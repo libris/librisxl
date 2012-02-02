@@ -1,22 +1,12 @@
 package se.kb.libris.whelks.backends.riak;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.servlet.http.HttpServletResponse;
 import se.kb.libris.whelks.Document;
 import se.kb.libris.whelks.Key;
-import se.kb.libris.whelks.Link;
 import se.kb.libris.whelks.Whelk;
 import se.kb.libris.whelks.exception.WhelkException;
 import se.kb.libris.whelks.plugin.KeyGenerator;
