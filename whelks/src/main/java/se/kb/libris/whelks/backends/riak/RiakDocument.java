@@ -8,9 +8,6 @@ import se.kb.libris.whelks.Document;
 import se.kb.libris.whelks.Key;
 import se.kb.libris.whelks.Link;
 
-/**
- * @author marma
- */
 public class RiakDocument implements Document {
     URI identifier = null;
     List<? extends Link> links = new LinkedList<RiakLink>();

@@ -1,8 +1,5 @@
 package se.kb.libris.whelks.exception;
 
-/**
- * @author marma
- */
 public class WhelkRuntimeException extends RuntimeException {
     public WhelkRuntimeException(String msg) {
         super(msg);

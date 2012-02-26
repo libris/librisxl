@@ -1,17 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kb.libris.whelks;
 
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 
-/**
- *
- * @author marma
- */
 public interface Document {
     public URI getIdentifier();
     public List<? extends Link> getLinks();

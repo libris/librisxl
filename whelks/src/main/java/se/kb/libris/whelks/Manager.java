@@ -1,13 +1,10 @@
 package se.kb.libris.whelks;
 
-import se.kb.libris.whelks.exception.NoSuchFactoryException;
+import se.kb.libris.whelks.exception.*;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
 
-/**
- * @author marma
- */
 public class Manager {
     private Map<String, Factory> factories = new TreeMap<String, Factory>();
     private static int version = 1;

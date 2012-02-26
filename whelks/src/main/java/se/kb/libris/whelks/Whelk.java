@@ -1,7 +1,3 @@
- /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kb.libris.whelks;
 
 import java.io.InputStream;
@@ -10,10 +6,6 @@ import java.util.List;
 import se.kb.libris.whelks.exception.WhelkException;
 import se.kb.libris.whelks.plugin.Plugin;
 
-/**
- *
- * @author marma
- */
 public interface Whelk {
     public URI add(Document d) throws WhelkException;
     public URI update(Document d) throws WhelkException;

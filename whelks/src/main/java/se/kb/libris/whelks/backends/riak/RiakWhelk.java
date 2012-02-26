@@ -14,9 +14,6 @@ import se.kb.libris.whelks.plugin.LinkFinder;
 import se.kb.libris.whelks.plugin.Plugin;
 import se.kb.libris.whelks.plugin.Trigger;
 
-/**
- * @author marma
- */
 public class RiakWhelk implements Whelk {
     private URL base;
     private String bucket = null;
