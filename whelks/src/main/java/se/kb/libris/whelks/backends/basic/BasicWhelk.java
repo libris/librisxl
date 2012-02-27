@@ -12,6 +12,7 @@ import se.kb.libris.whelks.Whelk;
 import se.kb.libris.whelks.backends.riak.RiakDocument;
 import se.kb.libris.whelks.exception.WhelkException;
 import se.kb.libris.whelks.graph.QuadStore;
+import se.kb.libris.whelks.graph.SparqlException;
 import se.kb.libris.whelks.index.Index;
 import se.kb.libris.whelks.index.Query;
 import se.kb.libris.whelks.index.SearchResult;
@@ -77,7 +78,15 @@ public class BasicWhelk implements Whelk {
 
     @Override
     public void delete(URI uri) throws WhelkException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        for (Trigger t: getTriggers())
+            t.beforeDelete(this, uri);
+
+        if (documentStore != null) documentStore.delete(uri);
+        if (index != null) index.delete(uri);
+        if (quadStore != null) quadStore.delete(uri);
+        
+        for (Trigger t: getTriggers())
+            t.afterDelete(this, uri);
     }
 
     @Override
@@ -86,8 +95,11 @@ public class BasicWhelk implements Whelk {
     }
 
     @Override
-    public InputStream sparql(String query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public InputStream sparql(String query) throws SparqlException {
+        if (quadStore != null)
+            return quadStore.sparql(query);
+        else
+            throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override

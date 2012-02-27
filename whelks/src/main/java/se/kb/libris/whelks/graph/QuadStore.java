@@ -9,5 +9,6 @@ import se.kb.libris.whelks.Document;
  */
 public interface QuadStore {
     public void update(Document doc) throws QuadStoreException;
+    public void delete(URI namedGraph) throws QuadStoreException;
     public InputStream sparql(String query) throws SparqlException;
 }

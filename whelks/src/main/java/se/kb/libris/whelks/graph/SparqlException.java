@@ -1,5 +1,5 @@
 package se.kb.libris.whelks.graph;
 
-class SparqlException extends Exception {
+public class SparqlException extends Exception {
     
 }
