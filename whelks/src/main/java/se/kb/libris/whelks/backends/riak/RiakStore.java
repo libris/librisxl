@@ -3,39 +3,23 @@ package se.kb.libris.whelks.backends.riak;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
 import se.kb.libris.whelks.Document;
-import se.kb.libris.whelks.Key;
-import se.kb.libris.whelks.Whelk;
 import se.kb.libris.whelks.exception.WhelkException;
-import se.kb.libris.whelks.plugin.KeyGenerator;
-import se.kb.libris.whelks.plugin.LinkFinder;
-import se.kb.libris.whelks.plugin.Plugin;
-import se.kb.libris.whelks.plugin.Trigger;
+import se.kb.libris.whelks.storage.DocumentStore;
 
-public class RiakWhelk implements Whelk {
+public class RiakStore implements DocumentStore {
     private URL base;
     private String bucket = null;
-    private List<Plugin> plugins = new LinkedList<Plugin>();
     
     static final int HTTP_CREATED = 201;
     
-    public RiakWhelk(URL _base, String _bucket) {
+    public RiakStore(URL _base, String _bucket) {
         base = _base;
         bucket = _bucket;
     }
     
     @Override
-    public URI add(Document d) throws WhelkException {
-        // extract keys
-        for (KeyGenerator kg: getKeyGenerators())
-            kg.generateKeys(d);
-        
-        // find links
-        for (LinkFinder lf: getLinkFinders())
-            lf.findLinks(d);
-        
+    public URI store(Document d) throws WhelkException {
         try {
             URL url = new URL(base, bucket + "/");
             
@@ -47,9 +31,6 @@ public class RiakWhelk implements Whelk {
             
             buildRequest(conn, d);
             
-            for (Trigger t: getTriggers())
-                t.beforeAdd(d);
-
             int responseCode = conn.getResponseCode();
             
             if (responseCode == HTTP_CREATED) {
@@ -64,9 +45,6 @@ public class RiakWhelk implements Whelk {
                 
                 ((RiakDocument)d).setIdentifier(new URI("riak:" + bucket + "/" + location.substring(7 + bucket.length())));
                 
-                for (Trigger t: getTriggers())
-                    t.afterAdd(d);
-            
                 return d.getIdentifier();
             } else {
                 throw new WhelkException("Could not create document (HTTP Status " + responseCode);
@@ -74,11 +52,6 @@ public class RiakWhelk implements Whelk {
         } catch (Exception e) {
             throw new WhelkException(e);
         }
-    }
-
-    @Override
-    public URI update(Document d) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -99,7 +72,7 @@ public class RiakWhelk implements Whelk {
     public Document document(URI identifier) {
         return new RiakDocument();
     }
-
+/*
     @Override
     public Iterable<? extends Document> find(String query) {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -119,36 +92,7 @@ public class RiakWhelk implements Whelk {
     public List<Plugin> plugins() {
         return plugins;
     }
-    
-    private List<KeyGenerator> getKeyGenerators() {
-        List<KeyGenerator> ret = new LinkedList<KeyGenerator>();
-        
-        for (Plugin plugin: plugins)
-            if (plugin instanceof KeyGenerator)
-                ret.add((KeyGenerator)plugin);
-        
-        return ret;
-    }
-
-    private List<LinkFinder> getLinkFinders() {
-        List<LinkFinder> ret = new LinkedList<LinkFinder>();
-        
-        for (Plugin plugin: plugins)
-            if (plugin instanceof LinkFinder)
-                ret.add((LinkFinder)plugin);
-        
-        return ret;
-    }
-    
-    private List<Trigger> getTriggers() {
-        List<Trigger> ret = new LinkedList<Trigger>();
-        
-        for (Plugin plugin: plugins)
-            if (plugin instanceof Trigger)
-                ret.add((Trigger)plugin);
-        
-        return ret;
-    }
+*/    
     
     /*
     private <T> List<T> filter() {
