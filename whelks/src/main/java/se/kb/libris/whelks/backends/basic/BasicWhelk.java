@@ -37,8 +37,13 @@ public class BasicWhelk implements Whelk {
         quadStore = _quadStore;
     }
     
+    /**
+     * 
+     */
     @Override
     public URI store(Document d) throws WhelkException {
+        boolean add = d.getIdentifier() == null;
+        
         // extract keys
         for (KeyGenerator kg: getKeyGenerators())
             kg.generateKeys(d);
@@ -49,7 +54,7 @@ public class BasicWhelk implements Whelk {
         
         // before triggers
         for (Trigger t: getTriggers())
-            if (d.getIdentifier() == null) t.beforeAdd(this, d);
+            if (add) t.beforeAdd(this, d);
             else t.beforeUpdate(this, d);
         
         // add document to store
@@ -65,8 +70,9 @@ public class BasicWhelk implements Whelk {
             quadStore.update(d);
 
         // after triggers
-        //for (Trigger t: getTriggers())
-        //    t.afterAdd(d);
+        for (Trigger t: getTriggers())
+            if (add) t.afterAdd(this, d);
+            else t.afterUpdate(this, d);
         
         return d.getIdentifier();
     }
