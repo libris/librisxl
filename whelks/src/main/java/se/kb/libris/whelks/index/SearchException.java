@@ -1,11 +1,9 @@
 package se.kb.libris.whelks.index;
 
-import se.kb.libris.whelks.exception.WhelkException;
-
 /**
  * @author marma
  */
-public class IndexException extends WhelkException {
+public class SearchException extends Exception {
     public IndexException(String msg) {
         super(msg);
     }
@@ -16,5 +14,5 @@ public class IndexException extends WhelkException {
 
     public IndexException(String msg, Throwable t) {
         super(msg, t);
-    }    
+    }
 }

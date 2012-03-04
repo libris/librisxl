@@ -1,9 +1,13 @@
 package se.kb.libris.whelks.backends.riak;
 
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import se.kb.libris.whelks.Document;
+import se.kb.libris.whelks.Key;
 import se.kb.libris.whelks.exception.WhelkException;
 import se.kb.libris.whelks.storage.DocumentStore;
 
@@ -47,7 +51,7 @@ public class RiakStore implements DocumentStore {
                 
                 return d.getIdentifier();
             } else {
-                throw new WhelkException("Could not create document (HTTP Status " + responseCode);
+                throw new WhelkException("Could not create document (HTTP Status " + responseCode + ")");
             }
         } catch (Exception e) {
             throw new WhelkException(e);
@@ -56,7 +60,13 @@ public class RiakStore implements DocumentStore {
 
     @Override
     public Document get(URI uri) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try {
+            return new RiakDocument(new URL(base, bucket + "/" + uri));
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(RiakStore.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return null;
     }
 
     @Override
@@ -77,24 +87,29 @@ public class RiakStore implements DocumentStore {
     public Iterable<? extends Document> find(String query) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
+*/
     @Override
     public Iterable<? extends Document> lookup(Key key) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Not supported");
     }
 
     @Override
     public Iterable<? extends Key> browse(URI type, String start) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Not supported");
     }
 
+    private void buildRequest(HttpURLConnection conn, Document d) {
+        
+    }
+
+    
+    
+    /*
     @Override
     public List<Plugin> plugins() {
         return plugins;
     }
-*/    
-    
-    /*
+
     private <T> List<T> filter() {
         List<T> ret = new LinkedList<T>();
         
@@ -104,11 +119,7 @@ public class RiakStore implements DocumentStore {
         
         return ret;
     }
-     */
     
-    private void buildRequest(HttpURLConnection conn, Document d) {
-        
-    }
 
     /*
      * @todo implement this to avoid iterating through whole list

@@ -2,6 +2,7 @@ package se.kb.libris.whelks.backends.riak;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import se.kb.libris.whelks.Document;
@@ -10,11 +11,13 @@ import se.kb.libris.whelks.Link;
 
 public class RiakDocument implements Document {
     URI identifier = null;
+    URL url = null;
     List<? extends Link> links = new LinkedList<RiakLink>();
     List<? extends Key> keys = new LinkedList<RiakKey>();
     String vclock = null, data = null, contentType = null, format = "UNKNOWN";
     
-    public RiakDocument() {
+    public RiakDocument(URL _url) {
+        url = _url;
     }
     
     @Override

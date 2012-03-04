@@ -5,7 +5,7 @@ import se.kb.libris.whelks.exception.WhelkException;
 /**
  * @author marma
  */
-class QuadStoreException extends WhelkException {
+public class QuadStoreException extends WhelkException {
     public QuadStoreException(String msg) {
         super(msg);
     }
