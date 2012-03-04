@@ -16,6 +16,71 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-core</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-atom-abdera</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-apache-client</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-spring</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-guice</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-simple-server</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs.jersey-oauth</groupId>
+            <artifactId>oauth-client</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs.jersey-oauth</groupId>
+            <artifactId>oauth-server</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs.jersey-oauth</groupId>
+            <artifactId>oauth-signature</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-web-api</artifactId>
             <version>6.0</version>
@@ -79,5 +144,12 @@
             </plugin>
         </plugins>
     </build>
-
+    <repositories>
+        <repository>
+            <url>http://download.java.net/maven/2/</url>
+            <id>restlib</id>
+            <layout>default</layout>
+            <name>Repository for library Library[restlib]</name>
+        </repository>
+    </repositories>
 </project>

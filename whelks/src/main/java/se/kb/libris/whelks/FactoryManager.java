@@ -1,15 +1,15 @@
 package se.kb.libris.whelks;
 
-import se.kb.libris.whelks.exception.*;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
+import se.kb.libris.whelks.exception.NoSuchFactoryException;
 
-public class Manager {
+public class FactoryManager {
     private Map<String, Factory> factories = new TreeMap<String, Factory>();
     private static int version = 1;
 
-    public Manager(URL url) {        
+    public FactoryManager(URL url) {        
     }
     
     public void registerFactory(String name, Factory factory) {
@@ -20,10 +20,10 @@ public class Manager {
         return factories.get(name);
     }
     
-    public Whelk createWhelk(String name, String bucket) {
-        if (!factories.containsKey(name))
-            throw new NoSuchFactoryException("No factory has been registered with the name '" + name + "'");
+    public Whelk createWhelk(String factoryName, String whelk) {
+        if (!factories.containsKey(factoryName))
+            throw new NoSuchFactoryException("No factory has been registered with the name '" + factoryName + "'");
         
-        return factories.get(name).create(bucket);
+        return factories.get(factoryName).create(whelk);
     }
 }
