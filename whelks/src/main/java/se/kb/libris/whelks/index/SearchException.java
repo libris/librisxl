@@ -4,15 +4,15 @@ package se.kb.libris.whelks.index;
  * @author marma
  */
 public class SearchException extends Exception {
-    public IndexException(String msg) {
+    public SearchException(String msg) {
         super(msg);
     }
 
-    public IndexException(Throwable t) {
+    public SearchException(Throwable t) {
         super(t);
     }
 
-    public IndexException(String msg, Throwable t) {
+    public SearchException(String msg, Throwable t) {
         super(msg, t);
     }
 }

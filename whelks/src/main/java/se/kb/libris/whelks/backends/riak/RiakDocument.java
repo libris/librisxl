@@ -15,6 +15,9 @@ public class RiakDocument implements Document {
     List<? extends Link> links = new LinkedList<RiakLink>();
     List<? extends Key> keys = new LinkedList<RiakKey>();
     String vclock = null, data = null, contentType = null, format = "UNKNOWN";
+
+    public RiakDocument() {
+    }    
     
     public RiakDocument(URL _url) {
         url = _url;
