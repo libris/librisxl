@@ -27,8 +27,3 @@ public class FactoryManager {
         return factories.get(factoryName).create(whelk);
     }
 }
-dnk765433221§´xeyg
-
-
-xdsq       abstract.
-gvyjkjy9h9erf59.lbiuo,k98ikmm fgö0cmmmmgggggg
