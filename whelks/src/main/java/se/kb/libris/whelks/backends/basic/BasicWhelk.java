@@ -12,17 +12,19 @@ import se.kb.libris.whelks.Key;
 import se.kb.libris.whelks.Whelk;
 import se.kb.libris.whelks.exception.WhelkException;
 import se.kb.libris.whelks.graph.QuadStore;
+import se.kb.libris.whelks.graph.SparqlEndpoint;
 import se.kb.libris.whelks.graph.SparqlException;
 import se.kb.libris.whelks.index.Index;
 import se.kb.libris.whelks.index.Query;
 import se.kb.libris.whelks.index.SearchResult;
+import se.kb.libris.whelks.index.Searchable;
 import se.kb.libris.whelks.plugin.*;
 import se.kb.libris.whelks.storage.DocumentStore;
 
 /**
  * @author marma
  */
-public class BasicWhelk implements Whelk, Pluggable {
+public class BasicWhelk implements Whelk, Searchable, SparqlEndpoint, Pluggable {
     DocumentStore documentStore = null;
     Index index = null;
     QuadStore quadStore = null;

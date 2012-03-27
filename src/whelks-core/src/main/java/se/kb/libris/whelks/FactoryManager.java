@@ -20,10 +20,10 @@ public class FactoryManager {
         return factories.get(name);
     }
     
-    public Whelk createWhelk(String factoryName, String whelk) {
+    public Whelk createWhelk(String factoryName, String name) {
         if (!factories.containsKey(factoryName))
             throw new NoSuchFactoryException("No factory has been registered with the name '" + factoryName + "'");
         
-        return factories.get(factoryName).create(whelk);
+        return factories.get(factoryName).create(name);
     }
 }

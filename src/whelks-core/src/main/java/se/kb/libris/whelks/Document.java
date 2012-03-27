@@ -8,8 +8,9 @@ public interface Document {
     public URI getIdentifier();
     public List<? extends Link> getLinks();
     public List<? extends Key> getKeys();
-    public String getData();
-    public Document setData(String data);
+    public byte[] getData();
+    public Document setData(byte[] data);
+    public Document setData(InputStream data);
     public InputStream getDataAsStream();
     public String getContentType();
     public Document setContentType();
