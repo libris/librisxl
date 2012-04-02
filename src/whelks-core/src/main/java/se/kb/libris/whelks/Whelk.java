@@ -9,7 +9,7 @@ public interface Whelk {
     public void delete(URI uri);
     
     // search/lookup/browse
-    public SearchResult<? extends Document> find(String query);
+    public SearchResult<? extends Document> search(String query);
     public LookupResult<? extends Document> lookup(Key key);
     public BrowseResult<? extends Key> browse(URI type, String start);
 
