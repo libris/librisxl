@@ -11,7 +11,6 @@ public interface Whelk {
     // search/lookup/browse
     public SearchResult<? extends Document> search(String query);
     public LookupResult<? extends Document> lookup(Key key);
-    public BrowseResult<? extends Key> browse(URI type, String start);
 
     // factory methods
     public Document createDocument();
