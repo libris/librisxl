@@ -7,8 +7,6 @@ import se.kb.libris.whelks.persistance.JSONSerialisable;
 public abstract class WhelkFactory implements JSONSerialisable {
     public abstract Whelk create();
 
-    public abstract void init(Map params);
-
     public static WhelkFactory newInstance(Map params) {
         try {
             WhelkFactory wf = (WhelkFactory)Class.forName(params.get("classname").toString()).newInstance();

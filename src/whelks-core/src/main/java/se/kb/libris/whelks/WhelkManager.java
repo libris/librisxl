@@ -17,16 +17,29 @@ public class WhelkManager implements JSONSerialisable {
     Map<String, Whelk> whelks = new TreeMap<String, Whelk>();
     Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
     
-    /** @todo bootstrap manager from URL **/
     /* Example JSON:
      * {
-     *   "whelks":{
+     *   "whelks":[{
      *     "classname":"org.example.TestWhelk",
-     *     
+     *     "name":"testwhelk",
+     *     "init_params":{
+     *       "param_1":"bla"
+     *     }],
+     *     "plugins":[
+     *       {
+     *          "classname":"org.example.TestPlugin",
+     *          "init_params":{
+     *            
+     *          }
+     *       }
+     *     ],
+     *     "apis":[
+     *     ]
      *   },
      *   "factories":{
      *     "local": {
      *       "classname":"org.example.TestWhelkFactory",
+     *       "name":"testfactory",
      *       "init_params":{
      *         "param_1":1,
      *         "param_2":"test"
@@ -42,11 +55,6 @@ public class WhelkManager implements JSONSerialisable {
             throw new WhelkRuntimeException(t);
         }
     }
-    
-    public void init(Map json) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
 
     public Whelk getWhelk(String name) {
         return whelks.get(name);
@@ -74,8 +82,15 @@ public class WhelkManager implements JSONSerialisable {
         
         return whelks.get(name);
     }
+    
+    public void deleteWhelk(String name) {
+        
+    }
 
-    public String serialise() {
+    public void init(Map json) {
+    }
+    
+    public Map serialise() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }
