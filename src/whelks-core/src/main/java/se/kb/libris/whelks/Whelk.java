@@ -5,14 +5,17 @@ import java.net.URI;
 public interface Whelk {
     // storage
     public URI store(Document d);
+    public URI store(URI uri, Document d);
     public Document get(URI uri);
     public void delete(URI uri);
     
-    // search/lookup/browse
-    public SearchResult<? extends Document> search(String query);
+    // search/lookup
+    public SearchResult<? extends Document> query(String query);
     public LookupResult<? extends Document> lookup(Key key);
-    public BrowseResult<? extends Key> browse(URI type, String start);
 
+    // maintenance
+    public void destroy();
+    
     // factory methods
-    public Document createDocument();
+    public Document createDocument(String contentType, String format, byte[] data);
 }
