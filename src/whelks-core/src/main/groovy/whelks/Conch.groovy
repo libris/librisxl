@@ -1,35 +1,89 @@
 package se.kb.libris.conch
 
-class Document {}
-class Storage {
-    def store(Document d) {}
+import se.kb.libris.whelks.Document
+import java.net.URI
+
+class JsonDocument implements Document {
+    URI identifier
+    List links
+    List keys
+    byte[] data
+    String contentType
+    String format
+    long size
+
+    Document withData(byte[] data) {}
+    Document withFormat(String format) {}
+    Document withContentType(String contentType) {}
 }
+
+class Storage {
+    def storageDir = "./storage/"
+
+    Storage() {
+        init()
+    }
+
+    Storage(def directoryName) {
+        setStorageDir(directoryName)
+    }
+
+    def init() {
+        new File(storageDir).mkdirs()
+    }
+
+    def setStorageDir(String directoryName) { 
+        storageDir = directoryName 
+        init()
+    }
+
+    def store(Document d) {
+        def filename = (d.identifier ? d.identifier.toString() : _create_filename())
+        File file = new File("$storageDir/$filename").withWriter {
+            out -> 
+                out.println d.data
+        }
+    }
+
+    def _create_filename() {
+        def pool = ['a'..'z','A'..'Z',0..9,'_'].flatten()
+        Random rand = new Random(System.currentTimeMillis())
+
+        def passChars = (0..10).collect { pool[rand.nextInt(pool.size())] }
+        passChars.join()
+    }
+}
+
 class Index {}
 class TripleStore {}
 
 class Whelk {
-    Storage s
-    Index i
+    Storage storage
+    Index index
     TripleStore ts
 
-    Whelk(Storage _s, Index _i, TripleStore _ts) { s = _s; i = _i; ts = _ts}
-    Whelk(Storage _s, Index _i) {s = _s; i = _i}
-    Whelk(Storage _s) {s = _s}
+    Whelk(Storage _s, Index _i, TripleStore _ts) { storage = _s; index = _i; ts = _ts}
+    Whelk(Storage _s, Index _i) {storage = _s; index = _i}
+    Whelk(Storage _s) {storage = _s}
 
     def query(def q) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        println "Whelk ${this.class.name} received query ${q}"
     }
+
+    def ingest(Document d, boolean bulk = false) {
+        storage.store(d)
+    }
+
+    def retrieve(URI identifier) {}
 }
 
 class API {
     def whelks = []
 
     def query(def q) {
-        def i = 0
-        whelks.each{
-            println "whelk number ${i}: ${it}"
-            (${it}).query(q)
-            i++
+        whelks.eachWithIndex { whelk, i ->
+            println "Asking whelk ${i}: ${whelk}"
+            whelk.query(q)
         }
     }
 
@@ -40,12 +94,13 @@ class API {
 
 class App {
     static main(args) {
-        def storage = new Storage()
+        def env = System.getenv()
+        def whelk_storage = (env['PROJECT_HOME'] ? env['PROJECT_HOME'] : System.getProperty('user.home')) + "/whelk_storage"
+        def storage = new Storage(whelk_storage)
         def whelk = new Whelk(storage)
 
         def api = new API()
         api.addWhelk(whelk)
-
 
         api.query('Fragile Things')
     }
