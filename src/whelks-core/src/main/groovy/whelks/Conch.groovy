@@ -3,7 +3,7 @@ package se.kb.libris.conch
 import se.kb.libris.whelks.Document
 import java.net.URI
 
-class JsonDocument implements Document {
+class MyDocument implements Document {
     URI identifier
     List links
     List keys
@@ -11,6 +11,10 @@ class JsonDocument implements Document {
     String contentType
     String format
     long size
+
+    MyDocument(String s) {
+        data = s.getBytes()
+    }
 
     Document withData(byte[] data) {}
     Document withFormat(String format) {}
@@ -102,6 +106,17 @@ class App {
         def api = new API()
         api.addWhelk(whelk)
 
+        /*
         api.query('Fragile Things')
+        */
+
+        if (args.length > 0) {
+            def file = new File(args[0])
+            println "Loading file ${file}"
+            println "${file.text}"
+            def doc = new MyDocument(file.text)
+            def identifier = whelk.ingest(doc)
+            println "Stored document with identifier ${identifier}"
+        }
     }
 }
