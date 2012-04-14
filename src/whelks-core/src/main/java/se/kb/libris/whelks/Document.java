@@ -1,18 +1,26 @@
 package se.kb.libris.whelks;
 
+import java.io.ByteArrayInputStream;
 import java.net.URI;
-import java.util.List;
 
+/**
+ * @todo MM 20120414 Support streams instead of/in addition to byte arrays
+ */
 public interface Document {
     public URI getIdentifier();
-    public List<? extends Link> getLinks();
-    public List<? extends Key> getKeys();
+    
     public byte[] getData();
+    //public ByteArrayInputStream getDataAsStream();
     public String getContentType();
-    public String getFormat();
     public long getSize();
     
+    public Iterable<? extends Link> getLinks();
+    public Iterable<? extends Key> getKeys();
+    public Iterable<? extends Tag> getTags();
+
+    public Document tag(URI uri, String value);
+    public Document untag(URI uri, String value);
     public Document withData(byte[] data);
-    public Document withFormat(String format);
+    //public Document withData(ByteArrayInputStream data);
     public Document withContentType(String contentType);
 }
