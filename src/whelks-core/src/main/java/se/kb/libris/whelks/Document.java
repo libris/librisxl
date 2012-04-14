@@ -3,15 +3,12 @@ package se.kb.libris.whelks;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 
-/**
- * @todo MM 20120414 Support streams instead of/in addition to byte arrays
- */
 public interface Document {
     public URI getIdentifier();
     public String getVersion();
     
     public byte[] getData();
-    //public ByteArrayInputStream getDataAsStream();
+    public ByteArrayInputStream getDataAsStream();
     public String getContentType();
     public long getSize();
     
@@ -19,11 +16,9 @@ public interface Document {
     public Iterable<? extends Key> getKeys();
     public Iterable<? extends Tag> getTags();
 
-    public Document tag(URI uri, String value);
-    public Document untag(URI uri, String value);
+    public Document tag(URI type, String value);
+    public Document untag(URI type, String value);
     public Document withData(byte[] data);
-    //public Document withData(ByteArrayInputStream data);
+    public Document withDataAsStream(ByteArrayInputStream data);
     public Document withContentType(String contentType);
-    
-    public Iterable<LogEntry> getHistory();
 }

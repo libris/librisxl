@@ -125,6 +125,8 @@ public class WhelkManager implements JSONInitialisable {
     }
 
     public JSONInitialisable init(JSONObject obj) {
+        
+        
         throw new UnsupportedOperationException("Not yet implemented");
     }
 }
