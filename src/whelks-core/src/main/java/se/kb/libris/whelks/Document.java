@@ -8,6 +8,7 @@ import java.net.URI;
  */
 public interface Document {
     public URI getIdentifier();
+    public String getVersion();
     
     public byte[] getData();
     //public ByteArrayInputStream getDataAsStream();
@@ -23,4 +24,6 @@ public interface Document {
     public Document withData(byte[] data);
     //public Document withData(ByteArrayInputStream data);
     public Document withContentType(String contentType);
+    
+    public Iterable<LogEntry> getHistory();
 }

@@ -1,10 +1,13 @@
 package se.kb.libris.whelks.persistance;
 
-import java.util.Map;
+import org.json.simple.JSONObject;
 
-/**
- * @todo MM - Investigate Google GSON which might be a more elegant solution
- */ 
-public interface Serialisable {
-    public String serialise();
+public class JSONDeserialiser {
+    public static JSONInitialisable deserialize(String classname, JSONObject obj) {
+        try {
+            return ((JSONInitialisable)Class.forName(classname).newInstance()).init(obj);
+        } catch (Throwable t) {
+            throw new DeserialiseException(t);
+        }
+    }
 }
