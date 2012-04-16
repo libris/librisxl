@@ -1,34 +1,21 @@
 package se.kb.libris.conch
 
 import se.kb.libris.whelks.Document
+import se.kb.libris.whelks.storage.Storage
+import se.kb.libris.whelks.basic.BasicWhelk
 import java.net.URI
 
-class MyDocument implements Document {
-    URI identifier
-    List links
-    List keys
-    byte[] data
-    String contentType
-    String format
-    long size
-
-    MyDocument(String s) {
-        data = s.getBytes()
-    }
-
-    Document withData(byte[] data) {}
-    Document withFormat(String format) {}
-    Document withContentType(String contentType) {}
+class MyDocument extends BasicDocument {
 }
 
-class Storage {
+class DiskStorage { //implements Storage {
     def storageDir = "./storage/"
 
-    Storage() {
+    DiskStorage() {
         init()
     }
 
-    Storage(def directoryName) {
+    DiskStorage(def directoryName) {
         setStorageDir(directoryName)
     }
 
@@ -37,16 +24,25 @@ class Storage {
     }
 
     def setStorageDir(String directoryName) { 
+        println "Callin setStorageDir"
         storageDir = directoryName 
         init()
     }
 
-    def store(Document d) {
+    void store(MyDocument d) {
         def filename = (d.identifier ? d.identifier.toString() : _create_filename())
-        File file = new File("$storageDir/$filename").withWriter {
-            out -> 
-                out.println d.data
-        }
+        File file = new File("$storageDir/$filename")
+        file.write(new String(d.data))
+        d.identifier = new URI(filename)
+    }
+
+    MyDocument retrieve(URI u) {
+        def s 
+        def filename = u.toString()
+        File f = new File("$storageDir/$filename")
+        println "Filecontents:"
+        println f.text
+        return new MyDocument(f.text)
     }
 
     def _create_filename() {
@@ -61,24 +57,28 @@ class Storage {
 class Index {}
 class TripleStore {}
 
-class Whelk {
-    Storage storage
+class Whelk extends BasicWhelk {
+    DiskStorage storage
     Index index
     TripleStore ts
 
     Whelk(Storage _s, Index _i, TripleStore _ts) { storage = _s; index = _i; ts = _ts}
     Whelk(Storage _s, Index _i) {storage = _s; index = _i}
-    Whelk(Storage _s) {storage = _s}
+    Whelk(DiskStorage _s) {storage = _s}
 
     def query(def q) {
         println "Whelk ${this.class.name} received query ${q}"
     }
 
-    def ingest(Document d, boolean bulk = false) {
+    def ingest(MyDocument d, boolean bulk = false) {
         storage.store(d)
+        return d.identifier
     }
 
-    def retrieve(URI identifier) {}
+    def retrieve(identifier) {
+        identifier = new URI(identifier)
+        storage.retrieve(identifier)
+    }
 }
 
 class API {
@@ -100,7 +100,7 @@ class App {
     static main(args) {
         def env = System.getenv()
         def whelk_storage = (env['PROJECT_HOME'] ? env['PROJECT_HOME'] : System.getProperty('user.home')) + "/whelk_storage"
-        def storage = new Storage(whelk_storage)
+        def storage = new DiskStorage(whelk_storage)
         def whelk = new Whelk(storage)
 
         def api = new API()
@@ -110,9 +110,15 @@ class App {
         api.query('Fragile Things')
         */
 
-        if (args.length > 0) {
+        if (args.length > 1 && args[0] == 'retrieve') {
+            println "Loading file ${args[1]}"
+            def ldoc = whelk.retrieve(args[1])
+            println "File:"
+            print new String(ldoc.data)
+        }
+        else if (args.length > 0) {
             def file = new File(args[0])
-            println "Loading file ${file}"
+            println "Storing file ${file}"
             println "${file.text}"
             def doc = new MyDocument(file.text)
             def identifier = whelk.ingest(doc)
