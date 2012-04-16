@@ -13,41 +13,37 @@ import se.kb.libris.whelks.plugin.Plugin;
 
     /* Example JSON:
      * {
-     *   "classname":"se.kb.libris.whelks.WhelkManager",
-     *   "init_params":{
-     *     "whelks":{
-     *       "test":{
-     *         "classname":"org.example.TestWhelk",
-     *         "init_params":{
-     *           "param_1":"bla"
+     *   "whelks":{
+     *     "test":{
+     *       "_classname":"org.example.TestWhelk",
+     *       "param_1":"bla",
+     *       "plugins":[
+     *         {
+     *           "_classname":"org.example.TestPlugin",
+     *           "param":"test"
      *         },
-     *         "plugins":[
-     *           {
-     *             "classname":"org.example.TestPlugin",
-     *             "init_params":{
-     *             }
-     *           }
-     *         ],
-     *         "apis":[
-     *         ],
-     *         "channels":[
-     *         ]
-     *       }
-     *     },
-     *     "factories":{
-     *       "local":{
-     *         "classname":"org.example.TestWhelkFactory",
-     *         "name":"testfactory",
-     *         "init_params":{
-     *           "param_1":1,
-     *           "param_2":"test"
+     *         {
+     *           "_classname":"org.example.TestAPI"
+     *           "param":"test"
      *         }
-     *       }
+     *       ],
+     *       "channels":[
+     *         {
+     *           "_classname":"org.example.TestChannel"
+     *           "param":"test"
+     *         }
+     *       ]
+     *     }
+     *   },
+     *   "factories":{
+     *     "testfactory":{
+     *       "_classname":"org.example.TestWhelkFactory",
+     *       "name":"testfactory"
      *     }
      *   }
      * }
      */
-public class WhelkManager implements Serialisable, Initialisable {
+public class WhelkManager implements JSONInitialisable {
     Map<String, Whelk> whelks = new TreeMap<String, Whelk>();
     Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
     URL location = null;
@@ -56,7 +52,7 @@ public class WhelkManager implements Serialisable, Initialisable {
         location = url;
         
         try {
-            initialise((JSONObject)JSONValue.parseWithException(new InputStreamReader(url.openStream())));
+            init((JSONObject)JSONValue.parseWithException(new InputStreamReader(url.openStream())));
         } catch (Throwable t) {
             throw new WhelkRuntimeException(t);
         }
@@ -97,48 +93,57 @@ public class WhelkManager implements Serialisable, Initialisable {
     }
 
     public String serialise() {
-        Gson gson = new Gson();
-        return gson.toJson(this);
-    
-        /*
         JSONObject ret = new JSONObject();
-        JSONObject _init_params = new JSONObject();
         JSONObject _whelks = new JSONObject();
         JSONObject _factories = new JSONObject();
         
         for (Entry<String, Whelk> entry: whelks.entrySet()) {
-            JSONObject _whelk = new JSONObject();
-            
-            if (entry.getValue() instanceof Pluggable) {
-                JSONArray _plugins = new JSONArray();
-                
-                for (Plugin p: ((Pluggable)entry.getValue()).getPlugins()) {
-                    JSONObject _plugin = new JSONObject();
-                    _plugin.put("classname", p.getClass().getName());
-                    
-                    _plugins.add(_plugin);
-                }
+            if (entry.getValue() instanceof JSONSerialisable) {
+                _whelks.put(entry.getKey(), ((JSONSerialisable)entry.getValue()).serialize());
+            } else {
+                JSONObject _whelk = new JSONObject();
+                _whelk.put("_classname", entry.getValue().getClass().getName());
+                _whelks.put(entry.getKey(), _whelk);
             }
-            
-            _whelks.put(entry.getKey(), _whelk);
         }
         
         for (Entry<String, WhelkFactory> entry: this.factories.entrySet()) {
-            JSONObject _factory = new JSONObject();
-            
-            
-            _factories.put(entry.getKey(), _factory);
+            if (entry.getValue() instanceof JSONSerialisable) {
+                _whelks.put(entry.getKey(), ((JSONSerialisable)entry.getValue()).serialize());
+            } else {
+                JSONObject _factory = new JSONObject();
+                _factory.put("_classname", entry.getValue().getClass().getName());
+                _factories.put(entry.getKey(), _factory);
+            }
         }
         
-        ret.put("classname", this.getClass().getName());
-        _init_params.put("whelks", _whelks);
-        ret.put("init_params", _init_params);
+        ret.put("_classname", this.getClass().getName());
+        ret.put("whelks", _whelks);
+        ret.put("factories", _factories);
         
         return ret.toJSONString();
-        */
     }
 
-    public void initialise(Map map) {
+    public JSONInitialisable init(JSONObject obj) {
+        
+        
         throw new UnsupportedOperationException("Not yet implemented");
     }
 }
+
+    /*
+    _whelk
+
+    if (entry.getValue() instanceof Pluggable) {
+        JSONArray _plugins = new JSONArray();
+
+        for (Plugin p: ((Pluggable)entry.getValue()).getPlugins()) {
+            JSONObject _plugin = new JSONObject();
+            _plugin.put("classname", p.getClass().getName());
+
+
+
+            _plugins.add(_plugin);
+        }
+    }
+    */
