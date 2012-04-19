@@ -1,10 +1,12 @@
 package se.kb.libris.conch
 
+import java.net.URI
+import org.restlet.*
+
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.storage.Storage
 import se.kb.libris.whelks.basic.BasicWhelk
 import se.kb.libris.whelks.basic.BasicDocument
-import java.net.URI
 
 class MyDocument extends BasicDocument {
     def type
@@ -81,8 +83,7 @@ class Whelk extends BasicWhelk {
     TripleStore ts
     def name
 
-    Whelk(Storage _s, Index _i, TripleStore _ts) { storage = _s; index = _i; ts = _ts}
-    Whelk(DiskStorage _s, Index _i) {storage = _s; index = _i}
+    Whelk(DiskStorage _s, Index _i) {storage = _s; index = _i }
     Whelk(DiskStorage _s) {storage = _s}
 
     def query(def q) {
@@ -122,14 +123,14 @@ class API {
     }
 }
 
-class App {
+class App extends Restlet {
     static main(args) {
         def env = System.getenv()
         def whelk_storage = (env['PROJECT_HOME'] ? env['PROJECT_HOME'] : System.getProperty('user.home')) + "/whelk_storage"
         def storage = new DiskStorage(whelk_storage)
-        def index = new ElasticSearchIndex()
+        def index = new ElasticSearchClientIndex()
         def whelk = new Whelk(storage, index)
-        whelk.name = "test"
+        whelk.name = "whelk"
 
         def api = new API()
         api.addWhelk(whelk)
