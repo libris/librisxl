@@ -8,6 +8,8 @@ import se.kb.libris.whelks.storage.Storage
 import se.kb.libris.whelks.basic.BasicWhelk
 import se.kb.libris.whelks.basic.BasicDocument
 
+import se.kb.libris.conch.component.*
+
 class MyDocument extends BasicDocument {
     URI identifier
     def type
@@ -29,7 +31,6 @@ class App {
         def whelk = new Whelk(storage, index)
         whelk.name = "whelk"
 
-        api.addWhelk(whelk)
 
         /*
         api.query('Fragile Things')

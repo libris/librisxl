@@ -11,6 +11,7 @@ import org.elasticsearch.node.NodeBuilder
 import static org.elasticsearch.node.NodeBuilder.*
 
 import se.kb.libris.whelks.Document
+import se.kb.libris.conch.component.*
 
 class ElasticSearchIndex implements Index {
     Client client
@@ -22,6 +23,12 @@ class ElasticSearchIndex implements Index {
             println "Index already exists " + ex.getMessage()
         }
     }
+
+    def add(Document d) {
+        index(d, d.index, d.type)
+    }
+
+    def find(def query) {}
 
     def index(Document d, def indexName, def type) {
         //_createIndex(indexName)

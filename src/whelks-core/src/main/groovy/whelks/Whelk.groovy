@@ -9,8 +9,10 @@ import se.kb.libris.whelks.basic.BasicWhelk
 import se.kb.libris.whelks.basic.BasicDocument
 
 class Whelk extends BasicWhelk {
-    def components
+    def components = []
     def name
+
+    def Whelk(name) {this.name = name}
 
     def query(def q) {
         println "Whelk ${this.class.name} received query ${q}"
@@ -33,7 +35,11 @@ class Whelk extends BasicWhelk {
 
     def retrieve(identifier) {
         identifier = new URI(identifier)
-        storage.retrieve(identifier)
+        components.each {
+            if (it instanceof Storage) {
+                it.retrieve(identifier)
+            }
+        }
     }
 
     def find(identifier) {
@@ -41,3 +47,4 @@ class Whelk extends BasicWhelk {
         println "Located document from elastic search"
         println response
     }
+}

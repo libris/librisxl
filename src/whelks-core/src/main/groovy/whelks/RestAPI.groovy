@@ -5,6 +5,7 @@ import org.restlet.data.*
 import org.restlet.resource.*
 
 import se.kb.libris.conch.*
+import se.kb.libris.conch.component.*
 
 class RestAPI extends Restlet {  
 
@@ -28,6 +29,7 @@ class RestAPI extends Restlet {
             println "upload: ${upload}"
             def doc = new MyDocument(filename).withData(upload.getBytes('UTF-8'))
             doc.type = type
+            doc.index = whelk.name
             def identifier = whelk.ingest(doc)
             response.setEntity("Thank you! Document ingested with id ${identifier}", MediaType.TEXT_PLAIN)
         }
@@ -40,10 +42,12 @@ class RestAPI extends Restlet {
         def env = System.getenv()
         def whelk_storage = (env["PROJECT_HOME"] ? env["PROJECT_HOME"] : System.getProperty("user.home")) + "/whelk_storage"
 
-        DiskStorage storage = new DiskStorage(whelk_storage)
+        Storage storage = new DiskStorage(whelk_storage)
         Index index = new ElasticSearchNodeIndex()
-        Whelk w = new Whelk(storage, index)
-        w.name = "groovywhelk"
+        Whelk w = new Whelk("groovywhelk")
+        w.components.add(storage)
+        w.components.add(index)
+
         RestAPI api = new RestAPI(w)
         // Create the HTTP server and listen on port 8182  
         new Server(Protocol.HTTP, 8182, api).start()
