@@ -1,16 +1,22 @@
 package se.kb.libris.conch.component
 
+import se.kb.libris.whelks.Document
+import se.kb.libris.conch.*
+
 interface Component {
     def add(Document d)
 }
 
-interface Storage extends Component {}
-
-interface Index extends Component {
-    def index(Document d, def indexName, def type)
+interface Storage extends Component {
+    def add(Document d)
+    def retrieve(URI u)
 }
 
-class DiskStorage implements Component { 
+interface Index extends Component {
+    def find(def query)
+}
+
+class DiskStorage implements Storage { 
     def storageDir = "./storage/"
 
     DiskStorage() {
@@ -31,11 +37,12 @@ class DiskStorage implements Component {
         init()
     }
 
-    void store(MyDocument d) {
+    def add(Document d) {
         def filename = (d.identifier ? d.identifier.toString() : _create_filename())
-            File file = new File("$storageDir/$filename")
-            file.write(new String(d.data))
-            d.identifier = new URI(filename)
+        println "${this.class.name} storing file $filename in $storageDir"
+        File file = new File("$storageDir/$filename")
+        file.write(new String(d.data))
+        d.identifier = new URI(filename)
     }
 
     MyDocument retrieve(URI u) {
