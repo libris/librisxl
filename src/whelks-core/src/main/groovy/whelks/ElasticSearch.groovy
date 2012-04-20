@@ -31,7 +31,7 @@ class ElasticSearchIndex implements Index {
     def find(def query) {}
 
     def index(Document d, def indexName, def type) {
-        //_createIndex(indexName)
+        //_createIndex(indexName) // Not needed. Indexes automatically created on indexing.
         println "Indexing document ..."
         IndexResponse response = client.prepareIndex(indexName, type, d.identifier.toString()).setSource(d.data).execute().actionGet()
         println "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}"
