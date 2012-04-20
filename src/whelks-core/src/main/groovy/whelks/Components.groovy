@@ -8,7 +8,6 @@ interface Component {
 }
 
 interface Storage extends Component {
-    def add(Document d)
     def retrieve(URI u)
 }
 
@@ -20,7 +19,9 @@ class DiskStorage implements Storage {
     def storageDir = "./storage/"
 
     DiskStorage() {
-        init()
+        def env = System.getenv()
+        def whelk_storage = (env["PROJECT_HOME"] ? env["PROJECT_HOME"] : System.getProperty("user.home")) + "/whelk_storage"
+        setStorageDir(whelk_storage)
     }
 
     DiskStorage(def directoryName) {
@@ -45,13 +46,11 @@ class DiskStorage implements Storage {
         d.identifier = new URI(filename)
     }
 
-    MyDocument retrieve(URI u) {
+    Document retrieve(URI u) {
         def s 
         def filename = u.toString()
         File f = new File("$storageDir/$filename")
-        println "Filecontents:"
-        println f.text
-        return new MyDocument(f.text)
+        return new MyDocument(filename).withData(f.text.getBytes('UTF-8'))
     }
 
     def _create_filename() {

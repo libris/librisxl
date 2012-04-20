@@ -4,9 +4,9 @@ import java.net.URI
 import org.restlet.*
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.storage.Storage
 import se.kb.libris.whelks.basic.BasicWhelk
-import se.kb.libris.whelks.basic.BasicDocument
+
+import se.kb.libris.conch.component.*
 
 class Whelk extends BasicWhelk {
     def components = []
@@ -35,11 +35,16 @@ class Whelk extends BasicWhelk {
 
     def retrieve(identifier) {
         identifier = new URI(identifier)
+        def doc = null
         components.each {
+            println "Looping component ${it.class.name}"
             if (it instanceof Storage) {
-                it.retrieve(identifier)
+                println "Is storage. Retrieving ..."
+                doc = it.retrieve(identifier)
+                println "Found a ${doc.class.name}"
             }
         }
+        return doc
     }
 
     def find(identifier) {

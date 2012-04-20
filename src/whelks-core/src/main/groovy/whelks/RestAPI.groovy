@@ -4,6 +4,7 @@ import org.restlet.*
 import org.restlet.data.*
 import org.restlet.resource.*
 
+import se.kb.libris.whelks.Document
 import se.kb.libris.conch.*
 import se.kb.libris.conch.component.*
 
@@ -18,7 +19,15 @@ class RestAPI extends Restlet {
 
     def void handle(Request request, Response response) {  
         if (request.method == Method.GET) {
-            response.setEntity("Hello groovy!", MediaType.TEXT_PLAIN)
+            def query = request.getResourceRef().getQueryAsForm().getValuesMap()
+            if (query.containsKey("load")) {
+                def d = whelk.retrieve(query.get("load"))
+                println "Loaded something from whelk : $d"
+                response.setEntity(new String(d.data), MediaType.APPLICATION_JSON)
+            }
+            else {
+                response.setEntity("Hello groovy!", MediaType.TEXT_PLAIN)
+            }
         } 
         else if (request.method == Method.PUT) {
             Form form = request.getResourceRef().getQueryAsForm()
@@ -39,16 +48,13 @@ class RestAPI extends Restlet {
     }
 
     static main(args) {
-        def env = System.getenv()
-        def whelk_storage = (env["PROJECT_HOME"] ? env["PROJECT_HOME"] : System.getProperty("user.home")) + "/whelk_storage"
-
-        Storage storage = new DiskStorage(whelk_storage)
-        Index index = new ElasticSearchNodeIndex()
         Whelk w = new Whelk("groovywhelk")
-        w.components.add(storage)
-        w.components.add(index)
+
+        w.components.add(new DiskStorage())
+        w.components.add(new ElasticSearchNodeIndex())
 
         RestAPI api = new RestAPI(w)
+        //
         // Create the HTTP server and listen on port 8182  
         new Server(Protocol.HTTP, 8182, api).start()
     }
