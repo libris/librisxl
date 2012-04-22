@@ -1,5 +1,6 @@
 package se.kb.libris.whelks;
 
+import java.io.ByteArrayInputStream;
 import java.net.URI;
 
 public interface Whelk {
@@ -19,5 +20,5 @@ public interface Whelk {
     
     // factory methods
     public Document createDocument(String contentType, byte[] data);
-    //public Document createDocument(String contentType, ByteArraInputStream data);
+    public Document createDocument(String contentType, ByteArrayInputStream data);
 }
