@@ -1,7 +1,9 @@
 package se.kb.libris.whelks.component;
 
-import se.kb.libris.whelks.plugin.Plugin;
+import java.net.URI;
+import se.kb.libris.whelks.Document;
 
 public interface QuadStore extends Component {
-    
+    public void update(URI uri, Document d);
+    public void delete(URI graph);
 }
