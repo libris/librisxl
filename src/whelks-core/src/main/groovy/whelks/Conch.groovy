@@ -18,6 +18,7 @@ class MyDocument extends BasicDocument {
     MyDocument() {}
 
     MyDocument(def uri) {
+        
         this.identifier = new URI(uri)
     }
 }
@@ -40,7 +41,7 @@ class App {
             println "Loading file ${args[1]}"
             def ldoc = whelk.retrieve(args[1])
             println "File:"
-            print new String(ldoc.data)
+            println new String(ldoc.data)
         }
         else if (args.length > 1 && args[0] == 'find') {
             whelk.find(args[1])

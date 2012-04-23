@@ -1,8 +1,13 @@
 package se.kb.libris.conch
 
-import org.restlet.*
-import org.restlet.data.*
-import org.restlet.resource.*
+import org.restlet.Restlet
+import org.restlet.Request
+import org.restlet.Response
+import org.restlet.Server
+import org.restlet.data.Form
+import org.restlet.data.MediaType
+import org.restlet.data.Method
+import org.restlet.data.Protocol
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.conch.*
@@ -24,7 +29,11 @@ class RestAPI extends Restlet {
                 def d = whelk.retrieve(query.get("load"))
                 println "Loaded something from whelk : $d"
                 response.setEntity(new String(d.data), MediaType.APPLICATION_JSON)
-            }
+            } 
+            else if (query.containsKey("find")) {
+                whelk.find(query.get("find"))
+                response.setEntity("Find in index", MediaType.TEXT_PLAIN)
+            } 
             else {
                 response.setEntity("Hello groovy!", MediaType.TEXT_PLAIN)
             }
@@ -48,10 +57,10 @@ class RestAPI extends Restlet {
     }
 
     static main(args) {
-        Whelk w = new Whelk("groovywhelk")
+        Whelk w = new Whelk("whelk")
 
-        w.components.add(new DiskStorage())
-        w.components.add(new ElasticSearchNodeIndex())
+        w.addComponent(new DiskStorage())
+        w.addComponent(new ElasticSearchNodeIndex())
 
         RestAPI api = new RestAPI(w)
         //
