@@ -102,7 +102,8 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable {
     }
 
     public Document convert(Document doc, String mimeType, String format, String profile) {
-        for (FormatConverter converter: getPlugins()
+        return null;
+        //for (FormatConverter converter: getPlugins()
     }
 
     private List<KeyGenerator> getKeyGenerators() {
@@ -172,5 +173,9 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable {
                     li.remove();
             }
         }
+    }
+
+    public Iterable<? extends Plugin> getPlugins() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
