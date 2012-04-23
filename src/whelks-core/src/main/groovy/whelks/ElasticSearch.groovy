@@ -1,19 +1,25 @@
-package se.kb.libris.conch
+package se.kb.libris.conch.component
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.index.IndexResponse
+import org.elasticsearch.action.search.SearchResponse
+import org.elasticsearch.action.search.SearchType
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.node.NodeBuilder
 
+import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
 
 import se.kb.libris.whelks.Document
+import se.kb.libris.conch.Whelk
 import se.kb.libris.conch.component.*
 
 class ElasticSearchIndex implements Index {
+
+    Whelk whelk
     Client client
 
     def _createIndex(indexName) {
@@ -24,11 +30,27 @@ class ElasticSearchIndex implements Index {
         }
     }
 
+    def setWhelk(Whelk w) { this.whelk = w }
+
     def add(Document d) {
         index(d, d.index, d.type)
     }
 
-    def find(def query) {}
+    def retrieve(URI uri) {
+
+    }
+
+    def find(def query) {
+        println "Doing query on $query"
+        SearchResponse response = client.prepareSearch(this.whelk.name)
+        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+        .setQuery(termQuery("*", query))
+        //.setFrom(0).setSize(60)
+        .setExplain(true)
+        .execute()
+        .actionGet()
+        println "Response: ${response.hits.totalHits}"
+    }
 
     def index(Document d, def indexName, def type) {
         //_createIndex(indexName) // Not needed. Indexes automatically created on indexing.

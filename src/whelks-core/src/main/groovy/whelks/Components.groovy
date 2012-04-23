@@ -4,19 +4,21 @@ import se.kb.libris.whelks.Document
 import se.kb.libris.conch.*
 
 interface Component {
+    def setWhelk(Whelk w)
     def add(Document d)
+    def retrieve(URI u)
 }
 
 interface Storage extends Component {
-    def retrieve(URI u)
 }
 
 interface Index extends Component {
     def find(def query)
 }
 
-class DiskStorage implements Storage { 
+class DiskStorage implements Storage {
     def storageDir = "./storage/"
+    Whelk whelk
 
     DiskStorage() {
         def env = System.getenv()
@@ -27,6 +29,8 @@ class DiskStorage implements Storage {
     DiskStorage(def directoryName) {
         setStorageDir(directoryName)
     }
+
+    def setWhelk(Whelk w) { this.whelk = w }
 
     def init() {
         new File(storageDir).mkdirs()

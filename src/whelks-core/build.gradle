@@ -1,14 +1,17 @@
 apply plugin: 'groovy'
-apply plugin: 'application'
+apply plugin: 'jetty'
 
 mainClassName = 'se.kb.libris.conch.RestAPI'
 
 jar {
-    dependsOn configurations.runtime
-        from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it).matching { exclude "META-INF/OSGI*" } } }
     manifest {
         attributes 'Main-Class': mainClassName
     }
+}
+
+task fatjar(type: Jar, dependsOn: jar) {
+    dependsOn configurations.runtime
+        from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it).matching { exclude "META-INF/OSGI*" } } }
 }
 
 repositories { 
