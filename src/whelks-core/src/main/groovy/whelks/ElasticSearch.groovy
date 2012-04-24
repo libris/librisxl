@@ -41,10 +41,10 @@ class ElasticSearchIndex implements Index {
     }
 
     def find(def query) {
-        println "Doing query on $query"
+        println "Doing query on $query (${query.class.name})"
         SearchResponse response = client.prepareSearch(this.whelk.name)
         .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-        .setQuery(termQuery("*", query))
+        .setQuery(termQuery("100", query))
         //.setFrom(0).setSize(60)
         .setExplain(true)
         .execute()
