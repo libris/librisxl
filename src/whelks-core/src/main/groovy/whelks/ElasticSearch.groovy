@@ -17,18 +17,10 @@ import se.kb.libris.whelks.Document
 import se.kb.libris.conch.Whelk
 import se.kb.libris.conch.component.*
 
-class ElasticSearchIndex implements Index {
+class ElasticSearch implements Index {
 
     Whelk whelk
     Client client
-
-    def _createIndex(indexName) {
-        try {
-            client.admin().indices().create(new CreateIndexRequest(indexName)).actionGet()
-        } catch(Exception ex) {
-            println "Index already exists " + ex.getMessage()
-        }
-    }
 
     def setWhelk(Whelk w) { this.whelk = w }
 
@@ -41,37 +33,42 @@ class ElasticSearchIndex implements Index {
     }
 
     def find(def query) {
-        println "Doing query on $query (${query.class.name})"
+        println "Doing query on $query"
         SearchResponse response = client.prepareSearch(this.whelk.name)
         .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-        .setQuery(termQuery("100", query))
+        .setQuery(queryString(query))
         //.setFrom(0).setSize(60)
         .setExplain(true)
         .execute()
         .actionGet()
         println "Response: ${response.hits.totalHits}"
+        return response.toString()
     }
 
     def index(Document d, def indexName, def type) {
-        //_createIndex(indexName) // Not needed. Indexes automatically created on indexing.
         println "Indexing document ..."
         IndexResponse response = client.prepareIndex(indexName, type, d.identifier.toString()).setSource(d.data).execute().actionGet()
-        println "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}"
+        println "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
+        def iresp = []
+        iresp['id'] = response.id
+        iresp['index'] = response.index
+        iresp['type'] = response.type
+        return iresp
     }
 }
 
-class ElasticSearchClientIndex extends ElasticSearchIndex {
+class ElasticSearchClient extends ElasticSearch {
 
-    def ElasticSearchClientIndex() {
+    def ElasticSearchClient() {
         println "Connecting to localhost:9200"
         client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("127.0.0.1", 9200))
     }
 } 
 
 
-class ElasticSearchNodeIndex extends ElasticSearchIndex {
+class ElasticSearchNode extends ElasticSearch {
 
-    def ElasticSearchNodeIndex() {
+    def ElasticSearchNode() {
         println "Creating elastic node"
         ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
         // here you can set the node and index settings via API

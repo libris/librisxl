@@ -33,11 +33,11 @@ class DiskStorage implements Storage {
     def setWhelk(Whelk w) { this.whelk = w }
 
     def init() {
+        println "Making sure directory $storageDir exists ..."
         new File(storageDir).mkdirs()
     }
 
     def setStorageDir(String directoryName) { 
-        println "Callin setStorageDir"
         storageDir = directoryName 
         init()
     }

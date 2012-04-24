@@ -18,7 +18,6 @@ class MyDocument extends BasicDocument {
     MyDocument() {}
 
     MyDocument(def uri) {
-        
         this.identifier = new URI(uri)
     }
 }
