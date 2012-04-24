@@ -27,14 +27,11 @@ class Whelk extends BasicWhelk {
     }
 
     def ingest(MyDocument d) {
+        def responses = [:]
         components.each {
-            it.add(d)
+            responses.put(it.class.name, it.add(d))
         }
-        /*
-        storage.store(d)
-        index.index(d, this.name, d.type)
-        */
-        return d.identifier
+        return responses
     }
 
     def retrieve(identifier) {

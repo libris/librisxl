@@ -31,8 +31,8 @@ class RestAPI extends Restlet {
                 response.setEntity(new String(d.data), MediaType.APPLICATION_JSON)
             } 
             else if (query.containsKey("find")) {
-                whelk.find(query.get("find"))
-                response.setEntity("Find in index", MediaType.TEXT_PLAIN)
+                def r = whelk.find(query.get("find"))
+                response.setEntity(r, MediaType.APPLICATION_JSON)
             } 
             else {
                 response.setEntity("Hello groovy!", MediaType.TEXT_PLAIN)
@@ -60,7 +60,7 @@ class RestAPI extends Restlet {
         Whelk w = new Whelk("whelk")
 
         w.addComponent(new DiskStorage())
-        w.addComponent(new ElasticSearchNodeIndex())
+        w.addComponent(new ElasticSearchNode())
 
         RestAPI api = new RestAPI(w)
         //
