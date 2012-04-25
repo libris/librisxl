@@ -25,7 +25,14 @@ class ElasticSearch implements Index {
     def setWhelk(Whelk w) { this.whelk = w }
 
     def add(Document d) {
-        index(d, d.index, d.type)
+        println "Indexing document ..."
+        IndexResponse response = client.prepareIndex(whelk.name, d.type, d.identifier.toString()).setSource(d.data).execute().actionGet()
+        println "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
+        def iresp = [:]
+        iresp['id'] = response.id
+        iresp['index'] = response.index
+        iresp['type'] = response.type
+        return iresp
     }
 
     def retrieve(URI uri) {
@@ -41,20 +48,10 @@ class ElasticSearch implements Index {
         .setExplain(true)
         .execute()
         .actionGet()
-        println "Response: ${response.hits.totalHits}"
+        println "Total hits: ${response.hits.totalHits}"
         return response.toString()
     }
 
-    def index(Document d, def indexName, def type) {
-        println "Indexing document ..."
-        IndexResponse response = client.prepareIndex(indexName, type, d.identifier.toString()).setSource(d.data).execute().actionGet()
-        println "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
-        def iresp = []
-        iresp['id'] = response.id
-        iresp['index'] = response.index
-        iresp['type'] = response.type
-        return iresp
-    }
 }
 
 class ElasticSearchClient extends ElasticSearch {

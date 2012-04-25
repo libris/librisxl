@@ -35,14 +35,15 @@ class Whelk extends BasicWhelk {
     }
 
     def retrieve(identifier) {
-        identifier = new URI(identifier)
+        if (identifier instanceof String) {
+            identifier = new URI(identifier)
+        }
         def doc = null
         components.each {
             println "Looping component ${it.class.name}"
             if (it instanceof Storage) {
                 println "Is storage. Retrieving ..."
                 doc = it.retrieve(identifier)
-                println "Found a ${doc.class.name}"
             }
         }
         return doc
@@ -62,6 +63,6 @@ class Whelk extends BasicWhelk {
             }
         }
         println "Located document from elastic search"
-        println doc
+        return doc
     }
 }
