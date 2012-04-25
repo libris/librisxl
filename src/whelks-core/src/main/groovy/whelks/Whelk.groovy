@@ -27,6 +27,7 @@ class Whelk extends BasicWhelk {
     }
 
     def ingest(MyDocument d) {
+        d.type = "marc21"
         def responses = [:]
         components.each {
             responses.put(it.class.name, it.add(d))

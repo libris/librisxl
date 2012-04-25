@@ -45,6 +45,10 @@ class DiskStorage implements Storage {
     def add(Document d) {
         def filename = (d.identifier ? d.identifier.toString() : _create_filename())
         println "${this.class.name} storing file $filename in $storageDir"
+        def fullpath = storageDir + "/" + filename
+        def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
+        println "PATH: $path"
+        new File(path).mkdirs()
         File file = new File("$storageDir/$filename")
         file.write(new String(d.data))
         d.identifier = new URI(filename)
