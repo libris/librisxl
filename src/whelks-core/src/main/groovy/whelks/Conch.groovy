@@ -13,12 +13,19 @@ import se.kb.libris.conch.component.*
 class MyDocument extends BasicDocument {
     URI identifier
     def type
-    def index
 
-    MyDocument() {}
+    MyDocument() {
+        generate_identifier()
+    }
 
-    MyDocument(def uri) {
+    MyDocument(URI uri) {
+        this.identifier = uri
+    }
+    MyDocument(String uri) {
         this.identifier = new URI(uri)
+    }
+
+    def generate_identifier() {
     }
 }
 
@@ -27,7 +34,7 @@ class App {
         def env = System.getenv()
         def whelk_storage = (env['PROJECT_HOME'] ? env['PROJECT_HOME'] : System.getProperty('user.home')) + "/whelk_storage"
         def storage = new DiskStorage(whelk_storage)
-        def index = new ElasticSearchClientIndex()
+        def index = new ElasticSearchClient()
         def whelk = new Whelk(storage, index)
         whelk.name = "whelk"
 
