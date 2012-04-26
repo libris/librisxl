@@ -33,7 +33,8 @@ class ServiceApplication extends Application {
     ServiceApplication(Context parentContext) {
         super(parentContext)
         whelk = new Whelk("whelk")
-        whelk.addComponent(new DiskStorage())
+        // Try using only ElasticSearch as storage
+        //whelk.addComponent(new DiskStorage())
         whelk.addComponent(new ElasticSearchNode())
     }
 
