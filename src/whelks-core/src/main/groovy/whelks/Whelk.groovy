@@ -1,5 +1,7 @@
 package se.kb.libris.conch
 
+import groovy.util.logging.Slf4j as Log
+
 import java.net.URI
 
 import se.kb.libris.whelks.Document
@@ -7,6 +9,7 @@ import se.kb.libris.whelks.basic.BasicWhelk
 
 import se.kb.libris.conch.component.*
 
+@Log
 class Whelk extends BasicWhelk {
     private def components = []
     def name
@@ -14,7 +17,7 @@ class Whelk extends BasicWhelk {
     def Whelk(name) {this.name = name}
 
     def query(def q) {
-        println "Whelk ${this.class.name} received query ${q}"
+        log.debug "Whelk ${this.class.name} received query ${q}"
     }
 
     def ingest(String docString) {
@@ -27,7 +30,6 @@ class Whelk extends BasicWhelk {
     }
 
     def ingest(MyDocument d) {
-        d.type = "marc21"
         def responses = [:]
         components.each {
             responses.put(it.class.name, it.add(d))
@@ -41,9 +43,9 @@ class Whelk extends BasicWhelk {
         }
         def doc = null
         components.each {
-            println "Looping component ${it.class.name}"
+            log.debug "Looping component ${it.class.name}"
             if (it instanceof Storage) {
-                println "Is storage. Retrieving ..."
+                log.debug "Is storage. Retrieving ..."
                 doc = it.retrieve(identifier)
             }
         }
@@ -54,16 +56,16 @@ class Whelk extends BasicWhelk {
         //def response = index.find(this.name, "marc21", identifier)
         def doc = null
         components.each {
-            println "Looping component ${it.class.name}"
+            log.debug "Looping component ${it.class.name}"
             if (it instanceof Index) {
-                println "Is index. Searching ..."
+                log.debug "Is index. Searching ..."
                 doc = it.find(query)
                 if (doc != null) {
-                    println "Found a ${doc.class.name}"
+                    log.debug "Found a ${doc.class.name}"
                 }
             }
         }
-        println "Located document from elastic search"
+        log.debug "Located document from elastic search"
         return doc
     }
 }
