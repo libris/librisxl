@@ -8,6 +8,7 @@ import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.basic.BasicWhelk
 
 import se.kb.libris.conch.component.*
+import se.kb.libris.conch.data.*
 
 @Log
 class Whelk extends BasicWhelk {
