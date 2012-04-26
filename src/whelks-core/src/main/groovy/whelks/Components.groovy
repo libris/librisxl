@@ -63,7 +63,7 @@ class DiskStorage implements Storage {
         def filename = u.toString()
         File f = new File("$storageDir/$filename")
         try {
-            return new MyDocument(filename).withData(f.text.getBytes('UTF-8'))
+            return new MyDocument(filename).withData(f.text.getBytes())
         } catch (FileNotFoundException fnfe) {
             return null
         }

@@ -71,7 +71,7 @@ class ElasticSearch implements Index {
         def dict = determineIndexAndType(uri)
         GetResponse response = client.prepareGet(dict['index'], dict['type'], dict['id']).execute().actionGet()
         if (response.exists()) {
-            return new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes('UTF-8'))
+            return new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes())
         }
         return null
     }
@@ -98,7 +98,6 @@ class ElasticSearchClient extends ElasticSearch {
         client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("127.0.0.1", 9200))
     }
 } 
-
 
 @Log
 class ElasticSearchNode extends ElasticSearch {
