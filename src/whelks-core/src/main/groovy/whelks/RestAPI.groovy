@@ -120,7 +120,6 @@ class DocumentRestlet extends WhelkRestlet {
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
             def d = whelk.retrieve(path)
-            println "D ${d}"
             if (d == null) {
                 Map<String, String> responsemap = new HashMap<String, String>()
                 Gson gson = new Gson()
@@ -129,7 +128,6 @@ class DocumentRestlet extends WhelkRestlet {
                 responsemap.put("reason", reason)
                 response.setEntity(gson.toJson(responsemap), MediaType.APPLICATION_JSON) 
             } else {
-                println "D.data\n${d.data}"
                 response.setEntity(new String(d.data), MediaType.APPLICATION_JSON)
             }
         }

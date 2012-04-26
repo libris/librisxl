@@ -22,7 +22,7 @@ import se.kb.libris.conch.data.MyDocument
 import se.kb.libris.conch.component.*
 
 @Log
-class ElasticSearch implements Index, Storage {
+class ElasticSearch implements Index {
 
     Whelk whelk
     Client client
