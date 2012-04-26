@@ -12,7 +12,6 @@ import se.kb.libris.conch.component.*
 
 class MyDocument extends BasicDocument {
     URI identifier
-    def type
 
     MyDocument() {
         generate_identifier()
@@ -23,9 +22,6 @@ class MyDocument extends BasicDocument {
     }
     MyDocument(String uri) {
         this.identifier = new URI(uri)
-    }
-
-    def generate_identifier() {
     }
 }
 

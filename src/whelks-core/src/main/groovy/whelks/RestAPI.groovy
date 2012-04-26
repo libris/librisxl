@@ -1,5 +1,7 @@
 package se.kb.libris.conch
 
+import groovy.util.logging.Slf4j as Log
+
 import org.restlet.Application
 import org.restlet.Context
 import org.restlet.Restlet
@@ -21,6 +23,7 @@ import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.conch.*
 import se.kb.libris.conch.component.*
 
+@Log
 class ServiceApplication extends Application {
 
     boolean allowCORS = true
@@ -65,60 +68,14 @@ class ServiceApplication extends Application {
                 if (request.method == Method.POST) {
                     // Handle uploaded unnamed document
                 }
-                response.setEntity("Try a URI for a document, or /_find?q=query to search", MediaType.TEXT_PLAIN)
+                response.setEntity("Try a URI for a document, or ${request.rootRef}/_find?q=query to search", MediaType.TEXT_PLAIN)
             }
         })
 
         //router.attach("/{path}/_find", new SearchRestlet(whelk))
         router.attach("/_find", searchRestlet)
         router.attach("{path}", docRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
-
-        /*
-
-        router.attach("/",
-        new Redirector(ctx, "{rh}/ui/", Redirector.MODE_CLIENT_SEE_OTHER))
-        router.attach("/ui",
-        new Redirector(ctx, "{rh}/ui/", Redirector.MODE_CLIENT_SEE_OTHER))
-
-        router.attach("/collector", new Finder(ctx, RDFLoaderHandler))
-
-        router.attach("/view", new SparqlTreeRouter(ctx, components.repository))
-
-        router.attach("/var/terms",
-        new DataFinder(ctx, components.repository,
-        components.jsonLdSettings, components.dataAppBaseUri + "var/terms",
-        "/sparql/construct_terms.rq"))
-
-        router.attach("/var/common",
-        new DataFinder(ctx, components.repository,
-        components.jsonLdSettings, components.dataAppBaseUri + "var/common",
-        "/sparql/construct_common.rq"))
-
-        router.attach("/{path}/data",
-        new DataFinder(ctx, components.repository,
-        components.jsonLdSettings, components.dataAppBaseUri,
-        "/sparql/construct_relrev_data.rq")
-        ).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
-
-        router.attach("/{path}/index",
-        new DataFinder(ctx, components.repository,
-        components.jsonLdSettings, components.dataAppBaseUri,
-        "/sparql/construct_summary.rq")
-        ).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
-
-        if (components.elasticQuery) {
-            router.attach("/-/{docType}",
-            new ElasticFinder(ctx, components.elasticQuery))
-        }
-
-        if (mediaDirUrl) {
-            router.attach("/json-ld/", new Directory(ctx, "clap:///json-ld/"))
-            router.attach("/css/", new Directory(ctx, mediaDirUrl + "css/"))
-            router.attach("/img/", new Directory(ctx, mediaDirUrl + "img/"))
-            router.attach("/js/", new Directory(ctx, mediaDirUrl + "js/"))
-            router.attach("/ui", new Directory(ctx, mediaDirUrl + "ui"))
-        }
-        */
+        
         return router
     }
 }
@@ -131,17 +88,17 @@ abstract class WhelkRestlet extends Restlet {
     }
 }
 
+@Log
 class SearchRestlet extends WhelkRestlet {  
 
     SearchRestlet(Whelk whelk) {
         super(whelk)
-        println "Instantiating SearchRestlet"
     }
 
     def void handle(Request request, Response response) {  
-        println "Root ref: ${request.rootRef}"
-        println "Request path: ${request.originalRef.path}"
-        println "Request path: ${request.resourceRef.remainingPart}"
+        log.debug "Root ref: ${request.rootRef}"
+        log.debug "Request path: ${request.originalRef.path}"
+        log.debug "Request path: ${request.resourceRef.remainingPart}"
         def path = request.resourceRef.path
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
         def r = whelk.find(query.get("q"))
@@ -150,17 +107,17 @@ class SearchRestlet extends WhelkRestlet {
 }
 
 
+@Log
 class DocumentRestlet extends WhelkRestlet {  
 
     DocumentRestlet(Whelk whelk) {
         super(whelk)
-        println "Instantiating DocumentRestlet"
     }
 
     def void handle(Request request, Response response) {  
         final String path = request.attributes["path"]
         if (request.method == Method.GET) {
-            println "Request path: ${path}"
+            log.debug "Request path: ${path}"
             def d = whelk.retrieve(path)
             if (d == null) {
                 Map<String, String> responsemap = new HashMap<String, String>()

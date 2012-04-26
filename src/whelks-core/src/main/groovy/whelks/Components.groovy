@@ -1,5 +1,7 @@
 package se.kb.libris.conch.component
 
+import groovy.util.logging.Slf4j as Log
+
 import se.kb.libris.whelks.Document
 import se.kb.libris.conch.*
 
@@ -16,6 +18,7 @@ interface Index extends Component {
     def find(def query)
 }
 
+@Log
 class DiskStorage implements Storage {
     def storageDir = "./storage/"
     Whelk whelk
@@ -33,7 +36,7 @@ class DiskStorage implements Storage {
     def setWhelk(Whelk w) { this.whelk = w }
 
     def init() {
-        println "Making sure directory $storageDir exists ..."
+        log.debug "Making sure directory $storageDir exists ..."
         new File(storageDir).mkdirs()
     }
 
@@ -44,10 +47,10 @@ class DiskStorage implements Storage {
 
     def add(Document d) {
         def filename = (d.identifier ? d.identifier.toString() : _create_filename())
-        println "${this.class.name} storing file $filename in $storageDir"
+        log.debug "${this.class.name} storing file $filename in $storageDir"
         def fullpath = storageDir + "/" + filename
         def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
-        println "PATH: $path"
+        log.debug "PATH: $path"
         new File(path).mkdirs()
         File file = new File("$storageDir/$filename")
         file.write(new String(d.data))
