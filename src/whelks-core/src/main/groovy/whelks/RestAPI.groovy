@@ -97,9 +97,6 @@ class SearchRestlet extends WhelkRestlet {
     }
 
     def void handle(Request request, Response response) {  
-        log.debug "Root ref: ${request.rootRef}"
-        log.debug "Request path: ${request.originalRef.path}"
-        log.debug "Request path: ${request.resourceRef.remainingPart}"
         def path = request.resourceRef.path
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
         def r = whelk.find(query.get("q"))
@@ -124,8 +121,7 @@ class DocumentRestlet extends WhelkRestlet {
                 Map<String, String> responsemap = new HashMap<String, String>()
                 Gson gson = new Gson()
                 responsemap.put("status", "error")
-                def reason = "No document with identifier ${path}"
-                responsemap.put("reason", reason)
+                responsemap.put("reason", "No document with identifier " + path)
                 response.setEntity(gson.toJson(responsemap), MediaType.APPLICATION_JSON) 
             } else {
                 response.setEntity(new String(d.data), MediaType.APPLICATION_JSON)
@@ -136,9 +132,9 @@ class DocumentRestlet extends WhelkRestlet {
             try {
                 def doc
                 if (path == "/") {
-                    doc = new MyDocument().withData(upload.getBytes('UTF-8'))
+                    doc = new MyDocument().withData(upload.getBytes())
                 } else {
-                    doc = new MyDocument(path).withData(upload.getBytes('UTF-8'))
+                    doc = new MyDocument(path).withData(upload.getBytes())
                 }
                 def identifier = whelk.ingest(doc)
                     response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
