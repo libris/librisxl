@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.conch.*
+import se.kb.libris.conch.data.*
 
 interface Component {
     def setWhelk(Whelk w)

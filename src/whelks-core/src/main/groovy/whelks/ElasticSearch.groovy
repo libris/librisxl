@@ -3,6 +3,7 @@ package se.kb.libris.conch.component
 import groovy.util.logging.Slf4j as Log
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
+import org.elasticsearch.action.get.GetResponse
 import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.action.search.SearchType
@@ -17,6 +18,7 @@ import static org.elasticsearch.node.NodeBuilder.*
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.conch.Whelk
+import se.kb.libris.conch.data.MyDocument
 import se.kb.libris.conch.component.*
 
 @Log
@@ -67,6 +69,11 @@ class ElasticSearch implements Index, Storage {
 
     def retrieve(URI uri) {
         def dict = determineIndexAndType(uri)
+        GetResponse response = client.prepareGet(dict['index'], dict['type'], dict['id']).execute().actionGet()
+        if (response.exists()) {
+            return new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes('UTF-8'))
+        }
+        return null
     }
 
     def find(def query) {
@@ -81,7 +88,6 @@ class ElasticSearch implements Index, Storage {
         log.debug "Total hits: ${response.hits.totalHits}"
         return response.toString()
     }
-
 }
 
 @Log
