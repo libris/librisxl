@@ -16,6 +16,8 @@ import org.elasticsearch.node.NodeBuilder
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
 
+import com.google.gson.Gson
+
 import se.kb.libris.whelks.Document
 import se.kb.libris.conch.Whelk
 import se.kb.libris.conch.data.MyDocument
@@ -35,13 +37,27 @@ class ElasticSearch implements Index, Storage {
         log.debug "Indexing document ..."
         def dict = determineIndexAndType(d.identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
-        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(d.data).execute().actionGet()
+        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(_wrap_data(d)).execute().actionGet()
         log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         def iresp = [:]
         iresp['id'] = response.id
         iresp['index'] = response.index
         iresp['type'] = response.type
         return iresp
+    }
+
+    /**
+     * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
+     */
+    def _wrap_data(doc) {
+        def docrepr = [:]
+        Gson gson = new Gson()
+        docrepr['data'] = new String(doc.data)
+        println "DATA:\n" + docrepr['data'] + "-------------\n"
+        docrepr['identifier'] = doc.identifier
+        String json = gson.toJson(docrepr)
+        println "GSON JSON:\n$json"
+        return json.getBytes()
     }
 
     def determineIndexAndType(URI uri) {

@@ -22,7 +22,30 @@ class Whelk extends BasicWhelk {
     }
 
     def ingest(String docString) {
+        MyDocument d = new MyDocument(generate_identifier()).withData(docString.getBytes())
+        ingest(d)
+    }
 
+    def generate_identifier() {
+        def uri = _create_random_URI()
+        while (has_identifier(uri)) {
+            uri = _create_random_URI()
+        }
+        return uri
+    }
+
+    def has_identifier(uri) {
+        // TODO: implement properly
+        return false
+    }
+
+    def _create_random_URI() {
+        def generator = { String alphabet, int n ->
+            new Random().with {
+                (1..n).collect { alphabet[ nextInt( alphabet.length() ) ] }.join()
+            }
+        }
+        return new URI("/" + this.name + "/" + generator( (('A'..'Z')+('a'..'z')+('0'..'9')).join(), 8 ))
     }
 
     def addComponent(Component c) {
@@ -30,7 +53,7 @@ class Whelk extends BasicWhelk {
         this.components.add(c)
     }
 
-    def ingest(MyDocument d) {
+    def ingest(Document d) {
         def responses = [:]
         components.each {
             responses.put(it.class.name, it.add(d))

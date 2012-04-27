@@ -18,6 +18,10 @@ jar {
     }
 }
 
+test {
+    include "**/*Test.class"
+}
+
 task depjar(type: Jar, dependsOn: jar) {
     archiveName = "dependencies.jar"
     dependsOn configurations.runtime
