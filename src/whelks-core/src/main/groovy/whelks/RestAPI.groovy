@@ -8,11 +8,13 @@ import org.restlet.Restlet
 import org.restlet.Request
 import org.restlet.Response
 import org.restlet.Server
+import org.restlet.data.Disposition
 import org.restlet.data.Form
 import org.restlet.data.MediaType
 import org.restlet.data.Method
 import org.restlet.data.Protocol
 import org.restlet.data.Status
+import org.restlet.representation.Representation
 import org.restlet.routing.Router
 import org.restlet.routing.Variable
 import org.restlet.ext.servlet.ServerServlet
@@ -129,7 +131,17 @@ class DocumentRestlet extends WhelkRestlet {
             }
         }
         else if (request.method == Method.PUT || request.method == Method.POST) {
+            Representation r = request.entity
+            Disposition d = r.disposition
+            if (d != null) {
+                println "Filename: ${d.filename}"
+                println "Type: ${d.type}"
+            }
+                println "Size: ${r.size}"
+            //def is = r.stream
+
             def upload = request.entityAsText
+            println "UPLOAD:\n" + upload + "\n--------------------"
             try {
                 def doc
                 if (path == "/") {

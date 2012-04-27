@@ -5,10 +5,6 @@ import se.kb.libris.whelks.basic.BasicDocument
 class MyDocument extends BasicDocument {
     URI identifier
 
-    MyDocument() {
-        generate_identifier()
-    }
-
     MyDocument(URI uri) {
         this.identifier = uri
     }
