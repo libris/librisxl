@@ -137,17 +137,22 @@ class DocumentRestlet extends WhelkRestlet {
                 println "Filename: ${d.filename}"
                 println "Type: ${d.type}"
             }
-                println "Size: ${r.size}"
-            //def is = r.stream
+            println "Size: ${r.size}"
+            def is = r.stream
+            byte[] data = new byte[r.size]
+            int i = 0
+            is.eachByte { b ->
+                data[i++] = b
+            }
 
-            def upload = request.entityAsText
+            def upload = new String(data)
             println "UPLOAD:\n" + upload + "\n--------------------"
             try {
                 def doc
                 if (path == "/") {
-                    doc = new MyDocument().withData(upload.getBytes())
+                    doc = new MyDocument().withData(data)
                 } else {
-                    doc = new MyDocument(path).withData(upload.getBytes())
+                    doc = new MyDocument(path).withData(data)
                 }
                 def identifier = whelk.ingest(doc)
                     response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
@@ -156,22 +161,4 @@ class DocumentRestlet extends WhelkRestlet {
             }
         }
     }
-
-    def correctPath(Request req) {
-
-    }
-
-    /*
-    static main(args) {
-        Whelk w = new Whelk("whelk")
-
-        w.addComponent(new DiskStorage())
-        w.addComponent(new ElasticSearchNode())
-
-        RestAPI api = new RestAPI(w)
-        //
-        // Create the HTTP server and listen on port 8182  
-        new Server(Protocol.HTTP, 8182, api).start()
-    }
-    */
 }  
