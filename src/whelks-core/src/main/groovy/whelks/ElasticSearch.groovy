@@ -17,6 +17,8 @@ import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
 
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import com.google.gson.JsonObject
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.conch.Whelk
@@ -50,14 +52,31 @@ class ElasticSearch implements Index, Storage {
      * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
      */
     def _wrap_data(doc) {
-        def docrepr = [:]
         Gson gson = new Gson()
-        docrepr['data'] = new String(doc.data)
-        println "DATA:\n" + docrepr['data'] + "-------------\n"
-        docrepr['identifier'] = doc.identifier
-        String json = gson.toJson(docrepr)
-        println "GSON JSON:\n$json"
-        return json.getBytes()
+        if (!_is_json(new String(doc.data))) {
+            def docrepr = [:]
+            docrepr['data'] = new String(doc.data)
+            docrepr['identifier'] = doc.identifier
+            String json = gson.toJson(docrepr)
+            return json.getBytes()
+        } else {
+            JsonObject mainData = gson.fromJson(new String(doc.data), JsonObject.class)
+            JsonObject newData = new JsonObject()
+            newData.add("data", mainData)
+            newData.addProperty("identifier", doc.identifier.toString())
+            //return gson.toJson(newData)
+            return doc.data
+        }
+    }
+
+    def _is_json(def data) {
+        Gson gson = new Gson()
+        try {
+            gson.fromJson(data, Object.class)
+        } catch (JsonSyntaxException jse) {
+            return false
+        }
+        return true
     }
 
     def determineIndexAndType(URI uri) {
