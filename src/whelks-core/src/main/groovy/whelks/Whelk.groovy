@@ -9,10 +9,11 @@ import se.kb.libris.whelks.basic.BasicWhelk
 
 import se.kb.libris.conch.component.*
 import se.kb.libris.conch.data.*
+import se.kb.libris.conch.plugin.*
 
 @Log
 class Whelk extends BasicWhelk {
-    private def components = []
+    private def plugins = []
     def name
 
     def Whelk(name) {this.name = name}
@@ -48,15 +49,28 @@ class Whelk extends BasicWhelk {
         return new URI("/" + this.name + "/" + generator( (('A'..'Z')+('a'..'z')+('0'..'9')).join(), 8 ))
     }
 
-    def addComponent(Component c) {
-        c.setWhelk(this)
-        this.components.add(c)
+    def addPlugin(Plugin p) {
+        p.setWhelk(this)
+        this.plugins.add(p)
+        
+    }
+
+    def getApis() {
+        def apis = []
+        plugins.each {
+            if (it instanceof API) {
+                apis.add(it)
+            }
+        }
+        return apis
     }
 
     def ingest(Document d) {
         def responses = [:]
-        components.each {
-            responses.put(it.class.name, it.add(d))
+        plugins.each {
+            if (it instanceof Component) {
+                responses.put(it.class.name, it.add(d))
+            }
         }
         return responses
     }
@@ -66,10 +80,9 @@ class Whelk extends BasicWhelk {
             identifier = new URI(identifier)
         }
         def doc = null
-        components.each {
-            log.debug "Looping component ${it.class.name}"
+        plugins.each {
             if (it instanceof Storage) {
-                log.debug "Is storage. Retrieving ..."
+                log.debug "${it.class.name} is storage. Retrieving ..."
                 doc = it.retrieve(identifier)
             }
         }
@@ -77,13 +90,12 @@ class Whelk extends BasicWhelk {
     }
 
     def find(query) {
-        //def response = index.find(this.name, "marc21", identifier)
         def doc = null
-        components.each {
+        plugins.each {
             log.debug "Looping component ${it.class.name}"
             if (it instanceof Index) {
                 log.debug "Is index. Searching ..."
-                doc = it.find(query)
+                doc = it.find(query, this.name)
                 if (doc != null) {
                     log.debug "Found a ${doc.class.name}"
                 }
