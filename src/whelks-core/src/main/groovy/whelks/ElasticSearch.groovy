@@ -128,7 +128,7 @@ class ElasticSearch implements Index, Storage {
         return null
     }
 
-    def find(def query, def index) {
+    def find(def query, def index, def raw = false) {
         log.debug "Doing query on $query"
         SearchResponse response = client.prepareSearch(index)
         .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
@@ -138,7 +138,18 @@ class ElasticSearch implements Index, Storage {
         .execute()
         .actionGet()
         log.debug "Total hits: ${response.hits.totalHits}"
-        return response.toString()
+        def hits = new StringBuilder()
+        response.hits.hits.eachWithIndex() { it, i ->
+            if (i > 0) { hits << "," }
+            hits << new String(it.source())
+        }
+        if (response.hits.totalHits() > 1) {
+            hits = hits.insert(0,"[")
+            hits = hits.append("]")
+        }
+        
+        return hits.toString()
+        //return response.toString()
     }
 }
 
