@@ -60,13 +60,24 @@ class ElasticSearch implements Index, Storage {
             String json = gson.toJson(docrepr)
             return json.getBytes()
         } else {
-            JsonObject mainData = gson.fromJson(new String(doc.data), JsonObject.class)
-            JsonObject newData = new JsonObject()
-            newData.add("data", mainData)
-            newData.addProperty("identifier", doc.identifier.toString())
-            //return gson.toJson(newData)
+            /*
+            def jsonmap = [:]
+            jsonmap['identifier'] = '"' + doc.identifier.toString() + '"'
+            jsonmap['data'] = new String(doc.data)
+            return _assemble_json_map(jsonmap)
+            */
             return doc.data
         }
+    }
+
+    def _assemble_json_map(jsonmap) {
+        def jsondata = new StringBuffer("{")
+        jsonmap.eachWithIndex() { it, i ->
+            if (i > 0) { jsondata << ","}
+            jsondata << '"' + it.key + '": ' + it.value
+        }
+        jsondata << "}"
+        return jsondata.toString().getBytes()
     }
 
     def _is_json(def data) {
@@ -104,16 +115,22 @@ class ElasticSearch implements Index, Storage {
 
     def retrieve(URI uri) {
         def dict = determineIndexAndType(uri)
-        GetResponse response = client.prepareGet(dict['index'], dict['type'], dict['id']).execute().actionGet()
+        GetResponse response 
+        try {
+            response = client.prepareGet(dict['index'], dict['type'], dict['id']).execute().actionGet()
+            println "Got response ${response.class.name}"
+        } catch (Exception e) {
+            log.error("Exception", e)
+        }
         if (response.exists()) {
             return new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes())
         }
         return null
     }
 
-    def find(def query) {
+    def find(def query, def index) {
         log.debug "Doing query on $query"
-        SearchResponse response = client.prepareSearch(this.whelk.name)
+        SearchResponse response = client.prepareSearch(index)
         .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
         .setQuery(queryString(query))
         //.setFrom(0).setSize(60)
@@ -129,8 +146,10 @@ class ElasticSearch implements Index, Storage {
 class ElasticSearchClient extends ElasticSearch {
 
     def ElasticSearchClient() {
-        log.debug "Connecting to localhost:9200"
-        client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("127.0.0.1", 9200))
+        log.debug "Connecting to devdb.libris.kb.se:9300"
+        client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("193.10.75.219", 9300))
+        //client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("127.0.0.1", 9200))
+        log.debug("... connected")
     }
 } 
 

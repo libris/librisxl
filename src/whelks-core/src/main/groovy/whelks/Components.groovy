@@ -5,9 +5,10 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.Document
 import se.kb.libris.conch.*
 import se.kb.libris.conch.data.*
+import se.kb.libris.conch.plugin.*
 
-interface Component {
-    def setWhelk(Whelk w)
+
+interface Component extends Plugin {
     def add(Document d)
     def retrieve(URI u)
 }
@@ -16,7 +17,7 @@ interface Storage extends Component {
 }
 
 interface Index extends Component {
-    def find(def query)
+    def find(def query, def index)
 }
 
 @Log

@@ -23,21 +23,28 @@ import com.google.gson.Gson
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.conch.*
-import se.kb.libris.conch.data.*
 import se.kb.libris.conch.component.*
+import se.kb.libris.conch.data.*
+import se.kb.libris.conch.plugin.*
 
 @Log
 class ServiceApplication extends Application {
 
     boolean allowCORS = true
-    Whelk whelk
+    def whelks = []
 
     ServiceApplication(Context parentContext) {
         super(parentContext)
-        whelk = new Whelk("whelk")
+        def bibwhelk = new Whelk("bib")
+        def authwhelk = new Whelk("author")
         // Try using only ElasticSearch as storage
         //whelk.addComponent(new DiskStorage())
-        whelk.addComponent(new ElasticSearchNode())
+        def es = new ElasticSearchClient()
+        // Using same es backend for both whelks
+        bibwhelk.addPlugin(es)
+        authwhelk.addPlugin(es)
+        whelks.add(bibwhelk)
+        whelks.add(authwhelk)
     }
 
     @Override
@@ -64,8 +71,8 @@ class ServiceApplication extends Application {
             }
         }*/
 
-        def docRestlet = new DocumentRestlet(whelk)
-        def searchRestlet = new SearchRestlet(whelk)
+        def docRestlet = new DocumentRestlet(whelks)
+        def searchRestlet = new SearchRestlet(whelks)
 
         router.attach("/", new Restlet() {
             void handle(Request request, Response response) {
@@ -76,8 +83,15 @@ class ServiceApplication extends Application {
             }
         })
 
-        //router.attach("/{path}/_find", new SearchRestlet(whelk))
+        /*
+        whelk.apis.each {
+            log.debug("Attaching ${it.class.name}")
+            router.attach(it.path, it)
+        }
+        */
+        // TODO: implement index-specific search
         router.attach("/_find", searchRestlet)
+        router.attach("/{path}/_find", searchRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
         router.attach("{path}", docRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
         
         return router
@@ -85,41 +99,51 @@ class ServiceApplication extends Application {
 }
 
 abstract class WhelkRestlet extends Restlet {
-    def whelk
+    def whelks = [:]
 
-    WhelkRestlet(def whelk) {
-        this.whelk = whelk
+    WhelkRestlet(whelks) {
+        whelks.each {
+            this.whelks[it.name] = it
+        }
     }
+
 }
 
 @Log
 class SearchRestlet extends WhelkRestlet {  
 
-    SearchRestlet(Whelk whelk) {
-        super(whelk)
+    SearchRestlet(whelks) {
+        super(whelks)
     }
 
     def void handle(Request request, Response response) {  
-        def path = request.resourceRef.path
+        final String path = request.attributes["path"]
+        println "SearchRestlet with path $path"
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def r = whelk.find(query.get("q"))
+        def r
+        if (path) {
+            def whelkname = (path.contains('/') ? path.substring(0, path.indexOf('/')) : path)
+            r = whelks[whelkname].find(query.get("q"))
+        } else {
+            r = whelks['bib'].find(query.get("q"))
+        }
         response.setEntity(r, MediaType.APPLICATION_JSON)
     }
 }
 
 
 @Log
-class DocumentRestlet extends WhelkRestlet {  
+class DocumentRestlet extends WhelkRestlet {
 
-    DocumentRestlet(Whelk whelk) {
-        super(whelk)
+    DocumentRestlet(whelks) {
+        super(whelks)
     }
 
     def void handle(Request request, Response response) {  
         final String path = request.attributes["path"]
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
-            def d = whelk.retrieve(path)
+            def d = whelks['bib'].retrieve(path)
             if (d == null) {
                 Map<String, String> responsemap = new HashMap<String, String>()
                 Gson gson = new Gson()
@@ -154,8 +178,8 @@ class DocumentRestlet extends WhelkRestlet {
                 } else {
                     doc = new MyDocument(path).withData(data)
                 }
-                def identifier = whelk.ingest(doc)
-                    response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
+                def identifier = whelks['bib'].ingest(doc)
+                response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {
                 response.setEntity(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
             }
