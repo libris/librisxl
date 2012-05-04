@@ -25,6 +25,8 @@ import se.kb.libris.conch.Whelk
 import se.kb.libris.conch.data.MyDocument
 import se.kb.libris.conch.component.*
 
+import static se.kb.libris.conch.Tools.*
+
 @Log
 class ElasticSearch implements Index, Storage {
 
@@ -57,6 +59,7 @@ class ElasticSearch implements Index, Storage {
             def docrepr = [:]
             docrepr['data'] = new String(doc.data)
             docrepr['identifier'] = doc.identifier
+            docrepr['contenttype'] = (doc.contentType == null ? contentType(doc.data) : doc.contentType)
             String json = gson.toJson(docrepr)
             return json.getBytes()
         } else {
@@ -113,7 +116,7 @@ class ElasticSearch implements Index, Storage {
         return dict
     }
 
-    def retrieve(URI uri) {
+    def retrieve(URI uri, raw = false) {
         def dict = determineIndexAndType(uri)
         GetResponse response 
         try {
@@ -123,12 +126,27 @@ class ElasticSearch implements Index, Storage {
             log.error("Exception", e)
         }
         if (response.exists()) {
-            return new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes())
+            MyDocument d 
+            def map = response.sourceAsMap()
+            log.debug("Raw mode: ${raw}")
+            if (!raw && map['contenttype'] != "application/json" && map['data']) {
+                map.each {
+                    log.debug(it.key +":" + it.value + " (" + it.value.class.name + ")")
+                }
+                if (!map['contenttype']) {
+                    map['contenttype'] = contentType(map['data'].getBytes())
+                }
+                d = new MyDocument(uri).withData(map['data'].getBytes()).withContentType(map['contenttype'])
+            } else {
+                d = new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes()).withContentType("application/json")
+            }
+
+            return d
         }
         return null
     }
 
-    def find(def query, def index, def raw = false) {
+    def find(query, index, raw = false) {
         log.debug "Doing query on $query"
         SearchResponse response = client.prepareSearch(index)
         .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
@@ -138,18 +156,22 @@ class ElasticSearch implements Index, Storage {
         .execute()
         .actionGet()
         log.debug "Total hits: ${response.hits.totalHits}"
-        def hits = new StringBuilder()
-        response.hits.hits.eachWithIndex() { it, i ->
-            if (i > 0) { hits << "," }
-            hits << new String(it.source())
+        log.debug("Raw mode: ${raw}")
+        if (raw) {
+            return response.toString()
+        } else {
+            def hits = new StringBuilder()
+            response.hits.hits.eachWithIndex() { it, i ->
+                if (i > 0) { hits << "," }
+                hits << new String(it.source())
+            }
+            if (response.hits.totalHits() > 1) {
+                hits = hits.insert(0,"[")
+                hits = hits.append("]")
+            }
+
+            return hits.toString()
         }
-        if (response.hits.totalHits() > 1) {
-            hits = hits.insert(0,"[")
-            hits = hits.append("]")
-        }
-        
-        return hits.toString()
-        //return response.toString()
     }
 }
 
@@ -158,8 +180,7 @@ class ElasticSearchClient extends ElasticSearch {
 
     def ElasticSearchClient() {
         log.debug "Connecting to devdb.libris.kb.se:9300"
-        client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("193.10.75.219", 9300))
-        //client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("127.0.0.1", 9200))
+        client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("devdb.libris.kb.se", 9300))
         log.debug("... connected")
     }
 } 

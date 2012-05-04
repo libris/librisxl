@@ -98,6 +98,7 @@ class ServiceApplication extends Application {
     }
 }
 
+@Log
 abstract class WhelkRestlet extends Restlet {
     def whelks = [:]
 
@@ -107,6 +108,21 @@ abstract class WhelkRestlet extends Restlet {
         }
     }
 
+    Whelk lookupWhelk(path) {
+        def pathparts = (path == null ? [] : path.split("/"))
+        // No sensible whelk selected. Use the first one (TODO?)
+        if (pathparts.size() <= 2) {
+            def whelk = whelks.values().toList()[0]
+            log.debug("No Whelk specified, using ${whelk.name}")
+            return whelk
+        }
+        def wname = pathparts[1]
+        def whelk = whelks[wname]
+        if (whelk == null) {
+            throw new WhelkRuntimeException("No such Whelk ($wname)")
+        }
+        return whelk
+    }
 }
 
 @Log
@@ -120,14 +136,13 @@ class SearchRestlet extends WhelkRestlet {
         final String path = request.attributes["path"]
         println "SearchRestlet with path $path"
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def r
-        if (path) {
-            def whelkname = (path.contains('/') ? path.substring(0, path.indexOf('/')) : path)
-            r = whelks[whelkname].find(query.get("q"))
-        } else {
-            r = whelks['bib'].find(query.get("q"))
+        boolean _raw = (query['_raw'] == 'true')
+        try {
+            def r = lookupWhelk(path).find(query.get("q"), _raw)
+            response.setEntity(r, MediaType.APPLICATION_JSON)
+        } catch (WhelkRuntimeException wrte) {
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
         }
-        response.setEntity(r, MediaType.APPLICATION_JSON)
     }
 }
 
@@ -139,19 +154,17 @@ class DocumentRestlet extends WhelkRestlet {
         super(whelks)
     }
 
+
     def void handle(Request request, Response response) {  
-        final String path = request.attributes["path"]
+        String path = request.attributes["path"]
+        boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
-            def d = whelks['bib'].retrieve(path)
-            if (d == null) {
-                Map<String, String> responsemap = new HashMap<String, String>()
-                Gson gson = new Gson()
-                responsemap.put("status", "error")
-                responsemap.put("reason", "No document with identifier " + path)
-                response.setEntity(gson.toJson(responsemap), MediaType.APPLICATION_JSON) 
-            } else {
-                response.setEntity(new String(d.data), MediaType.APPLICATION_JSON)
+            try {
+                def d = lookupWhelk(path).retrieve(path, _raw)
+                response.setEntity(new String(d.data), new MediaType(d.contentType))
+            } catch (WhelkRuntimeException wrte) {
+                response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
             }
         }
         else if (request.method == Method.PUT || request.method == Method.POST) {
@@ -162,6 +175,7 @@ class DocumentRestlet extends WhelkRestlet {
                 println "Type: ${d.type}"
             }
             println "Size: ${r.size}"
+            println "Mediatype: ${r.mediaType} " + r.mediaType.toString()
             def is = r.stream
             byte[] data = new byte[r.size]
             int i = 0
@@ -181,7 +195,7 @@ class DocumentRestlet extends WhelkRestlet {
                 def identifier = whelks['bib'].ingest(doc)
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {
-                response.setEntity(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
+                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
             }
         }
     }
