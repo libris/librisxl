@@ -109,7 +109,7 @@ class ElasticSearch implements Index, Storage {
             }
         }
         if (!dict['index']) {
-            dict['index'] = whelk.name
+            dict['index'] = whelk.defaultIndex
         }
         def type = typeelements.join("_")
         dict['type'] = (type ? type : this.defaultType)
@@ -121,7 +121,6 @@ class ElasticSearch implements Index, Storage {
         GetResponse response 
         try {
             response = client.prepareGet(dict['index'], dict['type'], dict['id']).execute().actionGet()
-            println "Got response ${response.class.name}"
         } catch (Exception e) {
             log.error("Exception", e)
         }
@@ -148,13 +147,19 @@ class ElasticSearch implements Index, Storage {
 
     def find(query, index, raw = false) {
         log.debug "Doing query on $query"
-        SearchResponse response = client.prepareSearch(index)
-        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-        .setQuery(queryString(query))
-        //.setFrom(0).setSize(60)
-        .setExplain(true)
-        .execute()
-        .actionGet()
+        def srb 
+        if (index == null) {
+            srb = client.prepareSearch()  
+        } else {
+            srb = client.prepareSearch(index)  
+        }
+        SearchResponse response = srb
+            .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+            .setQuery(queryString(query))
+            //.setFrom(0).setSize(60)
+            .setExplain(true)
+            .execute()
+            .actionGet()
         log.debug "Total hits: ${response.hits.totalHits}"
         log.debug("Raw mode: ${raw}")
         if (raw) {
