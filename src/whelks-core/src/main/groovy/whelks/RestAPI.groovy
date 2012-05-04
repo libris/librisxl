@@ -35,14 +35,18 @@ class ServiceApplication extends Application {
 
     ServiceApplication(Context parentContext) {
         super(parentContext)
+        def allwhelk = new Whelk("all")
+        allwhelk.defaultIndex = null
         def bibwhelk = new Whelk("bib")
         def authwhelk = new Whelk("author")
         // Try using only ElasticSearch as storage
         //whelk.addComponent(new DiskStorage())
         def es = new ElasticSearchClient()
         // Using same es backend for both whelks
+        allwhelk.addPlugin(es)
         bibwhelk.addPlugin(es)
         authwhelk.addPlugin(es)
+        whelks.add(allwhelk)
         whelks.add(bibwhelk)
         whelks.add(authwhelk)
     }
@@ -91,7 +95,7 @@ class ServiceApplication extends Application {
         */
         // TODO: implement index-specific search
         router.attach("/_find", searchRestlet)
-        router.attach("/{path}/_find", searchRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
+        router.attach("{path}/_find", searchRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
         router.attach("{path}", docRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
         
         return router
@@ -110,8 +114,8 @@ abstract class WhelkRestlet extends Restlet {
 
     Whelk lookupWhelk(path) {
         def pathparts = (path == null ? [] : path.split("/"))
-        // No sensible whelk selected. Use the first one (TODO?)
-        if (pathparts.size() <= 2) {
+        if (pathparts.size() < 2) {
+            // No sensible whelk selected. Use the first one (TODO?)
             def whelk = whelks.values().toList()[0]
             log.debug("No Whelk specified, using ${whelk.name}")
             return whelk
@@ -121,6 +125,7 @@ abstract class WhelkRestlet extends Restlet {
         if (whelk == null) {
             throw new WhelkRuntimeException("No such Whelk ($wname)")
         }
+        log.debug("Using Whelk ${whelk.name}")
         return whelk
     }
 }
@@ -146,7 +151,6 @@ class SearchRestlet extends WhelkRestlet {
     }
 }
 
-
 @Log
 class DocumentRestlet extends WhelkRestlet {
 
@@ -154,8 +158,7 @@ class DocumentRestlet extends WhelkRestlet {
         super(whelks)
     }
 
-
-    def void handle(Request request, Response response) {  
+    def void handle(Request request, Response response) {
         String path = request.attributes["path"]
         boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
         if (request.method == Method.GET) {
@@ -192,7 +195,7 @@ class DocumentRestlet extends WhelkRestlet {
                 } else {
                     doc = new MyDocument(path).withData(data)
                 }
-                def identifier = whelks['bib'].ingest(doc)
+                def identifier = lookupWhelk(path).ingest(doc)
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)

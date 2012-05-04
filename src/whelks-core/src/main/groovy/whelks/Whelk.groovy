@@ -16,8 +16,14 @@ import se.kb.libris.conch.plugin.*
 class Whelk extends BasicWhelk {
     private def plugins = []
     def name
+    def defaultIndex
 
     def Whelk(name) {this.name = name}
+
+    def setName(n) {
+        this.name = n
+        this.defaultIndex = n
+    }
 
     def query(def q) {
         log.debug "Whelk ${this.class.name} received query ${q}"
@@ -99,7 +105,7 @@ class Whelk extends BasicWhelk {
             log.debug "Looping component ${it.class.name}"
             if (it instanceof Index) {
                 log.debug "Is index. Searching ..."
-                doc = it.find(query, this.name, raw)
+                doc = it.find(query, this.defaultIndex, raw)
                 if (doc != null) {
                     log.debug "Found a ${doc.class.name}"
                 }
