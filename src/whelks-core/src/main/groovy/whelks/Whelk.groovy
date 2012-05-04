@@ -6,6 +6,7 @@ import java.net.URI
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.basic.BasicWhelk
+import se.kb.libris.whelks.exception.WhelkRuntimeException
 
 import se.kb.libris.conch.component.*
 import se.kb.libris.conch.data.*
@@ -75,7 +76,7 @@ class Whelk extends BasicWhelk {
         return responses
     }
 
-    def retrieve(identifier) {
+    def retrieve(identifier, raw=false) {
         if (identifier instanceof String) {
             identifier = new URI(identifier)
         }
@@ -83,19 +84,22 @@ class Whelk extends BasicWhelk {
         plugins.each {
             if (it instanceof Storage) {
                 log.debug "${it.class.name} is storage. Retrieving ..."
-                doc = it.retrieve(identifier)
+                doc = it.retrieve(identifier, raw)
             }
+        }
+        if (doc == null) {
+            throw new WhelkRuntimeException("Document not found: $identifier")
         }
         return doc
     }
 
-    def find(query) {
+    def find(query, raw = false) {
         def doc = null
         plugins.each {
             log.debug "Looping component ${it.class.name}"
             if (it instanceof Index) {
                 log.debug "Is index. Searching ..."
-                doc = it.find(query, this.name)
+                doc = it.find(query, this.name, raw)
                 if (doc != null) {
                     log.debug "Found a ${doc.class.name}"
                 }
