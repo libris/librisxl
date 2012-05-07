@@ -1,5 +1,6 @@
 package se.kb.libris.conch
 
+import java.util.regex.Pattern 
 import groovy.util.logging.Slf4j as Log
 
 import org.restlet.Application
@@ -44,12 +45,14 @@ class ServiceApplication extends Application {
         def es = new ElasticSearchClient()
         // Using same es backend for all whelks
         allwhelk.addPlugin(es)
-        allwhelk.addPlugin(new SearchAPI())
+        allwhelk.addPlugin(new SearchRestlet())
         authwhelk.addPlugin(es)
         authwhelk.addPlugin(new AutoComplete())
-        authwhelk.addPlugin(new SearchAPI())
+        authwhelk.addPlugin(new SearchRestlet())
+        authwhelk.addPlugin(new DocumentRestlet())
         bibwhelk.addPlugin(es)
-        bibwhelk.addPlugin(new SearchAPI())
+        bibwhelk.addPlugin(new SearchRestlet())
+        bibwhelk.addPlugin(new DocumentRestlet())
         whelks.add(allwhelk)
         whelks.add(bibwhelk)
         whelks.add(authwhelk)
@@ -60,8 +63,6 @@ class ServiceApplication extends Application {
         def ctx = getContext()
         def router = new Router(ctx)
 
-        def docRestlet = new DocumentRestlet()
-        docRestlet.setWhelks(whelks)
 
         router.attach("/", new Restlet() {
             void handle(Request request, Response response) {
@@ -76,7 +77,11 @@ class ServiceApplication extends Application {
         for (whelk in whelks) {
             for (api in whelk.getApis()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
-                router.attach(api.path, new APIWrapper(api))
+                if (api.varPath) {
+                    router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
+                } else {
+                    router.attach(api.path, api)
+                }
             }
         }
 
@@ -86,7 +91,7 @@ class ServiceApplication extends Application {
         router.attach("/_find", searchRestlet)
         router.attach("{path}/_find", searchRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
         */
-        router.attach("{path}", docRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
+        //router.attach("{path}", docRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
         
         return router
     }
@@ -111,44 +116,54 @@ class APIWrapper extends Restlet {
 }
 
 @Log
-abstract class WhelkRestlet extends Restlet {
-    def whelks = [:]
+abstract class BasicWhelkAPI extends Restlet implements API {
+    Whelk whelk
+    def path
+    def pathEnd = ""
 
-    def setWhelks(w) {
-        w.each {
-            this.whelks[it.name] = it
+    @Override
+    def setWhelk(Whelk w) {
+        this.whelk = w 
+        this.path = "/" + (w.defaultIndex == null ? "" : w.defaultIndex) + getModifiedPathEnd()
+    }
+
+    def getModifiedPathEnd() {
+        if (getPathEnd() == null || getPathEnd().length() == 0) {
+            return ""
+        } else {
+            return "/" + getPathEnd()
         }
     }
 
-
-    Whelk lookupWhelk(path) {
-        def pathparts = (path == null ? [] : path.split("/"))
-        if (pathparts.size() < 2) {
-            // No sensible whelk selected. Use the first one (TODO?)
-            def whelk = whelks.values().toList()[0]
-            log.debug("No Whelk specified, using ${whelk.name}")
-            return whelk
-        }
-        def wname = pathparts[1]
-        def whelk = whelks[wname]
-        if (whelk == null) {
-            throw new WhelkRuntimeException("No such Whelk ($wname)")
-        }
-        log.debug("Using Whelk ${whelk.name}")
-        return whelk
+    def getVarPath() {
+        return this.path.matches(Pattern.compile("\\{\\w\\}.+"))
     }
+
 }
 
 @Log
-class DocumentRestlet extends WhelkRestlet {
+class DocumentRestlet extends BasicWhelkAPI {
+
+    def pathEnd = "{path}"
+
+    def _escape_regex(str) {
+        def escaped = new StringBuffer()
+        str.each {
+            if (it == "{" || it == "}") {
+                escaped << "\\"
+            }
+            escaped << it 
+        }
+        return escaped.toString()
+    }
 
     def void handle(Request request, Response response) {
-        String path = request.attributes["path"]
+        String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["path"])
         boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
             try {
-                def d = lookupWhelk(path).retrieve(path, _raw)
+                def d = whelk.retrieve(path, _raw)
                 response.setEntity(new String(d.data), new MediaType(d.contentType))
             } catch (WhelkRuntimeException wrte) {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
@@ -179,7 +194,7 @@ class DocumentRestlet extends WhelkRestlet {
                 } else {
                     doc = new MyDocument(path).withData(data)
                 }
-                def identifier = lookupWhelk(path).ingest(doc)
+                def identifier = this.whelk.ingest(doc)
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
@@ -187,3 +202,39 @@ class DocumentRestlet extends WhelkRestlet {
         }
     }
 }  
+
+@Log
+class SearchRestlet extends BasicWhelkAPI {
+
+    def pathEnd = "_find"
+
+    @Override
+    def void handle(Request request, Response response) {
+        log.debug "SearchRestlet with path $path"
+        def query = request.getResourceRef().getQueryAsForm().getValuesMap()
+        boolean _raw = (query['_raw'] == 'true')
+        try {
+            def r = this.whelk.find(query.get("q"), _raw)
+            response.setEntity(r, MediaType.APPLICATION_JSON)
+        } catch (WhelkRuntimeException wrte) {
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+        }
+    }
+}
+
+@Log 
+class AutoComplete extends BasicWhelkAPI {
+
+    def pathEnd = "_complete"
+
+    @Override
+    def getPath() {
+        def p = super.getPath()
+        return p
+    }
+
+    @Override
+    def action() {  
+        log.debug "Handled by autocomplete"
+    }
+}
