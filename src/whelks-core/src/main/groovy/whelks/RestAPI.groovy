@@ -42,10 +42,14 @@ class ServiceApplication extends Application {
         // Try using only ElasticSearch as storage
         //whelk.addComponent(new DiskStorage())
         def es = new ElasticSearchClient()
-        // Using same es backend for both whelks
+        // Using same es backend for all whelks
         allwhelk.addPlugin(es)
-        bibwhelk.addPlugin(es)
+        allwhelk.addPlugin(new SearchAPI())
         authwhelk.addPlugin(es)
+        authwhelk.addPlugin(new AutoComplete())
+        authwhelk.addPlugin(new SearchAPI())
+        bibwhelk.addPlugin(es)
+        bibwhelk.addPlugin(new SearchAPI())
         whelks.add(allwhelk)
         whelks.add(bibwhelk)
         whelks.add(authwhelk)
@@ -55,28 +59,9 @@ class ServiceApplication extends Application {
     synchronized Restlet createInboundRoot() {
         def ctx = getContext()
         def router = new Router(ctx)
-        /*{
-            @Override
-            void handle(Request request, Response response) {
-                if (allowCORS) {
-                    addCORSHeaders(response)
-                }
-                super.handle(request, response)
-            }
-            private addCORSHeaders(Response response) {
-                def responseHeaders = response.attributes.get("org.restlet.http.headers")
-                if (responseHeaders == null) {
-                    responseHeaders = new Form()
-                    response.attributes.put("org.restlet.http.headers", responseHeaders)
-                }
-                responseHeaders.add("Access-Control-Allow-Origin", "*")
-                responseHeaders.add("Access-Control-Allow-Methods", "GET, POST, PUT")
-                responseHeaders.add("Access-Control-Allow-Credentials", "false")
-            }
-        }*/
 
-        def docRestlet = new DocumentRestlet(whelks)
-        def searchRestlet = new SearchRestlet(whelks)
+        def docRestlet = new DocumentRestlet()
+        docRestlet.setWhelks(whelks)
 
         router.attach("/", new Restlet() {
             void handle(Request request, Response response) {
@@ -87,30 +72,54 @@ class ServiceApplication extends Application {
             }
         })
 
-        /*
-        whelk.apis.each {
-            log.debug("Attaching ${it.class.name}")
-            router.attach(it.path, it)
+        log.debug("Look for suitable APIs to attach")
+        for (whelk in whelks) {
+            for (api in whelk.getApis()) {
+                log.debug("Attaching ${api.class.name} at ${api.path}")
+                router.attach(api.path, new APIWrapper(api))
+            }
         }
-        */
-        // TODO: implement index-specific search
+
+        log.debug("Attaching standard routes")
+
+        /*
         router.attach("/_find", searchRestlet)
         router.attach("{path}/_find", searchRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
+        */
         router.attach("{path}", docRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
         
         return router
     }
 }
 
+@Log 
+class APIWrapper extends Restlet {
+    API api
+
+    APIWrapper(API a) {
+        this.api = a
+    }
+
+    def void handle(Request request, Response response) {  
+        try {
+            response = api.handle(request, response)
+        } catch (WhelkRuntimeException wrte) {
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+        }
+    }
+
+}
+
 @Log
 abstract class WhelkRestlet extends Restlet {
     def whelks = [:]
 
-    WhelkRestlet(whelks) {
-        whelks.each {
+    def setWhelks(w) {
+        w.each {
             this.whelks[it.name] = it
         }
     }
+
 
     Whelk lookupWhelk(path) {
         def pathparts = (path == null ? [] : path.split("/"))
@@ -131,32 +140,7 @@ abstract class WhelkRestlet extends Restlet {
 }
 
 @Log
-class SearchRestlet extends WhelkRestlet {  
-
-    SearchRestlet(whelks) {
-        super(whelks)
-    }
-
-    def void handle(Request request, Response response) {  
-        final String path = request.attributes["path"]
-        println "SearchRestlet with path $path"
-        def query = request.getResourceRef().getQueryAsForm().getValuesMap()
-        boolean _raw = (query['_raw'] == 'true')
-        try {
-            def r = lookupWhelk(path).find(query.get("q"), _raw)
-            response.setEntity(r, MediaType.APPLICATION_JSON)
-        } catch (WhelkRuntimeException wrte) {
-            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
-        }
-    }
-}
-
-@Log
 class DocumentRestlet extends WhelkRestlet {
-
-    DocumentRestlet(whelks) {
-        super(whelks)
-    }
 
     def void handle(Request request, Response response) {
         String path = request.attributes["path"]

@@ -18,7 +18,7 @@ class Whelk extends BasicWhelk {
     def name
     def defaultIndex
 
-    def Whelk(name) {this.name = name}
+    def Whelk(name) { setName(name) }
 
     def setName(n) {
         this.name = n
@@ -56,10 +56,10 @@ class Whelk extends BasicWhelk {
         return new URI("/" + this.name + "/" + generator( (('A'..'Z')+('a'..'z')+('0'..'9')).join(), 8 ))
     }
 
+    @Override
     def addPlugin(Plugin p) {
         p.setWhelk(this)
         this.plugins.add(p)
-        
     }
 
     def getApis() {
