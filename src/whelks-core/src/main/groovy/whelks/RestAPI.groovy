@@ -73,7 +73,7 @@ class ServiceApplication extends Application {
             }
         })
 
-        log.debug("Look for suitable APIs to attach")
+        log.debug("Looking for suitable APIs to attach")
         for (whelk in whelks) {
             for (api in whelk.getApis()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
@@ -85,13 +85,12 @@ class ServiceApplication extends Application {
             }
         }
 
-        log.debug("Attaching standard routes")
 
         /*
         router.attach("/_find", searchRestlet)
         router.attach("{path}/_find", searchRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
+        router.attach("{path}", docRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
         */
-        //router.attach("{path}", docRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
         
         return router
     }
