@@ -1,11 +1,12 @@
-package se.kb.libris.conch.component
+package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.conch.*
-import se.kb.libris.conch.data.*
-import se.kb.libris.conch.plugin.*
+import se.kb.libris.whelks.plugin.Plugin
+
+import se.kb.libris.whelks.Whelk
+import se.kb.libris.conch.data.MyDocument
 
 
 interface Component extends Plugin {
@@ -24,6 +25,7 @@ interface Index extends Component {
 class DiskStorage implements Storage {
     def storageDir = "./storage/"
     Whelk whelk
+    boolean enabled = true
 
     DiskStorage() {
         def env = System.getenv()
@@ -35,7 +37,10 @@ class DiskStorage implements Storage {
         setStorageDir(directoryName)
     }
 
-    def setWhelk(Whelk w) { this.whelk = w }
+    def void setWhelk(se.kb.libris.whelks.Whelk w) { this.whelk = w }
+
+    def void enable() {this.enabled = true}
+    def void disable() {this.enabled = false}
 
     def init() {
         log.debug "Making sure directory $storageDir exists ..."

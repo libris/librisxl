@@ -22,37 +22,42 @@ import org.restlet.ext.servlet.ServerServlet
 import com.google.gson.Gson
 
 import se.kb.libris.whelks.Document
+import se.kb.libris.whelks.component.ElasticSearchClient
 import se.kb.libris.whelks.exception.WhelkRuntimeException
+import se.kb.libris.whelks.Whelk
+import se.kb.libris.conch.data.MyDocument
+/*
 import se.kb.libris.conch.*
 import se.kb.libris.conch.component.*
 import se.kb.libris.conch.data.*
-import se.kb.libris.conch.plugin.*
+*/
+import se.kb.libris.whelks.api.RestAPI
 
 @Log
-class ServiceApplication extends Application {
+class RestManager extends Application {
 
     boolean allowCORS = true
     def whelks = []
 
-    ServiceApplication(Context parentContext) {
+    RestManager(Context parentContext) {
         super(parentContext)
-        def allwhelk = new Whelk("all")
+        def allwhelk = new WhelkImpl("all")
         allwhelk.defaultIndex = null
-        def bibwhelk = new Whelk("bib")
-        def authwhelk = new Whelk("author")
+        def bibwhelk = new WhelkImpl("bib")
+        def authwhelk = new WhelkImpl("author")
         // Try using only ElasticSearch as storage
         //whelk.addComponent(new DiskStorage())
         def es = new ElasticSearchClient()
         // Using same es backend for all whelks
         allwhelk.addPlugin(es)
-        allwhelk.addPlugin(new SearchRestlet())
         authwhelk.addPlugin(es)
-        authwhelk.addPlugin(new AutoComplete())
-        authwhelk.addPlugin(new SearchRestlet())
-        authwhelk.addPlugin(new DocumentRestlet())
         bibwhelk.addPlugin(es)
-        bibwhelk.addPlugin(new SearchRestlet())
-        bibwhelk.addPlugin(new DocumentRestlet())
+        allwhelk.addAPI(new SearchRestlet())
+        authwhelk.addAPI(new AutoComplete())
+        authwhelk.addAPI(new SearchRestlet())
+        authwhelk.addAPI(new DocumentRestlet())
+        bibwhelk.addAPI(new SearchRestlet())
+        bibwhelk.addAPI(new DocumentRestlet())
         whelks.add(allwhelk)
         whelks.add(bibwhelk)
         whelks.add(authwhelk)
@@ -85,22 +90,15 @@ class ServiceApplication extends Application {
             }
         }
 
-
-        /*
-        router.attach("/_find", searchRestlet)
-        router.attach("{path}/_find", searchRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
-        router.attach("{path}", docRestlet).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
-        */
-        
         return router
     }
 }
 
 @Log 
 class APIWrapper extends Restlet {
-    API api
+    RestAPI api
 
-    APIWrapper(API a) {
+    APIWrapper(RestAPI a) {
         this.api = a
     }
 
@@ -111,17 +109,20 @@ class APIWrapper extends Restlet {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
         }
     }
-
 }
 
 @Log
-abstract class BasicWhelkAPI extends Restlet implements API {
+abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     Whelk whelk
     def path
     def pathEnd = ""
+    boolean enabled = true
+    
+    def void enable() {this.enabled = true}
+    def void disable() {this.enabled = false}
 
     @Override
-    def setWhelk(Whelk w) {
+    def void setWhelk(Whelk w) {
         this.whelk = w 
         this.path = "/" + (w.defaultIndex == null ? "" : w.defaultIndex) + getModifiedPathEnd()
     }

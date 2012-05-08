@@ -9,7 +9,7 @@
 
     <context-param>
         <param-name>org.restlet.application</param-name>
-        <param-value>se.kb.libris.conch.ServiceApplication</param-value>
+        <param-value>se.kb.libris.conch.RestManager</param-value>
     </context-param>
     <!--
     <context-param>
