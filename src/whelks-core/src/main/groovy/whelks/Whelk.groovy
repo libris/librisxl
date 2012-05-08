@@ -1,4 +1,4 @@
-package se.kb.libris.conch
+package se.kb.libris.whelks
 
 import groovy.util.logging.Slf4j as Log
 
@@ -12,6 +12,7 @@ import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.Plugin
 
 import se.kb.libris.conch.data.MyDocument
+import se.kb.libris.conch.data.WhelkSearchResult
 /*
 import se.kb.libris.conch.plugin.*
 
@@ -31,13 +32,9 @@ class WhelkImpl extends BasicWhelk {
         this.defaultIndex = n
     }
 
-    def query(def q) {
-        log.debug "Whelk ${this.class.name} received query ${q}"
-    }
-
-    def ingest(String docString) {
+    def URI store(String docString) {
         MyDocument d = new MyDocument(generate_identifier()).withData(docString.getBytes())
-        ingest(d)
+        return store(d)
     }
 
     def generate_identifier() {
@@ -103,6 +100,12 @@ class WhelkImpl extends BasicWhelk {
             throw new WhelkRuntimeException("Document not found: $identifier")
         }
         return doc
+    }
+
+
+    @Override
+    def SearchResult query(String query, QueryType type=QueryType.BOOLEAN, boolean raw = false) {
+        return new WhelkSearchResult(find(query, raw))
     }
 
     def find(query, raw = false) {

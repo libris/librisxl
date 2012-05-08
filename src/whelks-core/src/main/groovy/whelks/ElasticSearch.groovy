@@ -179,7 +179,6 @@ class ElasticSearch implements Index, Storage {
                 hits = hits.insert(0,"[")
                 hits = hits.append("]")
             }
-
             return hits.toString()
         }
     }
