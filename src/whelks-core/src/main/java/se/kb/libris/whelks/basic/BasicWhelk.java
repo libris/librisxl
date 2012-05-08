@@ -22,7 +22,7 @@ public class BasicWhelk implements Whelk, Pluggable {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public SearchResult query(QueryType type, String query) {
+    public SearchResult query(String query, QueryType type) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
