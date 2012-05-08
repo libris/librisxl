@@ -5,20 +5,26 @@ import groovy.util.logging.Slf4j as Log
 import java.net.URI
 
 import se.kb.libris.whelks.Document
+import se.kb.libris.whelks.api.RestAPI
 import se.kb.libris.whelks.basic.BasicWhelk
 import se.kb.libris.whelks.exception.WhelkRuntimeException
+import se.kb.libris.whelks.component.*
+import se.kb.libris.whelks.plugin.Plugin
 
-import se.kb.libris.conch.component.*
-import se.kb.libris.conch.data.*
+import se.kb.libris.conch.data.MyDocument
+/*
 import se.kb.libris.conch.plugin.*
 
+*/
+
 @Log
-class Whelk extends BasicWhelk {
+class WhelkImpl extends BasicWhelk {
     private def plugins = []
+    private def apis = []
     def name
     def defaultIndex
 
-    def Whelk(name) { setName(name) }
+    def WhelkImpl(name) { setName(name) }
 
     def setName(n) {
         this.name = n
@@ -57,19 +63,18 @@ class Whelk extends BasicWhelk {
     }
 
     @Override
-    def addPlugin(Plugin p) {
+    def void addPlugin(Plugin p) {
         p.setWhelk(this)
         this.plugins.add(p)
     }
 
+    def addAPI(RestAPI a) {
+        a.setWhelk(this)
+        this.apis.add(a)
+    }
+
     def getApis() {
-        def apis = []
-        plugins.each {
-            if (it instanceof API) {
-                apis.add(it)
-            }
-        }
-        return apis
+        return this.apis
     }
 
     def ingest(Document d) {

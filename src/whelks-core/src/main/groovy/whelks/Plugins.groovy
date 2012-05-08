@@ -1,23 +1,8 @@
-package se.kb.libris.conch.plugin
+package se.kb.libris.whelks.api
 
-import groovy.util.logging.Slf4j as Log
-
-import org.restlet.Restlet
-import org.restlet.Request
-import org.restlet.Response
-import org.restlet.data.MediaType
-
-import se.kb.libris.conch.Whelk
-import se.kb.libris.whelks.exception.WhelkRuntimeException
+import se.kb.libris.whelks.api.API
 
 
-interface Plugin {
-    def setWhelk(Whelk w)
-}
-interface API extends Plugin {
+interface RestAPI extends API {
     def getPath()
 }
-
-
-
-

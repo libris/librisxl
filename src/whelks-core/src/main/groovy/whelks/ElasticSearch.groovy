@@ -1,4 +1,4 @@
-package se.kb.libris.conch.component
+package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
@@ -21,7 +21,7 @@ import com.google.gson.JsonSyntaxException
 import com.google.gson.JsonObject
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.conch.Whelk
+import se.kb.libris.whelks.Whelk
 import se.kb.libris.conch.data.MyDocument
 import se.kb.libris.conch.component.*
 
@@ -33,9 +33,14 @@ class ElasticSearch implements Index, Storage {
     Whelk whelk
     Client client
 
+    boolean enabled = true
+
     String defaultType = "record"
 
-    def setWhelk(Whelk w) { this.whelk = w }
+    def void setWhelk(Whelk w) { this.whelk = w }
+
+    def void enable() {this.enabled = true}
+    def void disable() {this.enabled = false}
 
     def add(Document d) {
         log.debug "Indexing document ..."
