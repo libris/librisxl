@@ -77,17 +77,18 @@ class WhelkImpl extends BasicWhelk {
         return this.apis
     }
 
-    def ingest(Document d) {
-        def responses = [:]
+    @Override
+    def URI store(Document d) {
         plugins.each {
             if (it instanceof Component) {
-                responses.put(it.class.name, it.add(d))
+                it.add(d)
             }
         }
-        return responses
+        return d.identifier
     }
 
-    def retrieve(identifier, raw=false) {
+    @Override
+    def Document get(identifier, raw=false) {
         if (identifier instanceof String) {
             identifier = new URI(identifier)
         }

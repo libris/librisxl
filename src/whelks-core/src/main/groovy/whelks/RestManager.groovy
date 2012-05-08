@@ -36,7 +36,6 @@ import se.kb.libris.whelks.api.RestAPI
 @Log
 class RestManager extends Application {
 
-    boolean allowCORS = true
     def whelks = []
 
     RestManager(Context parentContext) {
@@ -163,7 +162,7 @@ class DocumentRestlet extends BasicWhelkAPI {
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
             try {
-                def d = whelk.retrieve(path, _raw)
+                def d = whelk.get(path, _raw)
                 response.setEntity(new String(d.data), new MediaType(d.contentType))
             } catch (WhelkRuntimeException wrte) {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
@@ -194,7 +193,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 } else {
                     doc = new MyDocument(path).withData(data)
                 }
-                def identifier = this.whelk.ingest(doc)
+                def identifier = this.whelk.store(doc)
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
