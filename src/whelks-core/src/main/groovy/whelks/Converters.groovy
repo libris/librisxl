@@ -2,8 +2,7 @@ package se.kb.libris.conch.converter
 
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.MarcRecord
-import se.kb.libris.util.marc.io.Iso2709Deserializer
-import se.kb.libris.util.marc.io.StrictIso2709Reader
+import se.kb.libris.util.marc.io.Iso2709MarcRecordReader
 
 class MarcJSONConverter {
 
@@ -26,10 +25,9 @@ class MarcJSONConverter {
     }
 
     static void main(args) {
-        byte[] barr = new File(args[0]).withInputStream {
-            new StrictIso2709Reader(it).readIso2709()
+        MarcRecord record = new File(args[0]).withInputStream {
+            new Iso2709MarcRecordReader(it/*, "utf-8"*/).readRecord()
         }
-        MarcRecord record = Iso2709Deserializer.deserialize(barr)//, "utf-8")
         println toJSONString(record)
     }
 
