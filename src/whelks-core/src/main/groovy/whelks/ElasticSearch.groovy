@@ -2,6 +2,8 @@ package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
+import org.apache.commons.io.output.ByteArrayOutputStream
+
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.get.GetResponse
 import org.elasticsearch.action.index.IndexResponse
@@ -41,11 +43,17 @@ class ElasticSearch implements Index, Storage {
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
+    private ByteArrayOutputStream baos = null
+
     def add(Document d) {
+    }
+
+    def add(byte[] data, URI identifier) {
         log.debug "Indexing document ..."
-        def dict = determineIndexAndType(d.identifier)
+        def dict = determineIndexAndType(identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
-        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(_wrap_data(d)).execute().actionGet()
+        //IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(_wrap_data(data)).execute().actionGet()
+        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(data).execute().actionGet()
         log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         def iresp = [:]
         iresp['id'] = response.id
@@ -58,7 +66,10 @@ class ElasticSearch implements Index, Storage {
      * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
      */
     def _wrap_data(doc) {
-        if (!_is_json(new String(doc.data))) {
+        doc = establishContentType(doc)
+        if (doc.contentType == "application/json") {
+            return doc.data
+        } else {
             Gson gson = new Gson()
             def docrepr = [:]
             docrepr['data'] = new String(doc.data)
@@ -66,29 +77,36 @@ class ElasticSearch implements Index, Storage {
             docrepr['contenttype'] = (doc.contentType == null ? contentType(doc.data) : doc.contentType)
             String json = gson.toJson(docrepr)
             return json.getBytes()
-        } else {
-            return doc.data
         }
     }
 
-    def _assemble_json_map(jsonmap) {
-        def jsondata = new StringBuffer("{")
-        jsonmap.eachWithIndex() { it, i ->
-            if (i > 0) { jsondata << ","}
-            jsondata << '"' + it.key + '": ' + it.value
+    OutputStream getOutputStreamFor(URI identifier, String contentType) {
+        if (! baos ) {
+            baos = new ByteArrayOutputStream() {
+                void close() throws IOException {
+                    //this.super.close()
+                    def data = toByteArray()
+                    println "Received this data:\n" + data
+                    ElasticSearch.this.add(data, identifier)
+                }
+            }
         }
-        jsondata << "}"
-        return jsondata.toString().getBytes()
+        println "Returning pimped OS"
+        return baos
     }
 
-    def _is_json(def data) {
-        Gson gson = new Gson()
-        try {
-            gson.fromJson(data, Object.class)
-        } catch (JsonSyntaxException jse) {
-            return false
-        }
-        return true
+    Document establishContentType(Document doc) {
+        if (doc.contentType == "application/json") {
+            String data = new String(doc.data)
+            Gson gson = new Gson()
+            try {
+                gson.fromJson(data, Object.class)
+                return doc
+            } catch (JsonSyntaxException jse) {
+                log.debug("Document was not appliction/json")
+            }
+        } 
+        return doc.withContentType("text/plain")
     }
 
     def determineIndexAndType(URI uri) {

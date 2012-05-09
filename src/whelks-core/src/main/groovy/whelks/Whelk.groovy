@@ -4,6 +4,9 @@ import groovy.util.logging.Slf4j as Log
 
 import java.net.URI
 
+import org.apache.commons.io.IOUtils
+import org.apache.commons.io.output.TeeOutputStream
+
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.api.RestAPI
 import se.kb.libris.whelks.basic.BasicWhelk
@@ -13,10 +16,6 @@ import se.kb.libris.whelks.plugin.Plugin
 
 import se.kb.libris.conch.data.WhelkDocument
 import se.kb.libris.conch.data.WhelkSearchResult
-/*
-import se.kb.libris.conch.plugin.*
-
-*/
 
 @Log
 class WhelkImpl extends BasicWhelk {
@@ -49,6 +48,10 @@ class WhelkImpl extends BasicWhelk {
         return uri
     }
 
+    boolean isBinaryData(byte[] data) {
+        return true
+    }
+
     def has_identifier(uri) {
         // TODO: implement properly
         return false
@@ -76,6 +79,36 @@ class WhelkImpl extends BasicWhelk {
 
     def getApis() {
         return this.apis
+    }
+
+
+    def getStorages() {
+        def storages = []
+        plugins.each {
+            if (it instanceof Component) {
+                storages << it
+            }
+        }
+        return storages
+    }
+
+    def URI store(URI identifier, String contentType, InputStream is) {
+        log.debug("Storing ${identifier} with ctype $contentType")
+        def combinedOutputStream = null
+        storages.each { 
+            def os = it.getOutputStreamFor(identifier, contentType)
+            if (! combinedOutputStream) {
+                combinedOutputStream = os
+            } else {
+                combinedOutputStream = new TeeOutputStream(combinedOutputStream, os) 
+            }
+        }
+        try {
+            IOUtils.copyLarge(is, combinedOutputStream)
+        } finally {
+            combinedOutputStream.close()
+        }
+        return identifier
     }
 
     @Override
