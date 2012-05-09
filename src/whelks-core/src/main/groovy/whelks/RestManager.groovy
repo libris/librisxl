@@ -160,6 +160,7 @@ class DocumentRestlet extends BasicWhelkAPI {
             log.debug "Request path: ${path}"
             try {
                 def d = whelk.get(path, _raw)
+                println "Got document with ctype: ${d.contentType}"
                 response.setEntity(new String(d.data), new MediaType(d.contentType))
             } catch (WhelkRuntimeException wrte) {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
@@ -174,6 +175,8 @@ class DocumentRestlet extends BasicWhelkAPI {
             }
             println "Size: ${r.size}"
             println "Mediatype: ${r.mediaType} " + r.mediaType.toString()
+
+            /*
             def is = r.stream
             byte[] data = new byte[r.size]
             int i = 0
@@ -182,15 +185,18 @@ class DocumentRestlet extends BasicWhelkAPI {
             }
 
             def upload = new String(data)
+
             println "UPLOAD:\n" + upload + "\n--------------------"
+            */
             try {
                 def doc
                 def identifier 
                 if (path == "/") {
                     identifier = this.whelk.store(upload)
                 } else {
-                    doc = this.whelk.createDocument(new URI(path), r.mediaType.toString(), data)
-                    identifier = this.whelk.store(doc)
+                    //doc = this.whelk.createDocument(new URI(path), r.mediaType.toString(), data)
+                    //identifier = this.whelk.store(doc)
+                    identifier = this.whelk.store(new URI(path), r.mediaType.toString(), request.entity.stream)
                 }
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {

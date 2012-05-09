@@ -9,14 +9,15 @@ import se.kb.libris.whelks.Whelk
 
 
 interface Component extends Plugin {
-    def add(Document d)
     def retrieve(URI u)
 }
 
 interface Storage extends Component {
+    OutputStream getOutputStreamFor(URI identifier, String contentType)
 }
 
 interface Index extends Component {
+    def add(Document d)
     def find(def query, def index)
 }
 
@@ -40,6 +41,10 @@ class DiskStorage implements Storage {
 
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
+
+    OutputStream getOutputStreamFor(URI identifier, String contentType) {
+        return null
+    }
 
     def init() {
         log.debug "Making sure directory $storageDir exists ..."
