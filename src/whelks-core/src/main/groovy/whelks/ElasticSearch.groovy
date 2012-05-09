@@ -22,7 +22,6 @@ import com.google.gson.JsonObject
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.Whelk
-import se.kb.libris.conch.data.MyDocument
 import se.kb.libris.conch.component.*
 
 import static se.kb.libris.conch.Tools.*
@@ -59,8 +58,8 @@ class ElasticSearch implements Index, Storage {
      * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
      */
     def _wrap_data(doc) {
-        Gson gson = new Gson()
         if (!_is_json(new String(doc.data))) {
+            Gson gson = new Gson()
             def docrepr = [:]
             docrepr['data'] = new String(doc.data)
             docrepr['identifier'] = doc.identifier
@@ -68,12 +67,6 @@ class ElasticSearch implements Index, Storage {
             String json = gson.toJson(docrepr)
             return json.getBytes()
         } else {
-            /*
-            def jsonmap = [:]
-            jsonmap['identifier'] = '"' + doc.identifier.toString() + '"'
-            jsonmap['data'] = new String(doc.data)
-            return _assemble_json_map(jsonmap)
-            */
             return doc.data
         }
     }
@@ -130,7 +123,7 @@ class ElasticSearch implements Index, Storage {
             log.error("Exception", e)
         }
         if (response.exists()) {
-            MyDocument d 
+            Document d 
             def map = response.sourceAsMap()
             log.debug("Raw mode: ${raw}")
             if (!raw && map['contenttype'] != "application/json" && map['data']) {
@@ -140,9 +133,11 @@ class ElasticSearch implements Index, Storage {
                 if (!map['contenttype']) {
                     map['contenttype'] = contentType(map['data'].getBytes())
                 }
-                d = new MyDocument(uri).withData(map['data'].getBytes()).withContentType(map['contenttype'])
+                d = this.whelk.createDocument(uri, map['contenttype'], map['data'].getBytes())
+                //d = new MyDocument(uri).withData(map['data'].getBytes()).withContentType(map['contenttype'])
             } else {
-                d = new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes()).withContentType("application/json")
+                d = this.whelk.createDocument(uri, "application/json", response.sourceAsString().getBytes())
+                //d = new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes()).withContentType("application/json")
             }
 
             return d

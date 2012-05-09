@@ -19,5 +19,6 @@ public interface Whelk {
     
     // factory methods
     public Document createDocument(String contentType, byte[] data);
+    public Document createDocument(URI identifier, String contentType, byte[] data);
     //public Document createDocument(String contentType, ByteArraInputStream data);
 }

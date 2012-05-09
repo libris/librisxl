@@ -1,16 +1,14 @@
 package se.kb.libris.conch.data
 
+import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.SearchResult
 import se.kb.libris.whelks.basic.BasicDocument
 
-class MyDocument extends BasicDocument {
+class WhelkDocument extends BasicDocument {
     URI identifier
-
-    MyDocument(URI uri) {
-        this.identifier = uri
-    }
-    MyDocument(String uri) {
-        this.identifier = new URI(uri)
+    Document withIdentifier(URI u) {
+        this.identifier = u
+        return this
     }
 }
 

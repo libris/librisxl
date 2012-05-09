@@ -6,7 +6,6 @@ import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.plugin.Plugin
 
 import se.kb.libris.whelks.Whelk
-import se.kb.libris.conch.data.MyDocument
 
 
 interface Component extends Plugin {
@@ -69,7 +68,7 @@ class DiskStorage implements Storage {
         def filename = u.toString()
         File f = new File("$storageDir/$filename")
         try {
-            return new MyDocument(filename).withData(f.text.getBytes())
+            return this.whelk.createDocument(u, "content/type", f.text.getBytes())
         } catch (FileNotFoundException fnfe) {
             return null
         }
