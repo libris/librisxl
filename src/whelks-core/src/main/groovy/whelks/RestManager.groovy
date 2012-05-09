@@ -27,12 +27,6 @@ import se.kb.libris.whelks.component.ElasticSearchClient
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.Whelk
 import se.kb.libris.whelks.WhelkImpl
-import se.kb.libris.conch.data.MyDocument
-/*
-import se.kb.libris.conch.*
-import se.kb.libris.conch.component.*
-import se.kb.libris.conch.data.*
-*/
 import se.kb.libris.whelks.api.RestAPI
 
 @Log
@@ -191,12 +185,13 @@ class DocumentRestlet extends BasicWhelkAPI {
             println "UPLOAD:\n" + upload + "\n--------------------"
             try {
                 def doc
+                def identifier 
                 if (path == "/") {
-                    doc = new MyDocument().withData(data)
+                    identifier = this.whelk.store(upload)
                 } else {
-                    doc = new MyDocument(path).withData(data)
+                    doc = this.whelk.createDocument(new URI(path), r.mediaType.toString(), data)
+                    identifier = this.whelk.store(doc)
                 }
-                def identifier = this.whelk.store(doc)
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)

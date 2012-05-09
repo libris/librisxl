@@ -11,7 +11,7 @@ import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.Plugin
 
-import se.kb.libris.conch.data.MyDocument
+import se.kb.libris.conch.data.WhelkDocument
 import se.kb.libris.conch.data.WhelkSearchResult
 /*
 import se.kb.libris.conch.plugin.*
@@ -33,11 +33,15 @@ class WhelkImpl extends BasicWhelk {
     }
 
     def URI store(String docString) {
-        MyDocument d = new MyDocument(generate_identifier()).withData(docString.getBytes())
+        store(docString, "text/plain")
+    }
+
+    def URI store(String docString, String contentType) {
+        Document d = createDocument(generate_identifier(), contentType, docString.getBytes())
         return store(d)
     }
 
-    def generate_identifier() {
+    def URI generate_identifier() {
         def uri = _create_random_URI()
         while (has_identifier(uri)) {
             uri = _create_random_URI()
@@ -122,5 +126,15 @@ class WhelkImpl extends BasicWhelk {
         }
         log.debug "Located document from elastic search"
         return doc
+    }
+
+    @Override
+    Document createDocument(String contentType, byte[] data) {
+        return new WhelkDocument().withIdentifier(_create_random_URI()).withContentType(contentType).withData(data)
+    }
+
+    @Override
+    Document createDocument(URI identifier, String contentType, byte[] data) {
+        return new WhelkDocument().withIdentifier(identifier).withContentType(contentType).withData(data)
     }
 }

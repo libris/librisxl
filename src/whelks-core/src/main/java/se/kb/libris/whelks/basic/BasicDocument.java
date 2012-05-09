@@ -76,7 +76,7 @@ public abstract class BasicDocument implements Document {
 
     public Document withData(byte[] data) {
         this.data = data;
-        
+        this.size = data.length;
         return this;
     }
 
@@ -100,6 +100,7 @@ public abstract class BasicDocument implements Document {
                 bout.write(buf, 0, n);
             
             this.data = bout.toByteArray();
+            this.size = this.data.length;
         } catch (java.io.IOException e) {
             
         }

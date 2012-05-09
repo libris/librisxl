@@ -41,6 +41,9 @@ public class BasicWhelk implements Whelk, Pluggable {
     public Document createDocument(String contentType, byte[] data) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    public Document createDocument(URI identifier, String contentType, byte[] data) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
     public Iterable<LogEntry> log(URI identifier) {
         throw new UnsupportedOperationException("Not supported yet.");
