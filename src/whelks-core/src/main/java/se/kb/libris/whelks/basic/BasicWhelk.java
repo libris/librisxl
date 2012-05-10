@@ -1,5 +1,6 @@
 package se.kb.libris.whelks.basic;
 
+import java.io.*;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,6 +12,10 @@ public class BasicWhelk implements Whelk, Pluggable {
     private List<Plugin> plugins = new LinkedList<Plugin>();
 
     public URI store(Document d) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public URI store(URI uri, String contentType, InputStream is) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

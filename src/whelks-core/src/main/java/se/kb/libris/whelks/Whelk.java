@@ -1,10 +1,12 @@
 package se.kb.libris.whelks;
 
+import java.io.InputStream;
 import java.net.URI;
 
 public interface Whelk {
     // storage
-    public URI store(Document d);
+    //public URI store(Document d);
+    public URI store(URI identifier, String contentType, InputStream is);
     public Document get(URI identifier);
     public void delete(URI identifier);
     

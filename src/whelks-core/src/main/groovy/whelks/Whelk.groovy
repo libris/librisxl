@@ -92,7 +92,12 @@ class WhelkImpl extends BasicWhelk {
         return storages
     }
 
-    def URI store(URI identifier, String contentType, InputStream is) {
+    @Override
+    def URI store(String contentType, InputStream is, long size = -1) {
+    }
+
+    @Override
+    def URI store(URI identifier, String contentType, InputStream is, long size = -1) {
         log.debug("Storing ${identifier} with ctype $contentType")
         def combinedOutputStream = null
         storages.each { 
@@ -104,7 +109,10 @@ class WhelkImpl extends BasicWhelk {
             }
         }
         try {
-            IOUtils.copyLarge(is, combinedOutputStream)
+            long savedBytes = IOUtils.copyLarge(is, combinedOutputStream)
+            if (size != -1 && savedBytes != size) {
+                throw new WhelkRuntimeException("Expected $size bytes. Received $savedBytes.")
+            }
         } finally {
             combinedOutputStream.close()
         }
