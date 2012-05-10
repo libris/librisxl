@@ -44,11 +44,13 @@ class RestManager extends Application {
         // Try using only ElasticSearch as storage
         //whelk.addComponent(new DiskStorage())
         def es = new ElasticSearchClient()
+        def ds = new DiskStorage()
         // Using same es backend for all whelks
         allwhelk.addPlugin(es)
         authwhelk.addPlugin(es)
-        authwhelk.addPlugin(new DiskStorage())
+        authwhelk.addPlugin(ds)
         bibwhelk.addPlugin(es)
+        bibwhelk.addPlugin(ds)
         allwhelk.addAPI(new SearchRestlet())
         authwhelk.addAPI(new AutoComplete())
         authwhelk.addAPI(new SearchRestlet())
