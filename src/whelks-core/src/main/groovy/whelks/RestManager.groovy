@@ -28,6 +28,7 @@ import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.Whelk
 import se.kb.libris.whelks.WhelkImpl
 import se.kb.libris.whelks.api.RestAPI
+import se.kb.libris.whelks.component.DiskStorage
 
 @Log
 class RestManager extends Application {
@@ -46,6 +47,7 @@ class RestManager extends Application {
         // Using same es backend for all whelks
         allwhelk.addPlugin(es)
         authwhelk.addPlugin(es)
+        authwhelk.addPlugin(new DiskStorage())
         bibwhelk.addPlugin(es)
         allwhelk.addAPI(new SearchRestlet())
         authwhelk.addAPI(new AutoComplete())
@@ -170,9 +172,9 @@ class DocumentRestlet extends BasicWhelkAPI {
             try {
                 def identifier 
                 if (path == "/") {
-                    identifier = this.whelk.store(r.mediaType.toString, request.entity.stream, request.entity.size)
+                    identifier = this.whelk.store(request.entity.mediaType.toString, request.entity.stream, request.entity.size)
                 } else {
-                    identifier = this.whelk.store(new URI(path), r.mediaType.toString(), request.entity.stream, request.entity.size)
+                    identifier = this.whelk.store(new URI(path), request.entity.mediaType.toString(), request.entity.stream, request.entity.size)
                 }
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {

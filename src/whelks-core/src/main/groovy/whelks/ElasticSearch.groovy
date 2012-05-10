@@ -43,17 +43,12 @@ class ElasticSearch implements Index, Storage {
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
-    private ByteArrayOutputStream baos = null
-
-    def add(Document d) {
-    }
-
     def add(byte[] data, URI identifier) {
         log.debug "Indexing document ..."
         def dict = determineIndexAndType(identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
         //IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(_wrap_data(data)).execute().actionGet()
-        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(data).execute().actionGet()
+        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(wrapData(data)).execute().actionGet()
         log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         def iresp = [:]
         iresp['id'] = response.id
@@ -65,10 +60,9 @@ class ElasticSearch implements Index, Storage {
     /**
      * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
      */
-    def _wrap_data(doc) {
-        doc = establishContentType(doc)
-        if (doc.contentType == "application/json") {
-            return doc.data
+    def wrapData(data) {
+        if (isJSON(data)) {
+            return data
         } else {
             Gson gson = new Gson()
             def docrepr = [:]
@@ -88,18 +82,15 @@ class ElasticSearch implements Index, Storage {
         }
     }
 
-    Document establishContentType(Document doc) {
-        if (doc.contentType == "application/json") {
-            String data = new String(doc.data)
-            Gson gson = new Gson()
-            try {
-                gson.fromJson(data, Object.class)
-                return doc
-            } catch (JsonSyntaxException jse) {
-                log.debug("Document was not appliction/json")
-            }
-        } 
-        return doc.withContentType("text/plain")
+    boolean isJSON(data) {
+        Gson gson = new Gson()
+        try {
+            gson.fromJson(new String(data), Object.class)
+        } catch (JsonSyntaxException jse) {
+            log.debug("Data was not appliction/json")
+            return false
+        }
+        return true
     }
 
     def determineIndexAndType(URI uri) {
