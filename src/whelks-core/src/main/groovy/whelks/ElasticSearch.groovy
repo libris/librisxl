@@ -81,18 +81,11 @@ class ElasticSearch implements Index, Storage {
     }
 
     OutputStream getOutputStreamFor(URI identifier, String contentType) {
-        if (! baos ) {
-            baos = new ByteArrayOutputStream() {
-                void close() throws IOException {
-                    //this.super.close()
-                    def data = toByteArray()
-                    println "Received this data:\n" + data
-                    ElasticSearch.this.add(data, identifier)
-                }
+        return new ByteArrayOutputStream() {
+            void close() throws IOException {
+                ElasticSearch.this.add(toByteArray(), identifier)
             }
         }
-        println "Returning pimped OS"
-        return baos
     }
 
     Document establishContentType(Document doc) {
@@ -152,10 +145,8 @@ class ElasticSearch implements Index, Storage {
                     map['contenttype'] = contentType(map['data'].getBytes())
                 }
                 d = this.whelk.createDocument(uri, map['contenttype'], map['data'].getBytes())
-                //d = new MyDocument(uri).withData(map['data'].getBytes()).withContentType(map['contenttype'])
             } else {
                 d = this.whelk.createDocument(uri, "application/json", response.sourceAsString().getBytes())
-                //d = new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes()).withContentType("application/json")
             }
 
             return d

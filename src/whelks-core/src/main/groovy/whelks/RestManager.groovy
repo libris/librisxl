@@ -167,36 +167,12 @@ class DocumentRestlet extends BasicWhelkAPI {
             }
         }
         else if (request.method == Method.PUT || request.method == Method.POST) {
-            Representation r = request.entity
-            Disposition d = r.disposition
-            if (d != null) {
-                println "Filename: ${d.filename}"
-                println "Type: ${d.type}"
-            }
-            println "Size: ${r.size}"
-            println "Mediatype: ${r.mediaType} " + r.mediaType.toString()
-
-            /*
-            def is = r.stream
-            byte[] data = new byte[r.size]
-            int i = 0
-            is.eachByte { b ->
-                data[i++] = b
-            }
-
-            def upload = new String(data)
-
-            println "UPLOAD:\n" + upload + "\n--------------------"
-            */
             try {
-                def doc
                 def identifier 
                 if (path == "/") {
-                    identifier = this.whelk.store(upload)
+                    identifier = this.whelk.store(r.mediaType.toString, request.entity.stream, request.entity.size)
                 } else {
-                    //doc = this.whelk.createDocument(new URI(path), r.mediaType.toString(), data)
-                    //identifier = this.whelk.store(doc)
-                    identifier = this.whelk.store(new URI(path), r.mediaType.toString(), request.entity.stream)
+                    identifier = this.whelk.store(new URI(path), r.mediaType.toString(), request.entity.stream, request.entity.size)
                 }
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {
