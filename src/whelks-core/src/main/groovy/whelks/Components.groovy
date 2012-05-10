@@ -17,7 +17,7 @@ interface Storage extends Component {
 }
 
 interface Index extends Component {
-    def add(Document d)
+    def add(byte[] data, URI identifier)
     def find(def query, def index)
 }
 
@@ -43,7 +43,15 @@ class DiskStorage implements Storage {
     def void disable() {this.enabled = false}
 
     OutputStream getOutputStreamFor(URI identifier, String contentType) {
-        return null
+        def filename = identifier.toString()
+        log.debug "${this.class.name} storing file $filename in $storageDir"
+        def fullpath = storageDir + "/" + filename
+        def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
+        log.debug "PATH: $path"
+        new File(path).mkdirs()
+        File file = new File("$storageDir/$filename")
+        return file.newOutputStream()
+        //file.write(new String(d.data))
     }
 
     def init() {
@@ -56,7 +64,7 @@ class DiskStorage implements Storage {
         init()
     }
 
-    def add(Document d) {
+    def deprecated_add(Document d) {
         def filename = (d.identifier ? d.identifier.toString() : _create_filename())
         log.debug "${this.class.name} storing file $filename in $storageDir"
         def fullpath = storageDir + "/" + filename
