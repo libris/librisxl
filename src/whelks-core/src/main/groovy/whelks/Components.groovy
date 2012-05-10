@@ -76,7 +76,7 @@ class DiskStorage implements Storage {
         d.identifier = new URI(filename)
     }
 
-    Document retrieve(URI u) {
+    Document retrieve(URI u, raw=false) {
         def s 
         def filename = u.toString()
         File f = new File("$storageDir/$filename")
