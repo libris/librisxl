@@ -8,7 +8,7 @@ import se.kb.libris.whelks.plugin.Pluggable;
 
 public class SerialiseTest {
     public static void main(String args[]) throws MalformedURLException {
-        WhelkManager manager = new WhelkManager(new URL("file:///tmp/out.txt"));
+        WhelkManager manager = new WhelkManager();
         manager.registerFactory("test", new TestFactory());
         Whelk whelk = manager.createWhelk("test", "test");
         
@@ -21,7 +21,7 @@ public class SerialiseTest {
         }
         
         System.out.println(manager.serialise());
-        
-        manager.save();
+
+        manager.save(new URL("file:///tmp/out.txt"));
     }
 }

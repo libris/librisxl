@@ -97,6 +97,10 @@ public class WhelkManager implements JSONInitialisable {
         whelks.remove(name).destroy();
     }
     
+    public Document resolve(URI identifier) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
     public void save(URL location) {
         if (location.getProtocol().equals("file")) {
             File file = new File(location.getFile());
