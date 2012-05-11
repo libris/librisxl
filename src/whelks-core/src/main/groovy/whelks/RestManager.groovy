@@ -22,7 +22,6 @@ import org.restlet.ext.servlet.ServerServlet
 import com.google.gson.Gson
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.QueryType
 import se.kb.libris.whelks.component.ElasticSearchClient
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.Whelk
@@ -48,7 +47,7 @@ class RestManager extends Application {
         // Using same es backend for all whelks
         allwhelk.addPlugin(es)
         authwhelk.addPlugin(es)
-        authwhelk.addPlugin(ds)
+        //authwhelk.addPlugin(ds)
         bibwhelk.addPlugin(es)
         bibwhelk.addPlugin(ds)
         allwhelk.addAPI(new SearchRestlet())
@@ -116,6 +115,8 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     def path
     def pathEnd = ""
     boolean enabled = true
+
+    String id = "RestAPI"
     
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
@@ -197,7 +198,7 @@ class SearchRestlet extends BasicWhelkAPI {
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
         boolean _raw = (query['_raw'] == 'true')
         try {
-            def r = this.whelk.query(query.get("q"), QueryType.BOOLEAN, _raw)
+            def r = this.whelk.query(query.get("q"), _raw)
             response.setEntity(r.result, MediaType.APPLICATION_JSON)
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)

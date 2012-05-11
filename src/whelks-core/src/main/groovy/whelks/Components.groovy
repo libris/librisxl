@@ -3,21 +3,11 @@ package se.kb.libris.whelks.component
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.plugin.Plugin
-
 import se.kb.libris.whelks.Whelk
 
-
-interface Component extends Plugin {
-    def retrieve(URI u)
-}
-
-interface Storage extends Component {
-    OutputStream getOutputStreamFor(URI identifier, String contentType)
-}
-
-interface Index extends Component {
+interface GIndex extends Component {
     def add(byte[] data, URI identifier)
+    def retrieve(URI u)
     def find(def query, def index)
 }
 
@@ -26,6 +16,8 @@ class DiskStorage implements Storage {
     def storageDir = "./storage/"
     Whelk whelk
     boolean enabled = true
+
+    String id = "diskstorage"
 
     DiskStorage() {
         def env = System.getenv()
@@ -52,6 +44,18 @@ class DiskStorage implements Storage {
         File file = new File("$storageDir/$filename")
         return file.newOutputStream()
         //file.write(new String(d.data))
+    }
+
+    Document get(URI uri) {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
+
+    void store(Document doc) {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
+
+    void delete(URI uri) {
+        throw new UnsupportedOperationException("Not supported yet.")
     }
 
     def init() {
@@ -81,7 +85,7 @@ class DiskStorage implements Storage {
         def filename = u.toString()
         File f = new File("$storageDir/$filename")
         try {
-            return this.whelk.createDocument(u, "content/type", f.text.getBytes())
+            return this.whelk.createDocument().withURI(u).withContentType("content/type").withData(f.text.getBytes())
         } catch (FileNotFoundException fnfe) {
             return null
         }
