@@ -75,11 +75,7 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable {
         return o;
     }
 
-    public Document createDocument(URI uri, byte[] data) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public Document createDocument(URI uri, InputStream data) {
+    public Document createDocument() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }
