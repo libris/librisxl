@@ -10,7 +10,7 @@ public interface Whelk {
     public void delete(URI identifier);
     
     // search/lookup
-    public SearchResult query(QueryType type, String query);
+    public SearchResult<? extends Document> query(String query);
     public LookupResult<? extends Document> lookup(Key key);
 
     // maintenance

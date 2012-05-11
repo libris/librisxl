@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import se.kb.libris.whelks.*;
+import se.kb.libris.whelks.exception.WhelkRuntimeException;
 import se.kb.libris.whelks.plugin.Pluggable;
 import se.kb.libris.whelks.plugin.Plugin;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -22,6 +23,15 @@ public abstract class BasicDocument implements Document {
     private List<Tag> tags = new LinkedList<Tag>();
     
     public URI getIdentifier() {
+        return identifier;
+    }
+
+    URI setIdentifier(URI _identifier) {
+        if (identifier != null)
+            throw new WhelkRuntimeException("Identifier cannot be set more than once");
+        
+        identifier = _identifier;
+        
         return identifier;
     }
 

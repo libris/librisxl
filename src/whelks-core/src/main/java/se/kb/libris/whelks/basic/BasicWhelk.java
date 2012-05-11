@@ -11,10 +11,12 @@ import se.kb.libris.whelks.component.Component;
 import se.kb.libris.whelks.component.Index;
 import se.kb.libris.whelks.component.QuadStore;
 import se.kb.libris.whelks.component.Storage;
+import se.kb.libris.whelks.exception.WhelkRuntimeException;
 import se.kb.libris.whelks.persistance.JSONInitialisable;
+import se.kb.libris.whelks.persistance.JSONSerialisable;
 import se.kb.libris.whelks.plugin.*;
 
-public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable {
+public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private List<Plugin> plugins = new LinkedList<Plugin>();
 
     public URI store(Document d) {
@@ -29,13 +31,16 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable {
             t.beforeStore(this, d);
         
         // add document to store, index and quadstore
-        for (Component c: getComponents())
+        for (Component c: getComponents()) {
             if (c instanceof Storage)
                 ((Storage)c).store(d);
-            else if (c instanceof Index)
+
+            if (c instanceof Index)
                 ((Index)c).index(d);
-            else if (c instanceof QuadStore)
-                ((QuadStore)c).update(d.getIdentifier(), d);        
+
+            if (c instanceof QuadStore)
+                ((QuadStore)c).update(d.getIdentifier(), d);
+        }
 
         // after triggers
         for (Trigger t: getTriggers())
@@ -60,6 +65,10 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable {
     }
 
     public void delete(URI uri) {
+        // before triggers
+        for (Trigger t: getTriggers())
+            t.beforeDelete(this, uri);
+        
         for (Component c: getComponents())
             if (c instanceof Storage)
                 ((Storage)c).delete(uri);
@@ -67,14 +76,27 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable {
                 ((Index)c).delete(uri);
             else if (c instanceof QuadStore)
                 ((QuadStore)c).delete(uri);        
+
+        // after triggers
+        for (Trigger t: getTriggers())
+            t.afterDelete(this, uri);
     }
 
-    public SearchResult query(QueryType type, String query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public SearchResult query(String query) {
+        for (Component c: getComponents())
+            if (c instanceof Index)
+                return ((Index)c).query(query);
+        
+        throw new WhelkRuntimeException("Whelk has no index for searching");
     }
 
     public LookupResult<? extends Document> lookup(Key key) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        /*
+        for (Component c: getComponents())
+            if (c instanceof Index)
+                return ((Index)c).query(query);
+        */
+        throw new WhelkRuntimeException("Whelk has no index for searching");
     }
 
     public Iterable<LogEntry> log(int startIndex) {
@@ -82,10 +104,6 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable {
     }
 
     public Iterable<LogEntry> log(URI identifier) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public JSONInitialisable init(JSONObject obj) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -176,6 +194,14 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable {
     }
 
     public Iterable<? extends Plugin> getPlugins() {
+        return plugins;
+    }
+
+    public JSONInitialisable init(JSONObject obj) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public JSONObject serialize() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }
