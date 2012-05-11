@@ -22,6 +22,7 @@ public interface Document {
 
     public Document tag(URI type, String value);
     public Document untag(URI type, String value);
+    public Document withURI(URI uri);
     public Document withData(byte[] data);
     public Document withDataAsStream(ByteArrayInputStream data);
     public Document withContentType(String contentType);

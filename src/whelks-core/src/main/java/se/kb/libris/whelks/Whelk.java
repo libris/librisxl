@@ -20,6 +20,5 @@ public interface Whelk {
     public Iterable<LogEntry> log(URI identifier);
     
     // factory methods
-    public Document createDocument(URI uri, byte[] data);
-    public Document createDocument(URI uri, InputStream data);
+    public Document createDocument();
 }
