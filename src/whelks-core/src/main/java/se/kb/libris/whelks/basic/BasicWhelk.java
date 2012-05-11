@@ -4,15 +4,49 @@ import java.io.*;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
+import org.json.simple.JSONObject;
 import se.kb.libris.whelks.*;
-import se.kb.libris.whelks.plugin.Pluggable;
-import se.kb.libris.whelks.plugin.Plugin;
+import se.kb.libris.whelks.component.Component;
+import se.kb.libris.whelks.component.Index;
+import se.kb.libris.whelks.component.QuadStore;
+import se.kb.libris.whelks.component.Storage;
+import se.kb.libris.whelks.exception.WhelkRuntimeException;
+import se.kb.libris.whelks.persistance.JSONInitialisable;
+import se.kb.libris.whelks.persistance.JSONSerialisable;
+import se.kb.libris.whelks.plugin.*;
 
-public class BasicWhelk implements Whelk, Pluggable {
+public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private List<Plugin> plugins = new LinkedList<Plugin>();
 
     public URI store(Document d) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        /**
+         * @todo if storage becomes optional, minting URIs needs to happen somewhere else (which is probably just as good anyway)
+         * if (d.getIdentifier() == null)
+         *  ...
+         */
+        
+        // before triggers
+        for (Trigger t: getTriggers())
+            t.beforeStore(this, d);
+        
+        // add document to store, index and quadstore
+        for (Component c: getComponents()) {
+            if (c instanceof Storage)
+                ((Storage)c).store(d);
+
+            if (c instanceof Index)
+                ((Index)c).index(d);
+
+            if (c instanceof QuadStore)
+                ((QuadStore)c).update(d.getIdentifier(), d);
+        }
+
+        // after triggers
+        for (Trigger t: getTriggers())
+            t.afterStore(this, d);
+        
+        return d.getIdentifier();
     }
 
     public URI store(URI uri, String contentType, InputStream is) {
@@ -20,33 +54,56 @@ public class BasicWhelk implements Whelk, Pluggable {
     }
 
     public Document get(URI uri) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Document d = null;
+        
+        for (Component c: getComponents()) {
+            if (c instanceof Storage) {
+                d = ((Storage)c).get(uri);
+                
+                if (d != null)
+                    return d;
+            }
+        }
+                
+        return d;
     }
 
     public void delete(URI uri) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        // before triggers
+        for (Trigger t: getTriggers())
+            t.beforeDelete(this, uri);
+        
+        for (Component c: getComponents())
+            if (c instanceof Storage)
+                ((Storage)c).delete(uri);
+            else if (c instanceof Index)
+                ((Index)c).delete(uri);
+            else if (c instanceof QuadStore)
+                ((QuadStore)c).delete(uri);        
+
+        // after triggers
+        for (Trigger t: getTriggers())
+            t.afterDelete(this, uri);
     }
 
-    public SearchResult query(String query, QueryType type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public SearchResult query(String query) {
+        for (Component c: getComponents())
+            if (c instanceof Index)
+                return ((Index)c).query(query);
+        
+        throw new WhelkRuntimeException("Whelk has no index for searching");
     }
 
     public LookupResult<? extends Document> lookup(Key key) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        /*
+        for (Component c: getComponents())
+            if (c instanceof Index)
+                return ((Index)c).query(query);
+        */
+        throw new WhelkRuntimeException("Whelk has no index for searching");
     }
 
     public Iterable<LogEntry> log(int startIndex) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void destroy() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public Document createDocument(String contentType, byte[] data) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    public Document createDocument(URI identifier, String contentType, byte[] data) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -54,16 +111,100 @@ public class BasicWhelk implements Whelk, Pluggable {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public List<Plugin> getPlugins() {
+    public void destroy() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void addPlugin(Plugin plugin) {
+    public Document createDocument(URI uri, byte[] data) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    public Document createDocument(URI uri, InputStream data) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void removePlugin(String id) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Document convert(Document doc, String mimeType, String format, String profile) {
+        return null;
+        //for (FormatConverter converter: getPlugins()
+    }
+
+    private List<KeyGenerator> getKeyGenerators() {
+        synchronized (plugins) {
+            List<KeyGenerator> ret = new LinkedList<KeyGenerator>();
+
+            for (Plugin plugin: plugins)
+                if (plugin instanceof KeyGenerator)
+                    ret.add((KeyGenerator)plugin);
+
+            return ret;
+        }
+    }
+
+    private List<LinkFinder> getLinkFinders() {
+        synchronized (plugins) {
+            List<LinkFinder> ret = new LinkedList<LinkFinder>();
+
+            for (Plugin plugin: plugins)
+                if (plugin instanceof LinkFinder)
+                    ret.add((LinkFinder)plugin);
+
+            return ret;
+        }
     }
     
+    private List<Trigger> getTriggers() {
+        synchronized (plugins) {
+            List<Trigger> ret = new LinkedList<Trigger>();
+
+            for (Plugin plugin: plugins)
+                if (plugin instanceof Trigger)
+                    ret.add((Trigger)plugin);
+
+            return ret;
+        }
+    }
+
+    private Iterable<Component> getComponents() {
+        synchronized (plugins) {
+            List<Component> ret = new LinkedList<Component>();
+
+            for (Plugin plugin: plugins)
+                if (plugin instanceof Component)
+                    ret.add((Component)plugin);
+
+            return ret;
+        }
+    }
+
+    @Override
+    public void addPlugin(Plugin plugin) {
+        synchronized (plugins) {
+            plugins.add(plugin);
+        }
+    }
+
+    @Override
+    public void removePlugin(String id) {
+        synchronized (plugins) {
+            ListIterator<Plugin> li = plugins.listIterator();
+
+            while (li.hasNext()) {
+                Plugin p = li.next();
+
+                if (p.getId().equals(id))
+                    li.remove();
+            }
+        }
+    }
+
+    public Iterable<? extends Plugin> getPlugins() {
+        return plugins;
+    }
+
+    public JSONInitialisable init(JSONObject obj) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public JSONObject serialize() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

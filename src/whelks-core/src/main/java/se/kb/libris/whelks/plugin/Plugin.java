@@ -4,6 +4,7 @@ import se.kb.libris.whelks.Whelk;
 
 public interface Plugin {
     public void setWhelk(Whelk w);
+    public String getId();
     public void enable();
     public void disable();
     public boolean isEnabled();
