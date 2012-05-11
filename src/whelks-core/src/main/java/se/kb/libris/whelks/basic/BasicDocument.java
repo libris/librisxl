@@ -1,9 +1,11 @@
 package se.kb.libris.whelks.basic;
 
+import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -21,6 +23,8 @@ public abstract class BasicDocument implements Document {
     private List<Link> links = new LinkedList<Link>();
     private List<Key> keys = new LinkedList<Key>();
     private List<Tag> tags = new LinkedList<Tag>();
+
+    private Date timestamp = null;
     
     public URI getIdentifier() {
         return identifier;
@@ -43,12 +47,28 @@ public abstract class BasicDocument implements Document {
         return data;
     }
 
+    public byte[] getData(long offset, long length) {
+        // Tired solution, late friday
+        byte[] datapart = new byte[(int)length];
+        int j = 0;
+        for (int i = (int)offset; i < offset + length; i++) {
+            datapart[j++] = data[i];
+        }
+
+        return datapart;
+
+    }
+
     public String getContentType() {
         return contentType;
     }
 
     public long getSize() {
         return size;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
     }
 
     public Iterable<? extends Link> getLinks() {
@@ -84,6 +104,11 @@ public abstract class BasicDocument implements Document {
         return this;
     }
 
+    public Document withURI(URI uri) {
+        this.identifier = uri;
+        return this;
+    }
+
     public Document withData(byte[] data) {
         this.data = data;
         this.size = data.length;
@@ -96,11 +121,15 @@ public abstract class BasicDocument implements Document {
         return this;
     }
 
-    public ByteArrayInputStream getDataAsStream() {
+    public InputStream getDataAsStream() {
         return new ByteArrayInputStream(data);
     }
 
-    public Document withDataAsStream(ByteArrayInputStream data) {
+    public InputStream getDataAsStream(long offset, long length) {
+        return new ByteArrayInputStream(data, (int)offset, (int)length);
+    }
+
+    public Document withDataAsStream(InputStream data) {
         byte buf[] = new byte[1024];
         ByteArrayOutputStream bout = new ByteArrayOutputStream(1024);
         

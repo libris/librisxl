@@ -24,17 +24,18 @@ import com.google.gson.JsonObject
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.Whelk
-import se.kb.libris.conch.component.*
+import se.kb.libris.whelks.component.*
 
 import static se.kb.libris.conch.Tools.*
 
 @Log
-class ElasticSearch implements Index, Storage {
+class ElasticSearch implements GIndex, Storage {
 
     Whelk whelk
     Client client
 
     boolean enabled = true
+    String id = "elasticsearch"
 
     String defaultType = "record"
 
@@ -72,6 +73,17 @@ class ElasticSearch implements Index, Storage {
             String json = gson.toJson(docrepr)
             return json.getBytes()
         }
+    }
+    Document get(URI uri) {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
+
+    void store(Document doc) {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
+
+    void delete(URI uri) {
+        throw new UnsupportedOperationException("Not supported yet.")
     }
 
     OutputStream getOutputStreamFor(URI identifier, String contentType) {
@@ -135,9 +147,9 @@ class ElasticSearch implements Index, Storage {
                 if (!map['contenttype']) {
                     map['contenttype'] = contentType(map['data'].getBytes())
                 }
-                d = this.whelk.createDocument(uri, map['contenttype'], map['data'].getBytes())
+                d = this.whelk.createDocument().withURI(uri).withContentType(map['contenttype']).withData(map['data'].getBytes())
             } else {
-                d = this.whelk.createDocument(uri, "application/json", response.sourceAsString().getBytes())
+                d = this.whelk.createDocument().withURI(uri).withContentType("application/json").withData(response.sourceAsString().getBytes())
             }
 
             return d

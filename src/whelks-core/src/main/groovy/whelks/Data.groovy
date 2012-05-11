@@ -5,16 +5,22 @@ import se.kb.libris.whelks.SearchResult
 import se.kb.libris.whelks.basic.BasicDocument
 
 class WhelkDocument extends BasicDocument {
+    /*
     URI identifier
     Document withIdentifier(URI u) {
         this.identifier = u
         return this
+
     }
+    */
 }
 
 class WhelkSearchResult implements SearchResult {
 
     String result
+    Iterable hits
+    Iterable facets
+    long numberOfHits
 
     WhelkSearchResult(String data) {
         this.result = data

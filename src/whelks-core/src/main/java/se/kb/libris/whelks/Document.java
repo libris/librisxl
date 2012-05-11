@@ -1,6 +1,6 @@
 package se.kb.libris.whelks;
 
-import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Date;
 
@@ -11,8 +11,8 @@ public interface Document {
         
     public byte[] getData();
     public byte[] getData(long offset, long length);
-    public ByteArrayInputStream getDataAsStream();
-    public ByteArrayInputStream getDataAsStream(long offset, long length);
+    public InputStream getDataAsStream();
+    public InputStream getDataAsStream(long offset, long length);
     public String getContentType();
     public long getSize();
     
@@ -24,6 +24,6 @@ public interface Document {
     public Document untag(URI type, String value);
     public Document withURI(URI uri);
     public Document withData(byte[] data);
-    public Document withDataAsStream(ByteArrayInputStream data);
+    public Document withDataAsStream(InputStream data);
     public Document withContentType(String contentType);
 }

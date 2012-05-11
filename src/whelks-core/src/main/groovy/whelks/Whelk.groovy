@@ -19,6 +19,7 @@ import se.kb.libris.conch.data.WhelkSearchResult
 
 @Log
 class WhelkImpl extends BasicWhelk {
+
     private def plugins = []
     private def apis = []
     def name
@@ -31,12 +32,8 @@ class WhelkImpl extends BasicWhelk {
         this.defaultIndex = n
     }
 
-    def URI store(String docString) {
-        store(docString, "text/plain")
-    }
-
     def URI store(String docString, String contentType) {
-        Document d = createDocument(generate_identifier(), contentType, docString.getBytes())
+        Document d = createDocument().withURI(generate_identifier()).withContentType(contentType).withData(docString.getBytes())
         return store(d)
     }
 
@@ -85,18 +82,21 @@ class WhelkImpl extends BasicWhelk {
     def getStorages() {
         def storages = []
         plugins.each {
-            if (it instanceof Component) {
+            if (it instanceof Storage) {
                 storages << it
             }
         }
         return storages
     }
 
-    @Override
     def URI store(String contentType, InputStream is, long size = -1) {
     }
 
     @Override
+    def URI store(Document doc) {
+        return store(doc.identifier, doc.contentType, doc.dataAsStream)
+    }
+
     def URI store(URI identifier, String contentType, InputStream is, long size = -1) {
         log.debug("Storing ${identifier} with ctype $contentType")
         def combinedOutputStream = null
@@ -120,16 +120,6 @@ class WhelkImpl extends BasicWhelk {
     }
 
     @Override
-    def URI store(Document d) {
-        plugins.each {
-            if (it instanceof Component) {
-                it.add(d)
-            }
-        }
-        return d.identifier
-    }
-
-    @Override
     def Document get(identifier, raw=false) {
         if (identifier instanceof String) {
             identifier = new URI(identifier)
@@ -149,7 +139,7 @@ class WhelkImpl extends BasicWhelk {
 
 
     @Override
-    def SearchResult query(String query, QueryType type=QueryType.BOOLEAN, boolean raw = false) {
+    def SearchResult query(String query, boolean raw = false) {
         return new WhelkSearchResult(find(query, raw))
     }
 
@@ -157,7 +147,7 @@ class WhelkImpl extends BasicWhelk {
         def doc = null
         plugins.each {
             log.debug "Looping component ${it.class.name}"
-            if (it instanceof Index) {
+            if (it instanceof GIndex) {
                 log.debug "Is index. Searching ..."
                 doc = it.find(query, this.defaultIndex, raw)
                 if (doc != null) {
@@ -170,12 +160,7 @@ class WhelkImpl extends BasicWhelk {
     }
 
     @Override
-    Document createDocument(String contentType, byte[] data) {
-        return new WhelkDocument().withIdentifier(_create_random_URI()).withContentType(contentType).withData(data)
-    }
-
-    @Override
-    Document createDocument(URI identifier, String contentType, byte[] data) {
-        return new WhelkDocument().withIdentifier(identifier).withContentType(contentType).withData(data)
+    Document createDocument() {
+        return new WhelkDocument()
     }
 }
