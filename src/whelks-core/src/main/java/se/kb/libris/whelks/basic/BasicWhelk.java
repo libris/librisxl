@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import se.kb.libris.whelks.*;
@@ -202,15 +204,19 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
     @Override
     public JSONInitialisable init(JSONObject obj) {
-        for (Iterator it = (JSONArray)obj.get("plugins").iterator(); it.hasNext();) {
-            JSONObject _plugin = (JSONObject)it.next();
-            Class c = Class.forName(_plugin.get("_classname").toString());
-            
-            Plugin p = (Plugin)c.newInstance();
-            if (c.isAssignableFrom(JSONInitialisable.class))
-                ((JSONInitialisable)p).init(_plugin);
-            
-            plugins.add(p);
+        for (Iterator it = ((JSONArray)obj.get("plugins")).iterator(); it.hasNext();) {
+            try {
+                JSONObject _plugin = (JSONObject)it.next();
+                Class c = Class.forName(_plugin.get("_classname").toString());
+                
+                Plugin p = (Plugin)c.newInstance();
+                if (c.isAssignableFrom(JSONInitialisable.class))
+                    ((JSONInitialisable)p).init(_plugin);
+                
+                plugins.add(p);
+            } catch (Exception e) {
+                throw new WhelkRuntimeException(e);
+            }
         }
         
         return this;
