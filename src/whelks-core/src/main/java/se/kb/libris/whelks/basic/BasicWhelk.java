@@ -230,6 +230,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         JSONArray _plugins = new JSONArray();
         for (Plugin p: plugins) {
             JSONObject _plugin = (p instanceof JSONSerialisable)? ((JSONSerialisable)p).serialize():new JSONObject();
+            _plugin.put("_classname", p.getClass().getName());
             _plugins.add(_plugin);
                     
         }

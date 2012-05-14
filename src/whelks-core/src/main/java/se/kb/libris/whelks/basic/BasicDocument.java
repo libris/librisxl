@@ -26,69 +26,67 @@ public abstract class BasicDocument implements Document {
 
     private Date timestamp = null;
     
+    @Override
     public URI getIdentifier() {
         return identifier;
     }
 
-    URI setIdentifier(URI _identifier) {
-        if (identifier != null)
-            throw new WhelkRuntimeException("Identifier cannot be set more than once");
-        
-        identifier = _identifier;
-        
-        return identifier;
-    }
-
+    @Override
     public String getVersion() {
         return version;
     }
 
+    @Override
     public byte[] getData() {
         return data;
     }
 
+    @Override
     public byte[] getData(long offset, long length) {
-        // Tired solution, late friday
-        byte[] datapart = new byte[(int)length];
-        int j = 0;
-        for (int i = (int)offset; i < offset + length; i++) {
-            datapart[j++] = data[i];
-        }
+        byte ret[] = new byte[(int)length];
+        System.arraycopy(data, 0, ret, 0, (int)size);
 
-        return datapart;
-
+        return ret;
     }
 
+    @Override
     public String getContentType() {
         return contentType;
     }
 
+    @Override
     public long getSize() {
         return size;
     }
 
+    @Override
     public Date getTimestamp() {
         return timestamp;
     }
 
+    @Override
     public Iterable<? extends Link> getLinks() {
         return links;
     }
 
+    @Override
     public Iterable<? extends Key> getKeys() {
         return keys;
     }
 
+    @Override
     public Iterable<? extends Tag> getTags() {
         return tags;
     }
 
+    @Override
     public Document tag(URI uri, String value) {
         tags.add(new BasicTag(uri, value));
         
         return this;
     }
 
+    @Override
     public Document untag(URI type, String value) {
         synchronized (tags) {
             ListIterator<Tag> li = tags.listIterator();
@@ -104,31 +102,37 @@ public abstract class BasicDocument implements Document {
         return this;
     }
 
-    public Document withURI(URI uri) {
+    @Override
+    public Document withIdentifier(URI uri) {
         this.identifier = uri;
         return this;
     }
 
+    @Override
     public Document withData(byte[] data) {
         this.data = data;
         this.size = data.length;
         return this;
     }
 
+    @Override
     public Document withContentType(String contentType) {
         this.contentType = contentType;
         
         return this;
     }
 
+    @Override
     public InputStream getDataAsStream() {
         return new ByteArrayInputStream(data);
     }
 
+    @Override
     public InputStream getDataAsStream(long offset, long length) {
         return new ByteArrayInputStream(data, (int)offset, (int)length);
     }
 
+    @Override
     public Document withDataAsStream(InputStream data) {
         byte buf[] = new byte[1024];
         ByteArrayOutputStream bout = new ByteArrayOutputStream(1024);
@@ -141,7 +145,7 @@ public abstract class BasicDocument implements Document {
             this.data = bout.toByteArray();
             this.size = this.data.length;
         } catch (java.io.IOException e) {
-            
+            throw new WhelkRuntimeException("Error while reading from stream", e);
         }
         
         return this;
