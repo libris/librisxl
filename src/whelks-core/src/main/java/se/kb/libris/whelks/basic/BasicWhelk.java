@@ -2,9 +2,11 @@ package se.kb.libris.whelks.basic;
 
 import java.io.*;
 import java.net.URI;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import se.kb.libris.whelks.*;
 import se.kb.libris.whelks.component.Component;
@@ -193,15 +195,40 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         }
     }
 
+    @Override
     public Iterable<? extends Plugin> getPlugins() {
         return plugins;
     }
 
+    @Override
     public JSONInitialisable init(JSONObject obj) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        for (Iterator it = (JSONArray)obj.get("plugins").iterator(); it.hasNext();) {
+            JSONObject _plugin = (JSONObject)it.next();
+            Class c = Class.forName(_plugin.get("_classname").toString());
+            
+            Plugin p = (Plugin)c.newInstance();
+            if (c.isAssignableFrom(JSONInitialisable.class))
+                ((JSONInitialisable)p).init(_plugin);
+            
+            plugins.add(p);
+        }
+        
+        return this;
     }
 
+    @Override
     public JSONObject serialize() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        JSONObject _whelk = new JSONObject();
+        _whelk.put("test", "test");
+        
+        JSONArray _plugins = new JSONArray();
+        for (Plugin p: plugins) {
+            JSONObject _plugin = (p instanceof JSONSerialisable)? ((JSONSerialisable)p).serialize():new JSONObject();
+            _plugins.add(_plugin);
+                    
+        }
+        _whelk.put("plugins", _plugins);
+                
+        return _whelk;
     }
 }

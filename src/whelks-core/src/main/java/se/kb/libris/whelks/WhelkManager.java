@@ -1,6 +1,5 @@
 package se.kb.libris.whelks;
 
-import com.google.gson.Gson;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -10,8 +9,6 @@ import java.util.logging.Logger;
 import org.json.simple.*;
 import se.kb.libris.whelks.exception.*;
 import se.kb.libris.whelks.persistance.*;
-import se.kb.libris.whelks.plugin.Pluggable;
-import se.kb.libris.whelks.plugin.Plugin;
 
     /* Example JSON:
      * {
@@ -63,6 +60,10 @@ public class WhelkManager implements JSONInitialisable {
         }
     }
 
+    public Map<String, Whelk> getWhelks() {
+        return whelks;
+    }
+    
     public Whelk getWhelk(String name) {
         return whelks.get(name);
     }
@@ -133,9 +134,7 @@ public class WhelkManager implements JSONInitialisable {
         
         for (Entry<String, Whelk> entry: whelks.entrySet()) {
             if (entry.getValue() instanceof JSONSerialisable) {
-                JSONObject _whelk = ((JSONSerialisable)entry.getValue()).serialize();
-                _whelk.put("_classname", entry.getValue().getClass().getName());
-                _whelks.put(entry.getKey(), _whelk);
+                _whelks.put(entry.getKey(), ((JSONSerialisable)entry.getValue()).serialize());
             } else {
                 JSONObject _whelk = new JSONObject();
                 _whelk.put("_classname", entry.getValue().getClass().getName());
