@@ -1,10 +1,15 @@
 package se.kb.libris.whelks.basic;
 
+import java.io.OutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.ListIterator;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.TeeOutputStream;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import se.kb.libris.whelks.*;
@@ -22,6 +27,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
     @Override
     public URI store(Document d) {
+
         /**
          * @todo if storage becomes optional, minting URIs needs to happen somewhere else (which is probably just as good anyway)
          * @todo find links and generate keys to store in document
@@ -31,11 +37,35 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         for (Trigger t: getTriggers())
             t.beforeStore(this, d);
         
-        // add document to store, index and quadstore
-        for (Component c: getComponents()) {
-            if (c instanceof Storage)
-                ((Storage)c).store(d);
+        // add document to store
+        OutputStream combinedOutputStream = null;
+        for (Storage s : getStorages()) {
+            OutputStream os = s.getOutputStreamFor(d);
+            if (combinedOutputStream == null) {
+                combinedOutputStream = os;
+            } else {
+                combinedOutputStream = new TeeOutputStream(combinedOutputStream, os);
+            }
+        }
+        if (combinedOutputStream != null) {
+            try {
+                long savedBytes = IOUtils.copyLarge(d.getDataAsStream(), combinedOutputStream);
+                if (d.getSize() != savedBytes) {
+                    throw new WhelkRuntimeException("Expected "+d.getSize() +" bytes. Received "+savedBytes+".");
+                } 
+            } catch (Exception e) {
+                throw new WhelkRuntimeException(e);
+            } finally {
+                try {
+                    combinedOutputStream.close();
+                } catch (IOException ioe) {
+                    throw new WhelkRuntimeException(ioe);
+                }
+            }
+        }
 
+        // add document to index and quadstore
+        for (Component c: getComponents()) {
             if (c instanceof Index)
                 ((Index)c).index(d);
 
@@ -49,6 +79,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         
         return d.getIdentifier();
     }
+
 
     @Override
     public Document get(URI uri) {
@@ -164,7 +195,19 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         }
     }
 
-    private Iterable<Component> getComponents() {
+    protected Iterable<Storage> getStorages() {
+        synchronized (plugins) {
+            List<Storage> ret = new LinkedList<Storage>();
+
+            for (Plugin plugin: plugins)
+                if (plugin instanceof Storage)
+                    ret.add((Storage)plugin);
+
+            return ret;
+        }
+    }
+
+    protected Iterable<Component> getComponents() {
         synchronized (plugins) {
             List<Component> ret = new LinkedList<Component>();
 
@@ -179,6 +222,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public void addPlugin(Plugin plugin) {
         synchronized (plugins) {
+            plugin.setWhelk(this);
             plugins.add(plugin);
         }
     }

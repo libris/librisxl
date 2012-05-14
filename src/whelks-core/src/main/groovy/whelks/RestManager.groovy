@@ -50,12 +50,12 @@ class RestManager extends Application {
         //authwhelk.addPlugin(ds)
         bibwhelk.addPlugin(es)
         bibwhelk.addPlugin(ds)
-        allwhelk.addAPI(new SearchRestlet())
-        authwhelk.addAPI(new AutoComplete())
-        authwhelk.addAPI(new SearchRestlet())
-        authwhelk.addAPI(new DocumentRestlet())
-        bibwhelk.addAPI(new SearchRestlet())
-        bibwhelk.addAPI(new DocumentRestlet())
+        allwhelk.addPlugin(new SearchRestlet())
+        authwhelk.addPlugin(new AutoComplete())
+        authwhelk.addPlugin(new SearchRestlet())
+        authwhelk.addPlugin(new DocumentRestlet())
+        bibwhelk.addPlugin(new SearchRestlet())
+        bibwhelk.addPlugin(new DocumentRestlet())
         whelks.add(allwhelk)
         whelks.add(bibwhelk)
         whelks.add(authwhelk)
@@ -174,11 +174,13 @@ class DocumentRestlet extends BasicWhelkAPI {
         else if (request.method == Method.PUT || request.method == Method.POST) {
             try {
                 def identifier 
+                Document doc = null
                 if (path == "/") {
-                    identifier = this.whelk.store(request.entity.mediaType.toString, request.entity.stream, request.entity.size)
+                    doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withDataAsStream(request.entity.stream)
                 } else {
-                    identifier = this.whelk.store(new URI(path), request.entity.mediaType.toString(), request.entity.stream, request.entity.size)
+                    doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withDataAsStream(request.entity.stream)
                 }
+                identifier = this.whelk.store(doc)
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)

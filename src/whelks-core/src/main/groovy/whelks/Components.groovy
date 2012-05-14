@@ -2,12 +2,11 @@ package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
-import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.Whelk
+import se.kb.libris.whelks.*
 
 interface GIndex extends Component {
     def add(byte[] data, URI identifier)
-    def retrieve(URI u)
+    def get(URI u)
     def find(def query, def index)
 }
 
@@ -34,8 +33,9 @@ class DiskStorage implements Storage {
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
-    OutputStream getOutputStreamFor(URI identifier, String contentType) {
-        def filename = identifier.toString()
+    @Override
+    OutputStream getOutputStreamFor(Document doc) {
+        def filename = doc.identifier.toString()
         log.debug "${this.class.name} storing file $filename in $storageDir"
         def fullpath = storageDir + "/" + filename
         def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
@@ -44,6 +44,10 @@ class DiskStorage implements Storage {
         File file = new File("$storageDir/$filename")
         return file.newOutputStream()
         //file.write(new String(d.data))
+    }
+
+    LookupResult lookup(Key key) {
+        throw new UnsupportedOperationException("Not supported yet.")
     }
 
     Document get(URI uri) {
@@ -85,7 +89,7 @@ class DiskStorage implements Storage {
         def filename = u.toString()
         File f = new File("$storageDir/$filename")
         try {
-            return this.whelk.createDocument().withURI(u).withContentType("content/type").withData(f.text.getBytes())
+            return this.whelk.createDocument().withIdentifier(u).withContentType("content/type").withData(f.text.getBytes())
         } catch (FileNotFoundException fnfe) {
             return null
         }

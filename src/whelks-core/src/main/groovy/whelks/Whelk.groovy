@@ -8,7 +8,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.commons.io.output.TeeOutputStream
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.api.RestAPI
+import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.basic.BasicWhelk
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.component.*
@@ -20,8 +20,6 @@ import se.kb.libris.conch.data.WhelkSearchResult
 @Log
 class WhelkImpl extends BasicWhelk {
 
-    private def plugins = []
-    private def apis = []
     def name
     def defaultIndex
 
@@ -30,11 +28,6 @@ class WhelkImpl extends BasicWhelk {
     def setName(n) {
         this.name = n
         this.defaultIndex = n
-    }
-
-    def URI store(String docString, String contentType) {
-        Document d = createDocument().withURI(generate_identifier()).withContentType(contentType).withData(docString.getBytes())
-        return store(d)
     }
 
     def URI generate_identifier() {
@@ -63,60 +56,16 @@ class WhelkImpl extends BasicWhelk {
         return new URI("/" + this.name + "/" + generator( (('A'..'Z')+('a'..'z')+('0'..'9')).join(), 8 ))
     }
 
-    @Override
-    def void addPlugin(Plugin p) {
-        p.setWhelk(this)
-        this.plugins.add(p)
-    }
-
-    def addAPI(RestAPI a) {
-        a.setWhelk(this)
-        this.apis.add(a)
-    }
-
     def getApis() {
-        return this.apis
-    }
-
-
-    def getStorages() {
-        def storages = []
-        plugins.each {
-            if (it instanceof Storage) {
-                storages << it
+        def apis = []
+        this.plugins.each {
+            log.debug("getApis looping component ${it.class.name}")
+            if (it instanceof API) {
+                log.debug("Adding ${it.class.name} to list ...")
+                apis << it
             }
         }
-        return storages
-    }
-
-    def URI store(String contentType, InputStream is, long size = -1) {
-    }
-
-    @Override
-    def URI store(Document doc) {
-        return store(doc.identifier, doc.contentType, doc.dataAsStream)
-    }
-
-    def URI store(URI identifier, String contentType, InputStream is, long size = -1) {
-        log.debug("Storing ${identifier} with ctype $contentType")
-        def combinedOutputStream = null
-        storages.each { 
-            def os = it.getOutputStreamFor(identifier, contentType)
-            if (! combinedOutputStream) {
-                combinedOutputStream = os
-            } else {
-                combinedOutputStream = new TeeOutputStream(combinedOutputStream, os) 
-            }
-        }
-        try {
-            long savedBytes = IOUtils.copyLarge(is, combinedOutputStream)
-            if (size != -1 && savedBytes != size) {
-                throw new WhelkRuntimeException("Expected $size bytes. Received $savedBytes.")
-            }
-        } finally {
-            combinedOutputStream.close()
-        }
-        return identifier
+        return apis
     }
 
     @Override
@@ -128,7 +77,7 @@ class WhelkImpl extends BasicWhelk {
         plugins.each {
             if (it instanceof Storage) {
                 log.debug "${it.class.name} is storage. Retrieving ..."
-                doc = it.retrieve(identifier, raw)
+                doc = it.get(identifier, raw)
             }
         }
         if (doc == null) {

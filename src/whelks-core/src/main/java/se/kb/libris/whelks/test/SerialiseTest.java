@@ -1,13 +1,15 @@
 package se.kb.libris.whelks.test;
 
-import com.google.gson.Gson;
+//import com.google.gson.Gson;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+/*
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
 import org.codehaus.jackson.map.SerializationConfig;
+*/
 import se.kb.libris.whelks.Whelk;
 import se.kb.libris.whelks.WhelkManager;
 import se.kb.libris.whelks.plugin.Pluggable;
