@@ -122,6 +122,12 @@ public class BasicDocument implements Document {
     }
 
     @Override
+    public Document withSize(long size) {
+        this.size = size;
+        return this;
+    }
+
+    @Override
     public InputStream getDataAsStream() {
         return new ByteArrayInputStream(data);
     }

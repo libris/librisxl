@@ -22,8 +22,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.JsonObject
 
-import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.Whelk
+import se.kb.libris.whelks.*
 import se.kb.libris.whelks.component.*
 
 import static se.kb.libris.conch.Tools.*
@@ -74,22 +73,18 @@ class ElasticSearch implements GIndex, Storage {
             return json.getBytes()
         }
     }
-    Document get(URI uri) {
-        throw new UnsupportedOperationException("Not supported yet.")
-    }
-
-    void store(Document doc) {
-        throw new UnsupportedOperationException("Not supported yet.")
-    }
 
     void delete(URI uri) {
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    OutputStream getOutputStreamFor(URI identifier, String contentType) {
+    @Override
+    OutputStream getOutputStreamFor(Document doc) {
+        log.debug("Preparing outputstream for document ${doc.identifier}")
+        //persistMetaDataFor(doc)
         return new ByteArrayOutputStream() {
             void close() throws IOException {
-                ElasticSearch.this.add(toByteArray(), identifier)
+                ElasticSearch.this.add(toByteArray(), doc.identifier)
             }
         }
     }
@@ -128,7 +123,8 @@ class ElasticSearch implements GIndex, Storage {
         return dict
     }
 
-    def retrieve(URI uri, raw = false) {
+    @Override
+    Document get(URI uri, raw = false) {
         def dict = determineIndexAndType(uri)
         GetResponse response 
         try {
@@ -147,9 +143,9 @@ class ElasticSearch implements GIndex, Storage {
                 if (!map['contenttype']) {
                     map['contenttype'] = contentType(map['data'].getBytes())
                 }
-                d = this.whelk.createDocument().withURI(uri).withContentType(map['contenttype']).withData(map['data'].getBytes())
+                d = this.whelk.createDocument().withIdentifier(uri).withContentType(map['contenttype']).withData(map['data'].getBytes())
             } else {
-                d = this.whelk.createDocument().withURI(uri).withContentType("application/json").withData(response.sourceAsString().getBytes())
+                d = this.whelk.createDocument().withIdentifier(uri).withContentType("application/json").withData(response.sourceAsString().getBytes())
             }
 
             return d
@@ -188,6 +184,10 @@ class ElasticSearch implements GIndex, Storage {
             }
             return hits.toString()
         }
+    }
+
+    LookupResult lookup(Key key) {
+        throw new UnsupportedOperationException("Not supported yet.")
     }
 }
 
