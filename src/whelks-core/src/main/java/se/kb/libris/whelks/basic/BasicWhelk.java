@@ -1,13 +1,10 @@
 package se.kb.libris.whelks.basic;
 
-import java.io.*;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import se.kb.libris.whelks.*;
@@ -23,12 +20,12 @@ import se.kb.libris.whelks.plugin.*;
 public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private List<Plugin> plugins = new LinkedList<Plugin>();
 
+    @Override
     public URI store(Document d) {
         /**
          * @todo if storage becomes optional, minting URIs needs to happen somewhere else (which is probably just as good anyway)
-         * if (d.getIdentifier() == null)
-         *  ...
-         */
+         * @todo find links and generate keys to store in document
+         */        
         
         // before triggers
         for (Trigger t: getTriggers())
@@ -53,10 +50,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         return d.getIdentifier();
     }
 
-    public URI store(URI uri, String contentType, InputStream is) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
+    @Override
     public Document get(URI uri) {
         Document d = null;
         
@@ -72,6 +66,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         return d;
     }
 
+    @Override
     public void delete(URI uri) {
         // before triggers
         for (Trigger t: getTriggers())
@@ -90,6 +85,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             t.afterDelete(this, uri);
     }
 
+    @Override
     public SearchResult query(String query) {
         for (Component c: getComponents())
             if (c instanceof Index)
@@ -98,29 +94,33 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
 
+    @Override
     public LookupResult<? extends Document> lookup(Key key) {
-        /*
         for (Component c: getComponents())
-            if (c instanceof Index)
-                return ((Index)c).query(query);
-        */
+            if (c instanceof Storage)
+                return ((Storage)c).lookup(key);
+
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
 
+    @Override
     public Iterable<LogEntry> log(int startIndex) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public Iterable<LogEntry> log(URI identifier) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public void destroy() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public Document createDocument() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new BasicDocument();
     }
 
     public Document convert(Document doc, String mimeType, String format, String profile) {

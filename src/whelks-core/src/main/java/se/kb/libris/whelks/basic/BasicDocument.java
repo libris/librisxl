@@ -3,7 +3,6 @@ package se.kb.libris.whelks.basic;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 import java.util.LinkedList;
@@ -11,11 +10,8 @@ import java.util.List;
 import java.util.ListIterator;
 import se.kb.libris.whelks.*;
 import se.kb.libris.whelks.exception.WhelkRuntimeException;
-import se.kb.libris.whelks.plugin.Pluggable;
-import se.kb.libris.whelks.plugin.Plugin;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-public abstract class BasicDocument implements Document {
+public class BasicDocument implements Document {
     private URI identifier = null;
     private String version = "1", contentType = null;
     private byte[] data = null;
@@ -23,8 +19,11 @@ public abstract class BasicDocument implements Document {
     private List<Link> links = new LinkedList<Link>();
     private List<Key> keys = new LinkedList<Key>();
     private List<Tag> tags = new LinkedList<Tag>();
-
     private Date timestamp = null;
+    
+    public BasicDocument() {
+        
+    }
     
     @Override
     public URI getIdentifier() {
