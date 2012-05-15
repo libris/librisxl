@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+
 import requests, json, io, sys
 
 def transform(a_json):
@@ -55,7 +55,7 @@ def get_records(f_100, sug_json):
 
 
 if __name__ == "__main__":
-    #print "joråsatte ...\n\n"
+    #print "jorasatte ...\n\n"
     data = sys.stdin.read()
     sug_json = transform(json.loads(data))
     sys.stdout.write(json.dumps(sug_json))

@@ -84,15 +84,20 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public Document get(URI uri) {
         Document d = null;
+
+        System.out.println("Getting document with ID: " + uri);
         
         for (Component c: getComponents()) {
             if (c instanceof Storage) {
                 d = ((Storage)c).get(uri);
                 
-                if (d != null)
+                if (d != null) {
                     return d;
+                }
             }
         }
+
+        
                 
         return d;
     }

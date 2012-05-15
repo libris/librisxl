@@ -28,6 +28,7 @@ import se.kb.libris.whelks.Whelk
 import se.kb.libris.whelks.WhelkImpl
 import se.kb.libris.whelks.api.RestAPI
 import se.kb.libris.whelks.component.DiskStorage
+import se.kb.libris.whelks.plugin.PythonRunnerFormatConverter
 
 @Log
 class RestManager extends Application {
@@ -44,18 +45,20 @@ class RestManager extends Application {
         //whelk.addComponent(new DiskStorage())
         def es = new ElasticSearchClient()
         def ds = new DiskStorage()
+        def sug_conv = new PythonRunnerFormatConverter("sug_json.py")
         // Using same es backend for all whelks
         allwhelk.addPlugin(es)
         authwhelk.addPlugin(es)
         //authwhelk.addPlugin(ds)
         bibwhelk.addPlugin(es)
-        bibwhelk.addPlugin(ds)
+        //bibwhelk.addPlugin(ds)
         allwhelk.addPlugin(new SearchRestlet())
         authwhelk.addPlugin(new AutoComplete())
         authwhelk.addPlugin(new SearchRestlet())
         authwhelk.addPlugin(new DocumentRestlet())
         bibwhelk.addPlugin(new SearchRestlet())
         bibwhelk.addPlugin(new DocumentRestlet())
+        //bibwhelk.addPlugin(sug_conv)
         whelks.add(allwhelk)
         whelks.add(bibwhelk)
         whelks.add(authwhelk)
