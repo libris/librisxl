@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'jetty'
 
-mainClassName = 'se.kb.libris.conch.RestAPI'
+//mainClassName = 'se.kb.libris.whelks.plugin.PythonRunnerFormatConverter'
 jettyRun.contextPath = '/'
 
 jar {
@@ -14,9 +14,11 @@ jar {
                 } 
             } 
         }
+    /*
     manifest {
         attributes 'Main-Class': mainClassName
     }
+    */
 }
 
 task depjar(type: Jar, dependsOn: jar) {
@@ -32,6 +34,7 @@ task depjar(type: Jar, dependsOn: jar) {
         }
 }
 
+// Not used atm
 task fatjar(type: Jar, dependsOn: jar) {
     dependsOn configurations.runtime
         from { 
@@ -51,6 +54,7 @@ repositories {
 }
 
 dependencies {
+    compile group: 'org.python', name: 'jython-standalone', version: '2.5.2'
     compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
     compile group: 'com.google.code.gson', name: 'gson', version: '2.1'
     compile group: 'org.elasticsearch', name: 'elasticsearch', version: '0.19.3'

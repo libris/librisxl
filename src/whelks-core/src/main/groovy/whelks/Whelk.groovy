@@ -12,7 +12,7 @@ import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.basic.BasicWhelk
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.component.*
-import se.kb.libris.whelks.plugin.Plugin
+import se.kb.libris.whelks.plugin.*
 
 import se.kb.libris.conch.data.WhelkDocument
 import se.kb.libris.conch.data.WhelkSearchResult
@@ -39,7 +39,7 @@ class WhelkImpl extends BasicWhelk {
     }
 
     boolean isBinaryData(byte[] data) {
-        return true
+        return false
     }
 
     def has_identifier(uri) {
@@ -83,6 +83,11 @@ class WhelkImpl extends BasicWhelk {
         if (doc == null) {
             throw new WhelkRuntimeException("Document not found: $identifier")
         }
+        for (Plugin p: getPlugins()) {
+            if (p instanceof FormatConverter) {
+                ((FormatConverter)p).convert(doc, null, null, null);
+            }
+        } 
         return doc
     }
 
