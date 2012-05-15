@@ -1,28 +1,22 @@
 package se.kb.libris.whelks.basic;
 
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.*;
 import java.net.URI;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 import se.kb.libris.whelks.*;
-import se.kb.libris.whelks.exception.WhelkRuntimeException;
+import se.kb.libris.whelks.exception.*;
 
 public class BasicDocument implements Document {
     private URI identifier = null;
     private String version = "1", contentType = null;
     private byte[] data = null;
     private long size;
-    private List<Link> links = new LinkedList<Link>();
-    private List<Key> keys = new LinkedList<Key>();
-    private List<Tag> tags = new LinkedList<Tag>();
+    private Set<Link> links = new TreeSet<Link>();
+    private Set<Key> keys = new TreeSet<Key>();
+    private Set<Tag> tags = new TreeSet<Tag>();
     private Date timestamp = null;
     
     public BasicDocument() {
-        
     }
     
     @Override
@@ -43,7 +37,7 @@ public class BasicDocument implements Document {
     @Override
     public byte[] getData(long offset, long length) {
         byte ret[] = new byte[(int)length];
-        System.arraycopy(data, 0, ret, 0, (int)size);
+        System.arraycopy(data, (int)offset, ret, 0, (int)length);
 
         return ret;
     }
@@ -64,17 +58,17 @@ public class BasicDocument implements Document {
     }
 
     @Override
-    public Iterable<? extends Link> getLinks() {
+    public Set<Link> getLinks() {
         return links;
     }
 
     @Override
-    public Iterable<? extends Key> getKeys() {
+    public Set<Key> getKeys() {
         return keys;
     }
 
     @Override
-    public Iterable<? extends Tag> getTags() {
+    public Set<Tag> getTags() {
         return tags;
     }
 
@@ -88,14 +82,13 @@ public class BasicDocument implements Document {
     @Override
     public Document untag(URI type, String value) {
         synchronized (tags) {
-            ListIterator<Tag> li = tags.listIterator();
+            Set<Tag> remove = new HashSet<Tag>();
             
-            while (li.hasNext()) {
-                Tag t = li.next();
-                
-                if (t.getType().equals(t) && t.getValue().equals(value))
-                    li.remove();
-            }
+            for (Tag t: tags)
+                if (t.getType().equals(type) && t.getValue().equals(value))
+                    remove.add(t);
+            
+            tags.removeAll(remove);
         }
         
         return this;

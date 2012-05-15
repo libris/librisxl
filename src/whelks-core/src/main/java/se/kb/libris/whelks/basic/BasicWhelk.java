@@ -1,71 +1,47 @@
 package se.kb.libris.whelks.basic;
 
-import java.io.OutputStream;
-import java.io.IOException;
 import java.net.URI;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.ListIterator;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.TeeOutputStream;
+import java.net.URISyntaxException;
+import java.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import se.kb.libris.whelks.*;
-import se.kb.libris.whelks.component.Component;
-import se.kb.libris.whelks.component.Index;
-import se.kb.libris.whelks.component.QuadStore;
-import se.kb.libris.whelks.component.Storage;
+import se.kb.libris.whelks.component.*;
 import se.kb.libris.whelks.exception.WhelkRuntimeException;
 import se.kb.libris.whelks.persistance.JSONInitialisable;
 import se.kb.libris.whelks.persistance.JSONSerialisable;
 import se.kb.libris.whelks.plugin.*;
 
 public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
-    private List<Plugin> plugins = new LinkedList<Plugin>();
+    private Random random = new Random();
+    private final List<Plugin> plugins = new LinkedList<Plugin>();
+    private String prefix = null;
 
     @Override
     public URI store(Document d) {
-
-        /**
-         * @todo if storage becomes optional, minting URIs needs to happen somewhere else (which is probably just as good anyway)
-         * @todo find links and generate keys to store in document
-         */        
+        // mint URI if document needs it
+        if (d.getIdentifier() == null || !d.getIdentifier().toString().startsWith("whelk:" + getPrefix() + "/"))
+            d.withIdentifier(mintIdentifier(d));
+        
+        // find and add links
+        d.getLinks().clear();
+        for (LinkFinder lf: getLinkFinders())
+            d.getLinks().addAll(lf.findLinks(d));
+                
+        // generate and add keys
+        d.getKeys().clear();
+        for (KeyGenerator kg: getKeyGenerators())
+            d.getKeys().addAll(kg.generateKeys(d));
         
         // before triggers
         for (Trigger t: getTriggers())
             t.beforeStore(this, d);
         
-        // add document to store
-        OutputStream combinedOutputStream = null;
-        for (Storage s : getStorages()) {
-            OutputStream os = s.getOutputStreamFor(d);
-            if (combinedOutputStream == null) {
-                combinedOutputStream = os;
-            } else {
-                combinedOutputStream = new TeeOutputStream(combinedOutputStream, os);
-            }
-        }
-        if (combinedOutputStream != null) {
-            try {
-                long savedBytes = IOUtils.copyLarge(d.getDataAsStream(), combinedOutputStream);
-                if (d.getSize() != savedBytes) {
-                    throw new WhelkRuntimeException("Expected "+d.getSize() +" bytes. Received "+savedBytes+".");
-                } 
-            } catch (Exception e) {
-                throw new WhelkRuntimeException(e);
-            } finally {
-                try {
-                    combinedOutputStream.close();
-                } catch (IOException ioe) {
-                    throw new WhelkRuntimeException(ioe);
-                }
-            }
-        }
-
-        // add document to index and quadstore
+        // add document to storage, index and quadstore
         for (Component c: getComponents()) {
+            if (c instanceof Index)
+                ((Storage)c).store(d);
+
             if (c instanceof Index)
                 ((Index)c).index(d);
 
@@ -80,13 +56,10 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         return d.getIdentifier();
     }
 
-
     @Override
     public Document get(URI uri) {
         Document d = null;
 
-        System.out.println("Getting document with ID: " + uri);
-        
         for (Component c: getComponents()) {
             if (c instanceof Storage) {
                 d = ((Storage)c).get(uri);
@@ -97,8 +70,6 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             }
         }
 
-        
-                
         return d;
     }
 
@@ -114,7 +85,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             else if (c instanceof Index)
                 ((Index)c).delete(uri);
             else if (c instanceof QuadStore)
-                ((QuadStore)c).delete(uri);        
+                ((QuadStore)c).delete(uri);
 
         // after triggers
         for (Trigger t: getTriggers())
@@ -152,6 +123,11 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public void destroy() {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getPrefix() {
+        return prefix;
     }
 
     @Override
@@ -227,7 +203,9 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public void addPlugin(Plugin plugin) {
         synchronized (plugins) {
-            plugin.setWhelk(this);
+            if (plugin instanceof Component)
+                ((Component)plugin).setWhelk(this);
+            
             plugins.add(plugin);
         }
     }
@@ -253,6 +231,8 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
     @Override
     public JSONInitialisable init(JSONObject obj) {
+        prefix = obj.get("prefix").toString();
+        
         for (Iterator it = ((JSONArray)obj.get("plugins")).iterator(); it.hasNext();) {
             try {
                 JSONObject _plugin = (JSONObject)it.next();
@@ -262,7 +242,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                 if (c.isAssignableFrom(JSONInitialisable.class))
                     ((JSONInitialisable)p).init(_plugin);
                 
-                plugins.add(p);
+                addPlugin(p);
             } catch (Exception e) {
                 throw new WhelkRuntimeException(e);
             }
@@ -274,7 +254,6 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public JSONObject serialize() {
         JSONObject _whelk = new JSONObject();
-        _whelk.put("test", "test");
         
         JSONArray _plugins = new JSONArray();
         for (Plugin p: plugins) {
@@ -286,5 +265,21 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         _whelk.put("plugins", _plugins);
                 
         return _whelk;
+    }
+
+    private URI mintIdentifier(Document d) {
+        try {
+            return new URI("whelk:" + getPrefix() + "/" + UUID.randomUUID());
+        } catch (URISyntaxException ex) {
+            throw new WhelkRuntimeException("Could not mint URI", ex);
+        }
+
+        /*
+        for (Plugin p: getPlugins())
+            if (p instanceof URIMinter)
+                return ((URIMinter)p).mint(d);
+
+        throw new WhelkRuntimeException("No URIMinter found, unable to mint URI");
+        */
     }
 }

@@ -5,5 +5,5 @@ import se.kb.libris.whelks.Document;
 import se.kb.libris.whelks.Key;
 
 public interface KeyGenerator extends Plugin {
-    List<? extends Key> generateKeys(Document d);
+    List<Key> generateKeys(Document d);
 }

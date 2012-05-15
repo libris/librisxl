@@ -1,7 +1,5 @@
 package se.kb.libris.whelks;
 
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 
 public interface Whelk {
@@ -15,6 +13,7 @@ public interface Whelk {
     public LookupResult<? extends Document> lookup(Key key);
 
     // maintenance
+    public String getPrefix();
     public void destroy();
     public Iterable<LogEntry> log(int startIndex);
     public Iterable<LogEntry> log(URI identifier);
