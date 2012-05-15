@@ -43,7 +43,7 @@ public class BasicDocument implements Document {
     @Override
     public byte[] getData(long offset, long length) {
         byte ret[] = new byte[(int)length];
-        System.arraycopy(data, 0, ret, 0, (int)size);
+        System.arraycopy(data, (int)offset, ret, 0, (int)length);
 
         return ret;
     }
