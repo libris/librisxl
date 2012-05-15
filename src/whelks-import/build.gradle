@@ -1,7 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'groovy'
+apply plugin: 'application'
 
-mainClassName = 'se.kb.libris.imports.batch.ApiImportImpl'
+mainClassName = 'se.kb.libris.imports.BatchImport'
 
 jar {
     dependsOn configurations.runtime
@@ -15,30 +16,6 @@ jar {
     manifest {
         attributes 'Main-Class': mainClassName
     }
-}
-
-task depjar(type: Jar, dependsOn: jar) {
-    archiveName = "dependencies.jar"
-    dependsOn configurations.runtime
-        from { 
-            configurations.runtime.collect { 
-                it.isDirectory() ? it : zipTree(it).matching { 
-                    exclude "se/kb/libris/**" 
-                    exclude "META-INF/**" 
-                } 
-            } 
-        }
-}
-
-task fatjar(type: Jar, dependsOn: jar) {
-    dependsOn configurations.runtime
-        from { 
-            configurations.runtime.collect { 
-                it.isDirectory() ? it : zipTree(it).matching { 
-                    exclude "META-INF/OSGI*" 
-                } 
-            } 
-        }
 }
 
 repositories { 
