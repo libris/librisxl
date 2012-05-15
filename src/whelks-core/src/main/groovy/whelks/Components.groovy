@@ -1,22 +1,12 @@
-package se.kb.libris.conch.component
+package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
-import se.kb.libris.whelks.Document
-import se.kb.libris.conch.*
-import se.kb.libris.conch.data.*
-import se.kb.libris.conch.plugin.*
+import se.kb.libris.whelks.*
 
-
-interface Component extends Plugin {
-    def add(Document d)
-    def retrieve(URI u)
-}
-
-interface Storage extends Component {
-}
-
-interface Index extends Component {
+interface GIndex extends Component {
+    def add(byte[] data, URI identifier)
+    def get(URI u)
     def find(def query, def index)
 }
 
@@ -24,6 +14,9 @@ interface Index extends Component {
 class DiskStorage implements Storage {
     def storageDir = "./storage/"
     Whelk whelk
+    boolean enabled = true
+
+    String id = "diskstorage"
 
     DiskStorage() {
         def env = System.getenv()
@@ -35,7 +28,39 @@ class DiskStorage implements Storage {
         setStorageDir(directoryName)
     }
 
-    def setWhelk(Whelk w) { this.whelk = w }
+    def void setWhelk(se.kb.libris.whelks.Whelk w) { this.whelk = w }
+
+    def void enable() {this.enabled = true}
+    def void disable() {this.enabled = false}
+
+    @Override
+    OutputStream getOutputStreamFor(Document doc) {
+        def filename = doc.identifier.toString()
+        log.debug "${this.class.name} storing file $filename in $storageDir"
+        def fullpath = storageDir + "/" + filename
+        def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
+        log.debug "PATH: $path"
+        new File(path).mkdirs()
+        File file = new File("$storageDir/$filename")
+        return file.newOutputStream()
+        //file.write(new String(d.data))
+    }
+
+    LookupResult lookup(Key key) {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
+
+    Document get(URI uri) {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
+
+    void store(Document doc) {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
+
+    void delete(URI uri) {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
 
     def init() {
         log.debug "Making sure directory $storageDir exists ..."
@@ -47,7 +72,7 @@ class DiskStorage implements Storage {
         init()
     }
 
-    def add(Document d) {
+    def deprecated_add(Document d) {
         def filename = (d.identifier ? d.identifier.toString() : _create_filename())
         log.debug "${this.class.name} storing file $filename in $storageDir"
         def fullpath = storageDir + "/" + filename
@@ -59,12 +84,12 @@ class DiskStorage implements Storage {
         d.identifier = new URI(filename)
     }
 
-    Document retrieve(URI u) {
+    Document retrieve(URI u, raw=false) {
         def s 
         def filename = u.toString()
         File f = new File("$storageDir/$filename")
         try {
-            return new MyDocument(filename).withData(f.text.getBytes())
+            return this.whelk.createDocument().withIdentifier(u).withContentType("content/type").withData(f.text.getBytes())
         } catch (FileNotFoundException fnfe) {
             return null
         }

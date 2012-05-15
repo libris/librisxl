@@ -1,5 +1,7 @@
 package se.kb.libris.whelks;
 
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.net.URI;
 
 public interface Whelk {
@@ -9,7 +11,7 @@ public interface Whelk {
     public void delete(URI identifier);
     
     // search/lookup
-    public SearchResult query(QueryType type, String query);
+    public SearchResult<? extends Document> query(String query);
     public LookupResult<? extends Document> lookup(Key key);
 
     // maintenance
@@ -18,6 +20,5 @@ public interface Whelk {
     public Iterable<LogEntry> log(URI identifier);
     
     // factory methods
-    public Document createDocument(String contentType, byte[] data);
-    //public Document createDocument(String contentType, ByteArraInputStream data);
+    public Document createDocument();
 }

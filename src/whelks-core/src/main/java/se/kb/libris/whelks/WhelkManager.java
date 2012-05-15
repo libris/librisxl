@@ -1,15 +1,14 @@
 package se.kb.libris.whelks;
 
-import com.google.gson.Gson;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.simple.*;
 import se.kb.libris.whelks.exception.*;
 import se.kb.libris.whelks.persistance.*;
-import se.kb.libris.whelks.plugin.Pluggable;
-import se.kb.libris.whelks.plugin.Plugin;
 
     /* Example JSON:
      * {
@@ -48,6 +47,9 @@ public class WhelkManager implements JSONInitialisable {
     Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
     URL location = null;
     
+    public WhelkManager() {
+    }
+    
     public WhelkManager(URL url) {
         location = url;
         
@@ -58,6 +60,10 @@ public class WhelkManager implements JSONInitialisable {
         }
     }
 
+    public Map<String, Whelk> getWhelks() {
+        return whelks;
+    }
+    
     public Whelk getWhelk(String name) {
         return whelks.get(name);
     }
@@ -75,7 +81,7 @@ public class WhelkManager implements JSONInitialisable {
     
     public Whelk createWhelk(String factoryName, String name) {
         if (!factories.containsKey(factoryName))
-            throw new NoSuchFactoryException("No factory has been registered with the name '" + factoryName + "'");
+            throw new WhelkRuntimeException("No factory has been registered with the name '" + factoryName + "'");
 
         if (whelks.containsKey(name))
             throw new WhelkRuntimeException("Whelk with name '" + name + "' already exists");
@@ -89,7 +95,36 @@ public class WhelkManager implements JSONInitialisable {
         if (!whelks.containsKey(name))
             throw new WhelkRuntimeException("No whelk exists with the name '" + name + "'");
         
-        whelks.get(name).destroy();
+        whelks.remove(name).destroy();
+    }
+    
+    public Document resolve(URI identifier) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    public void save(URL location) {
+        if (location.getProtocol().equals("file")) {
+            File file = new File(location.getFile());
+            PrintWriter writer = null;
+            
+            try {
+                writer = new PrintWriter(file);
+                writer.println(serialise());
+                
+                this.location = location;
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, null, ex);
+                throw new WhelkRuntimeException("Could not write to URL '" + location + "'");
+            } finally {
+                try { writer.close(); } catch (Exception e) {}
+            }
+        } else if (location.getProtocol().equals("http") || location.getProtocol().equals("https")) {
+            /** @todo implement HTTP(S) PUT*/
+        }
+    }
+    
+    public void save() {
+        save(location);
     }
 
     public String serialise() {
@@ -125,9 +160,61 @@ public class WhelkManager implements JSONInitialisable {
     }
 
     public JSONInitialisable init(JSONObject obj) {
+        if (obj.containsKey("whelks")) {
+            JSONObject _whelks = (JSONObject)obj.get("whelks");
+            
+            for (Object key: _whelks.keySet()) {
+                try {
+                    String name = key.toString();
+                    JSONObject _whelk = (JSONObject)_whelks.get(key);
+                    String classname = _whelk.get("_classname").toString();
+                    Class c = Class.forName(classname);
+                    
+                    if (c.isAssignableFrom(JSONDeserialiser.class)) {
+                        whelks.put(name, (Whelk)JSONDeserialiser.deserialize(classname, (JSONObject)_whelks.get(key)));
+                    } else {
+                        try {
+                            whelks.put(name, (Whelk)c.getConstructor(Map.class).newInstance(_whelk));
+                        } catch (NoSuchElementException e) {
+                            whelks.put(name, (Whelk)c.newInstance());
+                        } catch (Throwable t) {
+                            //throw new WhelkRuntimeException(t);
+                        }
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
         
+        if (obj.containsKey("factories")) {
+            JSONObject _factories = (JSONObject)obj.get("factories");
+            
+            for (Object key: _factories.keySet()) {
+                try {
+                    String name = key.toString();
+                    JSONObject _factory = (JSONObject)_factories.get(key);
+                    String classname = _factory.get("_classname").toString();
+                    Class c = Class.forName(classname);
+                    
+                    if (c.isAssignableFrom(JSONDeserialiser.class)) {
+                        factories.put(name, (WhelkFactory)JSONDeserialiser.deserialize(classname, (JSONObject)_factories.get(key)));
+                    } else {
+                        try {
+                            factories.put(name, (WhelkFactory)c.getConstructor(Map.class).newInstance(_factory));
+                        } catch (NoSuchElementException e) {
+                            factories.put(name, (WhelkFactory)c.newInstance());
+                        } catch (Throwable t) {
+                            //throw new WhelkRuntimeException(t);
+                        }
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
         
-        throw new UnsupportedOperationException("Not yet implemented");
+        return this;
     }
 }
 
