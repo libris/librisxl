@@ -1,3 +1,8 @@
+<<<<<<< .merge_file_EoDcUA
 .gradle
 build
 .*.swp
+=======
+/whelks/target/
+/src/whelks-core/target/
+>>>>>>> .merge_file_UhbZjd

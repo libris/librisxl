@@ -1,3 +1,4 @@
+apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'jetty'
 
@@ -16,10 +17,6 @@ jar {
     manifest {
         attributes 'Main-Class': mainClassName
     }
-}
-
-test {
-    include "**/*Test.class"
 }
 
 task depjar(type: Jar, dependsOn: jar) {
@@ -50,6 +47,7 @@ repositories {
     mavenCentral()
     maven { url "http://oss.sonatype.org/content/repositories/releases/" }
     maven { url "http://maven.restlet.org/" }
+    maven { url 'http://devproj.libris.kb.se/nexus/content/repositories/internal' }
 }
 
 dependencies {
@@ -58,9 +56,11 @@ dependencies {
     compile group: 'org.elasticsearch', name: 'elasticsearch', version: '0.19.3'
     compile group: 'org.elasticsearch', name: 'elasticsearch-lang-groovy', version: '1.1.0'
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.0.0'
+    compile group: 'commons-io', name: 'commons-io', version: '2.3'
     compile group: 'org.restlet.jse', name: 'org.restlet', version: '2.0.13'
     compile group: 'org.restlet.jee', name: 'org.restlet.ext.servlet', version: '2.0.13'
     groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.0' 
+    compile 'se.kb.libris:marc:1.2.6'
     providedCompile group: 'javax.servlet', name: 'servlet-api', version: '2.5'
     testCompile group: 'junit', name: 'junit', version: '4.7' 
 }

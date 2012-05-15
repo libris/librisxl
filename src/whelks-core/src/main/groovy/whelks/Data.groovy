@@ -1,14 +1,33 @@
 package se.kb.libris.conch.data
 
+import se.kb.libris.whelks.Document
+import se.kb.libris.whelks.SearchResult
 import se.kb.libris.whelks.basic.BasicDocument
 
-class MyDocument extends BasicDocument {
+class WhelkDocument extends BasicDocument {
+    /*
     URI identifier
+    Document withIdentifier(URI u) {
+        this.identifier = u
+        return this
 
-    MyDocument(URI uri) {
-        this.identifier = uri
     }
-    MyDocument(String uri) {
-        this.identifier = new URI(uri)
+    */
+}
+
+class WhelkSearchResult implements SearchResult {
+
+    String result
+    Iterable hits
+    Iterable facets
+    long numberOfHits
+
+    WhelkSearchResult(String data) {
+        this.result = data
     }
+
+    def String toString() {
+        return result
+    }
+
 }

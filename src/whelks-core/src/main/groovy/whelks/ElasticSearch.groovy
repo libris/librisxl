@@ -1,6 +1,8 @@
-package se.kb.libris.conch.component
+package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
+
+import org.apache.commons.io.output.ByteArrayOutputStream
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.get.GetResponse
@@ -20,28 +22,33 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.JsonObject
 
-import se.kb.libris.whelks.Document
-import se.kb.libris.conch.Whelk
-import se.kb.libris.conch.data.MyDocument
-import se.kb.libris.conch.component.*
+import se.kb.libris.whelks.*
+import se.kb.libris.whelks.component.*
 
 import static se.kb.libris.conch.Tools.*
 
 @Log
-class ElasticSearch implements Index, Storage {
+class ElasticSearch implements GIndex, Storage {
 
     Whelk whelk
     Client client
 
+    boolean enabled = true
+    String id = "elasticsearch"
+
     String defaultType = "record"
 
-    def setWhelk(Whelk w) { this.whelk = w }
+    def void setWhelk(Whelk w) { this.whelk = w }
 
-    def add(Document d) {
+    def void enable() {this.enabled = true}
+    def void disable() {this.enabled = false}
+
+    def add(byte[] data, URI identifier) {
         log.debug "Indexing document ..."
-        def dict = determineIndexAndType(d.identifier)
+        def dict = determineIndexAndType(identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
-        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(_wrap_data(d)).execute().actionGet()
+        //IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(_wrap_data(data)).execute().actionGet()
+        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(wrapData(data, identifier)).execute().actionGet()
         log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         def iresp = [:]
         iresp['id'] = response.id
@@ -53,41 +60,41 @@ class ElasticSearch implements Index, Storage {
     /**
      * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
      */
-    def _wrap_data(doc) {
-        Gson gson = new Gson()
-        if (!_is_json(new String(doc.data))) {
+    def wrapData(byte[] data, URI identifier) {
+        if (isJSON(data)) {
+            return data
+        } else {
+            Gson gson = new Gson()
             def docrepr = [:]
-            docrepr['data'] = new String(doc.data)
-            docrepr['identifier'] = doc.identifier
-            docrepr['contenttype'] = (doc.contentType == null ? contentType(doc.data) : doc.contentType)
+            docrepr['data'] = new String(data)
+            docrepr['identifier'] = identifier
+            docrepr['contenttype'] = "text/plain"
             String json = gson.toJson(docrepr)
             return json.getBytes()
-        } else {
-            /*
-            def jsonmap = [:]
-            jsonmap['identifier'] = '"' + doc.identifier.toString() + '"'
-            jsonmap['data'] = new String(doc.data)
-            return _assemble_json_map(jsonmap)
-            */
-            return doc.data
         }
     }
 
-    def _assemble_json_map(jsonmap) {
-        def jsondata = new StringBuffer("{")
-        jsonmap.eachWithIndex() { it, i ->
-            if (i > 0) { jsondata << ","}
-            jsondata << '"' + it.key + '": ' + it.value
-        }
-        jsondata << "}"
-        return jsondata.toString().getBytes()
+    void delete(URI uri) {
+        throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    def _is_json(def data) {
+    @Override
+    OutputStream getOutputStreamFor(Document doc) {
+        log.debug("Preparing outputstream for document ${doc.identifier}")
+        //persistMetaDataFor(doc)
+        return new ByteArrayOutputStream() {
+            void close() throws IOException {
+                ElasticSearch.this.add(toByteArray(), doc.identifier)
+            }
+        }
+    }
+
+    boolean isJSON(data) {
         Gson gson = new Gson()
         try {
-            gson.fromJson(data, Object.class)
+            gson.fromJson(new String(data), Object.class)
         } catch (JsonSyntaxException jse) {
+            log.debug("Data was not appliction/json")
             return false
         }
         return true
@@ -116,7 +123,8 @@ class ElasticSearch implements Index, Storage {
         return dict
     }
 
-    def retrieve(URI uri, raw = false) {
+    @Override
+    Document get(URI uri, raw = false) {
         def dict = determineIndexAndType(uri)
         GetResponse response 
         try {
@@ -125,7 +133,7 @@ class ElasticSearch implements Index, Storage {
             log.error("Exception", e)
         }
         if (response.exists()) {
-            MyDocument d 
+            Document d 
             def map = response.sourceAsMap()
             log.debug("Raw mode: ${raw}")
             if (!raw && map['contenttype'] != "application/json" && map['data']) {
@@ -135,9 +143,9 @@ class ElasticSearch implements Index, Storage {
                 if (!map['contenttype']) {
                     map['contenttype'] = contentType(map['data'].getBytes())
                 }
-                d = new MyDocument(uri).withData(map['data'].getBytes()).withContentType(map['contenttype'])
+                d = this.whelk.createDocument().withIdentifier(uri).withContentType(map['contenttype']).withData(map['data'].getBytes())
             } else {
-                d = new MyDocument(uri).withData(new String(response.sourceAsString()).getBytes()).withContentType("application/json")
+                d = this.whelk.createDocument().withIdentifier(uri).withContentType("application/json").withData(response.sourceAsString().getBytes())
             }
 
             return d
@@ -174,9 +182,12 @@ class ElasticSearch implements Index, Storage {
                 hits = hits.insert(0,"[")
                 hits = hits.append("]")
             }
-
             return hits.toString()
         }
+    }
+
+    LookupResult lookup(Key key) {
+        throw new UnsupportedOperationException("Not supported yet.")
     }
 }
 

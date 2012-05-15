@@ -7,7 +7,7 @@ import java.util.List;
  * @author marma
  */
 public interface Pluggable {
-    public Iterable<Plugin> getPlugins();
+    public Iterable<? extends Plugin> getPlugins();
     public void addPlugin(Plugin plugin);
     public void removePlugin(String id);
 }
