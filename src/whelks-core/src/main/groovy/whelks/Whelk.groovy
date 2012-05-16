@@ -73,6 +73,7 @@ class WhelkImpl extends BasicWhelk {
         }
     }
 
+    // TODO: This seems like bad form. Need to rethink identifier concept for whelk2whelk notifications.
     private Document rewriteIdentifierForWhelk(Document doc) {
         def parts = doc.identifier.toString().split("/")
         def newUriString = new StringBuffer()
