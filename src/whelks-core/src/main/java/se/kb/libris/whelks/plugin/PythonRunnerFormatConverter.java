@@ -9,8 +9,6 @@ import se.kb.libris.whelks.Document;
 import se.kb.libris.whelks.Whelk;
 import se.kb.libris.whelks.exception.*;
 
-
-
 public class PythonRunnerFormatConverter implements FormatConverter {
 
     private boolean enabled = true;
@@ -50,18 +48,13 @@ public class PythonRunnerFormatConverter implements FormatConverter {
         }
     }
 
-
+    @Override
     public Document convert(Document doc, String mimeType, String format, String profile) {
         try {
             Reader r = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(this.scriptName));
             if (python != null) {
                 python.put("whelk", this.whelk);
                 python.put("document", doc);
-                /*
-                StringWriter responseWriter = new StringWriter();
-                python.getContext().setReader(new StringReader(new String(doc.getData())));
-                python.getContext().setWriter(responseWriter);
-                */
                 python.eval(r);
                 Object result = python.get("result");
                 System.out.printf("\tScript result: %s\n", result);

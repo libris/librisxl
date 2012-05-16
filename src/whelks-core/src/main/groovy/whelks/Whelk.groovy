@@ -13,6 +13,7 @@ import se.kb.libris.whelks.basic.BasicWhelk
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.conch.RestManager
 
 import se.kb.libris.conch.data.WhelkDocument
 import se.kb.libris.conch.data.WhelkSearchResult
@@ -23,7 +24,13 @@ class WhelkImpl extends BasicWhelk {
     def name
     def defaultIndex
 
-    def WhelkImpl(name) { setName(name) }
+    RestManager manager
+
+    def listeners = []
+
+
+
+    def WhelkImpl(RestManager m, String name) { this.manager = m; setName(name) }
 
     def setName(n) {
         this.name = n
@@ -38,8 +45,68 @@ class WhelkImpl extends BasicWhelk {
         return uri
     }
 
+    void listenTo(Whelk w) {
+        w.registerListener(this.name)
+    }
+
+    void registerListener(listener) {
+        log.debug "Whelk $name registering $listener as listener."
+        listeners << listener
+    }
+
+    void notify(URI u) {
+        log.debug "Whelk $name notified of change in URI $u"
+        Document doc = manager.resolve(u)
+        boolean converted = false
+        for (Plugin p: getPlugins()) {
+            if (p instanceof FormatConverter) {
+                doc = ((FormatConverter)p).convert(doc, null, null, null);
+                converted = true
+            }
+        }
+        if (converted) {
+            log.debug "Document ${doc.identifier} converted. "
+            doc = rewriteIdentifierForWhelk(doc)
+            log.debug "New identifier assigned."
+            log.debug "Now saving new version."
+            store(doc)
+        }
+    }
+
+    private Document rewriteIdentifierForWhelk(Document doc) {
+        def parts = doc.identifier.toString().split("/")
+        def newUriString = new StringBuffer()
+        parts.eachWithIndex() { part, i ->
+            if (i == 0) {
+                newUriString << (this.defaultIndex ? "/" + this.defaultIndex : "")
+            }
+            else if (i > 1 && part) {
+                newUriString << "/" + part 
+            }
+        }
+        doc = doc.withIdentifier(new URI(newUriString.toString()))
+        log.debug "New URI: ${doc.identifier}"  
+        return doc
+    }
+
+    private void notifyListeners(URI u) {
+        listeners.each {
+            if (manager.whelks.keySet().contains(it)) {
+                // Local Whelk
+                manager.whelks[it].notify(u)
+            }
+        }
+    }
+
     boolean isBinaryData(byte[] data) {
         return false
+    }
+
+    @Override
+    URI store(Document d) {
+        URI u = super.store(d)
+        notifyListeners(u)
+        return u
     }
 
     def has_identifier(uri) {
@@ -83,11 +150,6 @@ class WhelkImpl extends BasicWhelk {
         if (doc == null) {
             throw new WhelkRuntimeException("Document not found: $identifier")
         }
-        for (Plugin p: getPlugins()) {
-            if (p instanceof FormatConverter) {
-                ((FormatConverter)p).convert(doc, null, null, null);
-            }
-        } 
         return doc
     }
 

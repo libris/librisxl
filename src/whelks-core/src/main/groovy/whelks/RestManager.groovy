@@ -33,35 +33,48 @@ import se.kb.libris.whelks.plugin.PythonRunnerFormatConverter
 @Log
 class RestManager extends Application {
 
-    def whelks = []
+    def whelks = [:]
 
     RestManager(Context parentContext) {
         super(parentContext)
-        def allwhelk = new WhelkImpl("all")
+        def allwhelk = new WhelkImpl(this, "all")
         allwhelk.defaultIndex = null
-        def bibwhelk = new WhelkImpl("bib")
-        def authwhelk = new WhelkImpl("author")
+        def bibwhelk = new WhelkImpl(this, "bib")
+        def authwhelk = new WhelkImpl(this, "author")
+        def suggestwhelk = new WhelkImpl(this, "suggest")
         // Try using only ElasticSearch as storage
         //whelk.addComponent(new DiskStorage())
         def es = new ElasticSearchClient()
         def ds = new DiskStorage()
-        def sug_conv = new PythonRunnerFormatConverter("sug_json.py")
+        def suggest_conv = new PythonRunnerFormatConverter("sug_json.py")
         // Using same es backend for all whelks
         allwhelk.addPlugin(es)
         authwhelk.addPlugin(es)
         //authwhelk.addPlugin(ds)
         bibwhelk.addPlugin(es)
+        suggestwhelk.addPlugin(es)
         //bibwhelk.addPlugin(ds)
         allwhelk.addPlugin(new SearchRestlet())
         authwhelk.addPlugin(new AutoComplete())
         authwhelk.addPlugin(new SearchRestlet())
         authwhelk.addPlugin(new DocumentRestlet())
-        authwhelk.addPlugin(sug_conv)
+        suggestwhelk.addPlugin(new SearchRestlet())
+        suggestwhelk.addPlugin(new DocumentRestlet())
+        suggestwhelk.addPlugin(suggest_conv)
+        suggestwhelk.listenTo(authwhelk)
         bibwhelk.addPlugin(new SearchRestlet())
         bibwhelk.addPlugin(new DocumentRestlet())
-        whelks.add(allwhelk)
-        whelks.add(bibwhelk)
-        whelks.add(authwhelk)
+        whelks.put(allwhelk.name, allwhelk)
+        whelks.put(bibwhelk.name, bibwhelk)
+        whelks.put(authwhelk.name, authwhelk)
+        whelks.put(suggestwhelk.name, suggestwhelk)
+    }
+
+    /**
+     * Very simple method to resolve the correct document given a URI.
+     */
+    Document resolve(URI uri) {
+        return whelks[uri.toString().split("/")[1]].get(uri)
     }
 
     @Override
@@ -80,8 +93,8 @@ class RestManager extends Application {
         })
 
         log.debug("Looking for suitable APIs to attach")
-        for (whelk in whelks) {
-            for (api in whelk.getApis()) {
+        whelks.each { 
+            for (api in it.value.getApis()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
                     router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
@@ -131,7 +144,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
         this.path = (tmppath.startsWith("/") ? tmppath : "/" + tmppath)
     }
 
-    def getModifiedPathEnd() {
+    private String getModifiedPathEnd() {
         if (getPathEnd() == null || getPathEnd().length() == 0) {
             return ""
         } else {

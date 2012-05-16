@@ -66,17 +66,17 @@ def get_records(f_100, sug_json):
         
 
 
-#if __name__ == "__main__":
-    #print "moeg ...\n\n"
-    #sys.stdout.write(json.dumps(sug_json))
-    #print "\n\n... typ?"
+_in_console = False
 try:
     data = document.getDataAsString()
 except:
     data = sys.stdin.read()
+    _in_console = True
 
 sug_json = transform(json.loads(data))
 result = json.dumps(sug_json)
+if _in_console:
+    print result
 
 
 
