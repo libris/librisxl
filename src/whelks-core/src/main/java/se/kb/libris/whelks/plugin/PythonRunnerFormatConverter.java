@@ -65,11 +65,13 @@ public class PythonRunnerFormatConverter implements FormatConverter {
                 python.eval(r);
                 Object result = python.get("result");
                 System.out.printf("\tScript result: %s\n", result);
+                return doc.withData(((String)result).getBytes());
             } else {
                 System.out.println("Sorry, python is null");
             }
+        } catch (ScriptException se) {
+            se.printStackTrace();
         } catch (Exception e) {
-            e.printStackTrace();
             throw new WhelkRuntimeException(e);
         }
         return doc;

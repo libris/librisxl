@@ -128,6 +128,11 @@ public class BasicDocument implements Document {
     }
 
     @Override
+    public String getDataAsString() {
+        return new String(data);
+    }
+
+    @Override
     public InputStream getDataAsStream() {
         return new ByteArrayInputStream(data);
     }

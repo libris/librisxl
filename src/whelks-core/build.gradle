@@ -51,6 +51,7 @@ repositories {
     maven { url "http://oss.sonatype.org/content/repositories/releases/" }
     maven { url "http://maven.restlet.org/" }
     maven { url 'http://devproj.libris.kb.se/nexus/content/repositories/internal' }
+    flatDir name: 'localDir', dirs: 'lib'
 }
 
 dependencies {
@@ -65,6 +66,7 @@ dependencies {
     compile group: 'org.restlet.jee', name: 'org.restlet.ext.servlet', version: '2.0.13'
     groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.0' 
     compile 'se.kb.libris:marc:1.2.6'
+    compile 'jyson:jyson:1.0.2'
     providedCompile group: 'javax.servlet', name: 'servlet-api', version: '2.5'
     testCompile group: 'junit', name: 'junit', version: '4.7' 
 }

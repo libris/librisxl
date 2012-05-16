@@ -1,5 +1,11 @@
 #!/usr/bin/env python
-import json, io, sys, urllib, urllib2
+import sys, urllib, urllib2
+try:
+    from com.xhaus.jyson import JysonCodec as json
+except ImportError:
+    # From Python
+    import json 
+
 
 def transform(a_json):
     sug_json = {}
@@ -60,16 +66,17 @@ def get_records(f_100, sug_json):
         
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     #print "moeg ...\n\n"
-    if (document):
-        data = document.getData()
-
-    #data = sys.stdin.read()
-    sug_json = transform(json.loads(data))
-    result = json.dumps(sug_json)
     #sys.stdout.write(json.dumps(sug_json))
     #print "\n\n... typ?"
+try:
+    data = document.getDataAsString()
+except:
+    data = sys.stdin.read()
+
+sug_json = transform(json.loads(data))
+result = json.dumps(sug_json)
 
 
 

@@ -11,6 +11,7 @@ public interface Document {
         
     public byte[] getData();
     public byte[] getData(long offset, long length);
+    public String getDataAsString();
     public InputStream getDataAsStream();
     public InputStream getDataAsStream(long offset, long length);
     public String getContentType();
