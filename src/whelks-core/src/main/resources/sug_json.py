@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-
-import requests, json, io, sys
+import json, io, sys, urllib, urllib2
 
 def transform(a_json):
     sug_json = {}
@@ -36,12 +35,19 @@ def transform(a_json):
 
 def get_records(f_100, sug_json):
     try:
-        urlbase = "http://libris.kb.se/xsearch?query=forf:(#100#)%20spr:swe&format=json"
-        xreply = requests.get(urlbase.replace("#100#", f_100))
-        reply = json.loads(xreply.text)
-        sug_json['records'] = reply['xsearch']['records']
+        #urlbase = "http://libris.kb.se/xsearch?query=forf:(#100#)%20spr:swe&format=json"
 
-        top_3 = reply['xsearch']['list'][:3]
+        url = 'http://libris.kb.se/xsearch'
+        values = {'query' : 'forf:(%s) spr:swe' % f_100, 'format' : 'json'}
+
+        data = urllib.urlencode(values)
+        reply = urllib2.urlopen(url + "?" + data)
+        response = reply.read()
+        print "response", type(response)
+        xresult = json.loads(response)['xsearch']
+
+        sug_json['records'] = xresult['records']
+        top_3 = xresult['list'][:3]
         top_titles = {}
         for p in top_3:
             top_titles[p['identifier']] = p['title']
@@ -55,10 +61,14 @@ def get_records(f_100, sug_json):
 
 
 if __name__ == "__main__":
-    #print "jorasatte ...\n\n"
-    data = sys.stdin.read()
+    #print "moeg ...\n\n"
+    if (document):
+        data = document.getData()
+
+    #data = sys.stdin.read()
     sug_json = transform(json.loads(data))
-    sys.stdout.write(json.dumps(sug_json))
+    result = json.dumps(sug_json)
+    #sys.stdout.write(json.dumps(sug_json))
     #print "\n\n... typ?"
 
 

@@ -56,17 +56,20 @@ public class PythonRunnerFormatConverter implements FormatConverter {
             Reader r = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(this.scriptName));
             if (python != null) {
                 python.put("whelk", this.whelk);
+                python.put("document", doc);
+                /*
                 StringWriter responseWriter = new StringWriter();
                 python.getContext().setReader(new StringReader(new String(doc.getData())));
                 python.getContext().setWriter(responseWriter);
+                */
                 python.eval(r);
-                String result = responseWriter.toString();
-                //Object result = python.get("result");
+                Object result = python.get("result");
                 System.out.printf("\tScript result: %s\n", result);
             } else {
                 System.out.println("Sorry, python is null");
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new WhelkRuntimeException(e);
         }
         return doc;

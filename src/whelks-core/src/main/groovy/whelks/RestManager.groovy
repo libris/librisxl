@@ -58,7 +58,7 @@ class RestManager extends Application {
         authwhelk.addPlugin(new DocumentRestlet())
         bibwhelk.addPlugin(new SearchRestlet())
         bibwhelk.addPlugin(new DocumentRestlet())
-        //bibwhelk.addPlugin(sug_conv)
+        bibwhelk.addPlugin(sug_conv)
         whelks.add(allwhelk)
         whelks.add(bibwhelk)
         whelks.add(authwhelk)
