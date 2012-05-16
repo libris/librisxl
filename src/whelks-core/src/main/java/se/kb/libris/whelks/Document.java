@@ -26,7 +26,6 @@ public interface Document {
     
     public Document withIdentifier(URI uri);
     public Document withData(byte[] data);
-    public Document withSize(long size);
     public Document withDataAsStream(InputStream data);
     public Document withContentType(String contentType);
 }

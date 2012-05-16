@@ -97,4 +97,9 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
     public JSONInitialisable init(JSONObject obj) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public String getPrefix() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

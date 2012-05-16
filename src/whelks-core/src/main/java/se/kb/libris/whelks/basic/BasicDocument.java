@@ -104,6 +104,7 @@ public class BasicDocument implements Document {
     public Document withData(byte[] data) {
         this.data = data;
         this.size = data.length;
+        
         return this;
     }
 
@@ -111,12 +112,6 @@ public class BasicDocument implements Document {
     public Document withContentType(String contentType) {
         this.contentType = contentType;
         
-        return this;
-    }
-
-    @Override
-    public Document withSize(long size) {
-        this.size = size;
         return this;
     }
 
