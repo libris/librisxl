@@ -74,9 +74,28 @@ except:
     _in_console = True
 
 sug_json = transform(json.loads(data))
-result = json.dumps(sug_json)
+r = json.dumps(sug_json)
+
+#for 700or100 in parse_bib_document():
+#    old_document = whelk.get(700or100)
+
+
+try:
+    mydoc = whelk.get("/%s%s" % (whelk.name, document.identifier))
+except:
+    mydoc = whelk.createDocument().withIdentifier("/%s%s" % (whelk.name, document.identifier))
+
+print "r", r
+
+mydoc = mydoc.withData(r)
+
+print "Sparar dokument i whelken daaraa"
+uri = whelk.store(mydoc)
+    
+
+
+print "sparat %s" % uri
+
+
 if _in_console:
     print result
-
-
-

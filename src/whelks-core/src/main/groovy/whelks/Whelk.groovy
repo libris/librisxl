@@ -28,8 +28,6 @@ class WhelkImpl extends BasicWhelk {
 
     def listeners = []
 
-
-
     def WhelkImpl(RestManager m, String name) { this.manager = m; setName(name) }
 
     def setName(n) {
@@ -61,7 +59,7 @@ class WhelkImpl extends BasicWhelk {
         for (Plugin p: getPlugins()) {
             if (p instanceof FormatConverter) {
                 doc = ((FormatConverter)p).convert(doc, null, null, null);
-                converted = true
+                converted = (doc != null)
             }
         }
         if (converted) {
@@ -103,8 +101,19 @@ class WhelkImpl extends BasicWhelk {
         return false
     }
 
+    boolean belongsHere(Document d) {
+        return d.identifier.toString().startsWith("/"+this.name+"/")
+    }
+
+    Document getByOtherIdentifier(URI u) {
+        return null
+    }
+
     @Override
     URI store(Document d) {
+        if (! belongsHere(d)) {
+            throw new WhelkRuntimeException("Document does not belong here.")
+        }
         URI u = super.store(d)
         notifyListeners(u)
         return u

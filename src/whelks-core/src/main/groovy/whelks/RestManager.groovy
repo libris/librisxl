@@ -46,7 +46,7 @@ class RestManager extends Application {
         //whelk.addComponent(new DiskStorage())
         def es = new ElasticSearchClient()
         def ds = new DiskStorage()
-        def suggest_conv = new PythonRunnerFormatConverter("sug_json.py")
+        def suggest_conv = new PythonRunnerFormatConverter("/Users/Markus/dev/java/librisxl/src/whelks-core/src/main/resources/sug_json.py")
         // Using same es backend for all whelks
         allwhelk.addPlugin(es)
         authwhelk.addPlugin(es)
@@ -93,10 +93,12 @@ class RestManager extends Application {
         })
 
         log.debug("Looking for suitable APIs to attach")
+
         whelks.each { 
             for (api in it.value.getApis()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
+                    log.debug("Setting varpath")
                     router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
                 } else {
                     router.attach(api.path, api)
@@ -104,6 +106,12 @@ class RestManager extends Application {
             }
         }
 
+        /*
+        def dr = new DocumentRestlet()
+        whelks['suggest'].addPlugin(dr)
+        router.attach("{path}", dr).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
+
+        */
         return router
     }
 }
@@ -130,6 +138,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     Whelk whelk
     def path
     def pathEnd = ""
+    def varPath = false
     boolean enabled = true
 
     String id = "RestAPI"
@@ -152,9 +161,11 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
         }
     }
 
+    /*
     def getVarPath() {
         return this.path.matches(Pattern.compile("\\{\\w\\}.+"))
     }
+    */
 
 }
 
@@ -162,6 +173,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
 class DocumentRestlet extends BasicWhelkAPI {
 
     def pathEnd = "{path}"
+    def varPath = true
 
     def _escape_regex(str) {
         def escaped = new StringBuffer()
@@ -175,7 +187,9 @@ class DocumentRestlet extends BasicWhelkAPI {
     }
 
     def void handle(Request request, Response response) {
+        log.debug("reqattr path: " + request.attributes["path"])
         String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["path"])
+        //path = request.attributes["path"]
         boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"

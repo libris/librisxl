@@ -102,6 +102,16 @@ public class BasicDocument implements Document {
     }
 
     @Override
+    public Document withIdentifier(String uri) {
+        try {
+            this.identifier = new URI(uri);
+        } catch (java.net.URISyntaxException e) {
+            throw new WhelkRuntimeException(e);
+        }
+        return this;
+    }
+
+    @Override
     public Document withIdentifier(URI uri) {
         this.identifier = uri;
         return this;

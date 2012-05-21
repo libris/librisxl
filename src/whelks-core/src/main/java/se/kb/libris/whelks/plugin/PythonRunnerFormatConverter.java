@@ -51,14 +51,24 @@ public class PythonRunnerFormatConverter implements FormatConverter {
     @Override
     public Document convert(Document doc, String mimeType, String format, String profile) {
         try {
-            Reader r = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(this.scriptName));
+            Reader r = null;
+            if (this.scriptName.startsWith("/")) {
+                System.out.println("Reading from filesystem");
+                r = new FileReader(scriptName);
+            } else {
+                r = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(this.scriptName));
+            }
             if (python != null) {
                 python.put("whelk", this.whelk);
                 python.put("document", doc);
                 python.eval(r);
                 Object result = python.get("result");
                 System.out.printf("\tScript result: %s\n", result);
-                return doc.withData(((String)result).getBytes());
+                if (result != null) {
+                    return doc.withData(((String)result).getBytes());
+                } else {
+                    return null;
+                }
             } else {
                 System.out.println("Sorry, python is null");
             }
