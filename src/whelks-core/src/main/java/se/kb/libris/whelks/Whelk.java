@@ -1,5 +1,6 @@
 package se.kb.libris.whelks;
 
+import java.io.InputStream;
 import java.net.URI;
 
 public interface Whelk {
@@ -11,13 +12,14 @@ public interface Whelk {
     // search/lookup
     public SearchResult<? extends Document> query(String query);
     public LookupResult<? extends Document> lookup(Key key);
+    public InputStream sparql(String query);
 
     // maintenance
-    public String getPrefix();
     public void destroy();
     public Iterable<LogEntry> log(int startIndex);
     public Iterable<LogEntry> log(URI identifier);
     
     // factory methods
-    public Document createDocument();
+    public Document createDocument(); 
+    public URI mintIdentifier(Document document);
 }

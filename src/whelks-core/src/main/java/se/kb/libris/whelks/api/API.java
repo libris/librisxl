@@ -4,5 +4,5 @@ import java.util.Map;
 import se.kb.libris.whelks.plugin.Plugin;
 
 public interface API extends Plugin {
-    public APIReturn request(Map requestInfo);
+    //public APIReturn request(Map requestInfo);
 }

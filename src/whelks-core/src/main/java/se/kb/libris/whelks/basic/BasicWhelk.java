@@ -24,9 +24,10 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             d.withIdentifier(mintIdentifier(d));
         
         // find and add links
-        d.getLinks().clear();
+        Set<Link> links = new HashSet<Link>();
         for (LinkFinder lf: getLinkFinders())
-            d.getLinks().addAll(lf.findLinks(d));
+            links.addAll(lf.findLinks(d));
+        d.withLinks(links);
                 
         // generate and add keys
         d.getKeys().clear();
