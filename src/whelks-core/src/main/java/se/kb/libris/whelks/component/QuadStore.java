@@ -1,6 +1,5 @@
 package se.kb.libris.whelks.component;
 
-import java.io.InputStream;
 import java.net.URI;
 import se.kb.libris.whelks.Document;
 import se.kb.libris.whelks.SparqlResult;
