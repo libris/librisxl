@@ -15,6 +15,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import org.apache.commons.codec.binary.Base64;
 import se.kb.libris.conch.converter.MarcJSONConverter;
+import java.util.Properties;
+import java.io.FileInputStream;
 /**
  *
  * @author katarina
@@ -25,7 +27,10 @@ public class BatchImportTest {
         MarcXmlRecordReader marcXmlRecordReader = null;
         try {
             URL url = new URL("http://data.libris.kb.se/auth/oaipmh/?verb=ListRecords&metadataPrefix=marcxml");
-            String authString = "apibeta:beta";
+            Properties properties = new Properties();
+            properties.load(new FileInputStream("whelks-core.properties")); //Kanske ska göra en ClassLoader.getResource-habrovink istället
+            String authString = properties.getProperty("authString");
+
             byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
             String authStringEnc = new String(authEncBytes);
             URLConnection urlConnection = url.openConnection();
