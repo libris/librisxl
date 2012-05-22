@@ -1,6 +1,7 @@
 package se.kb.libris.whelks;
 
 import java.io.InputStream;
+import java.io.Reader;
 
 public interface Description {
     public String getContentType();
