@@ -92,8 +92,6 @@ mydoc = mydoc.withData(r)
 print "Sparar dokument i whelken daaraa"
 uri = whelk.store(mydoc)
     
-
-
 print "sparat %s" % uri
 
 

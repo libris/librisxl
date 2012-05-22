@@ -2,8 +2,6 @@ package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
-import org.apache.commons.io.output.ByteArrayOutputStream
-
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.get.GetResponse
 import org.elasticsearch.action.index.IndexResponse
@@ -81,10 +79,11 @@ class ElasticSearch implements GIndex, Storage {
     @Override
     OutputStream getOutputStreamFor(Document doc) {
         log.debug("Preparing outputstream for document ${doc.identifier}")
-        //persistMetaDataFor(doc)
         return new ByteArrayOutputStream() {
             void close() throws IOException {
+                println "before"
                 ElasticSearch.this.add(toByteArray(), doc.identifier)
+                println "after"
             }
         }
     }
