@@ -7,7 +7,7 @@ public class JSONDeserialiser {
         try {
             return ((JSONInitialisable)Class.forName(classname).newInstance()).init(obj);
         } catch (Throwable t) {
-            throw new DeserialiseException(t);
+            throw new DeserialiseException("Failed to deserialise " + classname,t);
         }
     }
 }

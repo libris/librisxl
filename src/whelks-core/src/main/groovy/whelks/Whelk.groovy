@@ -13,6 +13,7 @@ import se.kb.libris.whelks.basic.BasicWhelk
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.persistance.*
 import se.kb.libris.conch.RestManager
 
 import se.kb.libris.conch.data.WhelkDocument
@@ -27,6 +28,8 @@ class WhelkImpl extends BasicWhelk {
     RestManager manager
 
     def listeners = []
+
+    def WhelkImpl() { }
 
     def WhelkImpl(RestManager m, String name) { this.manager = m; setName(name) }
 

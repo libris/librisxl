@@ -26,6 +26,8 @@ import se.kb.libris.whelks.component.ElasticSearchClient
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.Whelk
 import se.kb.libris.whelks.WhelkImpl
+import se.kb.libris.whelks.WhelkFactory
+import se.kb.libris.whelks.WhelkManager
 import se.kb.libris.whelks.api.RestAPI
 import se.kb.libris.whelks.component.DiskStorage
 import se.kb.libris.whelks.plugin.PythonRunnerFormatConverter
@@ -33,10 +35,13 @@ import se.kb.libris.whelks.plugin.PythonRunnerFormatConverter
 @Log
 class RestManager extends Application {
 
-    def whelks = [:]
+    final String WHELKCONFIGFILE = "/tmp/whelkconfig.json"
+    //def whelks = [:]
+    WhelkManager manager
 
     RestManager(Context parentContext) {
         super(parentContext)
+        /*
         def allwhelk = new WhelkImpl(this, "all")
         allwhelk.defaultIndex = null
         def bibwhelk = new WhelkImpl(this, "bib")
@@ -46,7 +51,7 @@ class RestManager extends Application {
         //whelk.addComponent(new DiskStorage())
         def es = new ElasticSearchClient()
         def ds = new DiskStorage()
-        def suggest_conv = new PythonRunnerFormatConverter("/Users/Markus/dev/java/librisxl/src/whelks-core/src/main/resources/sug_json.py")
+        def suggest_conv = new PythonRunnerFormatConverter("sug_json.py")
         // Using same es backend for all whelks
         allwhelk.addPlugin(es)
         authwhelk.addPlugin(es)
@@ -68,13 +73,60 @@ class RestManager extends Application {
         whelks.put(bibwhelk.name, bibwhelk)
         whelks.put(authwhelk.name, authwhelk)
         whelks.put(suggestwhelk.name, suggestwhelk)
+        */
+
+        init()
     }
+
+    void init() {
+        if (new File(WHELKCONFIGFILE).exists()) {
+            log.debug("Found serialised configuration. Trying to bootstrap ...")
+            manager = new WhelkManager(new URL("file://${WHELKCONFIGFILE}"))
+            log.debug("Manager bootstrapped. Contains "+manager.whelks.size()+" whelks ...")
+            manager.whelks.each {
+                log.debug("Say hello whelk ${it.key}: ${it.value}")
+            }
+        } else {
+            log.debug("Virgin installation. Setting up some whelks.")
+            manager = new WhelkManager()
+            /*
+            manager.registerFactory("whelk", new MyWhelkFactory())
+            def bibwhelk = manager.createWhelk("whelk", "bib")
+            def authwhelk = manager.createWhelk("whelk", "author")
+            def suggestwhelk = manager.createWhelk("whelk", "suggest")
+            */
+
+            def bibwhelk = manager.addWhelk(new WhelkImpl(), "bib")
+            def authwhelk = manager.addWhelk(new WhelkImpl(), "auth")
+            def suggestwhelk = manager.addWhelk(new WhelkImpl(), "suggest")
+
+            // Add storage and index
+            def es = new ElasticSearchClient()
+            bibwhelk.addPlugin(es)
+            authwhelk.addPlugin(es)
+            suggestwhelk.addPlugin(es)
+
+            // Add APIs
+            bibwhelk.addPlugin(new SearchRestlet())
+            bibwhelk.addPlugin(new DocumentRestlet())
+            authwhelk.addPlugin(new SearchRestlet())
+            authwhelk.addPlugin(new DocumentRestlet())
+            suggestwhelk.addPlugin(new SearchRestlet())
+            suggestwhelk.addPlugin(new DocumentRestlet())
+
+            // Add other plugins (formatconverters et al)
+            suggestwhelk.addPlugin(new PythonRunnerFormatConverter("sug_conv.py"))
+
+            manager.save(new URL("file://${WHELKCONFIGFILE}"))
+        }
+    }
+
 
     /**
      * Very simple method to resolve the correct document given a URI.
      */
     Document resolve(URI uri) {
-        return whelks[uri.toString().split("/")[1]].get(uri)
+        return manager.whelks[uri.toString().split("/")[1]].get(uri)
     }
 
     @Override
@@ -94,7 +146,8 @@ class RestManager extends Application {
 
         log.debug("Looking for suitable APIs to attach")
 
-        whelks.each { 
+        manager.whelks.each { 
+            log.debug("Manager found whelk ${it.key}")
             for (api in it.value.getApis()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {

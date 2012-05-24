@@ -78,6 +78,16 @@ public class WhelkManager implements JSONInitialisable {
     public WhelkFactory getFactory(String name) {
         return factories.get(name);
     }
+
+    public Whelk addWhelk(Whelk w, String name) {
+        if (whelks.containsKey(name)) {
+            throw new WhelkRuntimeException("Whelk with name '" + name + "' already exists");
+        }
+
+        whelks.put(name, w);
+        
+        return whelks.get(name);
+    }
     
     public Whelk createWhelk(String factoryName, String name) {
         if (!factories.containsKey(factoryName))
@@ -168,17 +178,24 @@ public class WhelkManager implements JSONInitialisable {
                     String name = key.toString();
                     JSONObject _whelk = (JSONObject)_whelks.get(key);
                     String classname = _whelk.get("_classname").toString();
+                    Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "whelk " + name + " of type " + classname);
                     Class c = Class.forName(classname);
+
+                    Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "class is " + c.getName());
                     
-                    if (c.isAssignableFrom(JSONDeserialiser.class)) {
+                    if (JSONInitialisable.class.isAssignableFrom(c)) {
+                        Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "whelk can be deserialised");
                         whelks.put(name, (Whelk)JSONDeserialiser.deserialize(classname, (JSONObject)_whelks.get(key)));
                     } else {
+                        Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "whelk cannot be deserialised");
                         try {
                             whelks.put(name, (Whelk)c.getConstructor(Map.class).newInstance(_whelk));
-                        } catch (NoSuchElementException e) {
+                        } catch (NoSuchElementException e1) {
+                            whelks.put(name, (Whelk)c.newInstance());
+                        } catch (NoSuchMethodException e2) {
                             whelks.put(name, (Whelk)c.newInstance());
                         } catch (Throwable t) {
-                            //throw new WhelkRuntimeException(t);
+                           throw new WhelkRuntimeException(t);
                         }
                     }
                 } catch (Exception ex) {

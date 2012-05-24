@@ -4,12 +4,14 @@ import javax.script.*;
 import java.io.*;
 
 import java.util.List;
+import org.json.simple.JSONObject;
 
 import se.kb.libris.whelks.Document;
 import se.kb.libris.whelks.Whelk;
 import se.kb.libris.whelks.exception.*;
+import se.kb.libris.whelks.persistance.*;
 
-public class PythonRunnerFormatConverter implements FormatConverter {
+public class PythonRunnerFormatConverter implements FormatConverter, JSONSerialisable, JSONInitialisable {
 
     private boolean enabled = true;
     private Whelk whelk = null;
@@ -17,11 +19,10 @@ public class PythonRunnerFormatConverter implements FormatConverter {
 
     final private ScriptEngine python = new ScriptEngineManager().getEngineByName("python");
 
-    PythonRunnerFormatConverter(String scriptName) {
-        this.scriptName = scriptName;
-        if (python == null) {
-            throw new WhelkRuntimeException("Unable to find script engine for python.");
-        }
+    public PythonRunnerFormatConverter() {}
+
+    public PythonRunnerFormatConverter(String scriptName) {
+        this.scriptName = scriptName; 
     }
 
     private void listAvailableEngines() {
@@ -48,8 +49,14 @@ public class PythonRunnerFormatConverter implements FormatConverter {
         }
     }
 
+    public void setScriptName(String sn) {this.scriptName = sn;}
+    public String getScriptName() {return this.scriptName;}
+
     @Override
     public Document convert(Document doc, String mimeType, String format, String profile) {
+        if (python == null) {
+            throw new WhelkRuntimeException("Unable to find script engine for python.");
+        }
         try {
             Reader r = null;
             if (this.scriptName.startsWith("/")) {
@@ -88,8 +95,31 @@ public class PythonRunnerFormatConverter implements FormatConverter {
         return "pythonRunnerFormatConverter";
     }
 
+    @Override
+    public JSONInitialisable init(JSONObject obj) {
+        System.out.println("Calling pythonrunner init method");
+        try {
+            this.scriptName = obj.get("scriptName").toString();
+        } catch (Exception e) {
+            throw new WhelkRuntimeException(e);
+
+        }
+        return this;
+
+    }
+
+    @Override
+    public JSONObject serialize() {
+        JSONObject _converter = new JSONObject();
+        _converter.put("_classname", this.getClass().getName());
+        _converter.put("scriptName", this.scriptName);
+                
+        return _converter;
+    }
+
     public void enable() { this.enabled = true; }
     public void disable() { this.enabled = false; }
 
     public void setWhelk(Whelk w) { this.whelk = w; }
+
 }
