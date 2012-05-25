@@ -4,12 +4,6 @@ import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.*
 
-interface GIndex extends Component {
-    def add(byte[] data, URI identifier)
-    def get(URI u)
-    def find(def query, def index)
-}
-
 @Log
 class DiskStorage implements Storage {
     def storageDir = "./storage/"

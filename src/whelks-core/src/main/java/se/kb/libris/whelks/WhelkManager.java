@@ -60,6 +60,17 @@ public class WhelkManager implements JSONInitialisable {
         }
     }
 
+    public String whoami(Whelk w) {
+        if (w != null) {
+            for (Entry<String, Whelk> entry : whelks.entrySet()) {
+                if (w.equals(entry.getValue())) {
+                    return entry.getKey();
+                }
+            }
+        }
+        return null;
+    }
+
     public Map<String, Whelk> getWhelks() {
         return whelks;
     }
@@ -83,7 +94,7 @@ public class WhelkManager implements JSONInitialisable {
         if (whelks.containsKey(name)) {
             throw new WhelkRuntimeException("Whelk with name '" + name + "' already exists");
         }
-
+        w.setManager(this);
         whelks.put(name, w);
         
         return whelks.get(name);

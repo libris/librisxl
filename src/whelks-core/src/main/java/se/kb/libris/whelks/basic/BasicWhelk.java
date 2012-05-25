@@ -24,6 +24,7 @@ import se.kb.libris.whelks.plugin.*;
 
 public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private List<Plugin> plugins = new LinkedList<Plugin>();
+    private WhelkManager manager = null;
 
     @Override
     public URI store(Document d) {
@@ -159,6 +160,21 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         return new BasicDocument();
     }
 
+    @Override
+    public String getName() {
+        return getManager().whoami(this);
+    }
+
+    @Override
+    public WhelkManager getManager() {
+        return this.manager;
+    }
+
+    @Override
+    public void setManager(WhelkManager wm) {
+        this.manager = wm;
+    }
+
     public Document convert(Document doc, String mimeType, String format, String profile) {
         return null;
         //for (FormatConverter converter: getPlugins()
@@ -250,6 +266,8 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     public Iterable<? extends Plugin> getPlugins() {
         return plugins;
     }
+
+
 
     @Override
     public JSONInitialisable init(JSONObject obj) {

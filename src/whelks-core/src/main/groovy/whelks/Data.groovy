@@ -4,26 +4,16 @@ import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.SearchResult
 import se.kb.libris.whelks.basic.BasicDocument
 
-class WhelkDocument extends BasicDocument {
-    /*
-    URI identifier
-    Document withIdentifier(URI u) {
-        this.identifier = u
-        return this
-
-    }
-    */
-}
-
 class WhelkSearchResult implements SearchResult {
 
     String result
     Iterable hits
     Iterable facets
-    long numberOfHits
+    int numberOfHits
 
-    WhelkSearchResult(String data) {
+    WhelkSearchResult(String data, int hits) {
         this.result = data
+        this.numberOfHits = hits
     }
 
     def String toString() {

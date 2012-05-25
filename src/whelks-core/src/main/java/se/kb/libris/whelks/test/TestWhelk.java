@@ -97,4 +97,19 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
     public JSONInitialisable init(JSONObject obj) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
+    public WhelkManager getManager() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void setManager(WhelkManager wm) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

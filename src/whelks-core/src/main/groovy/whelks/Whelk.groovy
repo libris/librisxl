@@ -9,14 +9,12 @@ import org.apache.commons.io.output.TeeOutputStream
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.api.*
-import se.kb.libris.whelks.basic.BasicWhelk
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.persistance.*
-import se.kb.libris.conch.RestManager
 
-import se.kb.libris.conch.data.WhelkDocument
 import se.kb.libris.conch.data.WhelkSearchResult
 
 @Log
@@ -25,13 +23,9 @@ class WhelkImpl extends BasicWhelk {
     def name
     def defaultIndex
 
-    RestManager manager
-
     def listeners = []
 
     def WhelkImpl() { }
-
-    def WhelkImpl(RestManager m, String name) { this.manager = m; setName(name) }
 
     def setName(n) {
         this.name = n
@@ -169,27 +163,23 @@ class WhelkImpl extends BasicWhelk {
 
     @Override
     def SearchResult query(String query, boolean raw = false) {
-        return new WhelkSearchResult(find(query, raw))
-    }
-
-    def find(query, raw = false) {
-        def doc = null
+        def result = null
         plugins.each {
             log.debug "Looping component ${it.class.name}"
-            if (it instanceof GIndex) {
+            if (it instanceof Index) {
                 log.debug "Is index. Searching ..."
-                doc = it.find(query, this.defaultIndex, raw)
-                if (doc != null) {
-                    log.debug "Found a ${doc.class.name}"
+                result = it.query(query, this.defaultIndex, raw)
+                if (result != null) {
+                    log.debug "Found a ${result.class.name}"
                 }
             }
         }
         log.debug "Located document from elastic search"
-        return doc
+        return result
     }
 
     @Override
     Document createDocument() {
-        return new WhelkDocument()
+        return new BasicDocument()
     }
 }

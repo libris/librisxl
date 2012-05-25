@@ -24,9 +24,10 @@ import se.kb.libris.whelks.*
 import se.kb.libris.whelks.component.*
 
 import static se.kb.libris.conch.Tools.*
+import se.kb.libris.conch.data.*
 
 @Log
-class ElasticSearch implements GIndex, Storage {
+class ElasticSearch implements Index, Storage {
 
     Whelk whelk
     Client client
@@ -55,6 +56,12 @@ class ElasticSearch implements GIndex, Storage {
         return iresp
     }
 
+    @Override
+    void index(Document doc) {
+        log.debug("Not indexing document, because we are also used as Storage. Unnecessary to store twice.")
+        //add(doc.data, doc.identifier)
+    }
+
     /**
      * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
      */
@@ -81,9 +88,7 @@ class ElasticSearch implements GIndex, Storage {
         log.debug("Preparing outputstream for document ${doc.identifier}")
         return new ByteArrayOutputStream() {
             void close() throws IOException {
-                println "before"
                 ElasticSearch.this.add(toByteArray(), doc.identifier)
-                println "after"
             }
         }
     }
@@ -152,9 +157,11 @@ class ElasticSearch implements GIndex, Storage {
         return null
     }
 
-    def find(query, index, raw = false) {
+    @Override
+    SearchResult query(String query, boolean raw = false) {
         log.debug "Doing query on $query"
         def srb 
+        def index = whelk.name
         if (index == null) {
             srb = client.prepareSearch()  
         } else {
@@ -170,21 +177,21 @@ class ElasticSearch implements GIndex, Storage {
         log.debug "Total hits: ${response.hits.totalHits}"
         log.debug("Raw mode: ${raw}")
         if (raw) {
-            return response.toString()
+            return new WhelkSearchResult(response.toString(), response.hits.totalHits)
+            //return response.toString()
         } else {
             def hits = new StringBuilder()
             response.hits.hits.eachWithIndex() { it, i ->
                 if (i > 0) { hits << "," }
                 hits << new String(it.source())
             }
-            if (response.hits.totalHits() > 1) {
-                hits = hits.insert(0,"[")
-                hits = hits.append("]")
-            }
+            hits = hits.insert(0,"[")
+            hits = hits.append("]")
             return hits.toString()
         }
     }
 
+    @Override
     LookupResult lookup(Key key) {
         throw new UnsupportedOperationException("Not supported yet.")
     }
