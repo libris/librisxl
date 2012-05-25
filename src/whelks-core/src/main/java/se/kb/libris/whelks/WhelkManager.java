@@ -185,6 +185,7 @@ public class WhelkManager implements JSONInitialisable {
         JSONObject ret = new JSONObject();
         JSONObject _whelks = new JSONObject();
         JSONObject _factories = new JSONObject();
+        JSONObject _listeners = new JSONObject();
         
         for (Entry<String, Whelk> entry: whelks.entrySet()) {
             if (entry.getValue() instanceof JSONSerialisable) {
@@ -205,10 +206,17 @@ public class WhelkManager implements JSONInitialisable {
                 _factories.put(entry.getKey(), _factory);
             }
         }
+
+        for (Entry<String, Set<String>> entry: this.listeners.entrySet()) {
+            JSONArray _receivers = new JSONArray();
+            _receivers.addAll(entry.getValue());
+            _listeners.put(entry.getKey(), _receivers);
+        }
         
         ret.put("_classname", this.getClass().getName());
         ret.put("whelks", _whelks);
         ret.put("factories", _factories);
+        ret.put("listeners", _listeners);
         
         return ret.toJSONString();
     }
@@ -244,6 +252,19 @@ public class WhelkManager implements JSONInitialisable {
                     }
                 } catch (Exception ex) {
                     Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+
+        if (obj.containsKey("listeners")) {
+            JSONObject _listeners = (JSONObject)obj.get("listeners");
+            for (Object key: _listeners.keySet()) {
+                try {
+                    JSONArray _receivers = (JSONArray)_listeners.get(key);
+                    this.listeners.put(key.toString(), new HashSet(_receivers));
+                    System.out.println("Deserialising listeners ...");
+                } catch (Exception e) {
+                    throw new WhelkRuntimeException(e);
                 }
             }
         }
