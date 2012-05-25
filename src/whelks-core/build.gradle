@@ -4,7 +4,7 @@ apply plugin: 'jetty'
 apply plugin: 'application'
 
 
-mainClassName = 'se.kb.libris.whelks.imports.BatchImportTest'
+mainClassName = 'se.kb.libris.whelks.imports.BatchImport'
 
 sourceSets {
     main {
