@@ -107,7 +107,9 @@ public class WhelkManager implements JSONInitialisable {
         if (whelks.containsKey(name))
             throw new WhelkRuntimeException("Whelk with name '" + name + "' already exists");
 
-        whelks.put(name, factories.get(factoryName).create());
+        Whelk w = factories.get(factoryName).create();
+        w.setManager(this);
+        whelks.put(name, w);
         
         return whelks.get(name);
     }
