@@ -24,4 +24,7 @@ public interface Whelk {
     
     // factory methods
     public Document createDocument();
+
+    // notifications
+    public void notify(URI uri);
 }

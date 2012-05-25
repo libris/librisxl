@@ -20,17 +20,7 @@ import se.kb.libris.conch.data.WhelkSearchResult
 @Log
 class WhelkImpl extends BasicWhelk {
 
-    def name
-    def defaultIndex
-
-    def listeners = []
-
     def WhelkImpl() { }
-
-    def setName(n) {
-        this.name = n
-        this.defaultIndex = n
-    }
 
     def URI generate_identifier() {
         def uri = _create_random_URI()
@@ -40,15 +30,8 @@ class WhelkImpl extends BasicWhelk {
         return uri
     }
 
-    void listenTo(Whelk w) {
-        w.registerListener(this.name)
-    }
 
-    void registerListener(listener) {
-        log.debug "Whelk $name registering $listener as listener."
-        listeners << listener
-    }
-
+    @Override
     void notify(URI u) {
         log.debug "Whelk $name notified of change in URI $u"
         Document doc = manager.resolve(u)
@@ -85,15 +68,6 @@ class WhelkImpl extends BasicWhelk {
         return doc
     }
 
-    private void notifyListeners(URI u) {
-        listeners.each {
-            if (manager.whelks.keySet().contains(it)) {
-                // Local Whelk
-                manager.whelks[it].notify(u)
-            }
-        }
-    }
-
     boolean isBinaryData(byte[] data) {
         return false
     }
@@ -102,17 +76,13 @@ class WhelkImpl extends BasicWhelk {
         return d.identifier.toString().startsWith("/"+this.name+"/")
     }
 
-    Document getByOtherIdentifier(URI u) {
-        return null
-    }
-
     @Override
     URI store(Document d) {
         if (! belongsHere(d)) {
             throw new WhelkRuntimeException("Document does not belong here.")
         }
         URI u = super.store(d)
-        notifyListeners(u)
+        manager.notifyListeners(u)
         return u
     }
 
@@ -168,7 +138,7 @@ class WhelkImpl extends BasicWhelk {
             log.debug "Looping component ${it.class.name}"
             if (it instanceof Index) {
                 log.debug "Is index. Searching ..."
-                result = it.query(query, this.defaultIndex, raw)
+                result = it.query(query, raw)
                 if (result != null) {
                     log.debug "Found a ${result.class.name}"
                 }

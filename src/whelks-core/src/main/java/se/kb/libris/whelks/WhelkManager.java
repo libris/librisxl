@@ -45,6 +45,7 @@ import se.kb.libris.whelks.persistance.*;
 public class WhelkManager implements JSONInitialisable {
     Map<String, Whelk> whelks = new TreeMap<String, Whelk>();
     Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
+    Map<String, Set<String>> listeners = new TreeMap<String, Set<String>>();
     URL location = null;
     
     public WhelkManager() {
@@ -122,9 +123,39 @@ public class WhelkManager implements JSONInitialisable {
     }
     
     public Document resolve(URI identifier) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return whelks.get(resolveWhelkNameForURI(identifier)).get(identifier);
     }
-    
+
+    // Notifications
+    public void establishListening(String fromWhelk, String toWhelk) {
+        if (listeners.containsKey(fromWhelk)) {
+            listeners.get(fromWhelk).add(toWhelk);
+        } else {
+            HashSet<String> to = new HashSet<String>();
+            to.add(toWhelk);
+            listeners.put(fromWhelk, to);
+        }
+    }
+
+    public void notifyListeners(URI uri) {
+        try {
+            for (String listener : listeners.get(resolveWhelkNameForURI(uri))) {
+                whelks.get(listener).notify(uri);
+            }
+        } catch (Exception e) {
+            Logger.getLogger(WhelkManager.class.getName()).log(Level.FINE, null, e);
+        }
+    }
+
+    private String resolveWhelkNameForURI(URI uri) {
+        try {
+            return uri.toString().split("/")[1];
+        } catch (Exception e) {
+            throw new WhelkRuntimeException("Can not determine whelk for URI " + uri, e);
+        }
+    }
+
+    // serialisation
     public void save(URL location) {
         if (location.getProtocol().equals("file")) {
             File file = new File(location.getFile());

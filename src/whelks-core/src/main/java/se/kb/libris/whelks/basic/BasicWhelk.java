@@ -216,6 +216,9 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         }
     }
 
+    @Override
+    public void notify(URI u) {}
+
     protected Iterable<Storage> getStorages() {
         synchronized (plugins) {
             List<Storage> ret = new LinkedList<Storage>();

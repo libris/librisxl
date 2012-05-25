@@ -9,13 +9,13 @@ import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
 
 interface RestAPI extends API {
-    def getPath()
+    String getPath()
 }
 
 @Log
 abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     Whelk whelk
-    def path
+
     def pathEnd = ""
     def varPath = false
     boolean enabled = true
@@ -28,8 +28,10 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     @Override
     def void setWhelk(Whelk w) {
         this.whelk = w 
-        def tmppath = (w.defaultIndex == null ? "" : w.defaultIndex) + getModifiedPathEnd()
-        this.path = (tmppath.startsWith("/") ? tmppath : "/" + tmppath)
+    }
+
+    String getPath() {
+        return "/" + this.whelk.name + "/" + getPathEnd()
     }
 
     private String getModifiedPathEnd() {
@@ -121,15 +123,4 @@ class SearchRestlet extends BasicWhelkAPI {
 class AutoComplete extends BasicWhelkAPI {
 
     def pathEnd = "_complete"
-
-    @Override
-    def getPath() {
-        def p = super.getPath()
-        return p
-    }
-
-    @Override
-    def action() {  
-        log.debug "Handled by autocomplete"
-    }
 }

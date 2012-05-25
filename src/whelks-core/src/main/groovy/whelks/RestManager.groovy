@@ -78,7 +78,7 @@ class RestManager extends Application {
             */
 
             def bibwhelk = manager.addWhelk(new WhelkImpl(), "bib")
-            def authwhelk = manager.addWhelk(new WhelkImpl(), "auth")
+            def authwhelk = manager.addWhelk(new WhelkImpl(), "author")
             def suggestwhelk = manager.addWhelk(new WhelkImpl(), "suggest")
 
             // Add storage and index
@@ -97,6 +97,8 @@ class RestManager extends Application {
 
             // Add other plugins (formatconverters et al)
             suggestwhelk.addPlugin(new PythonRunnerFormatConverter("sug_conv.py"))
+
+            manager.establishListening("author", "suggest")
 
             manager.save(new URL("file://${WHELKCONFIGFILE}"))
         }
@@ -119,7 +121,7 @@ class RestManager extends Application {
         router.attach("/", new Restlet() {
             void handle(Request request, Response response) {
                 if (request.method == Method.POST) {
-                    // Handle uploaded unnamed document
+                    // TODO: Handle uploaded unnamed document
                 }
                 response.setEntity("Try a URI for a document, or ${request.rootRef}/_find?q=query to search", MediaType.TEXT_PLAIN)
             }

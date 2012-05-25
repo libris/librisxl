@@ -38,6 +38,9 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
     }
 
     @Override
+    public void notify(URI u) {}
+
+    @Override
     public LookupResult<? extends Document> lookup(Key key) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
