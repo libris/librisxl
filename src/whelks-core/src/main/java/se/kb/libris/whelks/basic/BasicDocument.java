@@ -103,9 +103,7 @@ public class BasicDocument implements Document {
 
     @Override
     public Document withData(String dataString) {
-        System.out.println("Using withData with String as parameter");
-        this.data = dataString.getBytes();
-        return this;
+        return withData(dataString.getBytes());
     }
 
     @Override

@@ -136,9 +136,11 @@ public class BatchImport {
             MarcRecord record;
             //System.setOut(new PrintStream(System.out, false, "UTF-8"));
             while ((record = marcXmlRecordReader.readRecord()) != null) {
-                for (Controlfield cf : record.getControlfields("001")) {
+                String id = record.getControlfields("001").get(0).getData();
+                
+                /*for (Controlfield cf : record.getControlfields("001")) {
                     System.out.println("CF: " + cf.getData());
-                }
+                */
                 /*for (Datafield df : record.getDatafields("667")) {
                     System.out.println("DATAFIELD: " + df.getTag());
                     for (Subfield sf : df.getSubfields()) {
@@ -150,8 +152,11 @@ public class BatchImport {
 
                 //System.out.write(Iso2709Serializer.serialize(record));
                 //System.out.println(record);
-                String hylla = MarcJSONConverter.toJSONString(record);
-                System.out.println(hylla);
+                Whelk whelk = manager.getWhelk("author");
+                String jsonRec = MarcJSONConverter.toJSONString(record);
+                se.kb.libris.whelks.Document doc = whelk.createDocument().withData(jsonRec).withIdentifier("/author/" + id).withContentType("application/json");
+                whelk.store(doc);
+                //System.out.println(hylla);
             }
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
