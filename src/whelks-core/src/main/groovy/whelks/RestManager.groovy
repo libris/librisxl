@@ -96,7 +96,7 @@ class RestManager extends Application {
             suggestwhelk.addPlugin(new DocumentRestlet())
 
             // Add other plugins (formatconverters et al)
-            suggestwhelk.addPlugin(new PythonRunnerFormatConverter("sug_conv.py"))
+            suggestwhelk.addPlugin(new PythonRunnerFormatConverter("sug_json.py"))
 
             manager.establishListening("author", "suggest")
 
