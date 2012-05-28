@@ -4,9 +4,13 @@ import java.io.*;
 import java.net.*;
 import java.util.LinkedList;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.codec.binary.Base64;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.Controlfield;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.Subfield;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.Iso2709Serializer;
 import se.kb.libris.conch.converter.MarcJSONConverter;
@@ -29,6 +33,22 @@ public class BatchImport {
     public BatchImport(String baseUrl) {
         this.baseUrl = baseUrl;
     }
+    
+    private void getAuthentication() {
+        try {
+            Properties properties = new Properties();
+            properties.load(new FileInputStream("meta/whelks-core.properties"));
+            final String username = properties.getProperty("username");
+            final String password = properties.getProperty("password");
+                Authenticator.setDefault(new Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(username, password.toCharArray());
+                    }
+                });
+        } catch (IOException ex) {
+            Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     // START possible authentication alternative
     /*public void getAuthentication() throws IOException {
         Properties properties = new Properties();
@@ -43,6 +63,7 @@ public class BatchImport {
     }*/
     // END possible authentication alternative
     public void doImport() {
+        getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
         try {
             /*Properties properties = new Properties(); properties.load(new FileInputStream("resources/whelks-core.properties")); String
             authString = properties.getProperty("authString");
@@ -78,19 +99,23 @@ public class BatchImport {
         InputStream is = null;
         HttpURLConnection urlConnection = null;
         try {
-            Properties properties = new Properties(); // Authenticeringen ska göras annorstädes 
-            properties.load(new FileInputStream("meta/whelks-core.properties"));
+            //Properties properties = new Properties(); // Authenticeringen ska göras annorstädes 
+            /*properties.load(new FileInputStream("meta/whelks-core.properties"));
             String authStringRaw = properties.getProperty("authString");
             byte[] authEncBytes = Base64.encodeBase64(authStringRaw.getBytes());
-            String authString = new String(authEncBytes);
+            String authString = new String(authEncBytes);*/
             urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestProperty("Authorization", "Basic " + authString);
+            //urlConnection.setRequestProperty("Authorization", "Basic " + authString);
             is = urlConnection.getInputStream();
             DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document document = documentBuilder.parse(is);
+            //System.out.println(document.getInputEncoding() + ", HOHOHOHOHOHOHOH: " + document.getXmlEncoding());
             NodeList nodeList = document.getElementsByTagName("resumptionToken");
             Element element = (Element) nodeList.item(0);
-            System.out.println("resumptionToken : " + nodeList.getLength() + ", " + element.getTextContent());
+            /*NodeList nodeList2 = document.getElementsByTagName("subfield");
+            Element element2 = (Element) nodeList2.item(6);
+           
+            System.out.println("resumptionToken : " + nodeList.getLength() + ", " + element2.getTextContent());*/
             if (element != null && element.getTextContent().length() > 0) {
                 restok = element.getTextContent();
             }
@@ -100,13 +125,20 @@ public class BatchImport {
             TransformerFactory.newInstance().newTransformer().transform(xmlSource, outputTarget);
             is = new ByteArrayInputStream(outputStream.toByteArray());
 
-            MarcXmlRecordReader marcXmlRecordReader = new MarcXmlRecordReader(is, "/OAI-PMH/ListRecords/record/metadata/record");
+            MarcXmlRecordReader marcXmlRecordReader = new MarcXmlRecordReader(is, "/OAI-PMH/GetRecord/record/metadata/record");
             MarcRecord record;
-
+            //System.setOut(new PrintStream(System.out, false, "UTF-8"));
             while ((record = marcXmlRecordReader.readRecord()) != null) {
                 for (Controlfield cf : record.getControlfields("001")) {
                     System.out.println("CF: " + cf.getData());
                 }
+                /*for (Datafield df : record.getDatafields("667")) {
+                    System.out.println("DATAFIELD: " + df.getTag());
+                    for (Subfield sf : df.getSubfields()) {
+                        System.out.println("DATA: " + sf.getData());
+                    }
+                }*/
+                
                 //LinkedList<ControlField> cf001 = record.getControfields("001");
 
                 //System.out.write(Iso2709Serializer.serialize(record));
@@ -139,7 +171,7 @@ public class BatchImport {
     }
 
     public static void main(String[] args) {
-        BatchImport bi = new BatchImport("http://data.libris.kb.se/auth/oaipmh/?verb=ListRecords&metadataPrefix=marcxml&from=2012-05-23T15:21:27Z");
+        BatchImport bi = new BatchImport("http://data.libris.kb.se/auth/oaipmh/?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/auth/351502");
         bi.doImport();
 
     }
