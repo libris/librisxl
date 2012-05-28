@@ -161,9 +161,12 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     }
 
     @Override
-    public String getName() {
-        return getManager().whoami(this);
-    }
+        public String getName() {
+            if (getManager() != null) {
+                return getManager().whoami(this);
+            }
+            return "";
+        }
 
     @Override
     public WhelkManager getManager() {

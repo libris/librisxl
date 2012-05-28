@@ -20,8 +20,6 @@ import se.kb.libris.conch.data.WhelkSearchResult
 @Log
 class WhelkImpl extends BasicWhelk {
 
-    def WhelkImpl() { }
-
     def URI generate_identifier() {
         def uri = _create_random_URI()
         while (has_identifier(uri)) {
