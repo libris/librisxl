@@ -154,9 +154,12 @@ public class BatchImport {
                 //System.out.println(record);
                 Whelk whelk = manager.getWhelk("author");
                 String jsonRec = MarcJSONConverter.toJSONString(record);
-                se.kb.libris.whelks.Document doc = whelk.createDocument().withData(jsonRec).withIdentifier("/author/" + id).withContentType("application/json");
+                /*
+                System.out.println("PRE SAVE");
+                System.out.println(new String(jsonRec.getBytes("UTF-8")));
+                */
+                se.kb.libris.whelks.Document doc = whelk.createDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/author/" + id).withContentType("application/json");
                 whelk.store(doc);
-                //System.out.println(hylla);
             }
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
@@ -173,6 +176,8 @@ public class BatchImport {
                 is.close();
                 urlConnection.disconnect();
             } catch (IOException e) {
+            } catch (Exception e2) {
+                e2.printStackTrace();
             }
         }
         return restok;

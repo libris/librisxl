@@ -46,7 +46,6 @@ class ElasticSearch implements Index, Storage {
         log.debug "Indexing document ..."
         def dict = determineIndexAndType(identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
-        //IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(_wrap_data(data)).execute().actionGet()
         IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(wrapData(data, identifier)).execute().actionGet()
         log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         def iresp = [:]
@@ -84,6 +83,11 @@ class ElasticSearch implements Index, Storage {
     }
 
     @Override
+    public void store(Document d) {
+        log.debug "Storing data:\n${d.dataAsString}"
+        add(d.data, d.identifier)
+    }
+
     OutputStream getOutputStreamFor(Document doc) {
         log.debug("Preparing outputstream for document ${doc.identifier}")
         return new ByteArrayOutputStream() {
@@ -147,9 +151,9 @@ class ElasticSearch implements Index, Storage {
                 if (!map['contenttype']) {
                     map['contenttype'] = contentType(map['data'].getBytes())
                 }
-                d = this.whelk.createDocument().withIdentifier(uri).withContentType(map['contenttype']).withData(map['data'].getBytes())
+                d = this.whelk.createDocument().withIdentifier(uri).withContentType(map['contenttype']).withData(map['data'])
             } else {
-                d = this.whelk.createDocument().withIdentifier(uri).withContentType("application/json").withData(response.sourceAsString().getBytes())
+                d = this.whelk.createDocument().withIdentifier(uri).withContentType("application/json").withData(response.source())
             }
 
             return d

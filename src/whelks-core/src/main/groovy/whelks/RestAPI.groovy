@@ -77,7 +77,9 @@ class DocumentRestlet extends BasicWhelkAPI {
             try {
                 def d = whelk.get(path, _raw)
                 println "Got document with ctype: ${d.contentType}"
-                response.setEntity(new String(d.data), new MediaType(d.contentType))
+                println "Consistency check: "
+                println d.dataAsString
+                response.setEntity(d.dataAsString, new MediaType(d.contentType))
             } catch (WhelkRuntimeException wrte) {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
             }
@@ -89,7 +91,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 if (path == "/") {
                     doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withDataAsStream(request.entity.stream)
                 } else {
-                    doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withDataAsStream(request.entity.stream)
+                    doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withData(request.entityAsText)
                 }
                 identifier = this.whelk.store(doc)
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)

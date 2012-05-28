@@ -39,6 +39,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             t.beforeStore(this, d);
         
         // add document to store
+        /*
         OutputStream combinedOutputStream = null;
         for (Storage s : getStorages()) {
             OutputStream os = s.getOutputStreamFor(d);
@@ -64,9 +65,13 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                 }
             }
         }
+        */
 
         // add document to index and quadstore
         for (Component c: getComponents()) {
+            if (c instanceof Storage) 
+                ((Storage)c).store(d);
+
             if (c instanceof Index)
                 ((Index)c).index(d);
 
@@ -93,13 +98,11 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                 d = ((Storage)c).get(uri);
                 
                 if (d != null) {
+                    System.out.println("Successfully retrieved a document with identifier " + d.getIdentifier());
                     return d;
                 }
             }
         }
-
-        
-                
         return d;
     }
 
@@ -272,8 +275,6 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     public Iterable<? extends Plugin> getPlugins() {
         return plugins;
     }
-
-
 
     @Override
     public JSONInitialisable init(JSONObject obj) {
