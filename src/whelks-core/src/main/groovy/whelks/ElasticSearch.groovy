@@ -187,7 +187,7 @@ class ElasticSearch implements Index, Storage {
             }
             hits = hits.insert(0,"[")
             hits = hits.append("]")
-            return hits.toString()
+            return new WhelkSearchResult(hits.toString(), response.hits.totalHits)
         }
     }
 

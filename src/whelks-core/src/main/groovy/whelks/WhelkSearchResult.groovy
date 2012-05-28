@@ -9,10 +9,23 @@ class WhelkSearchResult implements SearchResult {
     String result
     Iterable hits
     Iterable facets
-    int numberOfHits
+    long numberOfHits
+
+    WhelkSearchResult(String data, long hits) {
+        this.result = data
+        this.numberOfHits = hits
+    }
 
     WhelkSearchResult(String data, int hits) {
         this.result = data
+        this.numberOfHits = hits
+    }
+
+    int getNumberOfHits() {
+        return (int)numberOfHits
+    }
+    
+    void setNumberOfHits(int hits) {
         this.numberOfHits = hits
     }
 

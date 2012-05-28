@@ -283,6 +283,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                 if (JSONInitialisable.class.isAssignableFrom(c))
                     ((JSONInitialisable)p).init(_plugin);
                 
+                p.setWhelk(this);
                 plugins.add(p);
             } catch (Exception e) {
                 throw new WhelkRuntimeException(e);

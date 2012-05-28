@@ -237,15 +237,20 @@ public class WhelkManager implements JSONInitialisable {
                     
                     if (JSONInitialisable.class.isAssignableFrom(c)) {
                         Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "whelk can be deserialised");
-                        whelks.put(name, (Whelk)JSONDeserialiser.deserialize(classname, (JSONObject)_whelks.get(key)));
+                        Whelk w = (Whelk)JSONDeserialiser.deserialize(classname, (JSONObject)_whelks.get(key));
+                        w.setManager(this);
+                        whelks.put(name, w);
                     } else {
                         Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "whelk cannot be deserialised");
                         try {
-                            whelks.put(name, (Whelk)c.getConstructor(Map.class).newInstance(_whelk));
+                            Whelk w = (Whelk)c.getConstructor(Map.class).newInstance(_whelk);
+                            whelks.put(name, w);
                         } catch (NoSuchElementException e1) {
-                            whelks.put(name, (Whelk)c.newInstance());
+                            Whelk w = (Whelk)c.newInstance();
+                            whelks.put(name, w);
                         } catch (NoSuchMethodException e2) {
-                            whelks.put(name, (Whelk)c.newInstance());
+                            Whelk w = (Whelk)c.newInstance();
+                            whelks.put(name, w);
                         } catch (Throwable t) {
                            throw new WhelkRuntimeException(t);
                         }
