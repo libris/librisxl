@@ -36,6 +36,7 @@ class WhelkImpl extends BasicWhelk {
         boolean converted = false
         for (Plugin p: getPlugins()) {
             if (p instanceof FormatConverter) {
+                log.debug "Found a formatconverter: ${p.class.name}"
                 doc = ((FormatConverter)p).convert(doc, null, null, null);
                 converted = (doc != null)
             }

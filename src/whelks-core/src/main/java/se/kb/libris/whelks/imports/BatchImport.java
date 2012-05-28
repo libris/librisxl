@@ -14,6 +14,7 @@ import se.kb.libris.util.marc.Subfield;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.Iso2709Serializer;
 import se.kb.libris.conch.converter.MarcJSONConverter;
+import se.kb.libris.whelks.*;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
@@ -29,9 +30,15 @@ import org.w3c.dom.NodeList;
 public class BatchImport {
 
     private String baseUrl;
+    private WhelkManager manager;
 
     public BatchImport(String baseUrl) {
         this.baseUrl = baseUrl;
+        try {
+            manager = new WhelkManager(new URL("file:///tmp/whelkconfig.json"));
+        } catch (MalformedURLException mue) {
+            mue.printStackTrace();
+        }
     }
     
     private void getAuthentication() {

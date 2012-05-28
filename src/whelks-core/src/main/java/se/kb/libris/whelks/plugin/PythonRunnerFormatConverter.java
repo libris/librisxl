@@ -58,14 +58,21 @@ public class PythonRunnerFormatConverter implements FormatConverter, JSONSeriali
             throw new WhelkRuntimeException("Unable to find script engine for python.");
         }
         try {
+            System.out.println("Converter executing script "+ this.scriptName);
             Reader r = null;
             if (this.scriptName.startsWith("/")) {
                 System.out.println("Reading from filesystem");
                 r = new FileReader(scriptName);
             } else {
-                r = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(this.scriptName));
+                System.out.println("Reading "+this.scriptName+ " from classpath");
+                InputStream is = this.getClass().getClassLoader().getResourceAsStream(this.scriptName);
+                System.out.println("Got IS: " +is);
+                r = new InputStreamReader(is);
+                System.out.println("Seeded reader");
             }
+            System.out.println("Has reader " + r);
             if (python != null) {
+                System.out.println("Plugin has whelk: " + this.whelk.getName());
                 python.put("whelk", this.whelk);
                 python.put("document", doc);
                 python.eval(r);
