@@ -188,6 +188,7 @@ public class BatchImport {
     }
 
     public static void main(String[] args) {
+        System.out.println("Using file encoding: " + System.getProperty("file.encoding"));
         BatchImport bi = new BatchImport("http://data.libris.kb.se/auth/oaipmh/?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/auth/351502");
         bi.doImport();
 

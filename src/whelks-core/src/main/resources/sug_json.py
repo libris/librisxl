@@ -2,6 +2,8 @@
 import sys, urllib, urllib2
 try:
     from com.xhaus.jyson import JysonCodec as json
+    from org.python.core.util import StringUtil as stringutil
+    from org.python.core import Py
 except ImportError:
     # From Python
     import json 
@@ -12,10 +14,6 @@ def transform(a_json):
 
     for f in a_json['fields']:
         for k, v in f.items():
-            try:
-                v = v.decode('utf-8')
-            except:
-                1
             if k == '100':
                 sug_json[k] = {}
                 for sf in v['subfields']:
@@ -44,29 +42,33 @@ def transform(a_json):
 
 
 def get_records(f_100, sug_json):
-    try:
+    #try:
         #urlbase = "http://libris.kb.se/xsearch?query=forf:(#100#)%20spr:swe&format=json"
 
-        url = 'http://libris.kb.se/xsearch'
-        values = {'query' : 'forf:(%s) spr:swe' % f_100, 'format' : 'json'}
+    url = 'http://libris.kb.se/xsearch'
+    values = {'query' : 'forf:(%s) spr:swe' % f_100, 'format' : 'json'}
 
-        data = urllib.urlencode(values)
-        reply = urllib2.urlopen(url + "?" + data)
-        response = reply.read()
-        print "response", type(response)
-        xresult = json.loads(response)['xsearch']
+    data = urllib.urlencode(values)
+    reply = urllib2.urlopen(url + "?" + data)
 
-        sug_json['records'] = xresult['records']
-        top_3 = xresult['list'][:3]
-        top_titles = {}
-        for p in top_3:
-            top_titles[p['identifier']] = p['title']
-        # TODO: Seems the top_titles contains bad encoding. Fix.
-        #sug_json['top_titles'] = top_titles
+    response = reply.read().decode('utf-8')
+    print list(response)
+    print "responsetype", type(response)
+    print "response", response
+
+    xresult = json.loads(response)['xsearch']
+
+    sug_json['records'] = xresult['records']
+    top_3 = xresult['list'][:3]
+    top_titles = {}
+    for p in top_3:
+        top_titles[p['identifier']] = unicode(p['title'])
+    # TODO: Seems the top_titles contains bad encoding. Fix.
+    sug_json['top_titles'] = top_titles
 
 
-    except:
-        0
+#    except:
+#        0
     return sug_json
         
 
@@ -75,8 +77,6 @@ _in_console = False
 try:
     data = document.getDataAsString()
     #data = utf8_data.decode('utf-8')
-except UnicodeDecodeError:
-    print "u" 
 except:
     data = sys.stdin.read()
     _in_console = True
@@ -84,9 +84,9 @@ except:
 
 print "console mode", _in_console
 
-print "data", data
 
 sug_json = transform(json.loads(data))
+print "sug_json", sug_json
 r = json.dumps(sug_json)
 
 #for 700or100 in parse_bib_document():

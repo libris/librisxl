@@ -43,28 +43,8 @@ class WhelkImpl extends BasicWhelk {
         }
         if (converted) {
             log.debug "Document ${doc.identifier} converted. "
-            doc = rewriteIdentifierForWhelk(doc)
-            log.debug "New identifier assigned."
-            log.debug "Now saving new version."
-            store(doc)
+            //store(doc)
         }
-    }
-
-    // TODO: This seems like bad form. Need to rethink identifier concept for whelk2whelk notifications.
-    private Document rewriteIdentifierForWhelk(Document doc) {
-        def parts = doc.identifier.toString().split("/")
-        def newUriString = new StringBuffer()
-        parts.eachWithIndex() { part, i ->
-            if (i == 0) {
-                newUriString << (this.defaultIndex ? "/" + this.defaultIndex : "")
-            }
-            else if (i > 1 && part) {
-                newUriString << "/" + part 
-            }
-        }
-        doc = doc.withIdentifier(new URI(newUriString.toString()))
-        log.debug "New URI: ${doc.identifier}"  
-        return doc
     }
 
     boolean isBinaryData(byte[] data) {

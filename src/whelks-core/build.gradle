@@ -6,6 +6,10 @@ apply plugin: 'application'
 
 mainClassName = 'se.kb.libris.whelks.imports.BatchImport'
 
+tasks.withType(GroovyCompile) {
+  groovyOptions.encoding = 'utf-8'
+}
+
 sourceSets {
     main {
         java { srcDirs = [] }
@@ -29,6 +33,10 @@ jar {
         attributes 'Main-Class': mainClassName
     }
  
+}
+
+run {
+    systemProperty "file.encoding", "UTF-8"
 }
 
 task depjar(type: Jar, dependsOn: jar) {

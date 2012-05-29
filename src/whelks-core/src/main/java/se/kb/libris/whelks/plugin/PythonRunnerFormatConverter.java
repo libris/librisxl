@@ -61,16 +61,11 @@ public class PythonRunnerFormatConverter implements FormatConverter, JSONSeriali
             System.out.println("Converter executing script "+ this.scriptName);
             Reader r = null;
             if (this.scriptName.startsWith("/")) {
-                System.out.println("Reading from filesystem");
                 r = new FileReader(scriptName);
             } else {
-                System.out.println("Reading "+this.scriptName+ " from classpath");
                 InputStream is = this.getClass().getClassLoader().getResourceAsStream(this.scriptName);
-                System.out.println("Got IS: " +is);
                 r = new InputStreamReader(is);
-                System.out.println("Seeded reader");
             }
-            System.out.println("Has reader " + r);
             if (python != null) {
                 System.out.println("Plugin has whelk: " + this.whelk.getName());
                 python.put("whelk", this.whelk);
