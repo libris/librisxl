@@ -29,17 +29,30 @@ import org.w3c.dom.NodeList;
 
 public class BatchImport {
 
-    private String baseUrl;
     private WhelkManager manager;
 
-    public BatchImport(String baseUrl) {
-        this.baseUrl = baseUrl;
+    private String resource;
+
+    private int imported = 0;
+
+    public BatchImport() {}
+
+
+    public BatchImport(String resource) {
+        this.resource = resource;
         try {
             manager = new WhelkManager(new URL("file:///tmp/whelkconfig.json"));
         } catch (MalformedURLException mue) {
             mue.printStackTrace();
         }
     }
+
+    private String getBaseUrl() {
+        return "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml&from=2012-05-23T15:21:27Z";
+    }
+
+    public void setResource(String r) { this.resource = r; }
+    public void setManager(WhelkManager m) { this.manager = m; }
     
     private void getAuthentication() {
         try {
@@ -69,7 +82,7 @@ public class BatchImport {
             });
     }*/
     // END possible authentication alternative
-    public void doImport() {
+    public int doImport() {
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
         try {
             /*Properties properties = new Properties(); properties.load(new FileInputStream("resources/whelks-core.properties")); String
@@ -79,11 +92,11 @@ public class BatchImport {
             urlConnection = url.openConnection();
             urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);*/
             // While resumptionToken is something
-            URL url = new URL(baseUrl);
+            URL url = new URL(getBaseUrl());
             String resumptionToken = harvest(url);
             while (resumptionToken != null) {
                 //redefine url
-                url = new URL("http://data.libris.kb.se/auth/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
+                url = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
                 resumptionToken = harvest(url);
             }
             
@@ -99,6 +112,7 @@ public class BatchImport {
             e.printStackTrace();*/
         }
 
+        return imported;
     }
 
     public String harvest(URL url) {
@@ -132,7 +146,7 @@ public class BatchImport {
             TransformerFactory.newInstance().newTransformer().transform(xmlSource, outputTarget);
             is = new ByteArrayInputStream(outputStream.toByteArray());
 
-            MarcXmlRecordReader marcXmlRecordReader = new MarcXmlRecordReader(is, "/OAI-PMH/GetRecord/record/metadata/record");
+            MarcXmlRecordReader marcXmlRecordReader = new MarcXmlRecordReader(is, "/OAI-PMH/ListRecords/record/metadata/record");
             MarcRecord record;
             //System.setOut(new PrintStream(System.out, false, "UTF-8"));
             while ((record = marcXmlRecordReader.readRecord()) != null) {
@@ -152,14 +166,16 @@ public class BatchImport {
 
                 //System.out.write(Iso2709Serializer.serialize(record));
                 //System.out.println(record);
-                Whelk whelk = manager.getWhelk("author");
+                Whelk whelk = manager.getWhelk(this.resource);
                 String jsonRec = MarcJSONConverter.toJSONString(record);
                 /*
                 System.out.println("PRE SAVE");
                 System.out.println(new String(jsonRec.getBytes("UTF-8")));
                 */
-                se.kb.libris.whelks.Document doc = whelk.createDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/author/" + id).withContentType("application/json");
+                se.kb.libris.whelks.Document doc = whelk.createDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
+                System.out.println("Storing document " + doc.getIdentifier());
                 whelk.store(doc);
+                imported++;
             }
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
@@ -189,7 +205,9 @@ public class BatchImport {
 
     public static void main(String[] args) {
         System.out.println("Using file encoding: " + System.getProperty("file.encoding"));
-        BatchImport bi = new BatchImport("http://data.libris.kb.se/auth/oaipmh/?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/auth/351502");
+        //BatchImport bi = new BatchImport("http://data.libris.kb.se/auth/oaipmh/?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/auth/351502");
+        //BatchImport bi = new BatchImport("http://data.libris.kb.se/auth/oaipmh/?verb=ListRecords&metadataPrefix=marcxml&from=2012-05-23T15:21:27Z");
+        BatchImport bi = new BatchImport();
         bi.doImport();
 
     }

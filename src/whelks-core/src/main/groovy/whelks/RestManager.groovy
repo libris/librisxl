@@ -22,40 +22,7 @@ class RestManager extends Application {
 
     RestManager(Context parentContext) {
         super(parentContext)
-        /*
-        def allwhelk = new WhelkImpl(this, "all")
-        allwhelk.defaultIndex = null
-        def bibwhelk = new WhelkImpl(this, "bib")
-        def authwhelk = new WhelkImpl(this, "author")
-        def suggestwhelk = new WhelkImpl(this, "suggest")
-        // Try using only ElasticSearch as storage
-        //whelk.addComponent(new DiskStorage())
-        def es = new ElasticSearchClient()
-        def ds = new DiskStorage()
-        def suggest_conv = new PythonRunnerFormatConverter("sug_json.py")
-        // Using same es backend for all whelks
-        allwhelk.addPlugin(es)
-        authwhelk.addPlugin(es)
-        //authwhelk.addPlugin(ds)
-        bibwhelk.addPlugin(es)
-        suggestwhelk.addPlugin(es)
-        //bibwhelk.addPlugin(ds)
-        allwhelk.addPlugin(new SearchRestlet())
-        authwhelk.addPlugin(new AutoComplete())
-        authwhelk.addPlugin(new SearchRestlet())
-        authwhelk.addPlugin(new DocumentRestlet())
-        suggestwhelk.addPlugin(new SearchRestlet())
-        suggestwhelk.addPlugin(new DocumentRestlet())
-        suggestwhelk.addPlugin(suggest_conv)
-        suggestwhelk.listenTo(authwhelk)
-        bibwhelk.addPlugin(new SearchRestlet())
-        bibwhelk.addPlugin(new DocumentRestlet())
-        whelks.put(allwhelk.name, allwhelk)
-        whelks.put(bibwhelk.name, bibwhelk)
-        whelks.put(authwhelk.name, authwhelk)
-        whelks.put(suggestwhelk.name, suggestwhelk)
-        */
-
+        System.out.println("Using file encoding: " + System.getProperty("file.encoding"));
         init()
     }
 
@@ -70,15 +37,9 @@ class RestManager extends Application {
         } else {
             log.debug("Virgin installation. Setting up some whelks.")
             manager = new WhelkManager()
-            /*
-            manager.registerFactory("whelk", new MyWhelkFactory())
-            def bibwhelk = manager.createWhelk("whelk", "bib")
-            def authwhelk = manager.createWhelk("whelk", "author")
-            def suggestwhelk = manager.createWhelk("whelk", "suggest")
-            */
 
             def bibwhelk = manager.addWhelk(new WhelkImpl(), "bib")
-            def authwhelk = manager.addWhelk(new WhelkImpl(), "author")
+            def authwhelk = manager.addWhelk(new WhelkImpl(), "auth")
             def suggestwhelk = manager.addWhelk(new WhelkImpl(), "suggest")
 
             // Add storage and index
@@ -89,8 +50,10 @@ class RestManager extends Application {
 
             // Add APIs
             bibwhelk.addPlugin(new SearchRestlet())
+            bibwhelk.addPlugin(new ImportRestlet())
             bibwhelk.addPlugin(new DocumentRestlet())
             authwhelk.addPlugin(new SearchRestlet())
+            authwhelk.addPlugin(new ImportRestlet())
             authwhelk.addPlugin(new DocumentRestlet())
             suggestwhelk.addPlugin(new SearchRestlet())
             suggestwhelk.addPlugin(new DocumentRestlet())
@@ -98,7 +61,8 @@ class RestManager extends Application {
             // Add other plugins (formatconverters et al)
             suggestwhelk.addPlugin(new PythonRunnerFormatConverter("sug_json.py"))
 
-            manager.establishListening("author", "suggest")
+            manager.establishListening("auth", "suggest")
+            manager.establishListening("bib", "suggest")
 
             manager.save(new URL("file://${WHELKCONFIGFILE}"))
         }

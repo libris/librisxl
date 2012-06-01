@@ -7,6 +7,7 @@ import org.restlet.data.*
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
+import se.kb.libris.whelks.imports.*
 
 interface RestAPI extends API {
     String getPath()
@@ -76,9 +77,6 @@ class DocumentRestlet extends BasicWhelkAPI {
             log.debug "Request path: ${path}"
             try {
                 def d = whelk.get(path, _raw)
-                println "Got document with ctype: ${d.contentType}"
-                println "Consistency check: "
-                println d.dataAsString
                 response.setEntity(d.dataAsString, new MediaType(d.contentType))
             } catch (WhelkRuntimeException wrte) {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
@@ -118,6 +116,24 @@ class SearchRestlet extends BasicWhelkAPI {
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
         }
+    }
+}
+
+@Log 
+class ImportRestlet extends BasicWhelkAPI {
+    def pathEnd = "_import"
+
+    BatchImport importer
+    ImportRestlet() {
+        importer = new BatchImport()
+    }
+
+    @Override
+    def void handle(Request request, Response response) {
+        importer.resource = this.whelk.name
+        importer.manager = this.whelk.manager
+        def count = importer.doImport()
+        response.setEntity("Imported $count records into ${whelk.name}.\n", MediaType.TEXT_PLAIN)
     }
 }
 

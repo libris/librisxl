@@ -60,9 +60,16 @@ class WhelkImpl extends BasicWhelk {
         if (! belongsHere(d)) {
             throw new WhelkRuntimeException("Document does not belong here.")
         }
-        URI u = super.store(d)
-        manager.notifyListeners(u)
-        return u
+        try {
+            URI u = super.store(d)
+            manager.notifyListeners(u)
+            return u
+        } catch (WhelkRuntimeException wre) {
+            log.error("Failed to save document ${d.identifier}: " + wre.getMessage())
+
+        }
+
+        return null
     }
 
     def has_identifier(uri) {

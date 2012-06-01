@@ -22,6 +22,7 @@ import com.google.gson.JsonObject
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.component.*
+import se.kb.libris.whelks.exception.*
 
 import static se.kb.libris.conch.Tools.*
 import se.kb.libris.conch.data.*
@@ -42,17 +43,16 @@ class ElasticSearch implements Index, Storage {
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
-    def add(byte[] data, URI identifier) {
+    def add(byte[] data, URI identifier, String contentType) {
         log.debug "Indexing document ..."
         def dict = determineIndexAndType(identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
-        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(wrapData(data, identifier)).execute().actionGet()
+        try {
+        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(wrapData(data, identifier, contentType)).execute().actionGet()
         log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
-        def iresp = [:]
-        iresp['id'] = response.id
-        iresp['index'] = response.index
-        iresp['type'] = response.type
-        return iresp
+        } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
+            log.error("Failed to index document with id ${identifier}: " + me.getMessage(), me)
+        }
     }
 
     @Override
@@ -64,9 +64,13 @@ class ElasticSearch implements Index, Storage {
     /**
      * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
      */
-    def wrapData(byte[] data, URI identifier) {
-        if (isJSON(data)) {
-            return data
+    def wrapData(byte[] data, URI identifier, String contentType) {
+        if (contentType.equalsIgnoreCase("application/json")) {
+            if (isJSON(data)) {
+                return data
+            } else {
+                throw new WhelkRuntimeException("Badly formed JSON data for document $identifier")
+            }
         } else {
             Gson gson = new Gson()
             def docrepr = [:]
@@ -84,8 +88,7 @@ class ElasticSearch implements Index, Storage {
 
     @Override
     public void store(Document d) {
-        log.debug "Storing data:\n${d.dataAsString}"
-        add(d.data, d.identifier)
+        add(d.data, d.identifier, d.contentType)
     }
 
     OutputStream getOutputStreamFor(Document doc) {
@@ -145,9 +148,11 @@ class ElasticSearch implements Index, Storage {
             def map = response.sourceAsMap()
             log.debug("Raw mode: ${raw}")
             if (!raw && map['contenttype'] != "application/json" && map['data']) {
+                /*
                 map.each {
                     log.debug(it.key +":" + it.value + " (" + it.value.class.name + ")")
                 }
+                */
                 if (!map['contenttype']) {
                     map['contenttype'] = contentType(map['data'].getBytes())
                 }
