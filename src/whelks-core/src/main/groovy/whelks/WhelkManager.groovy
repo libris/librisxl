@@ -1,5 +1,7 @@
 package se.kb.libris.whelks;
 
+import groovy.util.logging.Slf4j as Log
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -42,6 +44,7 @@ import se.kb.libris.whelks.persistance.*;
      *   }
      * }
      */
+@Log
 public class WhelkManager implements JSONInitialisable {
     Map<String, Whelk> whelks = new TreeMap<String, Whelk>();
     Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
@@ -138,6 +141,7 @@ public class WhelkManager implements JSONInitialisable {
     }
 
     public void notifyListeners(URI uri) {
+        log.debug("Received notification for " + uri);
         try {
             for (String listener : listeners.get(resolveWhelkNameForURI(uri))) {
                 whelks.get(listener).notify(uri);

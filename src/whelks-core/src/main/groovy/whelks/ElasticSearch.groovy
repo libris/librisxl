@@ -49,9 +49,11 @@ class ElasticSearch implements Index, Storage {
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
         try {
             IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(wrapData(data, identifier, contentType)).execute().actionGet()
-                log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
+            log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
             log.error("Failed to index document with id ${identifier}: " + me.getMessage(), me)
+        } catch (org.elasticsearch.client.transport.NoNodeAvailableException nnae) {
+            log.fatal("Failed to connect to elasticsearch node: " + nnae.getMessage(), nnae)
         }
     }
 

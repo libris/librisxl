@@ -61,7 +61,11 @@ class WhelkImpl extends BasicWhelk {
         }
         try {
             URI u = super.store(d)
-            manager.notifyListeners(u)
+            Thread.start {
+                log.debug("Notifying listeners in new thread.")
+                manager.notifyListeners(u)
+            }
+            log.debug("Returning uri $u")
             return u
         } catch (WhelkRuntimeException wre) {
             log.error("Failed to save document ${d.identifier}: " + wre.getMessage())
