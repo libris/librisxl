@@ -48,8 +48,8 @@ class ElasticSearch implements Index, Storage {
         def dict = determineIndexAndType(identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
         try {
-        IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(wrapData(data, identifier, contentType)).execute().actionGet()
-        log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
+            IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(wrapData(data, identifier, contentType)).execute().actionGet()
+                log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
             log.error("Failed to index document with id ${identifier}: " + me.getMessage(), me)
         }

@@ -11,6 +11,8 @@ def transform(a_json, rtype):
     sug_json = {}
     link = None
 
+    should_add = True
+
     for f in a_json['fields']:
         for k, v in f.items():
             if k == '001':
@@ -19,6 +21,8 @@ def transform(a_json, rtype):
                 sug_json[k] = {}
                 for sf in v['subfields']:
                     for sk, sv in sf.items():
+                        if sk == '0' and rtype == 'bib':
+                            should_add = False
                         sug_json[k][sk] = sv
             elif k in ['400', '678', '856']:
                 f_list = sug_json.get(k, [])
@@ -29,7 +33,7 @@ def transform(a_json, rtype):
                 f_list.append(d)
                 sug_json[k] = f_list
 
-    if sug_json.get('100', None):
+    if sug_json.get('100', None) and should_add:
         f_100 = ' '.join(sug_json['100'].values())
         if link:
             sug_json['link'] = link

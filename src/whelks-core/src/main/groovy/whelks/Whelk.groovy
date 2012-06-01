@@ -28,7 +28,6 @@ class WhelkImpl extends BasicWhelk {
         return uri
     }
 
-
     @Override
     void notify(URI u) {
         log.debug "Whelk $name notified of change in URI $u"

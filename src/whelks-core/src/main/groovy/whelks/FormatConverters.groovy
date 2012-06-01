@@ -1,7 +1,12 @@
 package se.kb.libris.whelks.plugin
 
+import javax.script.*
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
+import se.kb.libris.whelks.persistance.*
+
+import org.json.simple.JSONObject
 
 abstract class BasicFormatConverter implements FormatConverter {
     boolean enabled = true
