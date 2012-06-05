@@ -1,8 +1,11 @@
 package se.kb.libris.conch.converter
 
+import org.json.simple.*
+
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader
+
 
 /**
  *
@@ -11,7 +14,7 @@ import se.kb.libris.util.marc.io.Iso2709MarcRecordReader
  */
 class MarcJSONConverter {
 
-    static String toJSONString(MarcRecord record) {
+    static String old_toJSONString(MarcRecord record) {
         def builder = new groovy.json.JsonBuilder()
         builder {
             "leader"(record.leader)
@@ -23,7 +26,34 @@ class MarcJSONConverter {
                 ]
             ]})
         }
-        return builder.toPrettyString()
+        return builder.toString()
+    }
+
+    static String toJSONString(MarcRecord record) {
+        def json = new JSONObject()
+        def fields = new JSONObject()
+
+        record.fields.each {
+            if (it instanceof Controlfield) {
+                fields.put(it.tag, it.data)
+            } else {
+                def field = new JSONObject()
+                field.put("ind1", "" + it.getIndicator(0))
+                field.put("ind2", "" + it.getIndicator(1))
+                def subfields = new JSONArray()
+                it.subfields.each {
+                    def subfield = new JSONObject()
+                    subfield.put(it.code, it.data);
+                    subfields.add(subfield)
+                }
+                field.put("subfields", subfields)
+                fields.put(it.tag, field)
+            }
+        }
+        json.put("leader", record.leader)
+        json.put("fields", fields)
+        
+        return json.toString()
     }
 
     static void main(args) {
