@@ -119,6 +119,24 @@ class SearchRestlet extends BasicWhelkAPI {
     }
 }
 
+@Log
+class BibSearchRestlet extends BasicWhelkAPI {
+
+    def pathEnd = "_bibsearch"
+
+    @Override
+    def void handle(Request request, Response response) {
+        def query = request.getResourceRef().getQueryAsForm().getValuesMap()
+        boolean _raw = (query['_raw'] == 'true')
+        try {
+            def r = this.whelk.query(query.get("q"), _raw)
+            response.setEntity(r.result, MediaType.APPLICATION_JSON)
+        } catch (WhelkRuntimeException wrte) {
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+        }
+    }
+}
+
 @Log 
 class ImportRestlet extends BasicWhelkAPI {
     def pathEnd = "_import"

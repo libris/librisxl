@@ -83,7 +83,9 @@ def record_type(leader):
 _in_console = False
 try:
     data = document.getDataAsString()
+    ctype = document.getContentType()
 except:
+    ctype = "application/json"
     data = sys.stdin.read()
     whelk = None
     _in_console = True
@@ -91,27 +93,28 @@ except:
 
 #print "console mode", _in_console
 
-in_json = json.loads(data)
-rtype = record_type(in_json['leader'])
-suggest_source = rtype 
-if (rtype == 'bib'):
-    suggest_source = 'name'
+if ctype == 'application/json':
+    in_json = json.loads(data)
+    rtype = record_type(in_json['leader'])
+    suggest_source = rtype 
+    if (rtype == 'bib'):
+        suggest_source = 'name'
 
-w_name = whelk.name if whelk else "test"
+    w_name = whelk.name if whelk else "test"
 
-identifier = "/%s/%s/%s" % (w_name, suggest_source, document.identifier.toString().split("/")[-1])
-sug_json = transform(in_json, rtype)
-if sug_json:
-    sug_json['identifier'] = identifier
-    r = json.dumps(sug_json)
+    identifier = "/%s/%s/%s" % (w_name, suggest_source, document.identifier.toString().split("/")[-1])
+    sug_json = transform(in_json, rtype)
+    if sug_json:
+        sug_json['identifier'] = identifier
+        r = json.dumps(sug_json)
 
-    if whelk:
-        mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")
+        if whelk:
+            mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")
 
-        #print "Sparar dokument i whelken daaraa"
-        uri = whelk.store(mydoc)
-else:
-    print "Record %s has no usable auth information. (i.e. no 100-field)" % document.identifier
+            #print "Sparar dokument i whelken daaraa"
+            uri = whelk.store(mydoc)
+    else:
+        print "Record %s has no usable auth information. (i.e. no 100-field)" % document.identifier
 
 if _in_console:
     print r

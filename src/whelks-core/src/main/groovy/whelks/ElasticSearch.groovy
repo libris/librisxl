@@ -1,7 +1,6 @@
 package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
-import groovy.json.*
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.get.GetResponse
@@ -17,7 +16,8 @@ import org.elasticsearch.node.NodeBuilder
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
 
-import com.google.gson.Gson
+import org.json.simple.*
+import com.google.gson.*
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
@@ -62,27 +62,6 @@ class ElasticSearch implements Index, Storage {
         //add(doc.data, doc.identifier)
     }
 
-    /**
-     * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
-     */
-    def wrapData(byte[] data, URI identifier, String contentType) {
-        if (contentType.equalsIgnoreCase("application/json")) {
-            if (isJSON(data)) {
-                return data
-            } else {
-                throw new WhelkRuntimeException("Badly formed JSON data for document $identifier")
-            }
-        } else {
-            Gson gson = new Gson()
-            def docrepr = [:]
-            docrepr['data'] = new String(data)
-            docrepr['identifier'] = identifier
-            docrepr['contenttype'] = "text/plain"
-            String json = gson.toJson(docrepr)
-            return json.getBytes()
-        }
-    }
-
     void delete(URI uri) {
         throw new UnsupportedOperationException("Not supported yet.")
     }
@@ -102,7 +81,6 @@ class ElasticSearch implements Index, Storage {
         }
     }
 
-    /*
     boolean isJSON(data) {
         Gson gson = new Gson()
         try {
@@ -113,7 +91,6 @@ class ElasticSearch implements Index, Storage {
         }
         return true
     }
-    */
 
     def determineIndexAndType(URI uri) {
         log.debug "uripath: ${uri.path}"
@@ -156,13 +133,10 @@ class ElasticSearch implements Index, Storage {
                 log.debug("MAP: " + it.key +":" + it.value)
             }
             */
-            if (!raw && map['contenttype'] != "application/json" && map['data']) {
-                if (!map['contenttype']) {
-                    map['contenttype'] = contentType(map['data'].getBytes())
-                }
-                d = this.whelk.createDocument().withIdentifier(uri).withContentType(map['contenttype']).withData(map['data'])
-            } else {
+            if (raw) {
                 d = this.whelk.createDocument().withIdentifier(uri).withContentType("application/json").withData(response.source())
+            } else {
+                d = deserializeJsonDocument(response.source())
             }
 
             return d
@@ -210,35 +184,35 @@ class ElasticSearch implements Index, Storage {
     }
 
     Document deserializeJsonDocument(data) {
-
+        def jsonData = (JSONObject)JSONValue.parse(new String(data))
+        Document doc = this.whelk.createDocument()
+            .withIdentifier(jsonData.get("uri"))
+            .withContentType(jsonData.get("contenttype"))
+            .withData(jsonData.get("data").toString().getBytes())
+        return doc
     }
 
     def serializeDocumentToJson(Document doc) {
-        return doc.data
-        def jsonString = new StringBuilder("{")
-        jsonString << "\"uri\": \"${doc.identifier}\","
-        jsonString << "\"version\": \"${doc.version}\","
-        jsonString << "\"contenttype\": \"${doc.contentType}\","
-        jsonString << "\"size\": ${doc.size},"
-        jsonString << "\"data\":" << doc.dataAsString << "}"
-        /*
-        def builder = new JsonBuilder()
-        def root = builder {
-            uri doc.identifier.toString()
-            version doc.version
-            contenttype doc.contentType
-            size doc.size
-            /* TODO
-            links doc.links.asList()
-            keys doc.keys.asList()
-            tags doc.tags.asList()
+        //return doc.data
+        if (doc.contentType == "application/json") {
+            def jsonString = new StringBuilder("{")
+            jsonString << "\"uri\": \"${doc.identifier}\","
+            jsonString << "\"version\": \"${doc.version}\","
+            jsonString << "\"contenttype\": \"${doc.contentType}\","
+            jsonString << "\"size\": ${doc.size},"
+            jsonString << "\"data\":" << (isJSON(doc.dataAsString) ? doc.dataAsString : "\"${doc.dataAsString}\"") << "}"
+            return jsonString.toString().getBytes()
+        } else {
+            Gson gson = new Gson()
+            def docrepr = [:]
+            docrepr['data'] = new String(doc.data)
+            docrepr['uri'] = doc.identifier
+            docrepr['contenttype'] = "text/plain"
+            docrepr['size'] = doc.size
+            docrepr['version'] = doc.version
+            String json = gson.toJson(docrepr)
+            return json.getBytes()
         }
-        def slurper = new JsonSlurper()
-        root['data'] = slurper.parseText(new String(doc.data, 'UTF-8'))
-        println "RESULT"
-        print builder.toString()
-            */
-        return jsonString.toString()
     }
 }
 
