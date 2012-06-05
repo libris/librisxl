@@ -142,7 +142,7 @@ public class WhelkManager implements JSONInitialisable {
     }
 
     // Notifications
-    public LinkedList<URI> getNotificationQueue() {
+    public synchronized LinkedList<URI> getNotificationQueue() {
         return notificationStack;
     }
 
@@ -332,19 +332,17 @@ public class WhelkManager implements JSONInitialisable {
 
         @Override 
         public void run() {
-            System.out.println("Starting notificationsrunner.");
             while (true) {
-                if (this.manager.getNotificationQueue().size() > 0) {
-                    System.out.println("Oooh! Work to be done. Queue size is " + this.manager.getNotificationQueue().size());
-                    final URI u = this.manager.getNotificationQueue().pop();
-                    try {
-                        for (String listener : this.manager.getListeners().get(this.manager.resolveWhelkNameForURI(u))) {
-                            System.out.println("Notifying listener of change in " + u);
-                            this.manager.getWhelk(listener).notify(u);
-                        }
-                    } catch (Exception e) {
-                        Logger.getLogger(WhelkManager.class.getName()).log(Level.FINE, null, e);
+                try {
+                    URI uri = this.manager.getNotificationQueue().pop();
+                    Logger.getLogger(this.getClass().getName()).log(Level.FINE, "Notifying listeners of change in URI " + uri + ". Current size of list: " + this.manager.getNotificationQueue().size());
+                    for (String listener : this.manager.getListeners().get(this.manager.resolveWhelkNameForURI(uri))) {
+                        this.manager.getWhelk(listener).notify(uri);
                     }
+                } catch (NoSuchElementException nsee) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.FINEST, "No notifications to handle at this time.");
+                } catch (Exception e) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.FINE, null, e);
                 }
                 try {
                     Thread.currentThread().sleep(100);

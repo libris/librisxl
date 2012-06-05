@@ -26,6 +26,10 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     private List<Plugin> plugins = new LinkedList<Plugin>();
     private WhelkManager manager = null;
 
+    public BasicWhelk() {
+        addPlugin(new NotificationTrigger());
+    }
+
     @Override
     public URI store(Document d) {
 
@@ -36,7 +40,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         
         // before triggers
         for (Trigger t: getTriggers())
-            t.beforeStore(this, d);
+            t.beforeStore(d);
         
         // add document to store
         /*
@@ -81,7 +85,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
         // after triggers
         for (Trigger t: getTriggers())
-            t.afterStore(this, d);
+            t.afterStore(d);
         
         return d.getIdentifier();
     }
@@ -110,7 +114,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     public void delete(URI uri) {
         // before triggers
         for (Trigger t: getTriggers())
-            t.beforeDelete(this, uri);
+            t.beforeDelete(uri);
         
         for (Component c: getComponents())
             if (c instanceof Storage)
@@ -122,7 +126,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
         // after triggers
         for (Trigger t: getTriggers())
-            t.afterDelete(this, uri);
+            t.afterDelete(uri);
     }
 
     @Override

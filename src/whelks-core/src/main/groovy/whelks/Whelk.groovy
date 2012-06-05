@@ -19,6 +19,8 @@ import se.kb.libris.whelks.persistance.*
 @Log
 class WhelkImpl extends BasicWhelk {
 
+    WhelkImpl() {super()}
+
     def URI generate_identifier() {
         def uri = _create_random_URI()
         while (has_identifier(uri)) {
@@ -60,7 +62,7 @@ class WhelkImpl extends BasicWhelk {
         }
         try {
             URI u = super.store(d)
-            manager.notifyListeners(u)
+            //manager.notifyListeners(u)
             log.debug("Returning uri $u")
             return u
         } catch (WhelkRuntimeException wre) {
