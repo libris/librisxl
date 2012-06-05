@@ -98,7 +98,7 @@ class DocumentRestlet extends BasicWhelkAPI {
             }
         }
     }
-}  
+}
 
 @Log
 class SearchRestlet extends BasicWhelkAPI {
@@ -132,8 +132,10 @@ class ImportRestlet extends BasicWhelkAPI {
     def void handle(Request request, Response response) {
         importer.resource = this.whelk.name
         importer.manager = this.whelk.manager
+        def millis = System.currentTimeMillis()
         def count = importer.doImport()
-        response.setEntity("Imported $count records into ${whelk.name}.\n", MediaType.TEXT_PLAIN)
+        def diff = (System.currentTimeMillis() - millis)/1000
+        response.setEntity("Imported $count records into ${whelk.name} in $diff seconds.\n", MediaType.TEXT_PLAIN)
     }
 }
 

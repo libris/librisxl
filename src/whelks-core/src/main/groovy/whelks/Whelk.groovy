@@ -15,7 +15,6 @@ import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.persistance.*
 
-import se.kb.libris.conch.data.WhelkSearchResult
 
 @Log
 class WhelkImpl extends BasicWhelk {
@@ -61,10 +60,7 @@ class WhelkImpl extends BasicWhelk {
         }
         try {
             URI u = super.store(d)
-            Thread.start {
-                log.debug("Notifying listeners in new thread.")
-                manager.notifyListeners(u)
-            }
+            manager.notifyListeners(u)
             log.debug("Returning uri $u")
             return u
         } catch (WhelkRuntimeException wre) {
@@ -124,16 +120,10 @@ class WhelkImpl extends BasicWhelk {
     def SearchResult query(String query, boolean raw = false) {
         def result = null
         plugins.each {
-            log.debug "Looping component ${it.class.name}"
             if (it instanceof Index) {
-                log.debug "Is index. Searching ..."
                 result = it.query(query, raw)
-                if (result != null) {
-                    log.debug "Found a ${result.class.name}"
-                }
             }
         }
-        log.debug "Located document from elastic search"
         return result
     }
 

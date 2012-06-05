@@ -13,7 +13,7 @@ def transform(a_json, rtype):
 
     should_add = True
 
-    for f in a_json['data']['fields']:
+    for f in a_json['fields']:
         for k, v in f.items():
             if k == '001':
                 link = "/%s/%s" % (rtype, v)
@@ -91,7 +91,7 @@ except:
 #print "console mode", _in_console
 
 in_json = json.loads(data)
-rtype = record_type(in_json['data']['leader'])
+rtype = record_type(in_json['leader'])
 suggest_source = rtype 
 if (rtype == 'bib'):
     suggest_source = 'name'

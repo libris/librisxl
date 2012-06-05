@@ -1,22 +1,21 @@
-package se.kb.libris.conch.data
+package se.kb.libris.whelks.basic
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.SearchResult
-import se.kb.libris.whelks.basic.BasicDocument
 
-class WhelkSearchResult implements SearchResult {
+class BasicSearchResult implements SearchResult {
 
     String result
     Iterable hits
     Iterable facets
-    long numberOfHits
+    long numberOfHits = 0
 
-    WhelkSearchResult(String data, long hits) {
+    BasicSearchResult(String data, long hits) {
         this.result = data
         this.numberOfHits = hits
     }
 
-    WhelkSearchResult(String data, int hits) {
+    BasicSearchResult(String data, int hits) {
         this.result = data
         this.numberOfHits = hits
     }

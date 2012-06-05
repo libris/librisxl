@@ -8,5 +8,9 @@ class Tools {
     static String contentType(byte[] data) {
         return "text/plain"
     }
+
+    static String contentType(String data) {
+        return contentType(data.getBytes('UTF-8'))
+    }
 }
 

@@ -31,24 +31,26 @@ class MarcJSONConverter {
 
     static String toJSONString(MarcRecord record) {
         def json = new JSONObject()
-        def fields = new JSONObject()
+        def fields = new JSONArray()
 
         record.fields.each {
+            def field = new JSONObject()
             if (it instanceof Controlfield) {
-                fields.put(it.tag, it.data)
+                field.put(it.tag, it.data)
             } else {
-                def field = new JSONObject()
-                field.put("ind1", "" + it.getIndicator(0))
-                field.put("ind2", "" + it.getIndicator(1))
+                def datafield = new JSONObject()
+                datafield.put("ind1", "" + it.getIndicator(0))
+                datafield.put("ind2", "" + it.getIndicator(1))
                 def subfields = new JSONArray()
                 it.subfields.each {
                     def subfield = new JSONObject()
                     subfield.put(it.code, it.data);
                     subfields.add(subfield)
                 }
-                field.put("subfields", subfields)
-                fields.put(it.tag, field)
+                datafield.put("subfields", subfields)
+                field.put(it.tag, datafield)
             }
+            fields.add(field)
         }
         json.put("leader", record.leader)
         json.put("fields", fields)

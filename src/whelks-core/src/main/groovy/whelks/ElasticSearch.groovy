@@ -1,6 +1,7 @@
 package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
+import groovy.json.*
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.get.GetResponse
@@ -17,15 +18,13 @@ import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
 
 import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
-import com.google.gson.JsonObject
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 
 import static se.kb.libris.conch.Tools.*
-import se.kb.libris.conch.data.*
 
 @Log
 class ElasticSearch implements Index, Storage {
@@ -43,15 +42,15 @@ class ElasticSearch implements Index, Storage {
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
-    def add(byte[] data, URI identifier, String contentType) {
+    def add(Document doc) {
         log.debug "Indexing document ..."
-        def dict = determineIndexAndType(identifier)
+        def dict = determineIndexAndType(doc.identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
         try {
-            IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(wrapData(data, identifier, contentType)).execute().actionGet()
+            IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(serializeDocumentToJson(doc)).execute().actionGet()
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
-            log.error("Failed to index document with id ${identifier}: " + me.getMessage(), me)
+            log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
         } catch (org.elasticsearch.client.transport.NoNodeAvailableException nnae) {
             log.fatal("Failed to connect to elasticsearch node: " + nnae.getMessage(), nnae)
         }
@@ -90,18 +89,20 @@ class ElasticSearch implements Index, Storage {
 
     @Override
     public void store(Document d) {
-        add(d.data, d.identifier, d.contentType)
+        add(d)
     }
 
     OutputStream getOutputStreamFor(Document doc) {
         log.debug("Preparing outputstream for document ${doc.identifier}")
         return new ByteArrayOutputStream() {
             void close() throws IOException {
-                ElasticSearch.this.add(toByteArray(), doc.identifier)
+                doc = doc.withData(toByteArray())
+                ElasticSearch.this.add(doc)
             }
         }
     }
 
+    /*
     boolean isJSON(data) {
         Gson gson = new Gson()
         try {
@@ -112,6 +113,7 @@ class ElasticSearch implements Index, Storage {
         }
         return true
     }
+    */
 
     def determineIndexAndType(URI uri) {
         log.debug "uripath: ${uri.path}"
@@ -145,16 +147,16 @@ class ElasticSearch implements Index, Storage {
         } catch (Exception e) {
             log.error("Exception", e)
         }
-        if (response.exists()) {
+        if (response && response.exists()) {
             Document d 
             def map = response.sourceAsMap()
             log.debug("Raw mode: ${raw}")
+            /*
+            map.each {
+                log.debug("MAP: " + it.key +":" + it.value)
+            }
+            */
             if (!raw && map['contenttype'] != "application/json" && map['data']) {
-                /*
-                map.each {
-                    log.debug(it.key +":" + it.value + " (" + it.value.class.name + ")")
-                }
-                */
                 if (!map['contenttype']) {
                     map['contenttype'] = contentType(map['data'].getBytes())
                 }
@@ -188,7 +190,7 @@ class ElasticSearch implements Index, Storage {
         log.debug "Total hits: ${response.hits.totalHits}"
         log.debug("Raw mode: ${raw}")
         if (raw) {
-            return new WhelkSearchResult(response.toString(), response.hits.totalHits)
+            return new BasicSearchResult(response.toString(), response.hits.totalHits)
             //return response.toString()
         } else {
             def hits = new StringBuilder()
@@ -198,13 +200,45 @@ class ElasticSearch implements Index, Storage {
             }
             hits = hits.insert(0,"[")
             hits = hits.append("]")
-            return new WhelkSearchResult(hits.toString(), response.hits.totalHits)
+            return new BasicSearchResult(hits.toString(), response.hits.totalHits)
         }
     }
 
     @Override
     LookupResult lookup(Key key) {
         throw new UnsupportedOperationException("Not supported yet.")
+    }
+
+    Document deserializeJsonDocument(data) {
+
+    }
+
+    def serializeDocumentToJson(Document doc) {
+        return doc.data
+        def jsonString = new StringBuilder("{")
+        jsonString << "\"uri\": \"${doc.identifier}\","
+        jsonString << "\"version\": \"${doc.version}\","
+        jsonString << "\"contenttype\": \"${doc.contentType}\","
+        jsonString << "\"size\": ${doc.size},"
+        jsonString << "\"data\":" << doc.dataAsString << "}"
+        /*
+        def builder = new JsonBuilder()
+        def root = builder {
+            uri doc.identifier.toString()
+            version doc.version
+            contenttype doc.contentType
+            size doc.size
+            /* TODO
+            links doc.links.asList()
+            keys doc.keys.asList()
+            tags doc.tags.asList()
+        }
+        def slurper = new JsonSlurper()
+        root['data'] = slurper.parseText(new String(doc.data, 'UTF-8'))
+        println "RESULT"
+        print builder.toString()
+            */
+        return jsonString.toString()
     }
 }
 

@@ -1,7 +1,5 @@
 package se.kb.libris.whelks;
 
-import groovy.util.logging.Slf4j as Log
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -44,23 +42,36 @@ import se.kb.libris.whelks.persistance.*;
      *   }
      * }
      */
-@Log
 public class WhelkManager implements JSONInitialisable {
     Map<String, Whelk> whelks = new TreeMap<String, Whelk>();
     Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
     Map<String, Set<String>> listeners = new TreeMap<String, Set<String>>();
+    LinkedList<URI> notificationStack = new LinkedList<URI>();
     URL location = null;
-    
+
+    private static final int NUMBER_OF_NOTIFICATION_RUNNERS = 20;
+
     public WhelkManager() {
+        System.out.println("Starting manager.");
+        startNotificationRunners();
     }
-    
+
     public WhelkManager(URL url) {
+        System.out.println("Starting manager with url");
         location = url;
-        
+
         try {
             init((JSONObject)JSONValue.parseWithException(new InputStreamReader(url.openStream())));
+            startNotificationRunners();
         } catch (Throwable t) {
             throw new WhelkRuntimeException(t);
+        }
+    }
+
+    private void startNotificationRunners() {
+        for (int i = 0; i < NUMBER_OF_NOTIFICATION_RUNNERS; i++) {
+            System.out.println("Starting runner " + i);
+            (this.new NotificationMessenger(this)).start();
         }
     }
 
@@ -78,18 +89,19 @@ public class WhelkManager implements JSONInitialisable {
     public Map<String, Whelk> getWhelks() {
         return whelks;
     }
-    
+
+
     public Whelk getWhelk(String name) {
         return whelks.get(name);
     }
-    
+
     public void registerFactory(String name, WhelkFactory factory) {
         if (factories.containsKey(name))
             throw new WhelkRuntimeException("Factory with name '" + name + "' already exists");
 
         factories.put(name, factory);
     }
-    
+
     public WhelkFactory getFactory(String name) {
         return factories.get(name);
     }
@@ -100,10 +112,10 @@ public class WhelkManager implements JSONInitialisable {
         }
         w.setManager(this);
         whelks.put(name, w);
-        
+
         return whelks.get(name);
     }
-    
+
     public Whelk createWhelk(String factoryName, String name) {
         if (!factories.containsKey(factoryName))
             throw new WhelkRuntimeException("No factory has been registered with the name '" + factoryName + "'");
@@ -114,22 +126,30 @@ public class WhelkManager implements JSONInitialisable {
         Whelk w = factories.get(factoryName).create();
         w.setManager(this);
         whelks.put(name, w);
-        
+
         return whelks.get(name);
     }
-    
+
     public void destroyWhelk(String name) {
         if (!whelks.containsKey(name))
             throw new WhelkRuntimeException("No whelk exists with the name '" + name + "'");
-        
+
         whelks.remove(name).destroy();
     }
-    
+
     public Document resolve(URI identifier) {
         return whelks.get(resolveWhelkNameForURI(identifier)).get(identifier);
     }
 
     // Notifications
+    public LinkedList<URI> getNotificationQueue() {
+        return notificationStack;
+    }
+
+    public Map<String, Set<String>> getListeners() {
+        return this.listeners;
+    }
+
     public void establishListening(String fromWhelk, String toWhelk) {
         if (listeners.containsKey(fromWhelk)) {
             listeners.get(fromWhelk).add(toWhelk);
@@ -141,17 +161,11 @@ public class WhelkManager implements JSONInitialisable {
     }
 
     public void notifyListeners(URI uri) {
-        log.debug("Received notification for " + uri);
-        try {
-            for (String listener : listeners.get(resolveWhelkNameForURI(uri))) {
-                whelks.get(listener).notify(uri);
-            }
-        } catch (Exception e) {
-            Logger.getLogger(WhelkManager.class.getName()).log(Level.FINE, null, e);
-        }
+        Logger.getLogger(WhelkManager.class.getName()).log(Level.FINE, "Received notification for " + uri);
+        notificationStack.addLast(uri);
     }
 
-    private String resolveWhelkNameForURI(URI uri) {
+    protected String resolveWhelkNameForURI(URI uri) {
         try {
             return uri.toString().split("/")[1];
         } catch (Exception e) {
@@ -164,11 +178,11 @@ public class WhelkManager implements JSONInitialisable {
         if (location.getProtocol().equals("file")) {
             File file = new File(location.getFile());
             PrintWriter writer = null;
-            
+
             try {
                 writer = new PrintWriter(file);
                 writer.println(serialise());
-                
+
                 this.location = location;
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, null, ex);
@@ -180,7 +194,7 @@ public class WhelkManager implements JSONInitialisable {
             /** @todo implement HTTP(S) PUT*/
         }
     }
-    
+
     public void save() {
         save(location);
     }
@@ -190,7 +204,7 @@ public class WhelkManager implements JSONInitialisable {
         JSONObject _whelks = new JSONObject();
         JSONObject _factories = new JSONObject();
         JSONObject _listeners = new JSONObject();
-        
+
         for (Entry<String, Whelk> entry: whelks.entrySet()) {
             if (entry.getValue() instanceof JSONSerialisable) {
                 _whelks.put(entry.getKey(), ((JSONSerialisable)entry.getValue()).serialize());
@@ -200,7 +214,7 @@ public class WhelkManager implements JSONInitialisable {
                 _whelks.put(entry.getKey(), _whelk);
             }
         }
-        
+
         for (Entry<String, WhelkFactory> entry: this.factories.entrySet()) {
             if (entry.getValue() instanceof JSONSerialisable) {
                 _whelks.put(entry.getKey(), ((JSONSerialisable)entry.getValue()).serialize());
@@ -216,19 +230,19 @@ public class WhelkManager implements JSONInitialisable {
             _receivers.addAll(entry.getValue());
             _listeners.put(entry.getKey(), _receivers);
         }
-        
+
         ret.put("_classname", this.getClass().getName());
         ret.put("whelks", _whelks);
         ret.put("factories", _factories);
         ret.put("listeners", _listeners);
-        
+
         return ret.toJSONString();
     }
 
     public JSONInitialisable init(JSONObject obj) {
         if (obj.containsKey("whelks")) {
             JSONObject _whelks = (JSONObject)obj.get("whelks");
-            
+
             for (Object key: _whelks.keySet()) {
                 try {
                     String name = key.toString();
@@ -238,7 +252,7 @@ public class WhelkManager implements JSONInitialisable {
                     Class c = Class.forName(classname);
 
                     Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "class is " + c.getName());
-                    
+
                     if (JSONInitialisable.class.isAssignableFrom(c)) {
                         Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "whelk can be deserialised");
                         Whelk w = (Whelk)JSONDeserialiser.deserialize(classname, (JSONObject)_whelks.get(key));
@@ -256,7 +270,7 @@ public class WhelkManager implements JSONInitialisable {
                             Whelk w = (Whelk)c.newInstance();
                             whelks.put(name, w);
                         } catch (Throwable t) {
-                           throw new WhelkRuntimeException(t);
+                            throw new WhelkRuntimeException(t);
                         }
                     }
                 } catch (Exception ex) {
@@ -277,17 +291,17 @@ public class WhelkManager implements JSONInitialisable {
                 }
             }
         }
-        
+
         if (obj.containsKey("factories")) {
             JSONObject _factories = (JSONObject)obj.get("factories");
-            
+
             for (Object key: _factories.keySet()) {
                 try {
                     String name = key.toString();
                     JSONObject _factory = (JSONObject)_factories.get(key);
                     String classname = _factory.get("_classname").toString();
                     Class c = Class.forName(classname);
-                    
+
                     if (c.isAssignableFrom(JSONDeserialiser.class)) {
                         factories.put(name, (WhelkFactory)JSONDeserialiser.deserialize(classname, (JSONObject)_factories.get(key)));
                     } else {
@@ -304,8 +318,41 @@ public class WhelkManager implements JSONInitialisable {
                 }
             }
         }
-        
+
         return this;
+    }
+
+    private class NotificationMessenger extends Thread {
+
+        private WhelkManager manager;
+
+        public NotificationMessenger(WhelkManager wm) {
+            this.manager = wm;
+        }
+
+        @Override 
+        public void run() {
+            System.out.println("Starting notificationsrunner.");
+            while (true) {
+                if (this.manager.getNotificationQueue().size() > 0) {
+                    System.out.println("Oooh! Work to be done. Queue size is " + this.manager.getNotificationQueue().size());
+                    final URI u = this.manager.getNotificationQueue().pop();
+                    try {
+                        for (String listener : this.manager.getListeners().get(this.manager.resolveWhelkNameForURI(u))) {
+                            System.out.println("Notifying listener of change in " + u);
+                            this.manager.getWhelk(listener).notify(u);
+                        }
+                    } catch (Exception e) {
+                        Logger.getLogger(WhelkManager.class.getName()).log(Level.FINE, null, e);
+                    }
+                }
+                try {
+                    Thread.currentThread().sleep(100);
+                } catch (InterruptedException ie) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ie);
+                }
+            }
+        }
     }
 }
 
@@ -313,15 +360,15 @@ public class WhelkManager implements JSONInitialisable {
     _whelk
 
     if (entry.getValue() instanceof Pluggable) {
-        JSONArray _plugins = new JSONArray();
+        JSONArray _plugins = new JSONArray()
 
         for (Plugin p: ((Pluggable)entry.getValue()).getPlugins()) {
-            JSONObject _plugin = new JSONObject();
-            _plugin.put("classname", p.getClass().getName());
+            JSONObject _plugin = new JSONObject()
+            _plugin.put("classname", p.getClass().getName())
 
 
 
-            _plugins.add(_plugin);
+            _plugins.add(_plugin)
         }
     }
     */
