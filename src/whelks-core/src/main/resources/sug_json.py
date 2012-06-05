@@ -19,6 +19,7 @@ def transform(a_json, rtype):
                 link = "/%s/%s" % (rtype, v)
             if k == '100':
                 sug_json[k] = {}
+                sug_json[k]['ind1'] = v['ind1']
                 for sf in v['subfields']:
                     for sk, sv in sf.items():
                         if sk == '0' and rtype == 'bib':
