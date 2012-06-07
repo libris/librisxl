@@ -58,7 +58,7 @@ public class BatchImport {
     private void getAuthentication() {
         try {
             Properties properties = new Properties();
-            properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk-core.properties"));
+            properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"));
             final String username = properties.getProperty("username");
             final String password = properties.getProperty("password");
                 Authenticator.setDefault(new Authenticator() {
