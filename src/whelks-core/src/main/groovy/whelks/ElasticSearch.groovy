@@ -12,6 +12,7 @@ import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.node.NodeBuilder
+import org.elasticsearch.common.settings.*
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
@@ -220,8 +221,14 @@ class ElasticSearch implements Index, Storage {
 class ElasticSearchClient extends ElasticSearch {
 
     def ElasticSearchClient() {
-        log.debug "Connecting to devdb.libris.kb.se:9300"
-        client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("devdb.libris.kb.se", 9300))
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("meta/whelks-core.properties"));
+        final String elastichost = properties.getProperty("elastichost");
+
+        log.debug "Connecting to elastichost:9300"
+        Settings settings = ImmutableSettings.settingsBuilder()
+                .put("client.transport.ping_timeout", 30).build();
+        client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
         log.debug("... connected")
     }
 } 

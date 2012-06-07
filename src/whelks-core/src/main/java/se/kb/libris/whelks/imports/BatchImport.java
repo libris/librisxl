@@ -66,7 +66,7 @@ public class BatchImport {
                         return new PasswordAuthentication(username, password.toCharArray());
                     }
                 });
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
