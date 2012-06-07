@@ -4,6 +4,8 @@ public interface SearchResult<T extends Document> {
     int getNumberOfHits();
     Iterable<Facet> getFacets();
     Iterable<Hit<T>> getHits();
+
+    public String toJson();
     
     public class Facet {
         String prefix, value;

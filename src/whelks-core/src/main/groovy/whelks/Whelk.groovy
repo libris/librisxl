@@ -119,11 +119,11 @@ class WhelkImpl extends BasicWhelk {
 
 
     @Override
-    def SearchResult query(String query, boolean raw = false) {
+    def SearchResult query(String query) {
         def result = null
         plugins.each {
             if (it instanceof Index) {
-                result = it.query(query, raw)
+                result = it.query(query)
             }
         }
         return result

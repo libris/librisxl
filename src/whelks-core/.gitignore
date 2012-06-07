@@ -1,4 +1,4 @@
 data/
 target/
 build/
-meta/
+src/main/resources/whelks-core.properties

@@ -116,14 +116,30 @@ class ElasticSearch implements Index, Storage {
         return dict
     }
 
+    private GetResponse getFromElastic(index, type, id) {
+        GetResponse response  = null
+        try {
+            response = client.prepareGet(index, type, id).execute().actionGet()
+        } catch (Exception e) { 
+            log.warn("Failed to get response from server.", e)
+        }
+        return response
+    }
+
     @Override
     Document get(URI uri, raw = false) {
         def dict = determineIndexAndType(uri)
-        GetResponse response 
-        try {
-            response = client.prepareGet(dict['index'], dict['type'], dict['id']).execute().actionGet()
-        } catch (Exception e) {
-            log.error("Exception", e)
+        GetResponse response = null
+        int failcount = 0
+        while (response == null) {
+            response = getFromElastic(dict['index'], dict['type'], dict['id'])
+            if (response == null) {
+                log.warn("Retrying server connection ...")
+                if (failcount++ > 20) {
+                    break
+                }
+                Thread.sleep(100)
+            }
         }
         if (response && response.exists()) {
             Document d 
@@ -146,7 +162,7 @@ class ElasticSearch implements Index, Storage {
     }
 
     @Override
-    SearchResult query(String query, boolean raw = false) {
+    SearchResult query(String query) { //, boolean raw = false) {
         log.debug "Doing query on $query"
         def srb 
         def index = whelk.name
@@ -163,7 +179,11 @@ class ElasticSearch implements Index, Storage {
             .execute()
             .actionGet()
         log.debug "Total hits: ${response.hits.totalHits}"
-        log.debug("Raw mode: ${raw}")
+        def results = new BasicSearchResult()
+        response.hits.hits.each {
+            results.addHit(deserializeJsonDocument(it.source()))
+        }
+        /*
         if (raw) {
             return new BasicSearchResult(response.toString(), response.hits.totalHits)
             //return response.toString()
@@ -177,6 +197,8 @@ class ElasticSearch implements Index, Storage {
             hits = hits.append("]")
             return new BasicSearchResult(hits.toString(), response.hits.totalHits)
         }
+        */
+        return results
     }
 
     @Override
@@ -185,16 +207,21 @@ class ElasticSearch implements Index, Storage {
     }
 
     Document deserializeJsonDocument(data) {
-        def jsonData = (JSONObject)JSONValue.parse(new String(data))
+        def jsonData = (JSONObject)JSONValue.parse(new String(data, 'UTF-8'))
         Document doc = this.whelk.createDocument()
             .withIdentifier(jsonData.get("uri"))
             .withContentType(jsonData.get("contenttype"))
             .withData(jsonData.get("data").toString().getBytes())
+        /*
+        Gson gson = new Gson()
+        Document doc = gson.fromJson(new String(data), BasicDocument.class)
+        */
         return doc
     }
 
     def serializeDocumentToJson(Document doc) {
         //return doc.data
+        Gson gson = new Gson()
         if (doc.contentType == "application/json") {
             def jsonString = new StringBuilder("{")
             jsonString << "\"uri\": \"${doc.identifier}\","
@@ -202,9 +229,9 @@ class ElasticSearch implements Index, Storage {
             jsonString << "\"contenttype\": \"${doc.contentType}\","
             jsonString << "\"size\": ${doc.size},"
             jsonString << "\"data\":" << (isJSON(doc.dataAsString) ? doc.dataAsString : "\"${doc.dataAsString}\"") << "}"
+            println "JSON" + jsonString.toString()
             return jsonString.toString().getBytes()
         } else {
-            Gson gson = new Gson()
             def docrepr = [:]
             docrepr['data'] = new String(doc.data)
             docrepr['uri'] = doc.identifier
@@ -222,7 +249,9 @@ class ElasticSearchClient extends ElasticSearch {
 
     def ElasticSearchClient() {
         Properties properties = new Properties();
-        properties.load(new FileInputStream("meta/whelks-core.properties"));
+        def is = ElasticSearchClient.class.getClassLoader().getResourceAsStream("whelks-core.properties")
+        println "is is " + is
+        properties.load(is);
         final String elastichost = properties.getProperty("elastichost");
 
         log.debug "Connecting to elastichost:9300"

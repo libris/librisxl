@@ -109,10 +109,13 @@ class SearchRestlet extends BasicWhelkAPI {
     def void handle(Request request, Response response) {
         log.debug "SearchRestlet with path $path"
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
-        boolean _raw = (query['_raw'] == 'true')
         try {
-            def r = this.whelk.query(query.get("q"), _raw)
-            response.setEntity(r.result, MediaType.APPLICATION_JSON)
+            def results = this.whelk.query(query.get("q"))
+            if (results.numberOfHits > 0) {
+                response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
+            } else {
+                response.setEntity("No results for query", MediaType.TEXT_PLAIN)
+            }
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
         }

@@ -39,7 +39,8 @@ def transform(a_json, rtype):
         if link:
             sug_json['link'] = link
         sug_json['authorized'] = True if rtype == 'auth' else False
-        sug_json = get_records(f_100, sug_json)
+        if rtype == 'auth':
+            sug_json = get_records(f_100, sug_json)
         
         return sug_json
     else:

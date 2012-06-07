@@ -71,7 +71,7 @@ public class WhelkManager implements JSONInitialisable {
     private void startNotificationRunners() {
         for (int i = 0; i < NUMBER_OF_NOTIFICATION_RUNNERS; i++) {
             System.out.println("Starting runner " + i);
-            (this.new NotificationMessenger(this)).start();
+            (this.new NotificationMessenger(this, i)).start();
         }
     }
 
@@ -325,9 +325,11 @@ public class WhelkManager implements JSONInitialisable {
     private class NotificationMessenger extends Thread {
 
         private WhelkManager manager;
+        private int sleepoffset = 0;
 
-        public NotificationMessenger(WhelkManager wm) {
+        public NotificationMessenger(WhelkManager wm, int so) {
             this.manager = wm;
+            this.sleepoffset = so;
         }
 
         @Override 
@@ -345,7 +347,7 @@ public class WhelkManager implements JSONInitialisable {
                     Logger.getLogger(this.getClass().getName()).log(Level.FINE, null, e);
                 }
                 try {
-                    Thread.currentThread().sleep(100);
+                    Thread.currentThread().sleep(100+sleepoffset);
                 } catch (InterruptedException ie) {
                     Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ie);
                 }
