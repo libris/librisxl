@@ -1,7 +1,10 @@
 package se.kb.libris.whelks.plugin
 
+import groovy.util.logging.Slf4j as Log
+
 import se.kb.libris.whelks.*
 
+@Log
 class NotificationTrigger implements Trigger {
 
     boolean enabled = true
@@ -11,6 +14,7 @@ class NotificationTrigger implements Trigger {
     public void setWhelk(Whelk w) {this.whelk = w}
 
     public void afterStore(Document d) {
+        log.debug("Trigger for whelk ${this.whelk} notifying listeners ...")
         this.whelk.manager.notifyListeners(d.identifier)
     }
 

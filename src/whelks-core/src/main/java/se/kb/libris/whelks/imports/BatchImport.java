@@ -41,7 +41,7 @@ public class BatchImport {
     public BatchImport(String resource) {
         this.resource = resource;
         try {
-            manager = new WhelkManager(new URL("file:///tmp/whelkconfig.json"));
+            manager = WhelkManager.getInstance(new URL("file:///tmp/whelkconfig.json"));
         } catch (MalformedURLException mue) {
             mue.printStackTrace();
         }

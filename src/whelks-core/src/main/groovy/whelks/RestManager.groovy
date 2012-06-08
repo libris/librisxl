@@ -12,7 +12,7 @@ import se.kb.libris.whelks.component.ElasticSearchClient
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.api.*
-import se.kb.libris.whelks.plugin.PythonRunnerFormatConverter
+import se.kb.libris.whelks.plugin.*
 
 @Log
 class RestManager extends Application {
@@ -52,9 +52,11 @@ class RestManager extends Application {
             bibwhelk.addPlugin(new SearchRestlet())
             bibwhelk.addPlugin(new ImportRestlet())
             bibwhelk.addPlugin(new DocumentRestlet())
+            bibwhelk.addPlugin(new NotificationTrigger());
             authwhelk.addPlugin(new SearchRestlet())
             authwhelk.addPlugin(new ImportRestlet())
             authwhelk.addPlugin(new DocumentRestlet())
+            authwhelk.addPlugin(new NotificationTrigger());
             suggestwhelk.addPlugin(new SearchRestlet())
             suggestwhelk.addPlugin(new DocumentRestlet())
 

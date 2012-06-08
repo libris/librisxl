@@ -8,8 +8,8 @@ import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.action.search.SearchType
 import org.elasticsearch.client.Client
-import org.elasticsearch.client.transport.TransportClient
-import org.elasticsearch.common.transport.InetSocketTransportAddress
+import org.elasticsearch.client.transport.*
+import org.elasticsearch.common.transport.*
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.node.NodeBuilder
 import org.elasticsearch.common.settings.*
@@ -19,6 +19,7 @@ import static org.elasticsearch.node.NodeBuilder.*
 
 import org.json.simple.*
 import com.google.gson.*
+import groovy.json.JsonSlurper
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
@@ -35,6 +36,7 @@ class ElasticSearch implements Index, Storage {
 
     boolean enabled = true
     String id = "elasticsearch"
+    int MAX_TRIES = 1000
 
     String defaultType = "record"
 
@@ -43,18 +45,35 @@ class ElasticSearch implements Index, Storage {
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
-    def add(Document doc) {
+    def boolean add(Document doc) {
+        boolean unfailure = false
         log.debug "Indexing document ..."
         def dict = determineIndexAndType(doc.identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
         try {
             IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(serializeDocumentToJson(doc)).execute().actionGet()
+            response = client.prepareIndex(dict.index, dict.type+":meta", dict.id).setSource(extractMetaData(doc)).execute().actionGet()
+            unfailure = true
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
             log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
+                unfailure = true
         } catch (org.elasticsearch.client.transport.NoNodeAvailableException nnae) {
             log.fatal("Failed to connect to elasticsearch node: " + nnae.getMessage(), nnae)
         }
+        return unfailure
+    }
+
+    byte[] extractMetaData(Document doc) {
+        def builder = new groovy.json.JsonBuilder()
+        builder {
+            "uri"(doc.identifier.toString()) 
+            "version"(doc.version) 
+            "contenttype"(doc.contentType) 
+            "size"(doc.size)
+        }
+        println "Metadata: ${builder.toString()}"
+        return builder.toString().getBytes()
     }
 
     @Override
@@ -69,17 +88,24 @@ class ElasticSearch implements Index, Storage {
 
     @Override
     public void store(Document d) {
-        add(d)
+        int failcount = 0
+        while (!add(d)) {
+            if (failcount++ > MAX_TRIES) {
+                log.error("Failed to store document after $MAX_TRIES attempts")
+                break;
+            }
+            Thread.sleep(100)
+        }
     }
 
     OutputStream getOutputStreamFor(Document doc) {
         log.debug("Preparing outputstream for document ${doc.identifier}")
-        return new ByteArrayOutputStream() {
-            void close() throws IOException {
-                doc = doc.withData(toByteArray())
-                ElasticSearch.this.add(doc)
+            return new ByteArrayOutputStream() {
+                void close() throws IOException {
+                    doc = doc.withData(toByteArray())
+                    ElasticSearch.this.add(doc)
+                }
             }
-        }
     }
 
     boolean isJSON(data) {
@@ -130,16 +156,17 @@ class ElasticSearch implements Index, Storage {
     Document get(URI uri, raw = false) {
         def dict = determineIndexAndType(uri)
         GetResponse response = null
+        GetResponse metaresponse = null
         int failcount = 0
         while (response == null) {
             response = getFromElastic(dict['index'], dict['type'], dict['id'])
             if (response == null) {
                 log.warn("Retrying server connection ...")
-                if (failcount++ > 20) {
+                if (failcount++ > MAX_TRIES) {
                     break
                 }
                 Thread.sleep(100)
-            }
+            } 
         }
         if (response && response.exists()) {
             Document d 
@@ -147,41 +174,65 @@ class ElasticSearch implements Index, Storage {
             log.debug("Raw mode: ${raw}")
             /*
             map.each {
-                log.debug("MAP: " + it.key +":" + it.value)
+            log.debug("MAP: " + it.key +":" + it.value)
             }
             */
             if (raw) {
                 d = this.whelk.createDocument().withIdentifier(uri).withContentType("application/json").withData(response.source())
             } else {
-                d = deserializeJsonDocument(response.source())
+                d = deserializeJsonDocument(response.source(), uri, getFromElastic(dict['index'], dict['type']+":meta", dict['id']))
             }
 
+            println "Returning document with ctype ${d.contentType}"
             return d
         }
+        println "return null"
         return null
     }
 
-    @Override
-    SearchResult query(String query) { //, boolean raw = false) {
-        log.debug "Doing query on $query"
-        def srb 
-        def index = whelk.name
-        if (index == null) {
-            srb = client.prepareSearch()  
-        } else {
-            srb = client.prepareSearch(index)  
-        }
-        SearchResponse response = srb
+    private SearchResponse performQuery(query, index) {
+        SearchResponse response = null
+        try {
+            def srb
+            if (index == null) {
+                srb = client.prepareSearch()  
+            } else {
+                srb = client.prepareSearch(index)  
+            }
+            response = srb
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setQuery(queryString(query))
             //.setFrom(0).setSize(60)
             .setExplain(true)
             .execute()
             .actionGet()
-        log.debug "Total hits: ${response.hits.totalHits}"
+        } catch (NoNodeAvailableException e) {
+            log.warn("Failed to get response from server.", e)
+        } 
+        return response
+    }
+
+    @Override
+    SearchResult query(String query) { //, boolean raw = false) {
+        log.debug "Doing query on $query"
+        def index = whelk.name
+        def response = null
+        int failcount = 0
+        while (!response) {
+             response = performQuery(query, index)
+             if (!response) {
+                 log.warn("Retrying server connection ...")
+                 if (failcount++ > MAX_TRIES) {
+                     break
+                 }
+             }
+        }
         def results = new BasicSearchResult()
-        response.hits.hits.each {
-            results.addHit(deserializeJsonDocument(it.source()))
+        if (response) {
+            log.debug "Total hits: ${response.hits.totalHits}"
+            response.hits.hits.each {
+                results.addHit(this.whelk.createDocument().withData(it.source()))
+            }
         }
         /*
         if (raw) {
@@ -206,41 +257,38 @@ class ElasticSearch implements Index, Storage {
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    Document deserializeJsonDocument(data) {
-        def jsonData = (JSONObject)JSONValue.parse(new String(data, 'UTF-8'))
-        Document doc = this.whelk.createDocument()
-            .withIdentifier(jsonData.get("uri"))
-            .withContentType(jsonData.get("contenttype"))
-            .withData(jsonData.get("data").toString().getBytes())
+    Document deserializeJsonDocument(data, uri, metaresponse) {
         /*
-        Gson gson = new Gson()
-        Document doc = gson.fromJson(new String(data), BasicDocument.class)
+        println "About to deserialize this:"
+        println new String(data)
         */
+        def version, size
+        def contentType = "application/json"
+        if (metaresponse && metaresponse.exists()) {
+            def slurper = new JsonSlurper()
+            def slurped = slurper.parseText(new String(data))
+            version = slurped.version
+            size = slurped.size
+            contentType = (slurped.contenttype ? slurped.contenttype : contentType)
+        }
+        Document doc = this.whelk.createDocument().withData(data).withIdentifier(uri).withContentType(contentType)
         return doc
     }
 
     def serializeDocumentToJson(Document doc) {
-        //return doc.data
-        Gson gson = new Gson()
-        if (doc.contentType == "application/json") {
-            def jsonString = new StringBuilder("{")
-            jsonString << "\"uri\": \"${doc.identifier}\","
-            jsonString << "\"version\": \"${doc.version}\","
-            jsonString << "\"contenttype\": \"${doc.contentType}\","
-            jsonString << "\"size\": ${doc.size},"
-            jsonString << "\"data\":" << (isJSON(doc.dataAsString) ? doc.dataAsString : "\"${doc.dataAsString}\"") << "}"
-            println "JSON" + jsonString.toString()
-            return jsonString.toString().getBytes()
-        } else {
+        if (doc.contentType != "application/json") {
+            log.debug("Document is not JSON, must wrap it.")
+            Gson gson = new Gson()
             def docrepr = [:]
             docrepr['data'] = new String(doc.data)
             docrepr['uri'] = doc.identifier
             docrepr['contenttype'] = "text/plain"
             docrepr['size'] = doc.size
             docrepr['version'] = doc.version
-            String json = gson.toJson(docrepr)
-            return json.getBytes()
+            return gson.toJson(docrepr)
         }
+        log.debug("Document is JSON, nothing to serialize.")
+        return doc.data
     }
 }
 

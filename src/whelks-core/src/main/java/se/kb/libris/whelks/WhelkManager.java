@@ -43,6 +43,9 @@ import se.kb.libris.whelks.persistance.*;
      * }
      */
 public class WhelkManager implements JSONInitialisable {
+
+    private static WhelkManager instance = null;
+
     Map<String, Whelk> whelks = new TreeMap<String, Whelk>();
     Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
     Map<String, Set<String>> listeners = new TreeMap<String, Set<String>>();
@@ -51,12 +54,27 @@ public class WhelkManager implements JSONInitialisable {
 
     private static final int NUMBER_OF_NOTIFICATION_RUNNERS = 20;
 
-    public WhelkManager() {
+    public static WhelkManager getInstance() {
+        if (instance == null) {
+            instance = new WhelkManager();
+        }
+        return instance;
+    }
+    public static WhelkManager getInstance(URL location) {
+        if (instance == null) {
+            instance = new WhelkManager(location);
+        } else {
+            throw new WhelkRuntimeException("Manager already instantiated");
+        }
+        return instance;
+    }
+
+    private WhelkManager() {
         System.out.println("Starting manager.");
         startNotificationRunners();
     }
 
-    public WhelkManager(URL url) {
+    private WhelkManager(URL url) {
         System.out.println("Starting manager with url");
         location = url;
 
@@ -70,7 +88,6 @@ public class WhelkManager implements JSONInitialisable {
 
     private void startNotificationRunners() {
         for (int i = 0; i < NUMBER_OF_NOTIFICATION_RUNNERS; i++) {
-            System.out.println("Starting runner " + i);
             (this.new NotificationMessenger(this, i)).start();
         }
     }
@@ -142,8 +159,18 @@ public class WhelkManager implements JSONInitialisable {
     }
 
     // Notifications
-    public synchronized LinkedList<URI> getNotificationQueue() {
-        return notificationStack;
+    public synchronized URI getNextFromNotificationQueue() {
+        synchronized(this) {
+            try {
+                return notificationStack.pop(); 
+            } catch (NoSuchElementException nsee) {
+                Logger.getLogger(this.getClass().getName()).log(Level.FINEST, "No notifications to handle at this time.");
+            } 
+            return null;
+        }
+    }
+    public int getNotificationQueueSize() {
+        return notificationStack.size();
     }
 
     public Map<String, Set<String>> getListeners() {
@@ -285,7 +312,6 @@ public class WhelkManager implements JSONInitialisable {
                 try {
                     JSONArray _receivers = (JSONArray)_listeners.get(key);
                     this.listeners.put(key.toString(), new HashSet(_receivers));
-                    System.out.println("Deserialising listeners ...");
                 } catch (Exception e) {
                     throw new WhelkRuntimeException(e);
                 }
@@ -336,20 +362,22 @@ public class WhelkManager implements JSONInitialisable {
         public void run() {
             while (true) {
                 try {
-                    URI uri = this.manager.getNotificationQueue().pop();
-                    Logger.getLogger(this.getClass().getName()).log(Level.FINE, "Notifying listeners of change in URI " + uri + ". Current size of list: " + this.manager.getNotificationQueue().size());
-                    for (String listener : this.manager.getListeners().get(this.manager.resolveWhelkNameForURI(uri))) {
-                        this.manager.getWhelk(listener).notify(uri);
-                    }
-                } catch (NoSuchElementException nsee) {
-                    Logger.getLogger(this.getClass().getName()).log(Level.FINEST, "No notifications to handle at this time.");
-                } catch (Exception e) {
-                    Logger.getLogger(this.getClass().getName()).log(Level.FINE, null, e);
-                }
-                try {
-                    Thread.currentThread().sleep(100+sleepoffset);
+                    Thread.currentThread().sleep(100+(sleepoffset*10));
                 } catch (InterruptedException ie) {
                     Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ie);
+                }
+                try {
+                    synchronized(this) {
+                        URI uri = this.manager.getNextFromNotificationQueue();
+                        if (uri != null) {
+                            Logger.getLogger(this.getClass().getName()).log(Level.FINE, "Notifying listeners of change in URI " + uri + ". Current size of list: " + this.manager.getNotificationQueueSize());
+                            for (String listener : this.manager.getListeners().get(this.manager.resolveWhelkNameForURI(uri))) {
+                                this.manager.getWhelk(listener).notify(uri);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.FINE, null, e);
                 }
             }
         }

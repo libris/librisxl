@@ -8,48 +8,90 @@ except ImportError:
 
 
 def transform(a_json, rtype):
-    sug_json = {}
+    alla_json = []
+    resten_json = {}
     link = None
+    id001 = None
 
-    should_add = True
+    top_title = None
 
     for f in a_json['fields']:
         for k, v in f.items():
             if k == '001':
                 link = "/%s/%s" % (rtype, v)
-            if k == '100':
-                sug_json[k] = {}
-                sug_json[k]['ind1'] = v['ind1']
+                id001 = v
+            if k in ['100', '700']:
+                should_add = True
+                sug_json = {}
+                sug_json['100'] = {}
+                sug_json['100']['ind1'] = v['ind1']
                 for sf in v['subfields']:
                     for sk, sv in sf.items():
                         if sk == '0' and rtype == 'bib':
                             should_add = False
-                        sug_json[k][sk] = sv
+                        if sk in ['a','b','c','d']:
+                            sug_json['100'][sk] = sv
+                if should_add:
+                    if k == '100':
+                        sug_json['identifier'] = "/%s/%s/%s" % (w_name, suggest_source, id001)
+                    else:
+                        name = "%s_%s" % (id001, '_'.join(sug_json['100'].values()[1:]).replace(",","").replace(" ", "_"))
+
+                        print "values", w_name, suggest_source, "name:", name
+                        sug_json['identifier'] = "/%s/%s/%s" % (w_name, suggest_source, name)
+                    alla_json.append(sug_json)
             elif k in get_fields(rtype):
-                f_list = sug_json.get(k, [])
+                f_list = resten_json.get(k, [])
                 d = {}
                 for sf in v['subfields']:
                     for sk, sv in sf.items():
                         d[sk] = sv
                 f_list.append(d)
-                sug_json[k] = f_list
+                if k == '245':
+                    titleparts = {}
+                    for sf in v['subfields']:
+                        for sk, sv in sf.items():
+                            if sk in ['a', 'b']:
+                                titleparts[sk] = sv.strip('/ ')
+                                
+                    print "titleparts", titleparts
+                    top_title = "%s %s" % (titleparts['a'], titleparts.get('b', ''))
+                    
+                resten_json[k] = f_list
 
-    if sug_json.get('100', None) and should_add:
-        f_100 = ' '.join(sug_json['100'].values())
-        if link:
-            sug_json['link'] = link
-        sug_json['authorized'] = True if rtype == 'auth' else False
-        if rtype == 'auth':
-            sug_json = get_records(f_100, sug_json)
+    # get_records for auth-records
+    if rtype == 'auth':
+        if alla_json[0].get('100', None):
+            f_100 = ' '.join(alla_json[0]['100'].values()[1:])
+            resten_json = get_records(f_100, resten_json)
+    # single top-title for bibrecords
+    elif top_title: 
+        resten_json['top_titles'] = {"%s%s" % ("http://libris.kb.se", link) : top_title.strip()}
+
+    # More for resten
+    if link:
+        resten_json['link'] = link
+    resten_json['authorized'] = True if rtype == 'auth' else False
         
-        return sug_json
-    else:
-        return 0
+    # cleanup
+    try:
+        resten_json.pop('245')
+    except:
+        1
+
+    # append resten on alla
+    print "resten", resten_json
+    ny_alla = []
+    for my_json in alla_json:
+        ny_alla.append(dict(my_json.items() + resten_json.items()))
+
+    print "alla", ny_alla
+    return ny_alla
  
 def get_fields(rtype):
     if rtype == 'auth':
-        return ['400','500','678','856']
-    return ['400','678']
+        return ['400','500','678','680','856']
+    return ['245', '400','678']
 
 
 def get_records(f_100, sug_json):
@@ -61,6 +103,7 @@ def get_records(f_100, sug_json):
         reply = urllib2.urlopen(url + "?" + data)
 
         response = reply.read().decode('utf-8')
+        print "got response", response, type(response)
 
         xresult = json.loads(response)['xsearch']
 
@@ -72,6 +115,7 @@ def get_records(f_100, sug_json):
         sug_json['top_titles'] = top_titles
 
     except:
+        print "exception"
         0
     return sug_json
 
@@ -92,6 +136,7 @@ except:
     _in_console = True
 
 
+
 #print "console mode", _in_console
 
 if ctype == 'application/json':
@@ -103,19 +148,18 @@ if ctype == 'application/json':
 
     w_name = whelk.name if whelk else "test"
 
-    identifier = "/%s/%s/%s" % (w_name, suggest_source, document.identifier.toString().split("/")[-1])
-    sug_json = transform(in_json, rtype)
-    if sug_json:
-        sug_json['identifier'] = identifier
+    #identifier = "/%s/%s/%s" % (w_name, suggest_source, document.identifier.toString().split("/")[-1])
+    sug_jsons = transform(in_json, rtype)
+    for sug_json in sug_jsons:
+        identifier = sug_json['identifier'] 
         r = json.dumps(sug_json)
+        print "r", r
 
         if whelk:
             mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")
 
             #print "Sparar dokument i whelken daaraa"
             uri = whelk.store(mydoc)
-    else:
-        print "Record %s has no usable auth information. (i.e. no 100-field)" % document.identifier
 
 if _in_console:
     print r

@@ -16,7 +16,7 @@ import se.kb.libris.whelks.plugin.Pluggable;
 
 public class SerialiseTest {
     public static void main(String args[]) throws MalformedURLException, IOException {
-        WhelkManager manager = new WhelkManager();
+        WhelkManager manager = WhelkManager.getInstance();
         manager.registerFactory("test", new TestFactory());
         Whelk whelk = manager.createWhelk("test", "test");
 
