@@ -35,7 +35,7 @@ def transform(a_json, rtype):
                     if k == '100':
                         sug_json['identifier'] = "/%s/%s/%s" % (w_name, suggest_source, id001)
                     else:
-                        name = "%s_%s" % (id001, '_'.join(sug_json['100'].values()[1:]).replace(",","").replace(" ", "_"))
+                        name = "%s_%s" % (id001, '_'.join(sug_json['100'].values()[1:]).replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]",""))
 
                         print "values", w_name, suggest_source, "name:", name
                         sug_json['identifier'] = "/%s/%s/%s" % (w_name, suggest_source, name)

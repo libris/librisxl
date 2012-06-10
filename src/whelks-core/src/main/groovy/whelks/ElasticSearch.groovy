@@ -57,9 +57,9 @@ class ElasticSearch implements Index, Storage {
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
             log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
-                unfailure = true
+            unfailure = true
         } catch (org.elasticsearch.client.transport.NoNodeAvailableException nnae) {
-            log.fatal("Failed to connect to elasticsearch node: " + nnae.getMessage(), nnae)
+            log.error("Failed to connect to elasticsearch node: " + nnae.getMessage(), nnae)
         }
         return unfailure
     }
