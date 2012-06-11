@@ -14,6 +14,7 @@ public class BasicDocument implements Document {
     private Set<Link> links = new TreeSet<Link>();
     private Set<Key> keys = new TreeSet<Key>();
     private Set<Tag> tags = new TreeSet<Tag>();
+    private Set<Description> descriptions = new TreeSet<Description>();
     private Date timestamp = null;
     
     public BasicDocument() {
@@ -23,10 +24,20 @@ public class BasicDocument implements Document {
     public URI getIdentifier() {
         return identifier;
     }
+    
+    @Override
+    public void setIdentifier(URI _identifier) {
+        identifier = _identifier;
+    }
 
     @Override
     public String getVersion() {
         return version;
+    }
+    
+    @Override
+    public void setVersion(String _version) {
+        version = _version;
     }
 
     @Override
@@ -41,10 +52,37 @@ public class BasicDocument implements Document {
 
         return ret;
     }
+    
+    @Override
+    public void setData(byte _data[]) {
+        data = _data;
+    }
 
+    @Override
+    public void setData(InputStream data) {
+        byte buf[] = new byte[1024];
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(1024);
+        
+        try {
+            int n;
+            while ((n = data.read(buf)) != -1)
+                bout.write(buf, 0, n);
+            
+            this.data = bout.toByteArray();
+            this.size = this.data.length;
+        } catch (java.io.IOException e) {
+            throw new WhelkRuntimeException("Error while reading from stream", e);
+        }
+    }
+    
     @Override
     public String getContentType() {
         return contentType;
+    }
+    
+    @Override
+    public void setContentType(String _contentType) {
+        contentType = _contentType;
     }
 
     @Override
@@ -55,6 +93,10 @@ public class BasicDocument implements Document {
     @Override
     public Date getTimestamp() {
         return timestamp;
+    }
+    
+    public void setTimestamp(Date _timestamp) {
+        timestamp = _timestamp;
     }
 
     @Override
@@ -73,14 +115,27 @@ public class BasicDocument implements Document {
     }
 
     @Override
-    public Document tag(URI uri, String value) {
-        tags.add(new BasicTag(uri, value));
-        
-        return this;
+    public Set<Description> getDescriptions() {
+        return descriptions;
     }
 
     @Override
-    public Document untag(URI type, String value) {
+    public Tag tag(URI type, String value) {
+        synchronized (tags) {
+            for (Tag t: tags)
+                if (t.getType().equals(type) && t.getValue().equals(value))
+                    return t;
+        }
+
+        BasicTag tag = new BasicTag(type, value);
+
+        tags.add(tag);
+        
+        return tag;
+    }
+
+    @Override
+    public void untag(URI type, String value) {
         synchronized (tags) {
             Set<Tag> remove = new HashSet<Tag>();
             
@@ -90,34 +145,6 @@ public class BasicDocument implements Document {
             
             tags.removeAll(remove);
         }
-        
-        return this;
-    }
-
-    @Override
-    public Document withIdentifier(URI uri) {
-        this.identifier = uri;
-        return this;
-    }
-
-    @Override
-    public Document withData(byte[] data) {
-        this.data = data;
-        this.size = data.length;
-        
-        return this;
-    }
-
-    @Override
-    public Document withContentType(String contentType) {
-        this.contentType = contentType;
-        
-        return this;
-    }
-
-    @Override
-    public InputStream getDataAsStream() {
-        return new ByteArrayInputStream(data);
     }
 
     @Override
@@ -126,21 +153,7 @@ public class BasicDocument implements Document {
     }
 
     @Override
-    public Document withDataAsStream(InputStream data) {
-        byte buf[] = new byte[1024];
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(1024);
-        
-        try {
-            int n;
-            while ((n = data.read(buf)) != -1)
-                bout.write(buf, 0, n);
-            
-            this.data = bout.toByteArray();
-            this.size = this.data.length;
-        } catch (java.io.IOException e) {
-            throw new WhelkRuntimeException("Error while reading from stream", e);
-        }
-        
-        return this;
+    public InputStream getDataAsStream() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

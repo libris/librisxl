@@ -12,7 +12,7 @@ public interface Whelk {
     // search/lookup
     public SearchResult<? extends Document> query(String query);
     public LookupResult<? extends Document> lookup(Key key);
-    public InputStream sparql(String query);
+    public SparqlResult sparql(String query);
 
     // maintenance
     public void destroy();
@@ -20,5 +20,5 @@ public interface Whelk {
     public Iterable<LogEntry> log(URI identifier);
     
     // factory methods
-    public Document createDocument();
+    public Document createDocument(); 
 }
