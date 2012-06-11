@@ -5,9 +5,12 @@ import groovy.util.logging.Slf4j as Log
 import org.restlet.*
 import org.restlet.data.*
 
+import org.json.simple.JSONObject
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
+import se.kb.libris.whelks.persistance.*
 
 interface RestAPI extends API {
     String getPath()
@@ -164,4 +167,40 @@ class ImportRestlet extends BasicWhelkAPI {
 class AutoComplete extends BasicWhelkAPI {
 
     def pathEnd = "_complete"
+
+    def namePrefixes = ['100.a', '400.a', '500.a']
+
+    def void addNamePrefix(String prefix) {
+        namePrefixes << prefix
+    }
+
+    @Override
+    def void handle(Request request, Response response) {
+        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        String name = querymap.get("name")
+        if (name) {
+            if (name[-1] != ' ' && name[-1] != '*') {
+                name = name + "*"
+            }
+            def names = []
+            namePrefixes.each { p ->
+                def nameparts = []
+                name.split(" ").each {
+                    nameparts << "$p:$it"
+                }
+                names << nameparts.join(" and ")
+            }
+            def query = names.join(" or ")
+            println "Query is $query"
+            //def query = "100.a:\"$name\" or 400.a:\"$name\""
+            def results = this.whelk.query(query)
+            if (results.numberOfHits > 0) {
+                response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
+            } else {
+                response.setEntity("No results for query", MediaType.TEXT_PLAIN)
+            }
+        } else {
+            response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
+        }
+    }
 }

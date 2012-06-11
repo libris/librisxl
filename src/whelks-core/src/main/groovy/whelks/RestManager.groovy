@@ -56,6 +56,12 @@ class RestManager extends Application {
             authwhelk.addPlugin(new NotificationTrigger());
             suggestwhelk.addPlugin(new SearchRestlet())
             suggestwhelk.addPlugin(new DocumentRestlet())
+            def acplugin = new AutoComplete()
+            /*
+            acplugin.addNamePrefix("100.a")
+            acplugin.addNamePrefix("400.a")
+            */
+            suggestwhelk.addPlugin(acplugin)
 
             // Add other plugins (formatconverters et al)
             suggestwhelk.addPlugin(new PythonRunnerFormatConverter("sug_json.py"))
@@ -92,15 +98,18 @@ class RestManager extends Application {
 
         log.debug("Looking for suitable APIs to attach")
 
-        manager.whelks.each { 
+        manager.whelks.each {
             log.debug("Manager found whelk ${it.key}")
+            for (api in it.value.getApis()) {
+                if (!api.varPath) {
+                    router.attach(api.path, api)
+                }
+            }
             for (api in it.value.getApis()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
                     router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
-                } else {
-                    router.attach(api.path, api)
-                }
+                }             
             }
         }
 

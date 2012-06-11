@@ -13,6 +13,8 @@ import org.elasticsearch.common.transport.*
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.node.NodeBuilder
 import org.elasticsearch.common.settings.*
+import org.elasticsearch.common.settings.*
+import org.elasticsearch.search.highlight.*
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
@@ -200,14 +202,28 @@ class ElasticSearch implements Index, Storage {
             response = srb
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setQuery(queryString(query))
-            //.setFrom(0).setSize(60)
+            .setFrom(0).setSize(60)
             .setExplain(true)
+            .addSort("records", org.elasticsearch.search.sort.SortOrder.DESC)
+            .setHighlighterPreTags("")
+            .setHighlighterPostTags("")
+            .addHighlightedField("100.a")
+            .addHighlightedField("400.a")
+            .addHighlightedField("500.a")
             .execute()
             .actionGet()
         } catch (NoNodeAvailableException e) {
             log.debug("Failed to get response from server.", e)
         } 
         return response
+    }
+
+    def Map<String, String[]> convertHighlight(Map<String, HighlightField> hfields) {
+        def map = new TreeMap<String, String[]>()
+        hfields.each {
+            map.put(it.value.name, it.value.fragments)
+        }
+        return map
     }
 
     @Override
@@ -230,9 +246,14 @@ class ElasticSearch implements Index, Storage {
         if (response) {
             log.debug "Total hits: ${response.hits.totalHits}"
             response.hits.hits.each {
-                results.addHit(this.whelk.createDocument().withData(it.source()))
+                results.addHit(this.whelk.createDocument().withData(it.source()), convertHighlight(it.highlightFields)) 
             }
+            /*
+            println "Raw response:"
+            println response.toString()
+            */
         }
+
         /*
         if (raw) {
             return new BasicSearchResult(response.toString(), response.hits.totalHits)

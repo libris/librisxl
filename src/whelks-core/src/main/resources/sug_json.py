@@ -90,8 +90,8 @@ def transform(a_json, rtype):
  
 def get_fields(rtype):
     if rtype == 'auth':
-        return ['400','500','678','680','856']
-    return ['245', '400','678']
+        return ['400', '500', '678', '680', '856']
+    return ['245', '678']
 
 
 def get_records(f_100, sug_json):
