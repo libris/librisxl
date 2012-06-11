@@ -22,7 +22,7 @@ class RestManager extends Application {
 
     RestManager(Context parentContext) {
         super(parentContext)
-        System.out.println("Using file encoding: " + System.getProperty("file.encoding"));
+        log.debug("Using file encoding: " + System.getProperty("file.encoding"));
         init()
     }
 
@@ -31,9 +31,6 @@ class RestManager extends Application {
             log.debug("Found serialised configuration. Trying to bootstrap ...")
             manager = new WhelkManager(new URL("file://${WHELKCONFIGFILE}"))
             log.debug("Manager bootstrapped. Contains "+manager.whelks.size()+" whelks ...")
-            manager.whelks.each {
-                log.debug("Say hello whelk ${it.key}: ${it.value}")
-            }
         } else {
             log.debug("Virgin installation. Setting up some whelks.")
             manager = new WhelkManager()
@@ -100,7 +97,6 @@ class RestManager extends Application {
             for (api in it.value.getApis()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
-                    log.debug("Setting varpath")
                     router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
                 } else {
                     router.attach(api.path, api)

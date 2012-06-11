@@ -47,7 +47,6 @@ class ElasticSearch implements Index, Storage {
 
     def boolean add(Document doc) {
         boolean unfailure = false
-        log.debug "Indexing document ..."
         def dict = determineIndexAndType(doc.identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
         try {
@@ -59,7 +58,7 @@ class ElasticSearch implements Index, Storage {
             log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
             unfailure = true
         } catch (org.elasticsearch.client.transport.NoNodeAvailableException nnae) {
-            log.error("Failed to connect to elasticsearch node: " + nnae.getMessage(), nnae)
+            log.trace("Failed to connect to elasticsearch node: " + nnae.getMessage(), nnae)
         }
         return unfailure
     }
@@ -72,7 +71,7 @@ class ElasticSearch implements Index, Storage {
             "contenttype"(doc.contentType) 
             "size"(doc.size)
         }
-        println "Metadata: ${builder.toString()}"
+        //println "Metadata: ${builder.toString()}"
         return builder.toString().getBytes()
     }
 
@@ -120,7 +119,6 @@ class ElasticSearch implements Index, Storage {
     }
 
     def determineIndexAndType(URI uri) {
-        log.debug "uripath: ${uri.path}"
         def pathparts = uri.path.split("/").reverse()
         int maxpart = pathparts.size() - 2
         def dict = [:]
@@ -147,7 +145,7 @@ class ElasticSearch implements Index, Storage {
         try {
             response = client.prepareGet(index, type, id).execute().actionGet()
         } catch (Exception e) { 
-            log.warn("Failed to get response from server.", e)
+            log.debug("Failed to get response from server.", e)
         }
         return response
     }
@@ -161,8 +159,9 @@ class ElasticSearch implements Index, Storage {
         while (response == null) {
             response = getFromElastic(dict['index'], dict['type'], dict['id'])
             if (response == null) {
-                log.warn("Retrying server connection ...")
+                log.debug("Retrying server connection ...")
                 if (failcount++ > MAX_TRIES) {
+                    log.error("Failed to connect to elasticsearch after $MAX_TRIES attempts.")
                     break
                 }
                 Thread.sleep(100)
@@ -183,10 +182,9 @@ class ElasticSearch implements Index, Storage {
                 d = deserializeJsonDocument(response.source(), uri, getFromElastic(dict['index'], dict['type']+":meta", dict['id']))
             }
 
-            println "Returning document with ctype ${d.contentType}"
+            //println "Returning document with ctype ${d.contentType}"
             return d
         }
-        println "return null"
         return null
     }
 
@@ -207,7 +205,7 @@ class ElasticSearch implements Index, Storage {
             .execute()
             .actionGet()
         } catch (NoNodeAvailableException e) {
-            log.warn("Failed to get response from server.", e)
+            log.debug("Failed to get response from server.", e)
         } 
         return response
     }
@@ -221,8 +219,9 @@ class ElasticSearch implements Index, Storage {
         while (!response) {
              response = performQuery(query, index)
              if (!response) {
-                 log.warn("Retrying server connection ...")
+                 log.debug("Retrying server connection ...")
                  if (failcount++ > MAX_TRIES) {
+                    log.error("Failed to connect to elasticsearch after $MAX_TRIES attempts.")
                      break
                  }
              }
@@ -258,10 +257,6 @@ class ElasticSearch implements Index, Storage {
     }
 
     Document deserializeJsonDocument(data, uri, metaresponse) {
-        /*
-        println "About to deserialize this:"
-        println new String(data)
-        */
         def version, size
         def contentType = "application/json"
         if (metaresponse && metaresponse.exists()) {
@@ -287,7 +282,6 @@ class ElasticSearch implements Index, Storage {
             docrepr['version'] = doc.version
             return gson.toJson(docrepr)
         }
-        log.debug("Document is JSON, nothing to serialize.")
         return doc.data
     }
 }
@@ -298,7 +292,6 @@ class ElasticSearchClient extends ElasticSearch {
     def ElasticSearchClient() {
         Properties properties = new Properties();
         def is = ElasticSearchClient.class.getClassLoader().getResourceAsStream("whelks-core.properties")
-        println "is is " + is
         properties.load(is);
         final String elastichost = properties.getProperty("elastichost");
 

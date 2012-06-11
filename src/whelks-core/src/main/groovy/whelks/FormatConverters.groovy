@@ -1,6 +1,7 @@
 package se.kb.libris.whelks.plugin
 
 import javax.script.*
+import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
@@ -15,6 +16,7 @@ abstract class BasicFormatConverter implements FormatConverter {
     Whelk whelk
 }
 
+@Log
 class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSerialisable, JSONInitialisable {
 
     final private ScriptEngine python = new ScriptEngineManager().getEngineByName("python")
@@ -54,7 +56,7 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
             throw new WhelkRuntimeException("Unable to find script engine for python.")
         }
         try {
-            System.out.println("Converter executing script "+ this.scriptName)
+            log.debug("Converter executing script "+ this.scriptName)
             Reader r = null
             if (this.scriptName.startsWith("/")) {
                 r = new FileReader(scriptName)
@@ -63,19 +65,17 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
                 r = new InputStreamReader(is)
             }
             if (python != null) {
-                System.out.println("Plugin has whelk: " + this.whelk.getName())
                 python.put("whelk", this.whelk)
                 python.put("document", doc)
                 python.eval(r)
                 Object result = python.get("result")
-                System.out.printf("\tScript result: %s\n", result)
                 if (result != null) {
                     return doc.withData(((String)result).getBytes())
                 } else {
                     return null
                 }
             } else {
-                System.out.println("Sorry, python is null")
+                log.error("Sorry, python is null")
             }
         } catch (ScriptException se) {
             se.printStackTrace()
@@ -87,7 +87,6 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
 
     @Override
     public JSONInitialisable init(JSONObject obj) {
-        System.out.println("Calling pythonrunner init method")
         try {
             this.scriptName = obj.get("scriptName").toString()
         } catch (Exception e) {

@@ -275,18 +275,18 @@ public class WhelkManager implements JSONInitialisable {
                     String name = key.toString();
                     JSONObject _whelk = (JSONObject)_whelks.get(key);
                     String classname = _whelk.get("_classname").toString();
-                    Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "whelk " + name + " of type " + classname);
+                    Logger.getLogger(WhelkManager.class.getName()).log(Level.FINEST, "whelk " + name + " of type " + classname);
                     Class c = Class.forName(classname);
 
-                    Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "class is " + c.getName());
+                    Logger.getLogger(WhelkManager.class.getName()).log(Level.FINEST, "class is " + c.getName());
 
                     if (JSONInitialisable.class.isAssignableFrom(c)) {
-                        Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "whelk can be deserialised");
+                        Logger.getLogger(WhelkManager.class.getName()).log(Level.FINEST, "whelk can be deserialised");
                         Whelk w = (Whelk)JSONDeserialiser.deserialize(classname, (JSONObject)_whelks.get(key));
                         w.setManager(this);
                         whelks.put(name, w);
                     } else {
-                        Logger.getLogger(WhelkManager.class.getName()).log(Level.SEVERE, "whelk cannot be deserialised");
+                        Logger.getLogger(WhelkManager.class.getName()).log(Level.FINEST, "whelk cannot be deserialised");
                         try {
                             Whelk w = (Whelk)c.getConstructor(Map.class).newInstance(_whelk);
                             whelks.put(name, w);

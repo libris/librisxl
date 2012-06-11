@@ -37,7 +37,7 @@ def transform(a_json, rtype):
                     else:
                         name = "%s_%s" % (id001, '_'.join(sug_json['100'].values()[1:]).replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]",""))
 
-                        print "values", w_name, suggest_source, "name:", name
+                        #print "values", w_name, suggest_source, "name:", name
                         sug_json['identifier'] = "/%s/%s/%s" % (w_name, suggest_source, name)
                     alla_json.append(sug_json)
             elif k in get_fields(rtype):
@@ -54,7 +54,7 @@ def transform(a_json, rtype):
                             if sk in ['a', 'b']:
                                 titleparts[sk] = sv.strip('/ ')
                                 
-                    print "titleparts", titleparts
+                    #print "titleparts", titleparts
                     top_title = "%s %s" % (titleparts['a'], titleparts.get('b', ''))
                     
                 resten_json[k] = f_list
@@ -80,12 +80,12 @@ def transform(a_json, rtype):
         1
 
     # append resten on alla
-    print "resten", resten_json
+    #print "resten", resten_json
     ny_alla = []
     for my_json in alla_json:
         ny_alla.append(dict(my_json.items() + resten_json.items()))
 
-    print "alla", ny_alla
+    #print "alla", ny_alla
     return ny_alla
  
 def get_fields(rtype):
@@ -103,7 +103,7 @@ def get_records(f_100, sug_json):
         reply = urllib2.urlopen(url + "?" + data)
 
         response = reply.read().decode('utf-8')
-        print "got response", response, type(response)
+        #print "got response", response, type(response)
 
         xresult = json.loads(response)['xsearch']
 
@@ -115,7 +115,7 @@ def get_records(f_100, sug_json):
         sug_json['top_titles'] = top_titles
 
     except:
-        print "exception"
+        print "exception in get_records"
         0
     return sug_json
 
@@ -153,7 +153,7 @@ if ctype == 'application/json':
     for sug_json in sug_jsons:
         identifier = sug_json['identifier'] 
         r = json.dumps(sug_json)
-        print "r", r
+        #print "r", r
 
         if whelk:
             mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")

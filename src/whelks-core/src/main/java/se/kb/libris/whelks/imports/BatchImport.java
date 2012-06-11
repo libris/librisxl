@@ -174,7 +174,7 @@ public class BatchImport {
                 System.out.println(new String(jsonRec.getBytes("UTF-8")));
                 */
                 se.kb.libris.whelks.Document doc = whelk.createDocument().withData(jsonRec.getBytes()).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
-                System.out.println("Storing document " + doc.getIdentifier());
+                //System.out.println("Storing document " + doc.getIdentifier());
                 whelk.store(doc);
                 imported++;
             }

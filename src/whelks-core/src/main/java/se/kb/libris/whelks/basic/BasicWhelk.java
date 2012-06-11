@@ -84,6 +84,8 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         for (Trigger t: getTriggers()) {
             t.afterStore(d);
         }
+
+        System.out.println("Stored record with URI " + d.getIdentifier());
         
         return d.getIdentifier();
     }
@@ -93,14 +95,11 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     public Document get(URI uri) {
         Document d = null;
 
-        System.out.println("Getting document with ID: " + uri);
-        
         for (Component c: getComponents()) {
             if (c instanceof Storage) {
                 d = ((Storage)c).get(uri);
                 
                 if (d != null) {
-                    System.out.println("Successfully retrieved a document with identifier " + d.getIdentifier());
                     return d;
                 }
             }
