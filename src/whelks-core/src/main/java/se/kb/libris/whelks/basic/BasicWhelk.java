@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.ListIterator;
+import java.util.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.json.simple.JSONArray;
@@ -127,10 +128,10 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     }
 
     @Override
-    public SearchResult query(String query) {
+    public SearchResult query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight) {
         for (Component c: getComponents())
             if (c instanceof Index)
-                return ((Index)c).query(query);
+                return ((Index)c).query(query, sort, highlight);
         
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }

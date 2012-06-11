@@ -3,6 +3,7 @@ package se.kb.libris.whelks;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.util.*;
 
 public interface Whelk {
     // storage
@@ -11,7 +12,8 @@ public interface Whelk {
     public void delete(URI identifier);
     
     // search/lookup
-    public SearchResult<? extends Document> query(String query);
+    public SearchResult query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight);
+    //public SearchResult<? extends Document> query(String query);
     public LookupResult<? extends Document> lookup(Key key);
 
     // maintenance

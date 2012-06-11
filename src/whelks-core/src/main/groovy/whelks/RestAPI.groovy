@@ -113,7 +113,7 @@ class SearchRestlet extends BasicWhelkAPI {
         log.debug "SearchRestlet with path $path"
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
         try {
-            def results = this.whelk.query(query.get("q"))
+            def results = this.whelk.query(query.get("q"), null, null)
             if (results.numberOfHits > 0) {
                 response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
             } else {
@@ -178,6 +178,9 @@ class AutoComplete extends BasicWhelkAPI {
     def void handle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
         String name = querymap.get("name")
+        if (!name) {
+            name = querymap.get("q")
+        }
         if (name) {
             if (name[-1] != ' ' && name[-1] != '*') {
                 name = name + "*"
@@ -191,9 +194,10 @@ class AutoComplete extends BasicWhelkAPI {
                 names << nameparts.join(" and ")
             }
             def query = names.join(" or ")
-            println "Query is $query"
-            //def query = "100.a:\"$name\" or 400.a:\"$name\""
-            def results = this.whelk.query(query)
+            LinkedHashMap sortby = new LinkedHashMap<String,String>()
+            //sortby['100.a'] = "asc"
+            sortby['records'] = "desc"
+            def results = this.whelk.query(query, sortby, namePrefixes)
             if (results.numberOfHits > 0) {
                 response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
             } else {

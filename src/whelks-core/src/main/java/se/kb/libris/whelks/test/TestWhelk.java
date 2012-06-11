@@ -2,7 +2,7 @@ package se.kb.libris.whelks.test;
 
 import java.net.URI;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import se.kb.libris.whelks.*;
@@ -33,7 +33,7 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
     }
 
     @Override
-    public SearchResult<? extends Document> query(String query) {
+    public SearchResult query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

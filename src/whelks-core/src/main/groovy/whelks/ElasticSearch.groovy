@@ -190,7 +190,7 @@ class ElasticSearch implements Index, Storage {
         return null
     }
 
-    private SearchResponse performQuery(query, index) {
+    private SearchResponse performQuery(query, index, LinkedHashMap sortby, highlightfields) {
         SearchResponse response = null
         try {
             def srb
@@ -199,19 +199,24 @@ class ElasticSearch implements Index, Storage {
             } else {
                 srb = client.prepareSearch(index)  
             }
-            response = srb
+            srb = srb
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setQuery(queryString(query))
             .setFrom(0).setSize(60)
-            .setExplain(true)
-            .addSort("records", org.elasticsearch.search.sort.SortOrder.DESC)
-            .setHighlighterPreTags("")
-            .setHighlighterPostTags("")
-            .addHighlightedField("100.a")
-            .addHighlightedField("400.a")
-            .addHighlightedField("500.a")
-            .execute()
-            .actionGet()
+
+            if (sortby) {
+                sortby.each {
+                    srb = srb.addSort(it.key, (it.value && it.value == 'desc' ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
+                }
+            } 
+            if (highlightfields) {
+                srb = srb.setHighlighterPreTags("").setHighlighterPostTags("")
+                highlightfields.each {
+                    srb = srb.addHighlightedField(it)
+                }
+            }
+            log.debug("SearchRequestBuilder: " + srb)
+            response = srb.execute().actionGet()
         } catch (NoNodeAvailableException e) {
             log.debug("Failed to get response from server.", e)
         } 
@@ -227,13 +232,13 @@ class ElasticSearch implements Index, Storage {
     }
 
     @Override
-    SearchResult query(String query) { //, boolean raw = false) {
+    SearchResult query(String query, LinkedHashMap<String,String> sortby = null, Collection<String> highlightfields = null) { //, boolean raw = false) {
         log.debug "Doing query on $query"
         def index = whelk.name
         def response = null
         int failcount = 0
         while (!response) {
-             response = performQuery(query, index)
+             response = performQuery(query, index, sortby, highlightfields)
              if (!response) {
                  log.debug("Retrying server connection ...")
                  if (failcount++ > MAX_TRIES) {
@@ -246,7 +251,11 @@ class ElasticSearch implements Index, Storage {
         if (response) {
             log.debug "Total hits: ${response.hits.totalHits}"
             response.hits.hits.each {
-                results.addHit(this.whelk.createDocument().withData(it.source()), convertHighlight(it.highlightFields)) 
+                if (highlightfields) {
+                    results.addHit(this.whelk.createDocument().withData(it.source()), convertHighlight(it.highlightFields)) 
+                } else {
+                    results.addHit(this.whelk.createDocument().withData(it.source())) 
+                }
             }
             /*
             println "Raw response:"

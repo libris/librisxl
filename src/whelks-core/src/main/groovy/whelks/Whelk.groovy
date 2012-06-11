@@ -3,6 +3,7 @@ package se.kb.libris.whelks
 import groovy.util.logging.Slf4j as Log
 
 import java.net.URI
+import java.util.*;
 
 import org.apache.commons.io.IOUtils
 import org.apache.commons.io.output.TeeOutputStream
@@ -118,12 +119,11 @@ class WhelkImpl extends BasicWhelk {
     }
 
 
-    @Override
-    def SearchResult query(String query) {
+    def SearchResult _query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight) {
         def result = null
         plugins.each {
             if (it instanceof Index) {
-                result = it.query(query)
+                result = it.query(query, sort, highlight)
             }
         }
         return result
