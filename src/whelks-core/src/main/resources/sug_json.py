@@ -61,7 +61,7 @@ def transform(a_json, rtype):
 
     # get_records for auth-records
     if rtype == 'auth':
-        if alla_json[0].get('100', None):
+        if len(alla_json) > 0 and alla_json[0].get('100', None):
             f_100 = ' '.join(alla_json[0]['100'].values()[1:])
             resten_json = get_records(f_100, resten_json)
     # single top-title for bibrecords

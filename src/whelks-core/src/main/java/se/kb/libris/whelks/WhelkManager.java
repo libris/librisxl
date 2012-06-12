@@ -52,7 +52,7 @@ public class WhelkManager implements JSONInitialisable {
     LinkedList<URI> notificationStack = new LinkedList<URI>();
     URL location = null;
 
-    private static final int NUMBER_OF_NOTIFICATION_RUNNERS = 20;
+    private static final int NUMBER_OF_NOTIFICATION_RUNNERS = 5;
 
     public static WhelkManager getInstance() {
         if (instance == null) {

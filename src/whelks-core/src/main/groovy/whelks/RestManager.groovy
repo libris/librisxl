@@ -57,10 +57,9 @@ class RestManager extends Application {
             suggestwhelk.addPlugin(new SearchRestlet())
             suggestwhelk.addPlugin(new DocumentRestlet())
             def acplugin = new AutoComplete()
-            /*
             acplugin.addNamePrefix("100.a")
             acplugin.addNamePrefix("400.a")
-            */
+            acplugin.addNamePrefix("500.a")
             suggestwhelk.addPlugin(acplugin)
 
             // Add other plugins (formatconverters et al)

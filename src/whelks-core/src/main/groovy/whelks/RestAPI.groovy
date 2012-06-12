@@ -5,7 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import org.restlet.*
 import org.restlet.data.*
 
-import org.json.simple.JSONObject
+import org.json.simple.*
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
@@ -164,11 +164,11 @@ class ImportRestlet extends BasicWhelkAPI {
 }
 
 @Log 
-class AutoComplete extends BasicWhelkAPI {
+class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitialisable {
 
     def pathEnd = "_complete"
 
-    def namePrefixes = ['100.a', '400.a', '500.a']
+    def namePrefixes = []
 
     def void addNamePrefix(String prefix) {
         namePrefixes << prefix
@@ -206,5 +206,33 @@ class AutoComplete extends BasicWhelkAPI {
         } else {
             response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
         }
+    }
+
+    @Override
+    public JSONInitialisable init(JSONObject obj) {
+        for (Iterator it = obj.get("prefixes").iterator(); it.hasNext();) {
+            try {
+                def _prefix = it.next();
+                namePrefixes << _prefix.toString()
+            } catch (Exception e) {
+                throw new WhelkRuntimeException(e);
+            }
+        }
+        
+        return this;
+    }
+
+    @Override
+    JSONObject serialize() {
+        JSONObject _api = new JSONObject();
+        _api.put("_classname", this.getClass().getName());
+        
+        JSONArray _prefixes = new JSONArray();
+        namePrefixes.each {
+            _prefixes.add(it)
+        }
+        _api.put("prefixes", _prefixes);
+                
+        return _api;
     }
 }

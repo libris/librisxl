@@ -39,6 +39,7 @@ class ElasticSearch implements Index, Storage {
     boolean enabled = true
     String id = "elasticsearch"
     int MAX_TRIES = 1000
+    int RETRY_TIMEOUT = 300
 
     String defaultType = "record"
 
@@ -95,7 +96,7 @@ class ElasticSearch implements Index, Storage {
                 log.error("Failed to store document after $MAX_TRIES attempts")
                 break;
             }
-            Thread.sleep(100)
+            Thread.sleep(RETRY_TIMEOUT + failcount)
         }
     }
 
@@ -166,7 +167,7 @@ class ElasticSearch implements Index, Storage {
                     log.error("Failed to connect to elasticsearch after $MAX_TRIES attempts.")
                     break
                 }
-                Thread.sleep(100)
+                Thread.sleep(RETRY_TIMEOUT + failcount)
             } 
         }
         if (response && response.exists()) {
@@ -245,6 +246,7 @@ class ElasticSearch implements Index, Storage {
                     log.error("Failed to connect to elasticsearch after $MAX_TRIES attempts.")
                      break
                  }
+                 Thread.sleep(RETRY_TIMEOUT + failcount)
              }
         }
         def results = new BasicSearchResult()
