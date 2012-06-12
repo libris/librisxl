@@ -118,15 +118,20 @@ class WhelkImpl extends BasicWhelk {
         return doc
     }
 
-
     def SearchResult _query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight) {
         def result = null
-        plugins.each {
-            if (it instanceof Index) {
-                result = it.query(query, sort, highlight)
+        if (query.startsWith("count(")) {
+            def myregex = /(count\()(.+)(\))/
+            def matcher = (query =~ myregex)
+            query = matcher[0][2]
+            plugins.each {
+                if (it instanceof Index) {
+                    return it.query(query, null, null)
+                }
             }
+        } else {
+            return super.query(query, sort, highlight)
         }
-        return result
     }
 
     @Override

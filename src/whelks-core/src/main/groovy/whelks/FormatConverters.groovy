@@ -78,7 +78,7 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
                 log.error("Sorry, python is null")
             }
         } catch (ScriptException se) {
-            se.printStackTrace()
+            log.error("Script failed: " + se.getMessage(), se)
         } catch (Exception e) {
             throw new WhelkRuntimeException(e)
         }

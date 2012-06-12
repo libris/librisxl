@@ -12,6 +12,7 @@ public interface Whelk {
     public void delete(URI identifier);
     
     // search/lookup
+    public SearchResult query(String query);
     public SearchResult query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight);
     //public SearchResult<? extends Document> query(String query);
     public LookupResult<? extends Document> lookup(Key key);

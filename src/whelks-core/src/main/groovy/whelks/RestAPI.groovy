@@ -191,9 +191,9 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
                 name.split(" ").each {
                     nameparts << "$p:$it"
                 }
-                names << nameparts.join(" and ")
+                names << nameparts.join(" AND ")
             }
-            def query = names.join(" or ")
+            def query = names.join(" OR ")
             LinkedHashMap sortby = new LinkedHashMap<String,String>()
             //sortby['100.a'] = "asc"
             sortby['records'] = "desc"

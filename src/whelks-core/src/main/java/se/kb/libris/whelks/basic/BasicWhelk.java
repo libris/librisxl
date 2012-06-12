@@ -128,6 +128,15 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     }
 
     @Override
+    public SearchResult query(String query) {
+        for (Component c: getComponents())
+            if (c instanceof Index)
+                return ((Index)c).query(query, null, null);
+        
+        throw new WhelkRuntimeException("Whelk has no index for searching");
+    }
+
+    @Override
     public SearchResult query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight) {
         for (Component c: getComponents())
             if (c instanceof Index)

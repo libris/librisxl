@@ -62,7 +62,8 @@ def transform(a_json, rtype):
     # get_records for auth-records
     if rtype == 'auth':
         if len(alla_json) > 0 and alla_json[0].get('100', None):
-            f_100 = ' '.join(alla_json[0]['100'].values()[1:])
+            #f_100 = ' '.join(alla_json[0]['100'].values()[1:])
+            f_100 = alla_json[0]['100']
             resten_json = get_records(f_100, resten_json)
     # single top-title for bibrecords
     elif top_title: 
@@ -93,13 +94,32 @@ def get_fields(rtype):
         return ['400', '500', '678', '680', '856']
     return ['245', '678']
 
-
 def get_records(f_100, sug_json):
+    if bibwhelk:
+        query = []
+        for k, v in f_100.items():
+            if k in ['a','b','c','d']:
+                query.append("fields.100.subfields.%s:\"%s\"" % (k,v))
+        response = bibwhelk.query(' AND '.join(query))
+        print "Count: ", response.getNumberOfHits()
+        sug_json['records'] = response.getNumberOfHits()
+
+        top_3 = []
+        for document in response.hits[:3]:
+            top_3.append(json.loads(document.getDataAsString()))
+
+        print "top_3", top_3
+
+        
+    return sug_json
+
+def _get_records(f_100, sug_json):
     try:
         url = 'http://libris.kb.se/xsearch'
         values = {'query' : 'forf:(%s) spr:swe' % f_100, 'format' : 'json'}
 
         data = urllib.urlencode(values)
+        print "XSEARCH URL: %s?%s" % (url, data)
         reply = urllib2.urlopen(url + "?" + data)
 
         response = reply.read().decode('utf-8')
@@ -129,10 +149,12 @@ _in_console = False
 try:
     data = document.getDataAsString()
     ctype = document.getContentType()
+    bibwhelk = whelk.getManager().getWhelk('bib')
 except:
     ctype = "application/json"
     data = sys.stdin.read()
     whelk = None
+    bibwhelk = None
     _in_console = True
 
 

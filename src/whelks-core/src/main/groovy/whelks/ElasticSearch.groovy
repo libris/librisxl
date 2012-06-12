@@ -15,6 +15,7 @@ import org.elasticsearch.node.NodeBuilder
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.search.highlight.*
+import org.elasticsearch.action.count.CountResponse
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
@@ -196,9 +197,9 @@ class ElasticSearch implements Index, Storage {
         try {
             def srb
             if (index == null) {
-                srb = client.prepareSearch()  
+                srb = client.prepareSearch()
             } else {
-                srb = client.prepareSearch(index)  
+                srb = client.prepareSearch(index)
             }
             srb = srb
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
@@ -230,6 +231,19 @@ class ElasticSearch implements Index, Storage {
             map.put(it.value.name, it.value.fragments)
         }
         return map
+    }
+
+    @Override
+    long count(String query) {
+        log.debug("Counting documents matching query: $query")
+        CountResponse countResponse = client.prepareCount(whelk.name) 
+            .setQuery(queryString(query)) 
+            .execute() 
+            .actionGet(); 
+        if (countResponse) {
+            return countResponse.count()
+        }
+        return 0
     }
 
     @Override
