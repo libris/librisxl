@@ -62,9 +62,9 @@ def transform(a_json, rtype):
     # get_records for auth-records
     if rtype == 'auth':
         if len(alla_json) > 0 and alla_json[0].get('100', None):
-            #f_100 = ' '.join(alla_json[0]['100'].values()[1:])
-            f_100 = alla_json[0]['100']
-            resten_json = get_records(f_100, resten_json)
+            f_100 = ' '.join(alla_json[0]['100'].values()[1:])
+            #f_100 = alla_json[0]['100']
+            resten_json = _get_records(f_100, resten_json)
     # single top-title for bibrecords
     elif top_title: 
         resten_json['top_titles'] = {"%s%s" % ("http://libris.kb.se", link) : top_title.strip()}
@@ -119,7 +119,7 @@ def _get_records(f_100, sug_json):
         values = {'query' : 'forf:(%s) spr:swe' % f_100, 'format' : 'json'}
 
         data = urllib.urlencode(values)
-        print "XSEARCH URL: %s?%s" % (url, data)
+        #print "XSEARCH URL: %s?%s" % (url, data)
         reply = urllib2.urlopen(url + "?" + data)
 
         response = reply.read().decode('utf-8')
