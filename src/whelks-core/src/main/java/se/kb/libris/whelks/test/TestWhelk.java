@@ -36,6 +36,9 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
     public SearchResult query(String query) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    public SearchResult fieldQuery(Collection<String> fields, String query, LinkedHashMap<String,String> sort, Collection<String> highlight) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
     @Override
     public SearchResult query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight) {

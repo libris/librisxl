@@ -197,7 +197,7 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
             LinkedHashMap sortby = new LinkedHashMap<String,String>()
             //sortby['100.a'] = "asc"
             sortby['records'] = "desc"
-            def results = this.whelk.query(query, sortby, namePrefixes)
+            def results = this.whelk.fieldQuery(namePrefixes, name, sortby, namePrefixes)
             if (results.numberOfHits > 0) {
                 response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
             } else {

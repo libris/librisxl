@@ -192,6 +192,48 @@ class ElasticSearch implements Index, Storage {
         return null
     }
 
+    @Override
+    public SearchResult fieldQuery(Collection<String> fields, String query, LinkedHashMap<String,String> sort, Collection<String> highlightfields) {
+        def srb = client.prepareSearch(this.whelk.name)
+            .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+            .setFrom(0).setSize(60)
+            .setExplain(true)
+        def q = queryString(query)
+        fields.each {
+            q = q.field(it)
+        }
+        srb.setQuery(q)
+        if (sort) {
+            sort.each {
+                srb = srb.addSort(it.key, (it.value && it.value == 'desc' ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
+            }
+        } 
+        if (highlightfields) {
+            srb = srb.setHighlighterPreTags("").setHighlighterPostTags("")
+            highlightfields.each {
+                srb = srb.addHighlightedField(it)
+            }
+        }
+        log.debug("FieldSearchRequestBuilder: " + srb)
+        def response = srb.execute().actionGet()
+        def results = new BasicSearchResult()
+        if (response) {
+            log.debug "Total hits: ${response.hits.totalHits}"
+            response.hits.hits.each { 
+                if (highlightfields) {
+                    results.addHit(this.whelk.createDocument().withData(it.source()), convertHighlight(it.highlightFields))
+                } else {
+                    results.addHit(this.whelk.createDocument().withData(it.source())) 
+                }
+            }
+            /*
+            println "Raw response:"
+            println response.toString()
+            */
+        }
+        return results
+    }
+
     private SearchResponse performQuery(query, index, LinkedHashMap sortby, highlightfields) {
         SearchResponse response = null
         try {
@@ -222,6 +264,7 @@ class ElasticSearch implements Index, Storage {
         } catch (NoNodeAvailableException e) {
             log.debug("Failed to get response from server.", e)
         } 
+        println "pfrmQ: " + response
         return response
     }
 
