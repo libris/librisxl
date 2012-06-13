@@ -100,13 +100,19 @@ def get_records(f_100, sug_json):
         for k, v in f_100.items():
             if k in ['a','b','c','d']:
                 query.append("fields.100.subfields.%s:\"%s\"" % (k,v))
-        response = bibwhelk.query(' AND '.join(query))
+        response = bibwhelk.query(' AND '.join(query)) 
+        swe_response = response plus swe
         print "Count: ", response.getNumberOfHits()
         sug_json['records'] = response.getNumberOfHits()
 
         top_3 = []
         for document in response.hits[:3]:
             top_3.append(json.loads(document.getDataAsString()))
+        
+        top_missing = 3 - len(top_3)
+        if top_missing > 0:
+            for document in response.hits[:top_missing]:
+                top_3.append(json.loads(document.getDataAsString()))
 
         print "top_3", top_3
 

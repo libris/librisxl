@@ -68,7 +68,6 @@ repositories {
     mavenCentral()
     maven { url "http://oss.sonatype.org/content/repositories/releases/" }
     maven { url "http://maven.restlet.org/" }
-    maven { url 'http://devproj.libris.kb.se/nexus/content/repositories/internal' }
     flatDir name: 'localDir', dirs: 'lib'
 }
 
