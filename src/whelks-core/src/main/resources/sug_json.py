@@ -62,9 +62,9 @@ def transform(a_json, rtype):
     # get_records for auth-records
     if rtype == 'auth':
         if len(alla_json) > 0 and alla_json[0].get('100', None):
-            f_100 = ' '.join(alla_json[0]['100'].values()[1:])
-            #f_100 = alla_json[0]['100']
-            resten_json = _get_records(f_100, resten_json)
+            #f_100 = ' '.join(alla_json[0]['100'].values()[1:])
+            f_100 = alla_json[0]['100']
+            resten_json = get_records(f_100, resten_json)
     # single top-title for bibrecords
     elif top_title: 
         resten_json['top_titles'] = {"%s%s" % ("http://libris.kb.se", link) : top_title.strip()}
@@ -96,29 +96,67 @@ def get_fields(rtype):
 
 def get_records(f_100, sug_json):
     if bibwhelk:
-        query = []
+        query_100 = []
+        query_700 = []
         for k, v in f_100.items():
             if k in ['a','b','c','d']:
-                query.append("fields.100.subfields.%s:\"%s\"" % (k,v))
-        response = bibwhelk.query(' AND '.join(query)) 
-        swe_response = response plus swe
+                query_100.append("fields.100.subfields.%s:\"%s\"" % (k,v))
+                query_700.append("fields.700.subfields.%s:\"%s\"" % (k,v))
+        q_100 = ' AND '.join(query_100)
+        q_700 = ' AND '.join(query_700)
+        q_swe = "fields.008:swe"
+
+        q_all = '((%s) OR (%s)) AND %s' % (q_100, q_700, q_swe)
+
+        response = bibwhelk.query(q_all) 
         print "Count: ", response.getNumberOfHits()
         sug_json['records'] = response.getNumberOfHits()
 
-        top_3 = []
+        top_3 = {}
         for document in response.hits[:3]:
-            top_3.append(json.loads(document.getDataAsString()))
+            jdoc = json.loads(document.getDataAsString())
+            f_001, title = top_title_tuple(jdoc['fields'])
+            top_3[f_001] = title
         
-        top_missing = 3 - len(top_3)
-        if top_missing > 0:
-            for document in response.hits[:top_missing]:
-                top_3.append(json.loads(document.getDataAsString()))
+        top_missing = 5 - len(top_3)
+        q_all = '(%s) OR (%s)' % (q_100, q_700)
+
+        response = bibwhelk.query(q_all) 
+        print "Count: ", response.getNumberOfHits()
+        sug_json['records'] = response.getNumberOfHits()
+        for document in response.hits[:top_missing]:
+            jdoc = json.loads(document.getDataAsString())
+            f_001, title = top_title_tuple(jdoc['fields'])
+            top_3[f_001] = title
 
         print "top_3", top_3
-
+    sug_json['top_titles'] = top_3
         
     return sug_json
 
+def top_title_tuple(fields):
+    f_001 = ''
+    f_245_a = ''
+    f_245_b = ''
+    f_245_n = ''
+    for field in fields:
+        for k, v in field.items():
+            if k == '001':
+                f_001 = v
+            elif k == '245':
+                for sf in v['subfields']:
+                    for sk, sv in sf.items():
+                        if sk == 'a':
+                            f_245_a = sv
+                        elif sk == 'b':
+                            f_245_b = sv
+                        elif sk == 'n':
+                            f_245_n = sv
+    if f_001 and f_245_a:
+        title = f_245_a.strip(':;/.') + f_245_b.strip(':;/') + ' ' + f_245_n.strip(':;/ ')
+    return (f_001, title.strip())
+
+                          
 def _get_records(f_100, sug_json):
     try:
         url = 'http://libris.kb.se/xsearch'
