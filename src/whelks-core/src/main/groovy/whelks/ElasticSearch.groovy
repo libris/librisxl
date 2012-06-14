@@ -85,6 +85,7 @@ class ElasticSearch implements Index, Storage {
         //add(doc.data, doc.identifier)
     }
 
+    @Override
     void delete(URI uri) {
         throw new UnsupportedOperationException("Not supported yet.")
     }
@@ -186,56 +187,16 @@ class ElasticSearch implements Index, Storage {
                 d = deserializeJsonDocument(response.source(), uri, getFromElastic(dict['index'], dict['type']+":meta", dict['id']))
             }
 
-            //println "Returning document with ctype ${d.contentType}"
             return d
         }
         return null
     }
 
-    /*
-    @Override
-    public SearchResult fieldQuery(Collection<String> fields, String query, LinkedHashMap<String,String> sort, Collection<String> highlightfields) {
-        def srb = client.prepareSearch(this.whelk.name)
-            .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-            .setFrom(0).setSize(60)
-            .setExplain(true)
-        def q = queryString(query)
-        fields.each {
-            q = q.field(it)
-        }
-        srb.setQuery(q)
-        if (sort) {
-            sort.each {
-                srb = srb.addSort(it.key, (it.value && it.value == 'desc' ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
-            }
-        } 
-        if (highlightfields) {
-            srb = srb.setHighlighterPreTags("").setHighlighterPostTags("")
-            highlightfields.each {
-                srb = srb.addHighlightedField(it)
-            }
-        }
-        log.debug("FieldSearchRequestBuilder: " + srb)
-        def response = srb.execute().actionGet()
-        def results = new BasicSearchResult()
-        if (response) {
-            log.debug "Total hits: ${response.hits.totalHits}"
-            response.hits.hits.each { 
-                if (highlightfields) {
-                    results.addHit(createDocumentFromHit(it), convertHighlight(it.highlightFields)) 
-                } else {
-                    results.addHit(createDocumentFromHit(it))
-                }
-            }
-        }
-        return results
-    }
-    */
 
     def performQuery(Query q) {
         def srb = client.prepareSearch(this.whelk.name)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-            .setFrom(0).setSize(60)
+            .setFrom(q.start).setSize(q.n)
         def query = queryString(q.query)
         if (q.fields) {
             q.fields.each {
@@ -245,7 +206,7 @@ class ElasticSearch implements Index, Storage {
         srb.setQuery(query)
         if (q.sorting) {
             q.sorting.each {
-                srb = srb.addSort(it.key, (it.value && it.value == 'desc' ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
+                srb = srb.addSort(it.key, (it.value && it.value.equalsIgnoreCase('desc') ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
             }
         } 
         if (q.highlights) {
@@ -254,45 +215,11 @@ class ElasticSearch implements Index, Storage {
                 srb = srb.addHighlightedField(it)
             }
         }
-        log.debug("FieldSearchRequestBuilder: " + srb)
+        log.debug("SearchRequestBuilder: " + srb)
         def response = srb.execute().actionGet()
-    }
-
-    /*
-    private SearchResponse performQuery(query, index, LinkedHashMap sortby, highlightfields) {
-        SearchResponse response = null
-        try {
-            def srb
-            if (index == null) {
-                srb = client.prepareSearch()
-            } else {
-                srb = client.prepareSearch(index)
-            }
-            srb = srb
-            .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-            .setQuery(queryString(query))
-            .setFrom(0).setSize(60)
-
-            if (sortby) {
-                sortby.each {
-                    srb = srb.addSort(it.key, (it.value && it.value == 'desc' ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
-                }
-            } 
-            if (highlightfields) {
-                srb = srb.setHighlighterPreTags("").setHighlighterPostTags("")
-                highlightfields.each {
-                    srb = srb.addHighlightedField(it)
-                }
-            }
-            log.debug("SearchRequestBuilder: " + srb)
-            response = srb.execute().actionGet()
-        } catch (NoNodeAvailableException e) {
-            log.debug("Failed to get response from server.", e)
-        } 
-        println "pfrmQ: " + response
+        log.debug("SearchResponse: " + response)
         return response
     }
-    */
 
     def Map<String, String[]> convertHighlight(Map<String, HighlightField> hfields) {
         def map = new TreeMap<String, String[]>()
@@ -303,13 +230,8 @@ class ElasticSearch implements Index, Storage {
     }
 
     @Override
-    SearchResult query(String query) {
-        return query(new Query(query))
-    }
-
-    @Override
     SearchResult query(Query q) {
-        log.debug "Doing query on $query"
+        log.debug "Doing query on $q"
         def response = null
         int failcount = 0
         while (!response) {
@@ -323,9 +245,12 @@ class ElasticSearch implements Index, Storage {
                  Thread.sleep(RETRY_TIMEOUT + failcount)
              }
         }
-        def results = new BasicSearchResult()
+
+        def results = new BasicSearchResult(response.hits.totalHits)
+
         if (response) {
             log.debug "Total hits: ${response.hits.totalHits}"
+            results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
                 if (q.highlights) {
                     results.addHit(createDocumentFromHit(it), convertHighlight(it.highlightFields)) 
@@ -333,13 +258,12 @@ class ElasticSearch implements Index, Storage {
                     results.addHit(createDocumentFromHit(it))
                 }
             }
-        }
-
+        }     
         return results
     }
 
     Document createDocumentFromHit(hit) {
-        def u = new URI("/" + hit.index + (hit.type == this.defaultType ? "/" : "/" + hit.type + "/" + hit.id))
+        def u = new URI("/" + hit.index + (hit.type == this.defaultType ? "" : "/" + hit.type) + "/" + hit.id)
         return this.whelk.createDocument().withData(hit.source()).withIdentifier(u)
     }
 

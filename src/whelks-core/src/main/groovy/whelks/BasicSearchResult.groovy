@@ -10,8 +10,18 @@ class BasicSearchResult implements SearchResult {
     Iterable hits
     Iterable facets
 
-    BasicSearchResult() {
+    long numberOfHits = 0
+
+    BasicSearchResult(long nrHits) {
+        this.numberOfHits = nrHits
         this.hits = new ArrayList<Document>()
+    }
+
+    int getNumberOfHits() {
+        return (int)numberOfHits
+    }
+    int setNumberOfHits(int nrHits) {
+        this.numberOfHits = nrHits
     }
 
     void addHit(Document d) {
@@ -23,18 +33,18 @@ class BasicSearchResult implements SearchResult {
         this.hits.add(doc)
     }
 
-    int getNumberOfHits() {
-        return this.hits.size()
-    }
-
     def String toJson() {
         def jsonString = new StringBuilder()
-        jsonString << "["
+        jsonString << "{"
+        jsonString << "\"hits\": " << numberOfHits << ","
+        jsonString << "\"list\": ["
         hits.eachWithIndex() { it, i ->
             if (i > 0) { jsonString << "," }
-            jsonString << it.dataAsString
+            jsonString << "{\"identifier\": \"" << it.identifier << "\","
+            jsonString << "\"data\":" << it.dataAsString << "}"
         }
         jsonString << "]"
+        jsonString << "}"
         return jsonString.toString()
     }
 }
@@ -43,7 +53,7 @@ class HighlightedDocument extends BasicDocument {
     Map<String, String[]> matches = new TreeMap<String, String[]>()
 
     HighlightedDocument(Document d, Map<String, String[]> match) {
-        withData(d.getData())
+        withData(d.getData()).withIdentifier(d.identifier).withContentType(d.contentType)
         this.matches = match
     }
 

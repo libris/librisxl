@@ -6,6 +6,8 @@ class Query {
     def fields 
     def sorting
     def highlights
+    int start = 0
+    int n = 50
 
     Query(qstr) {
         this.query = qstr

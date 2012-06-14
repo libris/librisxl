@@ -113,11 +113,18 @@ class SearchRestlet extends BasicWhelkAPI {
         log.debug "SearchRestlet with path $path"
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
         try {
-            def results = this.whelk.query(query.get("q"), null, null)
-            if (results.numberOfHits > 0) {
-                response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
+            def q = query.get("q")
+            def callback = query.get("callback")
+            if (q) {
+                def results = this.whelk.query(query.get("q"))
+                def jsonResult = 
+                    (callback ? callback + "(" : "") +
+                    results.toJson() +
+                    (callback ? ");" : "") 
+
+                response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
             } else {
-                response.setEntity("No results for query", MediaType.TEXT_PLAIN)
+                response.setEntity("Missing q parameter", MediaType.TEXT_PLAIN)
             }
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
@@ -135,7 +142,7 @@ class BibSearchRestlet extends BasicWhelkAPI {
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
         boolean _raw = (query['_raw'] == 'true')
         try {
-            def r = this.whelk.query(query.get("q"), _raw)
+            def r = this.whelk.query(query.get("q"))
             response.setEntity(r.result, MediaType.APPLICATION_JSON)
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
@@ -181,6 +188,7 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
         if (!name) {
             name = querymap.get("q")
         }
+        def callback = querymap.get("callback")
         if (name) {
             if (name[-1] != ' ' && name[-1] != '*') {
                 name = name + "*"
@@ -203,11 +211,12 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
             query.fields = namePrefixes
 
             def results = this.whelk.query(query)
-            if (results.numberOfHits > 0) {
-                response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
-            } else {
-                response.setEntity("No results for query", MediaType.TEXT_PLAIN)
-            }
+            def jsonResult = 
+                (callback ? callback + "(" : "") +
+                results.toJson() +
+                (callback ? ");" : "") 
+
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
         } else {
             response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
         }
