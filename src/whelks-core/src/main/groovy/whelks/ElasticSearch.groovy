@@ -221,9 +221,9 @@ class ElasticSearch implements Index, Storage {
             log.debug "Total hits: ${response.hits.totalHits}"
             response.hits.hits.each { 
                 if (highlightfields) {
-                    results.addHit(this.whelk.createDocument().withData(it.source()), convertHighlight(it.highlightFields))
+                    results.addHit(createDocumentFromHit(it), convertHighlight(it.highlightFields)) 
                 } else {
-                    results.addHit(this.whelk.createDocument().withData(it.source())) 
+                    results.addHit(createDocumentFromHit(it))
                 }
             }
             /*
@@ -277,20 +277,15 @@ class ElasticSearch implements Index, Storage {
     }
 
     @Override
-    long count(String query) {
-        log.debug("Counting documents matching query: $query")
-        CountResponse countResponse = client.prepareCount(whelk.name) 
-            .setQuery(queryString(query)) 
-            .execute() 
-            .actionGet(); 
-        if (countResponse) {
-            return countResponse.count()
-        }
-        return 0
+    SearchResult query(String query) {
+        return query(new Query(query))
     }
 
     @Override
-    SearchResult query(String query, LinkedHashMap<String,String> sortby = null, Collection<String> highlightfields = null) { //, boolean raw = false) {
+    SearchResult query(Query q) {
+        def sortby = q.sorting
+        def query = q.query
+        def highlightfields = q.highlights
         log.debug "Doing query on $query"
         def index = whelk.name
         def response = null
@@ -311,33 +306,19 @@ class ElasticSearch implements Index, Storage {
             log.debug "Total hits: ${response.hits.totalHits}"
             response.hits.hits.each {
                 if (highlightfields) {
-                    results.addHit(this.whelk.createDocument().withData(it.source()), convertHighlight(it.highlightFields)) 
+                    results.addHit(createDocumentFromHit(it), convertHighlight(it.highlightFields)) 
                 } else {
-                    results.addHit(this.whelk.createDocument().withData(it.source())) 
+                    results.addHit(createDocumentFromHit(it))
                 }
             }
-            /*
-            println "Raw response:"
-            println response.toString()
-            */
         }
 
-        /*
-        if (raw) {
-            return new BasicSearchResult(response.toString(), response.hits.totalHits)
-            //return response.toString()
-        } else {
-            def hits = new StringBuilder()
-            response.hits.hits.eachWithIndex() { it, i ->
-                if (i > 0) { hits << "," }
-                hits << new String(it.source())
-            }
-            hits = hits.insert(0,"[")
-            hits = hits.append("]")
-            return new BasicSearchResult(hits.toString(), response.hits.totalHits)
-        }
-        */
         return results
+    }
+
+    Document createDocumentFromHit(hit) {
+        def u = new URI("/" + hit.index + (hit.type == this.defaultType ? "/" : "/" + hit.type + "/" + hit.id))
+        return this.whelk.createDocument().withData(hit.source).withIdentifier(u)
     }
 
     @Override

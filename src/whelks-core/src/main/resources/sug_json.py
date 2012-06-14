@@ -130,7 +130,10 @@ def get_records(f_100, sug_json):
             top_3[f_001] = title
 
         print "top_3", top_3
-    sug_json['top_titles'] = top_3
+        only_top_3 = {}
+        for k, v in top_3.items()[:3]:
+            only_top_3[k] = v
+        sug_json['top_titles'] = only_top_3
         
     return sug_json
 

@@ -13,8 +13,7 @@ public interface Whelk {
     
     // search/lookup
     public SearchResult query(String query);
-    public SearchResult query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight);
-    public SearchResult fieldQuery(Collection<String> fields, String query, LinkedHashMap<String,String> sort, Collection<String> highlight);
+    public SearchResult query(Query query);
 
     //public SearchResult<? extends Document> query(String query);
     public LookupResult<? extends Document> lookup(Key key);
