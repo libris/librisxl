@@ -118,31 +118,6 @@ class WhelkImpl extends BasicWhelk {
         return doc
     }
 
-    def SearchResult _fieldQuery(fields, query, sort, highlight) {
-        plugins.each {
-            if (it instanceof ElasticSearchClient) {
-                return ((ElasticSearchClient)it).fieldQuery(fields, query, sort, highlight)
-            }
-        }
-        println "Bad. Very bad."
-    }
-
-    def SearchResult _query(String query, LinkedHashMap<String,String> sort, Collection<String> highlight) {
-        def result = null
-        if (query.startsWith("count(")) {
-            def myregex = /(count\()(.+)(\))/
-            def matcher = (query =~ myregex)
-            query = matcher[0][2]
-            plugins.each {
-                if (it instanceof Index) {
-                    return it.query(query, null, null)
-                }
-            }
-        } else {
-            return super.query(query, sort, highlight)
-        }
-    }
-
     @Override
     Document createDocument() {
         return new BasicDocument()

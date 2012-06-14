@@ -192,6 +192,7 @@ class ElasticSearch implements Index, Storage {
         return null
     }
 
+    /*
     @Override
     public SearchResult fieldQuery(Collection<String> fields, String query, LinkedHashMap<String,String> sort, Collection<String> highlightfields) {
         def srb = client.prepareSearch(this.whelk.name)
@@ -226,14 +227,38 @@ class ElasticSearch implements Index, Storage {
                     results.addHit(createDocumentFromHit(it))
                 }
             }
-            /*
-            println "Raw response:"
-            println response.toString()
-            */
         }
         return results
     }
+    */
 
+    def performQuery(Query q) {
+        def srb = client.prepareSearch(this.whelk.name)
+            .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+            .setFrom(0).setSize(60)
+        def query = queryString(q.query)
+        if (q.fields) {
+            q.fields.each {
+                query = query.field(it)
+            }
+        }
+        srb.setQuery(query)
+        if (q.sorting) {
+            q.sorting.each {
+                srb = srb.addSort(it.key, (it.value && it.value == 'desc' ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
+            }
+        } 
+        if (q.highlights) {
+            srb = srb.setHighlighterPreTags("").setHighlighterPostTags("")
+            q.highlights.each {
+                srb = srb.addHighlightedField(it)
+            }
+        }
+        log.debug("FieldSearchRequestBuilder: " + srb)
+        def response = srb.execute().actionGet()
+    }
+
+    /*
     private SearchResponse performQuery(query, index, LinkedHashMap sortby, highlightfields) {
         SearchResponse response = null
         try {
@@ -267,6 +292,7 @@ class ElasticSearch implements Index, Storage {
         println "pfrmQ: " + response
         return response
     }
+    */
 
     def Map<String, String[]> convertHighlight(Map<String, HighlightField> hfields) {
         def map = new TreeMap<String, String[]>()
@@ -283,15 +309,11 @@ class ElasticSearch implements Index, Storage {
 
     @Override
     SearchResult query(Query q) {
-        def sortby = q.sorting
-        def query = q.query
-        def highlightfields = q.highlights
         log.debug "Doing query on $query"
-        def index = whelk.name
         def response = null
         int failcount = 0
         while (!response) {
-             response = performQuery(query, index, sortby, highlightfields)
+             response = performQuery(q)
              if (!response) {
                  log.debug("Retrying server connection ...")
                  if (failcount++ > MAX_TRIES) {
@@ -305,7 +327,7 @@ class ElasticSearch implements Index, Storage {
         if (response) {
             log.debug "Total hits: ${response.hits.totalHits}"
             response.hits.hits.each {
-                if (highlightfields) {
+                if (q.highlights) {
                     results.addHit(createDocumentFromHit(it), convertHighlight(it.highlightFields)) 
                 } else {
                     results.addHit(createDocumentFromHit(it))
@@ -318,7 +340,7 @@ class ElasticSearch implements Index, Storage {
 
     Document createDocumentFromHit(hit) {
         def u = new URI("/" + hit.index + (hit.type == this.defaultType ? "/" : "/" + hit.type + "/" + hit.id))
-        return this.whelk.createDocument().withData(hit.source).withIdentifier(u)
+        return this.whelk.createDocument().withData(hit.source()).withIdentifier(u)
     }
 
     @Override

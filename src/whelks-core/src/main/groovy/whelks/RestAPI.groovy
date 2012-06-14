@@ -193,11 +193,16 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
                 }
                 names << nameparts.join(" AND ")
             }
-            def query = names.join(" OR ")
+            //def query = names.join(" OR ")
             LinkedHashMap sortby = new LinkedHashMap<String,String>()
             //sortby['100.a'] = "asc"
             sortby['records'] = "desc"
-            def results = this.whelk.fieldQuery(namePrefixes, name, sortby, namePrefixes)
+            def query = new Query(name)
+            query.highlights = namePrefixes
+            query.sorting = sortby
+            query.fields = namePrefixes
+
+            def results = this.whelk.query(query)
             if (results.numberOfHits > 0) {
                 response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
             } else {
