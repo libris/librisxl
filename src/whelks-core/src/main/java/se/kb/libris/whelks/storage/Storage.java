@@ -5,5 +5,5 @@ import se.kb.libris.whelks.Document;
 
 public interface Storage {
     public void store(Document d);
-    public Document retrieve(URI u);
+    public Document retrieve(URI uri);
 }

@@ -1,7 +1,6 @@
 package se.kb.libris.whelks;
 
 import java.io.InputStream;
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.*;
 
@@ -12,11 +11,11 @@ public interface Whelk {
     public void delete(URI identifier);
     
     // search/lookup
-    public SearchResult query(String query);
-    public SearchResult query(Query query);
+    public SearchResult<? extends Document> query(String query);
+    public SearchResult<? extends Document> query(Query query);
 
-    //public SearchResult<? extends Document> query(String query);
     public LookupResult<? extends Document> lookup(Key key);
+    public SparqlResult sparql(String query);
 
     // maintenance
     public void destroy();

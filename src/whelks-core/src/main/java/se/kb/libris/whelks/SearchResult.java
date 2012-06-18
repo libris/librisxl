@@ -1,7 +1,8 @@
 package se.kb.libris.whelks;
 
 public interface SearchResult<T extends Document> {
-    int getNumberOfHits();
+
+    long getNumberOfHits();
     Iterable<Facet> getFacets();
     Iterable<Hit<T>> getHits();
 

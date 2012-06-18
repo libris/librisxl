@@ -1,38 +1,43 @@
 package se.kb.libris.whelks.basic;
 
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.*;
 import java.net.URI;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 import se.kb.libris.whelks.*;
-import se.kb.libris.whelks.exception.WhelkRuntimeException;
+import se.kb.libris.whelks.exception.*;
 
 public class BasicDocument implements Document {
     private URI identifier = null;
     private String version = "1", contentType = null;
     private byte[] data = null;
     private long size;
-    private List<Link> links = new LinkedList<Link>();
-    private List<Key> keys = new LinkedList<Key>();
-    private List<Tag> tags = new LinkedList<Tag>();
+    private Set<Link> links = new TreeSet<Link>();
+    private Set<Key> keys = new TreeSet<Key>();
+    private Set<Tag> tags = new TreeSet<Tag>();
+    private Set<Description> descriptions = new TreeSet<Description>();
     private Date timestamp = null;
     
     public BasicDocument() {
-        
     }
     
     @Override
     public URI getIdentifier() {
         return identifier;
     }
+    
+    @Override
+    public void setIdentifier(URI _identifier) {
+        identifier = _identifier;
+    }
 
     @Override
     public String getVersion() {
         return version;
+    }
+    
+    @Override
+    public void setVersion(String _version) {
+        version = _version;
     }
 
     @Override
@@ -47,10 +52,37 @@ public class BasicDocument implements Document {
 
         return ret;
     }
+    
+    @Override
+    public void setData(byte _data[]) {
+        data = _data;
+    }
 
+    @Override
+    public void setData(InputStream data) {
+        byte buf[] = new byte[1024];
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(1024);
+        
+        try {
+            int n;
+            while ((n = data.read(buf)) != -1)
+                bout.write(buf, 0, n);
+            
+            this.data = bout.toByteArray();
+            this.size = this.data.length;
+        } catch (java.io.IOException e) {
+            throw new WhelkRuntimeException("Error while reading from stream", e);
+        }
+    }
+    
     @Override
     public String getContentType() {
         return contentType;
+    }
+    
+    @Override
+    public void setContentType(String _contentType) {
+        contentType = _contentType;
     }
 
     @Override
@@ -62,43 +94,43 @@ public class BasicDocument implements Document {
     public Date getTimestamp() {
         return timestamp;
     }
+    
+    public void setTimestamp(Date _timestamp) {
+        timestamp = _timestamp;
+    }
 
     @Override
-    public Iterable<? extends Link> getLinks() {
+    public Set<Link> getLinks() {
         return links;
     }
 
     @Override
-    public Iterable<? extends Key> getKeys() {
+    public Set<Key> getKeys() {
         return keys;
     }
 
     @Override
-    public Iterable<? extends Tag> getTags() {
+    public Set<Tag> getTags() {
         return tags;
     }
 
     @Override
-    public Document tag(URI uri, String value) {
-        tags.add(new BasicTag(uri, value));
-        
-        return this;
+    public Set<Description> getDescriptions() {
+        return descriptions;
     }
 
     @Override
-    public Document untag(URI type, String value) {
+    public Tag tag(URI type, String value) {
         synchronized (tags) {
-            ListIterator<Tag> li = tags.listIterator();
-            
-            while (li.hasNext()) {
-                Tag t = li.next();
-                
-                if (t.getType().equals(t) && t.getValue().equals(value))
-                    li.remove();
-            }
+            for (Tag t: tags)
+                if (t.getType().equals(type) && t.getValue().equals(value))
+                    return t;
         }
+        BasicTag tag = new BasicTag(type, value);
+
+        tags.add(tag);
         
-        return this;
+        return tag;
     }
 
     @Override
@@ -172,7 +204,28 @@ public class BasicDocument implements Document {
         } catch (java.io.IOException e) {
             throw new WhelkRuntimeException("Error while reading from stream", e);
         }
-        
-        return this;
+    }
+
+    @Override
+    public void untag(URI type, String value) {
+        synchronized (tags) {
+            Set<Tag> remove = new HashSet<Tag>();
+            
+            for (Tag t: tags)
+                if (t.getType().equals(type) && t.getValue().equals(value))
+                    remove.add(t);
+            
+            tags.removeAll(remove);
+        }
+    }
+
+    @Override
+    public InputStream getDataAsStream(long offset, long length) {
+        return new ByteArrayInputStream(data, (int)offset, (int)length);
+    }
+
+    @Override
+    public InputStream getDataAsStream() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

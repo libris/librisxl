@@ -269,7 +269,6 @@ public class WhelkManager implements JSONInitialisable {
     public JSONInitialisable init(JSONObject obj) {
         if (obj.containsKey("whelks")) {
             JSONObject _whelks = (JSONObject)obj.get("whelks");
-
             for (Object key: _whelks.keySet()) {
                 try {
                     String name = key.toString();
@@ -344,7 +343,6 @@ public class WhelkManager implements JSONInitialisable {
                 }
             }
         }
-
         return this;
     }
 

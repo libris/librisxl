@@ -7,7 +7,6 @@ import se.kb.libris.whelks.Key;
 import se.kb.libris.whelks.LookupResult;
 
 public interface Storage extends Component {
-    //public OutputStream getOutputStreamFor(Document d);
     public void store(Document d);
     public Document get(URI uri);
     public void delete(URI uri);

@@ -121,4 +121,3 @@ class RestManager extends Application {
         return router
     }
 }
-

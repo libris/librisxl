@@ -6,7 +6,6 @@ import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader
 
-
 /**
  *
  * A mechanical transcription of {@link MarcRecord}s into JSON. The result is

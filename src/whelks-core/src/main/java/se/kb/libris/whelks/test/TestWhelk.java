@@ -33,7 +33,7 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
     }
 
     @Override
-    public SearchResult query(String query) {
+    public SearchResult<? extends Document> query(String query) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -118,6 +118,8 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
 
     @Override
     public void setManager(WhelkManager wm) {
+    }
+    public String getPrefix() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

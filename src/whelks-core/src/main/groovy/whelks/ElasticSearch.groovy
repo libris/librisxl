@@ -85,7 +85,23 @@ class ElasticSearch implements Index, Storage {
         //add(doc.data, doc.identifier)
     }
 
-    @Override
+    /**
+     * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
+     */
+    def wrapData(byte[] data, URI identifier) {
+        if (isJSON(data)) {
+            return data
+        } else {
+            Gson gson = new Gson()
+            def docrepr = [:]
+            docrepr['data'] = new String(data)
+            docrepr['identifier'] = identifier
+            docrepr['contenttype'] = "text/plain"
+            String json = gson.toJson(docrepr)
+            return json.getBytes()
+        }
+    }
+
     void delete(URI uri) {
         throw new UnsupportedOperationException("Not supported yet.")
     }
@@ -124,6 +140,7 @@ class ElasticSearch implements Index, Storage {
     }
 
     def determineIndexAndType(URI uri) {
+        log.debug "uripath: ${uri.path}"
         def pathparts = uri.path.split("/").reverse()
         int maxpart = pathparts.size() - 2
         def dict = [:]
@@ -191,7 +208,6 @@ class ElasticSearch implements Index, Storage {
         }
         return null
     }
-
 
     def performQuery(Query q) {
         def srb = client.prepareSearch(this.whelk.name)
@@ -299,6 +315,10 @@ class ElasticSearch implements Index, Storage {
             return gson.toJson(docrepr)
         }
         return doc.data
+    }
+
+    LookupResult lookup(Key key) {
+        throw new UnsupportedOperationException("Not supported yet.")
     }
 }
 

@@ -4,10 +4,10 @@ import java.net.URI;
 import se.kb.libris.whelks.Document;
 
 public interface Trigger extends Plugin {
-    public void beforeStore(Document d);
-    public void afterStore(Document d);
-    public void beforeGet(Document d);
-    public void afterGet(Document d);
-    public void beforeDelete(URI uri);
-    public void afterDelete(URI uri);
+    public void beforeStore(Whelk whelk, Document d);
+    public void afterStore(Whelk whelk, Document d);
+    public void beforeGet(Whelk whelk, Document d);
+    public void afterGet(Whelk whelk, Document d);
+    public void beforeDelete(Whelk whelk, URI uri);
+    public void afterDelete(Whelk whelk, URI uri);
 }

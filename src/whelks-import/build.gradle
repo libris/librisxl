@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'application'
 
-mainClassName = 'se.kb.libris.imports.BatchImportTest'
+mainClassName = 'se.kb.libris.imports.BatchImport'
 
 jar {
     dependsOn configurations.runtime

@@ -1,13 +1,12 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kb.libris.whelks;
 
-/**
- *
- * @author marma
- */
-public class Description {
-    
+import java.io.InputStream;
+import java.io.Reader;
+
+public interface Description {
+    public String getContentType();
+    public String getFormat();
+    public String getProfile();
+    public String getData();
+    public Reader getDataAsStream();
 }

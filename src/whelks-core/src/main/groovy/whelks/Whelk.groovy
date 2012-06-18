@@ -3,7 +3,6 @@ package se.kb.libris.whelks
 import groovy.util.logging.Slf4j as Log
 
 import java.net.URI
-import java.util.*;
 
 import org.apache.commons.io.IOUtils
 import org.apache.commons.io.output.TeeOutputStream
