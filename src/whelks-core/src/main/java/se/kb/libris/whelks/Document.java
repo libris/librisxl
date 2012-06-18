@@ -19,13 +19,12 @@ public interface Document {
     public void setVersion(String version);
     public void setTimestamp(Date date);
         
+    public void setData(byte data[]);
     public void setData(InputStream data);
     public String getContentType();
     public void setContentType(String contentType);
     public long getSize();
     
-    public Document tag(URI type, String value);
-    public Document untag(URI type, String value);
     public Document withIdentifier(String uri);
     public Document withIdentifier(URI uri);
     public Document withData(String dataString);

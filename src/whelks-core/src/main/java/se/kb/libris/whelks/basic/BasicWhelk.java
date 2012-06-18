@@ -18,6 +18,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
     private URI prefix = null;
+    private WhelkManager manager = null;
 
     @Override
     public URI store(Document d) {
@@ -83,7 +84,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     public void delete(URI uri) {
         // before triggers
         for (Trigger t: getTriggers())
-            t.beforeDelete(uri);
+            t.beforeDelete(this, uri);
         
         for (Component c: getComponents())
             if (c instanceof Storage)
@@ -95,8 +96,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
         // after triggers
         for (Trigger t: getTriggers())
-            t.afterDelete(uri);
-                ((QuadStore)c).delete(uri);
+            t.afterDelete(this, uri);
 
     }
 

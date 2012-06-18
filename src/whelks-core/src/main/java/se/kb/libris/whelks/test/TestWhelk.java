@@ -116,8 +116,15 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+
+    @Override
+    public SparqlResult sparql(String query) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     @Override
     public void setManager(WhelkManager wm) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     public String getPrefix() {
         throw new UnsupportedOperationException("Not supported yet.");

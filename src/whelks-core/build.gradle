@@ -3,7 +3,6 @@ apply plugin: 'groovy'
 apply plugin: 'jetty'
 apply plugin: 'application'
 
-jettyRun.contextPath = '/'
 
 mainClassName = 'se.kb.libris.whelks.imports.BatchImport'
 

@@ -219,13 +219,4 @@ public class BasicDocument implements Document {
         }
     }
 
-    @Override
-    public InputStream getDataAsStream(long offset, long length) {
-        return new ByteArrayInputStream(data, (int)offset, (int)length);
-    }
-
-    @Override
-    public InputStream getDataAsStream() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }
