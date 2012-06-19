@@ -51,7 +51,7 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
     }
 
     @Override
-    public Document convert(Document doc, String mimeType, String format, String profile) {
+    public Document convert(Whelk whelk, Document doc, String mimeType, String format, String profile) {
         if (python == null) {
             throw new WhelkRuntimeException("Unable to find script engine for python.")
         }
@@ -64,18 +64,17 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
                 InputStream is = this.getClass().getClassLoader().getResourceAsStream(this.scriptName)
                 r = new InputStreamReader(is)
             }
-            if (python != null) {
-                python.put("whelk", this.whelk)
-                python.put("document", doc)
-                python.eval(r)
-                Object result = python.get("result")
-                if (result != null) {
-                    return doc.withData(((String)result).getBytes())
-                } else {
-                    return null
-                }
+            if (r == null) {
+                throw new WhelkRuntimeException("Failed to read script.")
+            }
+            python.put("whelk", whelk)
+            python.put("document", doc)
+            python.eval(r)
+            Object result = python.get("result")
+            if (result != null) {
+                return doc.withData(((String)result).getBytes())
             } else {
-                log.error("Sorry, python is null")
+                return null
             }
         } catch (ScriptException se) {
             log.error("Script failed: " + se.getMessage(), se)
@@ -87,6 +86,8 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
 
     @Override
     public JSONInitialisable init(JSONObject obj) {
+        log.debug("Initializing pythonrunner.")
+        log.debug("Scriptname is " + obj.get("scriptName"))
         try {
             this.scriptName = obj.get("scriptName").toString()
         } catch (Exception e) {

@@ -35,9 +35,9 @@ class RestManager extends Application {
             log.debug("Virgin installation. Setting up some whelks.")
             manager = new WhelkManager()
 
-            def bibwhelk = manager.addWhelk(new WhelkImpl(), "bib")
-            def authwhelk = manager.addWhelk(new WhelkImpl(), "auth")
-            def suggestwhelk = manager.addWhelk(new WhelkImpl(), "suggest")
+            def bibwhelk = manager.addWhelk(new WhelkImpl("bib"))
+            def authwhelk = manager.addWhelk(new WhelkImpl("auth"))
+            def suggestwhelk = manager.addWhelk(new WhelkImpl("suggest"))
 
             // Add storage and index
             def es = new ElasticSearchClient()

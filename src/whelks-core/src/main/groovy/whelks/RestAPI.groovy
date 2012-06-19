@@ -35,7 +35,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     }
 
     String getPath() {
-        return "/" + this.whelk.name + "/" + getPathEnd()
+        return "/" + this.whelk.prefix + "/" + getPathEnd()
     }
 
     private String getModifiedPathEnd() {

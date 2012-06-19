@@ -86,7 +86,7 @@ def transform(a_json, rtype):
     for my_json in alla_json:
         ny_alla.append(dict(my_json.items() + resten_json.items()))
 
-    #print "alla", ny_alla
+    print "alla", ny_alla
     return ny_alla
  
 def get_fields(rtype):
@@ -215,14 +215,14 @@ if ctype == 'application/json':
     if (rtype == 'bib'):
         suggest_source = 'name'
 
-    w_name = whelk.name if whelk else "test"
+    w_name = whelk.prefix if whelk else "test"
 
     #identifier = "/%s/%s/%s" % (w_name, suggest_source, document.identifier.toString().split("/")[-1])
     sug_jsons = transform(in_json, rtype)
     for sug_json in sug_jsons:
         identifier = sug_json['identifier'] 
         r = json.dumps(sug_json)
-        #print "r", r
+        print "r", r
 
         if whelk:
             mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")

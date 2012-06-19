@@ -123,9 +123,10 @@ public class WhelkManager implements JSONInitialisable {
         return factories.get(name);
     }
 
-    public Whelk addWhelk(Whelk w, String name) {
+    public Whelk addWhelk(Whelk w) {
+        String name = w.getPrefix();
         if (whelks.containsKey(name)) {
-            throw new WhelkRuntimeException("Whelk with name '" + name + "' already exists");
+            throw new WhelkRuntimeException("Whelk with prefix '" + name + "' already exists");
         }
         w.setManager(this);
         whelks.put(name, w);
@@ -283,6 +284,7 @@ public class WhelkManager implements JSONInitialisable {
                         Logger.getLogger(WhelkManager.class.getName()).log(Level.FINEST, "whelk can be deserialised");
                         Whelk w = (Whelk)JSONDeserialiser.deserialize(classname, (JSONObject)_whelks.get(key));
                         w.setManager(this);
+                        w.setPrefix(_whelk.get("prefix").toString());
                         whelks.put(name, w);
                     } else {
                         Logger.getLogger(WhelkManager.class.getName()).log(Level.FINEST, "whelk cannot be deserialised");

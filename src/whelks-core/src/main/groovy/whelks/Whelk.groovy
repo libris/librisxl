@@ -20,6 +20,7 @@ import se.kb.libris.whelks.persistance.*
 class WhelkImpl extends BasicWhelk {
 
     WhelkImpl() {super()}
+    WhelkImpl(pfx) {super(pfx)}
 
     def URI generate_identifier() {
         def uri = _create_random_URI()
@@ -37,7 +38,7 @@ class WhelkImpl extends BasicWhelk {
         for (Plugin p: getPlugins()) {
             if (p instanceof FormatConverter) {
                 log.debug "Found a formatconverter: ${p.class.name}"
-                doc = ((FormatConverter)p).convert(doc, null, null, null);
+                doc = ((FormatConverter)p).convert(this, doc, null, null, null);
                 converted = (doc != null)
             }
         }

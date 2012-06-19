@@ -8,6 +8,7 @@ import java.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import se.kb.libris.whelks.*;
+import se.kb.libris.whelks.api.*;
 import se.kb.libris.whelks.component.*;
 import se.kb.libris.whelks.exception.WhelkRuntimeException;
 import se.kb.libris.whelks.persistance.JSONInitialisable;
@@ -17,13 +18,25 @@ import se.kb.libris.whelks.plugin.*;
 public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
-    private URI prefix = null;
+    private String prefix = null;
     private WhelkManager manager = null;
+
+    public BasicWhelk() {}
+
+    public BasicWhelk(String pfx) {
+        if (pfx != null && pfx.startsWith("/")) {
+            pfx = pfx.substring(1);
+        }
+        this.prefix = pfx;
+    }
+
+    public String getPrefix() { return this.prefix; }
+    public void setPrefix(String pfx) { this.prefix = pfx; }
 
     @Override
     public URI store(Document d) {
         // mint URI if document needs it
-        if (d.getIdentifier() == null || !d.getIdentifier().toString().startsWith(prefix.toString()))
+        if (d.getIdentifier() == null || !d.getIdentifier().toString().startsWith("/"+prefix))
             d.setIdentifier(mintIdentifier(d));
         
         // find and add links
@@ -255,6 +268,8 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         synchronized (plugins) {
             if (plugin instanceof Component)
                 ((Component)plugin).setWhelk(this);
+            if (plugin instanceof API) 
+                ((API)plugin).setWhelk(this);
             
             plugins.add(plugin);
         }
@@ -282,14 +297,14 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public JSONInitialisable init(JSONObject obj) {
         try {
-            prefix = new URI(obj.get("prefix").toString());
+            prefix = obj.get("prefix").toString();
         
             for (Iterator it = ((JSONArray)obj.get("plugins")).iterator(); it.hasNext();) {
                     JSONObject _plugin = (JSONObject)it.next();
                     Class c = Class.forName(_plugin.get("_classname").toString());
                 
                     Plugin p = (Plugin)c.newInstance();
-                    if (c.isAssignableFrom(JSONInitialisable.class))
+                    if (JSONInitialisable.class.isAssignableFrom(c))
                         ((JSONInitialisable)p).init(_plugin);
                 
                     addPlugin(p);
@@ -304,7 +319,8 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public JSONObject serialize() {
         JSONObject _whelk = new JSONObject();
-        _whelk.put("prefix", prefix.toString());
+        _whelk.put("prefix", prefix);
+        _whelk.put("_classname", this.getClass().getName());
         
         JSONArray _plugins = new JSONArray();
         for (Plugin p: plugins) {
@@ -320,7 +336,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
     private URI mintIdentifier(Document d) {
         try {
-            return new URI(prefix.toString() + UUID.randomUUID());
+            return new URI("/"+prefix.toString() + UUID.randomUUID());
         } catch (URISyntaxException ex) {
             throw new WhelkRuntimeException("Could not mint URI", ex);
         }

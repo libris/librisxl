@@ -317,9 +317,6 @@ class ElasticSearch implements Index, Storage {
         return doc.data
     }
 
-    LookupResult lookup(Key key) {
-        throw new UnsupportedOperationException("Not supported yet.")
-    }
 }
 
 @Log

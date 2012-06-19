@@ -24,6 +24,8 @@ public interface Whelk {
     public String getName();
     public void setManager(WhelkManager manager);
     public WhelkManager getManager();
+    public String getPrefix();
+    public void setPrefix(String pfx);
     
     // factory methods
     public Document createDocument();

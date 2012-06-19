@@ -129,4 +129,7 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
     public String getPrefix() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    public void setPrefix(String p) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

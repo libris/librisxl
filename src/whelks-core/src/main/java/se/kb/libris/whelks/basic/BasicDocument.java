@@ -190,23 +190,6 @@ public class BasicDocument implements Document {
     }
 
     @Override
-    public Document withDataAsStream(InputStream data) {
-        byte buf[] = new byte[1024];
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(1024);
-        
-        try {
-            int n;
-            while ((n = data.read(buf)) != -1)
-                bout.write(buf, 0, n);
-            
-            this.data = bout.toByteArray();
-            this.size = this.data.length;
-        } catch (java.io.IOException e) {
-            throw new WhelkRuntimeException("Error while reading from stream", e);
-        }
-    }
-
-    @Override
     public void untag(URI type, String value) {
         synchronized (tags) {
             Set<Tag> remove = new HashSet<Tag>();

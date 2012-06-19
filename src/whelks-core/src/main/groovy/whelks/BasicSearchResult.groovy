@@ -17,10 +17,7 @@ class BasicSearchResult implements SearchResult {
         this.hits = new ArrayList<Document>()
     }
 
-    int getNumberOfHits() {
-        return (int)numberOfHits
-    }
-    int setNumberOfHits(int nrHits) {
+    void setNumberOfHits(int nrHits) {
         this.numberOfHits = nrHits
     }
 

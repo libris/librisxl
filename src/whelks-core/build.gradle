@@ -53,6 +53,7 @@ task depjar(type: Jar, dependsOn: jar) {
 }
 
 // Not used atm
+/*
 task fatjar(type: Jar, dependsOn: jar) {
     dependsOn configurations.runtime
         from { 
@@ -63,6 +64,7 @@ task fatjar(type: Jar, dependsOn: jar) {
             } 
         }
 }
+*/
 
 repositories { 
     mavenCentral()

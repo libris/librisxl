@@ -9,21 +9,18 @@ class NotificationTrigger implements Trigger {
 
     boolean enabled = true
     String id = "notificationTrigger"
-    Whelk whelk
 
-    public void setWhelk(Whelk w) {this.whelk = w}
-
-    public void afterStore(Document d) {
-        log.debug("Trigger for whelk ${this.whelk} notifying listeners ...")
-        this.whelk.manager.notifyListeners(d.identifier)
+    public void afterStore(Whelk whelk, Document d) {
+        log.debug("Trigger for whelk ${whelk} notifying listeners ...")
+        whelk.manager.notifyListeners(d.identifier)
     }
 
-    public void afterGet(Document d){}
-    public void afterDelete(URI uri){}
+    public void afterGet(Whelk whelk, Document d){}
+    public void afterDelete(Whelk whelk, URI uri){}
 
-    public void beforeStore(Document d) {}
-    public void beforeGet(Document d){}
-    public void beforeDelete(URI uri){}
+    public void beforeStore(Whelk whelk, Document d) {}
+    public void beforeGet(Whelk whelk, Document d){}
+    public void beforeDelete(Whelk whelk, URI uri){}
 
 
     public void enable() {this.enabled = true}

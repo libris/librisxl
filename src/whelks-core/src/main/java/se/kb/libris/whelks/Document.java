@@ -30,7 +30,6 @@ public interface Document {
     public Document withData(String dataString);
     public Document withData(byte[] data);
     public Document withSize(long size);
-    public Document withDataAsStream(InputStream data);
     public Document withContentType(String contentType);
 
     public Set<Link> getLinks();
