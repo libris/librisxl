@@ -62,13 +62,9 @@ class WhelkImpl extends BasicWhelk {
             throw new WhelkRuntimeException("Document does not belong here.")
         }
         try {
-            URI u = super.store(d)
-            //manager.notifyListeners(u)
-            log.debug("Returning uri $u")
-            return u
+            return super.store(d)
         } catch (WhelkRuntimeException wre) {
             log.error("Failed to save document ${d.identifier}: " + wre.getMessage())
-
         }
 
         return null
