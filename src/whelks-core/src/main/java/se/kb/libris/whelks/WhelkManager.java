@@ -60,6 +60,7 @@ public class WhelkManager implements JSONInitialisable {
         }
         return instance;
     }
+
     public static WhelkManager getInstance(URL location) {
         if (instance == null) {
             instance = new WhelkManager(location);

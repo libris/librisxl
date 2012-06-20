@@ -59,6 +59,10 @@ def transform(a_json, rtype):
                     
                 resten_json[k] = f_list
 
+    #print "sug_json", sug_json
+    #print "resten_json", resten_json
+    #print "alla_json", alla_json
+
     # get_records for auth-records
     if rtype == 'auth':
         if len(alla_json) > 0 and alla_json[0].get('100', None):
@@ -86,7 +90,7 @@ def transform(a_json, rtype):
     for my_json in alla_json:
         ny_alla.append(dict(my_json.items() + resten_json.items()))
 
-    print "alla", ny_alla
+    #print "alla", ny_alla
     return ny_alla
  
 def get_fields(rtype):
@@ -222,7 +226,7 @@ if ctype == 'application/json':
     for sug_json in sug_jsons:
         identifier = sug_json['identifier'] 
         r = json.dumps(sug_json)
-        print "r", r
+        #print "r", r
 
         if whelk:
             mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")
