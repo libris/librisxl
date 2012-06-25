@@ -40,10 +40,6 @@ class WhelkImpl extends BasicWhelk {
         }
     }
 
-    boolean isBinaryData(byte[] data) {
-        return false
-    }
-
     boolean belongsHere(Document d) {
         return !d.identifier || d.identifier.toString().startsWith("/"+this.prefix+"/")
     }

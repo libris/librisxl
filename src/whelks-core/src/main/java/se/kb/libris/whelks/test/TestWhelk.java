@@ -107,11 +107,6 @@ public class TestWhelk implements Whelk, Pluggable, JSONSerialisable, JSONInitia
     }
 
     @Override
-    public String getName() {
-        return null;
-    }
-
-    @Override
     public WhelkManager getManager() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
