@@ -24,14 +24,17 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     public BasicWhelk() {}
 
     public BasicWhelk(String pfx) {
-        if (pfx != null && pfx.startsWith("/")) {
-            pfx = pfx.substring(1);
-        }
-        this.prefix = pfx;
+        setPrefix(pfx);
     }
 
     public String getPrefix() { return this.prefix; }
-    public void setPrefix(String pfx) { this.prefix = pfx; }
+
+    public void setPrefix(String pfx) { 
+        if (pfx != null && pfx.startsWith("/")) {
+            pfx = pfx.substring(1);
+        }
+        this.prefix = pfx; 
+    }
 
     @Override
     public URI store(Document d) {
@@ -166,14 +169,6 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     }
 
     @Override
-    public String getName() {
-        if (getManager() != null) {
-            return getManager().whoami(this);
-        }
-        return "";
-    }
-
-    @Override
     public WhelkManager getManager() {
         return this.manager;
     }
@@ -258,6 +253,18 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             for (Plugin plugin: plugins)
                 if (plugin instanceof Component)
                     ret.add((Component)plugin);
+
+            return ret;
+        }
+    }
+
+    protected Iterable<API> getAPIs() {
+        synchronized (plugins) {
+            List<API> ret = new LinkedList<API>();
+
+            for (Plugin plugin: plugins)
+                if (plugin instanceof API)
+                    ret.add((API)plugin);
 
             return ret;
         }

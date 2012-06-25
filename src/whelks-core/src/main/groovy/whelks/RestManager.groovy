@@ -99,12 +99,12 @@ class RestManager extends Application {
 
         manager.whelks.each {
             log.debug("Manager found whelk ${it.key}")
-            for (api in it.value.getApis()) {
+            for (api in it.value.getAPIs()) {
                 if (!api.varPath) {
                     router.attach(api.path, api)
                 }
             }
-            for (api in it.value.getApis()) {
+            for (api in it.value.getAPIs()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
                     router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))

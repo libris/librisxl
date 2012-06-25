@@ -21,7 +21,6 @@ public interface Whelk {
     public void destroy();
     public Iterable<LogEntry> log(int startIndex);
     public Iterable<LogEntry> log(URI identifier);
-    public String getName();
     public void setManager(WhelkManager manager);
     public WhelkManager getManager();
     public String getPrefix();

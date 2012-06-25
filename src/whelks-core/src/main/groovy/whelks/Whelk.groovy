@@ -22,17 +22,9 @@ class WhelkImpl extends BasicWhelk {
     WhelkImpl() {super()}
     WhelkImpl(pfx) {super(pfx)}
 
-    def URI generate_identifier() {
-        def uri = _create_random_URI()
-        while (has_identifier(uri)) {
-            uri = _create_random_URI()
-        }
-        return uri
-    }
-
     @Override
     void notify(URI u) {
-        log.debug "Whelk $name notified of change in URI $u"
+        log.debug "Whelk $prefix notified of change in URI $u"
         Document doc = manager.resolve(u)
         boolean converted = false
         for (Plugin p: getPlugins()) {
@@ -43,7 +35,7 @@ class WhelkImpl extends BasicWhelk {
             }
         }
         if (converted) {
-            log.debug "Document ${doc.identifier} converted. "
+            log.debug "Document ${doc.identifier} converted."
             //store(doc)
         }
     }
@@ -53,7 +45,7 @@ class WhelkImpl extends BasicWhelk {
     }
 
     boolean belongsHere(Document d) {
-        return d.identifier.toString().startsWith("/"+this.name+"/")
+        return !d.identifier || d.identifier.toString().startsWith("/"+this.prefix+"/")
     }
 
     @Override
@@ -70,24 +62,10 @@ class WhelkImpl extends BasicWhelk {
         return null
     }
 
-    def has_identifier(uri) {
-        // TODO: implement properly
-        return false
-    }
-
-    def _create_random_URI() {
-        def generator = { String alphabet, int n ->
-            new Random().with {
-                (1..n).collect { alphabet[ nextInt( alphabet.length() ) ] }.join()
-            }
-        }
-        return new URI("/" + this.name + "/" + generator( (('A'..'Z')+('a'..'z')+('0'..'9')).join(), 8 ))
-    }
-
+    /*
     def getApis() {
         def apis = []
         this.plugins.each {
-            log.debug("getApis looping component ${it.class.name}")
             if (it instanceof API) {
                 log.debug("Adding ${it.class.name} to list ...")
                 apis << it
@@ -113,9 +91,5 @@ class WhelkImpl extends BasicWhelk {
         }
         return doc
     }
-
-    @Override
-    Document createDocument() {
-        return new BasicDocument()
-    }
+    */
 }
