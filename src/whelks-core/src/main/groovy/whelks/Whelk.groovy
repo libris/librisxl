@@ -23,20 +23,19 @@ class WhelkImpl extends BasicWhelk {
     WhelkImpl(pfx) {super(pfx)}
 
     @Override
-    void notify(URI u) {
-        log.debug "Whelk $prefix notified of change in URI $u"
-        Document doc = manager.resolve(u)
-        boolean converted = false
+    void notify(URI uri) {
+        log.debug "Whelk $prefix notified of change in URI $uri"
+        Document doc = manager.resolve(uri)
+        Document convertedDocument = null
         for (Plugin p: getPlugins()) {
             if (p instanceof FormatConverter) {
                 log.debug "Found a formatconverter: ${p.class.name}"
-                doc = ((FormatConverter)p).convert(this, doc, null, null, null);
-                converted = (doc != null)
+                convertedDocument = ((FormatConverter)p).convert(this, doc)
             }
         }
-        if (converted) {
-            log.debug "Document ${doc.identifier} converted."
-            //store(doc)
+        if (convertedDocument) {
+            log.debug "New document created/converted with identifier ${convertedDocument.identifier}"
+            store(convertedDocument)
         }
     }
 

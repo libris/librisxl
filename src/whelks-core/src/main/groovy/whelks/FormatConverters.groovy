@@ -51,7 +51,7 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
     }
 
     @Override
-    public Document convert(Whelk whelk, Document doc, String mimeType, String format, String profile) {
+    public Document convert(Whelk whelk, Document doc) { 
         if (python == null) {
             throw new WhelkRuntimeException("Unable to find script engine for python.")
         }
