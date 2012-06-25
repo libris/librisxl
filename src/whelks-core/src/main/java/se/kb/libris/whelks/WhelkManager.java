@@ -47,7 +47,7 @@ public class WhelkManager implements JSONInitialisable {
     private static WhelkManager instance = null;
 
     Map<String, Whelk> whelks = new TreeMap<String, Whelk>();
-    Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
+    //Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
     Map<String, Set<String>> listeners = new TreeMap<String, Set<String>>();
     LinkedList<URI> notificationStack = new LinkedList<URI>();
     URL location = null;
@@ -113,6 +113,7 @@ public class WhelkManager implements JSONInitialisable {
         return whelks.get(name);
     }
 
+    /*
     public void registerFactory(String name, WhelkFactory factory) {
         if (factories.containsKey(name))
             throw new WhelkRuntimeException("Factory with name '" + name + "' already exists");
@@ -123,6 +124,7 @@ public class WhelkManager implements JSONInitialisable {
     public WhelkFactory getFactory(String name) {
         return factories.get(name);
     }
+    */
 
     public Whelk addWhelk(Whelk w) {
         String name = w.getPrefix();
@@ -135,6 +137,7 @@ public class WhelkManager implements JSONInitialisable {
         return whelks.get(name);
     }
 
+    /*
     public Whelk createWhelk(String factoryName, String name) {
         if (!factories.containsKey(factoryName))
             throw new WhelkRuntimeException("No factory has been registered with the name '" + factoryName + "'");
@@ -148,6 +151,7 @@ public class WhelkManager implements JSONInitialisable {
 
         return whelks.get(name);
     }
+    */
 
     public void destroyWhelk(String name) {
         if (!whelks.containsKey(name))
@@ -231,7 +235,7 @@ public class WhelkManager implements JSONInitialisable {
     public String serialise() {
         JSONObject ret = new JSONObject();
         JSONObject _whelks = new JSONObject();
-        JSONObject _factories = new JSONObject();
+        //JSONObject _factories = new JSONObject();
         JSONObject _listeners = new JSONObject();
 
         for (Entry<String, Whelk> entry: whelks.entrySet()) {
@@ -244,6 +248,7 @@ public class WhelkManager implements JSONInitialisable {
             }
         }
 
+        /*
         for (Entry<String, WhelkFactory> entry: this.factories.entrySet()) {
             if (entry.getValue() instanceof JSONSerialisable) {
                 _whelks.put(entry.getKey(), ((JSONSerialisable)entry.getValue()).serialize());
@@ -253,6 +258,7 @@ public class WhelkManager implements JSONInitialisable {
                 _factories.put(entry.getKey(), _factory);
             }
         }
+        */
 
         for (Entry<String, Set<String>> entry: this.listeners.entrySet()) {
             JSONArray _receivers = new JSONArray();
@@ -262,7 +268,7 @@ public class WhelkManager implements JSONInitialisable {
 
         ret.put("_classname", this.getClass().getName());
         ret.put("whelks", _whelks);
-        ret.put("factories", _factories);
+        //ret.put("factories", _factories);
         ret.put("listeners", _listeners);
 
         return ret.toJSONString();
@@ -320,6 +326,7 @@ public class WhelkManager implements JSONInitialisable {
             }
         }
 
+        /*
         if (obj.containsKey("factories")) {
             JSONObject _factories = (JSONObject)obj.get("factories");
 
@@ -346,6 +353,7 @@ public class WhelkManager implements JSONInitialisable {
                 }
             }
         }
+        */
         return this;
     }
 
