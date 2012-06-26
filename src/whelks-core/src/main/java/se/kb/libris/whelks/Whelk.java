@@ -21,10 +21,7 @@ public interface Whelk {
     public void destroy();
     public Iterable<LogEntry> log(int startIndex);
     public Iterable<LogEntry> log(URI identifier);
-    public void setManager(WhelkManager manager);
-    public WhelkManager getManager();
     public String getPrefix();
-    public void setPrefix(String pfx);
     
     // factory methods
     public Document createDocument();

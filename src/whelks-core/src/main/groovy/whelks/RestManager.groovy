@@ -18,7 +18,8 @@ import se.kb.libris.whelks.plugin.*
 class RestManager extends Application {
 
     final String WHELKCONFIGFILE = "/tmp/whelkconfig.json"
-    WhelkManager manager
+    //WhelkManager manager
+    def whelks = []
 
     RestManager(Context parentContext) {
         super(parentContext)
@@ -27,49 +28,40 @@ class RestManager extends Application {
     }
 
     void init() {
-        if (new File(WHELKCONFIGFILE).exists()) {
-            log.debug("Found serialised configuration. Trying to bootstrap ...")
-            manager = new WhelkManager(new URL("file://${WHELKCONFIGFILE}"))
-            log.debug("Manager bootstrapped. Contains "+manager.whelks.size()+" whelks ...")
-        } else {
-            log.debug("Virgin installation. Setting up some whelks.")
-            manager = new WhelkManager()
+        def bibwhelk = new WhelkImpl("bib")
+        def authwhelk = new WhelkImpl("auth")
+        def suggestwhelk = new WhelkImpl("suggest")
 
-            def bibwhelk = manager.addWhelk(new WhelkImpl("bib"))
-            def authwhelk = manager.addWhelk(new WhelkImpl("auth"))
-            def suggestwhelk = manager.addWhelk(new WhelkImpl("suggest"))
+        // Add storage and index
+        def es = new ElasticSearchClient()
+        bibwhelk.addPlugin(es)
+        authwhelk.addPlugin(es)
+        suggestwhelk.addPlugin(es)
 
-            // Add storage and index
-            def es = new ElasticSearchClient()
-            bibwhelk.addPlugin(es)
-            authwhelk.addPlugin(es)
-            suggestwhelk.addPlugin(es)
+        // Add APIs
+        bibwhelk.addPlugin(new SearchRestlet())
+        bibwhelk.addPlugin(new ImportRestlet())
+        bibwhelk.addPlugin(new DocumentRestlet())
+        authwhelk.addPlugin(new SearchRestlet())
+        authwhelk.addPlugin(new ImportRestlet())
+        authwhelk.addPlugin(new DocumentRestlet())
+        suggestwhelk.addPlugin(new SearchRestlet())
+        suggestwhelk.addPlugin(new DocumentRestlet())
+        def acplugin = new AutoComplete()
+        acplugin.addNamePrefix("100.a")
+        acplugin.addNamePrefix("400.a")
+        acplugin.addNamePrefix("500.a")
+        suggestwhelk.addPlugin(acplugin)
 
-            // Add APIs
-            bibwhelk.addPlugin(new SearchRestlet())
-            bibwhelk.addPlugin(new ImportRestlet())
-            bibwhelk.addPlugin(new DocumentRestlet())
-            bibwhelk.addPlugin(new NotificationTrigger());
-            authwhelk.addPlugin(new SearchRestlet())
-            authwhelk.addPlugin(new ImportRestlet())
-            authwhelk.addPlugin(new DocumentRestlet())
-            authwhelk.addPlugin(new NotificationTrigger());
-            suggestwhelk.addPlugin(new SearchRestlet())
-            suggestwhelk.addPlugin(new DocumentRestlet())
-            def acplugin = new AutoComplete()
-            acplugin.addNamePrefix("100.a")
-            acplugin.addNamePrefix("400.a")
-            acplugin.addNamePrefix("500.a")
-            suggestwhelk.addPlugin(acplugin)
+        // Add other plugins (formatconverters et al)
+        suggestwhelk.addPlugin(new PythonRunnerFormatConverter("sug_json.py"))
+        suggestwhelk.addPlugin(new Listener(bibwhelk))
+        suggestwhelk.addPlugin(new Listener(authwhelk))
 
-            // Add other plugins (formatconverters et al)
-            suggestwhelk.addPlugin(new PythonRunnerFormatConverter("sug_json.py"))
+        whelks << bibwhelk
+        whelks << authwhelk
+        whelks << suggestwhelk
 
-            manager.establishListening("auth", "suggest")
-            manager.establishListening("bib", "suggest")
-
-            manager.save(new URL("file://${WHELKCONFIGFILE}"))
-        }
     }
 
 
@@ -97,14 +89,14 @@ class RestManager extends Application {
 
         log.debug("Looking for suitable APIs to attach")
 
-        manager.whelks.each {
-            log.debug("Manager found whelk ${it.key}")
-            for (api in it.value.getAPIs()) {
+        whelks.each {
+            log.debug("Getting APIs for whelk ${it.prefix}")
+            for (api in it.getAPIs()) {
                 if (!api.varPath) {
                     router.attach(api.path, api)
                 }
             }
-            for (api in it.value.getAPIs()) {
+            for (api in it.getAPIs()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
                     router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))

@@ -42,9 +42,7 @@ import se.kb.libris.whelks.persistance.*;
      *   }
      * }
      */
-public class WhelkManager implements JSONInitialisable {
-
-    private static WhelkManager instance = null;
+public abstract class WhelkManager implements JSONInitialisable {
 
     Map<String, Whelk> whelks = new TreeMap<String, Whelk>();
     //Map<String, WhelkFactory> factories = new TreeMap<String, WhelkFactory>();
@@ -54,6 +52,7 @@ public class WhelkManager implements JSONInitialisable {
 
     private static final int NUMBER_OF_NOTIFICATION_RUNNERS = 5;
 
+    /*
     public static WhelkManager getInstance() {
         if (instance == null) {
             instance = new WhelkManager();
@@ -69,6 +68,7 @@ public class WhelkManager implements JSONInitialisable {
         }
         return instance;
     }
+    */
 
     private WhelkManager() {
         System.out.println("Starting manager.");
@@ -131,7 +131,7 @@ public class WhelkManager implements JSONInitialisable {
         if (whelks.containsKey(name)) {
             throw new WhelkRuntimeException("Whelk with prefix '" + name + "' already exists");
         }
-        w.setManager(this);
+        //w.setManager(this);
         whelks.put(name, w);
 
         return whelks.get(name);
@@ -290,8 +290,8 @@ public class WhelkManager implements JSONInitialisable {
                     if (JSONInitialisable.class.isAssignableFrom(c)) {
                         Logger.getLogger(WhelkManager.class.getName()).log(Level.FINEST, "whelk can be deserialised");
                         Whelk w = (Whelk)JSONDeserialiser.deserialize(classname, (JSONObject)_whelks.get(key));
-                        w.setManager(this);
-                        w.setPrefix(_whelk.get("prefix").toString());
+                        //w.setManager(this);
+                        //w.setPrefix(_whelk.get("prefix").toString());
                         whelks.put(name, w);
                     } else {
                         Logger.getLogger(WhelkManager.class.getName()).log(Level.FINEST, "whelk cannot be deserialised");

@@ -164,7 +164,7 @@ class ImportRestlet extends BasicWhelkAPI {
         importer.resource = this.whelk.name
         importer.manager = this.whelk.manager
         def millis = System.currentTimeMillis()
-        def count = importer.doImport()
+        def count = importer.doImport(this.whelk)
         def diff = (System.currentTimeMillis() - millis)/1000
         response.setEntity("Imported $count records into ${whelk.name} in $diff seconds.\n", MediaType.TEXT_PLAIN)
     }

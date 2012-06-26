@@ -18,23 +18,14 @@ import se.kb.libris.whelks.plugin.*;
 public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
-    private String prefix = null;
-    private WhelkManager manager = null;
-
-    public BasicWhelk() {}
+    private String prefix;
 
     public BasicWhelk(String pfx) {
-        setPrefix(pfx);
+        this.prefix = ((pfx != null && pfx.startsWith("/")) ? pfx.substring(1) : pfx);
     }
 
+    @Override
     public String getPrefix() { return this.prefix; }
-
-    public void setPrefix(String pfx) { 
-        if (pfx != null && pfx.startsWith("/")) {
-            pfx = pfx.substring(1);
-        }
-        this.prefix = pfx; 
-    }
 
     @Override
     public URI store(Document d) {
@@ -59,7 +50,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         
         // before triggers
         for (Trigger t: getTriggers())
-            t.beforeStore(this, d);
+            t.beforeStore(d);
         
         // add document to storage, index and quadstore
         for (Component c: getComponents()) {
@@ -75,7 +66,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
         // after triggers
         for (Trigger t: getTriggers())
-            t.afterStore(this, d);
+            t.afterStore(d);
         
         return d.getIdentifier();
     }
@@ -100,7 +91,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     public void delete(URI uri) {
         // before triggers
         for (Trigger t: getTriggers())
-            t.beforeDelete(this, uri);
+            t.beforeDelete(uri);
         
         for (Component c: getComponents())
             if (c instanceof Storage)
@@ -112,7 +103,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
         // after triggers
         for (Trigger t: getTriggers())
-            t.afterDelete(this, uri);
+            t.afterDelete(uri);
 
     }
 
@@ -166,21 +157,6 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public Document createDocument() {
         return new BasicDocument();
-    }
-
-    @Override
-    public WhelkManager getManager() {
-        return this.manager;
-    }
-
-    @Override
-    public void setManager(WhelkManager wm) {
-        this.manager = wm;
-    }
-
-    public Document convert(Document doc, String mimeType, String format, String profile) {
-        return null;
-        //for (FormatConverter converter: getPlugins()
     }
 
     private List<KeyGenerator> getKeyGenerators() {
@@ -273,12 +249,17 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public void addPlugin(Plugin plugin) {
         synchronized (plugins) {
-            if (plugin instanceof Component)
-                ((Component)plugin).setWhelk(this);
-            if (plugin instanceof API) 
-                ((API)plugin).setWhelk(this);
-            
+            plugin.setWhelk(this);
             plugins.add(plugin);
+        }
+    }
+
+    @Override
+    public void addPluginIfNotExists(Plugin plugin) {
+        synchronized (plugins) {
+            if (! plugins.contains(plugin)) {
+                addPlugin(plugin);
+            }
         }
     }
 

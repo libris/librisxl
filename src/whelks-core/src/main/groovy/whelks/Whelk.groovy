@@ -19,24 +19,12 @@ import se.kb.libris.whelks.persistance.*
 @Log
 class WhelkImpl extends BasicWhelk {
 
-    WhelkImpl() {super()}
-    WhelkImpl(pfx) {super(pfx)}
+    def state
 
-    @Override
-    void notify(URI uri) {
-        log.debug "Whelk $prefix notified of change in URI $uri"
-        Document doc = manager.resolve(uri)
-        Document convertedDocument = null
-        for (Plugin p: getPlugins()) {
-            if (p instanceof FormatConverter) {
-                log.debug "Found a formatconverter: ${p.class.name}"
-                convertedDocument = ((FormatConverter)p).convert(this, doc)
-            }
-        }
-        if (convertedDocument) {
-            log.debug "New document created/converted with identifier ${convertedDocument.identifier}"
-            store(convertedDocument)
-        }
+    WhelkImpl(pfx) {
+        super(pfx)
+        state = new WhelkState(this)
+        state.load()
     }
 
     boolean belongsHere(Document d) {
@@ -57,34 +45,87 @@ class WhelkImpl extends BasicWhelk {
         return null
     }
 
-    /*
-    def getApis() {
-        def apis = []
-        this.plugins.each {
-            if (it instanceof API) {
-                log.debug("Adding ${it.class.name} to list ...")
-                apis << it
+    // Notifications and listeners
+    @Override
+    void notify(Whelk whelk, URI uri) {
+        log.debug "Whelk $prefix notified of change in URI $uri"
+        Document doc = manager.resolve(uri)
+        Document convertedDocument = null
+        for (Plugin p: getPlugins()) {
+            if (p instanceof FormatConverter) {
+                log.debug "Found a formatconverter: ${p.class.name}"
+                convertedDocument = ((FormatConverter)p).convert(this, doc)
+                if (convertedDocument) {
+                    log.debug "New document created/converted with identifier ${convertedDocument.identifier}"
+                    store(convertedDocument)
+                }
             }
         }
-        return apis
+    }
+
+    void listenTo(whelk) {
+        whelk.state.addListener(this)
+        this.state.addNotifier(whelk)
+        this.state.save()
     }
 
     @Override
-    def Document get(identifier, raw=false) {
-        if (identifier instanceof String) {
-            identifier = new URI(identifier)
-        }
-        def doc = null
-        plugins.each {
-            if (it instanceof Storage) {
-                log.debug "${it.class.name} is storage. Retrieving ..."
-                doc = it.get(identifier, raw)
-            }
-        }
-        if (doc == null) {
-            throw new WhelkRuntimeException("Document not found: $identifier")
-        }
-        return doc
+    public String toString() {
+        return this.serialize().toString()
     }
-    */
+}
+
+@Log
+class WhelkState {
+
+    def whelk
+    final static String STORAGE_SUFFIX = "/.whelk/state"
+
+    /** A list of whelks listening to notifications from this whelk. */
+    def listeners = []
+    /** A list of whelks that this whelk is listening to. */
+    def notifiers = []
+
+    WhelkState(Whelk w) {
+        this.whelk = w
+    }
+
+    void addNotifier(whelk) {
+        notifiers << whelk.toString()
+    }
+    void addListener(whelk) {
+        listeners << whelk.toString()
+    }
+
+    void save() {
+        log.debug("Saving whelkstate")
+        def map = {}
+        println "notifiers.size: " + notifiers.size()
+        println "notifiers: " + notifiers
+        map['listeners'] = listeners
+        map['notifiers'] = notifiers
+        println "Map is:\n" + map
+        def builder = new groovy.json.JsonBuilder() 
+        builder {
+            "listeners"(listeners)
+            "notifiers"(notifiers)
+        }
+        println "state is:\n" + builder.toPrettyString()
+        def doc = this.whelk.createDocument().withData(builder.toString()).withIdentifier(new URI("/"+this.whelk.prefix+STORAGE_SUFFIX)).withContentType("application/json")
+        this.whelk.store(doc)
+    }
+
+    void load() {
+        def doc = this.whelk.get(new URI("/"+this.whelk.prefix+STORAGE_SUFFIX))
+        if (doc) {
+            log.debug("Loading whelkstate from storage")
+            def slurper = new groovy.json.JsonSlurper()
+            def result = slurper.parseText(doc.dataAsString)
+            this.listeners = result.listeners
+            this.notifiers = result.notifiers
+        } else {
+            log.debug("Didn't find any state.")
+        }
+    }
+
 }
