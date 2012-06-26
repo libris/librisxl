@@ -30,7 +30,7 @@ class RestManager extends Application {
     void init() {
         def bibwhelk = new WhelkImpl("bib")
         def authwhelk = new WhelkImpl("auth")
-        def suggestwhelk = new WhelkImpl("suggest")
+        def suggestwhelk = new ListeningWhelk("suggest")
 
         // Add storage and index
         def es = new ElasticSearchClient()

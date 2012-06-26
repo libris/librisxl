@@ -210,7 +210,7 @@ class ElasticSearch implements Index, Storage {
     }
 
     def performQuery(Query q) {
-        def srb = client.prepareSearch(this.whelk.name)
+        def srb = client.prepareSearch(this.whelk.prefix)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
         def query = queryString(q.query)

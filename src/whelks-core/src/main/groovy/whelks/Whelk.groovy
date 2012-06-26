@@ -19,12 +19,8 @@ import se.kb.libris.whelks.persistance.*
 @Log
 class WhelkImpl extends BasicWhelk {
 
-    def state
-
     WhelkImpl(pfx) {
         super(pfx)
-        state = new WhelkState(this)
-        state.load()
     }
 
     boolean belongsHere(Document d) {
@@ -45,8 +41,19 @@ class WhelkImpl extends BasicWhelk {
         return null
     }
 
-    // Notifications and listeners
-    @Override
+}
+
+@Log
+class ListeningWhelk extends WhelkImpl {
+    def state
+
+    ListeningWhelk(pfx) {
+        super(pfx)
+        state = new WhelkState(this)
+        state.load()
+    }
+
+
     void notify(Whelk whelk, URI uri) {
         log.debug "Whelk $prefix notified of change in URI $uri"
         Document doc = manager.resolve(uri)
@@ -61,17 +68,6 @@ class WhelkImpl extends BasicWhelk {
                 }
             }
         }
-    }
-
-    void listenTo(whelk) {
-        whelk.state.addListener(this)
-        this.state.addNotifier(whelk)
-        this.state.save()
-    }
-
-    @Override
-    public String toString() {
-        return this.serialize().toString()
     }
 }
 

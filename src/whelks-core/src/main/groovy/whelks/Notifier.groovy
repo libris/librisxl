@@ -4,11 +4,11 @@ import se.kb.libris.whelks.*
 
 class Notifier extends AbstractTrigger {
 
-    Whelk listener
+    ListeningWhelk listener
 
     String id = "notificationTrigger"
 
-    Notifier(Whelk w) {
+    Notifier(ListeningWhelk w) {
         this.listener = w
     }
 

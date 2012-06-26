@@ -79,7 +79,7 @@ class DocumentRestlet extends BasicWhelkAPI {
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
             try {
-                def d = whelk.get(path, _raw)
+                def d = whelk.get(new URI(path))
                 response.setEntity(d.dataAsString, new MediaType(d.contentType))
             } catch (WhelkRuntimeException wrte) {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
