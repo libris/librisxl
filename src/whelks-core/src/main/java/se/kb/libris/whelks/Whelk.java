@@ -21,6 +21,7 @@ public interface Whelk {
     public void destroy();
     public Iterable<LogEntry> log(int startIndex);
     public Iterable<LogEntry> log(URI identifier);
+    public Iterable<LogEntry> log(Date since);
     public String getPrefix();
     
     // factory methods

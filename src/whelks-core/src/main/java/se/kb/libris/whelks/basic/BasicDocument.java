@@ -94,6 +94,11 @@ public class BasicDocument implements Document {
     public Date getTimestamp() {
         return timestamp;
     }
+
+    @Override
+    public void updateTimestamp() {
+        timestamp = new Date();
+    }
     
     public void setTimestamp(Date _timestamp) {
         timestamp = _timestamp;

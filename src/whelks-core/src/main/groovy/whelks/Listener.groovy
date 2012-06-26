@@ -5,23 +5,35 @@ import se.kb.libris.whelks.exception.*
 
 class Listener implements Plugin {
 
-    ListeningWhelk whelk
-    Whelk notifier
+    Whelk homewhelk
+    Whelk otherwhelk
+    Notifier notifier
 
     String id = "whelkListener"
 
-    Listener(n) {
-        this.notifier = n
+    Listener(n, conv) {
+        this.otherwhelk = n
+        this.converter = conv
     }
 
     void setWhelk(Whelk w) {
-        if (w instanceof ListeningWhelk) {
-            this.whelk = w
-            this.notifier.addPluginIfNotExists(new Notifier(this.whelk))
-            id = id + ", listening to $notifier.prefix"
-            id = id + " for $w.prefix"
-        } else {
-            throw new WhelkRuntimeException("Listener designed to work only with ListeningWhelk.")
+        this.homewhelk = w
+        this.otherwhelk.addPluginIfNotExists(new Notifier(this))
+        id = id + ", listening to $otherwhelk.prefix"
+        id = id + " for $w.prefix"
+    }
+
+    void notify(Date timestamp) {
+        log.debug "Whelk $prefix notified of change since $timestamp"
+        if (converter) {
+            otherwhelk.log(timestamp).each {
+                Document doc = otherwhelk.get(it.identifier)
+                Document convertedDocument = converter.convert(doc)
+                if (convertedDocument) {
+                    log.debug "New document created/converted with identifier ${convertedDocument.identifier}"
+                        homewhelk.store(convertedDocument)
+                }
+            }
         }
     }
 }

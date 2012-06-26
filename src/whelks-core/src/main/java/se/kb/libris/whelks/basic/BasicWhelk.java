@@ -52,6 +52,8 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         for (Trigger t: getTriggers())
             t.beforeStore(d);
         
+        // Make sure document timestamp is updated before storing.
+        d.updateTimestamp();
         // add document to storage, index and quadstore
         for (Component c: getComponents()) {
             if (c instanceof Storage)
@@ -146,6 +148,11 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
     @Override
     public Iterable<LogEntry> log(URI identifier) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Iterable<LogEntry> log(Date since) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

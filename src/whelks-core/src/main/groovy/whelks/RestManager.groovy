@@ -53,10 +53,10 @@ class RestManager extends Application {
         acplugin.addNamePrefix("500.a")
         suggestwhelk.addPlugin(acplugin)
 
-        // Add other plugins (formatconverters et al)
-        suggestwhelk.addPlugin(new PythonRunnerFormatConverter("sug_json.py"))
-        suggestwhelk.addPlugin(new Listener(bibwhelk))
-        suggestwhelk.addPlugin(new Listener(authwhelk))
+        // Add other plugins 
+        def formatConverter = new PythonRunnerFormatConverter("sug_json.py")
+        suggestwhelk.addPlugin(new Listener(bibwhelk, formatConverter))
+        suggestwhelk.addPlugin(new Listener(authwhelk, formatConverter))
 
         whelks << bibwhelk
         whelks << authwhelk
@@ -64,13 +64,6 @@ class RestManager extends Application {
 
     }
 
-
-    /**
-     * Very simple method to resolve the correct document given a URI.
-     */
-    Document resolve(URI uri) {
-        return manager.whelks[uri.toString().split("/")[1]].get(uri)
-    }
 
     @Override
     synchronized Restlet createInboundRoot() {

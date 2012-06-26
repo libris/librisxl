@@ -10,6 +10,7 @@ public interface Document {
     public void setIdentifier(URI identifier);
     public String getVersion();
     public Date getTimestamp();
+    public void updateTimestamp();
         
     public byte[] getData();
     public byte[] getData(long offset, long length);

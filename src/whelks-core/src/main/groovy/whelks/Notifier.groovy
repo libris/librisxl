@@ -4,17 +4,17 @@ import se.kb.libris.whelks.*
 
 class Notifier extends AbstractTrigger {
 
-    ListeningWhelk listener
+    Listener listener
 
     String id = "notificationTrigger"
 
-    Notifier(ListeningWhelk w) {
-        this.listener = w
+    Notifier(Listener l) {
+        this.listener = l
     }
 
     @Override
     void afterStore(Document doc) {
-        listener.notify(this, doc.identifier)
+        listener.notify(this, doc.timestamp)
     }
 
     @Override
@@ -27,4 +27,5 @@ class Notifier extends AbstractTrigger {
         }
         return false
     }
+
 }

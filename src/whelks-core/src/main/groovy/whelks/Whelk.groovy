@@ -54,21 +54,6 @@ class ListeningWhelk extends WhelkImpl {
     }
 
 
-    void notify(Whelk whelk, URI uri) {
-        log.debug "Whelk $prefix notified of change in URI $uri"
-        Document doc = manager.resolve(uri)
-        Document convertedDocument = null
-        for (Plugin p: getPlugins()) {
-            if (p instanceof FormatConverter) {
-                log.debug "Found a formatconverter: ${p.class.name}"
-                convertedDocument = ((FormatConverter)p).convert(this, doc)
-                if (convertedDocument) {
-                    log.debug "New document created/converted with identifier ${convertedDocument.identifier}"
-                    store(convertedDocument)
-                }
-            }
-        }
-    }
 }
 
 @Log
