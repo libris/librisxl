@@ -14,7 +14,7 @@ class Notifier extends AbstractTrigger {
 
     @Override
     void afterStore(Document doc) {
-        listener.notify(this, doc.timestamp)
+        listener.notify(doc.timestampAsDate)
     }
 
     @Override

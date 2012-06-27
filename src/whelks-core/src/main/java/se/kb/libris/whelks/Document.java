@@ -9,8 +9,9 @@ public interface Document {
     public URI getIdentifier();
     public void setIdentifier(URI identifier);
     public String getVersion();
-    public Date getTimestamp();
-    public void updateTimestamp();
+    public Date getTimestampAsDate();
+    public long getTimestamp();
+    public Document updateTimestamp();
         
     public byte[] getData();
     public byte[] getData(long offset, long length);

@@ -1,17 +1,20 @@
 package se.kb.libris.whelks.plugin
 
+import groovy.util.logging.Slf4j as Log
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
 
+@Log
 class Listener implements Plugin {
 
     Whelk homewhelk
     Whelk otherwhelk
-    Notifier notifier
+    FormatConverter converter
 
     String id = "whelkListener"
 
-    Listener(n, conv) {
+    Listener(Whelk n, FormatConverter conv) {
         this.otherwhelk = n
         this.converter = conv
     }
@@ -24,7 +27,7 @@ class Listener implements Plugin {
     }
 
     void notify(Date timestamp) {
-        log.debug "Whelk $prefix notified of change since $timestamp"
+        log.debug "Whelk $homewhelk.prefix notified of change since $timestamp"
         if (converter) {
             otherwhelk.log(timestamp).each {
                 Document doc = otherwhelk.get(it.identifier)

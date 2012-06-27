@@ -16,9 +16,11 @@ import org.elasticsearch.common.settings.*
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.search.highlight.*
 import org.elasticsearch.action.count.CountResponse
+import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
+import static org.elasticsearch.common.xcontent.XContentFactory.*
 
 import org.json.simple.*
 import com.google.gson.*
@@ -44,18 +46,35 @@ class ElasticSearch implements Index, Storage {
 
     String defaultType = "record"
 
-    def void setWhelk(Whelk w) { this.whelk = w }
+    def void setWhelk(Whelk w) { this.whelk = w; init() }
 
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
+
+    def init() {
+        log.debug("Creating index ...")
+        XContentBuilder mapping = jsonBuilder().startObject()
+            .startObject(this.whelk.prefix)
+            .startObject("_timestamp")
+            .field("enabled", true)
+            .field("store", true)
+            .endObject()
+            .endObject()
+            .endObject()
+        println "mapping: " + mapping.string()
+
+        client.admin().indices().prepareCreate(this.whelk.prefix).addMapping(defaultType, mapping).execute()
+        println "Created ..."
+    }
 
     def boolean add(Document doc) {
         boolean unfailure = false
         def dict = determineIndexAndType(doc.identifier)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
         try {
-            IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setSource(serializeDocumentToJson(doc)).execute().actionGet()
-            response = client.prepareIndex(dict.index, dict.type+":meta", dict.id).setSource(extractMetaData(doc)).execute().actionGet()
+            IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setTimestamp(""+doc.updateTimestamp().getTimestamp()).setSource(serializeDocumentToJson(doc)).execute().actionGet()
+            println "response: " + response
+            //response = client.prepareIndex(dict.index, dict.type+":meta", dict.id).setSource(extractMetaData(doc)).execute().actionGet()
             unfailure = true
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
@@ -81,8 +100,14 @@ class ElasticSearch implements Index, Storage {
 
     @Override
     void index(Document doc) {
-        log.debug("Not indexing document, because we are also used as Storage. Unnecessary to store twice.")
-        //add(doc.data, doc.identifier)
+        int failcount = 0
+        while (!add(doc)) {
+            if (failcount++ > MAX_TRIES) {
+                log.error("Failed to store document after $MAX_TRIES attempts")
+                break;
+            }
+            Thread.sleep(RETRY_TIMEOUT + failcount)
+        }
     }
 
     /**
@@ -108,14 +133,7 @@ class ElasticSearch implements Index, Storage {
 
     @Override
     public void store(Document d) {
-        int failcount = 0
-        while (!add(d)) {
-            if (failcount++ > MAX_TRIES) {
-                log.error("Failed to store document after $MAX_TRIES attempts")
-                break;
-            }
-            Thread.sleep(RETRY_TIMEOUT + failcount)
-        }
+        log.debug("Not storing document, because we are also used as Index. Unnecessary to store twice.")
     }
 
     OutputStream getOutputStreamFor(Document doc) {
@@ -155,7 +173,7 @@ class ElasticSearch implements Index, Storage {
             }
         }
         if (!dict['index']) {
-            dict['index'] = whelk.defaultIndex
+            dict['index'] = whelk.prefix
         }
         def type = typeelements.join("_")
         dict['type'] = (type ? type : this.defaultType)
@@ -165,7 +183,7 @@ class ElasticSearch implements Index, Storage {
     private GetResponse getFromElastic(index, type, id) {
         GetResponse response  = null
         try {
-            response = client.prepareGet(index, type, id).execute().actionGet()
+            response = client.prepareGet(index, type, id).setFields("_source","_timestamp").execute().actionGet()
         } catch (Exception e) { 
             log.debug("Failed to get response from server.", e)
         }
@@ -207,6 +225,16 @@ class ElasticSearch implements Index, Storage {
             return d
         }
         return null
+    }
+
+    def performLogQuery(Date since) {
+      def srb = client.prepareSearch(this.whelk.prefix)
+      def query = rangeQuery("_timestamp").gte(since)
+      //def query = rangeQuery("fields.001").gte("191502")
+      srb.setQuery(query)
+      log.debug("Logquery: " + srb)
+      def response = srb.execute().actionGet()
+      log.debug("Response: " + response)
     }
 
     def performQuery(Query q) {
@@ -330,7 +358,9 @@ class ElasticSearchClient extends ElasticSearch {
 
         log.debug "Connecting to elastichost:9300"
         Settings settings = ImmutableSettings.settingsBuilder()
-                .put("client.transport.ping_timeout", 30).build();
+                .put("client.transport.ping_timeout", 30)
+                .put("cluser.name", "rockpool")
+                .build();
         client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
         log.debug("... connected")
     }

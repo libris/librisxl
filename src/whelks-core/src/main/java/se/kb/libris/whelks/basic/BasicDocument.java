@@ -18,6 +18,7 @@ public class BasicDocument implements Document {
     private Date timestamp = null;
     
     public BasicDocument() {
+        this.timestamp = new Date();
     }
     
     @Override
@@ -91,13 +92,19 @@ public class BasicDocument implements Document {
     }
 
     @Override
-    public Date getTimestamp() {
+    public Date getTimestampAsDate() {
         return timestamp;
     }
 
+    @Override 
+    public long getTimestamp() {
+        return timestamp.getTime();
+    }
+
     @Override
-    public void updateTimestamp() {
+    public Document updateTimestamp() {
         timestamp = new Date();
+        return this;
     }
     
     public void setTimestamp(Date _timestamp) {

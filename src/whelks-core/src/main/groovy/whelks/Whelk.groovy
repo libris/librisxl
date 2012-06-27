@@ -41,6 +41,18 @@ class WhelkImpl extends BasicWhelk {
         return null
     }
 
+    @Override
+    Iterable<LogEntry> log(Date since) {
+        def query = new Query()
+        //query.addFilter("timestamp", since)
+        components.each {
+            if (it instanceof Index) {
+                it.performLogQuery(since)
+            }
+        }
+        return null
+    }
+
 }
 
 @Log

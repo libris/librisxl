@@ -6,6 +6,7 @@ class Query {
     def fields 
     def sorting
     def highlights
+    def filters
     int start = 0
     int n = 50
 
@@ -30,5 +31,12 @@ class Query {
 
     Query addField(field) {
         fields << field
+    }
+
+    Query addFilter(field, value) {
+        if (!filters) {
+            filters = {}
+        }
+        filters[field] = value
     }
 }
