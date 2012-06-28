@@ -9,7 +9,7 @@ import se.kb.libris.whelks.persistance.*
 
 import org.json.simple.JSONObject
 
-abstract class BasicFormatConverter implements FormatConverter {
+abstract class BasicFormatConverter implements FormatConverter, WhelkAware {
     boolean enabled = true
     void enable() { this.enabled = true }
     void disable() { this.enabled = false }
@@ -22,33 +22,11 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
     final private ScriptEngine python = new ScriptEngineManager().getEngineByName("python")
     String scriptName
     String id = "PythonRunnerFormatConverter"
+    Map<String, Object> requirements = new HashMap<String, Object>()
 
     PythonRunnerFormatConverter() {}
-    PythonRunnerFormatConverter(String sn) { this.scriptName = sn }
+    PythonRunnerFormatConverter(String sn, Map req) { this.scriptName = sn; this.requirements = req }
 
-    private void listAvailableEngines() {
-        try {
-            ScriptEngineManager mgr = new ScriptEngineManager()
-            List<ScriptEngineFactory> factories = mgr.getEngineFactories()
-            for (ScriptEngineFactory factory: factories) {
-                System.out.println("ScriptEngineFactory Info")
-                String engName = factory.getEngineName()
-                String engVersion = factory.getEngineVersion()
-                String langName = factory.getLanguageName()
-                String langVersion = factory.getLanguageVersion()
-                System.out.printf("\tScript Engine: %s (%s)\n",
-                        engName, engVersion)
-                List<String> engNames = factory.getNames()
-                for(String name: engNames) {
-                    System.out.printf("\tEngine Alias: %s\n", name)
-                }
-                System.out.printf("\tLanguage: %s (%s)\n",
-                        langName, langVersion)
-            }
-        } catch (Exception e) {
-            throw new WhelkRuntimeException(e)
-        }
-    }
 
     @Override
     public Document convert(Document doc) { 
@@ -67,15 +45,21 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
             if (r == null) {
                 throw new WhelkRuntimeException("Failed to read script.")
             }
-            python.put("whelk", whelk)
+            requirements.each {
+                log.debug("Feeding python with ${it.value} (${it.key})")
+                python.put(it.key, it.value)
+            }
+            log.debug("Feeding python with $doc (document)")
             python.put("document", doc)
             python.eval(r)
             Object result = python.get("result")
             if (result != null) {
                 return doc.withData(((String)result).getBytes())
             } else {
+                log.debug("Python has handled everything for us. Now return null.")
                 return null
             }
+            log.debug("Done ...")
         } catch (ScriptException se) {
             log.error("Script failed: " + se.getMessage(), se)
         } catch (Exception e) {
@@ -105,6 +89,30 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
         _converter.put("scriptName", this.scriptName)
                 
         return _converter
+    }
+
+    private void listAvailableEngines() {
+        try {
+            ScriptEngineManager mgr = new ScriptEngineManager()
+            List<ScriptEngineFactory> factories = mgr.getEngineFactories()
+            for (ScriptEngineFactory factory: factories) {
+                System.out.println("ScriptEngineFactory Info")
+                String engName = factory.getEngineName()
+                String engVersion = factory.getEngineVersion()
+                String langName = factory.getLanguageName()
+                String langVersion = factory.getLanguageVersion()
+                System.out.printf("\tScript Engine: %s (%s)\n",
+                        engName, engVersion)
+                List<String> engNames = factory.getNames()
+                for(String name: engNames) {
+                    System.out.printf("\tEngine Alias: %s\n", name)
+                }
+                System.out.printf("\tLanguage: %s (%s)\n",
+                        langName, langVersion)
+            }
+        } catch (Exception e) {
+            throw new WhelkRuntimeException(e)
+        }
     }
 
 

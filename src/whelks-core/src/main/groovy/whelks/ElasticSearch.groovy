@@ -34,9 +34,9 @@ import se.kb.libris.whelks.exception.*
 import static se.kb.libris.conch.Tools.*
 
 @Log
-class ElasticSearch implements Index, Storage {
+abstract class ElasticSearch implements Index, Storage, History {
 
-    Whelk whelk
+    String index
     Client client
 
     boolean enabled = true
@@ -46,24 +46,23 @@ class ElasticSearch implements Index, Storage {
 
     String defaultType = "record"
 
-    def void setWhelk(Whelk w) { this.whelk = w; init() }
-
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
     def init() {
         log.debug("Creating index ...")
         XContentBuilder mapping = jsonBuilder().startObject()
-            .startObject(this.whelk.prefix)
+            .startObject(index)
             .startObject("_timestamp")
             .field("enabled", true)
             .field("store", true)
+            .field("path", "modified")
             .endObject()
             .endObject()
             .endObject()
         println "mapping: " + mapping.string()
 
-        client.admin().indices().prepareCreate(this.whelk.prefix).addMapping(defaultType, mapping).execute()
+        client.admin().indices().prepareCreate(index).addMapping(defaultType, mapping).execute()
         println "Created ..."
     }
 
@@ -217,7 +216,7 @@ class ElasticSearch implements Index, Storage {
             }
             */
             if (raw) {
-                d = this.whelk.createDocument().withIdentifier(uri).withContentType("application/json").withData(response.source())
+                d = new BasicDocument().withIdentifier(uri).withContentType("application/json").withData(response.source())
             } else {
                 d = deserializeJsonDocument(response.source(), uri, getFromElastic(dict['index'], dict['type']+":meta", dict['id']))
             }
@@ -227,18 +226,28 @@ class ElasticSearch implements Index, Storage {
         return null
     }
 
-    def performLogQuery(Date since) {
-      def srb = client.prepareSearch(this.whelk.prefix)
-      def query = rangeQuery("_timestamp").gte(since)
-      //def query = rangeQuery("fields.001").gte("191502")
-      srb.setQuery(query)
-      log.debug("Logquery: " + srb)
-      def response = srb.execute().actionGet()
-      log.debug("Response: " + response)
+    def Iterable<LogEntry> updates(Date since) {
+        def srb = client.prepareSearch(index).addField("_timestamp")
+        def query = rangeQuery("_timestamp").gte(since.getTime())
+        //def query = rangeQuery("fields.001").gte("191502")
+        srb.setQuery(query)
+        log.debug("Logquery: " + srb)
+        def response = srb.execute().actionGet()
+        log.debug("Response: " + response)
+        def results = new ArrayList<LogEntry>()
+        if (response) {
+            log.debug "Total log hits: ${response.hits.totalHits}"
+            response.hits.hits.each { 
+                def uri = new URI("/" + it.index + (it.type == this.defaultType ? "" : "/" + it.type) + "/" + it.id)
+                results.add(new LogEntry(uri, new Date()))
+            }
+        }
+
+        return results
     }
 
     def performQuery(Query q) {
-        def srb = client.prepareSearch(this.whelk.prefix)
+        def srb = client.prepareSearch(index)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
         def query = queryString(q.query)
@@ -308,7 +317,7 @@ class ElasticSearch implements Index, Storage {
 
     Document createDocumentFromHit(hit) {
         def u = new URI("/" + hit.index + (hit.type == this.defaultType ? "" : "/" + hit.type) + "/" + hit.id)
-        return this.whelk.createDocument().withData(hit.source()).withIdentifier(u)
+        return new BasicDocument().withData(hit.source()).withIdentifier(u)
     }
 
     @Override
@@ -326,7 +335,7 @@ class ElasticSearch implements Index, Storage {
             size = slurped.size
             contentType = (slurped.contenttype ? slurped.contenttype : contentType)
         }
-        Document doc = this.whelk.createDocument().withData(data).withIdentifier(uri).withContentType(contentType)
+        Document doc = new BasicDocument().withData(data).withIdentifier(uri).withContentType(contentType)
         return doc
     }
 
@@ -350,7 +359,9 @@ class ElasticSearch implements Index, Storage {
 @Log
 class ElasticSearchClient extends ElasticSearch {
 
-    def ElasticSearchClient() {
+    // Force one-client-per-whelk
+    ElasticSearchClient(String i) {
+        this.index = i
         Properties properties = new Properties();
         def is = ElasticSearchClient.class.getClassLoader().getResourceAsStream("whelks-core.properties")
         properties.load(is);

@@ -30,13 +30,12 @@ class RestManager extends Application {
     void init() {
         def bibwhelk = new WhelkImpl("bib")
         def authwhelk = new WhelkImpl("auth")
-        def suggestwhelk = new ListeningWhelk("suggest")
+        def suggestwhelk = new WhelkImpl("suggest")
 
         // Add storage and index
-        def es = new ElasticSearchClient()
-        bibwhelk.addPlugin(es)
-        authwhelk.addPlugin(es)
-        suggestwhelk.addPlugin(es)
+        bibwhelk.addPlugin(new ElasticSearchClient(bibwhelk.prefix))
+        authwhelk.addPlugin(new ElasticSearchClient(authwhelk.prefix))
+        suggestwhelk.addPlugin(new ElasticSearchClient(suggestwhelk.prefix))
 
         // Add APIs
         bibwhelk.addPlugin(new SearchRestlet())
@@ -54,7 +53,8 @@ class RestManager extends Application {
         suggestwhelk.addPlugin(acplugin)
 
         // Add other plugins 
-        def formatConverter = new PythonRunnerFormatConverter("sug_json.py")
+        def formatRequirements = ["bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
+        def formatConverter = new PythonRunnerFormatConverter("sug_json.py", formatRequirements)
         suggestwhelk.addPlugin(new Listener(bibwhelk, formatConverter))
         suggestwhelk.addPlugin(new Listener(authwhelk, formatConverter))
 

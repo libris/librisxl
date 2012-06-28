@@ -256,7 +256,9 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     @Override
     public void addPlugin(Plugin plugin) {
         synchronized (plugins) {
-            plugin.setWhelk(this);
+            if (plugin instanceof WhelkAware) {
+                ((WhelkAware)plugin).setWhelk(this);
+            }
             plugins.add(plugin);
         }
     }

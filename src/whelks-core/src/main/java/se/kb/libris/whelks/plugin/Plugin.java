@@ -3,7 +3,6 @@ package se.kb.libris.whelks.plugin;
 import se.kb.libris.whelks.Whelk;
 
 public interface Plugin {
-    public void setWhelk(Whelk w);
     public String getId();
     /*
     public void enable();

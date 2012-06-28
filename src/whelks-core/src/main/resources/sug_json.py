@@ -200,16 +200,16 @@ _in_console = False
 try:
     data = document.getDataAsString()
     ctype = document.getContentType()
-    bibwhelk = whelk.getManager().getWhelk('bib')
 except:
+    print "Exception in python setup ... Likely, nothing will run now."
     ctype = "application/json"
     data = sys.stdin.read()
-    whelk = None
+    suggestwhelk = None
     bibwhelk = None
     _in_console = True
 
 
-
+print "Script is running ..."
 #print "console mode", _in_console
 
 if ctype == 'application/json':
@@ -219,7 +219,7 @@ if ctype == 'application/json':
     if (rtype == 'bib'):
         suggest_source = 'name'
 
-    w_name = whelk.prefix if whelk else "test"
+    w_name = suggestwhelk.prefix if suggestwhelk else "test"
 
     #identifier = "/%s/%s/%s" % (w_name, suggest_source, document.identifier.toString().split("/")[-1])
     sug_jsons = transform(in_json, rtype)
@@ -228,11 +228,12 @@ if ctype == 'application/json':
         r = json.dumps(sug_json)
         #print "r", r
 
-        if whelk:
-            mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")
+        if suggestwhelk:
+            mydoc = suggestwhelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")
 
             #print "Sparar dokument i whelken daaraa"
-            uri = whelk.store(mydoc)
+            uri = suggestwhelk.store(mydoc)
 
+print "Script finished ..."
 if _in_console:
     print r

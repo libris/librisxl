@@ -43,11 +43,10 @@ class WhelkImpl extends BasicWhelk {
 
     @Override
     Iterable<LogEntry> log(Date since) {
-        def query = new Query()
-        //query.addFilter("timestamp", since)
-        components.each {
-            if (it instanceof Index) {
-                it.performLogQuery(since)
+        log.debug("Log called on whelk $prefix")
+        for (Component c : getComponents()) {
+            if (c instanceof History) {
+                return ((History)c).updates(since) 
             }
         }
         return null
