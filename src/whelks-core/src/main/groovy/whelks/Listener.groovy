@@ -35,7 +35,7 @@ class Listener implements WhelkAware {
     void notify(Date timestamp) {
         log.debug "Whelk $homewhelk.prefix notified of change since $timestamp";
         notifications.push(timestamp)
-        exchanger.exchange(notifications)
+        exchanger.exchange(notifications) 
         log.debug("switched ...")
     }
 
@@ -52,31 +52,35 @@ class Listener implements WhelkAware {
             log.debug("Calling log on whelk ${otherwhelk.prefix}")
             LinkedList<Date> worklist = notifications;
             while (worklist != null) {
-                log.debug("Starting work on worklist ...")
-                while (worklist.size() > 0) {
-                    def timestamp = worklist.peek()
-                    log.debug("Next timestamp off list: $timestamp")
-                    def updates = otherwhelk.log(timestamp)
-                    log.debug("Updates is $updates")
-                    if (updates.size() > 0) {
-                        log.debug("Found updates.")
-                        worklist.removeFirstOccurrence(timestamp)
-                        updates.each {
-                            Document doc = otherwhelk.get(it.identifier);
-                            Document convertedDocument = converter.convert(doc)
-                            if (convertedDocument) {
-                                log.debug("New document created/converted with identifier ${convertedDocument.identifier}")
-                                homewhelk.store(convertedDocument)
+                try {
+                    log.debug("Starting work on worklist ...")
+                    while (worklist.size() > 0) {
+                        def timestamp = worklist.peek()
+                        log.debug("Next timestamp off list: $timestamp")
+                        def updates = otherwhelk.log(timestamp)
+                        if (updates.size() > 0) {
+                            log.debug("Found updates.")
+                            updates.each {
+                                worklist.removeFirstOccurrence(it.timestamp)
+                                Document doc = otherwhelk.get(it.identifier);
+                                Document convertedDocument = converter.convert(doc)
+                                if (convertedDocument) {
+                                    log.debug("New document created/converted with identifier ${convertedDocument.identifier}")
+                                    homewhelk.store(convertedDocument)
+                                }
                             }
+                        } else {
+                            log.debug("Got no updates, despite notification. Waiting a while ...")
+                                Thread.sleep(CHECK_AGAIN_DELAY)
                         }
-                    } else {
-                        log.debug("Got no updates, despite notification. Waiting a while ...")
-                        Thread.sleep(CHECK_AGAIN_DELAY)
                     }
+                    log.debug("Done with worklist. Switching ...")
+                    exchanger.exchange(worklist)
+                } catch (Throwable t) {
+                    log.error("Got exception. Keep cool and carry on ...", t)
                 }
-                log.debug("Done with worklist. Switching ...")
-                exchanger.exchange(worklist)
             }
+            log.error("Thread is exiting ...")
         }
     }
 }

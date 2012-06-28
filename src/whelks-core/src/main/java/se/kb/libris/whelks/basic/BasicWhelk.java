@@ -138,7 +138,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             if (c instanceof QuadStore)
                 return ((QuadStore)c).sparql(query);
 
-        throw new WhelkRuntimeException("Whelk has no index for searching");
+        throw new WhelkRuntimeException("Whelk has no quadstore component.");
     }
 
     @Override
@@ -153,7 +153,12 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
     @Override
     public Iterable<LogEntry> log(Date since) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        for (Component c : getComponents()) {
+            if (c instanceof History) {
+                return ((History)c).updates(since);
+            }
+        }
+        throw new WhelkRuntimeException("Whelk has no index for searching");
     }
 
     @Override

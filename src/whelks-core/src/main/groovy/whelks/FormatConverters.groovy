@@ -62,6 +62,7 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
             log.debug("Done ...")
         } catch (ScriptException se) {
             log.error("Script failed: " + se.getMessage(), se)
+            return null
         } catch (Exception e) {
             throw new WhelkRuntimeException(e)
         }

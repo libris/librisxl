@@ -40,18 +40,6 @@ class WhelkImpl extends BasicWhelk {
 
         return null
     }
-
-    @Override
-    Iterable<LogEntry> log(Date since) {
-        log.debug("Log called on whelk $prefix")
-        for (Component c : getComponents()) {
-            if (c instanceof History) {
-                return ((History)c).updates(since) 
-            }
-        }
-        return null
-    }
-
 }
 
 @Log

@@ -80,7 +80,11 @@ class DocumentRestlet extends BasicWhelkAPI {
             log.debug "Request path: ${path}"
             try {
                 def d = whelk.get(new URI(path))
-                response.setEntity(d.dataAsString, new MediaType(d.contentType))
+                if (d) {
+                    response.setEntity(d.dataAsString, new MediaType(d.contentType))
+                } else {
+                    response.setStatus(Status.CLIENT_ERROR_NOT_FOUND)
+                }
             } catch (WhelkRuntimeException wrte) {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
             }
@@ -161,12 +165,11 @@ class ImportRestlet extends BasicWhelkAPI {
 
     @Override
     def void handle(Request request, Response response) {
-        importer.resource = this.whelk.name
-        importer.manager = this.whelk.manager
+        importer.resource = this.whelk.prefix
         def millis = System.currentTimeMillis()
         def count = importer.doImport(this.whelk)
         def diff = (System.currentTimeMillis() - millis)/1000
-        response.setEntity("Imported $count records into ${whelk.name} in $diff seconds.\n", MediaType.TEXT_PLAIN)
+        response.setEntity("Imported $count records into ${whelk.prefix} in $diff seconds.\n", MediaType.TEXT_PLAIN)
     }
 }
 

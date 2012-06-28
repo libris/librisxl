@@ -45,6 +45,7 @@ abstract class ElasticSearch implements Index, Storage, History {
     int RETRY_TIMEOUT = 300
 
     String defaultType = "record"
+    String storageType = "document"
 
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
@@ -56,24 +57,21 @@ abstract class ElasticSearch implements Index, Storage, History {
             .startObject("_timestamp")
             .field("enabled", true)
             .field("store", true)
-            .field("path", "modified")
             .endObject()
             .endObject()
             .endObject()
         println "mapping: " + mapping.string()
 
-        client.admin().indices().prepareCreate(index).addMapping(defaultType, mapping).execute()
+        client.admin().indices().prepareCreate(index).addMapping(storageType, mapping).execute()
         println "Created ..."
     }
 
-    def boolean add(Document doc) {
+    def boolean add(Document doc, String addType) {
         boolean unfailure = false
-        def dict = determineIndexAndType(doc.identifier)
+        def dict = determineIndexAndType(doc.identifier, addType)
         log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
         try {
-            IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setTimestamp(""+doc.updateTimestamp().getTimestamp()).setSource(serializeDocumentToJson(doc)).execute().actionGet()
-            println "response: " + response
-            //response = client.prepareIndex(dict.index, dict.type+":meta", dict.id).setSource(extractMetaData(doc)).execute().actionGet()
+            IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setTimestamp(""+doc.getTimestamp()).setSource(serializeDocumentToJson(doc, addType)).execute().actionGet()
             unfailure = true
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
@@ -85,22 +83,9 @@ abstract class ElasticSearch implements Index, Storage, History {
         return unfailure
     }
 
-    byte[] extractMetaData(Document doc) {
-        def builder = new groovy.json.JsonBuilder()
-        builder {
-            "uri"(doc.identifier.toString()) 
-            "version"(doc.version) 
-            "contenttype"(doc.contentType) 
-            "size"(doc.size)
-        }
-        //println "Metadata: ${builder.toString()}"
-        return builder.toString().getBytes()
-    }
-
-    @Override
-    void index(Document doc) {
+    void addLoop(Document doc, String type) {
         int failcount = 0
-        while (!add(doc)) {
+        while (!add(doc, type)) {
             if (failcount++ > MAX_TRIES) {
                 log.error("Failed to store document after $MAX_TRIES attempts")
                 break;
@@ -109,21 +94,9 @@ abstract class ElasticSearch implements Index, Storage, History {
         }
     }
 
-    /**
-     * Since ES can't handle anything but JSON, we need to wrap other types of data in a JSON wrapper before storing.
-     */
-    def wrapData(byte[] data, URI identifier) {
-        if (isJSON(data)) {
-            return data
-        } else {
-            Gson gson = new Gson()
-            def docrepr = [:]
-            docrepr['data'] = new String(data)
-            docrepr['identifier'] = identifier
-            docrepr['contenttype'] = "text/plain"
-            String json = gson.toJson(docrepr)
-            return json.getBytes()
-        }
+    @Override
+    void index(Document doc) {
+        addLoop(doc, defaultType)
     }
 
     void delete(URI uri) {
@@ -131,8 +104,8 @@ abstract class ElasticSearch implements Index, Storage, History {
     }
 
     @Override
-    public void store(Document d) {
-        log.debug("Not storing document, because we are also used as Index. Unnecessary to store twice.")
+    public void store(Document doc) {
+        addLoop(doc, storageType)
     }
 
     OutputStream getOutputStreamFor(Document doc) {
@@ -140,7 +113,7 @@ abstract class ElasticSearch implements Index, Storage, History {
             return new ByteArrayOutputStream() {
                 void close() throws IOException {
                     doc = doc.withData(toByteArray())
-                    ElasticSearch.this.add(doc)
+                    ElasticSearch.this.add(doc, storageType)
                 }
             }
     }
@@ -156,7 +129,7 @@ abstract class ElasticSearch implements Index, Storage, History {
         return true
     }
 
-    def determineIndexAndType(URI uri) {
+    def determineIndexAndType(URI uri, String fallbackType) {
         log.debug "uripath: ${uri.path}"
         def pathparts = uri.path.split("/").reverse()
         int maxpart = pathparts.size() - 2
@@ -172,10 +145,10 @@ abstract class ElasticSearch implements Index, Storage, History {
             }
         }
         if (!dict['index']) {
-            dict['index'] = whelk.prefix
+            dict['index'] = index
         }
         def type = typeelements.join("_")
-        dict['type'] = (type ? type : this.defaultType)
+        dict['type'] = (type ? type : fallbackType)
         return dict
     }
 
@@ -190,8 +163,8 @@ abstract class ElasticSearch implements Index, Storage, History {
     }
 
     @Override
-    Document get(URI uri, raw = false) {
-        def dict = determineIndexAndType(uri)
+    Document get(URI uri) {
+        def dict = determineIndexAndType(uri, storageType)
         GetResponse response = null
         GetResponse metaresponse = null
         int failcount = 0
@@ -207,39 +180,27 @@ abstract class ElasticSearch implements Index, Storage, History {
             } 
         }
         if (response && response.exists()) {
-            Document d 
-            def map = response.sourceAsMap()
-            log.debug("Raw mode: ${raw}")
-            /*
-            map.each {
-            log.debug("MAP: " + it.key +":" + it.value)
-            }
-            */
-            if (raw) {
-                d = new BasicDocument().withIdentifier(uri).withContentType("application/json").withData(response.source())
-            } else {
-                d = deserializeJsonDocument(response.source(), uri, getFromElastic(dict['index'], dict['type']+":meta", dict['id']))
-            }
-
-            return d
+            def ts = (response.field("_timestamp") ? response.field("_timestamp").value : null)
+            return deserializeJsonDocument(response.source(), uri, ts) 
         }
         return null
     }
 
     def Iterable<LogEntry> updates(Date since) {
-        def srb = client.prepareSearch(index).addField("_timestamp")
+        def srb = client.prepareSearch(index).addField("_timestamp").setTypes(storageType)
         def query = rangeQuery("_timestamp").gte(since.getTime())
         //def query = rangeQuery("fields.001").gte("191502")
         srb.setQuery(query)
         log.debug("Logquery: " + srb)
         def response = srb.execute().actionGet()
         log.debug("Response: " + response)
+        //return null
         def results = new ArrayList<LogEntry>()
         if (response) {
             log.debug "Total log hits: ${response.hits.totalHits}"
             response.hits.hits.each { 
-                def uri = new URI("/" + it.index + (it.type == this.defaultType ? "" : "/" + it.type) + "/" + it.id)
-                results.add(new LogEntry(uri, new Date()))
+                def uri = new URI("/" + it.index + (it.type == this.defaultType || it.type == this.storageType ? "" : "/" + it.type) + "/" + it.id)
+                results.add(new LogEntry(uri, new Date(it.field("_timestamp").value)))
             }
         }
 
@@ -316,7 +277,7 @@ abstract class ElasticSearch implements Index, Storage, History {
     }
 
     Document createDocumentFromHit(hit) {
-        def u = new URI("/" + hit.index + (hit.type == this.defaultType ? "" : "/" + hit.type) + "/" + hit.id)
+        def u = new URI("/" + hit.index + (hit.type == this.defaultType || hit.type == this.storageType ? "" : "/" + hit.type) + "/" + hit.id)
         return new BasicDocument().withData(hit.source()).withIdentifier(u)
     }
 
@@ -325,28 +286,35 @@ abstract class ElasticSearch implements Index, Storage, History {
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    Document deserializeJsonDocument(data, uri, metaresponse) {
-        def version, size
+    Document deserializeJsonDocument(source, uri, timestamp) {
+        def slurper = new JsonSlurper()
+        def slurped = slurper.parseText(new String(source))
         def contentType = "application/json"
-        if (metaresponse && metaresponse.exists()) {
-            def slurper = new JsonSlurper()
-            def slurped = slurper.parseText(new String(data))
-            version = slurped.version
-            size = slurped.size
-            contentType = (slurped.contenttype ? slurped.contenttype : contentType)
+        Document doc = null
+        if (slurped.data) {
+            def data = slurped.data
+
+            def version = slurped.version
+            def size = slurped.size
+            contentType = slurped.contenttype
+            doc = new BasicDocument().withData(data).withIdentifier(uri).withContentType(contentType)
+        } else {
+            doc = new BasicDocument().withData(source).withIdentifier(uri).withContentType(contentType)
         }
-        Document doc = new BasicDocument().withData(data).withIdentifier(uri).withContentType(contentType)
+        if (timestamp) {
+            doc.setTimestamp(new Date(timestamp))
+        }
         return doc
     }
 
-    def serializeDocumentToJson(Document doc) {
-        if (doc.contentType != "application/json") {
-            log.debug("Document is not JSON, must wrap it.")
+    def serializeDocumentToJson(Document doc, String addMode) {
+        if (doc.contentType != "application/json" || addMode == storageType) {
+            log.debug("Wrapping document.")
             Gson gson = new Gson()
             def docrepr = [:]
             docrepr['data'] = new String(doc.data)
             docrepr['uri'] = doc.identifier
-            docrepr['contenttype'] = "text/plain"
+            docrepr['contenttype'] = doc.contentType
             docrepr['size'] = doc.size
             docrepr['version'] = doc.version
             return gson.toJson(docrepr)
@@ -374,6 +342,7 @@ class ElasticSearchClient extends ElasticSearch {
                 .build();
         client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
         log.debug("... connected")
+        init()
     }
 } 
 

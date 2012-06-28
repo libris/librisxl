@@ -63,6 +63,8 @@ def transform(a_json, rtype):
     #print "resten_json", resten_json
     #print "alla_json", alla_json
 
+    resten_json['records'] = 1
+
     # get_records for auth-records
     if rtype == 'auth':
         if len(alla_json) > 0 and alla_json[0].get('100', None):
