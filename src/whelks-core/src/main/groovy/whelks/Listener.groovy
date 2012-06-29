@@ -14,7 +14,6 @@ class Listener implements WhelkAware {
     Whelk otherwhelk
     FormatConverter converter
 
-    Exchanger<LinkedList<Object>> exchanger = new Exchanger<LinkedList<Object>>()
     LinkedList notifications = new LinkedList<Object>()
 
     String id = "whelkListener"
@@ -35,60 +34,61 @@ class Listener implements WhelkAware {
     void notify(URI identifier) {
         log.debug "Whelk $homewhelk.prefix notified of change in $identifier";
         notifications.push(identifier)
-        exchanger.exchange(notifications) 
-        log.debug("switched ...")
     }
 
     void notify(Date timestamp) {
         log.debug "Whelk $homewhelk.prefix notified of change since $timestamp";
         notifications.push(timestamp)
-        exchanger.exchange(notifications) 
-        log.debug("switched ...")
     }
 
     @Log
     class UpdateFetcher implements Runnable {
 
         static final int CHECK_AGAIN_DELAY = 500
+        File logfile = new File("listener.log")
+        FileWriter fw
+        BufferedWriter bw
 
         UpdateFetcher() {
             log.debug("Starting fetcher thread ...")
+            fw = new FileWriter(logfile, true)
+            bw = new BufferedWriter(fw)
+        }
+
+        void listenerLog(String message) {
+            bw.write(message+"\n")
+            bw.flush()
         }
 
         void run() {
-            log.debug("Calling log on whelk ${otherwhelk.prefix}")
-            LinkedList<Date> worklist = notifications;
-            while (worklist != null) {
+            while (notifications != null) {
                 try {
-                    log.debug("Starting work on worklist ...")
-                    while (worklist.size() > 0) {
-                        def next = worklist.peek()
-                        log.debug("Next object off list: $next")
-                        if (next instanceof Date) {
-                            def updates = otherwhelk.log(next)
-                            if (updates.size() > 0) {
-                                log.debug("Found updates.")
-                                updates.each {
-                                    worklist.removeFirstOccurrence(it.timestamp)
-                                    convert(otherwhelk.get(it.identifier));
+                    log.debug("Starting work on notifications ...")
+                        while (notifications.size() > 0) {
+                            def next = notifications.pop();
+                            listenerLog("Working off notification list with " + notifications.size() + " items. Next is $next.")
+                            log.debug("Next object off list: $next")
+                            if (next instanceof Date) {
+                                def updates = otherwhelk.log(next)
+                                if (updates.size() > 0) {
+                                    log.debug("Found updates.")
+                                    updates.each {
+                                        convert(otherwhelk.get(it.identifier));
+                                    }
+                                } else {
+                                    log.debug("Got no updates, despite notification. Waiting a while ...");
+                                    Thread.sleep(CHECK_AGAIN_DELAY)
                                 }
-                            } else {
-                                log.debug("Got no updates, despite notification. Waiting a while ...");
-                                Thread.sleep(CHECK_AGAIN_DELAY)
+                            } else if (next instanceof URI) {
+                                log.debug("Notified of document change in $next");
+                                convert(otherwhelk.get(next));
                             }
-                        } else if (next instanceof URI) {
-                            log.debug("Notified of document change in $next");
-                            worklist.removeFirstOccurrence(next)
-                            convert(otherwhelk.get(next));
-                        } else {
-                            worklist.pop()
                         }
-                    }
-                    log.debug("Done with worklist. Switching ...")
-                    exchanger.exchange(worklist)
                 } catch (Throwable t) {
                     log.error("Got exception. Keep cool and carry on ...", t)
                 }
+                // Sleep for one second after running.
+                Thread.sleep(1000)
             }
             log.error("Thread is exiting ...")
         }
