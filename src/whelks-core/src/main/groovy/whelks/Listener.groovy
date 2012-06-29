@@ -14,8 +14,8 @@ class Listener implements WhelkAware {
     Whelk otherwhelk
     FormatConverter converter
 
-    Exchanger<LinkedList<Date>> exchanger = new Exchanger<LinkedList<Date>>()
-    LinkedList notifications = new LinkedList<Date>()
+    Exchanger<LinkedList<Object>> exchanger = new Exchanger<LinkedList<Object>>()
+    LinkedList notifications = new LinkedList<Object>()
 
     String id = "whelkListener"
 
@@ -30,6 +30,13 @@ class Listener implements WhelkAware {
     void setWhelk(Whelk w) {
         this.homewhelk = w
         id = id + " for $w.prefix"
+    }
+
+    void notify(URI identifier) {
+        log.debug "Whelk $homewhelk.prefix notified of change in $identifier";
+        notifications.push(identifier)
+        exchanger.exchange(notifications) 
+        log.debug("switched ...")
     }
 
     void notify(Date timestamp) {
@@ -55,23 +62,26 @@ class Listener implements WhelkAware {
                 try {
                     log.debug("Starting work on worklist ...")
                     while (worklist.size() > 0) {
-                        def timestamp = worklist.peek()
-                        log.debug("Next timestamp off list: $timestamp")
-                        def updates = otherwhelk.log(timestamp)
-                        if (updates.size() > 0) {
-                            log.debug("Found updates.")
-                            updates.each {
-                                worklist.removeFirstOccurrence(it.timestamp)
-                                Document doc = otherwhelk.get(it.identifier);
-                                Document convertedDocument = converter.convert(doc)
-                                if (convertedDocument) {
-                                    log.debug("New document created/converted with identifier ${convertedDocument.identifier}")
-                                    homewhelk.store(convertedDocument)
+                        def next = worklist.peek()
+                        log.debug("Next object off list: $next")
+                        if (next instanceof Date) {
+                            def updates = otherwhelk.log(next)
+                            if (updates.size() > 0) {
+                                log.debug("Found updates.")
+                                updates.each {
+                                    worklist.removeFirstOccurrence(it.timestamp)
+                                    convert(otherwhelk.get(it.identifier));
                                 }
-                            }
-                        } else {
-                            log.debug("Got no updates, despite notification. Waiting a while ...")
+                            } else {
+                                log.debug("Got no updates, despite notification. Waiting a while ...");
                                 Thread.sleep(CHECK_AGAIN_DELAY)
+                            }
+                        } else if (next instanceof URI) {
+                            log.debug("Notified of document change in $next");
+                            worklist.removeFirstOccurrence(next)
+                            convert(otherwhelk.get(next));
+                        } else {
+                            worklist.pop()
                         }
                     }
                     log.debug("Done with worklist. Switching ...")
@@ -82,5 +92,16 @@ class Listener implements WhelkAware {
             }
             log.error("Thread is exiting ...")
         }
+
+        void convert(Document doc) {
+            log.debug("Converting document ...")
+            Document convertedDocument = converter.convert(doc)
+            log.debug("Done ...")
+            if (convertedDocument) {
+                log.debug("New document created/converted with identifier ${convertedDocument.identifier}")
+                    homewhelk.store(convertedDocument)
+            }
+        }
+
     }
 }

@@ -32,6 +32,7 @@ public class BatchImport {
     private String resource;
 
     private int imported = 0;
+    private long starttime = 0;
 
     public BatchImport() {}
 
@@ -86,6 +87,7 @@ public class BatchImport {
             urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);*/
             // While resumptionToken is something
             URL url = new URL(getBaseUrl());
+            this.starttime = System.currentTimeMillis();
             String resumptionToken = harvest(url, whelk);
             while (resumptionToken != null) {
                 //redefine url
@@ -168,6 +170,9 @@ public class BatchImport {
                 //System.out.println("Storing document " + doc.getIdentifier());
                 whelk.store(doc);
                 imported++;
+                if (imported % 1000 == 0) {
+                    System.out.println("" + imported + " documents imported in " + ((System.currentTimeMillis() - this.starttime)/1000) + " seconds.");
+                }
             }
         } catch (ParserConfigurationException e) {
             e.printStackTrace();

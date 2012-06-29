@@ -15,10 +15,10 @@ public class BasicDocument implements Document {
     private Set<Key> keys = new TreeSet<Key>();
     private Set<Tag> tags = new TreeSet<Tag>();
     private Set<Description> descriptions = new TreeSet<Description>();
-    private Date timestamp = null;
+    private long timestamp = 0;
     
     public BasicDocument() {
-        this.timestamp = new Date();
+        this.timestamp = new Date().getTime();
     }
     
     @Override
@@ -93,22 +93,24 @@ public class BasicDocument implements Document {
 
     @Override
     public Date getTimestampAsDate() {
-        return timestamp;
+        return new Date(timestamp);
     }
 
     @Override 
     public long getTimestamp() {
-        return timestamp.getTime();
+        return timestamp;
     }
 
     @Override
     public Document updateTimestamp() {
-        timestamp = new Date();
+        timestamp = new Date().getTime();
         return this;
     }
     
     public void setTimestamp(Date _timestamp) {
-        timestamp = _timestamp;
+        if (_timestamp != null) {
+            timestamp = _timestamp.getTime();
+        }
     }
 
     @Override

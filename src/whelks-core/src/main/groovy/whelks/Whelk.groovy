@@ -33,6 +33,7 @@ class WhelkImpl extends BasicWhelk {
             throw new WhelkRuntimeException("Document does not belong here.")
         }
         try {
+            log.debug("[$prefix] Saving document with identifier $d.identifier")
             return super.store(d)
         } catch (WhelkRuntimeException wre) {
             log.error("Failed to save document ${d.identifier}: " + wre.getMessage())
@@ -80,17 +81,13 @@ class WhelkState {
     void save() {
         log.debug("Saving whelkstate")
         def map = {}
-        println "notifiers.size: " + notifiers.size()
-        println "notifiers: " + notifiers
         map['listeners'] = listeners
         map['notifiers'] = notifiers
-        println "Map is:\n" + map
         def builder = new groovy.json.JsonBuilder() 
         builder {
             "listeners"(listeners)
             "notifiers"(notifiers)
         }
-        println "state is:\n" + builder.toPrettyString()
         def doc = this.whelk.createDocument().withData(builder.toString()).withIdentifier(new URI("/"+this.whelk.prefix+STORAGE_SUFFIX)).withContentType("application/json")
         this.whelk.store(doc)
     }

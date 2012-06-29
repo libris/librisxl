@@ -35,7 +35,7 @@ def transform(a_json, rtype):
                     if k == '100':
                         sug_json['identifier'] = "/%s/%s/%s" % (w_name, suggest_source, id001)
                     else:
-                        name = "%s_%s" % (id001, '_'.join(sug_json['100'].values()[1:]).replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]",""))
+                        name = "%s/%s" % (id001, '_'.join(sug_json['100'].values()[1:]).replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]",""))
 
                         #print "values", w_name, suggest_source, "name:", name
                         sug_json['identifier'] = "/%s/%s/%s" % (w_name, suggest_source, name)
@@ -115,7 +115,7 @@ def get_records(f_100, sug_json):
         q_all = '((%s) OR (%s)) AND %s' % (q_100, q_700, q_swe)
 
         response = bibwhelk.query(q_all) 
-        print "Count: ", response.getNumberOfHits()
+        #print "Count: ", response.getNumberOfHits()
         sug_json['records'] = response.getNumberOfHits()
 
         top_3 = {}
@@ -128,14 +128,14 @@ def get_records(f_100, sug_json):
         q_all = '(%s) OR (%s)' % (q_100, q_700)
 
         response = bibwhelk.query(q_all) 
-        print "Count: ", response.getNumberOfHits()
+        #print "Count: ", response.getNumberOfHits()
         sug_json['records'] = response.getNumberOfHits()
         for document in response.hits[:top_missing]:
             jdoc = json.loads(document.getDataAsString())
             f_001, title = top_title_tuple(jdoc['fields'])
             top_3[f_001] = title
 
-        print "top_3", top_3
+        #print "top_3", top_3
         only_top_3 = {}
         for k, v in top_3.items()[:3]:
             only_top_3[k] = v
@@ -211,7 +211,6 @@ except:
     _in_console = True
 
 
-print "Script is running ..."
 #print "console mode", _in_console
 
 if ctype == 'application/json':
@@ -236,6 +235,5 @@ if ctype == 'application/json':
             #print "Sparar dokument i whelken daaraa"
             uri = suggestwhelk.store(mydoc)
 
-print "Script finished ..."
 if _in_console:
     print r

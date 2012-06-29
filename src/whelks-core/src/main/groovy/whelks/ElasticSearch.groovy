@@ -70,7 +70,6 @@ abstract class ElasticSearch implements Index, Storage, History {
                     log.debug("mapping: " + mapping.string())
 
                     client.admin().indices().prepareCreate(index).addMapping(storageType, mapping).execute()
-                    println "Created ..."
                 }
                 break;
             } catch (NoNodeAvailableException nnae) {
@@ -97,7 +96,13 @@ abstract class ElasticSearch implements Index, Storage, History {
         def eid = translateIdentifier(doc.identifier)
         log.debug "Should use index ${index}, type ${addType} and id ${eid}"
         try {
-            IndexResponse response = client.prepareIndex(index, addType, eid).setTimestamp(""+doc.getTimestamp()).setSource(serializeDocumentToJson(doc, addType)).execute().actionGet()
+            def irb = client.prepareIndex(index, addType, eid)
+            if (addType == indexType) {
+                irb.setSource(doc.data)
+            } else {
+                irb.setTimestamp(""+doc.getTimestamp()).setSource(serializeDocumentToJson(doc))
+            }
+            IndexResponse response = irb.execute().actionGet()
             unfailure = true
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
@@ -197,7 +202,9 @@ abstract class ElasticSearch implements Index, Storage, History {
     private GetResponse getFromElastic(index, type, id) {
         GetResponse response  = null
         try {
+            log.debug("Before execution")
             response = client.prepareGet(index, type, id).setFields("_source","_timestamp").execute().actionGet()
+            log.debug("After execution")
         } catch (Exception e) { 
             log.debug("Failed to get response from server: " + e.getMessage())
         }
@@ -206,10 +213,11 @@ abstract class ElasticSearch implements Index, Storage, History {
 
     @Override
     Document get(URI uri) {
+        log.debug("Received GET request for $uri")
         GetResponse response = null
-        GetResponse metaresponse = null
         int failcount = 0
         while (response == null) {
+            log.debug("Awaiting response ...")
             response = getFromElastic(index, storageType, translateIdentifier(uri))
             if (response == null) {
                 log.debug("Retrying server connection ...")
@@ -325,41 +333,16 @@ abstract class ElasticSearch implements Index, Storage, History {
     }
 
     Document deserializeJsonDocument(source, uri, timestamp) {
-        def slurper = new JsonSlurper()
-        def slurped = slurper.parseText(new String(source))
-        def contentType = "application/json"
-        Document doc = null
-        if (slurped.data) {
-            def data = slurped.data
-
-            def version = slurped.version
-            def size = slurped.size
-            contentType = slurped.contenttype
-            doc = new BasicDocument().withData(data).withIdentifier(uri).withContentType(contentType)
-        } else {
-            doc = new BasicDocument().withData(source).withIdentifier(uri).withContentType(contentType)
-        }
-        if (timestamp) {
-            doc.setTimestamp(new Date(timestamp))
-        }
+        Gson gson = new Gson()
+        Document doc = gson.fromJson(new String(source), BasicDocument.class)
         return doc
     }
 
-    def serializeDocumentToJson(Document doc, String addMode) {
-        if (doc.contentType != "application/json" || addMode == storageType) {
-            log.debug("Wrapping document.")
-            Gson gson = new Gson()
-            def docrepr = [:]
-            docrepr['data'] = new String(doc.data)
-            docrepr['uri'] = doc.identifier
-            docrepr['contenttype'] = doc.contentType
-            docrepr['size'] = doc.size
-            docrepr['version'] = doc.version
-            return gson.toJson(docrepr)
-        }
-        return doc.data
+    def serializeDocumentToJson(Document doc) {
+        Gson gson = new Gson()
+        def json = gson.toJson(doc)
+        return json
     }
-
 }
 
 @Log
