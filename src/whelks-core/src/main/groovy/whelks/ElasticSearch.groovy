@@ -41,37 +41,63 @@ abstract class ElasticSearch implements Index, Storage, History {
 
     boolean enabled = true
     String id = "elasticsearch"
-    int MAX_TRIES = 1000
+    int WARN_AFTER_TRIES = 1000
     int RETRY_TIMEOUT = 300
+    int MAX_RETRY_TIMEOUT = 60*60*1000
 
-    String defaultType = "record"
+    String URI_SEPARATOR = "::"
+
+    String indexType = "record"
     String storageType = "document"
 
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
     def init() {
-        log.debug("Creating index ...")
-        XContentBuilder mapping = jsonBuilder().startObject()
-            .startObject(index)
-            .startObject("_timestamp")
-            .field("enabled", true)
-            .field("store", true)
-            .endObject()
-            .endObject()
-            .endObject()
-        println "mapping: " + mapping.string()
+        int failcount = 0
+        while (true) {
+            try {
+                if (!client.admin().indices().prepareExists(index).execute().actionGet().exists()) {
+                    log.debug("Creating index ...")
+                    XContentBuilder mapping = jsonBuilder().startObject()
+                    .startObject(index)
+                    .startObject("_timestamp")
+                    .field("enabled", true)
+                    .field("store", true)
+                    .endObject()
+                    .endObject()
+                    .endObject()
+                    log.debug("mapping: " + mapping.string())
 
-        client.admin().indices().prepareCreate(index).addMapping(storageType, mapping).execute()
-        println "Created ..."
+                    client.admin().indices().prepareCreate(index).addMapping(storageType, mapping).execute()
+                    println "Created ..."
+                }
+                break;
+            } catch (NoNodeAvailableException nnae) {
+                log.debug("Retrying elasticsearch connection ...")
+                if (failcount++ > WARN_AFTER_TRIES) {
+                    log.warn("Failed to store document after $failcount attempts.")
+                }
+                Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
+            }
+        }
+        /*
+        def imd = client.admin().cluster().prepareState().setFilterIndices(index).execute().actionGet().getState().getMetaData().index(index)
+        def types = []
+        for (def mmd : imd.mappings) {
+            println "mmd: " + mmd
+            //types.add(mmd.type())
+        }
+        println "Types: " + types
+        */
     }
 
     def boolean add(Document doc, String addType) {
         boolean unfailure = false
-        def dict = determineIndexAndType(doc.identifier, addType)
-        log.debug "Should use index ${dict.index}, type ${dict.type} and id ${dict.id}"
+        def eid = translateIdentifier(doc.identifier)
+        log.debug "Should use index ${index}, type ${addType} and id ${eid}"
         try {
-            IndexResponse response = client.prepareIndex(dict.index, dict.type, dict.id).setTimestamp(""+doc.getTimestamp()).setSource(serializeDocumentToJson(doc, addType)).execute().actionGet()
+            IndexResponse response = client.prepareIndex(index, addType, eid).setTimestamp(""+doc.getTimestamp()).setSource(serializeDocumentToJson(doc, addType)).execute().actionGet()
             unfailure = true
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
@@ -86,17 +112,16 @@ abstract class ElasticSearch implements Index, Storage, History {
     void addLoop(Document doc, String type) {
         int failcount = 0
         while (!add(doc, type)) {
-            if (failcount++ > MAX_TRIES) {
-                log.error("Failed to store document after $MAX_TRIES attempts")
-                break;
+            if (failcount++ > WARN_AFTER_TRIES) {
+                log.warn("Failed to store document after $failcount attempts.")
             }
-            Thread.sleep(RETRY_TIMEOUT + failcount)
+            Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
         }
     }
 
     @Override
     void index(Document doc) {
-        addLoop(doc, defaultType)
+        addLoop(doc, indexType)
     }
 
     void delete(URI uri) {
@@ -129,6 +154,22 @@ abstract class ElasticSearch implements Index, Storage, History {
         return true
     }
 
+    def translateIdentifier(URI uri) {
+        def pathparts = uri.path.split("/")
+        def idelements = []
+        pathparts.eachWithIndex() { part, i ->
+            if (i > 1) {
+                idelements.add(part)
+            }
+        }
+        return idelements.join(URI_SEPARATOR)
+    }
+
+    URI translateIndexIdTo(id) {
+        return new URI("/"+index+"/"+id.replaceAll(URI_SEPARATOR, "/"))
+    }
+
+    /*
     def determineIndexAndType(URI uri, String fallbackType) {
         log.debug "uripath: ${uri.path}"
         def pathparts = uri.path.split("/").reverse()
@@ -151,32 +192,31 @@ abstract class ElasticSearch implements Index, Storage, History {
         dict['type'] = (type ? type : fallbackType)
         return dict
     }
+    */
 
     private GetResponse getFromElastic(index, type, id) {
         GetResponse response  = null
         try {
             response = client.prepareGet(index, type, id).setFields("_source","_timestamp").execute().actionGet()
         } catch (Exception e) { 
-            log.debug("Failed to get response from server.", e)
+            log.debug("Failed to get response from server: " + e.getMessage())
         }
         return response
     }
 
     @Override
     Document get(URI uri) {
-        def dict = determineIndexAndType(uri, storageType)
         GetResponse response = null
         GetResponse metaresponse = null
         int failcount = 0
         while (response == null) {
-            response = getFromElastic(dict['index'], dict['type'], dict['id'])
+            response = getFromElastic(index, storageType, translateIdentifier(uri))
             if (response == null) {
                 log.debug("Retrying server connection ...")
-                if (failcount++ > MAX_TRIES) {
-                    log.error("Failed to connect to elasticsearch after $MAX_TRIES attempts.")
-                    break
+                if (failcount++ > WARN_AFTER_TRIES) {
+                    log.warn("Failed to connect to elasticsearch after $failcount attempts.")
                 }
-                Thread.sleep(RETRY_TIMEOUT + failcount)
+                Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
             } 
         }
         if (response && response.exists()) {
@@ -199,16 +239,16 @@ abstract class ElasticSearch implements Index, Storage, History {
         if (response) {
             log.debug "Total log hits: ${response.hits.totalHits}"
             response.hits.hits.each { 
-                def uri = new URI("/" + it.index + (it.type == this.defaultType || it.type == this.storageType ? "" : "/" + it.type) + "/" + it.id)
-                results.add(new LogEntry(uri, new Date(it.field("_timestamp").value)))
+                results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
             }
         }
 
         return results
     }
 
+
     def performQuery(Query q) {
-        def srb = client.prepareSearch(index)
+        def srb = client.prepareSearch(index).setTypes(indexType)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
         def query = queryString(q.query)
@@ -252,11 +292,10 @@ abstract class ElasticSearch implements Index, Storage, History {
              response = performQuery(q)
              if (!response) {
                  log.debug("Retrying server connection ...")
-                 if (failcount++ > MAX_TRIES) {
-                    log.error("Failed to connect to elasticsearch after $MAX_TRIES attempts.")
-                     break
+                 if (failcount++ > WARN_AFTER_TRIES) {
+                    log.warn("Failed to connect to elasticsearch after $failcount attempts.")
                  }
-                 Thread.sleep(RETRY_TIMEOUT + failcount)
+                 Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
              }
         }
 
@@ -277,8 +316,7 @@ abstract class ElasticSearch implements Index, Storage, History {
     }
 
     Document createDocumentFromHit(hit) {
-        def u = new URI("/" + hit.index + (hit.type == this.defaultType || hit.type == this.storageType ? "" : "/" + hit.type) + "/" + hit.id)
-        return new BasicDocument().withData(hit.source()).withIdentifier(u)
+        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
     }
 
     @Override
