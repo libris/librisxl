@@ -1,6 +1,7 @@
 package se.kb.libris.whelks
 
 import groovy.util.logging.Slf4j as Log
+import groovy.transform.Synchronized
 
 import java.net.URI
 
@@ -40,6 +41,77 @@ class WhelkImpl extends BasicWhelk {
         }
 
         return null
+    }
+
+    @Override
+    public Iterable<LogEntry> log(Date since) {
+        for (Component c : getComponents()) {
+            if (c instanceof History) {
+                return new LogIterable(((History)c).updates(since), c, since);
+            }
+        }
+        throw new WhelkRuntimeException("Whelk has no index for searching");
+    }
+}
+
+@Log
+class LogIterable<LogEntry> implements Iterable {
+    History history
+    Collection<LogEntry> list
+    boolean refilling = false
+    boolean incomplete = false
+    int offset = 0
+    Object query
+
+    LogIterable(Collection<LogEntry> i, History h, Object q) {
+        this.list = i
+        this.history = h
+        this.query = q
+        this.incomplete = (list.size == History.BATCH_SIZE)
+    }
+
+    Iterator<LogEntry> iterator() {
+        return new LogIterator()
+    }
+
+    class LogIterator<LogEntry> implements Iterator {
+
+        Iterator iter
+
+        LogIterator() {
+            iter = list.iterator()
+        }
+
+        boolean hasNext() {
+            if (!iter.hasNext() && incomplete) {
+                refill()
+            }
+            return iter.hasNext()
+        }
+
+        @Synchronized
+        LogEntry next() {
+            LogEntry n = iter.next();
+            iter.remove();
+            if (!iter.hasNext() && incomplete && !refilling) {
+               refill()
+            }
+            return n
+        }
+
+        void remove() {
+            throw new UnsupportedOperationException("Not supported");
+        }
+
+        @Synchronized
+        private void refill() {
+            refilling = true
+            offset = offset + History.BATCH_SIZE
+            list = history.updates(query, offset)
+            incomplete = (list.size() == History.BATCH_SIZE)
+            iter = list.iterator()
+            refilling = false
+        }
     }
 }
 

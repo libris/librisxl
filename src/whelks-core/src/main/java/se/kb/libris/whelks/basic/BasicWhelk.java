@@ -50,7 +50,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         
         // before triggers
         for (Trigger t: getTriggers())
-            t.beforeStore(d);
+            if (t.isEnabled()) { t.beforeStore(d); }
         
         // Make sure document timestamp is updated before storing.
         d.updateTimestamp();
@@ -68,7 +68,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
         // after triggers
         for (Trigger t: getTriggers())
-            t.afterStore(d);
+            if (t.isEnabled()) { t.afterStore(d); }
         
         return d.getIdentifier();
     }
@@ -153,13 +153,9 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
     @Override
     public Iterable<LogEntry> log(Date since) {
-        for (Component c : getComponents()) {
-            if (c instanceof History) {
-                return ((History)c).updates(since);
-            }
-        }
-        throw new WhelkRuntimeException("Whelk has no index for searching");
+        throw new UnsupportedOperationException("Not supported yet.");
     }
+
 
     @Override
     public void destroy() {

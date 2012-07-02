@@ -44,6 +44,7 @@ class RestManager extends Application {
         authwhelk.addPlugin(new SearchRestlet())
         authwhelk.addPlugin(new ImportRestlet())
         authwhelk.addPlugin(new DocumentRestlet())
+        authwhelk.addPlugin(new LogRestlet())
         suggestwhelk.addPlugin(new SearchRestlet())
         suggestwhelk.addPlugin(new DocumentRestlet())
         def acplugin = new AutoComplete()

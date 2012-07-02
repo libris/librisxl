@@ -3,6 +3,7 @@ package se.kb.libris.whelks;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.*;
+import se.kb.libris.whelks.plugin.Plugin;
 
 public interface Whelk {
     // storage
@@ -23,6 +24,7 @@ public interface Whelk {
     public Iterable<LogEntry> log(URI identifier);
     public Iterable<LogEntry> log(Date since);
     public String getPrefix();
+    public Iterable<? extends Plugin> getPlugins();
     
     // factory methods
     public Document createDocument();

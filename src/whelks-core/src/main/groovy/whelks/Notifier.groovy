@@ -1,15 +1,28 @@
 package se.kb.libris.whelks.plugin
 
+import groovy.util.logging.Slf4j as Log
+
 import se.kb.libris.whelks.*
 
+@Log
 class Notifier extends AbstractTrigger {
 
     Listener listener
 
     String id = "notificationTrigger"
+    boolean enabled = true
 
     Notifier(Listener l) {
         this.listener = l
+    }
+
+    void enable() {
+        log.debug("Enabling notifier.")
+        this.enabled = true
+    }
+    void disable() {
+        log.debug("Disabling notifier.")
+        this.enabled = false
     }
 
     @Override

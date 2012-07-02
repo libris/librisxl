@@ -234,10 +234,9 @@ abstract class ElasticSearch implements Index, Storage, History {
         return null
     }
 
-    def Iterable<LogEntry> updates(Date since) {
-        def srb = client.prepareSearch(index).addField("_timestamp").setTypes(storageType)
+    def Collection<LogEntry> updates(Date since, int start = 0) {
+        def srb = client.prepareSearch(index).addField("_timestamp").setTypes(storageType).setFrom(start).setSize(BATCH_SIZE).addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
         def query = rangeQuery("_timestamp").gte(since.getTime())
-        //def query = rangeQuery("fields.001").gte("191502")
         srb.setQuery(query)
         log.debug("Logquery: " + srb)
         def response = srb.execute().actionGet()

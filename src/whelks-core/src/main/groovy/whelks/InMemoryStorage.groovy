@@ -8,6 +8,10 @@ class InMemoryStorage implements Storage {
     def storage = {}
     String id = "inmemorystorage"
     Whelk whelk
+    boolean enabled = true
+    boolean isEnabled() { return enabled }
+    void enable() {this.enabled = true}
+    void disable() {this.enabled = false}
 
     void store(Document d) {
         storage[d.identifier] = d

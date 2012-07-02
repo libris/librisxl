@@ -173,6 +173,28 @@ class ImportRestlet extends BasicWhelkAPI {
     }
 }
 
+@Log
+class LogRestlet extends BasicWhelkAPI {
+    def pathEnd = "_log"
+    @Override
+    def void handle(Request request, Response response) {
+        def query = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def since = query.get("since")
+        def date = Date.parse("yyyy-MM-dd HH:mm", since)
+        def results = this.whelk.log(date)
+        def stringResult = new StringBuilder()
+        int count = 0
+        results.each {
+            count++
+            log.debug("${it.identifier} (${it.timestamp})")
+            //stringResult << it.identifier << " (" << it.timestamp << ")" << "\n"
+        }
+        stringResult.insert(0, "Hittade $count uppdaterade dokument sedan $date\n")
+
+        response.setEntity(stringResult.toString(), MediaType.TEXT_PLAIN)
+    }
+}
+
 @Log 
 class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitialisable {
 

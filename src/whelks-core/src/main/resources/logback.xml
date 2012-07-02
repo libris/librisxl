@@ -7,7 +7,11 @@
     </encoder>
   </appender>
 
-  <root level="info">
+  <logger name="se.kb.libris.whelks.component">
+      <level value="info"/>
+  </logger>
+
+  <root level="debug">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

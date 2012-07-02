@@ -15,6 +15,7 @@ import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.Iso2709Serializer;
 import se.kb.libris.conch.converter.MarcJSONConverter;
 import se.kb.libris.whelks.*;
+import se.kb.libris.whelks.plugin.*;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
@@ -78,6 +79,11 @@ public class BatchImport {
     // END possible authentication alternative
     public int doImport(Whelk whelk) {
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
+        for (Plugin p : whelk.getPlugins()) {
+            if (p instanceof Notifier) {
+                p.disable();
+            }
+        }
         try {
             /*Properties properties = new Properties(); properties.load(new FileInputStream("resources/whelks-core.properties")); String
             authString = properties.getProperty("authString");
@@ -97,16 +103,19 @@ public class BatchImport {
             
             //System.out.println("RESTOK: " + resumptionToken);
             // Loop through harvest
-            
-
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         /*} catch (FileNotFoundException e) {
             e.printStackTrace();*/
+        } finally {
+            for (Plugin p : whelk.getPlugins()) {
+                if (p instanceof Notifier) {
+                    p.enable();
+                }
+            }
         }
-
         return imported;
     }
 

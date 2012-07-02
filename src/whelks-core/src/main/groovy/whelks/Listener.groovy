@@ -16,14 +16,28 @@ class Listener implements WhelkAware {
 
     LinkedList notifications = new LinkedList<Object>()
 
+    final int DEFAULT_NUMBER_OF_FETCHERS = 1
     String id = "whelkListener"
+    boolean enabled = true
+    boolean isEnabled() {return enabled}
+    void disable() {this.enabled = false}
+
+    Listener(Whelk n, FormatConverter conv, int numberOfFetchers) {
+        startup(n, conv, numberOfFetchers)
+    }
 
     Listener(Whelk n, FormatConverter conv) {
+        startup(n, conv, DEFAULT_NUMBER_OF_FETCHERS)
+    }
+
+    private void startup(Whelk n, FormatConverter conv, int numberOfFetchers) {
         this.otherwhelk = n
         this.converter = conv
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
         id = id + ", listening to $otherwhelk.prefix"
         new Thread(new UpdateFetcher()).start()
+        // TODO: Fix this.
+        //notify(lastCheckedDate)
     }
 
     void setWhelk(Whelk w) {
@@ -41,10 +55,16 @@ class Listener implements WhelkAware {
         notifications.push(timestamp)
     }
 
+    void enable() {
+        this.enabled = true
+        // TODO: Fix this.
+        //notify(lastCheckedDate)
+    }
+
     @Log
     class UpdateFetcher implements Runnable {
 
-        static final int CHECK_AGAIN_DELAY = 500
+        final int CHECK_AGAIN_DELAY = 500
         File logfile = new File("listener.log")
         FileWriter fw
         BufferedWriter bw
@@ -63,7 +83,6 @@ class Listener implements WhelkAware {
         void run() {
             while (notifications != null) {
                 try {
-                    log.debug("Starting work on notifications ...")
                         while (notifications.size() > 0) {
                             def next = notifications.pop();
                             listenerLog("Working off notification list with " + notifications.size() + " items. Next is $next.")
