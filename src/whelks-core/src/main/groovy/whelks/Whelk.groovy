@@ -115,18 +115,6 @@ class LogIterable<LogEntry> implements Iterable {
     }
 }
 
-@Log
-class ListeningWhelk extends WhelkImpl {
-    def state
-
-    ListeningWhelk(pfx) {
-        super(pfx)
-        state = new WhelkState(this)
-        state.load()
-    }
-
-
-}
 
 @Log
 class WhelkState {

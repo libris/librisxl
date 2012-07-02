@@ -148,17 +148,6 @@ abstract class ElasticSearch implements Index, Storage, History {
             }
     }
 
-    boolean isJSON(data) {
-        Gson gson = new Gson()
-        try {
-            gson.fromJson(new String(data), Object.class)
-        } catch (JsonSyntaxException jse) {
-            log.debug("Data was not appliction/json")
-            return false
-        }
-        return true
-    }
-
     def translateIdentifier(URI uri) {
         def pathparts = uri.path.split("/")
         def idelements = []
@@ -173,31 +162,6 @@ abstract class ElasticSearch implements Index, Storage, History {
     URI translateIndexIdTo(id) {
         return new URI("/"+index+"/"+id.replaceAll(URI_SEPARATOR, "/"))
     }
-
-    /*
-    def determineIndexAndType(URI uri, String fallbackType) {
-        log.debug "uripath: ${uri.path}"
-        def pathparts = uri.path.split("/").reverse()
-        int maxpart = pathparts.size() - 2
-        def dict = [:]
-        def typeelements = []
-        pathparts.eachWithIndex() { part, i ->
-            if (i == 0) {
-                dict['id'] = part
-            } else if (i == maxpart) {
-                dict['index'] = part
-            } else if (i < maxpart) {
-                typeelements.add(part)
-            }
-        }
-        if (!dict['index']) {
-            dict['index'] = index
-        }
-        def type = typeelements.join("_")
-        dict['type'] = (type ? type : fallbackType)
-        return dict
-    }
-    */
 
     private GetResponse getFromElastic(index, type, id) {
         GetResponse response  = null
@@ -235,18 +199,26 @@ abstract class ElasticSearch implements Index, Storage, History {
     }
 
     def Collection<LogEntry> updates(Date since, int start = 0) {
-        def srb = client.prepareSearch(index).addField("_timestamp").setTypes(storageType).setFrom(start).setSize(BATCH_SIZE).addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
-        def query = rangeQuery("_timestamp").gte(since.getTime())
-        srb.setQuery(query)
-        log.debug("Logquery: " + srb)
-        def response = srb.execute().actionGet()
-        log.debug("Response: " + response)
-        //return null
+        boolean success = false
         def results = new ArrayList<LogEntry>()
-        if (response) {
-            log.debug "Total log hits: ${response.hits.totalHits}"
-            response.hits.hits.each { 
-                results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
+        while (!success) {
+            try {
+                def srb = client.prepareSearch(index).addField("_timestamp").setTypes(storageType).setFrom(start).setSize(BATCH_SIZE).addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
+                def query = rangeQuery("_timestamp").gte(since.getTime())
+                srb.setQuery(query)
+                log.debug("Logquery: " + srb)
+                def response = srb.execute().actionGet()
+                log.debug("Response: " + response)
+                //return null
+                if (response) {
+                    log.debug "Total log hits: ${response.hits.totalHits}"
+                    response.hits.hits.each { 
+                        results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
+                    }
+                }
+                success = true
+            } catch (NoNodeAvailableException nnae) {
+                log.trace("Updates trapped no node available exception.")
             }
         }
 
@@ -255,30 +227,35 @@ abstract class ElasticSearch implements Index, Storage, History {
 
 
     def performQuery(Query q) {
-        def srb = client.prepareSearch(index).setTypes(indexType)
+        def response = null
+        try {
+            def srb = client.prepareSearch(index).setTypes(indexType)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
-        def query = queryString(q.query)
-        if (q.fields) {
-            q.fields.each {
-                query = query.field(it)
+            def query = queryString(q.query)
+            if (q.fields) {
+                q.fields.each {
+                    query = query.field(it)
+                }
             }
-        }
-        srb.setQuery(query)
-        if (q.sorting) {
-            q.sorting.each {
-                srb = srb.addSort(it.key, (it.value && it.value.equalsIgnoreCase('desc') ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
+            srb.setQuery(query)
+            if (q.sorting) {
+                q.sorting.each {
+                    srb = srb.addSort(it.key, (it.value && it.value.equalsIgnoreCase('desc') ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
+                }
+            } 
+            if (q.highlights) {
+                srb = srb.setHighlighterPreTags("").setHighlighterPostTags("")
+                q.highlights.each {
+                    srb = srb.addHighlightedField(it)
+                }
             }
+            log.debug("SearchRequestBuilder: " + srb)
+            response = srb.execute().actionGet()
+            log.debug("SearchResponse: " + response)
+        } catch (NoNodeAvailableException nnae) {
+            log.trace("Query trapped no node available.")
         } 
-        if (q.highlights) {
-            srb = srb.setHighlighterPreTags("").setHighlighterPostTags("")
-            q.highlights.each {
-                srb = srb.addHighlightedField(it)
-            }
-        }
-        log.debug("SearchRequestBuilder: " + srb)
-        def response = srb.execute().actionGet()
-        log.debug("SearchResponse: " + response)
         return response
     }
 
@@ -296,14 +273,14 @@ abstract class ElasticSearch implements Index, Storage, History {
         def response = null
         int failcount = 0
         while (!response) {
-             response = performQuery(q)
-             if (!response) {
-                 log.debug("Retrying server connection ...")
-                 if (failcount++ > WARN_AFTER_TRIES) {
+            response = performQuery(q)
+            if (!response) {
+                log.debug("Retrying server connection ...")
+                if (failcount++ > WARN_AFTER_TRIES) {
                     log.warn("Failed to connect to elasticsearch after $failcount attempts.")
-                 }
-                 Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
-             }
+                }
+                Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
+            }
         }
 
         def results = new BasicSearchResult(response.hits.totalHits)
