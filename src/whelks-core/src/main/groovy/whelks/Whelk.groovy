@@ -128,9 +128,10 @@ class ImportWhelk extends BasicWhelk {
             def prefix = args[0]
             def resource = (args.length > 1 ? args[1] : args[0])
             def whelk = new ImportWhelk(prefix)
+            def date = (args.length > 2 ? new Date(new Long(args[2])) : null)
             whelk.addPlugin(new ElasticSearchClient(prefix))
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
-            importer.doImport(whelk)
+            importer.doImport(whelk, date)
         } else {
             println "Supply whelk-prefix and resource-name as arguments to commence import."
         }

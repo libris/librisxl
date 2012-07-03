@@ -2,10 +2,9 @@ package se.kb.libris.whelks.imports;
 
 import java.io.*;
 import java.net.*;
-import java.util.LinkedList;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.*;
+import java.util.logging.*;
+import java.text.*;
 import org.apache.commons.codec.binary.Base64;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.Controlfield;
@@ -42,9 +41,15 @@ public class BatchImport {
         this.resource = resource;
     }
 
-    private String getBaseUrl() {
+    private String getBaseUrl(Date from) {
         //return "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml&from=2012-05-23T15:21:27Z";
-        return "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml";
+        String url = "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml";
+        if (from != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+            url = url + sdf.format(from);
+        }
+        System.out.println("URL: " + url);
+        return url;
     }
 
     public void setResource(String r) { this.resource = r; }
@@ -77,7 +82,7 @@ public class BatchImport {
             });
     }*/
     // END possible authentication alternative
-    public int doImport(Whelk whelk) {
+    public int doImport(Whelk whelk, Date from) {
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
         for (Plugin p : whelk.getPlugins()) {
             if (p instanceof Notifier) {
@@ -92,7 +97,7 @@ public class BatchImport {
             urlConnection = url.openConnection();
             urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);*/
             // While resumptionToken is something
-            URL url = new URL(getBaseUrl());
+            URL url = new URL(getBaseUrl(from));
             this.starttime = System.currentTimeMillis();
             String resumptionToken = harvest(url, whelk);
             while (resumptionToken != null) {
