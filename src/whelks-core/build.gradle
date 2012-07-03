@@ -4,7 +4,7 @@ apply plugin: 'jetty'
 apply plugin: 'application'
 
 
-mainClassName = 'se.kb.libris.whelks.imports.BatchImport'
+mainClassName = 'se.kb.libris.whelks.ImportWhelk'
 
 tasks.withType(GroovyCompile) {
   groovyOptions.encoding = 'utf-8'

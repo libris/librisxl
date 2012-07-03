@@ -19,7 +19,7 @@ class Listener implements WhelkAware {
     final int DEFAULT_NUMBER_OF_FETCHERS = 1
     final int STATE_SAVE_INTERVAL = 10000
     String id = "whelkListener"
-    boolean enabled = true
+    boolean enabled = false
     boolean isEnabled() {return enabled}
     void disable() {this.enabled = false}
     Date lastUpdate = null
@@ -38,6 +38,20 @@ class Listener implements WhelkAware {
         this.converter = conv
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
         id = id + ", listening to $otherwhelk.prefix"
+    }
+
+    void setWhelk(Whelk w) {
+        this.homewhelk = w
+        id = id + " for $w.prefix"
+        try {
+            lastUpdate = new Date(new Long(new File("/tmp/whelk_listener_state_${this.homewhelk.prefix}-${this.otherwhelk.prefix}").text))
+        } catch (Exception e) {
+            log.info("Didn't find a valid state-file.")
+        }
+        if (!lastUpdate) {
+            log.debug("Didn't find a last updated time. Setting epoch.")
+            lastUpdate = new Date(0L)
+        }
         new Thread(new UpdateFetcher()).start()
         Thread.start {
             Date lastSavedUpdate = lastUpdate
@@ -49,20 +63,6 @@ class Listener implements WhelkAware {
                     lastSavedUpdate = lastUpdate
                 }
             }
-        }
-    }
-
-    void setWhelk(Whelk w) {
-        this.homewhelk = w
-        id = id + " for $w.prefix"
-        try {
-            lastUpdate = new Date(new Long(new File("/tmp/whelk_listener_state_${this.homewhelk.prefix}-${this.otherwhelk.prefix}").text))
-        } catch (Exception e) {
-            log.info("Failed to read statefile. Ignoring.")
-        }
-        if (!lastUpdate) {
-            log.debug("Didn't find a last updated time. Setting epoch.")
-            lastUpdate = new Date(0L)
         }
         notify(lastUpdate)
     }
@@ -106,7 +106,7 @@ class Listener implements WhelkAware {
         void run() {
             while (notifications != null) {
                 try {
-                    while (notifications.size() > 0) {
+                    while (enabled && notifications.size() > 0) {
                         def next = notifications.pop()
                         listenerLog("Working off notification list with " + notifications.size() + " items. Next is $next.")
                         log.debug("Next object off list: $next")

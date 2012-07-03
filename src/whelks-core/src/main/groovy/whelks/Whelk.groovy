@@ -115,6 +115,28 @@ class LogIterable<LogEntry> implements Iterable {
     }
 }
 
+@Log
+class ImportWhelk extends BasicWhelk {
+
+    ImportWhelk(pfx) {
+        super(pfx)
+        log.info("Starting whelk '$pfx' in standalone import mode.")
+    }
+
+    static main(args) {
+        if (args) {
+            def prefix = args[0]
+            def resource = (args.length > 1 ? args[1] : args[0])
+            def whelk = new ImportWhelk(prefix)
+            whelk.addPlugin(new ElasticSearchClient(prefix))
+            def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
+            importer.doImport(whelk)
+        } else {
+            println "Supply whelk-prefix and resource-name as arguments to commence import."
+        }
+    }
+}
+
 
 @Log
 class WhelkState {
