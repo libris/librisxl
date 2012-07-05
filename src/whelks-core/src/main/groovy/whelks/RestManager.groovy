@@ -55,8 +55,10 @@ class RestManager extends Application {
         // Add other plugins 
         def formatParameters = ["script": "sug_json.py", "bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
         
+        /*
         suggestwhelk.addPlugin(new Listener(bibwhelk, 5, PythonRunnerFormatConverter.class, formatParameters))
         suggestwhelk.addPlugin(new Listener(authwhelk, 5, PythonRunnerFormatConverter.class, formatParameters))
+        */
 
         whelks << bibwhelk
         whelks << authwhelk
