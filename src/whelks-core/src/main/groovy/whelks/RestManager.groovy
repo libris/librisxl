@@ -8,7 +8,7 @@ import org.restlet.data.*
 import org.restlet.representation.*
 import org.restlet.routing.*
 
-import se.kb.libris.whelks.component.ElasticSearchClient
+import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.api.*
@@ -36,6 +36,7 @@ class RestManager extends Application {
         bibwhelk.addPlugin(new ElasticSearchClient(bibwhelk.prefix))
         authwhelk.addPlugin(new ElasticSearchClient(authwhelk.prefix))
         suggestwhelk.addPlugin(new ElasticSearchClient(suggestwhelk.prefix))
+        //suggestwhelk.addPlugin(new InMemoryStorage())
 
         // Add APIs
         bibwhelk.addPlugin(new SearchRestlet())
@@ -52,12 +53,10 @@ class RestManager extends Application {
         suggestwhelk.addPlugin(acplugin)
 
         // Add other plugins 
-        def formatRequirements = ["bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
-        def formatConverter = new PythonRunnerFormatConverter("sug_json.py", formatRequirements)
-        /*
-        suggestwhelk.addPlugin(new Listener(bibwhelk, formatConverter))
-        suggestwhelk.addPlugin(new Listener(authwhelk, formatConverter))
-        */
+        def formatParameters = ["script": "sug_json.py", "bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
+        
+        suggestwhelk.addPlugin(new Listener(bibwhelk, 5, PythonRunnerFormatConverter.class, formatParameters))
+        suggestwhelk.addPlugin(new Listener(authwhelk, 5, PythonRunnerFormatConverter.class, formatParameters))
 
         whelks << bibwhelk
         whelks << authwhelk

@@ -1,11 +1,14 @@
 package se.kb.libris.whelks.component
 
+import groovy.util.logging.Slf4j as Log
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 
+@Log
 class InMemoryStorage implements Storage {
-    def storage = {}
+    def storage = new HashMap<URI, Document>()
     String id = "inmemorystorage"
     Whelk whelk
     boolean enabled = true
@@ -14,11 +17,13 @@ class InMemoryStorage implements Storage {
     void disable() {this.enabled = false}
 
     void store(Document d) {
-        storage[d.identifier] = d
+        println "Extra allt ..."
+        log.debug("Saving document $d.identifier to memory.")
+        storage.put(d.identifier, d)
     }
 
     Document get(URI uri) {
-        return storage[uri]
+        return storage.get(uri)
     }
 
     void delete(URI uri) {

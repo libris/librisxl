@@ -1,8 +1,7 @@
 package se.kb.libris.whelks.plugin
 
 import groovy.util.logging.Slf4j as Log
-
-import java.util.concurrent.Exchanger
+import groovy.transform.Synchronized
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
@@ -14,31 +13,30 @@ class Listener implements WhelkAware {
     Whelk otherwhelk
     FormatConverter converter
 
-    LinkedList notifications = new LinkedList<Object>()
+    List identifiers = Collections.synchronizedList(new LinkedList())
 
-    final int DEFAULT_NUMBER_OF_FETCHERS = 1
+    final int DEFAULT_NUMBER_OF_HANDLERS = 1
     final int STATE_SAVE_INTERVAL = 10000
+    int numberOfHandlers = DEFAULT_NUMBER_OF_HANDLERS
+
     String id = "whelkListener"
-    boolean enabled = false
+    boolean enabled = true
     boolean isEnabled() {return enabled}
     void disable() {this.enabled = false}
     Date lastUpdate = null
 
+    Class formatConverterClass
+    Map converterParameters
 
-    Listener(Whelk n, FormatConverter conv, int numberOfFetchers) {
-        startup(n, conv, numberOfFetchers)
-    }
-
-    Listener(Whelk n, FormatConverter conv) {
-        startup(n, conv, DEFAULT_NUMBER_OF_FETCHERS)
-    }
-
-    private void startup(Whelk n, FormatConverter conv, int numberOfFetchers) {
+    Listener(Whelk n, int nrOfHandlers, Class formatConverterClass, Map converterParameters) {
         this.otherwhelk = n
-        this.converter = conv
+        this.numberOfHandlers = nrOfHandlers
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
+        this.formatConverterClass = formatConverterClass
+        this.converterParameters = converterParameters
         id = id + ", listening to $otherwhelk.prefix"
     }
+
 
     void setWhelk(Whelk w) {
         this.homewhelk = w
@@ -52,7 +50,10 @@ class Listener implements WhelkAware {
             log.debug("Didn't find a last updated time. Setting epoch.")
             lastUpdate = new Date(0L)
         }
-        new Thread(new UpdateFetcher()).start()
+        log.info("Starting $numberOfHandlers handlers.")
+        for (int i = 0; i < this.numberOfHandlers; i++) {
+            new Thread(new UpdateHandler(formatConverterClass, converterParameters)).start()
+        }
         Thread.start {
             Date lastSavedUpdate = lastUpdate
             while (true) {
@@ -64,17 +65,47 @@ class Listener implements WhelkAware {
                 }
             }
         }
-        notify(lastUpdate)
+        Thread.start {
+            notify(lastUpdate)
+        }
     }
 
     void notify(URI identifier) {
-        log.debug "Whelk $homewhelk.prefix notified of change in $identifier"
-        notifications.push(identifier)
+        log.trace "Whelk $homewhelk.prefix notified of change in $identifier"
+        if (!identifiers.contains(identifier)) {
+            identifiers.push(identifier)
+        }
     }
 
     void notify(Date timestamp) {
-        log.debug "Whelk $homewhelk.prefix notified of change since $timestamp"
-        notifications.push(timestamp)
+        log.trace "Whelk $homewhelk.prefix notified of change since $timestamp"
+        boolean updatesReceived = false
+        while (!updatesReceived) {
+            def updates = otherwhelk.log(timestamp)
+            def iter = updates.iterator()
+            if (iter.hasNext()) {
+                log.info("Found updates. Populating identifiers-list.")
+                iter.each {
+                    //log.debug("Adding identifier $it.identifier")
+                    notify(it.identifier)
+                }
+                updatesReceived = true
+            } else {
+                log.debug("Got no updates, despite notification. Waiting a while ...")
+                sleep(CHECK_AGAIN_DELAY)
+            }
+        }
+    }
+
+    @Synchronized
+    URI nextIdentifier() {
+        try {
+            URI u = identifiers.pop() 
+            log.debug("nextIdentifier returning $u. List contains " + identifiers.size() + " items.")
+            return u
+        } catch (NoSuchElementException nsee) {
+            return null
+        }
     }
 
     void enable() {
@@ -85,59 +116,31 @@ class Listener implements WhelkAware {
     }
 
     @Log
-    class UpdateFetcher implements Runnable {
+    class UpdateHandler implements Runnable {
 
         final int CHECK_AGAIN_DELAY = 500
-        File logfile = new File("listener.log")
-        FileWriter fw
-        BufferedWriter bw
 
-        UpdateFetcher() {
-            log.debug("Starting fetcher thread ...")
-            fw = new FileWriter(logfile, true)
-            bw = new BufferedWriter(fw)
-        }
+        def converter
 
-        void listenerLog(String message) {
-            bw.write(message+"\n")
-            bw.flush()
+        UpdateHandler(Class convClass, Map params) {
+            println "params: $params" 
+            converter = convClass.getConstructor(Map.class).newInstance(params)
         }
 
         void run() {
-            while (notifications != null) {
-                try {
-                    while (enabled && notifications.size() > 0) {
-                        def next = notifications.pop()
-                        listenerLog("Working off notification list with " + notifications.size() + " items. Next is $next.")
-                        log.debug("Next object off list: $next")
-                        if (next instanceof Date) {
-                            def updates = otherwhelk.log(next)
-                            def iter = updates.iterator()
-                            if (iter.hasNext()) {
-                                log.debug("Found updates.")
-                                iter.each {
-                                    convert(otherwhelk.get(it.identifier))
-                                }
-                            } else {
-                                log.debug("Got no updates, despite notification. Waiting a while ...")
-                                Thread.sleep(CHECK_AGAIN_DELAY)
-                            }
-                        } else if (next instanceof URI) {
-                            log.debug("Notified of document change in $next")
-                            convert(otherwhelk.get(next))
-                        }
-                    }
-                } catch (Throwable t) {
-                    log.error("Got exception. Keep cool and carry on ...", t)
+            while (true) {
+                log.debug("Loading next ...")
+                def uri = nextIdentifier()
+                log.debug("Next is $uri")
+                if (uri) {
+                    convert(otherwhelk.get(uri))
                 }
-                // Sleep for one second after running.
-                Thread.sleep(1000)
             }
             log.error("Thread is exiting ...")
         }
 
         void convert(Document doc) {
-            log.debug("Converting document ...")
+            log.debug("Converting document $doc.identifier ...")
             Document convertedDocument = converter.convert(doc)
             lastUpdate = doc.timestampAsDate
             log.debug("Done ...")

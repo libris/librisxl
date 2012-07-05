@@ -206,12 +206,12 @@ abstract class ElasticSearch implements Index, Storage, History {
                 def srb = client.prepareSearch(index).addField("_timestamp").setTypes(storageType).setFrom(start).setSize(BATCH_SIZE).addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
                 def query = rangeQuery("_timestamp").gte(since.getTime())
                 srb.setQuery(query)
-                log.debug("Logquery: " + srb)
+                log.trace("Logquery: " + srb)
                 def response = srb.execute().actionGet()
-                log.debug("Response: " + response)
+                log.trace("Response: " + response)
                 //return null
                 if (response) {
-                    log.debug "Total log hits: ${response.hits.totalHits}"
+                    log.trace "Total log hits: ${response.hits.totalHits}"
                     response.hits.hits.each { 
                         results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
                     }

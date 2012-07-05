@@ -28,13 +28,12 @@ class WhelkImpl extends BasicWhelk {
         return !d.identifier || d.identifier.toString().startsWith("/"+this.prefix+"/")
     }
 
-    @Override
     URI store(Document d) {
         if (! belongsHere(d)) {
             throw new WhelkRuntimeException("Document does not belong here.")
         }
         try {
-            log.debug("[$prefix] Saving document with identifier $d.identifier")
+            log.info("[$prefix] Saving document with identifier $d.identifier")
             return super.store(d)
         } catch (WhelkRuntimeException wre) {
             log.error("Failed to save document ${d.identifier}: " + wre.getMessage())
@@ -45,10 +44,14 @@ class WhelkImpl extends BasicWhelk {
 
     @Override
     public Iterable<LogEntry> log(Date since) {
+        History historyComponent = null
         for (Component c : getComponents()) {
             if (c instanceof History) {
-                return new LogIterable(((History)c).updates(since), c, since);
+                historyComponent = (History)c
             }
+        }
+        if (historyComponent) {
+            return new LogIterable(historyComponent.updates(since), historyComponent, since);
         }
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
@@ -171,7 +174,10 @@ class WhelkState {
             "listeners"(listeners)
             "notifiers"(notifiers)
         }
-        def doc = this.whelk.createDocument().withData(builder.toString()).withIdentifier(new URI("/"+this.whelk.prefix+STORAGE_SUFFIX)).withContentType("application/json")
+        def doc = this.whelk.createDocument()
+            .withData(builder.toString())
+            .withIdentifier(new URI("/"+this.whelk.prefix+STORAGE_SUFFIX))
+            .withContentType("application/json")
         this.whelk.store(doc)
     }
 

@@ -24,8 +24,10 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
     String id = "PythonRunnerFormatConverter"
     Map<String, Object> requirements = new HashMap<String, Object>()
 
-    PythonRunnerFormatConverter() {}
-    PythonRunnerFormatConverter(String sn, Map req) { this.scriptName = sn; this.requirements = req }
+    PythonRunnerFormatConverter(Map req) { 
+        this.scriptName = req.get("script")
+        this.requirements = req 
+    }
 
 
     @Override
@@ -49,7 +51,7 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
                 log.debug("Feeding python with ${it.value} (${it.key})")
                 python.put(it.key, it.value)
             }
-            log.debug("Feeding python with $doc (document)")
+            log.debug("Feeding python with $doc.identifier (document)")
             python.put("document", doc)
             python.eval(r)
             Object result = python.get("result")
