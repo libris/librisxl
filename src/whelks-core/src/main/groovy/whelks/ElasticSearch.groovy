@@ -60,7 +60,9 @@ abstract class ElasticSearch implements Index, Storage, History {
 
     @Override
     void delete(URI uri) {
-        throw new UnsupportedOperationException("Not supported yet.")
+        log.debug("Deleting object with identifier $uri")
+        performExecute(client.prepareDelete(index, indexType, translateIdentifier(uri)))
+        performExecute(client.prepareDelete(index, storageType, translateIdentifier(uri)))
     }
 
     @Override
@@ -81,7 +83,7 @@ abstract class ElasticSearch implements Index, Storage, History {
 
     def init() {
         if (!performExecute(client.admin().indices().prepareExists(index)).exists()) {
-            log.debug("Creating index ...")
+            log.info("Creating index ...")
             XContentBuilder mapping = jsonBuilder().startObject()
             .startObject(index)
             .startObject("_timestamp")

@@ -66,7 +66,6 @@ class RestManager extends Application {
 
     }
 
-
     @Override
     synchronized Restlet createInboundRoot() {
         def ctx = getContext()
