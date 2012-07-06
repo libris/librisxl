@@ -141,7 +141,6 @@ class ImportWhelk extends BasicWhelk {
     }
 }
 
-
 @Log
 class WhelkState {
 

@@ -17,6 +17,7 @@ class Listener implements WhelkAware {
 
     final int DEFAULT_NUMBER_OF_HANDLERS = 1
     final int STATE_SAVE_INTERVAL = 10000
+    final int CHECK_AGAIN_DELAY = 500
     int numberOfHandlers = DEFAULT_NUMBER_OF_HANDLERS
 
     String id = "whelkListener"
@@ -66,7 +67,14 @@ class Listener implements WhelkAware {
             }
         }
         Thread.start {
-            notify(lastUpdate)
+            def updates = otherwhelk.log(lastUpdate)
+            def iter = updates.iterator()
+            if (iter.hasNext()) {
+                log.info("Found updates. Populating identifiers-list.")
+                iter.each {
+                    notify(it.identifier)
+                }
+            }
         }
     }
 
@@ -118,7 +126,6 @@ class Listener implements WhelkAware {
     @Log
     class UpdateHandler implements Runnable {
 
-        final int CHECK_AGAIN_DELAY = 500
 
         def converter
 
@@ -129,12 +136,12 @@ class Listener implements WhelkAware {
 
         void run() {
             while (true) {
-                log.debug("Loading next ...")
                 def uri = nextIdentifier()
-                log.debug("Next is $uri")
                 if (uri) {
+                    log.debug("Next is $uri")
                     convert(otherwhelk.get(uri))
                 }
+                sleep(CHECK_AGAIN_DELAY)
             }
             log.error("Thread is exiting ...")
         }
