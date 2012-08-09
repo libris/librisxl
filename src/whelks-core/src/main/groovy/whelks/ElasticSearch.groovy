@@ -81,6 +81,28 @@ abstract class ElasticSearch implements Index, Storage, History {
         return null
     }
 
+    void bulkIndex(documents) {
+        addDocuments(documents, indexType)
+    }
+
+    void bulkStore(documents) {
+        addDocuments(documents, storageType)
+    }
+
+    void addDocuments(documents, addType) {
+        def breq = client.prepareBulk()
+
+        for (def doc : documents) {
+            breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
+        }
+        def response = performExecute(breq)
+        if (response.hasFailures()) {
+            println "Bulk import has failures."
+        } else {
+            println "Bulk imported ${documents.size()} documents"
+        }
+    }
+
     def init() {
         if (!performExecute(client.admin().indices().prepareExists(index)).exists()) {
             log.info("Creating index ...")

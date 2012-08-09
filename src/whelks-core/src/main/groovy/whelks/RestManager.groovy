@@ -41,6 +41,7 @@ class RestManager extends Application {
         // Add APIs
         bibwhelk.addPlugin(new SearchRestlet())
         bibwhelk.addPlugin(new DocumentRestlet())
+        bibwhelk.addPlugin(new KitinSearchRestlet())
         authwhelk.addPlugin(new SearchRestlet())
         authwhelk.addPlugin(new DocumentRestlet())
         authwhelk.addPlugin(new LogRestlet())
@@ -55,8 +56,10 @@ class RestManager extends Application {
         // Add other plugins 
         def formatParameters = ["script": "sug_json.py", "bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
         
+        /*
         suggestwhelk.addPlugin(new Listener(bibwhelk, 5, PythonRunnerFormatConverter.class, formatParameters))
         suggestwhelk.addPlugin(new Listener(authwhelk, 5, PythonRunnerFormatConverter.class, formatParameters))
+        */
 
         whelks << bibwhelk
         whelks << authwhelk

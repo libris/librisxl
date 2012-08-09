@@ -82,7 +82,7 @@ public class BatchImport {
             });
     }*/
     // END possible authentication alternative
-    public int doImport(Whelk whelk, Date from) {
+    public int doImport(ImportWhelk whelk, Date from) {
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
         for (Plugin p : whelk.getPlugins()) {
             if (p instanceof Notifier) {
@@ -124,28 +124,17 @@ public class BatchImport {
         return imported;
     }
 
-    public String harvest(URL url, Whelk whelk) {
+    public String harvest(URL url, ImportWhelk whelk) {
         String restok = null;
         InputStream is = null;
         HttpURLConnection urlConnection = null;
         try {
-            //Properties properties = new Properties(); // Authenticeringen ska göras annorstädes 
-            /*properties.load(new FileInputStream("meta/whelks-core.properties"));
-            String authStringRaw = properties.getProperty("authString");
-            byte[] authEncBytes = Base64.encodeBase64(authStringRaw.getBytes());
-            String authString = new String(authEncBytes);*/
             urlConnection = (HttpURLConnection) url.openConnection();
-            //urlConnection.setRequestProperty("Authorization", "Basic " + authString);
             is = urlConnection.getInputStream();
             DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document document = documentBuilder.parse(is);
-            //System.out.println(document.getInputEncoding() + ", HOHOHOHOHOHOHOH: " + document.getXmlEncoding());
             NodeList nodeList = document.getElementsByTagName("resumptionToken");
             Element element = (Element) nodeList.item(0);
-            /*NodeList nodeList2 = document.getElementsByTagName("subfield");
-            Element element2 = (Element) nodeList2.item(6);
-           
-            System.out.println("resumptionToken : " + nodeList.getLength() + ", " + element2.getTextContent());*/
             if (element != null && element.getTextContent().length() > 0) {
                 restok = element.getTextContent();
             }
@@ -157,37 +146,31 @@ public class BatchImport {
 
             MarcXmlRecordReader marcXmlRecordReader = new MarcXmlRecordReader(is, "/OAI-PMH/ListRecords/record/metadata/record");
             MarcRecord record;
-            //System.setOut(new PrintStream(System.out, false, "UTF-8"));
+
+            ArrayList<se.kb.libris.whelks.Document> documents = new ArrayList<se.kb.libris.whelks.Document>();
+
             while ((record = marcXmlRecordReader.readRecord()) != null) {
                 String id = record.getControlfields("001").get(0).getData();
                 
-                /*for (Controlfield cf : record.getControlfields("001")) {
-                    System.out.println("CF: " + cf.getData());
-                */
-                /*for (Datafield df : record.getDatafields("667")) {
-                    System.out.println("DATAFIELD: " + df.getTag());
-                    for (Subfield sf : df.getSubfields()) {
-                        System.out.println("DATA: " + sf.getData());
-                    }
-                }*/
-                
-                //LinkedList<ControlField> cf001 = record.getControfields("001");
-
-                //System.out.write(Iso2709Serializer.serialize(record));
-                //System.out.println(record);
                 String jsonRec = MarcJSONConverter.toJSONString(record);
-                /*
-                System.out.println("PRE SAVE");
-                System.out.println(new String(jsonRec.getBytes("UTF-8")));
-                */
+
                 se.kb.libris.whelks.Document doc = whelk.createDocument().withData(jsonRec.getBytes()).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
+                //
                 //System.out.println("Storing document " + doc.getIdentifier());
-                whelk.store(doc);
+                //System.out.println("Created document with id " + doc.getIdentifier());
+                documents.add(doc);
                 imported++;
+                //whelk.store(doc);
+                /*
                 if (imported % 1000 == 0) {
                     System.out.println("" + imported + " documents imported in " + ((System.currentTimeMillis() - this.starttime)/1000) + " seconds.");
                 }
+                */
             }
+            System.out.print("Prepared " + documents.size() + " documents for import. Executing ...");
+            whelk.bulkImport(documents);
+            System.out.println(" done. " + imported + " imported sofar.");
+
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
         } catch (SAXException e) {
@@ -209,19 +192,4 @@ public class BatchImport {
         }
         return restok;
     }
-
-    public Document createDocument(InputStream is) {
-        return null;
-    }
-
-    /*
-    public static void main(String[] args) {
-        System.out.println("Using file encoding: " + System.getProperty("file.encoding"));
-        //BatchImport bi = new BatchImport("http://data.libris.kb.se/auth/oaipmh/?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/auth/351502");
-        //BatchImport bi = new BatchImport("http://data.libris.kb.se/auth/oaipmh/?verb=ListRecords&metadataPrefix=marcxml&from=2012-05-23T15:21:27Z");
-        BatchImport bi = new BatchImport();
-        bi.doImport(null);
-
-    }
-    */
 }

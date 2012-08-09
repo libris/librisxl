@@ -126,6 +126,17 @@ class ImportWhelk extends BasicWhelk {
         log.info("Starting whelk '$pfx' in standalone import mode.")
     }
 
+    void bulkImport(documents) {
+        for (def c : components) {
+            if (c instanceof Index) {
+                c.bulkIndex(documents)
+            }
+            if (c instanceof Storage) {
+                c.bulkStore(documents)
+            }
+        }
+    }
+
     static main(args) {
         if (args) {
             def prefix = args[0]

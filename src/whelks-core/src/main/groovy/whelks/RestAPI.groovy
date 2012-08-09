@@ -137,6 +137,118 @@ class SearchRestlet extends BasicWhelkAPI {
 }
 
 @Log
+class KitinSearchRestlet extends BasicWhelkAPI {
+
+    def pathEnd = "kitin/_search"
+
+    def facit = [
+        "f":    ["100.a","505.r","700.a"],
+        "förf": ["100.a","505.r","700.a"],
+        "isbn": ["020.az"]
+        ]
+
+
+
+    def expandPrefix(query) {
+        println "prefixedQuery: $query"
+        def prefixedValue = query.split(":")
+        println "prefix: " + prefixedValue[0]
+        def expFields = []
+        println "Facit: $facit"
+        if (facit.containsKey(prefixedValue[0])) {
+            println "value: " + facit.get(prefixedValue[0])
+            facit.get(prefixedValue[0]).each {
+                println "it: $it"
+                def fs = it.split(/\./)
+                println "fs: $fs"
+                for (int i = 0; i < fs[1].length(); i++) {
+                    println "splitted subfields ${fs[1][i]}"
+                    expFields << "fields." + fs[0] + ".subfields." + fs[1][i] + ":" + prefixedValue[1]
+                }
+            }
+        } else {
+            expFields = [ query ]
+        }
+        println "expFields: $expFields"
+        return expFields
+        /*
+        if (prefixedValue[0] == "auth") {
+            return ["fields.100.subfields.a:"+prefixedValue[1], "fields.700.subfields.a:"+prefixedValue[1]]
+        } else if (prefixedValue[0] == "förf") {
+            return ["fields.100.subfields.a:"+prefixedValue[1], "fields.700.subfields.a:"+prefixedValue[1]]
+        } else if (prefixedValue[0] == "isbn") {
+            return ["fields.020.subfields.a:"+prefixedValue[1], "fields.020.subfields.z:"+prefixedValue[1]]
+        } else {
+            return [ query ]
+        }
+        */
+    }
+
+    def isIsbn(string) {
+        def result = string.trim().replaceAll("-", "").matches("[0-9]{10}|[0-9]{13}")
+        println "Result $result"
+        return result
+    }
+
+    def splitQuery(q) {
+        q = q.toLowerCase()
+        def bits = q.findAll(/([^\s]+:"[^"]+"|[^\s]+:[^\s]+|"[^"]+"|[^\s]+)\s*/)
+        def newQuery = []
+        def isbnQuery = []
+        bits.eachWithIndex() { it, i ->
+            it = it.trim()
+            println "bit: $it"
+            if (isIsbn(it)) {
+                it = "isbn:$it"
+            }
+            if (it.contains(":")) {
+                if (it.startsWith("isbn:")) {
+                    isbnQuery << expandPrefix(it).join(" OR ")
+                } else {
+                    newQuery << "(" + expandPrefix(it).join(" OR ") + ")"
+                }
+            } else {
+                newQuery << it 
+            }
+        }
+        def query
+        println "newQuery: $newQuery"
+        if (newQuery.size() > 0) {
+            query = "(" + newQuery.join(" AND ") + ")"
+        } 
+        if (isbnQuery.size() > 0) {
+            def isbnq = "(" + isbnQuery.join(" OR ") + ")"
+            query = (query ? query + " OR " + isbnq : isbnq)
+        }
+        println "query: $query"
+        return query
+    }
+
+    @Override
+    def void handle(Request request, Response response) {
+        def query = request.getResourceRef().getQueryAsForm().getValuesMap()
+        try {
+            def q = splitQuery(query.get("q"))
+            def callback = query.get("callback")
+            if (q) {
+                def results = this.whelk.query(q)
+                def jsonResult = 
+                    (callback ? callback + "(" : "") +
+                    results.toJson() +
+                    (callback ? ");" : "") 
+
+                response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+            } else {
+                response.setEntity("Missing q parameter", MediaType.TEXT_PLAIN)
+            }
+        } catch (WhelkRuntimeException wrte) {
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+        }
+
+    }
+}
+
+@Log
 class BibSearchRestlet extends BasicWhelkAPI {
 
     def pathEnd = "_bibsearch"
