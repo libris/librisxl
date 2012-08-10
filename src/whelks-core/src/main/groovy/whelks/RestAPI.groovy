@@ -142,9 +142,14 @@ class KitinSearchRestlet extends BasicWhelkAPI {
     def pathEnd = "kitin/_search"
 
     def facit = [
-        "f":    ["100.a","505.r","700.a"],
-        "förf": ["100.a","505.r","700.a"],
-        "isbn": ["020.az"]
+        "bibid": ["001"],
+        "f":     ["100.a","505.r","700.a"],
+        "förf":  ["100.a","505.r","700.a"],
+        "isbn":  ["020.az"],
+        "issn":  ["022.amyz"],
+        "t":     ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"],
+        "tit":   ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"],
+        "titel": ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"]
         ]
 
 
@@ -161,9 +166,13 @@ class KitinSearchRestlet extends BasicWhelkAPI {
                 println "it: $it"
                 def fs = it.split(/\./)
                 println "fs: $fs"
-                for (int i = 0; i < fs[1].length(); i++) {
-                    println "splitted subfields ${fs[1][i]}"
-                    expFields << "fields." + fs[0] + ".subfields." + fs[1][i] + ":" + prefixedValue[1]
+                if (fs.size() > 1) {
+                    for (int i = 0; i < fs[1].length(); i++) {
+                        println "splitted subfields ${fs[1][i]}"
+                        expFields << "fields." + fs[0] + ".subfields." + fs[1][i] + ":" + prefixedValue[1]
+                    }
+                } else {
+                    expFields << "fields." + fs[0] + ":" + prefixedValue[1]
                 }
             }
         } else {
@@ -171,23 +180,16 @@ class KitinSearchRestlet extends BasicWhelkAPI {
         }
         println "expFields: $expFields"
         return expFields
-        /*
-        if (prefixedValue[0] == "auth") {
-            return ["fields.100.subfields.a:"+prefixedValue[1], "fields.700.subfields.a:"+prefixedValue[1]]
-        } else if (prefixedValue[0] == "förf") {
-            return ["fields.100.subfields.a:"+prefixedValue[1], "fields.700.subfields.a:"+prefixedValue[1]]
-        } else if (prefixedValue[0] == "isbn") {
-            return ["fields.020.subfields.a:"+prefixedValue[1], "fields.020.subfields.z:"+prefixedValue[1]]
-        } else {
-            return [ query ]
-        }
-        */
     }
 
     def isIsbn(string) {
         def result = string.trim().replaceAll("-", "").matches("[0-9]{10}|[0-9]{13}")
         println "Result $result"
         return result
+    }
+
+    def isIssn(string) {
+        return string.trim().matches("[0-9]{4}-?[0-9]{4}")
     }
 
     def splitQuery(q) {
@@ -200,6 +202,9 @@ class KitinSearchRestlet extends BasicWhelkAPI {
             println "bit: $it"
             if (isIsbn(it)) {
                 it = "isbn:$it"
+            }
+            if (isIssn(it)) {
+                it = "issn:$it"
             }
             if (it.contains(":")) {
                 if (it.startsWith("isbn:")) {
