@@ -78,6 +78,21 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             return d.getIdentifier();
         }
 
+    @Override 
+        public void store(Iterable<Document> docs) {
+            // add document to storage, index and quadstore
+            for (Component c: getComponents()) {
+                if (c instanceof Storage) {
+                    ((Storage)c).store(docs);
+                }
+
+                if (c instanceof Index) {
+                    ((Index)c).index(docs);
+                }
+
+            }
+        }
+
     @Override
         public Document get(URI uri) {
             Document d = null;

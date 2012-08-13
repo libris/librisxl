@@ -8,6 +8,7 @@ import se.kb.libris.whelks.LookupResult;
 
 public interface Storage extends Component {
     public void store(Document d);
+    public void store(Iterable<Document> d);
     public Document get(URI uri);
     public void delete(URI uri);
     public LookupResult<? extends Document> lookup(Key key);

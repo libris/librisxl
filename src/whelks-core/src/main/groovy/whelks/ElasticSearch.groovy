@@ -59,6 +59,11 @@ abstract class ElasticSearch implements Index, Storage, History {
     }
 
     @Override
+    void index(Iterable<Document> doc) {
+        addDocuments(doc, indexType)
+    }
+
+    @Override
     void delete(URI uri) {
         log.debug("Deleting object with identifier $uri")
         performExecute(client.prepareDelete(index, indexType, translateIdentifier(uri)))
@@ -68,6 +73,11 @@ abstract class ElasticSearch implements Index, Storage, History {
     @Override
     public void store(Document doc) {
         addDocument(doc, storageType)
+    }
+
+    @Override
+    public void store(Iterable<Document> doc) {
+        addDocuments(doc, storageType)
     }
 
     @Override
@@ -81,14 +91,6 @@ abstract class ElasticSearch implements Index, Storage, History {
         return null
     }
 
-    void bulkIndex(documents) {
-        addDocuments(documents, indexType)
-    }
-
-    void bulkStore(documents) {
-        addDocuments(documents, storageType)
-    }
-
     void addDocuments(documents, addType) {
         def breq = client.prepareBulk()
 
@@ -98,9 +100,7 @@ abstract class ElasticSearch implements Index, Storage, History {
         def response = performExecute(breq)
         if (response.hasFailures()) {
             println "Bulk import has failures."
-        } else {
-            println "Bulk imported ${documents.size()} documents"
-        }
+        }     
     }
 
     def init() {

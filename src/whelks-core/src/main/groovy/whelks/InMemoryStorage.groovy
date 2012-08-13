@@ -22,6 +22,12 @@ class InMemoryStorage implements Storage {
         storage.put(d.identifier, d)
     }
 
+    void store(Iterable<Document> docs) {
+        for (Document d : docs) {
+            storage.put(d.identifier, d)
+        }
+    }
+
     Document get(URI uri) {
         return storage.get(uri)
     }

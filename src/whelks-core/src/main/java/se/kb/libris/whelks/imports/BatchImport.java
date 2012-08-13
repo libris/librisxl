@@ -167,9 +167,7 @@ public class BatchImport {
                 }
                 */
             }
-            System.out.print("Prepared " + documents.size() + " documents for import. Executing ...");
-            whelk.bulkImport(documents);
-            System.out.println(" done. " + imported + " imported sofar.");
+            whelk.store(documents);
 
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
