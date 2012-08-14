@@ -7,6 +7,7 @@ class Query {
     def sorting
     def highlights
     def filters
+    def facets
     int start = 0
     int n = 50
 
@@ -38,5 +39,12 @@ class Query {
             filters = {}
         }
         filters[field] = value
+    }
+
+    Query addFacet(name, field) {
+        if (!facets) {
+            facets = new HashMap<String,String>()
+        }
+        facets.put(name, field)
     }
 }

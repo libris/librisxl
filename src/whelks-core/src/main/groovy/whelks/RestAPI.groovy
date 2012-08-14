@@ -233,9 +233,11 @@ class KitinSearchRestlet extends BasicWhelkAPI {
     def void handle(Request request, Response response) {
         def query = request.getResourceRef().getQueryAsForm().getValuesMap()
         try {
-            def q = splitQuery(query.get("q"))
+            def q = new Query(splitQuery(query.get("q")))
             def callback = query.get("callback")
             if (q) {
+                q.addFacet("målspråk", "fields.041.subfields.a")
+                q.addFacet("originalspråk", "fields.041.subfields.h")
                 def results = this.whelk.query(q)
                 def jsonResult = 
                     (callback ? callback + "(" : "") +

@@ -16,6 +16,7 @@ import org.elasticsearch.common.settings.*
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.search.highlight.*
 import org.elasticsearch.action.count.CountResponse
+import org.elasticsearch.search.facet.FacetBuilders
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import static org.elasticsearch.index.query.QueryBuilders.*
@@ -179,7 +180,6 @@ abstract class ElasticSearch implements Index, Storage, History {
         return new URI("/"+index+"/"+id.replaceAll(URI_SEPARATOR, "/"))
     }
 
-
     def Collection<LogEntry> updates(Date since, int start = 0) {
         def results = new ArrayList<LogEntry>()
         def srb = client.prepareSearch(index).addField("_timestamp").setTypes(storageType).setFrom(start).setSize(BATCH_SIZE).addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
@@ -206,6 +206,18 @@ abstract class ElasticSearch implements Index, Storage, History {
         return map
     }
 
+    def convertFacets(eFacets) {
+        def facets = new HashMap<String, Map<String, Integer>>()
+        for (def f : eFacets) {
+            def termcounts = [:]
+            for (def entry : f.entries()) {
+                termcounts[entry.term] = entry.count
+            }
+            facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
+        }
+        return facets
+    }
+
     @Override
     SearchResult query(Query q) {
         log.debug "Doing query on $q"
@@ -230,6 +242,11 @@ abstract class ElasticSearch implements Index, Storage, History {
                 srb = srb.addHighlightedField(it)
             }
         }
+        if (q.facets) {
+            q.facets.each {
+                srb = srb.addFacet(FacetBuilders.termsFacet(it.key).field(it.value))
+            }
+        }
         log.debug("SearchRequestBuilder: " + srb)
         def response = performExecute(srb)
         log.debug("SearchResponse: " + response)
@@ -246,7 +263,10 @@ abstract class ElasticSearch implements Index, Storage, History {
                     results.addHit(createDocumentFromHit(it))
                 }
             }
-        }     
+            if (q.facets) { 
+                results.facets = convertFacets(response.facets.facets())
+            }
+        }
         return results
     }
 
