@@ -115,23 +115,19 @@ class SearchRestlet extends BasicWhelkAPI {
     @Override
     def void handle(Request request, Response response) {
         log.debug "SearchRestlet with path $path"
-        def query = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         try {
-            def q = query.get("q")
-            def callback = query.get("callback")
-            if (q) {
-                def results = this.whelk.query(query.get("q"))
+            def query = new Query(reqMap)
+            def callback = reqMap.get("callback")
+                def results = this.whelk.query(query)
                 def jsonResult = 
                     (callback ? callback + "(" : "") +
                     results.toJson() +
                     (callback ? ");" : "") 
 
                 response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
-            } else {
-                response.setEntity("Missing q parameter", MediaType.TEXT_PLAIN)
-            }
         } catch (WhelkRuntimeException wrte) {
-            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wrte.message)
         }
     }
 }
@@ -217,7 +213,6 @@ class KitinSearchRestlet extends BasicWhelkAPI {
             }
         }
         def query
-        println "newQuery: $newQuery"
         if (newQuery.size() > 0) {
             query = "(" + newQuery.join(" AND ") + ")"
         } 

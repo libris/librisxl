@@ -303,10 +303,11 @@ class ElasticSearchClient extends ElasticSearch {
         properties.load(is);
         final String elastichost = properties.getProperty("elastichost");
 
-        log.debug "Connecting to elastichost:9300"
+        log.debug "Connecting to $elastichost:9300"
         Settings settings = ImmutableSettings.settingsBuilder()
                 .put("client.transport.ping_timeout", 30)
-                .put("cluser.name", "rockpool")
+                .put("cluster.name", "minis")
+                .put("client.transport.sniff", true)
                 .build();
         client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
         log.debug("... connected")

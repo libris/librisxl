@@ -134,7 +134,7 @@ class ImportWhelk extends BasicWhelk {
             def date = (args.length > 2 ? new Date(new Long(args[2])) : null)
             whelk.addPlugin(new ElasticSearchClient(prefix))
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
-            int startTime = System.currentTimeMillis()
+            long startTime = System.currentTimeMillis()
             def nrimports = importer.doImport(whelk, date)
             println "Imported $nrimports documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
         } else {
