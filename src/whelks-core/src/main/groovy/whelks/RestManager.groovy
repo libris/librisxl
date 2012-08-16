@@ -38,6 +38,8 @@ class RestManager extends Application {
         suggestwhelk.addPlugin(new ElasticSearchClient(suggestwhelk.prefix))
         //suggestwhelk.addPlugin(new InMemoryStorage())
 
+        bibwhelk.addPlugin(new MarcCrackerIndexFormatConverter())
+
         // Add APIs
         bibwhelk.addPlugin(new SearchRestlet())
         bibwhelk.addPlugin(new DocumentRestlet())

@@ -48,20 +48,25 @@ class Query {
                 }
             }
             if (qmap.get("facets")) {
-                int i = 0
-                for (def fct : qmap.get("fct").split(",")) {
+                for (def fct : qmap.get("facets").split(",")) {
                     def f = fct.split(":")
-                    def flabel = "facet$i"
+                    def flabel = null
                     def fvalue = null
                     if (f.size() > 1) {
                         flabel = f[0]
                         fvalue = f[1]
                     } else {
+                        flabel = f[0]
                         fvalue = f[0]
                     }
                     addFacet(flabel, fvalue)
-                    i++
                 }
+            }
+            if (qmap.get("start")) {
+                start = new Integer(qmap.get("start"))
+            }
+            if (qmap.get("n")) {
+                start = new Integer(qmap.get("n"))
             }
         } else {
             throw new WhelkRuntimeException("Trying to create empty query.")

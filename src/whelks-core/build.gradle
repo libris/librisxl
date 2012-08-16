@@ -84,7 +84,7 @@ dependencies {
     compile 'commons-io:commons-io:2.3'
     compile 'org.restlet.jse:org.restlet:2.0.13'
     compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.13'
-    compile 'se.kb.libris:marc:1.2.6'
+    compile 'se.kb.libris:marc:1.2.7'
     compile 'jyson:jyson:1.0.2'
     compile 'commons-codec:commons-codec:1.4'
     providedCompile 'javax.servlet:servlet-api:2.5'

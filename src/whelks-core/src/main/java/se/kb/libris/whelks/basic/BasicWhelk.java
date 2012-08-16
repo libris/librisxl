@@ -64,8 +64,14 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                     ((Storage)c).store(d);
                 }
 
-                if (c instanceof Index)
-                    ((Index)c).index(d);
+                if (c instanceof Index) {
+                    Document indexDocument = d;
+                    for (Plugin p: getPlugins()) {
+                        if (p instanceof IndexFormatConverter)
+                            indexDocument = ((IndexFormatConverter)p).convert(d);
+                    }
+                    ((Index)c).index(indexDocument);
+                }
 
                 if (c instanceof QuadStore)
                     ((QuadStore)c).update(d.getIdentifier(), d);
@@ -78,16 +84,34 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             return d.getIdentifier();
         }
 
+
     @Override 
         public void store(Iterable<Document> docs) {
             // add document to storage, index and quadstore
+            List<Document> convertedDocuments = new ArrayList<Document>();
+
+            IndexFormatConverter ifc = null;
+
+            for (Plugin p: getPlugins()) {
+                if (p instanceof IndexFormatConverter)
+                    ifc = (IndexFormatConverter)p;
+            }
+
+            if (ifc != null) {
+                for (Document d : docs) {
+                    convertedDocuments.add(ifc.convert(d));
+                }
+            } else {
+                convertedDocuments.addAll((Collection)docs);
+            }
+
             for (Component c: getComponents()) {
                 if (c instanceof Storage) {
                     ((Storage)c).store(docs);
                 }
 
                 if (c instanceof Index) {
-                    ((Index)c).index(docs);
+                    ((Index)c).index(convertedDocuments);
                 }
 
             }

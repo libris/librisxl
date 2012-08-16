@@ -170,19 +170,19 @@ public class BatchImport {
             whelk.store(documents);
 
         } catch (ParserConfigurationException e) {
-            System.err.printn("URL " + url + " failed:");
+            System.err.println("URL " + url + " failed:");
             e.printStackTrace();
         } catch (SAXException e) {
-            System.err.printn("URL " + url + " failed:");
+            System.err.println("URL " + url + " failed:");
             e.printStackTrace();
         } catch (TransformerConfigurationException e) {
-            System.err.printn("URL " + url + " failed:");
+            System.err.println("URL " + url + " failed:");
             e.printStackTrace();
         } catch (TransformerException e) {
-            System.err.printn("URL " + url + " failed:");
+            System.err.println("URL " + url + " failed:");
             e.printStackTrace();
         } catch (IOException e) {
-            System.err.printn("URL " + url + " failed:");
+            System.err.println("URL " + url + " failed:");
             e.printStackTrace();
         } finally {
             try {
