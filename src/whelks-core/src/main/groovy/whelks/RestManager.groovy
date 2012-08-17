@@ -44,6 +44,7 @@ class RestManager extends Application {
         bibwhelk.addPlugin(new SearchRestlet())
         bibwhelk.addPlugin(new DocumentRestlet())
         bibwhelk.addPlugin(new KitinSearchRestlet())
+        bibwhelk.addPlugin(new PythonTestAPI())
         authwhelk.addPlugin(new SearchRestlet())
         authwhelk.addPlugin(new DocumentRestlet())
         authwhelk.addPlugin(new LogRestlet())

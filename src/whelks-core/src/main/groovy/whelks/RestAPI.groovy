@@ -133,6 +133,22 @@ class SearchRestlet extends BasicWhelkAPI {
 }
 
 @Log
+class PythonTestAPI extends BasicWhelkAPI {
+    def pathEnd = "_python"
+
+    @Override
+    def void handle(Request request, Response response) {
+        def p = new se.kb.libris.whelks.plugin.MarcCrackerIndexFormatConverter()
+        p.hello()
+        p.hello()
+        p.hello()
+        p.hello()
+        p.hello()
+        response.setEntity("hej", MediaType.TEXT_PLAIN)
+    }
+}
+
+@Log
 class KitinSearchRestlet extends BasicWhelkAPI {
 
     def pathEnd = "kitin/_search"

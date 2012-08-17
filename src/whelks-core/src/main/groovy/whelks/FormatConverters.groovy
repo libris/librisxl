@@ -19,14 +19,32 @@ abstract class BasicFormatConverter implements FormatConverter, WhelkAware {
 @Log
 class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSerialisable, JSONInitialisable {
 
-    final private ScriptEngine python = new ScriptEngineManager().getEngineByName("python")
+    final private ScriptEngine python 
     String scriptName
+    def script
+    Reader reader
     String id = "PythonRunnerFormatConverter"
     Map<String, Object> requirements = new HashMap<String, Object>()
 
-    PythonRunnerFormatConverter(Map req) { 
+    PythonRunnerFormatConverter(Map req) {
+        python = new ScriptEngineManager().getEngineByName("python")
         this.scriptName = req.get("script")
         this.requirements = req 
+        readScript(req.get("script"))
+    }
+
+    private readScript(scriptName) {
+        Reader r = null
+        if (scriptName.startsWith("/")) {
+            this.script = new File(scriptName).text
+        } else {
+            InputStream is = this.getClass().getClassLoader().getResourceAsStream(scriptName)
+            this.script = is.text
+        }
+        if (!this.script) {
+            throw new WhelkRuntimeException("Failed to read script.")
+        }
+        this.reader = new StringReader(this.script)
     }
 
 
@@ -37,23 +55,19 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
         }
         try {
             log.debug("Converter executing script "+ this.scriptName)
-            Reader r = null
-            if (this.scriptName.startsWith("/")) {
-                r = new FileReader(scriptName)
-            } else {
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream(this.scriptName)
-                r = new InputStreamReader(is)
-            }
-            if (r == null) {
-                throw new WhelkRuntimeException("Failed to read script.")
-            }
             requirements.each {
                 log.debug("Feeding python with ${it.value} (${it.key})")
                 python.put(it.key, it.value)
             }
-            log.debug("Feeding python with $doc.identifier (document)")
+            println "1: " + System.currentTimeMillis()
+            Reader r = new StringReader(this.script)
+            println "2: " + System.currentTimeMillis()
+            //log.debug("Feeding python with $doc.identifier (document)")
             python.put("document", doc)
+            println "3. " + System.currentTimeMillis()
             python.eval(r)
+            println "4: " + System.currentTimeMillis()
+            /*
             Object result = python.get("result")
             if (result != null) {
                 return doc.withData(((String)result).getBytes())
@@ -61,6 +75,8 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
                 log.debug("Python has handled everything for us. Now return null.")
                 return null
             }
+            */
+            reader.reset()
             log.debug("Done ...")
         } catch (ScriptException se) {
             log.error("Script failed: " + se.getMessage(), se)
@@ -94,7 +110,7 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
         return _converter
     }
 
-    private void listAvailableEngines() {
+    protected void listAvailableEngines() {
         try {
             ScriptEngineManager mgr = new ScriptEngineManager()
             List<ScriptEngineFactory> factories = mgr.getEngineFactories()
@@ -118,5 +134,11 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
         }
     }
 
+    static void main(args) {
+        def r = ["script": "test.py"]
+        def p = new PythonRunnerFormatConverter(r)
+        p.listAvailableEngines()
+        p.convert(null)
+    }
 
 }

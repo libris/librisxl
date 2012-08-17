@@ -2,26 +2,64 @@ package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.*
 
+import groovy.util.logging.Slf4j as Log
+
 import groovy.json.*
 
+@Log
 class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
 
     String id = this.class.name
     boolean enabled = true
+    def marcmap 
+
+    MarcCrackerIndexFormatConverter() {
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
+        this.marcmap = new JsonSlurper().parse(is.newReader())
+    }
+
+    def hello() {
+        log.debug("Saying hello")
+        println "hello ..."
+        log.debug("Done")
+    }
+
+    def build
 
     @Override
     Document convert(Document doc) {
         def json = new JsonSlurper().parseText(doc.dataAsString)
         def leader = json.leader
+
+        def l = [:]
+        def propref
+        for (def column : marcmap.bib."000".fixmaps[0].columns) {
+            if (propref != column.propRef) {
+                l[column.propRef] = ""
+            }
+            if (column.length == 1) {
+                l[column.propRef] << leader[column.offset]
+            } else {
+                l[column.propRef] << leader[(column.offset)..(column.offset+column.length-1)]
+            }
+            propref = column.propRef
+        }
+
+        println "Leader: $leader"
+        println "L: $l"
+
         def f001,f006,f007,f008
-        int pos008 = 0
+        int pos001,pos006,pos007,pos008 = 0
         json.fields.eachWithIndex() { it, i ->
             it.each { key, value ->
                 if (key == "001") {
+                    pos001 = i
                     f001 = value
                 } else if (key == "006") {
+                    pos006 = i
                     f006 = value
                 } else if (key == "007") {
+                    pos007 = i
                     f007 = value
                 } else if (key == "008") {
                     pos008 = i
@@ -29,7 +67,8 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
                 }
             }
         }
-        
+
+        /*
         def l = [:]
         l['00_record_length'] = leader[0..4]
         l['05_record_status'] = leader[5]
@@ -73,8 +112,11 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
             d['34_biography'] = f008[34]
         }
 
-        json.leader = ["subfields": l.collect {key, value -> [(key):value]}]
         json.fields[pos008] = ["008": ["subfields": d.collect {key, value -> [(key):value]}]]
+        */
+        json.leader = ["subfields": l.collect {key, value -> [(key):value]}]
+
+        println "json: $json"
         
         def builder = new JsonBuilder(json)
         doc.withData(builder.toString())
