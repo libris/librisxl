@@ -31,7 +31,6 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
             }
             propref = column.propRef
         }
-        println "expandField l: $l"
         return l
 
     }
@@ -58,7 +57,7 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
                                     if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(l['typeOfRecord'])) || fm.matchRecTypeBibLevel.contains(mrtbl)) {
                                         json.fields[pos] = [(fkey):["subfields": expandField(fvalue, fm.columns).collect {k, v -> [(k):v]} ]]
                                     }
-                                } catch (groovy.lang.MissingPropertyException mpe) { mpe.printStackTrace() }
+                                } catch (groovy.lang.MissingPropertyException mpe) { }
                             }
                         }
                     }
