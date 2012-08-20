@@ -1472,7 +1472,8 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>",
+              "propRef": "date"
             }, 
             {
               "label_sv": "Typ av utgivningssdatum", 
@@ -1486,21 +1487,24 @@
               "offset": 7, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>",
+              "propRef": "yearTime1"
             }, 
             {
               "label_sv": "\u00c5rtal/Tid (2)", 
               "offset": 11, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>",
+              "propRef": "yearTime2"
             }, 
             {
               "label_sv": "Utgivningsland", 
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country"
+              "placeholder": "country",
+              "propRef": "country"
             }, 
             {
               "label_sv": "Illustrationer 1", 
@@ -1619,7 +1623,8 @@
               "offset": 35, 
               "length": 3, 
               "default": "swe", 
-              "placeholder": "language"
+              "placeholder": "language",
+              "propRef": "language"
             }, 
             {
               "label_sv": "Modifieringar", 
