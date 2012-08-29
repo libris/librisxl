@@ -285,10 +285,8 @@ abstract class ElasticSearch implements Index, Storage, History {
     }
 
     Document deserializeJsonDocument(source, uri, timestamp) {
-        log.debug("Source: " + new String(source))
         Gson gson = new Gson()
         Document doc = gson.fromJson(new String(source), BasicDocument.class)
-        println "doc: ${doc.data}"
         return doc
     }
 

@@ -27,7 +27,7 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
         if (ctype == "application/json") {
             def in_json = new JsonSlurper().parseText(data)
             def rtype = record_type(in_json["leader"])
-            println "rtype: $rtype"
+            //println "rtype: $rtype"
             suggest_source = (rtype == "bib" ? "name" : rtype)
             w_name = (suggestwhelk ? suggestwhelk.prefix : "test");
             def sug_jsons = transform(in_json, rtype)
@@ -76,7 +76,7 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
                         if (k == "100") {
                             sug_json["identifier"] = "/${w_name}/${suggest_source}/${id001}"
                         } else {
-                            def name = "${id001}/" + sug_json["100"].values()[1..-1].join("_").replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","")
+                            def name = "${id001}/" + sug_json["100"]["a"].replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","")
 
                             //print "values", w_name, suggest_source, "name:", name
                             sug_json["identifier"] = "/${w_name}/${suggest_source}/${name}"
