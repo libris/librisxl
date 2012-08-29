@@ -8,7 +8,7 @@ import groovy.json.*
 class BasicSearchResult implements SearchResult {
 
     Iterable hits
-    Iterable facets
+    Map facets
 
     long numberOfHits = 0
 
@@ -41,8 +41,15 @@ class BasicSearchResult implements SearchResult {
             jsonString << "\"data\":" << it.dataAsString << "}"
         }
         jsonString << "]"
+        if (facets) {
+            jsonString << ",\"facets\":" << jsonifyFacets()
+        }
         jsonString << "}"
         return jsonString.toString()
+    }
+
+    private jsonifyFacets() {
+        return new JsonBuilder(facets).toString() 
     }
 }
 

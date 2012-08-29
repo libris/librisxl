@@ -35,7 +35,7 @@ def transform(a_json, rtype):
                     if k == '100':
                         sug_json['identifier'] = "/%s/%s/%s" % (w_name, suggest_source, id001)
                     else:
-                        name = "%s_%s" % (id001, '_'.join(sug_json['100'].values()[1:]).replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]",""))
+                        name = "%s/%s" % (id001, '_'.join(sug_json['100'].values()[1:]).replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]",""))
 
                         #print "values", w_name, suggest_source, "name:", name
                         sug_json['identifier'] = "/%s/%s/%s" % (w_name, suggest_source, name)
@@ -62,6 +62,8 @@ def transform(a_json, rtype):
     #print "sug_json", sug_json
     #print "resten_json", resten_json
     #print "alla_json", alla_json
+
+    resten_json['records'] = 1
 
     # get_records for auth-records
     if rtype == 'auth':
@@ -113,7 +115,7 @@ def get_records(f_100, sug_json):
         q_all = '((%s) OR (%s)) AND %s' % (q_100, q_700, q_swe)
 
         response = bibwhelk.query(q_all) 
-        print "Count: ", response.getNumberOfHits()
+        #print "Count: ", response.getNumberOfHits()
         sug_json['records'] = response.getNumberOfHits()
 
         top_3 = {}
@@ -126,14 +128,14 @@ def get_records(f_100, sug_json):
         q_all = '(%s) OR (%s)' % (q_100, q_700)
 
         response = bibwhelk.query(q_all) 
-        print "Count: ", response.getNumberOfHits()
+        #print "Count: ", response.getNumberOfHits()
         sug_json['records'] = response.getNumberOfHits()
         for document in response.hits[:top_missing]:
             jdoc = json.loads(document.getDataAsString())
             f_001, title = top_title_tuple(jdoc['fields'])
             top_3[f_001] = title
 
-        print "top_3", top_3
+        #print "top_3", top_3
         only_top_3 = {}
         for k, v in top_3.items()[:3]:
             only_top_3[k] = v
@@ -200,14 +202,13 @@ _in_console = False
 try:
     data = document.getDataAsString()
     ctype = document.getContentType()
-    bibwhelk = whelk.getManager().getWhelk('bib')
 except:
+    print "Exception in python setup ... Likely, nothing will run now."
     ctype = "application/json"
     data = sys.stdin.read()
-    whelk = None
+    suggestwhelk = None
     bibwhelk = None
     _in_console = True
-
 
 
 #print "console mode", _in_console
@@ -219,7 +220,7 @@ if ctype == 'application/json':
     if (rtype == 'bib'):
         suggest_source = 'name'
 
-    w_name = whelk.prefix if whelk else "test"
+    w_name = suggestwhelk.prefix if suggestwhelk else "test"
 
     #identifier = "/%s/%s/%s" % (w_name, suggest_source, document.identifier.toString().split("/")[-1])
     sug_jsons = transform(in_json, rtype)
@@ -228,11 +229,11 @@ if ctype == 'application/json':
         r = json.dumps(sug_json)
         #print "r", r
 
-        if whelk:
-            mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")
+        if suggestwhelk:
+            mydoc = suggestwhelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")
 
             #print "Sparar dokument i whelken daaraa"
-            uri = whelk.store(mydoc)
+            uri = suggestwhelk.store(mydoc)
 
 if _in_console:
     print r

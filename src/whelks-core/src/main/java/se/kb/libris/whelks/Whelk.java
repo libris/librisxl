@@ -3,10 +3,12 @@ package se.kb.libris.whelks;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.*;
+import se.kb.libris.whelks.plugin.Plugin;
 
 public interface Whelk {
     // storage
     public URI store(Document d);
+    public void store(Iterable<Document> d);
     public Document get(URI identifier);
     public void delete(URI identifier);
     
@@ -21,10 +23,9 @@ public interface Whelk {
     public void destroy();
     public Iterable<LogEntry> log(int startIndex);
     public Iterable<LogEntry> log(URI identifier);
-    public void setManager(WhelkManager manager);
-    public WhelkManager getManager();
+    public Iterable<LogEntry> log(Date since);
     public String getPrefix();
-    public void setPrefix(String pfx);
+    public Iterable<? extends Plugin> getPlugins();
     
     // factory methods
     public Document createDocument();

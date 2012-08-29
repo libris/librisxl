@@ -4,7 +4,8 @@ apply plugin: 'jetty'
 apply plugin: 'application'
 
 
-mainClassName = 'se.kb.libris.whelks.imports.BatchImport'
+mainClassName = 'se.kb.libris.whelks.ImportWhelk'
+//mainClassName = 'se.kb.libris.whelks.imports.BatchImport'
 
 tasks.withType(GroovyCompile) {
   groovyOptions.encoding = 'utf-8'
@@ -78,13 +79,13 @@ dependencies {
     compile 'org.python:jython-standalone:2.5.2'
     compile 'com.googlecode.json-simple:json-simple:1.1.1'
     compile 'com.google.code.gson:gson:2.1'
-    compile 'org.elasticsearch:elasticsearch:0.19.3'
+    compile 'org.elasticsearch:elasticsearch:0.19.6'
     compile 'org.elasticsearch:elasticsearch-lang-groovy:1.1.0'
     compile 'ch.qos.logback:logback-classic:1.0.0'
     compile 'commons-io:commons-io:2.3'
     compile 'org.restlet.jse:org.restlet:2.0.13'
     compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.13'
-    compile 'se.kb.libris:marc:1.2.6'
+    compile 'se.kb.libris:marc:1.2.7'
     compile 'jyson:jyson:1.0.2'
     compile 'commons-codec:commons-codec:1.4'
     providedCompile 'javax.servlet:servlet-api:2.5'

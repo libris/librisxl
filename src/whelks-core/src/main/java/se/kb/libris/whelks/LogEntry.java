@@ -1,15 +1,22 @@
 package se.kb.libris.whelks;
 
 import java.net.URI;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @todo Placeholder for something that holds an event for Document history and Whelk feed
  */
 
-public interface LogEntry {
-    public URI getIdentifier();
-    public Date getTimestamp();
-    public Map<String, String> getInfo();
+public class LogEntry {
+    private URI identifier;
+    private Date timestamp;
+
+    public LogEntry(URI i, Date t) { 
+        this.identifier = i;
+        this.timestamp = t;
+    }
+
+    public URI getIdentifier() { return identifier; }
+    public Date getTimestamp() { return timestamp; }
+    public Map<String, String> getInfo() { return new HashMap<String,String>(); }
 }

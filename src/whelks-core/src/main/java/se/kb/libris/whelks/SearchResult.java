@@ -1,10 +1,13 @@
 package se.kb.libris.whelks;
 
+import java.util.Map;
+
 public interface SearchResult<T extends Document> {
 
     long getNumberOfHits();
-    Iterable<Facet> getFacets();
+    //Iterable<Facet> getFacets();
     Iterable<Hit<T>> getHits();
+    Map<String, Map<String, Integer>> getFacets();
 
     public String toJson();
     

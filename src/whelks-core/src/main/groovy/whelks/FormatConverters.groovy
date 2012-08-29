@@ -9,7 +9,7 @@ import se.kb.libris.whelks.persistance.*
 
 import org.json.simple.JSONObject
 
-abstract class BasicFormatConverter implements FormatConverter {
+abstract class BasicFormatConverter implements FormatConverter, WhelkAware {
     boolean enabled = true
     void enable() { this.enabled = true }
     void disable() { this.enabled = false }
@@ -19,65 +19,68 @@ abstract class BasicFormatConverter implements FormatConverter {
 @Log
 class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSerialisable, JSONInitialisable {
 
-    final private ScriptEngine python = new ScriptEngineManager().getEngineByName("python")
+    final private ScriptEngine python 
     String scriptName
+    def script
+    Reader reader
     String id = "PythonRunnerFormatConverter"
+    Map<String, Object> requirements = new HashMap<String, Object>()
 
-    PythonRunnerFormatConverter() {}
-    PythonRunnerFormatConverter(String sn) { this.scriptName = sn }
-
-    private void listAvailableEngines() {
-        try {
-            ScriptEngineManager mgr = new ScriptEngineManager()
-            List<ScriptEngineFactory> factories = mgr.getEngineFactories()
-            for (ScriptEngineFactory factory: factories) {
-                System.out.println("ScriptEngineFactory Info")
-                String engName = factory.getEngineName()
-                String engVersion = factory.getEngineVersion()
-                String langName = factory.getLanguageName()
-                String langVersion = factory.getLanguageVersion()
-                System.out.printf("\tScript Engine: %s (%s)\n",
-                        engName, engVersion)
-                List<String> engNames = factory.getNames()
-                for(String name: engNames) {
-                    System.out.printf("\tEngine Alias: %s\n", name)
-                }
-                System.out.printf("\tLanguage: %s (%s)\n",
-                        langName, langVersion)
-            }
-        } catch (Exception e) {
-            throw new WhelkRuntimeException(e)
-        }
+    PythonRunnerFormatConverter(Map req) {
+        python = new ScriptEngineManager().getEngineByName("python")
+        this.scriptName = req.get("script")
+        this.requirements = req 
+        readScript(req.get("script"))
     }
 
+    private readScript(scriptName) {
+        Reader r = null
+        if (scriptName.startsWith("/")) {
+            this.script = new File(scriptName).text
+        } else {
+            InputStream is = this.getClass().getClassLoader().getResourceAsStream(scriptName)
+            this.script = is.text
+        }
+        if (!this.script) {
+            throw new WhelkRuntimeException("Failed to read script.")
+        }
+        this.reader = new StringReader(this.script)
+    }
+
+
     @Override
-    public Document convert(Whelk whelk, Document doc) { 
+    public Document convert(Document doc) { 
         if (python == null) {
             throw new WhelkRuntimeException("Unable to find script engine for python.")
         }
         try {
             log.debug("Converter executing script "+ this.scriptName)
-            Reader r = null
-            if (this.scriptName.startsWith("/")) {
-                r = new FileReader(scriptName)
-            } else {
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream(this.scriptName)
-                r = new InputStreamReader(is)
+            requirements.each {
+                log.debug("Feeding python with ${it.value} (${it.key})")
+                python.put(it.key, it.value)
             }
-            if (r == null) {
-                throw new WhelkRuntimeException("Failed to read script.")
-            }
-            python.put("whelk", whelk)
+            println "1: " + System.currentTimeMillis()
+            Reader r = new StringReader(this.script)
+            println "2: " + System.currentTimeMillis()
+            //log.debug("Feeding python with $doc.identifier (document)")
             python.put("document", doc)
+            println "3. " + System.currentTimeMillis()
             python.eval(r)
+            println "4: " + System.currentTimeMillis()
+            /*
             Object result = python.get("result")
             if (result != null) {
                 return doc.withData(((String)result).getBytes())
             } else {
+                log.debug("Python has handled everything for us. Now return null.")
                 return null
             }
+            */
+            reader.reset()
+            log.debug("Done ...")
         } catch (ScriptException se) {
             log.error("Script failed: " + se.getMessage(), se)
+            return null
         } catch (Exception e) {
             throw new WhelkRuntimeException(e)
         }
@@ -107,5 +110,35 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
         return _converter
     }
 
+    protected void listAvailableEngines() {
+        try {
+            ScriptEngineManager mgr = new ScriptEngineManager()
+            List<ScriptEngineFactory> factories = mgr.getEngineFactories()
+            for (ScriptEngineFactory factory: factories) {
+                System.out.println("ScriptEngineFactory Info")
+                String engName = factory.getEngineName()
+                String engVersion = factory.getEngineVersion()
+                String langName = factory.getLanguageName()
+                String langVersion = factory.getLanguageVersion()
+                System.out.printf("\tScript Engine: %s (%s)\n",
+                        engName, engVersion)
+                List<String> engNames = factory.getNames()
+                for(String name: engNames) {
+                    System.out.printf("\tEngine Alias: %s\n", name)
+                }
+                System.out.printf("\tLanguage: %s (%s)\n",
+                        langName, langVersion)
+            }
+        } catch (Exception e) {
+            throw new WhelkRuntimeException(e)
+        }
+    }
+
+    static void main(args) {
+        def r = ["script": "test.py"]
+        def p = new PythonRunnerFormatConverter(r)
+        p.listAvailableEngines()
+        p.convert(null)
+    }
 
 }
