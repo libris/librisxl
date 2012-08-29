@@ -96,7 +96,7 @@ abstract class ElasticSearch implements Index, Storage, History {
         def breq = client.prepareBulk()
 
         for (def doc : documents) {
-            breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(serializeDocumentToJson(doc))
+            breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(serializeDocumentToJson(doc)))
         }
         def response = performExecute(breq)
         if (response.hasFailures()) {
@@ -307,13 +307,14 @@ class ElasticSearchClient extends ElasticSearch {
         this.index = i
         Properties properties = new Properties();
         def is = ElasticSearchClient.class.getClassLoader().getResourceAsStream("whelks-core.properties")
-        properties.load(is);
-        final String elastichost = properties.getProperty("elastichost");
+        properties.load(is)
+        final String elastichost = properties.getProperty("elastichost")
+        final String elasticcluster = properties.getProperty("elasticclustername")
 
         log.debug "Connecting to $elastichost:9300"
         Settings settings = ImmutableSettings.settingsBuilder()
                 .put("client.transport.ping_timeout", 30)
-                .put("cluster.name", "minis")
+                .put("cluster.name", elasticcluster)
                 .put("client.transport.sniff", true)
                 .build();
         client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))

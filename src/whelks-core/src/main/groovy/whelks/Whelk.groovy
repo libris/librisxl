@@ -133,6 +133,7 @@ class ImportWhelk extends BasicWhelk {
             def whelk = new ImportWhelk(prefix)
             def date = (args.length > 2 ? new Date(new Long(args[2])) : null)
             whelk.addPlugin(new ElasticSearchClient(prefix))
+            whelk.addPlugin(new MarcCrackerIndexFormatConverter()) 
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
             def nrimports = importer.doImport(whelk, date)

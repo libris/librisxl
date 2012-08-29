@@ -934,7 +934,7 @@
           "matchKeys": [
             "h"
           ], 
-          "label_sv": "Mik&roformer", 
+          "label_sv": "&Mikroformer", 
           "columns": [
             {
               "label_sv": "S\u00e4rskild b\u00e4rarbeteckning", 
@@ -969,7 +969,7 @@
               "offset": 6, 
               "length": 3, 
               "default": "999", 
-              "placeholder": "<<<TEXT>>>",
+              "placeholder": "<<<TEXT>>>", 
               "propRef": "ensmallmentExactWithRightJustWithStartingLoser"
             }, 
             {
@@ -1156,8 +1156,7 @@
               "offset": 17, 
               "length": 6, 
               "default": "000000", 
-              "placeholder": "<<<TEXT>>>",
-              "propRef": "timeOfScruttination"
+              "placeholder": "<<<TEXT>>>"
             }
           ]
         }, 
@@ -1356,7 +1355,7 @@
           "matchKeys": [
             "t"
           ], 
-          "label_sv": "Te&xtresurser", 
+          "label_sv": "&Textresurser", 
           "columns": [
             {
               "label_sv": "S\u00e4rskild b\u00e4rarbeteckning", 
@@ -1437,8 +1436,7 @@
               "offset": 1, 
               "length": 1, 
               "default": "m", 
-              "placeholder": "unspecifiedmaterial",
-              "propRef": "especialNoiseSigning"
+              "placeholder": "unspecifiedmaterial"
             }
           ]
         }
@@ -1475,7 +1473,7 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>",
+              "placeholder": "<<<TEXT>>>", 
               "propRef": "date"
             }, 
             {
@@ -1490,7 +1488,7 @@
               "offset": 7, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>",
+              "placeholder": "<<<TEXT>>>", 
               "propRef": "yearTime1"
             }, 
             {
@@ -1498,7 +1496,7 @@
               "offset": 11, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>",
+              "placeholder": "<<<TEXT>>>", 
               "propRef": "yearTime2"
             }, 
             {
@@ -1506,7 +1504,7 @@
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country",
+              "placeholder": "country", 
               "propRef": "country"
             }, 
             {
@@ -1626,7 +1624,7 @@
               "offset": 35, 
               "length": 3, 
               "default": "swe", 
-              "placeholder": "language",
+              "placeholder": "language", 
               "propRef": "language"
             }, 
             {
@@ -1668,7 +1666,7 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>",
+              "placeholder": "<<<TEXT>>>", 
               "propRef": "date"
             }, 
             {
@@ -1683,7 +1681,7 @@
               "offset": 7, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>",
+              "placeholder": "<<<TEXT>>>", 
               "propRef": "yearTime1"
             }, 
             {
@@ -1691,7 +1689,7 @@
               "offset": 11, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>",
+              "placeholder": "<<<TEXT>>>", 
               "propRef": "yearTime2"
             }, 
             {
@@ -1699,7 +1697,7 @@
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country",
+              "placeholder": "country", 
               "propRef": "country"
             }, 
             {
@@ -1735,8 +1733,8 @@
               "offset": 35, 
               "length": 3, 
               "default": "swe", 
-              "placeholder": "language",
-              "propRef":"language"
+              "placeholder": "language", 
+              "propRef": "language"
             }, 
             {
               "label_sv": "Modifieringar", 
@@ -1786,7 +1784,8 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "date"
             }, 
             {
               "label_sv": "Typ av utgivningssdatum", 
@@ -1800,23 +1799,24 @@
               "offset": 7, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime1"
             }, 
             {
               "label_sv": "\u00c5rtal/Tid  (2)", 
               "offset": 11, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime2"
             }, 
             {
               "label_sv": "Utgivningsland", 
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country",
+              "placeholder": "country", 
               "propRef": "country"
-
             }, 
             {
               "label_sv": "Relief (h\u00f6jdskillndader) 1", 
@@ -1900,7 +1900,8 @@
               "offset": 35, 
               "length": 3, 
               "default": "swe", 
-              "placeholder": "language"
+              "placeholder": "language", 
+              "propRef": "language"
             }, 
             {
               "label_sv": "Modifieringar", 
@@ -1949,7 +1950,8 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "date"
             }, 
             {
               "label_sv": "Typ av utgivningssdatum", 
@@ -1963,21 +1965,24 @@
               "offset": 7, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime1"
             }, 
             {
               "label_sv": "\u00c5rtal/Tid  (2)", 
               "offset": 11, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime2"
             }, 
             {
               "label_sv": "Utgivningsland", 
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country"
+              "placeholder": "country", 
+              "propRef": "country"
             }, 
             {
               "label_sv": "Form", 
@@ -1991,7 +1996,8 @@
               "offset": 35, 
               "length": 3, 
               "default": "swe", 
-              "placeholder": "language"
+              "placeholder": "language", 
+              "propRef": "language"
             }, 
             {
               "label_sv": "Modifieringar", 
@@ -2059,7 +2065,8 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "date"
             }, 
             {
               "label_sv": "Typ av utgivningssdatum", 
@@ -2073,21 +2080,24 @@
               "offset": 7, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime1"
             }, 
             {
               "label_sv": "\u00c5rtal/Tid  (2)", 
               "offset": 11, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime2"
             }, 
             {
               "label_sv": "Utgivningsland", 
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country"
+              "placeholder": "country", 
+              "propRef": "country"
             }, 
             {
               "label_sv": "Kompositionsform (anv\u00e4nds ej)", 
@@ -2192,7 +2202,8 @@
               "offset": 35, 
               "length": 3, 
               "default": "___", 
-              "placeholder": "language"
+              "placeholder": "language", 
+              "propRef": "language"
             }, 
             {
               "label_sv": "Modifieringar", 
@@ -2239,7 +2250,8 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "date"
             }, 
             {
               "label_sv": "Typ av utgivningssdatum", 
@@ -2253,21 +2265,24 @@
               "offset": 7, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime1"
             }, 
             {
               "label_sv": "\u00c5rtal/Tid (2)", 
               "offset": 11, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime2"
             }, 
             {
               "label_sv": "Utgivningsland", 
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country"
+              "placeholder": "country", 
+              "propRef": "country"
             }, 
             {
               "label_sv": "Frekvens", 
@@ -2372,7 +2387,8 @@
               "offset": 35, 
               "length": 3, 
               "default": "swe", 
-              "placeholder": "language"
+              "placeholder": "language", 
+              "propRef": "language"
             }, 
             {
               "label_sv": "Modifieringar", 
@@ -2450,7 +2466,8 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "date"
             }, 
             {
               "label_sv": "Typ av utgivningssdatum", 
@@ -2464,21 +2481,24 @@
               "offset": 7, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime1"
             }, 
             {
               "label_sv": "\u00c5rtal/Tid (2)", 
               "offset": 11, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "yearTime2"
             }, 
             {
               "label_sv": "Utgivningsland", 
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country"
+              "placeholder": "country", 
+              "propRef": "country"
             }, 
             {
               "label_sv": "Speltid", 
@@ -2527,7 +2547,8 @@
               "offset": 35, 
               "length": 3, 
               "default": "___", 
-              "placeholder": "language"
+              "placeholder": "language", 
+              "propRef": "language"
             }, 
             {
               "label_sv": "Modifieringar", 
@@ -22706,7 +22727,8 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "date"
             }, 
             {
               "label_sv": "Geografisk precisering", 

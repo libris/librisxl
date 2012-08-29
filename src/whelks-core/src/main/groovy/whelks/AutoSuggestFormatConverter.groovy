@@ -9,6 +9,9 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
 
     def suggestwhelk
     def bibwhelk
+    def w_name
+    def suggest_source
+
     String id = "autoSuggestFormatConverter"
 
     AutoSuggestFormatConverter(Map req) {
@@ -25,8 +28,8 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
             def in_json = new JsonSlurper().parseText(data)
             def rtype = record_type(in_json["leader"])
             println "rtype: $rtype"
-            def suggest_source = (rtype == "bib" ? "name" : rtype)
-            def w_name = (suggestwhelk ? suggestwhelk.prefix : "test");
+            suggest_source = (rtype == "bib" ? "name" : rtype)
+            w_name = (suggestwhelk ? suggestwhelk.prefix : "test");
             def sug_jsons = transform(in_json, rtype)
             for (sug_json in sug_jsons) {
                 def identifier = sug_json["identifier"];
@@ -41,25 +44,25 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
     }
 
     def transform(a_json, rtype) {
-        alla_json = []
-        resten_json = [:]
-        link = None
-        id001 = None
+        def alla_json = []
+        def resten_json = [:]
+        def link
+        def id001
 
-        top_title = None
+        def top_title
 
-        for (f in a_json["fields"]) {
+        for (def f in a_json["fields"]) {
             f.each { k, v ->
                 if (k == "001") {
                     link = "/${rtype}/${v}"
                     id001 = v
                 }
                 if (k in ["100", "700"]) {
-                    should_add = True
-                    sug_json = [:]
+                    def should_add = true
+                    def sug_json = [:]
                     sug_json["100"] = [:]
                     sug_json["100"]["ind1"] = v["ind1"]
-                    for (sf in v["subfields"]) {
+                    for (def sf in v["subfields"]) {
                         sf.each {sk, sv -> 
                             if (sk == "0" && rtype == "bib") {
                                 should_add = false
@@ -73,7 +76,7 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
                         if (k == "100") {
                             sug_json["identifier"] = "/${w_name}/${suggest_source}/${id001}"
                         } else {
-                            name = "${id001}/" + sug_json["100"].values()[1..-1].join("_").replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","")
+                            def name = "${id001}/" + sug_json["100"].values()[1..-1].join("_").replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","")
 
                             //print "values", w_name, suggest_source, "name:", name
                             sug_json["identifier"] = "/${w_name}/${suggest_source}/${name}"
@@ -91,11 +94,11 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
                     }
                     f_list << d
                     if (k == "245") {
-                        titleparts = {}
+                        def titleparts = [:]
                         for (sf in v["subfields"]) {
                             sf.each { sk, sv ->
                                 if (sk in ["a", "b"]) {
-                                    titleparts[sk] = sv.trim("[/ ]")
+                                    titleparts[sk] = sv.replaceAll(/^[\s\/\[\]]+|[\s\/\[\]]+$/, "")
                                 }
                             }
                         }
@@ -141,9 +144,10 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
 
         // append resten on alla
         //print "resten", resten_json
-        ny_alla = []
+        def ny_alla = []
         for (def my_json : alla_json) {
-            ny_alla.append(dict(my_json.items() + resten_json.items()))
+            ny_alla << my_json + resten_json
+            //ny_alla.append(dict(my_json.items() + resten_json.items()))
         }
 
         //print "alla", ny_alla
@@ -236,7 +240,8 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
             }
         }
         if (f_001 && f_245_a) {
-            title = f_245_a.trim("[:;/.]") + f_245_b.trim("[:;/]") + " " + f_245_n.trim("[:;/ ]")
+            //title = f_245_a.trim("[:;/.]") + f_245_b.trim("[:;/]") + " " + f_245_n.trim("[:;/ ]")
+            title = f_245_a.replaceAll(/^[\[:;\/\.\]]+|[\[:;\/\.\]]+$/, "") + f_245_b.replaceAll(/^[\[:;\/\]]+|[\[:;\/\]]+$/, "") + " " + f_245_n.replaceAll(/^[\[:;\/\s\]]+|[\[:;\/\s\]]+$/, "")
         }
         return [f_001, title.trim()]
     }

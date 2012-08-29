@@ -40,9 +40,9 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
     Document convert(Document doc) {
         def json = new JsonSlurper().parseText(doc.dataAsString)
         def leader = json.leader
-        def pfx = doc.identifier.split("/")[1]
+        def pfx = doc.identifier.toString().split("/")[1]
 
-        def l = expandField(leader, marcmap.(pfx)."000".fixmaps[0].columns)
+        def l = expandField(leader, marcmap.get(pfx)."000".fixmaps[0].columns)
 
         json.leader = ["subfields": l.collect {key, value -> [(key):value]}]
 
@@ -60,7 +60,7 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
                         }
                         json.fields[pos] = [(fkey):date]
                     } else {
-                        marcmap.(pfx).each { key, value ->
+                        marcmap.get(pfx).each { key, value ->
                             if (fkey == key) {
                                 try {
                                     value.fixmaps.each { fm ->
@@ -76,10 +76,15 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
             }
         }
 
-        println "json: $json"
 
-        def builder = new JsonBuilder(json)
-        doc.withData(builder.toString())
+        try {
+            def builder = new JsonBuilder(json)
+            doc.withData(builder.toString())
+        } catch (Exception e) {
+            log.error("Failed to create cracked marc index: ${e.message}")
+            log.error("JSON structure: $json")
+            throw new se.kb.libris.whelks.exception.WhelkRuntimeException(e)
+        }
 
         return doc
     }
