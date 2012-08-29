@@ -96,12 +96,17 @@ abstract class ElasticSearch implements Index, Storage, History {
         def breq = client.prepareBulk()
 
         for (def doc : documents) {
-            breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
+            breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(serializeDocumentToJson(doc))
         }
         def response = performExecute(breq)
         if (response.hasFailures()) {
-            println "Bulk import has failures."
-        }     
+            log.error "Bulk import has failures."
+            for (def re : response.items()) {
+                if (re.failed()) {
+                    log.error "Fail message: ${re.failureMessage}"
+                }
+            }
+        }
     }
 
     def init() {
@@ -280,8 +285,10 @@ abstract class ElasticSearch implements Index, Storage, History {
     }
 
     Document deserializeJsonDocument(source, uri, timestamp) {
+        log.debug("Source: " + new String(source))
         Gson gson = new Gson()
         Document doc = gson.fromJson(new String(source), BasicDocument.class)
+        println "doc: ${doc.data}"
         return doc
     }
 

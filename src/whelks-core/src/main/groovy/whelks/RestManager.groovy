@@ -13,6 +13,7 @@ import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.plugin.external.*
 
 @Log
 class RestManager extends Application {
@@ -57,11 +58,11 @@ class RestManager extends Application {
         suggestwhelk.addPlugin(acplugin)
 
         // Add other plugins 
-        def formatParameters = ["script": "sug_json.py", "bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
+        def formatParameters = ["bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
         
         /*
-        suggestwhelk.addPlugin(new Listener(bibwhelk, 5, PythonRunnerFormatConverter.class, formatParameters))
-        suggestwhelk.addPlugin(new Listener(authwhelk, 5, PythonRunnerFormatConverter.class, formatParameters))
+        suggestwhelk.addPlugin(new Listener(bibwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
+        suggestwhelk.addPlugin(new Listener(authwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
         */
 
         whelks << bibwhelk

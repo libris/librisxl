@@ -40,8 +40,9 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
     Document convert(Document doc) {
         def json = new JsonSlurper().parseText(doc.dataAsString)
         def leader = json.leader
+        def pfx = doc.identifier.split("/")[1]
 
-        def l = expandField(leader, marcmap.bib."000".fixmaps[0].columns)
+        def l = expandField(leader, marcmap.(pfx)."000".fixmaps[0].columns)
 
         json.leader = ["subfields": l.collect {key, value -> [(key):value]}]
 
@@ -50,12 +51,22 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
         json.fields.eachWithIndex() { it, pos ->
             it.each { fkey, fvalue ->
                 if (fkey.startsWith("00")) {
-                    marcmap.bib.each { key, value ->
-                        if (fkey == key) {
-                            try {
-                                value.fixmaps.each { fm ->
-                                    if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(l['typeOfRecord'])) || fm.matchRecTypeBibLevel.contains(mrtbl)) {
-                                        json.fields[pos] = [(fkey):["subfields": expandField(fvalue, fm.columns).collect {k, v -> [(k):v]} ]]
+                    if (fkey == "005") {
+                        def date
+                        try {
+                            date = new Date().parse("yyyyMMddHHmmss.S", fvalue)
+                        } catch (Exception e) {
+                            date = new Date()
+                        }
+                        json.fields[pos] = [(fkey):date]
+                    } else {
+                        marcmap.(pfx).each { key, value ->
+                            if (fkey == key) {
+                                try {
+                                    value.fixmaps.each { fm ->
+                                        if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(l['typeOfRecord'])) || (fm.matchRecTypeBibLevel &&  fm.matchRecTypeBibLevel.contains(mrtbl))) {
+                                            json.fields[pos] = [(fkey):["subfields": expandField(fvalue, fm.columns).collect {k, v -> [(k):v] } ]]
+                                        }
                                     }
                                 } catch (groovy.lang.MissingPropertyException mpe) { }
                             }
@@ -64,6 +75,8 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
                 }
             }
         }
+
+        println "json: $json"
 
         def builder = new JsonBuilder(json)
         doc.withData(builder.toString())

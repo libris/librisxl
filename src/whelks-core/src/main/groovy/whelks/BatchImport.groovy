@@ -1,11 +1,19 @@
 package se.kb.libris.whelks.imports;
 
+import groovy.util.logging.Slf4j as Log
+import groovy.xml.StreamingMarkupBuilder
+import groovy.util.slurpersupport.GPathResult
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
 import java.text.*;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.*;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.Controlfield;
 import se.kb.libris.util.marc.Datafield;
@@ -27,7 +35,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class BatchImport {
+@Log
+class BatchImport {
 
     private String resource;
 
@@ -48,7 +57,7 @@ public class BatchImport {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
             url = url + sdf.format(from);
         }
-        System.out.println("URL: " + url);
+        log.debug("URL: $url");
         return url;
     }
 
@@ -69,18 +78,6 @@ public class BatchImport {
             Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    // START possible authentication alternative
-    /*public void getAuthentication() throws IOException {
-        Properties properties = new Properties();
-            properties.load(new FileInputStream("resources/whelks-core.properties"));
-            final String username = properties.getProperty("username");
-            final String password = properties.getProperty("password");
-            Authenticator.setDefault(new Authenticator() {
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(username, password.toCharArray());
-                }
-            });
-    }*/
     // END possible authentication alternative
     public int doImport(ImportWhelk whelk, Date from) {
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
@@ -90,12 +87,6 @@ public class BatchImport {
             }
         }
         try {
-            /*Properties properties = new Properties(); properties.load(new FileInputStream("resources/whelks-core.properties")); String
-            authString = properties.getProperty("authString");
-            byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
-            String authStringEnc = new String(authEncBytes);
-            urlConnection = url.openConnection();
-            urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);*/
             // While resumptionToken is something
             URL url = new URL(getBaseUrl(from));
             this.starttime = System.currentTimeMillis();
@@ -106,7 +97,6 @@ public class BatchImport {
                 resumptionToken = harvest(url, whelk);
             }
             
-            //System.out.println("RESTOK: " + resumptionToken);
             // Loop through harvest
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -124,14 +114,71 @@ public class BatchImport {
         return imported;
     }
 
-    public String harvest(URL url, ImportWhelk whelk) {
+    public static String createString(GPathResult root) {
+        return new StreamingMarkupBuilder().bind{ 
+            out << root 
+        } 
+    }
+
+    /*
+    String getFilteredString(String xmlString) {
+        byte[] outbytes
+        try {
+            // Decode the file just to get a CharBuffer for the encoder - perhaps not the simpliest way?
+            Charset charset = Charset.forName("UTF-8");
+            CharsetDecoder utf8Decoder = charset.newDecoder();
+            utf8Decoder.onMalformedInput(CodingErrorAction.IGNORE);
+            utf8Decoder.onUnmappableCharacter(CodingErrorAction.IGNORE);
+            CharsetEncoder utf8Encoder = charset.newEncoder();
+            CharBuffer buffer = utf8Decoder.decode(ByteBuffer.wrap(xmlString.getBytes()));
+            ByteBuffer bb = utf8Encoder.encode(buffer);
+            outbytes = bb.array();
+        } catch (CharacterCodingException ex) {
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+        } 
+        println "converted doc: " + new String(outbytes)
+        return new String(outbytes)
+    }
+    */
+
+    String findResumptionToken(xmlString) {
+        try {
+            return xmlString.split("(<)/?(resumptionToken>)")[1]
+        } catch (ArrayIndexOutOfBoundsException a) {
+            log.error("Failed to extract resumptionToken from xml:\n$xmlString")
+        }
+    }
+
+    String harvest(url, whelk) {
+        try {
+            def OAIPMH = new XmlSlurper(false,false).parseText(url.text)
+            def documents = []
+            OAIPMH.ListRecords.record.each {
+                MarcRecord record = MarcXmlRecordReader.fromXml(createString(it.metadata.record))
+                String id = record.getControlfields("001").get(0).getData();
+                String jsonRec = MarcJSONConverter.toJSONString(record);
+                documents << whelk.createDocument().withData(jsonRec.getBytes()).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
+                imported++
+            }
+            whelk.store(documents)
+            return OAIPMH.ListRecords.resumptionToken
+        } catch (Exception e) {
+            log.warn("Failed to parse XML document: ${e.message}. Trying to extract resumptionToken and continue.")
+            return findResumptionToken(url.text)
+        }
+    }
+
+    /*
+    public String oldharvest(URL url, ImportWhelk whelk) {
         String restok = null;
         InputStream is = null;
         HttpURLConnection urlConnection = null;
         try {
-            urlConnection = (HttpURLConnection) url.openConnection();
-            is = urlConnection.getInputStream();
+            urlConnection = (HttpURLConnection) url.openConnection(); 
+            String xmlString = getFilteredStreamFromURLConnection(urlConnection);
+            println "Length of $xmlString is " + xmlString.length()
             DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            is = IOUtils.toInputStream(xmlString);
             Document document = documentBuilder.parse(is);
             NodeList nodeList = document.getElementsByTagName("resumptionToken");
             Element element = (Element) nodeList.item(0);
@@ -151,7 +198,7 @@ public class BatchImport {
 
             while ((record = marcXmlRecordReader.readRecord()) != null) {
                 String id = record.getControlfields("001").get(0).getData();
-                
+
                 String jsonRec = MarcJSONConverter.toJSONString(record);
 
                 se.kb.libris.whelks.Document doc = whelk.createDocument().withData(jsonRec.getBytes()).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
@@ -161,11 +208,6 @@ public class BatchImport {
                 documents.add(doc);
                 imported++;
                 //whelk.store(doc);
-                /*
-                if (imported % 1000 == 0) {
-                    System.out.println("" + imported + " documents imported in " + ((System.currentTimeMillis() - this.starttime)/1000) + " seconds.");
-                }
-                */
             }
             whelk.store(documents);
 
@@ -185,14 +227,16 @@ public class BatchImport {
             System.err.println("URL " + url + " failed:");
             e.printStackTrace();
         } finally {
-            try {
-                is.close();
-                urlConnection.disconnect();
-            } catch (IOException e) {
-            } catch (Exception e2) {
-                e2.printStackTrace();
+            if (null != is) {
+                try {
+                    is.close();
+                    urlConnection.disconnect();
+                } catch (IOException e) {
+                } catch (Exception e2) {
+                    e2.printStackTrace();
+                }
             }
         }
         return restok;
-    }
+    }*/
 }

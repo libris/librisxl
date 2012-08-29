@@ -969,7 +969,8 @@
               "offset": 6, 
               "length": 3, 
               "default": "999", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>",
+              "propRef": "ensmallmentExactWithRightJustWithStartingLoser"
             }, 
             {
               "label_sv": "F\u00e4rg", 
@@ -1155,7 +1156,8 @@
               "offset": 17, 
               "length": 6, 
               "default": "000000", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>",
+              "propRef": "timeOfScruttination"
             }
           ]
         }, 
@@ -1435,7 +1437,8 @@
               "offset": 1, 
               "length": 1, 
               "default": "m", 
-              "placeholder": "unspecifiedmaterial"
+              "placeholder": "unspecifiedmaterial",
+              "propRef": "especialNoiseSigning"
             }
           ]
         }
@@ -1665,7 +1668,8 @@
               "offset": 0, 
               "length": 6, 
               "default": "aaaaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>",
+              "propRef": "date"
             }, 
             {
               "label_sv": "Typ av utgivningssdatum", 
@@ -1679,21 +1683,24 @@
               "offset": 7, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>",
+              "propRef": "yearTime1"
             }, 
             {
               "label_sv": "\u00c5rtal/Tid (2)", 
               "offset": 11, 
               "length": 4, 
               "default": "aaaa", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>",
+              "propRef": "yearTime2"
             }, 
             {
               "label_sv": "Utgivningsland", 
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country"
+              "placeholder": "country",
+              "propRef": "country"
             }, 
             {
               "label_sv": "M\u00e5lgrupp", 
@@ -1728,7 +1735,8 @@
               "offset": 35, 
               "length": 3, 
               "default": "swe", 
-              "placeholder": "language"
+              "placeholder": "language",
+              "propRef":"language"
             }, 
             {
               "label_sv": "Modifieringar", 
@@ -1806,7 +1814,9 @@
               "offset": 15, 
               "length": 3, 
               "default": "sw_", 
-              "placeholder": "country"
+              "placeholder": "country",
+              "propRef": "country"
+
             }, 
             {
               "label_sv": "Relief (h\u00f6jdskillndader) 1", 
