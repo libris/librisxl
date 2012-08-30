@@ -163,6 +163,7 @@ class ReindexingWhelk extends BasicWhelk {
         }
     }
 }
+
 @Log
 class ImportWhelk extends BasicWhelk {
 

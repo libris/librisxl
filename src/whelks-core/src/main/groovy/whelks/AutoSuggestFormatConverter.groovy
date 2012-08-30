@@ -122,7 +122,7 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
         if (rtype == "auth") {
             if (alla_json.size() > 0 && alla_json[0]["100"]) {
                 //f_100 = " ".join(alla_json[0]["100"].values()[1:])
-                f_100 = alla_json[0]["100"]
+                def f_100 = alla_json[0]["100"]
                 resten_json = get_records(f_100, resten_json)
             }
         } 
