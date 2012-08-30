@@ -35,7 +35,7 @@ import se.kb.libris.whelks.exception.*
 import static se.kb.libris.conch.Tools.*
 
 @Log
-abstract class ElasticSearch implements Index, Storage, History {
+abstract class ElasticSearch {
 
     String index
     Client client
@@ -185,7 +185,35 @@ abstract class ElasticSearch implements Index, Storage, History {
         return new URI("/"+index+"/"+id.replaceAll(URI_SEPARATOR, "/"))
     }
 
-    def Collection<LogEntry> updates(Date since, int start = 0) {
+    def Collection<LogEntry> updates(token = null) {
+        def results = new ArrayList<LogEntry>()
+        def srb
+        if (!token) {
+            log.debug("Starting matchAll-query")
+            srb = client.prepareSearch(index)
+                .addField("_timestamp")
+                .setTypes(storageType)
+                .setScroll(TimeValue.timeValueMinutes(2))
+                .setSize(BATCH_SIZE)
+                .addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
+                .setQuery(matchAllQuery())
+        } else {
+            log.debug("Continuing query with scrollId $token")
+            srb = client.prepareSearchScroll(token).setScroll(TimeValue.timeValueMinutes(2))
+        }
+        log.trace("Logquery: " + srb)
+        def response = performExecute(srb)
+        log.trace("Response: " + response)
+        if (response) {
+            log.trace "Total log hits: ${response.hits.totalHits}"
+            response.hits.hits.each {
+                results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
+            }
+        }
+        return [response.scrollId(), results]
+    }
+
+    def Collection<LogEntry> updates(Date since, start = 0) {
         def results = new ArrayList<LogEntry>()
         def srb = client.prepareSearch(index).addField("_timestamp").setTypes(storageType).setFrom(start).setSize(BATCH_SIZE).addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
         def query = rangeQuery("_timestamp").gte(since.getTime())
@@ -320,6 +348,21 @@ class ElasticSearchClient extends ElasticSearch {
         init()
     }
 } 
+
+class ElasticSearchClientStorage extends ElasticSearchClient implements Storage {
+    ElasticSearchClientStorage(String i) {
+        super(i)
+    }
+}
+class ElasticSearchClientIndex extends ElasticSearchClient implements Index {
+    ElasticSearchClientIndex(String i) { super(i); } 
+}
+class ElasticSearchClientHistory extends ElasticSearchClient implements History {
+    ElasticSearchClientHistory(String i) { super(i); } 
+}
+class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient implements Storage, Index, History {
+    ElasticSearchClientStorageIndexHistory(String i) { super(i); } 
+}
 
 @Log
 class ElasticSearchNode extends ElasticSearch {

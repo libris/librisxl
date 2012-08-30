@@ -21,15 +21,18 @@ public interface Whelk {
 
     // maintenance
     public void destroy();
+    public Iterable<LogEntry> log();
     public Iterable<LogEntry> log(int startIndex);
     public Iterable<LogEntry> log(URI identifier);
     public Iterable<LogEntry> log(Date since);
     public String getPrefix();
     public Iterable<? extends Plugin> getPlugins();
+    public void reindex();
     
     // factory methods
     public Document createDocument();
 
-    // notifications
+    // TO BE DELETED
     public void notify(URI uri);
+
 }

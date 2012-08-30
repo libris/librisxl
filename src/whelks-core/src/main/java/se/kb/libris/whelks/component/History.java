@@ -8,4 +8,5 @@ import se.kb.libris.whelks.LogEntry;
 public interface History {
     public static final int BATCH_SIZE = 1000;
     public Collection<LogEntry> updates(Date since);
+    public Collection<LogEntry> updates();
 }

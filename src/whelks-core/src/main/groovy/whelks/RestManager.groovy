@@ -34,9 +34,9 @@ class RestManager extends Application {
         def suggestwhelk = new WhelkImpl("suggest")
 
         // Add storage and index
-        bibwhelk.addPlugin(new ElasticSearchClient(bibwhelk.prefix))
-        authwhelk.addPlugin(new ElasticSearchClient(authwhelk.prefix))
-        suggestwhelk.addPlugin(new ElasticSearchClient(suggestwhelk.prefix))
+        bibwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(bibwhelk.prefix))
+        authwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(authwhelk.prefix))
+        suggestwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(suggestwhelk.prefix))
         //suggestwhelk.addPlugin(new InMemoryStorage())
 
         bibwhelk.addPlugin(new MarcCrackerIndexFormatConverter())

@@ -15,7 +15,7 @@ import se.kb.libris.whelks.persistance.JSONInitialisable;
 import se.kb.libris.whelks.persistance.JSONSerialisable;
 import se.kb.libris.whelks.plugin.*;
 
-public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
+public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
     private String prefix;
@@ -186,6 +186,11 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         }
 
     @Override
+        public Iterable<LogEntry> log() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+    @Override
         public Iterable<LogEntry> log(int startIndex) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -210,6 +215,11 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         public Document createDocument() {
             return new BasicDocument();
         }
+
+    @Override
+    public void reindex() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
     private List<KeyGenerator> getKeyGenerators() {
         List<KeyGenerator> ret = new LinkedList<KeyGenerator>();
@@ -250,9 +260,6 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
         return ret;
     }
-
-    @Override
-        public void notify(URI u) {}
 
     protected Iterable<Storage> getStorages() {
         List<Storage> ret = new LinkedList<Storage>();
@@ -361,6 +368,10 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
             return _whelk;
         }
+
+
+    @Deprecated
+        public void notify(URI u) {}
 
     private URI mintIdentifier(Document d) {
         try {

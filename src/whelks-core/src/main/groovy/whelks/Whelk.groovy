@@ -42,6 +42,9 @@ class WhelkImpl extends BasicWhelk {
         return null
     }
 
+    void reindex() {
+    }
+
     @Override
     public Iterable<LogEntry> log(Date since) {
         History historyComponent = null
@@ -55,6 +58,21 @@ class WhelkImpl extends BasicWhelk {
         }
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
+
+    @Override 
+    public Iterable<LogEntry> log() {
+        History historyComponent = null
+        for (Component c : getComponents()) {
+            if (c instanceof History) {
+                historyComponent = (History)c
+            }
+        }
+        if (historyComponent) {
+            return new LogIterable(historyComponent.updates(), historyComponent);
+        }
+        throw new WhelkRuntimeException("Whelk has no index for searching");
+    }
+
 }
 
 @Log
@@ -63,10 +81,10 @@ class LogIterable<LogEntry> implements Iterable {
     Collection<LogEntry> list
     boolean refilling = false
     boolean incomplete = false
-    int offset = 0
-    Object query
+    def offset = 0
+    def query
 
-    LogIterable(Collection<LogEntry> i, History h, Object q) {
+    LogIterable(Collection<LogEntry> i, History h, Object q=null) {
         this.list = i
         this.history = h
         this.query = q
@@ -109,8 +127,12 @@ class LogIterable<LogEntry> implements Iterable {
         @Synchronized
         private void refill() {
             refilling = true
-            offset = offset + History.BATCH_SIZE
-            list = history.updates(query, offset)
+            if (query) {
+                offset = offset + History.BATCH_SIZE
+                list = history.updates(query, offset)
+            } else {
+                (offset, list) = history.updates(offset)
+            }
             incomplete = (list.size() == History.BATCH_SIZE)
             iter = list.iterator()
             refilling = false
@@ -118,6 +140,29 @@ class LogIterable<LogEntry> implements Iterable {
     }
 }
 
+@Log
+class ReindexingWhelk extends BasicWhelk {
+
+    ReindexingWhelk(pfx) {
+        super(pfx)
+        log.info("Starting whelk '$pfx' in standalone reindexing mode.")
+    }
+
+    static main(args) {
+        if (args) {
+            def prefix = args[0]
+            def resource = (args.length > 1 ? args[1] : args[0])
+            def whelk = new ReindexingWhelk(prefix)
+            def date = (args.length > 2 ? new Date(new Long(args[2])) : null)
+            whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+            long startTime = System.currentTimeMillis()
+            whelk.reindex()
+            println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
+        } else {
+            println "Supply whelk-prefix and resource-name as arguments to commence reindexing."
+        }
+    }
+}
 @Log
 class ImportWhelk extends BasicWhelk {
 
@@ -132,8 +177,7 @@ class ImportWhelk extends BasicWhelk {
             def resource = (args.length > 1 ? args[1] : args[0])
             def whelk = new ImportWhelk(prefix)
             def date = (args.length > 2 ? new Date(new Long(args[2])) : null)
-            whelk.addPlugin(new ElasticSearchClient(prefix))
-            whelk.addPlugin(new MarcCrackerIndexFormatConverter()) 
+            whelk.addPlugin(new ElasticSearchClientStorage(prefix))
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
             def nrimports = importer.doImport(whelk, date)
@@ -144,15 +188,14 @@ class ImportWhelk extends BasicWhelk {
     }
 }
 
+/* NOT USED ATM
 @Log
 class WhelkState {
 
     def whelk
     final static String STORAGE_SUFFIX = "/.whelk/state"
 
-    /** A list of whelks listening to notifications from this whelk. */
     def listeners = []
-    /** A list of whelks that this whelk is listening to. */
     def notifiers = []
 
     WhelkState(Whelk w) {
@@ -197,3 +240,4 @@ class WhelkState {
     }
 
 }
+*/
