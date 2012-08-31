@@ -42,7 +42,17 @@ class WhelkImpl extends BasicWhelk {
         return null
     }
 
+    @Override
     void reindex() {
+        log().each {
+            println "it: $it"
+            def doc = get(it.identifier)
+            for (def c : components) {
+                if (c instanceof Index) {
+                    c.index(doc)
+                }
+            }
+        }
     }
 
     @Override
@@ -81,11 +91,12 @@ class LogIterable<LogEntry> implements Iterable {
     Collection<LogEntry> list
     boolean refilling = false
     boolean incomplete = false
-    def offset = 0
+    def offset 
     def query
 
-    LogIterable(Collection<LogEntry> i, History h, Object q=null) {
-        this.list = i
+    LogIterable(History.HistoryUpdates u, History h, Object q=null) {
+        this.list = u.updates
+        this.offset = u.nextToken
         this.history = h
         this.query = q
         this.incomplete = (list.size == History.BATCH_SIZE)
@@ -128,10 +139,12 @@ class LogIterable<LogEntry> implements Iterable {
         private void refill() {
             refilling = true
             if (query) {
-                offset = offset + History.BATCH_SIZE
+                offset = (offset ? offset : 0) + History.BATCH_SIZE
                 list = history.updates(query, offset)
             } else {
-                (offset, list) = history.updates(offset)
+                def hu = history.updates(offset)
+                list = hu.updates
+                offset = hu.nextToken
             }
             incomplete = (list.size() == History.BATCH_SIZE)
             iter = list.iterator()
@@ -141,7 +154,7 @@ class LogIterable<LogEntry> implements Iterable {
 }
 
 @Log
-class ReindexingWhelk extends BasicWhelk {
+class ReindexingWhelk extends WhelkImpl {
 
     ReindexingWhelk(pfx) {
         super(pfx)

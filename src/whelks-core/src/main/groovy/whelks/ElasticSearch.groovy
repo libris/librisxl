@@ -18,6 +18,7 @@ import org.elasticsearch.search.highlight.*
 import org.elasticsearch.action.count.CountResponse
 import org.elasticsearch.search.facet.FacetBuilders
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.unit.TimeValue
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
@@ -185,7 +186,7 @@ abstract class ElasticSearch {
         return new URI("/"+index+"/"+id.replaceAll(URI_SEPARATOR, "/"))
     }
 
-    def Collection<LogEntry> updates(token = null) {
+    def History.HistoryUpdates updates(Date since, token = null) {
         def results = new ArrayList<LogEntry>()
         def srb
         if (!token) {
@@ -196,7 +197,12 @@ abstract class ElasticSearch {
                 .setScroll(TimeValue.timeValueMinutes(2))
                 .setSize(BATCH_SIZE)
                 .addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
-                .setQuery(matchAllQuery())
+            if (since) {
+                def query = rangeQuery("_timestamp").gte(since.getTime())
+                srb.setQuery(query)
+            } else {
+                srb.setQuery(matchAllQuery())
+            }
         } else {
             log.debug("Continuing query with scrollId $token")
             srb = client.prepareSearchScroll(token).setScroll(TimeValue.timeValueMinutes(2))
@@ -210,25 +216,11 @@ abstract class ElasticSearch {
                 results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
             }
         }
-        return [response.scrollId(), results]
+        return new History.HistoryUpdates(results, response.scrollId())
     }
 
-    def Collection<LogEntry> updates(Date since, start = 0) {
-        def results = new ArrayList<LogEntry>()
-        def srb = client.prepareSearch(index).addField("_timestamp").setTypes(storageType).setFrom(start).setSize(BATCH_SIZE).addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
-        def query = rangeQuery("_timestamp").gte(since.getTime())
-        srb.setQuery(query)
-        log.trace("Logquery: " + srb)
-        def response = performExecute(srb)
-        log.trace("Response: " + response)
-        //return null
-        if (response) {
-            log.trace "Total log hits: ${response.hits.totalHits}"
-            response.hits.hits.each { 
-                results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
-            }
-        }
-        return results
+    def History.HistoryUpdates updates(token = null) {
+        return updates(null, token)
     }
 
     def Map<String, String[]> convertHighlight(Map<String, HighlightField> hfields) {
