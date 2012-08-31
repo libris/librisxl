@@ -63,6 +63,8 @@ class RestManager extends Application {
         suggestwhelk.addPlugin(new Listener(bibwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
         suggestwhelk.addPlugin(new Listener(authwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
 
+        bibwhelk.addPlugin(new MarcCrackerIndexFormatConverter())
+
         whelks << bibwhelk
         whelks << authwhelk
         whelks << suggestwhelk
