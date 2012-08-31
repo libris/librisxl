@@ -45,7 +45,6 @@ class WhelkImpl extends BasicWhelk {
     @Override
     void reindex() {
         log().each {
-            println "it: $it"
             def doc = get(it.identifier)
             for (def c : components) {
                 if (c instanceof Index) {
@@ -168,6 +167,7 @@ class ReindexingWhelk extends WhelkImpl {
             def whelk = new ReindexingWhelk(prefix)
             def date = (args.length > 2 ? new Date(new Long(args[2])) : null)
             whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+            whelk.addPlugin(new MarcCrackerIndexFormatConverter())
             long startTime = System.currentTimeMillis()
             whelk.reindex()
             println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
