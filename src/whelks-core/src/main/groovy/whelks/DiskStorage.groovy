@@ -48,6 +48,10 @@ class DiskStorage implements Storage {
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
+    Iterable<Document> getAll() {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
+
     void store(Document doc) {
         throw new UnsupportedOperationException("Not supported yet.")
     }

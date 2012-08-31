@@ -9,10 +9,10 @@
 
 
   <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
 
-  <root level="info">
+  <root level="debug">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

@@ -10,6 +10,7 @@ public interface Storage extends Component {
     public void store(Document d);
     public void store(Iterable<Document> d);
     public Document get(URI uri);
+    public Iterable<Document> getAll();
     public void delete(URI uri);
     public LookupResult<? extends Document> lookup(Key key);
 }

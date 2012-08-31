@@ -44,11 +44,14 @@ class WhelkImpl extends BasicWhelk {
 
     @Override
     void reindex() {
-        log().each {
-            def doc = get(it.identifier)
-            for (def c : components) {
-                if (c instanceof Index) {
-                    c.index(doc)
+        for (def s : components) {
+            if (s instanceof Storage) {
+                s.getAll().each {
+                    for (def c : components) {
+                        if (c instanceof Index) {
+                            c.index(it)
+                        }
+                    }
                 }
             }
         }
@@ -63,7 +66,7 @@ class WhelkImpl extends BasicWhelk {
             }
         }
         if (historyComponent) {
-            return new LogIterable(historyComponent.updates(since), historyComponent, since);
+            return new LogIterable<LogEntry>(historyComponent.updates(since), historyComponent, since);
         }
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
@@ -77,7 +80,7 @@ class WhelkImpl extends BasicWhelk {
             }
         }
         if (historyComponent) {
-            return new LogIterable(historyComponent.updates(), historyComponent);
+            return new LogIterable<LogEntry>(historyComponent.updates(), historyComponent);
         }
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
@@ -85,9 +88,9 @@ class WhelkImpl extends BasicWhelk {
 }
 
 @Log
-class LogIterable<LogEntry> implements Iterable {
+class LogIterable<T> implements Iterable {
     History history
-    Collection<LogEntry> list
+    Collection<T> list
     boolean refilling = false
     boolean incomplete = false
     def offset 
@@ -101,11 +104,11 @@ class LogIterable<LogEntry> implements Iterable {
         this.incomplete = (list.size == History.BATCH_SIZE)
     }
 
-    Iterator<LogEntry> iterator() {
+    Iterator<T> iterator() {
         return new LogIterator()
     }
 
-    class LogIterator<LogEntry> implements Iterator {
+    class LogIterator<T> implements Iterator {
 
         Iterator iter
 
@@ -121,8 +124,8 @@ class LogIterable<LogEntry> implements Iterable {
         }
 
         @Synchronized
-        LogEntry next() {
-            LogEntry n = iter.next();
+        T next() {
+            T n = iter.next();
             iter.remove();
             if (!iter.hasNext() && incomplete && !refilling) {
                refill()

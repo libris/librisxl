@@ -1,6 +1,7 @@
 package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
+import groovy.transform.Synchronized
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.get.GetResponse
@@ -88,9 +89,14 @@ abstract class ElasticSearch {
         GetResponse response = performExecute(client.prepareGet(index, storageType, translateIdentifier(uri)).setFields("_source","_timestamp"))
         if (response && response.exists()) {
             def ts = (response.field("_timestamp") ? response.field("_timestamp").value : null)
-            return deserializeJsonDocument(response.source(), uri, ts) 
+            return deserializeJsonDocument(response.source()) //, uri, ts) 
         }
         return null
+    }
+
+    @Override
+    Iterable<Document> getAll() {
+        return new ElasticIterable<Document>(this)
     }
 
     void addDocuments(documents, addType) {
@@ -304,7 +310,7 @@ abstract class ElasticSearch {
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    Document deserializeJsonDocument(source, uri, timestamp) {
+    Document deserializeJsonDocument(source) { //, uri, timestamp) {
         Gson gson = new Gson()
         Document doc = gson.fromJson(new String(source), BasicDocument.class)
         return doc
@@ -314,6 +320,102 @@ abstract class ElasticSearch {
         Gson gson = new Gson()
         def json = gson.toJson(doc)
         return json
+    }
+
+    def loadAll(token = null, since = null) {
+        def results = new ArrayList<LogEntry>()
+        def srb
+        if (!token) {
+            log.debug("Starting matchAll-query")
+            srb = client.prepareSearch(index)
+                .addField("_timestamp")
+                .addField("_source")
+                .setTypes(storageType)
+                .setScroll(TimeValue.timeValueMinutes(2))
+                .setSize(BATCH_SIZE)
+                .addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
+            if (since) {
+                def query = rangeQuery("_timestamp").gte(since.getTime())
+                srb.setQuery(query)
+            } else {
+                srb.setQuery(matchAllQuery())
+            }
+        } else {
+            log.debug("Continuing query with scrollId $token")
+            srb = client.prepareSearchScroll(token).setScroll(TimeValue.timeValueMinutes(2))
+        }
+        log.trace("loadAllquery: " + srb)
+        def response = performExecute(srb)
+        log.trace("Response: " + response)
+        if (response) {
+            log.trace "Total log hits: ${response.hits.totalHits}"
+            response.hits.hits.each {
+                results.add(deserializeJsonDocument(it.source()))
+            }
+        }
+        return [results, response.scrollId()]
+    }
+}
+
+
+@Log 
+class ElasticIterable<T> implements Iterable {
+    def indexInstance
+    Collection<T> list
+    boolean refilling = false
+    boolean incomplete = false
+    def token 
+    def query
+
+    ElasticIterable(i) {
+        log.debug("Creating new iterable.")
+        indexInstance = i
+        (list, token) = indexInstance.loadAll()
+        log.debug("Initial list with size: ${list.size} and token: $token")
+        incomplete = (list.size == History.BATCH_SIZE)
+    }
+
+    Iterator<T> iterator() {
+        return new ElasticIterator<T>()
+    }
+
+    class ElasticIterator<T> implements Iterator {
+
+        Iterator iter
+
+        ElasticIterator() {
+            iter = list.iterator()
+        }
+
+        boolean hasNext() {
+            if (!iter.hasNext() && incomplete) {
+                refill()
+            }
+            return iter.hasNext()
+        }
+
+        @Synchronized
+        T next() {
+            T n = iter.next();
+            iter.remove();
+            if (!iter.hasNext() && incomplete && !refilling) {
+               refill()
+            }
+            return n
+        }
+
+        void remove() {
+            throw new UnsupportedOperationException("Not supported");
+        }
+
+        @Synchronized
+        private void refill() {
+            refilling = true
+            (list, token) = this.indexInstance.loadAll(token)
+            incomplete = (list.size() == History.BATCH_SIZE)
+            iter = list.iterator()
+            refilling = false
+        }
     }
 }
 
@@ -355,6 +457,7 @@ class ElasticSearchClientHistory extends ElasticSearchClient implements History 
 class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient implements Storage, Index, History {
     ElasticSearchClientStorageIndexHistory(String i) { super(i); } 
 }
+
 
 @Log
 class ElasticSearchNode extends ElasticSearch {

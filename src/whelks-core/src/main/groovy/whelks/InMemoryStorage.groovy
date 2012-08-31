@@ -28,6 +28,10 @@ class InMemoryStorage implements Storage {
         }
     }
 
+    Iterable<Document> getAll() {
+        throw new UnsupportedOperationException("Not supported yet.")
+    }
+
     Document get(URI uri) {
         return storage.get(uri)
     }
