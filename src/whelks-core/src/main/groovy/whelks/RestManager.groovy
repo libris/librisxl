@@ -60,8 +60,10 @@ class RestManager extends Application {
         // Add other plugins 
         def formatParameters = ["bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
         
+        /*
         suggestwhelk.addPlugin(new Listener(bibwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
         suggestwhelk.addPlugin(new Listener(authwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
+        */
 
         bibwhelk.addPlugin(new MarcCrackerIndexFormatConverter())
 

@@ -44,17 +44,45 @@ class WhelkImpl extends BasicWhelk {
 
     @Override
     void reindex() {
+        int counter = 0
+        def scomp
+        def icomp
+        def ifc
         for (def s : components) {
             if (s instanceof Storage) {
-                s.getAll().each {
-                    for (def c : components) {
-                        if (c instanceof Index) {
-                            c.index(it)
-                        }
-                    }
-                }
+                scomp = s
             }
         }
+        for (def c : components) {
+            if (c instanceof Index) {
+                icomp = c
+            }
+        }
+        for (def p : plugins) {
+            if (p instanceof IndexFormatConverter) {
+                ifc = p
+            }
+        }
+        long startTime = System.currentTimeMillis()
+        def docs = []
+        scomp.getAll().each {
+            if (ifc) {
+                docs << ifc.convert(it)
+            } else {
+                docs << it
+            }
+            counter++
+            if (counter % History.BATCH_SIZE == 0) {
+                long ts = System.currentTimeMillis()
+                println "(" + ((ts - startTime)/1000) + ") New batch, indexing document with id: ${it.identifier}. Velocity: " + (counter/((ts - startTime)/1000)) + " documents per second."
+                icomp.index(docs)
+                docs = []
+            }
+        }
+        if (docs.size() > 0) {
+            icomp.index(docs)
+        }
+        println "Reindexed $counter documents"
     }
 
     @Override
@@ -62,36 +90,18 @@ class WhelkImpl extends BasicWhelk {
         History historyComponent = null
         for (Component c : getComponents()) {
             if (c instanceof History) {
-                historyComponent = (History)c
+                return ((History)c).updates(since)
             }
-        }
-        if (historyComponent) {
-            return new LogIterable<LogEntry>(historyComponent.updates(since), historyComponent, since);
         }
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
-
-    @Override 
-    public Iterable<LogEntry> log() {
-        History historyComponent = null
-        for (Component c : getComponents()) {
-            if (c instanceof History) {
-                historyComponent = (History)c
-            }
-        }
-        if (historyComponent) {
-            return new LogIterable<LogEntry>(historyComponent.updates(), historyComponent);
-        }
-        throw new WhelkRuntimeException("Whelk has no index for searching");
-    }
-
 }
 
+/*
 @Log
 class LogIterable<T> implements Iterable {
     History history
     Collection<T> list
-    boolean refilling = false
     boolean incomplete = false
     def offset 
     def query
@@ -127,7 +137,7 @@ class LogIterable<T> implements Iterable {
         T next() {
             T n = iter.next();
             iter.remove();
-            if (!iter.hasNext() && incomplete && !refilling) {
+            if (!iter.hasNext() && incomplete) {
                refill()
             }
             return n
@@ -139,7 +149,6 @@ class LogIterable<T> implements Iterable {
 
         @Synchronized
         private void refill() {
-            refilling = true
             if (query) {
                 offset = (offset ? offset : 0) + History.BATCH_SIZE
                 list = history.updates(query, offset)
@@ -150,10 +159,10 @@ class LogIterable<T> implements Iterable {
             }
             incomplete = (list.size() == History.BATCH_SIZE)
             iter = list.iterator()
-            refilling = false
         }
     }
 }
+*/
 
 @Log
 class ReindexingWhelk extends WhelkImpl {

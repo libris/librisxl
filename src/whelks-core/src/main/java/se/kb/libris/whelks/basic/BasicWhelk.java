@@ -186,11 +186,6 @@ public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable,
         }
 
     @Override
-        public Iterable<LogEntry> log() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-    @Override
         public Iterable<LogEntry> log(int startIndex) {
             throw new UnsupportedOperationException("Not supported yet.");
         }

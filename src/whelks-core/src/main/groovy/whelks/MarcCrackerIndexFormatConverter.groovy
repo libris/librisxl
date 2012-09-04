@@ -1,6 +1,7 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.exception.*
 
 import groovy.util.logging.Slf4j as Log
 
@@ -20,14 +21,20 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
     def expandField(ctrlfield, columns) {
         def l = [:]
         def propref
+        int co = 0
         for (def column : columns) {
             if (propref != column.propRef) {
                 l[column.propRef] = ""
             }
-            if (column.length == 1) {
-                l[column.propRef] += ctrlfield[column.offset]
-            } else {
-                l[column.propRef] += ctrlfield[(column.offset)..(column.offset+column.length-1)]
+            try {
+                if (column.length == 1) {
+                    l[column.propRef] += ctrlfield[column.offset]
+                } else {
+                    l[column.propRef] += ctrlfield[(column.offset)..(column.offset+column.length-1)]
+                }
+            } catch (StringIndexOutOfBoundsException sioobe) {
+                l.remove(column.propRef)
+                break
             }
             propref = column.propRef
         }
@@ -60,15 +67,30 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
                         }
                         json.fields[pos] = [(fkey):date]
                     } else {
+                        def matchKey = l['typeOfRecord']
+                        if (fkey == "006" || fkey == "007") {
+                            matchKey = fvalue[0]
+                        }
                         marcmap.get(pfx).each { key, value ->
                             if (fkey == key) {
                                 try {
                                     value.fixmaps.each { fm ->
-                                        if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(l['typeOfRecord'])) || (fm.matchRecTypeBibLevel &&  fm.matchRecTypeBibLevel.contains(mrtbl))) {
+                                        if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(matchKey)) || (fm.matchRecTypeBibLevel &&  fm.matchRecTypeBibLevel.contains(mrtbl))) {
+                                            if (fkey == "008" && fvalue.length() == 39) {
+                                                log.warn("Document ${doc.identifier} has wrong length in 008")
+                                                    fvalue = fvalue[0..19] + "|" + fvalue[20..-1]
+                                            }
                                             json.fields[pos] = [(fkey):["subfields": expandField(fvalue, fm.columns).collect {k, v -> [(k):v] } ]]
                                         }
                                     }
-                                } catch (groovy.lang.MissingPropertyException mpe) { }
+                                } catch (groovy.lang.MissingPropertyException mpe) { 
+                                } catch (Exception e) {
+                                    log.error("Document identifier: ${doc.identifier}")
+                                        log.error("fkey: $fkey")
+                                        log.error("l: $l")
+                                        throw e
+                                }
+
                             }
                         }
                     }

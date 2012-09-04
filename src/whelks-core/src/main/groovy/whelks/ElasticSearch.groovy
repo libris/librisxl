@@ -99,22 +99,6 @@ abstract class ElasticSearch {
         return new ElasticIterable<Document>(this)
     }
 
-    void addDocuments(documents, addType) {
-        def breq = client.prepareBulk()
-
-        for (def doc : documents) {
-            breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(serializeDocumentToJson(doc)))
-        }
-        def response = performExecute(breq)
-        if (response.hasFailures()) {
-            log.error "Bulk import has failures."
-            for (def re : response.items()) {
-                if (re.failed()) {
-                    log.error "Fail message: ${re.failureMessage}"
-                }
-            }
-        }
-    }
 
     def init() {
         if (!performExecute(client.admin().indices().prepareExists(index)).exists()) {
@@ -152,7 +136,7 @@ abstract class ElasticSearch {
 
     void addDocument(Document doc, String addType) {
         def eid = translateIdentifier(doc.identifier)
-        log.debug "Should use index ${index}, type ${addType} and id ${eid}"
+        log.trace "Should use index ${index}, type ${addType} and id ${eid}"
         try {
             def irb = client.prepareIndex(index, addType, eid)
             if (addType == indexType) {
@@ -161,9 +145,30 @@ abstract class ElasticSearch {
                 irb.setTimestamp(""+doc.getTimestamp()).setSource(serializeDocumentToJson(doc))
             }
             IndexResponse response = performExecute(irb)
-            log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
+            log.trace "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
             log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
+        }
+    }
+    
+    void addDocuments(documents, addType) {
+        def breq = client.prepareBulk()
+
+        for (def doc : documents) {
+            if (addType == indexType) {
+                breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
+            } else {
+                breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(serializeDocumentToJson(doc)))
+            }
+        }
+        def response = performExecute(breq)
+        if (response.hasFailures()) {
+            log.error "Bulk import has failures."
+            for (def re : response.items()) {
+                if (re.failed()) {
+                    log.error "Fail message: ${re.failureMessage}"
+                }
+            }
         }
     }
 
@@ -192,42 +197,6 @@ abstract class ElasticSearch {
         return new URI("/"+index+"/"+id.replaceAll(URI_SEPARATOR, "/"))
     }
 
-    def History.HistoryUpdates updates(Date since, token = null) {
-        def results = new ArrayList<LogEntry>()
-        def srb
-        if (!token) {
-            log.debug("Starting matchAll-query")
-            srb = client.prepareSearch(index)
-                .addField("_timestamp")
-                .setTypes(storageType)
-                .setScroll(TimeValue.timeValueMinutes(2))
-                .setSize(BATCH_SIZE)
-                .addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
-            if (since) {
-                def query = rangeQuery("_timestamp").gte(since.getTime())
-                srb.setQuery(query)
-            } else {
-                srb.setQuery(matchAllQuery())
-            }
-        } else {
-            log.debug("Continuing query with scrollId $token")
-            srb = client.prepareSearchScroll(token).setScroll(TimeValue.timeValueMinutes(2))
-        }
-        log.trace("Logquery: " + srb)
-        def response = performExecute(srb)
-        log.trace("Response: " + response)
-        if (response) {
-            log.trace "Total log hits: ${response.hits.totalHits}"
-            response.hits.hits.each {
-                results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
-            }
-        }
-        return new History.HistoryUpdates(results, response.scrollId())
-    }
-
-    def History.HistoryUpdates updates(token = null) {
-        return updates(null, token)
-    }
 
     def Map<String, String[]> convertHighlight(Map<String, HighlightField> hfields) {
         def map = new TreeMap<String, String[]>()
@@ -310,26 +279,38 @@ abstract class ElasticSearch {
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
+    /*
+     * TODO: This is a costly operation. See if it's possible to optimize. Used only for storage, so might be unnecessary 
+     * if using DocumentStore (e.g. RIAK)
+     */
     Document deserializeJsonDocument(source) { //, uri, timestamp) {
         Gson gson = new Gson()
         Document doc = gson.fromJson(new String(source), BasicDocument.class)
         return doc
     }
 
+    /*
+     * TODO: This is a costly operation. See if it's possible to optimize. Used only for storage, so might be unnecessary 
+     * if using DocumentStore (e.g. RIAK)
+     */
     def serializeDocumentToJson(Document doc) {
         Gson gson = new Gson()
         def json = gson.toJson(doc)
         return json
     }
+    
+    @Override
+    def Iterable<LogEntry> updates(Date since) {
+        return new ElasticIterable<LogEntry>(this, since)
+    }
 
-    def loadAll(token = null, since = null) {
+    def History.HistoryUpdates old_updates(Date since, token = null) {
         def results = new ArrayList<LogEntry>()
         def srb
         if (!token) {
             log.debug("Starting matchAll-query")
             srb = client.prepareSearch(index)
                 .addField("_timestamp")
-                .addField("_source")
                 .setTypes(storageType)
                 .setScroll(TimeValue.timeValueMinutes(2))
                 .setSize(BATCH_SIZE)
@@ -341,7 +322,48 @@ abstract class ElasticSearch {
                 srb.setQuery(matchAllQuery())
             }
         } else {
-            log.debug("Continuing query with scrollId $token")
+            log.trace("Continuing query with scrollId $token")
+            srb = client.prepareSearchScroll(token).setScroll(TimeValue.timeValueMinutes(2))
+        }
+        log.trace("Logquery: " + srb)
+        def response = performExecute(srb)
+        log.trace("Response: " + response)
+        if (response) {
+            log.trace "Total log hits: ${response.hits.totalHits}"
+            response.hits.hits.each {
+                results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
+            }
+        }
+        return new History.HistoryUpdates(results, response.scrollId())
+    }
+
+    def loadAll(String token = null, Date since = null, boolean loadDocuments = true) {
+        def results 
+        if (loadDocuments) {
+            results = new ArrayList<Document>()
+        } else {
+            results = new ArrayList<LogEntry>()
+        }
+        def srb
+        if (!token) {
+            log.trace("Starting matchAll-query")
+            srb = client.prepareSearch(index)
+            if (loadDocuments) {
+                srb = srb.addField("_source")
+            }
+            srb = srb.setTypes(storageType)
+                .setScroll(TimeValue.timeValueMinutes(2))
+                .setSize(BATCH_SIZE)
+            if (since) {
+                def query = rangeQuery("_timestamp").gte(since.getTime())
+                srb = srb.addField("_timestamp")
+                    .addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
+                    .setQuery(query)
+            } else {
+                srb.setQuery(matchAllQuery())
+            }
+        } else {
+            log.trace("Continuing query with scrollId $token")
             srb = client.prepareSearchScroll(token).setScroll(TimeValue.timeValueMinutes(2))
         }
         log.trace("loadAllquery: " + srb)
@@ -350,7 +372,11 @@ abstract class ElasticSearch {
         if (response) {
             log.trace "Total log hits: ${response.hits.totalHits}"
             response.hits.hits.each {
-                results.add(deserializeJsonDocument(it.source()))
+                if (loadDocuments) {
+                    results.add(deserializeJsonDocument(it.source()))
+                } else {
+                    results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
+                }
             }
         }
         return [results, response.scrollId()]
@@ -362,15 +388,15 @@ abstract class ElasticSearch {
 class ElasticIterable<T> implements Iterable {
     def indexInstance
     Collection<T> list
-    boolean refilling = false
     boolean incomplete = false
     def token 
-    def query
+    Date since
 
-    ElasticIterable(i) {
+    ElasticIterable(i, s = null) {
         log.debug("Creating new iterable.")
         indexInstance = i
-        (list, token) = indexInstance.loadAll()
+        since = s
+        (list, token) = indexInstance.loadAll(null, since, (since == null))
         log.debug("Initial list with size: ${list.size} and token: $token")
         incomplete = (list.size == History.BATCH_SIZE)
     }
@@ -388,9 +414,6 @@ class ElasticIterable<T> implements Iterable {
         }
 
         boolean hasNext() {
-            if (!iter.hasNext() && incomplete) {
-                refill()
-            }
             return iter.hasNext()
         }
 
@@ -398,7 +421,7 @@ class ElasticIterable<T> implements Iterable {
         T next() {
             T n = iter.next();
             iter.remove();
-            if (!iter.hasNext() && incomplete && !refilling) {
+            if (!iter.hasNext() && incomplete) {
                refill()
             }
             return n
@@ -410,11 +433,9 @@ class ElasticIterable<T> implements Iterable {
 
         @Synchronized
         private void refill() {
-            refilling = true
-            (list, token) = this.indexInstance.loadAll(token)
+            (list, token) = this.indexInstance.loadAll(token, since, (since == null))
             incomplete = (list.size() == History.BATCH_SIZE)
             iter = list.iterator()
-            refilling = false
         }
     }
 }
