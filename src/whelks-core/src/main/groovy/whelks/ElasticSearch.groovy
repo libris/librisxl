@@ -89,7 +89,7 @@ abstract class ElasticSearch {
         GetResponse response = performExecute(client.prepareGet(index, storageType, translateIdentifier(uri)).setFields("_source","_timestamp"))
         if (response && response.exists()) {
             def ts = (response.field("_timestamp") ? response.field("_timestamp").value : null)
-            return deserializeJsonDocument(response.source()) //, uri, ts) 
+            new BasicDocument(new String(response.source()))
         }
         return null
     }
@@ -142,7 +142,7 @@ abstract class ElasticSearch {
             if (addType == indexType) {
                 irb.setSource(doc.data)
             } else {
-                irb.setTimestamp(""+doc.getTimestamp()).setSource(serializeDocumentToJson(doc))
+                irb.setTimestamp(""+doc.getTimestamp()).setSource(doc.toJson())
             }
             IndexResponse response = performExecute(irb)
             log.trace "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
@@ -158,7 +158,7 @@ abstract class ElasticSearch {
             if (addType == indexType) {
                 breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
             } else {
-                breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(serializeDocumentToJson(doc)))
+                breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
             }
         }
         def response = performExecute(breq)
@@ -279,31 +279,12 @@ abstract class ElasticSearch {
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    /*
-     * TODO: This is a costly operation. See if it's possible to optimize. Used only for storage, so might be unnecessary 
-     * if using DocumentStore (e.g. RIAK)
-     */
-    Document deserializeJsonDocument(source) { //, uri, timestamp) {
-        Gson gson = new Gson()
-        Document doc = gson.fromJson(new String(source), BasicDocument.class)
-        return doc
-    }
-
-    /*
-     * TODO: This is a costly operation. See if it's possible to optimize. Used only for storage, so might be unnecessary 
-     * if using DocumentStore (e.g. RIAK)
-     */
-    def serializeDocumentToJson(Document doc) {
-        Gson gson = new Gson()
-        def json = gson.toJson(doc)
-        return json
-    }
-    
     @Override
     def Iterable<LogEntry> updates(Date since) {
         return new ElasticIterable<LogEntry>(this, since)
     }
 
+    /*
     def History.HistoryUpdates old_updates(Date since, token = null) {
         def results = new ArrayList<LogEntry>()
         def srb
@@ -336,6 +317,7 @@ abstract class ElasticSearch {
         }
         return new History.HistoryUpdates(results, response.scrollId())
     }
+    */
 
     def loadAll(String token = null, Date since = null, boolean loadDocuments = true) {
         def results 
@@ -373,7 +355,7 @@ abstract class ElasticSearch {
             log.trace "Total log hits: ${response.hits.totalHits}"
             response.hits.hits.each {
                 if (loadDocuments) {
-                    results.add(deserializeJsonDocument(it.source()))
+                    results.add(new BasicDocument(new String(it.source())))
                 } else {
                     results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
                 }

@@ -65,16 +65,18 @@ class WhelkImpl extends BasicWhelk {
         }
         long startTime = System.currentTimeMillis()
         def docs = []
-        scomp.getAll().each {
+        for (def doc : scomp.getAll()) {
+            println "Loop start with ${doc.identifier}"
             if (ifc) {
-                docs << ifc.convert(it)
+                docs << ifc.convert(doc)
             } else {
-                docs << it
+                docs << doc
             }
+            println "Document ${doc.identifier} converted and added to docs (" + docs.size() + ")"
             counter++
             if (counter % History.BATCH_SIZE == 0) {
                 long ts = System.currentTimeMillis()
-                println "(" + ((ts - startTime)/1000) + ") New batch, indexing document with id: ${it.identifier}. Velocity: " + (counter/((ts - startTime)/1000)) + " documents per second."
+                println "(" + ((ts - startTime)/1000) + ") New batch, indexing document with id: ${doc.identifier}. Velocity: " + (counter/((ts - startTime)/1000)) + " documents per second."
                 icomp.index(docs)
                 docs = []
             }

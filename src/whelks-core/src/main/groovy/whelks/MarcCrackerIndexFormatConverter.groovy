@@ -45,7 +45,9 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
 
     @Override
     Document convert(Document doc) {
+        println "Start convert on ${doc.dataAsString}"
         def json = new JsonSlurper().parseText(doc.dataAsString)
+        println "Jsonified."
         def leader = json.leader
         def pfx = doc.identifier.toString().split("/")[1]
 
@@ -54,8 +56,10 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
         json.leader = ["subfields": l.collect {key, value -> [(key):value]}]
 
         def mrtbl = l['typeOfRecord'] + l['bibLevel']
+        println "Leader extracted"
 
         json.fields.eachWithIndex() { it, pos ->
+            println "Working on json field $pos: $it"
             it.each { fkey, fvalue ->
                 if (fkey.startsWith("00")) {
                     if (fkey == "005") {
@@ -84,6 +88,7 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
                                         }
                                     }
                                 } catch (groovy.lang.MissingPropertyException mpe) { 
+                                    log.warn("Exception in $fm : ${mpe.message}")
                                 } catch (Exception e) {
                                     log.error("Document identifier: ${doc.identifier}")
                                         log.error("fkey: $fkey")

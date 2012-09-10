@@ -21,8 +21,8 @@ public interface Document {
     public void setVersion(String version);
     public void setTimestamp(Date date);
         
-    public void setData(byte data[]);
-    public void setData(InputStream data);
+    //public void setData(byte data[]);
+    //public void setData(InputStream data);
     public String getContentType();
     public void setContentType(String contentType);
     public long getSize();
@@ -38,6 +38,7 @@ public interface Document {
     public Set<Key> getKeys();
     public Set<Description> getDescriptions();    
     public Set<Tag> getTags();
+    public String toJson();
     
     public Tag tag(URI type, String value);
     public void untag(URI type, String value);

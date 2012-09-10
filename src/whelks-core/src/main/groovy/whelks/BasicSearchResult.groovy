@@ -53,20 +53,3 @@ class BasicSearchResult implements SearchResult {
     }
 }
 
-class HighlightedDocument extends BasicDocument {
-    Map<String, String[]> matches = new TreeMap<String, String[]>()
-
-    HighlightedDocument(Document d, Map<String, String[]> match) {
-        withData(d.getData()).withIdentifier(d.identifier).withContentType(d.contentType)
-        this.matches = match
-    }
-
-    @Override
-    String getDataAsString() {
-        def slurper = new JsonSlurper()
-        def json = slurper.parseText(super.getDataAsString())
-        json.highlight = matches
-        def builder = new JsonBuilder(json)
-        return builder.toString()
-    } 
-}
