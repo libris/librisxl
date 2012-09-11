@@ -45,9 +45,17 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
 
     @Override
     Document convert(Document doc) {
-        println "Start convert on ${doc.dataAsString}"
-        def json = new JsonSlurper().parseText(doc.dataAsString)
-        println "Jsonified."
+        log.info "Start convert on ${doc.dataAsString}"
+        def json
+        try {
+            json = new JsonSlurper().parseText(doc.dataAsString)
+        } catch (Exception e) {
+            log.error("Failed to parse document")
+            log.error(doc.dataAsString)
+            log.error(e)
+            throw(e)
+        }
+        log.trace "Jsonified."
         def leader = json.leader
         def pfx = doc.identifier.toString().split("/")[1]
 
@@ -56,10 +64,10 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
         json.leader = ["subfields": l.collect {key, value -> [(key):value]}]
 
         def mrtbl = l['typeOfRecord'] + l['bibLevel']
-        println "Leader extracted"
+        log.trace "Leader extracted"
 
         json.fields.eachWithIndex() { it, pos ->
-            println "Working on json field $pos: $it"
+            log.trace "Working on json field $pos: $it"
             it.each { fkey, fvalue ->
                 if (fkey.startsWith("00")) {
                     if (fkey == "005") {

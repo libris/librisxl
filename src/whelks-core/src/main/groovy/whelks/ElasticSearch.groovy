@@ -26,7 +26,6 @@ import static org.elasticsearch.node.NodeBuilder.*
 import static org.elasticsearch.common.xcontent.XContentFactory.*
 
 import org.json.simple.*
-import com.google.gson.*
 import groovy.json.JsonSlurper
 
 import se.kb.libris.whelks.*

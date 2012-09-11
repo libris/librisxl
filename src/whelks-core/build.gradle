@@ -75,10 +75,9 @@ repositories {
 }
 
 dependencies {
-    groovy 'org.codehaus.groovy:groovy:1.8.6'
+    groovy 'org.codehaus.groovy:groovy:2.0.1'
     compile 'org.python:jython-standalone:2.5.2'
     compile 'com.googlecode.json-simple:json-simple:1.1.1'
-    compile 'com.google.code.gson:gson:2.1'
     compile 'org.elasticsearch:elasticsearch:0.19.6'
     compile 'org.elasticsearch:elasticsearch-lang-groovy:1.1.0'
     compile 'ch.qos.logback:logback-classic:1.0.0'

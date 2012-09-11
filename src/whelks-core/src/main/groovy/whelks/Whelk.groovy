@@ -66,13 +66,11 @@ class WhelkImpl extends BasicWhelk {
         long startTime = System.currentTimeMillis()
         def docs = []
         for (def doc : scomp.getAll()) {
-            println "Loop start with ${doc.identifier}"
             if (ifc) {
                 docs << ifc.convert(doc)
             } else {
                 docs << doc
             }
-            println "Document ${doc.identifier} converted and added to docs (" + docs.size() + ")"
             counter++
             if (counter % History.BATCH_SIZE == 0) {
                 long ts = System.currentTimeMillis()
