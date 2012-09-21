@@ -70,7 +70,8 @@ public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable,
                         if (p instanceof IndexFormatConverter)
                             indexDocument = ((IndexFormatConverter)p).convert(d);
                     }
-                    ((Index)c).index(indexDocument);
+                    if (indexDocument != null) 
+                        ((Index)c).index(indexDocument);
                 }
 
                 if (c instanceof QuadStore)
@@ -99,7 +100,10 @@ public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable,
 
             if (ifc != null) {
                 for (Document d : docs) {
-                    convertedDocuments.add(ifc.convert(d));
+                    Document cd = ifc.convert(d);
+                    if (cd != null) {
+                        convertedDocuments.add(cd);
+                    }
                 }
             } else {
                 convertedDocuments.addAll((Collection)docs);

@@ -8,9 +8,11 @@
   </appender>
 
 
+  <!--
   <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
+  -->
 
   <root level="info">
     <appender-ref ref="STDOUT" />

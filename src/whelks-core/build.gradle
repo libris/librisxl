@@ -71,6 +71,7 @@ repositories {
     mavenCentral()
     maven { url "http://oss.sonatype.org/content/repositories/releases/" }
     maven { url "http://maven.restlet.org/" }
+    maven { url "http://repository.codehaus.org/" }
     flatDir name: 'localDir', dirs: 'lib'
 }
 
@@ -82,11 +83,12 @@ dependencies {
     compile 'org.elasticsearch:elasticsearch-lang-groovy:1.1.0'
     compile 'ch.qos.logback:logback-classic:1.0.0'
     compile 'commons-io:commons-io:2.3'
-    compile 'org.restlet.jse:org.restlet:2.0.13'
-    compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.13'
+    compile group:'org.restlet.jse', name:'org.restlet', version:'2.0.15'
+    compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.15'
     compile 'se.kb.libris:marc:1.2.7'
     compile 'jyson:jyson:1.0.2'
     compile 'commons-codec:commons-codec:1.4'
+    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.9'
     providedCompile 'javax.servlet:servlet-api:2.5'
     testCompile 'junit:junit:4.7' 
 }

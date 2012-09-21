@@ -67,7 +67,10 @@ class WhelkImpl extends BasicWhelk {
         def docs = []
         for (def doc : scomp.getAll()) {
             if (ifc) {
-                docs << ifc.convert(doc)
+                def cd = ifc.convert(doc)
+                if (cd) {
+                    docs << cd
+                }
             } else {
                 docs << doc
             }

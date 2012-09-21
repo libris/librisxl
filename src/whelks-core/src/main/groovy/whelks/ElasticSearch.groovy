@@ -88,7 +88,7 @@ abstract class ElasticSearch {
         GetResponse response = performExecute(client.prepareGet(index, storageType, translateIdentifier(uri)).setFields("_source","_timestamp"))
         if (response && response.exists()) {
             def ts = (response.field("_timestamp") ? response.field("_timestamp").value : null)
-            new BasicDocument(new String(response.source()))
+            return new BasicDocument(new String(response.source()))
         }
         return null
     }
@@ -334,7 +334,7 @@ abstract class ElasticSearch {
             }
             srb = srb.setTypes(storageType)
                 .setScroll(TimeValue.timeValueMinutes(2))
-                .setSize(BATCH_SIZE)
+                .setSize(History.BATCH_SIZE)
             if (since) {
                 def query = rangeQuery("_timestamp").gte(since.getTime())
                 srb = srb.addField("_timestamp")

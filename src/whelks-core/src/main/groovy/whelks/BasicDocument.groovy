@@ -1,12 +1,15 @@
 package se.kb.libris.whelks.basic
 
-import groovy.json.*
+import groovy.transform.TypeChecked
 import groovy.util.logging.Slf4j as Log
 
 import java.io.*
 import java.net.URI
 import java.util.*
 import java.nio.ByteBuffer
+
+import org.codehaus.jackson.*
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
 
@@ -14,22 +17,51 @@ import se.kb.libris.whelks.exception.*
 public class BasicDocument implements Document {
     URI identifier
     String version = "1", contentType 
-    ByteArray data 
-    Long size
+    byte[] data 
+    long size
     Set<Link> links = new TreeSet<Link>()
     Set<Key> keys = new TreeSet<Key>()
     Set<Tag> tags = new TreeSet<Tag>()
     Set<Description> descriptions = new TreeSet<Description>()
-    Long timestamp = 0
+    long timestamp = 0
 
     public BasicDocument() {
         this.timestamp = new Long(new Date().getTime())
     }
 
-    BasicDocument(String jsonSource) {
-        this.timestamp = new Long(new Date().getTime())
-        log.debug("jsonSource: $jsonSource")
-        fromMap(new JsonSlurper().parseText(jsonSource))
+    public BasicDocument(String jsonString) {
+        fromJson(jsonString)
+    }
+
+    public Document fromJson(String jsonString) {
+        log.debug("jsonSource: $jsonString")
+        JsonFactory f = new JsonFactory();
+        JsonParser jp = f.createJsonParser(jsonString);
+        jp.nextToken(); // will return JsonToken.START_OBJECT (verify?)
+        while (jp.nextToken() != JsonToken.END_OBJECT) {
+            String fieldname = jp.getCurrentName();
+            jp.nextToken(); // move to value, or START_OBJECT/START_ARRAY
+            if (!fieldname) {break;}
+            if ("data".equals(fieldname)) {
+                ByteArrayOutputStream baout = new ByteArrayOutputStream()
+                while (jp.nextToken() != JsonToken.END_ARRAY) {
+                    baout.write(jp.getByteValue())
+                }
+                data = baout.toByteArray()
+            } else if ("identifier".equals(fieldname)) {
+                identifier = new URI(jp.getText())
+            } else if ("size".equals(fieldname)) {
+                size = jp.getLongValue()
+            } else if ("timestamp".equals(fieldname)) {
+                timestamp = jp.getLongValue()
+            } else if ("version".equals(fieldname)) {
+                version = jp.getText()
+            } else if ("contentType".equals(fieldname)) {
+                contentType = jp.getText()
+            }
+        }
+        jp.close(); // ensure resources get cleaned up timely and properly
+        return this
     }
 
     public Document fromMap(Map repr) {
@@ -45,9 +77,11 @@ public class BasicDocument implements Document {
                     log.debug("" + repr[it.name].class + " is not assignable")
                     try {
                         this.(it.name) = this.class.getDeclaredField(it.name).type.getConstructor(repr[it.name].class).newInstance(repr[it.name])
+                        log.debug("Assigned by constructor parameter")
                     } catch (NoSuchMethodException n1) {
                         try {
                             this.(it.name) = this.class.getDeclaredField(it.name).type.getConstructor(String.class).newInstance(repr[it.name].toString())
+                            log.debug("Assigned by toString-method")
                         } catch (NoSuchMethodException n2) {
                             log.error("Ultimate failure: ${n2.message}", n2)
                         }
@@ -59,40 +93,43 @@ public class BasicDocument implements Document {
     }
 
     String toJson() {
-        def json = [:]
+        ByteArrayOutputStream baout = new ByteArrayOutputStream()
+        JsonFactory f = new JsonFactory()
+        JsonGenerator g = f.createJsonGenerator(baout, JsonEncoding.UTF8)
+        g.writeStartObject()
         this.class.declaredFields.each {
             if (this.(it.name) && !it.isSynthetic() && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
+                log.debug("${it.name} is ${it.genericType} - " + this.(it.name).class.isPrimitive())
                 if (this.(it.name) instanceof URI) {
                     log.debug("found a URI identifier")
-                    json.(it.name) = this.(it.name).toString()
-                } else if (this.(it.name) instanceof ByteArray) {
+                    g.writeStringField(it.name, this.(it.name).toString())
+                } else if (it.type.isArray()) {
                     log.debug("Found a bytearray")
-                    json.(it.name) = this.(it.name).toList()
+                    //g.writeBinaryField(it.name, this.(it.name))
+                    g.writeArrayFieldStart(it.name);
+                    for (byte b: (it.name)) {
+                        g.writeNumber(b)
+                    }
+                    g.writeEndArray();
+                } else if (it.type.isPrimitive()) {
+                    log.trace("Found a number")
+                    g.writeNumberField(it.name, this.(it.name))
                 } else {
-                    json.(it.name) = this.(it.name)
+                    log.trace("default writing ${it.name}")
+                    g.writeStringField(it.name, this.(it.name).toString())
                 }
             }
         }
-        /*
-        json.identifier = identifier.toString()
-        json.version = version
-        json.contentType = contentType
-        json.size = size
-        json.links = links
-        json.keys = keys
-        json.tags = tags
-        json.descriptions = descriptions
-        json.timestamp = timestamp
-        json.data = data.toList()
-        */
-        println "json: " +json
-
-        return new JsonBuilder(json).toString()
-    }
+        g.writeEndObject()
+        g.close()
+        String json = new String(baout.toByteArray())
+        log.trace("Generated json: $json")
+        return json
+    } 
 
     @Override
     public byte[] getData() {
-        return (data ? data.bytes : new byte[0])
+        return data
     }
 
     @Override
@@ -219,7 +256,7 @@ public class BasicDocument implements Document {
 
     @Override
     public Document withData(byte[] data) {
-        this.data = new ByteArray(data)
+        this.data = data //new ByteArray(data)
         this.size = data.length
         return this
     }
@@ -312,10 +349,10 @@ class HighlightedDocument extends BasicDocument {
 
     @Override
     String getDataAsString() {
-        def slurper = new JsonSlurper()
+        def slurper = new groovy.json.JsonSlurper()
         def json = slurper.parseText(super.getDataAsString())
         json.highlight = matches
-        def builder = new JsonBuilder(json)
+        def builder = new groovy.json.JsonBuilder(json)
         return builder.toString()
     } 
 }
