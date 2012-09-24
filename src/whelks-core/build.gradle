@@ -67,6 +67,10 @@ task fatjar(type: Jar, dependsOn: jar) {
 }
 */
 
+
+apply from: 'tools.gradle'
+
+
 repositories { 
     mavenCentral()
     maven { url "http://oss.sonatype.org/content/repositories/releases/" }
