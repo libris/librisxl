@@ -167,6 +167,20 @@ class LogIterable<T> implements Iterable {
 }
 */
 
+class Tool {
+    static Date parseDate(repr) {
+        if (!repr.number) {
+            return Date.parse("yyyy-MM-dd'T'hh:mm:ss", repr)
+        } else {
+            def tstamp = new Long(repr)
+            if (tstamp < 0) // minus in days
+                return new Date() + (tstamp as int)
+            else // time in millisecs
+                return new Date(tstamp)
+        }
+    }
+}
+
 @Log
 class ReindexingWhelk extends WhelkImpl {
 
@@ -180,7 +194,8 @@ class ReindexingWhelk extends WhelkImpl {
             def prefix = args[0]
             def resource = (args.length > 1 ? args[1] : args[0])
             def whelk = new ReindexingWhelk(prefix)
-            def date = (args.length > 2 ? new Date(new Long(args[2])) : null)
+            def date = (args.length > 2)? Tool.parseDate(args[2]) : null
+            println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
             whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
             whelk.addPlugin(new MarcCrackerIndexFormatConverter())
             long startTime = System.currentTimeMillis()
@@ -205,7 +220,8 @@ class ImportWhelk extends BasicWhelk {
             def prefix = args[0]
             def resource = (args.length > 1 ? args[1] : args[0])
             def whelk = new ImportWhelk(prefix)
-            def date = (args.length > 2 ? new Date(new Long(args[2])) : null)
+            def date = (args.length > 2)? Tool.parseDate(args[2]) : null
+            println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
             whelk.addPlugin(new ElasticSearchClientStorage(prefix))
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
