@@ -4,9 +4,6 @@ apply plugin: 'jetty'
 apply plugin: 'application'
 
 
-//mainClassName = 'se.kb.libris.whelks.ImportWhelk'
-mainClassName = 'se.kb.libris.whelks.ReindexingWhelk'
-
 tasks.withType(GroovyCompile) {
   groovyOptions.encoding = 'utf-8'
 }
@@ -14,64 +11,61 @@ tasks.withType(GroovyCompile) {
 sourceSets {
     main {
         java { srcDirs = [] }
-        groovy { srcDir 'src' }
+        groovy { srcDir 'src/main/' }
+    }
+    test {
+        groovy { srcDir 'src/test/groovy/' }
     }
 }
+
 
 jettyRun.contextPath = '/'
 
-jar {
-    dependsOn configurations.runtime
-        from { 
-            configurations.runtime.collect { 
-                it.isDirectory() ? it : zipTree(it).matching { 
-                    exclude "META-INF/OSGI*" 
-                } 
-            } 
-        }
-  
-    manifest {
-        attributes 'Main-Class': mainClassName
-    }
- 
-}
 
 run {
     systemProperty "file.encoding", "UTF-8"
 }
 
+//mainClassName = 'se.kb.libris.whelks.ImportWhelk'
+mainClassName = 'se.kb.libris.whelks.ReindexingWhelk'
+
+jar {
+    dependsOn configurations.runtime
+        from {
+            configurations.runtime.collect {
+                it.isDirectory() ? it : zipTree(it).matching {
+                    exclude "META-INF/OSGI*"
+                }
+            }
+        }
+
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+
+}
+
 task depjar(type: Jar, dependsOn: jar) {
     archiveName = "dependencies.jar"
     dependsOn configurations.runtime
-        from { 
-            configurations.runtime.collect { 
-                it.isDirectory() ? it : zipTree(it).matching { 
-                    exclude "se/kb/libris/**" 
-                    exclude "META-INF/**" 
-                } 
-            } 
+        from {
+            configurations.runtime.collect {
+                it.isDirectory() ? it : zipTree(it).matching {
+                    exclude "se/kb/libris/**"
+                    exclude "META-INF/**"
+                }
+            }
         }
 }
 
-// Not used atm
-/*
-task fatjar(type: Jar, dependsOn: jar) {
-    dependsOn configurations.runtime
-        from { 
-            configurations.runtime.collect { 
-                it.isDirectory() ? it : zipTree(it).matching { 
-                    exclude "META-INF/OSGI*" 
-                } 
-            } 
-        }
-}
-*/
+// Currently using regular jar task for fatjar
+//task fatjar(type: Jar, dependsOn: jar) { ... }
 
 
 apply from: 'tools.gradle'
 
 
-repositories { 
+repositories {
     mavenCentral()
     maven { url "http://oss.sonatype.org/content/repositories/releases/" }
     maven { url "http://maven.restlet.org/" }
@@ -94,5 +88,4 @@ dependencies {
     compile 'commons-codec:commons-codec:1.4'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.9'
     providedCompile 'javax.servlet:servlet-api:2.5'
-    testCompile 'junit:junit:4.7' 
 }
