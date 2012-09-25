@@ -88,7 +88,7 @@ abstract class ElasticSearch {
         GetResponse response = performExecute(client.prepareGet(index, storageType, translateIdentifier(uri)).setFields("_source","_timestamp"))
         if (response && response.exists()) {
             def ts = (response.field("_timestamp") ? response.field("_timestamp").value : null)
-            return new BasicDocument(new String(response.source()))
+            return new BasicDocument(response.sourceAsMap())
         }
         return null
     }
@@ -97,7 +97,6 @@ abstract class ElasticSearch {
     Iterable<Document> getAll() {
         return new ElasticIterable<Document>(this)
     }
-
 
     def init() {
         if (!performExecute(client.admin().indices().prepareExists(index)).exists()) {
@@ -283,41 +282,6 @@ abstract class ElasticSearch {
         return new ElasticIterable<LogEntry>(this, since)
     }
 
-    /*
-    def History.HistoryUpdates old_updates(Date since, token = null) {
-        def results = new ArrayList<LogEntry>()
-        def srb
-        if (!token) {
-            log.debug("Starting matchAll-query")
-            srb = client.prepareSearch(index)
-                .addField("_timestamp")
-                .setTypes(storageType)
-                .setScroll(TimeValue.timeValueMinutes(2))
-                .setSize(BATCH_SIZE)
-                .addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
-            if (since) {
-                def query = rangeQuery("_timestamp").gte(since.getTime())
-                srb.setQuery(query)
-            } else {
-                srb.setQuery(matchAllQuery())
-            }
-        } else {
-            log.trace("Continuing query with scrollId $token")
-            srb = client.prepareSearchScroll(token).setScroll(TimeValue.timeValueMinutes(2))
-        }
-        log.trace("Logquery: " + srb)
-        def response = performExecute(srb)
-        log.trace("Response: " + response)
-        if (response) {
-            log.trace "Total log hits: ${response.hits.totalHits}"
-            response.hits.hits.each {
-                results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
-            }
-        }
-        return new History.HistoryUpdates(results, response.scrollId())
-    }
-    */
-
     def loadAll(String token = null, Date since = null, boolean loadDocuments = true) {
         def results 
         if (loadDocuments) {
@@ -350,15 +314,21 @@ abstract class ElasticSearch {
         log.trace("loadAllquery: " + srb)
         def response = performExecute(srb)
         log.trace("Response: " + response)
+        if (response.timedOut()) {
+            log.warn("Response timed out")
+        }
         if (response) {
             log.trace "Total log hits: ${response.hits.totalHits}"
             response.hits.hits.each {
                 if (loadDocuments) {
                     results.add(new BasicDocument(new String(it.source())))
+                    //results.add(new String(it.source()))
                 } else {
                     results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
                 }
             }
+        } else if (!response || response.hits.length < 1) {
+            log.info("No response recevied.")
         }
         return [results, response.scrollId()]
     }

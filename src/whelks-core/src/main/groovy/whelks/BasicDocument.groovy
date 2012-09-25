@@ -33,6 +33,10 @@ public class BasicDocument implements Document {
         fromJson(jsonString)
     }
 
+    public BasicDocument(Map map) {
+        fromMap(map)
+    }
+
     public Document fromJson(String jsonString) {
         log.debug("jsonSource: $jsonString")
         JsonFactory f = new JsonFactory();
@@ -64,6 +68,21 @@ public class BasicDocument implements Document {
         return this
     }
 
+    public Document fromMap(Map map) {
+
+        map.each { key, value ->
+            println "$key: $value"
+            try {
+                this.(key) = value
+            } catch (Exception e) {
+                log.error("Failed to set value: ${e.message}", e)
+            }
+        }
+
+        return this
+    }
+
+    /*
     public Document fromMap(Map repr) {
         log.debug("repr: $repr")
         this.class.declaredFields.each {
@@ -91,6 +110,7 @@ public class BasicDocument implements Document {
         }
         return this
     }
+    */
 
     String toJson() {
         ByteArrayOutputStream baout = new ByteArrayOutputStream()

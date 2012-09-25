@@ -45,9 +45,9 @@ class WhelkImpl extends BasicWhelk {
     @Override
     void reindex() {
         int counter = 0
-        def scomp
-        def icomp
-        def ifc
+        Storage scomp
+        Index icomp
+        IndexFormatConverter ifc
         for (def s : components) {
             if (s instanceof Storage) {
                 scomp = s
@@ -64,32 +64,33 @@ class WhelkImpl extends BasicWhelk {
             }
         }
         long startTime = System.currentTimeMillis()
-        def docs = []
-        for (def doc : scomp.getAll()) {
+        List<Document> docs = new ArrayList<Document>()
+        for (Document doc : scomp.getAll()) {
             if (ifc) {
-                def cd = ifc.convert(doc)
-                if (cd) {
-                    docs << cd
-                }
+                Document cd = ifc.convert(doc)
+                    if (cd) {
+                        docs << cd
+                    }
             } else {
+                icomp.index(doc)
                 docs << doc
             }
-            counter++
-            if (counter % History.BATCH_SIZE == 0) {
+            if (counter++ % 10000 == 0) {
                 long ts = System.currentTimeMillis()
                 println "(" + ((ts - startTime)/1000) + ") New batch, indexing document with id: ${doc.identifier}. Velocity: " + (counter/((ts - startTime)/1000)) + " documents per second."
                 icomp.index(docs)
-                docs = []
+                docs.clear()
             }
         }
         if (docs.size() > 0) {
+            println "Indexing remaining " + docs.size() + " documents."
             icomp.index(docs)
-        }
+        } 
         println "Reindexed $counter documents"
     }
 
     @Override
-    public Iterable<LogEntry> log(Date since) {
+    public Interable<LogEntry> log(Date since) {
         History historyComponent = null
         for (Component c : getComponents()) {
             if (c instanceof History) {
