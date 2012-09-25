@@ -13,7 +13,8 @@ class WhelkSpec extends Specification {
         when:
         whelk.store(doc)
         then:
-        thrown(se.kb.libris.whelks.exception.WhelkRuntimeException)
+        def e = thrown(se.kb.libris.whelks.exception.WhelkRuntimeException)
+        e.message =~ /does not belong/
     }
 
 }
