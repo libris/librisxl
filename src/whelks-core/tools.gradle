@@ -15,3 +15,9 @@ task reindexData(dependsOn: 'classes', type: JavaExec) {
   main = 'se.kb.libris.whelks.ReindexingWhelk'
   args(System.getProperty('args', "").split() as String[])
 }
+
+task(console, dependsOn: 'classes', type: JavaExec) {
+  description "Launch a Groovy Console"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'groovy.ui.Console'
+}
