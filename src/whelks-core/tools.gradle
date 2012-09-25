@@ -1,0 +1,23 @@
+/**
+ * Runtime tools. Use these tasks to invoke compiled tools directly from gradle.
+ */
+
+task importData(dependsOn: 'classes', type: JavaExec) {
+  description "Run ImportWhelk. USAGE: importData -Dargs='<bib|auth> [resource] [since]'"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'se.kb.libris.whelks.ImportWhelk'
+  args(System.getProperty('args', "").split() as String[])
+}
+
+task reindexData(dependsOn: 'classes', type: JavaExec) {
+  description "Run ReindexingWhelk. USAGE: reindexData -Dargs='<bib|auth> [resource] [since]'"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'se.kb.libris.whelks.ReindexingWhelk'
+  args(System.getProperty('args', "").split() as String[])
+}
+
+task(console, dependsOn: 'classes', type: JavaExec) {
+  description "Launch a Groovy Console"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'groovy.ui.Console'
+}

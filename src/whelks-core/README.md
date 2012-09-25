@@ -14,8 +14,13 @@
 
 Warning! Don't do this against klustret unless you know what klustret means.
 
-    $ gradle jar
-    $ java -jar build/libs/whelks-core.jar [bib|auth]
+The import task uses this argument syntax:
+
+    <bib|auth> [bib|auth] [since (in milliseconds/negative days/datetime)]
+
+Example - import data to bib from resource bib since yesterday:
+
+    $ gradle importData -Dargs='bib bib -1'
 
 ## Start the whelk
 
