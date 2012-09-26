@@ -66,6 +66,8 @@ class WhelkImpl extends BasicWhelk {
         long startTime = System.currentTimeMillis()
         List<Document> docs = new ArrayList<Document>()
         for (Document doc : scomp.getAll()) {
+            counter++
+            /*
             if (ifc) {
                 Document cd = ifc.convert(doc)
                     if (cd) {
@@ -75,11 +77,12 @@ class WhelkImpl extends BasicWhelk {
                 icomp.index(doc)
                 docs << doc
             }
-            if (counter++ % 10000 == 0) {
+            */
+            if (counter % 10000 == 0) {
                 long ts = System.currentTimeMillis()
                 println "(" + ((ts - startTime)/1000) + ") New batch, indexing document with id: ${doc.identifier}. Velocity: " + (counter/((ts - startTime)/1000)) + " documents per second."
-                icomp.index(docs)
-                docs.clear()
+                //icomp.index(docs)
+                //docs.clear()
             }
         }
         if (docs.size() > 0) {
@@ -90,7 +93,7 @@ class WhelkImpl extends BasicWhelk {
     }
 
     @Override
-    public Interable<LogEntry> log(Date since) {
+    public Iterable<LogEntry> log(Date since) {
         History historyComponent = null
         for (Component c : getComponents()) {
             if (c instanceof History) {
@@ -223,7 +226,8 @@ class ImportWhelk extends BasicWhelk {
             def whelk = new ImportWhelk(prefix)
             def date = (args.length > 2)? Tool.parseDate(args[2]) : null
             println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
-            whelk.addPlugin(new ElasticSearchClientStorage(prefix))
+            whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+            whelk.addPlugin(new MarcCrackerIndexFormatConverter())
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
             def nrimports = importer.doImport(whelk, date)

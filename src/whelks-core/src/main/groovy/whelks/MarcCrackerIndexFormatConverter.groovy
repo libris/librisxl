@@ -46,14 +46,12 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
     @Override
     Document convert(Document doc) {
         log.debug "Start convert on ${doc.dataAsString}"
-        def json
+        def json 
         String d = doc.dataAsString
         try {
-            /*
-            if (d.contains("\\\\")) {
-                d = d.replaceAll("\\\\\\\\", "\\\\")
+            if (d.contains("\\\"")) {
+                d = d.replaceAll("\\\"", "/\"")
             }
-            */
             json = new JsonSlurper().parseText(doc.dataAsString)
         } catch (Exception e) {
             log.error("Failed to parse document")

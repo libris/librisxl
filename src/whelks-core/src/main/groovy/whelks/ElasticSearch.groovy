@@ -297,7 +297,7 @@ abstract class ElasticSearch {
                 srb = srb.addField("_source")
             }
             srb = srb.setTypes(storageType)
-                .setScroll(TimeValue.timeValueMinutes(2))
+                .setScroll(TimeValue.timeValueMinutes(20))
                 .setSize(History.BATCH_SIZE)
             if (since) {
                 def query = rangeQuery("_timestamp").gte(since.getTime())

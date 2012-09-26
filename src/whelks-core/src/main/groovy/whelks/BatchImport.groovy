@@ -55,9 +55,9 @@ class BatchImport {
         String url = "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml";
         if (from != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-            url = url + sdf.format(from);
+            url = url + "&" + sdf.format(from);
         }
-        log.debug("URL: $url");
+        log.info("URL: $url");
         return url;
     }
 

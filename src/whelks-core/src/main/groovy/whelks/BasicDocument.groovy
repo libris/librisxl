@@ -47,11 +47,14 @@ public class BasicDocument implements Document {
             jp.nextToken(); // move to value, or START_OBJECT/START_ARRAY
             if (!fieldname) {break;}
             if ("data".equals(fieldname)) {
+                /*
                 ByteArrayOutputStream baout = new ByteArrayOutputStream()
                 while (jp.nextToken() != JsonToken.END_ARRAY) {
                     baout.write(jp.getByteValue())
                 }
                 data = baout.toByteArray()
+                */
+                data = jp.getBinaryValue()
             } else if ("identifier".equals(fieldname)) {
                 identifier = new URI(jp.getText())
             } else if ("size".equals(fieldname)) {
@@ -70,13 +73,8 @@ public class BasicDocument implements Document {
 
     public Document fromMap(Map map) {
 
-        map.each { key, value ->
-            println "$key: $value"
-            try {
-                this.(key) = value
-            } catch (Exception e) {
-                log.error("Failed to set value: ${e.message}", e)
-            }
+        for (def key : map.keySet()) {
+            println "$key: " + map.get(key)
         }
 
         return this
@@ -125,12 +123,14 @@ public class BasicDocument implements Document {
                     g.writeStringField(it.name, this.(it.name).toString())
                 } else if (it.type.isArray()) {
                     log.debug("Found a bytearray")
-                    //g.writeBinaryField(it.name, this.(it.name))
+                    g.writeBinaryField(it.name, this.(it.name))
+                    /*
                     g.writeArrayFieldStart(it.name);
                     for (byte b: (it.name)) {
                         g.writeNumber(b)
                     }
                     g.writeEndArray();
+                    */
                 } else if (it.type.isPrimitive()) {
                     log.trace("Found a number")
                     g.writeNumberField(it.name, this.(it.name))
@@ -304,9 +304,26 @@ public class BasicDocument implements Document {
     }
 
     public Map getDataAsJsonMap() {
-
+        def jsonmap = [:]
+        this.class.declaredFields.each {
+            if (this.(it.name) && !it.isSynthetic() && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
+                if (this.(it.name) instanceof URI) {
+                    log.debug("found a URI identifier")
+                    jsonmap[it.name] = this.(it.name).toString()
+                } else if (it.type.isArray()) {
+                    log.debug("Found a bytearray")
+                    def l = []
+                    l.addAll(0, this.(it.name))
+                    jsonmap[it.name] = l
+                } else {
+                    log.trace("default writing ${it.name}")
+                    jsonmap[it.name] = this.(it.name)
+                }
+            }
+        }
+        println "JsonMap: $jsonmap"
+        return jsonmap
     }
-
 
     @Override
     public InputStream getDataAsStream(long offset, long length) {
