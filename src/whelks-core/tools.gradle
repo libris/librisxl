@@ -3,16 +3,23 @@
  */
 
 task importData(dependsOn: 'classes', type: JavaExec) {
-  description "Run ImportWhelk. USAGE: importData -Dargs='<bib|auth> [resource] [since]'"
+  description "Run ImportWhelk. (USAGE: -Dargs='<bib|auth> [resource] [since]')"
   classpath = sourceSets.main.runtimeClasspath
   main = 'se.kb.libris.whelks.ImportWhelk'
   args(System.getProperty('args', "").split() as String[])
 }
 
 task reindexData(dependsOn: 'classes', type: JavaExec) {
-  description "Run ReindexingWhelk. USAGE: reindexData -Dargs='<bib|auth> [resource] [since]'"
+  description "Run ReindexingWhelk. (USAGE: -Dargs='<bib|auth> [resource] [since]')"
   classpath = sourceSets.main.runtimeClasspath
   main = 'se.kb.libris.whelks.ReindexingWhelk'
+  args(System.getProperty('args', "").split() as String[])
+}
+
+task(groovy, dependsOn: 'classes', type: JavaExec) {
+  description "Run a Groovy Script (USAGE: -Dargs='<script> [...]')"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'groovy.ui.GroovyMain'
   args(System.getProperty('args', "").split() as String[])
 }
 
