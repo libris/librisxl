@@ -153,28 +153,6 @@ public class BasicDocument implements Document {
         }
     }
 
-    /*
-    @Override
-    public Set<Link> getLinks() {
-        return links
-    }
-
-    @Override
-    public Set<Key> getKeys() {
-        return keys
-    }
-
-    @Override
-    public Set<Tag> getTags() {
-        return tags
-    }
-
-    @Override
-    public Set<Description> getDescriptions() {
-        return descriptions
-    }
-    */
-
     @Override
     public Tag tag(URI type, String value) {
         synchronized (tags) {
