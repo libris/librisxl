@@ -45,9 +45,10 @@ class WhelkImpl extends BasicWhelk {
     @Override
     void reindex() {
         int counter = 0
-        Storage scomp
-        Index icomp
-        IndexFormatConverter ifc
+        Storage scomp = components.find { it instanceof Storage }
+        Index icomp = components.find { it instanceof Index }
+        IndexFormatConverter ifc = components.find { it instanceof IndexFormatConverter }
+        /*
         for (def s : components) {
             if (s instanceof Storage) {
                 scomp = s
@@ -63,30 +64,29 @@ class WhelkImpl extends BasicWhelk {
                 ifc = p
             }
         }
+        */
         long startTime = System.currentTimeMillis()
         List<Document> docs = new ArrayList<Document>()
         for (Document doc : scomp.getAll()) {
             counter++
-            /*
             if (ifc) {
                 Document cd = ifc.convert(doc)
-                    if (cd) {
-                        docs << cd
-                    }
+                if (cd) {
+                    docs << cd
+                }
             } else {
                 icomp.index(doc)
                 docs << doc
             }
-            */
             if (counter % 10000 == 0) {
                 long ts = System.currentTimeMillis()
-                println "(" + ((ts - startTime)/1000) + ") New batch, indexing document with id: ${doc.identifier}. Velocity: " + (counter/((ts - startTime)/1000)) + " documents per second."
-                //icomp.index(docs)
-                //docs.clear()
+                log.info "(" + ((ts - startTime)/1000) + ") New batch, indexing document with id: ${doc.identifier}. Velocity: " + (counter/((ts - startTime)/1000)) + " documents per second."
+                icomp.index(docs)
+                docs.clear()
             }
         }
         if (docs.size() > 0) {
-            println "Indexing remaining " + docs.size() + " documents."
+            log.info "Indexing remaining " + docs.size() + " documents."
             icomp.index(docs)
         } 
         println "Reindexed $counter documents"

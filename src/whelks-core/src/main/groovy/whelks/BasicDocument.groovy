@@ -41,19 +41,12 @@ public class BasicDocument implements Document {
         log.debug("jsonSource: $jsonString")
         JsonFactory f = new JsonFactory();
         JsonParser jp = f.createJsonParser(jsonString);
-        jp.nextToken(); // will return JsonToken.START_OBJECT (verify?)
+        jp.nextToken(); 
         while (jp.nextToken() != JsonToken.END_OBJECT) {
             String fieldname = jp.getCurrentName();
-            jp.nextToken(); // move to value, or START_OBJECT/START_ARRAY
+            jp.nextToken(); 
             if (!fieldname) {break;}
             if ("data".equals(fieldname)) {
-                /*
-                ByteArrayOutputStream baout = new ByteArrayOutputStream()
-                while (jp.nextToken() != JsonToken.END_ARRAY) {
-                    baout.write(jp.getByteValue())
-                }
-                data = baout.toByteArray()
-                */
                 data = jp.getBinaryValue()
             } else if ("identifier".equals(fieldname)) {
                 identifier = new URI(jp.getText())
@@ -67,48 +60,24 @@ public class BasicDocument implements Document {
                 contentType = jp.getText()
             }
         }
-        jp.close(); // ensure resources get cleaned up timely and properly
+        jp.close(); 
         return this
     }
 
     public Document fromMap(Map map) {
 
-        for (def key : map.keySet()) {
-            println "$key: " + map.get(key)
-        }
-
-        return this
-    }
-
-    /*
-    public Document fromMap(Map repr) {
-        log.debug("repr: $repr")
-        this.class.declaredFields.each {
-            log.debug("field: ${it.name}")
-            if (repr[it.name] && !it.isSynthetic()) {
-                log.debug("value: " + repr[it.name])
-                if (this.class.getDeclaredField(it.name).type.isAssignableFrom(repr[it.name].class)) {
-                    log.debug("" + this.class.getDeclaredField(it.name).type + " == " + repr[it.name].class)
-                    this.(it.name) = repr[it.name]
-                } else {
-                    log.debug("" + repr[it.name].class + " is not assignable")
-                    try {
-                        this.(it.name) = this.class.getDeclaredField(it.name).type.getConstructor(repr[it.name].class).newInstance(repr[it.name])
-                        log.debug("Assigned by constructor parameter")
-                    } catch (NoSuchMethodException n1) {
-                        try {
-                            this.(it.name) = this.class.getDeclaredField(it.name).type.getConstructor(String.class).newInstance(repr[it.name].toString())
-                            log.debug("Assigned by toString-method")
-                        } catch (NoSuchMethodException n2) {
-                            log.error("Ultimate failure: ${n2.message}", n2)
-                        }
-                    }
-                }
+        map.each { key, value ->
+            if (key == "data") {
+                this.data = value.decodeBase64()
+            } else if (key == "identifier") {
+                this.("$key") = new URI(value)
+            } else {
+                this.("$key") = value
             }
         }
+
         return this
     }
-    */
 
     String toJson() {
         ByteArrayOutputStream baout = new ByteArrayOutputStream()
@@ -124,13 +93,6 @@ public class BasicDocument implements Document {
                 } else if (it.type.isArray()) {
                     log.debug("Found a bytearray")
                     g.writeBinaryField(it.name, this.(it.name))
-                    /*
-                    g.writeArrayFieldStart(it.name);
-                    for (byte b: (it.name)) {
-                        g.writeNumber(b)
-                    }
-                    g.writeEndArray();
-                    */
                 } else if (it.type.isPrimitive()) {
                     log.trace("Found a number")
                     g.writeNumberField(it.name, this.(it.name))
@@ -159,32 +121,6 @@ public class BasicDocument implements Document {
 
         return ret
     }
-
-    /*
-    public void setData(ByteArray _ba) {
-        data = _ba
-    }
-
-    public void setData(byte[] _data) {
-        data = new ByteArray(_data)
-    }
-
-    public void setData(InputStream data) {
-        byte[] buf = new byte[1024]
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(1024)
-
-        try {
-            int n
-            while ((n = data.read(buf)) != -1)
-            bout.write(buf, 0, n)
-
-            this.data = bout.toByteArray()
-            this.size = this.data.length
-        } catch (java.io.IOException e) {
-            throw new WhelkRuntimeException("Error while reading from stream", e)
-        }
-    }
-    */
 
     @Override
     public long getSize() {
@@ -276,7 +212,7 @@ public class BasicDocument implements Document {
 
     @Override
     public Document withData(byte[] data) {
-        this.data = data //new ByteArray(data)
+        this.data = data 
         this.size = data.length
         return this
     }
@@ -341,38 +277,6 @@ public class BasicDocument implements Document {
 
             tags.removeAll(remove)
         }
-    }
-}
-
-class ByteArray {
-
-    byte[] bytes
-
-    ByteArray(String str) {
-        bytes = str.getBytes()
-    }
-
-    ByteArray(byte[] b) {
-        bytes = b
-    }
-
-    ByteArray(ArrayList al) {
-        bytes = new byte[al.size()]
-        int i = 0
-        al.each {
-            bytes[i++] = it
-        }
-    }
-
-    List toList() {
-        def l = []
-        l.addAll(0, bytes)
-        return l
-    }
-
-    @Override
-    public String toString() {
-        return new String(bytes)
     }
 }
 
