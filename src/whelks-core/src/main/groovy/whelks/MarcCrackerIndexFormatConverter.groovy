@@ -6,16 +6,22 @@ import se.kb.libris.whelks.exception.*
 import groovy.util.logging.Slf4j as Log
 
 import groovy.json.*
+import org.codehaus.jackson.map.ObjectMapper
 
 @Log
 class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
 
     String id = this.class.name
     boolean enabled = true
+    ObjectMapper mapper
     def marcmap 
 
-    MarcCrackerIndexFormatConverter() { InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
-        this.marcmap = new JsonSlurper().parse(is.newReader())
+    MarcCrackerIndexFormatConverter() { 
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
+        mapper = new ObjectMapper()
+        //this.marcmap = new JsonSlurper().parse(is.newReader())
+        this.marcmap = mapper.readValue(is, Object)
+        
     }
 
     def expandField(ctrlfield, columns) {
@@ -45,20 +51,23 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
 
     @Override
     Document convert(Document doc) {
-        log.debug "Start convert on ${doc.dataAsString}"
+        //log.debug "Start convert on ${doc.dataAsString}"
         def json 
         String d = doc.dataAsString
         try {
             if (d.contains("\\\"")) {
                 d = d.replaceAll("\\\"", "/\"")
             }
-            json = new JsonSlurper().parseText(doc.dataAsString)
+            //def mapper = new ObjectMapper()
+            json = mapper.readValue(doc.dataAsString, Map)
+
+            //json = new JsonSlurper().parseText(doc.dataAsString)
         } catch (Exception e) {
             log.error("Failed to parse document")
             log.error(doc.dataAsString, e)
             return null
         }
-        def leader = json.leader
+        def leader = json.leader 
         def pfx = doc.identifier.toString().split("/")[1]
 
         def l = expandField(leader, marcmap.get(pfx)."000".fixmaps[0].columns)
