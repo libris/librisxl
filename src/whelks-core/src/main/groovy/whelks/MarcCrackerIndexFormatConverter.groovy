@@ -20,7 +20,7 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         mapper = new ObjectMapper()
         //this.marcmap = new JsonSlurper().parse(is.newReader())
-        this.marcmap = mapper.readValue(is, Object)
+        this.marcmap = mapper.readValue(is, Map)
         
     }
 
