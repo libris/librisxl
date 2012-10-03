@@ -2,3 +2,4 @@ data/
 target/
 build/
 src/main/resources/whelks-core.properties
+.DS_Store
