@@ -243,7 +243,7 @@ public class BasicDocument implements Document {
                 }
             }
         }
-        println "JsonMap: $jsonmap"
+        log.debug "JsonMap: $jsonmap"
         return jsonmap
     }
 

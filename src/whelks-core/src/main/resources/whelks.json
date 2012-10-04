@@ -1,0 +1,28 @@
+{
+    "whelks": [
+    {
+        "bib":{
+            "plugins": ["index","storage","marccracker"]
+        }
+    }
+    ], 
+        "plugins": [
+        {
+            "index": { 
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory",
+                "_params" : "bib"
+            }
+        }, 
+        {
+            "storage": {
+                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
+                "_params" : "/tmp/whelk_storage"
+            }
+        }, 
+        {
+            "marccracker" : {
+                "_class" : "se.kb.libris.whelks.plugin.MarcCrackerIndexFormatConverter"
+            }
+        }
+    ]
+}

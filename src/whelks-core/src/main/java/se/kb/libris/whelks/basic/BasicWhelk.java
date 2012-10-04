@@ -60,7 +60,6 @@ public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable,
             d.updateTimestamp();
             // add document to storage, index and quadstore
             for (Component c: getComponents()) {
-                System.out.println("Looping components: " + c.getClass().getName());
                 if (c instanceof Storage) {
                     ((Storage)c).store(d);
                 }
