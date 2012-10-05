@@ -1,16 +1,26 @@
 {
-    "whelks": [
-    {
-        "bib":{
-            "plugins": ["index","storage","marccracker"]
+    "_whelks": [
+        {
+            "bib":{
+                "_plugins": ["index", "storage", "marccracker", "search", "document"]
+            }
+        },
+        {
+            "auth":{
+                "_plugins": [ "index", "storage", "search", "document"]
+            
+        },
+        {
+            "suggest":{
+                "_plugins": [ "index", "storage", "search", "document", "autocomplete"]
+            }
         }
-    }
     ], 
-        "plugins": [
+        "_plugins": [
         {
             "index": { 
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory",
-                "_params" : "bib"
+                "_params" : "_whelkname"
             }
         }, 
         {
@@ -22,6 +32,22 @@
         {
             "marccracker" : {
                 "_class" : "se.kb.libris.whelks.plugin.MarcCrackerIndexFormatConverter"
+            }
+        },
+        {
+            "search" : {
+                "_class" : "se.kb.libris.whelks.api.SearchRestlet"
+            }
+        },
+        {
+            "document" : {
+                "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
+            }
+        },
+        {
+            "autocomplete" : {
+                "_class" : "se.kb.libris.whelks.api.AutoComplete",
+                "_params" : ["100.a", "400.a", "500.a"]
             }
         }
     ]

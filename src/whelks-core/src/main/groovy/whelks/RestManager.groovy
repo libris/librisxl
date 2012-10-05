@@ -30,17 +30,19 @@ class RestManager extends Application {
 
     void init() {
         def wi = new WhelkInitializer(this.class.classLoader.getResourceAsStream("whelks.json"))
-        wi.getWhelks()
+        whelks = wi.getWhelks()
+        println "These whelks are available: $whelks"
+        /*
         def bibwhelk = new WhelkImpl("bib")
         def authwhelk = new WhelkImpl("auth")
         def suggestwhelk = new WhelkImpl("suggest")
 
         // Add storage and index
-        /*
-        bibwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(bibwhelk.prefix))
-        authwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(authwhelk.prefix))
-        suggestwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(suggestwhelk.prefix))
-        */
+        
+        //bibwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(bibwhelk.prefix))
+        //authwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(authwhelk.prefix))
+        //suggestwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(suggestwhelk.prefix))
+
         bibwhelk.addPlugin(new ElasticSearchClientIndexHistory(bibwhelk.prefix))
         authwhelk.addPlugin(new ElasticSearchClientIndexHistory(authwhelk.prefix))
         suggestwhelk.addPlugin(new ElasticSearchClientIndexHistory(suggestwhelk.prefix))
@@ -62,23 +64,19 @@ class RestManager extends Application {
         authwhelk.addPlugin(new LogRestlet())
         suggestwhelk.addPlugin(new SearchRestlet())
         suggestwhelk.addPlugin(new DocumentRestlet())
-        def acplugin = new AutoComplete()
-        acplugin.addNamePrefix("100.a")
-        acplugin.addNamePrefix("400.a")
-        acplugin.addNamePrefix("500.a")
+        def acplugin = new AutoComplete(["100.a", "400.a", "500.a"])
         suggestwhelk.addPlugin(acplugin)
 
         // Add other plugins 
         def formatParameters = ["bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
         
-        /*
-        suggestwhelk.addPlugin(new Listener(bibwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
-        suggestwhelk.addPlugin(new Listener(authwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
-        */
+        //suggestwhelk.addPlugin(new Listener(bibwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
+        //suggestwhelk.addPlugin(new Listener(authwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
 
         whelks << bibwhelk
         whelks << authwhelk
         whelks << suggestwhelk
+        */
 
     }
 

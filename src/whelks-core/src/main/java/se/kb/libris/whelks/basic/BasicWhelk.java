@@ -15,7 +15,7 @@ import se.kb.libris.whelks.persistance.JSONInitialisable;
 import se.kb.libris.whelks.persistance.JSONSerialisable;
 import se.kb.libris.whelks.plugin.*;
 
-public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
+public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
     private String prefix;
