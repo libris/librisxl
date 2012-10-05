@@ -57,7 +57,9 @@ abstract class ElasticSearch {
 
     @Override
     void index(Document doc) {
-        addDocument(doc, indexType)
+        if (doc) {
+            addDocument(doc, indexType)
+        }
     }
 
     @Override
@@ -404,11 +406,13 @@ class ElasticSearchClient extends ElasticSearch {
         final String elasticcluster = properties.getProperty("elasticclustername")
 
         log.debug "Connecting to $elastichost:9300"
-        Settings settings = ImmutableSettings.settingsBuilder()
+        def sb = ImmutableSettings.settingsBuilder()
                 .put("client.transport.ping_timeout", 30)
-                .put("cluster.name", elasticcluster)
                 .put("client.transport.sniff", true)
-                .build();
+        if (elasticcluster) {
+            sb = sb.put("cluster.name", elasticcluster)
+        }
+        Settings settings = sb.build();
         client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
         log.debug("... connected")
         init()
@@ -425,6 +429,9 @@ class ElasticSearchClientIndex extends ElasticSearchClient implements Index {
 }
 class ElasticSearchClientHistory extends ElasticSearchClient implements History {
     ElasticSearchClientHistory(String i) { super(i); } 
+}
+class ElasticSearchClientIndexHistory extends ElasticSearchClient implements Index, History {
+    ElasticSearchClientIndexHistory(String i) { super(i); } 
 }
 class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient implements Storage, Index, History {
     ElasticSearchClientStorageIndexHistory(String i) { super(i); } 

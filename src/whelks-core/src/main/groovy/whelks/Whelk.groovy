@@ -227,6 +227,7 @@ class ImportWhelk extends BasicWhelk {
             def date = (args.length > 2)? Tool.parseDate(args[2]) : null
             println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
             whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+            //whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
             whelk.addPlugin(new MarcCrackerIndexFormatConverter())
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()

@@ -37,6 +37,14 @@ public class BasicDocument implements Document {
         fromMap(map)
     }
 
+    public BasicDocument(Document d) {
+        this.class.declaredFields.each {
+            if (!it.isSynthetic() && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
+                this.(it.name) = d.(it.name)
+            }
+        }
+    }
+
     public Document fromJson(String jsonString) {
         log.debug("jsonSource: $jsonString")
         JsonFactory f = new JsonFactory();
@@ -235,7 +243,7 @@ public class BasicDocument implements Document {
                 }
             }
         }
-        println "JsonMap: $jsonmap"
+        log.debug "JsonMap: $jsonmap"
         return jsonmap
     }
 

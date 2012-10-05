@@ -65,13 +65,16 @@ public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable,
                 }
 
                 if (c instanceof Index) {
-                    Document indexDocument = d;
+                    boolean converted = false;
                     for (Plugin p: getPlugins()) {
-                        if (p instanceof IndexFormatConverter)
-                            indexDocument = ((IndexFormatConverter)p).convert(d);
+                        if (p instanceof IndexFormatConverter) {
+                            ((Index)c).index(((IndexFormatConverter)p).convert(d));
+                            converted = true;
+                        }
                     }
-                    if (indexDocument != null) 
-                        ((Index)c).index(indexDocument);
+                    if (!converted) {
+                        ((Index)c).index(d);
+                    }
                 }
 
                 if (c instanceof QuadStore)
