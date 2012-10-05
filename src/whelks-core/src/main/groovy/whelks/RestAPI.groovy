@@ -334,8 +334,14 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
 
     def namePrefixes = []
 
+    /*
     def void addNamePrefix(String prefix) {
         namePrefixes << prefix
+    }
+    */
+
+    AutoComplete(java.util.ArrayList namePfxs) {
+        namePrefixes.addAll(namePfxs)
     }
 
     @Override
