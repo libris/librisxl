@@ -55,9 +55,9 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
         def json 
         String d = doc.dataAsString
         try {
-            if (d.contains("\\\"")) {
-                d = d.replaceAll("\\\"", "/\"")
-            }
+            //if (d.contains("\\\"")) {
+              //  d = d.replaceAll("\\\"", "/\"")
+            //}
             //def mapper = new ObjectMapper()
             json = mapper.readValue(doc.dataAsString, Map)
 
