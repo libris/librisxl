@@ -28,3 +28,10 @@ task(console, dependsOn: 'classes', type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   main = 'groovy.ui.Console'
 }
+
+task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
+    description "Convert an ISO2709 file to JSON"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'se.kb.libris.conch.converter.MarcJSONConverter'
+    args(System.getProperty('args', "").split() as String[])
+}

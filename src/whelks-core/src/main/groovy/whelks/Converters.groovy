@@ -59,13 +59,38 @@ class MarcJSONConverter {
     }
 
     static String toJSONString(MarcRecord record) {
-        return "Not yet"
+        def json = mapper.createObjectNode()
+        def fields = mapper.createArrayNode()
+        record.fields.each {
+            def field = mapper.createObjectNode()
+            if (it instanceof Controlfield) {
+                field.put(it.tag, it.data)
+            } else {
+                def datafield = mapper.createObjectNode()
+                datafield.put("ind1", "" + it.getIndicator(0))
+                datafield.put("ind2", "" + it.getIndicator(1))
+                def subfields = mapper.createArrayNode()
+                it.subfields.each {
+                    def subfield = mapper.createObjectNode()
+                    subfield.put(Character.toString(it.code), it.data)
+                    subfields.add(subfield)
+                }
+                datafield.put("subfields", subfields)
+                field.put(it.tag, datafield)
+            }
+            fields.add(field)
+        }
+        json.put("leader", record.leader)
+        json.put("fields", fields)
+        return json.toString()
     }
 
     static void main(args) {
         MarcRecord record = new File(args[0]).withInputStream {
             new Iso2709MarcRecordReader(it/*, "utf-8"*/).readRecord()
         }
+        println toJSONString(record)
+        println "------------------------------------------------"
         println not_quite_so_old_toJSONString(record)/*.replaceAll(
                 /(?m)\{\s+(\S+: "[^"]+")\s+\}/, '{$1}')*/
 
