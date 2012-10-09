@@ -1,21 +1,21 @@
 package se.kb.libris.whelks.plugin.external
 
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.plugin.BasicFormatConverter
+import se.kb.libris.whelks.basic.*
+import se.kb.libris.whelks.plugin.*
 
 import groovy.json.*
 
-class AutoSuggestFormatConverter extends BasicFormatConverter {
+class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter, IndexFormatConverter, WhelkAware {
 
-    def suggestwhelk
-    def bibwhelk
+    Whelk whelk
+    Whelk bibwhelk
     def w_name
     def suggest_source
 
     String id = "autoSuggestFormatConverter"
 
     AutoSuggestFormatConverter(Map req) {
-        this.suggestwhelk = req["suggestwhelk"]
         this.bibwhelk = req["bibwhelk"]
     }
 
@@ -29,15 +29,15 @@ class AutoSuggestFormatConverter extends BasicFormatConverter {
             def rtype = record_type(in_json["leader"])
             //println "rtype: $rtype"
             suggest_source = (rtype == "bib" ? "name" : rtype)
-            w_name = (suggestwhelk ? suggestwhelk.prefix : "test");
+            w_name = (whelk ? whelk.prefix : "test");
             def sug_jsons = transform(in_json, rtype)
             for (sug_json in sug_jsons) {
                 def identifier = sug_json["identifier"];
                 def r = new JsonBuilder(sug_json).toString()
                 //print "r", r
-                if (suggestwhelk) {
-                    def mydoc = suggestwhelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
-                    def uri = suggestwhelk.store(mydoc)
+                if (whelk) {
+                    def mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
+                    def uri = whelk.store(mydoc)
                 }
             }
         }

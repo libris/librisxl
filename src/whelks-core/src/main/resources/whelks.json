@@ -7,8 +7,8 @@
         },
         {
             "auth":{
-                "_plugins": [ "index", "storage", "search", "document"]
-            
+                "_plugins": [ "index", "storage", "search", "document" ]
+            }
         },
         {
             "suggest":{
@@ -48,6 +48,12 @@
             "autocomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : ["100.a", "400.a", "500.a"]
+            }
+        }, 
+        {
+            "suggestformatconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter",
+                "_params" : "_whelk:bib"
             }
         }
     ]

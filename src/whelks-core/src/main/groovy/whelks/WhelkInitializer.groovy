@@ -6,6 +6,7 @@ import org.codehaus.jackson.map.ObjectMapper
 
 class WhelkInitializer {
     def json
+    def whelklist = []
 
     WhelkInitializer(InputStream is) {
         Object mapper = new ObjectMapper()
@@ -13,7 +14,6 @@ class WhelkInitializer {
     }
 
     def getWhelks() {
-        def whelks = []
         json._whelks.each { w ->
             w.each { wname, meta ->
                 meta._class = meta._class ?: "se.kb.libris.whelks.basic.BasicWhelk"  
@@ -21,10 +21,20 @@ class WhelkInitializer {
                 for (p in meta._plugins) {
                     whelk.addPlugin(getPlugin(p, wname))
                 }
-                whelks << whelk
+                whelklist << whelk
             }
         }
-        return whelks
+        return whelklist
+    }
+
+    def translateParams(params, whelkname) {
+        if (params == "_whelkname") {
+            return whelkname
+        } 
+        if (params instanceof String && params.startsWith("_whelk:")) {
+            return whelklist.find { it.prefix == meta._params.split(":")[1] }
+        }
+        return params 
     }
 
     def getPlugin(plugname, whelkname) {
@@ -38,7 +48,7 @@ class WhelkInitializer {
             p.each { label, meta ->
                 if (label == plugname) {
                     if (meta._params) {
-                        meta._params = meta._params == "_whelkname" ? whelkname : meta._params
+                        meta._params = translateParams(meta._params, whelkname)
                         plugin = Class.forName(meta._class).getConstructor(meta._params.getClass()).newInstance(meta._params)
                     } else {
                         plugin = Class.forName(meta._class).newInstance()
@@ -50,7 +60,7 @@ class WhelkInitializer {
                 }
             }
         }
-        println "Returning new or unique instance"
+        println "Returning new or unique instance of $plugname"
         return plugin
     }
 }
