@@ -29,7 +29,7 @@ class MarcJSONConverter {
         return builder.toString()
     }
 
-    static String not_quite_so_old_toJSONString(MarcRecord record) {
+    static String toJSONString(MarcRecord record) {
         def json = new JSONObject()
         def fields = new JSONArray()
 
@@ -58,15 +58,12 @@ class MarcJSONConverter {
         return json.toString()
     }
 
-    static String toJSONString(MarcRecord record) {
-        return "Not yet"
-    }
 
     static void main(args) {
         MarcRecord record = new File(args[0]).withInputStream {
             new Iso2709MarcRecordReader(it/*, "utf-8"*/).readRecord()
         }
-        println not_quite_so_old_toJSONString(record)/*.replaceAll(
+        println toJSONString(record)/*.replaceAll(
                 /(?m)\{\s+(\S+: "[^"]+")\s+\}/, '{$1}')*/
 
     }
