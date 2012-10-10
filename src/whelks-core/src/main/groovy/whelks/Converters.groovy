@@ -93,7 +93,5 @@ class MarcJSONConverter {
         println "------------------------------------------------"
         println not_quite_so_old_toJSONString(record)/*.replaceAll(
                 /(?m)\{\s+(\S+: "[^"]+")\s+\}/, '{$1}')*/
-
     }
-
 }

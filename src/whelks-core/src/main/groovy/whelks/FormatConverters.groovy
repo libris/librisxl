@@ -4,20 +4,14 @@ import javax.script.*
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.persistance.*
 
 import org.json.simple.JSONObject
 
-abstract class BasicFormatConverter implements FormatConverter, WhelkAware {
-    boolean enabled = true
-    void enable() { this.enabled = true }
-    void disable() { this.enabled = false }
-    Whelk whelk
-}
-
 @Log
-class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSerialisable, JSONInitialisable {
+class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter, WhelkAware, JSONSerialisable, JSONInitialisable {
 
     final private ScriptEngine python 
     String scriptName
@@ -25,6 +19,7 @@ class PythonRunnerFormatConverter extends BasicFormatConverter implements JSONSe
     Reader reader
     String id = "PythonRunnerFormatConverter"
     Map<String, Object> requirements = new HashMap<String, Object>()
+    Whelk whelk
 
     PythonRunnerFormatConverter(Map req) {
         python = new ScriptEngineManager().getEngineByName("python")

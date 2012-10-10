@@ -4,10 +4,16 @@ import groovy.util.logging.Slf4j as Log
 import groovy.transform.Synchronized
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
 
 @Log
-class Listener implements WhelkAware {
+class Listener extends BasicPlugin implements WhelkAware {
+    Whelk whelk
+}
+
+@Log
+class OldListener implements WhelkAware {
 
     Whelk homewhelk
     Whelk otherwhelk
@@ -29,7 +35,7 @@ class Listener implements WhelkAware {
     Class formatConverterClass
     Map converterParameters
 
-    Listener(Whelk n, int nrOfHandlers, Class formatConverterClass, Map converterParameters) {
+    OldListener(Whelk n, int nrOfHandlers, Class formatConverterClass, Map converterParameters) {
         this.otherwhelk = n
         this.numberOfHandlers = nrOfHandlers
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
