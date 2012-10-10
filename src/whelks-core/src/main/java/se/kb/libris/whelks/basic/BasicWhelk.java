@@ -103,9 +103,9 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
             if (ifc != null) {
                 for (Document d : docs) {
-                    Document cd = ifc.convert(d);
+                    List<Document> cd = ifc.convert(d);
                     if (cd != null) {
-                        convertedDocuments.add(cd);
+                        convertedDocuments.addAll(cd);
                     }
                 }
             } else {
@@ -117,7 +117,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                     ((Storage)c).store(docs);
                 }
 
-                if (c instanceof Index) {
+                if (c instanceof Index && convertedDocuments.size() > 0) {
                     ((Index)c).index(convertedDocuments);
                 }
 

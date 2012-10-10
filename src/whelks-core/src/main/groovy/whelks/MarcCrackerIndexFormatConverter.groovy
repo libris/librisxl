@@ -51,7 +51,7 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
     
 
     @Override
-    Document convert(Document doc) {
+    List<Document> convert(Document doc) {
         log.trace "Start convert on ${doc.dataAsString}"
         def json 
         String d = doc.dataAsString
@@ -133,7 +133,7 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
             throw new se.kb.libris.whelks.exception.WhelkRuntimeException(e)
         }
 
-        return doc
+        return [doc]
     }
 
 

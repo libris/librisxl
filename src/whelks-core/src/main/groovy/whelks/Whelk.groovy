@@ -20,7 +20,7 @@ import se.kb.libris.whelks.persistance.*
 @Log
 class WhelkImpl extends BasicWhelk {
 
-    WhelkImpl(pfx) {
+    WhelkImpl(String pfx) {
         super(pfx)
     }
 

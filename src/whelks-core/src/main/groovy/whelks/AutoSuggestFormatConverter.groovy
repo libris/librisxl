@@ -4,8 +4,10 @@ import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
 
+import groovy.util.logging.Slf4j as Log
 import groovy.json.*
 
+@Log
 class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter, IndexFormatConverter, WhelkAware {
 
     Whelk whelk
@@ -15,14 +17,15 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
 
     String id = "autoSuggestFormatConverter"
 
-    AutoSuggestFormatConverter(Map req) {
-        this.bibwhelk = req["bibwhelk"]
+    AutoSuggestFormatConverter(Whelk bw) {
+        this.bibwhelk = bw
     }
 
     @Override
-    public Document convert(Document document) {
+    public List<Document> convert(Document document) {
         def data = document.getDataAsString()
         def ctype = document.getContentType()
+        def docs  
 
         if (ctype == "application/json") {
             def in_json = new JsonSlurper().parseText(data)
@@ -34,13 +37,24 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
             for (sug_json in sug_jsons) {
                 def identifier = sug_json["identifier"];
                 def r = new JsonBuilder(sug_json).toString()
-                //print "r", r
+                if (!docs && r) {
+                    docs = []
+                }
+                if (r) {
+                    docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
+                } else {
+                    log.warn "Conversion got no content body for $identifier."
+                }
+                /*
                 if (whelk) {
                     def mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
                     def uri = whelk.store(mydoc)
                 }
+                */
             }
         }
+        log.debug("Convert resulted in " + docs?.size() + " documents.")
+        return docs
     }
 
     def transform(a_json, rtype) {

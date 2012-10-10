@@ -46,7 +46,7 @@ public class BasicDocument implements Document {
     }
 
     public Document fromJson(String jsonString) {
-        log.debug("jsonSource: $jsonString")
+        log.trace("jsonSource: $jsonString")
         JsonFactory f = new JsonFactory();
         JsonParser jp = f.createJsonParser(jsonString);
         jp.nextToken(); 
@@ -94,12 +94,12 @@ public class BasicDocument implements Document {
         g.writeStartObject()
         this.class.declaredFields.each {
             if (this.(it.name) && !it.isSynthetic() && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
-                log.debug("${it.name} is ${it.genericType} - " + this.(it.name).class.isPrimitive())
+                log.trace("${it.name} is ${it.genericType} - " + this.(it.name).class.isPrimitive())
                 if (this.(it.name) instanceof URI) {
-                    log.debug("found a URI identifier")
+                    log.trace("found a URI identifier")
                     g.writeStringField(it.name, this.(it.name).toString())
                 } else if (it.type.isArray()) {
-                    log.debug("Found a bytearray")
+                    log.trace("Found a bytearray")
                     g.writeBinaryField(it.name, this.(it.name))
                 } else if (it.type.isPrimitive()) {
                     log.trace("Found a number")
@@ -230,10 +230,10 @@ public class BasicDocument implements Document {
         this.class.declaredFields.each {
             if (this.(it.name) && !it.isSynthetic() && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
                 if (this.(it.name) instanceof URI) {
-                    log.debug("found a URI identifier")
+                    log.trace("found a URI identifier")
                     jsonmap[it.name] = this.(it.name).toString()
                 } else if (it.type.isArray()) {
-                    log.debug("Found a bytearray")
+                    log.trace("Found a bytearray")
                     def l = []
                     l.addAll(0, this.(it.name))
                     jsonmap[it.name] = l
@@ -243,7 +243,7 @@ public class BasicDocument implements Document {
                 }
             }
         }
-        log.debug "JsonMap: $jsonmap"
+        log.trace "JsonMap: $jsonmap"
         return jsonmap
     }
 

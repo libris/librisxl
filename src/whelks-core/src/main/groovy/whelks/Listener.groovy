@@ -41,7 +41,13 @@ class Listener extends BasicPlugin implements WhelkAware {
     }
     */
 
-    Listener(Whelk n, int nrOfHandlers = DEFAULT_NUMBER_OF_HANDLERS) {
+    Listener(Whelk n) {
+        this.otherwhelk = n
+        this.otherwhelk.addPluginIfNotExists(new Notifier(this))
+        id = id + ", listening to $otherwhelk.prefix"
+    }
+
+    Listener(Whelk n, int nrOfHandlers) {
         this.otherwhelk = n
         this.numberOfHandlers = nrOfHandlers
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
@@ -62,7 +68,8 @@ class Listener extends BasicPlugin implements WhelkAware {
         }
         log.info("Starting $numberOfHandlers handlers.")
         for (int i = 0; i < this.numberOfHandlers; i++) {
-            new Thread(new UpdateHandler(formatConverterClass, converterParameters)).start()
+            //new Thread(new UpdateHandler(formatConverterClass, converterParameters)).start()
+            new Thread(new UpdateHandler()).start()
         }
         Thread.start {
             Date lastSavedUpdate = lastUpdate
@@ -138,6 +145,9 @@ class Listener extends BasicPlugin implements WhelkAware {
 
         def converter
 
+        UpdateHandler() {
+        }
+
         UpdateHandler(Class convClass, Map params) {
             println "params: $params" 
             converter = convClass.getConstructor(Map.class).newInstance(params)
@@ -148,7 +158,9 @@ class Listener extends BasicPlugin implements WhelkAware {
                 def uri = nextIdentifier()
                 if (uri) {
                     log.debug("Next is $uri")
-                    homewhelk.store(otherwhelk.get(uri))
+                    def doc = otherwhelk.get(uri)
+                    homewhelk.store(doc)
+                    lastUpdate = doc.timestampAsDate
                     //convert(otherwhelk.get(uri))
                 }
                 sleep(CHECK_AGAIN_DELAY)
@@ -156,6 +168,7 @@ class Listener extends BasicPlugin implements WhelkAware {
             log.error("Thread is exiting ...")
         }
 
+        /*
         void convert(Document doc) {
             log.debug("Converting document $doc.identifier ...")
             Document convertedDocument = converter.convert(doc)
@@ -166,5 +179,6 @@ class Listener extends BasicPlugin implements WhelkAware {
                 homewhelk.store(convertedDocument)
             }
         }
+        */
     }
 }

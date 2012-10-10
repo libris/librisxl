@@ -152,21 +152,25 @@ abstract class ElasticSearch {
     }
     
     void addDocuments(documents, addType) {
-        def breq = client.prepareBulk()
+        if (documents) {
+            def breq = client.prepareBulk()
 
-        for (def doc : documents) {
-            if (addType == indexType) {
-                breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
-            } else {
-                breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
+            log.debug("Bulk request to index " + documents?.size() + " documents.")
+
+            for (doc in documents) {
+                if (addType == indexType) {
+                    breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
+                } else {
+                    breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
+                }
             }
-        }
-        def response = performExecute(breq)
-        if (response.hasFailures()) {
-            log.error "Bulk import has failures."
-            for (def re : response.items()) {
-                if (re.failed()) {
-                    log.error "Fail message: ${re.failureMessage}"
+            def response = performExecute(breq)
+            if (response.hasFailures()) {
+                log.error "Bulk import has failures."
+                for (def re : response.items()) {
+                    if (re.failed()) {
+                        log.error "Fail message: ${re.failureMessage}"
+                    }
                 }
             }
         }
@@ -220,7 +224,7 @@ abstract class ElasticSearch {
 
     @Override
     SearchResult query(Query q) {
-        log.debug "Doing query on $q"
+        log.trace "Doing query on $q"
         def srb = client.prepareSearch(index).setTypes(indexType)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
@@ -247,9 +251,9 @@ abstract class ElasticSearch {
                 srb = srb.addFacet(FacetBuilders.termsFacet(it.key).field(it.value))
             }
         }
-        log.debug("SearchRequestBuilder: " + srb)
+        log.trace("SearchRequestBuilder: " + srb)
         def response = performExecute(srb)
-        log.debug("SearchResponse: " + response)
+        log.trace("SearchResponse: " + response)
 
         def results = new BasicSearchResult(0)
 

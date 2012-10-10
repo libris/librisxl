@@ -44,7 +44,7 @@ class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter
 
 
     @Override
-    public Document convert(Document doc) { 
+    public List<Document> convert(Document doc) {
         if (python == null) {
             throw new WhelkRuntimeException("Unable to find script engine for python.")
         }
@@ -79,7 +79,7 @@ class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter
         } catch (Exception e) {
             throw new WhelkRuntimeException(e)
         }
-        return doc
+        return [doc]
     }
 
     @Override
