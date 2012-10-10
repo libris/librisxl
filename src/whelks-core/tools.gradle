@@ -30,7 +30,7 @@ task(console, dependsOn: 'classes', type: JavaExec) {
 }
 
 task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
-    description "Convert an ISO2709 file to JSON"
+    description "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
     classpath = sourceSets.main.runtimeClasspath
     main = 'se.kb.libris.conch.converter.MarcJSONConverter'
     args(System.getProperty('args', "").split() as String[])

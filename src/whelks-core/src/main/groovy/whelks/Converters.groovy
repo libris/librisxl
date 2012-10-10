@@ -90,8 +90,7 @@ class MarcJSONConverter {
             new Iso2709MarcRecordReader(it/*, "utf-8"*/).readRecord()
         }
         println toJSONString(record)
-        println "------------------------------------------------"
-        println not_quite_so_old_toJSONString(record)/*.replaceAll(
+        /*println not_quite_so_old_toJSONString(record)*//*.replaceAll(
                 /(?m)\{\s+(\S+: "[^"]+")\s+\}/, '{$1}')*/
     }
 }
