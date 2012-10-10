@@ -53,7 +53,7 @@ class DiskStorage implements Storage {
     }
 
     void store(Document doc) {
-        throw new UnsupportedOperationException("Not supported yet.")
+        getOutputStreamFor(doc).withWriter("UTF-8") { it.write(doc.toJson()) }
     }
 
     void store(Iterable<Document> docs) {

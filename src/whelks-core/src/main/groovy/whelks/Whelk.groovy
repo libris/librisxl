@@ -228,6 +228,7 @@ class ImportWhelk extends BasicWhelk {
             println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
             whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
             whelk.addPlugin(new MarcCrackerIndexFormatConverter())
+            whelk.addPlugin(new RiakStorage(prefix))
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
             def nrimports = importer.doImport(whelk, date)
@@ -235,6 +236,25 @@ class ImportWhelk extends BasicWhelk {
         } else {
             println "Supply whelk-prefix and resource-name as arguments to commence import."
         }
+    }
+}
+
+@Log
+class DiskStorageWhelk extends BasicWhelk {
+
+    DiskStorageWhelk(pfx) {
+        super(pfx)
+        log.info("Starting whelk '$pfx' in standalone disk storage mode.")
+    }
+
+    static main(args) {
+            def prefix = "diskstore"
+            def diskwhelk = new DiskStorageWhelk(prefix)
+            diskwhelk.addPlugin(new DiskStorage())
+            def testjson = "test"
+            BasicDocument jsondoc = new BasicDocument().fromJson(testjson)
+            diskwhelk.store(jsondoc)
+            log.info("Storing testdoc...")
     }
 }
 

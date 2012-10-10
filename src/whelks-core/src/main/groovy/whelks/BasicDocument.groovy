@@ -275,3 +275,6 @@ class HighlightedDocument extends BasicDocument {
         return builder.toString()
     } 
 }
+
+class RiakDocument extends BasicDocument {
+}

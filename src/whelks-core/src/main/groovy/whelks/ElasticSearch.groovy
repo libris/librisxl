@@ -153,6 +153,7 @@ abstract class ElasticSearch {
         def breq = client.prepareBulk()
 
         for (def doc : documents) {
+            log.debug("ES addDocument with type: "+ addType)
             if (addType == indexType) {
                 breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
             } else {
