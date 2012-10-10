@@ -13,11 +13,13 @@ class DiskStorage implements Storage {
 
     String id = "diskstorage"
 
+    /*
     DiskStorage() {
         def env = System.getenv()
         def whelk_storage = (env["PROJECT_HOME"] ? env["PROJECT_HOME"] : System.getProperty("user.home")) + "/whelk_storage"
         setStorageDir(whelk_storage)
     }
+    */
 
     DiskStorage(String directoryName) {
         setStorageDir(directoryName)

@@ -12,7 +12,7 @@
         },
         {
             "suggest":{
-                "_plugins": [ "index", "storage", "search", "document", "autocomplete"]
+                "_plugins": [ "index", "search", "autocomplete", "suggestformatconverter"]
             }
         }
     ], 

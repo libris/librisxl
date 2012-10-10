@@ -9,11 +9,6 @@ import se.kb.libris.whelks.exception.*
 
 @Log
 class Listener extends BasicPlugin implements WhelkAware {
-    Whelk whelk
-}
-
-@Log
-class OldListener implements WhelkAware {
 
     Whelk homewhelk
     Whelk otherwhelk
@@ -21,7 +16,7 @@ class OldListener implements WhelkAware {
 
     List identifiers = Collections.synchronizedList(new LinkedList())
 
-    final int DEFAULT_NUMBER_OF_HANDLERS = 1
+    final int DEFAULT_NUMBER_OF_HANDLERS = 5
     final int STATE_SAVE_INTERVAL = 10000
     final int CHECK_AGAIN_DELAY = 500
     int numberOfHandlers = DEFAULT_NUMBER_OF_HANDLERS
@@ -35,7 +30,8 @@ class OldListener implements WhelkAware {
     Class formatConverterClass
     Map converterParameters
 
-    OldListener(Whelk n, int nrOfHandlers, Class formatConverterClass, Map converterParameters) {
+    /*
+    Listener(Whelk n, int nrOfHandlers, Class formatConverterClass, Map converterParameters) {
         this.otherwhelk = n
         this.numberOfHandlers = nrOfHandlers
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
@@ -43,7 +39,14 @@ class OldListener implements WhelkAware {
         this.converterParameters = converterParameters
         id = id + ", listening to $otherwhelk.prefix"
     }
+    */
 
+    Listener(Whelk n, int nrOfHandlers = DEFAULT_NUMBER_OF_HANDLERS) {
+        this.otherwhelk = n
+        this.numberOfHandlers = nrOfHandlers
+        this.otherwhelk.addPluginIfNotExists(new Notifier(this))
+        id = id + ", listening to $otherwhelk.prefix"
+    }
 
     void setWhelk(Whelk w) {
         this.homewhelk = w
@@ -145,7 +148,8 @@ class OldListener implements WhelkAware {
                 def uri = nextIdentifier()
                 if (uri) {
                     log.debug("Next is $uri")
-                    convert(otherwhelk.get(uri))
+                    homewhelk.store(otherwhelk.get(uri))
+                    //convert(otherwhelk.get(uri))
                 }
                 sleep(CHECK_AGAIN_DELAY)
             }
@@ -162,6 +166,5 @@ class OldListener implements WhelkAware {
                 homewhelk.store(convertedDocument)
             }
         }
-
     }
 }

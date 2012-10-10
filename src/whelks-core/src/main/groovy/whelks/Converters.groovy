@@ -59,7 +59,7 @@ class MarcJSONConverter {
     }
 
     static String toJSONString(MarcRecord record) {
-        return "Not yet"
+        return not_quite_so_old_toJSONString(record)
     }
 
     static void main(args) {

@@ -1,9 +1,11 @@
 package se.kb.libris.whelks
 
+import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.plugin.*
 
 import org.codehaus.jackson.map.ObjectMapper
 
+@Log
 class WhelkInitializer {
     def json
     def whelklist = []
@@ -32,7 +34,7 @@ class WhelkInitializer {
             return whelkname
         } 
         if (params instanceof String && params.startsWith("_whelk:")) {
-            return whelklist.find { it.prefix == meta._params.split(":")[1] }
+            return whelklist.find { it.prefix == params.split(":")[1] }
         }
         return params 
     }
@@ -40,7 +42,7 @@ class WhelkInitializer {
     def getPlugin(plugname, whelkname) {
         def plugins = [:]
         if (plugins[plugname]) {
-            println "Recycling instance of $plugname"
+            log.trace "Recycling instance of $plugname"
             return plugins[plugname]
         }
         def plugin
@@ -49,18 +51,20 @@ class WhelkInitializer {
                 if (label == plugname) {
                     if (meta._params) {
                         meta._params = translateParams(meta._params, whelkname)
-                        plugin = Class.forName(meta._class).getConstructor(meta._params.getClass()).newInstance(meta._params)
+                        def paramclass = meta._params.getClass()
+                        def constructors = 
+                        plugin = Class.forName(meta._class).getDeclaredConstructor(meta._params.getClass()).newInstance(meta._params)
                     } else {
                         plugin = Class.forName(meta._class).newInstance()
                     }
                     if (!plugin instanceof WhelkAware && meta._param != "_whelkname") {
-                        println "$plugname not unique. Adding instance to map."
+                        log.trace "$plugname not unique. Adding instance to map."
                         plugins[label] = plugin
                     }
                 }
             }
         }
-        println "Returning new or unique instance of $plugname"
+        log.trace "Returning new or unique instance of $plugname"
         return plugin
     }
 }
