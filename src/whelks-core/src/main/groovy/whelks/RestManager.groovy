@@ -18,8 +18,8 @@ import se.kb.libris.whelks.plugin.external.*
 @Log
 class RestManager extends Application {
 
-    final String WHELKCONFIGFILE = "/tmp/whelkconfig.json"
-    //WhelkManager manager
+    final String WHELKCONFIGFILE = "file:src/main/resource/barebones-whelks.json"
+
     def whelks = []
 
     RestManager(Context parentContext) {
@@ -29,9 +29,16 @@ class RestManager extends Application {
     }
 
     void init() {
-        def wi = new WhelkInitializer(this.class.classLoader.getResourceAsStream("whelks.json"))
+        URI whelkconfig = new URI(System.getProperty("whelk.config.uri", WHELKCONFIGFILE))
+        log.info("Initializing whelks using definitions in $whelkconfig")
+        System.properties.each {k, v -> 
+            println "Property: $k = $v"
+        }
+        println "URI scheme: " + whelkconfig.getScheme()
+        //def wi = new WhelkInitializer(this.class.classLoader.getResourceAsStream("whelks.json"))
+        def wi = new WhelkInitializer(whelkconfig.toURL().newInputStream())
         whelks = wi.getWhelks()
-        println "These whelks are available: $whelks"
+
         /*
         def bibwhelk = new WhelkImpl("bib")
         def authwhelk = new WhelkImpl("auth")

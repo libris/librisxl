@@ -14,7 +14,7 @@
         },
         {
             "suggest":{
-                "_plugins": [ "index", "search", "autocomplete", "suggestformatconverter",
+                "_plugins": [ "index", "document", "search", "autocomplete", "suggestformatconverter",
                               "biblistener" ]
             }
         }

@@ -20,6 +20,7 @@ sourceSets {
 
 
 jettyRun.contextPath = '/'
+jettyRun.description = "Starts a jetty instance. To use a specific json-file to configure whelks, use -Dargs=whelk.config.uri=<URI of json file> (example: -Dargs=whelk.config.uri='file:src/main/resources/whelks.json')"
 
 
 run {
