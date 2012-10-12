@@ -36,7 +36,7 @@ import se.kb.libris.whelks.exception.*
 import static se.kb.libris.conch.Tools.*
 
 @Log
-abstract class ElasticSearch {
+abstract class ElasticSearch extends BasicPlugin {
 
     String index
     Client client
@@ -51,9 +51,6 @@ abstract class ElasticSearch {
 
     String indexType = "record"
     String storageType = "document"
-
-    def void enable() {this.enabled = true}
-    def void disable() {this.enabled = false}
 
     @Override
     void index(Document doc) {

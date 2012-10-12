@@ -8,6 +8,7 @@ import org.restlet.data.*
 import org.json.simple.*
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
 import se.kb.libris.whelks.persistance.*
@@ -25,6 +26,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     boolean enabled = true
 
     String id = "RestAPI"
+    int order = 0
     
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
@@ -45,13 +47,10 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
             return "/" + getPathEnd()
         }
     }
-
-    /*
-    def getVarPath() {
-        return this.path.matches(Pattern.compile("\\{\\w\\}.+"))
+    @Override
+    int compareTo(Plugin p) {
+        return (this.getOrder() - p.getOrder());
     }
-    */
-
 }
 
 @Log

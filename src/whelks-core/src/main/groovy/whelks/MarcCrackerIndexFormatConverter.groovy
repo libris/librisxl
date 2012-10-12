@@ -10,7 +10,7 @@ import groovy.json.*
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class MarcCrackerIndexFormatConverter extends BasicOrderedPlugin implements IndexFormatConverter {
+class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormatConverter {
 
     String id = this.class.name
     boolean enabled = true

@@ -11,7 +11,7 @@ import se.kb.libris.whelks.persistance.*
 import org.json.simple.JSONObject
 
 @Log
-class MarcFieldLabelerIndexFormatConverter extends BasicOrderedPlugin implements IndexFormatConverter, WhelkAware {
+class MarcFieldLabelerIndexFormatConverter extends BasicPlugin implements IndexFormatConverter, WhelkAware {
 
     int order = 100
     Whelk whelk

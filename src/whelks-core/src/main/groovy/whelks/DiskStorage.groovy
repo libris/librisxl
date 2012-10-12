@@ -6,12 +6,13 @@ import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 
 @Log
-class DiskStorage implements Storage {
+class DiskStorage extends BasicPlugin implements Storage {
     def storageDir = "./storage/"
     Whelk whelk
     boolean enabled = true
 
     String id = "diskstorage"
+
 
     /*
     DiskStorage() {

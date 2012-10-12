@@ -4,28 +4,28 @@ import se.kb.libris.whelks.plugin.*
 
 import spock.lang.Specification
 
-class BasicOrderedPluginSpec extends Specification {
+class BasicPluginSpec extends Specification {
 
+    SortedSet ss 
 
     def "should be properly sorted"() {
-        given:
-        def p1 = new BasicOrderedPlugin()
-        p1.id = "p1"
-        def p2 = new BasicOrderedPlugin()
-        p2.id = "p2"
-        def p3 = new BasicOrderedPlugin()
-        p3.id = "p3"
-        SortedSet ss = new SortedSet()
-        when:
-        p1.order = 3
-        p2.order = 2
-        p3.order = 1
-        ss.add(p1)
-        ss.add(p2)
-        ss.add(p3)
-        then:
-        "p3p2p1" == ss.collect { it }
+        expect:
+        ss.collect { it.id } == order
+        where:
+        ss                                                                                                        | order
+        new TreeSet([new TestBasicPlugin("p1", 1), new TestBasicPlugin("p2", 2), new TestBasicPlugin("p3", 3)])   | ["p1", "p2", "p3" ]
+        new TreeSet([new TestBasicPlugin("p1", 100), new TestBasicPlugin("p2", 2), new TestBasicPlugin("p3", 3)]) | ["p2", "p3", "p1" ]
+        new TreeSet([new TestBasicPlugin("p1", 1), new TestBasicPlugin("p2", 5), new TestBasicPlugin("p3", 2)])   | ["p1", "p3", "p2" ]
+        new TreeSet([new TestBasicPlugin("p1", 1), new TestBasicPlugin("p2", 2), new TestBasicPlugin("p3", 0)])   | ["p3", "p1", "p2" ]
+        new TreeSet([new TestBasicPlugin("p1", 0), new TestBasicPlugin("p2", 0), new TestBasicPlugin("p3", 0)])   | ["p1", "p2", "p3" ]
     }
+}
 
+class TestBasicPlugin extends BasicPlugin {
+    String id
+    TestBasicPlugin(id, order) {
+        this.id = id
+        this.order = order
+    }
 }
 
