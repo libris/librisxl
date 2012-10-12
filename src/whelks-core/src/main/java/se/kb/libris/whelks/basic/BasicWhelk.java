@@ -28,99 +28,48 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         public String getPrefix() { return this.prefix; }
 
     @Override
-        public URI store(Document d) {
-            // mint URI if document needs it
-            if (d.getIdentifier() == null || !d.getIdentifier().toString().startsWith("/"+prefix))
-                d.setIdentifier(mintIdentifier(d));
+    public URI store(Document d) {
+        // mint URI if document needs it
+        List<Document> docs = new ArrayList<Document>();
+        docs.add(d);
+        store(docs);
+        return d.getIdentifier();
+    }
 
-
-            // find and add links
-            d.getLinks().clear();
-            for (LinkFinder lf: getLinkFinders())
-                d.getLinks().addAll(lf.findLinks(d));
-
-
-            // generate and add keys
-            d.getKeys().clear();
-            for (KeyGenerator kg: getKeyGenerators())
-                d.getKeys().addAll(kg.generateKeys(d));
-
-
-            // extract descriptions
-            d.getDescriptions().clear();
-            for (DescriptionExtractor de: getDescriptionExtractors())
-                d.getDescriptions().add(de.extractDescription(d));
-
-
-            // before triggers
-            for (Trigger t: getTriggers())
-                if (t.isEnabled()) { t.beforeStore(d); }
-
-            // Make sure document timestamp is updated before storing.
-            d.updateTimestamp();
-            // add document to storage, index and quadstore
-            for (Component c: getComponents()) {
-                if (c instanceof Storage) {
-                    ((Storage)c).store(d);
-                }
-
-                if (c instanceof Index) {
-                    boolean converted = false;
-                    for (Plugin p: getPlugins()) {
-                        if (p instanceof IndexFormatConverter) {
-                            ((Index)c).index(((IndexFormatConverter)p).convert(d));
-                            converted = true;
-                        }
-                    }
-                    if (!converted) {
-                        ((Index)c).index(d);
-                    }
-                }
-
-                if (c instanceof QuadStore)
-                    ((QuadStore)c).update(d.getIdentifier(), d);
-            }
-
-            // after triggers
-            for (Trigger t: getTriggers())
-                if (t.isEnabled()) { t.afterStore(d); }
-
-            return d.getIdentifier();
-        }
-
-
-    @Override 
+    @Override
         public void store(Iterable<Document> docs) {
-            // add document to storage, index and quadstore
-            List<Document> convertedDocuments = new ArrayList<Document>();
-
-            IndexFormatConverter ifc = null;
-
-            for (Plugin p: getPlugins()) {
-                if (p instanceof IndexFormatConverter)
-                    ifc = (IndexFormatConverter)p;
-            }
-
-            if (ifc != null) {
-                for (Document d : docs) {
-                    List<Document> cd = ifc.convert(d);
-                    if (cd != null) {
-                        convertedDocuments.addAll(cd);
-                    }
+            // Pre storage operations
+            for (Document doc : docs) {
+                if (doc.getIdentifier() == null || !doc.getIdentifier().toString().startsWith("/"+prefix)) {
+                    doc.setIdentifier(mintIdentifier(doc));
                 }
-            } else {
-                convertedDocuments.addAll((Collection)docs);
+                for (Trigger t : getTriggers()) { if (t.isEnabled()) { t.beforeStore(doc); } }
             }
 
-            for (Component c: getComponents()) {
+            for (Component c : getComponents()) {
+
                 if (c instanceof Storage) {
                     ((Storage)c).store(docs);
                 }
 
-                if (c instanceof Index && convertedDocuments.size() > 0) {
-                    ((Index)c).index(convertedDocuments);
+                if (c instanceof Index) {
+                    List<Document> idocs = new ArrayList<Document>((Collection)docs);
+                    for (IndexFormatConverter ifc : getIndexFormatConverters()) {
+                        idocs = ifc.convert(idocs);
+                    }
+                    ((Index)c).index(idocs);
                 }
 
+                if (c instanceof QuadStore) {
+                    for (Document doc : docs) {
+                        ((QuadStore)c).update(doc.getIdentifier(), doc);
+                    }
+                }
+            }
+
+            // Post storage operations
+            for (Document doc : docs) {
+                for (Trigger t : getTriggers()) { if (t.isEnabled()) { t.afterStore(doc); } }
             }
         }
 
@@ -269,6 +218,24 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         for (Plugin plugin: plugins)
             if (plugin instanceof Storage)
                 ret.add((Storage)plugin);
+
+        return ret;
+    }
+
+    protected Iterable<FormatConverter> getFormatConverters() {
+        TreeSet<FormatConverter> ret = new TreeSet<FormatConverter>();
+        for (Plugin plugin: plugins) 
+            if (plugin instanceof FormatConverter)
+                ret.add((FormatConverter)plugin);
+
+        return ret;
+    }
+
+    protected Iterable<IndexFormatConverter> getIndexFormatConverters() {
+        TreeSet<IndexFormatConverter> ret = new TreeSet<IndexFormatConverter>();
+        for (Plugin plugin: plugins) 
+            if (plugin instanceof IndexFormatConverter)
+                ret.add((IndexFormatConverter)plugin);
 
         return ret;
     }

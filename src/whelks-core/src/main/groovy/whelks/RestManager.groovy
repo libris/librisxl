@@ -18,7 +18,7 @@ import se.kb.libris.whelks.plugin.external.*
 @Log
 class RestManager extends Application {
 
-    final String WHELKCONFIGFILE = "file:src/main/resource/barebones-whelks.json"
+    final String WHELKCONFIGFILE = "file:src/main/resources/barebones-whelks.json"
 
     def whelks = []
 
