@@ -9,4 +9,10 @@ public class BasicPlugin implements Plugin {
     public void enable() { this.enabled = true; }
     public void disable() { this.enabled = false; }
     public String getId() { return "basicplugin"; }
+
+    public int getOrder() { return 0; }
+
+    public int compareTo(OrderedPlugin p) {
+        return (this.getOrder() - p.getOrder());
+    }
 }

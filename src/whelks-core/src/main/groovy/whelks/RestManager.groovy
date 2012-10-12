@@ -31,11 +31,6 @@ class RestManager extends Application {
     void init() {
         URI whelkconfig = new URI(System.getProperty("whelk.config.uri", WHELKCONFIGFILE))
         log.info("Initializing whelks using definitions in $whelkconfig")
-        System.properties.each {k, v -> 
-            println "Property: $k = $v"
-        }
-        println "URI scheme: " + whelkconfig.getScheme()
-        //def wi = new WhelkInitializer(this.class.classLoader.getResourceAsStream("whelks.json"))
         def wi = new WhelkInitializer(whelkconfig.toURL().newInputStream())
         whelks = wi.getWhelks()
 

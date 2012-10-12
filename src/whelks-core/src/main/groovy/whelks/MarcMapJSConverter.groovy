@@ -24,6 +24,8 @@ class MarcMapJSConverter implements IndexFormatConverter {
     Context cx = Context.enter()
     Scriptable scope = cx.initStandardObjects()
 
+    int order = 0
+
     MarcMapJSConverter(scriptPath, objName, funcName) {
         this(null, scriptPath, objName, funcName)
     }
@@ -49,13 +51,22 @@ class MarcMapJSConverter implements IndexFormatConverter {
 
     @Override
     List<Document> convert(Document doc) {
-        def struct = parseJSON(doc.dataAsString)
-        def obj = scope.get(objName, scope)
-        def func = obj.get(funcName, obj)
-        def map = marcmap.get('bib', marcmap)
-        def result = func.call(cx, scope, obj, [map, struct] as Object[])
-        def repr = NativeJSON.stringify(cx, scope, result, null, 2)
-        return [new BasicDocument(doc).withData(repr)]
+        return convert([doc])
+    }
+
+    @Override
+    List<Document> convert(List<Document> docs) {
+        def outdocs = []
+        for (doc in docs) {
+            def struct = parseJSON(doc.dataAsString)
+            def obj = scope.get(objName, scope)
+            def func = obj.get(funcName, obj)
+            def map = marcmap.get('bib', marcmap)
+            def result = func.call(cx, scope, obj, [map, struct] as Object[])
+            def repr = NativeJSON.stringify(cx, scope, result, null, 2)
+            outdocs << new BasicDocument(doc).withData(repr)
+        }
+        return outdocs
     }
 
     def parseJSON(String repr) {

@@ -11,6 +11,25 @@ import se.kb.libris.whelks.persistance.*
 import org.json.simple.JSONObject
 
 @Log
+class MarcFieldLabelerIndexFormatConverter extends BasicOrderedPlugin implements IndexFormatConverter, WhelkAware {
+
+    int order = 100
+    Whelk whelk
+
+    @Override
+    List<Document> convert(Document doc) {
+        return convert([doc])
+    }
+
+    @Override 
+    List<Document> convert(List<Document> docs) {
+        def outdocs = []    
+        for (doc in docs) {
+        }
+    }
+}
+
+@Log
 class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter, WhelkAware, JSONSerialisable, JSONInitialisable {
 
     final private ScriptEngine python 

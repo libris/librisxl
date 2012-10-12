@@ -15,6 +15,8 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
     def w_name
     def suggest_source
 
+    int order
+
     String id = "autoSuggestFormatConverter"
 
     AutoSuggestFormatConverter(Whelk bw) {
@@ -23,36 +25,44 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
 
     @Override
     public List<Document> convert(Document document) {
-        def data = document.getDataAsString()
-        def ctype = document.getContentType()
-        def docs  
+        return convert([document])
+    }
 
-        if (ctype == "application/json") {
-            def in_json = new JsonSlurper().parseText(data)
-            def rtype = record_type(in_json["leader"])
-            //println "rtype: $rtype"
-            suggest_source = (rtype == "bib" ? "name" : rtype)
-            w_name = (whelk ? whelk.prefix : "test");
-            def sug_jsons = transform(in_json, rtype)
-            for (sug_json in sug_jsons) {
-                def identifier = sug_json["identifier"];
-                def r = new JsonBuilder(sug_json).toString()
-                if (!docs && r) {
-                    docs = []
-                }
-                if (r) {
-                    docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
-                } else {
-                    log.warn "Conversion got no content body for $identifier."
-                }
-                /*
-                if (whelk) {
+
+    @Override
+    public List<Document> convert(List<Document> documents) {
+        def docs  
+        for  (document in documents) {
+            def data = document.getDataAsString()
+            def ctype = document.getContentType()
+
+            if (ctype == "application/json") {
+                def in_json = new JsonSlurper().parseText(data)
+                def rtype = record_type(in_json["leader"])
+                //println "rtype: $rtype"
+                suggest_source = (rtype == "bib" ? "name" : rtype)
+                w_name = (whelk ? whelk.prefix : "test");
+                def sug_jsons = transform(in_json, rtype)
+                for (sug_json in sug_jsons) {
+                    def identifier = sug_json["identifier"];
+                    def r = new JsonBuilder(sug_json).toString()
+                    if (!docs && r) {
+                        docs = []
+                    }
+                    if (r) {
+                        docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
+                    } else {
+                        log.warn "Conversion got no content body for $identifier."
+                    }
+                    /*
+                    if (whelk) {
                     def mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
                     def uri = whelk.store(mydoc)
+                    }
+                    */
                 }
-                */
             }
-        }
+        } 
         log.debug("Convert resulted in " + docs?.size() + " documents.")
         return docs
     }
