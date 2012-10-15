@@ -56,14 +56,11 @@ class Query {
             }
             if (qmap.get("boost")) {
                 for (b in qmap.get("boost").split(",")) {
-                    //try {
-                        log.debug("adding " + b.split(":")[0] + " = " +b.split(":")[1])
+                    try {
                         addBoost(b.split(":")[0], new Float(b.split(":")[1]))
-                        /*
                     } catch (Exception e) {
                         log.error("Bad user: " + e.getMessage())
                     }
-                    */
                 }
             }
             if (qmap.get("facets")) {
@@ -120,10 +117,8 @@ class Query {
 
     Query addBoost(String field, Float boostvalue) {
         if (!this.boost) {
-            log.debug("Creating new dictionary for boost.")
             this.boost = [:]
         }
-        log.debug("f: $field, b: $boost")
         this.boost[field] = boostvalue
         return this
     }
