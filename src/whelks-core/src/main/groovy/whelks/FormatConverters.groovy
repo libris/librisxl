@@ -9,23 +9,89 @@ import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.persistance.*
 
 import org.json.simple.JSONObject
+import org.codehaus.jackson.map.ObjectMapper
 
 @Log
 class MarcFieldLabelerIndexFormatConverter extends BasicPlugin implements IndexFormatConverter, WhelkAware {
 
     int order = 100
     Whelk whelk
+    ObjectMapper mapper
+
+    def oldfacit = [
+        "bibid": ["001"],
+        "f":     ["100.a","505.r","700.a"],
+        "förf":  ["100.a","505.r","700.a"],
+        "isbn":  ["020.az"],
+        "issn":  ["022.amyz"],
+        "t":     ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"],
+        "tit":   ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"],
+        "titel": ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"]
+        ]
+
+    def facit = [
+        "020":   ["a":"isbn", "z":"isbn"],
+        "022":   ["a":"issn", "m":"issn", "y":"issn", "z":"issn"],
+        "100":   ["a":"author"],
+        "505":   ["r":"author"],
+        "700":   ["a":"author"],
+        "242":   ["a":"title", "b": "title"],
+        "245":   ["a":"title", "b": "title"],
+        "246":   ["a":"title", "b": "title"],
+        "247":   ["a":"title", "b": "title"],
+        "249":   ["a":"title", "b": "title"],
+        "720":   ["a":"title", "n": "title", "p": "title"]
+    ]
+
+
+    MarcFieldLabelerIndexFormatConverter() {
+        mapper = new ObjectMapper()
+    }
 
     @Override
     List<Document> convert(Document doc) {
         return convert([doc])
     }
 
-    @Override 
+    @Override
     List<Document> convert(List<Document> docs) {
-        def outdocs = []    
+        log.debug("Converting ${docs.size} documents")
+        def outdocs = []
         for (doc in docs) {
+            def json = mapper.readValue(doc.dataAsString, Map)
+            json.fields.each {
+                it.each { field, data ->
+                    //log.debug("Field: $field : $data")
+                    if (facit.containsKey(field)) {
+                       // log.debug("facit: " + facit[field])
+                        facit[field].each { f, v ->
+                            /*
+                            log.debug("F: $f, V: $v")
+                            log.debug "subfields: " + data["subfields"]
+                            */
+                            data["subfields"].each { pair ->
+                                if (pair[f]) {
+                                    if (!json.labels) {
+                                        json["labels"] = [:]
+                                    }
+                                    if (!json.labels[v]) {
+                                        json.labels[v] = []
+                                    }
+                                    if (v == "isbn") {
+                                        pair[f] = pair[f].replaceAll(/\D/, "")
+                                    }
+                                    json.labels[v].add(pair[f])
+                                    log.debug "Put "+ pair[f] + " in $v"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            log.debug("Final json: $json")
+            outdocs << new BasicDocument(doc).withData(mapper.writeValueAsBytes(json))
         }
+        return outdocs
     }
 }
 
@@ -61,6 +127,11 @@ class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter
         this.reader = new StringReader(this.script)
     }
 
+
+    @Override
+    public List<Document> convert(List<Document> docs) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
     @Override
     public List<Document> convert(Document doc) {

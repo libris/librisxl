@@ -4,8 +4,8 @@ import se.kb.libris.whelks.exception.WhelkRuntimeException
 
 class Query {
 
-    def query 
-    def fields 
+    def query
+    def fields
     def sorting
     def highlights
     def filters

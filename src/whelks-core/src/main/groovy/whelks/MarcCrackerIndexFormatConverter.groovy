@@ -6,7 +6,6 @@ import se.kb.libris.whelks.exception.*
 
 import groovy.util.logging.Slf4j as Log
 
-import groovy.json.*
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
@@ -15,7 +14,7 @@ class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormat
     String id = this.class.name
     boolean enabled = true
     ObjectMapper mapper
-    def marcmap 
+    def marcmap
     int order = 0
 
     MarcCrackerIndexFormatConverter() { 
@@ -23,7 +22,6 @@ class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormat
         mapper = new ObjectMapper()
         //this.marcmap = new JsonSlurper().parse(is.newReader())
         this.marcmap = mapper.readValue(is, Map)
-        
     }
 
     def expandField(ctrlfield, columns) {
@@ -49,11 +47,11 @@ class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormat
         return l
 
     }
-    
+
     @Override
     List<Document> convert(Document doc) {
         return convert([doc])
-    }   
+    }
 
     @Override
     List<Document> convert(List<Document> docs) {
@@ -132,8 +130,7 @@ class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormat
             }
 
             try {
-                def builder = new JsonBuilder(json)
-                outdocs << new BasicDocument(doc).withData(builder.toString())
+                outdocs << new BasicDocument(doc).withData(mapper.writeValueAsBytes(json))
             } catch (Exception e) {
                 log.error("Failed to create cracked marc index: ${e.message}")
                 log.error("JSON structure: $json")

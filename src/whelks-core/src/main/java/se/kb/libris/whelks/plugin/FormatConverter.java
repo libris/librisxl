@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface FormatConverter extends Plugin {
     public List<Document> convert(Document doc);
+    public List<Document> convert(List<Document> docs);
 }

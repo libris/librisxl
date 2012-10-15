@@ -47,9 +47,12 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             }
 
             for (Component c : getComponents()) {
-
                 if (c instanceof Storage) {
-                    ((Storage)c).store(docs);
+                    List<Document> sdocs = new ArrayList<Document>((Collection)docs);
+                    for (FormatConverter fc : getFormatConverters()) {
+                        sdocs = fc.convert(sdocs);
+                    }
+                    ((Storage)c).store(sdocs);
                 }
 
                 if (c instanceof Index) {

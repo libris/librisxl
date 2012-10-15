@@ -177,7 +177,7 @@ public class BasicDocument implements Document {
 
     @Override
     public Document withData(String dataString) {
-        return withData(dataString.getBytes())
+        return withData(dataString.getBytes("UTF-8"))
     }
 
     @Override

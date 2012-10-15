@@ -232,7 +232,7 @@ class KitinSearchRestlet extends BasicWhelkAPI {
         def query
         if (newQuery.size() > 0) {
             query = "(" + newQuery.join(" AND ") + ")"
-        } 
+        }
         if (isbnQuery.size() > 0) {
             def isbnq = "(" + isbnQuery.join(" OR ") + ")"
             query = (query ? query + " OR " + isbnq : isbnq)

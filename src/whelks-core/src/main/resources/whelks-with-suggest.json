@@ -3,13 +3,19 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["index", "storage", "search", "document", "marccracker", "marclabeler"]
+                "_plugins": ["index", "storage", "marccracker", "search", "document"]
             }
         },
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
                 "_plugins": [ "index", "storage", "search", "document" ]
+            }
+        },
+        {
+            "suggest":{
+                "_plugins": [ "index", "document", "search", "autocomplete", "suggestformatconverter",
+                              "biblistener" ]
             }
         }
     ], 
@@ -63,11 +69,6 @@
             "authlistener" : {
                 "_class" : "se.kb.libris.whelks.plugin.Listener",
                 "_params" : "_whelk:auth"
-            }
-        },
-        {
-            "marclabeler" : {
-                "_class" : "se.kb.libris.whelks.plugin.MarcFieldLabelerIndexFormatConverter"
             }
         }
     ]
