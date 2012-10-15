@@ -228,7 +228,16 @@ abstract class ElasticSearch extends BasicPlugin {
         def query = queryString(q.query)
         if (q.fields) {
             q.fields.each {
-                query = query.field(it)
+                if (q.boost && q.boost[it]) {
+                    query = query.field(it, q.boost[it])
+                } else {
+                    query = query.field(it)
+                }
+            }
+        } else if (q.boost) {
+            query = query.field("_all")
+            q.boost.each { f, b ->
+                query = query.field(f, b)
             }
         }
         srb.setQuery(query)
