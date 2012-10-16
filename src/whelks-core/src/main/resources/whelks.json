@@ -3,13 +3,13 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["index", "storage", "search", "document", "marccracker", "marclabeler"]
+                "_plugins": ["indexstorage", "search", "kitinsearch", "document", "marccracker", "marclabeler"]
             }
         },
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": [ "index", "storage", "search", "document" ]
+                "_plugins": [ "indexstorage", "search", "document" ]
             }
         }
     ], 
@@ -17,6 +17,12 @@
         {
             "index": { 
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory",
+                "_params" : "_whelkname"
+            }
+        }, 
+        {
+            "indexstorage": { 
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientStorageIndexHistory",
                 "_params" : "_whelkname"
             }
         }, 
@@ -33,12 +39,18 @@
         },
         {
             "search" : {
-                "_class" : "se.kb.libris.whelks.api.SearchRestlet"
+                "_class" : "se.kb.libris.whelks.api.SearchRestlet",
+                "_params" : {"boost" : "labels.title:2"}
             }
         },
         {
             "document" : {
                 "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
+            }
+        },
+        {
+            "kitinsearch" : {
+                "_class" : "se.kb.libris.whelks.api.KitinSearchRestlet2"
             }
         },
         {

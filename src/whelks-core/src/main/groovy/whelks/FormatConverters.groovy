@@ -18,17 +18,6 @@ class MarcFieldLabelerIndexFormatConverter extends BasicPlugin implements IndexF
     Whelk whelk
     ObjectMapper mapper
 
-    def oldfacit = [
-        "bibid": ["001"],
-        "f":     ["100.a","505.r","700.a"],
-        "förf":  ["100.a","505.r","700.a"],
-        "isbn":  ["020.az"],
-        "issn":  ["022.amyz"],
-        "t":     ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"],
-        "tit":   ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"],
-        "titel": ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"]
-        ]
-
     def facit = [
         "020":   ["a":"isbn", "z":"isbn"],
         "022":   ["a":"issn", "m":"issn", "y":"issn", "z":"issn"],
