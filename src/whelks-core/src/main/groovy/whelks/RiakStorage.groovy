@@ -22,9 +22,14 @@ class RiakStorage implements Storage {
     private int riak_port
     private String plugin_id = "riakstore"
     private boolean enabled = true
-    static final int HTTP_CREATED = 201
 
-    public RiakStorage(String bucket){
+    //public String getId(){ return this.clientId }
+    def id
+    boolean isEnabled(){ return this.enabled }
+    void enable(){ this.enabled = true }
+    void disable(){ this.enabled = false }
+
+    RiakStorage(String bucket){
         try {
             Properties properties = new Properties()
             def propInputStream = RiakStorage.class.getClassLoader().getResourceAsStream("whelks-core.properties")
@@ -39,14 +44,9 @@ class RiakStorage implements Storage {
          } catch(RiakException re) {
             log.debug("Could not intialize riak httpclient for: " + url + " Bucket: " + bucket + " " + e.getMessage())
         }
-   }
+    }
 
-    public String getId(){ return this.clientId }
-    public boolean isEnabled(){ return this.enabled }
-    public void enable(){ this.enabled = true }
-    public void disable(){ this.enabled = false }
-
-    public void store(Document d){  
+    void store(Document d){
         try {
             final String id = UUID.randomUUID().toString()
             this.riakBucket.store(id, d.data).execute()
@@ -56,25 +56,25 @@ class RiakStorage implements Storage {
         }
     }
 
-    public void store(Iterable<Document> d){
+    void store(Iterable<Document> d){
         for (def doc : d) {
             store(doc)
         }
     }
 
-    public Document get(URI uri){
+    Document get(URI uri){
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    public Iterable<Document> getAll(){
+    Iterable<Document> getAll(){
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    public void delete(URI uri){
+    void delete(URI uri){
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    public LookupResult<? extends Document> lookup(Key key){
+    LookupResult<? extends Document> lookup(Key key){
         throw new UnsupportedOperationException("Not supported yet.")
     }
 	

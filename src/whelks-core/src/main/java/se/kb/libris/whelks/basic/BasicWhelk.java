@@ -15,7 +15,7 @@ import se.kb.libris.whelks.persistance.JSONInitialisable;
 import se.kb.libris.whelks.persistance.JSONSerialisable;
 import se.kb.libris.whelks.plugin.*;
 
-public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
+public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
     private String prefix;
@@ -65,13 +65,16 @@ public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable,
                 }
 
                 if (c instanceof Index) {
-                    Document indexDocument = d;
+                    boolean converted = false;
                     for (Plugin p: getPlugins()) {
-                        if (p instanceof IndexFormatConverter)
-                            indexDocument = ((IndexFormatConverter)p).convert(d);
+                        if (p instanceof IndexFormatConverter) {
+                            ((Index)c).index(((IndexFormatConverter)p).convert(d));
+                            converted = true;
+                        }
                     }
-                    if (indexDocument != null) 
-                        ((Index)c).index(indexDocument);
+                    if (!converted) {
+                        ((Index)c).index(d);
+                    }
                 }
 
                 if (c instanceof QuadStore)
@@ -100,9 +103,9 @@ public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable,
 
             if (ifc != null) {
                 for (Document d : docs) {
-                    Document cd = ifc.convert(d);
+                    List<Document> cd = ifc.convert(d);
                     if (cd != null) {
-                        convertedDocuments.add(cd);
+                        convertedDocuments.addAll(cd);
                     }
                 }
             } else {
@@ -114,7 +117,7 @@ public abstract class BasicWhelk implements Whelk, Pluggable, JSONInitialisable,
                     ((Storage)c).store(docs);
                 }
 
-                if (c instanceof Index) {
+                if (c instanceof Index && convertedDocuments.size() > 0) {
                     ((Index)c).index(convertedDocuments);
                 }
 

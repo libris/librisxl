@@ -1,6 +1,7 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
 
 import groovy.util.logging.Slf4j as Log
@@ -50,15 +51,16 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
     
 
     @Override
-    Document convert(Document doc) {
-        //log.debug "Start convert on ${doc.dataAsString}"
+    List<Document> convert(Document doc) {
+        log.trace "Start convert on ${doc.dataAsString}"
         def json 
         String d = doc.dataAsString
         try {
+            /*
             if (d.contains("\\\"")) {
                 d = d.replaceAll("\\\"", "/\"")
             }
-            //def mapper = new ObjectMapper()
+            */
             json = mapper.readValue(doc.dataAsString, Map)
 
             //json = new JsonSlurper().parseText(doc.dataAsString)
@@ -122,17 +124,16 @@ class MarcCrackerIndexFormatConverter implements IndexFormatConverter {
             }
         }
 
-
         try {
             def builder = new JsonBuilder(json)
-            doc.withData(builder.toString())
+            doc = new BasicDocument(doc).withData(builder.toString())
         } catch (Exception e) {
             log.error("Failed to create cracked marc index: ${e.message}")
             log.error("JSON structure: $json")
             throw new se.kb.libris.whelks.exception.WhelkRuntimeException(e)
         }
 
-        return doc
+        return [doc]
     }
 
 

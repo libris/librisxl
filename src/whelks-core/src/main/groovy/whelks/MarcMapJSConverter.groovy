@@ -7,6 +7,7 @@ import org.mozilla.javascript.NativeJSON
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
 
 @Log
@@ -47,14 +48,14 @@ class MarcMapJSConverter implements IndexFormatConverter {
     }
 
     @Override
-    Document convert(Document doc) {
+    List<Document> convert(Document doc) {
         def struct = parseJSON(doc.dataAsString)
         def obj = scope.get(objName, scope)
         def func = obj.get(funcName, obj)
         def map = marcmap.get('bib', marcmap)
         def result = func.call(cx, scope, obj, [map, struct] as Object[])
         def repr = NativeJSON.stringify(cx, scope, result, null, 2)
-        return doc.withData(repr)
+        return [new BasicDocument(doc).withData(repr)]
     }
 
     def parseJSON(String repr) {

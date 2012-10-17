@@ -3,6 +3,7 @@ package se.kb.libris.whelks.component
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
 
 @Log
 class DiskStorage implements Storage {
@@ -12,13 +13,15 @@ class DiskStorage implements Storage {
 
     String id = "diskstorage"
 
+    /*
     DiskStorage() {
         def env = System.getenv()
         def whelk_storage = (env["PROJECT_HOME"] ? env["PROJECT_HOME"] : System.getProperty("user.home")) + "/whelk_storage"
         setStorageDir(whelk_storage)
     }
+    */
 
-    DiskStorage(def directoryName) {
+    DiskStorage(String directoryName) {
         setStorageDir(directoryName)
     }
 
@@ -45,7 +48,13 @@ class DiskStorage implements Storage {
     }
 
     Document get(URI uri) {
-        throw new UnsupportedOperationException("Not supported yet.")
+        def filename = uri.toString()
+        File f = new File("$storageDir/$filename")
+        try {
+            return new BasicDocument(f.text)
+        } catch (FileNotFoundException fnfe) {
+            return null
+        }
     }
 
     Iterable<Document> getAll() {
@@ -53,11 +62,20 @@ class DiskStorage implements Storage {
     }
 
     void store(Document doc) {
-        getOutputStreamFor(doc).withWriter("UTF-8") { it.write(doc.toJson()) }
+        def filename = doc.identifier.toString() 
+        log.debug "${this.class.name} storing file $filename in $storageDir"
+        def fullpath = storageDir + "/" + filename
+        def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
+        log.debug "PATH: $path"
+        new File(path).mkdirs()
+        File file = new File("$storageDir/$filename")
+        file.write(new String(doc.toJson()))
     }
 
     void store(Iterable<Document> docs) {
-        throw new UnsupportedOperationException("Not supported yet.")
+        docs.each {
+            store(it)
+        }
     }
 
     void delete(URI uri) {
@@ -72,36 +90,5 @@ class DiskStorage implements Storage {
     def setStorageDir(String directoryName) { 
         storageDir = directoryName 
         init()
-    }
-
-    def deprecated_add(Document d) {
-        def filename = (d.identifier ? d.identifier.toString() : _create_filename())
-        log.debug "${this.class.name} storing file $filename in $storageDir"
-        def fullpath = storageDir + "/" + filename
-        def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
-        log.debug "PATH: $path"
-        new File(path).mkdirs()
-        File file = new File("$storageDir/$filename")
-        file.write(new String(d.data))
-        d.identifier = new URI(filename)
-    }
-
-    Document retrieve(URI u, raw=false) {
-        def s 
-        def filename = u.toString()
-        File f = new File("$storageDir/$filename")
-        try {
-            return this.whelk.createDocument().withIdentifier(u).withContentType("content/type").withData(f.text.getBytes())
-        } catch (FileNotFoundException fnfe) {
-            return null
-        }
-    }
-
-    def _create_filename() {
-        def pool = ['a'..'z','A'..'Z',0..9,'_'].flatten()
-        Random rand = new Random(System.currentTimeMillis())
-
-        def passChars = (0..10).collect { pool[rand.nextInt(pool.size())] }
-        passChars.join()
     }
 }

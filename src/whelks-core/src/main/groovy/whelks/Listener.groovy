@@ -4,10 +4,11 @@ import groovy.util.logging.Slf4j as Log
 import groovy.transform.Synchronized
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
 
 @Log
-class Listener implements WhelkAware {
+class Listener extends BasicPlugin implements WhelkAware {
 
     Whelk homewhelk
     Whelk otherwhelk
@@ -15,7 +16,7 @@ class Listener implements WhelkAware {
 
     List identifiers = Collections.synchronizedList(new LinkedList())
 
-    final int DEFAULT_NUMBER_OF_HANDLERS = 1
+    final int DEFAULT_NUMBER_OF_HANDLERS = 5
     final int STATE_SAVE_INTERVAL = 10000
     final int CHECK_AGAIN_DELAY = 500
     int numberOfHandlers = DEFAULT_NUMBER_OF_HANDLERS
@@ -29,6 +30,7 @@ class Listener implements WhelkAware {
     Class formatConverterClass
     Map converterParameters
 
+    /*
     Listener(Whelk n, int nrOfHandlers, Class formatConverterClass, Map converterParameters) {
         this.otherwhelk = n
         this.numberOfHandlers = nrOfHandlers
@@ -37,7 +39,20 @@ class Listener implements WhelkAware {
         this.converterParameters = converterParameters
         id = id + ", listening to $otherwhelk.prefix"
     }
+    */
 
+    Listener(Whelk n) {
+        this.otherwhelk = n
+        this.otherwhelk.addPluginIfNotExists(new Notifier(this))
+        id = id + ", listening to $otherwhelk.prefix"
+    }
+
+    Listener(Whelk n, int nrOfHandlers) {
+        this.otherwhelk = n
+        this.numberOfHandlers = nrOfHandlers
+        this.otherwhelk.addPluginIfNotExists(new Notifier(this))
+        id = id + ", listening to $otherwhelk.prefix"
+    }
 
     void setWhelk(Whelk w) {
         this.homewhelk = w
@@ -53,7 +68,8 @@ class Listener implements WhelkAware {
         }
         log.info("Starting $numberOfHandlers handlers.")
         for (int i = 0; i < this.numberOfHandlers; i++) {
-            new Thread(new UpdateHandler(formatConverterClass, converterParameters)).start()
+            //new Thread(new UpdateHandler(formatConverterClass, converterParameters)).start()
+            new Thread(new UpdateHandler()).start()
         }
         Thread.start {
             Date lastSavedUpdate = lastUpdate
@@ -129,6 +145,9 @@ class Listener implements WhelkAware {
 
         def converter
 
+        UpdateHandler() {
+        }
+
         UpdateHandler(Class convClass, Map params) {
             println "params: $params" 
             converter = convClass.getConstructor(Map.class).newInstance(params)
@@ -139,13 +158,17 @@ class Listener implements WhelkAware {
                 def uri = nextIdentifier()
                 if (uri) {
                     log.debug("Next is $uri")
-                    convert(otherwhelk.get(uri))
+                    def doc = otherwhelk.get(uri)
+                    homewhelk.store(doc)
+                    lastUpdate = doc.timestampAsDate
+                    //convert(otherwhelk.get(uri))
                 }
                 sleep(CHECK_AGAIN_DELAY)
             }
             log.error("Thread is exiting ...")
         }
 
+        /*
         void convert(Document doc) {
             log.debug("Converting document $doc.identifier ...")
             Document convertedDocument = converter.convert(doc)
@@ -156,6 +179,6 @@ class Listener implements WhelkAware {
                 homewhelk.store(convertedDocument)
             }
         }
-
+        */
     }
 }
