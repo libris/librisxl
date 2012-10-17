@@ -1,15 +1,18 @@
 package se.kb.libris.whelks
 
+import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 
+@Log
 class Query {
 
-    def query 
-    def fields 
+    def query
+    def fields
     def sorting
     def highlights
     def filters
     def facets
+    def boost
     int start = 0
     int n = 50
 
@@ -44,7 +47,20 @@ class Query {
             }
             if (qmap.get("fields")) {
                 for (def f : qmap.get("fields").split(",")) {
-                    addField(f)
+                    if (f.contains(":")) {
+                        addField(f.split(":")[0], new Float(f.split(":")[1]))
+                    } else {
+                        addField(f)
+                    }
+                }
+            }
+            if (qmap.get("boost")) {
+                for (b in qmap.get("boost").split(",")) {
+                    try {
+                        addBoost(b.split(":")[0], new Float(b.split(":")[1]))
+                    } catch (Exception e) {
+                        log.error("Bad user: " + e.getMessage())
+                    }
                 }
             }
             if (qmap.get("facets")) {
@@ -91,14 +107,25 @@ class Query {
         return this
     }
 
-    Query addField(field) {
+    Query addField(String field) {
+        if (!fields) {
+            fields = []
+        }
         fields << field
+        return this
+    }
+
+    Query addBoost(String field, Float boostvalue) {
+        if (!this.boost) {
+            this.boost = [:]
+        }
+        this.boost[field] = boostvalue
         return this
     }
 
     Query addFilter(field, value) {
         if (!filters) {
-            filters = {}
+            filters = [:]
         }
         filters[field] = value
         return this

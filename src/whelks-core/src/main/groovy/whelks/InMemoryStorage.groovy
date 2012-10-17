@@ -3,11 +3,12 @@ package se.kb.libris.whelks.component
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 
 @Log
-class InMemoryStorage implements Storage {
+class InMemoryStorage extends BasicPlugin implements Storage {
     def storage = new HashMap<URI, Document>()
     String id = "inmemorystorage"
     Whelk whelk

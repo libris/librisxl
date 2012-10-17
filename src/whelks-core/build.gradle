@@ -2,7 +2,6 @@ apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'jetty'
 apply plugin: 'application'
-apply plugin: 'maven'
 
 
 tasks.withType(GroovyCompile) {
@@ -21,15 +20,15 @@ sourceSets {
 
 
 jettyRun.contextPath = '/'
+jettyRun.description = "Starts a jetty instance. To use a specific json-file to configure whelks, use -Dargs=whelk.config.uri=<URI of json file> (example: -Dargs=whelk.config.uri='file:src/main/resources/whelks.json')"
 
 
 run {
     systemProperty "file.encoding", "UTF-8"
 }
 
-mainClassName = 'se.kb.libris.whelks.imports.BatchImport'
+mainClassName = 'se.kb.libris.whelks.ImportWhelk'
 //mainClassName = 'se.kb.libris.whelks.ReindexingWhelk'
-//mainClassName = 'se.kb.libris.whelks.DiskStorageWhelk'
 
 jar {
     dependsOn configurations.runtime
@@ -60,12 +59,6 @@ task depjar(type: Jar, dependsOn: jar) {
         }
 }
 
-task copyToLib(type: Copy) {
-    dependsOn configurations.runtime
-    into "lib"
-    from configurations.runtime
-}
-
 // Currently using regular jar task for fatjar
 //task fatjar(type: Jar, dependsOn: jar) { ... }
 
@@ -75,9 +68,7 @@ apply from: 'tools.gradle'
 
 repositories {
     mavenCentral()
-    mavenLocal()
     maven { url "http://oss.sonatype.org/content/repositories/releases/" }
-    maven { url 'http://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url "http://maven.restlet.org/" }
     maven { url "http://repository.codehaus.org/" }
     flatDir name: 'localDir', dirs: 'lib'
@@ -89,7 +80,6 @@ dependencies {
     compile 'org.python:jython-standalone:2.5.2'
     compile 'org.mozilla:rhino:1.7R4'
     compile 'com.googlecode.json-simple:json-simple:1.1.1'
-    compile 'com.googlecode.json-simple:json-simple:1.1'
     compile 'org.elasticsearch:elasticsearch:0.19.9'
     compile 'org.elasticsearch:elasticsearch-lang-groovy:1.1.0'
     compile 'ch.qos.logback:logback-classic:1.0.0'
@@ -100,7 +90,6 @@ dependencies {
     compile 'jyson:jyson:1.0.2'
     compile 'commons-codec:commons-codec:1.7'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.9'
-    compile 'com.basho.riak:riak-client:1.0.6'
     providedCompile 'javax.servlet:servlet-api:2.5'
-    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0-SNAPSHOT'
+    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }

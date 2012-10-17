@@ -3,13 +3,13 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["indexstorage", "search", "kitinsearch", "document", "marccracker", "marclabeler"]
+                "_plugins": ["index", "storage", "search", "document"]
             }
         },
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": [ "indexstorage", "search", "document" ]
+                "_plugins": [ "index", "storage", "search", "document" ]
             }
         }
     ], 
@@ -17,12 +17,6 @@
         {
             "index": { 
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory",
-                "_params" : "_whelkname"
-            }
-        }, 
-        {
-            "indexstorage": { 
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientStorageIndexHistory",
                 "_params" : "_whelkname"
             }
         }, 
@@ -39,18 +33,12 @@
         },
         {
             "search" : {
-                "_class" : "se.kb.libris.whelks.api.SearchRestlet",
-                "_params" : {"boost" : "labels.title:2"}
+                "_class" : "se.kb.libris.whelks.api.SearchRestlet"
             }
         },
         {
             "document" : {
                 "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
-            }
-        },
-        {
-            "kitinsearch" : {
-                "_class" : "se.kb.libris.whelks.api.KitinSearchRestlet2"
             }
         },
         {
@@ -75,11 +63,6 @@
             "authlistener" : {
                 "_class" : "se.kb.libris.whelks.plugin.Listener",
                 "_params" : "_whelk:auth"
-            }
-        },
-        {
-            "marclabeler" : {
-                "_class" : "se.kb.libris.whelks.plugin.MarcFieldLabelerIndexFormatConverter"
             }
         }
     ]

@@ -157,7 +157,7 @@ class BatchImport {
                 MarcRecord record = MarcXmlRecordReader.fromXml(createString(it.metadata.record))
                 String id = record.getControlfields("001").get(0).getData();
                 String jsonRec = MarcJSONConverter.toJSONString(record);
-                documents << whelk.createDocument().withData(jsonRec.getBytes()).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
+                documents << whelk.createDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
                 imported++
             }
             whelk.store(documents)

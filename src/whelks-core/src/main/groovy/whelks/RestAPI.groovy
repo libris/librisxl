@@ -8,6 +8,7 @@ import org.restlet.data.*
 import org.json.simple.*
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
 import se.kb.libris.whelks.persistance.*
@@ -25,6 +26,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     boolean enabled = true
 
     String id = "RestAPI"
+    int order = 0
     
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
@@ -45,13 +47,10 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
             return "/" + getPathEnd()
         }
     }
-
-    /*
-    def getVarPath() {
-        return this.path.matches(Pattern.compile("\\{\\w\\}.+"))
+    @Override
+    int compareTo(Plugin p) {
+        return (this.getOrder() - p.getOrder());
     }
-    */
-
 }
 
 @Log
@@ -110,24 +109,54 @@ class DocumentRestlet extends BasicWhelkAPI {
 }
 
 @Log
+class CharacterRestlet extends BasicWhelkAPI {
+    def pathEnd = "_chars"
+    @Override
+    def void handle(Request request, Response response) {
+        def reqMap = request.resourceRef.queryAsForm.valuesMap
+        String word = reqMap["word"]
+        String cword = word
+        for (c in word.toCharArray()) {
+            if (c == 'ö') {
+                log.debug("EY!")
+                //log.debug("\\u" + Integer.toHexString('÷' | 0x10000).substring(1))
+            }
+            log.debug("Character: $c ")
+        }
+        response.setEntity("WORD: $cword", MediaType.TEXT_PLAIN)
+    }
+}
+
+@Log
 class SearchRestlet extends BasicWhelkAPI {
 
     def pathEnd = "_find"
+    def defaultQueryParams = [:]
+
+    SearchRestlet(Map queryParams) {
+        this.defaultQueryParams = queryParams
+    }
 
     @Override
     def void handle(Request request, Response response) {
         log.debug "SearchRestlet with path $path"
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         try {
+            this.defaultQueryParams.each { key, value ->
+                if (!reqMap[key]) {
+                    reqMap[key] = value
+                }
+            }
+            log.debug("reqMap: $reqMap")
             def query = new Query(reqMap)
             def callback = reqMap.get("callback")
-                def results = this.whelk.query(query)
-                def jsonResult = 
-                    (callback ? callback + "(" : "") +
-                    results.toJson() +
-                    (callback ? ");" : "") 
+            def results = this.whelk.query(query)
+            def jsonResult =
+                (callback ? callback + "(" : "") +
+                results.toJson() +
+                (callback ? ");" : "")
 
-                response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wrte.message)
         }
@@ -135,25 +164,44 @@ class SearchRestlet extends BasicWhelkAPI {
 }
 
 @Log
-class PythonTestAPI extends BasicWhelkAPI {
-    def pathEnd = "_python"
+class KitinSearchRestlet2 extends BasicWhelkAPI {
+    def pathEnd = "kitin/_search"
+
+    String defaultBoost = "labels.title:2,labels.author:2,labels.isbn:2"
 
     @Override
     def void handle(Request request, Response response) {
-        def p = new se.kb.libris.whelks.plugin.MarcCrackerIndexFormatConverter()
-        p.hello()
-        p.hello()
-        p.hello()
-        p.hello()
-        p.hello()
-        response.setEntity("hej", MediaType.TEXT_PLAIN)
+        def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        if (!reqMap["boost"]) {
+            reqMap["boost"] = defaultBoost
+        }
+        try {
+            def q = new Query(reqMap)
+            def callback = reqMap.get("callback")
+            if (q) {
+                q.addFacet("målspråk", "fields.041.subfields.a")
+                q.addFacet("originalspråk", "fields.041.subfields.h")
+                def results = this.whelk.query(q)
+                def jsonResult = 
+                    (callback ? callback + "(" : "") +
+                    results.toJson() +
+                    (callback ? ");" : "") 
+
+                response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+            } else {
+                response.setEntity("Missing q parameter", MediaType.TEXT_PLAIN)
+            }
+        } catch (WhelkRuntimeException wrte) {
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+        }
+
     }
 }
 
 @Log
 class KitinSearchRestlet extends BasicWhelkAPI {
 
-    def pathEnd = "kitin/_search"
+    def pathEnd = "kitin/_oldsearch"
 
     def facit = [
         "bibid": ["001"],
@@ -233,7 +281,7 @@ class KitinSearchRestlet extends BasicWhelkAPI {
         def query
         if (newQuery.size() > 0) {
             query = "(" + newQuery.join(" AND ") + ")"
-        } 
+        }
         if (isbnQuery.size() > 0) {
             def isbnq = "(" + isbnQuery.join(" OR ") + ")"
             query = (query ? query + " OR " + isbnq : isbnq)

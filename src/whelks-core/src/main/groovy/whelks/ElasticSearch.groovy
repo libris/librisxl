@@ -36,7 +36,7 @@ import se.kb.libris.whelks.exception.*
 import static se.kb.libris.conch.Tools.*
 
 @Log
-abstract class ElasticSearch {
+abstract class ElasticSearch extends BasicPlugin {
 
     String index
     Client client
@@ -51,9 +51,6 @@ abstract class ElasticSearch {
 
     String indexType = "record"
     String storageType = "document"
-
-    def void enable() {this.enabled = true}
-    def void disable() {this.enabled = false}
 
     @Override
     void index(Document doc) {
@@ -231,7 +228,16 @@ abstract class ElasticSearch {
         def query = queryString(q.query)
         if (q.fields) {
             q.fields.each {
-                query = query.field(it)
+                if (q.boost && q.boost[it]) {
+                    query = query.field(it, q.boost[it])
+                } else {
+                    query = query.field(it)
+                }
+            }
+        } else if (q.boost) {
+            query = query.field("_all")
+            q.boost.each { f, b ->
+                query = query.field(f, b)
             }
         }
         srb.setQuery(query)
