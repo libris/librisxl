@@ -33,53 +33,6 @@ class RestManager extends Application {
         log.info("Initializing whelks using definitions in $whelkconfig")
         def wi = new WhelkInitializer(whelkconfig.toURL().newInputStream())
         whelks = wi.getWhelks()
-
-        /*
-        def bibwhelk = new WhelkImpl("bib")
-        def authwhelk = new WhelkImpl("auth")
-        def suggestwhelk = new WhelkImpl("suggest")
-
-        // Add storage and index
-        
-        //bibwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(bibwhelk.prefix))
-        //authwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(authwhelk.prefix))
-        //suggestwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(suggestwhelk.prefix))
-
-        bibwhelk.addPlugin(new ElasticSearchClientIndexHistory(bibwhelk.prefix))
-        authwhelk.addPlugin(new ElasticSearchClientIndexHistory(authwhelk.prefix))
-        suggestwhelk.addPlugin(new ElasticSearchClientIndexHistory(suggestwhelk.prefix))
-        def diskstorage = new DiskStorage("/tmp/whelk_storage")
-        bibwhelk.addPlugin(diskstorage)
-        authwhelk.addPlugin(diskstorage)
-        suggestwhelk.addPlugin(diskstorage)
-        //suggestwhelk.addPlugin(new InMemoryStorage())
-
-        bibwhelk.addPlugin(new MarcCrackerIndexFormatConverter())
-
-        // Add APIs
-        bibwhelk.addPlugin(new SearchRestlet())
-        bibwhelk.addPlugin(new DocumentRestlet())
-        bibwhelk.addPlugin(new KitinSearchRestlet())
-        bibwhelk.addPlugin(new PythonTestAPI())
-        authwhelk.addPlugin(new SearchRestlet())
-        authwhelk.addPlugin(new DocumentRestlet())
-        authwhelk.addPlugin(new LogRestlet())
-        suggestwhelk.addPlugin(new SearchRestlet())
-        suggestwhelk.addPlugin(new DocumentRestlet())
-        def acplugin = new AutoComplete(["100.a", "400.a", "500.a"])
-        suggestwhelk.addPlugin(acplugin)
-
-        // Add other plugins 
-        def formatParameters = ["bibwhelk": bibwhelk, "suggestwhelk": suggestwhelk]
-        
-        //suggestwhelk.addPlugin(new Listener(bibwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
-        //suggestwhelk.addPlugin(new Listener(authwhelk, 5, AutoSuggestFormatConverter.class, formatParameters))
-
-        whelks << bibwhelk
-        whelks << authwhelk
-        whelks << suggestwhelk
-        */
-
     }
 
     @Override
