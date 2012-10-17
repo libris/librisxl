@@ -3,7 +3,7 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["indexstorage", "search", "kitinsearch", "document", "marccracker", "marclabeler"]
+                "_plugins": ["indexstorage", "search", "kitinsearch", "document", "marcmassager"]
             }
         },
         {
@@ -33,8 +33,8 @@
             }
         }, 
         {
-            "marccracker" : {
-                "_class" : "se.kb.libris.whelks.plugin.MarcCrackerIndexFormatConverter"
+            "marcmassager" : {
+                "_class" : "se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter"
             }
         },
         {
@@ -75,11 +75,6 @@
             "authlistener" : {
                 "_class" : "se.kb.libris.whelks.plugin.Listener",
                 "_params" : "_whelk:auth"
-            }
-        },
-        {
-            "marclabeler" : {
-                "_class" : "se.kb.libris.whelks.plugin.MarcFieldLabelerIndexFormatConverter"
             }
         }
     ]
