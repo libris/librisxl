@@ -9,7 +9,7 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormatConverter {
+class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements IndexFormatConverter {
 
     String id = this.class.name
     boolean enabled = true
@@ -17,7 +17,21 @@ class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormat
     def marcmap
     int order = 0
 
-    MarcCrackerIndexFormatConverter() { 
+    def facit = [
+        "020":   ["a":"isbn", "z":"isbn"],
+        "022":   ["a":"issn", "m":"issn", "y":"issn", "z":"issn"],
+        "100":   ["a":"author"],
+        "505":   ["r":"author"],
+        "700":   ["a":"author"],
+        "242":   ["a":"title", "b": "title"],
+        "245":   ["a":"title", "b": "title"],
+        "246":   ["a":"title", "b": "title"],
+        "247":   ["a":"title", "b": "title"],
+        "249":   ["a":"title", "b": "title"],
+        "720":   ["a":"title", "n": "title", "p": "title"]
+    ]
+
+    MarcCrackerAndLabelerIndexFormatConverter() { 
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         mapper = new ObjectMapper()
         //this.marcmap = new JsonSlurper().parse(is.newReader())
@@ -58,7 +72,7 @@ class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormat
         def outdocs = []
         for (doc in docs) {
             log.trace "Start convert on ${doc.dataAsString}"
-            def json 
+            def json
             String d = doc.dataAsString
             try {
                 /*
@@ -129,6 +143,9 @@ class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormat
                 }
             }
 
+            json = appendLabels(json)
+
+
             try {
                 outdocs << new BasicDocument(doc).withData(mapper.writeValueAsBytes(json))
             } catch (Exception e) {
@@ -139,6 +156,36 @@ class MarcCrackerIndexFormatConverter extends BasicPlugin implements IndexFormat
 
         }
         return outdocs
+    }
+
+    def appendLabels(def json) {
+        json.fields.each {
+            it.each { field, data ->
+                //log.debug("Field: $field : $data")
+                if (facit.containsKey(field)) {
+                    // log.debug("facit: " + facit[field])
+                    facit[field].each { f, v ->
+                        data["subfields"].each { pair ->
+                            if (pair[f]) {
+                                if (!json.labels) {
+                                    json["labels"] = [:]
+                                }
+                                if (!json.labels[v]) {
+                                    json.labels[v] = []
+                                }
+                                if (v == "isbn") {
+                                    pair[f] = pair[f].replaceAll(/\D/, "")
+                                }
+                                json.labels[v].add(pair[f])
+                                log.debug "Put "+ pair[f] + " in $v"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        log.debug("Final json: $json")
+        return json
     }
 
 

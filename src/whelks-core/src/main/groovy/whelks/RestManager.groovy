@@ -1,4 +1,4 @@
-package se.kb.libris.conch
+package se.kb.libris.whelks.api
 
 import java.util.regex.Pattern 
 import groovy.util.logging.Slf4j as Log
@@ -18,21 +18,15 @@ import se.kb.libris.whelks.plugin.external.*
 @Log
 class RestManager extends Application {
 
-    final String WHELKCONFIGFILE = "file:src/main/resources/barebones-whelks.json"
-
     def whelks = []
 
     RestManager(Context parentContext) {
         super(parentContext)
         log.debug("Using file encoding: " + System.getProperty("file.encoding"));
-        init()
-    }
-
-    void init() {
-        URI whelkconfig = new URI(System.getProperty("whelk.config.uri", WHELKCONFIGFILE))
-        log.info("Initializing whelks using definitions in $whelkconfig")
-        def wi = new WhelkInitializer(whelkconfig.toURL().newInputStream())
-        whelks = wi.getWhelks()
+        log.debug("Retrievieng whelks from JNDI ...")
+        javax.naming.Context jndiContext = new javax.naming.InitialContext()
+        whelks = jndiContext.lookup("whelks")
+        log.debug("Found these whelks: $whelks")
     }
 
     @Override
@@ -63,7 +57,7 @@ class RestManager extends Application {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
                     router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
-                }             
+                }
             }
         }
 

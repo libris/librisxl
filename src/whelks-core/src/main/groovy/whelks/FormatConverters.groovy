@@ -11,6 +11,7 @@ import se.kb.libris.whelks.persistance.*
 import org.json.simple.JSONObject
 import org.codehaus.jackson.map.ObjectMapper
 
+/*
 @Log
 class MarcFieldLabelerIndexFormatConverter extends BasicPlugin implements IndexFormatConverter, WhelkAware {
 
@@ -54,10 +55,6 @@ class MarcFieldLabelerIndexFormatConverter extends BasicPlugin implements IndexF
                     if (facit.containsKey(field)) {
                        // log.debug("facit: " + facit[field])
                         facit[field].each { f, v ->
-                            /*
-                            log.debug("F: $f, V: $v")
-                            log.debug "subfields: " + data["subfields"]
-                            */
                             data["subfields"].each { pair ->
                                 if (pair[f]) {
                                     if (!json.labels) {
@@ -83,6 +80,7 @@ class MarcFieldLabelerIndexFormatConverter extends BasicPlugin implements IndexF
         return outdocs
     }
 }
+*/
 
 @Log
 class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter, WhelkAware, JSONSerialisable, JSONInitialisable {
