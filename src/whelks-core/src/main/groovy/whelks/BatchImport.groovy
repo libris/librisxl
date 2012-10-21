@@ -81,11 +81,6 @@ class BatchImport {
     // END possible authentication alternative
     public int doImport(ImportWhelk whelk, Date from) {
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
-        for (Plugin p : whelk.getPlugins()) {
-            if (p instanceof Notifier) {
-                p.disable();
-            }
-        }
         try {
             // While resumptionToken is something
             URL url = new URL(getBaseUrl(from));
@@ -96,20 +91,12 @@ class BatchImport {
                 url = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
                 resumptionToken = harvest(url, whelk);
             }
-            
+
             // Loop through harvest
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        /*} catch (FileNotFoundException e) {
-            e.printStackTrace();*/
-        } finally {
-            for (Plugin p : whelk.getPlugins()) {
-                if (p instanceof Notifier) {
-                    p.enable();
-                }
-            }
         }
         return imported;
     }
@@ -157,10 +144,14 @@ class BatchImport {
                 MarcRecord record = MarcXmlRecordReader.fromXml(createString(it.metadata.record))
                 String id = record.getControlfields("001").get(0).getData();
                 String jsonRec = MarcJSONConverter.toJSONString(record);
-                documents << whelk.createDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
+                if (whelk) {
+                    documents << whelk.createDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
+                }
                 imported++
             }
-            whelk.store(documents)
+            if (whelk) {
+                whelk.store(documents)
+            }
             return OAIPMH.ListRecords.resumptionToken
         } catch (Exception e) {
             log.warn("Failed to parse XML document: ${e.message}. Trying to extract resumptionToken and continue.")
