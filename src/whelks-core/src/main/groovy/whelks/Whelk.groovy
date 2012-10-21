@@ -48,23 +48,7 @@ class WhelkImpl extends BasicWhelk {
         Storage scomp = components.find { it instanceof Storage }
         Index icomp = components.find { it instanceof Index }
         IndexFormatConverter ifc = components.find { it instanceof IndexFormatConverter }
-        /*
-        for (def s : components) {
-            if (s instanceof Storage) {
-                scomp = s
-            }
-        }
-        for (def c : components) {
-            if (c instanceof Index) {
-                icomp = c
-            }
-        }
-        for (def p : plugins) {
-            if (p instanceof IndexFormatConverter) {
-                ifc = p
-            }
-        }
-        */
+
         long startTime = System.currentTimeMillis()
         List<Document> docs = new ArrayList<Document>()
         for (Document doc : scomp.getAll()) {
