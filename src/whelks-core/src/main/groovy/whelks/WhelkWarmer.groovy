@@ -18,6 +18,6 @@ class WhelkWarmer extends org.restlet.ext.servlet.ServerServlet {
         }
         def whelks = wi.getWhelks()
         log.info("Initiated $whelks")
-        new javax.naming.InitialContext().bind("whelks", whelks)
+        new javax.naming.InitialContext().rebind("whelks", whelks)
     }
 }
