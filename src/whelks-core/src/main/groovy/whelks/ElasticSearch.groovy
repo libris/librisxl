@@ -409,11 +409,20 @@ class ElasticSearchClient extends ElasticSearch {
     // Force one-client-per-whelk
     ElasticSearchClient(String i) {
         this.index = i
-        Properties properties = new Properties();
-        def is = ElasticSearchClient.class.getClassLoader().getResourceAsStream("whelks-core.properties")
-        properties.load(is)
-        final String elastichost = properties.getProperty("elastichost")
-        final String elasticcluster = properties.getProperty("elasticclustername")
+        String elastichost, elasticcluster
+        def jndiContext = new javax.naming.InitialContext()
+        try {
+            elastichost = jndiContext.lookup("elastic.host")
+            elasticcluster = jndiContect.lookup("elastic.cluster")
+            log.info("Loading elasticsearch configuration from JNDI.")
+        } catch (javax.naming.NameNotFoundException nnfe) {
+            log.info("Loading elasticsearch configuration from properties.")
+            Properties properties = new Properties();
+            def is = ElasticSearchClient.class.getClassLoader().getResourceAsStream("whelks-core.properties")
+            properties.load(is)
+            elastichost = properties.getProperty("elastic.host")
+            elasticcluster = properties.getProperty("elastic.cluster")
+        }
 
         log.debug "Connecting to $elastichost:9300"
         def sb = ImmutableSettings.settingsBuilder()
