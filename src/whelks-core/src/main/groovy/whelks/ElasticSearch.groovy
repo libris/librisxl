@@ -20,6 +20,7 @@ import org.elasticsearch.action.count.CountResponse
 import org.elasticsearch.search.facet.FacetBuilders
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.unit.TimeValue
+import org.elasticsearch.index.query.*
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
@@ -225,7 +226,7 @@ abstract class ElasticSearch extends BasicPlugin {
         def srb = client.prepareSearch(index).setTypes(indexType)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
-        def query = queryString(q.query)
+        def query = queryString(q.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
         if (q.fields) {
             q.fields.each {
                 if (q.boost && q.boost[it]) {
