@@ -23,15 +23,14 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
         "100":   ["a":"author"],
         "505":   ["r":"author"],
         "700":   ["a":"author"],
-        "242":   ["a":"title", "b": "title"],
-        "245":   ["a":"title", "b": "title"],
+        "243":   ["a":"title"],
+        "245":   ["a":"title", "b": "title", "c": "author"],
         "246":   ["a":"title", "b": "title"],
         "247":   ["a":"title", "b": "title"],
-        "249":   ["a":"title", "b": "title"],
         "720":   ["a":"title", "n": "title", "p": "title"]
     ]
 
-    MarcCrackerAndLabelerIndexFormatConverter() { 
+    MarcCrackerAndLabelerIndexFormatConverter() {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         mapper = new ObjectMapper()
         //this.marcmap = new JsonSlurper().parse(is.newReader())
