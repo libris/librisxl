@@ -119,7 +119,7 @@ class ReindexingWhelk extends WhelkImpl {
             def date = (args.length > 2)? Tool.parseDate(args[2]) : null
             println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
             whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
-            whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
+            whelk.addPlugin(new MarcCrackerIndexFormatConverter())
             long startTime = System.currentTimeMillis()
             whelk.reindex()
             println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
@@ -143,11 +143,15 @@ class ImportWhelk extends BasicWhelk {
             def resource = (args.length > 1 ? args[1] : args[0])
             def whelk = new ImportWhelk(prefix)
             def date = (args.length > 2)? Tool.parseDate(args[2]) : null
-            println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
-            whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
-            //whelk.addPlugin(new ElasticSearchClientIndexHistory(prefix))
-            //whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
-            whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
+            def mode = (args.length > 3)? args[3]: "default"
+            println "Using arguments: prefix=$prefix, resource=$resource, since=$date, mode=$mode"
+            if (mode.equals("riak")) {
+                whelk.addPlugin(new RiakStorage(prefix))
+            } else {
+                //whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+                //whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
+                whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
+            }
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
             def nrimports = importer.doImport(whelk, date)

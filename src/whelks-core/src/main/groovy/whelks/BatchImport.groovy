@@ -145,7 +145,7 @@ class BatchImport {
                 String id = record.getControlfields("001").get(0).getData();
                 String jsonRec = MarcJSONConverter.toJSONString(record);
                 if (whelk) {
-                    documents << whelk.createDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
+                    documents << whelk.createDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
                 }
                 imported++
             }

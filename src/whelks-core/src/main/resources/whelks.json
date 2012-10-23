@@ -31,7 +31,13 @@
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
                 "_params" : "/tmp/whelk_storage"
             }
-        }, 
+        },
+        {
+            "riakstorage" : {
+                "_class" : "se.kb.libris.whelks.component.RiakStorage",
+                "_params" : "_whelkname"
+            }
+        },
         {
             "marcmassager" : {
                 "_class" : "se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter"

@@ -3,7 +3,7 @@
  */
 
 task importData(dependsOn: 'classes', type: JavaExec) {
-  description "Run ImportWhelk. (USAGE: -Dargs='<bib|auth> [resource] [since]')"
+  description "Run ImportWhelk. (USAGE: -Dargs='<bib|auth> [resource] [since] [mode(<default|riak>)]')"
   classpath = sourceSets.main.runtimeClasspath
   main = 'se.kb.libris.whelks.ImportWhelk'
   args(System.getProperty('args', "").split() as String[])
