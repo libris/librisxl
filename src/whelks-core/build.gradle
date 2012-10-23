@@ -18,6 +18,9 @@ sourceSets {
     }
 }
 
+test {
+    exclude '**/RiakStorageSpec.class'
+}
 
 jettyRun.contextPath = '/'
 jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dargs=whelk.config.uri=<URI of json file> (example: -Dargs=whelk.config.uri='file:src/main/resources/whelks.json')"
