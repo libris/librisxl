@@ -410,33 +410,25 @@ class ElasticSearchClient extends ElasticSearch {
     ElasticSearchClient(String i) {
         this.index = i
         String elastichost, elasticcluster
-        def jndiContext = new javax.naming.InitialContext()
-        try {
-            elastichost = jndiContext.lookup("elastic.host")
-            elasticcluster = jndiContect.lookup("elastic.cluster")
-            log.info("Loading elasticsearch configuration from JNDI.")
-        } catch (javax.naming.NameNotFoundException nnfe) {
-            log.info("Loading elasticsearch configuration from properties.")
-            Properties properties = new Properties();
-            def is = ElasticSearchClient.class.getClassLoader().getResourceAsStream("whelks-core.properties")
-            properties.load(is)
-            elastichost = properties.getProperty("elastic.host")
-            elasticcluster = properties.getProperty("elastic.cluster")
+        if (System.getProperty("elastic.host")) {
+            elastichost = System.getProperty("elastic.host")
+            elasticcluster = System.getProperty("elastic.cluster")
+            log.debug "Connecting to $elastichost:9300"
+            def sb = ImmutableSettings.settingsBuilder()
+            .put("client.transport.ping_timeout", 30)
+            .put("client.transport.sniff", true)
+            if (elasticcluster) {
+                sb = sb.put("cluster.name", elasticcluster)
+            }
+            Settings settings = sb.build();
+            client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
+            log.debug("... connected")
+            init()
+        } else {
+            log.error("Unable to initalize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
         }
-
-        log.debug "Connecting to $elastichost:9300"
-        def sb = ImmutableSettings.settingsBuilder()
-                .put("client.transport.ping_timeout", 30)
-                .put("client.transport.sniff", true)
-        if (elasticcluster) {
-            sb = sb.put("cluster.name", elasticcluster)
-        }
-        Settings settings = sb.build();
-        client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
-        log.debug("... connected")
-        init()
     }
-} 
+}
 
 class ElasticSearchClientStorage extends ElasticSearchClient implements Storage {
     ElasticSearchClientStorage(String i) {
