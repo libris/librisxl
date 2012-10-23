@@ -1,4 +1,4 @@
-/*package se.kb.libris.whelks.component
+package se.kb.libris.whelks.component
 
 import spock.lang.*
 import se.kb.libris.whelks.basic.BasicDocument
@@ -30,11 +30,8 @@ class RiakStorageSpec extends Specification {
         given:
         URI uri = new URI("/bib/777")
 
-        when:
-        def d = rs.get(uri)
-
-        then:
-        !d.empty
+        expect:
+        rs.get(uri) != null
     }
 
     def "should delete document from riak"(){
@@ -44,5 +41,5 @@ class RiakStorageSpec extends Specification {
         then:
         notThrown(Exception)
     }
-}*/
+}
 
