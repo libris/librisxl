@@ -1,4 +1,2 @@
 username=<apiusername>
 password=<apipassword>
-elastichost=<elastich search host>
-elasticclustername=<elastich search cluster name>

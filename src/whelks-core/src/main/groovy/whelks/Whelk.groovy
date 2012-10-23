@@ -48,23 +48,7 @@ class WhelkImpl extends BasicWhelk {
         Storage scomp = components.find { it instanceof Storage }
         Index icomp = components.find { it instanceof Index }
         IndexFormatConverter ifc = components.find { it instanceof IndexFormatConverter }
-        /*
-        for (def s : components) {
-            if (s instanceof Storage) {
-                scomp = s
-            }
-        }
-        for (def c : components) {
-            if (c instanceof Index) {
-                icomp = c
-            }
-        }
-        for (def p : plugins) {
-            if (p instanceof IndexFormatConverter) {
-                ifc = p
-            }
-        }
-        */
+
         long startTime = System.currentTimeMillis()
         List<Document> docs = new ArrayList<Document>()
         for (Document doc : scomp.getAll()) {
@@ -164,15 +148,15 @@ class ImportWhelk extends BasicWhelk {
             if (mode.equals("riak")) {
                 whelk.addPlugin(new RiakStorage(prefix))
             } else {
-                whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
-                whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
-                whelk.addPlugin(new MarcCrackerIndexFormatConverter())
-                whelk.addPlugin(new MarcFieldLabelerIndexFormatConverter())
+                //whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+                //whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
+                whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             }
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
             def nrimports = importer.doImport(whelk, date)
-            println "Imported $nrimports documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
+            float elapsed = ((System.currentTimeMillis() - startTime) / 1000)
+            println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else {
             println "Supply whelk-prefix and resource-name as arguments to commence import."
         }

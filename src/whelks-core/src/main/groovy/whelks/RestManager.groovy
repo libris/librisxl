@@ -24,8 +24,7 @@ class RestManager extends Application {
         super(parentContext)
         log.debug("Using file encoding: " + System.getProperty("file.encoding"));
         log.debug("Retrievieng whelks from JNDI ...")
-        javax.naming.Context jndiContext = new javax.naming.InitialContext()
-        whelks = jndiContext.lookup("whelks")
+        whelks = new javax.naming.InitialContext().lookup("whelks")
         log.debug("Found these whelks: $whelks")
     }
 
