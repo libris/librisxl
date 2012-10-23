@@ -75,8 +75,8 @@ class RiakStorage extends BasicPlugin implements Storage {
     }
 
     Document get(URI uri) {
-        String key = extractIdFromURI(d.identifier)
-        String bucket = extractBucketNameFromURI(d.identifier)
+        String key = extractIdFromURI(uri)
+        String bucket = extractBucketNameFromURI(uri)
         FetchResponse fetchResponse = riakClient.fetch(bucket, key)
         if (fetchResponse.getStatusCode().toString().trim().substring(0,1) == "2") {
             return new BasicDocument().withIdentifier(key).withData(fetchResponse.getObject().getValue()).withContentType(fetchResponse.getObject().getContentType())
@@ -89,8 +89,8 @@ class RiakStorage extends BasicPlugin implements Storage {
     }
 
     void delete(URI uri){
-        String key = extractIdFromURI(d.identifier)
-        String bucket = extractBucketNameFromURI(d.identifier)
+        String key = extractIdFromURI(uri)
+        String bucket = extractBucketNameFromURI(uri)
         FetchResponse response = new FetchResponse(riakClient.delete(bucket, key))
     }
 
