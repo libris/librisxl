@@ -97,5 +97,4 @@ class RiakStorage extends BasicPlugin implements Storage {
     LookupResult<? extends Document> lookup(Key key){
         throw new UnsupportedOperationException("Not supported yet.")
     }
-	
 }
