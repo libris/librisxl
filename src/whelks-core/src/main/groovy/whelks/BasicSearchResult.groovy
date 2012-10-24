@@ -3,18 +3,20 @@ package se.kb.libris.whelks.basic
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.SearchResult
 
-import groovy.json.*
+import org.codehaus.jackson.map.ObjectMapper
 
 class BasicSearchResult implements SearchResult {
 
     Iterable hits
     Map facets
+    ObjectMapper mapper
 
     long numberOfHits = 0
 
     BasicSearchResult(long nrHits) {
         this.numberOfHits = nrHits
         this.hits = new ArrayList<Document>()
+        this.mapper = new ObjectMapper()
     }
 
     void setNumberOfHits(int nrHits) {
@@ -49,7 +51,7 @@ class BasicSearchResult implements SearchResult {
     }
 
     private jsonifyFacets() {
-        return new JsonBuilder(facets).toString() 
+        return mapper.writeValueAsString(facets)
     }
 }
 
