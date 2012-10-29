@@ -119,7 +119,7 @@ class ReindexingWhelk extends WhelkImpl {
             def date = (args.length > 2)? Tool.parseDate(args[2]) : null
             println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
             whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
-            whelk.addPlugin(new MarcCrackerIndexFormatConverter())
+            whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             long startTime = System.currentTimeMillis()
             whelk.reindex()
             println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."

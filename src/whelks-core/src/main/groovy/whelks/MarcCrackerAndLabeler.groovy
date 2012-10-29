@@ -33,7 +33,6 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
     MarcCrackerAndLabelerIndexFormatConverter() {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         mapper = new ObjectMapper()
-        //this.marcmap = new JsonSlurper().parse(is.newReader())
         this.marcmap = mapper.readValue(is, Map)
     }
 
@@ -81,7 +80,6 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
                 */
                 json = mapper.readValue(doc.dataAsString, Map)
 
-                //json = new JsonSlurper().parseText(doc.dataAsString)
             } catch (Exception e) {
                 log.error("Failed to parse document")
                 log.error(doc.dataAsString, e)

@@ -5,7 +5,8 @@ import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
 
 import groovy.util.logging.Slf4j as Log
-import groovy.json.*
+
+import org.codehaus.jackson.map.ObjectMapper
 
 @Log
 class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter, IndexFormatConverter, WhelkAware {
@@ -18,9 +19,11 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
     int order
 
     String id = "autoSuggestFormatConverter"
+    ObjectMapper mapper
 
     AutoSuggestFormatConverter(Whelk bw) {
         this.bibwhelk = bw
+        this.mapper = new ObjectMapper()
     }
 
     @Override
@@ -31,13 +34,13 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
 
     @Override
     public List<Document> convert(List<Document> documents) {
-        def docs  
+        def docs
         for  (document in documents) {
             def data = document.getDataAsString()
             def ctype = document.getContentType()
 
             if (ctype == "application/json") {
-                def in_json = new JsonSlurper().parseText(data)
+                def in_json = mapper.readValue(data, Map)
                 def rtype = record_type(in_json["leader"])
                 //println "rtype: $rtype"
                 suggest_source = (rtype == "bib" ? "name" : rtype)
@@ -45,7 +48,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                 def sug_jsons = transform(in_json, rtype)
                 for (sug_json in sug_jsons) {
                     def identifier = sug_json["identifier"];
-                    def r = new JsonBuilder(sug_json).toString()
+                    def r = mapper.writeValueAsString(sug_json)
                     if (!docs && r) {
                         docs = []
                     }
@@ -208,7 +211,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
 
             def top_3 = [:]
             for (document in response.hits[0..2]) {
-                jdoc = new JsonSlurper().parseText(document.getDataAsString())
+                jdoc = mapper.readValue(document.getDataAsString(), Map)
                 def (f_001, title) = top_title_tuple(jdoc["fields"])
                 top_3[f_001] = title
             }

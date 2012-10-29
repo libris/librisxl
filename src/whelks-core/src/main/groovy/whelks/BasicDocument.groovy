@@ -9,6 +9,7 @@ import java.util.*
 import java.nio.ByteBuffer
 
 import org.codehaus.jackson.*
+import org.codehaus.jackson.map.ObjectMapper
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
@@ -276,12 +277,11 @@ class HighlightedDocument extends BasicDocument {
 
     @Override
     String getDataAsString() {
-        def slurper = new groovy.json.JsonSlurper()
-        def json = slurper.parseText(super.getDataAsString())
+        ObjectMapper mapper = new ObjectMapper()
+        def json = mapper.readValue(super.getDataAsString(), Map)
         json.highlight = matches
-        def builder = new groovy.json.JsonBuilder(json)
-        return builder.toString()
-    } 
+        return mapper.writeValueAsString(json)
+    }
 }
 
 class RiakDocument extends BasicDocument {
