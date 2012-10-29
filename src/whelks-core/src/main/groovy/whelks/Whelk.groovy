@@ -148,7 +148,7 @@ class ImportWhelk extends BasicWhelk {
             if (mode.equals("riak")) {
                 whelk.addPlugin(new RiakStorage(prefix))
             } else {
-                //whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+                whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
                 //whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
                 whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             }

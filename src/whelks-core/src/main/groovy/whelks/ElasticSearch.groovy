@@ -425,7 +425,7 @@ class ElasticSearchClient extends ElasticSearch {
             log.debug("... connected")
             init()
         } else {
-            log.error("Unable to initalize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
+            throw new WhelkRuntimeException("Unable to initalize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
         }
     }
 }

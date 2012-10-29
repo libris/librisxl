@@ -102,9 +102,9 @@ class BatchImport {
     }
 
     public static String createString(GPathResult root) {
-        return new StreamingMarkupBuilder().bind{ 
-            out << root 
-        } 
+        return new StreamingMarkupBuilder().bind{
+            out << root
+        }
     }
 
     /*
@@ -136,9 +136,16 @@ class BatchImport {
         }
     }
 
+    String normalizeString(String inString) {
+        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
+            return Normalizer.normalize(inString, Normalizer.Form.NFC)
+        }
+        return inString
+    }
+
     String harvest(url, whelk) {
         try {
-            def OAIPMH = new XmlSlurper(false,false).parseText(url.text)
+            def OAIPMH = new XmlSlurper(false,false).parseText(normalizeString(url.text))
             def documents = []
             OAIPMH.ListRecords.record.each {
                 MarcRecord record = MarcXmlRecordReader.fromXml(createString(it.metadata.record))

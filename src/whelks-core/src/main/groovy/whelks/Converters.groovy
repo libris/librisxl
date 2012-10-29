@@ -1,6 +1,8 @@
 package se.kb.libris.conch.converter
 
+import java.text.Normalizer
 import org.json.simple.*
+import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.MarcRecord
@@ -12,6 +14,7 @@ import org.codehaus.jackson.map.ObjectMapper
  * A mechanical transcription of {@link MarcRecord}s into JSON. The result is
  * compliant with the <a href="http://dilettantes.code4lib.org/blog/category/marc-in-json/">MARC-in-JSON</a> JSON schema.
  */
+@Log
 class MarcJSONConverter {
     protected final static ObjectMapper mapper = new ObjectMapper();
     static String old_toJSONString(MarcRecord record) {
@@ -54,7 +57,7 @@ class MarcJSONConverter {
         }
         json.put("leader", record.leader)
         json.put("fields", fields)
-        
+
         return json.toString()
     }
 
@@ -72,7 +75,7 @@ class MarcJSONConverter {
                 def subfields = mapper.createArrayNode()
                 it.subfields.each {
                     def subfield = mapper.createObjectNode()
-                    subfield.put(Character.toString(it.code), it.data)
+                    subfield.put(Character.toString(it.code), it.data) //normalizeString(it.data))
                     subfields.add(subfield)
                 }
                 datafield.put("subfields", subfields)
@@ -85,10 +88,22 @@ class MarcJSONConverter {
         return json.toString()
     }
 
-    static void main(args) {
-        MarcRecord record = new File(args[0]).withInputStream {
-            new Iso2709MarcRecordReader(it/*, "utf-8"*/).readRecord()
+    static InputStream getNormalizedInputStreamFromFile(File f) {
+        String unicodeString = f.getText("utf8")
+        if (!Normalizer.isNormalized(unicodeString, Normalizer.Form.NFC)) {
+            String newString = Normalizer.normalize(unicodeString, Normalizer.Form.NFC)
+            return new ByteArrayInputStream(newString.getBytes("UTF-8"))
         }
+        return f.newInputStream()
+    }
+
+    static void main(args) {
+        /*
+        MarcRecord record = new File(args[0]).withInputStream {
+            new Iso2709MarcRecordReader(it).readRecord()
+        }
+        */
+        MarcRecord record = new Iso2709MarcRecordReader(getNormalizedInputStreamFromFile(new File(args[0]))).readRecord()
         println toJSONString(record)
         /*println not_quite_so_old_toJSONString(record)*//*.replaceAll(
                 /(?m)\{\s+(\S+: "[^"]+")\s+\}/, '{$1}')*/
