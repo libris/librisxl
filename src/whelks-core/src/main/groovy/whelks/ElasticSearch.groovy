@@ -147,7 +147,7 @@ abstract class ElasticSearch extends BasicPlugin {
             log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
         }
     }
-    
+
     void addDocuments(documents, addType) {
         if (documents) {
             def breq = client.prepareBulk()
