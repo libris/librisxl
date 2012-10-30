@@ -149,27 +149,32 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     void addDocuments(documents, addType) {
-        if (documents) {
-            def breq = client.prepareBulk()
+        try {
+            if (documents) {
+                def breq = client.prepareBulk()
 
-            log.debug("Bulk request to index " + documents?.size() + " documents.")
+                log.debug("Bulk request to index " + documents?.size() + " documents.")
 
-            for (doc in documents) {
-                if (addType == indexType) {
-                    breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
-                } else {
-                    breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
+                for (doc in documents) {
+                    if (addType == indexType) {
+                        breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
+                    } else {
+                        breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
+                    }
                 }
-            }
-            def response = performExecute(breq)
-            if (response.hasFailures()) {
-                log.error "Bulk import has failures."
-                for (def re : response.items()) {
-                    if (re.failed()) {
-                        log.error "Fail message: ${re.failureMessage}"
+                def response = performExecute(breq)
+                if (response.hasFailures()) {
+                    log.error "Bulk import has failures."
+                    for (def re : response.items()) {
+                        if (re.failed()) {
+                            log.error "Fail message: ${re.failureMessage}"
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            log.error("Exception thrown while adding documents", e)
+            throw e
         }
     }
 

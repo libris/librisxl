@@ -161,7 +161,7 @@ class BatchImport {
             }
             return OAIPMH.ListRecords.resumptionToken
         } catch (Exception e) {
-            log.warn("Failed to parse XML document: ${e.message}. Trying to extract resumptionToken and continue.")
+            log.warn("Failed to parse XML document: ${e.message}. Trying to extract resumptionToken and continue.", e)
             return findResumptionToken(url.text)
         }
     }
