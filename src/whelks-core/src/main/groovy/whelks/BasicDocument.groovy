@@ -17,8 +17,8 @@ import se.kb.libris.whelks.exception.*
 @Log
 public class BasicDocument implements Document {
     URI identifier
-    String version = "1", contentType 
-    byte[] data 
+    String version = "1", contentType
+    byte[] data
     long size
     Set<Link> links = new TreeSet<Link>()
     Set<Key> keys = new TreeSet<Key>()

@@ -6,7 +6,7 @@ import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 
 @Log
-class DiskStorage extends BasicPlugin implements Storage {
+class DiskStorage extends BasicPlugin implements Storage, Index {
     def storageDir = "./storage/"
     Whelk whelk
     boolean enabled = true
@@ -61,6 +61,23 @@ class DiskStorage extends BasicPlugin implements Storage {
     Iterable<Document> getAll() {
         throw new UnsupportedOperationException("Not supported yet.")
     }
+
+    void index(Document doc) {
+        def filename = doc.identifier.toString() + ".index"
+        log.debug "${this.class.name} storing file $filename in $storageDir"
+        def fullpath = storageDir + "/" + filename
+        def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
+        log.debug "PATH: $path"
+        new File(path).mkdirs()
+        File file = new File("$storageDir/$filename")
+        file.write(doc.dataAsString)
+    }
+    public void index(Iterable<Document> d) {
+        for (doc in d) {
+            index(doc)
+        }
+    }
+    public SearchResult query(Query query) {return null}
 
     void store(Document doc) {
         def filename = doc.identifier.toString() 
