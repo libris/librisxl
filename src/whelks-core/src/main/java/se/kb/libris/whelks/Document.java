@@ -12,21 +12,21 @@ public interface Document {
     public Date getTimestampAsDate();
     public long getTimestamp();
     public Document updateTimestamp();
-        
+
     public byte[] getData();
     public byte[] getData(long offset, long length);
     public String getDataAsString();
     public InputStream getDataAsStream();
     public InputStream getDataAsStream(long offset, long length);
     public void setVersion(String version);
-    public void setTimestamp(Date date);
-        
+    public void setTimestamp(long timestamp);
+
     //public void setData(byte data[]);
     //public void setData(InputStream data);
     public String getContentType();
     public void setContentType(String contentType);
     public long getSize();
-    
+
     public Document withIdentifier(String uri);
     public Document withIdentifier(URI uri);
     public Document withData(String dataString);
@@ -36,10 +36,16 @@ public interface Document {
 
     public Set<Link> getLinks();
     public Set<Key> getKeys();
-    public Set<Description> getDescriptions();    
+    public Set<Description> getDescriptions();
     public Set<Tag> getTags();
     public String toJson();
-    
+
     public Tag tag(URI type, String value);
     public void untag(URI type, String value);
+
+    public Document withLink(Link link);
+    public Document withLink(String identifier);
+    public Document withLink(URI identifier);
+    public Document withLink(String identifier, String type);
+    public Document withLink(URI identifier, String type);
 }

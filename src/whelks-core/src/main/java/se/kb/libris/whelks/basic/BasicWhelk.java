@@ -40,6 +40,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         public void store(Iterable<Document> docs) {
             // Pre storage operations
             for (Document doc : docs) {
+                System.out.println("Doc is " + doc);
                 if (doc.getIdentifier() == null || !doc.getIdentifier().toString().startsWith("/"+prefix)) {
                     doc.setIdentifier(mintIdentifier(doc));
                 }

@@ -47,13 +47,14 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                 w_name = (whelk ? whelk.prefix : "test");
                 def sug_jsons = transform(in_json, rtype)
                 for (sug_json in sug_jsons) {
-                    def identifier = sug_json["identifier"];
+                    def identifier = sug_json["identifier"]
+                    def link = sug_json["link"]
                     def r = mapper.writeValueAsString(sug_json)
                     if (!docs && r) {
                         docs = []
                     }
                     if (r) {
-                        docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
+                        docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json").withLink(link, )
                     } else {
                         log.warn "Conversion got no content body for $identifier."
                     }
@@ -81,7 +82,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
         for (def f in a_json["fields"]) {
             f.each { k, v ->
                 if (k == "001") {
-                    link = "/${rtype}/${v}"
+                    link = new String("/${rtype}/${v}")
                     id001 = v
                 }
                 if (k in ["100", "700"]) {
@@ -101,12 +102,12 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                     }
                     if (should_add) {
                         if (k == "100") {
-                            sug_json["identifier"] = "/${w_name}/${suggest_source}/${id001}"
+                            sug_json["identifier"] = new String("/${w_name}/${suggest_source}/${id001}")
                         } else {
                             def name = "${id001}/" + sug_json["100"]["a"].replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","")
 
                             //print "values", w_name, suggest_source, "name:", name
-                            sug_json["identifier"] = "/${w_name}/${suggest_source}/${name}"
+                            sug_json["identifier"] = new String("/${w_name}/${suggest_source}/${name}")
                         }
                         alla_json << sug_json
 

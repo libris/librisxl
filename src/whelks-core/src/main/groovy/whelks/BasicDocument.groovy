@@ -9,6 +9,7 @@ import java.util.*
 import java.nio.ByteBuffer
 
 import org.codehaus.jackson.*
+import org.codehaus.jackson.annotate.JsonIgnore
 import org.codehaus.jackson.map.ObjectMapper
 
 import se.kb.libris.whelks.*
@@ -26,6 +27,8 @@ public class BasicDocument implements Document {
     Set<Description> descriptions = new TreeSet<Description>()
     long timestamp = 0
 
+    private ObjectMapper mapper = new ObjectMapper()
+
     public BasicDocument() {
         this.timestamp = new Long(new Date().getTime())
     }
@@ -34,11 +37,23 @@ public class BasicDocument implements Document {
         fromJson(jsonString)
     }
 
+    /*
     public BasicDocument(Map map) {
         fromMap(map)
     }
+    */
 
     public BasicDocument(Document d) {
+        copy(d)
+    }
+
+
+    public Document fromJson(String jsonString) {
+        BasicDocument newDoc = mapper.readValue(jsonString, BasicDocument)
+        copy(newDoc)
+    }
+
+    private void copy(Document d) {
         this.class.declaredFields.each {
             if (!it.isSynthetic() && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
                 this.(it.name) = d.(it.name)
@@ -46,7 +61,8 @@ public class BasicDocument implements Document {
         }
     }
 
-    public Document fromJson(String jsonString) {
+    /*
+    public Document fromJson2(String jsonString) {
         log.trace("jsonSource: $jsonString")
         JsonFactory f = new JsonFactory();
         JsonParser jp = f.createJsonParser(jsonString);
@@ -87,8 +103,14 @@ public class BasicDocument implements Document {
 
         return this
     }
+    */
 
     String toJson() {
+        return mapper.writeValueAsString(this)
+    }
+
+    /*
+    String toJson2() {
         ByteArrayOutputStream baout = new ByteArrayOutputStream()
         JsonFactory f = new JsonFactory()
         JsonGenerator g = f.createJsonGenerator(baout, JsonEncoding.UTF8)
@@ -105,9 +127,12 @@ public class BasicDocument implements Document {
                 } else if (it.type.isPrimitive()) {
                     log.trace("Found a number")
                     g.writeNumberField(it.name, this.(it.name))
+                } else if (this.(it.name) instanceof String) {
+                    log.trace("Found a string ${it.name}")
+                    g.writeStringField(it.name, this.(it.name).toString())
                 } else {
                     log.trace("default writing ${it.name}")
-                    g.writeStringField(it.name, this.(it.name).toString())
+                    g.writeObjectField(it.name, this.(it.name))
                 }
             }
         }
@@ -116,7 +141,8 @@ public class BasicDocument implements Document {
         String json = new String(baout.toByteArray())
         log.trace("Generated json: $json")
         return json
-    } 
+    }
+    */
 
     @Override
     public byte[] getData() {
@@ -137,6 +163,7 @@ public class BasicDocument implements Document {
     }
 
     @Override
+    @JsonIgnore
     public Date getTimestampAsDate() {
         return new Date(timestamp)
     }
@@ -152,14 +179,9 @@ public class BasicDocument implements Document {
         return this
     }
 
+    @Override
     public void setTimestamp(long _t) {
         this.timestamp = _t
-    }
-
-    public void setTimestamp(Date _timestamp) {
-        if (_timestamp != null) {
-            timestamp = new Long(_timestamp.getTime())
-        }
     }
 
     @Override
@@ -217,15 +239,18 @@ public class BasicDocument implements Document {
     }
 
     @Override
+    @JsonIgnore
     public String getDataAsString() {
         return new String(getData())
     }
 
     @Override
+    @JsonIgnore
     public InputStream getDataAsStream() {
         return new ByteArrayInputStream(getData())
     }
 
+    @JsonIgnore
     public Map getDataAsJsonMap() {
         def jsonmap = [:]
         this.class.declaredFields.each {
@@ -249,6 +274,7 @@ public class BasicDocument implements Document {
     }
 
     @Override
+    @JsonIgnore
     public InputStream getDataAsStream(long offset, long length) {
         return new ByteArrayInputStream(getData(), (int)offset, (int)length)
     }
@@ -264,6 +290,35 @@ public class BasicDocument implements Document {
 
             tags.removeAll(remove)
         }
+    }
+
+    @Override
+    Document withLink(Link link) {
+        links << link
+        return this
+    }
+    @Override
+    Document withLink(String identifier) {
+        links << new Link(new URI(identifier))
+        return this
+    }
+
+    @Override
+    Document withLink(URI identifier) {
+        links << new Link(identifier)
+        return this
+    }
+
+    @Override
+    Document withLink(URI identifier, String type) {
+        links << new Link(identifier, type)
+        return this
+    }
+
+    @Override
+    Document withLink(String identifier, String type) {
+        links << new Link(new URI(identifier), type)
+        return this
     }
 }
 

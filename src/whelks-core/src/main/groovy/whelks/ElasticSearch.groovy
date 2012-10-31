@@ -87,7 +87,7 @@ abstract class ElasticSearch extends BasicPlugin {
         GetResponse response = performExecute(client.prepareGet(index, storageType, translateIdentifier(uri)).setFields("_source","_timestamp"))
         if (response && response.exists()) {
             def ts = (response.field("_timestamp") ? response.field("_timestamp").value : null)
-            return new BasicDocument(response.sourceAsMap())
+            return new BasicDocument(response.sourceAsString())
         }
         return null
     }
