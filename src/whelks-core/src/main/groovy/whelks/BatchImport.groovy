@@ -88,7 +88,7 @@ class BatchImport {
     public int doImport(ImportWhelk whelk, Date from) {
         log.info("Starting $NUMBER_OF_IMPORTERS importers.")
         for (int i = 0; i < this.NUMBER_OF_IMPORTERS; i++) {
-            new Thread(new Importer(whelk)).start()
+            new Thread(new Importer(whelk, i)).start()
         }
 
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
@@ -190,8 +190,9 @@ class BatchImport {
     class Importer implements Runnable {
 
         Whelk whelk
+        int number
 
-        Importer(Whelk whelk) { this.whelk = whelk}
+        Importer(Whelk whelk, int nr) { this.whelk = whelk; this.number = nr;}
 
         void run() {
             while (true) {
@@ -199,6 +200,7 @@ class BatchImport {
                 if (docs) {
                     whelk.store(docs)
                 }
+                sleep(500+this.number)
             }
             log.error("Thread is exiting ...")
         }
