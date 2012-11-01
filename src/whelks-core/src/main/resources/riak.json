@@ -1,7 +1,36 @@
-{   "cluster_max_connections": 50,
-    "nodes": [
-        {"host": "192.168.3.16", "port": 8098, "riak_path": "riak", "max_connections": 10},
-        {"host": "192.168.3.37", "port": 8098, "riak_path": "riak", "max_connections": 10},
-        {"host": "192.168.3.39", "port": 8098, "riak_path": "riak", "max_connections": 10},
-    ]
+{
+    "cluster_max_connections": 50,
+    "nodes":
+        [
+            {
+             "host": "192.168.3.16",
+             "port": 8098,
+             "riak_path": "riak",
+             "max_connections": 10,
+             "buckets": [
+                            {"prefix": "bib", "n_val": 2, "allow_mult": false, "r": 1, "w": 1, "dw": 1},
+                            {"prefix": "auth", "n_val": 2, "allow_mult": false, "r": 1, "w": 1, "dw": 1}
+                        ]
+            },
+            {
+             "host": "192.168.3.37",
+             "port": 8098,
+             "riak_path": "riak",
+             "max_connections": 10,
+             "buckets": [
+                            {"prefix": "bib", "n_val": 2, "allow_mult": false, "r": 1, "w": 1, "dw": 1},
+                            {"prefix": "auth", "n_val": 2, "allow_mult": false, "r": 1, "w": 1, "dw": 1}
+                        ]
+            },
+            {
+             "host": "192.168.3.39",
+             "port": 8098,
+             "riak_path": "riak",
+             "max_connections": 10,
+             "buckets": [
+                            {"prefix": "bib", "n_val": 2, "allow_mult": false, "r": 1, "w": 1, "dw": 1},
+                            {"prefix": "auth", "n_val": 2, "allow_mult": false, "r": 1, "w": 1, "dw": 1}
+                        ]
+            }
+        ]
 }
