@@ -18,27 +18,6 @@ public class Link {
         setIdentifier(id);
         setType(t);
     }
-    /*
-    public Link(Map map) {
-        if (map != null) {
-            if (map.containsKey("type")) {
-                this.type = (String)map.get("type");
-            }
-            if (map.containsKey("identifier")) {
-                Object o = map.get("identifier");
-                if (o instanceof URI) {
-                    this.identifier = (URI)identifier;
-                } else if (o instanceof String) {
-                    try {
-                        this.identifier = new URI((String)o);
-                    } catch (java.net.URISyntaxException us) {
-                        throw new WhelkRuntimeException(us);
-                    }
-                }
-            }
-        }
-    }
-    */
 
     public String getType() {
         return this.type;

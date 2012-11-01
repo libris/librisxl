@@ -11,7 +11,7 @@ public interface Whelk {
     public void store(Iterable<Document> d);
     public Document get(URI identifier);
     public void delete(URI identifier);
-    
+
     // search/lookup
     public SearchResult<? extends Document> query(String query);
     public SearchResult<? extends Document> query(Query query);
@@ -21,13 +21,13 @@ public interface Whelk {
 
     // maintenance
     public void destroy();
-    public Iterable<LogEntry> log(int startIndex);
-    public Iterable<LogEntry> log(URI identifier);
-    public Iterable<LogEntry> log(Date since);
+    public Iterable<Document> log(int startIndex);
+    public Iterable<Document> log(URI identifier);
+    public Iterable<Document> log(Date since);
     public String getPrefix();
     public Iterable<? extends Plugin> getPlugins();
     public void reindex();
-    
+
     // factory methods
     public Document createDocument();
 

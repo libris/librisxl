@@ -22668,7 +22668,8 @@
               "offset": 6, 
               "length": 1, 
               "default": "z", 
-              "placeholder": "typeOfRecord"
+              "placeholder": "typeOfRecord",
+              "propRef": "typeOfRecord"
             }, 
             {
               "label_sv": "Teckenupps\u00e4ttning", 

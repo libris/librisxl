@@ -41,6 +41,9 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
         def propref
         int co = 0
         for (def column : columns) {
+            if (!column.propRef) {
+                throw new WhelkRuntimeException("Propref is null for $ctrlfield and $columns")
+            }
             if (propref != column.propRef) {
                 l[column.propRef] = ""
             }
@@ -174,14 +177,14 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
                                     pair[f] = pair[f].replaceAll(/\D/, "")
                                 }
                                 json.labels[v].add(pair[f])
-                                log.debug "Put "+ pair[f] + " in $v"
+                                log.trace "Put "+ pair[f] + " in $v"
                             }
                         }
                     }
                 }
             }
         }
-        log.debug("Final json: $json")
+        log.trace("Final json: $json")
         return json
     }
 

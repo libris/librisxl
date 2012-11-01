@@ -4,6 +4,8 @@ import groovy.util.logging.Slf4j as Log
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 
+import groovy.transform.Synchronized
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -22,6 +24,7 @@ import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.Iso2709Serializer;
 import se.kb.libris.conch.converter.MarcJSONConverter;
 import se.kb.libris.whelks.*;
+import se.kb.libris.whelks.basic.*;
 import se.kb.libris.whelks.plugin.*;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
@@ -42,6 +45,9 @@ class BatchImport {
 
     private int imported = 0;
     private long starttime = 0;
+    private int NUMBER_OF_IMPORTERS = 20
+
+    List<List<Document>> docList = new ArrayList<List<Document>>()
 
     public BatchImport() {}
 
@@ -62,7 +68,7 @@ class BatchImport {
     }
 
     public void setResource(String r) { this.resource = r; }
-    
+
     private void getAuthentication() {
         try {
             Properties properties = new Properties();
@@ -80,6 +86,11 @@ class BatchImport {
     }
     // END possible authentication alternative
     public int doImport(ImportWhelk whelk, Date from) {
+        log.info("Starting $NUMBER_OF_IMPORTERS importers.")
+        for (int i = 0; i < this.NUMBER_OF_IMPORTERS; i++) {
+            new Thread(new Importer(whelk)).start()
+        }
+
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
         try {
             // While resumptionToken is something
@@ -151,14 +162,10 @@ class BatchImport {
                 MarcRecord record = MarcXmlRecordReader.fromXml(createString(it.metadata.record))
                 String id = record.getControlfields("001").get(0).getData();
                 String jsonRec = MarcJSONConverter.toJSONString(record);
-                if (whelk) {
-                    documents << whelk.createDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
-                }
+                documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
                 imported++
             }
-            if (whelk) {
-                whelk.store(documents)
-            }
+            addBatch(documents)
             return OAIPMH.ListRecords.resumptionToken
         } catch (Exception e) {
             log.warn("Failed to parse XML document: ${e.message}. Trying to extract resumptionToken and continue.", e)
@@ -166,75 +173,34 @@ class BatchImport {
         }
     }
 
-    /*
-    public String oldharvest(URL url, ImportWhelk whelk) {
-        String restok = null;
-        InputStream is = null;
-        HttpURLConnection urlConnection = null;
+    void addBatch(List<Document> docs) {
+        docList << docs
+    }
+
+    @Synchronized
+    List<List<Document>> nextBatch() {
         try {
-            urlConnection = (HttpURLConnection) url.openConnection(); 
-            String xmlString = getFilteredStreamFromURLConnection(urlConnection);
-            println "Length of $xmlString is " + xmlString.length()
-            DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            is = IOUtils.toInputStream(xmlString);
-            Document document = documentBuilder.parse(is);
-            NodeList nodeList = document.getElementsByTagName("resumptionToken");
-            Element element = (Element) nodeList.item(0);
-            if (element != null && element.getTextContent().length() > 0) {
-                restok = element.getTextContent();
-            }
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            Source xmlSource = new DOMSource(document);
-            Result outputTarget = new StreamResult(outputStream);
-            TransformerFactory.newInstance().newTransformer().transform(xmlSource, outputTarget);
-            is = new ByteArrayInputStream(outputStream.toByteArray());
+            List<Document> docs = docList.pop()
+            return docs
+        } catch (NoSuchElementException nse) {
+            return null
+        }
+    }
 
-            MarcXmlRecordReader marcXmlRecordReader = new MarcXmlRecordReader(is, "/OAI-PMH/ListRecords/record/metadata/record");
-            MarcRecord record;
+    class Importer implements Runnable {
 
-            ArrayList<se.kb.libris.whelks.Document> documents = new ArrayList<se.kb.libris.whelks.Document>();
+        Whelk whelk
 
-            while ((record = marcXmlRecordReader.readRecord()) != null) {
-                String id = record.getControlfields("001").get(0).getData();
+        Importer(Whelk whelk) { this.whelk = whelk}
 
-                String jsonRec = MarcJSONConverter.toJSONString(record);
-
-                se.kb.libris.whelks.Document doc = whelk.createDocument().withData(jsonRec.getBytes()).withIdentifier("/" + this.resource + "/" + id).withContentType("application/json");
-                //
-                //System.out.println("Storing document " + doc.getIdentifier());
-                //System.out.println("Created document with id " + doc.getIdentifier());
-                documents.add(doc);
-                imported++;
-                //whelk.store(doc);
-            }
-            whelk.store(documents);
-
-        } catch (ParserConfigurationException e) {
-            System.err.println("URL " + url + " failed:");
-            e.printStackTrace();
-        } catch (SAXException e) {
-            System.err.println("URL " + url + " failed:");
-            e.printStackTrace();
-        } catch (TransformerConfigurationException e) {
-            System.err.println("URL " + url + " failed:");
-            e.printStackTrace();
-        } catch (TransformerException e) {
-            System.err.println("URL " + url + " failed:");
-            e.printStackTrace();
-        } catch (IOException e) {
-            System.err.println("URL " + url + " failed:");
-            e.printStackTrace();
-        } finally {
-            if (null != is) {
-                try {
-                    is.close();
-                    urlConnection.disconnect();
-                } catch (IOException e) {
-                } catch (Exception e2) {
-                    e2.printStackTrace();
+        void run() {
+            while (true) {
+                def docs = nextBatch()
+                if (docs) {
+                    whelk.store(docs)
                 }
             }
+            log.error("Thread is exiting ...")
         }
-        return restok;
-    }*/
+    }
 }

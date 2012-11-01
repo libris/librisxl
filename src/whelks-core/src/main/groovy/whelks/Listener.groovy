@@ -14,9 +14,9 @@ class Listener extends BasicPlugin implements WhelkAware {
     Whelk otherwhelk
     FormatConverter converter
 
-    List identifiers = Collections.synchronizedList(new LinkedList())
+    List documents = Collections.synchronizedList(new LinkedList())
 
-    final int DEFAULT_NUMBER_OF_HANDLERS = 5
+    final int DEFAULT_NUMBER_OF_HANDLERS = 50
     final int STATE_SAVE_INTERVAL = 10000
     final int CHECK_AGAIN_DELAY = 500
     int numberOfHandlers = DEFAULT_NUMBER_OF_HANDLERS
@@ -26,20 +26,6 @@ class Listener extends BasicPlugin implements WhelkAware {
     boolean isEnabled() {return enabled}
     void disable() {this.enabled = false}
     Date lastUpdate = null
-
-    Class formatConverterClass
-    Map converterParameters
-
-    /*
-    Listener(Whelk n, int nrOfHandlers, Class formatConverterClass, Map converterParameters) {
-        this.otherwhelk = n
-        this.numberOfHandlers = nrOfHandlers
-        this.otherwhelk.addPluginIfNotExists(new Notifier(this))
-        this.formatConverterClass = formatConverterClass
-        this.converterParameters = converterParameters
-        id = id + ", listening to $otherwhelk.prefix"
-    }
-    */
 
     Listener(Whelk n) {
         this.otherwhelk = n
@@ -68,7 +54,6 @@ class Listener extends BasicPlugin implements WhelkAware {
         }
         log.info("Starting $numberOfHandlers handlers.")
         for (int i = 0; i < this.numberOfHandlers; i++) {
-            //new Thread(new UpdateHandler(formatConverterClass, converterParameters)).start()
             new Thread(new UpdateHandler()).start()
         }
         Thread.start {
@@ -86,18 +71,18 @@ class Listener extends BasicPlugin implements WhelkAware {
             def updates = otherwhelk.log(lastUpdate)
             def iter = updates.iterator()
             if (iter.hasNext()) {
-                log.info("Found updates. Populating identifiers-list.")
+                log.info("Found updates. Populating documents-list.")
                 iter.each {
-                    notify(it.identifier)
+                    notify(it)
                 }
             }
         }
     }
 
-    void notify(URI identifier) {
-        log.trace "Whelk $homewhelk.prefix notified of change in $identifier"
-        if (!identifiers.contains(identifier)) {
-            identifiers.push(identifier)
+    void notify(Document doc) {
+        log.trace "Whelk $homewhelk.prefix notified of change in $doc"
+        if (!documents.contains(doc)) {
+            documents.push(doc)
         }
     }
 
@@ -108,10 +93,9 @@ class Listener extends BasicPlugin implements WhelkAware {
             def updates = otherwhelk.log(timestamp)
             def iter = updates.iterator()
             if (iter.hasNext()) {
-                log.info("Found updates. Populating identifiers-list.")
+                log.info("Found updates. Populating documents-list.")
                 iter.each {
-                    //log.debug("Adding identifier $it.identifier")
-                    notify(it.identifier)
+                    notify(it)
                 }
                 updatesReceived = true
             } else {
@@ -122,11 +106,11 @@ class Listener extends BasicPlugin implements WhelkAware {
     }
 
     @Synchronized
-    URI nextIdentifier() {
+    Document nextDocument() {
         try {
-            URI u = identifiers.pop() 
-            log.debug("nextIdentifier returning $u. List contains " + identifiers.size() + " items.")
-            return u
+            Document d = documents.pop()
+            log.debug("nextDocument returning ${d.identifier}. List contains " + documents.size() + " items.")
+            return d
         } catch (NoSuchElementException nsee) {
             return null
         }
@@ -148,17 +132,18 @@ class Listener extends BasicPlugin implements WhelkAware {
         UpdateHandler() {
         }
 
+        /*
         UpdateHandler(Class convClass, Map params) {
             println "params: $params" 
             converter = convClass.getConstructor(Map.class).newInstance(params)
         }
+        */
 
         void run() {
             while (true) {
-                def uri = nextIdentifier()
-                if (uri) {
-                    log.debug("Next is $uri")
-                    def doc = otherwhelk.get(uri)
+                def doc = nextDocument()
+                if (doc) {
+                    log.debug("Next is $doc.identifier")
                     homewhelk.store(doc)
                     lastUpdate = doc.timestampAsDate
                     //convert(otherwhelk.get(uri))
@@ -167,18 +152,5 @@ class Listener extends BasicPlugin implements WhelkAware {
             }
             log.error("Thread is exiting ...")
         }
-
-        /*
-        void convert(Document doc) {
-            log.debug("Converting document $doc.identifier ...")
-            Document convertedDocument = converter.convert(doc)
-            lastUpdate = doc.timestampAsDate
-            log.debug("Done ...")
-            if (convertedDocument) {
-                log.debug("New document created/converted with identifier ${convertedDocument.identifier}")
-                homewhelk.store(convertedDocument)
-            }
-        }
-        */
     }
 }

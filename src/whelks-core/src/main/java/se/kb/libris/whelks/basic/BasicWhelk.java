@@ -40,7 +40,6 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         public void store(Iterable<Document> docs) {
             // Pre storage operations
             for (Document doc : docs) {
-                System.out.println("Doc is " + doc);
                 if (doc.getIdentifier() == null || !doc.getIdentifier().toString().startsWith("/"+prefix)) {
                     doc.setIdentifier(mintIdentifier(doc));
                 }
@@ -146,17 +145,17 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         }
 
     @Override
-        public Iterable<LogEntry> log(int startIndex) {
+        public Iterable<Document> log(int startIndex) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
     @Override
-        public Iterable<LogEntry> log(URI identifier) {
+        public Iterable<Document> log(URI identifier) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
     @Override
-        public Iterable<LogEntry> log(Date since) {
+        public Iterable<Document> log(Date since) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 

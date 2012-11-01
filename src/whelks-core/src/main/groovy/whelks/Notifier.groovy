@@ -27,7 +27,7 @@ class Notifier extends AbstractTrigger {
 
     @Override
     void afterStore(Document doc) {
-        listener.notify(doc.identifier)
+        listener.notify(doc)
     }
 
     @Override

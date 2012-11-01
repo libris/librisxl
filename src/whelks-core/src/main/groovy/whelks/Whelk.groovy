@@ -77,7 +77,7 @@ class WhelkImpl extends BasicWhelk {
     }
 
     @Override
-    public Iterable<LogEntry> log(Date since) {
+    public Iterable<Document> log(Date since) {
         History historyComponent = null
         for (Component c : getComponents()) {
             if (c instanceof History) {

@@ -295,15 +295,17 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    def Iterable<LogEntry> updates(Date since) {
-        return new ElasticIterable<LogEntry>(this, since)
+    def Iterable<Document> updates(Date since) {
+        return new ElasticIterable<Document>(this, since)
     }
 
-    def loadAll(String token = null, Date since = null, boolean loadDocuments = true) {
-        def results 
+    def loadAll(String token = null, Date since = null, boolean loadDocuments = true, boolean sorted=false) {
+        def results
         if (loadDocuments) {
+            log.debug("Loading document-list")
             results = new ArrayList<Document>()
         } else {
+            log.debug("Loading logentry-list")
             results = new ArrayList<LogEntry>()
         }
         def srb
@@ -316,7 +318,7 @@ abstract class ElasticSearch extends BasicPlugin {
             srb = srb.setTypes(storageType)
                 .setScroll(TimeValue.timeValueMinutes(20))
                 .setSize(History.BATCH_SIZE)
-            if (since) {
+            if (sorted) {
                 def query = rangeQuery("_timestamp").gte(since.getTime())
                 srb = srb.addField("_timestamp")
                     .addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
@@ -357,14 +359,14 @@ class ElasticIterable<T> implements Iterable {
     def indexInstance
     Collection<T> list
     boolean incomplete = false
-    def token 
+    def token
     Date since
 
     ElasticIterable(i, s = null) {
         log.debug("Creating new iterable.")
         indexInstance = i
         since = s
-        (list, token) = indexInstance.loadAll(null, since, (since == null))
+        (list, token) = indexInstance.loadAll(null, since, true, true)
         log.debug("Initial list with size: ${list.size} and token: $token")
         incomplete = (list.size == History.BATCH_SIZE)
     }
@@ -401,7 +403,7 @@ class ElasticIterable<T> implements Iterable {
 
         @Synchronized
         private void refill() {
-            (list, token) = this.indexInstance.loadAll(token, since, (since == null))
+            (list, token) = this.indexInstance.loadAll(token, since, true, true)
             incomplete = (list.size() == History.BATCH_SIZE)
             iter = list.iterator()
         }
