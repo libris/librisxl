@@ -9,6 +9,7 @@ import se.kb.libris.whelks.exception.*
 import groovy.util.logging.Slf4j as Log
 import java.net.URL
 import java.net.URI
+import java.net.HttpURLConnection
 import com.basho.riak.client.RiakFactory
 import com.basho.riak.client.bucket.Bucket
 import com.basho.riak.client.IRiakObject
@@ -19,11 +20,30 @@ import com.basho.riak.client.http.response.FetchResponse
 import com.basho.riak.client.raw.http.HTTPClusterConfig
 import com.basho.riak.client.raw.http.HTTPClientConfig
 import com.basho.riak.client.query.NodeStats
+import com.basho.riak.client.cap.DefaultRetrier
 
 import groovy.json.JsonSlurper
 
 @Log
 abstract class RiakClient extends BasicPlugin {
+
+    static final int PING_CONNECT_TIMEOUT = 4000
+
+    boolean pingNode(String host, int port){
+        HttpURLConnection connection = null
+        try {
+            connection = (HttpURLConnection) new URL("http", host, port, "/ping").openConnection()
+            connection.setRequestMethod("HEAD")
+            connection.setConnectTimeout(PING_CONNECT_TIMEOUT)
+            if (connection.responseCode == 200) return true
+        } catch (Exception e) {
+            log.info("Could not connect to node " + host)
+            log.debug(e.message)
+        } finally {
+            if (connection != null) connection.disconnect()
+        }
+        return false
+    }
 
     IRiakClient getClient(){
         log.info("Starting riak client using riak.json configuration...")
@@ -31,13 +51,13 @@ abstract class RiakClient extends BasicPlugin {
         def riakjson = new JsonSlurper().parse(is.newReader())
         HTTPClusterConfig clusterConfig = new HTTPClusterConfig(riakjson.cluster_max_connections)
         riakjson.nodes.each {
-            def url = "http://" + it.host + ":" + it.port + "/riak"
-            HTTPClientConfig clientConfig = new HTTPClientConfig.Builder().withUrl(url).withMaxConnctions(it.max_connections).build()
-            clusterConfig.addClient(clientConfig)
-            log.info("Adding riak node " + url)
+            if (pingNode(it.host, it.port)) {
+                HTTPClientConfig clientConfig = new HTTPClientConfig.Builder().withHost(it.host).withPort(it.port).withRiakPath(it.riak_path).withMaxConnctions(it.max_connections).build()
+                clusterConfig.addClient(clientConfig)
+                log.info("Adding riak node " + it.host)
+            }
         }
-        final IRiakClient riakClient = RiakFactory.newClient(clusterConfig)
-        return riakClient
+        return RiakFactory.newClient(clusterConfig)
     }    
 
     void listRiakNodes() {
@@ -75,7 +95,7 @@ class RiakStorage extends RiakClient implements Storage {
         try {
             //TODO: check modified, vclock
             String key = extractIdFromURI(d.identifier)
-            IRiakObject riakObject = bucket.store(key, d.data).execute()
+            IRiakObject riakObject = bucket.store(key, d.data).withRetrier(new DefaultRetrier(1)).execute()
             log.info("Stored object with key: " + key + " to bucket: " + bucket.name)
         } catch(Exception e){
             log.debug("Exception trying to store document " + d.identifier)
