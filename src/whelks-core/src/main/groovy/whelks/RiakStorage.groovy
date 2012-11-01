@@ -21,6 +21,8 @@ import com.basho.riak.client.raw.http.HTTPClusterConfig
 import com.basho.riak.client.raw.http.HTTPClientConfig
 import com.basho.riak.client.query.NodeStats
 import com.basho.riak.client.cap.DefaultRetrier
+import com.basho.riak.client.operations.StoreObject
+import com.basho.riak.client.cap.Quora
 
 import groovy.json.JsonSlurper
 
@@ -28,6 +30,7 @@ import groovy.json.JsonSlurper
 abstract class RiakClient extends BasicPlugin {
 
     static final int PING_CONNECT_TIMEOUT = 4000
+    def riakjson
 
     boolean pingNode(String host, int port){
         HttpURLConnection connection = null
@@ -45,24 +48,36 @@ abstract class RiakClient extends BasicPlugin {
         return false
     }
 
-    IRiakClient getClient(){
-        log.info("Starting riak client using riak.json configuration...")
-        def is = RiakClient.class.classLoader.getResourceAsStream("riak.json")
-        def riakjson = new JsonSlurper().parse(is.newReader())
+    HTTPClusterConfig prepareClusterConfig(){
         HTTPClusterConfig clusterConfig = new HTTPClusterConfig(riakjson.cluster_max_connections)
         riakjson.nodes.each {
             if (pingNode(it.host, it.port)) {
-                HTTPClientConfig clientConfig = new HTTPClientConfig.Builder().withHost(it.host).withPort(it.port).withRiakPath(it.riak_path).withMaxConnctions(it.max_connections).build()
+                HTTPClientConfig clientConfig = new HTTPClientConfig.Builder().withHost(it.host).withPort(it.port).withRiakPath(it.riak_path).withMaxConnctions(it.max_connections).withTimeout(2000).build()
                 clusterConfig.addClient(clientConfig)
                 log.info("Adding riak node " + it.host)
             }
         }
-        return RiakFactory.newClient(clusterConfig)
+        if (clusterConfig.getClients().isEmpty()) {
+            throw new WhelkRuntimeException("No available Riak nodes.")
+        }
+        return clusterConfig
+    }
+
+    IRiakClient getClient(){
+        log.info("Starting riak client using riak.json configuration...")
+        def is = RiakClient.class.classLoader.getResourceAsStream("riak.json")
+        riakjson = new JsonSlurper().parse(is.newReader())
+        return RiakFactory.newClient(prepareClusterConfig())
     }    
 
+    IRiakClient getNodeReconfiguredClient(){
+        return RiakFactory.newClient(prepareClusterConfig())
+    }
+
     void listRiakNodes() {
+        log.info("Riak client configured with nodes....")
         for (NodeStats ns : riakClient.stats()){
-            log.info("Node: " + ns.nodename())
+            log.info(ns.nodename())
         }
     }
 }
@@ -73,6 +88,10 @@ class RiakStorage extends RiakClient implements Storage {
     private Bucket bucket
     private String plugin_id = "riakstore"
     private boolean enabled = true
+    static final int STORE_RETRIES = 3
+    static final int DEFAULT_W_QUORUM = 1 //minimum number of responding nodes on write
+    static final int DEFAULT_N_VAL = 2 //number of replicas of stored objects
+    static final boolean DEFAULT_ALLOW_MULT = false //allowing sibling objects, concurrent updates
 
     String getId(){ return this.clientId }
     int order
@@ -83,7 +102,7 @@ class RiakStorage extends RiakClient implements Storage {
     RiakStorage(String bucket){
         try {
             riakClient = getClient()
-            this.bucket = riakClient.createBucket(bucket).execute()
+            this.bucket = riakClient.createBucket(bucket).nVal(DEFAULT_N_VAL).allowSiblings(DEFAULT_ALLOW_MULT).w(DEFAULT_W_QUORUM).execute()
             log.info("Created bucket " + bucket)
         } catch(Exception e) {
             log.debug(e.printStackTrace())
@@ -91,15 +110,38 @@ class RiakStorage extends RiakClient implements Storage {
         }
     }
 
-    void store(Document d){
+    RiakStorage(){
         try {
-            //TODO: check modified, vclock
-            String key = extractIdFromURI(d.identifier)
-            IRiakObject riakObject = bucket.store(key, d.data).withRetrier(new DefaultRetrier(1)).execute()
-            log.info("Stored object with key: " + key + " to bucket: " + bucket.name)
-        } catch(Exception e){
-            log.debug("Exception trying to store document " + d.identifier)
-            throw new RiakException("Could not store document " + d.identifier + " " + e.message)
+            riakClient = getClient()
+            this.bucket = riakClient.createBucket(bucket).execute()
+            log.info("Created bucket " + bucket)
+        } catch(Exception e) {
+            log.debug(e.printStackTrace())
+            riakClient = getNodeReconfiguredClient()
+            throw new WhelkRuntimeException("Could not connect to RiakStorage. " + e.message)
+        }
+    }
+
+    void store(Document d){
+        int attempt = 0
+        int loop_times = 2
+
+        //TODO: check modified, vclock
+        String key = extractIdFromURI(d.identifier)
+        while (attempt < loop_times) {
+            try {
+                IRiakObject riakObject = bucket.store(key, d.data).withRetrier(new DefaultRetrier(STORE_RETRIES)).execute()
+                log.info("Stored object with key: " + key + " to bucket: " + bucket.name)
+                break
+            } catch(Exception e){
+                if (attempt == loop_times-1)
+                    log.info("Could not store document with identifier " + d.identifier + " " + e.message)
+                else {
+                    log.info("Reconfiguring riak client...")
+                    riakClient = getNodeReconfiguredClient()
+                }
+                attempt++
+            }
         }
     }
 
