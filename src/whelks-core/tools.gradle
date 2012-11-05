@@ -3,9 +3,11 @@
  */
 
 task importData(dependsOn: 'classes', type: JavaExec) {
-  description "Run ImportWhelk. (USAGE: -Dargs='<bib|auth> [resource] [since] [mode(<default|riak>)]')"
+  description "Run ImportWhelk. USAGE: -Dargs='<bib|auth> [resource] [since] ([mode(<riak>)])' -Delastic.host='<host>' (-Delastic.cluster='<cluster>')"
   classpath = sourceSets.main.runtimeClasspath
   main = 'se.kb.libris.whelks.ImportWhelk'
+  systemProperty 'elastic.host', System.getProperty('elastic.host', "")
+  systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', "")
   args(System.getProperty('args', "").split() as String[])
 }
 
