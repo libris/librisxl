@@ -21,6 +21,8 @@ class Listener extends BasicPlugin implements WhelkAware {
     final int CHECK_AGAIN_DELAY = 500
     int numberOfHandlers = DEFAULT_NUMBER_OF_HANDLERS
 
+    def pool
+
     String id = "whelkListener"
     boolean enabled = true
     boolean isEnabled() {return enabled}
@@ -31,14 +33,17 @@ class Listener extends BasicPlugin implements WhelkAware {
         this.otherwhelk = n
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
         id = id + ", listening to $otherwhelk.prefix"
+        pool = java.util.concurrent.Executors.newCachedThreadPool()
     }
 
+    /*
     Listener(Whelk n, int nrOfHandlers) {
         this.otherwhelk = n
         this.numberOfHandlers = nrOfHandlers
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
         id = id + ", listening to $otherwhelk.prefix"
     }
+    */
 
     void setWhelk(Whelk w) {
         this.homewhelk = w
@@ -52,10 +57,12 @@ class Listener extends BasicPlugin implements WhelkAware {
             log.debug("Didn't find a last updated time. Setting epoch.")
             lastUpdate = new Date(0L)
         }
+        /*
         log.info("Starting $numberOfHandlers handlers.")
         for (int i = 0; i < this.numberOfHandlers; i++) {
             new Thread(new UpdateHandler()).start()
         }
+        */
         Thread.start {
             Date lastSavedUpdate = lastUpdate
             while (true) {
@@ -81,9 +88,17 @@ class Listener extends BasicPlugin implements WhelkAware {
 
     void notify(Document doc) {
         log.trace "Whelk $homewhelk.prefix notified of change in $doc"
+        /*
         if (!documents.contains(doc)) {
             documents.push(doc)
         }
+        */
+        pool.submit(new Runnable() {
+            public void run() {
+                log.debug("Pushing ${doc.identifier} to $homewhelk")
+                homewhelk.store(doc)
+            }
+        })
     }
 
     void notify(Date timestamp) {
@@ -104,6 +119,7 @@ class Listener extends BasicPlugin implements WhelkAware {
             }
         }
     }
+    /*
 
     @Synchronized
     Document nextDocument() {
@@ -115,6 +131,7 @@ class Listener extends BasicPlugin implements WhelkAware {
             return null
         }
     }
+    */
 
     void enable() {
         this.enabled = true
@@ -123,6 +140,7 @@ class Listener extends BasicPlugin implements WhelkAware {
         }
     }
 
+    /*
     @Log
     class UpdateHandler implements Runnable {
 
@@ -131,13 +149,6 @@ class Listener extends BasicPlugin implements WhelkAware {
 
         UpdateHandler() {
         }
-
-        /*
-        UpdateHandler(Class convClass, Map params) {
-            println "params: $params" 
-            converter = convClass.getConstructor(Map.class).newInstance(params)
-        }
-        */
 
         void run() {
             while (true) {
@@ -153,4 +164,5 @@ class Listener extends BasicPlugin implements WhelkAware {
             log.error("Thread is exiting ...")
         }
     }
+    */
 }

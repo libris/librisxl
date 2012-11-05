@@ -33,10 +33,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 @Log
 class BatchImport {
@@ -46,8 +42,9 @@ class BatchImport {
     private int imported = 0;
     private long starttime = 0;
     private int NUMBER_OF_IMPORTERS = 20
+    def pool
 
-    List<List<Document>> docList = new ArrayList<List<Document>>()
+    List docList = Collections.synchronizedList(new LinkedList())
 
     public BatchImport() {}
 
@@ -86,10 +83,7 @@ class BatchImport {
     }
     // END possible authentication alternative
     public int doImport(ImportWhelk whelk, Date from) {
-        log.info("Starting $NUMBER_OF_IMPORTERS importers.")
-        for (int i = 0; i < this.NUMBER_OF_IMPORTERS; i++) {
-            new Thread(new Importer(whelk, i)).start()
-        }
+        pool = java.util.concurrent.Executors.newCachedThreadPool()
 
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
         try {
@@ -118,27 +112,6 @@ class BatchImport {
         }
     }
 
-    /*
-    String getFilteredString(String xmlString) {
-        byte[] outbytes
-        try {
-            // Decode the file just to get a CharBuffer for the encoder - perhaps not the simpliest way?
-            Charset charset = Charset.forName("UTF-8");
-            CharsetDecoder utf8Decoder = charset.newDecoder();
-            utf8Decoder.onMalformedInput(CodingErrorAction.IGNORE);
-            utf8Decoder.onUnmappableCharacter(CodingErrorAction.IGNORE);
-            CharsetEncoder utf8Encoder = charset.newEncoder();
-            CharBuffer buffer = utf8Decoder.decode(ByteBuffer.wrap(xmlString.getBytes()));
-            ByteBuffer bb = utf8Encoder.encode(buffer);
-            outbytes = bb.array();
-        } catch (CharacterCodingException ex) {
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
-        } 
-        println "converted doc: " + new String(outbytes)
-        return new String(outbytes)
-    }
-    */
-
     String findResumptionToken(xmlString) {
         try {
             return xmlString.split("(<)/?(resumptionToken>)")[1]
@@ -157,15 +130,22 @@ class BatchImport {
     String harvest(url, whelk) {
         try {
             def OAIPMH = new XmlSlurper(false,false).parseText(normalizeString(url.text))
-            def documents = []
+            //def documents = []
             OAIPMH.ListRecords.record.each {
                 MarcRecord record = MarcXmlRecordReader.fromXml(createString(it.metadata.record))
                 String id = record.getControlfields("001").get(0).getData();
                 String jsonRec = MarcJSONConverter.toJSONString(record);
-                documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                Document document = new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                log.debug("Submitting document to importer.")
+                pool.submit(new Runnable() {
+                    public void run() {
+                        log.debug("Pushing ${document.identifier} to $whelk")
+                        whelk.store(document)
+                    }
+                })
                 imported++
             }
-            addBatch(documents)
+            //addBatch(documents)
             return OAIPMH.ListRecords.resumptionToken
         } catch (Exception e) {
             log.warn("Failed to parse XML document: ${e.message}. Trying to extract resumptionToken and continue.", e)
@@ -173,6 +153,7 @@ class BatchImport {
         }
     }
 
+    /*
     void addBatch(List<Document> docs) {
         docList << docs
     }
@@ -190,19 +171,13 @@ class BatchImport {
     class Importer implements Runnable {
 
         Whelk whelk
-        int number
+        List<Document> batch
 
-        Importer(Whelk whelk, int nr) { this.whelk = whelk; this.number = nr;}
+        Importer(Whelk whelk, List<Document> b) { this.whelk = whelk; this.batch = b;}
 
         void run() {
-            while (true) {
-                def docs = nextBatch()
-                if (docs) {
-                    whelk.store(docs)
-                }
-                sleep(500+this.number)
-            }
-            log.error("Thread is exiting ...")
+            whelk.store(batch)
         }
     }
+    */
 }
