@@ -12,6 +12,7 @@ import java.net.URI
 import java.net.HttpURLConnection
 import com.basho.riak.client.RiakFactory
 import com.basho.riak.client.bucket.Bucket
+import com.basho.riak.client.builders.RiakObjectBuilder
 import com.basho.riak.client.IRiakObject
 import com.basho.riak.client.IRiakClient
 import com.basho.riak.client.RiakException
@@ -146,7 +147,8 @@ class RiakStorage extends RiakClient implements Storage {
             bucket = createBucket(prefix, DEFAULT_N_VAL, DEFAULT_ALLOW_MULT, DEFAULT_W_QUORUM)
         while (attempt < loop_times) {
             try {
-                IRiakObject riakObject = bucket.store(key, d.data).withRetrier(new DefaultRetrier(STORE_RETRIES)).execute()
+                IRiakObject riakObject = RiakObjectBuilder.newBuilder(prefix, key).withContentType("application/json").withValue(d.data).build()
+                IRiakObject storedObject = bucket.store(riakObject).withRetrier(new DefaultRetrier(STORE_RETRIES)).execute()
                 log.info("Stored object with key: " + key + " to bucket: " + bucket.name)
                 break
             } catch(Exception e){
@@ -192,7 +194,7 @@ class RiakStorage extends RiakClient implements Storage {
             String bucket_name = extractBucketNameFromURI(uri)
             Bucket bucket = getFetchBucket(bucket_name)
             IRiakObject riakObject = bucket.fetch(key).execute()
-            log.info("Fetched object with key" + riakObject.key)
+            log.info("Fetched object with key " + riakObject.key)
             return new BasicDocument().withIdentifier(key).withData(riakObject.value).withContentType(riakObject.getContentType())
         } catch (Exception e){
             log.debug("Exception trying to fetch " + uri.path + " " + e.message)
