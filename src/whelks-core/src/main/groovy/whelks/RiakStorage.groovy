@@ -117,8 +117,8 @@ class RiakStorage extends RiakClient implements Storage {
         try {
             riakjson = getJsonConfig()
             riakClient = getClient(riakjson)
-            riakjson nodes.buckets.each {
-                buckets[prefix] = riakClient.createBucket(it.prefix, it.n_val, it.allow_mult, it.w)
+            riakjson.nodes.buckets.each {
+                buckets[it.prefix] = createBucket(it.prefix, it.n_val, it.allow_mult, it.w)
             }
             log.info("Created buckets " + buckets.toMapString())
         } catch(Exception e) {
@@ -147,9 +147,8 @@ class RiakStorage extends RiakClient implements Storage {
             bucket = createBucket(prefix, DEFAULT_N_VAL, DEFAULT_ALLOW_MULT, DEFAULT_W_QUORUM)
         while (attempt < loop_times) {
             try {
-                IRiakObject riakObject = RiakObjectBuilder.newBuilder(prefix, key).withContentType("application/json").withValue(d.data).build()
+                IRiakObject riakObject = RiakObjectBuilder.newBuilder(prefix, key).withContentType(d.contentType).withValue(d.data).build()
                 IRiakObject storedObject = bucket.store(riakObject).withRetrier(new DefaultRetrier(STORE_RETRIES)).execute()
-                log.info("Stored object with key: " + key + " to bucket: " + bucket.name)
                 break
             } catch(Exception e){
                 if (attempt == loop_times-1) {
@@ -194,17 +193,15 @@ class RiakStorage extends RiakClient implements Storage {
             String bucket_name = extractBucketNameFromURI(uri)
             Bucket bucket = getFetchBucket(bucket_name)
             IRiakObject riakObject = bucket.fetch(key).execute()
-            log.info("Fetched object with key " + riakObject.key)
             return new BasicDocument().withIdentifier(key).withData(riakObject.value).withContentType(riakObject.getContentType())
         } catch (Exception e){
             log.debug("Exception trying to fetch " + uri.path + " " + e.message)
-            throw new RiakException("Could not fetch document " + uri.path)
         }
         return null
     }
 
     Iterable<Document> getAll(){
-        throw new UnsupportedOperationException("Not supported yet.")
+        return new RiakIterable<Document>(this)
     }
 
     void delete(URI uri){
@@ -212,6 +209,7 @@ class RiakStorage extends RiakClient implements Storage {
             String key = extractIdFromURI(uri)
             String bucket_name = extractBucketNameFromURI(uri)
             Bucket bucket = getFetchBucket(bucket_name)
+            log.info("Deleting " + bucket_name + key)
             bucket.delete(key).execute()
        } catch (Exception e){
             log.debug("Exception trying to delete " + uri.path + " " + e.message)
@@ -232,5 +230,30 @@ class RiakStorage extends RiakClient implements Storage {
 
     LookupResult<? extends Document> lookup(Key key){
         throw new UnsupportedOperationException("Not supported yet.")
+    }
+}
+
+@Log
+class RiakIterable<T> implements Iterable {
+
+    def riakDocs
+
+    RiakIterable(def riakStorage){
+        riakDocs = new ArrayList<Document>()
+        riakStorage.buckets.each {
+            def prefix = it.value.name
+            it.value.keys().each {
+                def uri = new URI("/" + prefix + "/" + it)
+                def doc = riakStorage.get(uri)
+                if (doc != null) {
+                    riakDocs.add(riakStorage.get(uri))
+                }
+            }
+        }
+        log.info("Loading RiakIterable for " + riakDocs.size() + " number of documents.")
+    }
+
+    Iterator<Document> iterator() {
+        return riakDocs.iterator()
     }
 }
