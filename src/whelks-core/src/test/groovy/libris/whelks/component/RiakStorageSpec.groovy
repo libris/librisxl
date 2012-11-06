@@ -41,5 +41,13 @@ class RiakStorageSpec extends Specification {
         then:
         notThrown(Exception)
     }
+
+    def "should get all docs from riakstorage"(){
+        given:
+        def alldocs = rs.getAll()
+
+        expect:
+        alldocs.toList().size() > 0
+    }
 }
 
