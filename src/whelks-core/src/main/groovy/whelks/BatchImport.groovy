@@ -28,6 +28,14 @@ import se.kb.libris.conch.converter.MarcJSONConverter;
 import se.kb.libris.whelks.*;
 import se.kb.libris.whelks.basic.*;
 import se.kb.libris.whelks.plugin.*;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.util.concurrent.ThreadPoolExecutor
 
 @Log
 class BatchImport {
@@ -127,7 +135,7 @@ class Harvester implements Runnable {
             Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     public void run() {
         try {
             getAuthentication();
@@ -162,13 +170,18 @@ class Harvester implements Runnable {
                     documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
                 }
             }
+            log.debug("Number of docs " + documents.size())
             if (documents.size() > 0) {
+                log.debug("documents size > 0")
                 imported = imported + documents.size()
                 log.debug("Storing documents ... $imported sofar.")
                 whelk.store(documents)
                 /*
                 storepool.submit(new Runnable() {
                     public void run() {
+                        log.debug("Current pool size: " + ((ThreadPoolExecutor)storepool).getPoolSize() + " current active count " + ((ThreadPoolExecutor)storepool).getActiveCount())
+                        //log.debug("Pushing ${document.identifier} to $whelk")
+                        //whelk.store(document)
                         whelk.store(documents)
                         log.trace("Thread has now imported $imported documents.")
                     }
@@ -196,7 +209,8 @@ class Harvester implements Runnable {
             return OAIPMH.ListRecords.resumptionToken
         }
         catch (Exception e) {
-            log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
+            //log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
+            log.debug(e.printStackTrace())
             return findResumptionToken(xmlString)
         }
     }
@@ -220,6 +234,7 @@ class Harvester implements Runnable {
         }
         return null
     }
+
     String createString(GPathResult root) {
         return new StreamingMarkupBuilder().bind{
             out << root
