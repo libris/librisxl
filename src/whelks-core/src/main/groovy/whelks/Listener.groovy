@@ -120,7 +120,6 @@ class Listener extends BasicPlugin implements WhelkAware {
         }
     }
     /*
-
     @Synchronized
     Document nextDocument() {
         try {
@@ -143,8 +142,6 @@ class Listener extends BasicPlugin implements WhelkAware {
     /*
     @Log
     class UpdateHandler implements Runnable {
-
-
         def converter
 
         UpdateHandler() {

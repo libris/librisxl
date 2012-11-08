@@ -25,13 +25,13 @@
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory",
                 "_params" : "_whelkname"
             }
-        }, 
+        },
         {
             "indexstorage": { 
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientStorageIndexHistory",
                 "_params" : "_whelkname"
             }
-        }, 
+        },
         {
             "storage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
