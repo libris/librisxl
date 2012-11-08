@@ -216,8 +216,12 @@ abstract class ElasticSearch extends BasicPlugin {
         def facets = new HashMap<String, Map<String, Integer>>()
         for (def f : eFacets) {
             def termcounts = [:]
-            for (def entry : f.entries()) {
-                termcounts[entry.term] = entry.count
+            try {
+                for (def entry : f.entries()) {
+                    termcounts[entry.term] = entry.count
+                }
+            } catch (MissingMethodException mme) {
+                termcounts[f.name] = f.count
             }
             facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
         }
@@ -259,7 +263,12 @@ abstract class ElasticSearch extends BasicPlugin {
         }
         if (q.facets) {
             q.facets.each {
-                srb = srb.addFacet(FacetBuilders.termsFacet(it.key).field(it.value))
+                if (it instanceof TermFacet) {
+                    srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field))
+                } else if (it instanceof QueryFacet) {
+                    def qf = new QueryStringQueryBuilder(it.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
+                    srb = srb.addFacet(FacetBuilders.queryFacet(it.name).query(qf))
+                }
             }
         }
         log.trace("SearchRequestBuilder: " + srb)

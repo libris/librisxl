@@ -181,6 +181,11 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             if (q) {
                 q.addFacet("målspråk", "fields.041.subfields.a")
                 q.addFacet("originalspråk", "fields.041.subfields.h")
+                q.addFacet("medietyp", "leader.subfields.typeOfRecord")
+                q.addFacet("bibliografisk nivå", "leader.subfields.bibLevel")
+                q.addFacet("bärartyp", "fields.007.subfields.carrierType")
+                q.addFacet("utgivningstid", "fields.008.subfields.yearTime1")
+                q.addFacet("ebok", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r", Query.QUERY_FACET)
                 def results = this.whelk.query(q)
                 def jsonResult = 
                     (callback ? callback + "(" : "") +

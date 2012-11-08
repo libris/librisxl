@@ -104,7 +104,7 @@ class Harvester implements Runnable {
     int year
     def storepool
 
-    Harvester(Whelk w, String r, final URL u, int y) {
+    Harvester(Whelk w, String r, URL u, int y) {
         this.url = new URL(u.toString())
         this.resource = r
         this.whelk = w
@@ -133,43 +133,47 @@ class Harvester implements Runnable {
             getAuthentication();
             log.info("Starting harvester with url: $url")
             String resumptionToken = harvest(this.url);
-            while (resumptionToken != null) {
+            while (resumptionToken) {
                 URL rurl = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
                 resumptionToken = harvest(rurl)
                 log.debug("Received resumptionToken $resumptionToken")
             }
         } finally {
-            log.info("Harvester for ${this.year} has ended its run.")
+            log.info("Harvester for ${this.year} has ended its run. $imported documents imported.")
             this.storepool.shutdown()
         }
     }
 
     String harvest(URL url) {
-        log.debug("Call for harvest on $url")
         String mdrecord = null
         String xmlString
         def OAIPMH
         try {
-            log.debug("URL.text: ${url.text}")
+            log.trace("URL.text: ${url.text}")
             xmlString = normalizeString(url.text)
             OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
-            log.debug("OAIPMH: $OAIPMH")
             def documents = []
             OAIPMH.ListRecords.record.each {
                 mdrecord = createString(it.metadata.record)
-                MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
-                String id = record.getControlfields("001").get(0).getData();
-                String jsonRec = MarcJSONConverter.toJSONString(record);
-                documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                if (mdrecord) {
+                    MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
+                    String id = record.getControlfields("001").get(0).getData();
+                    String jsonRec = MarcJSONConverter.toJSONString(record);
+                    documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                }
             }
             if (documents.size() > 0) {
                 imported = imported + documents.size()
+                log.debug("Storing documents ... $imported sofar.")
+                whelk.store(documents)
+                /*
                 storepool.submit(new Runnable() {
                     public void run() {
                         whelk.store(documents)
                         log.trace("Thread has now imported $imported documents.")
                     }
                 })
+                */
             }
             /*
             log.info("rt type: (" + OAIPMH.ListRecords.resumptionToken.class + ")")

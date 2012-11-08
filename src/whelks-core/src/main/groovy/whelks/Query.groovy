@@ -12,9 +12,13 @@ class Query {
     def highlights
     def filters
     def facets
+    def queryFacets
     def boost
     int start = 0
     int n = 50
+
+    public static final int TERM_FACET = 0
+    public static final int QUERY_FACET = 1
 
     Query(String qstr) {
         this.query = qstr
@@ -131,11 +135,21 @@ class Query {
         return this
     }
 
-    Query addFacet(name, field) {
+    Query addFacet(String name, String field, int facettype=TERM_FACET) {
         if (!facets) {
-            facets = new HashMap<String,String>()
+            facets = []
         }
-        facets.put(name, field)
+        facets << (facettype == TERM_FACET ? new TermFacet(name, field) : new QueryFacet(name, field))
         return this
     }
+}
+
+class TermFacet {
+    String name, field
+    TermFacet(n, f) { this.name = n; this.field = f; }
+}
+
+class QueryFacet {
+    String name, query
+    QueryFacet(n, q) { this.name = n; this.query = q; }
 }
