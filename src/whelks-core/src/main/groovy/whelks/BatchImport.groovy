@@ -10,6 +10,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.text.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -26,20 +28,12 @@ import se.kb.libris.conch.converter.MarcJSONConverter;
 import se.kb.libris.whelks.*;
 import se.kb.libris.whelks.basic.*;
 import se.kb.libris.whelks.plugin.*;
-import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 @Log
 class BatchImport {
 
     private String resource;
 
-    private int imported = 0;
     private long starttime = 0;
     private int NUMBER_OF_IMPORTERS = 20
     def pool
@@ -53,18 +47,70 @@ class BatchImport {
         this.resource = resource;
     }
 
-    private String getBaseUrl(Date from) {
+     URL getBaseUrl(Date from, Date until) {
         //return "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml&from=2012-05-23T15:21:27Z";
         String url = "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml";
         if (from != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-            url = url + "&" + sdf.format(from);
+            url = url + "&from=" + sdf.format(from);
+            if (until) {
+                url = url + "&until=" + sdf.format(until)
+                log.debug("" + sdf.format(from) + "-" + sdf.format(until))
+            }
         }
-        log.info("URL: $url");
-        return url;
+        log.debug("URL: $url");
+        return new URL(url)
     }
 
     public void setResource(String r) { this.resource = r; }
+
+    // END possible authentication alternative
+    public int doImport(ImportWhelk whelk, Date from) {
+        try {
+            pool = Executors.newCachedThreadPool()
+
+            this.starttime = System.currentTimeMillis();
+            List<Future> futures = []
+            if (from) {
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), 0))
+            } else {
+                for (int i = 1970; i < 2013; i++) {
+                    final Date fromDate = getYearDate(i)
+                    final Date untilDate = getYearDate(i+1)
+                    futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(fromDate, untilDate), i))
+                }
+            }
+            log.info("Collecting results ...")
+            def results = futures.collect{it.get()}
+            log.info("Results: $results, after " + (System.currentTimeMillis() - starttime)/1000 + " seconds.")
+        } finally {
+            pool.shutdown()
+        }
+        return 0
+    }
+
+    Date getYearDate(int year) {
+        def sdf = new SimpleDateFormat("yyyy")
+        return sdf.parse("" + year)
+    }
+}
+
+@Log
+class Harvester implements Runnable {
+    URL url
+    Whelk whelk
+    String resource
+    private int imported = 0;
+    int year
+    def storepool
+
+    Harvester(Whelk w, String r, URL u, int y) {
+        this.url = u
+        this.resource = r
+        this.whelk = w
+        this.year = y
+        this.storepool = Executors.newCachedThreadPool()
+    }
 
     private void getAuthentication() {
         try {
@@ -81,103 +127,91 @@ class BatchImport {
             Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    // END possible authentication alternative
-    public int doImport(ImportWhelk whelk, Date from) {
-        pool = java.util.concurrent.Executors.newCachedThreadPool()
 
-        getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
+    public void run() {
         try {
-            // While resumptionToken is something
-            URL url = new URL(getBaseUrl(from));
-            this.starttime = System.currentTimeMillis();
-            String resumptionToken = harvest(url, whelk);
-            while (resumptionToken != null) {
-                //redefine url
-                url = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
-                resumptionToken = harvest(url, whelk);
+            getAuthentication();
+            log.info("Starting harvester with url: $url")
+            String resumptionToken = harvest(url);
+            if (!resumptionToken) {
+                log.warn("Curious results ($resumptionToken) for $url")
             }
-
-            // Loop through harvest
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return imported;
-    }
-
-    public static String createString(GPathResult root) {
-        return new StreamingMarkupBuilder().bind{
-            out << root
+            while (resumptionToken != null) {
+                url = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
+                resumptionToken = harvest(url)
+                log.debug("Received resumptionToken $resumptionToken")
+            }
+        } finally {
+            log.info("Harvester for ${this.year} has ended its run.")
+            this.storepool.shutdown()
         }
     }
 
-    String findResumptionToken(xmlString) {
+    String harvest(URL url) {
+        log.debug("Call for harvest on $url")
         try {
-            return xmlString.split("(<)/?(resumptionToken>)")[1]
-        } catch (ArrayIndexOutOfBoundsException a) {
-            log.error("Failed to extract resumptionToken from xml:\n$xmlString")
+            log.debug("URL.text: ${url.text}")
+            def OAIPMH = new XmlSlurper(false,false).parseText(normalizeString(url.text))
+            log.debug("OAIPMH: $OAIPMH")
+            def documents = []
+            String mdrecord = null
+            OAIPMH.ListRecords.record.each {
+                mdrecord = createString(it.metadata.record)
+                MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
+                String id = record.getControlfields("001").get(0).getData();
+                String jsonRec = MarcJSONConverter.toJSONString(record);
+                documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+            }
+            if (documents.size() > 0) {
+                imported = imported + documents.size()
+                storepool.submit(new Runnable() {
+                    public void run() {
+                        whelk.store(documents)
+                        log.trace("Thread has now imported $imported documents.")
+                    }
+                })
+            }
+            /*
+            log.info("rt type: " + OAIPMH.ListRecords.resumptionToken.class.name)
+            log.error "object: (${OAIPMH.ListRecords.resumptionToken})"
+            if (OAIPMH.ListRecords.resumptionToken == "") {
+                log.error("NO RESUMPTION TOKEN FOR $url!")
+                log.error("Raw: " + url.text)
+                log.error("Normalized: " + normalizeString(url.text))
+                throw new se.kb.libris.whelks.exception.WhelkRuntimeException("Bad")
+            }
+            */
+            return OAIPMH.ListRecords.resumptionToken
+        } catch (java.io.IOException ioe) {
+            log.warn("Failed to parse record \"$mdrecord\": ${ioe.message}. Trying to extract resumptionToken and continue.")
+            return findResumptionToken(url.text)
+        } 
+        catch (Exception e) {
+            log.warn("Failed to parse XML document \"${url.text}\": ${e.message}. Trying to extract resumptionToken and continue.")
+            return findResumptionToken(url.text)
         }
     }
 
     String normalizeString(String inString) {
         if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
+            log.debug("Normalizing ...")
             return Normalizer.normalize(inString, Normalizer.Form.NFC)
         }
         return inString
     }
 
-    String harvest(url, whelk) {
+    String findResumptionToken(xmlString) {
+        log.info("findResumption ...")
         try {
-            def OAIPMH = new XmlSlurper(false,false).parseText(normalizeString(url.text))
-            //def documents = []
-            OAIPMH.ListRecords.record.each {
-                MarcRecord record = MarcXmlRecordReader.fromXml(createString(it.metadata.record))
-                String id = record.getControlfields("001").get(0).getData();
-                String jsonRec = MarcJSONConverter.toJSONString(record);
-                Document document = new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
-                log.debug("Submitting document to importer.")
-                pool.submit(new Runnable() {
-                    public void run() {
-                        log.debug("Pushing ${document.identifier} to $whelk")
-                        whelk.store(document)
-                    }
-                })
-                imported++
-            }
-            //addBatch(documents)
-            return OAIPMH.ListRecords.resumptionToken
-        } catch (Exception e) {
-            log.warn("Failed to parse XML document: ${e.message}. Trying to extract resumptionToken and continue.", e)
-            return findResumptionToken(url.text)
+            return xmlString.split("(<)/?(resumptionToken>)")[1]
+        } catch (ArrayIndexOutOfBoundsException a) {
+            log.warn("Failed to extract resumptionToken from xml:\n$xmlString")
+        }
+        return null
+    }
+    String createString(GPathResult root) {
+        return new StreamingMarkupBuilder().bind{
+            out << root
         }
     }
-
-    /*
-    void addBatch(List<Document> docs) {
-        docList << docs
-    }
-
-    @Synchronized
-    List<List<Document>> nextBatch() {
-        try {
-            List<Document> docs = docList.pop()
-            return docs
-        } catch (NoSuchElementException nse) {
-            return null
-        }
-    }
-
-    class Importer implements Runnable {
-
-        Whelk whelk
-        List<Document> batch
-
-        Importer(Whelk whelk, List<Document> b) { this.whelk = whelk; this.batch = b;}
-
-        void run() {
-            whelk.store(batch)
-        }
-    }
-    */
 }

@@ -15,12 +15,12 @@
       <level value="trace"/>
   </logger>
 
-  <logger name="se.kb.libris.whelks.plugin">
+  <logger name="se.kb.libris.whelks.imports">
       <level value="debug"/>
   </logger>
   -->
 
-  <root level="debug">
+  <root level="info">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>
