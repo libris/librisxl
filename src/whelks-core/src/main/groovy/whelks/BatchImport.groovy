@@ -33,6 +33,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.util.concurrent.ThreadPoolExecutor
 
 @Log
 class BatchImport {
@@ -83,7 +84,8 @@ class BatchImport {
     }
     // END possible authentication alternative
     public int doImport(ImportWhelk whelk, Date from) {
-        pool = java.util.concurrent.Executors.newCachedThreadPool()
+        //pool = java.util.concurrent.Executors.newCachedThreadPool()
+        pool = java.util.concurrent.Executors.newFixedThreadPool(20)
 
         getAuthentication(); // Testar detta istället för urlconn-grejen i harvest()
         try {
@@ -139,6 +141,7 @@ class BatchImport {
                 log.debug("Submitting document to importer.")
                 pool.submit(new Runnable() {
                     public void run() {
+                        log.debug("Current pool size: " + ((ThreadPoolExecutor)pool).getPoolSize() + " current active count " + ((ThreadPoolExecutor)pool).getActiveCount())
                         log.debug("Pushing ${document.identifier} to $whelk")
                         whelk.store(document)
                     }
