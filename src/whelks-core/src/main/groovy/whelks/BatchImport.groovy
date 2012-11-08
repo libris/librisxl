@@ -104,8 +104,8 @@ class Harvester implements Runnable {
     int year
     def storepool
 
-    Harvester(Whelk w, String r, URL u, int y) {
-        this.url = u
+    Harvester(Whelk w, String r, final URL u, int y) {
+        this.url = new URL(u.toString())
         this.resource = r
         this.whelk = w
         this.year = y
@@ -132,13 +132,10 @@ class Harvester implements Runnable {
         try {
             getAuthentication();
             log.info("Starting harvester with url: $url")
-            String resumptionToken = harvest(url);
-            if (!resumptionToken) {
-                log.warn("Curious results ($resumptionToken) for $url")
-            }
+            String resumptionToken = harvest(this.url);
             while (resumptionToken != null) {
-                url = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
-                resumptionToken = harvest(url)
+                URL rurl = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
+                resumptionToken = harvest(rurl)
                 log.debug("Received resumptionToken $resumptionToken")
             }
         } finally {
@@ -149,12 +146,15 @@ class Harvester implements Runnable {
 
     String harvest(URL url) {
         log.debug("Call for harvest on $url")
+        String mdrecord = null
+        String xmlString
+        def OAIPMH
         try {
             log.debug("URL.text: ${url.text}")
-            def OAIPMH = new XmlSlurper(false,false).parseText(normalizeString(url.text))
+            xmlString = normalizeString(url.text)
+            OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
             log.debug("OAIPMH: $OAIPMH")
             def documents = []
-            String mdrecord = null
             OAIPMH.ListRecords.record.each {
                 mdrecord = createString(it.metadata.record)
                 MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
@@ -172,29 +172,34 @@ class Harvester implements Runnable {
                 })
             }
             /*
-            log.info("rt type: " + OAIPMH.ListRecords.resumptionToken.class.name)
-            log.error "object: (${OAIPMH.ListRecords.resumptionToken})"
+            log.info("rt type: (" + OAIPMH.ListRecords.resumptionToken.class + ")")
+            log.info("object:  (" + OAIPMH.ListRecords.resumptionToken + ")")
             if (OAIPMH.ListRecords.resumptionToken == "") {
                 log.error("NO RESUMPTION TOKEN FOR $url!")
                 log.error("Raw: " + url.text)
-                log.error("Normalized: " + normalizeString(url.text))
+                log.error("Normalized: " + xmlString)
                 throw new se.kb.libris.whelks.exception.WhelkRuntimeException("Bad")
             }
             */
             return OAIPMH.ListRecords.resumptionToken
         } catch (java.io.IOException ioe) {
-            log.warn("Failed to parse record \"$mdrecord\": ${ioe.message}. Trying to extract resumptionToken and continue.")
-            return findResumptionToken(url.text)
-        } 
+            log.warn("Failed to parse record \"$mdrecord\": ${ioe.message}.")
+            /*
+            log.info("XML for this error: $xmlString")
+            log.info("URL: $url")
+            log.info("ResumptionToken is ${OAIPMH.ListRecords.resumptionToken}")
+            */
+            return OAIPMH.ListRecords.resumptionToken
+        }
         catch (Exception e) {
-            log.warn("Failed to parse XML document \"${url.text}\": ${e.message}. Trying to extract resumptionToken and continue.")
-            return findResumptionToken(url.text)
+            log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
+            return findResumptionToken(xmlString)
         }
     }
 
     String normalizeString(String inString) {
         if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
-            log.debug("Normalizing ...")
+            log.trace("Normalizing ...")
             return Normalizer.normalize(inString, Normalizer.Form.NFC)
         }
         return inString
@@ -203,7 +208,9 @@ class Harvester implements Runnable {
     String findResumptionToken(xmlString) {
         log.info("findResumption ...")
         try {
-            return xmlString.split("(<)/?(resumptionToken>)")[1]
+            String rt = xmlString.split("(<)/?(resumptionToken>)")[1]
+            log.info("Found $rt")
+            return rt
         } catch (ArrayIndexOutOfBoundsException a) {
             log.warn("Failed to extract resumptionToken from xml:\n$xmlString")
         }
