@@ -150,6 +150,6 @@ class TermFacet {
 }
 
 class QueryFacet {
-    String name, label, query
-    QueryFacet(n, l, q) { this.label = l; this.name = n; this.query = q; }
+    String group, name, query
+    QueryFacet(g, n, q) { this.group = g; this.name = n; this.query = q; }
 }

@@ -212,7 +212,7 @@ abstract class ElasticSearch extends BasicPlugin {
         return map
     }
 
-    def convertFacets(eFacets) {
+    def convertFacets(eFacets, query) {
         def facets = new HashMap<String, Map<String, Integer>>()
         for (def f : eFacets) {
             def termcounts = [:]
@@ -220,12 +220,13 @@ abstract class ElasticSearch extends BasicPlugin {
                 for (def entry : f.entries()) {
                     termcounts[entry.term] = entry.count
                 }
+                facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
             } catch (MissingMethodException mme) {
                 if (f.count) {
                     termcounts[f.name] = f.count
                 }
+                facets.put(query.facets.find { it.name == f.name }.group, termcounts.sort { a, b -> b.value <=> a.value })
             }
-            facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
         }
         return facets
     }
@@ -295,7 +296,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 }
             }
             if (q.facets) {
-                results.facets = convertFacets(response.facets.facets())
+                results.facets = convertFacets(response.facets.facets(), q)
             }
         }
         return results
