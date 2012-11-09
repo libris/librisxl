@@ -107,6 +107,7 @@ class Harvester implements Runnable {
     Whelk whelk
     String resource
     private int imported = 0;
+    private int failed = 0;
     int year
     def storepool
 
@@ -145,7 +146,7 @@ class Harvester implements Runnable {
                 log.debug("Received resumptionToken $resumptionToken")
             }
         } finally {
-            log.info("Harvester for ${this.year} has ended its run. $imported documents imported.")
+            log.info("Harvester for ${this.year} has ended its run. $imported documents imported. $failed failed.")
             this.storepool.shutdown()
         }
     }
@@ -166,6 +167,8 @@ class Harvester implements Runnable {
                     String id = record.getControlfields("001").get(0).getData();
                     String jsonRec = MarcJSONConverter.toJSONString(record);
                     documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                } else {
+                    failed++
                 }
             }
             log.debug("Number of docs " + documents.size())
