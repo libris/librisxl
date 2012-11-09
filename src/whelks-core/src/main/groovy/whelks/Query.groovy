@@ -135,11 +135,11 @@ class Query {
         return this
     }
 
-    Query addFacet(String name, String field, int facettype=TERM_FACET) {
+    Query addFacet(String name, String field, String facetgroup=null) {
         if (!facets) {
             facets = []
         }
-        facets << (facettype == TERM_FACET ? new TermFacet(name, field) : new QueryFacet(name, field))
+        facets << (facetgroup!=null ? new QueryFacet(facetgroup, name, field) : new TermFacet(name, field))
         return this
     }
 }
@@ -150,6 +150,6 @@ class TermFacet {
 }
 
 class QueryFacet {
-    String name, query
-    QueryFacet(n, q) { this.name = n; this.query = q; }
+    String name, label, query
+    QueryFacet(n, l, q) { this.label = l; this.name = n; this.query = q; }
 }
