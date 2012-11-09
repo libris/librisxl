@@ -46,8 +46,6 @@ class BatchImport {
     private int NUMBER_OF_IMPORTERS = 20
     def pool
 
-    List docList = Collections.synchronizedList(new LinkedList())
-
     public BatchImport() {}
 
 

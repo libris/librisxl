@@ -221,7 +221,9 @@ abstract class ElasticSearch extends BasicPlugin {
                     termcounts[entry.term] = entry.count
                 }
             } catch (MissingMethodException mme) {
-                termcounts[f.name] = f.count
+                if (f.count) {
+                    termcounts[f.name] = f.count
+                }
             }
             facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
         }
@@ -287,7 +289,7 @@ abstract class ElasticSearch extends BasicPlugin {
                     results.addHit(createDocumentFromHit(it))
                 }
             }
-            if (q.facets) { 
+            if (q.facets) {
                 results.facets = convertFacets(response.facets.facets())
             }
         }
