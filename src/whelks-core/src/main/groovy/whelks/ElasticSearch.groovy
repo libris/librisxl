@@ -222,10 +222,12 @@ abstract class ElasticSearch extends BasicPlugin {
                 }
                 facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
             } catch (MissingMethodException mme) {
+                def group = query.facets.find {it.name == f.name}.group
+                termcounts = facets.get(group, [:])
                 if (f.count) {
                     termcounts[f.name] = f.count
                 }
-                facets.put(query.facets.find { it.name == f.name }.group, termcounts.sort { a, b -> b.value <=> a.value })
+                facets.put(group, termcounts.sort { a, b -> b.value <=> a.value })
             }
         }
         return facets
