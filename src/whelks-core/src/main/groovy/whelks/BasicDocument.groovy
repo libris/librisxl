@@ -10,7 +10,8 @@ import java.nio.ByteBuffer
 
 import org.codehaus.jackson.*
 import org.codehaus.jackson.annotate.JsonIgnore
-import org.codehaus.jackson.map.ObjectMapper
+import org.codehaus.jackson.map.*
+import org.codehaus.jackson.map.ser.CustomSerializerFactory
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
@@ -333,8 +334,21 @@ class HighlightedDocument extends BasicDocument {
     @Override
     String getDataAsString() {
         ObjectMapper mapper = new ObjectMapper()
+        CustomSerializerFactory sf = new CustomSerializerFactory();
+        mapper.setSerializerFactory(sf);
+
+        sf.addGenericMapping(org.elasticsearch.common.text.StringAndBytesText.class, new JsonSerializer<org.elasticsearch.common.text.StringAndBytesText>() {
+            @Override
+            public void serialize(org.elasticsearch.common.text.StringAndBytesText value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+                println value
+                jgen.writeObject(value.string())
+            }
+        });
+        println "data: " + super.getDataAsString()
+        println "matches: " + matches
         def json = mapper.readValue(super.getDataAsString(), Map)
         json.highlight = matches
+        println "json: " + json
         return mapper.writeValueAsString(json)
     }
 }
