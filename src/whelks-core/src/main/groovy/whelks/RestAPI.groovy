@@ -181,6 +181,15 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             if (q) {
                 q.addFacet("målspråk", "fields.041.subfields.a")
                 q.addFacet("originalspråk", "fields.041.subfields.h")
+                q.addFacet("medietyp", "leader.subfields.typeOfRecord")
+                q.addFacet("bibliografisk nivå", "leader.subfields.bibLevel")
+                q.addFacet("bärartyp", "fields.007.subfields.carrierType")
+                q.addFacet("utgivningstid", "fields.008.subfields.yearTime1")
+                q.addFacet("ebok", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r", "speciale")
+                q.addFacet("ljudbok", "leader.subfields.typeOfRecord:i leader.subfields.bibLevel:m fields.007.subfields.carrierType:s", "speciale")
+                q.addFacet("etidskrift", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r", "speciale")
+                q.addFacet("bok", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m !fields.007.subfields.carrierType:c", "speciale")
+                q.addFacet("tidskrift", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s !fields.007.subfields.carrierType:c", "speciale")
                 def results = this.whelk.query(q)
                 def jsonResult = 
                     (callback ? callback + "(" : "") +

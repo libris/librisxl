@@ -36,10 +36,13 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
         this.marcmap = mapper.readValue(is, Map)
     }
 
-    def expandField(ctrlfield, columns) {
+    def expandField(fieldkey, ctrlfield, columns) {
         def l = [:]
         def propref
         int co = 0
+        if (fieldkey == "006" || fieldkey == "007") {
+            l['carrierType'] = ctrlfield[0]
+        }
         for (def column : columns) {
             if (!column.propRef) {
                 throw new WhelkRuntimeException("Propref is null for $ctrlfield and $columns")
@@ -91,7 +94,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
             def leader = json.leader 
             def pfx = doc.identifier.toString().split("/")[1]
 
-            def l = expandField(leader, marcmap.get(pfx)."000".fixmaps[0].columns)
+            def l = expandField("000", leader, marcmap.get(pfx)."000".fixmaps[0].columns)
 
             json.leader = ["subfields": l.collect {key, value -> [(key):value]}]
 
@@ -119,12 +122,12 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
                                 if (fkey == key) {
                                     try {
                                         value.fixmaps.each { fm ->
-                                            if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(matchKey)) || (fm.matchRecTypeBibLevel &&  fm.matchRecTypeBibLevel.contains(mrtbl))) {
+                                            if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(matchKey)) || (fm.matchRecTypeBibLevel && fm.matchRecTypeBibLevel.contains(mrtbl))) {
                                                 if (fkey == "008" && fvalue.length() == 39) {
                                                     log.warn("Document ${doc.identifier} has wrong length in 008")
                                                         fvalue = fvalue[0..19] + "|" + fvalue[20..-1]
                                                 }
-                                                json.fields[pos] = [(fkey):["subfields": expandField(fvalue, fm.columns).collect {k, v -> [(k):v] } ]]
+                                                json.fields[pos] = [(fkey):["subfields": expandField(fkey, fvalue, fm.columns).collect {k, v -> [(k):v] } ]]
                                             }
                                         }
                                     } catch (groovy.lang.MissingPropertyException mpe) { 

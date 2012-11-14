@@ -121,9 +121,12 @@ abstract class ElasticSearch extends BasicPlugin {
             try {
                 response = requestBuilder.execute().actionGet()
             } catch (NoNodeAvailableException n) {
-                log.debug("Retrying server connection ...")
+                log.trace("Retrying server connection ...")
                 if (failcount++ > WARN_AFTER_TRIES) {
                     log.warn("Failed to connect to elasticsearch after $failcount attempts.")
+                }
+                if (failcount % 100 == 0) {
+                    log.info("Server is not responsive. Still trying ...")
                 }
                 Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
             }
@@ -153,7 +156,7 @@ abstract class ElasticSearch extends BasicPlugin {
             if (documents) {
                 def breq = client.prepareBulk()
 
-                log.debug("Bulk request to index " + documents?.size() + " documents.")
+                log.trace("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
                     if (addType == indexType) {
@@ -212,14 +215,23 @@ abstract class ElasticSearch extends BasicPlugin {
         return map
     }
 
-    def convertFacets(eFacets) {
+    def convertFacets(eFacets, query) {
         def facets = new HashMap<String, Map<String, Integer>>()
         for (def f : eFacets) {
             def termcounts = [:]
-            for (def entry : f.entries()) {
-                termcounts[entry.term] = entry.count
+            try {
+                for (def entry : f.entries()) {
+                    termcounts[entry.term] = entry.count
+                }
+                facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
+            } catch (MissingMethodException mme) {
+                def group = query.facets.find {it.name == f.name}.group
+                termcounts = facets.get(group, [:])
+                if (f.count) {
+                    termcounts[f.name] = f.count
+                }
+                facets.put(group, termcounts.sort { a, b -> b.value <=> a.value })
             }
-            facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
         }
         return facets
     }
@@ -230,22 +242,27 @@ abstract class ElasticSearch extends BasicPlugin {
         def srb = client.prepareSearch(index).setTypes(indexType)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
-        def query = queryString(q.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
-        if (q.fields) {
-            q.fields.each {
-                if (q.boost && q.boost[it]) {
-                    query = query.field(it, q.boost[it])
-                } else {
-                    query = query.field(it)
+        if (q.query == "*") {
+            log.debug("Setting matchAll")
+            srb.setQuery(matchAllQuery())
+        } else {
+            def query = queryString(q.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
+            if (q.fields) {
+                q.fields.each {
+                    if (q.boost && q.boost[it]) {
+                        query = query.field(it, q.boost[it])
+                    } else {
+                        query = query.field(it)
+                    }
+                }
+            } else if (q.boost) {
+                query = query.field("_all")
+                q.boost.each { f, b ->
+                    query = query.field(f, b)
                 }
             }
-        } else if (q.boost) {
-            query = query.field("_all")
-            q.boost.each { f, b ->
-                query = query.field(f, b)
-            }
+            srb.setQuery(query)
         }
-        srb.setQuery(query)
         if (q.sorting) {
             q.sorting.each {
                 srb = srb.addSort(it.key, (it.value && it.value.equalsIgnoreCase('desc') ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
@@ -259,7 +276,12 @@ abstract class ElasticSearch extends BasicPlugin {
         }
         if (q.facets) {
             q.facets.each {
-                srb = srb.addFacet(FacetBuilders.termsFacet(it.key).field(it.value))
+                if (it instanceof TermFacet) {
+                    srb = srb.addFacet(FacetBuilders.termsFacet(it.field).field(it.field))
+                } else if (it instanceof QueryFacet) {
+                    def qf = new QueryStringQueryBuilder(it.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
+                    srb = srb.addFacet(FacetBuilders.queryFacet(it.name).query(qf))
+                }
             }
         }
         log.trace("SearchRequestBuilder: " + srb)
@@ -278,8 +300,8 @@ abstract class ElasticSearch extends BasicPlugin {
                     results.addHit(createDocumentFromHit(it))
                 }
             }
-            if (q.facets) { 
-                results.facets = convertFacets(response.facets.facets())
+            if (q.facets) {
+                results.facets = convertFacets(response.facets.facets(), q)
             }
         }
         return results

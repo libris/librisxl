@@ -178,7 +178,6 @@ class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter
         JSONObject _converter = new JSONObject()
         _converter.put("_classname", this.getClass().getName())
         _converter.put("scriptName", this.scriptName)
-                
         return _converter
     }
 

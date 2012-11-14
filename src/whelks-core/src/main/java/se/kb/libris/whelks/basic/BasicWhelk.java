@@ -18,6 +18,7 @@ import se.kb.libris.whelks.plugin.*;
 public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
+    private final Set<URI> globalIdentifiers = new HashSet<URI>();
     private String prefix;
 
     public BasicWhelk(String pfx) {
@@ -44,15 +45,18 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                     doc.setIdentifier(mintIdentifier(doc));
                 }
                 for (Trigger t : getTriggers()) { if (t.isEnabled()) { t.beforeStore(doc); } }
+                if (!globalIdentifiers.add(doc.getIdentifier())) {
+                    throw new WhelkRuntimeException("BAAAAAAAAAJS!!!!!");
+                }
+            }
+
+            for (FormatConverter fc : getFormatConverters()) {
+                docs = fc.convert((List)docs);
             }
 
             for (Component c : getComponents()) {
                 if (c instanceof Storage) {
-                    List<Document> sdocs = new ArrayList<Document>((Collection)docs);
-                    for (FormatConverter fc : getFormatConverters()) {
-                        sdocs = fc.convert(sdocs);
-                    }
-                    ((Storage)c).store(sdocs);
+                    ((Storage)c).store(docs);
                 }
 
                 if (c instanceof Index) {

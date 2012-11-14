@@ -37,8 +37,11 @@ class BatchImport {
     private long starttime = 0;
     private int NUMBER_OF_IMPORTERS = 20
     def pool
+<<<<<<< HEAD
     
     List docList = Collections.synchronizedList(new LinkedList())
+=======
+>>>>>>> 68d95a5a652c48b0d7e54bf1434ea170a9a916fe
 
     public BatchImport() {}
 
@@ -99,7 +102,12 @@ class Harvester implements Runnable {
     URL url
     Whelk whelk
     String resource
+<<<<<<< HEAD
     private final AtomicInteger importedCount = new AtomicInteger()
+=======
+    private int imported = 0;
+    private int failed = 0;
+>>>>>>> 68d95a5a652c48b0d7e54bf1434ea170a9a916fe
     int year
     def queue
     def executor
@@ -107,7 +115,7 @@ class Harvester implements Runnable {
     static final int MAX_POOL_SIZE = 20
     static final long KEEP_ALIVE_TIME = 60
 
-    Harvester(Whelk w, String r, final URL u, int y) {
+    Harvester(Whelk w, String r, URL u, int y) {
         this.url = new URL(u.toString())
         this.resource = r
         this.whelk = w
@@ -153,33 +161,40 @@ class Harvester implements Runnable {
                 log.debug("Received resumptionToken $resumptionToken")
             }
         } finally {
+<<<<<<< HEAD
             log.info("Harvester for ${this.year} has ended its run.")
             this.executor.shutdown()
             if (!executor.awaitTermination(KEEP_ALIVE_TIME, TimeUnit.SECONDS)) {
                 executor.shutdownNow();
             }
 
+=======
+            log.info("Harvester for ${this.year} has ended its run. $imported documents imported. $failed failed.")
+            this.storepool.shutdown()
+>>>>>>> 68d95a5a652c48b0d7e54bf1434ea170a9a916fe
         }
     }
 
     String harvest(URL url) {
-        log.debug("Call for harvest on $url")
         String mdrecord = null
         String xmlString
         def OAIPMH
         try {
-            //log.debug("URL.text: ${url.text}")
+            log.trace("URL.text: ${url.text}")
             xmlString = normalizeString(url.text)
             OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
-            //log.debug("OAIPMH: $OAIPMH")
             def documents = []
             OAIPMH.ListRecords.record.each {
                 mdrecord = createString(it.metadata.record)
-                MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
-                String id = record.getControlfields("001").get(0).getData();
-                String jsonRec = MarcJSONConverter.toJSONString(record);
-                documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
-                //log.debug("Imported " + importedCount.incrementAndGet())
+                if (mdrecord) {
+                    MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
+                    String id = record.getControlfields("001").get(0).getData();
+                    String jsonRec = MarcJSONConverter.toJSONString(record);
+                    documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                    //log.debug("Imported " + importedCount.incrementAndGet())
+                } else {
+                    failed++
+                }
             }
             if (documents.size() > 0) {
                 //storepool.submit(new Runnable() {

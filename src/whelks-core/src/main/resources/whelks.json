@@ -11,6 +11,11 @@
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
                 "_plugins": [ "index", "riakstorage", "search", "document" ]
             }
+        },
+        {
+            "suggest":{
+                "_plugins": [ "index", "search", "document", "autocomplete", "suggestformatconverter" ]
+            }
         }
     ], 
         "_plugins": [
