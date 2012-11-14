@@ -121,9 +121,12 @@ abstract class ElasticSearch extends BasicPlugin {
             try {
                 response = requestBuilder.execute().actionGet()
             } catch (NoNodeAvailableException n) {
-                log.debug("Retrying server connection ...")
+                log.trace("Retrying server connection ...")
                 if (failcount++ > WARN_AFTER_TRIES) {
                     log.warn("Failed to connect to elasticsearch after $failcount attempts.")
+                }
+                if (failcount % 100 == 0) {
+                    log.info("Server is not responsive. Still trying ...")
                 }
                 Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
             }
@@ -274,7 +277,7 @@ abstract class ElasticSearch extends BasicPlugin {
         if (q.facets) {
             q.facets.each {
                 if (it instanceof TermFacet) {
-                    srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field))
+                    srb = srb.addFacet(FacetBuilders.termsFacet(it.field).field(it.field))
                 } else if (it instanceof QueryFacet) {
                     def qf = new QueryStringQueryBuilder(it.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
                     srb = srb.addFacet(FacetBuilders.queryFacet(it.name).query(qf))
