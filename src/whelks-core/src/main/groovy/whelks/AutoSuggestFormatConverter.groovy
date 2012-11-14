@@ -9,7 +9,7 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter, IndexFormatConverter, WhelkAware {
+class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter, WhelkAware {
 
     Whelk whelk
     Whelk bibwhelk
@@ -54,7 +54,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                         docs = []
                     }
                     if (r) {
-                        docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json").withLink(link, )
+                        docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json").withLink(link, "basedOn")
                     } else {
                         log.warn "Conversion got no content body for $identifier."
                     }
@@ -66,7 +66,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                     */
                 }
             }
-        } 
+        }
         log.debug("Convert resulted in " + docs?.size() + " documents.")
         return docs
     }
@@ -78,6 +78,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
         def id001
 
         def top_title
+
 
         for (def f in a_json["fields"]) {
             f.each { k, v ->
@@ -110,7 +111,6 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                             sug_json["identifier"] = new String("/${w_name}/${suggest_source}/${name}")
                         }
                         alla_json << sug_json
-
                     }
                 } else if (k in get_fields(rtype)) {
                     def f_list = (resten_json[k] ? resten_json[k] : [])
@@ -139,10 +139,6 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                 }
             }
         }
-
-        //print "sug_json", sug_json
-        //print "resten_json", resten_json
-        //print "alla_json", alla_json
 
         resten_json["records"] = 1
 
@@ -178,7 +174,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
             //ny_alla.append(dict(my_json.items() + resten_json.items()))
         }
 
-        //print "alla", ny_alla
+        println "record: $ny_alla"
         return ny_alla
 
     }
@@ -192,29 +188,34 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
 
     def get_records(f_100, sug_json) {
         if (bibwhelk) {
-            query_100 = []
-            query_700 = []
+            def query_100 = []
+            def query_700 = []
             f_100.each { k, v ->
                 if (["a","b","c","d"].contains(k)) {
                     query_100 << "fields.100.subfields.${k}:\"${v}\""
                     query_700 << "fields.700.subfields.${k}:\"${v}\""
                 }
             }
-            q_100 = query.join(" AND ")
-            q_700 = query_700.join(" AND ")
-            q_swe = "fields.008:swe"
+            def q_100 = query_100.join(" AND ")
+            def q_700 = query_700.join(" AND ")
+            def q_swe = "fields.008:swe"
 
-            q_all = "(($q_100) OR ($q_700)) AND $q_swe"
+            def q_all = "(($q_100) OR ($q_700)) AND $q_swe"
 
-            response = bibwhelk.query(q_all) 
+            def response = bibwhelk.query(q_all) 
             //print "Count: ", response.getNumberOfHits()
             sug_json["records"] = response.getNumberOfHits()
 
             def top_3 = [:]
-            for (document in response.hits[0..2]) {
+            int rh = 0
+            def jdoc
+            for (document in response.hits) {
                 jdoc = mapper.readValue(document.getDataAsString(), Map)
                 def (f_001, title) = top_title_tuple(jdoc["fields"])
                 top_3[f_001] = title
+                if (rh++ > 2) {
+                    break
+                }
             }
 
             def top_missing = 5 - top_3.size()
@@ -223,14 +224,18 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
             response = bibwhelk.query(q_all) 
             //print "Count: ", response.getNumberOfHits()
             sug_json["records"] = response.getNumberOfHits()
-            for (document in response.hits[0..(top_missing)]) {
-                jdoc = json.loads(document.getDataAsString())
+            rh = 0
+            for (document in response.hits) {
+                jdoc = mapper.readValue(document.getDataAsString(), Map)
                 def (f_001, title) = top_title_tuple(jdoc["fields"])
                 top_3[f_001] = title
+                if (rh++ < top_missing) {
+                    break
+                }
             }
 
             //print "top_3", top_3
-            only_top_3 = [:]
+            def only_top_3 = [:]
             top_3[0..2].each { k, v ->
                 only_top_3[k] = v
             }
@@ -240,10 +245,10 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
     }
 
     def top_title_tuple(fields) {
-        f_001 = ""
-        f_245_a = ""
-        f_245_b = ""
-        f_245_n = ""
+        def f_001 = ""
+        def f_245_a = ""
+        def f_245_b = ""
+        def f_245_n = ""
         for (field in fields) {
             field.each { k,v ->
                 if (k == "001") {
@@ -267,6 +272,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
 
             }
         }
+        def title = ""
         if (f_001 && f_245_a) {
             //title = f_245_a.trim("[:;/.]") + f_245_b.trim("[:;/]") + " " + f_245_n.trim("[:;/ ]")
             title = f_245_a.replaceAll(/^[\[:;\/\.\]]+|[\[:;\/\.\]]+$/, "") + f_245_b.replaceAll(/^[\[:;\/\]]+|[\[:;\/\]]+$/, "") + " " + f_245_n.replaceAll(/^[\[:;\/\s\]]+|[\[:;\/\s\]]+$/, "")
@@ -304,7 +310,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
     }
 
     def record_type(leader) {
-        if (leader[6] == "z") {
+        if (leader && leader[6] == "z") {
             return "auth"
         }
         return "bib"
