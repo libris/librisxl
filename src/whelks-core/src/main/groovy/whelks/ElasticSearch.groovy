@@ -277,7 +277,7 @@ abstract class ElasticSearch extends BasicPlugin {
         if (q.facets) {
             q.facets.each {
                 if (it instanceof TermFacet) {
-                    srb = srb.addFacet(FacetBuilders.termsFacet(it.field).field(it.field))
+                    srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field))
                 } else if (it instanceof QueryFacet) {
                     def qf = new QueryStringQueryBuilder(it.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
                     srb = srb.addFacet(FacetBuilders.queryFacet(it.name).query(qf))

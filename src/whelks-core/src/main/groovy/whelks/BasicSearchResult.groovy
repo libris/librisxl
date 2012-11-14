@@ -16,7 +16,7 @@ class BasicSearchResult implements SearchResult {
     BasicSearchResult(long nrHits) {
         this.numberOfHits = nrHits
         this.hits = new ArrayList<Document>()
-        this.mapper = new ObjectMapper()
+        this.mapper = new ElasticJsonMapper()
     }
 
     void setNumberOfHits(int nrHits) {

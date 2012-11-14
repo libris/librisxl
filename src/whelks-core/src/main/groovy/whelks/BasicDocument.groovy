@@ -8,10 +8,7 @@ import java.net.URI
 import java.util.*
 import java.nio.ByteBuffer
 
-import org.codehaus.jackson.*
 import org.codehaus.jackson.annotate.JsonIgnore
-import org.codehaus.jackson.map.*
-import org.codehaus.jackson.map.ser.CustomSerializerFactory
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
@@ -28,7 +25,7 @@ public class BasicDocument implements Document {
     Set<Description> descriptions = new TreeSet<Description>()
     long timestamp = 0
 
-    private ObjectMapper mapper = new ObjectMapper()
+    def mapper = new ElasticJsonMapper()
 
     public BasicDocument() {
         this.timestamp = new Long(new Date().getTime())
@@ -333,22 +330,9 @@ class HighlightedDocument extends BasicDocument {
 
     @Override
     String getDataAsString() {
-        ObjectMapper mapper = new ObjectMapper()
-        CustomSerializerFactory sf = new CustomSerializerFactory();
-        mapper.setSerializerFactory(sf);
-
-        sf.addGenericMapping(org.elasticsearch.common.text.StringAndBytesText.class, new JsonSerializer<org.elasticsearch.common.text.StringAndBytesText>() {
-            @Override
-            public void serialize(org.elasticsearch.common.text.StringAndBytesText value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
-                println value
-                jgen.writeObject(value.string())
-            }
-        });
-        println "data: " + super.getDataAsString()
-        println "matches: " + matches
+        def mapper = new ElasticJsonMapper()
         def json = mapper.readValue(super.getDataAsString(), Map)
         json.highlight = matches
-        println "json: " + json
         return mapper.writeValueAsString(json)
     }
 }

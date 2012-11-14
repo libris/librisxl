@@ -9,7 +9,6 @@ import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.persistance.*
 
 import org.json.simple.JSONObject
-import org.codehaus.jackson.map.ObjectMapper
 
 /*
 @Log

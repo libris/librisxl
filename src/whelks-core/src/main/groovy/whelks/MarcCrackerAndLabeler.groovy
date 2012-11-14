@@ -6,14 +6,13 @@ import se.kb.libris.whelks.exception.*
 
 import groovy.util.logging.Slf4j as Log
 
-import org.codehaus.jackson.map.ObjectMapper
 
 @Log
 class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements IndexFormatConverter {
 
     String id = this.class.name
     boolean enabled = true
-    ObjectMapper mapper
+    def mapper
     def marcmap
     int order = 0
 
@@ -32,7 +31,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
 
     MarcCrackerAndLabelerIndexFormatConverter() {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
-        mapper = new ObjectMapper()
+        mapper = new ElasticJsonMapper()
         this.marcmap = mapper.readValue(is, Map)
     }
 
