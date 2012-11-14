@@ -135,6 +135,14 @@ class Query {
         return this
     }
 
+    Query addFacet(String field) {
+        if (!facets) {
+            facets = []
+        }
+        facets << new TermFacet(field, field)
+        return this
+    }
+
     Query addFacet(String name, String field, String facetgroup=null) {
         if (!facets) {
             facets = []
