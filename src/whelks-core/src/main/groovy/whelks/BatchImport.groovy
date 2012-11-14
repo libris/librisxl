@@ -37,11 +37,6 @@ class BatchImport {
     private long starttime = 0;
     private int NUMBER_OF_IMPORTERS = 20
     def pool
-<<<<<<< HEAD
-    
-    List docList = Collections.synchronizedList(new LinkedList())
-=======
->>>>>>> 68d95a5a652c48b0d7e54bf1434ea170a9a916fe
 
     public BatchImport() {}
 
@@ -102,12 +97,8 @@ class Harvester implements Runnable {
     URL url
     Whelk whelk
     String resource
-<<<<<<< HEAD
     private final AtomicInteger importedCount = new AtomicInteger()
-=======
-    private int imported = 0;
     private int failed = 0;
->>>>>>> 68d95a5a652c48b0d7e54bf1434ea170a9a916fe
     int year
     def queue
     def executor
@@ -161,17 +152,11 @@ class Harvester implements Runnable {
                 log.debug("Received resumptionToken $resumptionToken")
             }
         } finally {
-<<<<<<< HEAD
             log.info("Harvester for ${this.year} has ended its run.")
             this.executor.shutdown()
             if (!executor.awaitTermination(KEEP_ALIVE_TIME, TimeUnit.SECONDS)) {
                 executor.shutdownNow();
             }
-
-=======
-            log.info("Harvester for ${this.year} has ended its run. $imported documents imported. $failed failed.")
-            this.storepool.shutdown()
->>>>>>> 68d95a5a652c48b0d7e54bf1434ea170a9a916fe
         }
     }
 
