@@ -6,9 +6,8 @@ import groovy.util.slurpersupport.GPathResult
 
 import groovy.transform.Synchronized
 
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.*
+import java.util.concurrent.atomic.*
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.text.*
@@ -39,17 +38,7 @@ class BatchImport {
         this.resource = resource;
     }
 
-    @Synchronized
-    public int getImportedDocs() {
-        return this.importedDocs
-    }
-    @Synchronized
-    public void setImportedDocs(int d) {
-        this.importedDocs = d
-    }
-
-
-     URL getBaseUrl(Date from, Date until) {
+    URL getBaseUrl(Date from, Date until) {
         //return "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml&from=2012-05-23T15:21:27Z";
         String url = "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml";
         if (from != null) {
@@ -66,7 +55,6 @@ class BatchImport {
 
     public void setResource(String r) { this.resource = r; }
 
-    // END possible authentication alternative
     public int doImport(ImportWhelk whelk, Date from) {
         try {
             pool = Executors.newCachedThreadPool()
@@ -86,8 +74,8 @@ class BatchImport {
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20120701"), Date.parse("yyyyMMdd", "20120930")), "2012Q3"))
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20121001"), Date.parse("yyyyMMdd", "20121231")), "2012Q4"))
             }
-            log.info("Collecting results ...")
             def results = futures.collect{it.get()}
+            log.info("Collecting results ...")
             log.info("Results: $results, after " + (System.currentTimeMillis() - starttime)/1000 + " seconds.")
         } finally {
             pool.shutdown()
@@ -106,18 +94,25 @@ class Harvester implements Runnable {
     URL url
     Whelk whelk
     String resource
-    private int imported = 0;
+    private final AtomicInteger importedCount = new AtomicInteger()
     private int failed = 0;
     private int xmlfailed = 0;
     String year
     def storepool
+    def queue
+    def executor
+    static final int CORE_POOL_SIZE = 10
+    static final int MAX_POOL_SIZE = 20
+    static final long KEEP_ALIVE_TIME = 60
 
     Harvester(Whelk w, String r, URL u, String y) {
         this.url = new URL(u.toString())
         this.resource = r
         this.whelk = w
         this.year = y
-        this.storepool = Executors.newCachedThreadPool()
+        //queue = new LinkedBlockingQueue<Runnable>()
+        //executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.SECONDS, queue, new ThreadPoolExecutor.CallerRunsPolicy())
+        executor = newScalingThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME)
     }
 
     private void getAuthentication() {
@@ -126,7 +121,7 @@ class Harvester implements Runnable {
             properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"));
             final String username = properties.getProperty("username");
             final String password = properties.getProperty("password");
-                Authenticator.setDefault(new Authenticator() {
+            Authenticator.setDefault(new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(username, password.toCharArray());
                     }
@@ -135,7 +130,15 @@ class Harvester implements Runnable {
             Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
+    public ExecutorService newScalingThreadPoolExecutor(int min, int max, long keepAliveTime) {
+        ScalingQueue queue = new ScalingQueue()
+        ThreadPoolExecutor executor = new ScalingThreadPoolExecutor(min, max, keepAliveTime, TimeUnit.SECONDS, queue)
+        executor.setRejectedExecutionHandler(new ForceQueuePolicy())
+        queue.setThreadPoolExecutor(executor)
+        return executor
+    }
+
     public void run() {
         try {
             getAuthentication();
@@ -153,7 +156,10 @@ class Harvester implements Runnable {
             }
         } finally {
             log.info("Harvester for ${this.year} has ended its run. $imported documents imported. $failed failed. $xmlfailed failed XML documents.")
-            this.storepool.shutdown()
+            this.executor.shutdown()
+            if (!executor.awaitTermination(KEEP_ALIVE_TIME, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
         }
     }
 
@@ -177,20 +183,24 @@ class Harvester implements Runnable {
                     String id = record.getControlfields("001").get(0).getData();
                     String jsonRec = MarcJSONConverter.toJSONString(record);
                     documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                    //log.debug("Imported " + importedCount.incrementAndGet())
                 } else {
                     failed++
                 }
             }
-            /*
-            log.info("rt type: (" + OAIPMH.ListRecords.resumptionToken.class + ")")
-            log.info("object:  (" + OAIPMH.ListRecords.resumptionToken + ")")
-            if (OAIPMH.ListRecords.resumptionToken == "") {
-                log.error("NO RESUMPTION TOKEN FOR $url!")
-                log.error("Raw: " + url.text)
-                log.error("Normalized: " + xmlString)
-                throw new se.kb.libris.whelks.exception.WhelkRuntimeException("Bad")
-            }
-            */
+            if (documents.size() > 0) {
+                //storepool.submit(new Runnable() {
+                executor.execute(new Runnable() {
+                        public void run() {
+                            log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
+                            //log.debug("Pushing ${document.identifier} to $whelk")
+                            //whelk.store(document)
+                            whelk.store(documents)
+                            log.trace("Thread has now imported $imported documents.")
+                        }
+                    })
+            } else log.debug("Harvest on $url resulted in no documents. xmlstring: ${xmlString}")
+
             if (!OAIPMH.ListRecords.resumptionToken) {
                 throw new WhelkRuntimeException("No res-token found in $xmlString : " + OAIPMH.ListRecords.resumptionToken)
             }
@@ -198,14 +208,11 @@ class Harvester implements Runnable {
         } catch (java.io.IOException ioe) {
             log.warn("Failed to parse record \"$mdrecord\": ${ioe.message}.")
             return OAIPMH.ListRecords.resumptionToken
-        /*
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             //log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
             log.debug(e.printStackTrace())
             xmlfailed++
             return findResumptionToken(xmlString)
-            */
         } finally {
             if (documents.size() > 0) {
                 imported = imported + documents.size()
@@ -250,5 +257,60 @@ class Harvester implements Runnable {
         return new StreamingMarkupBuilder().bind{
             out << root
         }
+    }
+}
+
+@Log
+class ScalingQueue extends LinkedBlockingQueue {
+    private ThreadPoolExecutor executor
+
+    public ScalingQueue() { super() }
+    public ScalingQueue(int capacity) { super(capacity)}
+
+    public setThreadPoolExecutor(ThreadPoolExecutor executor) {
+        this.executor = executor
+    }
+
+    @Override
+    public boolean offer(Object o) {
+        log.debug("Number of executor active threads " + executor.getActiveCount() + " and queue size " + super.size())
+        int allWorkingThreads = executor.getActiveCount() + super.size()
+        log.debug("Executor poolsize " + executor.getPoolSize())
+        return allWorkingThreads < executor.getPoolSize() && super.offer(o)
+    }
+}
+
+@Log
+class ForceQueuePolicy implements RejectedExecutionHandler {
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        try {
+            executor.getQueue().put(r)
+        } catch(InterruptedException ie) {
+            throw new Exception(ie)
+        }
+    }
+}
+
+@Log
+class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
+    private final AtomicInteger activeCount = new AtomicInteger()
+
+    public ScalingThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, LinkedBlockingQueue queue) {
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, queue)
+    }
+
+    @Override
+    public int getActiveCount() {
+        return activeCount.get()
+    }
+
+    @Override
+    protected void beforeExecute(Thread t, Runnable r) {
+        activeCount.incrementAndGet()
+    }
+
+    @Override
+    protected void afterExecute(Runnable r, Throwable t) {
+        activeCount.decrementAndGet()
     }
 }

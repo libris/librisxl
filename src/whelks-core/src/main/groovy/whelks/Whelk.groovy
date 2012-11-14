@@ -141,14 +141,15 @@ class ImportWhelk extends BasicWhelk {
         if (args) {
             def prefix = args[0]
             def resource = (args.length > 1 ? args[1] : args[0])
-            def date = (args.length > 2)? Tool.parseDate(args[2]) : null
-            def mode = (args.length > 3)? args[3]: "default"
             def whelk = new ImportWhelk(prefix)
-            println "Using arguments: prefix=$prefix, resource=$resource, since=$date, mode=$mode"
+            def mode = (args.length > 2 ? args[2] : "default")
+            def date = (args.length > 3 ? Tool.parseDate(args[3]) : null)
+            println "Using arguments: prefix=$prefix, resource=$resource, mode=$mode, since=$date"
             if (mode.equals("riak")) {
                 whelk.addPlugin(new RiakStorage(prefix))
             } else {
                 whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+                //whelk.addPlugin(new RiakStorage(prefix))
                 //whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
                 whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             }
