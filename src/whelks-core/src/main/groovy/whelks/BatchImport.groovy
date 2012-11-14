@@ -6,36 +6,21 @@ import groovy.util.slurpersupport.GPathResult
 
 import groovy.transform.Synchronized
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.logging.*;
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
-import java.text.*;
+import java.util.concurrent.ThreadPoolExecutor
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.*;
+import java.text.*
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
-import se.kb.libris.util.marc.MarcRecord;
-import se.kb.libris.util.marc.Controlfield;
-import se.kb.libris.util.marc.Datafield;
-import se.kb.libris.util.marc.Subfield;
-import se.kb.libris.util.marc.io.MarcXmlRecordReader;
-import se.kb.libris.util.marc.io.Iso2709Serializer;
+import se.kb.libris.util.marc.*
+import se.kb.libris.util.marc.io.*
 import se.kb.libris.conch.converter.MarcJSONConverter;
 import se.kb.libris.whelks.*;
 import se.kb.libris.whelks.basic.*;
+import se.kb.libris.whelks.exception.*;
 import se.kb.libris.whelks.plugin.*;
-import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.util.concurrent.ThreadPoolExecutor
 
 @Log
 class BatchImport {
@@ -45,6 +30,7 @@ class BatchImport {
     private long starttime = 0;
     private int NUMBER_OF_IMPORTERS = 20
     def pool
+    int importedDocs = 0
 
     public BatchImport() {}
 
@@ -52,6 +38,16 @@ class BatchImport {
     public BatchImport(String resource) {
         this.resource = resource;
     }
+
+    @Synchronized
+    public int getImportedDocs() {
+        return this.importedDocs
+    }
+    @Synchronized
+    public void setImportedDocs(int d) {
+        this.importedDocs = d
+    }
+
 
      URL getBaseUrl(Date from, Date until) {
         //return "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml&from=2012-05-23T15:21:27Z";
@@ -78,13 +74,17 @@ class BatchImport {
             this.starttime = System.currentTimeMillis();
             List<Future> futures = []
             if (from) {
-                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), 0))
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), 0, this))
             } else {
-                for (int i = 1970; i < 2013; i++) {
+                for (int i = 1970; i < 2012; i++) {
                     final Date fromDate = getYearDate(i)
                     final Date untilDate = getYearDate(i+1)
-                    futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(fromDate, untilDate), i))
+                    futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(fromDate, untilDate), ""+i))
                 }
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20120101"), Date.parse("yyyyMMdd", "20120331")), "2012Q1"))
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20120401"), Date.parse("yyyyMMdd", "20120630")), "2012Q2"))
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20120701"), Date.parse("yyyyMMdd", "20120930")), "2012Q3"))
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20121001"), Date.parse("yyyyMMdd", "20121231")), "2012Q4"))
             }
             log.info("Collecting results ...")
             def results = futures.collect{it.get()}
@@ -108,10 +108,11 @@ class Harvester implements Runnable {
     String resource
     private int imported = 0;
     private int failed = 0;
-    int year
+    private int xmlfailed = 0;
+    String year
     def storepool
 
-    Harvester(Whelk w, String r, URL u, int y) {
+    Harvester(Whelk w, String r, URL u, String y) {
         this.url = new URL(u.toString())
         this.resource = r
         this.whelk = w
@@ -140,13 +141,18 @@ class Harvester implements Runnable {
             getAuthentication();
             log.info("Starting harvester with url: $url")
             String resumptionToken = harvest(this.url);
-            while (resumptionToken) {
+            while (resumptionToken!=null) {
                 URL rurl = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
                 resumptionToken = harvest(rurl)
-                log.debug("Received resumptionToken $resumptionToken")
+                /*
+                if (!resumptionToken) {
+                    throw new WhelkRuntimeException("Bad resumptiontoken for ${rurl.text}: " +resumptionToken)
+                }
+                */
+                log.trace("Received resumptionToken $resumptionToken")
             }
         } finally {
-            log.info("Harvester for ${this.year} has ended its run. $imported documents imported. $failed failed.")
+            log.info("Harvester for ${this.year} has ended its run. $imported documents imported. $failed failed. $xmlfailed failed XML documents.")
             this.storepool.shutdown()
         }
     }
@@ -155,11 +161,15 @@ class Harvester implements Runnable {
         String mdrecord = null
         String xmlString
         def OAIPMH
+        def documents = []
         try {
             log.trace("URL.text: ${url.text}")
             xmlString = normalizeString(url.text)
             OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
-            def documents = []
+            if (OAIPMH.ListRecords.size() == 0) {
+                log.info("No records found in $xmlString. Returning null for $url")
+                return null
+            }
             OAIPMH.ListRecords.record.each {
                 mdrecord = createString(it.metadata.record)
                 if (mdrecord) {
@@ -171,11 +181,35 @@ class Harvester implements Runnable {
                     failed++
                 }
             }
-            log.debug("Number of docs " + documents.size())
+            /*
+            log.info("rt type: (" + OAIPMH.ListRecords.resumptionToken.class + ")")
+            log.info("object:  (" + OAIPMH.ListRecords.resumptionToken + ")")
+            if (OAIPMH.ListRecords.resumptionToken == "") {
+                log.error("NO RESUMPTION TOKEN FOR $url!")
+                log.error("Raw: " + url.text)
+                log.error("Normalized: " + xmlString)
+                throw new se.kb.libris.whelks.exception.WhelkRuntimeException("Bad")
+            }
+            */
+            if (!OAIPMH.ListRecords.resumptionToken) {
+                throw new WhelkRuntimeException("No res-token found in $xmlString : " + OAIPMH.ListRecords.resumptionToken)
+            }
+            return OAIPMH.ListRecords.resumptionToken
+        } catch (java.io.IOException ioe) {
+            log.warn("Failed to parse record \"$mdrecord\": ${ioe.message}.")
+            return OAIPMH.ListRecords.resumptionToken
+        /*
+        }
+        catch (Exception e) {
+            //log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
+            log.debug(e.printStackTrace())
+            xmlfailed++
+            return findResumptionToken(xmlString)
+            */
+        } finally {
             if (documents.size() > 0) {
-                log.debug("documents size > 0")
                 imported = imported + documents.size()
-                log.debug("Storing documents ... $imported sofar.")
+                log.debug("Storing "+documents.size()+" documents ... $imported sofar.")
                 whelk.store(documents)
                 /*
                 storepool.submit(new Runnable() {
@@ -189,30 +223,6 @@ class Harvester implements Runnable {
                 })
                 */
             }
-            /*
-            log.info("rt type: (" + OAIPMH.ListRecords.resumptionToken.class + ")")
-            log.info("object:  (" + OAIPMH.ListRecords.resumptionToken + ")")
-            if (OAIPMH.ListRecords.resumptionToken == "") {
-                log.error("NO RESUMPTION TOKEN FOR $url!")
-                log.error("Raw: " + url.text)
-                log.error("Normalized: " + xmlString)
-                throw new se.kb.libris.whelks.exception.WhelkRuntimeException("Bad")
-            }
-            */
-            return OAIPMH.ListRecords.resumptionToken
-        } catch (java.io.IOException ioe) {
-            log.warn("Failed to parse record \"$mdrecord\": ${ioe.message}.")
-            /*
-            log.info("XML for this error: $xmlString")
-            log.info("URL: $url")
-            log.info("ResumptionToken is ${OAIPMH.ListRecords.resumptionToken}")
-            */
-            return OAIPMH.ListRecords.resumptionToken
-        }
-        catch (Exception e) {
-            //log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
-            log.debug(e.printStackTrace())
-            return findResumptionToken(xmlString)
         }
     }
 
