@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import se.kb.libris.whelks.*;
@@ -18,7 +20,6 @@ import se.kb.libris.whelks.plugin.*;
 public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
-    private final Set<URI> globalIdentifiers = new HashSet<URI>();
     private String prefix;
 
     public BasicWhelk(String pfx) {
@@ -38,22 +39,20 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     }
 
     @Override
-        public void store(Iterable<Document> docs) {
-            // Pre storage operations
-            for (Document doc : docs) {
-                if (doc.getIdentifier() == null || !doc.getIdentifier().toString().startsWith("/"+prefix)) {
-                    doc.setIdentifier(mintIdentifier(doc));
-                }
-                for (Trigger t : getTriggers()) { if (t.isEnabled()) { t.beforeStore(doc); } }
-                if (!globalIdentifiers.add(doc.getIdentifier())) {
-                    throw new WhelkRuntimeException("BAAAAAAAAAJS!!!!!");
-                }
+    public void store(Iterable<Document> docs) {
+        // Pre storage operations
+        for (Document doc : docs) {
+            if (doc.getIdentifier() == null || !doc.getIdentifier().toString().startsWith("/"+prefix)) {
+                doc.setIdentifier(mintIdentifier(doc));
             }
+            for (Trigger t : getTriggers()) { if (t.isEnabled()) { t.beforeStore(doc); } }
+        }
 
-            for (FormatConverter fc : getFormatConverters()) {
-                docs = fc.convert((List)docs);
-            }
+        for (FormatConverter fc : getFormatConverters()) {
+            docs = fc.convert((List)docs);
+        }
 
+        if (docs != null) {
             for (Component c : getComponents()) {
                 if (c instanceof Storage) {
                     ((Storage)c).store(docs);
@@ -79,100 +78,101 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                 for (Trigger t : getTriggers()) { if (t.isEnabled()) { t.afterStore(doc); } }
             }
         }
+    }
 
     @Override
-        public Document get(URI uri) {
-            Document d = null;
+    public Document get(URI uri) {
+        Document d = null;
 
-            for (Component c: getComponents()) {
-                if (c instanceof Storage) {
-                    d = ((Storage)c).get(uri);
+        for (Component c: getComponents()) {
+            if (c instanceof Storage) {
+                d = ((Storage)c).get(uri);
 
-                    if (d != null) {
-                        return d;
-                    }
+                if (d != null) {
+                    return d;
                 }
             }
-            return d;
         }
+        return d;
+    }
 
     @Override
-        public void delete(URI uri) {
-            // before triggers
-            for (Trigger t: getTriggers())
-                t.beforeDelete(uri);
+    public void delete(URI uri) {
+        // before triggers
+        for (Trigger t: getTriggers())
+            t.beforeDelete(uri);
 
-            for (Component c: getComponents())
-                if (c instanceof Storage)
-                    ((Storage)c).delete(uri);
-                else if (c instanceof Index)
-                    ((Index)c).delete(uri);
-                else if (c instanceof QuadStore)
-                    ((QuadStore)c).delete(uri);        
+        for (Component c: getComponents())
+            if (c instanceof Storage)
+                ((Storage)c).delete(uri);
+            else if (c instanceof Index)
+                ((Index)c).delete(uri);
+            else if (c instanceof QuadStore)
+                ((QuadStore)c).delete(uri);        
 
-            // after triggers
-            for (Trigger t: getTriggers())
-                t.afterDelete(uri);
+        // after triggers
+        for (Trigger t: getTriggers())
+            t.afterDelete(uri);
 
-        }
-
-    @Override
-        public SearchResult query(String query) {
-            return query(new Query(query));
-        }
+    }
 
     @Override
-        public SearchResult query(Query query) {
-            for (Component c: getComponents())
-                if (c instanceof Index)
-                    return ((Index)c).query(query);
-
-            throw new WhelkRuntimeException("Whelk has no index for searching");
-        }
+    public SearchResult query(String query) {
+        return query(new Query(query));
+    }
 
     @Override
-        public LookupResult<? extends Document> lookup(Key key) {
-            for (Component c: getComponents())
-                if (c instanceof Storage)
-                    return ((Storage)c).lookup(key);
+    public SearchResult query(Query query) {
+        for (Component c: getComponents())
+            if (c instanceof Index)
+                return ((Index)c).query(query);
 
-            throw new WhelkRuntimeException("Whelk has no storage for searching");
-        }
-
-    @Override
-        public SparqlResult sparql(String query) {
-            for (Component c: getComponents())
-                if (c instanceof QuadStore)
-                    return ((QuadStore)c).sparql(query);
-
-            throw new WhelkRuntimeException("Whelk has no quadstore component.");
-        }
+        throw new WhelkRuntimeException("Whelk has no index for searching");
+    }
 
     @Override
-        public Iterable<Document> log(int startIndex) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
+    public LookupResult<? extends Document> lookup(Key key) {
+        for (Component c: getComponents())
+            if (c instanceof Storage)
+                return ((Storage)c).lookup(key);
+
+        throw new WhelkRuntimeException("Whelk has no storage for searching");
+    }
 
     @Override
-        public Iterable<Document> log(URI identifier) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
+    public SparqlResult sparql(String query) {
+        for (Component c: getComponents())
+            if (c instanceof QuadStore)
+                return ((QuadStore)c).sparql(query);
+
+        throw new WhelkRuntimeException("Whelk has no quadstore component.");
+    }
 
     @Override
-        public Iterable<Document> log(Date since) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
+    public Iterable<Document> log(int startIndex) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Iterable<Document> log(URI identifier) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Iterable<Document> log(Date since) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 
     @Override
-        public void destroy() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
+    public void destroy() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
     @Override
-        public Document createDocument() {
-            return new BasicDocument();
-        }
+    public Document createDocument() {
+        return new BasicDocument();
+    }
 
     @Override
     public void reindex() {
@@ -268,86 +268,86 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     }
 
     @Override
-        public void addPlugin(Plugin plugin) {
-            synchronized (plugins) {
-                if (plugin instanceof WhelkAware) {
-                    ((WhelkAware)plugin).setWhelk(this);
-                }
-                plugins.add(plugin);
+    public void addPlugin(Plugin plugin) {
+        synchronized (plugins) {
+            if (plugin instanceof WhelkAware) {
+                ((WhelkAware)plugin).setWhelk(this);
+            }
+            plugins.add(plugin);
+        }
+    }
+
+    @Override
+    public void addPluginIfNotExists(Plugin plugin) {
+        synchronized (plugins) {
+            if (! plugins.contains(plugin)) {
+                addPlugin(plugin);
             }
         }
+    }
 
     @Override
-        public void addPluginIfNotExists(Plugin plugin) {
-            synchronized (plugins) {
-                if (! plugins.contains(plugin)) {
-                    addPlugin(plugin);
-                }
+    public void removePlugin(String id) {
+        synchronized (plugins) {
+            ListIterator<Plugin> li = plugins.listIterator();
+
+            while (li.hasNext()) {
+                Plugin p = li.next();
+
+                if (p.getId().equals(id))
+                    li.remove();
             }
         }
+    }
 
     @Override
-        public void removePlugin(String id) {
-            synchronized (plugins) {
-                ListIterator<Plugin> li = plugins.listIterator();
+    public Iterable<? extends Plugin> getPlugins() {
+        return plugins;
+    }
 
-                while (li.hasNext()) {
-                    Plugin p = li.next();
+    @Override
+    public JSONInitialisable init(JSONObject obj) {
+        try {
+            prefix = obj.get("prefix").toString();
 
-                    if (p.getId().equals(id))
-                        li.remove();
-                }
+            for (Iterator it = ((JSONArray)obj.get("plugins")).iterator(); it.hasNext();) {
+                JSONObject _plugin = (JSONObject)it.next();
+                Class c = Class.forName(_plugin.get("_classname").toString());
+
+                Plugin p = (Plugin)c.newInstance();
+                if (JSONInitialisable.class.isAssignableFrom(c))
+                    ((JSONInitialisable)p).init(_plugin);
+
+                addPlugin(p);
             }
-        }
+        } catch (Exception e) {
+            throw new WhelkRuntimeException(e);
+        }            
+
+        return this;
+    }
 
     @Override
-        public Iterable<? extends Plugin> getPlugins() {
-            return plugins;
+    public JSONObject serialize() {
+        JSONObject _whelk = new JSONObject();
+        _whelk.put("prefix", prefix);
+        _whelk.put("_classname", this.getClass().getName());
+
+        JSONArray _plugins = new JSONArray();
+        for (Plugin p: plugins) {
+            JSONObject _plugin = (p instanceof JSONSerialisable)? ((JSONSerialisable)p).serialize():new JSONObject();
+            _plugin.put("_classname", p.getClass().getName());
+            _plugins.add(_plugin);
+
         }
+        _whelk.put("plugins", _plugins);
 
-    @Override
-        public JSONInitialisable init(JSONObject obj) {
-            try {
-                prefix = obj.get("prefix").toString();
-
-                for (Iterator it = ((JSONArray)obj.get("plugins")).iterator(); it.hasNext();) {
-                    JSONObject _plugin = (JSONObject)it.next();
-                    Class c = Class.forName(_plugin.get("_classname").toString());
-
-                    Plugin p = (Plugin)c.newInstance();
-                    if (JSONInitialisable.class.isAssignableFrom(c))
-                        ((JSONInitialisable)p).init(_plugin);
-
-                    addPlugin(p);
-                }
-            } catch (Exception e) {
-                throw new WhelkRuntimeException(e);
-            }            
-
-            return this;
-        }
-
-    @Override
-        public JSONObject serialize() {
-            JSONObject _whelk = new JSONObject();
-            _whelk.put("prefix", prefix);
-            _whelk.put("_classname", this.getClass().getName());
-
-            JSONArray _plugins = new JSONArray();
-            for (Plugin p: plugins) {
-                JSONObject _plugin = (p instanceof JSONSerialisable)? ((JSONSerialisable)p).serialize():new JSONObject();
-                _plugin.put("_classname", p.getClass().getName());
-                _plugins.add(_plugin);
-
-            }
-            _whelk.put("plugins", _plugins);
-
-            return _whelk;
-        }
+        return _whelk;
+    }
 
 
     @Deprecated
-        public void notify(URI u) {}
+    public void notify(URI u) {}
 
     private URI mintIdentifier(Document d) {
         try {
