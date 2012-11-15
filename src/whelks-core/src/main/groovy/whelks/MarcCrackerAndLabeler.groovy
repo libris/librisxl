@@ -6,13 +6,15 @@ import se.kb.libris.whelks.exception.*
 
 import groovy.util.logging.Slf4j as Log
 
+import org.codehaus.jackson.map.ObjectMapper
+
 
 @Log
 class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements IndexFormatConverter {
 
     String id = this.class.name
     boolean enabled = true
-    def mapper
+    ObjectMapper mapper
     def marcmap
     int order = 0
 

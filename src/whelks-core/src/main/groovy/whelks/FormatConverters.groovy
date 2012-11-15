@@ -34,7 +34,7 @@ class MarcFieldLabelerIndexFormatConverter extends BasicPlugin implements IndexF
 
 
     MarcFieldLabelerIndexFormatConverter() {
-        mapper = new ObjectMapper()
+        mapper = new ElasticJsonMapper()
     }
 
     @Override

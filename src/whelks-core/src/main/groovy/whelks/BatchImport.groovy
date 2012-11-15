@@ -155,7 +155,7 @@ class Harvester implements Runnable {
                 log.trace("Received resumptionToken $resumptionToken")
             }
         } finally {
-            log.info("Harvester for ${this.year} has ended its run. $imported documents imported. $failed failed. $xmlfailed failed XML documents.")
+            log.info("Harvester for ${this.year} has ended its run. $importedCount documents imported. $failed failed. $xmlfailed failed XML documents.")
             this.executor.shutdown()
             if (!executor.awaitTermination(KEEP_ALIVE_TIME, TimeUnit.SECONDS)) {
                 executor.shutdownNow();
@@ -195,8 +195,9 @@ class Harvester implements Runnable {
                             log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
                             //log.debug("Pushing ${document.identifier} to $whelk")
                             //whelk.store(document)
+                            log.info("Storing " + documents.size() + " documents in pool.")
                             whelk.store(documents)
-                            log.trace("Thread has now imported $imported documents.")
+                            log.trace("Thread has now imported $importedCount documents.")
                         }
                     })
             } else log.debug("Harvest on $url resulted in no documents. xmlstring: ${xmlString}")
@@ -215,8 +216,8 @@ class Harvester implements Runnable {
             return findResumptionToken(xmlString)
         } finally {
             if (documents.size() > 0) {
-                imported = imported + documents.size()
-                log.debug("Storing "+documents.size()+" documents ... $imported sofar.")
+                importedCount.addAndGet(documents.size())
+                log.debug("Storing "+documents.size()+" documents ... $importedCount sofar.")
                 whelk.store(documents)
                 /*
                 storepool.submit(new Runnable() {

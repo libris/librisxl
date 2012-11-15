@@ -8,6 +8,7 @@ import java.net.URI
 import java.util.*
 import java.nio.ByteBuffer
 
+import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
 import se.kb.libris.whelks.*
@@ -25,7 +26,8 @@ public class BasicDocument implements Document {
     Set<Description> descriptions = new TreeSet<Description>()
     long timestamp = 0
 
-    def mapper = new ElasticJsonMapper()
+    @JsonIgnore
+    ObjectMapper mapper = new ElasticJsonMapper()
 
     public BasicDocument() {
         this.timestamp = new Long(new Date().getTime())

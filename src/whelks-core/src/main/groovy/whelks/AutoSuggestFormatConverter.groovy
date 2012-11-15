@@ -6,6 +6,8 @@ import se.kb.libris.whelks.plugin.*
 
 import groovy.util.logging.Slf4j as Log
 
+import org.codehaus.jackson.map.ObjectMapper
+
 @Log
 class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter, WhelkAware {
 
@@ -17,7 +19,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
     int order
 
     String id = "autoSuggestFormatConverter"
-    def mapper
+    ObjectMapper mapper
 
     AutoSuggestFormatConverter(Whelk bw) {
         this.bibwhelk = bw
