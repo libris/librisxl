@@ -3,13 +3,13 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["index", "storage", "search", "kitinsearch", "document", "marcmassager"]
+                "_plugins": ["indexstorage", "search", "kitinsearch", "document", "marcmassager"]
             }
         },
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": [ "index", "storage", "search", "document" ]
+                "_plugins": [ "indexstorage", "search", "document" ]
             }
         },
         {
