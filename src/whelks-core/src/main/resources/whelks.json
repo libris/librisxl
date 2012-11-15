@@ -9,7 +9,7 @@
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": [ "indexstorage", "search", "document" ]
+                "_plugins": [ "indexstorage", "search", "document", "marcmassager" ]
             }
         },
         {

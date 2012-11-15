@@ -3,19 +3,18 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["indexstorage", "marcmassager", "search", "document"]
+                "_plugins": ["indexstorage", "search", "kitinsearch", "document", "marcmassager"]
             }
         },
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": [ "indexstorage", "search", "document" ]
+                "_plugins": [ "indexstorage", "search", "document", "marcmassager" ]
             }
         },
         {
             "suggest":{
-                "_plugins": [ "index", "search", "autocomplete", "suggestformatconverter",
-                              "biblistener" ]
+                "_plugins": [ "index", "search", "document", "autocomplete", "suggestformatconverter", "biblistener", "authlistener" ]
             }
         }
     ], 
@@ -51,6 +50,11 @@
         {
             "document" : {
                 "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
+            }
+        },
+        {
+            "kitinsearch" : {
+                "_class" : "se.kb.libris.whelks.api.KitinSearchRestlet2"
             }
         },
         {

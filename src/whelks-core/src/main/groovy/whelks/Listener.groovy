@@ -3,9 +3,12 @@ package se.kb.libris.whelks.plugin
 import groovy.util.logging.Slf4j as Log
 import groovy.transform.Synchronized
 
+import java.util.concurrent.*
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
+import se.kb.libris.whelks.imports.*
 
 @Log
 class Listener extends BasicPlugin implements WhelkAware {
@@ -16,10 +19,10 @@ class Listener extends BasicPlugin implements WhelkAware {
 
     List documents = Collections.synchronizedList(new LinkedList())
 
-    final int DEFAULT_NUMBER_OF_HANDLERS = 50
+    final int DEFAULT_NUMBER_OF_HANDLERS = 2
+    final int MAX_NUMBER_OF_HANDLERS = 10
     final int STATE_SAVE_INTERVAL = 10000
     final int CHECK_AGAIN_DELAY = 500
-    int numberOfHandlers = DEFAULT_NUMBER_OF_HANDLERS
 
     def pool
 
@@ -33,7 +36,8 @@ class Listener extends BasicPlugin implements WhelkAware {
         this.otherwhelk = n
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
         id = id + ", listening to $otherwhelk.prefix"
-        pool = java.util.concurrent.Executors.newCachedThreadPool()
+        //pool = java.util.concurrent.Executors.newCachedThreadPool()
+        pool = newScalingThreadPoolExecutor(DEFAULT_NUMBER_OF_HANDLERS, MAX_NUMBER_OF_HANDLERS, 60)
     }
 
     /*
@@ -93,9 +97,9 @@ class Listener extends BasicPlugin implements WhelkAware {
             documents.push(doc)
         }
         */
-        pool.submit(new Runnable() {
+        pool.execute(new Runnable() {
             public void run() {
-                log.debug("Pushing ${doc.identifier} to $homewhelk")
+                log.debug("Pushing ${doc.identifier} to $homewhelk (${homewhelk.prefix})")
                 homewhelk.store(doc)
             }
         })
@@ -119,18 +123,6 @@ class Listener extends BasicPlugin implements WhelkAware {
             }
         }
     }
-    /*
-    @Synchronized
-    Document nextDocument() {
-        try {
-            Document d = documents.pop()
-            log.debug("nextDocument returning ${d.identifier}. List contains " + documents.size() + " items.")
-            return d
-        } catch (NoSuchElementException nsee) {
-            return null
-        }
-    }
-    */
 
     void enable() {
         this.enabled = true
@@ -139,27 +131,11 @@ class Listener extends BasicPlugin implements WhelkAware {
         }
     }
 
-    /*
-    @Log
-    class UpdateHandler implements Runnable {
-        def converter
-
-        UpdateHandler() {
-        }
-
-        void run() {
-            while (true) {
-                def doc = nextDocument()
-                if (doc) {
-                    log.debug("Next is $doc.identifier")
-                    homewhelk.store(doc)
-                    lastUpdate = doc.timestampAsDate
-                    //convert(otherwhelk.get(uri))
-                }
-                sleep(CHECK_AGAIN_DELAY)
-            }
-            log.error("Thread is exiting ...")
-        }
+    public ExecutorService newScalingThreadPoolExecutor(int min, int max, long keepAliveTime) {
+        ScalingQueue queue = new ScalingQueue()
+        ThreadPoolExecutor executor = new ScalingThreadPoolExecutor(min, max, keepAliveTime, TimeUnit.SECONDS, queue)
+        executor.setRejectedExecutionHandler(new ForceQueuePolicy())
+        queue.setThreadPoolExecutor(executor)
+        return executor
     }
-    */
 }
