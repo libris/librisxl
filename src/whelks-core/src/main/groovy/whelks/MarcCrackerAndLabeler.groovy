@@ -75,6 +75,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
     @Override
     List<Document> convert(List<Document> docs) {
         def outdocs = []
+        log.debug("Converting " + docs?.size() + " documents.")
         for (doc in docs) {
             log.trace "Start convert on ${doc.dataAsString}"
             def json

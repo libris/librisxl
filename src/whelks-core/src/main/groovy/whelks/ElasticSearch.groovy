@@ -318,16 +318,14 @@ abstract class ElasticSearch extends BasicPlugin {
 
     @Override
     def Iterable<Document> updates(Date since) {
-        return new ElasticIterable<Document>(this, since)
+        return new ElasticIterable<Document>(this, since, true)
     }
 
     def loadAll(String token = null, Date since = null, boolean loadDocuments = true, boolean sorted=false) {
         def results
         if (loadDocuments) {
-            log.debug("Loading document-list")
             results = new ArrayList<Document>()
         } else {
-            log.debug("Loading logentry-list")
             results = new ArrayList<LogEntry>()
         }
         def srb
@@ -341,7 +339,12 @@ abstract class ElasticSearch extends BasicPlugin {
                 .setScroll(TimeValue.timeValueMinutes(20))
                 .setSize(History.BATCH_SIZE)
             if (sorted) {
-                def query = rangeQuery("_timestamp").gte(since.getTime())
+                def query
+                if (since) {
+                    query = rangeQuery("_timestamp").gte(since.getTime())
+                } else {
+                    query = matchAllQuery()
+                }
                 srb = srb.addField("_timestamp")
                     .addSort("_timestamp", org.elasticsearch.search.sort.SortOrder.ASC)
                     .setQuery(query)
@@ -371,6 +374,7 @@ abstract class ElasticSearch extends BasicPlugin {
         } else if (!response || response.hits.length < 1) {
             log.info("No response recevied.")
         }
+        log.debug("Found " + results.size() + " items. Scroll ID: " + response.scrollId())
         return [results, response.scrollId()]
     }
 }
@@ -381,14 +385,16 @@ class ElasticIterable<T> implements Iterable {
     def indexInstance
     Collection<T> list
     boolean incomplete = false
+    boolean sorted
     def token
     Date since
 
-    ElasticIterable(i, s = null) {
+    ElasticIterable(Index idx, Date snc = null, boolean srt = false) {
         log.debug("Creating new iterable.")
-        indexInstance = i
-        since = s
-        (list, token) = indexInstance.loadAll(null, since, true, true)
+        indexInstance = idx
+        since = snc
+        sorted = srt
+        (list, token) = indexInstance.loadAll(null, since, true, sorted)
         log.debug("Initial list with size: ${list.size} and token: $token")
         incomplete = (list.size == History.BATCH_SIZE)
     }
@@ -425,7 +431,7 @@ class ElasticIterable<T> implements Iterable {
 
         @Synchronized
         private void refill() {
-            (list, token) = this.indexInstance.loadAll(token, since, true, true)
+            (list, token) = this.indexInstance.loadAll(token, since, true, sorted)
             incomplete = (list.size() == History.BATCH_SIZE)
             iter = list.iterator()
         }

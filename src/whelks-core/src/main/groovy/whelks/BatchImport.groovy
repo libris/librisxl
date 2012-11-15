@@ -61,8 +61,8 @@ class BatchImport {
 
             this.starttime = System.currentTimeMillis();
             List<Future> futures = []
-            if (from) {
-                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), 0, this))
+            if (!from) {
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla"))
             } else {
                 for (int i = 1970; i < 2012; i++) {
                     final Date fromDate = getYearDate(i)
@@ -188,19 +188,6 @@ class Harvester implements Runnable {
                     failed++
                 }
             }
-            if (documents.size() > 0) {
-                //storepool.submit(new Runnable() {
-                executor.execute(new Runnable() {
-                        public void run() {
-                            log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
-                            //log.debug("Pushing ${document.identifier} to $whelk")
-                            //whelk.store(document)
-                            log.info("Storing " + documents.size() + " documents in pool.")
-                            whelk.store(documents)
-                            log.trace("Thread has now imported $importedCount documents.")
-                        }
-                    })
-            } else log.debug("Harvest on $url resulted in no documents. xmlstring: ${xmlString}")
 
             if (!OAIPMH.ListRecords.resumptionToken) {
                 throw new WhelkRuntimeException("No res-token found in $xmlString : " + OAIPMH.ListRecords.resumptionToken)
@@ -217,9 +204,15 @@ class Harvester implements Runnable {
         } finally {
             if (documents.size() > 0) {
                 importedCount.addAndGet(documents.size())
-                log.debug("Storing "+documents.size()+" documents ... $importedCount sofar.")
-                whelk.store(documents)
+                executor.execute(new Runnable() {
+                        public void run() {
+                            log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
+                            log.info("Storing "+documents.size()+" documents ... $importedCount sofar.")
+                            whelk.store(documents)
+                        }
+                    })
                 /*
+                whelk.store(documents)
                 storepool.submit(new Runnable() {
                     public void run() {
                         log.debug("Current pool size: " + ((ThreadPoolExecutor)storepool).getPoolSize() + " current active count " + ((ThreadPoolExecutor)storepool).getActiveCount())
@@ -230,7 +223,7 @@ class Harvester implements Runnable {
                     }
                 })
                 */
-            }
+            } else log.debug("Harvest on $url resulted in no documents. xmlstring: ${xmlString}")
         }
     }
 

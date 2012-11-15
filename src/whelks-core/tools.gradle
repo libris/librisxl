@@ -13,9 +13,11 @@ task importData(dependsOn: 'classes', type: JavaExec) {
 }
 
 task reindexData(dependsOn: 'classes', type: JavaExec) {
-  description "Run ReindexingWhelk. (USAGE: -Dargs='<bib|auth> [resource] [since]')"
+  description "Run ReindexingWhelk. (USAGE: -Dargs='<bib|auth> [resource] [since]') -Delastic.host='<host>' (-Delastic.cluster='<cluster>')"
   classpath = sourceSets.main.runtimeClasspath
   main = 'se.kb.libris.whelks.ReindexingWhelk'
+  systemProperty 'elastic.host', System.getProperty('elastic.host', "")
+  systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', "")
   args(System.getProperty('args', "").split() as String[])
 }
 

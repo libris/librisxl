@@ -3,6 +3,7 @@ package se.kb.libris.whelks
 import groovy.util.logging.Slf4j as Log
 import groovy.transform.Synchronized
 
+import java.util.concurrent.*
 import java.net.URI
 
 import org.apache.commons.io.IOUtils
@@ -15,6 +16,7 @@ import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.persistance.*
+import se.kb.libris.whelks.imports.*
 
 
 @Log
@@ -47,32 +49,45 @@ class WhelkImpl extends BasicWhelk {
         int counter = 0
         Storage scomp = components.find { it instanceof Storage }
         Index icomp = components.find { it instanceof Index }
-        IndexFormatConverter ifc = components.find { it instanceof IndexFormatConverter }
+        IndexFormatConverter ifc = plugins.find { it instanceof IndexFormatConverter }
 
         long startTime = System.currentTimeMillis()
         List<Document> docs = new ArrayList<Document>()
-        for (Document doc : scomp.getAll()) {
-            counter++
-            if (ifc) {
-                Document cd = ifc.convert(doc)
-                if (cd) {
-                    docs << cd
+        def executor = newScalingThreadPoolExecutor(1,50,60)
+        try {
+            for (Document doc : scomp.getAll()) {
+                counter++
+                docs.add(doc)
+                if (counter % History.BATCH_SIZE == 0) {
+                    long ts = System.currentTimeMillis()
+                    log.info "(" + ((ts - startTime)/History.BATCH_SIZE) + ") New batch, indexing document with id: ${doc.identifier}. Velocity: " + (counter/((ts - startTime)/History.BATCH_SIZE)) + " documents per second. $counter total sofar."
+                    def idocs = new ArrayList<Document>(docs)
+                    executor.execute(new Runnable() {
+                        public void run() {
+                            if (ifc) {
+                                idocs = ifc.convert(idocs)
+                            }
+                            log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
+                            log.info("Indexing "+idocs.size()+" documents ... ")
+                            icomp.index(idocs)
+                        }
+                    })
+                    docs.clear()
                 }
-            } else {
-                icomp.index(doc)
-                docs << doc
             }
-            if (counter % 10000 == 0) {
-                long ts = System.currentTimeMillis()
-                log.info "(" + ((ts - startTime)/1000) + ") New batch, indexing document with id: ${doc.identifier}. Velocity: " + (counter/((ts - startTime)/1000)) + " documents per second."
+            if (docs.size() > 0) {
+                log.info "Indexing remaining " + docs.size() + " documents."
+                if (ifc) {
+                    docs = ifc.convert(docs)
+                }
                 icomp.index(docs)
-                docs.clear()
+            }
+        } finally {
+            executor.shutdown()
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                executor.shutdownNow()
             }
         }
-        if (docs.size() > 0) {
-            log.info "Indexing remaining " + docs.size() + " documents."
-            icomp.index(docs)
-        } 
         println "Reindexed $counter documents"
     }
 
@@ -86,7 +101,18 @@ class WhelkImpl extends BasicWhelk {
         }
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
+
+    public ExecutorService newScalingThreadPoolExecutor(int min, int max, long keepAliveTime) {
+        ScalingQueue queue = new ScalingQueue()
+        ThreadPoolExecutor executor = new ScalingThreadPoolExecutor(min, max, keepAliveTime, TimeUnit.SECONDS, queue)
+        executor.setRejectedExecutionHandler(new ForceQueuePolicy())
+        queue.setThreadPoolExecutor(executor)
+        return executor
+    }
+
 }
+
+
 
 
 class Tool {
