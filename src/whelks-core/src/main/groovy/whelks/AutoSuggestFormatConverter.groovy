@@ -197,10 +197,11 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
             }
             def q_100 = query_100.join(" AND ")
             def q_700 = query_700.join(" AND ")
-            def q_swe = "fields.008:swe"
+            def q_swe = "fields.008.subfields.language:swe"
 
             def q_all = "(($q_100) OR ($q_700)) AND $q_swe"
 
+            log.debug("Finding records for author $f_100: $q_all")
             def response = bibwhelk.query(q_all) 
             //print "Count: ", response.getNumberOfHits()
             sug_json["records"] = response.getNumberOfHits()

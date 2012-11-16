@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 import groovy.transform.Synchronized
 
 import java.util.concurrent.*
+import java.util.concurrent.atomic.*
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
@@ -30,7 +31,7 @@ class Listener extends BasicPlugin implements WhelkAware {
     boolean enabled = true
     boolean isEnabled() {return enabled}
     void disable() {this.enabled = false}
-    Date lastUpdate = null
+    final AtomicLong lastUpdate = new AtomicLong()
 
     Listener(Whelk n) {
         this.otherwhelk = n
@@ -53,13 +54,13 @@ class Listener extends BasicPlugin implements WhelkAware {
         this.homewhelk = w
         id = id + " for $w.prefix"
         try {
-            lastUpdate = new Date(new Long(new File("/tmp/whelk_listener_state_${this.homewhelk.prefix}-${this.otherwhelk.prefix}").text))
+            lastUpdate.set(new File("/tmp/whelk_listener_state_${this.homewhelk.prefix}-${this.otherwhelk.prefix}").text.longValue())
         } catch (Exception e) {
             log.info("Didn't find a valid state-file.")
         }
         if (!lastUpdate) {
             log.debug("Didn't find a last updated time. Setting epoch.")
-            lastUpdate = new Date(0L)
+            lastUpdate.set(0L)
         }
         /*
         log.info("Starting $numberOfHandlers handlers.")
@@ -68,18 +69,18 @@ class Listener extends BasicPlugin implements WhelkAware {
         }
         */
         Thread.start {
-            Date lastSavedUpdate = lastUpdate
+            long lastSavedUpdate = lastUpdate.get()
             while (true) {
                 sleep(STATE_SAVE_INTERVAL)
-                if (lastUpdate && lastUpdate != lastSavedUpdate) {
+                if (lastUpdate && lastUpdate.get() != lastSavedUpdate) {
                     log.debug("Saving state.")
-                    new File("/tmp/whelk_listener_state_${this.homewhelk.prefix}-${this.otherwhelk.prefix}").text = "" + lastUpdate.time
-                    lastSavedUpdate = lastUpdate
+                    new File("/tmp/whelk_listener_state_${this.homewhelk.prefix}-${this.otherwhelk.prefix}").text = "" + lastUpdate.get()
+                    lastSavedUpdate = lastUpdate.get()
                 }
             }
         }
         Thread.start {
-            def updates = otherwhelk.log(lastUpdate)
+            def updates = otherwhelk.log(new Date(lastUpdate.get()))
             def iter = updates.iterator()
             if (iter.hasNext()) {
                 log.info("Found updates. Populating documents-list.")
@@ -100,6 +101,7 @@ class Listener extends BasicPlugin implements WhelkAware {
         pool.execute(new Runnable() {
             public void run() {
                 log.debug("Pushing ${doc.identifier} to $homewhelk (${homewhelk.prefix})")
+                lastUpdate.set(doc.getTimestamp())
                 homewhelk.store(doc)
             }
         })
