@@ -131,7 +131,7 @@ class Harvester implements Runnable {
         }
     }
 
-    public ExecutorService newScalingThreadPoolExecutor(int min, int max, long keepAliveTime) {
+    public ThreadPoolExecutor newScalingThreadPoolExecutor(int min, int max, long keepAliveTime) {
         ScalingQueue queue = new ScalingQueue()
         ThreadPoolExecutor executor = new ScalingThreadPoolExecutor(min, max, keepAliveTime, TimeUnit.SECONDS, queue)
         executor.setRejectedExecutionHandler(new ForceQueuePolicy())
@@ -141,6 +141,10 @@ class Harvester implements Runnable {
 
     public void run() {
         try {
+            Thread monitorThread = new Thread(new MonitorThread(executor, year))
+            monitorThread.setDaemon(true)
+            monitorThread.start()
+            log.info("Staring monitor thread for harvester " + year)
             getAuthentication();
             log.info("Starting harvester with url: $url")
             String resumptionToken = harvest(this.url);
@@ -206,7 +210,7 @@ class Harvester implements Runnable {
                 importedCount.addAndGet(documents.size())
                 executor.execute(new Runnable() {
                         public void run() {
-                            log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
+                            //log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
                             log.info("Storing "+documents.size()+" documents ... $importedCount sofar.")
                             whelk.store(documents)
                         }
@@ -259,7 +263,7 @@ class ScalingQueue extends LinkedBlockingQueue {
     private ThreadPoolExecutor executor
 
     public ScalingQueue() { super() }
-    public ScalingQueue(int capacity) { super(capacity)}
+    public ScalingQueue(int capacity) { super(capacity) }
 
     public setThreadPoolExecutor(ThreadPoolExecutor executor) {
         this.executor = executor
@@ -267,9 +271,14 @@ class ScalingQueue extends LinkedBlockingQueue {
 
     @Override
     public boolean offer(Object o) {
-        log.debug("Number of executor active threads " + executor.getActiveCount() + " and queue size " + super.size())
-        int allWorkingThreads = executor.getActiveCount() + super.size()
+        //int allWorkingThreads = executor.getActiveCount() + super.size()
+        int allWorkingThreads = executor.getActiveCount()
         log.debug("Executor poolsize " + executor.getPoolSize())
+        /*while (allWorkingThreads < executor.getPoolSize) {
+
+        }*/
+        def offered = super.offer(o)
+        log.debug("Offered " + offered)
         return allWorkingThreads < executor.getPoolSize() && super.offer(o)
     }
 }
@@ -306,5 +315,25 @@ class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
     @Override
     protected void afterExecute(Runnable r, Throwable t) {
         activeCount.decrementAndGet()
+    }
+}
+
+@Log
+class MonitorThread implements Runnable {
+    private ThreadPoolExecutor executor
+    private String harvester
+
+    public MonitorThread(ThreadPoolExecutor executor, String harvester) {
+        this.executor = executor
+        this.harvester = harvester
+    }
+
+    public void run() {
+        while(true) {
+            log.debug("Harvester: " + harvester + ". Number of executor active threads " + executor.getActiveCount() + ". Task queue size " + executor.getQueue().size() + ". Completed tasks so far " + executor.getCompletedTaskCount())
+            Thread.sleep(5000)
+        }
+
+
     }
 }
