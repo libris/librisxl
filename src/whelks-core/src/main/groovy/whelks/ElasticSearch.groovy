@@ -87,7 +87,11 @@ abstract class ElasticSearch extends BasicPlugin {
         GetResponse response = performExecute(client.prepareGet(index, storageType, translateIdentifier(uri)).setFields("_source","_timestamp"))
         if (response && response.exists()) {
             def ts = (response.field("_timestamp") ? response.field("_timestamp").value : null)
-            return new BasicDocument(response.sourceAsString())
+            try {
+                return new BasicDocument(response.sourceAsString())
+            } catch (DocumentException de) {
+                log.error("Failed to created document with uri ${uri} from source - " + de.getMessage(), de)
+            }
         }
         return null
     }
@@ -365,8 +369,11 @@ abstract class ElasticSearch extends BasicPlugin {
             log.trace "Total log hits: ${response.hits.totalHits}"
             response.hits.hits.each {
                 if (loadDocuments) {
-                    results.add(new BasicDocument(new String(it.source())))
-                    //results.add(new String(it.source()))
+                    try {
+                        results.add(new BasicDocument(new String(it.source())))
+                    } catch (DocumentException de) {
+                        log.error("Failed to created document with id ${it.id} from source - " + de.getMessage(), de)
+                    }
                 } else {
                     results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
                 }

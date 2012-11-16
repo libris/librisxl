@@ -8,6 +8,7 @@ import java.net.URI
 import java.util.*
 import java.nio.ByteBuffer
 
+import org.codehaus.jackson.*
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
@@ -49,8 +50,12 @@ public class BasicDocument implements Document {
 
 
     public Document fromJson(String jsonString) {
-        BasicDocument newDoc = mapper.readValue(jsonString, BasicDocument)
-        copy(newDoc)
+        try {
+            BasicDocument newDoc = mapper.readValue(jsonString, BasicDocument)
+            copy(newDoc)
+        } catch (JsonParseException jpe) {
+            throw new DocumentException(jpe)
+        }
     }
 
     private void copy(Document d) {
