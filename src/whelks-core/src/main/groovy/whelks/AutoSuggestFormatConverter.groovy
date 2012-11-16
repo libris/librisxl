@@ -174,7 +174,6 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
             //ny_alla.append(dict(my_json.items() + resten_json.items()))
         }
 
-        println "record: $ny_alla"
         return ny_alla
 
     }
