@@ -54,7 +54,7 @@ class Listener extends BasicPlugin implements WhelkAware {
         this.homewhelk = w
         id = id + " for $w.prefix"
         try {
-            lastUpdate.set(new File("/tmp/whelk_listener_state_${this.homewhelk.prefix}-${this.otherwhelk.prefix}").text.longValue())
+            lastUpdate.set(new Long(new File("/tmp/whelk_listener_state_${this.homewhelk.prefix}-${this.otherwhelk.prefix}").text))
         } catch (Exception e) {
             log.info("Didn't find a valid state-file.")
         }
