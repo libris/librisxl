@@ -174,10 +174,10 @@ class ImportWhelk extends BasicWhelk {
             if (mode.equals("riak")) {
                 whelk.addPlugin(new RiakStorage(prefix))
             } else {
-                whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+                //whelk.addPlugin(new ElasticSearchClientIndexHistory(prefix))
                 //whelk.addPlugin(new RiakStorage(prefix))
-                //whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
-                whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
+                whelk.addPlugin(new DiskStorage("/data/whelk_storage"))
+                //whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             }
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()

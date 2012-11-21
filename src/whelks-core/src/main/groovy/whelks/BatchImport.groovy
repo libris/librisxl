@@ -201,8 +201,8 @@ class Harvester implements Runnable {
             log.warn("Failed to parse record \"$mdrecord\": ${ioe.message}.")
             return OAIPMH.ListRecords.resumptionToken
         } catch (Exception e) {
-            //log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
-            log.debug(e.printStackTrace())
+            log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
+            log.warn(e.printStackTrace())
             xmlfailed++
             return findResumptionToken(xmlString)
         } finally {

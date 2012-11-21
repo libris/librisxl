@@ -3,13 +3,13 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["indexstorage", "search", "kitinsearch", "document", "marcmassager"]
+                "_plugins": ["index", "storage", "search", "kitinsearch", "document", "marcmassager"]
             }
         },
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": [ "indexstorage", "search", "document", "marcmassager" ]
+                "_plugins": [ "index", "storage", "search", "document", "marcmassager" ]
             }
         },
         {
@@ -20,13 +20,13 @@
     ], 
         "_plugins": [
         {
-            "index": { 
+            "index": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory",
                 "_params" : "_whelkname"
             }
         }, 
         {
-            "indexstorage": { 
+            "indexstorage": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientStorageIndexHistory",
                 "_params" : "_whelkname"
             }
