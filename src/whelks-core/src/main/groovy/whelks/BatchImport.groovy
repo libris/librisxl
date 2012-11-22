@@ -61,6 +61,8 @@ class BatchImport {
 
             this.starttime = System.currentTimeMillis();
             List<Future> futures = []
+            futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla"))
+            /*
             if (!from) {
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla"))
             } else {
@@ -74,6 +76,7 @@ class BatchImport {
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20120701"), Date.parse("yyyyMMdd", "20120930")), "2012Q3"))
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20121001"), Date.parse("yyyyMMdd", "20121231")), "2012Q4"))
             }
+            */
             def results = futures.collect{it.get()}
             log.info("Collecting results ...")
             log.info("Results: $results, after " + (System.currentTimeMillis() - starttime)/1000 + " seconds.")
