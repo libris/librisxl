@@ -8,9 +8,8 @@ import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*
 
 @Log
-class DiskStorage extends BasicPlugin implements Storage, WhelkAware {
+class DiskStorage extends BasicPlugin implements Storage {
     def storageDir = "./storage"
-    Whelk whelk
     boolean enabled = true
 
     String id = "diskstorage"
@@ -18,32 +17,29 @@ class DiskStorage extends BasicPlugin implements Storage, WhelkAware {
 
     int PATH_CHUNKS=4
 
-    DiskStorage(String directoryName) {
-        this.storageDir = directoryName
+    DiskStorage(String directoryName, String whelkPrefix) {
+        StringBuilder dn = new StringBuilder(directoryName)
+        while (dn[dn.length()-1] == '/') {
+            dn.deleteCharAt(dn.length()-1)
+        }
+        this.storageDir = dn.toString() + "/" + whelkPrefix
+        log.info("Starting DiskStorage with storageDir $storageDir")
     }
-
-    def void setWhelk(se.kb.libris.whelks.Whelk w) { this.whelk = w }
 
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
-    @Override
     OutputStream getOutputStreamFor(Document doc) {
-        def filename = doc.identifier.toString()
-            log.debug "${this.class.name} storing file $filename in $storageDir"
-            def fullpath = storageDir + "/" + filename
-            def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
-            log.debug "PATH: $path"
-            new File(path).mkdirs()
-            File file = new File("$storageDir/$filename")
-            return file.newOutputStream()
-            //file.write(new String(d.data))
+        File file = new File(buildPath(doc.identifier))
+        return file.newOutputStream()
     }
 
+    @Override
     LookupResult lookup(Key key) {
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
+    @Override
     Document get(URI uri) {
         File f = new File(buildPath(uri, false))
         try {
@@ -53,8 +49,9 @@ class DiskStorage extends BasicPlugin implements Storage, WhelkAware {
         }
     }
 
+    @Override
     Iterable<Document> getAll() {
-        def baseDir = new File(this.storageDir + (this.whelk ? "/" + this.whelk.prefix : ""))
+        def baseDir = new File(this.storageDir)
         return new DiskDocumentIterable(baseDir)
     }
 
