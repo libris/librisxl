@@ -10,6 +10,7 @@ import se.kb.libris.whelks.plugin.*
 @Log
 class DiskStorage extends BasicPlugin implements Storage {
     def storageDir = "./storage"
+    def whelkPrefix
     boolean enabled = true
 
     String id = "diskstorage"
@@ -17,12 +18,13 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     int PATH_CHUNKS=4
 
-    DiskStorage(String directoryName) {
+    DiskStorage(String directoryName, String wlkPfx) {
         StringBuilder dn = new StringBuilder(directoryName)
         while (dn[dn.length()-1] == '/') {
             dn.deleteCharAt(dn.length()-1)
         }
         this.storageDir = dn.toString() // + "/" + whelkPrefix
+        this.whelkPrefix = wlkPfx
         log.info("Starting DiskStorage with storageDir $storageDir")
     }
 
@@ -53,7 +55,7 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Iterable<Document> getAll() {
-        def baseDir = new File(this.storageDir)
+        def baseDir = new File(this.storageDir+"/"+this.whelkPrefix)
         return new DiskDocumentIterable(baseDir)
     }
 

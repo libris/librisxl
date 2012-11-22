@@ -202,7 +202,7 @@ public class BasicDocument implements Document {
                 return t
         }
         */
-        BasicTag tag = new BasicTag(type, value)
+        Tag tag = new Tag(type, value)
 
         this.tags.add(tag)
 

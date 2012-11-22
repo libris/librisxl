@@ -51,6 +51,8 @@ class WhelkImpl extends BasicWhelk {
         Index icomp = components.find { it instanceof Index }
         IndexFormatConverter ifc = plugins.find { it instanceof IndexFormatConverter }
 
+        log.info("Using $scomp as storage source for reindex.")
+
         long startTime = System.currentTimeMillis()
         List<Document> docs = new ArrayList<Document>()
         def executor = newScalingThreadPoolExecutor(1,50,60)
@@ -144,7 +146,10 @@ class ReindexingWhelk extends WhelkImpl {
             def whelk = new ReindexingWhelk(prefix)
             def date = (args.length > 2)? Tool.parseDate(args[2]) : null
             println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
-            whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+            whelk.addPlugin(new DiskStorage("/tmp/whelk_storage", prefix))
+            def es = new ElasticSearchClientStorageIndexHistory(prefix)
+            es.order = 10
+            whelk.addPlugin(es)
             whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             long startTime = System.currentTimeMillis()
             whelk.reindex()
@@ -176,7 +181,7 @@ class ImportWhelk extends BasicWhelk {
             } else {
                 //whelk.addPlugin(new ElasticSearchClientIndexHistory(prefix))
                 //whelk.addPlugin(new RiakStorage(prefix))
-                whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
+                whelk.addPlugin(new DiskStorage("/extra/whelk_storage"))
                 //whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             }
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)

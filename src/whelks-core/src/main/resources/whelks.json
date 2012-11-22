@@ -35,7 +35,7 @@
         {
             "storage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : "/tmp/whelk_storage",
+                "_params" : "/tmp/whelk_storage, _whelkname",
                 "_priority" : 1
 
             }
