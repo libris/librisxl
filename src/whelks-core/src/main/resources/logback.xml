@@ -15,8 +15,8 @@
       <level value="trace"/>
   </logger>
 
-  <logger name="se.kb.libris.whelks.imports">
-      <level value="debug"/>
+  <logger name="se.kb.libris.whelks.WhelkInitializer">
+      <level value="trace"/>
   </logger>
   -->
 
