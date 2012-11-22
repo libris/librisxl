@@ -103,6 +103,10 @@ class WhelkInitializer {
                     } else {
                         plugin = Class.forName(meta._class).newInstance()
                     }
+                    if (meta._priority) {
+                        log.debug("Setting priority ${meta._priority} for plugin $label")
+                        plugin.order = meta._priority
+                    }
                     if (!plugin instanceof WhelkAware && meta._param instanceof String && !meta._param.split(",").find {it.startsWith("_")}) {
                         log.trace "$plugname not unique. Adding instance to map."
                         plugins[label] = plugin

@@ -17,12 +17,12 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     int PATH_CHUNKS=4
 
-    DiskStorage(String directoryName, String whelkPrefix) {
+    DiskStorage(String directoryName) {
         StringBuilder dn = new StringBuilder(directoryName)
         while (dn[dn.length()-1] == '/') {
             dn.deleteCharAt(dn.length()-1)
         }
-        this.storageDir = dn.toString() + "/" + whelkPrefix
+        this.storageDir = dn.toString() // + "/" + whelkPrefix
         log.info("Starting DiskStorage with storageDir $storageDir")
     }
 
@@ -43,7 +43,9 @@ class DiskStorage extends BasicPlugin implements Storage {
     Document get(URI uri) {
         File f = new File(buildPath(uri, false))
         try {
-            return new BasicDocument(f.text)
+            def document = new BasicDocument(f.text)
+            log.debug("Loading document from disk.")
+            return document
         } catch (FileNotFoundException fnfe) {
             return null
         }

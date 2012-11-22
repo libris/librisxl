@@ -89,6 +89,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                 d = ((Storage)c).get(uri);
 
                 if (d != null) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.FINE, "Document found in storage " + c);
                     return d;
                 }
             }
@@ -220,7 +221,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     }
 
     protected Iterable<Storage> getStorages() {
-        List<Storage> ret = new LinkedList<Storage>();
+        TreeSet<Storage> ret = new TreeSet<Storage>();
 
         for (Plugin plugin: plugins)
             if (plugin instanceof Storage)
@@ -248,7 +249,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     }
 
     protected Iterable<Component> getComponents() {
-        List<Component> ret = new LinkedList<Component>();
+        TreeSet<Component> ret = new TreeSet<Component>();
 
         for (Plugin plugin: plugins)
             if (plugin instanceof Component)

@@ -176,7 +176,7 @@ class ImportWhelk extends BasicWhelk {
             } else {
                 //whelk.addPlugin(new ElasticSearchClientIndexHistory(prefix))
                 //whelk.addPlugin(new RiakStorage(prefix))
-                whelk.addPlugin(new DiskStorage("/data/whelk_storage"))
+                whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
                 //whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             }
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)

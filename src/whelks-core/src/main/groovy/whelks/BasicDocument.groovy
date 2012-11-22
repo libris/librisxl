@@ -21,9 +21,9 @@ public class BasicDocument implements Document {
     String version = "1", contentType
     byte[] data
     long size
-    Set<Link> links = new TreeSet<Link>()
+    Set<Link> links = new HashSet<Link>()
     Set<Key> keys = new TreeSet<Key>()
-    Set<Tag> tags = new TreeSet<Tag>()
+    Set<Tag> tags = new HashSet<Tag>()
     Set<Description> descriptions = new TreeSet<Description>()
     long timestamp = 0
 
@@ -189,18 +189,24 @@ public class BasicDocument implements Document {
         this.timestamp = _t
     }
 
+    public Document tag(String type, String value) {
+        return tag(new URI(type), value)
+    }
+
     @Override
-    public Tag tag(URI type, String value) {
+    public Document tag(URI type, String value) {
+        /*
         synchronized (tags) {
             for (Tag t: tags)
             if (t.getType().equals(type) && t.getValue().equals(value))
                 return t
         }
+        */
         BasicTag tag = new BasicTag(type, value)
 
-        tags.add(tag)
+        this.tags.add(tag)
 
-        return tag
+        return this
     }
 
     @Override

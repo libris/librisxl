@@ -189,7 +189,19 @@ class Harvester implements Runnable {
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
                     String id = record.getControlfields("001").get(0).getData();
                     String jsonRec = MarcJSONConverter.toJSONString(record);
-                    documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                    def doc = new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                    if (it.header.setSpec) {
+                        for (sS in it.header.setSpec) {
+                            if (sS.toString().startsWith("authority:")) {
+                                def auth = "/auth/" + sS.toString().substring(10)
+                                doc = doc.withLink(auth, "authority")
+                            }
+                            if (sS.toString().startsWith("location:")) {
+                                doc = doc.tag("location", sS.toString().substring(9))
+                            }
+                        }
+                    }
+                    documents << doc
                     //log.debug("Imported " + importedCount.incrementAndGet())
                 } else {
                     failed++
