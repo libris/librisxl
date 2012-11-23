@@ -173,16 +173,17 @@ class ImportWhelk extends BasicWhelk {
             def prefix = args[0]
             def resource = (args.length > 1 ? args[1] : args[0])
             def whelk = new ImportWhelk(prefix)
-            def mode = (args.length > 2 ? args[2] : "default")
+            // Mode parameter doubles as basedir for diskstorage if not using riak.
+            def mode = (args.length > 2 ? args[2] : "/extra/whelk_storage")
             def date = (args.length > 3 ? Tool.parseDate(args[3]) : null)
             println "Using arguments: prefix=$prefix, resource=$resource, mode=$mode, since=$date"
             if (mode.equals("riak")) {
                 whelk.addPlugin(new RiakStorage(prefix))
             } else {
-                //whelk.addPlugin(new ElasticSearchClientIndexHistory(prefix))
                 //whelk.addPlugin(new RiakStorage(prefix))
-                whelk.addPlugin(new DiskStorage("/extra/whelk_storage"))
-                //whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
+                whelk.addPlugin(new DiskStorage(mode, prefix))
+                whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+                whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             }
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
