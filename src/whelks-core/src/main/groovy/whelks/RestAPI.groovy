@@ -53,6 +53,10 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     }
 }
 
+enum DisplayMode {
+    DOCUMENT, META
+}
+
 @Log
 class DocumentRestlet extends BasicWhelkAPI {
 
@@ -70,18 +74,31 @@ class DocumentRestlet extends BasicWhelkAPI {
         return escaped.toString()
     }
 
+    def determineDisplayMode(path) {
+        if (path.endsWith("/meta")) {
+            return [path[0 .. -6], DisplayMode.META]
+        }
+        return [path, DisplayMode.DOCUMENT]
+    }
+
     def void handle(Request request, Response response) {
         log.debug("reqattr path: " + request.attributes["path"])
         String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["path"])
-        //path = request.attributes["path"]
+        def mode = DisplayMode.DOCUMENT
+        (path, mode) = determineDisplayMode(path)
         boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
+            log.debug " DisplayMode: $mode"
             try {
                 def d = whelk.get(new URI(path))
-                log.debug("D: $d")
+                log.debug("Document received from whelk: $d")
                 if (d) {
-                    response.setEntity(d.dataAsString, new MediaType(d.contentType))
+                    if (mode == DisplayMode.META) {
+                        response.setEntity(d.toJson(), MediaType.APPLICATION_JSON)
+                    } else {
+                        response.setEntity(d.dataAsString, new MediaType(d.contentType))
+                    }
                 } else {
                     log.debug("Failed to find a document with URI $path")
                     response.setStatus(Status.CLIENT_ERROR_NOT_FOUND)
