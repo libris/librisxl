@@ -143,10 +143,10 @@ class ReindexingWhelk extends WhelkImpl {
         if (args) {
             def prefix = args[0]
             def resource = (args.length > 1 ? args[1] : args[0])
+            def basedir =  (args.length > 2 ? args[2] : "/extra/whelk_storage")
             def whelk = new ReindexingWhelk(prefix)
-            def date = (args.length > 2)? Tool.parseDate(args[2]) : null
-            println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
-            whelk.addPlugin(new DiskStorage("/tmp/whelk_storage", prefix))
+            println "Using arguments: prefix=$prefix, resource=$resource, basedir=$basedir"
+            whelk.addPlugin(new DiskStorage(basedir, prefix))
             whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
             whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             long startTime = System.currentTimeMillis()
