@@ -13,6 +13,8 @@ import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
 import se.kb.libris.whelks.persistance.*
 
+import org.codehaus.jackson.map.*
+
 interface RestAPI extends API {
     String getPath()
 }
@@ -50,6 +52,31 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     @Override
     int compareTo(Plugin p) {
         return (this.getOrder() - p.getOrder());
+    }
+}
+
+@Log
+class DiscoveryAPI extends BasicWhelkAPI {
+
+    ObjectMapper mapper = new ObjectMapper()
+
+    DiscoveryAPI(Whelk w) {
+        this.whelk = w
+    }
+
+    @Override
+    String getPath() {
+        return "/" + this.whelk.prefix + "/"
+    }
+
+    @Override
+    def void handle(Request request, Response response) {
+        def info = [:]
+        info["whelk"] = whelk.prefix
+        info["apis"] = whelk.getAPIs().collect { it.path }
+        log.debug("info: $info")
+
+        response.setEntity(mapper.writeValueAsString(info), MediaType.APPLICATION_JSON)
     }
 }
 

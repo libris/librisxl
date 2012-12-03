@@ -114,9 +114,6 @@ class WhelkImpl extends BasicWhelk {
 
 }
 
-
-
-
 class Tool {
     static Date parseDate(repr) {
         if (!repr.number) {
