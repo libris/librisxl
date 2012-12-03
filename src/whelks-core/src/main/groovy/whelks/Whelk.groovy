@@ -142,18 +142,22 @@ class ReindexingWhelk extends WhelkImpl {
     static main(args) {
         if (args) {
             def prefix = args[0]
-            def resource = (args.length > 1 ? args[1] : args[0])
-            def basedir =  (args.length > 2 ? args[2] : "/extra/whelk_storage")
+            def basedir =  (args.length > 1 ? args[1] : "/extra/whelk_storage")
             def whelk = new ReindexingWhelk(prefix)
-            println "Using arguments: prefix=$prefix, resource=$resource, basedir=$basedir"
+            log.info "Using arguments: prefix=$prefix, basedir=$basedir"
             whelk.addPlugin(new DiskStorage(basedir, prefix))
             whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
             whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
+            def startMsg = "Starting whelk $prefix with the following plugins activated:"
+            for (plugin in whelk.plugins) {
+                startMsg = "$startMsg ${plugin.id} ($plugin)"
+            }
+            log.info(startMsg)
             long startTime = System.currentTimeMillis()
             whelk.reindex()
-            println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
+            log.info "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
         } else {
-            println "Supply whelk-prefix and resource-name as arguments to commence reindexing."
+            println "Supply whelk-prefix as arguments to commence reindexing."
         }
     }
 }
@@ -180,9 +184,14 @@ class ImportWhelk extends BasicWhelk {
             } else {
                 //whelk.addPlugin(new RiakStorage(prefix))
                 whelk.addPlugin(new DiskStorage(mode, prefix))
-                whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+                whelk.addPlugin(new ElasticSearchClientIndexHistory(prefix))
                 whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
             }
+            def startMsg = "Starting whelk $prefix with the following plugins activated:"
+            for (plugin in whelk.plugins) {
+                startMsg = "$startMsg ${plugin.id} ($plugin)"
+            }
+            log.info(startMsg)
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
             def nrimports = importer.doImport(whelk, date)

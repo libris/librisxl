@@ -154,7 +154,7 @@ class RiakStorage extends RiakClient implements Storage {
             try {
                 IRiakObject riakObject = RiakObjectBuilder.newBuilder(prefix, key).withContentType(d.contentType).withValue(d.data).build()
                 IRiakObject storedObject = bucket.store(riakObject).withRetrier(new DefaultRetrier(STORE_RETRIES)).execute()
-                log.info("Stored document " + d.identifier + " to riak")
+                log.trace("Stored document " + d.identifier + " to riak")
                 break
             } catch(RiakResponseRuntimeException rrre){
                 log.warn("Could not store document with identifier " + d.identifier + " " + e.message)

@@ -222,9 +222,9 @@ class Harvester implements Runnable {
             return findResumptionToken(xmlString)
         } finally {
             if (documents.size() > 0) {
-                importedCount.addAndGet(documents.size())
                 executor.execute(new Runnable() {
                         public void run() {
+                            importedCount.addAndGet(documents.size())
                             //log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
                             log.info("Storing "+documents.size()+" documents ... $importedCount sofar.")
                             whelk.store(documents)
