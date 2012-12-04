@@ -40,7 +40,7 @@ public interface Document {
     public Set<Tag> getTags();
     public String toJson();
 
-    public Tag tag(URI type, String value);
+    public Document tag(URI type, String value);
     public void untag(URI type, String value);
 
     public Document withLink(Link link);

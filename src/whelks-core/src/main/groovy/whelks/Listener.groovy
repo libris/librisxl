@@ -37,7 +37,6 @@ class Listener extends BasicPlugin implements WhelkAware {
         this.otherwhelk = n
         this.otherwhelk.addPluginIfNotExists(new Notifier(this))
         id = id + ", listening to $otherwhelk.prefix"
-        //pool = java.util.concurrent.Executors.newCachedThreadPool()
         pool = newScalingThreadPoolExecutor(DEFAULT_NUMBER_OF_HANDLERS, MAX_NUMBER_OF_HANDLERS, 60)
     }
 

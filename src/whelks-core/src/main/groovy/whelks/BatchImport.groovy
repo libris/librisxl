@@ -55,12 +55,14 @@ class BatchImport {
 
     public void setResource(String r) { this.resource = r; }
 
-    public int doImport(ImportWhelk whelk, Date from) {
+    public int doImport(Whelk whelk, Date from) {
         try {
             pool = Executors.newCachedThreadPool()
 
             this.starttime = System.currentTimeMillis();
             List<Future> futures = []
+            futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla"))
+            /*
             if (!from) {
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla"))
             } else {
@@ -74,6 +76,7 @@ class BatchImport {
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20120701"), Date.parse("yyyyMMdd", "20120930")), "2012Q3"))
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20121001"), Date.parse("yyyyMMdd", "20121231")), "2012Q4"))
             }
+            */
             def results = futures.collect{it.get()}
             log.info("Collecting results ...")
             log.info("Results: $results, after " + (System.currentTimeMillis() - starttime)/1000 + " seconds.")
@@ -184,7 +187,19 @@ class Harvester implements Runnable {
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
                     String id = record.getControlfields("001").get(0).getData();
                     String jsonRec = MarcJSONConverter.toJSONString(record);
-                    documents << new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                    def doc = new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                    if (it.header.setSpec) {
+                        for (sS in it.header.setSpec) {
+                            if (sS.toString().startsWith("authority:")) {
+                                def auth = "/auth/" + sS.toString().substring(10)
+                                doc = doc.withLink(auth, "authority")
+                            }
+                            if (sS.toString().startsWith("location:")) {
+                                doc = doc.tag("location", sS.toString().substring(9))
+                            }
+                        }
+                    }
+                    documents << doc
                     //log.debug("Imported " + importedCount.incrementAndGet())
                 } else {
                     failed++
@@ -199,8 +214,8 @@ class Harvester implements Runnable {
             log.warn("Failed to parse record \"$mdrecord\": ${ioe.message}.")
             return OAIPMH.ListRecords.resumptionToken
         } catch (Exception e) {
-            //log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
-            log.debug(e.printStackTrace())
+            log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
+            log.warn(e.printStackTrace())
             xmlfailed++
             return findResumptionToken(xmlString)
         } finally {

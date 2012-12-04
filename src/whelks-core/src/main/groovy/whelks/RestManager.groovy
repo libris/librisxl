@@ -46,6 +46,9 @@ class RestManager extends Application {
         log.debug("Looking for suitable APIs to attach")
 
         whelks.each {
+            log.debug("Attaching Discovery API")
+            def dapi = new DiscoveryAPI(it)
+            router.attach(dapi.path, dapi)
             log.debug("Getting APIs for whelk ${it.prefix}")
             for (api in it.getAPIs()) {
                 if (!api.varPath) {
@@ -55,7 +58,7 @@ class RestManager extends Application {
             for (api in it.getAPIs()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
-                    router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
+                    router.attach(api.path, api).template.variables.put("identifier", new Variable(Variable.TYPE_URI_PATH))
                 }
             }
         }

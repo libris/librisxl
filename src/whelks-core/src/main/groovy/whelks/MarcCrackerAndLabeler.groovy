@@ -149,7 +149,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
             }
 
             json = appendLabels(json)
-
+            json = appendTags(json, doc)
 
             try {
                 outdocs << new BasicDocument(doc).withData(mapper.writeValueAsBytes(json))
@@ -161,6 +161,13 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
 
         }
         return outdocs
+    }
+
+    def appendTags(def json, Document doc) {
+        for (tag in doc.tags) {
+            json[tag.type] = tag.value
+        }
+        return json
     }
 
     def appendLabels(def json) {

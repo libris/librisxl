@@ -145,7 +145,6 @@ class RiakStorage extends RiakClient implements Storage {
         int attempt = 0
         int loop_times = 2
 
-        //TODO: check modified, vclock
         String key = extractIdFromURI(d.identifier)
         Bucket bucket = buckets.get(prefix)
         if (bucket == null)
@@ -154,7 +153,7 @@ class RiakStorage extends RiakClient implements Storage {
             try {
                 IRiakObject riakObject = RiakObjectBuilder.newBuilder(prefix, key).withContentType(d.contentType).withValue(d.data).build()
                 IRiakObject storedObject = bucket.store(riakObject).withRetrier(new DefaultRetrier(STORE_RETRIES)).execute()
-                log.debug("Stored document " + d.identifier + " to riak")
+                log.trace("Stored document " + d.identifier + " to riak")
                 break
             } catch(RiakResponseRuntimeException rrre){
                 log.warn("Could not store document with identifier " + d.identifier + " " + e.message)

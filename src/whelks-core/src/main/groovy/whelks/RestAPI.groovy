@@ -13,6 +13,8 @@ import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
 import se.kb.libris.whelks.persistance.*
 
+import org.codehaus.jackson.map.*
+
 interface RestAPI extends API {
     String getPath()
 }
@@ -54,9 +56,38 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
 }
 
 @Log
+class DiscoveryAPI extends BasicWhelkAPI {
+
+    ObjectMapper mapper = new ObjectMapper()
+
+    DiscoveryAPI(Whelk w) {
+        this.whelk = w
+    }
+
+    @Override
+    String getPath() {
+        return "/" + this.whelk.prefix + "/"
+    }
+
+    @Override
+    def void handle(Request request, Response response) {
+        def info = [:]
+        info["whelk"] = whelk.prefix
+        info["apis"] = whelk.getAPIs().collect { it.path }
+        log.debug("info: $info")
+
+        response.setEntity(mapper.writeValueAsString(info), MediaType.APPLICATION_JSON)
+    }
+}
+
+enum DisplayMode {
+    DOCUMENT, META
+}
+
+@Log
 class DocumentRestlet extends BasicWhelkAPI {
 
-    def pathEnd = "{path}"
+    def pathEnd = "{identifier}"
     def varPath = true
 
     def _escape_regex(str) {
@@ -70,18 +101,31 @@ class DocumentRestlet extends BasicWhelkAPI {
         return escaped.toString()
     }
 
+    def determineDisplayMode(path) {
+        if (path.endsWith("/meta")) {
+            return [path[0 .. -6], DisplayMode.META]
+        }
+        return [path, DisplayMode.DOCUMENT]
+    }
+
     def void handle(Request request, Response response) {
-        log.debug("reqattr path: " + request.attributes["path"])
-        String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["path"])
-        //path = request.attributes["path"]
+        log.debug("reqattr path: " + request.attributes["identifier"])
+        String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["identifier"])
+        def mode = DisplayMode.DOCUMENT
+        (path, mode) = determineDisplayMode(path)
         boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
+            log.debug " DisplayMode: $mode"
             try {
                 def d = whelk.get(new URI(path))
-                log.debug("D: $d")
+                log.debug("Document received from whelk: $d")
                 if (d) {
-                    response.setEntity(d.dataAsString, new MediaType(d.contentType))
+                    if (mode == DisplayMode.META) {
+                        response.setEntity(d.toJson(), MediaType.APPLICATION_JSON)
+                    } else {
+                        response.setEntity(d.dataAsString, new MediaType(d.contentType))
+                    }
                 } else {
                     log.debug("Failed to find a document with URI $path")
                     response.setStatus(Status.CLIENT_ERROR_NOT_FOUND)

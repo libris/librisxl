@@ -3,13 +3,13 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["indexstorage", "search", "kitinsearch", "document", "marcmassager"]
+                "_plugins": ["indexstorage", "storage", "search", "kitinsearch", "document", "marcmassager"]
             }
         },
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": [ "indexstorage", "search", "document", "marcmassager" ]
+                "_plugins": [ "indexstorage", "storage", "search", "document", "marcmassager" ]
             }
         },
         {
@@ -20,27 +20,31 @@
     ], 
         "_plugins": [
         {
-            "index": { 
+            "index": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory",
                 "_params" : "_whelkname"
             }
         }, 
         {
-            "indexstorage": { 
+            "indexstorage": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientStorageIndexHistory",
-                "_params" : "_whelkname"
+                "_params" : "_whelkname", 
+                "_priority" : 2
             }
         }, 
         {
             "storage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : "/tmp/whelk_storage"
+                "_params" : "/tmp/whelk_storage, _whelkname",
+                "_priority" : 1
+
             }
         },
         {
             "riakstorage" : {
                 "_class" : "se.kb.libris.whelks.component.RiakStorage",
-                "_params" : "_whelkname"
+                "_params" : "_whelkname", 
+                "_priority" : 0
             }
         },
         {

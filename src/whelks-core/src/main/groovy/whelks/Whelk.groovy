@@ -12,11 +12,12 @@ import org.apache.commons.io.output.TeeOutputStream
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.basic.*
-import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.component.*
-import se.kb.libris.whelks.plugin.*
-import se.kb.libris.whelks.persistance.*
+import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.imports.*
+import se.kb.libris.whelks.persistance.*
+import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.plugin.external.*
 
 
 @Log
@@ -50,6 +51,8 @@ class WhelkImpl extends BasicWhelk {
         Storage scomp = components.find { it instanceof Storage }
         Index icomp = components.find { it instanceof Index }
         IndexFormatConverter ifc = plugins.find { it instanceof IndexFormatConverter }
+
+        log.info("Using $scomp as storage source for reindex.")
 
         long startTime = System.currentTimeMillis()
         List<Document> docs = new ArrayList<Document>()
@@ -112,9 +115,6 @@ class WhelkImpl extends BasicWhelk {
 
 }
 
-
-
-
 class Tool {
     static Date parseDate(repr) {
         if (!repr.number) {
@@ -129,6 +129,7 @@ class Tool {
     }
 }
 
+/*
 @Log
 class ReindexingWhelk extends WhelkImpl {
 
@@ -140,17 +141,22 @@ class ReindexingWhelk extends WhelkImpl {
     static main(args) {
         if (args) {
             def prefix = args[0]
-            def resource = (args.length > 1 ? args[1] : args[0])
+            def basedir =  (args.length > 1 ? args[1] : "/extra/whelk_storage")
             def whelk = new ReindexingWhelk(prefix)
-            def date = (args.length > 2)? Tool.parseDate(args[2]) : null
-            println "Using arguments: prefix=$prefix, resource=$resource, since=$date"
+            log.info "Using arguments: prefix=$prefix, basedir=$basedir"
+            whelk.addPlugin(new DiskStorage(basedir, prefix))
             whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
             whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
+            def startMsg = "Starting whelk $prefix with the following plugins activated:"
+            for (plugin in whelk.plugins) {
+                startMsg = "$startMsg ${plugin.id} ($plugin)"
+            }
+            log.info(startMsg)
             long startTime = System.currentTimeMillis()
             whelk.reindex()
-            println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
+            log.info "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
         } else {
-            println "Supply whelk-prefix and resource-name as arguments to commence reindexing."
+            println "Supply whelk-prefix as arguments to commence reindexing."
         }
     }
 }
@@ -165,20 +171,32 @@ class ImportWhelk extends BasicWhelk {
 
     static main(args) {
         if (args) {
-            def prefix = args[0]
-            def resource = (args.length > 1 ? args[1] : args[0])
+            def prefix = "suggest" //args[0]
+            def resource = "bib" // (args.length > 1 ? args[1] : args[0])
             def whelk = new ImportWhelk(prefix)
-            def mode = (args.length > 2 ? args[2] : "default")
+            // Mode parameter doubles as basedir for diskstorage if not using riak.
+            def mode = (args.length > 2 ? args[2] : "/extra/whelk_storage")
             def date = (args.length > 3 ? Tool.parseDate(args[3]) : null)
             println "Using arguments: prefix=$prefix, resource=$resource, mode=$mode, since=$date"
             if (mode.equals("riak")) {
                 whelk.addPlugin(new RiakStorage(prefix))
             } else {
-                whelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
                 //whelk.addPlugin(new RiakStorage(prefix))
-                //whelk.addPlugin(new DiskStorage("/tmp/whelk_storage"))
-                whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
+                if (prefix.equals("suggest")) {
+                    def bibwhelk = new BasicWhelk("bib")
+                    bibwhelk.addPlugin(new ElasticSearchClientStorageIndexHistory(prefix))
+                    whelk.addPlugin(new AutoSuggestFormatConverter(bibwhelk))
+                } else {
+                    whelk.addPlugin(new DiskStorage(mode, prefix))
+                    whelk.addPlugin(new ElasticSearchClientIndexHistory(prefix))
+                    whelk.addPlugin(new MarcCrackerAndLabelerIndexFormatConverter())
+                }
             }
+            def startMsg = "Starting whelk $prefix with the following plugins activated:"
+            for (plugin in whelk.plugins) {
+                startMsg = "$startMsg ${plugin.id} ($plugin)"
+            }
+            log.info(startMsg)
             def importer = new se.kb.libris.whelks.imports.BatchImport(resource)
             long startTime = System.currentTimeMillis()
             def nrimports = importer.doImport(whelk, date)
@@ -186,6 +204,32 @@ class ImportWhelk extends BasicWhelk {
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else {
             println "Supply whelk-prefix and resource-name as arguments to commence import."
+        }
+    }
+}
+*/
+
+@Log
+class WhelkOperator {
+
+    static main(args) {
+        def operation = (args.length > 0 ? args[0] : null)
+        def whelk = (args.length > 2 ? (new WhelkInitializer(new URI(args[2]).toURL().newInputStream()).getWhelks().find { it.prefix == args[1] }) : null)
+        def resource = (args.length > 3 ? args[3] : whelk?.prefix)
+        def since = (args.length > 4 ? Tool.parseDate(args[4]) : null)
+        if (operation == "import") {
+            def importer = new BatchImport(resource)
+            long startTime = System.currentTimeMillis()
+            def nrimports = importer.doImport(whelk, since)
+            float elapsed = ((System.currentTimeMillis() - startTime) / 1000)
+            println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
+
+        } else if (operation == "reindex") {
+            long startTime = System.currentTimeMillis()
+            whelk.reindex()
+            println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
+        } else {
+            println "Usage: <import|reindex> <whelkname> <config-url> [resource (for import)] [since (for import)]"
         }
     }
 }
