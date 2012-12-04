@@ -231,11 +231,11 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 q.addFacet("leader.subfields.bibLevel")
                 q.addFacet("fields.007.subfields.carrierType")
                 q.addFacet("fields.008.subfields.yearTime1")
-                q.addFacet("ebok", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r", "speciale")
-                q.addFacet("ljudbok", "leader.subfields.typeOfRecord:i leader.subfields.bibLevel:m fields.007.subfields.carrierType:s", "speciale")
-                q.addFacet("etidskrift", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r", "speciale")
-                q.addFacet("bok", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m !fields.007.subfields.carrierType:c", "speciale")
-                q.addFacet("tidskrift", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s !fields.007.subfields.carrierType:c", "speciale")
+                q.addFacet("E-bok", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r", "Bok-/tidskriftstyp")
+                q.addFacet("Ljudbok", "leader.subfields.typeOfRecord:i leader.subfields.bibLevel:m fields.007.subfields.carrierType:s", "Bok-/tidskriftstyp")
+                q.addFacet("E-tidskrift", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r", "Bok-/tidskriftstyp")
+                q.addFacet("Bok", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m !fields.007.subfields.carrierType:c", "Bok-/tidskriftstyp")
+                q.addFacet("Tidskrift", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s !fields.007.subfields.carrierType:c", "Bok-/tidskriftstyp")
                 def results = this.whelk.query(q)
                 def jsonResult =
                     (callback ? callback + "(" : "") +
