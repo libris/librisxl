@@ -9,6 +9,7 @@ task importData(dependsOn: 'classes', type: JavaExec) {
   main = 'se.kb.libris.whelks.ImportWhelk'
   systemProperty 'elastic.host', System.getProperty('elastic.host', "")
   systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', "")
+  systemProperty 'file.encoding', System.getProperty('file.encoding', "")
   args(System.getProperty('args', "").split() as String[])
   maxHeapSize = '1024m'
 }

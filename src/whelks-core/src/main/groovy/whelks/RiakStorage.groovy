@@ -145,7 +145,6 @@ class RiakStorage extends RiakClient implements Storage {
         int attempt = 0
         int loop_times = 2
 
-        //TODO: check modified, vclock
         String key = extractIdFromURI(d.identifier)
         Bucket bucket = buckets.get(prefix)
         if (bucket == null)
