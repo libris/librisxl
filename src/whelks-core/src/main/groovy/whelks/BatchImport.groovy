@@ -101,8 +101,8 @@ class Harvester implements Runnable {
     def storepool
     def queue
     def executor
-    static final int CORE_POOL_SIZE = 10
-    static final int MAX_POOL_SIZE = 20
+    static final int CORE_POOL_SIZE = 500
+    static final int MAX_POOL_SIZE = 500
     static final long KEEP_ALIVE_TIME = 60
 
     Harvester(Whelk w, String r, URL u, String y) {
@@ -110,8 +110,6 @@ class Harvester implements Runnable {
         this.resource = r
         this.whelk = w
         this.year = y
-        //queue = new LinkedBlockingQueue<Runnable>()
-        //executor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.SECONDS, queue, new ThreadPoolExecutor.CallerRunsPolicy())
         executor = newScalingThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME)
     }
 
@@ -207,26 +205,13 @@ class Harvester implements Runnable {
             return findResumptionToken(xmlString)
         } finally {
             if (documents.size() > 0) {
-                importedCount.addAndGet(documents.size())
                 executor.execute(new Runnable() {
                         public void run() {
-                            //log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
+                            importedCount.addAndGet(documents.size())
                             log.info("Storing "+documents.size()+" documents ... $importedCount sofar.")
                             whelk.store(documents)
                         }
                     })
-                /*
-                whelk.store(documents)
-                storepool.submit(new Runnable() {
-                    public void run() {
-                        log.debug("Current pool size: " + ((ThreadPoolExecutor)storepool).getPoolSize() + " current active count " + ((ThreadPoolExecutor)storepool).getActiveCount())
-                        //log.debug("Pushing ${document.identifier} to $whelk")
-                        //whelk.store(document)
-                        whelk.store(documents)
-                        log.trace("Thread has now imported $imported documents.")
-                    }
-                })
-                */
             } else log.debug("Harvest on $url resulted in no documents. xmlstring: ${xmlString}")
         }
     }
@@ -271,14 +256,7 @@ class ScalingQueue extends LinkedBlockingQueue {
 
     @Override
     public boolean offer(Object o) {
-        //int allWorkingThreads = executor.getActiveCount() + super.size()
         int allWorkingThreads = executor.getActiveCount()
-        log.debug("Executor poolsize " + executor.getPoolSize())
-        /*while (allWorkingThreads < executor.getPoolSize) {
-
-        }*/
-        def offered = super.offer(o)
-        log.debug("Offered " + offered)
         return allWorkingThreads < executor.getPoolSize() && super.offer(o)
     }
 }
@@ -310,6 +288,9 @@ class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
         activeCount.incrementAndGet()
+        if (getActiveCount() == getCorePoolSize()) {
+            Thread.sleep(1000)
+        }
     }
 
     @Override
