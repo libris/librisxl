@@ -55,7 +55,7 @@ class BatchImport {
 
     public void setResource(String r) { this.resource = r; }
 
-    public int doImport(ImportWhelk whelk, Date from) {
+    public int doImport(Whelk whelk, Date from) {
         try {
             pool = Executors.newCachedThreadPool()
 

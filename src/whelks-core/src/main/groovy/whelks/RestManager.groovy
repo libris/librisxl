@@ -58,7 +58,7 @@ class RestManager extends Application {
             for (api in it.getAPIs()) {
                 log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
-                    router.attach(api.path, api).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
+                    router.attach(api.path, api).template.variables.put("identifier", new Variable(Variable.TYPE_URI_PATH))
                 }
             }
         }

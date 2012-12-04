@@ -87,7 +87,7 @@ enum DisplayMode {
 @Log
 class DocumentRestlet extends BasicWhelkAPI {
 
-    def pathEnd = "{path}"
+    def pathEnd = "{identifier}"
     def varPath = true
 
     def _escape_regex(str) {
@@ -109,8 +109,8 @@ class DocumentRestlet extends BasicWhelkAPI {
     }
 
     def void handle(Request request, Response response) {
-        log.debug("reqattr path: " + request.attributes["path"])
-        String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["path"])
+        log.debug("reqattr path: " + request.attributes["identifier"])
+        String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["identifier"])
         def mode = DisplayMode.DOCUMENT
         (path, mode) = determineDisplayMode(path)
         boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
