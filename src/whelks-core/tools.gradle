@@ -2,6 +2,7 @@
  * Runtime tools. Use these tasks to invoke compiled tools directly from gradle.
  */
 
+/*
 task importData(dependsOn: 'classes', type: JavaExec) {
   description "Run ImportWhelk. USAGE: -Dargs='<bib|auth> [resource] [mode(<default|riak>)] ([since])' -Delastic.host='<host>' (-Delastic.cluster='<cluster>')"
   classpath = sourceSets.main.runtimeClasspath
@@ -16,6 +17,16 @@ task reindexData(dependsOn: 'classes', type: JavaExec) {
   description "Run ReindexingWhelk. (USAGE: -Dargs='<bib|auth> [resource] [since]') -Delastic.host='<host>' (-Delastic.cluster='<cluster>')"
   classpath = sourceSets.main.runtimeClasspath
   main = 'se.kb.libris.whelks.ReindexingWhelk'
+  systemProperty 'elastic.host', System.getProperty('elastic.host', "")
+  systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', "")
+  args(System.getProperty('args', "").split() as String[])
+}
+*/
+
+task whelkOperation(dependsOn: 'classes', type: JavaExec) {
+  description "Run import or reindex. (USAGE: -Dargs='<import|reindex> <whelkname> <config-url> [resource (for import)] [since (for import)]' -Delastic.host='<host>' (-Delastic.cluster='<cluster>'))"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'se.kb.libris.whelks.WhelkOperator'
   systemProperty 'elastic.host', System.getProperty('elastic.host', "")
   systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', "")
   args(System.getProperty('args', "").split() as String[])
