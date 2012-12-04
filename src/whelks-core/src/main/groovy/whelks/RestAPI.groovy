@@ -223,8 +223,10 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             def q = new Query(reqMap)
             def callback = reqMap.get("callback")
             if (q) {
+                /*
                 q.addFacet("fields.041.subfields.a")
                 q.addFacet("fields.041.subfields.h")
+                */
                 q.addFacet("leader.subfields.typeOfRecord")
                 q.addFacet("leader.subfields.bibLevel")
                 q.addFacet("fields.007.subfields.carrierType")
