@@ -21,6 +21,7 @@ public interface Whelk {
 
     // maintenance
     public void destroy();
+    public Iterable<Document> log();
     public Iterable<Document> log(int startIndex);
     public Iterable<Document> log(URI identifier);
     public Iterable<Document> log(Date since);

@@ -92,12 +92,12 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                     sug_json["100"] = [:]
                     sug_json["100"]["ind1"] = v["ind1"]
                     for (def sf in v["subfields"]) {
-                        sf.each {sk, sv -> 
+                        sf.each {sk, sv ->
                             if (sk == "0" && rtype == "bib") {
                                 should_add = false
                             }
                             if (["a","b","c","d"].contains(sk)) {
-                                sug_json["100"][sk] = sv
+                                sug_json[k][sk] = sv
                             }
                         }
                     }
@@ -105,7 +105,13 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                         if (k == "100") {
                             sug_json["identifier"] = new String("/${w_name}/${suggest_source}/${id001}")
                         } else {
-                            def name = "${id001}/" + sug_json["100"]["a"].replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","")
+                            def name
+                            try {
+                                name = "${id001}/" + sug_json["100"]["a"].replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","").replace("|", "")
+                            } catch (NullPointerException npe) {
+                                log.error("Couldn't find 100a field for record $id001: $sug_json", npe)
+                                throw npe
+                            }
 
                             //print "values", w_name, suggest_source, "name:", name
                             sug_json["identifier"] = new String("/${w_name}/${suggest_source}/${name}")
@@ -143,14 +149,17 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
         resten_json["records"] = 1
 
         // get_records for auth-records
+        /* Temporarily disabled
         if (rtype == "auth") {
             if (alla_json.size() > 0 && alla_json[0]["100"]) {
                 //f_100 = " ".join(alla_json[0]["100"].values()[1:])
                 def f_100 = alla_json[0]["100"]
                 resten_json = get_records(f_100, resten_json)
             }
-        } 
-        else if (top_title) { 
+        }
+        else 
+        */
+        if (top_title) { 
             // single top-title for bibrecords
             resten_json["top_titles"] = ["http://libris.kb.se${link}" : top_title.trim()]
         }

@@ -228,8 +228,53 @@ class WhelkOperator {
             long startTime = System.currentTimeMillis()
             whelk.reindex()
             println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
+        } else if (operation == "rebalance") {
+            // Makes sure all documents are in all storages. Using storage with prio 0 as base whelk.
+            int count = 0
+            def docs = []
+            for (doc in whelk.log()) {
+                docs << doc
+                count++
+                if (count % 1000 == 0) {
+                    log.info("Storing "+ docs.size()+ " documents in all components ... ($count total)")
+                    whelk.store(docs)
+                    docs = []
+                }
+            }
+            if (docs.size() > 0) {
+                count += docs.size()
+                whelk.store(docs)
+            }
+            println "Whelk is rebalanced. All storages should now contain $count documents."
+        } else if (operation == "repopulate" || operation == "rebalance") {
+            def target = (args.length > 2 ? (new WhelkInitializer(new URI(args[2]).toURL().newInputStream()).getWhelks().find { it.prefix == resource }) : null)
+            int count = 0
+            def docs = []
+            for (doc in whelk.log()) {
+                docs << doc
+                count++
+                if (count % 1000 == 0) {
+                    log.info("Storing "+ docs.size()+ " documents in " + (target ? target.prefix : "all components") + " ... ($count total)")
+                    if (target) {
+                        target.store(docs)
+                    } else {
+                        whelk.store(docs)
+                    }
+                    docs = []
+                }
+            }
+            if (docs.size() > 0) {
+                count += docs.size()
+                if (target) {
+                    target.store(docs)
+                } else {
+                    whelk.store(docs)
+                }
+            }
+            println "Whelk is repopulated."
+
         } else {
-            println "Usage: <import|reindex> <whelkname> <config-url> [resource (for import)] [since (for import)]"
+            println "Usage: <import|reindex|rebalance|repopulate> <whelkname> <config-url> [resource (for import)|target (for repopulate)] [since (for import)]"
         }
     }
 }
