@@ -239,10 +239,8 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
     Query expandQuery(Query q) {
         def newquery = []
         for (queryitem in q.query.split()) {
-            log.info("queryitem: $queryitem")
             if (queryitem.contains(":")) {
                 def (group, key) = queryitem.split(":")
-                log.info("Group: $group, Key: $key")
                 if (queryFacets[group]) {
                     newquery << (queryFacets[group][key] ?: "")
                 } else {
@@ -253,7 +251,6 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             }
         }
         q.query = newquery.join(" ")
-        log.info("querystring: ${q.query}")
         return q
     }
 
