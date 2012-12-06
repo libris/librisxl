@@ -11,6 +11,7 @@ import java.net.URL
 import java.net.URI
 import java.net.HttpURLConnection
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Callable
 import com.basho.riak.client.RiakFactory
 import com.basho.riak.client.bucket.Bucket
 import com.basho.riak.client.builders.RiakObjectBuilder
@@ -23,9 +24,12 @@ import com.basho.riak.client.http.response.RiakResponseRuntimeException
 import com.basho.riak.client.raw.http.HTTPClusterConfig
 import com.basho.riak.client.raw.http.HTTPClientConfig
 import com.basho.riak.client.query.NodeStats
-import com.basho.riak.client.cap.DefaultRetrier
+import com.basho.riak.client.cap.Retrier
 import com.basho.riak.client.operations.StoreObject
 import com.basho.riak.client.cap.Quora
+import com.basho.riak.client.RiakRetryFailedException
+import com.basho.riak.client.convert.ConversionException
+import com.basho.riak.client.raw.MatchFoundException
 
 import groovy.json.JsonSlurper
 import groovy.transform.Synchronized
@@ -56,7 +60,7 @@ abstract class RiakClient extends BasicPlugin {
         HTTPClusterConfig clusterConfig = new HTTPClusterConfig(json_config.cluster_max_connections)
         json_config.nodes.each {
             if (pingNode(it.host, it.port)) {
-                HTTPClientConfig clientConfig = new HTTPClientConfig.Builder().withHost(it.host).withPort(it.port).withRiakPath(it.riak_path).withMaxConnctions(it.max_connections).withTimeout(3000).build()
+                HTTPClientConfig clientConfig = new HTTPClientConfig.Builder().withHost(it.host).withPort(it.port).withRiakPath(it.riak_path).withMaxConnctions(it.max_connections).withTimeout(10000).build()
                 clusterConfig.addClient(clientConfig)
                 log.info("Adding riak node " + it.host)
             }
@@ -147,19 +151,20 @@ class RiakStorage extends RiakClient implements Storage {
 
         String key = extractIdFromURI(d.identifier)
         Bucket bucket = buckets.get(prefix)
-        if (bucket == null)
-            bucket = createBucket(prefix, DEFAULT_N_VAL, DEFAULT_ALLOW_MULT, DEFAULT_W_QUORUM, DEFAULT_R_QUORUM)
-        while (attempt < loop_times) {
-            try {
+        try {
+            if (bucket == null)
+                bucket = createBucket(prefix, DEFAULT_N_VAL, DEFAULT_ALLOW_MULT, DEFAULT_W_QUORUM, DEFAULT_R_QUORUM)
+            //while (attempt < loop_times) {
                 IRiakObject riakObject = RiakObjectBuilder.newBuilder(prefix, key).withContentType(d.contentType).withValue(d.data).build()
-                IRiakObject storedObject = bucket.store(riakObject).withRetrier(new DefaultRetrier(STORE_RETRIES)).execute()
+                IRiakObject storedObject = bucket.store(riakObject).withRetrier(new WaitingRetrier(STORE_RETRIES)).execute()
                 log.trace("Stored document " + d.identifier + " to riak")
-                break
+                //break
             } catch(RiakResponseRuntimeException rrre){
                 log.warn("Could not store document with identifier " + d.identifier + " " + e.message)
                 throw new WhelkRuntimeException(rrre.message)
             } catch(Exception e){
-                if (attempt == loop_times-1) {
+               log.warn("Could not store document with identifier " + d.identifier + " " + e.message)
+               /* if (attempt == loop_times-1) {
                     log.warn("Could not store document with identifier " + d.identifier + " " + e.message)
                     log.debug(e.printStackTrace())
                 } else {
@@ -167,8 +172,9 @@ class RiakStorage extends RiakClient implements Storage {
                     riakClient = getNodeReconfiguredClient(riakjson)
                 }
                 attempt++
+                */
             }
-        }
+        //}
     }
 
     String extractIdFromURI(URI uri) {
@@ -217,7 +223,7 @@ class RiakStorage extends RiakClient implements Storage {
             String key = extractIdFromURI(uri)
             String bucket_name = extractBucketNameFromURI(uri)
             Bucket bucket = getFetchBucket(bucket_name)
-            log.info("Deleting " + bucket_name + key)
+            log.debug("Deleting " + bucket_name + key)
             bucket.delete(key).execute()
        } catch (Exception e){
             log.debug("Exception trying to delete " + uri.path + " " + e.message)
@@ -264,4 +270,43 @@ class RiakIterable<T> implements Iterable {
     Iterator<Document> iterator() {
         return riakDocs.iterator()
     }
+}
+
+@Log
+class WaitingRetrier implements Retrier {
+    final static int RETRY_WAIT = 3000
+    final int attempts
+
+    public WaitingRetrier(int attempts){
+        this.attempts = attempts
+    }
+
+    public <T> T attempt(Callable<T> command) throws RiakRetryFailedException {
+        return attempt(command, attempts)
+    }
+
+    @Synchronized
+    public <T> T attempt(final Callable<T> command, final int times) throws RiakRetryFailedException {
+        try {
+            return command.call()
+        } catch (MatchFoundException e) {
+            log.debug("Match found")
+            throw e
+        } catch (ConversionException e) {
+            log.debug("Convertion exception ")
+            throw e
+        } catch (Exception e) {
+            if (times == 0) {
+                throw new RiakRetryFailedException(e)
+            } else {
+                int factor = attempts - times + 1
+                def waitTime = RETRY_WAIT * factor
+                log.debug("Attempt: " + times + " Sleeping " + waitTime + " before retry")
+                Thread.sleep(waitTime)
+                return attempt(command, times - 1)
+            }
+        }
+    }
+
+
 }
