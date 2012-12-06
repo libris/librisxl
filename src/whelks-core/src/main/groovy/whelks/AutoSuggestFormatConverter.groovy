@@ -79,18 +79,17 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
 
         def top_title
 
-
         for (def f in a_json["fields"]) {
             f.each { k, v ->
                 if (k == "001") {
                     link = new String("/${rtype}/${v}")
                     id001 = v
                 }
-                if (k in ["100", "700"]) {
+                if (k in get_name_fields(rtype)) {
                     def should_add = true
                     def sug_json = [:]
-                    sug_json["100"] = [:]
-                    sug_json["100"]["ind1"] = v["ind1"]
+                    sug_json[k] = [:]
+                    sug_json[k]["ind1"] = v["ind1"]
                     for (def sf in v["subfields"]) {
                         sf.each {sk, sv ->
                             if (sk == "0" && rtype == "bib") {
@@ -109,14 +108,16 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                             try {
                                 name = "${id001}/" + sug_json["100"]["a"].replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","").replace("|", "")
                             } catch (NullPointerException npe) {
-                                log.error("Couldn't find 100a field for record $id001: $sug_json", npe)
-                                throw npe
+                                log.error("Couldn't find ${k}.a field for record $id001: $sug_json", npe)
+                                should_add= false
                             }
 
                             //print "values", w_name, suggest_source, "name:", name
                             sug_json["identifier"] = new String("/${w_name}/${suggest_source}/${name}")
                         }
-                        alla_json << sug_json
+                        if (should_add) {
+                            alla_json << sug_json
+                        }
                     }
                 } else if (k in get_fields(rtype)) {
                     def f_list = (resten_json[k] ? resten_json[k] : [])
@@ -192,6 +193,13 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
             return ["400", "500", "678", "680", "856"]
         }
         return ["245", "678"]
+    }
+
+    def get_name_fields(rtype) {
+        if (rtype == "auth") {
+            return ["100"]
+        }
+        return ["100", "700"]
     }
 
     def get_records(f_100, sug_json) {
