@@ -211,7 +211,8 @@ class SearchRestlet extends BasicWhelkAPI {
 class KitinSearchRestlet2 extends BasicWhelkAPI {
     def pathEnd = "kitin/_search"
 
-    String defaultBoost = "labels.title:2,labels.author:2,labels.isbn:2"
+    //String defaultBoost = "labels.title:2,labels.author:2,labels.isbn:2"
+    String defaultBoost = "fields.020.subfields.a:5,fields.022.subfields.a:5,fields.100.subfields.a:5,fields.100.subfields.b:5,labels.title:3,fields.600.subfields.a:2,fields.600.subfields.b:2,fields.260.subfields.c:2,fields.008.subfields.yearTime1:2"
 
     def queryFacets = [
         "custom.bookSerial": [
