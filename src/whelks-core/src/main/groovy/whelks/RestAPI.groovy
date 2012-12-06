@@ -213,6 +213,47 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
 
     String defaultBoost = "labels.title:2,labels.author:2,labels.isbn:2"
 
+    def queryFacets = [
+        "custom.bookSerial": [
+             "ebook": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
+             "audiobook": "leader.subfields.typeOfRecord:i leader.subfields.bibLevel:m fields.007.subfields.carrierType:s",
+             "eserial": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
+             "book": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m !fields.007.subfields.carrierType:c",
+             "serial": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s !fields.007.subfields.carrierType:c"
+        ]
+    ]
+
+
+    Query addQueryFacets(Query q) {
+        for (facetgroup in queryFacets) {
+            facetgroup.value.each {fl, qv ->
+                q.addFacet(fl, qv, facetgroup.key)
+            }
+        }
+        return q
+    }
+
+    /**
+     * Look for, and expand customFacets.
+     */
+    Query expandQuery(Query q) {
+        def newquery = []
+        for (queryitem in q.query.split()) {
+            if (queryitem.contains(":")) {
+                def (group, key) = queryitem.split(":")
+                if (queryFacets[group]) {
+                    newquery << (queryFacets[group][key] ?: "")
+                } else {
+                    newquery << queryitem
+                }
+            } else {
+                newquery << queryitem
+            }
+        }
+        q.query = newquery.join(" ")
+        return q
+    }
+
     @Override
     def void handle(Request request, Response response) {
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
@@ -223,19 +264,12 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             def q = new Query(reqMap)
             def callback = reqMap.get("callback")
             if (q) {
-                /*
-                q.addFacet("fields.041.subfields.a")
-                q.addFacet("fields.041.subfields.h")
-                */
                 q.addFacet("leader.subfields.typeOfRecord")
                 q.addFacet("leader.subfields.bibLevel")
                 q.addFacet("fields.007.subfields.carrierType")
                 q.addFacet("fields.008.subfields.yearTime1")
-                q.addFacet("E-bok", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r", "Bok-/tidskriftstyp")
-                q.addFacet("Ljudbok", "leader.subfields.typeOfRecord:i leader.subfields.bibLevel:m fields.007.subfields.carrierType:s", "Bok-/tidskriftstyp")
-                q.addFacet("E-tidskrift", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r", "Bok-/tidskriftstyp")
-                q.addFacet("Bok", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m !fields.007.subfields.carrierType:c", "Bok-/tidskriftstyp")
-                q.addFacet("Tidskrift", "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s !fields.007.subfields.carrierType:c", "Bok-/tidskriftstyp")
+                q = addQueryFacets(q)
+                q = expandQuery(q)
                 def results = this.whelk.query(q)
                 def jsonResult =
                     (callback ? callback + "(" : "") +

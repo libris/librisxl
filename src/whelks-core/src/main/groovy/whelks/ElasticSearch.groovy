@@ -46,6 +46,7 @@ abstract class ElasticSearch extends BasicPlugin {
     int WARN_AFTER_TRIES = 1000
     int RETRY_TIMEOUT = 300
     int MAX_RETRY_TIMEOUT = 60*60*1000
+    int MAX_NUMBER_OF_FACETS = 100
 
     String URI_SEPARATOR = "::"
 
@@ -281,7 +282,7 @@ abstract class ElasticSearch extends BasicPlugin {
         if (q.facets) {
             q.facets.each {
                 if (it instanceof TermFacet) {
-                    srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field))
+                    srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
                 } else if (it instanceof QueryFacet) {
                     def qf = new QueryStringQueryBuilder(it.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
                     srb = srb.addFacet(FacetBuilders.queryFacet(it.name).query(qf))

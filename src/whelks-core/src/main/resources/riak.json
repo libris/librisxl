@@ -3,7 +3,7 @@
     "nodes":
         [
             {
-             "host": "192.168.3.16",
+             "host": "193.10.75.51",
              "port": 8098,
              "riak_path": "riak",
              "max_connections": 100,

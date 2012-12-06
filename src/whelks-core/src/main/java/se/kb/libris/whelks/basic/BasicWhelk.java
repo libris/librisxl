@@ -150,6 +150,15 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     }
 
     @Override
+    public Iterable<Document> log() {
+        for (Component c: getComponents())
+            if (c instanceof Storage)
+                return ((Storage)c).getAll();
+
+        throw new WhelkRuntimeException("Whelk has no storage for searching");
+    }
+
+    @Override
     public Iterable<Document> log(int startIndex) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
