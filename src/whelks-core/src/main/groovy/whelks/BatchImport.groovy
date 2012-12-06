@@ -107,12 +107,14 @@ class Harvester implements Runnable {
     static final int CORE_POOL_SIZE = 500
     static final int MAX_POOL_SIZE = 500
     static final long KEEP_ALIVE_TIME = 60
+    final long startTime
 
     Harvester(Whelk w, String r, URL u, String y) {
         this.url = new URL(u.toString())
         this.resource = r
         this.whelk = w
         this.year = y
+        this.startTime = System.currentTimeMillis()
         executor = newScalingThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME)
     }
 
@@ -223,7 +225,8 @@ class Harvester implements Runnable {
                 executor.execute(new Runnable() {
                         public void run() {
                             importedCount.addAndGet(documents.size())
-                            log.info("Storing "+documents.size()+" documents ... $importedCount sofar.")
+                            float elapsed = ((System.currentTimeMillis() - startTime) / 1000)
+                            log.info("Storing " + documents.size() + ". Imported $importedCount documents in $elapsed seconds sofar. That's " + importedCount/elapsed + " docs per sec.")
                             whelk.store(documents)
                         }
                     })
