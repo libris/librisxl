@@ -30,8 +30,6 @@ run {
     systemProperty "file.encoding", "UTF-8"
 }
 
-//mainClassName = 'se.kb.libris.whelks.ImportWhelk'
-//mainClassName = 'se.kb.libris.whelks.ReindexingWhelk'
 mainClassName = 'se.kb.libris.whelks.WhelkOperator'
 
 jar {

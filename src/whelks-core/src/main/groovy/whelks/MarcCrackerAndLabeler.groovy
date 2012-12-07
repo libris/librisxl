@@ -64,7 +64,6 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
             propref = column.propRef
         }
         return l
-
     }
 
     @Override

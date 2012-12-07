@@ -38,6 +38,10 @@ public class BasicDocument implements Document {
         fromJson(jsonString)
     }
 
+    public BasicDocument(File jsonFile) {
+        fromJson(jsonFile)
+    }
+
     /*
     public BasicDocument(Map map) {
         fromMap(map)
@@ -48,6 +52,14 @@ public class BasicDocument implements Document {
         copy(d)
     }
 
+    public Document fromJson(File jsonFile) {
+        try {
+            BasicDocument newDoc = mapper.readValue(jsonFile, BasicDocument)
+            copy(newDoc)
+        } catch (JsonParseException jpe) {
+            throw new DocumentException(jpe)
+        }
+    }
 
     public Document fromJson(String jsonString) {
         try {

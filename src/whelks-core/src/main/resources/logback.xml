@@ -9,7 +9,7 @@
 
   <!--
   <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="info"/>
+      <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.basic.BasicDocument">
       <level value="trace"/>
@@ -20,7 +20,7 @@
   </logger>
   -->
 
-  <root level="debug">
+  <root level="info">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

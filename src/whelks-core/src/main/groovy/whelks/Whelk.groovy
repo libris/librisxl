@@ -228,27 +228,7 @@ class WhelkOperator {
         } else if (operation == "reindex") {
             whelk.reindex()
             println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
-            /*
-        } else if (operation == "rebalance") {
-            // Makes sure all documents are in all storages. Using storage with prio 0 as base whelk.
-            int count = 0
-            def docs = []
-            for (doc in whelk.log()) {
-                docs << doc
-                count++
-                if (count % 1000 == 0) {
-                    log.info("Storing "+ docs.size()+ " documents in all components ... ($count total)")
-                    whelk.store(docs)
-                    docs = []
-                }
-            }
-            if (docs.size() > 0) {
-                count += docs.size()
-                whelk.store(docs)
-            }
-            println "Whelk is rebalanced. All storages should now contain $count documents."
-            */
-        } else if (operation == "repopulate" || operation == "rebalance") {
+        } else if (operation == "populate" || operation == "rebalance") {
             def target = (args.length > 2 ? (new WhelkInitializer(new URI(args[2]).toURL().newInputStream()).getWhelks().find { it.prefix == resource }) : null)
             int count = 0
             def docs = []
@@ -275,7 +255,6 @@ class WhelkOperator {
             }
             time = (System.currentTimeMillis() - startTime)/1000
             println "Whelk ${whelk.prefix} is ${operation}d. $count documents in $time seconds."
-
         } else if (operation == "benchmark") {
             int count = 0
             def docs = []
@@ -291,7 +270,7 @@ class WhelkOperator {
             time = (System.currentTimeMillis() - startTime)/1000
             log.info("$count documents read. Total time elapsed: ${time} seconds. That's " + (count/time) + " documents / second.")
         } else {
-            println "Usage: <import|reindex|rebalance|repopulate> <whelkname> <config-url> [resource (for import)|target (for repopulate)] [since (for import)]"
+            println "Usage: <import|reindex|rebalance|populate> <whelkname> <config-url> [resource (for import)|target (for populate)] [since (for import)]"
         }
     }
 }

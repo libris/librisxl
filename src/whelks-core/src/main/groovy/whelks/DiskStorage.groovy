@@ -15,8 +15,10 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     String id = "diskstorage"
     String docFolder = "_"
+    Map<URI, Long> inventory
 
     int PATH_CHUNKS=4
+    final String INVENTORY_FILE = "inventory.data"
 
     DiskStorage(String directoryName, String wlkPfx) {
         StringBuilder dn = new StringBuilder(directoryName)
@@ -25,6 +27,18 @@ class DiskStorage extends BasicPlugin implements Storage {
         }
         this.storageDir = dn.toString() // + "/" + whelkPrefix
         this.whelkPrefix = wlkPfx
+        try {
+            File invFile = new File(this.storageDir + "/" + INVENTORY_FILE).withObjectInputStream { instream ->
+                instream.eachObject {
+                    this.inventory = it
+                }
+            }
+            log.info("Loading inventory.")
+        } catch (Exception e) {
+            this.inventory = new HashMap<URI, Long>()
+            log.info("Creating inventory.")
+        }
+
         log.info("Starting DiskStorage with storageDir $storageDir")
     }
 
@@ -59,32 +73,37 @@ class DiskStorage extends BasicPlugin implements Storage {
         return new DiskDocumentIterable(baseDir)
     }
 
-    void index(Document doc) {
-        def filename = doc.identifier.toString() + ".index"
-            log.debug "${this.class.name} storing file $filename in $storageDir"
-            def fullpath = storageDir + "/" + filename
-            def path = fullpath.substring(0, fullpath.lastIndexOf("/"))
-            log.debug "PATH: $path"
-            new File(path).mkdirs()
-            File file = new File("$storageDir/$filename")
-            file.write(doc.dataAsString)
-    }
-    public void index(Iterable<Document> d) {
-        for (doc in d) {
-            index(doc)
-        }
-    }
-
     @Override
-    void store(Document doc) {
+    void store(Document doc, boolean saveInventory = true) {
         File file = new File(buildPath(doc.identifier, true))
-            file.write(doc.toJson())
+        file.write(doc.toJson())
+        this.inventory[doc.identifier] = doc.timestamp
+        if (saveInventory) {
+            log.debug("Saving inventory")
+            new File(this.storageDir + "/" + INVENTORY_FILE).withObjectOutputStream {
+                it << this.inventory
+            }
+        }
     }
 
     @Override
     void store(Iterable<Document> docs) {
         docs.each {
-            store(it)
+            store(it, false)
+        }
+        log.debug("Saving inventory")
+        new File(this.storageDir + "/" + INVENTORY_FILE).withObjectOutputStream {
+            it << this.inventory
+        }
+    }
+
+    void updateInventory() {
+        for (doc in getAll()) {
+            inventory[doc.identifier] = doc.timestamp
+        }
+        log.debug("Saving inventory")
+        new File(this.storageDir + "/" + INVENTORY_FILE).withObjectOutputStream {
+            it << this.inventory
         }
     }
 
@@ -158,7 +177,7 @@ class DiskStorage extends BasicPlugin implements Storage {
                 File currentFile = fileStack.pop();
 
                 if (currentFile.isFile() && currentFile.length() > 0) {
-                    def d = new BasicDocument(currentFile.text)
+                    def d = new BasicDocument(currentFile)
                     resultQueue.offer(d)
                 }
 
@@ -170,5 +189,9 @@ class DiskStorage extends BasicPlugin implements Storage {
 
         public void remove() {}
 
+    }
+
+    static main(args) {
+        new DiskStorage("/extra/whelk_storage", args[0]).updateInventory()
     }
 }
