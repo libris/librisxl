@@ -293,7 +293,7 @@ class WaitingRetrier implements Retrier {
             log.debug("Match found")
             throw e
         } catch (ConversionException e) {
-            log.debug("Convertion exception ")
+            log.debug("Conversion exception ")
             throw e
         } catch (Exception e) {
             if (times == 0) {

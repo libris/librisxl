@@ -8,6 +8,7 @@ import groovy.transform.Synchronized
 
 import java.util.concurrent.*
 import java.util.concurrent.atomic.*
+import java.util.Calendar
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.text.*
@@ -55,13 +56,17 @@ class BatchImport {
 
     public void setResource(String r) { this.resource = r; }
 
-    public int doImport(Whelk whelk, Date from) {
+    public int doImport(Whelk whelk, Date from, int noOfDocs) {
         try {
             pool = Executors.newCachedThreadPool()
 
             this.starttime = System.currentTimeMillis();
             List<Future> futures = []
-            futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla"))
+            if (from && noOfDocs) {
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), from.getDateString() + " and $noOfDocs", noOfDocs))
+            } else { 
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla", null))
+            }
             /*
             if (!from) {
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla"))
@@ -98,8 +103,8 @@ class Harvester implements Runnable {
     Whelk whelk
     String resource
     private final AtomicInteger importedCount = new AtomicInteger()
-    private int failed = 0;
-    private int xmlfailed = 0;
+    private int failed = 0
+    private int xmlfailed = 0
     String year
     def storepool
     def queue
@@ -108,13 +113,18 @@ class Harvester implements Runnable {
     static final int MAX_POOL_SIZE = 500
     static final long KEEP_ALIVE_TIME = 60
     final long startTime
+    private int harvestMax
+    private int harvestCount = 0
+    private String lastTimestamp
 
-    Harvester(Whelk w, String r, URL u, String y) {
+    Harvester(Whelk w, String r, URL u, String y, int harvestMax) {
         this.url = new URL(u.toString())
         this.resource = r
         this.whelk = w
         this.year = y
         this.startTime = System.currentTimeMillis()
+        if (harvestMax) this.harvestMax = harvestMax
+        else harvestMax = 100000000
         executor = newScalingThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME)
     }
 
@@ -150,19 +160,16 @@ class Harvester implements Runnable {
             log.info("Staring monitor thread for harvester " + year)
             getAuthentication();
             log.info("Starting harvester with url: $url")
-            String resumptionToken = harvest(this.url);
-            while (resumptionToken!=null) {
+            String resumptionToken = harvest(this.url)
+            harvestCount = harvestCount + 100
+            while (resumptionToken != null && harvestCount < harvestMax) {
                 URL rurl = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
                 resumptionToken = harvest(rurl)
-                /*
-                if (!resumptionToken) {
-                    throw new WhelkRuntimeException("Bad resumptiontoken for ${rurl.text}: " +resumptionToken)
-                }
-                */
                 log.trace("Received resumptionToken $resumptionToken")
+                harvestCount = harvestCount + 100
             }
         } finally {
-            log.info("Harvester for ${this.year} has ended its run. $importedCount documents imported. $failed failed. $xmlfailed failed XML documents.")
+            log.info("Harvester for ${this.year} has ended its run. $importedCount documents imported. $failed failed. $xmlfailed failed XML documents. Last timestamp: $lastTimestamp")
             this.executor.shutdown()
             if (!executor.awaitTermination(KEEP_ALIVE_TIME, TimeUnit.SECONDS)) {
                 executor.shutdownNow();
@@ -200,6 +207,10 @@ class Harvester implements Runnable {
                                 doc = doc.tag("location", sS.toString().substring(9))
                             }
                         }
+                    }
+                    if (it.header.datestamp) {
+                        lastTimestamp = it.header.datestamp.toString()
+                        log.debug("Doc timestamp: $lastTimestamp")
                     }
                     documents << doc
                     //log.debug("Imported " + importedCount.incrementAndGet())
@@ -332,7 +343,5 @@ class MonitorThread implements Runnable {
             log.debug("Harvester: " + harvester + ". Number of executor active threads " + executor.getActiveCount() + ". Task queue size " + executor.getQueue().size() + ". Completed tasks so far " + executor.getCompletedTaskCount())
             Thread.sleep(5000)
         }
-
-
     }
 }
