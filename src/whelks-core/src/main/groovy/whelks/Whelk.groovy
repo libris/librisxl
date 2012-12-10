@@ -217,12 +217,12 @@ class WhelkOperator {
         def whelk = (args.length > 2 ? (new WhelkInitializer(new URI(args[2]).toURL().newInputStream()).getWhelks().find { it.prefix == args[1] }) : null)
         def resource = (args.length > 3 ? args[3] : whelk?.prefix)
         def since = (args.length > 4 ? Tool.parseDate(args[4]) : null)
-        def numberOfDocs = (args.length > 5 ? args[5] : null)
+        def numberOfDocs = (args.length > 5 ? args[5].toInteger() : null)
         long startTime = System.currentTimeMillis()
         long time = 0
         if (operation == "import") {
             def importer = new BatchImport(resource)
-            def nrimports = importer.doImport(whelk, since, Integer.parseInt(numberOfDocs))
+            def nrimports = importer.doImport(whelk, since, numberOfDocs)
             float elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
 

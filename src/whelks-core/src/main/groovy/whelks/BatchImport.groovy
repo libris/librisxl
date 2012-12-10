@@ -56,14 +56,14 @@ class BatchImport {
 
     public void setResource(String r) { this.resource = r; }
 
-    public int doImport(Whelk whelk, Date from, int noOfDocs) {
+    public int doImport(Whelk whelk, Date from, Integer noOfDocs) {
         try {
             pool = Executors.newCachedThreadPool()
 
             this.starttime = System.currentTimeMillis();
             List<Future> futures = []
             if (from && noOfDocs) {
-                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), from.getDateString() + " and $noOfDocs", noOfDocs))
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), from.getDateString() + " and $noOfDocs", noOfDocs.intValue()))
             } else { 
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla", null))
             }
@@ -113,18 +113,17 @@ class Harvester implements Runnable {
     static final int MAX_POOL_SIZE = 500
     static final long KEEP_ALIVE_TIME = 60
     final long startTime
-    private int harvestMax
+    private int harvestMax = 100000000
     private int harvestCount = 0
     private String lastTimestamp
 
-    Harvester(Whelk w, String r, URL u, String y, int harvestMax) {
+    Harvester(Whelk w, String r, URL u, String y, Integer harvestMax) {
         this.url = new URL(u.toString())
         this.resource = r
         this.whelk = w
         this.year = y
         this.startTime = System.currentTimeMillis()
-        if (harvestMax) this.harvestMax = harvestMax
-        else harvestMax = 100000000
+        if (harvestMax) this.harvestMax = harvestMax.intValue()
         executor = newScalingThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME)
     }
 
