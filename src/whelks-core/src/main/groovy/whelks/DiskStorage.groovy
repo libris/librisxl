@@ -79,8 +79,8 @@ class DiskStorage extends BasicPlugin implements Storage {
     void store(Document doc, boolean saveInventory = true) {
         File file = new File(buildPath(doc.identifier, true))
         file.write(doc.toJson())
-        this.inventory[doc.identifier] = doc.timestamp
         /*
+        this.inventory[doc.identifier] = doc.timestamp
         if (saveInventory) {
             log.debug("Saving inventory")
             new File(this.storageDir + "/" + INVENTORY_FILE).withObjectOutputStream {
