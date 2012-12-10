@@ -27,6 +27,7 @@ class DiskStorage extends BasicPlugin implements Storage {
         }
         this.storageDir = dn.toString() // + "/" + whelkPrefix
         this.whelkPrefix = wlkPfx
+        /*
         try {
             File invFile = new File(this.storageDir + "/" + INVENTORY_FILE).withObjectInputStream { instream ->
                 instream.eachObject {
@@ -38,6 +39,7 @@ class DiskStorage extends BasicPlugin implements Storage {
             this.inventory = new HashMap<URI, Long>()
             log.info("Creating inventory.")
         }
+        */
 
         log.info("Starting DiskStorage with storageDir $storageDir")
     }
@@ -78,12 +80,14 @@ class DiskStorage extends BasicPlugin implements Storage {
         File file = new File(buildPath(doc.identifier, true))
         file.write(doc.toJson())
         this.inventory[doc.identifier] = doc.timestamp
+        /*
         if (saveInventory) {
             log.debug("Saving inventory")
             new File(this.storageDir + "/" + INVENTORY_FILE).withObjectOutputStream {
                 it << this.inventory
             }
         }
+        */
     }
 
     @Override
@@ -91,10 +95,12 @@ class DiskStorage extends BasicPlugin implements Storage {
         docs.each {
             store(it, false)
         }
+        /*
         log.debug("Saving inventory")
         new File(this.storageDir + "/" + INVENTORY_FILE).withObjectOutputStream {
             it << this.inventory
         }
+        */
     }
 
     void updateInventory() {
