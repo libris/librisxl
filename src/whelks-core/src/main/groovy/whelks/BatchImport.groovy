@@ -63,7 +63,8 @@ class BatchImport {
             this.starttime = System.currentTimeMillis();
             List<Future> futures = []
             if (from && noOfDocs) {
-                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), from.getDateString() + " and $noOfDocs", noOfDocs.intValue()))
+                def dateFormatter = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss")
+                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), dateFormatter.format(from) + " and docs count $noOfDocs", noOfDocs.intValue()))
             } else { 
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla", null))
             }
@@ -169,6 +170,8 @@ class Harvester implements Runnable {
             }
         } finally {
             log.info("Harvester for ${this.year} has ended its run. $importedCount documents imported. $failed failed. $xmlfailed failed XML documents. Last timestamp: $lastTimestamp")
+            File logFile = new File("import.log")
+            logFile.write("Harvester for ${this.year}. $importedCount documents imported. $failed failed. $xmlfailed failed XML documents. Last timestamp: $lastTimestamp")
             this.executor.shutdown()
             if (!executor.awaitTermination(KEEP_ALIVE_TIME, TimeUnit.SECONDS)) {
                 executor.shutdownNow();
@@ -209,7 +212,6 @@ class Harvester implements Runnable {
                     }
                     if (it.header.datestamp) {
                         lastTimestamp = it.header.datestamp.toString()
-                        log.debug("Doc timestamp: $lastTimestamp")
                     }
                     documents << doc
                     //log.debug("Imported " + importedCount.incrementAndGet())
