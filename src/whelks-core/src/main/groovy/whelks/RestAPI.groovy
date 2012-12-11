@@ -29,7 +29,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
 
     String id = "RestAPI"
     int order = 0
-    
+
     def void enable() {this.enabled = true}
     def void disable() {this.enabled = false}
 
@@ -41,6 +41,11 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     String getPath() {
         return "/" + this.whelk.prefix + "/" + getPathEnd()
     }
+
+    /**
+     * For discovery API.
+     */
+    abstract String getDescription();
 
     private String getModifiedPathEnd() {
         if (getPathEnd() == null || getPathEnd().length() == 0) {
@@ -60,6 +65,8 @@ class DiscoveryAPI extends BasicWhelkAPI {
 
     ObjectMapper mapper = new ObjectMapper()
 
+    String description = "Discovery API"
+
     DiscoveryAPI(Whelk w) {
         this.whelk = w
     }
@@ -73,7 +80,10 @@ class DiscoveryAPI extends BasicWhelkAPI {
     def void handle(Request request, Response response) {
         def info = [:]
         info["whelk"] = whelk.prefix
-        info["apis"] = whelk.getAPIs().collect { it.path }
+        info["apis"] = whelk.getAPIs().collect {
+            [ [ "path" : (it.path) ,
+                "description" : (it.description) ]
+            ] }
         log.debug("info: $info")
 
         response.setEntity(mapper.writeValueAsString(info), MediaType.APPLICATION_JSON)
@@ -89,6 +99,8 @@ class DocumentRestlet extends BasicWhelkAPI {
 
     def pathEnd = "{identifier}"
     def varPath = true
+
+    String description = "A GET request with identifier loads a document. A PUT request stores a document."
 
     def _escape_regex(str) {
         def escaped = new StringBuffer()
@@ -152,6 +164,7 @@ class DocumentRestlet extends BasicWhelkAPI {
     }
 }
 
+/*
 @Log
 class CharacterRestlet extends BasicWhelkAPI {
     def pathEnd = "_chars"
@@ -170,12 +183,16 @@ class CharacterRestlet extends BasicWhelkAPI {
         response.setEntity("WORD: $cword", MediaType.TEXT_PLAIN)
     }
 }
+*/
 
 @Log
 class SearchRestlet extends BasicWhelkAPI {
 
     def pathEnd = "_find"
     def defaultQueryParams = [:]
+
+    String description = "Generic search API, acception both GET and POST requests. Accepts parameters compatible with the Query object. (Simple usage: ?q=searchterm)"
+
 
     SearchRestlet(Map queryParams) {
         this.defaultQueryParams = queryParams
@@ -210,6 +227,8 @@ class SearchRestlet extends BasicWhelkAPI {
 @Log
 class KitinSearchRestlet2 extends BasicWhelkAPI {
     def pathEnd = "kitin/_search"
+
+    String description = "Query API with preconfigured parameters for Kitin."
 
     //String defaultBoost = "labels.title:2,labels.author:2,labels.isbn:2"
     String defaultBoost = "fields.020.subfields.a:5,fields.022.subfields.a:5,fields.100.subfields.a:5,fields.100.subfields.b:5,labels.title:3,fields.600.subfields.a:2,fields.600.subfields.b:2,fields.260.subfields.c:2,fields.008.subfields.yearTime1:2"
@@ -277,7 +296,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 def jsonResult =
                     (callback ? callback + "(" : "") +
                     results.toJson() +
-                    (callback ? ");" : "") 
+                    (callback ? ");" : "")
 
                 response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
             } else {
@@ -295,6 +314,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
 class KitinSearchRestlet extends BasicWhelkAPI {
 
     def pathEnd = "kitin/_oldsearch"
+    String description = "old crap"
 
     def facit = [
         "bibid": ["001"],
@@ -409,6 +429,7 @@ class KitinSearchRestlet extends BasicWhelkAPI {
     }
 }
 
+/*
 @Log
 class BibSearchRestlet extends BasicWhelkAPI {
 
@@ -467,6 +488,7 @@ class LogRestlet extends BasicWhelkAPI {
         response.setEntity(stringResult.toString(), MediaType.TEXT_PLAIN)
     }
 }
+*/
 
 @Log 
 class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitialisable {
@@ -474,6 +496,7 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
     def pathEnd = "_complete"
 
     def namePrefixes = []
+    String description = "Search API for autocompletion. Use parameter name or q."
 
     /*
     def void addNamePrefix(String prefix) {

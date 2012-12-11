@@ -43,8 +43,7 @@ class RestManager extends Application {
                 if (request.method == Method.POST) {
                     // TODO: Handle uploaded unnamed document
                 }
-                def wlist = [:]
-                wlist["available_whelks"] = whelks.collect { it.prefix }
+                def wlist = ["available_whelks":whelks.collect { it.prefix }]
                 response.setEntity(mapper.writeValueAsString(wlist), MediaType.APPLICATION_JSON)
             }
         })
