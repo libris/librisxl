@@ -106,7 +106,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                         } else {
                             def name
                             try {
-                                name = "${id001}/" + sug_json["100"]["a"].replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","").replace("|", "")
+                                name = "${id001}/" + sug_json[k]["a"].replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","").replace("|", "").replace("\"", "")
                             } catch (NullPointerException npe) {
                                 log.error("Couldn't find ${k}.a field for record $id001: $sug_json", npe)
                                 should_add= false

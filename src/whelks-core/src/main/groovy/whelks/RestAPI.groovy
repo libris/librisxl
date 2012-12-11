@@ -257,12 +257,14 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
 
     @Override
     def void handle(Request request, Response response) {
+        long startTime = System.currentTimeMillis()
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def q
         if (!reqMap["boost"]) {
             reqMap["boost"] = defaultBoost
         }
         try {
-            def q = new Query(reqMap)
+            q = new Query(reqMap)
             def callback = reqMap.get("callback")
             if (q) {
                 q.addFacet("leader.subfields.typeOfRecord")
@@ -283,8 +285,9 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             }
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+        } finally {
+            log.info("Query [" + q?.query + "] completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
         }
-
     }
 }
 

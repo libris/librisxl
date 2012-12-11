@@ -8,6 +8,8 @@ import org.restlet.data.*
 import org.restlet.representation.*
 import org.restlet.routing.*
 
+import org.codehaus.jackson.map.*
+
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.*
@@ -35,11 +37,15 @@ class RestManager extends Application {
 
 
         router.attach("/", new Restlet() {
+            ObjectMapper mapper = new ObjectMapper()
+
             void handle(Request request, Response response) {
                 if (request.method == Method.POST) {
                     // TODO: Handle uploaded unnamed document
                 }
-                response.setEntity("Try a URI for a document, or ${request.rootRef}/_find?q=query to search", MediaType.TEXT_PLAIN)
+                def wlist = [:]
+                wlist["available_whelks"] = whelks.collect { it.prefix }
+                response.setEntity(mapper.writeValueAsString(wlist), MediaType.APPLICATION_JSON)
             }
         })
 
