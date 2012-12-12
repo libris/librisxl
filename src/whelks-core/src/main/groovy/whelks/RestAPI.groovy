@@ -285,7 +285,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
         try {
             q = new Query(reqMap)
             if (reqMap["f"]) {
-                q.query = (q.query + " " + reqMap["f"].trim()
+                q.query = (q.query + " " + reqMap["f"]).trim()
                 log.info("Query after facets: ${q.query}")
             }
             def callback = reqMap.get("callback")
