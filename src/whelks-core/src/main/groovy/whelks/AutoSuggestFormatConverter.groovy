@@ -162,7 +162,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
         */
         if (top_title) { 
             // single top-title for bibrecords
-            resten_json["top_titles"] = ["http://libris.kb.se${link}" : top_title.trim()]
+            resten_json["top_titles"] = ["uri": new String("http://libris.kb.se${link}"), "title" : top_title.trim()]
         }
 
         // More for resten
@@ -298,6 +298,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
     }
 
 
+    /*
     def _get_records(f_100, sug_json) {
         try {
             url = "http://libris.kb.se/xsearch"
@@ -325,6 +326,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
         }
         return sug_json
     }
+    */
 
     def record_type(leader) {
         if (leader && leader[6] == "z") {
