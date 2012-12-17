@@ -227,7 +227,7 @@ class WhelkOperator {
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
 
         } else if (operation == "reindex") {
-            if (resource) { // Reindex a single document
+            if (args.length > 3) { // Reindex a single document
                 println "Reindexing document with identifier $resource"
                 def document = whelk.get(new URI(resource))
                 whelk.store(document)

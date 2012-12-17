@@ -94,6 +94,9 @@ class Query {
     }
 
     Query addHighlight(field) {
+        if (!highlights) {
+            highlights = []
+        }
         highlights << field
         return this
     }
