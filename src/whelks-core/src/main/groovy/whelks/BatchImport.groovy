@@ -9,18 +9,18 @@ import groovy.transform.Synchronized
 import java.util.concurrent.*
 import java.util.concurrent.atomic.*
 import java.util.Calendar
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
 import java.text.*
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.codec.binary.Base64
+import org.apache.commons.io.IOUtils
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
-import se.kb.libris.conch.converter.MarcJSONConverter;
-import se.kb.libris.whelks.*;
-import se.kb.libris.whelks.basic.*;
-import se.kb.libris.whelks.exception.*;
-import se.kb.libris.whelks.plugin.*;
+import se.kb.libris.conch.converter.MarcJSONConverter
+import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
+import se.kb.libris.whelks.exception.*
+import se.kb.libris.whelks.plugin.*
 
 @Log
 class BatchImport {
@@ -40,27 +40,26 @@ class BatchImport {
     }
 
     URL getBaseUrl(Date from, Date until) {
-        //return "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml&from=2012-05-23T15:21:27Z";
-        String url = "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml";
+        String url = "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml"
         if (from != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-            url = url + "&from=" + sdf.format(from);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            url = url + "&from=" + sdf.format(from)
             if (until) {
                 url = url + "&until=" + sdf.format(until)
                 log.debug("" + sdf.format(from) + "-" + sdf.format(until))
             }
         }
-        log.debug("URL: $url");
+        log.debug("URL: $url")
         return new URL(url)
     }
 
-    public void setResource(String r) { this.resource = r; }
+    public void setResource(String r) { this.resource = r }
 
     public int doImport(Whelk whelk, Date from, Integer noOfDocs) {
         try {
             pool = Executors.newCachedThreadPool()
 
-            this.starttime = System.currentTimeMillis();
+            this.starttime = System.currentTimeMillis()
             List<Future> futures = []
             if (from && noOfDocs) {
                 def dateFormatter = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss")
@@ -68,21 +67,6 @@ class BatchImport {
             } else { 
                 futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla", null))
             }
-            /*
-            if (!from) {
-                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(from, null), "alla"))
-            } else {
-                for (int i = 1970; i < 2012; i++) {
-                    final Date fromDate = getYearDate(i)
-                    final Date untilDate = getYearDate(i+1)
-                    futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(fromDate, untilDate), ""+i))
-                }
-                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20120101"), Date.parse("yyyyMMdd", "20120331")), "2012Q1"))
-                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20120401"), Date.parse("yyyyMMdd", "20120630")), "2012Q2"))
-                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20120701"), Date.parse("yyyyMMdd", "20120930")), "2012Q3"))
-                futures << pool.submit(new Harvester(whelk, this.resource, getBaseUrl(Date.parse("yyyyMMdd", "20121001"), Date.parse("yyyyMMdd", "20121231")), "2012Q4"))
-            }
-            */
             def results = futures.collect{it.get()}
             log.info("Collecting results ...")
             log.info("Results: $results, after " + (System.currentTimeMillis() - starttime)/1000 + " seconds.")
@@ -130,17 +114,17 @@ class Harvester implements Runnable {
 
     private void getAuthentication() {
         try {
-            Properties properties = new Properties();
-            properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"));
-            final String username = properties.getProperty("username");
-            final String password = properties.getProperty("password");
+            Properties properties = new Properties()
+            properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"))
+            final String username = properties.getProperty("username")
+            final String password = properties.getProperty("password")
             Authenticator.setDefault(new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password.toCharArray());
+                        return new PasswordAuthentication(username, password.toCharArray())
                     }
                 });
         } catch (Exception ex) {
-            Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex)
         }
     }
 
@@ -163,7 +147,7 @@ class Harvester implements Runnable {
             String resumptionToken = harvest(this.url)
             harvestCount = harvestCount + 100
             while (resumptionToken != null && harvestCount < harvestMax) {
-                URL rurl = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken);
+                URL rurl = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken)
                 resumptionToken = harvest(rurl)
                 log.trace("Received resumptionToken $resumptionToken")
                 harvestCount = harvestCount + 100
@@ -196,9 +180,9 @@ class Harvester implements Runnable {
                 mdrecord = createString(it.metadata.record)
                 if (mdrecord) {
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
-                    String id = record.getControlfields("001").get(0).getData();
-                    String jsonRec = MarcJSONConverter.toJSONString(record);
-                    def doc = new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json");
+                    String id = record.getControlfields("001").get(0).getData()
+                    String jsonRec = MarcJSONConverter.toJSONString(record)
+                    def doc = new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json")
                     if (it.header.setSpec) {
                         for (sS in it.header.setSpec) {
                             if (sS.toString().startsWith("authority:")) {
