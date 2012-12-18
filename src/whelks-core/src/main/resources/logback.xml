@@ -7,20 +7,52 @@
     </encoder>
   </appender>
 
+  <appender name="FILE-API" class="ch.qos.logback.core.FileAppender">
+      <file>${catalina.base}/logs/whelk.log</file>
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <appender name="FILE-TECH" class="ch.qos.logback.core.FileAppender">
+    <file>${catalina.base}/logs/whelk-tech.log</file>
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <appender name="FILE-QUERY" class="ch.qos.logback.core.FileAppender">
+    <file>${catalina.base}/logs/whelk-query.log</file>
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
   <!--
   <logger name="se.kb.libris.whelks.component.ElasticSearch">
+      <level value="trace"/>
+  </logger>
+  <logger name="se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter">
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.basic.BasicDocument">
       <level value="trace"/>
   </logger>
-
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger>
   -->
 
-  <root level="debug">
+  <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">
+    <appender-ref ref="FILE-QUERY" />
+  </logger>
+  <logger name="se.kb.libris.whelks" level="DEBUG">
+    <appender-ref ref="FILE-TECH" />
+  </logger>
+
+  <logger name="se.kb.libris.whelks.api" level="DEBUG">
+    <appender-ref ref="FILE-API" />
+  </logger>
+
+  <root level="info">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

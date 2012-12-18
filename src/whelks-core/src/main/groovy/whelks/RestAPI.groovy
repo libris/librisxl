@@ -278,7 +278,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
     def void handle(Request request, Response response) {
         long startTime = System.currentTimeMillis()
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def q
+        def q, results
         if (!reqMap["boost"]) {
             reqMap["boost"] = defaultBoost
         }
@@ -286,7 +286,6 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             q = new Query(reqMap)
             if (reqMap["f"]) {
                 q.query = (q.query + " " + reqMap["f"]).trim()
-                log.info("Query after facets: ${q.query}")
             }
             def callback = reqMap.get("callback")
             if (q) {
@@ -296,7 +295,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 q.addFacet("fields.008.subfields.yearTime1")
                 q = addQueryFacets(q)
                 q = expandQuery(q)
-                def results = this.whelk.query(q)
+                results = this.whelk.query(q)
                 def jsonResult =
                     (callback ? callback + "(" : "") +
                     results.toJson() +
@@ -309,7 +308,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
         } finally {
-            log.info("Query [" + q?.query + "] completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
+            log.info("Query [" + q?.query + "] completed in " + (System.currentTimeMillis() - startTime) + " milliseconds and resulted in " + results?.numberOfHits + " hits.")
         }
     }
 }

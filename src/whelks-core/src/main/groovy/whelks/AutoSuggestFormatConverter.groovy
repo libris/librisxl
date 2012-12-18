@@ -5,6 +5,7 @@ import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
 
 import groovy.util.logging.Slf4j as Log
+import java.text.Normalizer
 
 import org.codehaus.jackson.map.ObjectMapper
 
@@ -106,7 +107,9 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                         } else {
                             def name
                             try {
-                                name = "${id001}/" + sug_json[k]["a"].replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","").replace("|", "").replace("\"", "").replace("<", "").replace(">", "")
+                                //name = "${id001}/" + sug_json[k]["a"].replace(",","").replace(" ", "_").replace(".","").replace("[","").replace("]","").replace("|", "").replace("\"", "").replace("<", "").replace(">", "").replace("\\", "")
+                                name = "${id001}/" + Normalizer.normalize(sug_json[k]["a"], Normalizer.Form.NFD).replaceAll(/[^0-9a-zA-Z ]/, '').tr(' ', '_')
+                                log.trace("Normalized name: $name")
                             } catch (NullPointerException npe) {
                                 log.error("Couldn't find ${k}.a field for record $id001: $sug_json", npe)
                                 should_add= false
@@ -150,7 +153,6 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
         resten_json["records"] = 1
 
         // get_records for auth-records
-        /* Temporarily disabled
         if (rtype == "auth") {
             if (alla_json.size() > 0 && alla_json[0]["100"]) {
                 //f_100 = " ".join(alla_json[0]["100"].values()[1:])
@@ -158,9 +160,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
                 resten_json = get_records(f_100, resten_json)
             }
         }
-        else 
-        */
-        if (top_title) { 
+        else if (top_title) { 
             // single top-title for bibrecords
             resten_json["top_titles"] = ["uri": new String("http://libris.kb.se${link}"), "title" : top_title.trim()]
         }
@@ -223,40 +223,40 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
             //print "Count: ", response.getNumberOfHits()
             sug_json["records"] = response.getNumberOfHits()
 
-            def top_3 = [:]
+            def top_3 = []
             int rh = 0
             def jdoc
             for (document in response.hits) {
                 jdoc = mapper.readValue(document.getDataAsString(), Map)
                 def (f_001, title) = top_title_tuple(jdoc["fields"])
-                top_3[f_001] = title
-                if (rh++ > 2) {
+                top_3 << ["uri" : new String("http://libris.kb.se/bib/${f_001}"), "title" : title]
+                if (++rh > 2) {
+                    log.info("BREAKING! rh == $rh")
                     break
                 }
             }
 
-            def top_missing = 5 - top_3.size()
-            q_all = "($q_100) OR ($q_700)"
+            log.trace("top_3 after pass 1: $top_3 rh: $rh")
 
-            response = bibwhelk.query(q_all) 
-            //print "Count: ", response.getNumberOfHits()
-            sug_json["records"] = response.getNumberOfHits()
-            rh = 0
-            for (document in response.hits) {
-                jdoc = mapper.readValue(document.getDataAsString(), Map)
-                def (f_001, title) = top_title_tuple(jdoc["fields"])
-                top_3[f_001] = title
-                if (rh++ < top_missing) {
-                    break
+            if (rh < 3) {
+                q_all = "($q_100) OR ($q_700)"
+
+                response = bibwhelk.query(q_all)
+                //print "Count: ", response.getNumberOfHits()
+                sug_json["records"] = response.getNumberOfHits()
+                for (document in response.hits) {
+                    jdoc = mapper.readValue(document.getDataAsString(), Map)
+                    def (f_001, title) = top_title_tuple(jdoc["fields"])
+                    top_3 << ["uri" : new String("http://libris.kb.se/bib/${f_001}"), "title" : title]
+                    if (++rh > 2) {
+                        log.info("BREAKING! rh == $rh")
+                        break
+                    }
                 }
             }
+            log.trace("top_3 after pass 2: $top_3")
 
-            //print "top_3", top_3
-            def only_top_3 = [:]
-            top_3[0..2].each { k, v ->
-                only_top_3[k] = v
-            }
-            sug_json["top_titles"] = only_top_3
+            sug_json["top_titles"] = top_3
         }
         return sug_json
     }
