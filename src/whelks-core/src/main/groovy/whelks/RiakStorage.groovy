@@ -23,6 +23,7 @@ import com.basho.riak.client.http.response.FetchResponse
 import com.basho.riak.client.http.response.RiakResponseRuntimeException
 import com.basho.riak.client.raw.http.HTTPClusterConfig
 import com.basho.riak.client.raw.http.HTTPClientConfig
+import com.basho.riak.client.raw.config.Configuration
 import com.basho.riak.client.query.NodeStats
 import com.basho.riak.client.cap.Retrier
 import com.basho.riak.client.operations.StoreObject
@@ -56,29 +57,41 @@ abstract class RiakClient extends BasicPlugin {
     }
 
     @Synchronized
-    HTTPClusterConfig prepareClusterConfig(json_config){
-        HTTPClusterConfig clusterConfig = new HTTPClusterConfig(json_config.cluster_max_connections)
-        json_config.nodes.each {
-            if (pingNode(it.host, it.port)) {
-                HTTPClientConfig clientConfig = new HTTPClientConfig.Builder().withHost(it.host).withPort(it.port).withRiakPath(it.riak_path).withMaxConnctions(it.max_connections).withTimeout(10000).build()
-                clusterConfig.addClient(clientConfig)
-                log.info("Adding riak node " + it.host)
+    Configuration prepareHTTPConfig(json_config){
+        def config
+        if (json_config.config_type.equals("httpcluster")) {
+            config = new HTTPClusterConfig(json_config.total_max_connections)
+            json_config.nodes.each {
+                if (pingNode(it.host, it.port)) {
+                    HTTPClientConfig clientConfig = new HTTPClientConfig.Builder().withHost(it.host).withPort(it.port).withRiakPath(it.riak_path).withMaxConnctions(it.max_connections).withTimeout(10000).build()
+                    config.addClient(clientConfig)
+                    log.info("Adding riak node " + it.host)
+                }
+            }
+            if (config.getClients().size() < 1) {
+                throw new WhelkRuntimeException("No available Riak nodes.")
+            }
+            log.debug("Cluster config clients: " + config.getClients().size())
+        }
+        if (json_config.config_type.equals("httpclient")) {
+            json_config.nodes.each {
+                if (pingNode(it.host, it.port)) {
+                    config = new HTTPClientConfig.Builder().withHost(it.host).withPort(it.port).withRiakPath(it.riak_path).withMaxConnctions(it.max_connections).withTimeout(10000).build()
+                } else throw new WhelkRuntimeException("Riak node $it.host not available.")
+            log.info("Adding riak node " + it.host)
             }
         }
-        log.debug("Cluster config clients: " + clusterConfig.getClients().size())
-        if (clusterConfig.getClients().size() < 1) {
-            throw new WhelkRuntimeException("No available Riak nodes.")
-        }
-        return clusterConfig
+        return config
     }
+    
 
     IRiakClient getClient(def json_config){
         log.info("Starting riak client using riak.json configuration...")
-        return RiakFactory.newClient(prepareClusterConfig(json_config))
+        return RiakFactory.newClient(prepareHTTPConfig(json_config))
     }    
 
     IRiakClient getNodeReconfiguredClient(def json_config){
-        return RiakFactory.newClient(prepareClusterConfig(json_config))
+        return RiakFactory.newClient(prepareHTTPConfig(json_config))
     }
 
     void listRiakNodes() {
@@ -96,7 +109,7 @@ class RiakStorage extends RiakClient implements Storage {
     private String prefix
     private boolean enabled = true
     def riakjson
-    static final int STORE_RETRIES = 5
+    static final int STORE_RETRIES = 50
     static final int DEFAULT_W_QUORUM = 1 //minimum number of responding nodes on write
     static final int DEFAULT_R_QUORUM = 1 //minimum number of responding nodes on read
     static final int DEFAULT_N_VAL = 2 //default quorum, number of replicas of stored objects
@@ -274,7 +287,7 @@ class RiakIterable<T> implements Iterable {
 
 @Log
 class WaitingRetrier implements Retrier {
-    final static int RETRY_WAIT = 3000
+    final static int RETRY_WAIT = 500
     final int attempts
 
     public WaitingRetrier(int attempts){
@@ -299,9 +312,10 @@ class WaitingRetrier implements Retrier {
             if (times == 0) {
                 throw new RiakRetryFailedException(e)
             } else {
-                int factor = attempts - times + 1
-                def waitTime = RETRY_WAIT * factor
-                log.debug("Attempt: " + times + " Sleeping " + waitTime + " before retry")
+                //int factor = attempts - times + 1
+                def index = attempts - times + 1
+                def waitTime = RETRY_WAIT + index
+                log.debug("Attempt: " + index + " Sleeping " + waitTime + " before retry")
                 Thread.sleep(waitTime)
                 return attempt(command, times - 1)
             }
