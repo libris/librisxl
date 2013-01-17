@@ -164,27 +164,6 @@ class DocumentRestlet extends BasicWhelkAPI {
     }
 }
 
-/*
-@Log
-class CharacterRestlet extends BasicWhelkAPI {
-    def pathEnd = "_chars"
-    @Override
-    def void handle(Request request, Response response) {
-        def reqMap = request.resourceRef.queryAsForm.valuesMap
-        String word = reqMap["word"]
-        String cword = word
-        for (c in word.toCharArray()) {
-            if (c == 'ö') {
-                log.debug("EY!")
-                //log.debug("\\u" + Integer.toHexString('÷' | 0x10000).substring(1))
-            }
-            log.debug("Character: $c ")
-        }
-        response.setEntity("WORD: $cword", MediaType.TEXT_PLAIN)
-    }
-}
-*/
-
 @Log
 class SearchRestlet extends BasicWhelkAPI {
 
@@ -431,67 +410,6 @@ class KitinSearchRestlet extends BasicWhelkAPI {
 
     }
 }
-
-/*
-@Log
-class BibSearchRestlet extends BasicWhelkAPI {
-
-    def pathEnd = "_bibsearch"
-
-    @Override
-    def void handle(Request request, Response response) {
-        def query = request.getResourceRef().getQueryAsForm().getValuesMap()
-        boolean _raw = (query['_raw'] == 'true')
-        try {
-            def r = this.whelk.query(query.get("q"))
-            response.setEntity(r.result, MediaType.APPLICATION_JSON)
-        } catch (WhelkRuntimeException wrte) {
-            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
-        }
-    }
-}
-
-@Log 
-class ImportRestlet extends BasicWhelkAPI {
-    def pathEnd = "_import"
-
-    BatchImport importer
-    ImportRestlet() {
-        importer = new BatchImport()
-    }
-
-    @Override
-    def void handle(Request request, Response response) {
-        importer.resource = this.whelk.prefix
-        def millis = System.currentTimeMillis()
-        def count = importer.doImport(this.whelk)
-        def diff = (System.currentTimeMillis() - millis)/1000
-        response.setEntity("Imported $count records into ${whelk.prefix} in $diff seconds.\n", MediaType.TEXT_PLAIN)
-    }
-}
-
-@Log
-class LogRestlet extends BasicWhelkAPI {
-    def pathEnd = "_log"
-    @Override
-    def void handle(Request request, Response response) {
-        def query = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def since = query.get("since")
-        def date = Date.parse("yyyy-MM-dd HH:mm", since)
-        def results = this.whelk.log(date)
-        def stringResult = new StringBuilder()
-        int count = 0
-        results.each {
-            count++
-            log.debug("${it.identifier} (${it.timestamp})")
-            //stringResult << it.identifier << " (" << it.timestamp << ")" << "\n"
-        }
-        stringResult.insert(0, "Hittade $count uppdaterade dokument sedan $date\n")
-
-        response.setEntity(stringResult.toString(), MediaType.TEXT_PLAIN)
-    }
-}
-*/
 
 @Log 
 class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitialisable {

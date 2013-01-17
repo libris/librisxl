@@ -64,9 +64,7 @@ task depjar(type: Jar, dependsOn: jar) {
 // Currently using regular jar task for fatjar
 //task fatjar(type: Jar, dependsOn: jar) { ... }
 
-
 apply from: 'tools.gradle'
-
 
 repositories {
     mavenCentral()
@@ -82,9 +80,11 @@ dependencies {
     compile 'org.python:jython-standalone:2.5.2'
     compile 'org.mozilla:rhino:1.7R4'
     compile 'com.googlecode.json-simple:json-simple:1.1.1'
-    compile 'org.elasticsearch:elasticsearch:0.19.9'
+    compile 'org.elasticsearch:elasticsearch:0.20.1'
     compile 'org.elasticsearch:elasticsearch-lang-groovy:1.1.0'
+    compile 'com.spatial4j:spatial4j:0.3'
     compile 'ch.qos.logback:logback-classic:1.0.0'
+    compile 'org.slf4j:log4j-over-slf4j:1.6.5'
     compile 'commons-io:commons-io:2.3'
     compile group:'org.restlet.jse', name:'org.restlet', version:'2.0.15'
     compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.15'

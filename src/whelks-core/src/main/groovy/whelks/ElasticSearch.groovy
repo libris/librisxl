@@ -164,6 +164,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 log.trace("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
+                    log.trace("Document data: $doc.dataAsString")
                     if (addType == indexType) {
                         breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
                     } else {
