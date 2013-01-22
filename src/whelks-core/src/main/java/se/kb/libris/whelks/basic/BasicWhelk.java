@@ -80,6 +80,13 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         }
     }
 
+    /**
+     * Post construct init method.
+     */
+    @Override
+    public void init() {
+    }
+
     @Override
     public Document get(URI uri) {
         Document d = null;

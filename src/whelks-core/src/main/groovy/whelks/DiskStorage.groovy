@@ -159,7 +159,9 @@ class DiskStorage extends BasicPlugin implements Storage {
         private Queue<Document> resultQueue = new LinkedList<Document>()
 
         DiskDocumentIterator(File startDirectory) {
-            fileStack.addAll(startDirectory.listFiles())
+            if (startDirectory && startDirectory.exists()) {
+                fileStack.addAll(startDirectory.listFiles())
+            }
         }
 
         public boolean hasNext() {

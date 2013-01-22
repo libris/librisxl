@@ -164,6 +164,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 log.trace("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
+                    log.trace("Document data: $doc.dataAsString")
                     if (addType == indexType) {
                         breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
                     } else {
@@ -493,15 +494,17 @@ class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient impleme
 
 
 @Log
-class ElasticSearchNode extends ElasticSearch {
+class ElasticSearchNode extends ElasticSearch implements Index {
 
-    def ElasticSearchNode() {
+    def ElasticSearchNode(String i) {
+        this.index = i
         log.debug "Creating elastic node"
-        ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder()
-        // here you can set the node and index settings via API
-        settings.build()
+        ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
+        sb = sb.put("node.name", "index_"+i)
+        sb = sb.put("cluster.name", "bundled_whelk_index")
+        sb.build()
+        Settings settings = sb.build()
         NodeBuilder nBuilder = nodeBuilder().settings(settings)
-        //
         // start it!
         def node = nBuilder.build().start()
         client = node.client()

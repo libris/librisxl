@@ -8,4 +8,8 @@ import spock.lang.Specification
 class WhelkInitializerSpec extends Specification {
 
     def wi = new WhelkInitializer(null)
+
+    def "should expand parameter variables"() {
+
+    }
 }

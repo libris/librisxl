@@ -20,6 +20,7 @@ public interface Whelk {
     public SparqlResult sparql(String query);
 
     // maintenance
+    public void init();
     public void destroy();
     public Iterable<Document> log();
     public Iterable<Document> log(int startIndex);

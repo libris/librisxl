@@ -27,7 +27,13 @@
   </appender>
 
   <!--
+  <logger name="org.elasticsearch">
+      <level value="trace"/>
+  </logger>
   <logger name="se.kb.libris.whelks.component.ElasticSearch">
+      <level value="trace"/>
+  </logger>
+  <logger name="se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter">
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter">
@@ -41,6 +47,7 @@
   </logger>
   -->
 
+  <!--
   <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">
     <appender-ref ref="FILE-QUERY" />
   </logger>
@@ -51,6 +58,7 @@
   <logger name="se.kb.libris.whelks.api" level="DEBUG">
     <appender-ref ref="FILE-API" />
   </logger>
+  -->
 
   <root level="info">
     <appender-ref ref="STDOUT" />

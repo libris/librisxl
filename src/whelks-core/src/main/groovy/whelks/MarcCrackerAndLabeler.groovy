@@ -119,6 +119,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
                             if (fkey == "006" || fkey == "007") {
                                 matchKey = fvalue[0]
                             }
+                            log.trace("matchKey: $matchKey")
                             marcmap.get(pfx).each { key, value ->
                                 if (fkey == key) {
                                     try {
@@ -126,7 +127,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
                                             if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(matchKey)) || (fm.matchRecTypeBibLevel && fm.matchRecTypeBibLevel.contains(mrtbl))) {
                                                 if (fkey == "008" && fvalue.length() == 39) {
                                                     log.warn("Document ${doc.identifier} has wrong length in 008")
-                                                        fvalue = fvalue[0..19] + "|" + fvalue[20..-1]
+                                                    fvalue = fvalue[0..19] + "|" + fvalue[20..-1]
                                                 }
                                                 json.fields[pos] = [(fkey):["subfields": expandField(fkey, fvalue, fm.columns).collect {k, v -> [(k):v] } ]]
                                             }
@@ -135,9 +136,9 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
                                         log.warn("Exception in $fm : ${mpe.message}")
                                     } catch (Exception e) {
                                         log.error("Document identifier: ${doc.identifier}")
-                                            log.error("fkey: $fkey")
-                                            log.error("l: $l")
-                                            throw e
+                                        log.error("fkey: $fkey")
+                                        log.error("l: $l")
+                                        throw e
                                     }
 
                                 }

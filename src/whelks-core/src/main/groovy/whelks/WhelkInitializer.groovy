@@ -26,6 +26,8 @@ class WhelkInitializer {
                 for (p in meta._plugins) {
                     whelk.addPlugin(getPlugin(p, wname))
                 }
+                log.debug("Initializing the whelk")
+                whelk.init()
                 whelklist << whelk
             }
         }
