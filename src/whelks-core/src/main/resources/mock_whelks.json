@@ -1,0 +1,77 @@
+{
+    "_whelks": [
+        {
+            "bib":{
+                "_class" : "se.kb.libris.whelks.WhelkImpl",
+                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "document", "marcmassager"]
+            }
+        },
+        {
+            "auth":{
+                "_class" : "se.kb.libris.whelks.WhelkImpl",
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "marcmassager" ]
+            }
+        }
+    ],
+    "_plugins": [
+        {
+            "localindex": {
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
+                "_params" : "_whelkname"
+            }
+        },
+        {
+            "diskstorage": {
+                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
+                "_params" : "./src/test/resources/mock_storage, _whelkname",
+                "_priority" : 0
+
+            }
+        },
+        {
+            "marcmassager" : {
+                "_class" : "se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter"
+            }
+        },
+        {
+            "search" : {
+                "_class" : "se.kb.libris.whelks.api.SearchRestlet",
+                "_params" : {"boost" : "labels.title:2"}
+            }
+        },
+        {
+            "document" : {
+                "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
+            }
+        },
+        {
+            "kitinsearch" : {
+                "_class" : "se.kb.libris.whelks.api.KitinSearchRestlet2"
+            }
+        },
+        {
+            "autocomplete" : {
+                "_class" : "se.kb.libris.whelks.api.AutoComplete",
+                "_params" : ["100.a", "400.a", "500.a"]
+            }
+        },
+        {
+            "suggestformatconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter",
+                "_params" : "_whelk:bib"
+            }
+        }, 
+        {
+            "biblistener" : {
+                "_class" : "se.kb.libris.whelks.plugin.Listener",
+                "_params" : "_whelk:bib"
+            }
+        },
+        {
+            "authlistener" : {
+                "_class" : "se.kb.libris.whelks.plugin.Listener",
+                "_params" : "_whelk:auth"
+            }
+        }
+    ]
+}

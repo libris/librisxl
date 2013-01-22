@@ -22,9 +22,6 @@ test {
     exclude '**/RiakStorageSpec.class'
 }
 
-jettyRun.contextPath = '/'
-jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
-
 
 run {
     systemProperty "file.encoding", "UTF-8"

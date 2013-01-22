@@ -1,6 +1,7 @@
 /**
  * Runtime tools. Use these tasks to invoke compiled tools directly from gradle.
  */
+import org.gradle.api.plugins.jetty.JettyRun
 
 /*
 task importData(dependsOn: 'classes', type: JavaExec) {
@@ -52,4 +53,13 @@ task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'se.kb.libris.conch.converter.MarcJSONConverter'
     args(System.getProperty('args', "").split() as String[])
+}
+
+jettyRun.contextPath = '/'
+jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
+
+task(jettyLocal, dependsOn: 'classes', type: JettyRun) {
+    description "Starts a local whelk with default settings."
+    System.setProperty("whelk.config.uri", "file:src/main/resources/mock_whelks.json")
+    System.setProperty("file.encoding", System.getProperty('file.encoding', ""))
 }
