@@ -2,13 +2,13 @@
     "_whelks": [
         {
             "bib":{
-                "_class" : "se.kb.libris.whelks.WhelkImpl",
+                "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
                 "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "document", "marcmassager"]
             }
         },
         {
             "auth":{
-                "_class" : "se.kb.libris.whelks.WhelkImpl",
+                "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
                 "_plugins": [ "localindex", "diskstorage", "search", "document", "marcmassager" ]
             }
         }

@@ -494,12 +494,13 @@ class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient impleme
 
 
 @Log
-class ElasticSearchNode extends ElasticSearch {
+class ElasticSearchNode extends ElasticSearch implements Index {
 
     def ElasticSearchNode(String i) {
         this.index = i
         log.debug "Creating elastic node"
         ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
+        sb = sb.put("node.name", "index_"+i)
         sb = sb.put("cluster.name", "bundled_whelk_index")
         sb.build()
         Settings settings = sb.build()

@@ -91,7 +91,7 @@ class WhelkImpl extends BasicWhelk {
                 executor.shutdownNow()
             }
         }
-        println "Reindexed $counter documents"
+        log.debug "Reindexed $counter documents"
     }
 
     @Override
@@ -113,6 +113,24 @@ class WhelkImpl extends BasicWhelk {
         return executor
     }
 
+}
+
+/**
+ * Used by the local "mock" whelk setup.
+ */
+@Log
+class ReindexOnStartupWhelk extends WhelkImpl {
+
+    ReindexOnStartupWhelk(String pfx) {
+        super(pfx)
+    }
+
+    @Override
+    public void init() {
+        log.info("Indexing whelk ${this.prefix}.")
+        reindex()
+        log.info("Whelk reindexed.")
+    }
 }
 
 class Tool {
