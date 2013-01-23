@@ -38,7 +38,7 @@ import static se.kb.libris.conch.Tools.*
 @Log
 abstract class ElasticSearch extends BasicPlugin {
 
-    String index
+    //String idxpfx
     Client client
 
     boolean enabled = true
@@ -54,38 +54,38 @@ abstract class ElasticSearch extends BasicPlugin {
     String storageType = "document"
 
     @Override
-    void index(Document doc) {
+    void index(Document doc, String idxpfx) {
         if (doc) {
-            addDocument(doc, indexType)
+            addDocument(doc, indexType, idxpfx)
         }
     }
 
     @Override
-    void index(Iterable<Document> doc) {
-        addDocuments(doc, indexType)
+    void index(Iterable<Document> doc, String idxpfx) {
+        addDocuments(doc, indexType, idxpfx)
     }
 
     @Override
-    void delete(URI uri) {
+    void delete(URI uri, String idxpfx) {
         log.debug("Deleting object with identifier $uri")
-        performExecute(client.prepareDelete(index, indexType, translateIdentifier(uri)))
-        performExecute(client.prepareDelete(index, storageType, translateIdentifier(uri)))
+        performExecute(client.prepareDelete(idxpfx, indexType, translateIdentifier(uri)))
+        performExecute(client.prepareDelete(idxpfx, storageType, translateIdentifier(uri)))
     }
 
     @Override
-    public void store(Document doc) {
-        addDocument(doc, storageType)
+    public void store(Document doc, String idxpfx) {
+        addDocument(doc, storageType, idxpfx)
     }
 
     @Override
-    public void store(Iterable<Document> doc) {
-        addDocuments(doc, storageType)
+    public void store(Iterable<Document> doc, String idxpfx) {
+        addDocuments(doc, storageType, idxpfx)
     }
 
     @Override
-    Document get(URI uri) {
+    Document get(URI uri, String idxpfx) {
         log.debug("Received GET request for $uri")
-        GetResponse response = performExecute(client.prepareGet(index, storageType, translateIdentifier(uri)).setFields("_source","_timestamp"))
+        GetResponse response = performExecute(client.prepareGet(idxpfx, storageType, translateIdentifier(uri)).setFields("_source","_timestamp"))
         if (response && response.exists()) {
             def ts = (response.field("_timestamp") ? response.field("_timestamp").value : null)
             try {
@@ -98,15 +98,15 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    Iterable<Document> getAll() {
+    Iterable<Document> getAll(String idxpfx) {
         return new ElasticIterable<Document>(this)
     }
 
-    def init() {
-        if (!performExecute(client.admin().indices().prepareExists(index)).exists()) {
+    def init(String idxpfx) {
+        if (!performExecute(client.admin().indices().prepareExists(idxpfx)).exists()) {
             log.info("Creating index ...")
             XContentBuilder mapping = jsonBuilder().startObject()
-            .startObject(index)
+            .startObject(idxpfx)
             .startObject("_timestamp")
             .field("enabled", true)
             .field("store", true)
@@ -115,7 +115,7 @@ abstract class ElasticSearch extends BasicPlugin {
             .endObject()
             log.debug("mapping: " + mapping.string())
 
-            performExecute(client.admin().indices().prepareCreate(index).addMapping(storageType, mapping))
+            performExecute(client.admin().indices().prepareCreate(idxpfx).addMapping(storageType, mapping))
         }
     }
 
@@ -139,11 +139,11 @@ abstract class ElasticSearch extends BasicPlugin {
         return response
     }
 
-    void addDocument(Document doc, String addType) {
+    void addDocument(Document doc, String addType, String idxpfx) {
         def eid = translateIdentifier(doc.identifier)
-        log.trace "Should use index ${index}, type ${addType} and id ${eid}"
+        log.trace "Should use index ${idxpfx}, type ${addType} and id ${eid}"
         try {
-            def irb = client.prepareIndex(index, addType, eid)
+            def irb = client.prepareIndex(idxpfx, addType, eid)
             if (addType == indexType) {
                 irb.setSource(doc.data)
             } else {
@@ -156,7 +156,7 @@ abstract class ElasticSearch extends BasicPlugin {
         }
     }
 
-    void addDocuments(documents, addType) {
+    void addDocuments(documents, addType, idxpfx) {
         try {
             if (documents) {
                 def breq = client.prepareBulk()
@@ -166,9 +166,9 @@ abstract class ElasticSearch extends BasicPlugin {
                 for (doc in documents) {
                     log.trace("Document data: $doc.dataAsString")
                     if (addType == indexType) {
-                        breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
+                        breq.add(client.prepareIndex(idxpfx, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
                     } else {
-                        breq.add(client.prepareIndex(index, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
+                        breq.add(client.prepareIndex(idxpfx, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
                     }
                 }
                 def response = performExecute(breq)
@@ -209,7 +209,7 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     URI translateIndexIdTo(id) {
-        return new URI("/"+index+"/"+id.replaceAll(URI_SEPARATOR, "/"))
+        return new URI("/"+idxpfx+"/"+id.replaceAll(URI_SEPARATOR, "/"))
     }
 
 
@@ -243,9 +243,9 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    SearchResult query(Query q) {
+    SearchResult query(Query q, String idxpfx) {
         log.trace "Doing query on $q"
-        def srb = client.prepareSearch(index).setTypes(indexType)
+        def srb = client.prepareSearch(idxpfx).setTypes(indexType)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
         if (q.query == "*") {
@@ -337,7 +337,7 @@ abstract class ElasticSearch extends BasicPlugin {
         def srb
         if (!token) {
             log.trace("Starting matchAll-query")
-            srb = client.prepareSearch(index)
+            srb = client.prepareSearch(idxpfx)
             if (loadDocuments) {
                 srb = srb.addField("_source")
             }
@@ -452,7 +452,7 @@ class ElasticSearchClient extends ElasticSearch {
 
     // Force one-client-per-whelk
     ElasticSearchClient(String i) {
-        this.index = i
+        //this.idxpfx = i
         String elastichost, elasticcluster
         if (System.getProperty("elastic.host")) {
             elastichost = System.getProperty("elastic.host")
@@ -467,7 +467,7 @@ class ElasticSearchClient extends ElasticSearch {
             Settings settings = sb.build();
             client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
             log.debug("... connected")
-            init()
+            init(i)
         } else {
             throw new WhelkRuntimeException("Unable to initalize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
         }
@@ -497,10 +497,14 @@ class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient impleme
 class ElasticSearchNode extends ElasticSearch implements Index {
 
     def ElasticSearchNode(String i) {
-        this.index = i
+        //this.idxpfx = i
         log.debug "Creating elastic node"
+        def elasticcluster = System.getProperty("elastic.cluster")
         ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
         sb = sb.put("node.name", "index_"+i)
+        if (elasticcluster) {
+            sb = sb.put("cluster.name", elasticcluster)
+        }
         sb = sb.put("cluster.name", "bundled_whelk_index")
         sb.build()
         Settings settings = sb.build()
@@ -509,5 +513,6 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         def node = nBuilder.build().start()
         client = node.client()
         log.debug "Client connected to new ES node"
+        init(i)
     }
 }

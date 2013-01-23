@@ -55,7 +55,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         if (docs != null) {
             for (Component c : getComponents()) {
                 if (c instanceof Storage) {
-                    ((Storage)c).store(docs);
+                    ((Storage)c).store(docs, this.prefix);
                 }
 
                 if (c instanceof Index) {
@@ -63,7 +63,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
                     for (IndexFormatConverter ifc : getIndexFormatConverters()) {
                         idocs = ifc.convert(idocs);
                     }
-                    ((Index)c).index(idocs);
+                    ((Index)c).index(idocs, this.prefix);
                 }
 
                 if (c instanceof QuadStore) {
@@ -93,7 +93,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
         for (Component c: getComponents()) {
             if (c instanceof Storage) {
-                d = ((Storage)c).get(uri);
+                d = ((Storage)c).get(uri, this.prefix);
 
                 if (d != null) {
                     Logger.getLogger(this.getClass().getName()).log(Level.FINE, "Document found in storage " + c);
@@ -112,9 +112,9 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
         for (Component c: getComponents())
             if (c instanceof Storage)
-                ((Storage)c).delete(uri);
+                ((Storage)c).delete(uri, this.prefix);
             else if (c instanceof Index)
-                ((Index)c).delete(uri);
+                ((Index)c).delete(uri, this.prefix);
             else if (c instanceof QuadStore)
                 ((QuadStore)c).delete(uri);        
 
@@ -133,7 +133,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     public SearchResult query(Query query) {
         for (Component c: getComponents())
             if (c instanceof Index)
-                return ((Index)c).query(query);
+                return ((Index)c).query(query, this.prefix);
 
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
@@ -160,7 +160,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
     public Iterable<Document> log() {
         for (Component c: getComponents())
             if (c instanceof Storage)
-                return ((Storage)c).getAll();
+                return ((Storage)c).getAll(this.prefix);
 
         throw new WhelkRuntimeException("Whelk has no storage for searching");
     }

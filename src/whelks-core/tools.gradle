@@ -60,6 +60,7 @@ jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>'
 
 task(jettyLocal, dependsOn: 'classes', type: JettyRun) {
     description "Starts a local whelk with default settings."
-    System.setProperty("whelk.config.uri", "file:src/main/resources/mock_whelks.json")
-    System.setProperty("file.encoding", System.getProperty('file.encoding', ""))
+    System.setProperty('whelk.config.uri', "file:src/main/resources/mock_whelks.json")
+    System.setProperty('elastic.cluster', "bundled_whelk_index")
+    System.setProperty('file.encoding', System.getProperty('file.encoding', ""))
 }
