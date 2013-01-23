@@ -290,6 +290,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
             if (plugin instanceof WhelkAware) {
                 ((WhelkAware)plugin).setWhelk(this);
             }
+            plugin.init(this.prefix);
             plugins.add(plugin);
         }
     }

@@ -102,7 +102,8 @@ abstract class ElasticSearch extends BasicPlugin {
         return new ElasticIterable<Document>(this)
     }
 
-    def init(String idxpfx) {
+    @Override
+    void init(String idxpfx) {
         if (!performExecute(client.admin().indices().prepareExists(idxpfx)).exists()) {
             log.info("Creating index ...")
             XContentBuilder mapping = jsonBuilder().startObject()
@@ -451,8 +452,7 @@ class ElasticIterable<T> implements Iterable {
 class ElasticSearchClient extends ElasticSearch {
 
     // Force one-client-per-whelk
-    ElasticSearchClient(String i) {
-        //this.idxpfx = i
+    ElasticSearchClient() {
         String elastichost, elasticcluster
         if (System.getProperty("elastic.host")) {
             elastichost = System.getProperty("elastic.host")
@@ -467,41 +467,26 @@ class ElasticSearchClient extends ElasticSearch {
             Settings settings = sb.build();
             client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
             log.debug("... connected")
-            init(i)
         } else {
             throw new WhelkRuntimeException("Unable to initalize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
         }
     }
 }
 
-class ElasticSearchClientStorage extends ElasticSearchClient implements Storage {
-    ElasticSearchClientStorage(String i) {
-        super(i)
-    }
-}
-class ElasticSearchClientIndex extends ElasticSearchClient implements Index {
-    ElasticSearchClientIndex(String i) { super(i); } 
-}
-class ElasticSearchClientHistory extends ElasticSearchClient implements History {
-    ElasticSearchClientHistory(String i) { super(i); } 
-}
-class ElasticSearchClientIndexHistory extends ElasticSearchClient implements Index, History {
-    ElasticSearchClientIndexHistory(String i) { super(i); } 
-}
-class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient implements Storage, Index, History {
-    ElasticSearchClientStorageIndexHistory(String i) { super(i); } 
-}
+class ElasticSearchClientStorage extends ElasticSearchClient implements Storage { }
+class ElasticSearchClientIndex extends ElasticSearchClient implements Index { }
+class ElasticSearchClientHistory extends ElasticSearchClient implements History { }
+class ElasticSearchClientIndexHistory extends ElasticSearchClient implements Index, History { }
+class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient implements Storage, Index, History { }
 
 
 @Log
 class ElasticSearchNode extends ElasticSearch implements Index {
 
-    def ElasticSearchNode(String i) {
-        //this.idxpfx = i
+    def ElasticSearchNode() {
         log.debug "Creating elastic node"
         def elasticcluster = System.getProperty("elastic.cluster")
         ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
-        sb = sb.put("node.name", "index_"+i)
         if (elasticcluster) {
             sb = sb.put("cluster.name", elasticcluster)
         }
@@ -513,6 +498,5 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         def node = nBuilder.build().start()
         client = node.client()
         log.debug "Client connected to new ES node"
-        init(i)
     }
 }

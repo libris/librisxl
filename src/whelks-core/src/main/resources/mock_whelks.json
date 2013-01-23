@@ -17,7 +17,7 @@
         {
             "localindex": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
-                "_params" : "_whelkname"
+                "_unique" : false
             }
         },
         {

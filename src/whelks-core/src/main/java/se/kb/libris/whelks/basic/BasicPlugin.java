@@ -19,6 +19,8 @@ public class BasicPlugin implements Plugin {
     public int getOrder() { return order; }
     public void setOrder(int o) { this.order = o; }
     @Override
+    public void init(String whelkName) {}
+    @Override
     public int compareTo(Plugin p) {
         int diff = this.getOrder() - p.getOrder();
         if (diff == 0) {

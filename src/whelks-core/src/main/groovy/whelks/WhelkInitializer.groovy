@@ -10,6 +10,7 @@ import org.codehaus.jackson.map.ObjectMapper
 class WhelkInitializer {
     def json
     def whelklist = []
+    def plugins = [:]
 
     WhelkInitializer(InputStream is) {
         Object mapper = new ObjectMapper()
@@ -54,7 +55,6 @@ class WhelkInitializer {
     }
 
     def getPlugin(plugname, whelkname) {
-        def plugins = [:]
         if (plugins[plugname]) {
             log.trace "Recycling instance of $plugname"
             return plugins[plugname]
@@ -64,6 +64,7 @@ class WhelkInitializer {
             p.each { label, meta ->
                 if (label == plugname) {
                     if (meta._params) {
+                        log.trace("Plugin $label has parameters.")
                         def params = translateParams(meta._params, whelkname)
                         log.debug("Plugin parameter: ${params}")
                         def pclasses = params.collect { it.class }
@@ -77,39 +78,32 @@ class WhelkInitializer {
                             for (cnstr in Class.forName(meta._class).getConstructors()) {
                                 log.trace("Found constructor for ${meta._class}: $cnstr")
                                 log.trace("Parameter types: " + cnstr.getParameterTypes())
-                                //if (params instanceof List) {
-                                    boolean match = true
-                                    int i = 0
-                                    for (pt in cnstr.getParameterTypes()) {
-                                        log.trace("Loop parameter type: $pt")
-                                        log.trace("Check against: " + params[i])
-                                        if (!pt.isAssignableFrom(params[i++].getClass())) {
-                                            match = false
-                                        }
-                                    }
-                                    if (match) {
-                                        plugin = cnstr.newInstance(params as Object[])
-                                        break;
-                                    }
-                                    /*
-                                } else {
-                                    if (cnstr.getParameterTypes().length == 1
-                                            && cnstr.getParameterTypes()[0].isAssignableFrom(params.getClass())) {
-                                        log.trace("Executing constructor with $params")
-                                        plugin = cnstr.newInstance(params)
+                                boolean match = true
+                                int i = 0
+                                for (pt in cnstr.getParameterTypes()) {
+                                    log.trace("Loop parameter type: $pt")
+                                    log.trace("Check against: " + params[i])
+                                    if (!pt.isAssignableFrom(params[i++].getClass())) {
+                                        match = false
                                     }
                                 }
-                                */
+                                if (match) {
+                                    plugin = cnstr.newInstance(params as Object[])
+                                    break;
+                                }
                             }
                         }
                     } else {
+                        log.trace("Plugin $label has no parameters.")
                         plugin = Class.forName(meta._class).newInstance()
                     }
                     if (meta._priority) {
                         log.debug("Setting priority ${meta._priority} for plugin $label")
                         plugin.order = meta._priority
                     }
-                    if (!plugin instanceof WhelkAware && meta._param instanceof String && !meta._param.split(",").find {it.startsWith("_")}) {
+                    if (!meta._unique 
+                            && !(plugin instanceof WhelkAware) 
+                            && (!meta._param || (meta._param instanceof String && !meta._param.split(",").find {it.startsWith("_")}))) {
                         log.trace "$plugname not unique. Adding instance to map."
                         plugins[label] = plugin
                     }

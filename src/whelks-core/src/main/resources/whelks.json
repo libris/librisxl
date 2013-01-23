@@ -21,21 +21,19 @@
         "_plugins": [
         {
             "index": {
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory",
-                "_params" : "_whelkname"
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory"
             }
         }, 
         {
             "indexstorage": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientStorageIndexHistory",
-                "_params" : "_whelkname", 
                 "_priority" : 2
             }
         }, 
         {
             "storage": {
-                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : "/tmp/whelk_storage, _whelkname",
+                "_class" : "se.kb.libris.whelks.component.DiskStorage",
+                "_params" : "/tmp/whelk_storage",
                 "_priority" : 1
 
             }
@@ -43,7 +41,7 @@
         {
             "riakstorage" : {
                 "_class" : "se.kb.libris.whelks.component.RiakStorage",
-                "_params" : "_whelkname", 
+                "_params" : "_whelkname",
                 "_priority" : 0
             }
         },
