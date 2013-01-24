@@ -78,7 +78,7 @@ class DiskStorage extends BasicPlugin implements Storage {
     @Override
     void store(Iterable<Document> docs, String whelkPrefix) {
         docs.each {
-            store(it, false)
+            store(it, whelkPrefix, false)
         }
         /*
         log.debug("Saving inventory")
