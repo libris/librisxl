@@ -18,6 +18,7 @@ import com.basho.riak.client.builders.RiakObjectBuilder
 import com.basho.riak.client.IRiakObject
 import com.basho.riak.client.IRiakClient
 import com.basho.riak.client.RiakException
+import com.basho.riak.client.RiakLink
 import com.basho.riak.client.http.RiakObject
 import com.basho.riak.client.http.response.FetchResponse
 import com.basho.riak.client.http.response.RiakResponseRuntimeException
@@ -169,6 +170,12 @@ class RiakStorage extends RiakClient implements Storage {
                 bucket = createBucket(prefix, DEFAULT_N_VAL, DEFAULT_ALLOW_MULT, DEFAULT_W_QUORUM, DEFAULT_R_QUORUM)
             //while (attempt < loop_times) {
                 IRiakObject riakObject = RiakObjectBuilder.newBuilder(prefix, key).withContentType(d.contentType).withValue(d.data).build()
+                def iter = d.links.iterator()
+                while (iter.hasNext()) {
+                    def link = iter.next()
+                    riakObject.addLink(new RiakLink(prefix, link.identifier(), link.type()))
+                    log.debug("Adding link " + link.identifier + " " + link.type)
+                }
                 IRiakObject storedObject = bucket.store(riakObject).withRetrier(new WaitingRetrier(STORE_RETRIES)).execute()
                 log.trace("Stored document " + d.identifier + " to riak")
                 //break
