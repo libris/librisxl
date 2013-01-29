@@ -24,6 +24,7 @@ class DiskStorageSpec extends Specification {
             "/bib"                    | TMP_STORAGE+"/"+DOC_FOLDER+"/bib"
             "/documents"              | TMP_STORAGE+"/docu/ment/"+DOC_FOLDER+"/documents"
             "/1234567890abcdefghijkl" | TMP_STORAGE+"/1234/5678/90ab/cdef/ghij/"+DOC_FOLDER+"/1234567890abcdefghijkl"
+            "/libris/bib/123456"      | TMP_STORAGE+"/libris/bib/1234/_/123456"
     }
 
     def "should build flat path"() {
