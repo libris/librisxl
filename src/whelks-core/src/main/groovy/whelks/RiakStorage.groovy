@@ -107,7 +107,7 @@ abstract class RiakClient extends BasicPlugin {
 class RiakStorage extends RiakClient implements Storage {
     private IRiakClient riakClient
     private ConcurrentHashMap buckets
-    private String prefix
+    //private String prefix
     private boolean enabled = true
     def riakjson
     static final int STORE_RETRIES = 50
@@ -124,7 +124,7 @@ class RiakStorage extends RiakClient implements Storage {
 
     RiakStorage(String prefix){
         try {
-            this.prefix = prefix
+            //this.prefix = prefix
             riakjson = getJsonConfig()
             riakClient = getClient(riakjson)
             Bucket bucket = createBucket(prefix, DEFAULT_N_VAL, DEFAULT_ALLOW_MULT, DEFAULT_W_QUORUM, DEFAULT_R_QUORUM)
@@ -159,7 +159,7 @@ class RiakStorage extends RiakClient implements Storage {
         return riakClient.createBucket(prefix).nVal(n_val).allowSiblings(allow_mult).w(w_quorum).r(r_quorum).execute()
     }
 
-    void store(Document d){
+    void store(Document d, String prefix){
         int attempt = 0
         int loop_times = 2
 
@@ -173,8 +173,8 @@ class RiakStorage extends RiakClient implements Storage {
                 def iter = d.links.iterator()
                 while (iter.hasNext()) {
                     def link = iter.next()
-                    riakObject.addLink(new RiakLink(prefix, link.identifier(), link.type()))
-                    log.debug("Adding link " + link.identifier + " " + link.type)
+                    riakObject.addLink(new RiakLink(prefix, link.identifier.getPath(), link.type))
+                    log.trace("Adding link " + link.identifier.getPath() + " " + link.type)
                 }
                 IRiakObject storedObject = bucket.store(riakObject).withRetrier(new WaitingRetrier(STORE_RETRIES)).execute()
                 log.trace("Stored document " + d.identifier + " to riak")
@@ -211,9 +211,9 @@ class RiakStorage extends RiakClient implements Storage {
         return riakClient.fetchBucket(bucket_name).execute()
     }
 
-    void store(Iterable<Document> docs){
+    void store(Iterable<Document> docs, String prefix){
         for (Document doc : docs) {
-            store(doc)
+            store(doc, prefix)
         }
     }
 
@@ -221,7 +221,7 @@ class RiakStorage extends RiakClient implements Storage {
         return "/" + bucket_name + "/" + id
     }
 
-    Document get(URI uri) {
+    Document get(URI uri, String prefix) {
         try {
             String key = extractIdFromURI(uri)
             String bucket_name = extractBucketNameFromURI(uri)
@@ -234,11 +234,11 @@ class RiakStorage extends RiakClient implements Storage {
         return null
     }
 
-    Iterable<Document> getAll(){
+    Iterable<Document> getAll(String prefix){
         return new RiakIterable<Document>(this)
     }
 
-    void delete(URI uri){
+    void delete(URI uri, String prefix){
         try {
             String key = extractIdFromURI(uri)
             String bucket_name = extractBucketNameFromURI(uri)
