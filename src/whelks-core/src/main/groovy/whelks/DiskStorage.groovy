@@ -183,8 +183,17 @@ class DiskStorage extends BasicPlugin implements Storage {
         public void remove() {}
 
     }
+}
 
-    static main(args) {
-        new DiskStorage("/extra/whelk_storage", args[0]).updateInventory()
+@Log
+class FlatDiskStorage extends DiskStorage {
+
+    FlatDiskStorage(String directoryName) {
+        super(directoryName)
+    }
+
+    @Override
+    String buildPath(URI id, boolean createDirectories) {
+        return (this.storageDir + "/" + id.path).replaceAll(/\/+/, "/")
     }
 }

@@ -6,8 +6,9 @@ class DiskStorageSpec extends Specification {
 
     final static String TMP_STORAGE = "/tmp/teststorage"
     final static String DOC_FOLDER = "_"
-    def disk = new DiskStorage(TMP_STORAGE)
 
+    def disk = new DiskStorage(TMP_STORAGE)
+    def flatdisk = new FlatDiskStorage(TMP_STORAGE)
 
     def "should build proper path"() {
         expect:
@@ -25,5 +26,20 @@ class DiskStorageSpec extends Specification {
             "/1234567890abcdefghijkl" | TMP_STORAGE+"/1234/5678/90ab/cdef/ghij/"+DOC_FOLDER+"/1234567890abcdefghijkl"
     }
 
-
+    def "should build flat path"() {
+        expect:
+            flatdisk.buildPath(new URI(uri), false) == path
+        where:
+            uri                       | path
+            "/bib/123"                | TMP_STORAGE+"/bib/123"
+            "/bib/12345678"           | TMP_STORAGE+"/bib/12345678"
+            "/bib/name/12345678"      | TMP_STORAGE+"/bib/name/12345678"
+            "/bib/123456789"          | TMP_STORAGE+"/bib/123456789"
+            "/bib/some/other/path/1"  | TMP_STORAGE+"/bib/some/other/path/1"
+            "/bib//123.json"          | TMP_STORAGE+"/bib/123.json"
+            "/bib"                    | TMP_STORAGE+"/bib"
+            "/documents"              | TMP_STORAGE+"/documents"
+            "/1234567890abcdefghijkl" | TMP_STORAGE+"/1234567890abcdefghijkl"
+            "http://foo.com/bib/123"  | TMP_STORAGE+"/bib/123"
+    }
 }

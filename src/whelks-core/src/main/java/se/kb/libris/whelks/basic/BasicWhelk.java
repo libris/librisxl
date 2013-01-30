@@ -7,17 +7,21 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+/*
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+*/
 import se.kb.libris.whelks.*;
 import se.kb.libris.whelks.api.*;
 import se.kb.libris.whelks.component.*;
 import se.kb.libris.whelks.exception.WhelkRuntimeException;
+/*
 import se.kb.libris.whelks.persistance.JSONInitialisable;
 import se.kb.libris.whelks.persistance.JSONSerialisable;
+*/
 import se.kb.libris.whelks.plugin.*;
 
-public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSerialisable {
+public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
     private String prefix;
@@ -323,6 +327,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         return plugins;
     }
 
+    /* Candidate for removal 
     @Override
     public JSONInitialisable init(JSONObject obj) {
         try {
@@ -366,6 +371,7 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
 
     @Deprecated
     public void notify(URI u) {}
+    */
 
     private URI mintIdentifier(Document d) {
         try {
@@ -373,13 +379,5 @@ public class BasicWhelk implements Whelk, Pluggable, JSONInitialisable, JSONSeri
         } catch (URISyntaxException ex) {
             throw new WhelkRuntimeException("Could not mint URI", ex);
         }
-
-        /*
-           for (Plugin p: getPlugins())
-           if (p instanceof URIMinter)
-           return ((URIMinter)p).mint(d);
-
-           throw new WhelkRuntimeException("No URIMinter found, unable to mint URI");
-           */
     }
 }

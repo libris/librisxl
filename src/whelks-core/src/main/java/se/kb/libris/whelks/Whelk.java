@@ -32,8 +32,4 @@ public interface Whelk {
 
     // factory methods
     public Document createDocument();
-
-    // TO BE DELETED
-    public void notify(URI uri);
-
 }
