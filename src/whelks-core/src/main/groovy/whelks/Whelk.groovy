@@ -58,7 +58,7 @@ class WhelkImpl extends BasicWhelk {
         List<Document> docs = new ArrayList<Document>()
         def executor = newScalingThreadPoolExecutor(1,50,60)
         try {
-            for (Document doc : scomp.getAll()) {
+            for (Document doc : scomp.getAll(this.prefix)) {
                 counter++
                 docs.add(doc)
                 if (counter % History.BATCH_SIZE == 0) {
@@ -72,7 +72,7 @@ class WhelkImpl extends BasicWhelk {
                             }
                             log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
                             log.info("Indexing "+idocs.size()+" documents ... ")
-                            icomp.index(idocs)
+                            icomp.index(idocs, this.prefix)
                         }
                     })
                     docs.clear()
@@ -83,7 +83,7 @@ class WhelkImpl extends BasicWhelk {
                 if (ifc) {
                     docs = ifc.convert(docs)
                 }
-                icomp.index(docs)
+                icomp.index(docs, this.prefix)
             }
         } finally {
             executor.shutdown()

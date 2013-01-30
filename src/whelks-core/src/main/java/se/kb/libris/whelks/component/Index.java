@@ -7,8 +7,9 @@ import se.kb.libris.whelks.Document;
 import se.kb.libris.whelks.SearchResult;
 
 public interface Index extends Component {
-    public void index(Document d);
-    public void index(Iterable<Document> d);
-    public SearchResult query(Query query);
-    public void delete(URI uri);    
+    public void index(Document d, String indexName);
+    public void index(Iterable<Document> d, String indexName);
+    public SearchResult query(Query query, String indexName);
+    public void delete(URI uri, String indexName);
+
 }

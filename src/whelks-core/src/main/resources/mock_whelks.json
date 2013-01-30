@@ -17,13 +17,13 @@
         {
             "localindex": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
-                "_params" : "_whelkname"
+                "_unique" : false
             }
         },
         {
             "diskstorage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : "./src/test/resources/mock_storage, _whelkname",
+                "_params" : "./src/test/resources/mock_storage",
                 "_priority" : 0
 
             }

@@ -10,7 +10,6 @@ import se.kb.libris.whelks.plugin.*
 @Log
 class DiskStorage extends BasicPlugin implements Storage {
     def storageDir = "./storage"
-    def whelkPrefix
     boolean enabled = true
 
     String id = "diskstorage"
@@ -20,26 +19,12 @@ class DiskStorage extends BasicPlugin implements Storage {
     int PATH_CHUNKS=4
     final String INVENTORY_FILE = "inventory.data"
 
-    DiskStorage(String directoryName, String wlkPfx) {
+    DiskStorage(String directoryName) {
         StringBuilder dn = new StringBuilder(directoryName)
         while (dn[dn.length()-1] == '/') {
             dn.deleteCharAt(dn.length()-1)
         }
-        this.storageDir = dn.toString() // + "/" + whelkPrefix
-        this.whelkPrefix = wlkPfx
-        /*
-        try {
-            File invFile = new File(this.storageDir + "/" + INVENTORY_FILE).withObjectInputStream { instream ->
-                instream.eachObject {
-                    this.inventory = it
-                }
-            }
-            log.info("Loading inventory.")
-        } catch (Exception e) {
-            this.inventory = new HashMap<URI, Long>()
-            log.info("Creating inventory.")
-        }
-        */
+        this.storageDir = dn.toString()
 
         log.info("Starting DiskStorage with storageDir $storageDir")
     }
@@ -58,7 +43,7 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Document get(URI uri) {
+    Document get(URI uri, String whelkPrefix) {
         File f = new File(buildPath(uri, false))
         try {
             def document = new BasicDocument(f.text)
@@ -70,13 +55,13 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Iterable<Document> getAll() {
-        def baseDir = new File(this.storageDir+"/"+this.whelkPrefix)
+    Iterable<Document> getAll(String whelkPrefix) {
+        def baseDir = new File(this.storageDir+"/"+ whelkPrefix)
         return new DiskDocumentIterable(baseDir)
     }
 
     @Override
-    void store(Document doc, boolean saveInventory = true) {
+    void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
         File file = new File(buildPath(doc.identifier, true))
         file.write(doc.toJson())
         /*
@@ -91,9 +76,9 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    void store(Iterable<Document> docs) {
+    void store(Iterable<Document> docs, String whelkPrefix) {
         docs.each {
-            store(it, false)
+            store(it, whelkPrefix, false)
         }
         /*
         log.debug("Saving inventory")
@@ -114,7 +99,7 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    void delete(URI uri) {
+    void delete(URI uri, String whelkPrefix) {
         try {
             if (!new File(buildPath(uri, false)).delete()) {
                 log.error("Failed to delete $uri")

@@ -21,14 +21,12 @@
         "_plugins": [
         {
             "index": { 
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory",
-                "_params" : "_whelkname"
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory"
             }
         },
         {
             "indexstorage": { 
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientStorageIndexHistory",
-                "_params" : "_whelkname"
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientStorageIndexHistory"
             }
         },
         {

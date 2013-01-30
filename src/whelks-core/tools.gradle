@@ -55,11 +55,19 @@ task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
     args(System.getProperty('args', "").split() as String[])
 }
 
-jettyRun.contextPath = '/'
-jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
+task jettyRun(dependsOn: 'classes', type: JettyRun, overwrite: true) {
+    //jettyRun.contextPath = '/'
+    jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
 
-task(jettyLocal, dependsOn: 'classes', type: JettyRun) {
-    description "Starts a local whelk with default settings."
-    System.setProperty("whelk.config.uri", "file:src/main/resources/mock_whelks.json")
-    System.setProperty("file.encoding", System.getProperty('file.encoding', ""))
+    def mock_config = "file:src/main/resources/mock_whelks.json"
+    def mock_cluster = "bundled_whelk_index"
+    System.setProperty('file.encoding', System.getProperty('file.encoding', "UTF-8"))
+    System.setProperty('whelk.config.uri', System.getProperty("whelk.config.uri", mock_config))
+
+    if (System.getProperty("whelk.config.uri", "") == mock_config) {
+        System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
+    } else {
+        System.setProperty('elastic.host', System.getProperty("elastic.host", ""))
+        System.setProperty('elastic.cluster', System.getProperty('elastic.cluster', ""))
+    }
 }

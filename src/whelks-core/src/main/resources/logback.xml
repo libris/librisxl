@@ -26,10 +26,10 @@
     </encoder>
   </appender>
 
-  <!--
   <logger name="org.elasticsearch">
-      <level value="trace"/>
+      <level value="warn"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="trace"/>
   </logger>

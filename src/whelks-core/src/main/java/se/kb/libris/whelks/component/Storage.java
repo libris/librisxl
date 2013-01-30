@@ -7,10 +7,10 @@ import se.kb.libris.whelks.Key;
 import se.kb.libris.whelks.LookupResult;
 
 public interface Storage extends Component {
-    public void store(Document d);
-    public void store(Iterable<Document> d);
-    public Document get(URI uri);
-    public Iterable<Document> getAll();
-    public void delete(URI uri);
+    public void store(Document d, String whelkPrefix);
+    public void store(Iterable<Document> d, String whelkPrefix);
+    public Document get(URI uri, String whelkPrefix);
+    public Iterable<Document> getAll(String whelkPrefix);
+    public void delete(URI uri, String whelkPrefix);
     public LookupResult<? extends Document> lookup(Key key);
 }
