@@ -16,6 +16,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
     Whelk bibwhelk
     def w_name
     def suggest_source
+    String requiredContentType = "application/json"
 
     int order
 

@@ -91,6 +91,7 @@ class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter
     String id = "PythonRunnerFormatConverter"
     Map<String, Object> requirements = new HashMap<String, Object>()
     Whelk whelk
+    String requiredContentType = "application/json"
 
     PythonRunnerFormatConverter(Map req) {
         python = new ScriptEngineManager().getEngineByName("python")
