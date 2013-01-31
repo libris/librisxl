@@ -1,12 +1,12 @@
-{
-    "cluster_max_connections": 50,
+{   "config_type": "httpclient",
+    "total_max_connections": 500,
     "nodes":
         [
             {
-             "host": "193.10.75.51",
+             "host": "192.168.3.128",
              "port": 8098,
              "riak_path": "riak",
-             "max_connections": 100,
+             "max_connections": 500,
              "buckets": [
                             {"prefix": "bib", "n_val": 1, "allow_mult": false, "r": 1, "w": 1, "dw": 1},
                             {"prefix": "auth", "n_val": 1, "allow_mult": false, "r": 1, "w": 1, "dw": 1}
