@@ -14,34 +14,71 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
 
     String requiredContentType = "application/json"
     def marcmap
+    def marcref
 
     Marc2JsonLDConverter() {
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         mapper = new ElasticJsonMapper()
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         this.marcmap = mapper.readValue(is, Map)
+        is = this.getClass().getClassLoader().getResourceAsStream("marc_refs.json")
+        this.marcref = mapper.readValue(is, Map)
     }
 
     def createJson(URI identifier, Map injson) {
         def outjson = [:]
+        def pfx = identifier.toString().split("/")[1]
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
         // Workaround to prevent original data from being changed
         //outjson["marc21"] = mapper.readValue(mapper.writeValueAsBytes(injson), Map)
         injson = rewriteJson(identifier, injson)
+        log.trace("Leader: ${injson.leader}")
+        injson.leader.subfields.each { 
+            it.each { lkey, lvalue ->
+                lvalue = lvalue.trim()
+                if (lvalue && !(lvalue =~ /^\|+$/)) {
+                    outjson[lkey] = lvalue
+                }
+            }
+        }
         injson.fields.each {
             log.trace("Working on json field $it")
             it.each { fkey, fvalue ->
-                if (fkey == "006" || fkey == "007" || fkey == "008") {
-                    log.info("fvalue: " + fvalue["subfields"])
+                if ((fkey as int) > 5 && (fkey as int) < 9) {
                     fvalue["subfields"].each {
                         it.each { skey, svalue ->
-                            if (svalue.trim() && svalue != "|") {
+                            svalue = svalue.trim()
+                            if (svalue && !(svalue =~ /^\|+$/)) {
                                 outjson[skey] = svalue
                             }
                         }
                     }
                 } else {
-
+                    log.trace("Value: $fvalue")
+                    if (marcref[pfx][fkey]) {
+                        log.trace("Found a reference: " +marcref[pfx][fkey])
+                        fvalue["subfields"].each {
+                            it.each { skey, svalue ->
+                                def label = marcref[pfx][fkey][skey]
+                                if (label) {
+                                    if (outjson[label]) {
+                                        log.trace("Adding $svalue to outjson")
+                                        if (outjson[label] instanceof List) {
+                                            outjson[label] << svalue
+                                        } else {
+                                            def l = []
+                                            l << outjson[label]
+                                            l << svalue
+                                            outjson[label] = l
+                                        }
+                                    } else {
+                                        log.trace("Inserting $svalue in outjson")
+                                        outjson[label] = svalue
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

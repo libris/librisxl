@@ -4,6 +4,10 @@
             "a" : "author",
             "d" : "author_date"
         },
+        "700": {
+            "a" : "author",
+            "d" : "author_date"
+        },
         "245": {
             "a" : "title"
         }
