@@ -1,10 +1,12 @@
 {
     "bib": {
         "100": {
+            "_linked" : true,
             "a" : "author",
             "d" : "author_date"
         },
         "700": {
+            "_linked" : true,
             "a" : "author",
             "d" : "author_date"
         },

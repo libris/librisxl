@@ -13,14 +13,11 @@ import org.codehaus.jackson.map.ObjectMapper
 class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter implements FormatConverter {
 
     String requiredContentType = "application/json"
-    def marcmap
     def marcref
 
     Marc2JsonLDConverter() {
-        mapper = new ElasticJsonMapper()
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
-        this.marcmap = mapper.readValue(is, Map)
-        is = this.getClass().getClassLoader().getResourceAsStream("marc_refs.json")
+        mapper = new ObjectMapper()
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc_refs.json")
         this.marcref = mapper.readValue(is, Map)
     }
 
@@ -59,8 +56,12 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                         log.trace("Found a reference: " +marcref[pfx][fkey])
                         fvalue["subfields"].each {
                             it.each { skey, svalue ->
-                                def label = marcref[pfx][fkey][skey]
-                                if (label) {
+                                def label  = marcref[pfx][fkey][skey]
+                                def linked = marcref[pfx][fkey]["_linked"]
+                                if (linked) {
+                                    log.trace("Create new entity for $fkey")
+                                    createEntity(fvalue)
+                                } else if (label) {
                                     if (outjson[label]) {
                                         log.trace("Adding $svalue to outjson")
                                         if (outjson[label] instanceof List) {
@@ -83,6 +84,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             }
         }
         return outjson
+    }
+
+    def createEntity(data) {
+        
     }
 
 
