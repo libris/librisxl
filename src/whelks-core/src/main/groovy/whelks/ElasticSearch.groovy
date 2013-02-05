@@ -209,7 +209,7 @@ abstract class ElasticSearch extends BasicPlugin {
         return idelements.join(URI_SEPARATOR)
     }
 
-    URI translateIndexIdTo(id) {
+    URI translateIndexIdTo(id, idxpfx) {
         return new URI("/"+idxpfx+"/"+id.replaceAll(URI_SEPARATOR, "/"))
     }
 
@@ -302,9 +302,9 @@ abstract class ElasticSearch extends BasicPlugin {
             results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
                 if (q.highlights) {
-                    results.addHit(createDocumentFromHit(it), convertHighlight(it.highlightFields)) 
+                    results.addHit(createDocumentFromHit(it, idxpfx), convertHighlight(it.highlightFields)) 
                 } else {
-                    results.addHit(createDocumentFromHit(it))
+                    results.addHit(createDocumentFromHit(it, idxpfx))
                 }
             }
             if (q.facets) {
@@ -314,8 +314,8 @@ abstract class ElasticSearch extends BasicPlugin {
         return results
     }
 
-    Document createDocumentFromHit(hit) {
-        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+    Document createDocumentFromHit(hit, idxpfx) {
+        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id, idxpfx))
     }
 
     @Override
