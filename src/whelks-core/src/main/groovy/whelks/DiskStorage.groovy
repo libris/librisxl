@@ -21,6 +21,9 @@ class DiskStorage extends BasicPlugin implements Storage {
     int PATH_CHUNKS=4
     final String INVENTORY_FILE = "inventory.data"
 
+    static final String DATAFILE = "source"
+    static final String METAFILE = "meta"
+
     DiskStorage(String directoryName) {
         StringBuilder dn = new StringBuilder(directoryName)
         while (dn[dn.length()-1] == '/') {
@@ -133,8 +136,6 @@ class DiskStorage extends BasicPlugin implements Storage {
 @Log
 class FlatDiskStorage extends DiskStorage {
 
-    static final String DATAFILE = "source"
-    static final String METAFILE = "meta"
 
     FlatDiskStorage(String directoryName) {
         super(directoryName)
@@ -220,15 +221,15 @@ class DiskDocumentIterable implements Iterable<Document> {
 
                 if (currentFile.isFile() && currentFile.length() > 0) {
                     def d
-                    if (currentFile.name == FlatDiskStorage.DATAFILE) {
-                        def metafile = new File(currentFile.parent + "/" + FlatDiskStorage.METAFILE)
+                    if (currentFile.name == DiskStorage.DATAFILE) {
+                        def metafile = new File(currentFile.parent + "/" + DiskStorage.METAFILE)
                         if (metafile.exists()) {
                             d = new BasicDocument(metafile.text)
                         } else {
                             d = new BasicDocument()
                         }
                         d.data = currentFile.readBytes()
-                    } else if (currentFile.name != FlatDiskStorage.DATAFILE && currentFile.name != FlatDiskStorage.METAFILE) {
+                    } else if (currentFile.name != DiskStorage.DATAFILE && currentFile.name != DiskStorage.METAFILE) {
                         d = new BasicDocument(currentFile)
                     }
                     if (d) {
