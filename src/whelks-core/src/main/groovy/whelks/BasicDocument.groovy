@@ -126,6 +126,10 @@ public class BasicDocument implements Document {
         return mapper.writeValueAsString(this)
     }
 
+    Map toMap() {
+        return mapper.convertValue(this, Map)
+    }
+
     /*
     String toJson2() {
         ByteArrayOutputStream baout = new ByteArrayOutputStream()
@@ -244,7 +248,7 @@ public class BasicDocument implements Document {
 
     @Override
     public Document withData(byte[] data) {
-        this.data = data 
+        this.data = data
         this.size = data.length
         return this
     }

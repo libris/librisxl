@@ -18,4 +18,15 @@ class BasicDocumentSpec extends Specification {
         newdoc.version == "1"
         newdoc.size == doc.size
     }
+
+    def "should extract map from significant fields"() {
+        given:
+        def doc = new BasicDocument().withIdentifier("/libris/2345").withData("foo").withContentType("application/json").withLink("/libris/1234")
+        when:
+        def map = doc.toMap()
+        then:
+        map['identifier'] == "/libris/2345"
+        map['data'] == ("foo" as byte[])
+        map['links'] == [["type":"default", "identifier":"/libris/1234"]]
+    }
 }
