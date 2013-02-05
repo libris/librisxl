@@ -87,7 +87,6 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     }
 
     def createEntity(data) {
-        
     }
 
 

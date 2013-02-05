@@ -2,6 +2,8 @@ package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
+import java.text.*
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
@@ -125,18 +127,65 @@ class DiskStorage extends BasicPlugin implements Storage {
         }
         return path.replaceAll(/\/+/, "/") + "/" + basename
     }
+}
 
-    class DiskDocumentIterable implements Iterable<Document> {
-        File baseDirectory
-        DiskDocumentIterable(File bd) {
-            this.baseDirectory = bd
 
-        }
+@Log
+class FlatDiskStorage extends DiskStorage {
 
-        Iterator<Document> iterator() {
-            return new DiskDocumentIterator(this.baseDirectory)
+    static final String DATAFILE = "source"
+    static final String METAFILE = "meta"
+
+    FlatDiskStorage(String directoryName) {
+        super(directoryName)
+    }
+
+    @Override
+    void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
+        File sourcefile = new File(buildPath(doc.identifier, true) + "/" +DATAFILE)
+        File metafile = new File(buildPath(doc.identifier, true) + "/"+ METAFILE)
+        sourcefile.write(doc.dataAsString)
+        metafile.write(doc.toJson())
+    }
+
+    @Override
+    Document get(URI uri, String whelkPrefix) {
+        File datafile = new File(buildPath(uri, false)+ "/" + DATAFILE)
+        File metafile = new File(buildPath(uri, false)+ "/" + METAFILE)
+        try {
+            def document = new BasicDocument(metafile.text)
+            document.data = datafile.readBytes()
+            log.debug("Loading document from disk.")
+            return document
+        } catch (FileNotFoundException fnfe) {
+            return null
         }
     }
+
+    @Override
+    String buildPath(URI id, boolean createDirectories) {
+        def path = (this.storageDir + "/" + id.path).replaceAll(/\/+/, "/")
+        if (createDirectories) {
+            new File(path).mkdirs()
+        }
+        return path
+    }
+}
+
+/*
+ * Utility classes.
+ */
+class DiskDocumentIterable implements Iterable<Document> {
+    File baseDirectory
+    DiskDocumentIterable(File bd) {
+        this.baseDirectory = bd
+
+    }
+
+    Iterator<Document> iterator() {
+        return new DiskDocumentIterator(this.baseDirectory)
+    }
+
 
     class DiskDocumentIterator<Document> implements Iterator {
 
@@ -170,8 +219,21 @@ class DiskStorage extends BasicPlugin implements Storage {
                 File currentFile = fileStack.pop();
 
                 if (currentFile.isFile() && currentFile.length() > 0) {
-                    def d = new BasicDocument(currentFile)
-                    resultQueue.offer(d)
+                    def d
+                    if (currentFile.name == FlatDiskStorage.DATAFILE) {
+                        def metafile = new File(currentFile.parent + "/" + FlatDiskStorage.METAFILE)
+                        if (metafile.exists()) {
+                            d = new BasicDocument(metafile.text)
+                        } else {
+                            d = new BasicDocument()
+                        }
+                        d.data = currentFile.readBytes()
+                    } else if (currentFile.name != FlatDiskStorage.DATAFILE && currentFile.name != FlatDiskStorage.METAFILE) {
+                        d = new BasicDocument(currentFile)
+                    }
+                    if (d) {
+                        resultQueue.offer(d)
+                    }
                 }
 
                 if (currentFile.isDirectory()) {
@@ -182,18 +244,5 @@ class DiskStorage extends BasicPlugin implements Storage {
 
         public void remove() {}
 
-    }
-}
-
-@Log
-class FlatDiskStorage extends DiskStorage {
-
-    FlatDiskStorage(String directoryName) {
-        super(directoryName)
-    }
-
-    @Override
-    String buildPath(URI id, boolean createDirectories) {
-        return (this.storageDir + "/" + id.path).replaceAll(/\/+/, "/")
     }
 }
