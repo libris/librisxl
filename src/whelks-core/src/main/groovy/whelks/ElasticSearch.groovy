@@ -99,7 +99,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
     @Override
     Iterable<Document> getAll(String idxpfx) {
-        return new ElasticIterable<Document>(this)
+        return new ElasticIterable<Document>(this, idxpfx)
     }
 
     @Override
@@ -328,7 +328,7 @@ abstract class ElasticSearch extends BasicPlugin {
         return new ElasticIterable<Document>(this, since, true)
     }
 
-    def loadAll(String token = null, Date since = null, boolean loadDocuments = true, boolean sorted=false) {
+    def loadAll(String idxpfx, String token = null, Date since = null, boolean loadDocuments = true, boolean sorted=false) {
         def results
         if (loadDocuments) {
             results = new ArrayList<Document>()
@@ -378,7 +378,7 @@ abstract class ElasticSearch extends BasicPlugin {
                         log.error("Failed to created document with id ${it.id} from source - " + de.getMessage(), de)
                     }
                 } else {
-                    results.add(new LogEntry(translateIndexIdTo(it.id), new Date(it.field("_timestamp").value)))
+                    results.add(new LogEntry(translateIndexIdTo(it.id, idxpfx), new Date(it.field("_timestamp").value)))
                 }
             }
         } else if (!response || response.hits.length < 1) {
@@ -397,14 +397,16 @@ class ElasticIterable<T> implements Iterable {
     boolean incomplete = false
     boolean sorted
     def token
+    String idxpfx
     Date since
 
-    ElasticIterable(Index idx, Date snc = null, boolean srt = false) {
+    ElasticIterable(Index idx, String idxpfx, Date snc = null, boolean srt = false) {
         log.debug("Creating new iterable.")
         indexInstance = idx
+        this.idxpfx = idxpfx
         since = snc
         sorted = srt
-        (list, token) = indexInstance.loadAll(null, since, true, sorted)
+        (list, token) = indexInstance.loadAll(idxpfx, null, since, true, sorted)
         log.debug("Initial list with size: ${list.size} and token: $token")
         incomplete = (list.size == History.BATCH_SIZE)
     }
@@ -441,7 +443,7 @@ class ElasticIterable<T> implements Iterable {
 
         @Synchronized
         private void refill() {
-            (list, token) = this.indexInstance.loadAll(token, since, true, sorted)
+            (list, token) = this.indexInstance.loadAll(this.idxpfx, token, since, true, sorted)
             incomplete = (list.size() == History.BATCH_SIZE)
             iter = list.iterator()
         }

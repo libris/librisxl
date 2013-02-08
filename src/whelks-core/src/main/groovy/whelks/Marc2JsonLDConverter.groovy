@@ -21,6 +21,134 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         this.marcref = mapper.readValue(is, Map)
     }
 
+    def mapDefault(json) {
+        return json
+    }
+
+    def facit = ["100" : [
+                    "a" : "preferredNameForThePerson",
+                    "d" : "authorDate",
+                    "z" : false
+                    ]
+                ]
+
+                /*
+    def postProcessors = [
+        "preferredNameForThePerson": { return split on "," into givenName, surname }
+    ]
+    */
+
+    def toTheDungeon(code, json) {
+    }
+
+
+    def mapPerson(code, json) {
+        println "json: $json"
+        def out = [:]
+        log.trace("subfields: " + json['subfields'])
+        json['subfields'].each { key, value ->
+            println "subfield: $it"
+            if (!mapValue(code, key, value)) {
+                return toTheDungeon(code, json)
+            }
+        }
+        if (json["ind1"] == "1") {
+            def name = json["subfields"].find { it.get("a") }["a"]
+            log.trace("name: $name")
+            if (name.contains(", ")) {
+                out[facit["100"]["a"]] = name.split(", ")[1] + " " + name.split(", ")[0]
+            } else {
+
+            }
+        } else {
+            out["authorName"] = json["subfields"].find { it.get("a") }["a"]
+        }
+        return out
+    }
+
+    def mapField(code, json, outjson) {
+        switch(code) {
+            case "100":
+            case "700":
+                outjson <<  mapPerson(code, json)
+                break;
+            default:
+                outjson << mapDefault(json[code])
+                break;
+        }
+        return outjson
+    }
+
+    def createJson(URI identifier, Map injson) {
+        def outjson = [:]
+        def pfx = identifier.toString().split("/")[1]
+        outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
+        outjson["@id"] = identifier.toString()
+        // Workaround to prevent original data from being changed
+        //outjson["marc21"] = mapper.readValue(mapper.writeValueAsBytes(injson), Map)
+        injson = rewriteJson(identifier, injson)
+        log.trace("Leader: ${injson.leader}")
+        injson.leader.subfields.each { 
+            it.each { lkey, lvalue ->
+                lvalue = lvalue.trim()
+                if (lvalue && !(lvalue =~ /^\|+$/)) {
+                    outjson[lkey] = lvalue
+                }
+            }
+        }
+        injson.fields.each {
+            log.trace("Working on json field $it")
+            it.each { fkey, fvalue ->
+                outjson = mapField(fkey, fvalue, outjson)
+                log.trace("outjson: $outjson")
+                /*
+                if ((fkey as int) > 5 && (fkey as int) < 9) {
+                    fvalue["subfields"].each {
+                        it.each { skey, svalue ->
+                            svalue = svalue.trim()
+                            if (svalue && !(svalue =~ /^\|+$/)) {
+                                outjson[skey] = svalue
+                            }
+                        }
+                    }
+                } else {
+                    log.trace("Value: $fvalue")
+                    if (marcref[pfx][fkey]) {
+                        log.trace("Found a reference: " +marcref[pfx][fkey])
+                        fvalue["subfields"].each {
+                            it.each { skey, svalue ->
+                                def label  = marcref[pfx][fkey][skey]
+                                def linked = marcref[pfx][fkey]["_linked"]
+                                if (linked) {
+                                    log.trace("Create new entity for $fkey")
+                                    createEntity(fvalue)
+                                } else if (label) {
+                                    if (outjson[label]) {
+                                        log.trace("Adding $svalue to outjson")
+                                        if (outjson[label] instanceof List) {
+                                            outjson[label] << svalue
+                                        } else {
+                                            def l = []
+                                            l << outjson[label]
+                                            l << svalue
+                                            outjson[label] = l
+                                        }
+                                    } else {
+                                        log.trace("Inserting $svalue in outjson")
+                                        outjson[label] = svalue
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                */
+            }
+        }
+        return outjson
+    }
+
+    /*
     def createJson(URI identifier, Map injson) {
         def outjson = [:]
         def pfx = identifier.toString().split("/")[1]
@@ -85,6 +213,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         }
         return outjson
     }
+    */
 
     def createEntity(data) {
     }
