@@ -21,14 +21,12 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         this.marcref = mapper.readValue(is, Map)
     }
 
-    def mapDefault(json) {
-        return json
-    }
-
     def facit = ["100" : [
                     "a" : "preferredNameForThePerson",
-                    "d" : "authorDate",
-                    "z" : false
+                    "d" : "authorDate"
+                    ],
+                 "020" : [
+                    "a" : "isbn"
                     ]
                 ]
 
@@ -38,6 +36,35 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     ]
     */
 
+    Map mapDefault(String code, def value) {
+        if (facit[code]) {
+            return [(facit[code]): value]
+        } else {
+            return ["raw" : [(code): value]]
+        }
+    }
+
+    Map mapDefault(String code, Map json) {
+        boolean complete = true
+        def out = [:]
+        log.trace("mapDefault: $code = $json")
+        json.get("subfields").each {
+            log.trace("iterator: $it")
+            it.each { k, v ->
+                if (facit?.get(code)?.get(k)) {
+                    out[facit[code][k]] = v
+                } else {
+                    complete = false
+                }
+            }
+        }
+        if (complete) {
+            return out
+        }
+        return ["raw": [(code):json]]
+    }
+
+
     def toTheDungeon(code, json) {
     }
 
@@ -45,38 +72,67 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     def mapPerson(code, json) {
         println "json: $json"
         def out = [:]
+        boolean complete = true
         log.trace("subfields: " + json['subfields'])
-        json['subfields'].each { key, value ->
-            println "subfield: $it"
-            if (!mapValue(code, key, value)) {
-                return toTheDungeon(code, json)
+        json['subfields'].each { it.each { key, value ->
+            switch (key) {
+                case "a":
+                    out["preferredNameForThePerson"] = value
+                    if (json["ind1"] == "1") {
+                        def n = value.split(", ")
+                        out["surname"] = n[0]
+                        out["givenName"] = n[1]
+                        out["name"] = n[1] + " " + n[0]
+                    } else {
+                        out["name"] = value
+                    }
+                    break;
+                case "d":
+                    def d = value.split("-")
+                    out["dateOfBirth"] = ["@type":"year", "@value": d[0]]
+                    if (d.length > 1) {
+                        out["dateOfDeath"] = ["@type":"year", "@value": d[1]]
+                    }
+                    break;
+                default:
+                    complete = false
+                    break;
             }
-        }
-        if (json["ind1"] == "1") {
-            def name = json["subfields"].find { it.get("a") }["a"]
-            log.trace("name: $name")
-            if (name.contains(", ")) {
-                out[facit["100"]["a"]] = name.split(", ")[1] + " " + name.split(", ")[0]
-            } else {
-
-            }
+        } }
+        if (complete) {
+            return ["authorList": [out]]
         } else {
-            out["authorName"] = json["subfields"].find { it.get("a") }["a"]
+            return ["raw": [(code):json]]
         }
-        return out
     }
 
     def mapField(code, json, outjson) {
         switch(code) {
             case "100":
             case "700":
-                outjson <<  mapPerson(code, json)
+                outjson = mergeMap(outjson, mapPerson(code, json))
                 break;
             default:
-                outjson << mapDefault(json[code])
+                outjson = mergeMap(outjson, mapDefault(code, json))
+                log.trace("OutJson now: $outjson")
                 break;
         }
         return outjson
+    }
+
+    Map mergeMap(origmap, newmap) {
+        newmap.each { key, value ->
+            if (origmap.containsKey(key)) {
+                if (!(origmap.get(key) instanceof List)) {
+                    origmap[key] = [origmap[key]]
+                }
+                origmap[key] << value
+            } else {
+                origmap[key] = value
+            }
+        }
+
+        origmap
     }
 
     def createJson(URI identifier, Map injson) {
