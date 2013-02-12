@@ -10,7 +10,7 @@
     "gr2": "http://rdvocab.info/ElementsGr2/",
     "ent": "http://rdvocab.info/uri/schema/FRBRentitiesRDA/",
     "rel": "http://rdvocab.info/RDARelationshipsWEMI/",
-    "librismarc": "http://libris.kb.se/def/marc21#",
+    "marc": "http://libris.kb.se/def/marc21#",
 
     "literal": "rdf:value",
     "year": "xsd:gYear",
@@ -26,10 +26,14 @@
     "creator": "dc:creator",
     "dateAndTimeOfLatestTransaction": {"@id": "dc:modified", "@type": "xsd:dateTime"},
     "describes": "foaf:primaryTopic",
+    "catForm": "marc:catForm",
+    "encLevel": "marc:encLevel",
+    "localSystemNumber": "marc:localSystemNumber",
+    "status": "marc:status",
 
     "Manifestation": "ent:Manifestation",
     "isbn": "bibo:isbn",
-    "expressionManifested": "rel:expressionManifested",
+    "expression": "rel:expressionManifested",
 
     "Expression": {"@id": "ent:Expression", "_properties": ["titleProper", "..."]},
     "titleProper": {"_min": 1, "_max": 1, "_label_sv": "Titel"},
