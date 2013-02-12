@@ -69,6 +69,29 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     def toTheDungeon(code, json) {
     }
 
+    def mapIdentifier(code, json) {
+        def out = [:]
+        boolean complete = true
+        json["subfields"].each {
+            it.each { key, value ->
+                switch (key) {
+                    case "a":
+                        out["identifierForTheManifestation"] = value
+                        out["isbn"] = value.replaceAll("[^\\d]", "")
+                        break
+                    case "c":
+                        break
+                    default:
+                        complete = false
+                        break
+                }
+            }
+        }
+        if (complete) {
+            return out
+        }
+        return ["raw": [(code):json]]
+    }
 
     def mapPerson(code, json) {
         println "json: $json"

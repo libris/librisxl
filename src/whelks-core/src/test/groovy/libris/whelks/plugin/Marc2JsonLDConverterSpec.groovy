@@ -49,7 +49,7 @@ class Marc2JsonLDConverterSpec extends Specification {
         setup:
             def conv = new Marc2JsonLDConverter()
         expect:
-            conv.mapPerson(code, marc) == jsonld
+            conv.mapIdentifier(code, marc) == jsonld
         where:
             code  | marc                                                                               | jsonld
             "020" | ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]               | ["identifierForTheManifestation": "91-0-056322-6 (inb.)", "isbn":"9100563226"]
@@ -66,7 +66,6 @@ class Marc2JsonLDConverterSpec extends Specification {
             ["foo":"bar"]       | ["foo":"beer"]   | ["foo": ["bar", "beer"]]
             ["key":["v1","v2"]] | ["key":"v3"]     | ["key": ["v1","v2","v3"]]
     }
-
 
     /*
      * Utility
