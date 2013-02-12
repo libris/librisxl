@@ -34,6 +34,28 @@ class Marc2JsonLDConverterSpec extends Specification {
             ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]   | ["raw":["100":["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]]]
     }
 
+    /*
+    def "should map title"() {
+        setup:
+            def conv = new Marc2JsonLDConverter()
+        expect:
+            conv.mapPerson("245", marc) == jsonld
+        where:
+            marc                                                                          | jsonld
+    }
+    */
+
+    def "should map isbn"() {
+        setup:
+            def conv = new Marc2JsonLDConverter()
+        expect:
+            conv.mapPerson(code, marc) == jsonld
+        where:
+            code  | marc                                                                               | jsonld
+            "020" | ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]               | ["identifierForTheManifestation": "91-0-056322-6 (inb.)", "isbn":"9100563226"]
+            "020" | ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)", "c":"310:00"]]] | ["identifierForTheManifestation": "91-0-056322-6 (inb.)", "isbn":"9100563226"]
+    }
+
     def "should merge maps"() {
         setup: 
             def conv = new Marc2JsonLDConverter()

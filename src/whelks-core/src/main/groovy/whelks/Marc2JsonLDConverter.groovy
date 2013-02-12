@@ -26,7 +26,8 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     "d" : "authorDate"
                     ],
                  "020" : [
-                    "a" : "isbn"
+                    "a" : "isbn",
+                    "c" : false
                     ]
                 ]
 
@@ -49,11 +50,11 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         def out = [:]
         log.trace("mapDefault: $code = $json")
         json.get("subfields").each {
-            log.trace("iterator: $it")
             it.each { k, v ->
-                if (facit?.get(code)?.get(k)) {
-                    out[facit[code][k]] = v
-                } else {
+                def label = facit?.get(code)?.get(k)
+                if (label) {
+                    out[label] = v
+                } else if (label == null) {
                     complete = false
                 }
             }
