@@ -11,7 +11,7 @@
   "librismarc:catForm": "AACR2/KRS (normalv\u00e4rde)",
   "librismarc:encLevel": "Nationalbibliografisk niv\u00e5 (jfr KRS 1.0D3)",
   "librismarc:localSystemNumber": "9100563226",
-  "librismarc:status": "c"
+  "librismarc:status": "c",
   "describes": {
     "@id": "http://libris.kb.se/bib/7149593#manifestation",
     "@type": ["Manifestation", "bibo:Book"],
@@ -35,7 +35,7 @@
     "expressionManifested": {
       "@type": ["Expression", "bibo:Book"],
       "librismarc:typeOfRecord": "Text: tryck",
-      "titleProper": "Anteckningar fr\u00e5n en \u00f6"
+      "titleProper": "Anteckningar fr\u00e5n en \u00f6",
       "statementOfResponsibilityRelatingToTitleProper": "Tove Jansson, Tuulikki Pietil\u00e4",
       "authorList": [
         {
@@ -88,15 +88,13 @@
         {
           "@id": "http://libris.kb.se/sab/Gcdz/Jansson,+Tove+1914-2001"
         }
-      ],
+      ]
     },
     "termsOfAvailability": {
       "literal": "310:00"
     }
   },
   "marc21": {
-    "fields": [
-      "100" : {"4":"ill"}
-    ]
+      "001": "7149593"
   }
 }
