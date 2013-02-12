@@ -132,6 +132,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
 
     def mapField(code, json, outjson) {
         switch(code) {
+            case "020":
+                log.trace("injson: $json")
+                outjson = mergeMap(outjson, mapIdentifier(code, json))
+                break
             case "100":
             case "700":
                 outjson = mergeMap(outjson, mapPerson(code, json))
