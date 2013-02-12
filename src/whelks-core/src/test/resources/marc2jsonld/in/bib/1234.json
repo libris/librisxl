@@ -1,0 +1,216 @@
+{
+    "leader": "00716cam a22002297 r4500",
+    "fields": [
+        {
+            "001": "1234"
+        },
+        {
+            "005": "20110309100026.0"
+        },
+        {
+            "008": "760922s1971    xxu           000 0 eng c"
+        },
+        {
+            "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "0-8247-1116-5"
+                    }
+                ]
+            }
+        },
+        {
+            "035": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "9": "9900990307"
+                    }
+                ]
+            }
+        },
+        {
+            "040": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Li*"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Ubb"
+                    },
+                    {
+                        "2": "kssb/5"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Ucef"
+                    },
+                    {
+                        "2": "kssb/5"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Ue.05"
+                    },
+                    {
+                        "2": "kssb/5"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Ppdc"
+                    },
+                    {
+                        "2": "kssb/5"
+                    }
+                ]
+            }
+        },
+        {
+            "245": {
+                "ind1": "0",
+                "ind2": "0",
+                "subfields": [
+                    {
+                        "a": "Water and water pollution handbook."
+                    },
+                    {
+                        "n": "Vol. 2"
+                    }
+                ]
+            }
+        },
+        {
+            "260": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "New York :"
+                    },
+                    {
+                        "b": "Marcel Dekker,"
+                    },
+                    {
+                        "c": "1971"
+                    }
+                ]
+            }
+        },
+        {
+            "300": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "S. 451-800 :"
+                    },
+                    {
+                        "b": "ill."
+                    }
+                ]
+            }
+        },
+        {
+            "700": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Ciaccio, Leonard L."
+                    },
+                    {
+                        "4": "edt"
+                    }
+                ]
+            }
+        },
+        {
+            "772": {
+                "ind1": "0",
+                "ind2": "0",
+                "subfields": [
+                    {
+                        "7": "nn"
+                    },
+                    {
+                        "t": "Water and water pollution handbook"
+                    },
+                    {
+                        "c": "ed. by L.L. Ciaccio"
+                    },
+                    {
+                        "d": "New York : Marcel Dekker, cop. 1971-1973"
+                    },
+                    {
+                        "w": "9900006496"
+                    },
+                    {
+                        "9": "2"
+                    }
+                ]
+            }
+        },
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Ubb"
+                    },
+                    {
+                        "b": "Oceanografi Hydrologi"
+                    }
+                ]
+            }
+        },
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Ucef"
+                    },
+                    {
+                        "b": "Kemi Analytisk"
+                    }
+                ]
+            }
+        }
+    ]
+}

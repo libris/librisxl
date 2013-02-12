@@ -1,0 +1,133 @@
+{
+
+  "extend": {
+
+    "000": {
+      "typeOfRecord": {"derivable": true, "comment": "autotypes Manifestation?"},
+      "bibLevel": {"directive": "controls parsing of 006-008..."},
+      "linked": {},
+      "status": {"detail": true},
+      "characterCoding": {"detail": true},
+      "catForm": {},
+      "encLevel": {},
+      "status": {"hidden": true},
+      "entryMap": {"hidden": true},
+      "typeOfControl": {"detail": 0}
+    },
+    "001": {"controlNumber": {}},
+    "005": {"generated": true},
+    "035": {"tagDisplay": "category", "subfields": "choice"},
+
+    "040": {},
+    "042": {},
+
+    "008": {
+      "0+6": {"parseAs": "date"},
+      "publicationStatus": {"dateTypeFor": "008.0+6"},
+      "7+4": {"id": "yearTime1", "parseAs": "date"},
+      "11+4": {"id": "yearTime2", "parseAs": "date"},
+      "catalogingSource": {},
+      "modifiedRecord": {"detail": 0},
+      "language": {"sameValueAs": [null]},
+      "mapsRelief": {"repeatedBy": "006.fixedLengthDataElementsAdditionalMaterialCharacteristics"},
+      "mapsProjection": {"repeatedBy": "006.mapsProjection"},
+      "mapsIndex": {"repeatedBy": "006.mapsIndex"},
+      "mapsMaterial": {"repeatedBy": "006.mapsMaterial"},
+      "mapsGovtPub": {"repeatedBy": "006.mapsGovtPub"},
+      "mapsItem": {"repeatedBy": "006.mapsItem"},
+      "Place of Publication": {},
+      "mapsFormat": {"repeatedBy": "006.mapsFormat"}
+    },
+
+    "084": {"detail": true, "equivalentProperty": "dc:subject"},
+    "650": {"equivalentProperty": "dc:subject"},
+    "740": {"detail": true, "equivalentProperty": "skos:hiddenLabel"},
+
+    "100": {"a": {"type": "autocomplete", "service": "auth"}, "defaultCodes": ["a", "d"]},
+    "600": {"a": {"type": "autocomplete", "service": "auth"}, "defaultCodes": ["a", "d"]},
+    "700": {"a": {"type": "autocomplete", "service": "auth"}, "defaultCodes": ["a", "d"]},
+
+    "245": {
+      "ind1": {"type": "boolean"},
+      "ind2": {"type": "number"},
+      "a": {"type": "heading"},
+      "statementOfResponsibilityEtc": {"comment_sv": "Första namnet i 245.c sameValueAs 100.a. Övriga i 245.c till varsin 700.a (om relevanta)."}
+    },
+    "710": {},
+    "505": {},
+    "440": {"moreModernSubfieldsIn": "490"},
+    "041": {"languageCodeOfTextSoundTrackOrSeparateTitle": {"sameValueAs": ["240.uniformTitle"], "equivalentProperty": "el:titleOfTheWork"}},
+
+    "300": {"flatten": true, "inGroup": "physicalDescriptionEtc"},
+    "007": {
+      "mapColor": {},
+      "mapDetails": {},
+      "mapMaterial": {},
+      "mapMedium": {},
+      "mapReproduction": {},
+      "mapPosNeg": {}
+    },
+    "034": {"flatten": true},
+    "255": {"flatten": true},
+    "260": {"flatten": true, "a": {"entity": "Region", "property": "label"},
+            "defaultCodes": ["a", "b", "c", "e"],
+            "indicatorsFor": "b"},
+    "538": {"subfieldAsValue": true},
+    "500": {"subfieldAsValue": true}
+
+  },
+
+  "entities": {
+    "record": {
+      "main": [
+        {"leader": ["typeOfRecord", "bibLevel", "encLevel", "catForm"]}
+      ],
+      "hidden": [
+        {"leader": ["status", "typeOfControl", "characterCoding", "linked"]},
+        "001",
+        "005",
+        {"008": ["_col_0_6", "publicationStatus", "booksItem", "serialsItem", "modifiedRecord", "catalogingSource"]},
+        "035",
+        "599",
+        "040"
+      ]
+    },
+    "work": {
+      "cover": ["245", "100", "700", "710", "711", "720"],
+      "contents": [
+        {"008": ["booksLiteraryForm", "booksContents", "booksConfPub", "booksFestschrift", "booksBiography", "booksAudience", "booksGovtPub"]},
+        {"008": ["serialsLiteraryForm", "serialsContents", "serialsConfPub", "serialsFestschrift", "serialsBiography", "serialsAudience", "serialsGovtPub"]}
+      ],
+      "classification": ["042", "084", "600", "650", "082", "050", "043"],
+      "hidden": ["976"]
+    },
+    "expression": {
+      "main": ["028", {"008": ["language", "booksIllustrations", "booksIndex", "serialsIllustrations", "serialsIndex"]}, "505", "520"],
+      "hidden": []
+    },
+    "manifestation": {
+      "main": ["020", "260", {"008": ["yearTime1", "country"]}, "500", "300", "362"],
+      "hidden": []
+    },
+    "other": {
+      "main": []
+    }
+  },
+
+  "groups": {
+    "classificationCallNumbersSubjectsCategories": {"comment": "05x-08x and more", "label_sv": "Klassifikationskoder och rapportnummer"},
+    "mainEntry": {"comment": "1xx", "label_sv": "Huvuduppslag"},
+    "titleRelated": {"comment": "20x-24x", "label_sv": "Titel och titelrelaterade f\u00e4lt"},
+    "editionImprintEtc": {"comment": "250-270", "label_sv": "Upplaga och tryckningar"},
+    "physicalDescriptionEtc": {"comment": "3xx", "label_sv": "Fysisk beskrivning m.m."},
+    "seriesStatement": {"comment": "4xx", "label_sv": "Serieuppgifter"},
+    "note": {"comment": "5xx check swedish division", "label_sv": "Anm\u00e4rkningar"},
+    "subjectAccess": {"comment": "6xx", "label_sv": "\u00c4mnesordsbiuppslag"},
+    "addedEntry": {"comment": "70x-75x", "label_sv": "Biuppslag"},
+    "linkingEntry": {"comment": "76x-78x", "label_sv": "L\u00e4nkf\u00e4lt"},
+    "seriesEntry": {"comment": "80x-83x", "label_sv": "Seriebiuppslag"},
+    "holdingsLocationAlternategraphicsEtc": {"comment": "841-88x Not used in bibformat", "label_sv": "Best\u00e5nd, elektronisk adress etc."},
+    "9xx": {"comment": "976 Libris defined", "label_sv": "SAB-Rubrik"}
+  }
+
+}
