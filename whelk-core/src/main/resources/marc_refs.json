@@ -1,17 +1,10 @@
 {
-    "bib": {
-        "100": {
-            "_linked" : true,
-            "a" : "author",
-            "d" : "author_date"
-        },
-        "700": {
-            "_linked" : true,
-            "a" : "author",
-            "d" : "author_date"
-        },
-        "245": {
-            "a" : "title"
-        }
+    "020" : {
+        "a" : ["isbn", "identifierForTheManifestation"],
+        "c" : false
+    },
+    "245": {
+        "a" : "titleProper",
+        "c" : "statementOfResponsibilityRelatingToTitleProper"
     }
 }

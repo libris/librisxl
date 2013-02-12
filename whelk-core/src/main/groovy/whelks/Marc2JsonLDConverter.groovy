@@ -13,6 +13,7 @@ import org.codehaus.jackson.map.ObjectMapper
 class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter implements FormatConverter {
 
     String requiredContentType = "application/json"
+    final static String RAW_LABEL = "marc21"
     def marcref
 
     Marc2JsonLDConverter() {
@@ -21,27 +22,11 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         this.marcref = mapper.readValue(is, Map)
     }
 
-    def facit = ["100" : [
-                    "a" : "preferredNameForThePerson",
-                    "d" : "authorDate"
-                    ],
-                 "020" : [
-                    "a" : "isbn",
-                    "c" : false
-                    ]
-                ]
-
-                /*
-    def postProcessors = [
-        "preferredNameForThePerson": { return split on "," into givenName, surname }
-    ]
-    */
-
     Map mapDefault(String code, def value) {
-        if (facit[code]) {
-            return [(facit[code]): value]
+        if (marcref[code]) {
+            return [(marcref[code]): value]
         } else {
-            return ["raw" : [(code): value]]
+            return [(RAW_LABEL) : [(code): value]]
         }
     }
 
@@ -51,7 +36,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         log.trace("mapDefault: $code = $json")
         json.get("subfields").each {
             it.each { k, v ->
-                def label = facit?.get(code)?.get(k)
+                def label = marcref?.get(code)?.get(k)
                 if (label) {
                     out[label] = v
                 } else if (label == null) {
@@ -62,16 +47,40 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         if (complete) {
             return out
         }
-        return ["raw": [(code):json]]
+        return [(RAW_LABEL): [(code):json]]
     }
 
-
-    def toTheDungeon(code, json) {
+    def mapIsbn(json) {
+        def out = [:]
+        boolean complete = true
+        json['subfields'].each { it.each { key, value ->
+            switch (key) {
+                case "a":
+                    log.trace("isbn a: $value")
+                    if (value.contains(" ")) {
+                        out["isbn"] = value.split(" ")[0].replaceAll("-", "")
+                        out["isbnRemainder"] = value.split(" ")[1]
+                    } else {
+                        out["isbn"] = value.replaceAll("-", "")
+                    }
+                    break;
+                case "c":
+                    log.trace("isbn c: $value")
+                    out["termsOfAvailability"]=["literal":value]
+                    break;
+                default:
+                    log.trace("isbn unknown: $key == $value")
+                    complete = false
+                    break;
+            }
+        } }
+        if (complete) {
+            return out
+        }
+        return [(RAW_LABEL):["020":json]]
     }
-
 
     def mapPerson(code, json) {
-        println "json: $json"
         def out = [:]
         boolean complete = true
         log.trace("subfields: " + json['subfields'])
@@ -103,12 +112,14 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         if (complete) {
             return ["authorList": [out]]
         } else {
-            return ["raw": [(code):json]]
+            return [(RAW_LABEL): [(code):json]]
         }
     }
 
     def mapField(code, json, outjson) {
         switch(code) {
+            case "020":
+                outjson = mergeMap(outjson, mapIsbn(json))
             case "100":
             case "700":
                 outjson = mergeMap(outjson, mapPerson(code, json))

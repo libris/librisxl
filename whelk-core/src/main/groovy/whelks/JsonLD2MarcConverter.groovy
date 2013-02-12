@@ -12,7 +12,7 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
 
     JsonLD2MarcConverter() {
         mapper = new ObjectMapper()
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc_refs.json").getText("utf-8")
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc_refs.json")
         this.marcref = mapper.readValue(is, Map)
     }
 
@@ -23,6 +23,14 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
          fields["001"] = idstr[idstr.length - 1]
         }
         fields["005"] = injson?.get("dateAndTimeOfLatestTransaction").replaceAll("^\\d.", "")
+    }
+
+    def mapIsbn(injson) {
+        return injson
+    }
+
+    def mapPerson(injson) {
+        return injson
     }
 
 }
