@@ -37,9 +37,9 @@ class Marc2JsonLDConverterSpec extends Specification {
         expect:
             conv.mapDefault("245", marc) == jsonld
         where:
-            marc                                                                                            | jsonld
-            [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel", "c": "Kalle Kula"]]]               | ["titleProper" : "Bokens titel", "statementOfResponsibilityRelatingToTitleProper" : "Kalle Kula"]
-            [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel", "c": "Kalle Kula", "z":"foo"]]]    | [(Marc2JsonLDConverter.RAW_LABEL):["245":[ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel", "c": "Kalle Kula", "z":"foo"]]]]]
+            marc                                                                                              | jsonld
+            [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"]]]               | ["titleProper" : "Bokens titel", "statementOfResponsibilityRelatingToTitleProper" : "Kalle Kula"]
+            [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"], ["z":"foo"]]]  | [(Marc2JsonLDConverter.RAW_LABEL):["245":[ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel", "c": "Kalle Kula", "z":"foo"]]]]]
     }
 
     def "should map isbn"() {
@@ -47,11 +47,11 @@ class Marc2JsonLDConverterSpec extends Specification {
             conv.mapIsbn(marc) == jsonld
             vnoc.mapIsbn(jsonld) == cleanIsbn(marc)
         where:
-            marc                                                                               | jsonld
-            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]               | ["isbn":"9100563226", "isbnRemainder": "(inb.)"]
-            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"]]]                      | ["isbn":"9100563226"]
-            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)", "c":"310:00"]]] | ["isbn":"9100563226", "isbnRemainder": "(inb.)", "termsOfAvailability":["literal":"310:00"]]
-            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6", "z":"foo"]]]           | [(Marc2JsonLDConverter.RAW_LABEL):["020":["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6", "z":"foo"]]]]]
+            marc                                                                                 | jsonld
+            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]                 | ["isbn":"9100563226", "isbnRemainder": "(inb.)"]
+            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"]]]                        | ["isbn":"9100563226"]
+            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"], ["c":"310:00"]]] | ["isbn":"9100563226", "isbnRemainder": "(inb.)", "termsOfAvailability":["literal":"310:00"]]
+            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]           | [(Marc2JsonLDConverter.RAW_LABEL):["020":["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]]]
     }
 
     def "should merge maps"() {
