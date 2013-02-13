@@ -23,13 +23,16 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
          fields["001"] = idstr[idstr.length - 1]
         }
         fields["005"] = injson?.get("dateAndTimeOfLatestTransaction").replaceAll("^\\d.", "")
-        injson.each { key, value ->
+        injson["describes"]["expression"].each { key, value ->
             switch(key) {
+                case "authorList":
+                    value.each {
+                        fields["100"] = mapPerson(it)
+                    }
+                    break
                 case "isbnRemainder":
                 case "isbn":
                     fields["020"] = mapIsbn([injson["isbn"]] << injson["isbnRemainder"])
-                    break
-                case "authorList":
                     break
                 case (Marc2JsonLDConverter.RAW_LABEL):
                     value.each { k, v ->
@@ -48,10 +51,6 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         marcField["ind2"] = ind2
         marcField["subfields"]= []
         return marcField
-    }
-
-    def addSubfield(marcField, code, value) {
-        return marcField["subfields"][code] = value
     }
 
     def mapIsbn(injson) {
@@ -77,11 +76,9 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
     }
 
     def mapPerson(injson) {
-        //TODO: om fler än tre, 700
         def marcField = createMarcField("0", " ")
-        if (injson?.get("authorList")) {
-            def name = injson["authorList"][0]?.get("name")
-            injson["authorList"][0].each { key, value ->
+        def name = injson[0]?.get("name")
+        injson[0].each { key, value ->
                 switch (key) {
                     case "surname":
                         marcField["ind1"] = "1"
@@ -101,18 +98,19 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                         marcField["subfields"] << subX
                         break
                 }
-            }
-            if (name) {
-                def subA = [:]
-                subA["a"] = name
-                marcField["subfields"] << subA
-            }
-        }
-        
-        //hanterar första author
+          }
+          if (name) {
+              def subA = [:]
+              subA["a"] = name
+              marcField["subfields"] << subA
+          }
+        log.trace("in the raw label" + injson[Marc2JsonLDConverter.RAW_LABEL])
         if (injson?.get(Marc2JsonLDConverter.RAW_LABEL)) {
             injson[Marc2JsonLDConverter.RAW_LABEL].each { key, value ->
+                marcField["ind1"] = injson[Marc2JsonLDConverter.RAW_LABEL][key]["ind1"]
+                marcField["ind2"] = injson[Marc2JsonLDConverter.RAW_LABEL][key]["ind2"]
                 injson[Marc2JsonLDConverter.RAW_LABEL][key]["subfields"][0].each { k, v ->
+                    log.trace("key: $k, value: $v")
                     marcField["subfields"] << [(k):(v)]
                 }
             }
@@ -120,6 +118,14 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         return marcField
     }
 
+    def mapDefault(injson) {
+        def marcField = createMarcField(" ", " ")
+        def subfields = [:]
+        injson.each { key, value ->
+            
+        }
+
+    }
     //TODO: use marc_refs
 }
 
