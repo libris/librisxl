@@ -8,10 +8,10 @@
     "abbr": "NB"
   },
   "dateAndTimeOfLatestTransaction": "2004-08-09T15:20:32.0",
-  "librismarc:catForm": "AACR2/KRS (normalv\u00e4rde)",
-  "librismarc:encLevel": "Nationalbibliografisk niv\u00e5 (jfr KRS 1.0D3)",
-  "librismarc:localSystemNumber": "9100563226",
-  "librismarc:status": "c",
+  "catForm": "AACR2/KRS (normalv\u00e4rde)",
+  "encLevel": "Nationalbibliografisk niv\u00e5 (jfr KRS 1.0D3)",
+  "localSystemNumber": "9100563226",
+  "status": "c",
   "describes": {
     "@id": "http://libris.kb.se/bib/7149593#manifestation",
     "@type": ["Manifestation", "bibo:Book"],
@@ -32,9 +32,9 @@
       "label": "Stockholm"
     },
     "publishersName": "Bonnier",
-    "expressionManifested": {
+    "expression": {
       "@type": ["Expression", "bibo:Book"],
-      "librismarc:typeOfRecord": "Text: tryck",
+      "marc:typeOfRecord": "Text: tryck",
       "titleProper": "Anteckningar fr\u00e5n en \u00f6",
       "statementOfResponsibilityRelatingToTitleProper": "Tove Jansson, Tuulikki Pietil\u00e4",
       "authorList": [
@@ -67,8 +67,8 @@
         }
       ],
       "languageOfTheContent": "swe",
-      "librismarc:bibLevel": "Monografisk resurs",
-      "librismarc:bibliographyCode": [
+      "marc:bibLevel": "Monografisk resurs",
+      "marc:bibliographyCode": [
         "SEE",
         "BULB",
         "SLB",
