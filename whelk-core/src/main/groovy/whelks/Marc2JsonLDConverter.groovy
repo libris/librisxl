@@ -37,7 +37,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         json.get("subfields").each {
             it.each { k, v ->
                 def label = marcref?.get(code)?.get(k)
-                if (label) {
+                log.trace("label: $label")
+                if (label instanceof Map) {
+                    assignValue(out, label, v)
+                } else if (label) {
                     out[label] = v
                 } else if (label == null) {
                     complete = false
@@ -45,9 +48,38 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             }
         }
         if (complete) {
+            log.trace("default mapping: $out")
             return out
         }
         return [(RAW_LABEL): [(code):json]]
+    }
+
+    private void assignValue(Map out, Map refmap, def value) {
+        refmap.each { rk, rv ->
+            log.trace("rk: $rk, rv: $rv")
+            if (!(rv instanceof Map)) {
+                log.trace("$rv is not map. Setting $rk = [$rv : $value]")
+                if (out[(rk)]) {
+                    out[(rk)] << [(rv):value]
+                } else {
+                    out[(rk)] = [(rv):value]
+                }
+            } else {
+                if (out.containsKey(rk)) {
+                    log.trace("out already contains an $rk")
+                    if (!(out.get(rk) instanceof Map)) {
+                        log.trace(" ... and it's not a Map!")
+                        def ov = out.get(rk)
+                        out[(rk)] = ["value":ov]
+                    }
+                } else {
+                    log.trace("no previous key named $rk")
+                    out[(rk)] = [:]
+                }
+                log.trace("creating map at $out")
+                assignValue(out[(rk)], rv, value)
+            }
+        }
     }
 
     def mapIsbn(json) {
@@ -75,7 +107,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             }
         } }
         if (complete) {
-            return out
+            return ["describes":out]
         }
         return [(RAW_LABEL):["020":json]]
     }
@@ -134,7 +166,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             }
         } }
         if (complete) {
-            return ["authorList": [out]]
+            return ["describes":["expressionManifested":["authorList": [out]]]]
         } else {
             return [(RAW_LABEL): [(code):json]]
         }
@@ -159,20 +191,48 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         return outjson
     }
 
-    Map mergeMap(origmap, newmap) {
+    Map oldmergeMap(origmap, newmap) {
+        log.trace("origmap: $origmap")
         newmap.each { key, value ->
+            log.trace("key is $key ("+key.getClass().getName()+") - value is $value ("+value.getClass().getName()+")")
             if (origmap.containsKey(key)) {
-                if (!(origmap.get(key) instanceof List)) {
-                    origmap[key] = [origmap[key]]
+                if (origmap.get(key) instanceof Map) {
+                    log.trace("recursing ...")
+                    origmap[key] = mergeMap(origmap[key], newmap)
+                } else {
+                    if (!(origmap.get(key) instanceof List)) {
+                        origmap[key] = [origmap[key]]
+                    }
+                    origmap[key] << value
                 }
-                origmap[key] << value
             } else {
                 origmap[key] = value
             }
         }
 
+        log.trace("updated origmap: $origmap")
         origmap
     }
+
+    Map mergeMap(Map origmap, Map newmap) {
+        newmap.each { key, value -> 
+            if (origmap.containsKey(key)) { // Update value for original map
+                if (value instanceof Map && origmap.get(key) instanceof Map) {
+                    origmap[key] = mergeMap(origmap.get(key), value)
+                } else {
+                    if (!(origmap.get(key) instanceof List)) {
+                        origmap[key] = [origmap[key]]
+                    }
+                    origmap[key] << value
+                }
+            } else { // Add key to original map
+                origmap[key] = value
+            }
+        }
+        log.trace("updated origmap: $origmap")
+        return origmap
+    }
+
 
     def createJson(URI identifier, Map injson) {
         def outjson = [:]
