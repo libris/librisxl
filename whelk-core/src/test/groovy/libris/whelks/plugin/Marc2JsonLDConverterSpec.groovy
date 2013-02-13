@@ -74,6 +74,19 @@ class Marc2JsonLDConverterSpec extends Specification {
             ["key":["subkey":["v1":"v2"]]] | ["key":["subkey":["v1":"v4"]]]   | ["key": ["subkey":[["v1":"v2"],["v1":"v4"]]]]
     }
 
+    def "should created map structure"() {
+        expect:
+            conv.createNestedMapStructure(map, keys, type) == newmap
+        where:
+            map                            | keys                             | type                           | newmap
+            [:]                            | ["key1", "key2"]                 | "foo"                          | ["key1":["key2":"foo"]]
+            [:]                            | ["key1", "key2"]                 | []                             | ["key1":["key2":[]]] 
+            [:]                            | ["key1", "key2","key3"]          | []                             | ["key1":["key2":["key3":[]]]] 
+            ["k1":["k2":"v1"]]             | ["k1", "k2"]                     | []                             | ["k1":["k2":["v1"]]] 
+            ["k1":["k2":"v1"]]             | ["k1", "k2", "k3"]               | []                             | ["k1":["k2":"v1","k3":[]]] 
+            ["k1":["k2":["k3":[]]]]        | ["k1", "k2", "k3"]               | []                             | ["k1":["k2":["k3":[]]]]
+    }
+
     /*
      * Utility
      */
