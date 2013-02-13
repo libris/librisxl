@@ -16,21 +16,62 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         this.marcref = mapper.readValue(is, Map)
     }
 
-    def mapDocument(def injson) {
+    def mapDocument(injson) {
         def fields = [:]
         def idstr = injson?.get("@id").split("/")
         if (idstr) {
          fields["001"] = idstr[idstr.length - 1]
         }
         fields["005"] = injson?.get("dateAndTimeOfLatestTransaction").replaceAll("^\\d.", "")
+        injson.each { key, value ->
+            switch(key) {
+                case "isbnRemainder":
+                case "isbn":
+                    fields << mapIsbn([injson["isbn"]] << injson["isbnRemainder"])
+                    break
+                case "authorList":
+                    break
+                default:
+                    return fields
+            }
+
+        }
+        return fields
+    }
+
+    def createMarcField(ind1, ind2) {
+        def marcField = [:]
+        marcField["ind1"] = ind1
+        marcField["ind2"] = ind2
+        marcField["subfields"]= []
+        return marcField
+    }
+
+    def addSubfield(marcField, code, value) {
+        return marcField["subfields"][code] = value
     }
 
     def mapIsbn(injson) {
-        return injson
+        def marcField = createMarcField(" ", " ")
+        def subfield = [:]
+        def isbnRemainder = ""
+        if (injson["isbnRemainder"]) {
+            isbnRemainder = " " + injson["isbnRemainder"]
+        }
+        if (injson["isbn"]) {
+            subfield["a"] = injson["isbn"] + isbnRemainder
+        }
+        if (injson["termsOfAvailability"]) {
+            subfield["c"] = injson["termsOfAvailability"]["literal"]
+        }
+        marcField["subfields"] << subfield
+        return marcField
     }
 
     def mapPerson(injson) {
-        return injson
+        def out = [:]
+        return out
     }
 
 }
+
