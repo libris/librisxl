@@ -4,7 +4,15 @@
         "c" : false
     },
     "245": {
-        "a" : "titleProper",
-        "c" : "statementOfResponsibilityRelatingToTitleProper"
+        "a" : {
+            "describes": {
+                "expressionManifested" : "titleProper"
+            }
+        },
+        "c" : {
+            "describes" : {
+                "expressionManifested" : "statementOfResponsibilityRelatingToTitleProper"
+            }
+        }
     }
 }

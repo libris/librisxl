@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record xmlns="http://www.loc.gov/MARC21/slim" type="Bibliographic">
+  <leader>00887cam a2200277 a 4500</leader>
+  <controlfield tag="001">7149593</controlfield>
+  <controlfield tag="005">20040809152032.0</controlfield>
+  <controlfield tag="008">960214s1996    sw            000 0aswe  </controlfield>
+  <datafield tag="020" ind1=" " ind2=" ">
+    <subfield code="a">91-0-056322-6 (inb.) ;</subfield>
+    <subfield code="c">310:00</subfield>
+  </datafield>
+  <datafield tag="035" ind1=" " ind2=" ">
+    <subfield code="9">9100563226</subfield>
+  </datafield>
+  <datafield tag="040" ind1=" " ind2=" ">
+    <subfield code="a">NB</subfield>
+  </datafield>
+  <datafield tag="042" ind1=" " ind2=" ">
+    <subfield code="9">BULB</subfield>
+    <subfield code="9">NB</subfield>
+    <subfield code="9">SEE</subfield>
+    <subfield code="9">SLB</subfield>
+    <subfield code="9">KVIN</subfield>
+  </datafield>
+  <datafield tag="084" ind1=" " ind2=" ">
+    <subfield code="a">Gcdz Jansson, Tove</subfield>
+    <subfield code="2">kssb/6</subfield>
+  </datafield>
+  <datafield tag="084" ind1=" " ind2=" ">
+    <subfield code="a">Ibz Pietilä, Tuulikki</subfield>
+    <subfield code="2">kssb/6</subfield>
+  </datafield>
+  <datafield tag="084" ind1=" " ind2=" ">
+    <subfield code="a">Lz</subfield>
+  </datafield>
+  <datafield tag="100" ind1="1" ind2=" ">
+    <subfield code="a">Jansson, Tove,</subfield>
+    <subfield code="d">1914-2001</subfield>
+  </datafield>
+  <datafield tag="245" ind1="0" ind2="0">
+    <subfield code="a">Anteckningar från en ö /</subfield>
+    <subfield code="c">Tove Jansson, Tuulikki Pietilä</subfield>
+  </datafield>
+  <datafield tag="260" ind1=" " ind2=" ">
+    <subfield code="a">Stockholm :</subfield>
+    <subfield code="b">Bonnier,</subfield>
+    <subfield code="c">1996 ;</subfield>
+    <subfield code="e">(Finland)</subfield>
+  </datafield>
+  <datafield tag="300" ind1=" " ind2=" ">
+    <subfield code="a">102, [1] s. :</subfield>
+    <subfield code="b">ill. ;</subfield>
+    <subfield code="c">25 cm</subfield>
+  </datafield>
+  <datafield tag="500" ind1=" " ind2=" ">
+    <subfield code="a">Även tillg. med tryckår: 2. uppl., 1996</subfield>
+  </datafield>
+  <datafield tag="599" ind1=" " ind2=" ">
+    <subfield code="a">Li:S</subfield>
+  </datafield>
+  <datafield tag="600" ind1="1" ind2="4">
+    <subfield code="a">Jansson, Tove,</subfield>
+    <subfield code="d">1914-2001</subfield>
+  </datafield>
+  <datafield tag="600" ind1="1" ind2="4">
+    <subfield code="a">Pietilä, Tuulikki</subfield>
+  </datafield>
+  <datafield tag="700" ind1="1" ind2=" ">
+    <subfield code="a">Pietilä, Tuulikki,</subfield>
+    <subfield code="d">1917-</subfield>
+  </datafield>
+  <datafield tag="976" ind1=" " ind2="2">
+    <subfield code="a">Gcdz</subfield>
+    <subfield code="b">Litteraturhistoria Finlandssvensk</subfield>
+  </datafield>
+  <datafield tag="976" ind1=" " ind2="2">
+    <subfield code="a">Ibz</subfield>
+    <subfield code="b">Konst Konsthistoria</subfield>
+  </datafield>
+</record>
