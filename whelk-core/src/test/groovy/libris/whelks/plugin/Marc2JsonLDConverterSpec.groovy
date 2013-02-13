@@ -45,7 +45,7 @@ class Marc2JsonLDConverterSpec extends Specification {
     def "should map isbn"() {
         expect:
             conv.mapIsbn(marc) == jsonld
-            vnoc.mapIsbn(jsonld) == marc
+            vnoc.mapIsbn(jsonld) == cleanIsbn(marc)
         where:
             marc                                                                               | jsonld
             ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]               | ["describes":["isbn":"9100563226", "isbnRemainder": "(inb.)"]]
@@ -71,5 +71,16 @@ class Marc2JsonLDConverterSpec extends Specification {
         log.info("file: marc2jsonld/$jsonFile")
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc2jsonld/"+jsonFile)
         return mapper.readValue(is, Map)
+    }
+
+    def cleanIsbn(jsonMarc) {
+        def subA = jsonMarc?.get("subfields")[0]?.get("a").split(" ")
+        def cleanedIsbn = subA[0].replaceAll("[^\\d]", "")
+        def remainder = ""
+        if (subA.length > 1) {
+            remainder = " " + subA[1]
+        }
+        jsonMarc["subfields"][0]["a"] = cleanedIsbn + remainder
+        return jsonMarc
     }
 }
