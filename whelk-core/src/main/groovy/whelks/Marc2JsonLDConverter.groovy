@@ -80,6 +80,30 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         return [(RAW_LABEL):["020":json]]
     }
 
+    def mapIdentifier(code, json) {
+        def out = [:]
+        boolean complete = true
+        json["subfields"].each {
+            it.each { key, value ->
+                switch (key) {
+                    case "a":
+                        out["identifierForTheManifestation"] = value
+                        out["isbn"] = value.replaceAll("[^\\d]", "")
+                        break
+                    case "c":
+                        break
+                    default:
+                        complete = false
+                        break
+                }
+            }
+        }
+        if (complete) {
+            return out
+        }
+        return ["raw": [(code):json]]
+    }
+
     def mapPerson(code, json) {
         def out = [:]
         boolean complete = true
@@ -120,6 +144,9 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         switch(code) {
             case "020":
                 outjson = mergeMap(outjson, mapIsbn(json))
+                log.trace("injson: $json")
+                //outjson = mergeMap(outjson, mapIdentifier(code, json))
+                break
             case "100":
             case "700":
                 outjson = mergeMap(outjson, mapPerson(code, json))

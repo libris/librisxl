@@ -63,7 +63,6 @@ class Marc2JsonLDConverterSpec extends Specification {
             ["key":["v1","v2"]] | ["key":"v3"]     | ["key": ["v1","v2","v3"]]
     }
 
-
     /*
      * Utility
      */
