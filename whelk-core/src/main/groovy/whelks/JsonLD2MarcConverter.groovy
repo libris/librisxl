@@ -27,15 +27,18 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             switch(key) {
                 case "isbnRemainder":
                 case "isbn":
-                    fields << mapIsbn([injson["isbn"]] << injson["isbnRemainder"])
+                    fields["020"] = mapIsbn([injson["isbn"]] << injson["isbnRemainder"])
                     break
                 case "authorList":
                     break
-                default:
-                    return fields
+                case (Marc2JsonLDConverter.RAW_LABEL):
+                    value.each { k, v ->
+                        fields[k] = v
+                    }
+                    break
             }
-
         }
+        
         return fields
     }
 
@@ -53,25 +56,70 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
 
     def mapIsbn(injson) {
         def marcField = createMarcField(" ", " ")
-        def subfield = [:]
+        def subfields = [:]
         def isbnRemainder = ""
         if (injson["isbnRemainder"]) {
             isbnRemainder = " " + injson["isbnRemainder"]
         }
         if (injson["isbn"]) {
-            subfield["a"] = injson["isbn"] + isbnRemainder
+            subfields["a"] = injson["isbn"] + isbnRemainder
         }
         if (injson["termsOfAvailability"]) {
-            subfield["c"] = injson["termsOfAvailability"]["literal"]
+            subfields["c"] = injson["termsOfAvailability"]["literal"]
         }
-        marcField["subfields"] << subfield
+        if (injson[Marc2JsonLDConverter.RAW_LABEL]) {
+            injson[Marc2JsonLDConverter.RAW_LABEL]["020"]["subfields"][0].each { k, v ->
+                subfields[k] = v
+            }
+        }
+        marcField["subfields"] << subfields
         return marcField
     }
 
     def mapPerson(injson) {
-        def out = [:]
-        return out
+        //TODO: om fler än tre, 700
+        def marcField = createMarcField("0", " ")
+        if (injson?.get("authorList")) {
+            def name = injson["authorList"][0]?.get("name")
+            injson["authorList"][0].each { key, value ->
+                switch (key) {
+                    case "surname":
+                        marcField["ind1"] = "1"
+                        name = value
+                        break
+                    case "givenName":
+                        name = name + ", " + value
+                        break
+                    case "dateOfBirth":
+                        def subD = [:]
+                        subD["d"] = value
+                        marcField["subfields"] << subD
+                        break
+                    case "dateOfDeath":
+                        def subX = [:]
+                        subX["d"] = value
+                        marcField["subfields"] << subX
+                        break
+                }
+            }
+            if (name) {
+                def subA = [:]
+                subA["a"] = name
+                marcField["subfields"] << subA
+            }
+        }
+        
+        //hanterar första author
+        if (injson?.get(Marc2JsonLDConverter.RAW_LABEL)) {
+            injson[Marc2JsonLDConverter.RAW_LABEL].each { key, value ->
+                injson[Marc2JsonLDConverter.RAW_LABEL][key]["subfields"][0].each { k, v ->
+                    marcField["subfields"] << [(k):(v)]
+                }
+            }
+        }
+        return marcField
     }
 
+    //TODO: use marc_refs
 }
 
