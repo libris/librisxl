@@ -1,12 +1,15 @@
 {
     "levels": {
-        "describes": ["020","300","500"],
-        "expressionManifested" : ["245"]
+        "describes": ["020","042","300","500"],
+        "expression" : ["245"]
     },
     "fields": {
         "020" : {
             "a" : ["isbn", "identifierForTheManifestation"],
             "c" : [false]
+        },
+        "042" : {
+            "9" : ["marc:bibliographyCode"]
         },
         "245": {
             "a" : ["titleProper"],
@@ -18,7 +21,9 @@
             "c" : ["dimensions"]
         },
         "500": {
-            "a" : ["coment"]
+            "a" : ["comment"]
+        },
+        "language" : {
         }
     }
 }
