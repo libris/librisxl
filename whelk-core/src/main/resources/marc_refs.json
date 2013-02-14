@@ -1,6 +1,6 @@
 {
     "levels": {
-        "describes": ["020"],
+        "describes": ["020","300","500"],
         "expressionManifested" : ["245"]
     },
     "fields": {
@@ -11,6 +11,14 @@
         "245": {
             "a" : ["titleProper"],
             "c" : ["statementOfResponsibilityRelatingToTitleProper"]
+        },
+        "300": {
+            "a" : ["extendOfText"],
+            "b" : ["baseMaterial"],
+            "c" : ["dimensions"]
+        },
+        "500": {
+            "a" : ["coment"]
         }
     }
 }

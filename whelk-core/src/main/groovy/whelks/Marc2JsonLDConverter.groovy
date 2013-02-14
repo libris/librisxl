@@ -167,15 +167,36 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             }
         } }
         if (complete) {
-            /*
-            def rout = ["describes":["expressionManifested":["authorList": []]]]
-            rout["describes"]["expressionManifested"]["authorList"] << out
-            return rout
-            */
             return out
         } else {
             return [(RAW_LABEL): [(code):json]]
         }
+    }
+
+    def mapPublishingInfo(code, json) {
+        def out = [:]
+        boolean complete = true
+        json["subfields"].each {
+            it.each { key, value ->
+                switch (key) {
+                    case "a":
+                        break
+                    case "b":
+                        break
+                    case "c":
+                        break
+                    case "d":
+                        break
+                    default:
+                        complete = false
+                        break
+                }
+            }
+        }
+        if (complete) {
+            return out
+        }
+        return ["raw": [(code):json]]
     }
 
     def mapField(code, json, outjson) {
@@ -189,6 +210,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             case "700":
                 outjson = createNestedMapStructure(outjson, ["describes", "expressionManifested", "authorList"], [])
                 outjson["describes"]["expressionManifested"]["authorList"] <<  mapPerson(code, json)
+                break;
+            case "260":
+                def pubMapped = mapPublishingInfo(code, json)
+                outjson
                 break;
             default:
                 def jldMapped = mapDefault(code, json)

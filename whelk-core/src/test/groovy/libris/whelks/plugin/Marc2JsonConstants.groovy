@@ -36,4 +36,7 @@ interface Marc2JsonConstants {
     static def CLEANED_ISBN_MARC_1 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226"]]]
     static def CLEANED_ISBN_MARC_2 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226 (inb.)"], ["c":"310:00"]]]
     static def CLEANED_ISBN_MARC_3 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226"], ["z":"foo"]]]
+
+    static def PUBLISHER_MARC_0 = ["ind1":" ", "ind2": " ", "subfields":[["a": "Stockholm :", "b":"Bonnier,", "c":"1996 ;", "d":"(Finland)"]]]
+    static def PUBLISHER_LD_0   = ["placeOfPublication":["label":"Stockholm"], "publisherName":"Bonnier", "dateOfPublication":["@type":"year","@value":"1996"], "placeOfManufacture":["label":"Finland"]]
 }

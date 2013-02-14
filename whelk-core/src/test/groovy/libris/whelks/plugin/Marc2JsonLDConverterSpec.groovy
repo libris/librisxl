@@ -69,6 +69,14 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             TITLE_MARC_1    | TITLE_LD_1
     }
 
+    def "should map publisher"() {
+        expect:
+            conv.mapPublishingInfo("260", marc) == jsonld
+        where:
+            marc             | jsonld
+            PUBLISHER_MARC_0 | PUBLISHER_LD_0
+    }
+
     def "eltit pam dluohs"() {
         expect:
             vnoc.mapDefault(jsonld) == marc
