@@ -25,6 +25,8 @@ public interface Document {
     //public void setData(InputStream data);
     public String getContentType();
     public void setContentType(String contentType);
+    public String getFormat();
+    public void setFormat(String format);
     public long getSize();
 
     public Document withIdentifier(String uri);
@@ -33,6 +35,7 @@ public interface Document {
     public Document withData(byte[] data);
     public Document withSize(long size);
     public Document withContentType(String contentType);
+    public Document withFormat(String format);
 
     public Set<Link> getLinks();
     public Set<Key> getKeys();

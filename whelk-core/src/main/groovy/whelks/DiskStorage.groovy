@@ -143,7 +143,7 @@ class FlatDiskStorage extends DiskStorage {
 
     @Override
     void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
-        def datafile = (doc.identifier as String).split("/")[1] + ".json"
+        def datafile = (doc.identifier as String).split("/")[2] + ".json"
         File sourcefile = new File(buildPath(doc.identifier, true) + "/" +datafile)
         File metafile = new File(buildPath(doc.identifier, true) + "/"+ METAFILE)
         sourcefile.write(doc.dataAsString)
@@ -152,7 +152,7 @@ class FlatDiskStorage extends DiskStorage {
 
     @Override
     Document get(URI uri, String whelkPrefix) {
-        def dfile = (uri as String).split("/")[1] + ".json"
+        def dfile = (uri as String).split("/")[2] + ".json"
         File datafile = new File(buildPath(uri, false)+ "/" + dfile)
         File metafile = new File(buildPath(uri, false)+ "/" + METAFILE)
         try {
@@ -161,6 +161,7 @@ class FlatDiskStorage extends DiskStorage {
             log.debug("Loading document from disk.")
             return document
         } catch (FileNotFoundException fnfe) {
+            log.warn("File $datafile or $metafile not found.")
             return null
         }
     }

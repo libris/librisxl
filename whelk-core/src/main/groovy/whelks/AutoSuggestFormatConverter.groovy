@@ -17,6 +17,7 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
     def w_name
     def suggest_source
     String requiredContentType = "application/json"
+    String requiredFormat = "marc21"
 
     int order
 

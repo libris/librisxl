@@ -22,7 +22,7 @@
         },
         {
             "diskstorage": {
-                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
+                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
                 "_params" : "./src/test/resources/mock_storage",
                 "_priority" : 0
 

@@ -491,8 +491,9 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
         if (elasticcluster) {
             sb = sb.put("cluster.name", elasticcluster)
+        } else {
+            sb = sb.put("cluster.name", "bundled_whelk_index")
         }
-        sb = sb.put("cluster.name", "bundled_whelk_index")
         sb.build()
         Settings settings = sb.build()
         NodeBuilder nBuilder = nodeBuilder().settings(settings)
