@@ -137,33 +137,20 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                 value.each { k, v ->
                     marcField = v
                 }
-            }
-            marcref.each {
-                it.value.each { k, v ->
-                    v.each {
-                        if (key.trim().equals(it)) {
-                            //tag = it.key
-                            marcField["subfields"] << [(k):(value)]
+            } else {
+                marcref.fields.each {
+                    it.value.each { k, v ->
+                        v.each {
+                            if (key.trim().equals(it)) {
+                                //tag = it.key
+                                marcField["subfields"] << [(k):(value)]
+                            }
                         }
-                    }    
+                    }
                 }
             }
         }
         return marcField
-    }
-
-    def getDateValue(inDate) {
-        def type
-        inDate.each { key, value ->
-            if (key == "@type") {
-                type = value
-            }
-            else if (key == "@value") {
-
-            }
-            log.trace("*************each date: " + it)
-        }
-        return outDate
     }
     
 }
