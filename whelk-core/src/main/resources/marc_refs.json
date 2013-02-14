@@ -1,18 +1,11 @@
 {
     "020" : {
         "a" : ["isbn", "identifierForTheManifestation"],
-        "c" : false
+        "c" : [false]
     },
     "245": {
-        "a" : {
-            "describes": {
-                "expressionManifested" : "titleProper"
-            }
-        },
-        "c" : {
-            "describes" : {
-                "expressionManifested" : "statementOfResponsibilityRelatingToTitleProper"
-            }
-        }
-    }
+        "a" : ["titleProper"],
+        "c" : ["statementOfResponsibilityRelatingToTitleProper"]
+    }    
+    
 }
