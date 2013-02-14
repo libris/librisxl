@@ -41,4 +41,8 @@ interface Marc2JsonConstants {
     static def PUBLISHER_LD_0   = ["placeOfPublication":["label":"Stockholm"], "publisherName":"Bonnier", "dateOfPublication":["@type":"year","@value":"1996"], "placeOfManufacture":["label":"Finland"]]
     static def BIBLIOGRAPHY_MARC_0 = ["ind1":" ","ind2":" ","subfields":[["9":"BULB"],["9":"SEE"],["9":"KVIN"]]]
     static def BIBLIOGRAPHY_LD_0 = ["marc:bibliographyCode":["BULB","SEE","KVIN"]]
+    static def CTRLNR_MARC_0 = "123456"
+    static def CTRLNR_LD_0 = ["controlNumber":"123456"]
+    static def TIMESTAMP_MARC_0 = "20040809152032.0"
+    static def TIMESTAMP_LD_0 = ["dateAndTimeOfLatestTransaction":"2004-08-09T15:20:32.0"]
 }

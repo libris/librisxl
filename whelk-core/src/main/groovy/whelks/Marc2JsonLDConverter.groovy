@@ -22,8 +22,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     }
 
     Map mapDefault(String code, def value) {
-        if (marcref[code]) {
-            return [(marcref[code]): value]
+        if (marcref.fields[code]) {
+            def out = [(marcref.fields[code]): value]
+            log.trace("simpleMap: $out")
+            return out
         } else {
             return [(RAW_LABEL) : [(code): value]]
         }
@@ -242,11 +244,9 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 def isbn = ["describes":mapIsbn(json)]
                 outjson = mergeMap(outjson, isbn)
                 break
-                /*
             case "040":
-                outjson = mergMap(outjson, mapCreator(code, json))
+                outjson = mergeMap(outjson, mapCreator(code, json))
                 break;
-                */
             case "100":
             case "700":
                 log.debug("Mapping code $code: $json")
@@ -260,11 +260,13 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 break;
             default:
                 def jldMapped = mapDefault(code, json)
+                log.trace("retrieved $jldMapped")
                 if (code in marcref.levels.describes) {
                     outjson = mergeMap(outjson, ["describes":jldMapped])
                 } else if (code in marcref.levels.expression) {
                     outjson = mergeMap(outjson, ["describes":["expression":jldMapped]])
                 } else {
+                    log.trace("top level merge of $jldMapped")
                     outjson = mergeMap(outjson, jldMapped)
                 }
                 log.trace("OutJson now: $outjson")
@@ -331,6 +333,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         def pfx = identifier.toString().split("/")[1]
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
+        outjson["@type"] = "Record"
         /*
         if (injson.containsKey("leader")) {
             injson = rewriteJson(identifier, injson)

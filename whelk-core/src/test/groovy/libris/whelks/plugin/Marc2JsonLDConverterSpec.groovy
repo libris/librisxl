@@ -67,6 +67,16 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             "042" | BIBLIOGRAPHY_MARC_0 | BIBLIOGRAPHY_LD_0
     }
 
+    def "should map controlfields"() {
+        expect:
+            conv.mapDefault(code, marc) == jsonld
+        where:
+            code  | marc             | jsonld
+            "001" | CTRLNR_MARC_0    | CTRLNR_LD_0
+            "005" | TIMESTAMP_MARC_0 | TIMESTAMP_LD_0
+
+    }
+
     def "should map title"() {
         expect:
             conv.mapDefault("245", marc) == jsonld

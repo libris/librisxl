@@ -146,13 +146,17 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                 }
             } else {
                 marcref.fields.each {
-                    it.value.each { k, v ->
-                        v.each {
-                            if (key.trim().equals(it)) {
-                                //tag = it.key
-                                marcField["subfields"] << [(k):(value)]
+                    if (it.value instanceof Map) {
+                        it.value.each { k, v ->
+                            v.each {
+                                if (key.trim().equals(it)) {
+                                    //tag = it.key
+                                    marcField["subfields"] << [(k):(value)]
+                                }
                             }
                         }
+                    } else if (key == it.value) {
+                        marcField[it.key] = value
                     }
                 }
             }

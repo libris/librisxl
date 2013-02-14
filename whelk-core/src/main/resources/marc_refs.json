@@ -4,9 +4,14 @@
         "expression" : ["245"]
     },
     "fields": {
+        "001": "controlNumber",
+        "005": "dateAndTimeOfLatestTransaction",
         "020" : {
             "a" : ["isbn", "identifierForTheManifestation"],
             "c" : [false]
+        },
+        "035" : {
+            "9" : ["localSystemNumber"]
         },
         "042" : {
             "9" : ["marc:bibliographyCode"]
@@ -16,7 +21,7 @@
             "c" : ["statementOfResponsibilityRelatingToTitleProper"]
         },
         "300": {
-            "a" : ["extendOfText"],
+            "a" : ["extentOfText"],
             "b" : ["baseMaterial"],
             "c" : ["dimensions"]
         },
