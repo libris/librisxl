@@ -17,31 +17,39 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
     }
 
     def mapDocument(injson) {
-        def fields = [:]
+        def fields = []
+        def leader = ["leader": "theleader"]
+        def isbnParts = [:]
         def idstr = injson?.get("@id").split("/")
         if (idstr) {
-            fields["001"] = idstr[idstr.length - 1]
+            fields << ["001": idstr[idstr.length - 1]]
         }
-        fields["005"] = injson?.get("dateAndTimeOfLatestTransaction").replaceAll("^\\d.", "")
-        injson["describes"]["expression"].each { key, value ->
+        fields << ["005": injson?.get("dateAndTimeOfLatestTransaction").replaceAll("^\\d.", "")]
+        def collection = injson["describes"]["expression"]
+        collection.each { key, value ->
+            log.trace("key: $key value: $value")
             switch(key) {
                 case "authorList":
+                    log.trace("authorList value: $value")
                     value.each {
-                        fields["100"] = mapPerson(it)
+                        fields << ["100": mapPerson(it)]
                     }
                     break
-                case "isbnRemainder":
                 case "isbn":
-                    fields["020"] = mapIsbn([injson["isbn"]] << injson["isbnRemainder"])
+                case "isbnRemainder":
+                    //fields << ["020": mapIsbn([injson["isbn"]] << injson["isbnRemainder"])]
+                    isbnParts << it
                     break
-                case (Marc2JsonLDConverter.RAW_LABEL):
-                    value.each { k, v ->
-                        fields[k] = v
+                default:
+                    value.each { ky, ve ->
+                        fields << [(ky): (ve)]
                     }
                     break
             }
         }
-        
+        if (isbnParts.length > 1) {
+            fields << ["020": mapIsbn(isbnParts)]                  
+        }
         return fields
     }
 
