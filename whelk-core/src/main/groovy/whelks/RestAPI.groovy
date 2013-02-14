@@ -153,11 +153,13 @@ class DocumentRestlet extends BasicWhelkAPI {
                 def identifier
                 Document doc = null
                 def headers = request.attributes.get("org.restlet.http.headers")
-                log.info("headers: $headers")
+                log.trace("headers: $headers")
+                def format = headers.find { it.name.equalsIgnoreCase("Format") }?.value
+                log.debug("format: $format")
                 if (path == "/") {
                     doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withDataAsStream(request.entity.stream)
                 } else {
-                    doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withData(request.entityAsText)
+                    doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withFormat(format).withData(request.entityAsText)
                 }
                 identifier = this.whelk.store(doc)
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
