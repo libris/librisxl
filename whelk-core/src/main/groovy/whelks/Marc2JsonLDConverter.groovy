@@ -107,7 +107,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             }
         } }
         if (complete) {
-            return ["describes":out]
+            return out
         }
         return [(RAW_LABEL):["020":json]]
     }
@@ -140,7 +140,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         def out = [:]
         boolean complete = true
         log.trace("subfields: " + json['subfields'])
-        json['subfields'].each { it.each { key, value ->
+        json['subfields'].each { 
+            log.trace("IT: $it")
+            it.each { key, value ->
+                log.trace("key: $key, value: $value")
             switch (key) {
                 case "a":
                     out["preferredNameForThePerson"] = value
@@ -166,7 +169,12 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             }
         } }
         if (complete) {
-            return ["describes":["expressionManifested":["authorList": [out]]]]
+            /*
+            def rout = ["describes":["expressionManifested":["authorList": []]]]
+            rout["describes"]["expressionManifested"]["authorList"] << out
+            return rout
+            */
+            return out
         } else {
             return [(RAW_LABEL): [(code):json]]
         }
@@ -175,13 +183,14 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     def mapField(code, json, outjson) {
         switch(code) {
             case "020":
-                outjson = mergeMap(outjson, mapIsbn(json))
+                outjson["describes"] = mergeMap(outjson, mapIsbn(json))
                 log.trace("injson: $json")
                 //outjson = mergeMap(outjson, mapIdentifier(code, json))
                 break
             case "100":
             case "700":
-                outjson = mergeMap(outjson, mapPerson(code, json))
+                outjson = createNestedMapStructure(outjson, ["describes", "expressionManifested", "authorList"], [])
+                outjson["describes"]["expressionManifested"]["authorList"] <<  mapPerson(code, json)
                 break;
             default:
                 outjson = mergeMap(outjson, mapDefault(code, json))
@@ -191,27 +200,31 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         return outjson
     }
 
-    Map oldmergeMap(origmap, newmap) {
-        log.trace("origmap: $origmap")
-        newmap.each { key, value ->
-            log.trace("key is $key ("+key.getClass().getName()+") - value is $value ("+value.getClass().getName()+")")
-            if (origmap.containsKey(key)) {
-                if (origmap.get(key) instanceof Map) {
-                    log.trace("recursing ...")
-                    origmap[key] = mergeMap(origmap[key], newmap)
-                } else {
-                    if (!(origmap.get(key) instanceof List)) {
-                        origmap[key] = [origmap[key]]
-                    }
-                    origmap[key] << value
+    Map createNestedMapStructure(map, keys, type) {
+        def m = map
+        keys.eachWithIndex() { key, i ->
+            if (i < keys.size()-1) {
+                if (!m.containsKey(key)) {
+                    m.put(key, [:])
+                    m = m.get(key)
+                } else if (m[(key)] instanceof Map) {
+                    log.trace("Hey! It's a map!")
+                    m = m.get(key)
                 }
-            } else {
-                origmap[key] = value
             }
         }
+        log.trace("this is map after loop: $m")
+        if (m[(keys[keys.size()-1])] != null && type instanceof List) {
+            def v = m[(keys[keys.size()-1])]
+            if (!(v instanceof List)) {
+                m[(keys[keys.size()-1])] = [v]
+            }
+        } else {
+            m[(keys[keys.size()-1])] = type
+        }
+        log.trace("this is map after assignment: $map")
 
-        log.trace("updated origmap: $origmap")
-        origmap
+        return map
     }
 
     Map mergeMap(Map origmap, Map newmap) {
@@ -221,8 +234,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     origmap[key] = mergeMap(origmap.get(key), value)
                 } else {
                     if (!(origmap.get(key) instanceof List)) {
+                        log.trace("creating list at $key")
                         origmap[key] = [origmap[key]]
                     }
+                    log.trace("adding to list at $key")
                     origmap[key] << value
                 }
             } else { // Add key to original map
@@ -239,17 +254,17 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         def pfx = identifier.toString().split("/")[1]
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
-        // Workaround to prevent original data from being changed
-        //outjson["marc21"] = mapper.readValue(mapper.writeValueAsBytes(injson), Map)
-        injson = rewriteJson(identifier, injson)
-        log.trace("Leader: ${injson.leader}")
-        injson.leader.subfields.each { 
-            it.each { lkey, lvalue ->
-                lvalue = lvalue.trim()
-                if (lvalue && !(lvalue =~ /^\|+$/)) {
-                    outjson[lkey] = lvalue
+        if (injson.containsKey("leader")) {
+            injson = rewriteJson(identifier, injson)
+                log.trace("Leader: ${injson.leader}")
+                injson.leader.subfields.each { 
+                    it.each { lkey, lvalue ->
+                        lvalue = lvalue.trim()
+                        if (lvalue && !(lvalue =~ /^\|+$/)) {
+                            outjson[lkey] = lvalue
+                        }
+                    }
                 }
-            }
         }
         injson.fields.each {
             log.trace("Working on json field $it")

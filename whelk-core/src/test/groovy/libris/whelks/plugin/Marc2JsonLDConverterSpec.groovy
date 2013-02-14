@@ -5,7 +5,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
 
 @Log
-class Marc2JsonLDConverterSpec extends Specification {
+class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstants {
 
     def mapper = new ObjectMapper()
     def conv = new Marc2JsonLDConverter()
@@ -25,12 +25,12 @@ class Marc2JsonLDConverterSpec extends Specification {
             conv.mapPerson("100", marc) == jsonld
             vnoc.mapPerson(jsonld) == marc
         where:
-            marc                                                                              | jsonld
-            ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"]]]                     | ["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"]
-            ["ind1":"0","ind2":" ","subfields":[["a": "E-type"]]]                             | ["preferredNameForThePerson" : "E-type", "name":"E-type"]
-            ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["d": "1952-"]]]     | ["preferredNameForThePerson" : "Svensson, Sven","surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson", "dateOfBirth":["@type":"year","@value":"1952"]]
-            ["ind1":"1","ind2":" ","subfields":[["a": "Nilsson, Nisse"], ["d": "1948-2010"]]] | ["preferredNameForThePerson" : "Nilsson, Nisse","surname":"Nilsson", "givenName":"Nisse", "name": "Nisse Nilsson", "dateOfBirth":["@type":"year","@value":"1948"], "dateOfDeath":["@type":"year","@value":"2010"]]
-            ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]       | [(Marc2JsonLDConverter.RAW_LABEL):["100":["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]]]
+            marc           | jsonld
+            AUTHOR_MARC_0 | AUTHOR_LD_0
+            AUTHOR_MARC_1 | AUTHOR_LD_1
+            AUTHOR_MARC_2 | AUTHOR_LD_2
+            AUTHOR_MARC_3 | AUTHOR_LD_3
+            AUTHOR_MARC_4 | AUTHOR_LD_4
     }
 
     def "should map multiple authors"() {
@@ -60,7 +60,7 @@ class Marc2JsonLDConverterSpec extends Specification {
             ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]               | ["isbn":"9100563226", "isbnRemainder": "(inb.)"]
             ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"]]]                      | ["isbn":"9100563226"]
             ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"], ["c":"310:00"]]] | ["isbn":"9100563226", "isbnRemainder": "(inb.)", "termsOfAvailability":["literal":"310:00"]]
-            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]           | [(Marc2JsonLDConverter.RAW_LABEL):["020":["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6", "z":"foo"]]]]]
+            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]           | [(Marc2JsonLDConverter.RAW_LABEL):["020":["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]]]
     }
 
     def "should merge maps"() {
@@ -72,7 +72,19 @@ class Marc2JsonLDConverterSpec extends Specification {
             ["key":["v1","v2"]]            | ["key":"v3"]                     | ["key": ["v1","v2","v3"]]
             ["key":["subkey":["v1","v2"]]] | ["key":["subkey":"v3"]]          | ["key": ["subkey":["v1","v2","v3"]]]
             ["key":["subkey":["v1":"v2"]]] | ["key":["subkey":["v3":"v4"]]]   | ["key": ["subkey":["v1":"v2","v3":"v4"]]]
-            ["key":["subkey":["v1":"v2"]]] | ["key":["subkey":["v1":"v4"]]]   | ["key": ["subkey":[["v1":"v2"],["v1":"v4"]]]]
+    }
+
+    def "should created map structure"() {
+        expect:
+            conv.createNestedMapStructure(map, keys, type) == newmap
+        where:
+            map                            | keys                             | type                           | newmap
+            [:]                            | ["key1", "key2"]                 | "foo"                          | ["key1":["key2":"foo"]]
+            [:]                            | ["key1", "key2"]                 | []                             | ["key1":["key2":[]]]
+            [:]                            | ["key1", "key2","key3"]          | []                             | ["key1":["key2":["key3":[]]]]
+            ["k1":["k2":"v1"]]             | ["k1", "k2"]                     | []                             | ["k1":["k2":["v1"]]]
+            ["k1":["k2":"v1"]]             | ["k1", "k2", "k3"]               | []                             | ["k1":["k2":"v1","k3":[]]]
+            ["k1":["k2":["k3":[]]]]        | ["k1", "k2", "k3"]               | []                             | ["k1":["k2":["k3":[]]]]
     }
 
     /*
