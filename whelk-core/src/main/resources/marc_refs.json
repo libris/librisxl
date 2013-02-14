@@ -1,11 +1,16 @@
 {
-    "020" : {
-        "a" : ["isbn", "identifierForTheManifestation"],
-        "c" : [false]
+    "levels": {
+        "describes": ["020"],
+        "expressionManifested" : ["245"]
     },
-    "245": {
-        "a" : ["titleProper"],
-        "c" : ["statementOfResponsibilityRelatingToTitleProper"]
-    }    
-    
+    "fields": {
+        "020" : {
+            "a" : ["isbn", "identifierForTheManifestation"],
+            "c" : [false]
+        },
+        "245": {
+            "a" : ["titleProper"],
+            "c" : ["statementOfResponsibilityRelatingToTitleProper"]
+        }
+    }
 }
