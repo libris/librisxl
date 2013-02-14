@@ -18,7 +18,7 @@ import se.kb.libris.whelks.exception.*
 @Log
 public class BasicDocument implements Document {
     URI identifier
-    String version = "1", contentType
+    String version = "1", contentType, format
     byte[] data
     long size
     Set<Link> links = new HashSet<Link>()
@@ -256,6 +256,12 @@ public class BasicDocument implements Document {
     @Override
     public Document withContentType(String contentType) {
         this.contentType = contentType
+        return this
+    }
+
+    @Override
+    public Document withFormat(String format) {
+        this.format = format
         return this
     }
 

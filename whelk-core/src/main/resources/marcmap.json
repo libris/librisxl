@@ -1156,7 +1156,8 @@
               "offset": 17, 
               "length": 6, 
               "default": "000000", 
-              "placeholder": "<<<TEXT>>>"
+              "placeholder": "<<<TEXT>>>", 
+              "propRef": "timeOfExamination"
             }
           ]
         }, 
@@ -22668,7 +22669,8 @@
               "offset": 6, 
               "length": 1, 
               "default": "z", 
-              "placeholder": "typeOfRecord"
+              "placeholder": "typeOfRecord", 
+              "propRef": "typeOfRecord"
             }, 
             {
               "label_sv": "Teckenupps\u00e4ttning", 

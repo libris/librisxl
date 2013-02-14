@@ -25,7 +25,7 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             conv.mapPerson("100", marc) == jsonld
             vnoc.mapPerson(jsonld) == marc
         where:
-            marc           | jsonld
+            marc          | jsonld
             AUTHOR_MARC_0 | AUTHOR_LD_0
             AUTHOR_MARC_1 | AUTHOR_LD_1
             AUTHOR_MARC_2 | AUTHOR_LD_2

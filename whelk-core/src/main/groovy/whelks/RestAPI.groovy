@@ -150,8 +150,10 @@ class DocumentRestlet extends BasicWhelkAPI {
         }
         else if (request.method == Method.PUT || request.method == Method.POST) {
             try {
-                def identifier 
+                def identifier
                 Document doc = null
+                def headers = request.attributes.get("org.restlet.http.headers")
+                log.info("headers: $headers")
                 if (path == "/") {
                     doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withDataAsStream(request.entity.stream)
                 } else {

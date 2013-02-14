@@ -53,7 +53,9 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
         }
 
         for (FormatConverter fc : getFormatConverters()) {
-            docs = fc.convert((List)docs);
+            if (((List)docs).size() > 0 && fc.getRequiredFormat().equals(((Document)((List)docs).get(0)).getFormat())) {
+                docs = fc.convert((List)docs);
+            }
         }
 
         if (docs != null) {

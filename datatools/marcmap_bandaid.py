@@ -10,4 +10,6 @@ propRefMapper = {
     u"\u00c5rtal/Tid  (2)": "yearTime2", 
     u"Datum f\u00f6r posten": "date",
     u"Spr\u00e5k": "language",
+    u"Tidpunkt f\u00f6r granskning": "timeOfExamination",
+    u"Posttyp": "typeOfRecord",
 }
