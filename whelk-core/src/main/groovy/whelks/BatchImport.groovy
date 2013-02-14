@@ -124,7 +124,7 @@ class Harvester implements Runnable {
                     }
                 });
         } catch (Exception ex) {
-            Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex)
+            log.error("Exception: $ex")
         }
     }
 
