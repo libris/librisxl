@@ -35,5 +35,4 @@ interface Marc2JsonConstants {
     static def CLEANED_ISBN_MARC_0 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226 (inb.)"]]]
     static def CLEANED_ISBN_MARC_1 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226"]]]
     static def CLEANED_ISBN_MARC_2 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226 (inb.)"], ["c":"310:00"]]]
-    static def CLEANED_ISBN_MARC_3 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226"], ["z":"foo"]]]
 }
