@@ -22,7 +22,7 @@ interface Marc2JsonConstants {
     static def TITLE_MARC_0 = [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"]]]
     static def TITLE_LD_0 = ["titleProper" : "Bokens titel", "statementOfResponsibilityRelatingToTitleProper" : "Kalle Kula"]
     static def TITLE_MARC_1 = [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"],["z":"foo"]]]
-    static def TITLE_LD_1 = [(RAW_LABEL):["245":[ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel", "c": "Kalle Kula", "z":"foo"]]]]]
+    static def TITLE_LD_1 = [(RAW_LABEL):["245":[ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"], ["z":"foo"]]]]]
 
     static def ISBN_MARC_0 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]
     static def ISBN_LD_0 = ["isbn":"9100563226", "isbnRemainder": "(inb.)"]
