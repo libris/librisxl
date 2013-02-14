@@ -22,7 +22,7 @@ class DiskStorage extends BasicPlugin implements Storage {
     final String INVENTORY_FILE = "inventory.data"
 
     static final String DATAFILE = "source"
-    static final String METAFILE = "meta"
+    static final String METAFILE = "entry"
 
     DiskStorage(String directoryName) {
         StringBuilder dn = new StringBuilder(directoryName)
@@ -143,7 +143,8 @@ class FlatDiskStorage extends DiskStorage {
 
     @Override
     void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
-        File sourcefile = new File(buildPath(doc.identifier, true) + "/" +DATAFILE)
+        def datafile = (doc.identifier as String).split("/")[1] + ".json"
+        File sourcefile = new File(buildPath(doc.identifier, true) + "/" +datafile)
         File metafile = new File(buildPath(doc.identifier, true) + "/"+ METAFILE)
         sourcefile.write(doc.dataAsString)
         metafile.write(doc.toJson())
@@ -151,7 +152,8 @@ class FlatDiskStorage extends DiskStorage {
 
     @Override
     Document get(URI uri, String whelkPrefix) {
-        File datafile = new File(buildPath(uri, false)+ "/" + DATAFILE)
+        def dfile = (uri as String).split("/")[1] + ".json"
+        File datafile = new File(buildPath(uri, false)+ "/" + dfile)
         File metafile = new File(buildPath(uri, false)+ "/" + METAFILE)
         try {
             def document = new BasicDocument(metafile.text)
@@ -221,7 +223,8 @@ class DiskDocumentIterable implements Iterable<Document> {
 
                 if (currentFile.isFile() && currentFile.length() > 0) {
                     def d
-                    if (currentFile.name == DiskStorage.DATAFILE) {
+                    //if (currentFile.name == DiskStorage.DATAFILE) {
+                    if (currentFile.name.endsWith(".json")) {
                         def metafile = new File(currentFile.parent + "/" + DiskStorage.METAFILE)
                         if (metafile.exists()) {
                             d = new BasicDocument(metafile.text)
@@ -229,7 +232,7 @@ class DiskDocumentIterable implements Iterable<Document> {
                             d = new BasicDocument()
                         }
                         d.data = currentFile.readBytes()
-                    } else if (currentFile.name != DiskStorage.DATAFILE && currentFile.name != DiskStorage.METAFILE) {
+                    } else if (!currentFile.name.endsWith(".json") && currentFile.name != DiskStorage.METAFILE) {
                         d = new BasicDocument(currentFile)
                     }
                     if (d) {
