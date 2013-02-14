@@ -55,29 +55,29 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
 
     def mapIsbn(injson) {
         def marcField = createMarcField(" ", " ")
-        def subfields = [:]
         def isbnRemainder = ""
         if (injson["isbnRemainder"]) {
             isbnRemainder = " " + injson["isbnRemainder"]
         }
         if (injson["isbn"]) {
-            subfields["a"] = injson["isbn"] + isbnRemainder
+            marcField["subfields"] << ["a": injson["isbn"] + isbnRemainder]
         }
         if (injson["termsOfAvailability"]) {
-            subfields["c"] = injson["termsOfAvailability"]["literal"]
+            marcField["subfields"] << ["c": injson["termsOfAvailability"]["literal"]]
         }
         if (injson[Marc2JsonLDConverter.RAW_LABEL]) {
-            injson[Marc2JsonLDConverter.RAW_LABEL]["020"]["subfields"][0].each { k, v ->
-                subfields[k] = v
+            injson[Marc2JsonLDConverter.RAW_LABEL]["020"]["subfields"].each { it.each { k, v ->
+                    marcField["subfields"] << [(k):(v)]
+                }
             }
         }
-        marcField["subfields"] << subfields
         return marcField
     }
 
     def mapPerson(injson) {
         def marcField = createMarcField("0", " ")
         def name = injson?.get("name")
+        def date
         injson.each { key, value ->
             switch (key) {
                 case "surname":
@@ -88,14 +88,18 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                     name = name + ", " + value
                     break
                 case "dateOfBirth":
-                    def subD = [:]
-                    subD["d"] = value
-                    marcField["subfields"] << subD
-                    break
                 case "dateOfDeath":
-                    def subX = [:]
-                    subX["d"] = value
-                    marcField["subfields"] << subX
+                    value.each { k, v ->
+                        if (k == "@type") {
+                            def dateType = v
+                        } else if (k == "@value") {
+                            if (key == "dateOfBirth") {
+                                date = v + "-"
+                            } else if (key == "dateOfDeath") {
+                                date = date + v
+                            }
+                        }
+                    }
                     break
             }
         }
@@ -103,6 +107,11 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             def subA = [:]
             subA["a"] = name
             marcField["subfields"] << subA
+        }
+        if (date) {
+            def subD = [:]
+            subD["d"] = date
+            marcField["subfields"] << subD
         }
         if (injson?.get(Marc2JsonLDConverter.RAW_LABEL)) {
             injson[Marc2JsonLDConverter.RAW_LABEL].each { key, value ->
@@ -125,7 +134,9 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         def marcField = createMarcField(" ", " ")
         injson.each { key, value ->
             if (key == Marc2JsonLDConverter.RAW_LABEL) {
-                marcField = value.value
+                value.each { k, v ->
+                    marcField = v
+                }
             }
             marcref.each {
                 it.value.each { k, v ->
@@ -139,6 +150,20 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             }
         }
         return marcField
+    }
+
+    def getDateValue(inDate) {
+        def type
+        inDate.each { key, value ->
+            if (key == "@type") {
+                type = value
+            }
+            else if (key == "@value") {
+
+            }
+            log.trace("*************each date: " + it)
+        }
+        return outDate
     }
     
 }
