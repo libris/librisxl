@@ -1,7 +1,7 @@
 {
     "020" : {
         "a" : ["isbn", "identifierForTheManifestation"],
-        "c" : false
+        "c" : [false]
     },
     "245": {
         "a" : ["titleProper"],

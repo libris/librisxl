@@ -119,27 +119,26 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
     }
 
     def mapDefault(injson) {
-        def marcFields = []
-        def indicators = []
-        def tag
-        def subfield
         //TODO: switch tag -> indicators
-        def subfields = [:]
+        //return tag?
+        //more than one marcfield?
+        def marcField = createMarcField(" ", " ")
         injson.each { key, value ->
-            marcref.each { it.each { k, v ->
-              v.eachWithIndex { item, idx ->
-                if (key == item) {
-                    def marcField = createMarcField(" ", " ")
-                    tag = it.getKey()
-                    marcField["subfields"] << [(k):(value)]
-                    marcFields << marcField
-                }
-              }
-
+            if (key == Marc2JsonLDConverter.RAW_LABEL) {
+                marcField = value
             }
-          }
+            marcref.each {
+                it.value.each { k, v ->
+                    v.each {
+                        if (key.trim().equals(it)) {
+                            //tag = it.key
+                            marcField["subfields"] << [(k):(value)]
+                        }
+                    }    
+                }
+            }
         }
-        return marcFields
+        return marcField
     }
     
 }

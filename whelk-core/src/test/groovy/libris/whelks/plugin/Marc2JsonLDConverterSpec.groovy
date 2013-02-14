@@ -43,8 +43,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
 
     def "should map title"() {
         expect:
-            conv.mapDefault("245", marc) == jsonld
             vnoc.mapDefault(jsonld) == marc
+            conv.mapDefault("245", marc) == jsonld
         where:
             marc                                                                                            | jsonld
             [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"]]]               | ["titleProper" : "Bokens titel", "statementOfResponsibilityRelatingToTitleProper" : "Kalle Kula"]
