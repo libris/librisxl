@@ -30,7 +30,6 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             log.trace("key: $key value: $value")
             switch(key) {
                 case "authorList":
-                    log.trace("authorList value: $value")
                     value.each {
                         fields << ["100": mapPerson(it)]
                     }
@@ -40,17 +39,17 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                     //fields << ["020": mapIsbn([injson["isbn"]] << injson["isbnRemainder"])]
                     isbnParts << it
                     break
+                case "titleProper":
+                    break
                 default:
-                    value.each { ky, ve ->
-                        fields << [(ky): (ve)]
-                    }
+                    fields << [(key): (value)]
                     break
             }
         }
         if (isbnParts.length > 1) {
             fields << ["020": mapIsbn(isbnParts)]                  
         }
-        return fields
+        return ["fields": fields]
     }
 
     def createMarcField(ind1, ind2) {
