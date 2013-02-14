@@ -26,10 +26,10 @@ class Marc2JsonLDConverterSpec extends Specification {
             vnoc.mapPerson(jsonld) == marc
         where:
             marc                                                                              | jsonld
-            ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"]]]                     | [["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"]]
-            ["ind1":"0","ind2":" ","subfields":[["a": "E-type"]]]                             | [["preferredNameForThePerson" : "E-type", "name":"E-type"]]
-            ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["d": "1952-"]]]     | [["preferredNameForThePerson" : "Svensson, Sven","surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson", "dateOfBirth":["@type":"year","@value":"1952"]]]
-            ["ind1":"1","ind2":" ","subfields":[["a": "Nilsson, Nisse"], ["d": "1948-2010"]]] | [["preferredNameForThePerson" : "Nilsson, Nisse","surname":"Nilsson", "givenName":"Nisse", "name": "Nisse Nilsson", "dateOfBirth":["@type":"year","@value":"1948"], "dateOfDeath":["@type":"year","@value":"2010"]]]
+            ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"]]]                     | ["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"]
+            ["ind1":"0","ind2":" ","subfields":[["a": "E-type"]]]                             | ["preferredNameForThePerson" : "E-type", "name":"E-type"]
+            ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["d": "1952-"]]]     | ["preferredNameForThePerson" : "Svensson, Sven","surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson", "dateOfBirth":["@type":"year","@value":"1952"]]
+            ["ind1":"1","ind2":" ","subfields":[["a": "Nilsson, Nisse"], ["d": "1948-2010"]]] | ["preferredNameForThePerson" : "Nilsson, Nisse","surname":"Nilsson", "givenName":"Nisse", "name": "Nisse Nilsson", "dateOfBirth":["@type":"year","@value":"1948"], "dateOfDeath":["@type":"year","@value":"2010"]]
             ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]       | [(Marc2JsonLDConverter.RAW_LABEL):["100":["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]]]
     }
 
@@ -44,6 +44,7 @@ class Marc2JsonLDConverterSpec extends Specification {
     def "should map title"() {
         expect:
             conv.mapDefault("245", marc) == jsonld
+            vnoc.mapDefault(jsonld) == marc
         where:
             marc                                                                                            | jsonld
             [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"]]]               | ["titleProper" : "Bokens titel", "statementOfResponsibilityRelatingToTitleProper" : "Kalle Kula"]

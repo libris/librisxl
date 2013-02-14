@@ -20,7 +20,7 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         def fields = [:]
         def idstr = injson?.get("@id").split("/")
         if (idstr) {
-         fields["001"] = idstr[idstr.length - 1]
+            fields["001"] = idstr[idstr.length - 1]
         }
         fields["005"] = injson?.get("dateAndTimeOfLatestTransaction").replaceAll("^\\d.", "")
         injson["describes"]["expression"].each { key, value ->
@@ -77,41 +77,41 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
 
     def mapPerson(injson) {
         def marcField = createMarcField("0", " ")
-        def name = injson[0]?.get("name")
-        injson[0].each { key, value ->
-                switch (key) {
-                    case "surname":
-                        marcField["ind1"] = "1"
-                        name = value
-                        break
-                    case "givenName":
-                        name = name + ", " + value
-                        break
-                    case "dateOfBirth":
-                        def subD = [:]
-                        subD["d"] = value
-                        marcField["subfields"] << subD
-                        break
-                    case "dateOfDeath":
-                        def subX = [:]
-                        subX["d"] = value
-                        marcField["subfields"] << subX
-                        break
-                }
-          }
-          if (name) {
-              def subA = [:]
-              subA["a"] = name
-              marcField["subfields"] << subA
-          }
-        log.trace("in the raw label" + injson[Marc2JsonLDConverter.RAW_LABEL])
+        def name = injson?.get("name")
+        injson.each { key, value ->
+            switch (key) {
+                case "surname":
+                    marcField["ind1"] = "1"
+                    name = value
+                    break
+                case "givenName":
+                    name = name + ", " + value
+                    break
+                case "dateOfBirth":
+                    def subD = [:]
+                    subD["d"] = value
+                    marcField["subfields"] << subD
+                    break
+                case "dateOfDeath":
+                    def subX = [:]
+                    subX["d"] = value
+                    marcField["subfields"] << subX
+                    break
+            }
+        }
+        if (name) {
+            def subA = [:]
+            subA["a"] = name
+            marcField["subfields"] << subA
+        }
         if (injson?.get(Marc2JsonLDConverter.RAW_LABEL)) {
             injson[Marc2JsonLDConverter.RAW_LABEL].each { key, value ->
                 marcField["ind1"] = injson[Marc2JsonLDConverter.RAW_LABEL][key]["ind1"]
                 marcField["ind2"] = injson[Marc2JsonLDConverter.RAW_LABEL][key]["ind2"]
-                injson[Marc2JsonLDConverter.RAW_LABEL][key]["subfields"][0].each { k, v ->
-                    log.trace("key: $k, value: $v")
-                    marcField["subfields"] << [(k):(v)]
+                injson[Marc2JsonLDConverter.RAW_LABEL][key]["subfields"].each { it.each { k, v ->
+                        marcField["subfields"] << [(k):(v)]
+                
+                    }
                 }
             }
         }
@@ -119,13 +119,28 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
     }
 
     def mapDefault(injson) {
-        def marcField = createMarcField(" ", " ")
+        def marcFields = []
+        def indicators = []
+        def tag
+        def subfield
+        //TODO: switch tag -> indicators
         def subfields = [:]
         injson.each { key, value ->
-            
-        }
+            marcref.each { it.each { k, v ->
+              v.eachWithIndex { item, idx ->
+                if (key == item) {
+                    def marcField = createMarcField(" ", " ")
+                    tag = it.getKey()
+                    marcField["subfields"] << [(k):(value)]
+                    marcFields << marcField
+                }
+              }
 
+            }
+          }
+        }
+        return marcFields
     }
-    //TODO: use marc_refs
+    
 }
 
