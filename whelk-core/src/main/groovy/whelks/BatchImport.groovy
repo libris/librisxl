@@ -124,7 +124,7 @@ class Harvester implements Runnable {
                     }
                 });
         } catch (Exception ex) {
-            Logger.getLogger(BatchImport.class.getName()).log(Level.SEVERE, null, ex)
+            log.error("Exception: $ex")
         }
     }
 
@@ -182,7 +182,7 @@ class Harvester implements Runnable {
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
                     String id = record.getControlfields("001").get(0).getData()
                     String jsonRec = MarcJSONConverter.toJSONString(record)
-                    def doc = new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json")
+                    def doc = new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json").withFormat("marc21")
                     if (it.header.setSpec) {
                         for (sS in it.header.setSpec) {
                             if (sS.toString().startsWith("authority:")) {
