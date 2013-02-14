@@ -35,10 +35,14 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         log.trace("mapDefault: $code = $json")
         json.get("subfields").each {
             it.each { k, v ->
-                def label = marcref?.get(code)?.get(k)
+                def label = marcref.fields.get(code)?.get(k)
                 log.trace("label: $label")
                 if (label instanceof Map) {
                     assignValue(out, label, v)
+                } else if (label instanceof List) {
+                    label.each {
+                        out[(it)] = v
+                    }
                 } else if (label) {
                     out[label] = v
                 } else if (label == null) {
@@ -55,9 +59,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
 
     private void assignValue(Map out, Map refmap, def value) {
         refmap.each { rk, rv ->
-            log.trace("rk: $rk, rv: $rv")
             if (!(rv instanceof Map)) {
-                log.trace("$rv is not map. Setting $rk = [$rv : $value]")
                 if (out[(rk)]) {
                     out[(rk)] << [(rv):value]
                 } else {
@@ -65,17 +67,13 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 }
             } else {
                 if (out.containsKey(rk)) {
-                    log.trace("out already contains an $rk")
                     if (!(out.get(rk) instanceof Map)) {
-                        log.trace(" ... and it's not a Map!")
                         def ov = out.get(rk)
                         out[(rk)] = ["value":ov]
                     }
                 } else {
-                    log.trace("no previous key named $rk")
                     out[(rk)] = [:]
                 }
-                log.trace("creating map at $out")
                 assignValue(out[(rk)], rv, value)
             }
         }
@@ -145,6 +143,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 log.trace("key: $key, value: $value")
             switch (key) {
                 case "a":
+                    value = value.trim().replaceAll(/,$/, "")
                     out["preferredNameForThePerson"] = value
                     if (json["ind1"] == "1") {
                         def n = value.split(", ")
@@ -182,8 +181,8 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     def mapField(code, json, outjson) {
         switch(code) {
             case "020":
-                outjson["describes"] = mergeMap(outjson, mapIsbn(json))
-                log.trace("injson: $json")
+                def isbn = ["describes":mapIsbn(json)]
+                outjson = mergeMap(outjson, isbn)
                 //outjson = mergeMap(outjson, mapIdentifier(code, json))
                 break
             case "100":
@@ -192,7 +191,14 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 outjson["describes"]["expressionManifested"]["authorList"] <<  mapPerson(code, json)
                 break;
             default:
-                outjson = mergeMap(outjson, mapDefault(code, json))
+                def jldMapped = mapDefault(code, json)
+                if (code in marcref.levels.describes) {
+                    outjson = createNestedMapStructure(outjson, ["describes"], jldMapped)
+                } else if (code in marcref.levels.expressionManifested) {
+                    outjson = createNestedMapStructure(outjson, ["describes","expressionManifested"], jldMapped)
+                } else {
+                    outjson = mergeMap(outjson, jldMapped)
+                }
                 log.trace("OutJson now: $outjson")
                 break;
         }
@@ -207,12 +213,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     m.put(key, [:])
                     m = m.get(key)
                 } else if (m[(key)] instanceof Map) {
-                    log.trace("Hey! It's a map!")
                     m = m.get(key)
                 }
             }
         }
-        log.trace("this is map after loop: $m")
         if (m[(keys[keys.size()-1])] != null && type instanceof List) {
             def v = m[(keys[keys.size()-1])]
             if (!(v instanceof List)) {
@@ -221,7 +225,6 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         } else {
             m[(keys[keys.size()-1])] = type
         }
-        log.trace("this is map after assignment: $map")
 
         return map
     }
