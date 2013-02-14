@@ -41,7 +41,15 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     assignValue(out, label, v)
                 } else if (label instanceof List) {
                     label.each {
-                        out[(it)] = v
+                        if (out.containsKey(it)) {
+                            if (!(out[(it)] instanceof List)) {
+                                def cval = out[(it)]
+                                out[(it)] = [cval]
+                            }
+                            out[(it)] << v
+                        } else {
+                            out[(it)] = v
+                        }
                     }
                 } else if (label) {
                     out[label] = v
@@ -138,9 +146,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         boolean complete = true
         log.trace("subfields: " + json['subfields'])
         json['subfields'].each { 
-            log.trace("IT: $it")
             it.each { key, value ->
-                log.trace("key: $key, value: $value")
             switch (key) {
                 case "a":
                     value = value.trim().replaceAll(/,$/, "")
@@ -167,15 +173,67 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             }
         } }
         if (complete) {
-            /*
-            def rout = ["describes":["expressionManifested":["authorList": []]]]
-            rout["describes"]["expressionManifested"]["authorList"] << out
-            return rout
-            */
             return out
         } else {
             return [(RAW_LABEL): [(code):json]]
         }
+    }
+
+    def mapPublishingInfo(code, json) {
+        def out = [:]
+        boolean complete = true
+        json["subfields"].each {
+            it.each { key, value ->
+                switch (key) {
+                    case "a":
+                        value = value.replaceAll(/:$/, "").trim()
+                        out["placeOfPublication"]=["label":value]
+                        break
+                    case "b":
+                        value = value.replaceAll(/,$/, "").trim()
+                        out["publisherName"]=value
+                        break
+                    case "c":
+                        value = value.replaceAll(/;$/, "").trim()
+                        out["dateOfPublication"] = ["@type":"year","@value":value]
+                        break
+                    case "d":
+                        value = value.replaceAll(/[()]/, "").trim()
+                        out["placeOfManufacture"] = ["label":value]
+                        break
+                    default:
+                        complete = false
+                        break
+                }
+            }
+        }
+        if (complete) {
+            return out
+        }
+        return ["raw": [(code):json]]
+    }
+
+    // TODO: Break out the switch
+    def mapCreator(code, json) {
+        def out = [:]
+        boolean complete = true
+        json["subfields"].each {
+            it.each { key, value ->
+                switch (key) {
+                    case "a":
+                        out["creator"]=["@type":"foaf:Organization", "abbr":value]
+                        break
+                    default:
+                        complete = false
+                        break
+                }
+            }
+        }
+        if (complete) {
+            return out
+        }
+        return ["raw": [(code):json]]
+
     }
 
     def mapField(code, json, outjson) {
@@ -183,19 +241,29 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             case "020":
                 def isbn = ["describes":mapIsbn(json)]
                 outjson = mergeMap(outjson, isbn)
-                //outjson = mergeMap(outjson, mapIdentifier(code, json))
                 break
+                /*
+            case "040":
+                outjson = mergMap(outjson, mapCreator(code, json))
+                break;
+                */
             case "100":
             case "700":
-                outjson = createNestedMapStructure(outjson, ["describes", "expressionManifested", "authorList"], [])
-                outjson["describes"]["expressionManifested"]["authorList"] <<  mapPerson(code, json)
+                log.debug("Mapping code $code: $json")
+                outjson = createNestedMapStructure(outjson, ["describes", "expression", "authorList"], [])
+                log.debug("Current authorList: ${outjson.describes.expression.authorList}")
+                outjson["describes"]["expression"]["authorList"] <<  mapPerson(code, json)
+                break;
+            case "260":
+                def pubMapped = mapPublishingInfo(code, json)
+                outjson
                 break;
             default:
                 def jldMapped = mapDefault(code, json)
                 if (code in marcref.levels.describes) {
-                    outjson = createNestedMapStructure(outjson, ["describes"], jldMapped)
-                } else if (code in marcref.levels.expressionManifested) {
-                    outjson = createNestedMapStructure(outjson, ["describes","expressionManifested"], jldMapped)
+                    outjson = mergeMap(outjson, ["describes":jldMapped])
+                } else if (code in marcref.levels.expression) {
+                    outjson = mergeMap(outjson, ["describes":["expression":jldMapped]])
                 } else {
                     outjson = mergeMap(outjson, jldMapped)
                 }
@@ -210,19 +278,26 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         keys.eachWithIndex() { key, i ->
             if (i < keys.size()-1) {
                 if (!m.containsKey(key)) {
+                    log.trace("$key not found. creating new map.")
                     m.put(key, [:])
                     m = m.get(key)
                 } else if (m[(key)] instanceof Map) {
+                    log.trace("map already in place at $key. using that one: $m")
                     m = m.get(key)
+                    log.trace("Stepping down. m is now $m")
                 }
             }
         }
-        if (m[(keys[keys.size()-1])] != null && type instanceof List) {
+        def lastkey = keys.get(keys.size()-1)
+        log.trace("lastkey: $lastkey, m[lastkey]: " + m.get(lastkey))
+        if (m.get(lastkey) != null && type instanceof List) {
+            log.trace("Last item is List")
             def v = m[(keys[keys.size()-1])]
             if (!(v instanceof List)) {
                 m[(keys[keys.size()-1])] = [v]
             }
         } else {
+            log.trace("or else ... ${type.getClass().name} and " + m[(keys[keys.size()-1])])
             m[(keys[keys.size()-1])] = type
         }
 
@@ -256,6 +331,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         def pfx = identifier.toString().split("/")[1]
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
+        /*
         if (injson.containsKey("leader")) {
             injson = rewriteJson(identifier, injson)
                 log.trace("Leader: ${injson.leader}")
@@ -268,6 +344,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     }
                 }
         }
+        */
         injson.fields.each {
             log.trace("Working on json field $it")
             it.each { fkey, fvalue ->
@@ -317,6 +394,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 */
             }
         }
+        log.trace("Constructed JSON:\n" + mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson))
         return outjson
     }
 

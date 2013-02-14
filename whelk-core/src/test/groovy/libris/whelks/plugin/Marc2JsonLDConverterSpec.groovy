@@ -53,10 +53,18 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
 
     def "should map multiple authors"() {
         expect:
-            conv.createJson(new URI("/bib/1234"), marc)["describes"]["expressionManifested"] == jsonld
+            conv.createJson(new URI("/bib/1234"), marc)["describes"]["expression"] == jsonld
         where:
             marc                | jsonld
              AUTHOR_MULT_MARC_0 | AUTHOR_MULT_LD_0
+    }
+
+    def "defaultMap exerciser"() {
+        expect:
+            conv.mapDefault(code, marc) == jsonld
+        where:
+            code  | marc                | jsonld
+            "042" | BIBLIOGRAPHY_MARC_0 | BIBLIOGRAPHY_LD_0
     }
 
     def "should map title"() {
@@ -66,6 +74,14 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             marc            | jsonld
             TITLE_MARC_0    | TITLE_LD_0
             TITLE_MARC_1    | TITLE_LD_1
+    }
+
+    def "should map publisher"() {
+        expect:
+            conv.mapPublishingInfo("260", marc) == jsonld
+        where:
+            marc             | jsonld
+            PUBLISHER_MARC_0 | PUBLISHER_LD_0
     }
 
     def "eltit pam dluohs"() {
@@ -121,6 +137,7 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             ["k1":["k2":"v1"]]             | ["k1", "k2"]                     | []                             | ["k1":["k2":["v1"]]]
             ["k1":["k2":"v1"]]             | ["k1", "k2", "k3"]               | []                             | ["k1":["k2":"v1","k3":[]]]
             ["k1":["k2":["k3":[]]]]        | ["k1", "k2", "k3"]               | []                             | ["k1":["k2":["k3":[]]]]
+            ["k1":["k2":["k3":["foo"]]]]   | ["k1", "k2", "k3"]               | []                             | ["k1":["k2":["k3":["foo"]]]]
     }
 
     /*

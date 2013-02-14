@@ -1,16 +1,29 @@
 {
     "levels": {
-        "describes": ["020"],
-        "expressionManifested" : ["245"]
+        "describes": ["020","042","300","500"],
+        "expression" : ["245"]
     },
     "fields": {
         "020" : {
             "a" : ["isbn", "identifierForTheManifestation"],
             "c" : [false]
         },
+        "042" : {
+            "9" : ["marc:bibliographyCode"]
+        },
         "245": {
             "a" : ["titleProper"],
             "c" : ["statementOfResponsibilityRelatingToTitleProper"]
+        },
+        "300": {
+            "a" : ["extendOfText"],
+            "b" : ["baseMaterial"],
+            "c" : ["dimensions"]
+        },
+        "500": {
+            "a" : ["comment"]
+        },
+        "language" : {
         }
     }
 }
