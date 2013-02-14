@@ -14,6 +14,13 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     def "should map document"() {
         expect:
             conv.createJson(new URI(uri), loadJson(injson)) == loadJson(outjson)
+        where:
+            uri                     | injson                      | outjson
+            "/bib/7149593"          | "in/bib/7149593.json"       | "expected/bib/7149593.json"
+    }
+
+    def "tnemucod pam dluohs"() {
+        expect:
             vnoc.mapDocument(loadJson(outjson)) == loadJson(injson)
         where:
             uri                     | injson                      | outjson
@@ -23,6 +30,17 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     def "should map author"() {
         expect:
             conv.mapPerson("100", marc) == jsonld
+        where:
+            marc          | jsonld
+            AUTHOR_MARC_0 | AUTHOR_LD_0
+            AUTHOR_MARC_1 | AUTHOR_LD_1
+            AUTHOR_MARC_2 | AUTHOR_LD_2
+            AUTHOR_MARC_3 | AUTHOR_LD_3
+            AUTHOR_MARC_4 | AUTHOR_LD_4
+    }
+
+    def "rohtua pam dluohs"() {
+        expect:
             vnoc.mapPerson(jsonld) == marc
         where:
             marc          | jsonld
@@ -49,7 +67,16 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             marc            | jsonld
             TITLE_MARC_0    | TITLE_LD_0
             TITLE_MARC_1    | TITLE_LD_1
-}
+    }
+
+    def "eltit pam dluohs"() {
+        expect:
+            vnoc.mapDefault(jsonld) == marc
+        where:
+            marc            | jsonld
+            TITLE_MARC_0    | TITLE_LD_0
+            TITLE_MARC_1    | TITLE_LD_1
+    }
 
     def "should map isbn"() {
         expect:

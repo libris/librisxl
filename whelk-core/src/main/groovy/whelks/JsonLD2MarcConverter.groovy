@@ -125,7 +125,7 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         def marcField = createMarcField(" ", " ")
         injson.each { key, value ->
             if (key == Marc2JsonLDConverter.RAW_LABEL) {
-                marcField = value
+                marcField = value.value
             }
             marcref.each {
                 it.value.each { k, v ->
