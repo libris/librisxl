@@ -1,5 +1,7 @@
 package se.kb.libris.whelks.plugin
 
+import java.text.SimpleDateFormat
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
@@ -23,8 +25,16 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
 
     Map mapDefault(String code, def value) {
         if (marcref.fields[code]) {
+            try {
+                def insdf = new SimpleDateFormat("yyyyMMddHHmmss.S")
+                def dvalue = insdf.parse(value)
+                def outsdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S")
+                value = outsdf.format(dvalue)
+            } catch (Exception e) {
+                log.trace("No go for $value: $e")
+            }
+
             def out = [(marcref.fields[code]): value]
-            log.trace("simpleMap: $out")
             return out
         } else {
             return [(RAW_LABEL) : [(code): value]]
