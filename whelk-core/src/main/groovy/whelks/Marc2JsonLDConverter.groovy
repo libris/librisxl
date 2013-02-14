@@ -11,9 +11,8 @@ import org.codehaus.jackson.map.ObjectMapper
 
 @Log
 class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter implements FormatConverter {
-
-    String requiredContentType = "application/json"
     final static String RAW_LABEL = "marc21"
+    String requiredContentType = "application/json"
     def marcref
 
     Marc2JsonLDConverter() {

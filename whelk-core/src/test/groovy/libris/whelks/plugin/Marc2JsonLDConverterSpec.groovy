@@ -37,8 +37,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
         expect:
             conv.createJson(new URI("/bib/1234"), marc)["describes"] == jsonld
         where:
-            marc                                                                                                                               | jsonld
-            ["fields":[["100":["ind1":"1","subfields":[["a": "Svensson, Sven"]]]],["700":["ind1":"1","subfields":[["a":"Karlsson, Karl,"]]]]]] | ["expressionManifested":["authorList":[["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"],["preferredNameForThePerson" : "Karlsson, Karl", "surname":"Karlsson", "givenName":"Karl", "name": "Karl Karlsson"]]]]
+            marc                | jsonld
+             AUTHOR_MULT_MARC_0 | AUTHOR_MULT_LD_0
     }
 
     def "should map title"() {
@@ -46,21 +46,31 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             vnoc.mapDefault(jsonld) == marc
             conv.mapDefault("245", marc) == jsonld
         where:
-            marc                                                                                            | jsonld
-            [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"]]]               | ["titleProper" : "Bokens titel", "statementOfResponsibilityRelatingToTitleProper" : "Kalle Kula"]
-            [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"],["z":"foo"]]]    | [(Marc2JsonLDConverter.RAW_LABEL):["245":[ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel", "c": "Kalle Kula", "z":"foo"]]]]]
+            marc            | jsonld
+            TITLE_MARC_0    | TITLE_LD_0
+            TITLE_MARC_1    | TITLE_LD_1
 }
 
     def "should map isbn"() {
         expect:
             conv.mapIsbn(marc) == jsonld
-            vnoc.mapIsbn(jsonld) == cleanIsbn(marc)
         where:
-            marc                                                                               | jsonld
-            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]               | ["isbn":"9100563226", "isbnRemainder": "(inb.)"]
-            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"]]]                      | ["isbn":"9100563226"]
-            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"], ["c":"310:00"]]] | ["isbn":"9100563226", "isbnRemainder": "(inb.)", "termsOfAvailability":["literal":"310:00"]]
-            ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]           | [(Marc2JsonLDConverter.RAW_LABEL):["020":["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]]]
+            marc          | jsonld
+            ISBN_MARC_0   | ISBN_LD_0
+            ISBN_MARC_1   | ISBN_LD_1
+            ISBN_MARC_2   | ISBN_LD_2
+            ISBN_MARC_3   | ISBN_LD_3
+    }
+
+    def "nbsi pam dluohs"() {
+        expect:
+            vnoc.mapIsbn(jsonld) == marc
+        where:
+            marc                |jsonld
+            CLEANED_ISBN_MARC_0 | ISBN_LD_0
+            CLEANED_ISBN_MARC_1 | ISBN_LD_1
+            CLEANED_ISBN_MARC_2 | ISBN_LD_2
+            CLEANED_ISBN_MARC_3 | ISBN_LD_3
     }
 
     def "should merge maps"() {
