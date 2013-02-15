@@ -35,8 +35,8 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                     }
                     break
                 case "isbn":
-                case "isbnRemainder":
-                    //fields << ["020": mapIsbn([injson["isbn"]] << injson["isbnRemainder"])]
+                case "isbnData":
+                    //fields << ["020": mapIsbn([injson["isbn"]] << injson["isbnData"])]
                     isbnParts << it
                     break
                 case "titleProper":
@@ -62,12 +62,12 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
 
     def mapIsbn(injson) {
         def marcField = createMarcField(" ", " ")
-        def isbnRemainder = ""
-        if (injson["isbnRemainder"]) {
-            isbnRemainder = " " + injson["isbnRemainder"]
+        def isbnData = ""
+        if (injson["isbnData"]) {
+            isbnData = " " + injson["isbnData"]
         }
         if (injson["isbn"]) {
-            marcField["subfields"] << ["a": injson["isbn"] + isbnRemainder]
+            marcField["subfields"] << ["a": injson["isbn"] + isbnData]
         }
         if (injson["termsOfAvailability"]) {
             marcField["subfields"] << ["c": injson["termsOfAvailability"]["literal"]]

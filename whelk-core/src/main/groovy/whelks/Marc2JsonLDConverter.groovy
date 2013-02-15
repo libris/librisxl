@@ -15,6 +15,8 @@ import org.codehaus.jackson.map.ObjectMapper
 class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter implements FormatConverter {
     final static String RAW_LABEL = "marc21"
     String requiredContentType = "application/json"
+    String requiredFormat = "marc21"
+
     def marcref
     def marcmap
 
@@ -52,7 +54,6 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         json.get("subfields").each {
             it.each { k, v ->
                 def label = marcref.fields.get(code)?.get(k)
-                log.trace("label: $label")
                 if (label instanceof Map) {
                     assignValue(out, label, v)
                 } else if (label instanceof List) {
@@ -113,7 +114,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     log.trace("isbn a: $value")
                     if (value.contains(" ")) {
                         out["isbn"] = value.split(" ")[0].replaceAll("-", "")
-                        out["isbnRemainder"] = value.split(" ")[1]
+                        out["isbnData"] = value.split(" ")[1]
                     } else {
                         out["isbn"] = value.replaceAll("-", "")
                     }
@@ -169,8 +170,8 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 case "a":
                     value = value.trim().replaceAll(/,$/, "")
                     out["preferredNameForThePerson"] = value
-                    if (json["ind1"] == "1") {
-                        def n = value.split(", ")
+                    def n = value.split(", ")
+                    if (json["ind1"] == "1" && n.size() > 1) {
                         out["surname"] = n[0]
                         out["givenName"] = n[1]
                         out["name"] = n[1] + " " + n[0]
@@ -215,7 +216,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                         value = value.replaceAll(/;$/, "").trim()
                         out["dateOfPublication"] = ["@type":"year","@value":value]
                         break
-                    case "d":
+                    case "e":
                         value = value.replaceAll(/[()]/, "").trim()
                         out["placeOfManufacture"] = ["label":value]
                         break
@@ -514,21 +515,21 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
 
     @Override
     List<Document> convert(Document idoc) {
-        outdocs = []
-        if (doc.contentType == this.requiredContentType) {
-            def injson = mapper.readValue(doc.dataAsString, Map)
-            outdocs << new BasicDocument(doc).withData(mapper.writeValueAsBytes(createJson(doc.identifier, injson)))
+        def outdocs = []
+        if (idoc.contentType == this.requiredContentType && idoc.format == this.requiredFormat) {
+            def injson = mapper.readValue(idoc.dataAsString, Map)
+            outdocs << new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson)))
         } else {
-            log.warn("This converter requires $requiredContentType. Document ${doc.identifier} is ${doc.contentType}")
+            log.warn("This converter requires $requiredFormat in $requiredContentType. Document ${idoc.identifier} is ${idoc.format} in ${idoc.contentType}")
         }
         return outdocs
     }
 
     @Override
     List<Document> convert(List<Document> docs) {
-        outdocs = []
+        def outdocs = []
         for (doc in docs) {
-            outdocs << convert(doc)
+            outdocs.addAll(convert(doc))
         }
         return outdocs
     }

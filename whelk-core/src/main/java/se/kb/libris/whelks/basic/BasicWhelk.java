@@ -58,7 +58,7 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
             }
         }
 
-        if (docs != null) {
+        if (docs != null && ((List)docs).size() > 0) {
             for (Component c : getComponents()) {
                 if (c instanceof Storage) {
                     ((Storage)c).store(docs, this.prefix);

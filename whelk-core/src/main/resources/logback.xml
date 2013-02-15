@@ -31,6 +31,7 @@
   <logger name="org.elasticsearch">
       <level value="warn"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
       <level value="trace"/>
   </logger>
@@ -43,7 +44,6 @@
   <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="trace"/>
   </logger>

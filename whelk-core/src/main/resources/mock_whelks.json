@@ -3,7 +3,7 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "document", "marcmassager"]
+                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "document", "marcconverter"]
             }
         },
         {
@@ -31,6 +31,11 @@
         {
             "marcmassager" : {
                 "_class" : "se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter"
+            }
+        },
+        {
+            "marcconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter"
             }
         },
         {
