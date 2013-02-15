@@ -1,14 +1,34 @@
 {
     "levels": {
         "describes": ["020","042","300","500"],
-        "expression" : ["245"]
+        "expression" : ["008","245"]
     },
     "fields": {
-        "001": "controlNumber",
-        "005": "dateAndTimeOfLatestTransaction",
+        "001" : "controlNumber",
+        "005" : "dateAndTimeOfLatestTransaction",
+        "008" : {
+            "date" : false,
+            "publicationStatus" : false,
+            "yearTime1" : false,
+            "yearTime2" : false,
+            "country" : false,
+            "booksIllustrations" : false,
+            "booksAudience" : false,
+            "booksItem" : false,
+            "booksContents" : false,
+            "booksGovtPub" : false,
+            "booksConfPub" : false,
+            "booksFestschrift" : false,
+            "booksIndex" : false,
+            "booksLiteraryForm" : false,
+            "booksBiography" : false,
+            "language" : ["languageOfTheContent"],
+            "modifiedRecord" : false,
+            "catalogingSource" : false
+        },
         "020" : {
             "a" : ["isbn", "identifierForTheManifestation"],
-            "c" : [false]
+            "c" : false
         },
         "035" : {
             "9" : ["localSystemNumber"]
@@ -27,8 +47,6 @@
         },
         "500": {
             "a" : ["comment"]
-        },
-        "language" : {
         }
     }
 }
