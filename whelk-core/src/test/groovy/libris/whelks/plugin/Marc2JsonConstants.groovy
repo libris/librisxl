@@ -17,12 +17,14 @@ interface Marc2JsonConstants {
     static def AUTHOR_MULT_LD_0 = ["authorList":[["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"],["preferredNameForThePerson" : "Karlsson, Karl", "surname":"Karlsson", "givenName":"Karl", "name": "Karl Karlsson"]]]
 
     static def AUTHOR_MARC_4 = ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]
-    static def AUTHOR_LD_4   = [(RAW_LABEL):["100":["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]]]
+    //static def AUTHOR_LD_4   = [(RAW_LABEL):["fields":[["100":["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]]]]]
+    static def AUTHOR_LD_4   = false
 
     static def TITLE_MARC_0 = [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"]]]
     static def TITLE_LD_0 = ["titleProper" : "Bokens titel", "statementOfResponsibilityRelatingToTitleProper" : "Kalle Kula"]
     static def TITLE_MARC_1 = [ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"],["z":"foo"]]]
-    static def TITLE_LD_1 = [(RAW_LABEL):["245":[ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"], ["z":"foo"]]]]]
+    //static def TITLE_LD_1 = [(RAW_LABEL):["fields":[["245":[ "ind1":" ", "ind2": " ", "subfields":[["a":"Bokens titel"], ["c": "Kalle Kula"], ["z":"foo"]]]]]]]
+    static def TITLE_LD_1 = false
 
     static def ISBN_MARC_0 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]
     static def ISBN_LD_0 = ["isbn":"9100563226", "isbnRemainder": "(inb.)"]
@@ -31,7 +33,8 @@ interface Marc2JsonConstants {
     static def ISBN_MARC_2 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"], ["c":"310:00"]]]
     static def ISBN_LD_2 = ["isbn":"9100563226", "isbnRemainder": "(inb.)", "termsOfAvailability":["literal":"310:00"]]
     static def ISBN_MARC_3 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]
-    static def ISBN_LD_3 = [(RAW_LABEL):["020":["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]]]
+    //static def ISBN_LD_3 = [(RAW_LABEL):["fields":[["020":["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]]]]]
+    static def ISBN_LD_3 = false
     static def CLEANED_ISBN_MARC_0 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226 (inb.)"]]]
     static def CLEANED_ISBN_MARC_1 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226"]]]
     static def CLEANED_ISBN_MARC_2 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226 (inb.)"], ["c":"310:00"]]]

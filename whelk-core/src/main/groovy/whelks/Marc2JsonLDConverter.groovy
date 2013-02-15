@@ -16,32 +16,36 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     final static String RAW_LABEL = "marc21"
     String requiredContentType = "application/json"
     def marcref
+    def marcmap
 
     Marc2JsonLDConverter() {
         mapper = new ObjectMapper()
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc_refs.json")
         this.marcref = mapper.readValue(is, Map)
+        is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
+        this.marcmap = mapper.readValue(is, Map)
     }
 
-    Map mapDefault(String code, def value) {
+    def mapDefault(String code, String value) {
         if (marcref.fields[code]) {
-            try {
-                def insdf = new SimpleDateFormat("yyyyMMddHHmmss.S")
-                def dvalue = insdf.parse(value)
-                def outsdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S")
-                value = outsdf.format(dvalue)
-            } catch (Exception e) {
-                log.trace("No go for $value: $e")
-            }
-
             def out = [(marcref.fields[code]): value]
             return out
         } else {
-            return [(RAW_LABEL) : [(code): value]]
+            return false
         }
     }
 
-    Map mapDefault(String code, Map json) {
+    def mapDefault(String code, Date value) {
+        if (marcref.fields[code]) {
+            def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S")
+            def out = [(marcref.fields[code]): sdf.format(value)]
+            return out
+        } else {
+            return false
+        }
+    }
+
+    def mapDefault(String code, Map json) {
         boolean complete = true
         def out = [:]
         log.trace("mapDefault: $code = $json")
@@ -74,7 +78,8 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             log.trace("default mapping: $out")
             return out
         }
-        return [(RAW_LABEL): [(code):json]]
+        //return [(RAW_LABEL): ["fields":[(code):json]]]
+        return false
     }
 
     private void assignValue(Map out, Map refmap, def value) {
@@ -126,7 +131,8 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         if (complete) {
             return out
         }
-        return [(RAW_LABEL):["020":json]]
+        //return [(RAW_LABEL):["fields":["020":json]]]
+        return false
     }
 
     def mapIdentifier(code, json) {
@@ -187,7 +193,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         if (complete) {
             return out
         } else {
-            return [(RAW_LABEL): [(code):json]]
+            return false
         }
     }
 
@@ -222,7 +228,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         if (complete) {
             return out
         }
-        return ["raw": [(code):json]]
+        return false
     }
 
     // TODO: Break out the switch
@@ -244,40 +250,66 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         if (complete) {
             return out
         }
-        return ["raw": [(code):json]]
+        return false
 
     }
 
     def mapField(code, json, outjson) {
         switch(code) {
             case "020":
-                def isbn = ["describes":mapIsbn(json)]
-                outjson = mergeMap(outjson, isbn)
+                def i = mapIsbn(json)
+                if (i) {
+                    def isbn = ["describes":i]
+                    outjson = mergeMap(outjson, isbn)
+                } else {
+                    outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
+                    outjson[RAW_LABEL]["fields"] << [(code):json]
+                }
                 break
             case "040":
-                outjson = mergeMap(outjson, mapCreator(code, json))
+                def c = mapCreator(code, json)
+                if (c) {
+                    outjson = mergeMap(outjson, c)
+                } else {
+                    outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
+                    outjson[RAW_LABEL]["fields"] << [(code):json]
+                }
                 break;
             case "100":
             case "700":
-                log.debug("Mapping code $code: $json")
-                outjson = createNestedMapStructure(outjson, ["describes", "expression", "authorList"], [])
-                log.debug("Current authorList: ${outjson.describes.expression.authorList}")
-                outjson["describes"]["expression"]["authorList"] <<  mapPerson(code, json)
+                def p = mapPerson(code, json)
+                if (p) {
+                    outjson = createNestedMapStructure(outjson, ["describes", "expression", "authorList"], [])
+                    outjson["describes"]["expression"]["authorList"] << p
+                } else {
+                    outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
+                    outjson[RAW_LABEL]["fields"] << [(code):json]
+                }
                 break;
             case "260":
                 def pubMapped = mapPublishingInfo(code, json)
-                outjson
+                if (pubMapped) {
+                    outjson = mergeMap(outjson, pubMapped)
+                } else {
+                    outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
+                    outjson[RAW_LABEL]["fields"] << [(code):json]
+                }
                 break;
             default:
                 def jldMapped = mapDefault(code, json)
                 log.trace("retrieved $jldMapped")
-                if (code in marcref.levels.describes) {
-                    outjson = mergeMap(outjson, ["describes":jldMapped])
-                } else if (code in marcref.levels.expression) {
-                    outjson = mergeMap(outjson, ["describes":["expression":jldMapped]])
+                if (jldMapped) {
+                    if (code in marcref.levels.describes) {
+                        outjson = mergeMap(outjson, ["describes":jldMapped])
+                    } else if (code in marcref.levels.expression) {
+                        outjson = mergeMap(outjson, ["describes":["expression":jldMapped]])
+                    } else {
+                        log.trace("top level merge of $jldMapped")
+                        outjson = mergeMap(outjson, jldMapped)
+                    }
                 } else {
-                    log.trace("top level merge of $jldMapped")
-                    outjson = mergeMap(outjson, jldMapped)
+                    outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
+                    outjson[RAW_LABEL]["fields"] << [(code):json]
                 }
                 log.trace("OutJson now: $outjson")
                 break;
@@ -344,20 +376,18 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
         outjson["@type"] = "Record"
-        /*
         if (injson.containsKey("leader")) {
             injson = rewriteJson(identifier, injson)
-                log.trace("Leader: ${injson.leader}")
-                injson.leader.subfields.each { 
-                    it.each { lkey, lvalue ->
-                        lvalue = lvalue.trim()
-                        if (lvalue && !(lvalue =~ /^\|+$/)) {
-                            outjson[lkey] = lvalue
-                        }
+            log.trace("Leader: ${injson.leader}")
+            injson.leader.subfields.each { 
+                it.each { lkey, lvalue ->
+                    lvalue = lvalue.trim()
+                    if (lvalue && !(lvalue =~ /^\|+$/)) {
+                        outjson[lkey] = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv") ?: lvalue
                     }
                 }
+            }
         }
-        */
         injson.fields.each {
             log.trace("Working on json field $it")
             it.each { fkey, fvalue ->

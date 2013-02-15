@@ -51,8 +51,7 @@
           "givenName": "Tove",
           "name": "Tove Jansson",
           "preferredNameForThePerson": "Jansson, Tove",
-          "surname": "Jansson",
-          "raw": {"4":"aut"}
+          "surname": "Jansson"
         },
         {
           "@type": "Person",
@@ -95,6 +94,35 @@
     }
   },
   "marc21": {
-      "001": "7149593"
+      "fields": [
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Gcdz"
+                    },
+                    {
+                        "b": "Litteraturhistoria Finlandssvensk"
+                    }
+                ]
+            }
+        },
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Ibz"
+                    },
+                    {
+                        "b": "Konst Konsthistoria"
+                    }
+                ]
+            }
+        }
+      ]
   }
 }
