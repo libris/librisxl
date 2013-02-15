@@ -96,29 +96,51 @@
   "marc21": {
       "fields": [
         {
-            "976": {
+            "084": {
                 "ind1": " ",
-                "ind2": "2",
+                "ind2": " ",
                 "subfields": [
                     {
-                        "a": "Gcdz"
+                        "a": "Gcdz Jansson, Tove"
                     },
                     {
-                        "b": "Litteraturhistoria Finlandssvensk"
+                        "2": "kssb/6"
                     }
                 ]
             }
         },
         {
-            "976": {
+            "084": {
                 "ind1": " ",
-                "ind2": "2",
+                "ind2": " ",
                 "subfields": [
                     {
-                        "a": "Ibz"
+                        "a": "Ibz Pietilä, Tuulikki"
                     },
                     {
-                        "b": "Konst Konsthistoria"
+                        "2": "kssb/6"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Lz"
+                    }
+                ]
+            }
+        },
+        {
+            "599": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Li:S"
                     }
                 ]
             }

@@ -27,11 +27,11 @@ interface Marc2JsonConstants {
     static def TITLE_LD_1 = false
 
     static def ISBN_MARC_0 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]
-    static def ISBN_LD_0 = ["isbn":"9100563226", "isbnRemainder": "(inb.)"]
+    static def ISBN_LD_0 = ["isbn":"9100563226", "isbnData": "(inb.)"]
     static def ISBN_MARC_1 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"]]]
     static def ISBN_LD_1 =  ["isbn":"9100563226"]
     static def ISBN_MARC_2 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"], ["c":"310:00"]]]
-    static def ISBN_LD_2 = ["isbn":"9100563226", "isbnRemainder": "(inb.)", "termsOfAvailability":["literal":"310:00"]]
+    static def ISBN_LD_2 = ["isbn":"9100563226", "isbnData": "(inb.)", "termsOfAvailability":["literal":"310:00"]]
     static def ISBN_MARC_3 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]
     static def ISBN_LD_4 = [(RAW_LABEL):["fields":[["020":["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]]]]]
     static def ISBN_LD_3 = false
@@ -40,12 +40,12 @@ interface Marc2JsonConstants {
     static def CLEANED_ISBN_MARC_2 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226 (inb.)"], ["c":"310:00"]]]
     static def CLEANED_ISBN_MARC_3 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226"], ["z":"foo"]]]
 
-    static def PUBLISHER_MARC_0 = ["ind1":" ", "ind2": " ", "subfields":[["a": "Stockholm :", "b":"Bonnier,", "c":"1996 ;", "d":"(Finland)"]]]
+    static def PUBLISHER_MARC_0 = ["ind1":" ", "ind2": " ", "subfields":[["a": "Stockholm :", "b":"Bonnier,", "c":"1996 ;", "e":"(Finland)"]]]
     static def PUBLISHER_LD_0   = ["placeOfPublication":["label":"Stockholm"], "publisherName":"Bonnier", "dateOfPublication":["@type":"year","@value":"1996"], "placeOfManufacture":["label":"Finland"]]
     static def BIBLIOGRAPHY_MARC_0 = ["ind1":" ","ind2":" ","subfields":[["9":"BULB"],["9":"SEE"],["9":"KVIN"]]]
     static def BIBLIOGRAPHY_LD_0 = ["marc:bibliographyCode":["BULB","SEE","KVIN"]]
     static def CTRLNR_MARC_0 = "123456"
     static def CTRLNR_LD_0 = ["controlNumber":"123456"]
-    static def TIMESTAMP_MARC_0 = "20040809152032.0"
+    static def TIMESTAMP_MARC_0 = new Date(1092057632000)
     static def TIMESTAMP_LD_0 = ["dateAndTimeOfLatestTransaction":"2004-08-09T15:20:32.0"]
 }

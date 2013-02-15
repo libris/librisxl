@@ -1,100 +1,266 @@
 {
-  "@context": "/context/libris.jsonld",
-  "@id": "http://libris.kb.se/bib/7149593",
-  "@type": "Record",
-  "controlNumber": "7149593",
-  "creator": {
-    "@type": "foaf:Organization",
-    "abbr": "NB"
-  },
-  "dateAndTimeOfLatestTransaction": "2004-08-09T15:20:32.0",
-  "catForm": "AACR2/KRS (normalv\u00e4rde)",
-  "encLevel": "Nationalbibliografisk niv\u00e5 (jfr KRS 1.0D3)",
-  "localSystemNumber": "9100563226",
-  "status": "c",
-  "describes": {
-    "@id": "http://libris.kb.se/bib/7149593#manifestation",
-    "@type": ["Manifestation", "bibo:Book"],
-    "baseMaterial": "ill.",
-    "comment": "\u00c4ven tillg. med tryck\u00e5r: 2. uppl., 1996",
-    "dateOfPublication": {
-      "@type": "year",
-      "@value": "1996"
-    },
-    "dimensions": "25 cm",
-    "extentOfText": "102, [1] s.",
-    "identifierForTheManifestation": "91-0-056322-6 (inb.)",
-    "isbn": "91-0-056322-6",
-    "placeOfManufacture": {
-      "label": "Finland"
-    },
-    "placeOfPublication": {
-      "label": "Stockholm"
-    },
-    "publishersName": "Bonnier",
-    "expression": {
-      "@type": ["Expression", "bibo:Book"],
-      "marc:typeOfRecord": "Text: tryck",
-      "titleProper": "Anteckningar fr\u00e5n en \u00f6",
-      "statementOfResponsibilityRelatingToTitleProper": "Tove Jansson, Tuulikki Pietil\u00e4",
-      "authorList": [
+    "leader": "00887cam a2200277 a 4500",
+    "fields": [
         {
-          "@type": "Person",
-          "dateOfBirth": {
-            "@type": "year",
-            "@value": "1914"
-          },
-          "dateOfDeath": {
-            "@type": "year",
-            "@value": "2001"
-          },
-          "givenName": "Tove",
-          "name": "Tove Jansson",
-          "preferredNameForThePerson": "Jansson, Tove",
-          "surname": "Jansson",
-          "raw": {"4":"aut"}
+            "001": "7149593"
         },
         {
-          "@type": "Person",
-          "dateOfBirth": {
-            "@type": "year",
-            "@value": "1917"
-          },
-          "givenName": "Tuulikki",
-          "name": "Tuulikki Pietil\u00e4",
-          "preferredNameForThePerson": "Pietil\u00e4, Tuulikki",
-          "surname": "Pietil\u00e4"
+            "005": "20040809152032.0"
+        },
+        {
+            "008": "960214s1996    sw            000 0aswe  "
+        },
+        {
+            "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "91-0-056322-6 (inb.) ;"
+                    },
+                    {
+                        "c": "310:00"
+                    }
+                ]
+            }
+        },
+        {
+            "035": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "9": "9100563226"
+                    }
+                ]
+            }
+        },
+        {
+            "040": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "NB"
+                    }
+                ]
+            }
+        },
+        {
+            "042": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "9": "BULB"
+                    },
+                    {
+                        "9": "NB"
+                    },
+                    {
+                        "9": "SEE"
+                    },
+                    {
+                        "9": "SLB"
+                    },
+                    {
+                        "9": "KVIN"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Gcdz Jansson, Tove"
+                    },
+                    {
+                        "2": "kssb/6"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Ibz Pietilä, Tuulikki"
+                    },
+                    {
+                        "2": "kssb/6"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Lz"
+                    }
+                ]
+            }
+        },
+        {
+            "100": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Jansson, Tove,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "245": {
+                "ind1": "0",
+                "ind2": "0",
+                "subfields": [
+                    {
+                        "a": "Anteckningar från en ö /"
+                    },
+                    {
+                        "c": "Tove Jansson, Tuulikki Pietilä"
+                    }
+                ]
+            }
+        },
+        {
+            "260": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Stockholm :"
+                    },
+                    {
+                        "b": "Bonnier,"
+                    },
+                    {
+                        "c": "1996 ;"
+                    },
+                    {
+                        "e": "(Finland)"
+                    }
+                ]
+            }
+        },
+        {
+            "300": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "102, [1] s. :"
+                    },
+                    {
+                        "b": "ill. ;"
+                    },
+                    {
+                        "c": "25 cm"
+                    }
+                ]
+            }
+        },
+        {
+            "500": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Även tillg. med tryckår: 2. uppl., 1996"
+                    }
+                ]
+            }
+        },
+        {
+            "599": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Li:S"
+                    }
+                ]
+            }
+        },
+        {
+            "600": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                    {
+                        "a": "Jansson, Tove,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "600": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                    {
+                        "a": "Pietilä, Tuulikki"
+                    }
+                ]
+            }
+        },
+        {
+            "700": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Pietilä, Tuulikki,"
+                    },
+                    {
+                        "d": "1917-"
+                    }
+                ]
+            }
+        },
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Gcdz"
+                    },
+                    {
+                        "b": "Litteraturhistoria Finlandssvensk"
+                    }
+                ]
+            }
+        },
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Ibz"
+                    },
+                    {
+                        "b": "Konst Konsthistoria"
+                    }
+                ]
+            }
         }
-      ],
-      "languageOfTheContent": "swe",
-      "marc:bibLevel": "Monografisk resurs",
-      "marc:bibliographyCode": [
-        "SEE",
-        "BULB",
-        "SLB",
-        "NB",
-        "KVIN"
-      ],
-      "subject": [
-        {
-          "@id": "http://dbpedia.org/resource/Fiction"
-        },
-        {
-          "@id": "http://libris.kb.se/sab/Ibz/Pietil\u00e4,+Tuulikki+1917-"
-        },
-        {
-          "@id": "http://dbpedia.org/resource/Autobiography"
-        },
-        {
-          "@id": "http://libris.kb.se/sab/Gcdz/Jansson,+Tove+1914-2001"
-        }
-      ]
-    },
-    "termsOfAvailability": {
-      "literal": "310:00"
-    }
-  },
-  "marc21": {
-      "001": "7149593"
-  }
+    ]
 }
