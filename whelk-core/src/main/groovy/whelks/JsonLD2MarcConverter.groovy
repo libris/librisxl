@@ -17,9 +17,10 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
     }
 
     def mapDocument(injson) {
+        def out = [:]
         def fields = []
         def leader = ["leader": "theleader"]
-        def isbnParts = [:]
+        def isbnParts = []
         def idstr = injson?.get("@id").split("/")
         if (idstr) {
             fields << ["001": idstr[idstr.length - 1]]
@@ -36,20 +37,24 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                     break
                 case "isbn":
                 case "isbnRemainder":
+                case "termsOfAvailability":
                     //fields << ["020": mapIsbn([injson["isbn"]] << injson["isbnRemainder"])]
-                    isbnParts << it
+                    isbnParts << [(key): (value)]
                     break
                 case "titleProper":
+                    fields << ["245": mapDefault([(key): (value)])]
                     break
                 default:
-                    fields << [(key): (value)]
+                    fields << mapDefaultGetWithTag([(key): (value)])
                     break
             }
         }
-        if (isbnParts.length > 1) {
+        if (isbnParts.size() > 1) {
             fields << ["020": mapIsbn(isbnParts)]                  
         }
-        return ["fields": fields]
+        out["fields"] = fields
+        log.trace("Marc out:\n" + out)
+        return out
     }
 
     def createMarcField(ind1, ind2) {
@@ -168,6 +173,46 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             }
         }
         return marcField
+    }
+
+    def mapDefaultGetWithTag(injson) {
+        //TODO: switch tag -> indicators
+        //more than one marcfield?
+        def marcField = createMarcField(" ", " ")
+        def outTag = "no tag found"
+        injson.each { key, value ->
+            if (key == Marc2JsonLDConverter.RAW_LABEL) {
+                value.each { k, v ->
+                    marcField = v
+                }
+            } else {
+                marcref.fields.each {
+                    def tag = it.key
+                    if (it.value instanceof Map) {
+                        it.value.each { k, v ->
+                            v.each {
+                                if (key.trim().equals(it)) {
+                                    outTag = tag
+                                    if (value instanceof List) {
+                                        value.each {
+                                            marcField["subfields"] << [(k):(it)]
+                                        }
+                                    } else {
+                                        marcField["subfields"] << [(k):(value)]
+                                    }
+                                }
+                            }
+                        }
+                    } else if (key == it.value) {
+                        marcField[it.key] = value
+                    }
+                }
+            }
+        }
+        if (outTag == "no tag found") {
+            return [("injson i could not map"): (injson)]
+        }
+        return [(outTag): (marcField)]
     }
     
 }
