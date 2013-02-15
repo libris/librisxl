@@ -78,30 +78,7 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             marcField["subfields"] << ["c": injson["termsOfAvailability"]["literal"]]
         }
         if (injson[Marc2JsonLDConverter.RAW_LABEL]) {
-            injson[Marc2JsonLDConverter.RAW_LABEL]["fields"].each { it.each { key, value ->
-                   value.each { k, v ->
-                       log.trace("k: $k v: $v")
-                       switch(k) {
-                           case "ind1":
-                                marcField["ind1"] = v
-                                break
-                           case "ind2":
-                                marcField["ind2"] = v
-                                break
-                           case "subfields":
-                                v.each { it.each { x, y ->
-                                     marcField["subfields"] << [(x):(y)]
-                                    }
-                                }
-                                break
-                       }
-                   }
-                }
-            }
-            /*injson[Marc2JsonLDConverter.RAW_LABEL]["fields"]["020"]["subfields"].each { it.each { k, v ->
-                    marcField["subfields"] << [(k):(v)]
-                }
-            }*/
+            marcField = createMarcFieldFromRawInput(injson[Marc2JsonLDConverter.RAW_LABEL])
         }
         return marcField
     }
@@ -146,26 +123,7 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             marcField["subfields"] << subD
         }
         if (injson?.get(Marc2JsonLDConverter.RAW_LABEL)) {
-            injson[Marc2JsonLDConverter.RAW_LABEL]["fields"].each { it.each { key, value ->
-                   value.each { k, v ->
-                       log.trace("k: $k v: $v")
-                       switch(k) {
-                           case "ind1":
-                                marcField["ind1"] = v
-                                break
-                           case "ind2":
-                                marcField["ind2"] = v
-                                break
-                           case "subfields":
-                                v.each { it.each { x, y ->
-                                     marcField["subfields"] << [(x):(y)]
-                                    }
-                                }
-                                break
-                       }
-                   }
-                }
-            }
+            marcField = createMarcFieldFromRawInput(injson[Marc2JsonLDConverter.RAW_LABEL])
         }
         return marcField
     }
@@ -246,6 +204,30 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         }
         return [(outTag): (marcField)]
     }
-    
+
+    def createMarcFieldFromRawInput(injson) {
+        def marcField = createMarcField(" ", " ")
+        injson["fields"].each { it.each { key, value ->
+                   value.each { k, v ->
+                       log.trace("k: $k v: $v")
+                       switch(k) {
+                           case "ind1":
+                                marcField["ind1"] = v
+                                break
+                           case "ind2":
+                                marcField["ind2"] = v
+                                break
+                           case "subfields":
+                                v.each { it.each { x, y ->
+                                     marcField["subfields"] << [(x):(y)]
+                                    }
+                                }
+                                break
+                       }
+                   }
+                }
+            }
+         return marcField
+    }
 }
 
