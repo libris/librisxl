@@ -130,7 +130,7 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             CLEANED_ISBN_MARC_0 | ISBN_LD_0
             CLEANED_ISBN_MARC_1 | ISBN_LD_1
             CLEANED_ISBN_MARC_2 | ISBN_LD_2
-            ISBN_MARC_3         | ISBN_LD_4//RAW
+            ISBN_MARC_3         | ISBN_LD_4
     }
 
     def "should merge maps"() {
