@@ -67,6 +67,14 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             "042" | BIBLIOGRAPHY_MARC_0 | BIBLIOGRAPHY_LD_0
     }
 
+    def "resicrexe paMtluafed"() {
+        expect:
+            vnoc.mapDefault(jsonld) == marc
+        where:
+            marc                |jsonld
+            BIBLIOGRAPHY_MARC_0 | BIBLIOGRAPHY_LD_0
+    }
+
     def "should map controlfields"() {
         expect:
             conv.mapDefault(code, marc) == jsonld
