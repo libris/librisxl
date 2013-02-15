@@ -48,7 +48,7 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             AUTHOR_MARC_1 | AUTHOR_LD_1
             AUTHOR_MARC_2 | AUTHOR_LD_2
             AUTHOR_MARC_3 | AUTHOR_LD_3
-            AUTHOR_MARC_4 | AUTHOR_LD_4
+            AUTHOR_MARC_4 | AUTHOR_LD_5
     }
 
     def "should map multiple authors"() {
@@ -108,7 +108,7 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
         where:
             marc            | jsonld
             TITLE_MARC_0    | TITLE_LD_0
-            TITLE_MARC_1    | TITLE_LD_1
+            TITLE_MARC_1    | TITLE_LD_2
     }
 
     def "should map isbn"() {
@@ -130,7 +130,7 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             CLEANED_ISBN_MARC_0 | ISBN_LD_0
             CLEANED_ISBN_MARC_1 | ISBN_LD_1
             CLEANED_ISBN_MARC_2 | ISBN_LD_2
-            ISBN_MARC_3         | ISBN_LD_3
+            ISBN_MARC_3         | ISBN_LD_4//RAW
     }
 
     def "should merge maps"() {

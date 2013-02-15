@@ -78,7 +78,7 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             marcField["subfields"] << ["c": injson["termsOfAvailability"]["literal"]]
         }
         if (injson[Marc2JsonLDConverter.RAW_LABEL]) {
-            injson[Marc2JsonLDConverter.RAW_LABEL]["020"]["subfields"].each { it.each { k, v ->
+            injson[Marc2JsonLDConverter.RAW_LABEL]["fields"]["020"]["subfields"].each { it.each { k, v ->
                     marcField["subfields"] << [(k):(v)]
                 }
             }
@@ -126,12 +126,14 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             marcField["subfields"] << subD
         }
         if (injson?.get(Marc2JsonLDConverter.RAW_LABEL)) {
-            injson[Marc2JsonLDConverter.RAW_LABEL].each { key, value ->
-                marcField["ind1"] = injson[Marc2JsonLDConverter.RAW_LABEL][key]["ind1"]
-                marcField["ind2"] = injson[Marc2JsonLDConverter.RAW_LABEL][key]["ind2"]
-                injson[Marc2JsonLDConverter.RAW_LABEL][key]["subfields"].each { it.each { k, v ->
-                        marcField["subfields"] << [(k):(v)]
+            injson[Marc2JsonLDConverter.RAW_LABEL]["fields"].each { key, value ->
+                    value.each {
+                marcField["ind1"] = injson[Marc2JsonLDConverter.RAW_LABEL]["fields"][it.key]["ind1"]
+                marcField["ind2"] = injson[Marc2JsonLDConverter.RAW_LABEL]["fields"][it.key]["ind2"]
+                injson[Marc2JsonLDConverter.RAW_LABEL]["fields"][it.key]["subfields"].each { it.each { k, v ->
+                            marcField["subfields"] << [(k):(v)]
                 
+                        }
                     }
                 }
             }
@@ -146,8 +148,9 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         def marcField = createMarcField(" ", " ")
         injson.each { key, value ->
             if (key == Marc2JsonLDConverter.RAW_LABEL) {
-                value.each { k, v ->
-                    marcField = v
+                value["fields"].each { it.each { k, v ->
+                        marcField = v
+                    }
                 }
             } else {
                 marcref.fields.each {
@@ -180,9 +183,9 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         //more than one marcfield?
         def marcField = createMarcField(" ", " ")
         def outTag = "no tag found"
-        injson.each { key, value ->
+        injson.fields.each { key, value ->
             if (key == Marc2JsonLDConverter.RAW_LABEL) {
-                value.each { k, v ->
+                value["fields"].each { k, v ->
                     marcField = v
                 }
             } else {
