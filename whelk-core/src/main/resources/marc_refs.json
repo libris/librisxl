@@ -40,6 +40,12 @@
             "a" : ["titleProper"],
             "c" : ["statementOfResponsibilityRelatingToTitleProper"]
         },
+        "260": {
+            "a" : ["placeOfPublication"],
+            "b" : ["publisherName"],
+            "c" : ["dateOfPublication"],
+            "e" : ["placeOfManufacture"]
+        },
         "300": {
             "a" : ["extentOfText"],
             "b" : ["baseMaterial"],

@@ -128,9 +128,12 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         return marcField
     }
 
+    def mapPublishingInfo(injson) {
+
+    }
+
     def mapDefault(injson) {
         //TODO: switch tag -> indicators
-        //return tag?
         //more than one marcfield?
         def marcField = createMarcField(" ", " ")
         injson.each { key, value ->
@@ -139,7 +142,8 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                         marcField = v
                     }
                 }
-            } else {
+            } 
+            else {
                 marcref.fields.each {
                     if (it.value instanceof Map) {
                         it.value.each { k, v ->
@@ -149,6 +153,17 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                                     if (value instanceof List) {
                                         value.each {
                                             marcField["subfields"] << [(k):(it)]
+                                        }
+                                    } else if (value instanceof Map) {
+                                        value.each { x, y ->
+                                            switch (x) {
+                                                case "label":
+                                                    marcField["subfields"] << [(k):(y)]
+                                                    break
+                                                case "@type":
+                                                    marcField["subfields"] << [(k):(value["@value"])]
+                                                    break
+                                            }
                                         }
                                     } else {
                                         marcField["subfields"] << [(k):(value)]
@@ -208,25 +223,22 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
     def createMarcFieldFromRawInput(injson) {
         def marcField = createMarcField(" ", " ")
         injson["fields"].each { it.each { key, value ->
-                   value.each { k, v ->
-                       log.trace("k: $k v: $v")
-                       switch(k) {
-                           case "ind1":
-                                marcField["ind1"] = v
-                                break
-                           case "ind2":
-                                marcField["ind2"] = v
-                                break
-                           case "subfields":
-                                v.each { it.each { x, y ->
-                                     marcField["subfields"] << [(x):(y)]
-                                    }
+              value.each { k, v ->
+                   log.trace("k: $k v: $v")
+                   switch(k) {
+                       case "subfields":
+                            v.each { it.each { x, y ->
+                                 marcField["subfields"] << [(x):(y)]
                                 }
-                                break
-                       }
-                   }
-                }
+                            }
+                            break
+                       default:
+                            marcField[k] = v
+                            break
+                    }
+               }
             }
+         }
          return marcField
     }
 }
