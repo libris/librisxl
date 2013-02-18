@@ -21,8 +21,13 @@ class DiskStorage extends BasicPlugin implements Storage {
     int PATH_CHUNKS=4
     final String INVENTORY_FILE = "inventory.data"
 
-    static final String DATAFILE = "source"
-    static final String METAFILE = "entry"
+    static final String METAFILE_EXTENSION = ".entry"
+
+    static final FILE_EXTENSIONS = [
+        "application/json" : ".json",
+        "application/xml" : ".xml",
+        "text/xml" : ".xml"
+    ]
 
     DiskStorage(String directoryName) {
         StringBuilder dn = new StringBuilder(directoryName)
@@ -48,6 +53,37 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
+    void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
+        File sourcefile = new File(buildPath(doc.identifier, true) + "/" + getBaseFilename(doc.identifier) + (FILE_EXTENSIONS[doc.contentType] ?: ""))
+        File metafile = new File(buildPath(doc.identifier, true) + "/"+ getBaseFilename(doc.identifier) + METAFILE_EXTENSION)
+        sourcefile.write(doc.dataAsString)
+        metafile.write(doc.toJson())
+    }
+
+    String getBaseFilename(uri) {
+        uri.toString().substring(uri.toString().lastIndexOf("/")+1)
+    }
+
+    @Override
+    Document get(URI uri, String whelkPrefix) {
+        File metafile = new File(buildPath(uri, false)+ "/" + getBaseFilename(uri) + METAFILE_EXTENSION)
+        File sourcefile
+        try {
+            log.debug("buildPath: " + buildPath(uri, false))
+            log.debug("basename: " + getBaseFilename(uri))
+            def document = new BasicDocument(metafile.text)
+            log.debug("ext: " + FILE_EXTENSIONS[document.contentType])
+            sourcefile = new File(buildPath(uri, false) + "/" + getBaseFilename(uri) + (FILE_EXTENSIONS[document.contentType] ?: ""))
+            document.data = sourcefile.readBytes()
+            log.debug("Loading document from disk.")
+            return document
+        } catch (FileNotFoundException fnfe) {
+            log.warn("File $sourcefile or $metafile not found.")
+            return null
+        }
+    }
+    /*
+    @Override
     Document get(URI uri, String whelkPrefix) {
         File f = new File(buildPath(uri, false))
         try {
@@ -59,6 +95,14 @@ class DiskStorage extends BasicPlugin implements Storage {
         }
     }
 
+
+    @Override
+    void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
+        File file = new File(buildPath(doc.identifier, true))
+        file.write(doc.toJson())
+    }
+    */
+
     @Override
     Iterable<Document> getAll(String whelkPrefix) {
         def baseDir = new File(this.storageDir+"/"+ whelkPrefix)
@@ -66,40 +110,9 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
-        File file = new File(buildPath(doc.identifier, true))
-        file.write(doc.toJson())
-        /*
-        this.inventory[doc.identifier] = doc.timestamp
-        if (saveInventory) {
-            log.debug("Saving inventory")
-            new File(this.storageDir + "/" + INVENTORY_FILE).withObjectOutputStream {
-                it << this.inventory
-            }
-        }
-        */
-    }
-
-    @Override
     void store(Iterable<Document> docs, String whelkPrefix) {
         docs.each {
             store(it, whelkPrefix, false)
-        }
-        /*
-        log.debug("Saving inventory")
-        new File(this.storageDir + "/" + INVENTORY_FILE).withObjectOutputStream {
-            it << this.inventory
-        }
-        */
-    }
-
-    void updateInventory() {
-        for (doc in getAll()) {
-            inventory[doc.identifier] = doc.timestamp
-        }
-        log.debug("Saving inventory")
-        new File(this.storageDir + "/" + INVENTORY_FILE).withObjectOutputStream {
-            it << this.inventory
         }
     }
 
@@ -123,15 +136,14 @@ class DiskStorage extends BasicPlugin implements Storage {
         }
 
         if (this.docFolder) {
-            path = path + "/" + this.docFolder
+            path = path + "/" + this.docFolder + "/" + basename
         }
         if (createDirectories) {
             new File(path).mkdirs()
         }
-        return path.replaceAll(/\/+/, "/") + "/" + basename
+        return path.replaceAll(/\/+/, "/") //+ "/" + basename
     }
 }
-
 
 @Log
 class FlatDiskStorage extends DiskStorage {
@@ -141,30 +153,6 @@ class FlatDiskStorage extends DiskStorage {
         super(directoryName)
     }
 
-    @Override
-    void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
-        def datafile = (doc.identifier as String).split("/")[2] + ".json"
-        File sourcefile = new File(buildPath(doc.identifier, true) + "/" +datafile)
-        File metafile = new File(buildPath(doc.identifier, true) + "/"+ METAFILE)
-        sourcefile.write(doc.dataAsString)
-        metafile.write(doc.toJson())
-    }
-
-    @Override
-    Document get(URI uri, String whelkPrefix) {
-        def dfile = (uri as String).split("/")[2] + ".json"
-        File datafile = new File(buildPath(uri, false)+ "/" + dfile)
-        File metafile = new File(buildPath(uri, false)+ "/" + METAFILE)
-        try {
-            def document = new BasicDocument(metafile.text)
-            document.data = datafile.readBytes()
-            log.debug("Loading document from disk.")
-            return document
-        } catch (FileNotFoundException fnfe) {
-            log.warn("File $datafile or $metafile not found.")
-            return null
-        }
-    }
 
     @Override
     String buildPath(URI id, boolean createDirectories) {
@@ -223,21 +211,15 @@ class DiskDocumentIterable implements Iterable<Document> {
                 File currentFile = fileStack.pop();
 
                 if (currentFile.isFile() && currentFile.length() > 0) {
-                    def d
-                    //if (currentFile.name == DiskStorage.DATAFILE) {
-                    if (currentFile.name.endsWith(".json")) {
-                        def metafile = new File(currentFile.parent + "/" + DiskStorage.METAFILE)
-                        if (metafile.exists()) {
-                            d = new BasicDocument(metafile.text)
-                        } else {
-                            d = new BasicDocument()
-                        }
-                        d.data = currentFile.readBytes()
-                    } else if (!currentFile.name.endsWith(".json") && currentFile.name != DiskStorage.METAFILE) {
-                        d = new BasicDocument(currentFile)
+                    def document
+                    if (currentFile.name.endsWith(DiskStorage.METAFILE_EXTENSION)) {
+                        document = new BasicDocument(currentFile.text)
+                        def fileBaseName = currentFile.parent + "/" + currentFile.name.lastIndexOf('.').with {it != -1 ? currentFile.name[0..<it] : currentFile.name}
+                        def sourcefile = new File(fileBaseName + (DiskStorage.FILE_EXTENSIONS[document.contentType] ?: ""))
+                        document.data = sourcefile.readBytes()
                     }
-                    if (d) {
-                        resultQueue.offer(d)
+                    if (document) {
+                        resultQueue.offer(document)
                     }
                 }
 

@@ -38,6 +38,7 @@
         },
         "245": {
             "a" : ["titleProper"],
+            "b" : ["titleRemainder"],
             "c" : ["statementOfResponsibilityRelatingToTitleProper"]
         },
         "300": {
