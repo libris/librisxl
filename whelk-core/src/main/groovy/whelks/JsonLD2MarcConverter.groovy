@@ -26,13 +26,44 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             fields << ["001": idstr[idstr.length - 1]]
         }
         fields << ["005": injson?.get("dateAndTimeOfLatestTransaction").replaceAll("^\\d.", "")]
+
+        if (injson[Marc2JsonLDConverter.RAW_LABEL]) {
+            injson[Marc2JsonLDConverter.RAW_LABEL]["fields"].each { it.each { key, value ->
+                  def tag = key
+                  def marcField = createMarcField(" ", " ")
+                  value.each { k, v ->
+                      switch(k) {
+                          case "subfields":
+                                v.each { it.each { i, j ->
+                                    marcField["subfields"] << [(i):(j)]
+                                  }
+                                }
+                                break
+                          default:
+                                marcField[k] = v
+                      }
+                  }
+                 fields << [(tag): (marcField)]
+                }
+             }
+             //fields << ["raw": (createMarcFieldFromRawInput(injson[Marc2JsonLDConverter.RAW_LABEL]))]
+        }
+
+        injson["describes"].each { k, v ->
+            switch(k) {
+                default:
+                    fields << mapDefaultGetWithTag([(k): (v)])
+                    break
+            }
+        }
+
         def collection = injson["describes"]["expression"]
         collection.each { key, value ->
             log.trace("key: $key value: $value")
             switch(key) {
                 case "authorList":
                     value.each {
-                        fields << ["100": mapPerson(it)]
+                        fields << ["100": (mapPerson(it))]
                     }
                     break
                 case "isbn":
@@ -50,8 +81,9 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             }
         }
         if (isbnParts.size() > 1) {
-            fields << ["020": mapIsbn(isbnParts)]                  
+            fields << ["020": (mapIsbn(isbnParts))]
         }
+
         out["fields"] = fields
         log.trace("Marc out:\n" + out)
         return out
@@ -84,6 +116,7 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
     }
 
     def mapPerson(injson) {
+        log.trace("mapperson injson: $injson")
         def marcField = createMarcField("0", " ")
         def name = injson?.get("name")
         def date
