@@ -174,6 +174,7 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         //more than one marcfield?
         def marcField = createMarcField(" ", " ")
         def outTag = "no tag found"
+        def isControlField = false
         injson.each { key, value ->
             if (key == Marc2JsonLDConverter.RAW_LABEL) {
                 value["fields"].each { it.each { k, v ->
@@ -185,6 +186,9 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             else {
                 marcref.fields.each {
                     def tag = it.key
+                    if (tag.matches(/00\d/)) {
+                        isControlField = true
+                    }
                     if (it.value instanceof Map) {
                         it.value.each { k, v ->
                             v.each {
@@ -212,7 +216,11 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                             }
                         }
                     } else if (key == it.value) {
-                        marcField[it.key] = value
+                        if (isControlField) {
+                            marcField = value
+                        } else {
+                            marcField[it.key] = value
+                        }
                     }
                 }
             }
