@@ -3,22 +3,27 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["indexstorage", "storage", "search", "kitinsearch", "document", "marcmassager"]
+                "_plugins": ["bundledIndex", "storage", "search", "kitinsearch", "document", "marcmassager"]
             }
         },
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": [ "indexstorage", "storage", "search", "document", "marcmassager" ]
+                "_plugins": [ "bundledIndex", "storage", "search", "document", "marcmassager" ]
             }
         },
         {
             "suggest":{
-                "_plugins": [ "index", "search", "document", "autocomplete", "suggestformatconverter" ]
+                "_plugins": [ "bundledIndex", "search", "document", "autocomplete", "suggestformatconverter" ]
             }
         }
     ], 
         "_plugins": [
+        {
+            "bundledIndex": {
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchNode"
+            }
+        }, 
         {
             "index": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory"

@@ -327,9 +327,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     m.put(key, [:])
                     m = m.get(key)
                 } else if (m[(key)] instanceof Map) {
-                    log.trace("map already in place at $key. using that one: $m")
                     m = m.get(key)
-                    log.trace("Stepping down. m is now $m")
                 }
             }
         }
@@ -342,7 +340,6 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 m[(keys[keys.size()-1])] = [v]
             }
         } else {
-            log.trace("or else ... ${type.getClass().name} and " + m[(keys[keys.size()-1])])
             m[(keys[keys.size()-1])] = type
         }
 
@@ -384,7 +381,12 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 it.each { lkey, lvalue ->
                     lvalue = lvalue.trim()
                     if (lvalue && !(lvalue =~ /^\|+$/)) {
-                        outjson[lkey] = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv") ?: lvalue
+                        def lbl = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
+                        if (lbl) {
+                            outjson[lkey] = ["code":lvalue,"label":lbl]
+                        } else {
+                            outjson[lkey] = lvalue
+                        }
                     }
                 }
             }
@@ -394,124 +396,11 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             it.each { fkey, fvalue ->
                 outjson = mapField(fkey, fvalue, outjson)
                 log.trace("outjson: $outjson")
-                /*
-                if ((fkey as int) > 5 && (fkey as int) < 9) {
-                    fvalue["subfields"].each {
-                        it.each { skey, svalue ->
-                            svalue = svalue.trim()
-                            if (svalue && !(svalue =~ /^\|+$/)) {
-                                outjson[skey] = svalue
-                            }
-                        }
-                    }
-                } else {
-                    log.trace("Value: $fvalue")
-                    if (marcref[pfx][fkey]) {
-                        log.trace("Found a reference: " +marcref[pfx][fkey])
-                        fvalue["subfields"].each {
-                            it.each { skey, svalue ->
-                                def label  = marcref[pfx][fkey][skey]
-                                def linked = marcref[pfx][fkey]["_linked"]
-                                if (linked) {
-                                    log.trace("Create new entity for $fkey")
-                                    createEntity(fvalue)
-                                } else if (label) {
-                                    if (outjson[label]) {
-                                        log.trace("Adding $svalue to outjson")
-                                        if (outjson[label] instanceof List) {
-                                            outjson[label] << svalue
-                                        } else {
-                                            def l = []
-                                            l << outjson[label]
-                                            l << svalue
-                                            outjson[label] = l
-                                        }
-                                    } else {
-                                        log.trace("Inserting $svalue in outjson")
-                                        outjson[label] = svalue
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                */
             }
         }
         log.trace("Constructed JSON:\n" + mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson))
         return outjson
     }
-
-    /*
-    def createJson(URI identifier, Map injson) {
-        def outjson = [:]
-        def pfx = identifier.toString().split("/")[1]
-        outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
-        outjson["@id"] = identifier.toString()
-        // Workaround to prevent original data from being changed
-        //outjson["marc21"] = mapper.readValue(mapper.writeValueAsBytes(injson), Map)
-        injson = rewriteJson(identifier, injson)
-        log.trace("Leader: ${injson.leader}")
-        injson.leader.subfields.each { 
-            it.each { lkey, lvalue ->
-                lvalue = lvalue.trim()
-                if (lvalue && !(lvalue =~ /^\|+$/)) {
-                    outjson[lkey] = lvalue
-                }
-            }
-        }
-        injson.fields.each {
-            log.trace("Working on json field $it")
-            it.each { fkey, fvalue ->
-                if ((fkey as int) > 5 && (fkey as int) < 9) {
-                    fvalue["subfields"].each {
-                        it.each { skey, svalue ->
-                            svalue = svalue.trim()
-                            if (svalue && !(svalue =~ /^\|+$/)) {
-                                outjson[skey] = svalue
-                            }
-                        }
-                    }
-                } else {
-                    log.trace("Value: $fvalue")
-                    if (marcref[pfx][fkey]) {
-                        log.trace("Found a reference: " +marcref[pfx][fkey])
-                        fvalue["subfields"].each {
-                            it.each { skey, svalue ->
-                                def label  = marcref[pfx][fkey][skey]
-                                def linked = marcref[pfx][fkey]["_linked"]
-                                if (linked) {
-                                    log.trace("Create new entity for $fkey")
-                                    createEntity(fvalue)
-                                } else if (label) {
-                                    if (outjson[label]) {
-                                        log.trace("Adding $svalue to outjson")
-                                        if (outjson[label] instanceof List) {
-                                            outjson[label] << svalue
-                                        } else {
-                                            def l = []
-                                            l << outjson[label]
-                                            l << svalue
-                                            outjson[label] = l
-                                        }
-                                    } else {
-                                        log.trace("Inserting $svalue in outjson")
-                                        outjson[label] = svalue
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return outjson
-    }
-    */
-
-    def createEntity(data) {
-    }
-
 
     @Override
     List<Document> convert(Document idoc) {
