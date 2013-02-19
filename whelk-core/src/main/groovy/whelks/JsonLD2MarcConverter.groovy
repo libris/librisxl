@@ -128,28 +128,35 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         return marcField
     }
 
-    def mapPublishingInfo(injson) {
-
-    }
-
     def mapDefault(injson) {
+        def out
+        mapDefaultGetWithTag(injson).each { key, value ->
+            out = value
+        }
+        return out
+    }
+    
+    def mapDefaultGetWithTag(injson) {
         //TODO: switch tag -> indicators
         //more than one marcfield?
         def marcField = createMarcField(" ", " ")
+        def outTag = "no tag found"
         injson.each { key, value ->
             if (key == Marc2JsonLDConverter.RAW_LABEL) {
                 value["fields"].each { it.each { k, v ->
+                        outTag = k
                         marcField = v
                     }
                 }
             } 
             else {
                 marcref.fields.each {
+                    def tag = it.key
                     if (it.value instanceof Map) {
                         it.value.each { k, v ->
                             v.each {
                                 if (key.trim().equals(it)) {
-                                    //tag = it.key
+                                    outTag = tag
                                     if (value instanceof List) {
                                         value.each {
                                             marcField["subfields"] << [(k):(it)]
@@ -177,54 +184,17 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                 }
             }
         }
-        return marcField
-    }
-
-    def mapDefaultGetWithTag(injson) {
-        //TODO: switch tag -> indicators
-        //more than one marcfield?
-        def marcField = createMarcField(" ", " ")
-        def outTag = "no tag found"
-        injson.fields.each { key, value ->
-            if (key == Marc2JsonLDConverter.RAW_LABEL) {
-                value["fields"].each { k, v ->
-                    marcField = v
-                }
-            } else {
-                marcref.fields.each {
-                    def tag = it.key
-                    if (it.value instanceof Map) {
-                        it.value.each { k, v ->
-                            v.each {
-                                if (key.trim().equals(it)) {
-                                    outTag = tag
-                                    if (value instanceof List) {
-                                        value.each {
-                                            marcField["subfields"] << [(k):(it)]
-                                        }
-                                    } else {
-                                        marcField["subfields"] << [(k):(value)]
-                                    }
-                                }
-                            }
-                        }
-                    } else if (key == it.value) {
-                        marcField[it.key] = value
-                    }
-                }
-            }
-        }
         if (outTag == "no tag found") {
             return [("injson i could not map"): (injson)]
         }
-        return [(outTag): (marcField)]
+        def out = [(outTag): (marcField)]
+        return out
     }
 
     def createMarcFieldFromRawInput(injson) {
         def marcField = createMarcField(" ", " ")
         injson["fields"].each { it.each { key, value ->
               value.each { k, v ->
-                   log.trace("k: $k v: $v")
                    switch(k) {
                        case "subfields":
                             v.each { it.each { x, y ->
