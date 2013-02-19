@@ -10,9 +10,9 @@
   "dateAndTimeOfLatestTransaction": "2004-08-09T15:20:32.0",
   "catForm": "AACR2/KRS (normalv\u00e4rde)",
   "encLevel": {
-      "code":"_",
-      "label":"Nationalbibliografisk niv\u00e5 (jfr KRS 1.0D3)",
-  }
+    "code":"_",
+    "label":"Nationalbibliografisk niv\u00e5 (jfr KRS 1.0D3)"
+  },
   "localSystemNumber": "9100563226",
   "status": "c",
   "describes": {
