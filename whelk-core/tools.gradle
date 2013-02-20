@@ -62,6 +62,14 @@ task convertMarc2JsonLD(dependsOn: 'classes', type: JavaExec) {
     args(System.getProperty('args', "").split() as String[])
 }
 
+task convertJsonLD2Marc(dependsOn: 'classes', type: JavaExec) {
+    description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<uri> <infile>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'se.kb.libris.whelks.plugin.JsonLD2MarcConverter'
+    args(System.getProperty('args', "").split() as String[])
+}
+
+
 task jettyRun(dependsOn: 'classes', type: JettyRun, overwrite: true) {
     //jettyRun.contextPath = '/'
     jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"

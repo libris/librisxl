@@ -37,7 +37,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         InputStream is = converter.getClass().getClassLoader().getResourceAsStream("marc2jsonld/in/"+injson )
         def infile = mapper.readValue(is, Map)
         def outjson = converter.createJson(uri, infile)
-        def file = new File("$injson")
+        def file = new File("src/main/resources/marc2jsonld/ut/$injson")
         file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
     }
 
