@@ -21,11 +21,24 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     def marcmap
 
     Marc2JsonLDConverter() {
-        mapper = new ObjectMapper()
+        def mapper = new ObjectMapper()
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc_refs.json")
         this.marcref = mapper.readValue(is, Map)
         is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         this.marcmap = mapper.readValue(is, Map)
+    }
+
+   static main(args) {
+        def uri = new URI(args[0])
+        def injson = args[1]
+        def mapper = new ObjectMapper()
+        def converter = new Marc2JsonLDConverter()
+        log.info("file: marc2jsonld/in/$injson")
+        InputStream is = converter.getClass().getClassLoader().getResourceAsStream("marc2jsonld/in/"+injson )
+        def infile = mapper.readValue(is, Map)
+        def outjson = converter.createJson(uri, infile)
+        def file = new File("$injson")
+        file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
     }
 
     def mapDefault(String code, String value) {
