@@ -40,20 +40,12 @@
       } ]
     }
   }, {
-    "injson i could not map" : {
+    "unmapped_jsonld" : {
       "@id" : "http://libris.kb.se/bib/7149593#manifestation"
     }
   }, {
-    "injson i could not map" : {
+    "unmapped_jsonld" : {
       "@type" : [ "Manifestation", "bibo:Book" ]
-    }
-  }, {
-    "300" : {
-      "ind1" : " ",
-      "ind2" : " ",
-      "subfields" : [ {
-        "b" : "ill."
-      } ]
     }
   }, {
     "500" : {
@@ -61,30 +53,6 @@
       "ind2" : " ",
       "subfields" : [ {
         "a" : "Även tillg. med tryckår: 2. uppl., 1996"
-      } ]
-    }
-  }, {
-    "260" : {
-      "ind1" : " ",
-      "ind2" : " ",
-      "subfields" : [ {
-        "c" : "1996"
-      } ]
-    }
-  }, {
-    "300" : {
-      "ind1" : " ",
-      "ind2" : " ",
-      "subfields" : [ {
-        "c" : "25 cm"
-      } ]
-    }
-  }, {
-    "300" : {
-      "ind1" : " ",
-      "ind2" : " ",
-      "subfields" : [ {
-        "a" : "102, [1] s."
       } ]
     }
   }, {
@@ -96,35 +64,11 @@
       } ]
     }
   }, {
-    "020" : {
-      "ind1" : " ",
-      "ind2" : " ",
-      "subfields" : [ {
-        "a" : "91-0-056322-6"
-      } ]
-    }
-  }, {
-    "260" : {
-      "ind1" : " ",
-      "ind2" : " ",
-      "subfields" : [ {
-        "e" : "Finland"
-      } ]
-    }
-  }, {
-    "260" : {
-      "ind1" : " ",
-      "ind2" : " ",
-      "subfields" : [ {
-        "a" : "Stockholm"
-      } ]
-    }
-  }, {
-    "injson i could not map" : {
+    "unmapped_jsonld" : {
       "publishersName" : "Bonnier"
     }
   }, {
-    "injson i could not map" : {
+    "unmapped_jsonld" : {
       "expression" : {
         "@type" : [ "Expression", "bibo:Book" ],
         "marc:typeOfRecord" : "Text: tryck",
@@ -170,34 +114,12 @@
       }
     }
   }, {
-    "injson i could not map" : {
-      "termsOfAvailability" : {
-        "literal" : "310:00"
-      }
-    }
-  }, {
-    "injson i could not map" : {
+    "unmapped_jsonld" : {
       "@type" : [ "Expression", "bibo:Book" ]
     }
   }, {
-    "injson i could not map" : {
+    "unmapped_jsonld" : {
       "marc:typeOfRecord" : "Text: tryck"
-    }
-  }, {
-    "245" : {
-      "ind1" : " ",
-      "ind2" : " ",
-      "subfields" : [ {
-        "a" : "Anteckningar från en ö"
-      } ]
-    }
-  }, {
-    "245" : {
-      "ind1" : " ",
-      "ind2" : " ",
-      "subfields" : [ {
-        "c" : "Tove Jansson, Tuulikki Pietilä"
-      } ]
     }
   }, {
     "100" : {
@@ -228,7 +150,7 @@
       } ]
     }
   }, {
-    "injson i could not map" : {
+    "unmapped_jsonld" : {
       "marc:bibLevel" : "Monografisk resurs"
     }
   }, {
@@ -248,7 +170,7 @@
       } ]
     }
   }, {
-    "injson i could not map" : {
+    "unmapped_jsonld" : {
       "subject" : [ {
         "@id" : "http://dbpedia.org/resource/Fiction"
       }, {
@@ -257,6 +179,46 @@
         "@id" : "http://dbpedia.org/resource/Autobiography"
       }, {
         "@id" : "http://libris.kb.se/sab/Gcdz/Jansson,+Tove+1914-2001"
+      } ]
+    }
+  }, {
+    "020" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ ]
+    }
+  }, {
+    "245" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "a" : "Anteckningar från en ö"
+      }, {
+        "c" : "Tove Jansson, Tuulikki Pietilä"
+      } ]
+    }
+  }, {
+    "260" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "c" : "1996"
+      }, {
+        "e" : "Finland"
+      }, {
+        "a" : "Stockholm"
+      } ]
+    }
+  }, {
+    "300" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "b" : "ill."
+      }, {
+        "c" : "25 cm"
+      }, {
+        "a" : "102, [1] s."
       } ]
     }
   } ]

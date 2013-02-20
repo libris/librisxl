@@ -8,6 +8,7 @@ import org.codehaus.jackson.map.ObjectMapper
 class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter implements FormatConverter {
 
     String requiredContentType = "application/json"
+    static final String RAW_LABEL = "unmapped_jsonld"
     def marcref
 
     JsonLD2MarcConverter() {
@@ -34,6 +35,10 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         def fields = []
         def leader = ["leader": "theleader"]
         def isbnParts = []
+        //def collectedParts = []
+        def titleParts = [:]
+        def publicationParts = [:]
+        def physicalDescParts = [:]
         def idstr = injson?.get("@id").split("/")
         if (idstr) {
             fields << ["001": idstr[idstr.length - 1]]
@@ -59,11 +64,27 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                  fields << [(tag): (marcField)]
                 }
              }
-             //fields << ["raw": (createMarcFieldFromRawInput(injson[Marc2JsonLDConverter.RAW_LABEL]))]
         }
 
         injson["describes"].each { k, v ->
             switch(k) {
+                case "placeOfPublication":
+                case "publisherName":
+                case "dateOfPublication":
+                case "placeOfManufacture":
+                    publicationParts[k] = v
+                    break
+                case "extentOfText":
+                case "baseMaterial":
+                case "dimensions":
+                    physicalDescParts[k] = v
+                    //collectedParts << [k: v]
+                    break
+                case "isbn":
+                case "isbnData":
+                case "termsOfAvailability":
+                    isbnParts << [(k): (v)]
+                    break
                 default:
                     fields << mapDefaultGetWithTag([(k): (v)])
                     break
@@ -79,14 +100,11 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                         fields << ["100": (mapPerson(it))]
                     }
                     break
-                case "isbn":
-                case "isbnData":
-                case "termsOfAvailability":
-                    //fields << ["020": mapIsbn([injson["isbn"]] << injson["isbnRemainder"])]
-                    isbnParts << [(key): (value)]
-                    break
                 case "titleProper":
-                    fields << ["245": mapDefault([(key): (value)])]
+                case "titleRemainder":
+                case "statementOfResponsibilityRelatingToTitleProper":
+                    titleParts[key] = value
+                    //collectedParts << [key: value]
                     break
                 default:
                     fields << mapDefaultGetWithTag([(key): (value)])
@@ -96,7 +114,15 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         if (isbnParts.size() > 1) {
             fields << ["020": (mapIsbn(isbnParts))]
         }
-
+        if (titleParts.size() > 1) {
+            fields << ["245": mapDefault(titleParts)]
+        }
+        if (publicationParts.size() > 1) {
+            fields << ["260": mapDefault(publicationParts)]
+        }
+        if (physicalDescParts.size() > 1) {
+            fields << ["300": mapDefault(physicalDescParts)]
+        }
         out["fields"] = fields
         log.trace("Marc out:\n" + out)
         return out
@@ -185,6 +211,7 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
     def mapDefaultGetWithTag(injson) {
         //TODO: switch tag -> indicators
         //more than one marcfield?
+        log.trace("mapdefault injson: $injson")
         def marcField = createMarcField(" ", " ")
         def outTag = "no tag found"
         def isControlField = false
@@ -239,9 +266,10 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
             }
         }
         if (outTag == "no tag found") {
-            return [("injson i could not map"): (injson)]
+            return [(RAW_LABEL): (injson)]
         }
         def out = [(outTag): (marcField)]
+        log.trace("mapdefault outjson: $out")
         return out
     }
 
