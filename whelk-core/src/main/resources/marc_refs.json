@@ -26,6 +26,10 @@
             "modifiedRecord" : false,
             "catalogingSource" : false
         },
+        "028" : {
+            "a" : ["edition"],
+            "b" : ["publisher"]
+        },
         "035" : {
             "9" : ["localSystemNumber"]
         },
