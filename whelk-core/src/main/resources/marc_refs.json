@@ -55,5 +55,13 @@
         "500": {
             "a" : ["comment"]
         }
+    },
+    "relators" : {
+        "aut" : "author",
+        "mus" : "musician",
+        "ill" : "illustrator",
+        "trl" : "translator",
+        "pbd" : "publishingDirector",
+        "rpy" : "responsibleParty"
     }
 }

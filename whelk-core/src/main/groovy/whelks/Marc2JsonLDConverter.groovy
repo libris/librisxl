@@ -215,34 +215,43 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
     def mapPerson(code, json) {
         def out = [:]
         boolean complete = true
+        def creatorLabel = "author"
         log.trace("subfields: " + json['subfields'])
-        json['subfields'].each { 
+        def person = [:]
+        json['subfields'].each {
+            log.trace("subfield: $it")
             it.each { key, value ->
-            switch (key) {
-                case "a":
+                switch (key) {
+                    case "a":
                     value = value.trim().replaceAll(/,$/, "")
-                    out["preferredNameForThePerson"] = value
+                    person["preferredNameForThePerson"] = value
                     def n = value.split(", ")
                     if (json["ind1"] == "1" && n.size() > 1) {
-                        out["surname"] = n[0]
-                        out["givenName"] = n[1]
-                        out["name"] = n[1] + " " + n[0]
+                        person["surname"] = n[0]
+                        person["givenName"] = n[1]
+                        person["name"] = n[1] + " " + n[0]
                     } else {
-                        out["name"] = value
+                        person["name"] = value
                     }
                     break;
-                case "d":
+                    case "d":
                     def d = value.split("-")
-                    out["dateOfBirth"] = ["@type":"year", "@value": d[0]]
+                    person["dateOfBirth"] = ["@type":"year", "@value": d[0]]
                     if (d.length > 1) {
-                        out["dateOfDeath"] = ["@type":"year", "@value": d[1]]
+                        person["dateOfDeath"] = ["@type":"year", "@value": d[1]]
                     }
                     break;
-                default:
-                    complete = false
-                    break;
+                    case "4":
+                        creatorLabel = marcref.relators[value] ?: value
+                        break;
+                    default:
+                        complete = false
+                        break;
+                }
             }
-        } }
+        }
+        log.trace("Adding $person to $creatorLabel")
+        out[(creatorLabel)] = person
         if (complete) {
             return out
         } else {
@@ -341,8 +350,8 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
             case "700":
                 def p = mapPerson(code, json)
                 if (p) {
-                    outjson = createNestedMapStructure(outjson, ["describes", "expression", "authorList"], [])
-                    outjson["describes"]["expression"]["authorList"] << p
+                    outjson = createNestedMapStructure(outjson, ["describes", "expression", "creators"], [])
+                    outjson["describes"]["expression"]["creators"] << p
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]

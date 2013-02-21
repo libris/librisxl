@@ -3,24 +3,26 @@ package se.kb.libris.whelks.plugin
 interface Marc2JsonConstants {
     final static String RAW_LABEL = "marc21"
     static def AUTHOR_MARC_0 = ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"]]]
-    static def AUTHOR_LD_0   = ["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"]
-    static def AUTHOR_MARC_1 = ["ind1":"0","ind2":" ","subfields":[["a": "E-type"]]]
-    static def AUTHOR_LD_1   = ["preferredNameForThePerson" : "E-type", "name":"E-type"]
+    static def AUTHOR_LD_0   = ["author":["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"]]
+    static def AUTHOR_MARC_1 = ["ind1":"0","ind2":" ","subfields":[["a": "E-type"],["4":"mus"]]]
+    static def AUTHOR_LD_1   = ["musician":["preferredNameForThePerson" : "E-type", "name":"E-type"]]
     static def AUTHOR_MARC_2 = ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["d": "1952-"]]]
-    static def AUTHOR_LD_2  = ["preferredNameForThePerson" : "Svensson, Sven","surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson", "dateOfBirth":["@type":"year","@value":"1952"]]
+    static def AUTHOR_LD_2  = ["author":["preferredNameForThePerson" : "Svensson, Sven","surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson", "dateOfBirth":["@type":"year","@value":"1952"]]]
     static def AUTHOR_MARC_3 = ["ind1":"1","ind2":" ","subfields":[["a": "Nilsson, Nisse"], ["d": "1948-2010"]]]
-    static def AUTHOR_LD_3   = ["preferredNameForThePerson" : "Nilsson, Nisse","surname":"Nilsson",
+    static def AUTHOR_LD_3   = ["author":["preferredNameForThePerson" : "Nilsson, Nisse","surname":"Nilsson",
                                     "givenName":"Nisse", "name": "Nisse Nilsson",
                                     "dateOfBirth":["@type":"year","@value":"1948"],
-                                    "dateOfDeath":["@type":"year","@value":"2010"]]
+                                    "dateOfDeath":["@type":"year","@value":"2010"]]]
     static def AUTHOR_MULT_MARC_0 = ["fields":[["100":["ind1":"1","subfields":[["a": "Svensson, Sven"]]]],["700":["ind1":"1","subfields":[["a":"Karlsson, Karl,"]]]]]]
-    static def AUTHOR_MULT_LD_0 = ["authorList":[["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"],["preferredNameForThePerson" : "Karlsson, Karl", "surname":"Karlsson", "givenName":"Karl", "name": "Karl Karlsson"]]]
+    static def AUTHOR_MULT_LD_0 = ["creators":[["author":["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"]],["author":["preferredNameForThePerson" : "Karlsson, Karl", "surname":"Karlsson", "givenName":"Karl", "name": "Karl Karlsson"]]]]
+    static def AUTHOR_MULT_MARC_1 = ["fields":[["100":["ind1":"1","subfields":[["a": "Svensson, Sven"]]]],["700":["ind1":"1","subfields":[["a":"Karlsson, Karl,"],["4":"ill"]]]]]]
+    static def AUTHOR_MULT_LD_1 = ["creators":[["author":["preferredNameForThePerson" : "Svensson, Sven", "surname":"Svensson", "givenName":"Sven", "name": "Sven Svensson"]],["illustrator":["preferredNameForThePerson" : "Karlsson, Karl", "surname":"Karlsson", "givenName":"Karl", "name": "Karl Karlsson"]]]]
 
     static def AUTHOR_MARC_6 = ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]
-    static def AUTHOR_LD_6   = ["preferredNameForThePerson" : "Nilsson, Nisse","surname":"Nilsson",
+    static def AUTHOR_LD_6   = ["author":["preferredNameForThePerson" : "Nilsson, Nisse","surname":"Nilsson",
                                     "givenName":"Nisse", "name": "Nisse Nilsson",
                                     "dateOfBirth":["@type":"year","@value":"1948"],
-                                    "dateOfDeath":["@type":"year","@value":"2010"]]
+                                    "dateOfDeath":["@type":"year","@value":"2010"]]]
     static def AUTHOR_MARC_4 = ["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]
     static def AUTHOR_LD_5   = [(RAW_LABEL):["fields":[["100":["ind1":"1","ind2":" ","subfields":[["a": "Svensson, Sven"], ["z": "foo"]]]]]]]
     static def AUTHOR_LD_4   = false
