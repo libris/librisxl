@@ -31,6 +31,36 @@
   "describes" : {
     "expression" : {
       "languageOfTheContent" : "swe",
+      "creators" : [
+      {
+          "author" : {
+              "preferredNameForThePerson" : "Jansson, Tove",
+              "surname" : "Jansson",
+              "givenName" : "Tove",
+              "name" : "Tove Jansson",
+              "dateOfBirth" : {
+                  "@type" : "year",
+                  "@value" : "1914"
+              },
+              "dateOfDeath" : {
+                  "@type" : "year",
+                  "@value" : "2001"
+              }
+          }
+      },
+      {
+          "author" : {
+              "preferredNameForThePerson" : "Pietilä, Tuulikki",
+              "surname" : "Pietilä",
+              "givenName" : "Tuulikki",
+              "name" : "Tuulikki Pietilä",
+              "dateOfBirth" : {
+                  "@type" : "year",
+                  "@value" : "1917"
+              }
+          }
+      }
+      ],
       "authorList" : [ {
         "preferredNameForThePerson" : "Jansson, Tove",
         "surname" : "Jansson",

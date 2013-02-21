@@ -16,6 +16,9 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             conv.createJson(new URI(uri), loadJson(injson)) == loadJson(outjson)
         where:
             uri                     | injson                      | outjson
+            "/bib/12732969"         | "in/bib/12732969.json"      | "expected/bib/12732969.json"
+            "/bib/12035894"         | "in/bib/12035894.json"      | "expected/bib/12035894.json"
+            "/bib/8261338"          | "in/bib/8261338.json"       | "expected/bib/8261338.json"
             "/bib/7149593"          | "in/bib/7149593.json"       | "expected/bib/7149593.json"
     }
 
@@ -172,6 +175,7 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     def loadJson(jsonFile) {
         log.info("file: marc2jsonld/$jsonFile")
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc2jsonld/"+jsonFile)
+        log.trace("stream: $is")
         return mapper.readValue(is, Map)
     }
 

@@ -136,6 +136,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     log.trace("isbn c: $value")
                     out["termsOfAvailability"]=["literal":value]
                     break;
+                case "z":
+                    log.trace("isbn z: $value")
+                    out["deprecatedIsbn"]=value
+                    break;
                 default:
                     log.trace("isbn unknown: $key == $value")
                     complete = false
