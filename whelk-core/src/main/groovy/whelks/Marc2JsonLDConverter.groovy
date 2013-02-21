@@ -242,7 +242,11 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
                     }
                     break;
                     case "4":
-                        creatorLabel = marcref.relators[value] ?: value
+                        if (marcref.relators[value]) {
+                            creatorLabel = marcref.relators[value]
+                        } else {
+                            complete = false
+                        }
                         break;
                     default:
                         complete = false
@@ -250,9 +254,9 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
                 }
             }
         }
-        log.trace("Adding $person to $creatorLabel")
-        out[(creatorLabel)] = person
         if (complete) {
+            log.trace("Adding $person to $creatorLabel")
+            out[(creatorLabel)] = person
             return out
         } else {
             return false
