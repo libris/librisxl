@@ -458,11 +458,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
                     lvalue = lvalue.trim()
                     if (lvalue && !(lvalue =~ /^\|+$/)) {
                         def lbl = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
-                        if (lbl) {
-                            outjson[lkey] = ["code":lvalue,"label":lbl]
-                        } else {
-                            outjson[lkey] = lvalue
-                        }
+                        outjson[lkey] = ["code":lvalue,"label":(lbl ?: "")]
                     }
                 }
             }
