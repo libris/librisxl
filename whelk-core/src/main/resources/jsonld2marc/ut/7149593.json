@@ -56,11 +56,223 @@
       } ]
     }
   }, {
+    "unmapped_jsonld" : {
+      "publishersName" : "Bonnier"
+    }
+  }, {
+    "unmapped_jsonld" : {
+      "expression" : {
+        "@type" : [ "Expression", "bibo:Book" ],
+        "marc:typeOfRecord" : "Text: tryck",
+        "titleProper" : "Anteckningar från en ö",
+        "statementOfResponsibilityRelatingToTitleProper" : "Tove Jansson, Tuulikki Pietilä",
+        "authorList" : [ {
+          "@type" : "Person",
+          "dateOfBirth" : {
+            "@type" : "year",
+            "@value" : "1914"
+          },
+          "dateOfDeath" : {
+            "@type" : "year",
+            "@value" : "2001"
+          },
+          "givenName" : "Tove",
+          "name" : "Tove Jansson",
+          "preferredNameForThePerson" : "Jansson, Tove",
+          "surname" : "Jansson"
+        }, {
+          "@type" : "Person",
+          "dateOfBirth" : {
+            "@type" : "year",
+            "@value" : "1917"
+          },
+          "givenName" : "Tuulikki",
+          "name" : "Tuulikki Pietilä",
+          "preferredNameForThePerson" : "Pietilä, Tuulikki",
+          "surname" : "Pietilä"
+        } ],
+        "languageOfTheContent" : "swe",
+        "marc:bibLevel" : "Monografisk resurs",
+        "marc:bibliographyCode" : [ "SEE", "BULB", "SLB", "NB", "KVIN" ],
+        "subject" : [ {
+          "@id" : "http://dbpedia.org/resource/Fiction"
+        }, {
+          "@id" : "http://libris.kb.se/sab/Ibz/Pietilä,+Tuulikki+1917-"
+        }, {
+          "@id" : "http://dbpedia.org/resource/Autobiography"
+        }, {
+          "@id" : "http://libris.kb.se/sab/Gcdz/Jansson,+Tove+1914-2001"
+        } ]
+      }
+    }
+  }, {
+    "unmapped_jsonld" : {
+      "@type" : [ "Expression", "bibo:Book" ]
+    }
+  }, {
+    "unmapped_jsonld" : {
+      "marc:typeOfRecord" : "Text: tryck"
+    }
+  }, {
+    "100" : {
+      "ind1" : "1",
+      "ind2" : " ",
+      "subfields" : [ {
+        "a" : "Jansson"
+      }, {
+        "d" : "1914-2001"
+      } ]
+    }
+  }, {
+    "100" : {
+      "ind1" : "1",
+      "ind2" : " ",
+      "subfields" : [ {
+        "a" : "Pietilä"
+      }, {
+        "d" : "1917-"
+      } ]
+    }
+  }, {
+    "008" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "language" : "swe"
+      } ]
+    }
+  }, {
+    "unmapped_jsonld" : {
+      "marc:bibLevel" : "Monografisk resurs"
+    }
+  }, {
+    "042" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "9" : "SEE"
+      }, {
+        "9" : "BULB"
+      }, {
+        "9" : "SLB"
+      }, {
+        "9" : "NB"
+      }, {
+        "9" : "KVIN"
+      } ]
+    }
+  }, {
+    "unmapped_jsonld" : {
+      "subject" : [ {
+        "@id" : "http://dbpedia.org/resource/Fiction"
+      }, {
+        "@id" : "http://libris.kb.se/sab/Ibz/Pietilä,+Tuulikki+1917-"
+      }, {
+        "@id" : "http://dbpedia.org/resource/Autobiography"
+      }, {
+        "@id" : "http://libris.kb.se/sab/Gcdz/Jansson,+Tove+1914-2001"
+      } ]
+    }
+  }, {
     "020" : {
       "ind1" : " ",
       "ind2" : " ",
       "subfields" : [ {
-        "a" : "91-0-056322-6 (inb.)"
+        "a" : [ "91-0-056322-6 (inb.)", null, null ]
+      }, {
+        "c" : "310:00"
+      } ]
+    }
+  }, {
+    "245" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "a" : "Anteckningar från en ö"
+      }, {
+        "c" : "Tove Jansson, Tuulikki Pietilä"
+      } ]
+    }
+  }, {
+    "260" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "c" : "1996"
+      }, {
+        "e" : "Finland"
+      }, {
+        "a" : "Stockholm"
+      } ]
+    }
+  }, {
+    "300" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "b" : "ill."
+      }, {
+        "c" : "25 cm"
+      }, {
+        "a" : "102, [1] s."
+      } ]
+    }
+  } ]
+}{
+  "fields" : [ {
+    "001" : "7149593"
+  }, {
+    "005" : "04-08-09T15:20:32.0"
+  }, {
+    "084" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "a" : "Gcdz Jansson, Tove"
+      }, {
+        "2" : "kssb/6"
+      } ]
+    }
+  }, {
+    "084" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "a" : "Ibz Pietilä, Tuulikki"
+      }, {
+        "2" : "kssb/6"
+      } ]
+    }
+  }, {
+    "084" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "a" : "Lz"
+      } ]
+    }
+  }, {
+    "599" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "a" : "Li:S"
+      } ]
+    }
+  }, {
+    "unmapped_jsonld" : {
+      "@id" : "http://libris.kb.se/bib/7149593#manifestation"
+    }
+  }, {
+    "unmapped_jsonld" : {
+      "@type" : [ "Manifestation", "bibo:Book" ]
+    }
+  }, {
+    "500" : {
+      "ind1" : " ",
+      "ind2" : " ",
+      "subfields" : [ {
+        "a" : "Även tillg. med tryckår: 2. uppl., 1996"
       } ]
     }
   }, {
@@ -185,7 +397,11 @@
     "020" : {
       "ind1" : " ",
       "ind2" : " ",
-      "subfields" : [ ]
+      "subfields" : [ {
+        "a" : [ "91-0-056322-6 (inb.)", null, null ]
+      }, {
+        "c" : "310:00"
+      } ]
     }
   }, {
     "245" : {

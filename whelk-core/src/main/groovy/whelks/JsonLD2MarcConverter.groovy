@@ -81,11 +81,11 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
                     //collectedParts << [k: v]
                     break
                 case "isbn":
-                case "isbnData":
+                case "identifierForTheManifestation":
                 case "termsOfAvailability":
-                    isbnParts << [(k): (v)]
+                    isbnParts << [(k): v]
                     break
-                default:
+                default://kolla om ej djupare nivå
                     fields << mapDefaultGetWithTag([(k): (v)])
                     break
             }
@@ -132,25 +132,30 @@ class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter im
         def marcField = [:]
         marcField["ind1"] = ind1
         marcField["ind2"] = ind2
-        marcField["subfields"]= []
+        marcField["subfields"] = []
         return marcField
     }
 
     def mapIsbn(injson) {
         def marcField = createMarcField(" ", " ")
-        def isbnData = ""
-        if (injson["isbnData"]) {
-            isbnData = " " + injson["isbnData"]
-        }
-        if (injson["isbn"]) {
-            marcField["subfields"] << ["a": injson["isbn"] + isbnData]
+        if (injson["identifierForTheManifestation"]) {
+            marcField["subfields"] << ["a": injson["identifierForTheManifestation"]]
+        } else if (injson["isbn"]) {
+            marcField["subfields"] << ["a": injson["isbn"]]
         }
         if (injson["termsOfAvailability"]) {
-            marcField["subfields"] << ["c": injson["termsOfAvailability"]["literal"]]
+            injson["termsOfAvailability"].each { it.each { key, value ->
+                switch (key) {
+                    case "literal":
+                        marcField["subfields"] << ["c": value]
+                }
+              }
+            }
         }
-        if (injson[Marc2JsonLDConverter.RAW_LABEL]) {
+        /*if (injson[Marc2JsonLDConverter.RAW_LABEL] != null) {
+            log.trace("inrawlabel")
             marcField = createMarcFieldFromRawInput(injson[Marc2JsonLDConverter.RAW_LABEL])
-        }
+        }*/
         return marcField
     }
 
