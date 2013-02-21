@@ -153,28 +153,62 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         return false
     }
 
-    def mapIdentifier(code, json) {
+    def mapOtherIdentifier(code, json) {
         def out = [:]
         boolean complete = true
-        json["subfields"].each {
-            it.each { key, value ->
-                switch (key) {
-                    case "a":
-                        out["identifierForTheManifestation"] = value
-                        out["isbn"] = value.replaceAll("[^\\d]", "")
-                        break
-                    case "c":
-                        break
-                    default:
-                        complete = false
-                        break
+        def selectedLabel
+        log.trace("ind1: ${json.ind1}")
+        switch((json["ind1"] as String)) {
+            case "0":
+                selectedLabel = "isrc"
+                break;
+            case "1":
+                selectedLabel = "upc"
+                break;
+            case "2":
+                selectedLabel = "ismn"
+                break;
+            case "3":
+                selectedLabel = "ean"
+                break;
+            case "4":
+                selectedLabel = "sici"
+                break;
+            case "7":
+                selectedLabel = "_other"
+                break;
+            case "8":
+                selectedLabel = "unspecifiedStandardIdentifier"
+                break;
+        }
+        log.trace("selectedLabel : $selectedLabel")
+        if (!selectedLabel) {
+            log.trace("Unable to find a label for ${json.ind1}")
+            complete = false
+        } else {
+            json["subfields"].each {
+                it.each { key, value ->
+                    switch (key) {
+                        case "a":
+                            out[selectedLabel] = value
+                            break
+                        case "2":
+                            out["identifier"] = ["@type":"Identifier","identifierScheme":value,"identifierValue":out["_other"]]
+                            out.remove("_other")
+                            break;
+                        default:
+                            log.trace("No rule for key $key")
+                            complete = false
+                            break
+                    }
                 }
             }
         }
         if (complete) {
+            log.trace("mapped other identifier: $out")
             return out
         }
-        return ["raw": [(code):json]]
+        return false
     }
 
     def mapPerson(code, json) {
@@ -279,6 +313,15 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                 if (i) {
                     def isbn = ["describes":i]
                     outjson = mergeMap(outjson, isbn)
+                } else {
+                    outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
+                    outjson[RAW_LABEL]["fields"] << [(code):json]
+                }
+                break
+            case "024":
+                def i = mapOtherIdentifier(code, json)
+                if (i) {
+                    outjson = mergeMap(outjson, ["describes":i])
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]

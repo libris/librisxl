@@ -16,8 +16,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             conv.createJson(new URI(uri), loadJson(injson)) == loadJson(outjson)
         where:
             uri                     | injson                      | outjson
-            "/bib/12732969"         | "in/bib/12732969.json"      | "expected/bib/12732969.json"
             "/bib/12035894"         | "in/bib/12035894.json"      | "expected/bib/12035894.json"
+            "/bib/12732969"         | "in/bib/12732969.json"      | "expected/bib/12732969.json"
             "/bib/8261338"          | "in/bib/8261338.json"       | "expected/bib/8261338.json"
             "/bib/7149593"          | "in/bib/7149593.json"       | "expected/bib/7149593.json"
     }
@@ -142,6 +142,16 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             CLEANED_ISBN_MARC_1 | ISBN_LD_1
             CLEANED_ISBN_MARC_2 | ISBN_LD_2
             ISBN_MARC_3         | ISBN_LD_4
+    }
+
+    def "should map other identifier"() {
+        log.info("### should map other identifier")
+        expect:
+            conv.mapOtherIdentifier("024", marc) == jsonld
+        where:
+            marc                | jsonld
+            OTH_IDENT_MARC_1    | OTH_IDENT_LD_1
+            OTH_IDENT_MARC_2    | OTH_IDENT_LD_2
     }
 
     def "should merge maps"() {

@@ -56,4 +56,9 @@ interface Marc2JsonConstants {
     static def CTRLNR_LD_0 = ["controlNumber":"123456"]
     static def TIMESTAMP_MARC_0 = new Date(1092057632000)
     static def TIMESTAMP_LD_0 = ["dateAndTimeOfLatestTransaction":"2004-08-09T15:20:32.0"]
+
+    static def OTH_IDENT_MARC_1 = ["ind1":"7","subfields":[["a":"1234","2":"mySpecialIdentifier"]]]
+    static def OTH_IDENT_MARC_2 = ["ind1":"1","subfields":[["a":"1234"]]]
+    static def OTH_IDENT_LD_1 =   ["identifier":["@type":"Identifier", "identifierScheme":"mySpecialIdentifier","identifierValue":"1234"]]
+    static def OTH_IDENT_LD_2 =   ["upc":"1234"]
 }

@@ -1,6 +1,6 @@
 {
     "levels": {
-        "describes": ["020","042","300","500"],
+        "describes": ["020","024","028","042","300","500"],
         "expression" : ["008","245"]
     },
     "fields": {
@@ -25,10 +25,6 @@
             "language" : ["languageOfTheContent"],
             "modifiedRecord" : false,
             "catalogingSource" : false
-        },
-        "020" : {
-            "a" : ["isbn", "identifierForTheManifestation"],
-            "c" : false
         },
         "035" : {
             "9" : ["localSystemNumber"]
