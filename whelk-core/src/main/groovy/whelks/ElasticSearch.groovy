@@ -165,7 +165,6 @@ abstract class ElasticSearch extends BasicPlugin {
                 log.trace("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
-                    log.trace("Document data: $doc.dataAsString")
                     if (addType == indexType) {
                         breq.add(client.prepareIndex(idxpfx, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
                     } else {
@@ -177,7 +176,14 @@ abstract class ElasticSearch extends BasicPlugin {
                     log.error "Bulk import has failures."
                     for (def re : response.items()) {
                         if (re.failed()) {
-                            log.error "Fail message: ${re.failureMessage}"
+                            log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
+                            if (log.isTraceEnabled()) {
+                                for (doc in documents) {
+                                    if (doc.identifier.toString() == "/"+re.index+"/"+re.id) {
+                                        log.trace("Failed document: ${doc.dataAsString}")
+                                    }
+                                }
+                            }
                         }
                     }
                 }

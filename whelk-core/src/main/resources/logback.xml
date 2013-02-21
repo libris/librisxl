@@ -31,13 +31,14 @@
   <logger name="org.elasticsearch">
       <level value="warn"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
       <level value="trace"/>
-  </logger>-->
+  </logger>
+  <!--
   <logger name="se.kb.libris.whelks.plugin.JsonLD2MarcConverter">
       <level value="trace"/>
   </logger>
+  -->
   <!--
   <logger name="se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter">
       <level value="trace"/>
@@ -45,11 +46,9 @@
   <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.component">
-      <level value="debug"/>
+      <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter">
       <level value="trace"/>
   </logger>

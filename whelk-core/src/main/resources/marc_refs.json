@@ -1,6 +1,6 @@
 {
     "levels": {
-        "describes": ["020","042","300","500"],
+        "describes": ["020","024","028","042","300","500"],
         "expression" : ["008","245"]
     },
     "fields": {
@@ -26,9 +26,9 @@
             "modifiedRecord" : false,
             "catalogingSource" : false
         },
-        "020" : {
-            "a" : ["isbn", "identifierForTheManifestation"],
-            "c" : false
+        "028" : {
+            "a" : ["edition"],
+            "b" : ["publisher"]
         },
         "035" : {
             "9" : ["localSystemNumber"]
@@ -39,7 +39,8 @@
         "245": {
             "a" : ["titleProper"],
             "b" : ["titleRemainder"],
-            "c" : ["statementOfResponsibilityRelatingToTitleProper"]
+            "c" : ["statementOfResponsibilityRelatingToTitleProper"],
+            "h" : ["mediaTerm"]
         },
         "260": {
             "a" : ["placeOfPublication"],
@@ -55,5 +56,14 @@
         "500": {
             "a" : ["comment"]
         }
+    },
+    "relators" : {
+        "aut" : "author",
+        "mus" : "musician",
+        "ill" : "illustrator",
+        "trl" : "translator",
+        "pbd" : "publishingDirector",
+        "rpy" : "responsibleParty",
+        "wde" : "woodEngraver"
     }
 }

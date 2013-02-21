@@ -12,16 +12,17 @@ import org.codehaus.jackson.map.ObjectMapper
 
 
 @Log
-class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter implements FormatConverter {
+class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
     final static String RAW_LABEL = "marc21"
     String requiredContentType = "application/json"
     String requiredFormat = "marc21"
+    ObjectMapper mapper
 
     def marcref
     def marcmap
 
     Marc2JsonLDConverter() {
-        def mapper = new ObjectMapper()
+        mapper = new ObjectMapper()
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc_refs.json")
         this.marcref = mapper.readValue(is, Map)
         is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
@@ -136,6 +137,10 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     log.trace("isbn c: $value")
                     out["termsOfAvailability"]=["literal":value]
                     break;
+                case "z":
+                    log.trace("isbn z: $value")
+                    out["deprecatedIsbn"]=value
+                    break;
                 default:
                     log.trace("isbn unknown: $key == $value")
                     complete = false
@@ -149,62 +154,109 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         return false
     }
 
-    def mapIdentifier(code, json) {
+    def mapOtherIdentifier(code, json) {
         def out = [:]
         boolean complete = true
-        json["subfields"].each {
-            it.each { key, value ->
-                switch (key) {
-                    case "a":
-                        out["identifierForTheManifestation"] = value
-                        out["isbn"] = value.replaceAll("[^\\d]", "")
-                        break
-                    case "c":
-                        break
-                    default:
-                        complete = false
-                        break
+        def selectedLabel
+        log.trace("ind1: ${json.ind1}")
+        switch((json["ind1"] as String)) {
+            case "0":
+                selectedLabel = "isrc"
+                break;
+            case "1":
+                selectedLabel = "upc"
+                break;
+            case "2":
+                selectedLabel = "ismn"
+                break;
+            case "3":
+                selectedLabel = "ean"
+                break;
+            case "4":
+                selectedLabel = "sici"
+                break;
+            case "7":
+                selectedLabel = "_other"
+                break;
+            case "8":
+                selectedLabel = "unspecifiedStandardIdentifier"
+                break;
+        }
+        log.trace("selectedLabel : $selectedLabel")
+        if (!selectedLabel) {
+            log.trace("Unable to find a label for ${json.ind1}")
+            complete = false
+        } else {
+            json["subfields"].each {
+                it.each { key, value ->
+                    switch (key) {
+                        case "a":
+                            out[selectedLabel] = value
+                            break
+                        case "2":
+                            out["identifier"] = ["@type":"Identifier","identifierScheme":value,"identifierValue":out["_other"]]
+                            out.remove("_other")
+                            break;
+                        default:
+                            log.trace("No rule for key $key")
+                            complete = false
+                            break
+                    }
                 }
             }
         }
         if (complete) {
+            log.trace("mapped other identifier: $out")
             return out
         }
-        return ["raw": [(code):json]]
+        return false
     }
 
     def mapPerson(code, json) {
         def out = [:]
         boolean complete = true
+        def creatorLabel = "author"
         log.trace("subfields: " + json['subfields'])
-        json['subfields'].each { 
+        def person = [:]
+        json['subfields'].each {
+            log.trace("subfield: $it")
             it.each { key, value ->
-            switch (key) {
-                case "a":
+                switch (key) {
+                    case "a":
                     value = value.trim().replaceAll(/,$/, "")
-                    out["preferredNameForThePerson"] = value
+                    person["preferredNameForThePerson"] = value
                     def n = value.split(", ")
                     if (json["ind1"] == "1" && n.size() > 1) {
-                        out["surname"] = n[0]
-                        out["givenName"] = n[1]
-                        out["name"] = n[1] + " " + n[0]
+                        person["surname"] = n[0]
+                        person["givenName"] = n[1]
+                        person["name"] = n[1] + " " + n[0]
                     } else {
-                        out["name"] = value
+                        person["name"] = value
                     }
                     break;
-                case "d":
+                    case "d":
                     def d = value.split("-")
-                    out["dateOfBirth"] = ["@type":"year", "@value": d[0]]
+                    person["dateOfBirth"] = ["@type":"year", "@value": d[0]]
                     if (d.length > 1) {
-                        out["dateOfDeath"] = ["@type":"year", "@value": d[1]]
+                        person["dateOfDeath"] = ["@type":"year", "@value": d[1]]
                     }
                     break;
-                default:
-                    complete = false
-                    break;
+                    case "4":
+                        if (marcref.relators[value]) {
+                            creatorLabel = marcref.relators[value]
+                        } else {
+                            complete = false
+                        }
+                        break;
+                    default:
+                        complete = false
+                        break;
+                }
             }
-        } }
+        }
         if (complete) {
+            log.trace("Adding $person to $creatorLabel")
+            out[(creatorLabel)] = person
             return out
         } else {
             return false
@@ -280,6 +332,15 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
                     outjson[RAW_LABEL]["fields"] << [(code):json]
                 }
                 break
+            case "024":
+                def i = mapOtherIdentifier(code, json)
+                if (i) {
+                    outjson = mergeMap(outjson, ["describes":i])
+                } else {
+                    outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
+                    outjson[RAW_LABEL]["fields"] << [(code):json]
+                }
+                break
             case "040":
                 def c = mapCreator(code, json)
                 if (c) {
@@ -293,8 +354,8 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
             case "700":
                 def p = mapPerson(code, json)
                 if (p) {
-                    outjson = createNestedMapStructure(outjson, ["describes", "expression", "authorList"], [])
-                    outjson["describes"]["expression"]["authorList"] << p
+                    outjson = createNestedMapStructure(outjson, ["describes", "expression", "creators"], [])
+                    outjson["describes"]["expression"]["creators"] << p
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]
@@ -384,22 +445,20 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     def createJson(URI identifier, Map injson) {
         def outjson = [:]
         def pfx = identifier.toString().split("/")[1]
+        def marccracker = new MarcCrackerAndLabelerIndexFormatConverter()
+
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
         outjson["@type"] = "Record"
         if (injson.containsKey("leader")) {
-            injson = rewriteJson(identifier, injson)
+            injson = marccracker.rewriteJson(identifier, injson)
             log.trace("Leader: ${injson.leader}")
             injson.leader.subfields.each { 
                 it.each { lkey, lvalue ->
                     lvalue = lvalue.trim()
                     if (lvalue && !(lvalue =~ /^\|+$/)) {
                         def lbl = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
-                        if (lbl) {
-                            outjson[lkey] = ["code":lvalue,"label":lbl]
-                        } else {
-                            outjson[lkey] = lvalue
-                        }
+                        outjson[lkey] = ["code":lvalue,"label":(lbl ?: "")]
                     }
                 }
             }
@@ -420,7 +479,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         def outdocs = []
         if (idoc.contentType == this.requiredContentType && idoc.format == this.requiredFormat) {
             def injson = mapper.readValue(idoc.dataAsString, Map)
-            outdocs << new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson)))
+            outdocs << new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson))).withFormat("jsonld")
         } else {
             log.warn("This converter requires $requiredFormat in $requiredContentType. Document ${idoc.identifier} is ${idoc.format} in ${idoc.contentType}")
         }
