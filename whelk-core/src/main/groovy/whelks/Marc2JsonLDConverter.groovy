@@ -12,16 +12,17 @@ import org.codehaus.jackson.map.ObjectMapper
 
 
 @Log
-class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter implements FormatConverter {
+class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
     final static String RAW_LABEL = "marc21"
     String requiredContentType = "application/json"
     String requiredFormat = "marc21"
+    ObjectMapper mapper
 
     def marcref
     def marcmap
 
     Marc2JsonLDConverter() {
-        def mapper = new ObjectMapper()
+        mapper = new ObjectMapper()
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc_refs.json")
         this.marcref = mapper.readValue(is, Map)
         is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
@@ -431,11 +432,13 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
     def createJson(URI identifier, Map injson) {
         def outjson = [:]
         def pfx = identifier.toString().split("/")[1]
+        def marccracker = new MarcCrackerAndLabelerIndexFormatConverter()
+
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
         outjson["@type"] = "Record"
         if (injson.containsKey("leader")) {
-            injson = rewriteJson(identifier, injson)
+            injson = marccracker.rewriteJson(identifier, injson)
             log.trace("Leader: ${injson.leader}")
             injson.leader.subfields.each { 
                 it.each { lkey, lvalue ->
@@ -467,7 +470,7 @@ class Marc2JsonLDConverter extends MarcCrackerAndLabelerIndexFormatConverter imp
         def outdocs = []
         if (idoc.contentType == this.requiredContentType && idoc.format == this.requiredFormat) {
             def injson = mapper.readValue(idoc.dataAsString, Map)
-            outdocs << new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson)))
+            outdocs << new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson))).withFormat("jsonld")
         } else {
             log.warn("This converter requires $requiredFormat in $requiredContentType. Document ${idoc.identifier} is ${idoc.format} in ${idoc.contentType}")
         }
