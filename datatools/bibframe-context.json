@@ -1,0 +1,25 @@
+{
+  "@context": [
+    "base-context.json", {
+      "@vocab": "http://bibframe.org/vocab/",
+      "rda": "http://rdvocab.info/Elements/",
+      "gr2": "http://rdvocab.info/ElementsGr2/",
+      "locid": "http://id.loc.gov/vocabulary/identifiers/",
+      "madsrdf": "http://www.loc.gov/mads/rdf/v1#",
+
+      "pubYear": {"@id": "pubDate", "@type": "xsd:gYear"},
+      "placeOfPublication": "placePub",
+      "placeOfManufacture": "rda:placeOfManufacture",
+      "baseMaterial": "rda:baseMaterial",
+      "isbnNote": "isbnData",
+
+      "statementOfResponsibility": "rda:statementOfResponsibilityRelatingToTitleProper",
+      "authorList": {"@id": "bibo:authorList", "@container": "@list"},
+
+      "authoritativeName": "gr2:preferredNameForThePerson",
+      "birthYear": {"@id": "gr2:dateOfBirth", "@type": "xsd:year"},
+      "deathYear": {"@id": "gr2:dateOfDeath", "@type": "xsd:year"}
+
+    }
+  ]
+}

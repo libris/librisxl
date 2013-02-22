@@ -1,51 +1,35 @@
 {
-  "@context": {
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "foaf": "http://xmlns.com/foaf/0.1/",
-    "bibo": "http://purl.org/ontology/bibo/",
-    "dc": "http://purl.org/dc/terms/",
-    "@vocab": "http://rdvocab.info/Elements/",
-    "gr2": "http://rdvocab.info/ElementsGr2/",
-    "ent": "http://rdvocab.info/uri/schema/FRBRentitiesRDA/",
-    "rel": "http://rdvocab.info/RDARelationshipsWEMI/",
-    "marc": "http://libris.kb.se/def/marc21#",
+  "@context": [
+    "base-context.json", {
+      "@vocab": "http://rdvocab.info/Elements/",
+      "gr2": "http://rdvocab.info/ElementsGr2/",
+      "ent": "http://rdvocab.info/uri/schema/FRBRentitiesRDA/",
+      "rel": "http://rdvocab.info/RDARelationshipsWEMI/",
 
-    "literal": "rdf:value",
-    "year": "xsd:gYear",
-    "date": "xsd:date",
-    "dateTime": "xsd:dateTime",
+      "Instance": "ent:Manifestation",
+      "extent": "extentOfText",
+      "isbn": "bibo:isbn",
+      "isbnNote": null,
+      "identifier": "identifierForTheManifestation",
+      "instanceOf": "rel:expressionManifested",
+      "pubDate": "dateOfPublication",
+      "pubYear": {"@id": "dateOfPublication", "@type": "xsd:gYear"},
 
-    "label": "rdfs:label",
-    "comment": "rdfs:comment",
-    "subject": "dc:subject",
+      "Work": {"@id": "ent:Expression", "_properties": ["titleProper", "..."]},
+      "title": {"@id": "titleProper", "_min": 1, "_max": 1, "_label_sv": "Titel"},
+      "statementOfResponsibility": "statementOfResponsibilityRelatingToTitleProper",
+      "authorList": {"@id": "bibo:authorList", "@container": "@list"},
+      "language": "languageOfTheContent",
 
-    "Record": "foaf:Document",
-    "controlNumber": "dc:identifier",
-    "creator": "dc:creator",
-    "dateAndTimeOfLatestTransaction": {"@id": "dc:modified", "@type": "xsd:dateTime"},
-    "describes": "foaf:primaryTopic",
-    "catForm": "marc:catForm",
-    "encLevel": "marc:encLevel",
-    "localSystemNumber": "marc:localSystemNumber",
-    "status": "marc:status",
+      "Organization": "foaf:Organization",
 
-    "Manifestation": "ent:Manifestation",
-    "isbn": "bibo:isbn",
-    "expression": "rel:expressionManifested",
-
-    "Expression": {"@id": "ent:Expression", "_properties": ["titleProper", "..."]},
-    "titleProper": {"_min": 1, "_max": 1, "_label_sv": "Titel"},
-    "authorList": {"@id": "bibo:authorList", "@container": "@list"},
-
-    "Person": "ent:Person",
-    "name": "foaf:name",
-    "abbr": "foaf:nick",
-    "givenName": "foaf:givenName",
-    "surname": "foaf:surname",
-    "dateOfBirth": "gr2:dateOfBirth",
-    "dateOfDeath": "gr2:dateOfDeath",
-    "preferredNameForThePerson": "gr2:preferredNameForThePerson"
-  }
+      "Person": "ent:Person",
+      "birthDate": "gr2:dateOfBirth",
+      "deathDate": "gr2:dateOfDeath",
+      "birthYear": {"@id": "gr2:dateOfBirth", "@type": "xsd:year"},
+      "deathYear": {"@id": "gr2:dateOfDeath", "@type": "xsd:year"},
+      "authorizedName": "gr2:preferredNameForThePerson",
+      "authorizedAccessPoint": null
+    }
+  ]
 }
