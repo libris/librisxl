@@ -515,15 +515,14 @@ class ResourceListRestlet extends BasicWhelkAPI {
         "lang": "langcodes.json",
         "country": "countrycodes.json"
     ]
-    def lang
-    def country
+    def langcodes
+    def countrycodes
     def mapper
 
     ResourceListRestlet() {
         mapper = new ObjectMapper()
-        codeFiles.each { k, v ->
-            loadCodes(k)
-        }
+        langcodes = loadCodes("lang")
+        countrycodes = loadCodes("country")
     }
 
     def convertPropertiesToJson(def typeOfCode) {
@@ -540,7 +539,7 @@ class ResourceListRestlet extends BasicWhelkAPI {
     def loadCodes(def typeOfCode) {
         def jsonfile = "$typeOfCode" + "codes.json"
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("$jsonfile")
-        this.lang = mapper.readValue(is, Map)
+        return mapper.readValue(is, Map)
     }
 
     def void handle(Request request, Response response) {
@@ -550,12 +549,10 @@ class ResourceListRestlet extends BasicWhelkAPI {
         def country = queryMap.get("country")
 
         if (lang && lang.trim().equals("all")) {
-            jsonResponse = loadCodes("lang")
-            response.setEntity(mapper.writeValueAsString(jsonResponse), MediaType.APPLICATION_JSON)
+            response.setEntity(mapper.writeValueAsString(langcodes), MediaType.APPLICATION_JSON)
 
         } else if (country && country.trim().equals("all")) {
-               jsonResponse = loadCodes("country")
-               response.setEntity(mapper.writeValueAsString(jsonResponse), MediaType.APPLICATION_JSON)
+               response.setEntity(mapper.writeValueAsString(countrycodes), MediaType.APPLICATION_JSON)
         } else {
             response.setEntity('{"error":"Use parameter \"lang=<all/language>\" or \"country=<all/country>\"."}', MediaType.APPLICATION_JSON)
         }
