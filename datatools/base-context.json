@@ -1,0 +1,42 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "bibo": "http://purl.org/ontology/bibo/",
+    "dc": "http://purl.org/dc/terms/",
+    "marc": "http://libris.kb.se/def/marc21#",
+    "marc21": null,
+
+    "value": "rdf:value",
+    "year": "xsd:gYear",
+    "date": "xsd:date",
+    "dateTime": "xsd:dateTime",
+
+    "label": "rdfs:label",
+    "comment": "rdfs:comment",
+    "subject": "dc:subject",
+
+    "Document": "foaf:Document",
+    "controlNumber": "dc:identifier",
+    "creator": "dc:creator",
+    "modified": {"@id": "dc:modified", "@type": "xsd:dateTime"},
+    "about": "foaf:primaryTopic",
+    "catForm": "marc:catForm",
+    "encLevel": "marc:encLevel",
+    "localSystemNumber": "marc:localSystemNumber",
+    "status": "marc:status",
+    "code": "marc:code",
+
+    "publisher": "dc:publisher",
+
+    "Text": "dc:BibliographicResource",
+    "Book": "bibo:Book",
+
+    "name": "foaf:name",
+    "abbr": "foaf:nick",
+    "givenName": "foaf:givenName",
+    "familyName": "foaf:familyName"
+  }
+}
