@@ -504,3 +504,62 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
         return _api;
     }
 }
+
+@Log
+class ResourceListRestlet extends BasicWhelkAPI {
+    def pathEnd = "_resourcelist"
+
+    String description = "Query API for language and country codes."
+
+    def codeFiles = [
+        "lang": "langcodes.json",
+        "country": "countrycodes.json"
+    ]
+    def lang
+    def country
+    def mapper
+
+    ResourceListRestlet() {
+        mapper = new ObjectMapper()
+        codeFiles.each { k, v ->
+            loadCodes(k)
+        }
+    }
+
+    def convertPropertiesToJson(def typeOfCode) {
+        def outjson = [:]
+        def properties = new Properties()
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("$typeOfCode" + "codes.properties"))
+        properties.each { key, value ->
+            outjson[key] = value
+        }
+        def file = new File("$typeOfCode" + "codes.json")
+        file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
+    }
+
+    def loadCodes(def typeOfCode) {
+        def jsonfile = "$typeOfCode" + "codes.json"
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("$jsonfile")
+        this.lang = mapper.readValue(is, Map)
+    }
+
+    def void handle(Request request, Response response) {
+        def jsonResponse
+        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def lang = queryMap.get("lang")
+        def country = queryMap.get("country")
+
+        if (lang && lang.trim().equals("all")) {
+            jsonResponse = loadCodes("lang")
+            response.setEntity(mapper.writeValueAsString(jsonResponse), MediaType.APPLICATION_JSON)
+
+        } else if (country && country.trim().equals("all")) {
+               jsonResponse = loadCodes("country")
+               response.setEntity(mapper.writeValueAsString(jsonResponse), MediaType.APPLICATION_JSON)
+        } else {
+            response.setEntity('{"error":"Use parameter \"lang=<all/language>\" or \"country=<all/country>\"."}', MediaType.APPLICATION_JSON)
+        }
+
+
+    }
+}

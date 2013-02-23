@@ -3,7 +3,7 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "document", "marcconverter"]
+                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "document", "marcconverter", "resourcelist"]
             }
         },
         {
@@ -14,6 +14,11 @@
         }
     ],
     "_plugins": [
+        {
+            "resourcelist": {
+                "_class": "se.kb.libris.whelks.api.ResourceListRestlet"
+            }
+        },
         {
             "localindex": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
