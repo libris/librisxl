@@ -560,3 +560,28 @@ class ResourceListRestlet extends BasicWhelkAPI {
 
     }
 }
+
+@Log
+class MarcMapRestlet extends BasicWhelkAPI {
+    def pathEnd = "_marcmap"
+
+    String description = "API for marcmap."
+
+    static final String marcmapfile = "marcmap.json"
+    def marcmap
+    def mapper
+
+    MarcMapRestlet() {
+        mapper = new ObjectMapper()
+        marcmap = loadMarcMap()
+    }
+
+    def loadMarcMap() {
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("$marcmapfile")
+        return mapper.readValue(is, Map)
+    }
+
+    def void handle(Request request, Response response) {
+        response.setEntity(mapper.writeValueAsString(marcmap), MediaType.APPLICATION_JSON)
+    }
+}
