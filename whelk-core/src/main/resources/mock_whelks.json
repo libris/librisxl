@@ -3,7 +3,7 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "document", "marcconverter", "resourcelist"]
+                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "document", "marcconverter"]
             }
         },
         {
@@ -11,12 +11,23 @@
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
                 "_plugins": [ "localindex", "diskstorage", "search", "document", "marcmassager" ]
             }
+        },
+        {
+            "resource":{
+                "_class" : "se.kb.libris.whelks.WhelkImpl",
+                "_plugins": ["resourcelist", "marcmap"]
+            }
         }
     ],
     "_plugins": [
         {
             "resourcelist": {
                 "_class": "se.kb.libris.whelks.api.ResourceListRestlet"
+            }
+        },
+        {
+            "marcmap": {
+                "_class": "se.kb.libris.whelks.api.MarcMapRestlet"
             }
         },
         {
