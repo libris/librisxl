@@ -33,15 +33,16 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
 
    static main(args) {
         def uri = new URI(args[0])
-        def injson = args[1]
+        def source = new File(args[1])
+        def destDir = new File(args[2])
+        def dest = new File(destDir, source.name)
         def mapper = new ObjectMapper()
+        log.info("source: $source")
+        def inData = source.withInputStream { mapper.readValue(it, Map) }
         def converter = new Marc2JsonLDConverter()
-        log.info("file: marc2jsonld/in/$injson")
-        InputStream is = converter.getClass().getClassLoader().getResourceAsStream("marc2jsonld/in/"+injson )
-        def infile = mapper.readValue(is, Map)
-        def outjson = converter.createJson(uri, infile)
-        def file = new File("src/main/resources/marc2jsonld/ut/$injson")
-        file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
+        def outjson = converter.createJson(uri, inData)
+        log.info("dest: $dest")
+        dest << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
     }
 
     def mapDefault(String code, String value) {
