@@ -2,14 +2,20 @@
     "_whelks": [
         {
             "bib":{
-                "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "document", "marcconverter"]
+                "_class" : "se.kb.libris.whelks.WhelkImpl",
+                "_plugins": ["bundledindex", "diskstorage", "search", "kitinsearch", "document", "marcmassager"]
             }
         },
         {
             "auth":{
+                "_class" : "se.kb.libris.whelks.WhelkImpl",
+                "_plugins": [ "bundledindex", "diskstorage", "search", "document", "marcmassager" ]
+            }
+        },
+        {
+            "hold":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "marcconverter" ]
+                "_plugins": ["bundledindex", "diskstorage", "search", "document", "marcconverter"]
             }
         },
         {
@@ -18,8 +24,8 @@
                 "_plugins": ["resourcelist", "marcmap"]
             }
         }
-    ],
-    "_plugins": [
+    ], 
+        "_plugins": [
         {
             "resourcelist": {
                 "_class": "se.kb.libris.whelks.api.ResourceListRestlet"
@@ -31,15 +37,15 @@
             }
         },
         {
-            "localindex": {
+            "bundledindex": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
                 "_unique" : false
             }
         },
         {
             "diskstorage": {
-                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
-                "_params" : "./src/test/resources/mock_storage",
+                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
+                "_params" : "/tmp/whelk_storage",
                 "_priority" : 0
 
             }
@@ -70,18 +76,6 @@
                 "_class" : "se.kb.libris.whelks.api.KitinSearchRestlet2"
             }
         },
-        {
-            "autocomplete" : {
-                "_class" : "se.kb.libris.whelks.api.AutoComplete",
-                "_params" : ["100.a", "400.a", "500.a"]
-            }
-        },
-        {
-            "suggestformatconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter",
-                "_params" : "_whelk:bib"
-            }
-        }, 
         {
             "biblistener" : {
                 "_class" : "se.kb.libris.whelks.plugin.Listener",
