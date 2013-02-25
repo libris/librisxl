@@ -7,6 +7,7 @@ A bib post:
 
     $ curl -s 'http://libris.kb.se/data/bib/7149593?format=text' -o bib/7149593.marc
     $ curl -s 'http://libris.kb.se/data/bib/7149593?format=ISO2709' > /tmp/7149593.ISO2709
+    $ curl -s 'http://libris.kb.se/data/bib/7149593?format=application/marcxml' > /tmp/7149593.ISO2709
 
 An auth post:
 
