@@ -26,6 +26,9 @@
             "modifiedRecord" : false,
             "catalogingSource" : false
         },
+        "014" : {
+            "a" : ["linkageNumber"]
+        },
         "028" : {
             "a" : ["edition"],
             "b" : ["publisher"]
@@ -35,6 +38,10 @@
         },
         "042" : {
             "9" : ["marc:bibliographyCode"]
+        },
+        "084" : {
+            "a" : ["classificationNumber"],
+            "2" : ["numberSource"]
         },
         "245": {
             "a" : ["titleProper"],
@@ -55,6 +62,23 @@
         },
         "500": {
             "a" : ["comment"]
+        },
+        "650": {
+            "a" : ["topicalTerm"],
+            "x" : ["generalSubdivision"],
+            "z" : ["geographicSubdivision"]
+        },
+        "698": {
+            "a" : ["localSubjectCode"],
+            "b" : ["localSubjectTerm"]
+        },
+        "852": {
+            "8": ["sequenceNumber"],
+            "b" : ["location"],
+            "c" : ["shelvingLocation"],
+            "h" : ["classificationPart"],
+            "j" : ["shelvingControlNumber"],
+            "x" : ["nonpublicNote"]
         }
     },
     "relators" : {
