@@ -500,7 +500,11 @@ class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient impleme
 @Log
 class ElasticSearchNode extends ElasticSearch implements Index {
 
-    def ElasticSearchNode() {
+    ElasticSearchNode() {
+        this(null)
+    }
+
+    ElasticSearchNode(String dataDir) {
         log.debug "Creating elastic node"
         def elasticcluster = System.getProperty("elastic.cluster")
         ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
@@ -509,7 +513,9 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         } else {
             sb = sb.put("cluster.name", "bundled_whelk_index")
         }
-        sb.put("path.data", "var/index")
+        if (dataDir != null) {
+            sb.put("path.data", dataDir)
+        }
         sb.build()
         Settings settings = sb.build()
         NodeBuilder nBuilder = nodeBuilder().settings(settings)
@@ -518,4 +524,5 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         client = node.client()
         log.debug "Client connected to new ES node"
     }
+
 }
