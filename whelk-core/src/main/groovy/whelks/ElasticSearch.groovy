@@ -108,15 +108,24 @@ abstract class ElasticSearch extends BasicPlugin {
             log.info("Creating index ...")
             XContentBuilder mapping = jsonBuilder().startObject()
             .startObject(idxpfx)
+            .field("date_detection", false)
             .startObject("_timestamp")
             .field("enabled", true)
             .field("store", true)
             .endObject()
             .endObject()
             .endObject()
-            log.debug("mapping: " + mapping.string())
+            log.debug("create: " + mapping.string())
 
             performExecute(client.admin().indices().prepareCreate(idxpfx).addMapping(storageType, mapping))
+            log.info("Creating mappings ...")
+            mapping = jsonBuilder().startObject()
+            .startObject(idxpfx)
+            .field("date_detection", false)
+            .endObject()
+            .endObject()
+            log.debug("mapping: " + mapping.string())
+            performExecute(client.admin().indices().preparePutMapping(idxpfx).setType(indexType).setSource(mapping))
         }
     }
 
