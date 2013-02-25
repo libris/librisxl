@@ -9,7 +9,13 @@
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "marcmassager" ]
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "marcconverter" ]
+            }
+        },
+        {
+            "hold":{
+                "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
+                "_plugins": ["localindex", "diskstorage", "search", "document", "marcconverter"]
             }
         },
         {

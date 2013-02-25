@@ -192,6 +192,9 @@ class Harvester implements Runnable {
                             if (sS.toString().startsWith("location:")) {
                                 doc = doc.tag("location", sS.toString().substring(9))
                             }
+                            if (sS.toString().startsWith("bibid:")) {
+                                doc = doc.withLink("/bib/" + sS.toString().substring(6), "bib")
+                            }
                         }
                     }
                     if (it.header.datestamp) {
