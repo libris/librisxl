@@ -33,13 +33,14 @@
         {
             "localindex": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
+                "_params" : "work/data",
                 "_unique" : false
             }
         },
         {
             "diskstorage": {
                 "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
-                "_params" : "./src/test/resources/mock_storage",
+                "_params" : "work/storage",
                 "_priority" : 0
 
             }
