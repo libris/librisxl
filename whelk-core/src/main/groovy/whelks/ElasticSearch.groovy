@@ -509,6 +509,7 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         } else {
             sb = sb.put("cluster.name", "bundled_whelk_index")
         }
+        sb.put("path.data", "var/index")
         sb.build()
         Settings settings = sb.build()
         NodeBuilder nBuilder = nodeBuilder().settings(settings)
