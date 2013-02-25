@@ -42,6 +42,14 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             AUTHOR_MARC_4 | AUTHOR_LD_4
     }
 
+    def "should map author from document"() {
+        expect:
+            conv.createJson(new URI(uri), loadJson(injson))["about"]["instanceOf"]["authorList"] == loadJson(outjson)["about"]["instanceOf"]["authorList"]
+        where:
+            uri              | injson                 | outjson
+            "/bib/7149593"   | "in/bib/7149593.json"  | "expected/bib/7149593.json"
+    }
+
     def "rohtua pam dluohs"() {
         expect:
             vnoc.mapPerson(jsonld) == marc
@@ -56,10 +64,19 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
 
     def "should map multiple authors"() {
         expect:
-            conv.createJson(new URI("/bib/1234"), marc)["describes"]["expression"] == jsonld
+            conv.createJson(new URI("/bib/1234"), marc)["about"]["instanceOf"]["authorList"] == jsonld
         where:
             marc                | jsonld
              AUTHOR_MULT_MARC_0 | AUTHOR_MULT_LD_0
+             AUTHOR_MULT_MARC_1 | AUTHOR_MULT_LD_1
+    }
+
+    def "should map illustrator"() {
+        expect:
+            conv.createJson(new URI("/bib/1234"), marc)["about"]["illustrator"] == jsonld
+        where:
+            marc                | jsonld
+             AUTHOR_MULT_MARC_1 | AUTHOR_MULT_LD_2
     }
 
     def "defaultMap exerciser"() {
