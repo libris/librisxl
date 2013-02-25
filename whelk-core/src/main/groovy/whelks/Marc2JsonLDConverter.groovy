@@ -14,6 +14,8 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
     final static String RAW_LABEL = "marc21"
+    final static String ABOUT_LABEL = "about"
+    final static String INSTANCE_LABEL = "instanceOf"
     String requiredContentType = "application/json"
     String requiredFormat = "marc21"
     ObjectMapper mapper
@@ -214,39 +216,45 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
 
     def mapPerson(code, json) {
         def out = [:]
+        out["@type"] = "Person"
         boolean complete = true
-        def creatorLabel = "author"
+        //def creatorLabel = "author"
         log.trace("subfields: " + json['subfields'])
-        def person = [:]
+        //def person = [:]
         json['subfields'].each {
             log.trace("subfield: $it")
             it.each { key, value ->
                 switch (key) {
                     case "a":
                     value = value.trim().replaceAll(/,$/, "")
-                    person["preferredNameForThePerson"] = value
+                    out["authoritativeName"] = value
                     def n = value.split(", ")
                     if (json["ind1"] == "1" && n.size() > 1) {
-                        person["surname"] = n[0]
-                        person["givenName"] = n[1]
-                        person["name"] = n[1] + " " + n[0]
+                        out["familyName"] = n[0]
+                        out["givenName"] = n[1]
+                        out["name"] = n[1] + " " + n[0]
                     } else {
-                        person["name"] = value
+                        out["name"] = value
                     }
                     break;
                     case "d":
                     def d = value.split("-")
-                    person["dateOfBirth"] = ["@type":"year", "@value": d[0]]
+                    out["birthYear"] = d[0]
                     if (d.length > 1) {
-                        person["dateOfDeath"] = ["@type":"year", "@value": d[1]]
+                        out["deathYear"] = d[1]
+                    }
+                    if (out["authoritativeName"]) {
+                        out["authorizedAccessPoint"] = out["authoritativeName"] + ", $value"
                     }
                     break;
                     case "4":
+                    /*
                         if (marcref.relators[value]) {
                             creatorLabel = marcref.relators[value]
                         } else {
                             complete = false
                         }
+                        */
                         break;
                     default:
                         complete = false
@@ -255,8 +263,10 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
             }
         }
         if (complete) {
+            /*
             log.trace("Adding $person to $creatorLabel")
             out[(creatorLabel)] = person
+            */
             return out
         } else {
             return false
@@ -325,7 +335,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
             case "020":
                 def i = mapIsbn(json)
                 if (i) {
-                    def isbn = ["describes":i]
+                    def isbn = [(ABOUT_LABEL):i]
                     outjson = mergeMap(outjson, isbn)
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
@@ -335,7 +345,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
             case "024":
                 def i = mapOtherIdentifier(code, json)
                 if (i) {
-                    outjson = mergeMap(outjson, ["describes":i])
+                    outjson = mergeMap(outjson, [(ABOUT_LABEL):i])
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]
@@ -354,8 +364,22 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
             case "700":
                 def p = mapPerson(code, json)
                 if (p) {
-                    outjson = createNestedMapStructure(outjson, ["describes", "expression", "creators"], [])
-                    outjson["describes"]["expression"]["creators"] << p
+                    def relcode = subfieldCode("4", json["subfields"])
+                    log.trace("relcode: $relcode")
+                    def relator = marcref.relators[relcode]
+                    log.trace("mapPerson found relator $relator")
+                    if (relator && relator != "author") {
+                        if (relator in marcref.levels[INSTANCE_LABEL]) {
+                            outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL, relator], [])
+                            outjson[ABOUT_LABEL][INSTANCE_LABEL][relator] << p
+                        } else {
+                            outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, relator], [])
+                            outjson[ABOUT_LABEL][relator] << p
+                        }
+                    } else {
+                        outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL, "authorList"], [])
+                        outjson[ABOUT_LABEL][INSTANCE_LABEL]["authorList"] << p
+                    }
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]
@@ -374,10 +398,10 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
                 def jldMapped = mapDefault(code, json)
                 log.trace("retrieved $jldMapped")
                 if (jldMapped) {
-                    if (code in marcref.levels.describes) {
-                        outjson = mergeMap(outjson, ["describes":jldMapped])
-                    } else if (code in marcref.levels.expression) {
-                        outjson = mergeMap(outjson, ["describes":["expression":jldMapped]])
+                    if (code in marcref.levels.about) {
+                        outjson = mergeMap(outjson, [(ABOUT_LABEL):jldMapped])
+                    } else if (code in marcref.levels.instanceOf) {
+                        outjson = mergeMap(outjson, [(ABOUT_LABEL):[(INSTANCE_LABEL):jldMapped]])
                     } else {
                         log.trace("top level merge of $jldMapped")
                         outjson = mergeMap(outjson, jldMapped)
@@ -390,6 +414,21 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
                 break;
         }
         return outjson
+    }
+
+    String subfieldCode(code, subfields) {
+        log.trace("subfieldCode subfields: $subfields")
+        def sfcode = null
+        subfields.each {
+            it.each { key, value ->
+                if (key == code) {
+                    log.trace("subfieldCode: $code = $value")
+                    sfcode = value
+                }
+            }
+        }
+        log.trace("Returning $sfcode ($code, $subfields)")
+        return sfcode
     }
 
     Map createNestedMapStructure(map, keys, type) {
