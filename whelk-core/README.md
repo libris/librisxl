@@ -30,5 +30,14 @@ Example - import data to bib from resource bib since yesterday:
 
 ## Adding data to storage:
 
-    curl -XPUT -H "Content-Type:application/json" "http://<some-whelk-url>/<desired-document-path>" --data-binary @file.json
+    $ curl -XPUT -H "Content-Type:application/json" "http://<some-whelk-url>/<desired-document-path>" --data-binary @file.json
+
+## Starting a local whelk with mock data
+
+    $ gradle whelkOperation -Dargs='import bib file:src/main/resources/mock_whelks.json bib 1975-01-01T00:00:00Z 100' -Delastic.host='localhost' -Dfile.encoding='utf-8'
+
+## Running data conversion on a single test document
+
+    $ gradle convertMarc2JsonLD -Dargs="/bib/7149593 src/test/resources/marc2jsonld/in/bib/7149593.json build/"
+    $ gradle convertJsonLD2Marc -Dargs="build/7149593.json /tmp/"
 
