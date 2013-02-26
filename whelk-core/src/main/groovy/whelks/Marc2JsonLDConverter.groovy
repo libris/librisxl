@@ -12,7 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper
 
 
 @Log
-class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
+class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConverter {
     final static String RAW_LABEL = "marc21"
     final static String ABOUT_LABEL = "about"
     final static String INSTANCE_LABEL = "instanceOf"
@@ -22,6 +22,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
 
     def marcref
     def marcmap
+    Whelk whelk
 
     Marc2JsonLDConverter() {
         mapper = new ObjectMapper()
@@ -490,19 +491,22 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
         outjson["@type"] = "Record"
-        if (injson.containsKey("leader")) {
-            injson = marccracker.rewriteJson(identifier, injson)
-            log.trace("Leader: ${injson.leader}")
-            injson.leader.subfields.each { 
-                it.each { lkey, lvalue ->
-                    lvalue = lvalue.trim()
-                    if (lvalue && !(lvalue =~ /^\|+$/)) {
-                        def lbl = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
-                        outjson[lkey] = ["code":lvalue,"label":(lbl ?: "")]
+        if (whelk.getPrefix().equals("bib")) {
+            if (injson.containsKey("leader")) {
+                injson = marccracker.rewriteJson(identifier, injson)
+                log.trace("Leader: ${injson.leader}")
+                injson.leader.subfields.each {
+                    it.each { lkey, lvalue ->
+                        lvalue = lvalue.trim()
+                        if (lvalue && !(lvalue =~ /^\|+$/)) {
+                            def lbl = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
+                            outjson[lkey] = ["code":lvalue,"label":(lbl ?: "")]
+                        }
                     }
                 }
             }
         }
+
         injson.fields.each {
             log.trace("Working on json field $it")
             it.each { fkey, fvalue ->
