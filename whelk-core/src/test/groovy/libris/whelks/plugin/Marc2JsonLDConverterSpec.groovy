@@ -1,5 +1,6 @@
 package se.kb.libris.whelks.plugin
 
+import se.kb.libris.whelks.Whelk
 import spock.lang.Specification
 import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
@@ -8,9 +9,14 @@ import groovy.util.logging.Slf4j as Log
 class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstants {
 
     def mapper = new ObjectMapper()
+    def whelk = Mock(Whelk) {
+        getPrefix() >> "bib"
+    }
     def conv = new Marc2JsonLDConverter()
 
     def "should map document"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
             conv.createJson(new URI(uri), loadJson(injson)) == loadJson(outjson)
         where:
@@ -34,6 +40,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     }
 
     def "should map author from document"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
             conv.createJson(new URI(uri), loadJson(injson))["about"]["instanceOf"]["authorList"] == loadJson(outjson)["about"]["instanceOf"]["authorList"]
         where:
@@ -42,6 +50,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     }
 
     def "should map plain about for Tove"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
             conv.createJson(new URI(uri), loadJson(injson))["about"].remove("instanceOf") == loadJson(outjson)["about"].remove("instanceOf")
         where:
@@ -50,6 +60,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     }
 
     def "should map multiple authors"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
             conv.createJson(new URI("/bib/1234"), marc)["about"]["instanceOf"]["authorList"] == jsonld
         where:
@@ -59,6 +71,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     }
 
     def "should map illustrator"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
             conv.createJson(new URI("/bib/1234"), marc)["about"]["illustrator"] == jsonld
         where:
