@@ -220,7 +220,8 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
 
     def queryFacets = [
         "custom.bookSerial": [
-             "ebook": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
+             //"ebook": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
+             "ebook": "about.marc:typeOfRecord.code:a about.instanceOf.marc:bibLevel.code:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
              "audiobook": "leader.subfields.typeOfRecord:i leader.subfields.bibLevel:m fields.007.subfields.carrierType:s",
              "eserial": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
              "book": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m !fields.007.subfields.carrierType:c",
@@ -264,9 +265,11 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
         long startTime = System.currentTimeMillis()
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def q, results
+        /*
         if (!reqMap["boost"]) {
             reqMap["boost"] = defaultBoost
         }
+        */
         try {
             q = new Query(reqMap)
             if (reqMap["f"]) {
@@ -274,11 +277,14 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             }
             def callback = reqMap.get("callback")
             if (q) {
-                q.addFacet("leader.subfields.typeOfRecord")
-                q.addFacet("leader.subfields.bibLevel")
+                q.addFacet("status.label")
+                q.addFacet("about.typeOfRecord.label")
+                q.addFacet("about.instanceOf.bibLevel.label")
+                /*
                 q.addFacet("fields.007.subfields.carrierType")
                 q.addFacet("fields.008.subfields.yearTime1")
-                q = addQueryFacets(q)
+                */
+                //q = addQueryFacets(q)
                 q = expandQuery(q)
                 results = this.whelk.query(q)
                 def jsonResult =

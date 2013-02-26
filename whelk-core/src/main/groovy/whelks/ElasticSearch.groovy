@@ -122,6 +122,7 @@ abstract class ElasticSearch extends BasicPlugin {
             mapping = jsonBuilder().startObject()
             .startObject(idxpfx)
             .field("date_detection", false)
+            .field("store", true)
             .endObject()
             .endObject()
             log.debug("mapping: " + mapping.string())
@@ -299,7 +300,8 @@ abstract class ElasticSearch extends BasicPlugin {
         if (q.facets) {
             q.facets.each {
                 if (it instanceof TermFacet) {
-                    srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
+                    //srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
+                    srb = srb.addFacet(FacetBuilders.termsFacet(it.name).scriptField("_source."+it.field).size(MAX_NUMBER_OF_FACETS))
                 } else if (it instanceof QueryFacet) {
                     def qf = new QueryStringQueryBuilder(it.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
                     srb = srb.addFacet(FacetBuilders.queryFacet(it.name).query(qf))
