@@ -493,12 +493,12 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                                 def lbl = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
                                 if (lkey in marcref.levels.instanceOf) {
                                     outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL], [:])
-                                    outjson[ABOUT_LABEL][INSTANCE_LABEL]["marc:"+lkey] = ["code":lvalue,"label":(lbl ?: "")]
+                                    outjson[ABOUT_LABEL][INSTANCE_LABEL][lkey] = ["code":lvalue,"label":(lbl ?: "")]
                                 } else if (lkey in marcref.levels.about) {
                                     outjson = createNestedMapStructure(outjson, [ABOUT_LABEL], [:])
-                                    outjson[ABOUT_LABEL]["marc:"+lkey] = ["code":lvalue,"label":(lbl ?: "")]
+                                    outjson[ABOUT_LABEL][lkey] = ["code":lvalue,"label":(lbl ?: "")]
                                 } else {
-                                    outjson["marc:"+lkey] = ["code":lvalue,"label":(lbl ?: "")]
+                                    outjson[lkey] = ["code":lvalue,"label":(lbl ?: "")]
                                 }
                             }
                         }

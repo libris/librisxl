@@ -5,7 +5,7 @@
   "controlNumber": "7149593",
   "creator": {"@type": "Organization", "abbr": "NB"},
   "modified": "2004-08-09T15:20:32.0",
-  "marc:catForm": {
+  "catForm": {
       "code" : "",
       "label": "AACR2/KRS (normalv\u00e4rde)"
   },
@@ -18,11 +18,11 @@
       "code": "c",
       "label" : "Rättad eller reviderad post (sätts maskinellt)"
   },
-  "marc:bibliographyCode": ["SEE", "BULB", "SLB", "NB", "KVIN"],
+  "bibliographyCode": ["SEE", "BULB", "SLB", "NB", "KVIN"],
   "about": {
     "@id": "http://libris.kb.se/bib/7149593",
     "@type": ["Instance", "Book"],
-    "marc:typeOfRecord": {
+    "typeOfRecord": {
         "code": "",
         "label":"Text: tryck"
     },
@@ -44,7 +44,7 @@
     "termsOfAvailability": "310:00",
     "instanceOf": {
       "@type": ["Work", "Text"],
-      "marc:bibLevel": {
+      "bibLevel": {
           "code" : "",
           "label" : "Monografisk resurs"
       },
