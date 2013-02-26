@@ -5,6 +5,7 @@
     },
     "fields": {
         "001" : "controlNumber",
+        "004" : false,
         "005" : "dateAndTimeOfLatestTransaction",
         "008" : {
             "date" : false,
@@ -67,6 +68,10 @@
             "a" : ["topicalTerm"],
             "x" : ["generalSubdivision"],
             "z" : ["geographicSubdivision"]
+        },
+        "653": {
+            "a" : ["uncontrolledIndexTerm"],
+            "6" : ["linkage"]
         },
         "698": {
             "a" : ["localSubjectCode"],
