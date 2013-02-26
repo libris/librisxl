@@ -220,9 +220,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         def out = [:]
         out["@type"] = "Person"
         boolean complete = true
-        //def creatorLabel = "author"
         log.trace("subfields: " + json['subfields'])
-        //def person = [:]
         json['subfields'].each {
             log.trace("subfield: $it")
             it.each { key, value ->
@@ -250,13 +248,6 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                     }
                     break;
                     case "4":
-                    /*
-                        if (marcref.relators[value]) {
-                            creatorLabel = marcref.relators[value]
-                        } else {
-                            complete = false
-                        }
-                        */
                         break;
                     default:
                         complete = false
@@ -265,10 +256,6 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             }
         }
         if (complete) {
-            /*
-            log.trace("Adding $person to $creatorLabel")
-            out[(creatorLabel)] = person
-            */
             return out
         } else {
             return false

@@ -108,15 +108,24 @@ abstract class ElasticSearch extends BasicPlugin {
             log.info("Creating index ...")
             XContentBuilder mapping = jsonBuilder().startObject()
             .startObject(idxpfx)
+            .field("date_detection", false)
             .startObject("_timestamp")
             .field("enabled", true)
             .field("store", true)
             .endObject()
             .endObject()
             .endObject()
-            log.debug("mapping: " + mapping.string())
+            log.debug("create: " + mapping.string())
 
             performExecute(client.admin().indices().prepareCreate(idxpfx).addMapping(storageType, mapping))
+            log.info("Creating mappings ...")
+            mapping = jsonBuilder().startObject()
+            .startObject(idxpfx)
+            .field("date_detection", false)
+            .endObject()
+            .endObject()
+            log.debug("mapping: " + mapping.string())
+            performExecute(client.admin().indices().preparePutMapping(idxpfx).setType(indexType).setSource(mapping))
         }
     }
 
@@ -491,7 +500,11 @@ class ElasticSearchClientStorageIndexHistory extends ElasticSearchClient impleme
 @Log
 class ElasticSearchNode extends ElasticSearch implements Index {
 
-    def ElasticSearchNode() {
+    ElasticSearchNode() {
+        this(null)
+    }
+
+    ElasticSearchNode(String dataDir) {
         log.debug "Creating elastic node"
         def elasticcluster = System.getProperty("elastic.cluster")
         ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
@@ -499,6 +512,9 @@ class ElasticSearchNode extends ElasticSearch implements Index {
             sb = sb.put("cluster.name", elasticcluster)
         } else {
             sb = sb.put("cluster.name", "bundled_whelk_index")
+        }
+        if (dataDir != null) {
+            sb.put("path.data", dataDir)
         }
         sb.build()
         Settings settings = sb.build()
@@ -508,4 +524,5 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         client = node.client()
         log.debug "Client connected to new ES node"
     }
+
 }
