@@ -50,10 +50,11 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         if (marcref.fields[code]) {
             def out = [(marcref.fields[code]): value]
             return out
-        } else {
+        } else if (marcref.fields[code] == false){
             log.debug("Failed to map $code")
             return false
         }
+        return null
     }
 
     def mapDefault(String code, Date value) {
@@ -61,10 +62,11 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S")
             def out = [(marcref.fields[code]): sdf.format(value)]
             return out
-        } else {
+        } else if (marcref.fields[code] == false){
             log.debug("Failed to map $code")
             return false
         }
+        return null
     }
 
     def mapDefault(String code, Map json) {
@@ -73,6 +75,9 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         log.trace("mapDefault: $code = $json")
         json.get("subfields").each {
             it.each { k, v ->
+                if (marcref.fields.get(code) == null) {
+                    return null
+                }
                 def label = marcref.fields.get(code)?.get(k)
                 if (label instanceof Map) {
                     assignValue(out, label, v)
@@ -406,6 +411,8 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                         log.trace("top level merge of $jldMapped")
                         outjson = mergeMap(outjson, jldMapped)
                     }
+                } else if (jldMapped == false) {
+                    return outjson
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]
