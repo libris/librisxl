@@ -41,6 +41,14 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             "/bib/7149593"   | "in/bib/7149593.json"  | "expected/bib/7149593.json"
     }
 
+    def "should map plain about for Tove"() {
+        expect:
+            conv.createJson(new URI(uri), loadJson(injson))["about"].remove("instanceOf") == loadJson(outjson)["about"].remove("instanceOf")
+        where:
+            uri              | injson                 | outjson
+            "/bib/7149593"   | "in/bib/7149593.json"  | "expected/bib/7149593.json"
+    }
+
     def "should map multiple authors"() {
         expect:
             conv.createJson(new URI("/bib/1234"), marc)["about"]["instanceOf"]["authorList"] == jsonld

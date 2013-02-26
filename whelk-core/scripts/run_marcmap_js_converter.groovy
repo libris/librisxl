@@ -1,8 +1,8 @@
 /* Example usage:
     $ gradle -q groovy -Dargs="scripts/run_marcmap_js_converter.groovy \
             src/main/resources/marcmap.json \
-            ../../../kitin/static/js/marcjson.js marcjson.rawToNamed \
-            ../../../kitin/examples/bib/7149593.json"
+            ../datatools/lib/marcjson.js marcjson.rawToNamed \
+            src/test/resources/marc2jsonld/in/bib/7149593.json"
 */
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
@@ -18,7 +18,7 @@ def conv = new MarcMapJSConverter(marcmap, script, obj, func)
 
 def convert = {
     def source = new BasicDocument().withIdentifier(id).withData(new File(data).text)
-    return conv.convert(source)
+    return conv.convert(source)[0]
 }
 
 if (i == 1) {

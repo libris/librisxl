@@ -72,7 +72,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
         def leader = json.leader
         def pfx = identifier.toString().split("/")[1]
 
-        def l = expandField("000", leader, marcmap.get(pfx)."000".fixmaps[0].columns)
+        def l = expandField("000", leader, marcmap.get(pfx)?."000"?.fixmaps?.get(0)?.columns)
 
         json.leader = ["subfields": l.collect {key, value -> [(key):value]}]
 
