@@ -5,23 +5,36 @@
   "controlNumber": "7149593",
   "creator": {"@type": "Organization", "abbr": "NB"},
   "modified": "2004-08-09T15:20:32.0",
-  "catForm": "AACR2/KRS (normalv\u00e4rde)",
+  "marc:catForm": {
+      "code" : "",
+      "label": "AACR2/KRS (normalv\u00e4rde)"
+  },
   "encLevel": {
     "code":"_",
     "label": "Nationalbibliografisk niv\u00e5 (jfr KRS 1.0D3)"
   },
   "localSystemNumber": "9100563226",
-  "status": {"code": "c"},
+  "status": {
+      "code": "c",
+      "label" : "Rättad eller reviderad post (sätts maskinellt)"
+  },
   "marc:bibliographyCode": ["SEE", "BULB", "SLB", "NB", "KVIN"],
   "about": {
     "@id": "http://libris.kb.se/bib/7149593",
     "@type": ["Instance", "Book"],
-    "marc:typeOfRecord": "Text: tryck",
+    "marc:typeOfRecord": {
+        "code": "",
+        "label":"Text: tryck"
+    },
     "baseMaterial": "ill.",
     "comment": "\u00c4ven tillg. med tryck\u00e5r: 2. uppl., 1996",
     "dimensions": "25 cm",
     "extent": "102, [1] s.",
-    "identifier": "91-0-056322-6 (inb.)",
+    "identifier": {
+        "@type" : "Identifier",
+        "identifierScheme" : "isbn",
+        "identifierValue" : "91-0-056322-6 (inb.)"
+    },
     "isbn": "91-0-056322-6",
     "isbnNote": "inb.",
     "placeOfManufacture": {"@type": "Place", "label": "Finland"},
@@ -31,7 +44,10 @@
     "termsOfAvailability": "310:00",
     "instanceOf": {
       "@type": ["Work", "Text"],
-      "marc:bibLevel": "Monografisk resurs",
+      "marc:bibLevel": {
+          "code" : "",
+          "label" : "Monografisk resurs"
+      },
       "title": "Anteckningar fr\u00e5n en \u00f6",
       "statementOfResponsibility": "Tove Jansson, Tuulikki Pietil\u00e4",
       "authorList": [

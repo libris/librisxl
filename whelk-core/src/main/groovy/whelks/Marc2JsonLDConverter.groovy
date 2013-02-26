@@ -12,7 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper
 
 
 @Log
-class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConverter {
+class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConverter, IndexFormatConverter {
     final static String RAW_LABEL = "marc21"
     final static String ABOUT_LABEL = "about"
     final static String INSTANCE_LABEL = "instanceOf"
@@ -218,7 +218,15 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
 
     def mapPerson(code, json) {
         def out = [:]
-        out["@type"] = "Person"
+        if ((code as int) % 100 == 0) {
+            out["@type"] = "Person"
+        }
+        if ((code as int) % 100 == 10) {
+            out["@type"] = "Organisation"
+        }
+        if ((code as int) % 100 == 11) {
+            out["@type"] = "Conference"
+        }
         boolean complete = true
         log.trace("subfields: " + json['subfields'])
         json['subfields'].each {
@@ -304,7 +312,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             it.each { key, value ->
                 switch (key) {
                     case "a":
-                        out["creator"]=["@type":"foaf:Organization", "abbr":value]
+                        out["creator"]=["@type":"Organization", "abbr":value]
                         break
                     default:
                         complete = false
@@ -515,7 +523,8 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             def injson = mapper.readValue(idoc.dataAsString, Map)
             outdocs << new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson))).withFormat("jsonld")
         } else {
-            log.warn("This converter requires $requiredFormat in $requiredContentType. Document ${idoc.identifier} is ${idoc.format} in ${idoc.contentType}")
+            log.debug("This converter requires $requiredFormat in $requiredContentType. Document ${idoc.identifier} is ${idoc.format} in ${idoc.contentType}")
+            outdocs << idoc
         }
         return outdocs
     }
