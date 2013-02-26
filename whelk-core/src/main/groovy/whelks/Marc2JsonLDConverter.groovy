@@ -398,7 +398,6 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]
                 }
-                log.trace("OutJson now: $outjson")
                 break;
         }
         return outjson
@@ -454,17 +453,14 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
                     origmap[key] = mergeMap(origmap.get(key), value)
                 } else {
                     if (!(origmap.get(key) instanceof List)) {
-                        log.trace("creating list at $key")
                         origmap[key] = [origmap[key]]
                     }
-                    log.trace("adding to list at $key")
                     origmap[key] << value
                 }
             } else { // Add key to original map
                 origmap[key] = value
             }
         }
-        log.trace("updated origmap: $origmap")
         return origmap
     }
 
@@ -476,7 +472,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
 
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
-        outjson["@type"] = "Record"
+        outjson["@type"] = ["Instance", "Book"]
         if (injson.containsKey("leader")) {
             injson = marccracker.rewriteJson(identifier, injson)
             log.trace("Leader: ${injson.leader}")
@@ -485,7 +481,15 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
                     lvalue = lvalue.trim()
                     if (lvalue && !(lvalue =~ /^\|+$/)) {
                         def lbl = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
-                        outjson[lkey] = ["code":lvalue,"label":(lbl ?: "")]
+                        if (lkey in marcref.levels.instanceOf) {
+                            outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL], [:])
+                            outjson[ABOUT_LABEL][INSTANCE_LABEL]["marc:"+lkey] = ["code":lvalue,"label":(lbl ?: "")]
+                        } else if (lkey in marcref.levels.about) {
+                            outjson = createNestedMapStructure(outjson, [ABOUT_LABEL], [:])
+                            outjson[ABOUT_LABEL]["marc:"+lkey] = ["code":lvalue,"label":(lbl ?: "")]
+                        } else {
+                            outjson["marc:"+lkey] = ["code":lvalue,"label":(lbl ?: "")]
+                        }
                     }
                 }
             }
@@ -494,7 +498,6 @@ class Marc2JsonLDConverter extends BasicPlugin implements FormatConverter {
             log.trace("Working on json field $it")
             it.each { fkey, fvalue ->
                 outjson = mapField(fkey, fvalue, outjson)
-                log.trace("outjson: $outjson")
             }
         }
         log.trace("Constructed JSON:\n" + mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson))
