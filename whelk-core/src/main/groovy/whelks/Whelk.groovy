@@ -71,8 +71,8 @@ class WhelkImpl extends BasicWhelk {
                                 idocs = ifc.convert(idocs)
                             }
                             log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
-                            log.info("Indexing "+idocs.size()+" documents ... ")
-                            icomp.index(idocs, this.prefix)
+                            log.info("Indexing "+idocs.size()+" documents ... "+"Whelk prefix: "+this.getPrefix())
+                            icomp.index(idocs, this.getPrefix())
                         }
                     })
                     docs.clear()
