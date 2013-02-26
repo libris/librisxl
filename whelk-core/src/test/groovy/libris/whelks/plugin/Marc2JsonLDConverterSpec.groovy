@@ -1,5 +1,6 @@
 package se.kb.libris.whelks.plugin
 
+import se.kb.libris.whelks.Whelk
 import spock.lang.Specification
 import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
@@ -8,10 +9,14 @@ import groovy.util.logging.Slf4j as Log
 class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstants {
 
     def mapper = new ObjectMapper()
+    def whelk = Mock(Whelk) {
+        getPrefix() >> "bib"
+    }
     def conv = new Marc2JsonLDConverter()
-    def vnoc = new JsonLD2MarcConverter()
 
     def "should map document"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
             conv.createJson(new URI(uri), loadJson(injson)) == loadJson(outjson)
         where:
@@ -19,14 +24,6 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             "/bib/8261338"          | "in/bib/8261338.json"       | "expected/bib/8261338.json"
             "/bib/12035894"         | "in/bib/12035894.json"      | "expected/bib/12035894.json"
             "/bib/12732969"         | "in/bib/12732969.json"      | "expected/bib/12732969.json"
-            "/bib/7149593"          | "in/bib/7149593.json"       | "expected/bib/7149593.json"
-    }
-
-    def "tnemucod pam dluohs"() {
-        expect:
-            vnoc.mapDocument(loadJson(outjson)) == loadJson(injson)
-        where:
-            uri                     | injson                      | outjson
             "/bib/7149593"          | "in/bib/7149593.json"       | "expected/bib/7149593.json"
     }
 
@@ -43,6 +40,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     }
 
     def "should map author from document"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
             conv.createJson(new URI(uri), loadJson(injson))["about"]["instanceOf"]["authorList"] == loadJson(outjson)["about"]["instanceOf"]["authorList"]
         where:
@@ -50,19 +49,19 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             "/bib/7149593"   | "in/bib/7149593.json"  | "expected/bib/7149593.json"
     }
 
-    def "rohtua pam dluohs"() {
+    def "should map plain about for Tove"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
-            vnoc.mapPerson(jsonld) == marc
+            conv.createJson(new URI(uri), loadJson(injson))["about"].remove("instanceOf") == loadJson(outjson)["about"].remove("instanceOf")
         where:
-            marc          | jsonld
-            AUTHOR_MARC_0 | AUTHOR_LD_0
-            AUTHOR_MARC_1 | AUTHOR_LD_1
-            AUTHOR_MARC_2 | AUTHOR_LD_2
-            AUTHOR_MARC_3 | AUTHOR_LD_3
-            AUTHOR_MARC_4 | AUTHOR_LD_5
+            uri              | injson                 | outjson
+            "/bib/7149593"   | "in/bib/7149593.json"  | "expected/bib/7149593.json"
     }
 
     def "should map multiple authors"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
             conv.createJson(new URI("/bib/1234"), marc)["about"]["instanceOf"]["authorList"] == jsonld
         where:
@@ -72,6 +71,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     }
 
     def "should map illustrator"() {
+        given:
+            conv.setWhelk(whelk)
         expect:
             conv.createJson(new URI("/bib/1234"), marc)["about"]["illustrator"] == jsonld
         where:
@@ -85,14 +86,6 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
         where:
             code  | marc                | jsonld
             "042" | BIBLIOGRAPHY_MARC_0 | BIBLIOGRAPHY_LD_0
-    }
-
-    def "resicrexe paMtluafed"() {
-        expect:
-            vnoc.mapDefault(jsonld) == marc
-        where:
-            marc                |jsonld
-            BIBLIOGRAPHY_MARC_0 | BIBLIOGRAPHY_LD_0
     }
 
     def "should map controlfields"() {
@@ -122,23 +115,6 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             PUBLISHER_MARC_0 | PUBLISHER_LD_0
     }
 
-    def "rehsilbup pam dluohs"() {
-        expect:
-            vnoc.mapDefault(jsonld) == marc
-        where:
-            marc             | jsonld
-            PUBLISHER_MARC_1 | PUBLISHER_LD_0
-    }
-
-    def "eltit pam dluohs"() {
-        expect:
-            vnoc.mapDefault(jsonld) == marc
-        where:
-            marc            | jsonld
-            TITLE_MARC_0    | TITLE_LD_0
-            TITLE_MARC_1    | TITLE_LD_2
-    }
-
     def "should map isbn"() {
         expect:
             conv.mapIsbn(marc) == jsonld
@@ -148,17 +124,6 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             ISBN_MARC_1   | ISBN_LD_1
             ISBN_MARC_2   | ISBN_LD_2
             ISBN_MARC_3   | ISBN_LD_3
-    }
-
-    def "nbsi pam dluohs"() {
-        expect:
-            vnoc.mapIsbn(jsonld) == marc
-        where:
-            marc                |jsonld
-            CLEANED_ISBN_MARC_0 | ISBN_LD_0
-            CLEANED_ISBN_MARC_1 | ISBN_LD_1
-            CLEANED_ISBN_MARC_2 | ISBN_LD_2
-            ISBN_MARC_3         | ISBN_LD_4
     }
 
     def "should map other identifier"() {

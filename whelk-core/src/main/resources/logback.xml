@@ -31,9 +31,13 @@
   <logger name="org.elasticsearch">
       <level value="warn"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
       <level value="trace"/>
   </logger>
+       <logger name="se.kb.libris.whelks.imports.BatchImport">
+      <level value="debug"/>
+  </logger>-->
   <!--
   <logger name="se.kb.libris.whelks.plugin.JsonLD2MarcConverter">
       <level value="trace"/>
