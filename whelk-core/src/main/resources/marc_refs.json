@@ -1,6 +1,6 @@
 {
     "levels": {
-        "about"      : ["020","024","028","042","300","500","typeOfRecord"],
+        "about"      : ["020","024","028","042","260","300","500","typeOfRecord"],
         "instanceOf" : ["008","245","bibLevel"]
     },
     "fields": {
@@ -31,7 +31,7 @@
         },
         "028" : {
             "a" : ["edition"],
-            "b" : ["publisher"]
+            "b" : ["editionPublisher"]
         },
         "035" : {
             "9" : ["localSystemNumber"]

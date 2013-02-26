@@ -51,6 +51,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             def out = [(marcref.fields[code]): value]
             return out
         } else {
+            log.debug("Failed to map $code")
             return false
         }
     }
@@ -61,6 +62,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             def out = [(marcref.fields[code]): sdf.format(value)]
             return out
         } else {
+            log.debug("Failed to map $code")
             return false
         }
     }
@@ -89,6 +91,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                 } else if (label) {
                     out[label] = v
                 } else if (label == null) {
+                    log.debug("Failed to map ${code}.${k}")
                     complete = false
                 }
             }
@@ -222,7 +225,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             out["@type"] = "Person"
         }
         if ((code as int) % 100 == 10) {
-            out["@type"] = "Organisation"
+            out["@type"] = "Organization"
         }
         if ((code as int) % 100 == 11) {
             out["@type"] = "Conference"
@@ -278,19 +281,19 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                 switch (key) {
                     case "a":
                         value = value.replaceAll(/:$/, "").trim()
-                        out["placeOfPublication"]=["label":value]
+                        out["placeOfPublication"]=["@type":"Place","label":value]
                         break
                     case "b":
                         value = value.replaceAll(/,$/, "").trim()
-                        out["publisherName"]=value
+                        out["publisher"]=["@type":"Organization", "name":value]
                         break
                     case "c":
                         value = value.replaceAll(/;$/, "").trim()
-                        out["dateOfPublication"] = ["@type":"year","@value":value]
+                        out["pubDate"] = ["@type":"year","@value":value]
                         break
                     case "e":
                         value = value.replaceAll(/[()]/, "").trim()
-                        out["placeOfManufacture"] = ["label":value]
+                        out["placeOfManufacture"] = ["@type":"Place","label":value]
                         break
                     default:
                         complete = false
@@ -385,7 +388,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             case "260":
                 def pubMapped = mapPublishingInfo(code, json)
                 if (pubMapped) {
-                    outjson = mergeMap(outjson, pubMapped)
+                    outjson = mergeMap(outjson, [(ABOUT_LABEL):pubMapped])
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]
@@ -507,7 +510,6 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         }
 
         injson.fields.each {
-            log.trace("Working on json field $it")
             it.each { fkey, fvalue ->
                 outjson = mapField(fkey, fvalue, outjson)
             }

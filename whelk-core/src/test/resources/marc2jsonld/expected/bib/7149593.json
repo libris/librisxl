@@ -6,7 +6,7 @@
   "creator": {"@type": "Organization", "abbr": "NB"},
   "modified": "2004-08-09T15:20:32.0",
   "catForm": {
-      "code" : "",
+      "code" : "a",
       "label": "AACR2/KRS (normalv\u00e4rde)"
   },
   "encLevel": {
@@ -23,7 +23,7 @@
     "@id": "http://libris.kb.se/bib/7149593",
     "@type": ["Instance", "Book"],
     "typeOfRecord": {
-        "code": "",
+        "code": "a",
         "label":"Text: tryck"
     },
     "baseMaterial": "ill.",
@@ -45,7 +45,7 @@
     "instanceOf": {
       "@type": ["Work", "Text"],
       "bibLevel": {
-          "code" : "",
+          "code" : "m",
           "label" : "Monografisk resurs"
       },
       "title": "Anteckningar fr\u00e5n en \u00f6",
