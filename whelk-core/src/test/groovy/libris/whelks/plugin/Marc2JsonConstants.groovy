@@ -35,14 +35,14 @@ interface Marc2JsonConstants {
     static def TITLE_LD_1 = false
 
     static def ISBN_MARC_0 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"]]]
-    static def ISBN_LD_0 = ["isbn":"9100563226", "isbnData": "(inb.)"]
+    static def ISBN_LD_0 = ["isbn":"9100563226", "isbnNote": "(inb.)","identifier":["@type":"Identifier","identifierScheme":"isbn","identifierValue":"91-0-056322-6 (inb.)"]]
     static def ISBN_MARC_1 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"]]]
-    static def ISBN_LD_1 =  ["isbn":"9100563226"]
+    static def ISBN_LD_1 =  ["isbn":"9100563226","identifier":["@type":"Identifier","identifierScheme":"isbn","identifierValue":"91-0-056322-6"]]
     static def ISBN_MARC_2 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6 (inb.)"], ["c":"310:00"]]]
-    static def ISBN_LD_2 = ["isbn":"9100563226", "isbnData": "(inb.)", "termsOfAvailability":["literal":"310:00"]]
+    static def ISBN_LD_2 = ["isbn":"9100563226", "isbnNote": "(inb.)", "termsOfAvailability":["literal":"310:00"],"identifier":["@type":"Identifier","identifierScheme":"isbn","identifierValue":"91-0-056322-6 (inb.)"]]
     static def ISBN_MARC_3 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["g":"foo"]]]
     static def ISBN_MARC_5 = ["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["z":"foo"]]]
-    static def ISBN_LD_5 = ["isbn":"9100563226", "isbnData": "(inb.)", "termsOfAvailability":["literal":"310:00"], "deprecatedIsbn":"foo"]
+    static def ISBN_LD_5 = ["isbn":"9100563226", "isbnNote": "(inb.)", "termsOfAvailability":["literal":"310:00"], "deprecatedIsbn":"foo","identifier":["@type":"Identifier","identifierScheme":"isbn","identifierValue":"91-0-056322-6 (inb.)"]]
     static def ISBN_LD_4 = [(RAW_LABEL):["fields":[["020":["ind1":" ","ind2":" ", "subfields":[["a": "91-0-056322-6"], ["g":"foo"]]]]]]]
     static def ISBN_LD_3 = false
     static def CLEANED_ISBN_MARC_0 = ["ind1":" ","ind2":" ", "subfields":[["a": "9100563226 (inb.)"]]]

@@ -1,7 +1,7 @@
 {
     "levels": {
-        "about"      : ["020","024","028","042","260","300","500","typeOfRecord"],
-        "instanceOf" : ["008","245","bibLevel"]
+        "about"      : ["020","024","028","042","250","260","300","500","504","505","520","typeOfRecord"],
+        "instanceOf" : ["008","082","050","245","bibLevel"]
     },
     "fields": {
         "001" : "controlNumber",
@@ -12,7 +12,7 @@
             "publicationStatus" : false,
             "yearTime1" : false,
             "yearTime2" : false,
-            "country" : false,
+            "country" : ["country"],
             "booksIllustrations" : false,
             "booksAudience" : false,
             "booksItem" : false,
@@ -27,6 +27,9 @@
             "modifiedRecord" : false,
             "catalogingSource" : false
         },
+        "010": {
+            "a" : ["lccn"]
+        },
         "014" : {
             "a" : ["linkageNumber"]
         },
@@ -40,6 +43,13 @@
         "042" : {
             "9" : ["marc:bibliographyCode"]
         },
+        "050" : {
+            "a" : ["class-lcc"]
+        },
+        "082" : {
+            "a" : ["class-ddc"],
+            "2" : false
+        },
         "084" : {
             "a" : ["classificationNumber"],
             "2" : ["numberSource"]
@@ -50,6 +60,9 @@
             "c" : ["statementOfResponsibility"],
             "h" : ["mediaTerm"]
         },
+        "250": {
+            "a" : ["edition"]
+        },
         "260": {
             "a" : ["placeOfPublication"],
             "b" : ["publisherName"],
@@ -57,12 +70,21 @@
             "e" : ["placeOfManufacture"]
         },
         "300": {
-            "a" : ["extentOfText"],
+            "a" : ["extent"],
             "b" : ["baseMaterial"],
             "c" : ["dimensions"]
         },
         "500": {
             "a" : ["comment"]
+        },
+        "504": {
+            "a" : ["supplementaryContentNote"]
+        },
+        "505": {
+            "a" : ["listOfContents"]
+        },
+        "520": {
+            "a" : ["summary"]
         },
         "650": {
             "a" : ["topicalTerm"],
