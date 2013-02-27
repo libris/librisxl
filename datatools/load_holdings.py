@@ -9,17 +9,20 @@ JAVA_CLASSPATH="%s/../whelk-core/classes/main/:../whelk-core/build/libs/whelk-co
 MARC_CONVERTER="se.kb.libris.conch.converter.MarcJSONConverter"
 HOLD_DIR="%s/../whelk-core/src/test/resources/marc2jsonld/in/hold" % os.path.dirname(os.path.realpath(__file__))
 
+parser = argparse.ArgumentParser(description='Load holdings from OAI-PMH for a given bibid')
+parser.add_argument('-b', '--bibid')
+parser.add_argument('-u', '--username', help='The username to use for OAI-PMH')
+parser.add_argument('-p', '--password', help='The password to use for OAI-PMH')
 
-API_USERNAME = ""
-API_PASSWORD = ""
+args = parser.parse_args()
 
 try:
     os.makedirs(HOLD_DIR)
 except:
     1
 
-request = urllib2.Request("http://data.libris.kb.se/hold/oaipmh?verb=ListRecords&metadataPrefix=marcxml&set=bibid:7149593")
-base64string = base64.encodestring('%s:%s' % (API_USERNAME, API_PASSWORD)).replace('\n', '')
+request = urllib2.Request("http://data.libris.kb.se/hold/oaipmh?verb=ListRecords&metadataPrefix=marcxml&set=bibid:%s" % args.bibid)
+base64string = base64.encodestring('%s:%s' % (args.username,args.password)).replace('\n', '')
 request.add_header("Authorization", "Basic %s" % base64string)
 result = urllib2.urlopen(request)
 
