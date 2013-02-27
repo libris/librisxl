@@ -57,7 +57,7 @@
             "e" : ["placeOfManufacture"]
         },
         "300": {
-            "a" : ["extentOfText"],
+            "a" : ["extent"],
             "b" : ["baseMaterial"],
             "c" : ["dimensions"]
         },
