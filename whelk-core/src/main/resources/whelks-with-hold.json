@@ -2,7 +2,7 @@
     "_whelks": [
         {
             "bib":{
-                "_class" : "se.kb.libris.whelks.WhelkImpl",
+                "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
                 "_plugins": ["bundledindex", "diskstorage", "search", "kitinsearch", "document", "marcmassager"]
             }
         },
@@ -15,7 +15,7 @@
         {
             "hold":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": ["bundledindex", "diskstorage", "search", "document", "marcconverter"]
+                "_plugins": ["bundledindex", "diskstorage", "search", "document", "metasearch", "marcconverter"]
             }
         },
         {
@@ -25,7 +25,11 @@
             }
         }
     ], 
-        "_plugins": [
+        "_plugins": [{
+            "metasearch": {
+                "_class": "se.kb.libris.whelks.api.MetadataSearchRestlet"
+            }
+        },
         {
             "resourcelist": {
                 "_class": "se.kb.libris.whelks.api.ResourceListRestlet"

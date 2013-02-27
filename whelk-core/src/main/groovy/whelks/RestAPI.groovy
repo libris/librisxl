@@ -591,3 +591,26 @@ class MarcMapRestlet extends BasicWhelkAPI {
         response.setEntity(mapper.writeValueAsString(marcmap), MediaType.APPLICATION_JSON)
     }
 }
+
+@Log
+class MetadataSearchRestlet extends BasicWhelkAPI {
+    def pathEnd = "_metasearch"
+
+    String description = "Query API for metadata search."
+    
+    def void handle(Request request, Response response) {
+        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        log.trace("QueryMap $queryMap")
+        def callback = queryMap.get("callback")
+        def bibid = queryMap.get("bibid")
+
+        if (bibid) {
+            def results = this.whelk.query(new Query(bibid), "metadata")
+            def jsonResult =
+                (callback ? callback + "(" : "") + results.toJson() + (callback ? ");" : "")
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+        } else {
+            response.setEntity('{"Error":"Use parameter \"bibid=<bibid>\"."}', MediaType.APPLICATION_JSON)
+        }
+    }
+}
