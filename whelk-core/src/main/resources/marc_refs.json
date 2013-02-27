@@ -12,7 +12,7 @@
             "publicationStatus" : false,
             "yearTime1" : false,
             "yearTime2" : false,
-            "country" : false,
+            "country" : ["country"],
             "booksIllustrations" : false,
             "booksAudience" : false,
             "booksItem" : false,

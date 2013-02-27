@@ -144,6 +144,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                     } else {
                         out["isbn"] = value.replaceAll("-", "")
                     }
+                    out["identifier"] = ["@type":"Identifier","identifierScheme":"isbn","identifierValue":value]
                     break;
                 case "c":
                     log.trace("isbn c: $value")
