@@ -265,6 +265,9 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                     break;
                     case "4":
                         break;
+                    case "6":
+                    //TODO: create linked resource for alternateGraphicRepresentation
+                        break;
                     default:
                         complete = false
                         break;
@@ -492,7 +495,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
         if (whelk.getPrefix().equals("bib")) {
-            outjson["@type"] = ["Instance", "Book"]
+            outjson["@type"] = ["Instance"]
             if (injson.containsKey("leader")) {
                 injson = marccracker.rewriteJson(identifier, injson)
                     log.trace("Leader: ${injson.leader}")
@@ -501,6 +504,16 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                             lvalue = lvalue.trim()
                             if (lvalue && !(lvalue =~ /^\|+$/)) {
                                 def lbl = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
+                                if (lkey == "typeOfRecord") {
+                                    switch (lvalue) {
+                                        case "a":
+                                        outjson["@type"] << "Book"
+                                        break;
+                                        case "j":
+                                        outjson["@type"] << "Music Recording"
+                                        break;
+                                    }
+                                }
                                 if (lkey in marcref.levels.instanceOf) {
                                     outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL], [:])
                                     outjson[ABOUT_LABEL][INSTANCE_LABEL][lkey] = ["code":lvalue,"label":(lbl ?: "")]
