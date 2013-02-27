@@ -7,6 +7,7 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader
+import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import org.codehaus.jackson.map.ObjectMapper
 
 /**
@@ -100,12 +101,18 @@ class MarcJSONConverter {
     static void main(args) {
         /*
         MarcRecord record = new File(args[0]).withInputStream {
-            new Iso2709MarcRecordReader(it).readRecord()
+        new Iso2709MarcRecordReader(it).readRecord()
         }
         */
-        MarcRecord record = new Iso2709MarcRecordReader(getNormalizedInputStreamFromFile(new File(args[0]))).readRecord()
+        MarcRecord record = null
+        if (args.length > 1 && args[0] == "-xml")  {
+            record = new MarcXmlRecordReader(getNormalizedInputStreamFromFile(new File(args[1]))).readRecord()
+        }
+        if (record == null) {
+            record = new Iso2709MarcRecordReader(getNormalizedInputStreamFromFile(new File(args[0]))).readRecord()
+        }
         println toJSONString(record)
         /*println not_quite_so_old_toJSONString(record)*//*.replaceAll(
-                /(?m)\{\s+(\S+: "[^"]+")\s+\}/, '{$1}')*/
+            /(?m)\{\s+(\S+: "[^"]+")\s+\}/, '{$1}')*/
     }
 }
