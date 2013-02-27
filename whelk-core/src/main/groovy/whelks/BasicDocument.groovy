@@ -7,6 +7,7 @@ import java.io.*
 import java.net.URI
 import java.util.*
 import java.nio.ByteBuffer
+import java.lang.annotation.*
 
 import org.codehaus.jackson.*
 import org.codehaus.jackson.map.*
@@ -15,16 +16,36 @@ import org.codehaus.jackson.annotate.JsonIgnore
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
 
+@Target(value = ElementType.FIELD)
+@Retention(value = RetentionPolicy.RUNTIME)
+public @interface IsMetadata {}
+
 @Log
 public class BasicDocument implements Document {
+    @IsMetadata
     URI identifier
+
+    @IsMetadata
     String version = "1", contentType, format
+
     byte[] data
+    
+    @IsMetadata
     long size
+
+    @IsMetadata
     Set<Link> links = new HashSet<Link>()
+    
+    @IsMetadata
     Set<Key> keys = new TreeSet<Key>()
+    
+    @IsMetadata
     Set<Tag> tags = new HashSet<Tag>()
+    
+    @IsMetadata
     Set<Description> descriptions = new TreeSet<Description>()
+    
+    @IsMetadata
     long timestamp = 0
 
     @JsonIgnore
@@ -306,6 +327,30 @@ public class BasicDocument implements Document {
         return jsonmap
     }
 
+    @JsonIgnore
+    public String getMetadataJson() {
+        def mapper = new ObjectMapper()
+        def out = this.class.declaredFields.findAll {
+            !it.synthetic &&
+            it.getModifiers() != java.lang.reflect.Modifier.TRANSIENT &&
+            it.getAnnotation(IsMetadata.class) != null
+        }.collectEntries { v ->
+            log.trace("v.type " + v.type)
+            if (v.type == "interface java.util.Set") {
+                [(v.name) : getObjectAsJson(this[v.name])]
+            } else {
+                [(v.name) : this[v.name]]
+            }
+        }
+        log.trace("Constructed metadatajson: $out")
+        return mapper.writeValueAsString(out)
+    }
+
+    String getObjectAsJson(def obj) {
+        def map = mapper.convertValue(obj, Map)
+        return mapper.writeValueAsString(map)
+    }
+
     @Override
     @JsonIgnore
     public InputStream getDataAsStream(long offset, long length) {
@@ -370,7 +415,4 @@ class HighlightedDocument extends BasicDocument {
         json.highlight = matches
         return mapper.writeValueAsString(json)
     }
-}
-
-class RiakDocument extends BasicDocument {
 }

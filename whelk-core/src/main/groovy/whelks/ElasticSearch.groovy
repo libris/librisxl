@@ -51,6 +51,7 @@ abstract class ElasticSearch extends BasicPlugin {
     String URI_SEPARATOR = "::"
 
     String indexType = "record"
+    String indexMetadataType = "metadata"
     String storageType = "document"
 
     @Override
@@ -157,6 +158,8 @@ abstract class ElasticSearch extends BasicPlugin {
             def irb = client.prepareIndex(idxpfx, addType, eid)
             if (addType == indexType) {
                 irb.setSource(doc.data)
+                log.trace("Prepareing index of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
+                client.prepareIndex(idxpfx, indexMetadataType, doc.getMetadataJson())
             } else {
                 irb.setTimestamp(""+doc.getTimestamp()).setSource(doc.toJson())
             }
@@ -177,6 +180,8 @@ abstract class ElasticSearch extends BasicPlugin {
                 for (doc in documents) {
                     if (addType == indexType) {
                         breq.add(client.prepareIndex(idxpfx, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
+                        log.trace("Prepareing index of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
+                        breq.add(client.prepareIndex(idxpfx, indexMetadataType, translateIdentifier(doc.identifier)).setSource(doc.getMetadataJson()))
                     } else {
                         breq.add(client.prepareIndex(idxpfx, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
                     }
