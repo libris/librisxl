@@ -75,7 +75,7 @@ task jettyRun(dependsOn: 'classes', type: JettyRun, overwrite: true) {
     jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
 
     def mock_config = "file:src/main/resources/mock_whelks.json"
-    def mock_cluster = "bundled_whelk_index"
+    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
     System.setProperty('file.encoding', System.getProperty('file.encoding', "UTF-8"))
     System.setProperty('whelk.config.uri', System.getProperty("whelk.config.uri", mock_config))
 

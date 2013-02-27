@@ -1,6 +1,6 @@
 {
     "levels": {
-        "about"      : ["020","024","028","042","260","300","500","typeOfRecord"],
+        "about"      : ["020","024","028","042","260","300","500","504","505","520","typeOfRecord"],
         "instanceOf" : ["008","245","bibLevel"]
     },
     "fields": {
@@ -63,6 +63,15 @@
         },
         "500": {
             "a" : ["comment"]
+        },
+        "504": {
+            "a" : ["supplementaryContentNote"]
+        },
+        "505": {
+            "a" : ["listOfContents"]
+        },
+        "520": {
+            "a" : ["summary"]
         },
         "650": {
             "a" : ["topicalTerm"],

@@ -140,7 +140,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                     log.trace("isbn a: $value")
                     if (value.contains(" ")) {
                         out["isbn"] = value.split(" ")[0].replaceAll("-", "")
-                        out["isbnData"] = value.split(" ")[1]
+                        out["isbnNote"] = value.split(" ")[1]
                     } else {
                         out["isbn"] = value.replaceAll("-", "")
                     }
