@@ -3,10 +3,15 @@
 import xml.etree.ElementTree as ET
 import urllib2, base64
 import subprocess, os, sys
+import argparse
 
 JAVA_CLASSPATH="%s/../whelk-core/classes/main/:../whelk-core/build/libs/whelk-core.jar" % os.path.dirname(os.path.realpath(__file__))
 MARC_CONVERTER="se.kb.libris.conch.converter.MarcJSONConverter"
 HOLD_DIR="%s/../whelk-core/src/test/resources/marc2jsonld/in/hold" % os.path.dirname(os.path.realpath(__file__))
+
+
+API_USERNAME = ""
+API_PASSWORD = ""
 
 try:
     os.makedirs(HOLD_DIR)
@@ -14,7 +19,7 @@ except:
     1
 
 request = urllib2.Request("http://data.libris.kb.se/hold/oaipmh?verb=ListRecords&metadataPrefix=marcxml&set=bibid:7149593")
-base64string = base64.encodestring('%s:%s' % ("apibeta", "beta")).replace('\n', '')
+base64string = base64.encodestring('%s:%s' % (API_USERNAME, API_PASSWORD)).replace('\n', '')
 request.add_header("Authorization", "Basic %s" % base64string)
 result = urllib2.urlopen(request)
 

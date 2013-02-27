@@ -13,6 +13,12 @@
             }
         },
         {
+            "hold":{
+                "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "marcconverter" ]
+            }
+        },
+        {
             "resource":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
                 "_plugins": ["resourcelist", "marcmap"]
