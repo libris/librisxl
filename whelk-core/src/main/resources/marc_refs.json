@@ -71,19 +71,27 @@
         },
         "653": {
             "a" : ["uncontrolledIndexTerm"],
-            "6" : ["linkage"]
+            "6" : ["indexTermLinkage"]
         },
         "698": {
             "a" : ["localSubjectCode"],
             "b" : ["localSubjectTerm"]
         },
         "852": {
-            "8": ["sequenceNumber"],
+            "8" : ["sequenceNumber"],
             "b" : ["location"],
             "c" : ["shelvingLocation"],
             "h" : ["classificationPart"],
+            "i" : ["itemPart"],
             "j" : ["shelvingControlNumber"],
-            "x" : ["nonpublicNote"]
+            "l" : ["shelvingFormOrTitle"],
+            "x" : ["shelvingNonpublicNote"],
+            "z" : ["shelvingPublicNote"]
+        },
+        "866": {
+            "a" : ["textualHoldings"],
+            "x" : ["holdingsNonpublicNote"],
+            "z" : ["holdingsPublicNote"]
         }
     },
     "relators" : {

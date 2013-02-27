@@ -570,7 +570,8 @@ class ResourceListRestlet extends BasicWhelkAPI {
 @Log
 class MarcMapRestlet extends BasicWhelkAPI {
     def pathEnd = "_marcmap"
-    String description = "API for marcmap. Hej"
+
+    String description = "API for marcmap."
 
     static final String marcmapfile = "marcmap.json"
     def marcmap
