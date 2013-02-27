@@ -494,8 +494,9 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
 
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
+        outjson["@type"] = ["Document"]
         if (whelk.getPrefix().equals("bib")) {
-            outjson["@type"] = ["Instance"]
+            outjson[ABOUT_LABEL] = ["@type":["Instance"]]
             if (injson.containsKey("leader")) {
                 injson = marccracker.rewriteJson(identifier, injson)
                     log.trace("Leader: ${injson.leader}")
@@ -507,10 +508,10 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                                 if (lkey == "typeOfRecord") {
                                     switch (lvalue) {
                                         case "a":
-                                        outjson["@type"] << "Book"
+                                        outjson[ABOUT_LABEL]["@type"] << "Book"
                                         break;
                                         case "j":
-                                        outjson["@type"] << "Music Recording"
+                                        outjson[ABOUT_LABEL]["@type"] << "Music Recording"
                                         break;
                                     }
                                 }
