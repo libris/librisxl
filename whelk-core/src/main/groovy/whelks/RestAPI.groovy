@@ -549,7 +549,6 @@ class ResourceListRestlet extends BasicWhelkAPI {
     }
 
     def void handle(Request request, Response response) {
-        def jsonResponse
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def lang = queryMap.get("lang")
         def country = queryMap.get("country")
@@ -595,22 +594,32 @@ class MarcMapRestlet extends BasicWhelkAPI {
 @Log
 class MetadataSearchRestlet extends BasicWhelkAPI {
     def pathEnd = "_metasearch"
+    def mapper
 
     String description = "Query API for metadata search."
     
     def void handle(Request request, Response response) {
+        mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        log.trace("QueryMap $queryMap")
-        def callback = queryMap.get("callback")
-        def bibid = queryMap.get("bibid")
-
-        if (bibid) {
-            def results = this.whelk.query(new Query(bibid), "metadata")
-            def jsonResult =
-                (callback ? callback + "(" : "") + results.toJson() + (callback ? ");" : "")
-            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+        //def callback = queryMap.get("callback")
+        def link = queryMap.get("link")
+        def queryStr
+        def results
+        def holdRecords = [:]
+        if (link) {
+            queryStr = new Query(link).addField("links.identifier")
+            results = this.whelk.query(queryStr, "metadata")
+            //def jsonResult = results.toJson()
+                //(callback ? callback + "(" : "") + results.toJson() + (callback ? ");" : "")
+            results.hits.each {
+                def identifier = it.identifier.toString()
+                queryStr = new Query(identifier).addField("@id")
+                holdRecords[(identifier)] = this.whelk.query(queryStr, "record").toJson()
+            }
+            response.setEntity(mapper.writeValueAsString(holdRecords), MediaType.APPLICATION_JSON)
         } else {
-            response.setEntity('{"Error":"Use parameter \"bibid=<bibid>\"."}', MediaType.APPLICATION_JSON)
+            response.setEntity('{"Error":"Use parameter \"link=<uri>\"."}', MediaType.APPLICATION_JSON)
         }
     }
 }
+
