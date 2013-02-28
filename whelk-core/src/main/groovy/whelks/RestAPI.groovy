@@ -156,10 +156,15 @@ class DocumentRestlet extends BasicWhelkAPI {
                 log.trace("headers: $headers")
                 def format = headers.find { it.name.equalsIgnoreCase("Format") }?.value
                 log.debug("format: $format")
+                def link = headers.find { it.name.equals("link") }?.value
                 if (path == "/") {
                     doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withDataAsStream(request.entity.stream)
                 } else {
                     doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withFormat(format).withData(request.entityAsText)
+                }
+                if (link != null) {
+                    log.trace("Adding link $link to document...")
+                    doc = doc.withLink(link)
                 }
                 identifier = this.whelk.store(doc)
                 response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)

@@ -13,6 +13,10 @@ for d in $datadir/in/*; do
             fmt=jsonld
         fi
         dest_url=http://localhost:8080/whelk-core/$datatype/$id
-        curl -XPUT -H "Content-type:application/json" -H "format:$fmt" $dest_url --data-binary @$f
+        if [ "$datatype" ==  "hold" ]; then
+            curl -XPUT -H "Content-type:application/json" -H "format:$fmt" -H "link:/bib/7149593" $dest_url --data-binary @$f
+        else    
+            curl -XPUT -H "Content-type:application/json" -H "format:$fmt" $dest_url --data-binary @$f
+        fi
     done
 done
