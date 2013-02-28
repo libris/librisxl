@@ -32,7 +32,7 @@
       <level value="warn"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
        <logger name="se.kb.libris.whelks.imports.BatchImport">
@@ -49,11 +49,10 @@
   </logger>
   <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
-  </logger>-->
+  </logger>
   <logger name="se.kb.libris.whelks.component">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter">
       <level value="trace"/>
   </logger>-->
