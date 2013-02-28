@@ -368,6 +368,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         def subjectcode = ""
         def out = []
         boolean complete = true
+        log.trace("map subject for $json")
         json["subfields"].each {
             it.each { key, value ->
                 switch(key) {
@@ -401,6 +402,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             }
             out << ["@id":new String("http://libris.kb.se/sab/$subjectcode")]
         }
+        log.trace("map subject out: $out")
         return (out.size() > 0 ? out : false)
     }
 
@@ -439,6 +441,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                     outjson[RAW_LABEL]["fields"] << [(code):json]
                 }
                 break;
+            case "072":
             case "084":
                 def c = mapSubject(code, json)
                 if (c) {

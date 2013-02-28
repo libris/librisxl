@@ -130,6 +130,7 @@
             "Lz" : "http://dbpedia.org/resource/Autobiography"
         },
         "bicssc": {
+            "FH" : "http://dbpedia.org/resource/Thriller_(genre)",
             "FK" : "http://dbpedia.org/resource/Horror_fiction",
             "FL" : "http://dbpedia.org/resource/Science_fiction",
             "FM" : "http://dbpedia.org/resource/Fantasy_literature"

@@ -21,6 +21,7 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             conv.createJson(new URI(uri), loadJson(injson)) == loadJson(outjson)
         where:
             uri                     | injson                      | outjson
+            "/bib/13531679"         | "in/bib/13531679.json"      | "expected/bib/13531679.json"
             "/bib/7149593"          | "in/bib/7149593.json"       | "expected/bib/7149593.json"
             "/bib/12384646"         | "in/bib/12384646.json"      | "expected/bib/12384646.json"
     }
