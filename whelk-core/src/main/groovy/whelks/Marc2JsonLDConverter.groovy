@@ -139,8 +139,8 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                 case "a":
                     log.trace("isbn a: $value")
                     if (value.contains(" ")) {
-                        out["isbn"] = value.split(" ")[0].replaceAll("-", "")
-                        out["isbnNote"] = value.split(" ")[1]
+                        out["isbn"] = value.split(/\s+/, 2)[0].replaceAll("-", "")
+                        out["isbnNote"] = value.split(/\s+/, 2)[1]
                     } else {
                         out["isbn"] = value.replaceAll("-", "")
                     }
@@ -361,6 +361,49 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
 
     }
 
+
+    def mapSubject(code, json) {
+        def baseurl = "http://libris.kb.se/"
+        def system = "sab"
+        def subjectcode = ""
+        def out = []
+        boolean complete = true
+        json["subfields"].each {
+            it.each { key, value ->
+                switch(key) {
+                    case "a":
+                    subjectcode = value
+                    break;
+                    case "2":
+                    system = value
+                    break;
+                    default:
+                    complete = false
+                    break;
+                }
+            }
+        }
+        if (!complete) {
+            return false
+        }
+        if (marcref.subjects.get(system)?.containsKey(subjectcode)) {
+            out << ["@id":new String(marcref.subjects[system][subjectcode])]
+        }
+        if (system.startsWith("kssb/")) {
+            if (subjectcode =~ /\s/) {
+                def (maincode, restcode) = subjectcode.split(/\s+/, 2)
+                subjectcode = maincode+"/"+URLEncoder.encode(restcode)
+            } else {
+                if (marcref.subjects.get("sab")?.containsKey(subjectcode)) {
+                    out << ["@id":new String(marcref.subjects[system][subjectcode])]
+                }
+                subjectcode = URLEncoder.encode(subjectcode)
+            }
+            out << ["@id":new String("http://libris.kb.se/sab/$subjectcode")]
+        }
+        return (out.size() > 0 ? out : false)
+    }
+
     def mapField(code, json, outjson) {
         switch(code) {
             case "020":
@@ -391,6 +434,16 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                 def c = mapCreator(code, json)
                 if (c) {
                     outjson = mergeMap(outjson, c)
+                } else {
+                    outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
+                    outjson[RAW_LABEL]["fields"] << [(code):json]
+                }
+                break;
+            case "084":
+                def c = mapSubject(code, json)
+                if (c) {
+                    outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL, "subject"], [])
+                    outjson[ABOUT_LABEL][INSTANCE_LABEL]["subject"].addAll(c)
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]
@@ -532,7 +585,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
 
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
-        outjson["@type"] = ["Document"]
+        outjson["@type"] = "Document"
         if (whelk.getPrefix().equals("bib")) {
             outjson[ABOUT_LABEL] = ["@type":["Instance"]]
             if (injson.containsKey("leader")) {

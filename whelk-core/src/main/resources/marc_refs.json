@@ -1,7 +1,7 @@
 {
     "levels": {
         "about"      : ["020","024","028","042","250","260","300","500","504","505","520","typeOfRecord"],
-        "instanceOf" : ["008","082","050","245","bibLevel"]
+        "instanceOf" : ["008","082","050","084","245","bibLevel"]
     },
     "fields": {
         "001" : "controlNumber",
@@ -124,5 +124,16 @@
         "pbd" : "publishingDirector",
         "rpy" : "responsibleParty",
         "wde" : "woodEngraver"
+    },
+    "subjects" : {
+        "sab": {
+            "Lz" : "http://dbpedia.org/resource/Autobiography"
+        },
+        "bicssc": {
+            "FK" : "http://dbpedia.org/resource/Horror_fiction",
+            "FL" : "http://dbpedia.org/resource/Science_fiction",
+            "FM" : "http://dbpedia.org/resource/Fantasy_literature"
+        }
+
     }
 }
