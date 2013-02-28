@@ -137,9 +137,13 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
 
     @Override
     public SearchResult query(Query query) {
+        return query(query, null);
+    }
+
+    public SearchResult query(Query query, String indexType) {
         for (Component c: getComponents())
             if (c instanceof Index)
-                return ((Index)c).query(query, this.prefix);
+                return ((Index)c).query(query, this.prefix, indexType);
 
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }

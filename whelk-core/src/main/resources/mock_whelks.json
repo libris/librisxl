@@ -15,7 +15,7 @@
         {
             "hold":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "marcconverter" ]
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "metasearch", "marcconverter" ]
             }
         },
         {
@@ -26,6 +26,11 @@
         }
     ],
     "_plugins": [
+        {
+            "metasearch": {
+                "_class": "se.kb.libris.whelks.api.MetadataSearchRestlet"
+            }
+        },
         {
             "resourcelist": {
                 "_class": "se.kb.libris.whelks.api.ResourceListRestlet"

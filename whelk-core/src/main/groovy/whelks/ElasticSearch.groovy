@@ -265,9 +265,11 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    SearchResult query(Query q, String idxpfx) {
+    SearchResult query(Query q, String idxpfx, String indexType) {
+        def iType = (indexType == null ? this.indexType : indexType)
+        log.trace "Querying index $idxpfx and indextype $iType"
         log.trace "Doing query on $q"
-        def srb = client.prepareSearch(idxpfx).setTypes(indexType)
+        def srb = client.prepareSearch(idxpfx).setTypes(iType)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
         if (q.query == "*") {
@@ -295,7 +297,7 @@ abstract class ElasticSearch extends BasicPlugin {
             q.sorting.each {
                 srb = srb.addSort(it.key, (it.value && it.value.equalsIgnoreCase('desc') ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
             }
-        } 
+        }
         if (q.highlights) {
             srb = srb.setHighlighterPreTags("").setHighlighterPostTags("")
             q.highlights.each {
@@ -324,7 +326,7 @@ abstract class ElasticSearch extends BasicPlugin {
             results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
                 if (q.highlights) {
-                    results.addHit(createDocumentFromHit(it, idxpfx), convertHighlight(it.highlightFields)) 
+                    results.addHit(createDocumentFromHit(it, idxpfx), convertHighlight(it.highlightFields))
                 } else {
                     results.addHit(createDocumentFromHit(it, idxpfx))
                 }
@@ -334,6 +336,10 @@ abstract class ElasticSearch extends BasicPlugin {
             }
         }
         return results
+    }
+
+    SearchResult query(Query q, String idxpfx) {
+       return query(q, idxpfx, indexType)
     }
 
     Document createDocumentFromHit(hit, idxpfx) {

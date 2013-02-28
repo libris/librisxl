@@ -549,7 +549,6 @@ class ResourceListRestlet extends BasicWhelkAPI {
     }
 
     def void handle(Request request, Response response) {
-        def jsonResponse
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def lang = queryMap.get("lang")
         def country = queryMap.get("country")
@@ -591,3 +590,36 @@ class MarcMapRestlet extends BasicWhelkAPI {
         response.setEntity(mapper.writeValueAsString(marcmap), MediaType.APPLICATION_JSON)
     }
 }
+
+@Log
+class MetadataSearchRestlet extends BasicWhelkAPI {
+    def pathEnd = "_metasearch"
+    def mapper
+
+    String description = "Query API for metadata search."
+    
+    def void handle(Request request, Response response) {
+        mapper = new ObjectMapper()
+        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        //def callback = queryMap.get("callback")
+        def link = queryMap.get("link")
+        def queryStr
+        def results
+        def holdRecords = [:]
+        if (link) {
+            queryStr = new Query(link).addField("links.identifier")
+            results = this.whelk.query(queryStr, "metadata")
+            //def jsonResult = results.toJson()
+                //(callback ? callback + "(" : "") + results.toJson() + (callback ? ");" : "")
+            results.hits.each {
+                def identifier = it.identifier.toString()
+                queryStr = new Query(identifier).addField("@id")
+                holdRecords[(identifier)] = this.whelk.query(queryStr, "record").toJson()
+            }
+            response.setEntity(mapper.writeValueAsString(holdRecords), MediaType.APPLICATION_JSON)
+        } else {
+            response.setEntity('{"Error":"Use parameter \"link=<uri>\"."}', MediaType.APPLICATION_JSON)
+        }
+    }
+}
+
