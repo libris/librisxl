@@ -144,7 +144,6 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                     } else {
                         out["isbn"] = value.replaceAll("-", "")
                     }
-                    out["identifier"] = ["@type":"Identifier","identifierScheme":"isbn","identifierValue":value]
                     break;
                 case "c":
                     log.trace("isbn c: $value")
@@ -163,7 +162,17 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         if (complete) {
             return out
         }
-        //return [(RAW_LABEL):["fields":["020":json]]]
+        return false
+    }
+
+    def mapIsbnAsOtherIdentifier(code, json) {
+        try {
+            def v = json.subfields.collect {["@type":"Identifier","identifierScheme":"isbn","identifierValue":it["a"]]}[0]
+            log.trace("isbn as other identifier: $v")
+            return v
+        } catch (Exception e) {
+            log.debug("Mapping isbn as identifier yielded exception: ${e.message}")
+        }
         return false
     }
 
@@ -344,8 +353,8 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             case "020":
                 def i = mapIsbn(json)
                 if (i) {
-                    def isbn = [(ABOUT_LABEL):i]
-                    outjson = mergeMap(outjson, isbn)
+                    outjson = mergeMap(outjson, [(ABOUT_LABEL):i])
+                    outjson = createNestedMapStructure(outjson, [ABOUT_LABEL,"identifier"], mapIsbnAsOtherIdentifier(code,json))
                 } else {
                     outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
                     outjson[RAW_LABEL]["fields"] << [(code):json]
