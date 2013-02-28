@@ -25,7 +25,8 @@
             }
         }
     ], 
-        "_plugins": [{
+        "_plugins": [
+        {
             "metasearch": {
                 "_class": "se.kb.libris.whelks.api.MetadataSearchRestlet"
             }
