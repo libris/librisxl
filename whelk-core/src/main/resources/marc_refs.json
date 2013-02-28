@@ -40,6 +40,12 @@
         "035" : {
             "9" : ["localSystemNumber"]
         },
+        "040" : {
+            "a" : ["creator"],
+            "b" : ["catalogingLanguage"],
+            "c" : ["transliteratingBy"],
+            "d" : ["catalogingChangesBy"]
+        },
         "042" : {
             "9" : ["marc:bibliographyCode"]
         },
