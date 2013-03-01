@@ -83,6 +83,9 @@
         "500": {
             "a" : ["comment"]
         },
+        "599": {
+            "a" : ["internalRemark"]
+        },
         "504": {
             "a" : ["supplementaryContentNote"]
         },

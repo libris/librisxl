@@ -75,29 +75,41 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         log.trace("mapDefault: $code = $json")
         json.get("subfields").each {
             it.each { k, v ->
-                if (marcref.fields.get(code) == null) {
-                    return null
-                }
-                def label = marcref.fields.get(code)?.get(k)
-                if (label instanceof Map) {
-                    assignValue(out, label, v)
-                } else if (label instanceof List) {
-                    label.each {
-                        if (out.containsKey(it)) {
-                            if (!(out[(it)] instanceof List)) {
-                                def cval = out[(it)]
-                                out[(it)] = [cval]
+                if ((code as int) > 8) {
+                    if (marcref.fields.get(code) == null) {
+                        return null
+                    }
+                    def label = marcref.fields.get(code)?.get(k)
+                    if (label instanceof Map) {
+                        assignValue(out, label, v)
+                    } else if (label instanceof List) {
+                        label.each {
+                            if (out.containsKey(it)) {
+                                if (!(out[(it)] instanceof List)) {
+                                    def cval = out[(it)]
+                                    out[(it)] = [cval]
+                                }
+                                out[(it)] << v
+                            } else {
+                                out[(it)] = v
                             }
-                            out[(it)] << v
+                        }
+                    } else if (label) {
+                        out[label] = v
+                    } else if (label == null) {
+                        log.debug("Failed to map ${code}.${k}")
+                        complete = false
+                    }
+                } else { // Map controlfield
+                    log.trace("mapping controlfield $k = $v")
+                    if (v.trim() && !(v =~ /^[|]+$/)) {
+                        def lbl = marcmap.bib.fixprops?.get(k)?.get(v)?.get("label_sv")
+                        if (lbl) {
+                            out[k] = ["code":v,"label":lbl,"@language":"sv"]
                         } else {
-                            out[(it)] = v
+                            out[k] = v
                         }
                     }
-                } else if (label) {
-                    out[label] = v
-                } else if (label == null) {
-                    log.debug("Failed to map ${code}.${k}")
-                    complete = false
                 }
             }
         }
@@ -652,11 +664,11 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                                     }
                                 }
                                 if (lkey in marcref.levels.instanceOf) {
-                                    outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL, lkey],["code":lvalue,"label":(lbl ?: "")])
+                                    outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL, lkey],["code":lvalue,"label":(lbl ?: ""),"@language":"sv"])
                                 } else if (lkey in marcref.levels.about) {
-                                    outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, lkey], ["code":lvalue,"label":(lbl ?: "")])
+                                    outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, lkey], ["code":lvalue,"label":(lbl ?: ""),"@language":"sv"])
                                 } else {
-                                    outjson[lkey] = ["code":lvalue,"label":(lbl ?: "")]
+                                    outjson[lkey] = ["code":lvalue,"label":(lbl ?: ""),"@language":"sv"]
                                 }
                             }
                         }
