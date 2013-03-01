@@ -659,7 +659,8 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
         def link = queryMap.get("link")
         def queryStr
         def results
-        def holdRecords = [:]
+        def outjson = [:]
+        def records = []
         if (link) {
             queryStr = new Query(link).addField("links.identifier")
             results = this.whelk.query(queryStr, "metadata")
@@ -667,10 +668,13 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
                 //(callback ? callback + "(" : "") + results.toJson() + (callback ? ");" : "")
             results.hits.each {
                 def identifier = it.identifier.toString()
-                queryStr = new Query(identifier).addField("@id")
-                holdRecords[(identifier)] = this.whelk.query(queryStr, "record").toJson()
+                def d = whelk.get(new URI(identifier))
+                //queryStr = new Query(identifier).addField("@id")
+                //outRecords[(identifier)] = this.whelk.query(queryStr, "record").toJson()
+                records << d
             }
-            response.setEntity(mapper.writeValueAsString(holdRecords), MediaType.APPLICATION_JSON)
+            outjson["list"] = records
+            response.setEntity(mapper.writeValueAsString(outjson), MediaType.APPLICATION_JSON)
         } else {
             response.setEntity('{"Error":"Use parameter \"link=<uri>\"."}', MediaType.APPLICATION_JSON)
         }

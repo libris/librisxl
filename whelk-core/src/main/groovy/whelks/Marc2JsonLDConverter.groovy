@@ -696,7 +696,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             def injson = mapper.readValue(idoc.dataAsString, Map)
             outdocs << new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson))).withFormat("jsonld")
         } else {
-            log.trace("This converter requires $requiredFormat in $requiredContentType. Document ${idoc.identifier} is ${idoc.format} in ${idoc.contentType}")
+            //log.trace("This converter requires $requiredFormat in $requiredContentType. Document ${idoc.identifier} is ${idoc.format} in ${idoc.contentType}")
             outdocs << idoc
         }
         return outdocs
