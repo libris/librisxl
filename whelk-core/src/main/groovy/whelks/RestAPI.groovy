@@ -457,20 +457,9 @@ class AutoComplete extends BasicWhelkAPI {
             if (name[-1] != ' ' && name[-1] != '*') {
                 name = name + "*"
             }
-            def names = []
-            namePrefixes.each { p ->
-                def nameparts = []
-                name.split(" ").each {
-                    nameparts << "$p:$it"
-                }
-                names << nameparts.join(" AND ")
-            }
-            log.debug("names: $names")
             log.debug("name: $name")
             log.debug("namePrefixes: $namePrefixes")
-            //def query = names.join(" OR ")
             LinkedHashMap sortby = new LinkedHashMap<String,String>()
-            //sortby['100.a'] = "asc"
             sortby['records'] = "desc"
             def query = new Query(name)
             query.highlights = namePrefixes
