@@ -14,7 +14,7 @@
         },
         {
             "suggest":{
-                "_plugins": [ "bundledIndex", "search", "document", "autocomplete", "suggestformatconverter" ]
+                "_plugins": [ "bundledIndex", "search", "document", "autocomplete"]
             }
         }
     ], 

@@ -19,6 +19,13 @@
             }
         },
         {
+            "suggest":{
+                "_class" : "se.kb.libris.whelks.CombinedWhelk",
+                "prefixes" : ["auth", "bib"],
+                "_plugins": [ "localindex", "search", "document", "autocomplete" ]
+            }
+        },
+        {
             "resource":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
                 "_plugins": ["resourcelist", "marcmap"]
@@ -85,7 +92,12 @@
         {
             "autocomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
-                "_params" : ["100.a", "400.a", "500.a"]
+                "_params" : [
+                              "about.instanceOf.authorList.authoritativeName",
+                              "marc21.fields.100.subfields.a",
+                              "marc21.fields.400.subfields.a",
+                              "marc21.fields.500.subfields.a"
+                            ]
             }
         },
         {

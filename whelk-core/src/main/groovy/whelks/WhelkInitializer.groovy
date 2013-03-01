@@ -24,6 +24,13 @@ class WhelkInitializer {
             w.each { wname, meta ->
                 meta._class = meta._class ?: "se.kb.libris.whelks.basic.BasicWhelk"
                 def whelk = Class.forName(meta._class).getConstructor(String.class).newInstance(wname)
+                // Find setters for whelk.
+                meta.each { key, value ->
+                    if (!(key =~ /^_.+$/)) {
+                        log.trace("Found a property to set for $wname: $key = $value")
+                        whelk."$key" = value
+                    }
+                }
                 for (p in meta._plugins) {
                     whelk.addPlugin(getPlugin(p, wname))
                 }

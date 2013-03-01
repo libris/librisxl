@@ -357,13 +357,17 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             it.each { key, value ->
                 if (marcref.fields.get(code)?.containsKey(key)) {
                     marcref.fields[code][key].each {
-                        if (!out[(it)]) {
-                            out[(it)] = ["@type":"Organization", "abbr":value]
+                        if (key == "b") {
+                            out[(it)] = value
                         } else {
-                            if (!(out[(it)] instanceof List)) {
-                                out[(it)] = [out[(it)]]
+                            if (!out[(it)]) {
+                                out[(it)] = ["@type":"Organization", "abbr":value]
+                            } else {
+                                if (!(out[(it)] instanceof List)) {
+                                    out[(it)] = [out[(it)]]
+                                }
+                                out[(it)] << ["@type":"Organization", "abbr":value]
                             }
-                            out[(it)] << ["@type":"Organization", "abbr":value]
                         }
                     }
                 } else {

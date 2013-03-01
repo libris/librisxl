@@ -427,9 +427,8 @@ class KitinSearchRestlet extends BasicWhelkAPI {
 
     }
 }
-
-@Log 
-class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitialisable {
+@Log
+class AutoComplete extends BasicWhelkAPI {
 
     def pathEnd = "_complete"
 
@@ -443,6 +442,69 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
     */
 
     AutoComplete(java.util.ArrayList namePfxs) {
+        namePrefixes.addAll(namePfxs)
+    }
+
+    @Override
+    def void handle(Request request, Response response) {
+        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        String name = querymap.get("name")
+        if (!name) {
+            name = querymap.get("q")
+        }
+        def callback = querymap.get("callback")
+        if (name) {
+            if (name[-1] != ' ' && name[-1] != '*') {
+                name = name + "*"
+            }
+            def names = []
+            namePrefixes.each { p ->
+                def nameparts = []
+                name.split(" ").each {
+                    nameparts << "$p:$it"
+                }
+                names << nameparts.join(" AND ")
+            }
+            log.debug("names: $names")
+            log.debug("name: $name")
+            log.debug("namePrefixes: $namePrefixes")
+            //def query = names.join(" OR ")
+            LinkedHashMap sortby = new LinkedHashMap<String,String>()
+            //sortby['100.a'] = "asc"
+            sortby['records'] = "desc"
+            def query = new Query(name)
+            query.highlights = namePrefixes
+            //query.sorting = sortby
+            query.fields = namePrefixes
+
+            def results = this.whelk.query(query)
+            def jsonResult = 
+                (callback ? callback + "(" : "") +
+                results.toJson() +
+                (callback ? ");" : "") 
+
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+        } else {
+            response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
+        }
+    }
+}
+
+@Log
+class OldAutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitialisable {
+
+    def pathEnd = "_complete"
+
+    def namePrefixes = []
+    String description = "Search API for autocompletion. Use parameter name or q."
+
+    /*
+    def void addNamePrefix(String prefix) {
+        namePrefixes << prefix
+    }
+    */
+
+    OldAutoComplete(java.util.ArrayList namePfxs) {
         namePrefixes.addAll(namePfxs)
     }
 
@@ -497,7 +559,6 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
                 throw new WhelkRuntimeException(e);
             }
         }
-        
         return this;
     }
 
@@ -505,7 +566,6 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
     JSONObject serialize() {
         JSONObject _api = new JSONObject();
         _api.put("_classname", this.getClass().getName());
-        
         JSONArray _prefixes = new JSONArray();
         namePrefixes.each {
             _prefixes.add(it)

@@ -141,9 +141,13 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
     }
 
     public SearchResult query(Query query, String indexType) {
+        return query(query, this.prefix, indexType);
+    }
+
+    public SearchResult query(Query query, String prefix, String indexType) {
         for (Component c: getComponents())
             if (c instanceof Index)
-                return ((Index)c).query(query, this.prefix, indexType);
+                return ((Index)c).query(query, prefix, indexType);
 
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
@@ -294,14 +298,19 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
         return ret;
     }
 
+    protected void initializePlugins() {
+        for (Plugin plugin : plugins) 
+            plugin.init(this.prefix);
+    }
+
     @Override
     public void addPlugin(Plugin plugin) {
         synchronized (plugins) {
             if (plugin instanceof WhelkAware) {
                 ((WhelkAware)plugin).setWhelk(this);
             }
-            plugin.init(this.prefix);
             plugins.add(plugin);
+            initializePlugins();
         }
     }
 

@@ -269,7 +269,12 @@ abstract class ElasticSearch extends BasicPlugin {
         def iType = (indexType == null ? this.indexType : indexType)
         log.trace "Querying index $idxpfx and indextype $iType"
         log.trace "Doing query on $q"
-        def srb = client.prepareSearch(idxpfx).setTypes(iType)
+        def idxlist = [idxpfx]
+        if (idxpfx.contains(",")) {
+            idxlist = idxpfx.split(",").collect{it.trim()}
+        }
+        log.debug("Searching in indexes: $idxlist")
+        def srb = client.prepareSearch(idxlist as String[]).setTypes(iType)
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
         if (q.query == "*") {
@@ -326,9 +331,9 @@ abstract class ElasticSearch extends BasicPlugin {
             results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
                 if (q.highlights) {
-                    results.addHit(createDocumentFromHit(it, idxpfx), convertHighlight(it.highlightFields))
+                    results.addHit(createDocumentFromHit(it), convertHighlight(it.highlightFields))
                 } else {
-                    results.addHit(createDocumentFromHit(it, idxpfx))
+                    results.addHit(createDocumentFromHit(it))
                 }
             }
             if (q.facets) {
@@ -342,8 +347,8 @@ abstract class ElasticSearch extends BasicPlugin {
        return query(q, idxpfx, indexType)
     }
 
-    Document createDocumentFromHit(hit, idxpfx) {
-        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id, idxpfx))
+    Document createDocumentFromHit(hit) {
+        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id, hit.index))
     }
 
     @Override
@@ -406,7 +411,7 @@ abstract class ElasticSearch extends BasicPlugin {
                         log.error("Failed to created document with id ${it.id} from source - " + de.getMessage(), de)
                     }
                 } else {
-                    results.add(new LogEntry(translateIndexIdTo(it.id, idxpfx), new Date(it.field("_timestamp").value)))
+                    results.add(new LogEntry(translateIndexIdTo(it.id, it.index), new Date(it.field("_timestamp").value)))
                 }
             }
         } else if (!response || response.hits.length < 1) {

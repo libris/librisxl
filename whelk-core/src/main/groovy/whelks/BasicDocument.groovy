@@ -400,6 +400,7 @@ public class BasicDocument implements Document {
     }
 }
 
+@Log
 class HighlightedDocument extends BasicDocument {
     Map<String, String[]> matches = new TreeMap<String, String[]>()
 
