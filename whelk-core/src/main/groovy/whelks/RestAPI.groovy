@@ -622,7 +622,7 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
                 def d = whelk.get(new URI(identifier))
                 //queryStr = new Query(identifier).addField("@id")
                 //outRecords[(identifier)] = this.whelk.query(queryStr, "record").toJson()
-                records << d.dataAsString
+                records << d
             }
             outjson["list"] = records
             response.setEntity(mapper.writeValueAsString(outjson), MediaType.APPLICATION_JSON)
