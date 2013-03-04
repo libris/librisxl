@@ -18,3 +18,10 @@ An auth post:
 
 The librisxl backend system has tools for converting ISO2709 to MARC-in-JSON.
 
+## Generate the marcmap
+
+1. Get Swedish legacy config files (ask a co-worker for sources)
+2. Put them somewhere (called $CONFIG_DIR below)
+
+    $ python parse_legacy_config.py $CONFIG_DIR/TagTable/Marc21 sv > ../whelk-core/src/main/resources/marcmap.json
+
