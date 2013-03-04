@@ -58,7 +58,7 @@
         },
         "084" : {
             "a" : ["classificationNumber"],
-            "2" : ["numberSource"]
+            "2" : ["classificationNumberSource"]
         },
         "245": {
             "a" : ["title"],
