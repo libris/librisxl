@@ -32,7 +32,7 @@ class BasicSearchResult implements SearchResult {
         this.hits.add(doc)
     }
 
-    def String toJson() {
+    String toJson() {
         def jsonString = new StringBuilder()
         jsonString << "{"
         jsonString << "\"hits\": " << numberOfHits << ","

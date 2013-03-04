@@ -81,6 +81,9 @@
  <logger name="se.kb.libris.whelks.api.AutoComplete">
       <level value="debug"/>
   </logger>
+ <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
+      <level value="trace"/>
+  </logger>
 
   <!--
   <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">

@@ -467,15 +467,105 @@ class AutoComplete extends BasicWhelkAPI {
             query.fields = namePrefixes
 
             def results = this.whelk.query(query)
+            /*
             def jsonResult = 
                 (callback ? callback + "(" : "") +
                 results.toJson() +
                 (callback ? ");" : "") 
+                */
+            def c = new SuggestResultsConverter(results, [namePrefixes[0]], ["marc21.fields.678.subfields.a"])
+            def jsonResult = c.toJson()
 
             response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
         } else {
             response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
         }
+    }
+}
+
+@Log
+class SuggestResultsConverter {
+    def results
+    ObjectMapper mapper
+    List mainFields
+    List supplementalFields
+
+    SuggestResultsConverter(SearchResult r, List mfs, List sfs) {
+        this.results = r
+        this.mapper = new ObjectMapper()
+        this.mainFields = mfs
+        this.supplementalFields = sfs
+    }
+
+    String toJson() {
+        def list = []
+        def out = [:]
+        results.hits.each {
+            def doc = mapper.readValue(it.dataAsString, Map)
+            if (it.identifier.toString().contains("/auth/")) {
+                list << mapAuthRecord(it.identifier, doc)
+            }
+            if (it.identifier.toString().contains("/bib")) {
+                list << mapBibRecord(it.identifier, doc)
+            }
+        }
+        out["hits"] = results.numberOfHits
+        out["list"] = list
+        return mapper.writeValueAsString(out)
+    }
+
+    def getDeepValue(Map map, String key) {
+        log.trace("getDeepValue: map = $map, key = $key")
+        def keylist = key.split(/\./)
+        def lastkey = keylist[keylist.length-1]
+        def result
+        for (int i = 0; i < keylist.length; i++) {
+            def k = keylist[i]
+            while (map.containsKey(k)) {
+                if (k == lastkey) {
+                    result = map.get(k)
+                    map = [:]
+                } else {
+                    if (map.get(k) instanceof Map) {
+                        map = map.get(k)
+                    } else {
+                        result = []
+                        for (item in map[k]) {
+                            def dv = getDeepValue(item, keylist[i..-1].join("."))
+                            if (dv) {
+                                result <<  dv
+                            }
+                        }
+                        map = [:]
+                    }
+                }
+            }
+        }
+        return ((result && result instanceof List && result.size() == 1) ? result[0] : result)
+    }
+
+    def mapAuthRecord(id, r) {
+        def name = [:]
+        name["identifier"] = id
+        log.debug("hl : ${r.highlight} (${r.highlight.getClass().getName()})")
+        boolean mainhit = r.highlight.any { it.key in mainFields }
+        log.debug("mainFields: $mainFields")
+        name["name"] = getDeepValue(r, mainFields[0])
+        if (!mainhit) {
+            name["hit_in"] = r.highlight.find { !(it.key in mainFields) }.collect { it.value }[0]
+        }
+        for (field in supplementalFields) {
+            name[field] = getDeepValue(r, field)
+        }
+
+        return name
+    }
+
+    def mapBibRecord(id, r) {
+        def name = [:]
+        name["identifier"] = id
+        name["name"] = r.highlight.collect { it.value }[0][0]
+        return name
     }
 }
 
