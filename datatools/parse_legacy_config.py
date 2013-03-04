@@ -11,6 +11,9 @@ from marcmap_bandaid import propRefMapper as bandaid
 ENC = "latin-1"
 
 def parse_configs(confdir, lang):
+    # FIXME: Errors in Hmarcfix:
+    # - remove initial "e " at top of file
+    # - add = after _ in [008GeneralRetention]
     # FIXME: Errors in english version:
     # - Bmarcfix.cfg:267 has a leading space which ConfigParser fails on
     # - Master.cfg:134 repeats position key 13 twice (change second to e.g. 1301 to make it work)
@@ -26,8 +29,9 @@ def parse_configs(confdir, lang):
     BIB_CONFS = ["Bmarc{0}xx.cfg".format(i) for i in xrange(10)]
     b_cfg = read_config(pjoin(confdir, f) for f in BIB_CONFS)
 
-    #HOLDINGS_CONFS = ["Hmarc{0}xx.cfg".format(i) for i in (0, 3, 4, 6, 7, 8, 9)]
-    #hfix_cfg = read_config(pjoin(confdir, "Hmarcfix.cfg"))
+    HOLDINGS_CONFS = ["Hmarc{0}xx.cfg".format(i) for i in (0, 3, 4, 6, 7, 8, 9)]
+    hfix_cfg = read_config(pjoin(confdir, "Hmarcfix.cfg"))
+    h_cfg = read_config(pjoin(confdir, f) for f in HOLDINGS_CONFS)
     #"country.cfg"
     #"lang.cfg"
 
@@ -35,8 +39,8 @@ def parse_configs(confdir, lang):
 
 
     categories = [('bib', "Bibliographic", b_cfg),
-                ('auth', "Authority", a_cfg),]
-                #('hold', "Holdings", h_cfg)]
+                ('auth', "Authority", a_cfg),
+                ('hold', "Holdings", h_cfg)]
 
     for cat_id, name, cfg in categories:
         block = out[cat_id] = odict()
@@ -109,7 +113,8 @@ def parse_configs(confdir, lang):
 
     for block_key, fix_tags, fix_cfg in [
             ('bib', ['000', '006', '007', '008'], bfix_cfg),
-            ('auth', ['000', '008'], afix_cfg)]:
+            ('auth', ['000', '008'], afix_cfg),
+            ('hold', ['000', '007', '008'], hfix_cfg)]:
         block = out[block_key]
         fixprops = block['fixprops'] = odict()
         _fixprop_unique = {}
