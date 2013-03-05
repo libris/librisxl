@@ -3,19 +3,19 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "marcconverter"]
+                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter"]
             }
         },
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "marcconverter" ]
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "bibmarcconverter" ]
             }
         },
         {
             "hold":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "metasearch", "marcconverter" ]
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "metasearch", "holdmarcconverter" ]
             }
         },
         {
@@ -62,8 +62,15 @@
             }
         },
         {
-            "marcconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter"
+            "bibmarcconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter",
+                "_params" : "bib"
+            }
+        },
+        {
+            "holdmarcconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter",
+                "_params" : "hold"
             }
         },
         {
