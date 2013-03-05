@@ -19,6 +19,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
     ObjectMapper mapper
     def marcmap
     int order = 0
+    def recordType
 
     def facit = [
         "020":   ["a":"isbn", "z":"isbn"],
@@ -68,62 +69,97 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
         return l
     }
 
-    def rewriteJson(URI identifier, final Map json) {
+    def rewriteJson(URI identifier, final Map json, String recordType) {
         def leader = json.leader
-        def pfx = identifier.toString().split("/")[1]
+        //def pfx = identifier.toString().split("/")[1]
 
-        def l = expandField("000", leader, marcmap.get(pfx)?."000"?.fixmaps?.get(0)?.columns)
-
+        def l = expandField("000", leader, marcmap.get(recordType)?."000"?.fixmaps?.get(0)?.columns)
         json.leader = ["subfields": l.collect {key, value -> [(key):value]}]
 
-        def mrtbl = l['typeOfRecord'] + l['bibLevel']
-        log.trace "Leader extracted"
+        if (recordType.equals("bib")) {
+            def mrtbl = l['typeOfRecord'] + l['bibLevel']
+            log.trace "Leader extracted"
 
-        json.fields.eachWithIndex() { it, pos ->
-            log.trace "Working on json field $pos: $it"
-            it.each { fkey, fvalue ->
-                if (fkey.startsWith("00")) {
-                    if (fkey == "005") {
-                        def date
-                        try {
-                            date = new Date().parse("yyyyMMddHHmmss.S", fvalue)
-                        } catch (Exception e) {
-                            date = new Date()
-                        }
-                        json.fields[pos] = [(fkey):date]
-                    } else {
-                        def matchKey = l['typeOfRecord']
-                        if (fkey == "006" || fkey == "007") {
-                            matchKey = fvalue[0]
-                        }
-                        log.trace("matchKey: $matchKey")
-                        marcmap.get(pfx).each { key, value ->
-                            if (fkey == key) {
-                                try {
-                                    value.fixmaps.each { fm ->
-                                        if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(matchKey)) || (fm.matchRecTypeBibLevel && fm.matchRecTypeBibLevel.contains(mrtbl))) {
-                                            if (fkey == "008" && fvalue.length() == 39) {
-                                                log.warn("Document ${identifier} has wrong length in 008")
-                                                    fvalue = fvalue[0..19] + "|" + fvalue[20..-1]
+            json.fields.eachWithIndex() { it, pos ->
+                log.trace "Working on json field $pos: $it"
+                it.each { fkey, fvalue ->
+                    if (fkey.startsWith("00")) {
+                        if (fkey == "005") {
+                            def date
+                            try {
+                                date = new Date().parse("yyyyMMddHHmmss.S", fvalue)
+                            } catch (Exception e) {
+                                date = new Date()
+                            }
+                            json.fields[pos] = [(fkey):date]
+                        } else {
+                            def matchKey = l['typeOfRecord']
+                            if (fkey == "006" || fkey == "007") {
+                                matchKey = fvalue[0]
+                            }
+                            log.trace("matchKey: $matchKey")
+                            marcmap.bib.each { key, value ->
+                                if (fkey == key) {
+                                    try {
+                                        value.fixmaps.each { fm ->
+                                            if ((!fm.matchRecTypeBibLevel && fm.matchKeys.contains(matchKey)) || (fm.matchRecTypeBibLevel && fm.matchRecTypeBibLevel.contains(mrtbl))) {
+                                                if (fkey == "008" && fvalue.length() == 39) {
+                                                    log.warn("Document ${identifier} has wrong length in 008")
+                                                        fvalue = fvalue[0..19] + "|" + fvalue[20..-1]
+                                                }
+                                                json.fields[pos] = [(fkey):["subfields": expandField(fkey, fvalue, fm.columns).collect {k, v -> [(k):v] } ]]
                                             }
-                                            json.fields[pos] = [(fkey):["subfields": expandField(fkey, fvalue, fm.columns).collect {k, v -> [(k):v] } ]]
                                         }
+                                    } catch (groovy.lang.MissingPropertyException mpe) {
+                                        log.warn("Exception in $fm : ${mpe.message}")
+                                    } catch (Exception e) {
+                                        log.error("Document identifier: ${identifier}")
+                                            log.error("fkey: $fkey")
+                                            log.error("l: $l")
+                                            throw e
                                     }
-                                } catch (groovy.lang.MissingPropertyException mpe) { 
-                                    log.warn("Exception in $fm : ${mpe.message}")
-                                } catch (Exception e) {
-                                    log.error("Document identifier: ${identifier}")
-                                        log.error("fkey: $fkey")
-                                        log.error("l: $l")
-                                        throw e
-                                }
 
+                                }
                             }
                         }
                     }
                 }
             }
-        }
+        } else if (recordType.equals("hold")) {
+            log.trace("hold cracking")
+            def resourceType = "monographic"
+            if (l["type"].equals("y")) {
+                resourceType = "serial"
+            }
+           /* json.fields.eachWithIndex() { it, pos ->
+                log.trace "Working on json field $pos: $it"
+                it.each { fkey, fvalue ->
+                    if (fkey.startsWith("00")) {
+                        marcmap.hold.each { key, value ->
+                            if (fkey == key) {
+                                log.debug("fkey: $fkey")
+                                try {
+                                    log.debug("value: ${value}")
+                                    value.fixmaps.each {
+                                            log.debug("fixmaps.each it.columns: ${it.columns}")
+                                            json.fields[pos] = [(fkey):["subfields": expandField(fkey, fvalue, it.columns).collect {k, v -> [(k):v] } ]]
+                                        }
+                                } catch (groovy.lang.MissingPropertyException mpe) {
+                                    log.error("${mpe.message}")
+                                } catch (Exception e) {
+                                        log.error("Document identifier: ${identifier}")
+                                        log.error("fkey: $fkey")
+                                        log.error("l: $l")
+                                        log.error("${e.message}")
+                               }
+                                
+                            }
+                         }
+                     }
+                 }
+             }*/
+         }
+
         return json
     }
 
@@ -155,7 +191,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
                     return null
                 }
 
-                json = rewriteJson(doc.identifier, json)
+                json = rewriteJson(doc.identifier, json, "")
 
 
                     json = appendLabels(json)
