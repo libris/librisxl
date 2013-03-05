@@ -1,149 +1,161 @@
 {
-    "levels": {
-        "about"      : ["020","024","028","042","250","260","300","500","504","505","520","typeOfRecord"],
-        "instanceOf" : ["008","082","050","084","245","bibLevel"]
-    },
-    "fields": {
-        "001" : "controlNumber",
-        "004" : false,
-        "005" : "dateAndTimeOfLatestTransaction",
-        "008" : {
-            "date" : false,
-            "publicationStatus" : false,
-            "yearTime1" : false,
-            "yearTime2" : false,
-            "country" : ["country"],
-            "booksIllustrations" : false,
-            "booksAudience" : false,
-            "booksItem" : false,
-            "booksContents" : false,
-            "booksGovtPub" : false,
-            "booksConfPub" : false,
-            "booksFestschrift" : false,
-            "booksIndex" : false,
-            "booksLiteraryForm" : false,
-            "booksBiography" : false,
-            "language" : ["language"],
-            "modifiedRecord" : false,
-            "catalogingSource" : false
+    "bib": {
+        "levels": {
+            "about"      : ["020","024","028","042","250","260","300","500","504","505","520","typeOfRecord"],
+            "instanceOf" : ["008","082","050","084","245","bibLevel"]
         },
-        "010": {
-            "a" : ["lccn"]
+        "fields": {
+            "001" : "controlNumber",
+            "004" : false,
+            "005" : "dateAndTimeOfLatestTransaction",
+            "008" : {
+                "date" : false,
+                "publicationStatus" : false,
+                "yearTime1" : false,
+                "yearTime2" : false,
+                "country" : ["country"],
+                "booksIllustrations" : false,
+                "booksAudience" : false,
+                "booksItem" : false,
+                "booksContents" : false,
+                "booksGovtPub" : false,
+                "booksConfPub" : false,
+                "booksFestschrift" : false,
+                "booksIndex" : false,
+                "booksLiteraryForm" : false,
+                "booksBiography" : false,
+                "language" : ["language"],
+                "modifiedRecord" : false,
+                "catalogingSource" : false
+            },
+            "010": {
+                "a" : ["lccn"]
+            },
+            "028" : {
+                "a" : ["edition"],
+                "b" : ["editionPublisher"]
+            },
+            "035" : {
+                "9" : ["localSystemNumber"]
+            },
+            "040" : {
+                "a" : ["creator"],
+                "b" : ["catalogingLanguage"],
+                "c" : ["transliteratingBy"],
+                "d" : ["catalogingChangesBy"]
+            },
+            "042" : {
+                "9" : ["marc:bibliographyCode"]
+            },
+            "050" : {
+                "a" : ["class-lcc"]
+            },
+            "082" : {
+                "a" : ["class-ddc"],
+                "2" : false
+            },
+            "245": {
+                "a" : ["title"],
+                "b" : ["titleRemainder"],
+                "c" : ["statementOfResponsibility"],
+                "h" : ["mediaTerm"]
+            },
+            "250": {
+                "a" : ["edition"]
+            },
+            "260": {
+                "a" : ["placeOfPublication"],
+                "b" : ["publisherName"],
+                "c" : ["dateOfPublication"],
+                "e" : ["placeOfManufacture"]
+            },
+            "300": {
+                "a" : ["extent"],
+                "b" : ["baseMaterial"],
+                "c" : ["dimensions"]
+            },
+            "500": {
+                "a" : ["comment"]
+            },
+            "599": {
+                "a" : ["internalRemark"]
+            },
+            "504": {
+                "a" : ["supplementaryContentNote"]
+            },
+            "505": {
+                "a" : ["listOfContents"]
+            },
+            "520": {
+                "a" : ["summary"]
+            },
+            "650": {
+                "a" : ["topicalTerm"],
+                "x" : ["generalSubdivision"],
+                "z" : ["geographicSubdivision"]
+            },
+            "653": {
+                "a" : ["uncontrolledIndexTerm"],
+                "6" : ["indexTermLinkage"]
+            }
         },
-        "014" : {
-            "a" : ["linkageNumber"]
+        "relators" : {
+            "aut" : "author",
+            "mus" : "musician",
+            "ill" : "illustrator",
+            "trl" : "translator",
+            "pbd" : "publishingDirector",
+            "rpy" : "responsibleParty",
+            "wde" : "woodEngraver"
         },
-        "028" : {
-            "a" : ["edition"],
-            "b" : ["editionPublisher"]
-        },
-        "035" : {
-            "9" : ["localSystemNumber"]
-        },
-        "040" : {
-            "a" : ["creator"],
-            "b" : ["catalogingLanguage"],
-            "c" : ["transliteratingBy"],
-            "d" : ["catalogingChangesBy"]
-        },
-        "042" : {
-            "9" : ["marc:bibliographyCode"]
-        },
-        "050" : {
-            "a" : ["class-lcc"]
-        },
-        "082" : {
-            "a" : ["class-ddc"],
-            "2" : false
-        },
-        "084" : {
-            "a" : ["classificationNumber"],
-            "2" : ["classificationNumberSource"]
-        },
-        "245": {
-            "a" : ["title"],
-            "b" : ["titleRemainder"],
-            "c" : ["statementOfResponsibility"],
-            "h" : ["mediaTerm"]
-        },
-        "250": {
-            "a" : ["edition"]
-        },
-        "260": {
-            "a" : ["placeOfPublication"],
-            "b" : ["publisherName"],
-            "c" : ["dateOfPublication"],
-            "e" : ["placeOfManufacture"]
-        },
-        "300": {
-            "a" : ["extent"],
-            "b" : ["baseMaterial"],
-            "c" : ["dimensions"]
-        },
-        "500": {
-            "a" : ["comment"]
-        },
-        "599": {
-            "a" : ["internalRemark"]
-        },
-        "504": {
-            "a" : ["supplementaryContentNote"]
-        },
-        "505": {
-            "a" : ["listOfContents"]
-        },
-        "520": {
-            "a" : ["summary"]
-        },
-        "650": {
-            "a" : ["topicalTerm"],
-            "x" : ["generalSubdivision"],
-            "z" : ["geographicSubdivision"]
-        },
-        "653": {
-            "a" : ["uncontrolledIndexTerm"],
-            "6" : ["indexTermLinkage"]
-        },
-        "698": {
-            "a" : ["localSubjectCode"],
-            "b" : ["localSubjectTerm"]
-        },
-        "852": {
-            "8" : ["sequenceNumber"],
-            "b" : ["location"],
-            "c" : ["shelvingLocation"],
-            "h" : ["classificationPart"],
-            "i" : ["itemPart"],
-            "j" : ["shelvingControlNumber"],
-            "l" : ["shelvingFormOrTitle"],
-            "x" : ["shelvingNonpublicNote"],
-            "z" : ["shelvingPublicNote"]
-        },
-        "866": {
-            "a" : ["textualHoldings"],
-            "x" : ["holdingsNonpublicNote"],
-            "z" : ["holdingsPublicNote"]
-        }
-    },
-    "relators" : {
-        "aut" : "author",
-        "mus" : "musician",
-        "ill" : "illustrator",
-        "trl" : "translator",
-        "pbd" : "publishingDirector",
-        "rpy" : "responsibleParty",
-        "wde" : "woodEngraver"
-    },
-    "subjects" : {
-        "sab": {
-            "Lz" : "http://dbpedia.org/resource/Autobiography"
-        },
-        "bicssc": {
-            "FH" : "http://dbpedia.org/resource/Thriller_(genre)",
-            "FK" : "http://dbpedia.org/resource/Horror_fiction",
-            "FL" : "http://dbpedia.org/resource/Science_fiction",
-            "FM" : "http://dbpedia.org/resource/Fantasy_literature"
-        }
+        "subjects" : {
+            "sab": {
+                "Lz" : "http://dbpedia.org/resource/Autobiography"
+            },
+            "bicssc": {
+                "FH" : "http://dbpedia.org/resource/Thriller_(genre)",
+                "FK" : "http://dbpedia.org/resource/Horror_fiction",
+                "FL" : "http://dbpedia.org/resource/Science_fiction",
+                "FM" : "http://dbpedia.org/resource/Fantasy_literature"
+            }
 
+        }
+    },
+    "hold": {
+        "fields": {
+            "001": false,
+            "004": false,
+            "008": false,
+            "014" : {
+                "a" : ["linkageNumber"]
+            },
+            "084" : {
+                "a" : ["classificationNumber"],
+                "2" : ["classificationNumberSource"]
+            },
+            "698": {
+                "a" : ["localSubjectCode"],
+                "b" : ["localSubjectTerm"]
+            },
+            "852": {
+                "8" : ["sequenceNumber"],
+                "b" : ["location"],
+                "c" : ["shelvingLocation"],
+                "h" : ["classificationPart"],
+                "i" : ["itemPart"],
+                "j" : ["shelvingControlNumber"],
+                "l" : ["shelvingFormOrTitle"],
+                "x" : ["shelvingNonpublicNote"],
+                "z" : ["shelvingPublicNote"]
+            },
+            "866": {
+                "a" : ["textualHoldings"],
+                "x" : ["holdingsNonpublicNote"],
+                "z" : ["holdingsPublicNote"]
+            }
+        }
+    },
+    "auth": {
+        "fields": {}
     }
 }
