@@ -674,7 +674,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
     def createJson(URI identifier, Map injson) {
         def outjson = [:]
         def pfx = identifier.toString().split("/")[1]
-        def marccracker = new MarcCrackerAndLabelerIndexFormatConverter()
+        def marccracker = new MarcCrackerAndLabelerIndexFormatConverter(recordType)
 
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
@@ -682,7 +682,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         if (recordType.equals("bib")) {
             outjson[ABOUT_LABEL] = ["@type":["Instance"]]
             if (injson.containsKey("leader")) {
-                injson = marccracker.rewriteJson(identifier, injson, "bib")
+                injson = marccracker.rewriteJson(identifier, injson)
                     log.trace("Leader: ${injson.leader}")
                     injson.leader.subfields.each { 
                         it.each { lkey, lvalue ->
@@ -712,7 +712,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
             }
         } else if (recordType.equals("hold")) {
             if (injson.containsKey("leader")) {
-                injson = marccracker.rewriteJson(identifier, injson, "hold")
+                injson = marccracker.rewriteJson(identifier, injson)
                 log.trace("Leader: ${injson.leader}")
                 log.trace("Rewritten injson ${injson.leader}")
             }

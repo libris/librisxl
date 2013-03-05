@@ -34,7 +34,8 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
         "720":   ["a":"title", "n": "title", "p": "title"]
     ]
 
-    MarcCrackerAndLabelerIndexFormatConverter() {
+    MarcCrackerAndLabelerIndexFormatConverter(String recordType) {
+        this.recordType = recordType
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         mapper = new ElasticJsonMapper()
         this.marcmap = mapper.readValue(is, Map)
@@ -69,7 +70,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
         return l
     }
 
-    def rewriteJson(URI identifier, final Map json, String recordType) {
+    def rewriteJson(URI identifier, final Map json) {
         def leader = json.leader
         //def pfx = identifier.toString().split("/")[1]
 
@@ -191,7 +192,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
                     return null
                 }
 
-                json = rewriteJson(doc.identifier, json, "")
+                json = rewriteJson(doc.identifier, json)
 
 
                     json = appendLabels(json)
