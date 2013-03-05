@@ -153,9 +153,10 @@ abstract class ElasticSearch extends BasicPlugin {
 
     void addDocument(Document doc, String addType, String idxpfx) {
         def eid = translateIdentifier(doc.identifier)
-        log.trace "Should use index ${idxpfx}, type ${addType} and id ${eid}"
+        def entityType = doc.tags.find { it.type.toString() == "entityType"}?.value ?: addType
+        log.debug "Should use index ${idxpfx}, type ${entityType} and id ${eid}"
         try {
-            def irb = client.prepareIndex(idxpfx, addType, eid)
+            def irb = client.prepareIndex(idxpfx, entityType, eid)
             if (addType == indexType) {
                 irb.setSource(doc.data)
                 log.trace("Prepareing index of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
@@ -266,15 +267,15 @@ abstract class ElasticSearch extends BasicPlugin {
 
     @Override
     SearchResult query(Query q, String idxpfx, String indexType) {
-        def iType = (indexType == null ? this.indexType : indexType)
-        log.trace "Querying index $idxpfx and indextype $iType"
+        def iType = (indexType == null ? [this.indexType] : indexType.split(","))
+        log.debug "Querying index $idxpfx and indextype $iType"
         log.trace "Doing query on $q"
         def idxlist = [idxpfx]
         if (idxpfx.contains(",")) {
             idxlist = idxpfx.split(",").collect{it.trim()}
         }
         log.debug("Searching in indexes: $idxlist")
-        def srb = client.prepareSearch(idxlist as String[]).setTypes(iType)
+        def srb = client.prepareSearch(idxlist as String[]).setTypes(iType as String[])
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
         if (q.query == "*") {

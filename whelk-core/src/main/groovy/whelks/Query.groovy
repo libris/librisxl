@@ -86,7 +86,7 @@ class Query {
                 start = new Integer(qmap.get("start"))
             }
             if (qmap.get("n")) {
-                start = new Integer(qmap.get("n"))
+                n = new Integer(qmap.get("n"))
             }
         } else {
             throw new WhelkRuntimeException("Trying to create empty query.")

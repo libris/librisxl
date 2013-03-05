@@ -29,22 +29,22 @@ public class BasicDocument implements Document {
     String version = "1", contentType, format
 
     byte[] data
-    
+
     @IsMetadata
     long size
 
     @IsMetadata
     Set<Link> links = new HashSet<Link>()
-    
+
     @IsMetadata
     Set<Key> keys = new TreeSet<Key>()
-    
+
     @IsMetadata
     Set<Tag> tags = new HashSet<Tag>()
-    
+
     @IsMetadata
     Set<Description> descriptions = new TreeSet<Description>()
-    
+
     @IsMetadata
     long timestamp = 0
 

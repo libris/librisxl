@@ -433,6 +433,8 @@ class AutoComplete extends BasicWhelkAPI {
     def pathEnd = "_complete"
 
     def namePrefixes = []
+    def extraInfo = []
+    String types
     String description = "Search API for autocompletion. Use parameter name or q."
 
     /*
@@ -441,8 +443,10 @@ class AutoComplete extends BasicWhelkAPI {
     }
     */
 
-    AutoComplete(java.util.ArrayList namePfxs) {
-        namePrefixes.addAll(namePfxs)
+    AutoComplete(Map lists) {
+        namePrefixes.addAll(lists.get("queryFields"))
+        extraInfo.addAll(lists.get("infoFields"))
+        types = lists.get("indexTypes")
     }
 
     @Override
@@ -466,14 +470,14 @@ class AutoComplete extends BasicWhelkAPI {
             //query.sorting = sortby
             query.fields = namePrefixes
 
-            def results = this.whelk.query(query)
+            def results = this.whelk.query(query, types)
             /*
             def jsonResult = 
                 (callback ? callback + "(" : "") +
                 results.toJson() +
                 (callback ? ");" : "") 
                 */
-            def c = new SuggestResultsConverter(results, [namePrefixes[0]], ["marc21.fields.678.subfields.a"])
+            def c = new SuggestResultsConverter(results, [namePrefixes[0]], extraInfo)
             def jsonResult = c.toJson()
 
             response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
@@ -515,7 +519,7 @@ class SuggestResultsConverter {
     }
 
     def getDeepValue(Map map, String key) {
-        log.trace("getDeepValue: map = $map, key = $key")
+        //log.trace("getDeepValue: map = $map, key = $key")
         def keylist = key.split(/\./)
         def lastkey = keylist[keylist.length-1]
         def result
@@ -533,7 +537,7 @@ class SuggestResultsConverter {
                         for (item in map[k]) {
                             def dv = getDeepValue(item, keylist[i..-1].join("."))
                             if (dv) {
-                                result <<  dv
+                                result << dv
                             }
                         }
                         map = [:]
@@ -552,11 +556,16 @@ class SuggestResultsConverter {
         log.debug("mainFields: $mainFields")
         name["name"] = getDeepValue(r, mainFields[0])
         if (!mainhit) {
-            name["hit_in"] = r.highlight.find { !(it.key in mainFields) }.collect { it.value }[0]
+            name["found_in"] = r.highlight.findAll { !(it.key in mainFields) }//.collect { it.value }[0]
         }
         for (field in supplementalFields) {
-            name[field] = getDeepValue(r, field)
+            def dv = getDeepValue(r, field)
+            log.trace("dv $field : $dv")
+            if (dv) {
+                name[field] = dv
+            }
         }
+        name["authorized"] = true
 
         return name
     }
@@ -564,7 +573,15 @@ class SuggestResultsConverter {
     def mapBibRecord(id, r) {
         def name = [:]
         name["identifier"] = id
-        name["name"] = r.highlight.collect { it.value }[0][0]
+        name["name"] = r.highlight.collect { it.value }
+        log.debug("highlight: ${r.highlight}")
+        for (field in supplementalFields) {
+            def dv = getDeepValue(r, field)
+            log.trace("dv $field : $dv")
+            if (dv) {
+                name[field] = dv
+            }
+        }
         return name
     }
 }
@@ -741,7 +758,7 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
     def mapper
 
     String description = "Query API for metadata search."
-    
+
     def void handle(Request request, Response response) {
         mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()

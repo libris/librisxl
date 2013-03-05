@@ -3,7 +3,7 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "marcconverter"]
+                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "marcconverter", "entityextractor"]
             }
         },
         {
@@ -74,6 +74,11 @@
             }
         },
         {
+            "entityextractor" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
+            }
+        },
+        {
             "search" : {
                 "_class" : "se.kb.libris.whelks.api.SearchRestlet",
                 "_params" : {"boost" : "labels.title:2"}
@@ -92,12 +97,23 @@
         {
             "autocomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
-                "_params" : [
-                              "about.instanceOf.authorList.authoritativeName",
+                "_params" : {"queryFields":[
+                              "authoritativeName",
                               "marc21.fields.100.subfields.a",
                               "marc21.fields.400.subfields.a",
                               "marc21.fields.500.subfields.a"
-                            ]
+                            ],
+                            "infoFields":[
+                              "birthyear",
+                              "deathyear",
+                              "authorOf",
+                              "marc21.fields.678.subfields.a",
+                              "marc21.fields.100.subfields.b",
+                              "marc21.fields.100.subfields.c",
+                              "marc21.fields.100.subfields.d"
+                            ],
+                            "indexTypes":"Person"
+                            }
             }
         },
         {
