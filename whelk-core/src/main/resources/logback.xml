@@ -31,7 +31,7 @@
   <logger name="org.elasticsearch">
       <level value="warn"/>
   </logger>
-  <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
+  <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="trace"/>
   </logger>
   <!--
@@ -72,6 +72,18 @@
       <level value="trace"/>
   </logger>
   -->
+  <logger name="se.kb.libris.whelks.CombinedWhelk">
+      <level value="trace"/>
+  </logger>
+ <logger name="se.kb.libris.whelks.component.ElasticSearch">
+      <level value="trace"/>
+  </logger>
+ <logger name="se.kb.libris.whelks.api.AutoComplete">
+      <level value="debug"/>
+  </logger>
+ <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
+      <level value="trace"/>
+  </logger>
 
   <!--
   <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">

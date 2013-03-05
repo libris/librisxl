@@ -17,5 +17,17 @@ class ElasticJsonMapper extends ObjectMapper {
                 jgen.writeObject(value.string())
             }
         });
+        sf.addGenericMapping(StringText.class, new JsonSerializer<StringText>() {
+            @Override
+            public void serialize(StringText value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+                jgen.writeObject(value.string())
+            }
+        });
+        sf.addGenericMapping(Text.class, new JsonSerializer<Text>() {
+            @Override
+            public void serialize(Text value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+                jgen.writeObject(value.string())
+            }
+        });
     }
 }

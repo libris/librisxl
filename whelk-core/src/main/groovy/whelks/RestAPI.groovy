@@ -427,9 +427,187 @@ class KitinSearchRestlet extends BasicWhelkAPI {
 
     }
 }
+@Log
+class AutoComplete extends BasicWhelkAPI {
 
-@Log 
-class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitialisable {
+    def pathEnd = "_complete"
+
+    def namePrefixes = []
+    def extraInfo = []
+    String types
+    String description = "Search API for autocompletion. Use parameter name or q."
+
+    /*
+    def void addNamePrefix(String prefix) {
+        namePrefixes << prefix
+    }
+    */
+
+    AutoComplete(Map lists) {
+        namePrefixes.addAll(lists.get("queryFields"))
+        extraInfo.addAll(lists.get("infoFields"))
+        types = lists.get("indexTypes")
+    }
+
+    @Override
+    def void handle(Request request, Response response) {
+        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        String name = querymap.get("name")
+        if (!name) {
+            name = querymap.get("q")
+        }
+        def callback = querymap.get("callback")
+        if (name) {
+            if (name[-1] != ' ' && name[-1] != '*') {
+                name = name + "*"
+            }
+            log.debug("name: $name")
+            log.debug("namePrefixes: $namePrefixes")
+            LinkedHashMap sortby = new LinkedHashMap<String,String>()
+            sortby['records'] = "desc"
+            def query = new Query(name)
+            query.highlights = namePrefixes
+            //query.sorting = sortby
+            query.fields = namePrefixes
+
+            def results = this.whelk.query(query, types)
+            /*
+            def jsonResult = 
+                (callback ? callback + "(" : "") +
+                results.toJson() +
+                (callback ? ");" : "") 
+                */
+            def c = new SuggestResultsConverter(results, [namePrefixes[0]], extraInfo)
+
+            response.setEntity(c.toJson(), MediaType.APPLICATION_JSON)
+        } else {
+            response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
+        }
+    }
+}
+
+@Log
+class SuggestResultsConverter {
+    def results
+    ObjectMapper mapper
+    List mainFields
+    List supplementalFields
+
+    SuggestResultsConverter(SearchResult r, List mfs, List sfs) {
+        this.results = r
+        this.mapper = new ObjectMapper()
+        this.mainFields = mfs
+        this.supplementalFields = sfs
+    }
+
+    String toJson() {
+        def list = []
+        def out = [:]
+        results.hits.each {
+            def doc = mapper.readValue(it.dataAsString, Map)
+            if (it.identifier.toString().contains("/auth/")) {
+                list << mapAuthRecord(it.identifier, doc)
+            }
+            if (it.identifier.toString().contains("/bib")) {
+                list << mapBibRecord(it.identifier, doc)
+            }
+        }
+        out["hits"] = results.numberOfHits
+        out["list"] = list
+        return mapper.writeValueAsString(out)
+    }
+
+    def getDeepValue(Map map, String key) {
+        //log.trace("getDeepValue: map = $map, key = $key")
+        def keylist = key.split(/\./)
+        def lastkey = keylist[keylist.length-1]
+        def result
+        for (int i = 0; i < keylist.length; i++) {
+            def k = keylist[i]
+            while (map.containsKey(k)) {
+                if (k == lastkey) {
+                    result = map.get(k)
+                    map = [:]
+                } else {
+                    if (map.get(k) instanceof Map) {
+                        map = map.get(k)
+                    } else {
+                        result = []
+                        for (item in map[k]) {
+                            def dv = getDeepValue(item, keylist[i..-1].join("."))
+                            if (dv) {
+                                result << dv
+                            }
+                        }
+                        map = [:]
+                    }
+                }
+            }
+        }
+        if (!result && (lastkey == key)) {
+            result = findNestedValueForKey(map, key)
+        }
+        return ((result && result instanceof List && result.size() == 1) ? result[0] : result)
+    }
+
+    def findNestedValueForKey(Map map, String key) {
+        def result
+        map.each { k, v ->
+            if (k == key) {
+                result = v
+            } else if (!result && v instanceof Map) {
+                result = findNestedValueForKey(v, key)
+            } else if (!result && v instanceof List) {
+                v.each {
+                    if (it instanceof Map) {
+                        result = findNestedValueForKey(it, key)
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    def mapAuthRecord(id, r) {
+        def name = [:]
+        name["identifier"] = id
+        log.debug("hl : ${r.highlight} (${r.highlight.getClass().getName()})")
+        boolean mainhit = r.highlight.any { it.key in mainFields }
+        log.debug("mainFields: $mainFields")
+        name[mainFields[0]] = getDeepValue(r, mainFields[0])
+        if (!mainhit) {
+            name["found_in"] = r.highlight.findAll { !(it.key in mainFields) }//.collect { it.value }[0]
+        }
+        for (field in supplementalFields) {
+            def dv = getDeepValue(r, field)
+            log.trace("dv $field : $dv")
+            if (dv) {
+                name[field] = dv
+            }
+        }
+        name["authorized"] = true
+
+        return name
+    }
+
+    def mapBibRecord(id, r) {
+        def name = [:]
+        name["identifier"] = id
+        name[mainFields[0]] = getDeepValue(r, mainFields[0])
+        log.debug("highlight: ${r.highlight}")
+        for (field in supplementalFields) {
+            def dv = getDeepValue(r, field)
+            log.trace("dv $field : $dv")
+            if (dv) {
+                name[field] = dv
+            }
+        }
+        return name
+    }
+}
+
+@Log
+class OldAutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitialisable {
 
     def pathEnd = "_complete"
 
@@ -442,7 +620,7 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
     }
     */
 
-    AutoComplete(java.util.ArrayList namePfxs) {
+    OldAutoComplete(java.util.ArrayList namePfxs) {
         namePrefixes.addAll(namePfxs)
     }
 
@@ -497,7 +675,6 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
                 throw new WhelkRuntimeException(e);
             }
         }
-        
         return this;
     }
 
@@ -505,7 +682,6 @@ class AutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitia
     JSONObject serialize() {
         JSONObject _api = new JSONObject();
         _api.put("_classname", this.getClass().getName());
-        
         JSONArray _prefixes = new JSONArray();
         namePrefixes.each {
             _prefixes.add(it)
@@ -602,7 +778,7 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
     def mapper
 
     String description = "Query API for metadata search."
-    
+
     def void handle(Request request, Response response) {
         mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()

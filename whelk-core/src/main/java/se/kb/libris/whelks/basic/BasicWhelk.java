@@ -54,7 +54,11 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
 
         for (FormatConverter fc : getFormatConverters()) {
             if (((List)docs).size() > 0 && fc.getRequiredFormat().equals(((Document)((List)docs).get(0)).getFormat())) {
-                docs = fc.convert((List)docs);
+                List<Document> convertedList = new ArrayList<Document>();
+                for (Document doc : ((List<Document>)docs)) {
+                    convertedList.addAll(fc.convert(doc));
+                }
+                docs = convertedList;
             }
         }
 
@@ -65,11 +69,20 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
                 }
 
                 if (c instanceof Index) {
-                    List<Document> idocs = new ArrayList<Document>((Collection)docs);
+                    List<Document> idocs = new ArrayList<Document>();
+                    boolean formatConverted = false;
                     for (IndexFormatConverter ifc : getIndexFormatConverters()) {
-                        idocs = ifc.convert(idocs);
+                        formatConverted = true;
+                        for (Document doc : ((List<Document>)docs)) {
+                            idocs.addAll(ifc.convert(doc));
+                        }
+                    } 
+                    if (!formatConverted) {
+                        idocs.addAll((Collection)docs);
                     }
-                    ((Index)c).index(idocs, this.prefix);
+                    for (Document d : idocs) {
+                        ((Index)c).index(d, this.prefix);
+                    }
                 }
 
                 if (c instanceof QuadStore) {
@@ -141,9 +154,13 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
     }
 
     public SearchResult query(Query query, String indexType) {
+        return query(query, this.prefix, indexType);
+    }
+
+    public SearchResult query(Query query, String prefix, String indexType) {
         for (Component c: getComponents())
             if (c instanceof Index)
-                return ((Index)c).query(query, this.prefix, indexType);
+                return ((Index)c).query(query, prefix, indexType);
 
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
@@ -294,14 +311,19 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
         return ret;
     }
 
+    protected void initializePlugins() {
+        for (Plugin plugin : plugins) 
+            plugin.init(this.prefix);
+    }
+
     @Override
     public void addPlugin(Plugin plugin) {
         synchronized (plugins) {
             if (plugin instanceof WhelkAware) {
                 ((WhelkAware)plugin).setWhelk(this);
             }
-            plugin.init(this.prefix);
             plugins.add(plugin);
+            initializePlugins();
         }
     }
 

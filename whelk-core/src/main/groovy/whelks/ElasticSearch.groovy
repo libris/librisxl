@@ -153,9 +153,10 @@ abstract class ElasticSearch extends BasicPlugin {
 
     void addDocument(Document doc, String addType, String idxpfx) {
         def eid = translateIdentifier(doc.identifier)
-        log.trace "Should use index ${idxpfx}, type ${addType} and id ${eid}"
+        def entityType = doc.tags.find { it.type.toString() == "entityType"}?.value ?: addType
+        log.debug "Should use index ${idxpfx}, type ${entityType} and id ${eid}"
         try {
-            def irb = client.prepareIndex(idxpfx, addType, eid)
+            def irb = client.prepareIndex(idxpfx, entityType, eid)
             if (addType == indexType) {
                 irb.setSource(doc.data)
                 log.trace("Prepareing index of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
@@ -266,10 +267,15 @@ abstract class ElasticSearch extends BasicPlugin {
 
     @Override
     SearchResult query(Query q, String idxpfx, String indexType) {
-        def iType = (indexType == null ? this.indexType : indexType)
-        log.trace "Querying index $idxpfx and indextype $iType"
+        def iType = (indexType == null ? [this.indexType] : indexType.split(","))
+        log.debug "Querying index $idxpfx and indextype $iType"
         log.trace "Doing query on $q"
-        def srb = client.prepareSearch(idxpfx).setTypes(iType)
+        def idxlist = [idxpfx]
+        if (idxpfx.contains(",")) {
+            idxlist = idxpfx.split(",").collect{it.trim()}
+        }
+        log.debug("Searching in indexes: $idxlist")
+        def srb = client.prepareSearch(idxlist as String[]).setTypes(iType as String[])
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
         if (q.query == "*") {
@@ -326,9 +332,9 @@ abstract class ElasticSearch extends BasicPlugin {
             results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
                 if (q.highlights) {
-                    results.addHit(createDocumentFromHit(it, idxpfx), convertHighlight(it.highlightFields))
+                    results.addHit(createDocumentFromHit(it), convertHighlight(it.highlightFields))
                 } else {
-                    results.addHit(createDocumentFromHit(it, idxpfx))
+                    results.addHit(createDocumentFromHit(it))
                 }
             }
             if (q.facets) {
@@ -342,8 +348,8 @@ abstract class ElasticSearch extends BasicPlugin {
        return query(q, idxpfx, indexType)
     }
 
-    Document createDocumentFromHit(hit, idxpfx) {
-        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id, idxpfx))
+    Document createDocumentFromHit(hit) {
+        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id, hit.index))
     }
 
     @Override
@@ -406,7 +412,7 @@ abstract class ElasticSearch extends BasicPlugin {
                         log.error("Failed to created document with id ${it.id} from source - " + de.getMessage(), de)
                     }
                 } else {
-                    results.add(new LogEntry(translateIndexIdTo(it.id, idxpfx), new Date(it.field("_timestamp").value)))
+                    results.add(new LogEntry(translateIndexIdTo(it.id, it.index), new Date(it.field("_timestamp").value)))
                 }
             }
         } else if (!response || response.hits.length < 1) {

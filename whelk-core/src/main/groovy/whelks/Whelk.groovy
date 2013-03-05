@@ -115,6 +115,37 @@ class WhelkImpl extends BasicWhelk {
 
 }
 
+@Log
+class CombinedWhelk extends BasicWhelk {
+
+    String indexes
+
+    CombinedWhelk(String pfx) {
+        super(pfx)
+    }
+
+    void setPrefixes(List idxs) {
+        log.trace("Setting indexes: $idxs")
+        this.indexes = idxs.join(",")
+    }
+
+    @Override
+    void store(Iterable<Document> docs) {
+        throw new WhelkRuntimeException("CombinedWhelk is not designed for storing documents.")
+    }
+
+    @Override
+    protected void initializePlugins() {
+        log.debug("Combined whelk does not initialize plugins.")
+    }
+
+    @Override
+    SearchResult query(Query q, String indexType) {
+        log.trace("query intercepted: $q, $indexType")
+        return super.query(q, this.indexes, indexType)
+    }
+}
+
 /**
  * Used by the local "mock" whelk setup.
  */

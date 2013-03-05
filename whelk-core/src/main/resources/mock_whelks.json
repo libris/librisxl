@@ -3,7 +3,7 @@
         {
             "bib":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter"]
+                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor"]
             }
         },
         {
@@ -16,6 +16,13 @@
             "hold":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
                 "_plugins": [ "localindex", "diskstorage", "search", "document", "metasearch", "holdmarcconverter" ]
+            }
+        },
+        {
+            "suggest":{
+                "_class" : "se.kb.libris.whelks.CombinedWhelk",
+                "prefixes" : ["auth", "bib"],
+                "_plugins": [ "localindex", "search", "document", "autocomplete" ]
             }
         },
         {
@@ -74,6 +81,11 @@
             }
         },
         {
+            "entityextractor" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
+            }
+        },
+        {
             "search" : {
                 "_class" : "se.kb.libris.whelks.api.SearchRestlet",
                 "_params" : {"boost" : "labels.title:2"}
@@ -92,7 +104,23 @@
         {
             "autocomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
-                "_params" : ["100.a", "400.a", "500.a"]
+                "_params" : {"queryFields":[
+                              "authoritativeName",
+                              "marc21.fields.100.subfields.a",
+                              "marc21.fields.400.subfields.a",
+                              "marc21.fields.500.subfields.a"
+                            ],
+                            "infoFields":[
+                              "birthYear",
+                              "deathYear",
+                              "authorOf",
+                              "marc21.fields.678.subfields.a",
+                              "marc21.fields.100.subfields.b",
+                              "marc21.fields.100.subfields.c",
+                              "marc21.fields.100.subfields.d"
+                            ],
+                            "indexTypes":"Person,record"
+                            }
             }
         },
         {

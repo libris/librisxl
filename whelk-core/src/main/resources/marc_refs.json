@@ -8,26 +8,6 @@
             "001" : "controlNumber",
             "004" : false,
             "005" : "dateAndTimeOfLatestTransaction",
-            "008" : {
-                "date" : false,
-                "publicationStatus" : false,
-                "yearTime1" : false,
-                "yearTime2" : false,
-                "country" : ["country"],
-                "booksIllustrations" : false,
-                "booksAudience" : false,
-                "booksItem" : false,
-                "booksContents" : false,
-                "booksGovtPub" : false,
-                "booksConfPub" : false,
-                "booksFestschrift" : false,
-                "booksIndex" : false,
-                "booksLiteraryForm" : false,
-                "booksBiography" : false,
-                "language" : ["language"],
-                "modifiedRecord" : false,
-                "catalogingSource" : false
-            },
             "010": {
                 "a" : ["lccn"]
             },
@@ -123,9 +103,6 @@
     },
     "hold": {
         "fields": {
-            "001": false,
-            "004": false,
-            "008": false,
             "014" : {
                 "a" : ["linkageNumber"]
             },
