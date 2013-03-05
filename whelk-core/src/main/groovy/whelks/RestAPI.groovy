@@ -478,9 +478,8 @@ class AutoComplete extends BasicWhelkAPI {
                 (callback ? ");" : "") 
                 */
             def c = new SuggestResultsConverter(results, [namePrefixes[0]], extraInfo)
-            def jsonResult = c.toJson()
 
-            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+            response.setEntity(c.toJson(), MediaType.APPLICATION_JSON)
         } else {
             response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
         }
@@ -545,7 +544,28 @@ class SuggestResultsConverter {
                 }
             }
         }
+        if (!result && (lastkey == key)) {
+            result = findNestedValueForKey(map, key)
+        }
         return ((result && result instanceof List && result.size() == 1) ? result[0] : result)
+    }
+
+    def findNestedValueForKey(Map map, String key) {
+        def result
+        map.each { k, v ->
+            if (k == key) {
+                result = v
+            } else if (!result && v instanceof Map) {
+                result = findNestedValueForKey(v, key)
+            } else if (!result && v instanceof List) {
+                v.each {
+                    if (it instanceof Map) {
+                        result = findNestedValueForKey(it, key)
+                    }
+                }
+            }
+        }
+        return result
     }
 
     def mapAuthRecord(id, r) {
@@ -554,7 +574,7 @@ class SuggestResultsConverter {
         log.debug("hl : ${r.highlight} (${r.highlight.getClass().getName()})")
         boolean mainhit = r.highlight.any { it.key in mainFields }
         log.debug("mainFields: $mainFields")
-        name["name"] = getDeepValue(r, mainFields[0])
+        name[mainFields[0]] = getDeepValue(r, mainFields[0])
         if (!mainhit) {
             name["found_in"] = r.highlight.findAll { !(it.key in mainFields) }//.collect { it.value }[0]
         }
@@ -573,7 +593,7 @@ class SuggestResultsConverter {
     def mapBibRecord(id, r) {
         def name = [:]
         name["identifier"] = id
-        name["name"] = r.highlight.collect { it.value }
+        name[mainFields[0]] = getDeepValue(r, mainFields[0])
         log.debug("highlight: ${r.highlight}")
         for (field in supplementalFields) {
             def dv = getDeepValue(r, field)

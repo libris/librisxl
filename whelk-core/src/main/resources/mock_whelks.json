@@ -104,15 +104,15 @@
                               "marc21.fields.500.subfields.a"
                             ],
                             "infoFields":[
-                              "birthyear",
-                              "deathyear",
+                              "birthYear",
+                              "deathYear",
                               "authorOf",
                               "marc21.fields.678.subfields.a",
                               "marc21.fields.100.subfields.b",
                               "marc21.fields.100.subfields.c",
                               "marc21.fields.100.subfields.d"
                             ],
-                            "indexTypes":"Person"
+                            "indexTypes":"Person,record"
                             }
             }
         },
