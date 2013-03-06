@@ -16,7 +16,6 @@ class Listener extends BasicPlugin implements WhelkAware {
 
     Whelk homewhelk
     Whelk otherwhelk
-    FormatConverter converter
 
     List documents = Collections.synchronizedList(new LinkedList())
 

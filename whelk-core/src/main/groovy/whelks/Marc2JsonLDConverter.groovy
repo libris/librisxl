@@ -12,7 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper
 
 
 @Log
-class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConverter, IndexFormatConverter {
+class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, FormatConverter, IndexFormatConverter {
     final static String RAW_LABEL = "marc21"
     final static String ABOUT_LABEL = "about"
     final static String INSTANCE_LABEL = "instanceOf"
@@ -728,7 +728,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
     }
 
     @Override
-    List<Document> convert(Document idoc) {
+    List<Document> doConvert(Document idoc) {
         def outdocs = []
         if (idoc.contentType == this.requiredContentType && idoc.format == this.requiredFormat) {
             def injson = mapper.readValue(idoc.dataAsString, Map)
@@ -736,15 +736,6 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         } else {
             //log.trace("This converter requires $requiredFormat in $requiredContentType. Document ${idoc.identifier} is ${idoc.format} in ${idoc.contentType}")
             outdocs << idoc
-        }
-        return outdocs
-    }
-
-    @Override
-    List<Document> convert(List<Document> docs) {
-        def outdocs = []
-        for (doc in docs) {
-            outdocs.addAll(convert(doc))
         }
         return outdocs
     }

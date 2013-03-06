@@ -10,7 +10,7 @@ import org.codehaus.jackson.map.ObjectMapper
 
 
 @Log
-class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements IndexFormatConverter {
+class MarcCrackerAndLabelerIndexFormatConverter extends BasicFormatConverter implements IndexFormatConverter {
 
     String requiredContentType = "application/json"
     String requiredFormat = "marc21"
@@ -173,50 +173,42 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
     }
 
     @Override
-    List<Document> convert(Document doc) {
-        return convert([doc])
-    }
-
-    @Override
-    List<Document> convert(List<Document> docs) {
+    List<Document> doConvert(Document doc) {
         def outdocs = []
-        log.debug("Converting " + docs?.size() + " documents.")
-        for (doc in docs) {
-            if (doc.format == this.requiredFormat) {
-                log.trace "Start convert on ${doc.dataAsString}"
-                def json
-                String d = doc.dataAsString
-                try {
-                    /*
-                    if (d.contains("\\\"")) {
-                    d = d.replaceAll("\\\"", "/\"")
-                    }
-                    */
-                    json = mapper.readValue(doc.dataAsString, Map)
+        if (doc.format == this.requiredFormat) {
+            log.trace "Start convert on ${doc.dataAsString}"
+            def json
+            String d = doc.dataAsString
+            try {
+                /*
+                if (d.contains("\\\"")) {
+                d = d.replaceAll("\\\"", "/\"")
+                }
+                */
+                json = mapper.readValue(doc.dataAsString, Map)
 
+            } catch (Exception e) {
+                log.error("Failed to parse document")
+                log.error(doc.dataAsString, e)
+                return null
+            }
+
+            json = rewriteJson(doc.identifier, json)
+
+
+                json = appendLabels(json)
+                json = appendTags(json, doc)
+
+                try {
+                    outdocs << new BasicDocument(doc).withData(mapper.writeValueAsBytes(json))
                 } catch (Exception e) {
-                    log.error("Failed to parse document")
-                    log.error(doc.dataAsString, e)
-                    return null
+                    log.error("Failed to create cracked marc index: ${e.message}")
+                    log.error("JSON structure: $json")
+                    throw new se.kb.libris.whelks.exception.WhelkRuntimeException(e)
                 }
 
-                json = rewriteJson(doc.identifier, json)
-
-
-                    json = appendLabels(json)
-                    json = appendTags(json, doc)
-
-                    try {
-                        outdocs << new BasicDocument(doc).withData(mapper.writeValueAsBytes(json))
-                    } catch (Exception e) {
-                        log.error("Failed to create cracked marc index: ${e.message}")
-                        log.error("JSON structure: $json")
-                        throw new se.kb.libris.whelks.exception.WhelkRuntimeException(e)
-                    }
-
-            } else {
-                outdocs << doc
-            }
+        } else {
+            outdocs << doc
         }
         return outdocs
     }

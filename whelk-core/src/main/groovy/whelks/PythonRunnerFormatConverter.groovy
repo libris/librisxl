@@ -38,7 +38,7 @@ class MarcFieldLabelerIndexFormatConverter extends BasicPlugin implements IndexF
     }
 
     @Override
-    List<Document> convert(Document doc) {
+    List<Document> doConvert(Document doc) {
         return convert([doc])
     }
 
@@ -82,7 +82,7 @@ class MarcFieldLabelerIndexFormatConverter extends BasicPlugin implements IndexF
 */
 
 @Log
-class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter, WhelkAware, JSONSerialisable, JSONInitialisable {
+class PythonRunnerFormatConverter extends BasicFormatConverter implements FormatConverter, WhelkAware, JSONSerialisable, JSONInitialisable {
 
     final private ScriptEngine python 
     String scriptName
@@ -117,12 +117,7 @@ class PythonRunnerFormatConverter extends BasicPlugin implements FormatConverter
 
 
     @Override
-    public List<Document> convert(List<Document> docs) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public List<Document> convert(Document doc) {
+    public List<Document> doConvert(Document doc) {
         if (python == null) {
             throw new WhelkRuntimeException("Unable to find script engine for python.")
         }
