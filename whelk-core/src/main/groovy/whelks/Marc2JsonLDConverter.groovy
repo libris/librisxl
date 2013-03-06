@@ -14,6 +14,7 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, FormatConverter, IndexFormatConverter {
     final static String RAW_LABEL = "marc21"
+    final static String UNKNOWN_LABEL = "unknown"
     final static String ABOUT_LABEL = "about"
     final static String INSTANCE_LABEL = "instanceOf"
     String requiredContentType = "application/json"
@@ -61,7 +62,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                  }
               } else {
                   out = [(marcrefValue): value]
-              }  
+              }
              return out
         } else if (!marcrefValue){
             log.debug("Failed to map $code")
@@ -130,7 +131,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
             log.trace("default mapping: $out")
             return out
         }
-        //return [(RAW_LABEL): ["fields":[(code):json]]]
+        //return [(raw_lbl): ["fields":[(code):json]]]
         return false
     }
 
@@ -281,9 +282,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
             out["@type"] = "Conference"
         }
         boolean complete = true
-        log.trace("subfields: " + json['subfields'])
         json['subfields'].each {
-            log.trace("subfield: $it")
             it.each { key, value ->
                 switch (key) {
                     case "a":
@@ -441,6 +440,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     }
 
     def mapField(code, json, outjson) {
+        def raw_lbl = (marcref.uninteresting.contains(code) ? RAW_LABEL : UNKNOWN_LABEL)
         if (recordType.equals("bib")) {
             switch(code) {
                 case "020":
@@ -449,8 +449,8 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                         outjson = mergeMap(outjson, [(ABOUT_LABEL):i])
                         outjson = createNestedMapStructure(outjson, [ABOUT_LABEL,"identifier"], mapOtherIdentifierAsBNode("isbn",json))
                     } else {
-                        outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
-                        outjson[RAW_LABEL]["fields"] << [(code):json]
+                        outjson = createNestedMapStructure(outjson, [raw_lbl,"fields"],[])
+                        outjson[raw_lbl]["fields"] << [(code):json]
                     }
                     break
                 case "024":
@@ -463,8 +463,8 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                             outjson = mergeMap(outjson, [(ABOUT_LABEL):i])
                         }
                     } else {
-                        outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
-                        outjson[RAW_LABEL]["fields"] << [(code):json]
+                        outjson = createNestedMapStructure(outjson, [raw_lbl,"fields"],[])
+                        outjson[raw_lbl]["fields"] << [(code):json]
                     }
                     break
                 case "040":
@@ -472,8 +472,8 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     if (c) {
                         outjson = mergeMap(outjson, c)
                     } else {
-                        outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
-                        outjson[RAW_LABEL]["fields"] << [(code):json]
+                        outjson = createNestedMapStructure(outjson, [raw_lbl,"fields"],[])
+                        outjson[raw_lbl]["fields"] << [(code):json]
                     }
                     break;
                 case "072":
@@ -483,8 +483,8 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                         outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL, "subject"], [])
                         outjson[ABOUT_LABEL][INSTANCE_LABEL]["subject"].addAll(c)
                     } else {
-                        outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
-                        outjson[RAW_LABEL]["fields"] << [(code):json]
+                        outjson = createNestedMapStructure(outjson, [raw_lbl,"fields"],[])
+                        outjson[raw_lbl]["fields"] << [(code):json]
                     }
                     break;
                 case "100":
@@ -493,10 +493,10 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     if (p) {
                         def relcode = subfieldCode("4", json["subfields"])
                         log.trace("relcode: $relcode")
-                        def relator = marcref.bib.relators[relcode]
+                        def relator = marcref[recordType].relators[relcode]
                         log.trace("mapPerson found relator $relator")
                         if (relator && relator != "author") {
-                            if (relator in marcref.bib.levels[INSTANCE_LABEL]) {
+                            if (relator in marcref[recordType].levels[INSTANCE_LABEL]) {
                                 outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL, relator], [])
                                 outjson[ABOUT_LABEL][INSTANCE_LABEL][relator] << p
                             } else {
@@ -508,8 +508,8 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                             outjson[ABOUT_LABEL][INSTANCE_LABEL]["authorList"] << p
                         }
                     } else {
-                        outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
-                        outjson[RAW_LABEL]["fields"] << [(code):json]
+                        outjson = createNestedMapStructure(outjson, [raw_lbl,"fields"],[])
+                        outjson[raw_lbl]["fields"] << [(code):json]
                     }
                     break;
                 case "260":
@@ -517,8 +517,8 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     if (pubMapped) {
                         outjson = mergeMap(outjson, [(ABOUT_LABEL):pubMapped])
                     } else {
-                        outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
-                        outjson[RAW_LABEL]["fields"] << [(code):json]
+                        outjson = createNestedMapStructure(outjson, [raw_lbl,"fields"],[])
+                        outjson[raw_lbl]["fields"] << [(code):json]
                     }
                     break;
                 default:
@@ -526,9 +526,9 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     def jldMapped = mapDefault(code, json)
                     log.trace("retrieved $jldMapped")
                     if (jldMapped) {
-                        if (code in marcref.bib.levels.about) {
+                        if (code in marcref[recordType].levels.about) {
                             outjson = mergeMap(outjson, [(ABOUT_LABEL):jldMapped])
-                        } else if (code in marcref.bib.levels.instanceOf) {
+                        } else if (code in marcref[recordType].levels.instanceOf) {
                             outjson = mergeMap(outjson, [(ABOUT_LABEL):[(INSTANCE_LABEL):jldMapped]])
                         } else {
                             log.trace("top level merge of $jldMapped")
@@ -537,8 +537,8 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     } else if (jldMapped == false) {
                         return outjson
                     } else {
-                        outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
-                        outjson[RAW_LABEL]["fields"] << [(code):json]
+                        outjson = createNestedMapStructure(outjson, [raw_lbl,"fields"],[])
+                        outjson[raw_lbl]["fields"] << [(code):json]
                     }
                     break;
             }
@@ -553,13 +553,85 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     } else if (jldMapped == false) {
                         return outjson
                     } else {
-                        outjson = createNestedMapStructure(outjson, [RAW_LABEL,"fields"],[])
-                        outjson[RAW_LABEL]["fields"] << [(code):json]
+                        outjson = createNestedMapStructure(outjson, [raw_lbl,"fields"],[])
+                        outjson[raw_lbl]["fields"] << [(code):json]
                     }
             }
+        } else if (recordType.equals("auth")) {
+            switch (code) {
+                case "100":
+                case "700":
+                    outjson = mergeMap(outjson, mapPerson(code, json))
+                    break;
+                case "400":
+                    def p = mapPerson(code, json)
+                    def altName = [(marcref[recordType].fields[code]): (p.authorizedAccessPoint ?: p.authoritativeName)]
+                    outjson = mergeMap(outjson, altName)
+                    break;
+                case "856":
+                    outjson = mergeMap(outjson, mapLinks(code, json))
+                    break
+                default:
+                    log.trace("mapfield default code: $code json: ${json}}")
+                    def jldMapped = mapDefault(code, json)
+                    log.trace("retrieved $jldMapped")
+                    if (jldMapped) {
+                        outjson = mergeMap(outjson, jldMapped)
+                    } else {
+                        outjson = createNestedMapStructure(outjson, [raw_lbl,"fields"],[])
+                        outjson[raw_lbl]["fields"] << [(code):json]
+                    }
+                break;
+            }
         }
-        
         return outjson
+    }
+
+
+    def mapLinks(code, json) {
+        def out = [:]
+        boolean complete = true
+        def url, source
+        json["subfields"].each {
+            it.each { key, value ->
+                switch (key) {
+                    case "u":
+                        url = value
+                        break
+                    case "y":
+                    case "z":
+                        source = value
+                        break
+                    default:
+                        complete = false
+                        break
+                }
+            }
+        }
+        switch(source) {
+            case "DBPedia":
+                out["dbpedia"] = url
+                break
+            case "Wikipedia":
+                out["wikipedia"] = url
+                break
+            case "VIAF":
+                out["viaf"] = url
+                break
+            case "LC Name Authority":
+                out["lc"] = url
+                break
+            case "bild":
+                out["image"] = url
+                break
+            default:
+                complete = false
+                break
+        }
+        if (complete) {
+            return out
+        }
+        return false
     }
 
     Map addToOrCreateListForKey(map, obj) {
@@ -579,17 +651,14 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     }
 
     String subfieldCode(code, subfields) {
-        log.trace("subfieldCode subfields: $subfields")
         def sfcode = null
         subfields.each {
             it.each { key, value ->
                 if (key == code) {
-                    log.trace("subfieldCode: $code = $value")
                     sfcode = value
                 }
             }
         }
-        log.trace("Returning $sfcode ($code, $subfields)")
         return sfcode
     }
 
@@ -632,12 +701,9 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     }
 
     Map mergeMap(Map origmap, Map newmap) {
-        log.debug("origmap: $origmap")
-        log.debug("newmap: $newmap")
         newmap.each { key, value -> 
             if (origmap.containsKey(key)) { // Update value for original map
                 if (value instanceof Map && origmap.get(key) instanceof Map) {
-                    log.debug("iterating")
                     origmap[key] = mergeMap(origmap.get(key), value)
                 } else {
                     if (!(origmap.get(key) instanceof List)) {
@@ -678,8 +744,8 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
 
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()
-        outjson["@type"] = "Document"
         if (recordType.equals("bib")) {
+            outjson["@type"] = "Document"
             outjson[ABOUT_LABEL] = ["@type":["Instance"]]
             if (injson.containsKey("leader")) {
                 injson = marccracker.rewriteJson(identifier, injson)
@@ -688,7 +754,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                         it.each { lkey, lvalue ->
                             lvalue = lvalue.trim()
                             if (lvalue && !(lvalue =~ /^\|+$/)) {
-                                def lbl = marcmap.bib.fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
+                                def lbl = marcmap[recordType].fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
                                 if (lkey == "typeOfRecord") {
                                     switch (lvalue) {
                                         case "a":
@@ -699,9 +765,9 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                                         break;
                                     }
                                 }
-                                if (lkey in marcref.bib.levels.instanceOf) {
+                                if (lkey in marcref[recordType].levels.instanceOf) {
                                     outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, INSTANCE_LABEL, lkey],["code":lvalue,"label":(lbl ?: ""),"@language":"sv"])
-                                } else if (lkey in marcref.bib.levels.about) {
+                                } else if (lkey in marcref[recordType].levels.about) {
                                     outjson = createNestedMapStructure(outjson, [ABOUT_LABEL, lkey], ["code":lvalue,"label":(lbl ?: ""),"@language":"sv"])
                                 } else {
                                     outjson[lkey] = ["code":lvalue,"label":(lbl ?: ""),"@language":"sv"]
@@ -716,10 +782,17 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 log.trace("Leader: ${injson.leader}")
                 log.trace("Rewritten injson ${injson.leader}")
             }
+        } else if (recordType.equals("auth")) {
+            if (injson.containsKey("leader")) {
+                injson = marccracker.rewriteJson(identifier, injson)
+                log.trace("Leader: ${injson.leader}")
+                log.trace("Rewritten injson ${injson.leader}")
+            }
         }
 
         injson.fields.each {
             it.each { fkey, fvalue ->
+                log.trace("$fkey = $fvalue")
                 outjson = mapField(fkey, fvalue, outjson)
             }
         }

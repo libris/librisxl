@@ -9,7 +9,7 @@
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "bibmarcconverter" ]
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "authmarcconverter" ]
             }
         },
         {
@@ -78,6 +78,12 @@
             "holdmarcconverter" : {
                 "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter",
                 "_params" : "hold"
+            }
+        },
+        {
+            "authmarcconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter",
+                "_params" : "auth"
             }
         },
         {

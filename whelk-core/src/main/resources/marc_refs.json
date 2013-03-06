@@ -135,6 +135,20 @@
         }
     },
     "auth": {
-        "fields": {}
-    }
+        "fields": {
+            "001" : "controlNumber",
+            "005" : "dateAndTimeOfLatestTransaction",
+            "400": "label",
+            "667" : {
+                "a" : ["internalRemark"]
+            },
+            "670" : {
+                "a" : ["source"]
+            },
+            "678" : {
+                "a" : ["description"]
+            }
+        }
+    },
+    "uninteresting" : ["043"]
 }
