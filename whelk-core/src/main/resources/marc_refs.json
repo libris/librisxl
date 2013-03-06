@@ -138,6 +138,38 @@
         }
     },
     "auth": {
-        "fields": {}
-    }
+        "fields": {
+            "001" : "controlNumber",
+            "005" : "dateAndTimeOfLatestTransaction",
+            "035" : {
+                "a" : "otherSystem"
+            },
+            "040" : {
+                "a" : ["creator"],
+                "b" : ["catalogingLanguage"],
+                "c" : ["transliteratingBy"],
+                "d" : ["catalogingChangesBy"]
+            },
+            "046" : {
+                "f" : ["birthDate"],
+                "g" : ["deathDate"]
+            },
+            "083" : {
+                "a" : ["class-ddc"],
+                "2" : false
+            },
+            "400": "label",
+            "500": "seeAlso",
+            "667" : {
+                "a" : ["internalRemark"]
+            },
+            "670" : {
+                "a" : ["source"]
+            },
+            "678" : {
+                "a" : ["description"]
+            }
+        }
+    },
+    "uninteresting" : ["043"]
 }
