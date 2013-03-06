@@ -28,10 +28,13 @@
   </appender>
   -->
 
-  <logger name="org.elasticsearch">
+ <!-- <logger name="org.elasticsearch">
       <level value="warn"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
+      <level value="trace"/>
+  </logger>-->
+  <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
       <level value="trace"/>
   </logger>
   <!--
@@ -46,33 +49,28 @@
   <!--
   <logger name="se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter">
       <level value="trace"/>
-  </logger>
-  <logger name="se.kb.libris.whelks.plugin">
+  </logger>-->
+  <!--<logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
-  </logger>
-  <logger name="se.kb.libris.whelks.component">
-      <level value="trace"/>
-  </logger>
   </logger>-->
  <!-- <logger name="se.kb.libris.whelks.component">
       <level value="trace"/>
-  </logger>-->
+  </logger>
   <logger name="se.kb.libris.whelks.api">
       <level value="trace"/>
-  </logger>
+  </logger>-->
   <!--
   <logger name="se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter">
       <level value="trace"/>
-  </logger>-->
-
-<!--  <logger name="se.kb.libris.whelks.basic.BasicDocument">
+  </logger>
+  <logger name="se.kb.libris.whelks.basic.BasicDocument">
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger>
   -->
-  <logger name="se.kb.libris.whelks.CombinedWhelk">
+ <!-- <logger name="se.kb.libris.whelks.CombinedWhelk">
       <level value="trace"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
@@ -83,7 +81,7 @@
   </logger>
  <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
       <level value="trace"/>
-  </logger>
+  </logger>-->
 
   <!--
   <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">

@@ -49,7 +49,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
     }
 
     def mapDefault(String code, String value) {
-        log.trace("mapDefault: $code = $value")
+        log.trace("mapDefault, string value: $code = $value")
         def marcrefValue = marcref.get(recordType).fields[code]
         def out = [:]
         if (marcrefValue) {
@@ -60,7 +60,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
                         }
                  }
               } else {
-                  out = [marcrefValue: value]
+                  out = [(marcrefValue): value]
               }  
              return out
         } else if (!marcrefValue){

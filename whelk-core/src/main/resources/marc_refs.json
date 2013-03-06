@@ -68,15 +68,6 @@
             },
             "520": {
                 "a" : ["summary"]
-            },
-            "650": {
-                "a" : ["topicalTerm"],
-                "x" : ["generalSubdivision"],
-                "z" : ["geographicSubdivision"]
-            },
-            "653": {
-                "a" : ["uncontrolledIndexTerm"],
-                "6" : ["indexTermLinkage"]
             }
         },
         "relators" : {
@@ -103,12 +94,23 @@
     },
     "hold": {
         "fields": {
+            "001" : "controlNumber",
+            "005" : "dateAndTimeOfLatestTransaction",
             "014" : {
                 "a" : ["linkageNumber"]
             },
             "084" : {
                 "a" : ["classificationNumber"],
                 "2" : ["classificationNumberSource"]
+            },
+            "650": {
+                "a" : ["topicalTerm"],
+                "x" : ["generalSubdivision"],
+                "z" : ["geographicSubdivision"]
+            },
+            "653": {
+                "a" : ["uncontrolledIndexTerm"],
+                "6" : ["indexTermLinkage"]
             },
             "698": {
                 "a" : ["localSubjectCode"],

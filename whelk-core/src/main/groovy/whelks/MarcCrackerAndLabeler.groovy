@@ -132,10 +132,18 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
             if (l["type"].equals("y")) {
                 resourceType = "serial"
             }
-           /* json.fields.eachWithIndex() { it, pos ->
+            json.fields.eachWithIndex() { it, pos ->
                 log.trace "Working on json field $pos: $it"
                 it.each { fkey, fvalue ->
-                    if (fkey.startsWith("00")) {
+                        if (fkey == "005") {
+                            def date
+                            try {
+                                date = new Date().parse("yyyyMMddHHmmss.S", fvalue)
+                            } catch (Exception e) {
+                                date = new Date()
+                            }
+                            json.fields[pos] = [(fkey):date]
+                        } /*else {
                         marcmap.hold.each { key, value ->
                             if (fkey == key) {
                                 log.debug("fkey: $fkey")
@@ -155,10 +163,10 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicPlugin implements I
                                }
                                 
                             }
-                         }
-                     }
+                         }*/
+                     
                  }
-             }*/
+             }
          }
 
         return json
