@@ -709,50 +709,52 @@ class ResourceListRestlet extends BasicWhelkAPI {
 
     def codeFiles = [
         "lang": "langcodes.json",
-        "country": "countrycodes.json"
+        "country": "countrycodes.json",
+        "nationality": "nationalitycodes.json",
+        "function": "functioncodes.json"
     ]
-    def langcodes
-    def countrycodes
+    def lang
+    def country
+    def nationality
+    def function
     def mapper
 
     ResourceListRestlet() {
         mapper = new ObjectMapper()
-        langcodes = loadCodes("lang")
-        countrycodes = loadCodes("country")
+        codeFiles.each { key, fileName ->
+           this[(key)] = loadCodes(key)
+        }
     }
 
     def convertPropertiesToJson(def typeOfCode) {
+        log.trace("Converting properties ${typeOfCode}")
         def outjson = [:]
         def properties = new Properties()
         properties.load(this.getClass().getClassLoader().getResourceAsStream("$typeOfCode" + "codes.properties"))
         properties.each { key, value ->
             outjson[key] = value
         }
-        def file = new File("$typeOfCode" + "codes.json")
+        def file = new File(codeFiles.get(typeOfCode))
         file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
     }
 
-    def loadCodes(def typeOfCode) {
-        def jsonfile = "$typeOfCode" + "codes.json"
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("$jsonfile")
+    def loadCodes(String typeOfCode) {
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode))
         return mapper.readValue(is, Map)
     }
 
     def void handle(Request request, Response response) {
+        def foundParam = false
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def lang = queryMap.get("lang")
-        def country = queryMap.get("country")
-
-        if (lang && lang.trim().equals("all")) {
-            response.setEntity(mapper.writeValueAsString(langcodes), MediaType.APPLICATION_JSON)
-
-        } else if (country && country.trim().equals("all")) {
-               response.setEntity(mapper.writeValueAsString(countrycodes), MediaType.APPLICATION_JSON)
-        } else {
-            response.setEntity('{"error":"Use parameter \"lang=<all/language>\" or \"country=<all/country>\"."}', MediaType.APPLICATION_JSON)
+        codeFiles.each { key, value ->
+            if (queryMap.get(key) && queryMap.get(key).trim().equals("all")) {
+                response.setEntity(mapper.writeValueAsString(this[(key)]), MediaType.APPLICATION_JSON)
+                foundParam = true
+            }
         }
-
-
+        if (!foundParam) {
+            response.setEntity('{"Error":"Use parameter \"lang=all\", \"country=all\", \"nationality=all\" or \"function=all\"."}', MediaType.APPLICATION_JSON)
+        }
     }
 }
 
