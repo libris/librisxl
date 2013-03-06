@@ -159,6 +159,7 @@
                 "2" : false
             },
             "400": "label",
+            "500": "seeAlso",
             "667" : {
                 "a" : ["internalRemark"]
             },

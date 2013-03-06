@@ -646,6 +646,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     }
                     break;
                 case "400":
+                case "500":
                     def p = mapPerson(code, json)
                     if (p) {
                         def altName = [(marcref[recordType].fields[code]): (p.authorizedAccessPoint ?: p.authoritativeName)]
