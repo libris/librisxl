@@ -37,10 +37,16 @@
     "shelvingControlNumber": "marc21:shelvingControlNumber",
     "shelvingFormOrTitle": "marc21:shelvingFormOrTitle",
     "shelvingNonpublicNote": "marc21:shelvingNonpublicNote",
-    "shelvingPublicNote": "marc:shelvingPublicNote",
+    "shelvingPublicNote": "marc21:shelvingPublicNote",
     "classificationCode": "marc:classificationCode",
     "classificationCodeSource": "marc:classificationCodeSource",
     "textualHoldings": "marc21:textualHoldings",
+    "subjectPersonName": "marc:subjectPersonName",
+    "subjectTopicalTerm": "marc:subjectTopicalTerm",
+    "subjectGeneralSubdivision": "marc:subjectGeneralSubdivision",
+    "subjectGeographicSubdivision": "marc:subjectGeographicSubdivision",
+    "uncontrolledIndexTerm": "marc:uncontrolledIndexTerm",
+    "indexTermLinkage": "marc:indexTermLinkage",
 
     "publisher": "dc:publisher",
 
