@@ -103,10 +103,13 @@
                 "a" : ["classificationNumber"],
                 "2" : ["classificationNumberSource"]
             },
+            "600": {
+                "a" : ["subjectPersonName"]
+            },
             "650": {
-                "a" : ["topicalTerm"],
-                "x" : ["generalSubdivision"],
-                "z" : ["geographicSubdivision"]
+                "a" : ["subjectTopicalTerm"],
+                "x" : ["subjectGeneralSubdivision"],
+                "z" : ["subjectGeographicSubdivision"]
             },
             "653": {
                 "a" : ["uncontrolledIndexTerm"],
