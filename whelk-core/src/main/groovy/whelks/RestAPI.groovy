@@ -172,7 +172,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 if (ifMatch
                         && this.whelk.get(new URI(path))
                         && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
-                    response.setStatus(Status.CLIENT_ERROR_CONFLICT, "The resource has been updated by someone else. Please refetch.")
+                    response.setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
                     identifier = this.whelk.store(doc)
                     response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)

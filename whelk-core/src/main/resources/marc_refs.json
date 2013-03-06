@@ -150,6 +150,14 @@
                 "c" : ["transliteratingBy"],
                 "d" : ["catalogingChangesBy"]
             },
+            "046" : {
+                "f" : ["birthDate"],
+                "g" : ["deathDate"]
+            },
+            "083" : {
+                "a" : ["class-ddc"],
+                "2" : false
+            },
             "400": "label",
             "667" : {
                 "a" : ["internalRemark"]
