@@ -140,6 +140,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                     } else {
                         response.setEntity(d.dataAsString, new MediaType(d.contentType))
                     }
+                    response.entity.setTag(new Tag(d.timestamp as String, false))
                 } else {
                     log.debug("Failed to find a document with URI $path")
                     response.setStatus(Status.CLIENT_ERROR_NOT_FOUND)
@@ -166,8 +167,16 @@ class DocumentRestlet extends BasicWhelkAPI {
                     log.trace("Adding link $link to document...")
                     doc = doc.withLink(link)
                 }
-                identifier = this.whelk.store(doc)
-                response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
+                // Check If-Match
+                def ifMatch = headers.find { it.name.equalsIgnoreCase("If-Match") }?.value
+                if (ifMatch
+                        && this.whelk.get(new URI(path))
+                        && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
+                    response.setStatus(Status.CLIENT_ERROR_CONFLICT, "The resource has been updated by someone else. Please refetch.")
+                } else {
+                    identifier = this.whelk.store(doc)
+                    response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
+                }
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
             }
