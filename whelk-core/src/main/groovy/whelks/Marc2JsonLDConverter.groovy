@@ -839,9 +839,31 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
             }
         } else if (recordType.equals("hold")) {
             if (injson.containsKey("leader")) {
+                log.trace("Leader: ${injson.leader}}")
                 injson = marccracker.rewriteJson(identifier, injson)
-                log.trace("Leader: ${injson.leader}")
-                log.trace("Rewritten injson ${injson.leader}")
+                if (injson.containsKey("leader")) {
+                    log.debug("injson.leader ${injson.leader}")
+                    def resourceType = "unknown"
+                    def typeValue, statValue
+                    injson.leader.subfields.each {
+                        it.each { key, value ->
+                            switch (key.trim()) {
+                                case "type":
+                                    typeValue = value.trim()
+                                    break
+                                case "statistics":
+                                    statValue = value.trim()
+                                    break
+                            }
+                            if (typeValue?.equals("x") && statValue?.matches(/[acdm]/)) {
+                                resourceType = "monographic"
+                            } else if (typeValue?.equals("y") && statValue?.matches(/[bis]/)) {
+                                resourceType = "serial"
+                            }
+                        }
+                    }
+                    outjson["@resourceType"] = resourceType
+                }
             }
         } else if (recordType.equals("auth")) {
             if (injson.containsKey("leader")) {

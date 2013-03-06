@@ -46,10 +46,9 @@
       <level value="trace"/>
   </logger>
   -->
-  <!--
   <logger name="se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter">
       <level value="trace"/>
-  </logger>-->
+  </logger>
   <!--<logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
   </logger>-->
