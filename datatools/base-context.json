@@ -47,6 +47,7 @@
     "subjectGeographicSubdivision": "marc:subjectGeographicSubdivision",
     "uncontrolledIndexTerm": "marc:uncontrolledIndexTerm",
     "indexTermLinkage": "marc:indexTermLinkage",
+    "issueMode": "marc:issueMode",
 
     "publisher": "dc:publisher",
 

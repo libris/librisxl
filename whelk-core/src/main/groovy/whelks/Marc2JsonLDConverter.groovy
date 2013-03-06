@@ -870,7 +870,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                             }
                         }
                     }
-                    outjson["@resourceType"] = resourceType
+                    outjson["@issueMode"] = resourceType
                 }
             }
         } else if (recordType.equals("auth")) {
