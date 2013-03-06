@@ -291,9 +291,9 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             }
             def callback = reqMap.get("callback")
             if (q) {
-                q.addFacet("status.label")
-                q.addFacet("about.typeOfRecord.label")
-                q.addFacet("about.instanceOf.bibLevel.label")
+                q.addFacet("status")
+                q.addFacet("typeOfRecord")
+                q.addFacet("bibLevel")
                 /*
                 q.addFacet("fields.007.subfields.carrierType")
                 q.addFacet("fields.008.subfields.yearTime1")
