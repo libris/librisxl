@@ -791,6 +791,7 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
     String description = "Query API for metadata search."
 
     def void handle(Request request, Response response) {
+        //TODO: hold som matchar bibid och location
         mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def link = queryMap.get("link")

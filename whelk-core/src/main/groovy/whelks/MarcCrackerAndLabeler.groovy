@@ -127,11 +127,6 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicFormatConverter imp
                 }
             }
         } else if (recordType.equals("hold")) {
-            log.trace("hold cracking")
-            def resourceType = "monographic"
-            if (l["type"].equals("y")) {
-                resourceType = "serial"
-            }
             json.fields.eachWithIndex() { it, pos ->
                 log.trace "Working on json field $pos: $it"
                 it.each { fkey, fvalue ->
@@ -143,8 +138,8 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicFormatConverter imp
                                 date = new Date()
                             }
                             json.fields[pos] = [(fkey):date]
-                        } /*else {
-                        marcmap.hold.each { key, value ->
+                        } else {
+                        /*marcmap.hold.each { key, value ->
                             if (fkey == key) {
                                 log.debug("fkey: $fkey")
                                 try {
@@ -165,9 +160,10 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicFormatConverter imp
                             }
                          }*/
                      
-                 }
+                     }
              }
-         }
+           }
+        }
 
         return json
     }
