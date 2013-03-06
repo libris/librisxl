@@ -129,6 +129,11 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
         }
         if (complete) {
             log.trace("default mapping: $out")
+            def objlabel = marcref.get(recordType).fields.get(code)?.get("_objectLabel")
+            if (objlabel) {
+                log.trace("returning nested object for $code")
+                return [(objlabel):out]
+            }
             return out
         }
         //return [(raw_lbl): ["fields":[(code):json]]]
@@ -387,6 +392,9 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
             case "bild":
                 out["image"] = url
                 break
+            case "Fritt tillgänglig via":
+                out["availableAt"] = url
+                break
             default:
                 complete = false
                 break
@@ -592,6 +600,14 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                         outjson = dropToRaw(outjson, raw_lbl, code, json)
                     }
                     break;
+                case "856":
+                    def l = mapLinks(code, json)
+                    if (l) {
+                        outjson = mergeMap(outjson, [(ABOUT_LABEL):l])
+                    } else {
+                        dropToRaw(outjson, raw_lbl, code, json)
+                    }
+                    break
                 default:
                     log.trace("mapfield default code: $code json: ${json}}")
                     def jldMapped = mapDefault(code, json)
