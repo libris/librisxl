@@ -42,7 +42,7 @@ class Marc2JsonLDConverter extends BasicPlugin implements WhelkAware, FormatConv
         def mapper = new ObjectMapper()
         log.info("source: $source")
         def inData = source.withInputStream { mapper.readValue(it, Map) }
-        def converter = new Marc2JsonLDConverter()
+        def converter = new Marc2JsonLDConverter(args[3])
         def outjson = converter.createJson(uri, inData)
         log.info("dest: $dest")
         dest << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
