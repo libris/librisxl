@@ -141,6 +141,15 @@
         "fields": {
             "001" : "controlNumber",
             "005" : "dateAndTimeOfLatestTransaction",
+            "035" : {
+                "a" : "otherSystem"
+            },
+            "040" : {
+                "a" : ["creator"],
+                "b" : ["catalogingLanguage"],
+                "c" : ["transliteratingBy"],
+                "d" : ["catalogingChangesBy"]
+            },
             "400": "label",
             "667" : {
                 "a" : ["internalRemark"]
