@@ -76,7 +76,7 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
                         for (Document doc : ((List<Document>)docs)) {
                             idocs.addAll(ifc.convert(doc));
                         }
-                    } 
+                    }
                     if (!formatConverted) {
                         idocs.addAll((Collection)docs);
                     }

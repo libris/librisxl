@@ -10,7 +10,7 @@ import java.text.Normalizer
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter, WhelkAware {
+class AutoSuggestFormatConverter extends BasicFormatConverter implements FormatConverter, WhelkAware {
 
     Whelk whelk
     Whelk bibwhelk
@@ -30,44 +30,36 @@ class AutoSuggestFormatConverter extends BasicPlugin implements FormatConverter,
     }
 
     @Override
-    public List<Document> convert(Document document) {
-        return convert([document])
-    }
-
-
-    @Override
-    public List<Document> convert(List<Document> documents) {
+    public List<Document> doConvert(Document document) {
         def docs
-        for  (document in documents) {
-            def data = document.getDataAsString()
-            def ctype = document.getContentType()
+        def data = document.getDataAsString()
+        def ctype = document.getContentType()
 
-            if (ctype == "application/json") {
-                def in_json = mapper.readValue(data, Map)
-                def rtype = record_type(in_json["leader"])
-                //println "rtype: $rtype"
-                suggest_source = (rtype == "bib" ? "name" : rtype)
-                w_name = (whelk ? whelk.prefix : "test");
-                def sug_jsons = transform(in_json, rtype)
-                for (sug_json in sug_jsons) {
-                    def identifier = sug_json["identifier"]
+        if (ctype == "application/json") {
+            def in_json = mapper.readValue(data, Map)
+            def rtype = record_type(in_json["leader"])
+            //println "rtype: $rtype"
+            suggest_source = (rtype == "bib" ? "name" : rtype)
+            w_name = (whelk ? whelk.prefix : "test");
+            def sug_jsons = transform(in_json, rtype)
+            for (sug_json in sug_jsons) {
+                def identifier = sug_json["identifier"]
                     def link = sug_json["link"]
                     def r = mapper.writeValueAsString(sug_json)
                     if (!docs && r) {
                         docs = []
                     }
-                    if (r) {
-                        docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json").withLink(link, "basedOn")
-                    } else {
-                        log.warn "Conversion got no content body for $identifier."
-                    }
-                    /*
-                    if (whelk) {
-                    def mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
-                    def uri = whelk.store(mydoc)
-                    }
-                    */
+                if (r) {
+                    docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json").withLink(link, "basedOn")
+                } else {
+                    log.warn "Conversion got no content body for $identifier."
                 }
+                /*
+                if (whelk) {
+                def mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
+                def uri = whelk.store(mydoc)
+                }
+                */
             }
         }
         log.debug("Convert resulted in " + docs?.size() + " documents.")

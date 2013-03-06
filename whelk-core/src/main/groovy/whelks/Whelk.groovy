@@ -81,7 +81,7 @@ class WhelkImpl extends BasicWhelk {
             if (docs.size() > 0) {
                 log.info "Indexing remaining " + docs.size() + " documents."
                 if (ifc) {
-                    docs = ifc.convert(docs)
+                    docs = ifc.convertBulk(docs)
                 }
                 icomp.index(docs, this.prefix)
             }
@@ -136,7 +136,7 @@ class CombinedWhelk extends BasicWhelk {
 
     @Override
     protected void initializePlugins() {
-        log.debug("Combined whelk does not initialize plugins.")
+        log.trace("Combined whelk does not initialize plugins.")
     }
 
     @Override

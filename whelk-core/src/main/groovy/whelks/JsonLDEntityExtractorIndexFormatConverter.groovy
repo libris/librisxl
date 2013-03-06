@@ -7,25 +7,23 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class JsonLDEntityExtractorIndexFormatConverter extends BasicPlugin implements IndexFormatConverter {
+class JsonLDEntityExtractorIndexFormatConverter extends BasicFormatConverter implements IndexFormatConverter {
 
     String requiredContentType = "application/json"
     String requiredFormat = "jsonld"
     ObjectMapper mapper = new ObjectMapper()
 
-    List<Document> convert(Document doc) {
+    List<Document> doConvert(Document doc) {
         def doclist = [doc]
-        if (doc.contentType == requiredContentType && doc.format == requiredFormat) {
-            def json = mapper.readValue(doc.dataAsString, Map)
-            int i = 0
-            for (person in json.about.instanceOf.authorList) {
-                i++
-                String pident = "${doc.identifier.toString()}/person/$i"
-                person["@id"] = pident
-                person["authorOf"] = doc.identifier
-                log.debug("Found person: $person")
-                doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withFormat("jsonld").withContentType("application/json").withIdentifier(pident).tag("entityType", person["@type"])
-            }
+        def json = mapper.readValue(doc.dataAsString, Map)
+        int i = 0
+        for (person in json.about.instanceOf.authorList) {
+            i++
+            String pident = "${doc.identifier.toString()}/person/$i"
+            person["@id"] = pident
+            person["authorOf"] = doc.identifier
+            log.debug("Found person: $person")
+            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withFormat("jsonld").withContentType("application/json").withIdentifier(pident).tag("entityType", person["@type"])
         }
         return doclist
     }
