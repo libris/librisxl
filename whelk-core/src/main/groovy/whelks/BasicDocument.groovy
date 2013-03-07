@@ -300,6 +300,12 @@ public class BasicDocument implements Document {
 
     @Override
     @JsonIgnore
+    public Map getDataAsJson() {
+        return mapper.readValue(getDataAsString(), Map)
+    }
+
+    @Override
+    @JsonIgnore
     public InputStream getDataAsStream() {
         return new ByteArrayInputStream(getData())
     }

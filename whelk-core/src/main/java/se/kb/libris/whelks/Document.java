@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Date;
 import java.util.Set;
+import java.util.Map;
 
 public interface Document {
     public URI getIdentifier();
@@ -16,6 +17,7 @@ public interface Document {
     public byte[] getData();
     public byte[] getData(long offset, long length);
     public String getDataAsString();
+    public Map getDataAsJson();
     public InputStream getDataAsStream();
     public InputStream getDataAsStream(long offset, long length);
     public void setVersion(String version);

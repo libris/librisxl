@@ -7,6 +7,7 @@ import org.restlet.data.*
 
 import org.json.simple.*
 
+import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
@@ -526,6 +527,7 @@ class SuggestResultsConverter {
         return mapper.writeValueAsString(out)
     }
 
+    /*
     def getDeepValue(Map map, String key) {
         //log.trace("getDeepValue: map = $map, key = $key")
         def keylist = key.split(/\./)
@@ -576,6 +578,7 @@ class SuggestResultsConverter {
         }
         return result
     }
+    */
 
     def mapAuthRecord(id, r) {
         def name = [:]
@@ -583,12 +586,12 @@ class SuggestResultsConverter {
         log.debug("hl : ${r.highlight} (${r.highlight.getClass().getName()})")
         boolean mainhit = r.highlight.any { it.key in mainFields }
         log.debug("mainFields: $mainFields")
-        name[mainFields[0]] = getDeepValue(r, mainFields[0])
+        name[mainFields[0]] = Tools.getDeepValue(r, mainFields[0])
         if (!mainhit) {
             name["found_in"] = r.highlight.findAll { !(it.key in mainFields) }//.collect { it.value }[0]
         }
         for (field in supplementalFields) {
-            def dv = getDeepValue(r, field)
+            def dv = Tools.getDeepValue(r, field)
             log.trace("dv $field : $dv")
             if (dv) {
                 name[field] = dv
@@ -602,10 +605,10 @@ class SuggestResultsConverter {
     def mapBibRecord(id, r) {
         def name = [:]
         name["identifier"] = id
-        name[mainFields[0]] = getDeepValue(r, mainFields[0])
+        name[mainFields[0]] = Tools.getDeepValue(r, mainFields[0])
         log.debug("highlight: ${r.highlight}")
         for (field in supplementalFields) {
-            def dv = getDeepValue(r, field)
+            def dv = Tools.getDeepValue(r, field)
             log.trace("dv $field : $dv")
             if (dv) {
                 name[field] = dv
