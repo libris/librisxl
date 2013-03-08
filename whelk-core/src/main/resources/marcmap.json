@@ -2219,7 +2219,10 @@
             "mc", 
             "mb", 
             "mm", 
-            "mi"
+            "mi", 
+            "mp", 
+            "ms", 
+            "m9"
           ], 
           "columns": [
             {
@@ -2355,7 +2358,13 @@
             "eb", 
             "fa", 
             "fb", 
-            "fc"
+            "fc", 
+            "e9", 
+            "fi", 
+            "fd", 
+            "fm", 
+            "ep", 
+            "es"
           ], 
           "columns": [
             {
@@ -2537,7 +2546,16 @@
             "bb", 
             "bc", 
             "bm", 
-            "bi"
+            "bi", 
+            "pb", 
+            "pc", 
+            "pa", 
+            "bp", 
+            "pd", 
+            "bs", 
+            "pi", 
+            "b9", 
+            "pm"
           ], 
           "columns": [
             {
@@ -2648,7 +2666,19 @@
             "i9", 
             "dm", 
             "di", 
-            "jp"
+            "jp", 
+            "dd", 
+            "db", 
+            "dc", 
+            "da", 
+            "jm", 
+            "c9", 
+            "ji", 
+            "jd", 
+            "js", 
+            "ds", 
+            "dp", 
+            "jc"
           ], 
           "columns": [
             {
@@ -2840,21 +2870,32 @@
           ], 
           "term": "Serial", 
           "matchRecTypeBibLevel": [
+            "ps", 
             "ab", 
-            "t9", 
+            "bb", 
+            "rs", 
             "ai", 
             "hs", 
-            "hp", 
-            "ts", 
-            "h9", 
-            "hb", 
-            "ap", 
+            "nb", 
+            "ob", 
+            "tb", 
+            "pb", 
+            "na", 
             "as", 
-            "hi", 
+            "ts", 
+            "rb", 
+            "bs", 
+            "hb", 
+            "ns", 
+            "os", 
+            "h9", 
+            "t9", 
+            "hp", 
             "tp", 
+            "ap", 
+            "hi", 
             "ti", 
-            "a9", 
-            "tb"
+            "a9"
           ], 
           "columns": [
             {
@@ -3068,7 +3109,30 @@
             "rd", 
             "ra", 
             "o9", 
-            "rc"
+            "rc", 
+            "np", 
+            "rm", 
+            "k9", 
+            "ns", 
+            "ri", 
+            "rb", 
+            "om", 
+            "g9", 
+            "kc", 
+            "kb", 
+            "ka", 
+            "oi", 
+            "kd", 
+            "ki", 
+            "od", 
+            "oc", 
+            "ob", 
+            "km", 
+            "ks", 
+            "n9", 
+            "kp", 
+            "os", 
+            "op"
           ], 
           "columns": [
             {
@@ -48171,7 +48235,19 @@
             "va", 
             "ur", 
             "xo", 
-            "yo"
+            "yo", 
+            "ya", 
+            "xa", 
+            "uo", 
+            "vo", 
+            "y", 
+            "vr", 
+            "u", 
+            "v", 
+            "xr", 
+            "x", 
+            "yr", 
+            "ua"
           ], 
           "columns": [
             {
