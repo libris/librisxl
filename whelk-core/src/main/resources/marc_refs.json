@@ -1,8 +1,8 @@
 {
     "bib": {
         "levels": {
-            "about"      : ["020","024","028","042","250","256","260","300","490","500","504","505","520","538","typeOfRecord"],
-            "instanceOf" : ["008","082","050","084","245","650","bibLevel"]
+            "about"      : ["008","020","024","028","042","250","256","260","300","490","500","504","505","520","538","typeOfRecord"],
+            "instanceOf" : ["082","050","084","245","650","bibLevel"]
         },
         "fields": {
             "001" : "controlNumber",
@@ -156,8 +156,57 @@
         }
     },
     "auth": {
+        "levels" : {
+            "domain" : ["040"],
+            "hasAnnotation": ["667"]
+        },
+        "mapping": {
+            "040" : {
+                "domain.creatingAgency": "040.a",
+                "domain.transcribingAgency": "040.c",
+                "domain.updatingAgency": "040.d",
+                "domain.lang": "040.b",
+                "domain.rule": "040.e",
+                "domain.subjectScheme": "040.f"
+            },
+            "042" : {
+                "subsetOfScheme" : "042.9"
+            },
+            "667" : {
+                "hasAnnotation.internalNote": "667.a"
+            },
+            "670" : {
+                "hasAnnotation.source": "670.abu"
+            },
+            "675" : {
+                "hasAnnotation.sourceNotFound": "675.a"
+            },
+            "678" : {
+                "hasAnnotation.about": "678.a"
+            },
+            "680" : {
+                "hasAnnotation.publicNote": "680.aiu"
+            },
+            "856" : {
+                "hasAnnotation.uri": "856.uxz3"
+            }
+        },
+        "process" : {
+            "100" : {
+                "method" : "mapPerson",
+                "level" : "creatorPerson"
+            },
+            "700" : {
+                "method" : "mapPerson",
+                "level" : "creatorPerson"
+            },
+            "800" : {
+                "method" : "mapPerson",
+                "level" : "creatorPerson"
+            }
+        },
         "fields": {
-            "001" : "controlNumber",
+            "001" : "identifier",
             "005" : "dateAndTimeOfLatestTransaction",
             "035" : {
                 "a" : "otherSystem"

@@ -7,6 +7,7 @@ import org.restlet.data.*
 
 import org.json.simple.*
 
+import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
@@ -175,7 +176,10 @@ class DocumentRestlet extends BasicWhelkAPI {
                     response.setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
                     identifier = this.whelk.store(doc)
-                    response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
+                    //response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
+
+                    response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
+                    response.setLocationRef(identifier.toString())
                 }
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
@@ -291,9 +295,9 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             }
             def callback = reqMap.get("callback")
             if (q) {
-                q.addFacet("status.label")
-                q.addFacet("about.typeOfRecord.label")
-                q.addFacet("about.instanceOf.bibLevel.label")
+                q.addFacet("status")
+                q.addFacet("typeOfRecord")
+                q.addFacet("bibLevel")
                 /*
                 q.addFacet("fields.007.subfields.carrierType")
                 q.addFacet("fields.008.subfields.yearTime1")
@@ -526,6 +530,7 @@ class SuggestResultsConverter {
         return mapper.writeValueAsString(out)
     }
 
+    /*
     def getDeepValue(Map map, String key) {
         //log.trace("getDeepValue: map = $map, key = $key")
         def keylist = key.split(/\./)
@@ -576,6 +581,7 @@ class SuggestResultsConverter {
         }
         return result
     }
+    */
 
     def mapAuthRecord(id, r) {
         def name = [:]
@@ -583,12 +589,12 @@ class SuggestResultsConverter {
         log.debug("hl : ${r.highlight} (${r.highlight.getClass().getName()})")
         boolean mainhit = r.highlight.any { it.key in mainFields }
         log.debug("mainFields: $mainFields")
-        name[mainFields[0]] = getDeepValue(r, mainFields[0])
+        name[mainFields[0]] = Tools.getDeepValue(r, mainFields[0])
         if (!mainhit) {
             name["found_in"] = r.highlight.findAll { !(it.key in mainFields) }//.collect { it.value }[0]
         }
         for (field in supplementalFields) {
-            def dv = getDeepValue(r, field)
+            def dv = Tools.getDeepValue(r, field)
             log.trace("dv $field : $dv")
             if (dv) {
                 name[field] = dv
@@ -602,10 +608,10 @@ class SuggestResultsConverter {
     def mapBibRecord(id, r) {
         def name = [:]
         name["identifier"] = id
-        name[mainFields[0]] = getDeepValue(r, mainFields[0])
+        name[mainFields[0]] = Tools.getDeepValue(r, mainFields[0])
         log.debug("highlight: ${r.highlight}")
         for (field in supplementalFields) {
-            def dv = getDeepValue(r, field)
+            def dv = Tools.getDeepValue(r, field)
             log.trace("dv $field : $dv")
             if (dv) {
                 name[field] = dv

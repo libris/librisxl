@@ -2,6 +2,7 @@ package se.kb.libris.whelks.plugin
 
 import java.text.SimpleDateFormat
 
+import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
@@ -17,6 +18,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     final static String UNKNOWN_LABEL = "unknown"
     final static String ABOUT_LABEL = "about"
     final static String INSTANCE_LABEL = "instanceOf"
+    final static String MARCMAP_RESOURCE = "/resource/_marcmap"
     String requiredContentType = "application/json"
     String requiredFormat = "marc21"
     ObjectMapper mapper
@@ -117,12 +119,16 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 } else { // Map controlfield
                     log.trace("mapping controlfield $k = $v")
                     if (v.trim() && !(v =~ /^[|]+$/)) {
+                        out[k] = new String("$MARCMAP_RESOURCE/$code/$k/$v")
+                        /*
+
                         def lbl = marcmap.get(recordType).fixprops?.get(k)?.get(v)?.get("label_sv")
                         if (lbl) {
                             out[k] = ["code":v,"label":lbl,"@language":"sv"]
                         } else {
                             out[k] = v
                         }
+                        */
                     }
                 }
             }
@@ -341,7 +347,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 switch (key) {
                     case "f":
                     case "g":
-                        out[marcref.auth.fields[code][key]] = new SimpleDateFormat("yyyy-MM-dd").format(new SimpleDateFormat("yyyyMMdd").parse(value))
+                        out[marcref.auth.fields[code][key][0]] = new SimpleDateFormat("yyyy-MM-dd").format(new SimpleDateFormat("yyyyMMdd").parse(value))
                         break
                     default:
                         complete = false
@@ -529,7 +535,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 case "020":
                     def i = mapIsbn(json)
                     if (i) {
-                        outjson = mergeMap(outjson, [(ABOUT_LABEL):i])
+                        outjson = Tools.mergeMap(outjson, [(ABOUT_LABEL):i])
                         outjson = createNestedMapStructure(outjson, [ABOUT_LABEL,"identifier"], mapOtherIdentifierAsBNode("isbn",json))
                     } else {
                         dropToRaw(outjson, raw_lbl, code, json)
@@ -542,7 +548,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                             outjson = createNestedMapStructure(outjson, [ABOUT_LABEL,"identifier"], mapOtherIdentifierAsBNode(i["_other_ident"],json))
                         } else {
                             outjson = createNestedMapStructure(outjson, [ABOUT_LABEL,"identifier"], mapOtherIdentifierAsBNode(i.find{it.key}.key,json))
-                            outjson = mergeMap(outjson, [(ABOUT_LABEL):i])
+                            outjson = Tools.mergeMap(outjson, [(ABOUT_LABEL):i])
                         }
                     } else {
 
@@ -553,7 +559,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 case "040":
                     def c = mapCreator(code, json)
                     if (c) {
-                        outjson = mergeMap(outjson, c)
+                        outjson = Tools.mergeMap(outjson, c)
                     } else {
                         dropToRaw(outjson, raw_lbl, code, json)
                     }
@@ -595,7 +601,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 case "260":
                     def pubMapped = mapPublishingInfo(code, json)
                     if (pubMapped) {
-                        outjson = mergeMap(outjson, [(ABOUT_LABEL):pubMapped])
+                        outjson = Tools.mergeMap(outjson, [(ABOUT_LABEL):pubMapped])
                     } else {
                         outjson = dropToRaw(outjson, raw_lbl, code, json)
                     }
@@ -603,7 +609,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 case "856":
                     def l = mapLinks(code, json)
                     if (l) {
-                        outjson = mergeMap(outjson, [(ABOUT_LABEL):l])
+                        outjson = Tools.mergeMap(outjson, [(ABOUT_LABEL):l])
                     } else {
                         dropToRaw(outjson, raw_lbl, code, json)
                     }
@@ -614,12 +620,12 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     log.trace("retrieved $jldMapped")
                     if (jldMapped) {
                         if (code in marcref[recordType].levels.about) {
-                            outjson = mergeMap(outjson, [(ABOUT_LABEL):jldMapped])
+                            outjson = Tools.mergeMap(outjson, [(ABOUT_LABEL):jldMapped])
                         } else if (code in marcref[recordType].levels.instanceOf) {
-                            outjson = mergeMap(outjson, [(ABOUT_LABEL):[(INSTANCE_LABEL):jldMapped]])
+                            outjson = Tools.mergeMap(outjson, [(ABOUT_LABEL):[(INSTANCE_LABEL):jldMapped]])
                         } else {
                             log.trace("top level merge of $jldMapped")
-                            outjson = mergeMap(outjson, jldMapped)
+                            outjson = Tools.mergeMap(outjson, jldMapped)
                         }
                     } else if (jldMapped == false) {
                         return outjson
@@ -635,7 +641,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     def jldMapped = mapDefault(code, json)
                     log.trace("retrieved $jldMapped")
                     if (jldMapped) {
-                        outjson = mergeMap(outjson, jldMapped)
+                        outjson = Tools.mergeMap(outjson, jldMapped)
                     } else if (jldMapped == false) {
                         return outjson
                     } else {
@@ -647,7 +653,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 case "046":
                     def bd = mapBirthDate(code, json)
                     if (bd) {
-                        outjson = mergeMap(outjson, bd)
+                        outjson = Tools.mergeMap(outjson, bd)
                     } else {
                         dropToRaw(outjson, raw_lbl, code, json)
                     }
@@ -656,7 +662,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 case "700":
                     def p = mapPerson(code, json)
                     if (p) {
-                        outjson = mergeMap(outjson, p)
+                        outjson = Tools.mergeMap(outjson, p)
                     } else {
                         dropToRaw(outjson, raw_lbl, code, json)
                     }
@@ -666,7 +672,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     def p = mapPerson(code, json)
                     if (p) {
                         def altName = [(marcref[recordType].fields[code]): (p.authorizedAccessPoint ?: p.authoritativeName)]
-                        outjson = mergeMap(outjson, altName)
+                        outjson = Tools.mergeMap(outjson, altName)
                     } else {
                         dropToRaw(outjson, raw_lbl, code, json)
                     }
@@ -674,7 +680,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 case "856":
                     def l = mapLinks(code, json)
                     if (l) {
-                        outjson = mergeMap(outjson, mapLinks(code, json))
+                        outjson = Tools.mergeMap(outjson, mapLinks(code, json))
                     } else {
                         dropToRaw(outjson, raw_lbl, code, json)
                     }
@@ -684,7 +690,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     def jldMapped = mapDefault(code, json)
                     log.trace("retrieved $jldMapped")
                     if (jldMapped) {
-                        outjson = mergeMap(outjson, jldMapped)
+                        outjson = Tools.mergeMap(outjson, jldMapped)
                     } else {
                         dropToRaw(outjson, raw_lbl, code, json)
                     }
@@ -761,42 +767,6 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
         return map
     }
 
-    Map mergeMap(Map origmap, Map newmap) {
-        newmap.each { key, value -> 
-            if (origmap.containsKey(key)) { // Update value for original map
-                if (value instanceof Map && origmap.get(key) instanceof Map) {
-                    origmap[key] = mergeMap(origmap.get(key), value)
-                } else {
-                    if (!(origmap.get(key) instanceof List)) {
-                        origmap[key] = [origmap[key]]
-                    }
-                    origmap[key] << value
-                }
-            } else { // Add key to original map
-                origmap[key] = value
-            }
-        }
-        return origmap
-    }
-
-    Map oldmergeMap(Map origmap, Map newmap) {
-        newmap.each { key, value -> 
-            if (origmap.containsKey(key)) { // Update value for original map
-                if (value instanceof Map && origmap.get(key) instanceof Map) {
-                    origmap[key] = mergeMap(origmap.get(key), value)
-                } else {
-                    if (!(origmap.get(key) instanceof List)) {
-                        origmap[key] = [origmap[key]]
-                    }
-                    origmap[key] << value
-                }
-            } else { // Add key to original map
-                origmap[key] = value
-            }
-        }
-        return origmap
-    }
-
 
     def createJson(URI identifier, Map injson) {
         def outjson = [:]
@@ -807,14 +777,16 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
         outjson["@id"] = identifier.toString()
         if (recordType.equals("bib")) {
             outjson["@type"] = "Document"
-            outjson[ABOUT_LABEL] = ["@type":["Instance"]]
+            outjson[ABOUT_LABEL] = ["@type":"Instance"]
             if (injson.containsKey("leader")) {
                 injson = marccracker.rewriteJson(identifier, injson)
                     log.trace("Leader: ${injson.leader}")
-                    injson.leader.subfields.each { 
+                    injson.leader.subfields.each {
                         it.each { lkey, lvalue ->
                             lvalue = lvalue.trim()
                             if (lvalue && !(lvalue =~ /^\|+$/)) {
+                                outjson[lkey] = new String("$MARCMAP_RESOURCE/leader/$lkey/$lvalue")
+                                /*
                                 def lbl = marcmap[recordType].fixprops?.get(lkey)?.get(lvalue)?.get("label_sv")
                                 if (lkey == "typeOfRecord") {
                                     switch (lvalue) {
@@ -833,6 +805,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                                 } else {
                                     outjson[lkey] = ["code":lvalue,"label":(lbl ?: ""),"@language":"sv"]
                                 }
+                                */
                             }
                         }
                     }
@@ -870,6 +843,14 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                 injson = marccracker.rewriteJson(identifier, injson)
                 log.trace("Leader: ${injson.leader}")
                 log.trace("Rewritten injson ${injson.leader}")
+                    injson.leader.subfields.each {
+                        it.each { lkey, lvalue ->
+                            lvalue = lvalue.trim()
+                            if (lvalue && !(lvalue =~ /^\|+$/)) {
+                                outjson[lkey] = new String("$MARCMAP_RESOURCE/leader/$lkey/$lvalue")
+                            }
+                        }
+                    }
             }
         }
 

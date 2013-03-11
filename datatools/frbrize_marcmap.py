@@ -4,9 +4,9 @@ from itertools import starmap
 import csv
 
 from sys import stderr
-import cgitb; cgitb.enable(format='text')
-def error(msg):
-    print >>stderr, msg
+#import cgitb; cgitb.enable(format='text')
+def error(msg, *args):
+    print >>stderr, msg.format(*args)
 
 
 class Item(namedtuple('Item',
@@ -74,13 +74,13 @@ def add_entities_to_marcmap(marcmap, items):
             continue
         field = recmap.get(item.field)
         if not field:
-            error("Unknown field:", item.field)
+            error("Unknown field: {0}", item.field)
             continue
         if item.subfield:
             try:
                 field['subfield'][item.subfield]['entity'] = item.entity
             except KeyError:
-                error("Unknown field: {0.field}, subfield: {0.subfield}".format(item))
+                error("Unknown field: {0.field}, subfield: {0.subfield}", item)
         elif item.position:
             matchmap = None
             # TODO: just guessing about 01 and 02
@@ -102,8 +102,8 @@ def add_entities_to_marcmap(marcmap, items):
                     if name.startswith(matchmap):
                         break
                 else:
-                    error("Found no fixmap for field {0} matching {1} (entity: {2})".format(
-                            item.field, matchmap, item.entity))
+                    error("Found no fixmap for field {0} matching {1} (entity: {2})",
+                            item.field, matchmap, item.entity)
                 if '-' in item.position:
                     item_start, item_stop = map(int, item.position.split('-'))
                     # TODO: is this always information about repeated attributes?

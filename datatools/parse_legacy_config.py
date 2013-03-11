@@ -212,6 +212,12 @@ def dmerge(a, b):
             bdict = columnsdict(v)
             if adict or bdict:
                 a[k] = dmerge(adict, bdict).values()
+            elif any(isinstance(m, str) for m in v):
+                if len(v) > len(a[k]):
+                    diff = set(a[k]) - set(v)
+                    a[k] = v
+                    if diff:
+                        a[k] += list(diff)
             else:
                 a[k] = [dmerge(alv, blv) if isinstance(alv, dict) else alv
                         for alv, blv in zip(a[k], v)]
