@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 datadir=$(dirname $0)/../src/test/resources/marc2jsonld
-
 for d in $datadir/in/*; do
     datatype=`basename $d`
     for f in $datadir/in/$datatype/*.json; do
