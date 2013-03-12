@@ -66,7 +66,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                   out = [(marcrefValue): value]
               }
              return out
-        } else if (!marcrefValue){
+        } else if (marcrefValue == false){
             log.debug("Failed to map $code")
             return false
         }

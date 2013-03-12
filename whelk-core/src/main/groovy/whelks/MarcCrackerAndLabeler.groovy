@@ -50,7 +50,9 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicFormatConverter imp
         }
         for (def column : columns) {
             if (!column.propRef) {
-                throw new WhelkRuntimeException("Propref is null for $ctrlfield and $columns")
+                log.warn("Propref is null for $fieldkey: $ctrlfield and $column")
+                break
+                //throw new WhelkRuntimeException("Propref is null for $ctrlfield and $columns")
             }
             if (propref != column.propRef) {
                 l[column.propRef] = ""
@@ -139,26 +141,22 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicFormatConverter imp
                             }
                             json.fields[pos] = [(fkey):date]
                         } else {
-                        /*marcmap.hold.each { key, value ->
+                        marcmap.hold.each { key, value ->
                             if (fkey == key) {
-                                log.debug("fkey: $fkey")
                                 try {
-                                    log.debug("value: ${value}")
-                                    value.fixmaps.each {
-                                            log.debug("fixmaps.each it.columns: ${it.columns}")
-                                            json.fields[pos] = [(fkey):["subfields": expandField(fkey, fvalue, it.columns).collect {k, v -> [(k):v] } ]]
+                                    value.fixmaps.each { fm ->
+                                            json.fields[pos] = [(fkey):["subfields": expandField(fkey, fvalue, fm.columns).collect {k, v -> [(k):v] } ]]
                                         }
                                 } catch (groovy.lang.MissingPropertyException mpe) {
-                                    log.error("${mpe.message}")
+                                        log.warn("Exception in $fm : ${mpe.message}")
                                 } catch (Exception e) {
                                         log.error("Document identifier: ${identifier}")
                                         log.error("fkey: $fkey")
-                                        log.error("l: $l")
                                         log.error("${e.message}")
                                }
                                 
                             }
-                         }*/
+                         }
                      
                      }
              }

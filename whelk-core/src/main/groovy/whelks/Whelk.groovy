@@ -252,17 +252,9 @@ class WhelkOperator {
 }
 
 @Log
-class ResourceWhelk extends WhelkImpl {
+class ResourceWhelk extends BasicWhelk {
 
     ResourceWhelk(String prefix) {
         super(prefix)
-    }
-
-    @Override
-    public void init() {
-        log.info("Staring ResourceWhelk")
-        //loadMarcMap()
-        //loadResources()
-        log.info("Resources loaded")
     }
 }

@@ -6,6 +6,7 @@
         },
         "fields": {
             "001" : "controlNumber",
+            "003" : "controlNumberIdentifier",
             "004" : false,
             "005" : "dateAndTimeOfLatestTransaction",
             "010": {
