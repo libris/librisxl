@@ -93,6 +93,14 @@
                     "level" : "about.otherIdentifier"
                 }
             ],
+            "072" : {
+                "method" : "mapSubject",
+                "level" : "about.instanceOf.subject"
+            },
+            "084" : {
+                "method" : "mapSubject",
+                "level" : "about.instanceOf.subject"
+            },
             "100": {
                 "method" : "mapPerson",
                 "level" : "about.instanceOf.authorList"

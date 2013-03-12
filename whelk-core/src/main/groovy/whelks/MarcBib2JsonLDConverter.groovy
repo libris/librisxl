@@ -36,14 +36,14 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         return id
     }
 
-    def mapSubject(code, json) {
+    def mapSubject(outjson, code, fjson, marcjson) {
         def baseurl = "http://libris.kb.se/"
         def system = "sab"
         def subjectcode = ""
-        def out = []
+        def out = [:]
         boolean complete = true
-        log.trace("map subject for $json")
-        json["subfields"].each {
+        log.info("map subject for $fjson")
+        fjson["subfields"].each {
             it.each { key, value ->
                 switch(key) {
                     case "a":
@@ -58,26 +58,23 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
                 }
             }
         }
-        if (!complete) {
-            return false
-        }
-        if (marcref.get(recordType).subjects.get(system)?.containsKey(subjectcode)) {
-            out << ["@id":new String(marcref.get(recordType).subjects[system][subjectcode])]
+        if (marcref.get(RTYPE).subjects.get(system)?.containsKey(subjectcode)) {
+            out = ["@id":new String(marcref.get(RTYPE).subjects[system][subjectcode])]
         }
         if (system.startsWith("kssb/")) {
             if (subjectcode =~ /\s/) {
                 def (maincode, restcode) = subjectcode.split(/\s+/, 2)
                 subjectcode = maincode+"/"+URLEncoder.encode(restcode)
             } else {
-                if (marcref.get(recordType).subjects.get("sab")?.containsKey(subjectcode)) {
-                    out << ["@id":new String(marcref.get(recordType).subjects[system][subjectcode])]
+                if (marcref.get(RTYPE).subjects.get("sab")?.containsKey(subjectcode)) {
+                    out = ["@id":new String(marcref.get(RTYPE).subjects[system][subjectcode])]
                 }
                 subjectcode = URLEncoder.encode(subjectcode)
             }
-            out << ["@id":new String("http://libris.kb.se/sab/$subjectcode")]
+            out = ["@id":new String("http://libris.kb.se/sab/$subjectcode")]
         }
-        log.trace("map subject out: $out")
-        return (out.size() > 0 ? out : false)
+        log.info("map subject out: $out")
+        return out
     }
 }
 
