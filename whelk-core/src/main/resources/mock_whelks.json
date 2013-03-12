@@ -82,8 +82,7 @@
         },
         {
             "authmarcconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter",
-                "_params" : "auth"
+                "_class" : "se.kb.libris.whelks.plugin.MarcAuth2JsonLDConverter"
             }
         },
         {

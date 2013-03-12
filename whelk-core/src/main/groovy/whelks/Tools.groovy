@@ -1,5 +1,8 @@
 package se.kb.libris.conch
 
+import groovy.util.logging.Slf4j as Log
+
+@Log
 class Tools {
     /**
      * Detects the content-type of supplied data.
@@ -65,34 +68,38 @@ class Tools {
     }
 
     static Map insertAt(Map origmap, String path, Object newobject) {
-        def m = origmap
-        def keys = path.split(/\./)
-        keys.eachWithIndex() { key, i ->
-            if (i < keys.size()-1) {
-                if (!m.containsKey(key)) {
-                    m.put(key, [:])
-                    m = m.get(key)
-                } else if (m.get(key) instanceof Map) {
-                    m = m.get(key)
-                } else {
-                    def value = m.get(key)
-                    def nm = [:]
-                    m.put(key, [])
-                    m[(key)] << value
-                    m[(key)] << nm
-                    m = nm
+        if (path) {
+            def m = origmap
+            def keys = path.split(/\./)
+            keys.eachWithIndex() { key, i ->
+                if (i < keys.size()-1) {
+                    if (!m.containsKey(key)) {
+                        m.put(key, [:])
+                        m = m.get(key)
+                    } else if (m.get(key) instanceof Map) {
+                        m = m.get(key)
+                    } else {
+                        def value = m.get(key)
+                        def nm = [:]
+                        m.put(key, [])
+                        m[(key)] << value
+                        m[(key)] << nm
+                        m = nm
+                    }
                 }
             }
-        }
-        def lastkey = keys[keys.size()-1]
-        def lastvalue = m.get(lastkey)
-        if (lastvalue != null) {
-            if (!(lastvalue instanceof List)) {
-                m[lastkey] = [lastvalue]
+            def lastkey = keys[keys.size()-1]
+            def lastvalue = m.get(lastkey)
+            if (lastvalue != null) {
+                if (!(lastvalue instanceof List)) {
+                    m[lastkey] = [lastvalue]
+                }
+                m[lastkey] << newobject
+            } else {
+                m[lastkey] = newobject
             }
-            m[lastkey] << newobject
-        } else {
-            m[lastkey] = newobject
+        } else if (newobject instanceof Map) {
+            origmap = origmap + newobject
         }
         return origmap
     }

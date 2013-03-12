@@ -48,6 +48,8 @@
     "uncontrolledIndexTerm": "marc:uncontrolledIndexTerm",
     "indexTermLinkage": "marc:indexTermLinkage",
     "issueMode": "marc:issueMode",
+    "titlesAndOtherWordsAssociatedWithName": "marc:titlesAndOtherWordsAssociatedWithName",
+    "numeration":"marc:numeration",
 
     "publisher": "dc:publisher",
 

@@ -155,10 +155,6 @@
         }
     },
     "auth": {
-        "levels" : {
-            "domain" : ["040"],
-            "hasAnnotation": ["667"]
-        },
         "mapping": {
             "040" : {
                 "domain.creatingAgency": "040.a",
@@ -175,7 +171,11 @@
                 "hasAnnotation.internalNote": "667.a"
             },
             "670" : {
-                "hasAnnotation.source": "670.abu"
+                "hasAnnotation.source" : {
+                    "label" : "670.a",
+                    "extractedRelevantPortion" : "670.b",
+                    "uri" : "670.u"
+                }
             },
             "675" : {
                 "hasAnnotation.sourceNotFound": "675.a"
@@ -187,22 +187,28 @@
                 "hasAnnotation.publicNote": "680.aiu"
             },
             "856" : {
-                "hasAnnotation.uri": "856.uxz3"
+                "hasAnnotation.electronicLocationAndAccess": {
+                    "uri": "856.u",
+                    "nonPublicNote": "856.x",
+                    "publicNote": "z",
+                    "materialsSpecified":"3"
+                }
             }
         },
         "process" : {
             "100" : {
-                "method" : "mapPerson",
-                "level" : "creatorPerson"
+                "method" : "mapPerson"
             },
             "700" : {
-                "method" : "mapPerson",
-                "level" : "creatorPerson"
+                "method" : "mapPerson"
             },
             "800" : {
-                "method" : "mapPerson",
-                "level" : "creatorPerson"
+                "method" : "mapPerson"
             }
+        },
+        "levels" : {
+            "domain" : ["040"],
+            "hasAnnotation": ["667"]
         },
         "fields": {
             "001" : "identifier",

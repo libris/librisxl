@@ -31,11 +31,30 @@ class MarcAuth2JsonLDConverter extends BasicFormatConverter implements FormatCon
         if (marcref[RTYPE].mapping[code]) {
             def usecode = (marcref[RTYPE].mapping[code] instanceof Map ? code : marcref[RTYPE].mapping[code])
             marcref[RTYPE].mapping[usecode].each { property, fieldcode ->
-                getMarcField(fieldcode, docjson).each {
-                    if (it) {
-                        log.trace("inserting at $property: $it")
-                        outjson = Tools.insertAt(outjson, property, it)
+                log.trace("Examining mapping: $property -- $fieldcode")
+                if (fieldcode instanceof String) {
+                    if (fieldcode.startsWith(usecode)) {
+                        def v = getMarcValueFromField(fieldcode, fjson)
+                        if (v) {
+                            Tools.insertAt(outjson, property, v)
+                        }
+                    } else {
+                        getMarcField(fieldcode, docjson).each {
+                            if (it) {
+                                log.trace("inserting at $property: $it")
+                                outjson = Tools.insertAt(outjson, property, it)
+                            }
+                        }
                     }
+                } else {
+                    def obj = [:]
+                    fieldcode.each { item, fcode ->
+                        def v = getMarcValueFromField(fcode, fjson)
+                        if (v) {
+                            obj[(item)] = v
+                        }
+                    }
+                    outjson = Tools.insertAt(outjson, property, obj)
                 }
             }
 
@@ -46,7 +65,7 @@ class MarcAuth2JsonLDConverter extends BasicFormatConverter implements FormatCon
         } else {
             outjson = dropToRaw(outjson, [(code):fjson])
         }
-        log.trace("outjson: $outjson")
+        //log.trace("outjson: $outjson")
         return outjson
     }
 
@@ -54,9 +73,10 @@ class MarcAuth2JsonLDConverter extends BasicFormatConverter implements FormatCon
         def injson = doc.dataAsJson
         def outjson = [:]
 
+
         for (field in injson.fields) {
-            it.each { code, fjson ->
-                mapField(outjson, code, fjson, injson)
+            field.each { code, fjson ->
+                outjson = mapField(outjson, code, fjson, injson)
             }
         }
 
@@ -76,15 +96,8 @@ class MarcAuth2JsonLDConverter extends BasicFormatConverter implements FormatCon
         marcjson.fields.each {
             it.each { f, v ->
                 if (f == field) {
-                    def codeValues = []
-                    v.subfields.each { s ->
-                        s.each {sc, sv ->
-                            if (sc in code.toList()) {
-                                codeValues << sv
-                            }
-                        }
-                    }
-                    values << codeValues.join(joinChar)
+                    log.trace("calling getvalue at $f")
+                    values << getMarcValueFromField(code, v, joinChar)
                 }
             }
         }
@@ -92,9 +105,64 @@ class MarcAuth2JsonLDConverter extends BasicFormatConverter implements FormatCon
         return values
     }
 
+    def getMarcValueFromField(code, fieldjson, joinChar=" ") {
+        def codeValues = []
+        log.trace("getMarcValueFromField: $code - $fieldjson")
+        fieldjson.subfields.each { s ->
+            s.each {sc, sv ->
+                if (sc in code.toList()) {
+                    codeValues << sv
+                }
+            }
+        }
+        log.trace("codeValues: $codeValues")
+        return codeValues.join(joinChar)
+    }
+
     // Mapping methods
     def mapPerson(outjson, code, fjson, marcjson) {
-        return ["authoritativeName":"Foo Bar","birthDate":"epoch"]
+        log.trace("person json: $fjson")
+        def person = [:]
+        if ((code as int) % 100 == 0) {
+            person["@type"] = "Person"
+        }
+        if ((code as int) % 110 == 0) {
+            person["@type"] = "Organization"
+        }
+        if ((code as int) % 111 == 0) {
+            person["@type"] = "Conference"
+        }
+        def name = getMarcValueFromField("a", fjson)
+        def numeration = getMarcValueFromField("b", fjson)
+        def title = getMarcValueFromField("c", fjson)
+        def dates = getMarcValueFromField("d", fjson)
+        person["authoritativeName"] = name.replaceAll(/,$/, "").trim()
+        person["authorizedAccessPoint"] = name.replaceAll(/,$/, "").trim()
+        if (numeration) {
+            person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + " " + numeration
+            person["numeration"] = numeration
+        }
+        if (title) {
+            person["titlesAndOtherWordsAssociatedWithName"] = title
+            person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + ", " + title
+
+        }
+        if (dates) {
+            person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + ", " + dates
+            dates = dates.split(/-/)
+            person["birthDate"] = dates[0]
+            if (dates.size() > 1) {
+                person["deathDate"] = dates[1]
+            }
+        }
+        if (fjson.ind1 == "1" && person["authoritativeName"] =~ /, /) {
+            person["givenName"] = person["authoritativeName"].split(", ")[1]
+            person["familyName"] = person["authoritativeName"].split(", ")[0]
+            person["name"] =  person["givenName"] + " " + person["familyName"]
+        } else {
+            person["name"] = person["authoritativeName"]
+        }
+        log.trace("person: $person")
+        return person
     }
 }
-

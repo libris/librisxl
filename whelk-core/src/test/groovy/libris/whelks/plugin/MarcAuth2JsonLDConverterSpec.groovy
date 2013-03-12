@@ -10,6 +10,7 @@ class MarcAuth2JsonLDConverterSpec extends Specification {
     def conv = new MarcAuth2JsonLDConverter()
 
     def "should map person"() {
+        log.info("### should map person")
         expect:
             conv.mapField(injson, code, loadJsonSubField(marcdoc,code), loadJson(marcdoc)) == result
         where:
@@ -19,6 +20,7 @@ class MarcAuth2JsonLDConverterSpec extends Specification {
     }
 
     def "should map creator"() {
+        log.info("### should map creator")
         expect:
             conv.mapField(injson, code, loadJsonSubField(marcdoc,code), loadJson(marcdoc)) == result
         where:
@@ -27,6 +29,7 @@ class MarcAuth2JsonLDConverterSpec extends Specification {
     }
 
     def "should map annotation"() {
+        log.info("### should map annotation")
         expect:
             conv.mapField(injson, code, loadJsonSubField(marcdoc,code), loadJson(marcdoc)) == result
         where:
@@ -34,6 +37,7 @@ class MarcAuth2JsonLDConverterSpec extends Specification {
             "in/auth/254498.json" | [:]     | "667" | ["domain":["creatingInstitution":"some value"]]
     }
     def "should map source"() {
+        log.info("### should map source")
         expect:
             conv.mapField(injson, code, loadJsonSubField(marcdoc,code), loadJson(marcdoc)) == result
         where:
