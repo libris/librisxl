@@ -38,7 +38,7 @@
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.BasicMarc2JsonLDConverter">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.MarcBib2JsonLDConverter">
       <level value="trace"/>

@@ -89,8 +89,8 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
     List<Document> doConvert(Document doc) {
         def injson = doc.dataAsJson
-        def outjson = ["@type":detectRecordType(injson)]
-
+        def outjson = ["@id":doc.identifier.toString()]
+        outjson["@type"] = detectRecordType(injson)
 
         for (field in injson.fields) {
             field.each { code, fjson ->
@@ -105,10 +105,43 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
     // Utility methods
     String detectRecordType(marcjson) {
+        log.debug("leader: ${marcjson.leader}")
+        def typeOfRecord = marcjson.leader[6]
+        def bibLevel = marcjson.leader[7]
+        def carrierType = getControlField("007", marcjson)?.charAt(0)
+        if (typeOfRecord == "a" && bibLevel == "m" && carrierType != "c") {
+            return "Book"
+        }
+        if (typeOfRecord == "i" && bibLevel == "m" && carrierType == "s") {
+            return "Audiobook"
+        }
+        if (typeOfRecord == "a" && bibLevel == "s" && carrierType != "c") {
+            return "Serial"
+        }
+        def computerMaterial = getControlField("007", marcjson)?.charAt(1)
+        if (typeOfRecord == "a" && bibLevel == "m" && carrierType == "c" && computerMaterial == "r") {
+            return "Ebook"
+        }
+        if (typeOfRecord == "a" && bibLevel == "s" && carrierType == "c" && computerMaterial == "r") {
+            return "Eserial"
+        }
+        return "Unknown"
     }
 
     def dropToRaw(outjson, marcjson) {
         outjson = Tools.insertAt(outjson, "unknown.fields", marcjson)
+    }
+
+    def getControlField(field, marcjson) {
+        def value
+        marcjson.fields.each {
+            it.each { f, v ->
+                if (field == f) {
+                    value = v
+                }
+            }
+        }
+        return value
     }
 
     def getMarcField(fieldcode, marcjson, joinChar=" ") {
