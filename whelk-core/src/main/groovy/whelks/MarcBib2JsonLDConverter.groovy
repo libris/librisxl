@@ -42,7 +42,7 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         def subjectcode = ""
         def out = [:]
         boolean complete = true
-        log.info("map subject for $fjson")
+        log.debug("map subject for $fjson")
         fjson["subfields"].each {
             it.each { key, value ->
                 switch(key) {
@@ -73,7 +73,7 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
             }
             out = ["@id":new String("http://libris.kb.se/sab/$subjectcode")]
         }
-        log.info("map subject out: $out")
+        log.debug("map subject out: $out")
         return out
     }
 }
