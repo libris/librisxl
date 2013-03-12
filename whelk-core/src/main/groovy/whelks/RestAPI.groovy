@@ -177,9 +177,8 @@ class DocumentRestlet extends BasicWhelkAPI {
                 } else {
                     identifier = this.whelk.store(doc)
                     //response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
-
                     response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                    response.setLocationRef(identifier.toString())
+                    response.setLocationRef(request.getOriginalRef().toString())
                 }
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
@@ -517,13 +516,21 @@ class SuggestResultsConverter {
         def list = []
         def out = [:]
         results.hits.each {
-            def doc = mapper.readValue(it.dataAsString, Map)
+            def data = mapper.readValue(it.dataAsString, Map)
+            data.remove("unknown")
+            def doc = ["data":data]
+            doc.identifier = it.identifier
             if (it.identifier.toString().contains("/auth/")) {
-                list << mapAuthRecord(it.identifier, doc)
+                doc["authorized"] = true
+            } else {
             }
-            if (it.identifier.toString().contains("/bib")) {
-                list << mapBibRecord(it.identifier, doc)
+            list << doc
+            /*
+            if (it.identifier.toString().contains("/bib/")) {
+                list << doc
+                //list << mapBibRecord(it.identifier, doc)
             }
+            */
         }
         out["hits"] = results.numberOfHits
         out["list"] = list

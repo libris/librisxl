@@ -17,13 +17,17 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicFormatConverter imp
         def doclist = [doc]
         def json = mapper.readValue(doc.dataAsString, Map)
         int i = 0
-        for (person in json.about.instanceOf.authorList) {
+        for (person in json?.about?.instanceOf?.authorList) {
             i++
             String pident = "${doc.identifier.toString()}/person/$i"
             person["@id"] = pident
             person["authorOf"] = doc.identifier
             log.debug("Found person: $person")
             doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withFormat("jsonld").withContentType("application/json").withIdentifier(pident).tag("entityType", person["@type"])
+        }
+        if (json["@type"]) {
+            log.debug("Record has a @type. Adding to entity recordtype.")
+            doclist << new BasicDocument(doc).tag("entityType", json["@type"])
         }
         return doclist
     }
