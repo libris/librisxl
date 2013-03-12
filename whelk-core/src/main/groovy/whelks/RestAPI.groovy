@@ -177,9 +177,8 @@ class DocumentRestlet extends BasicWhelkAPI {
                 } else {
                     identifier = this.whelk.store(doc)
                     //response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
-
                     response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                    response.setLocationRef(identifier.toString())
+                    response.setLocationRef(request.getOriginalRef().toString())
                 }
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
