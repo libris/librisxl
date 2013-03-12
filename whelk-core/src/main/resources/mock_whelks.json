@@ -9,7 +9,7 @@
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "authmarcconverter" ]
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "authmarcconverter", "entityextractor" ]
             }
         },
         {
@@ -111,16 +111,15 @@
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : {"queryFields":[
                               "authoritativeName",
-                              "label",
-                              "seeAlso"
+                              "label"
                             ],
                             "infoFields":[
                               "birthYear",
                               "deathYear",
                               "authorOf",
-                              "description"
+                              "hasAnnotation.about"
                             ],
-                            "indexTypes":"Person,record"
+                            "indexTypes":"Person"
                             }
             }
         },

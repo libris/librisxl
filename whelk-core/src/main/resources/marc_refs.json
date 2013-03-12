@@ -200,12 +200,22 @@
             "100" : {
                 "method" : "mapPerson"
             },
+            "110" : {
+                "method" : "mapPerson"
+            },
+            "111" : {
+                "method" : "mapPerson"
+            },
             "700" : {
                 "method" : "mapPerson"
             },
             "800" : {
                 "method" : "mapPerson"
             }
+        },
+        "handled_elsewhere": {
+            "400":true,
+            "500":true
         },
         "levels" : {
             "domain" : ["040"],

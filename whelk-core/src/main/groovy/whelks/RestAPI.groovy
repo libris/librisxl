@@ -518,10 +518,12 @@ class SuggestResultsConverter {
         results.hits.each {
             def doc = mapper.readValue(it.dataAsString, Map)
             if (it.identifier.toString().contains("/auth/")) {
-                list << mapAuthRecord(it.identifier, doc)
+                doc["authorized"] = true
+                list << doc //mapAuthRecord(it.identifier, doc)
             }
-            if (it.identifier.toString().contains("/bib")) {
-                list << mapBibRecord(it.identifier, doc)
+            if (it.identifier.toString().contains("/bib/")) {
+                list << doc
+                //list << mapBibRecord(it.identifier, doc)
             }
         }
         out["hits"] = results.numberOfHits

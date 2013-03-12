@@ -46,7 +46,7 @@ class MarcAuth2JsonLDConverter extends BasicFormatConverter implements FormatCon
                             }
                         }
                     }
-                } else {
+                } else if (fieldcode instanceof Map) {
                     def obj = [:]
                     fieldcode.each { item, fcode ->
                         def v = getMarcValueFromField(fcode, fjson)
@@ -62,7 +62,7 @@ class MarcAuth2JsonLDConverter extends BasicFormatConverter implements FormatCon
             log.trace("call method ${marcref[RTYPE].process[code]}")
             def mapping = "${marcref[RTYPE].process[code].method}"(outjson, code, fjson, docjson)
             outjson = Tools.insertAt(outjson, marcref[RTYPE].process[code].level, mapping)
-        } else {
+        } else if (!(marcref[RTYPE].handled_elsewhere[code])) {
             outjson = dropToRaw(outjson, [(code):fjson])
         }
         //log.trace("outjson: $outjson")
@@ -150,9 +150,9 @@ class MarcAuth2JsonLDConverter extends BasicFormatConverter implements FormatCon
         if (dates) {
             person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + ", " + dates
             dates = dates.split(/-/)
-            person["birthDate"] = dates[0]
+            person["birthYear"] = dates[0]
             if (dates.size() > 1) {
-                person["deathDate"] = dates[1]
+                person["deathYear"] = dates[1]
             }
         }
         if (fjson.ind1 == "1" && person["authoritativeName"] =~ /, /) {
@@ -161,6 +161,13 @@ class MarcAuth2JsonLDConverter extends BasicFormatConverter implements FormatCon
             person["name"] =  person["givenName"] + " " + person["familyName"]
         } else {
             person["name"] = person["authoritativeName"]
+        }
+        def altLabels = []
+        for (f in ["400.a","410.a","411.a","500.a","510.a","511.a"]) {
+            altLabels.addAll(getMarcField(f, marcjson))
+        }
+        if (altLabels) {
+            person["label"] = altLabels
         }
         log.trace("person: $person")
         return person
