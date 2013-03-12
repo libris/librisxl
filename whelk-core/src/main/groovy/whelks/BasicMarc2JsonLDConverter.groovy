@@ -90,7 +90,10 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
     List<Document> doConvert(Document doc) {
         def injson = doc.dataAsJson
         def outjson = ["@id":doc.identifier.toString()]
-        outjson["@type"] = detectRecordType(injson)
+        def rt = detectRecordType(injson)
+        if (rt) {
+            outjson["@type"] = rt
+        }
 
         for (field in injson.fields) {
             field.each { code, fjson ->
@@ -125,7 +128,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         if (typeOfRecord == "a" && bibLevel == "s" && carrierType == "c" && computerMaterial == "r") {
             return "Eserial"
         }
-        return "Unknown"
+        return null
     }
 
     def dropToRaw(outjson, marcjson) {

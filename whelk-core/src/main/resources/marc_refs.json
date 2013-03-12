@@ -287,6 +287,15 @@
             "042" : {
                 "subsetOfScheme" : "042.9"
             },
+            "150" : {
+                "term" : "150.a"
+            },
+            "450" : {
+                "seeAlso" : "450.a"
+            },
+            "550" : {
+                "topicalTerm" : "550.a"
+            },
             "667" : {
                 "hasAnnotation.internalNote": "667.a"
             },
