@@ -19,6 +19,7 @@ import se.kb.libris.whelks.persistance.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.plugin.external.*
 
+import org.codehaus.jackson.map.*
 
 @Log
 class WhelkImpl extends BasicWhelk {
@@ -256,5 +257,21 @@ class ResourceWhelk extends BasicWhelk {
 
     ResourceWhelk(String prefix) {
         super(prefix)
+    }
+
+    static main(args) {
+        def propFile = args[0]
+        def jsonFile = args[1]
+        log.info("Converting properties $propFile to json...")
+        def outjson = [:]
+        def mapper = new ObjectMapper()
+        def properties = new Properties()
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("$propFile"))
+        properties.each { key, value ->
+            outjson[key] = value
+        }
+        def file = new File("$jsonFile").createNewFile()
+        file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
+        log.info("Created $jsonFile")
     }
 }
