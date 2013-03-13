@@ -11,7 +11,6 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         super(rt)
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("thesauri.json")
         this.thesauri = mapper.readValue(is, Map)
-
     }
 
     @Override
@@ -25,13 +24,32 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
                 person["source"] = thesauri[fjson.ind2]
             }
         } else {
-            section = ["relator": "authorList"]
+            section = mapSection(fjson)
         }
         if (section) {
             return [person, section]
         } else {
             return person
         }
+    }
+
+    def mapSection(fjson) {
+        def section
+        def relcode = getMarcValueFromField("4", fjson)
+        if (relcode) {
+            section = ["relator": (marcref.bib.relators[relcode] ?: "creator")]
+        } else {
+            section = ["relator": "authorList"]
+        }
+        return section
+    }
+
+    def mapInstitution(outjson, code, fjson, marcjson) {
+        def inst = mapPerson(outjson, code, fjson, marcjson)
+        log.debug("inst: $inst")
+        inst[0]["@type"] = "Organization"
+        inst[0].remove("source")
+        return inst
     }
 
     def mapIsbn(outjson, code, fjson, marcjson) {

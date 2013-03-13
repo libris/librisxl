@@ -20,6 +20,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
     def marcref
     def marcmap
+    def thesauri
 
     BasicMarc2JsonLDConverter(String rt) {
         this.RTYPE = rt
@@ -28,6 +29,8 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         this.marcref = mapper.readValue(is, Map)
         is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         this.marcmap = mapper.readValue(is, Map)
+        is = this.getClass().getClassLoader().getResourceAsStream("thesauri.json")
+        this.thesauri = mapper.readValue(is, Map)
     }
 
     def mapField(outjson, code, fjson, docjson) {
@@ -39,7 +42,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                     if (fieldcode.startsWith("CONSTANT:")) {
                         def v = fieldcode.substring(9)
                         outjson = Tools.insertAt(outjson, property, v)
-                    } else if (fieldcode.startsWith(usecode)) {
+                    } else if (!fieldcode.contains(".") || fieldcode.startsWith(usecode)) {
                         def v = getMarcValueFromField(fieldcode, fjson)
                         if (v) {
                             outjson = Tools.insertAt(outjson, property, v)
@@ -151,7 +154,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         outjson = Tools.insertAt(outjson, "unknown.fields", marcjson)
     }
 
-    def mapDate(outjson, code, fjson, marcjson) {
+    def mapDateTime(outjson, code, fjson, marcjson) {
         Date.parse("yyyyMMddHHmmss.S", fjson).format("yyyy-MM-dd'T'HH:mm:ss.S")
     }
 

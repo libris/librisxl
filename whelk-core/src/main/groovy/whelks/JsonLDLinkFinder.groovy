@@ -20,18 +20,20 @@ class JsonLDLinkFinder extends BasicPlugin implements LinkFinder {
 
     def collectIds(map, type, selfId) {
         def ids = []
-        map.each { key, value ->
-            if (key == "@id") {
-                if (value != selfId) {
-                    ids << new Link(new URI(value), type)
+        if (map instanceof Map) {
+            map.each { key, value ->
+                if (key == "@id") {
+                    if (value != selfId) {
+                        ids << new Link(new URI(value), type)
+                    }
                 }
-            }
-            if (value instanceof Map) {
-                ids.addAll(collectIds(value, key, selfId))
-            }
-            if (value instanceof List) {
-                value.each {
-                    ids.addAll(collectIds(it, key, selfId))
+                if (value instanceof Map) {
+                    ids.addAll(collectIds(value, key, selfId))
+                }
+                if (value instanceof List) {
+                    value.each {
+                        ids.addAll(collectIds(it, key, selfId))
+                    }
                 }
             }
         }
