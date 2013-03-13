@@ -6,7 +6,7 @@ import java.net.URI;
 import se.kb.libris.whelks.exception.*;
 
 public class Link {
-    private String type = "default";
+    private String type = "";
     private URI identifier;
 
     public Link() {}
