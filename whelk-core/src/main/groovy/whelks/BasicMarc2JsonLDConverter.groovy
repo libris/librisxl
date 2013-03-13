@@ -80,7 +80,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             for (proc in proclist) {
                 def m = proc.level =~ /\<\<(\w+)\>\>/
                 def mapping
-                def params = [:]
+                def params = []
                 log.debug("call method ${proc.method}")
                 if (m) {
                     log.debug("special proc.level: ${m[0]}")
@@ -91,12 +91,10 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                 }
                 log.debug("result mapping: $mapping")
                 if (mapping) {
-                    def level = proc.level
-                    params.each { var, val ->
-                        level = level.replaceAll("<<$var>>", val)
+                    parseParamsForLevels(proc.level, params).each { level ->
+                        log.info("Inserting at $level : $mapping")
+                        outjson = Tools.insertAt(outjson, level, mapping)
                     }
-                    log.debug("Inserting at $level : $mapping")
-                    outjson = Tools.insertAt(outjson, level, mapping)
                 }
             }
         } else if (!(marcref[RTYPE].handled_elsewhere[code])) {
@@ -104,6 +102,19 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         }
         //log.trace("outjson: $outjson")
         return outjson
+    }
+
+
+    def parseParamsForLevels(level, params) {
+        def levels = (params ? [] : [level])
+        params.each {
+            def l = level
+            it.each { var, val ->
+                l = l.replaceAll("<<$var>>", val)
+            }
+            levels << l
+        }
+        return levels
     }
 
     List<Document> doConvert(Document doc) {
