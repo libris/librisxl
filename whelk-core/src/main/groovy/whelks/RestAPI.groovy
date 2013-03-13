@@ -723,6 +723,7 @@ class ResourceListRestlet extends BasicWhelkAPI {
     def codeFiles = [
         "lang": "langcodes.json",
         "country": "countrycodes.json",
+        "nationality": "nationalitycodes.json",
         "function": "functioncodes.json"
     ]
     def lang
