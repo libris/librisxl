@@ -1,5 +1,7 @@
 package se.kb.libris.whelks.plugin
 
+import java.text.SimpleDateFormat
+
 import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
@@ -73,11 +75,25 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                 proclist = [proclist]
             }
             for (proc in proclist) {
-                log.trace("call method ${proc.method}")
-                def mapping = "${proc.method}"(outjson, code, fjson, docjson)
-                log.trace("result mapping: $mapping")
+                def m = proc.level =~ /\<\<(\w+)\>\>/
+                def mapping
+                def params = [:]
+                log.debug("call method ${proc.method}")
+                if (m) {
+                    log.debug("special proc.level: ${m[0]}")
+                    (mapping, params) = "${proc.method}"(outjson, code, fjson, docjson)
+                } else {
+                    log.debug("default proc.level: ${proc.level}")
+                    mapping = "${proc.method}"(outjson, code, fjson, docjson)
+                }
+                log.debug("result mapping: $mapping")
                 if (mapping) {
-                    outjson = Tools.insertAt(outjson, proc.level, mapping)
+                    def level = proc.level
+                    params.each { var, val ->
+                        level = level.replaceAll("<<$var>>", val)
+                    }
+                    log.debug("Inserting at $level : $mapping")
+                    outjson = Tools.insertAt(outjson, level, mapping)
                 }
             }
         } else if (!(marcref[RTYPE].handled_elsewhere[code])) {
@@ -133,6 +149,10 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
     def dropToRaw(outjson, marcjson) {
         outjson = Tools.insertAt(outjson, "unknown.fields", marcjson)
+    }
+
+    def mapDate(outjson, code, fjson, marcjson) {
+        Date.parse("yyyyMMddHHmmss.S", fjson).format("yyyy-MM-dd'T'HH:mm:ss.S")
     }
 
     def getControlField(field, marcjson) {

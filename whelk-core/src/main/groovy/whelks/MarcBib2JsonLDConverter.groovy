@@ -6,14 +6,32 @@ import groovy.util.logging.Slf4j as Log
 
 @Log
 class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
+    def thesauri
     MarcBib2JsonLDConverter(String rt) {
         super(rt)
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("thesauri.json")
+        this.thesauri = mapper.readValue(is, Map)
+
     }
+
     @Override
     def mapPerson(outjson, code, fjson, marcjson) {
         def person = super.mapPerson(outjson, code, fjson, marcjson)
-        log.trace("HIJACKED PERSON: $person")
-        return person
+        def section
+        if (fjson.ind2.trim()) {
+            if (fjson.ind2 == "7") {
+                person["source"] = getMarcValueFromField("2", fjson)
+            } else if (fjson.ind2 != "4") {
+                person["source"] = thesauri[fjson.ind2]
+            }
+        } else {
+            section = ["relator": "authorList"]
+        }
+        if (section) {
+            return [person, section]
+        } else {
+            return person
+        }
     }
 
     def mapIsbn(outjson, code, fjson, marcjson) {

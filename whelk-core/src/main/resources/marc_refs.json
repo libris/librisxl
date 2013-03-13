@@ -4,6 +4,9 @@
             "001" : {
                 "controlNumber" : "001"
             },
+            "010" : {
+                "lccn" : "010.a"
+            },
             "040" : {
                 "domain.creatingAgency": "040.a",
                 "domain.transcribingAgency": "040.c",
@@ -83,6 +86,10 @@
             }
         },
         "process" : {
+            "005" : {
+                "method" : "mapDate",
+                "level" : "modified"
+            },
             "020": [
                 {
                     "method" : "mapIsbn",
@@ -103,19 +110,23 @@
             },
             "100": {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.authorList"
+                "level" : "about.instanceOf.<<relator>>"
             },
             "110" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.authorList"
+                "level" : "about.instanceOf.<<relator>>"
             },
             "111" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.authorList"
+                "level" : "about.instanceOf.<<relator>>"
+            },
+            "600" : {
+                "method" : "mapPerson",
+                "level" : "about.instanceOf.subject"
             },
             "700" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.authorList"
+                "level" : "about.instanceOf.<<relator>>"
             }
         },
         "handled_elsewhere" : {},
@@ -325,6 +336,10 @@
             }
         },
         "process" : {
+            "005" : {
+                "method" : "mapDate",
+                "level" : "modified"
+            },
             "100" : {
                 "method" : "mapPerson"
             },
