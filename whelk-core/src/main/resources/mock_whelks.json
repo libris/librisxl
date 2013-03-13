@@ -9,13 +9,13 @@
         {
             "auth":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "authmarcconverter", "entityextractor" ]
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
             }
         },
         {
             "hold":{
                 "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "metasearch", "holdmarcconverter" ]
+                "_plugins": [ "localindex", "diskstorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
             }
         },
         {
