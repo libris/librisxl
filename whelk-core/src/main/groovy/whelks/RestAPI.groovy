@@ -723,7 +723,6 @@ class ResourceListRestlet extends BasicWhelkAPI {
     def codeFiles = [
         "lang": "langcodes.json",
         "country": "countrycodes.json",
-        //"nationality": "nationalitycodes.json",
         "function": "functioncodes.json"
     ]
     def lang
@@ -735,21 +734,12 @@ class ResourceListRestlet extends BasicWhelkAPI {
     ResourceListRestlet() {
         mapper = new ObjectMapper()
         codeFiles.each { key, fileName ->
+           log.debug("Load codes $key")
            this[(key)] = loadCodes(key)
         }
     }
 
-    def convertPropertiesToJson(def typeOfCode) {
-        log.trace("Converting properties ${typeOfCode}")
-        def outjson = [:]
-        def properties = new Properties()
-        properties.load(this.getClass().getClassLoader().getResourceAsStream("$typeOfCode" + "codes.properties"))
-        properties.each { key, value ->
-            outjson[key] = value
-        }
-        def file = new File(codeFiles.get(typeOfCode))
-        file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
-    }
+    //TODO:implement get and post/put to storage alt. documentrestlet
 
     def loadCodes(String typeOfCode) {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode))
