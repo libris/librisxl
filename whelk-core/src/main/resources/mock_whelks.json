@@ -70,7 +70,7 @@
         },
         {
             "bibmarcconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter",
+                "_class" : "se.kb.libris.whelks.plugin.MarcBib2JsonLDConverter",
                 "_params" : "bib"
             }
         },
@@ -82,7 +82,8 @@
         },
         {
             "authmarcconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.MarcAuth2JsonLDConverter"
+                "_class" : "se.kb.libris.whelks.plugin.MarcAuth2JsonLDConverter",
+                "_params" : "auth"
             }
         },
         {

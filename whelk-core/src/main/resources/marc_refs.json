@@ -1,5 +1,124 @@
 {
     "bib": {
+        "mapping": {
+            "001" : {
+                "controlNumber" : "001"
+            },
+            "040" : {
+                "domain.creatingAgency": "040.a",
+                "domain.transcribingAgency": "040.c",
+                "domain.updatingAgency": "040.d",
+                "domain.lang": "040.b",
+                "domain.rule": "040.e",
+                "domain.subjectScheme": "040.f"
+            },
+            "035" : {
+                "localSystemNumber" : "035.9"
+            },
+            "042" : {
+                "about.subsetOfScheme" : "042.9"
+            },
+            "050" : {
+                "about.instanceOf.class-lcc" : "050.a"
+            },
+            "082" : {
+                "about.instanceOf.class-ddc" : "082.a"
+            },
+            "245" : {
+                "about.instanceOf.title" : "245.a",
+                "about.instanceOf.titleRemainder" : "245.b",
+                "about.instanceOf.statementOfResponsibility" : "245.c",
+                "about.instanceOf.mediaTerm" : "245.h"
+            },
+            "250" : {
+                "about.edition" : "250.a"
+            },
+            "256" : {
+                "about.fileType" : "250.a"
+            },
+            "260" : {
+                "about.publisher": {
+                    "@type" : "CONSTANT:Organization",
+                    "placeOfPublication" : "260.a",
+                    "publisherName" : "260.b",
+                    "dateOfPublication" : "260.c",
+                    "placeOfManufacture" : "260.e"
+                }
+            },
+            "300" : {
+                "about.extent" : "300.a",
+                "about.baseMaterial" : "300.b",
+                "about.dimensions" : "300.c"
+            },
+            "490" : {
+                "about.series": {
+                    "title": "490.a",
+                    "part": "490.v",
+                    "issn": "490.x"
+                }
+            },
+            "500" : {
+                "about.comment" : "500.a"
+            },
+            "504" : {
+                "about.supplementaryContentNote" : "504.a"
+            },
+            "505" : {
+                "about.listOfContents" : "505.a"
+            },
+            "520" : {
+                "about.summary" : "520.a"
+            },
+            "538" : {
+                "about.systemRequirements" : "538.a"
+            },
+            "599" : {
+                "internalRemark" : "599.a"
+            },
+            "650" : {
+                "about.instanceOf.subjectList" : {
+                    "term" : "650.a",
+                    "system" : "650.2"
+                }
+            }
+        },
+        "process" : {
+            "020": [
+                {
+                    "method" : "mapIsbn",
+                    "level" : "about.isbn"
+                },
+                {
+                    "method" : "mapIdentifier",
+                    "level" : "about.otherIdentifier"
+                }
+            ],
+            "072" : {
+                "method" : "mapSubject",
+                "level" : "about.instanceOf.subject"
+            },
+            "084" : {
+                "method" : "mapSubject",
+                "level" : "about.instanceOf.subject"
+            },
+            "100": {
+                "method" : "mapPerson",
+                "level" : "about.instanceOf.authorList"
+            },
+            "110" : {
+                "method" : "mapPerson",
+                "level" : "about.instanceOf.authorList"
+            },
+            "111" : {
+                "method" : "mapPerson",
+                "level" : "about.instanceOf.authorList"
+            },
+            "700" : {
+                "method" : "mapPerson",
+                "level" : "about.instanceOf.authorList"
+            }
+        },
+        "handled_elsewhere" : {},
         "levels": {
             "about"      : ["008","020","024","028","042","250","256","260","300","490","500","504","505","520","538","typeOfRecord"],
             "instanceOf" : ["082","050","084","245","650","bibLevel"]
@@ -168,6 +287,15 @@
             "042" : {
                 "subsetOfScheme" : "042.9"
             },
+            "150" : {
+                "term" : "150.a"
+            },
+            "450" : {
+                "seeAlso" : "450.a"
+            },
+            "550" : {
+                "topicalTerm" : "550.a"
+            },
             "667" : {
                 "hasAnnotation.internalNote": "667.a"
             },
@@ -216,42 +344,6 @@
         "handled_elsewhere": {
             "400":true,
             "500":true
-        },
-        "levels" : {
-            "domain" : ["040"],
-            "hasAnnotation": ["667"]
-        },
-        "fields": {
-            "001" : "identifier",
-            "005" : "dateAndTimeOfLatestTransaction",
-            "035" : {
-                "a" : "otherSystem"
-            },
-            "040" : {
-                "a" : ["creator"],
-                "b" : ["catalogingLanguage"],
-                "c" : ["transliteratingBy"],
-                "d" : ["catalogingChangesBy"]
-            },
-            "046" : {
-                "f" : ["birthDate"],
-                "g" : ["deathDate"]
-            },
-            "083" : {
-                "a" : ["class-ddc"],
-                "2" : false
-            },
-            "400": "label",
-            "500": "seeAlso",
-            "667" : {
-                "a" : ["internalRemark"]
-            },
-            "670" : {
-                "a" : ["source"]
-            },
-            "678" : {
-                "a" : ["description"]
-            }
         }
     },
     "uninteresting" : ["043"]

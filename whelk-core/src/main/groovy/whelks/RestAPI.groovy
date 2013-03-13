@@ -522,7 +522,6 @@ class SuggestResultsConverter {
             doc.identifier = it.identifier
             if (it.identifier.toString().contains("/auth/")) {
                 doc["authorized"] = true
-            } else {
             }
             list << doc
             /*

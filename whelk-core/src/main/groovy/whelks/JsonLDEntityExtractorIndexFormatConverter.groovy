@@ -17,17 +17,25 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicFormatConverter imp
         def doclist = [doc]
         def json = mapper.readValue(doc.dataAsString, Map)
         int i = 0
-        for (person in json?.about?.instanceOf?.authorList) {
-            i++
+        def authList = json.about?.instanceOf?.authorList
+        if (authList instanceof List) {
+            for (person in authList) {
+                i++
+                String pident = "${doc.identifier.toString()}/person/$i"
+                person["@id"] = pident
+                person["authorOf"] = doc.identifier
+                doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withFormat("jsonld").withContentType("application/json").withIdentifier(pident).tag("entityType", person["@type"])
+            }
+        } else if (authList instanceof Map) {
             String pident = "${doc.identifier.toString()}/person/$i"
-            person["@id"] = pident
-            person["authorOf"] = doc.identifier
-            log.debug("Found person: $person")
-            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withFormat("jsonld").withContentType("application/json").withIdentifier(pident).tag("entityType", person["@type"])
+            authList["@id"] = pident
+            authList["authorOf"] = doc.identifier
+            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(authList)).withFormat("jsonld").withContentType("application/json").withIdentifier(pident).tag("entityType", authList["@type"])
         }
         if (json["@type"]) {
             log.debug("Record has a @type. Adding to entity recordtype.")
-            doclist << new BasicDocument(doc).tag("entityType", json["@type"])
+            json.remove("unknown")
+            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(json)).withFormat("jsonld").withContentType("application/json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
         }
         return doclist
     }
