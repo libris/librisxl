@@ -742,19 +742,6 @@ class ResourceListRestlet extends BasicWhelkAPI {
 
     //TODO:implement get and post/put to storage alt. documentrestlet
 
-    /*def convertPropsToJson(String typeOfCode) {
-        log.info("Converting properties $typeOfCode to json...")
-        def outjson = [:]
-        def properties = new Properties()
-        properties.load(this.getClass().getClassLoader().getResourceAsStream(typeOfCode + "codes.properties"))
-        properties.each { key, value ->
-            outjson[key] = value
-        }
-        def file = new File(codeFiles.get(typeOfCode))
-        log.info(mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson))
-        file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
-    }*/
-
     def loadCodes(String typeOfCode) {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode))
         return mapper.readValue(is, Map)
