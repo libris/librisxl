@@ -34,11 +34,11 @@ class MarcAuth2JsonLDConverter extends BasicMarc2JsonLDConverter {
 
     def mapTerm(outjson, code, fjson, marcjson) {
         def term = [:]
-        term["term"] = getMarcValueFromField("a", fjson)
-        term["number"] = getMarcValueFromField("0", fjson)
+        term["term"] = getMarcValueFromField(code, "a", fjson)
+        term["number"] = getMarcValueFromField(code, "0", fjson)
         if (fjson.ind2.trim()) {
             if (fjson.ind2 == "7") {
-                term["source"] = getMarcValueFromField("2", fjson)
+                term["source"] = getMarcValueFromField(code, "2", fjson)
             } else if (fjson.ind2 != "4") {
                 term["source"] = thesauri[fjson.ind2]
             }

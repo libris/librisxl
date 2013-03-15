@@ -15,8 +15,12 @@
                 "domain.rule": "e",
                 "domain.subjectScheme": "f"
             },
+            "028" : {
+                "about.edition" : "a",
+                "about.editionPublisher" : "b"
+            },
             "035" : {
-                "localSystemNumber" : "9"
+                "localSystemNumber" : "a9"
             },
             "042" : {
                 "about.subsetOfScheme" : "9"
@@ -81,6 +85,9 @@
             "650" : {
                 "about.instanceOf.subjectList" : {
                     "term" : "a",
+                    "formSubdivision" : "v",
+                    "generalSubdivision" : "x",
+                    "geographicSubdivision" : "z",
                     "system" : "2"
                 }
             }
@@ -100,6 +107,12 @@
                     "level" : "about.otherIdentifier"
                 }
             ],
+            "024" : 
+                {
+                    "method" : "mapIdentifier",
+                    "level" : "about.otherIdentifier"
+                }
+            ,
             "072" : {
                 "method" : "mapSubject",
                 "level" : "about.instanceOf.subject"
@@ -134,6 +147,7 @@
             }
         },
         "handled_elsewhere" : {},
+        "purposefully_ignored" : {"050.b":true,"082.2":true},
         "levels": {
             "about"      : ["008","020","024","028","042","250","256","260","300","490","500","504","505","520","538","typeOfRecord"],
             "instanceOf" : ["082","050","084","245","650","bibLevel"]
@@ -297,8 +311,7 @@
                 "controlNumber" : "001"
             },
             "035" : {
-                "localSystemNumber" : "a",
-                "localSystemNumber" : "9"
+                "localSystemNumber" : "a9"
             },
             "040" : {
                 "domain.creatingAgency": "a",
@@ -315,8 +328,8 @@
             },
             "065" : {
                 "otherClassification" : {
-                    "number" : "065.a",
-                    "system" : "065.2"
+                    "number" : "a",
+                    "system" : "2"
                 }
             },
             "082" : {

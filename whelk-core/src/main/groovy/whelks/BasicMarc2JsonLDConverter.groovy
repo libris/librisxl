@@ -22,6 +22,8 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
     def marcmap
     def thesauri
 
+    def convertedCodes = [:]
+
     BasicMarc2JsonLDConverter(String rt) {
         this.RTYPE = rt
         mapper = new ObjectMapper()
@@ -43,7 +45,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                         def v = fieldcode.substring(9)
                         outjson = Tools.insertAt(outjson, property, v)
                     } else if (!fieldcode.contains(".") || fieldcode.startsWith(usecode)) {
-                        def v = getMarcValueFromField(fieldcode, fjson)
+                        def v = getMarcValueFromField(code, fieldcode, fjson)
                         if (v) {
                             outjson = Tools.insertAt(outjson, property, v)
                         }
@@ -62,7 +64,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                         if (fcode.startsWith("CONSTANT:")) {
                             v = fcode.substring(9)
                         } else {
-                            v = getMarcValueFromField(fcode, fjson)
+                            v = getMarcValueFromField(code, fcode, fjson)
                         }
                         if (v) {
                             obj[(item)] = v
@@ -92,7 +94,6 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                 log.debug("result mapping: $mapping")
                 if (mapping) {
                     parseParamsForLevels(proc.level, params).each { level ->
-                        log.info("Inserting at $level : $mapping")
                         outjson = Tools.insertAt(outjson, level, mapping)
                     }
                 }
@@ -125,13 +126,43 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             outjson["@type"] = rt
         }
 
+        def missing = []
         for (field in injson.fields) {
             field.each { code, fjson ->
                 outjson = mapField(outjson, code, fjson, injson)
+                missing.addAll(detectMissing(code, fjson))
+            }
+        }
+        if (missing) {
+            if (!outjson["unknown"]) {
+                outjson["unknown"] = ["unmapped":missing as Set]
+            } else {
+                outjson["unknown"]["unmapped"] = missing as Set
             }
         }
 
         return [new BasicDocument(doc).withData(mapper.writeValueAsBytes(outjson)).withFormat("jsonld")]
+    }
+
+    def detectMissing(code, fjson) {
+        def missing = []
+        if (fjson instanceof Map) {
+            fjson.subfields.each { s ->
+                s.each { sc, sv ->
+                    if (!convertedCodes["$code.$sc"] 
+                            && !marcref.RTYPE?.purposefully_ignored?.get("$code.$sc")) {
+                        log.trace("Missing $code.$sc")
+                        missing << new String("$code.$sc")
+                    }
+                }
+            }
+        } else {
+            if (!convertedCodes["$code."]) {
+                log.trace("Missing $code")
+                missing << new String("$code")
+            }
+        }
+        return missing
     }
 
 
@@ -166,6 +197,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
     }
 
     def mapDateTime(outjson, code, fjson, marcjson) {
+        convertedCodes["$code."] = true
         Date.parse("yyyyMMddHHmmss.S", fjson).format("yyyy-MM-dd'T'HH:mm:ss.S")
     }
 
@@ -189,7 +221,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             it.each { f, v ->
                 if (f == field) {
                     log.trace("calling getvalue at $f")
-                    values << getMarcValueFromField(code, v, joinChar)
+                    values << getMarcValueFromField(field, code, v, joinChar)
                 }
             }
         }
@@ -197,13 +229,14 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         return values
     }
 
-    def getMarcValueFromField(code, fieldjson, joinChar=" ") {
+    def getMarcValueFromField(field, code, fieldjson, joinChar=" ") {
         def codeValues = []
-        log.trace("getMarcValueFromField: $code - $fieldjson")
+        log.trace("getMarcValueFromField: $field.$code - $fieldjson")
         if (fieldjson instanceof Map) {
             fieldjson.subfields.each { s ->
                 s.each {sc, sv ->
                     if (sc in code.toList()) {
+                        this.convertedCodes["$field.$sc"] = true
                         codeValues << sv
                     }
                 }
@@ -228,10 +261,10 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         if ((code as int) % 111 == 0) {
             person["@type"] = "Conference"
         }
-        def name = getMarcValueFromField("a", fjson)
-        def numeration = getMarcValueFromField("b", fjson)
-        def title = getMarcValueFromField("c", fjson)
-        def dates = getMarcValueFromField("d", fjson)
+        def name = getMarcValueFromField(code, "a", fjson)
+        def numeration = getMarcValueFromField(code, "b", fjson)
+        def title = getMarcValueFromField(code, "c", fjson)
+        def dates = getMarcValueFromField(code, "d", fjson)
         person["authoritativeName"] = name.replaceAll(/,$/, "").trim()
         person["authorizedAccessPoint"] = name.replaceAll(/,$/, "").trim()
         if (numeration) {
