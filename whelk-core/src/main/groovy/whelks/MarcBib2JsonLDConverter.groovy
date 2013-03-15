@@ -81,6 +81,15 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         return selectedLabel
     }
 
+    def mapStandardIdentifier(outjson, code, fjson, marcjson) {
+        def scheme = detectIdentifierScheme(fjson)
+        def value
+        if (scheme) {
+            value = getMarcValueFromField(code, "a", fjson)
+        }
+        return [value, [["scheme":scheme]]]
+    }
+
     def mapIdentifier(outjson, code, fjson, marcjson) {
         def scheme = (detectIdentifierScheme(fjson) ?: (getMarcValueFromField(code, "2", fjson) ?: "isbn"))
         if (scheme) {

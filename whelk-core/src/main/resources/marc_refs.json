@@ -107,11 +107,16 @@
                     "level" : "about.otherIdentifier"
                 }
             ],
-            "024" : 
+            "024" : [
                 {
                     "method" : "mapIdentifier",
                     "level" : "about.otherIdentifier"
+                },
+                {
+                    "method" : "mapStandardIdentifier",
+                    "level" : "about.<<scheme>>"
                 }
+            ]
             ,
             "072" : {
                 "method" : "mapSubject",
