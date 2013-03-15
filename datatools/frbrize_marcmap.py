@@ -15,6 +15,28 @@ class Item(namedtuple('Item',
     pass
 
 
+entity_map = {
+    'Corp.Body': 'CorporateBody',
+    'Manifest./Item': 'ManifestationOrItem',
+    'C/O/E/P': 'ConceptOrObjectOrEventOrPlace',
+    'Expresson': 'Expression',
+    'Person/Corp.': 'Agent',
+}
+
+rectype_map = {
+    '006': {'Continuing': 'Serial'},
+    '007': {
+            'Electronic': 'Computer',
+            'NPG': 'NonprojectedGraphic',
+            'MP': 'MotionPicture',
+            'Music': 'NotatedMusic',
+            'RSI': 'RemoteSensingImage',
+            'SR': 'SoundRecording',
+        },
+    '008': {'All': ''}
+}
+
+
 def get_items(fpath):
     with open(fpath, 'rb') as f:
         reader = csv.reader(f)
@@ -27,32 +49,19 @@ def get_items(fpath):
                 continue # TODO: ok? Directory is about low-level syntax parsning
             elif len(field) > 3 and field[3].isalpha():
                 field, rectype = field[0:3], field[3:]
-                if field == '006':
-                    renames = {'Continuing': 'Serial'}
-                elif field == '007':
-                    renames = {
-                        'Electronic': 'Computer',
-                        'NPG': 'NonprojectedGraphic',
-                        'MP': 'MotionPicture',
-                        'Music': 'NotatedMusic',
-                        'RSI': 'RemoteSensingImage',
-                        'SR': 'SoundRecording',
-                    }
-                elif field == '008':
-                    renames = {'All': ''}
-                else:
-                    renames = {}
-                rectype = renames.get(rectype, rectype)
+                rectype = rectype_map.get(field, {}).get(rectype, rectype)
                 fixmap = field + "_" + rectype
             else:
                 fixmap = None
+            entity = re.sub(r'\?|\+[EA]\d+|^n/a$', '',
+                        item.entity.replace('\x98', '')).title().replace(' ', '')
+            entity = entity_map.get(entity, entity)
             item = item._replace(
                     field=field,
                     rectype=item.rectype.split('/'),
                     position=item.position if item.position != 'n/a' else None,
                     subfield=item.subfield if item.subfield != 'n/a' else None,
-                    entity=re.sub(r'\?|\+[EA]\d+|^n/a$', '',
-                        item.entity.replace('\x98', '')).title().replace(' ', ''))
+                    entity=entity)
             item.fixmap = fixmap
             yield item
 
