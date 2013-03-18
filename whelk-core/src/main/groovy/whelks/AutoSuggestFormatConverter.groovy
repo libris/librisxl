@@ -50,7 +50,8 @@ class AutoSuggestFormatConverter extends BasicFormatConverter implements IndexFo
                         docs = []
                     }
                 if (r) {
-                    docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json").withLink(link, "basedOn")
+                    //docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json").withLink(link, "basedOn")
+                    docs << whelk.createDocument(r, ["identifier":identifier,"contentType":"application/json","link":new Link(link, "basedOn")])
                 } else {
                     log.warn "Conversion got no content body for $identifier."
                 }

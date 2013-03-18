@@ -92,11 +92,11 @@ class WhelkImpl extends BasicWhelk {
                     docs = ifc.convertBulk(docs)
                 }
                 if (icomp == null) {
-                	log.warn("No index components configured for ${this.prefix} whelk.")
-                	counter = 0
+                    log.warn("No index components configured for ${this.prefix} whelk.")
+                    counter = 0
                 } else {
-                	log.info "Indexing remaining " + docs.size() + " documents."
-                	icomp?.index(docs, this.prefix)
+                    log.info "Indexing remaining " + docs.size() + " documents."
+                    icomp?.index(docs, this.prefix)
                 }
             }
         } finally {
