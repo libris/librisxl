@@ -108,6 +108,9 @@ class WhelkInitializer {
                         log.debug("Setting priority ${meta._priority} for plugin $label")
                         plugin.order = meta._priority
                     }
+                    if (meta._id) {
+                        plugin.id = meta._id
+                    }
                     if (!meta._unique 
                             && !(plugin instanceof WhelkAware) 
                             && (!meta._param || (meta._param instanceof String && !meta._param.split(",").find {it.startsWith("_")}))) {

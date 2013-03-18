@@ -159,13 +159,13 @@ abstract class ElasticSearch extends BasicPlugin {
             def irb = client.prepareIndex(idxpfx, entityType, eid)
             if (addType == indexType) {
                 irb.setSource(doc.data)
-                log.trace("Prepareing index of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
+                log.debug("Prepareing index (single document) of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
                 client.prepareIndex(idxpfx, indexMetadataType, doc.getMetadataJson())
             } else {
                 irb.setTimestamp(""+doc.getTimestamp()).setSource(doc.toJson())
             }
             IndexResponse response = performExecute(irb)
-            log.trace "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
+            log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
             log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
         }
@@ -176,12 +176,12 @@ abstract class ElasticSearch extends BasicPlugin {
             if (documents) {
                 def breq = client.prepareBulk()
 
-                log.trace("Bulk request to index " + documents?.size() + " documents.")
+                log.debug("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
                     if (addType == indexType) {
                         breq.add(client.prepareIndex(idxpfx, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
-                        log.trace("Prepareing index of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
+                        log.debug("Prepareing index (bulk) of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
                         breq.add(client.prepareIndex(idxpfx, indexMetadataType, translateIdentifier(doc.identifier)).setSource(doc.getMetadataJson()))
                     } else {
                         breq.add(client.prepareIndex(idxpfx, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
