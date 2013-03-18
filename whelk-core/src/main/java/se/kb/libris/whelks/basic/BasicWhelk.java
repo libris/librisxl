@@ -35,17 +35,17 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
 
     @Override
     public URI store(Document d) {
-    	if (d.getIdentifier() == null || !d.getIdentifier().toString().startsWith("/"+prefix)) {
-            d.setIdentifier(mintIdentifier(d));                   
-    	}
-		List<Document> docs = new ArrayList<Document>();
+        if (d.getIdentifier() == null || !d.getIdentifier().toString().startsWith("/"+prefix)) {
+            d.setIdentifier(mintIdentifier(d));
+        }
+        List<Document> docs = new ArrayList<Document>();
         docs.add(d);
-        store(docs);
+        bulkStore(docs);
         return d.getIdentifier();
     }
 
     @Override
-    public void store(Iterable<Document> docs) {
+    public void bulkStore(Iterable<Document> docs) {
         // Pre storage operations
         for (Document doc : docs) {
             if (doc.getIdentifier() == null || !doc.getIdentifier().toString().startsWith("/"+prefix)) {

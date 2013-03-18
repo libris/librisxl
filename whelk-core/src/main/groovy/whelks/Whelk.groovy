@@ -32,19 +32,69 @@ class WhelkImpl extends BasicWhelk {
         return !d.identifier || d.identifier.toString().startsWith("/"+this.prefix+"/")
     }
 
-    URI store(Document d) {
-        if (! belongsHere(d)) {
-            throw new WhelkRuntimeException("Document does not belong here.")
+    @Override
+    URI store(Document doc) {
+        if (!doc.identifier || !doc.identifier.toString().startsWith("/"+this.prefix+"/")) {
+            doc.identifier = mintIdentifier(doc)
         }
-        try {
-            def identifier = super.store(d)
-            log.info("[$prefix] Saving document with identifier $identifier")
-            return identifier
-        } catch (WhelkRuntimeException wre) {
-            log.error("Failed to save document ${d.identifier}: " + wre.getMessage())
+        for (storage in storages) {
+            storage.store(doc, this.prefix)
         }
 
-        return null
+        addToIndex(doc)
+        addToQuadStore(doc)
+
+        return doc.identifier
+    }
+
+    private void addToIndex(doc) {
+        log.debug("Adding to indexes")
+        def docs = []
+        for (ifc in getIndexFormatConverters()) {
+            log.trace("Calling indexformatconverter $ifc")
+            docs.addAll(ifc.convert(doc))
+        }
+        if (!docs) {
+            docs.add(doc)
+        }
+        for (d in docs) {
+            for (idx in indexes) {
+                idx.index(d, this.prefix)
+            }
+        }
+    }
+
+    private void addToQuadStore(doc) {}
+
+    Document createDocument() {
+        return new BasicDocument()
+    }
+
+    @Override
+    Iterable<Document> createDocument(data, metadata) {
+        log.info("Creating document")
+        def doc = new BasicDocument().withData(data)
+        metadata.each { param, value ->
+            log.info("Adding $param = $value")
+            doc = doc."with${param.capitalize()}"(value)
+        }
+        def docs = []
+        for (fc in formatConverters) {
+            log.debug("Running formatconverter $fc")
+            docs.addAll(fc.convert(doc))
+        }
+        if (!docs) {
+            docs.add(doc)
+        }
+        for (lf in linkFinders) {
+            log.debug("Running linkfinder $lf")
+            for (d in docs) {
+                for (link in lf.findLinks(d)) {
+                    d.withLink(link)
+                }
+            }
+        }
+        return docs
     }
 
     @Override
@@ -130,76 +180,7 @@ class WhelkImpl extends BasicWhelk {
 }
 
 @Log
-class NewWhelk extends WhelkImpl {
-
-    NewWhelk(String pfx) {
-        super(pfx)
-    }
-
-    @Override
-    URI store(Document doc) {
-        if (!doc.identifier || !doc.identifier.toString().startsWith("/"+this.prefix+"/")) {
-            doc.identifier = mintIdentifier(doc)
-        }
-        for (storage in storages) {
-            storage.store(doc, this.prefix)
-        }
-
-        addToIndex(doc)
-        addToQuadStore(doc)
-
-        return doc.identifier
-    }
-
-    private void addToIndex(doc) {
-        log.debug("Adding to indexes")
-        def docs = []
-        for (ifc in getIndexFormatConverters()) {
-            log.trace("Calling indexformatconverter $ifc")
-            docs.addAll(ifc.convert(doc))
-        }
-        if (!docs) {
-            docs.add(doc)
-        }
-        for (d in docs) {
-            for (idx in indexes) {
-                idx.index(d, this.prefix)
-            }
-        }
-    }
-
-    private void addToQuadStore(doc) {}
-
-    @Override
-    Iterable<Document> createDocument(data, metadata) {
-        log.info("Creating document")
-        def doc = new BasicDocument().withData(data)
-        metadata.each { param, value ->
-            log.info("Adding $param = $value")
-            doc = doc."with${param.capitalize()}"(value)
-        }
-        def docs = []
-        for (fc in formatConverters) {
-            log.debug("Running formatconverter $fc")
-            docs.addAll(fc.convert(doc))
-        }
-        if (!docs) {
-            docs.add(doc)
-        }
-        for (lf in linkFinders) {
-            log.debug("Running linkfinder $lf")
-            for (d in docs) {
-                for (link in lf.findLinks(d)) {
-                    d.withLink(link)
-                }
-            }
-        }
-        return docs
-    }
-}
-
-@Log
-class CombinedWhelk extends NewWhelk {
+class CombinedWhelk extends WhelkImpl {
 
     String idxs
 
@@ -233,7 +214,7 @@ class CombinedWhelk extends NewWhelk {
  * Used by the local "mock" whelk setup.
  */
 @Log
-class ReindexOnStartupWhelk extends NewWhelk {
+class ReindexOnStartupWhelk extends WhelkImpl {
 
     ReindexOnStartupWhelk(String pfx) {
         super(pfx)
