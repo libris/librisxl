@@ -159,13 +159,14 @@ abstract class ElasticSearch extends BasicPlugin {
             def irb = client.prepareIndex(idxpfx, entityType, eid)
             if (addType == indexType) {
                 irb.setSource(doc.data)
-                log.debug("Prepareing index (single document) of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
-                client.prepareIndex(idxpfx, indexMetadataType, doc.getMetadataJson())
             } else {
                 irb.setTimestamp(""+doc.getTimestamp()).setSource(doc.toJson())
             }
             IndexResponse response = performExecute(irb)
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
+            log.debug("Prepareing metadata indexing with type $indexMetadataType and metadatajson: " + doc.getMetadataJson())
+            irb = client.prepareIndex(idxpfx, indexMetadataType, eid).setSource(doc.getMetadataJson())
+            response = performExecute(irb)
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
             log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
         }
