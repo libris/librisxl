@@ -26,6 +26,7 @@ entity_map = {
 # like indicators, may affect other properties (e.g. datatype, source)
 ambiguous_entities = ('DataElement', 'Field', 'Segment')
 
+# TODO: incomplete
 tag_rel_entity_map = {
     '100': (None, 'Person'), # creator or via relatorCode
     '110': (None, 'Organization'),
@@ -100,6 +101,7 @@ SCHEMA = Namespace("http://schema.org/")
 VANN = Namespace("http://purl.org/vocab/vann/")
 #BF = Namespace("http://bibframe.org/vocab/")
 LF = Namespace("http://purl.org/net/927/libframe#")
+LTAX = Namespace("http://purl.org/net/927/libframe/taxonomy#")
 
 DOMAIN = SCHEMA.domain
 
@@ -122,7 +124,7 @@ def vocab_from_marcmap(marcmap):
     process_fix_media_types(bib, '007')
     _fixed_cleanup()
     for tag, tagdef in bib.items():
-        if tag in ('000', '006', '007', '008'):
+        if tag in ('000', '006', '007', '008', 'fixprops'):
             continue
         process_tag(tag, tagdef)
     _cleanup()
@@ -178,9 +180,16 @@ def process_fix_media_types(bib, tag):
 
 def process_tag(tag, tagdef):
     tag_entity = get_tag_entity(tag, tagdef)
+
+    tag_concept = graph.resource(LTAX[tagdef.get('id') or "field-" + tag])
+    tag_concept.add(RDF.type, SKOS.Concept)
+    tag_concept.add(SKOS.notation, Literal(tag))
+    _add_labels(tag_concept, tagdef)
+
     # TODO: if rel, add it too?
     #if ind(1|2)_entity == 'DataElement': specializes col (a?) (e.g. format, specific prop)
     #if ind(1|2)_entity == 'Field': sometimes another prop (sometimes boolean)?
+
     cols = tagdef['subfield'].items() if 'subfield' in tagdef else [(None, tagdef)]
     for code, col in cols:
         entity = col.get('entity')
@@ -211,19 +220,19 @@ def _process_fixprop(tag, baseclass, col, fixprops):
         return
     if tag not in fixprop_typerefs or propRef not in fixprop_typerefs[tag]:
         # TODO: create SKOS items?
-        #graph.add((propRefType, RDFS.subClassOf, SKOS.Concept))
-        #fixitem.add(SKOS.broader, propRefType)
+        #graph.add((propRefEnum, RDFS.subClassOf, SKOS.Concept))
+        #fixitem.add(SKOS.broader, propRefEnum)
         return
-    propRefType = graph.resource(LF[upfirst(propRef)])
-    propRefType.add(RDF.type, OWL.Class)
-    propRefType.add(RDFS.subClassOf, OWL.Class) # a metaclass
-    graph.add((LF[propRef], RDFS.range, propRefType.identifier))
+    propRefEnum = graph.resource(LTAX[upfirst(propRef)])
+    propRefEnum.add(RDF.type, OWL.Class)
+    propRefEnum.add(RDFS.subClassOf, OWL.Class) # a metaclass
+    graph.add((LF[propRef], RDFS.range, propRefEnum.identifier))
     for letter, item in fixprops[propRef].items():
         key = item.get('id')
         if not key or key in ('unspecified', 'unknown', 'other', 'notApplicable', 'noAttemptToCode'):
             continue
-        fixitem = graph.resource(LF[upfirst(key)])
-        fixitem.add(RDF.type, propRefType)
+        fixitem = graph.resource(LTAX[upfirst(key)])
+        fixitem.add(RDF.type, propRefEnum)
         fixitem.add(RDF.type, OWL.Class)
         _add_labels(fixitem, item)
         if baseclass:
@@ -251,7 +260,7 @@ def _process_property(col, domains, tag, code, group=None):
             code = ".%s" % code
         prop.add(SKOS.notation, Literal(tag + code))
         if group:
-            prop.add(VANN.termGroup, Literal(group))
+            prop.add(VANN.termGroup, LTAX[group])
 
     return prop
 
