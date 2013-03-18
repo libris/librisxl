@@ -28,7 +28,7 @@
         {
             "resource":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["resourcelist", "marcmap"]
+                "_plugins": ["diskstorage", "document", "resourcelist", "marcmap", "search"]
             }
         }
     ],
