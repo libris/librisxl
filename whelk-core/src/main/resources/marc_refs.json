@@ -4,85 +4,99 @@
             "001" : {
                 "controlNumber" : "001"
             },
+            "010" : {
+                "lccn" : "a"
+            },
             "040" : {
-                "domain.creatingAgency": "040.a",
-                "domain.transcribingAgency": "040.c",
-                "domain.updatingAgency": "040.d",
-                "domain.lang": "040.b",
-                "domain.rule": "040.e",
-                "domain.subjectScheme": "040.f"
+                "domain.creatingAgency": "a",
+                "domain.transcribingAgency": "c",
+                "domain.updatingAgency": "d",
+                "domain.lang": "b",
+                "domain.rule": "e",
+                "domain.subjectScheme": "f"
+            },
+            "028" : {
+                "about.edition" : "a",
+                "about.editionPublisher" : "b"
             },
             "035" : {
-                "localSystemNumber" : "035.9"
+                "localSystemNumber" : "a9"
             },
             "042" : {
-                "about.subsetOfScheme" : "042.9"
+                "about.subsetOfScheme" : "9"
             },
             "050" : {
-                "about.instanceOf.class-lcc" : "050.a"
+                "about.instanceOf.class-lcc" : "a"
             },
             "082" : {
-                "about.instanceOf.class-ddc" : "082.a"
+                "about.instanceOf.class-ddc" : "a"
             },
             "245" : {
-                "about.instanceOf.title" : "245.a",
-                "about.instanceOf.titleRemainder" : "245.b",
-                "about.instanceOf.statementOfResponsibility" : "245.c",
-                "about.instanceOf.mediaTerm" : "245.h"
+                "about.instanceOf.title" : "a",
+                "about.instanceOf.titleRemainder" : "b",
+                "about.instanceOf.statementOfResponsibility" : "c",
+                "about.instanceOf.mediaTerm" : "h"
             },
             "250" : {
-                "about.edition" : "250.a"
+                "about.edition" : "a"
             },
             "256" : {
-                "about.fileType" : "250.a"
+                "about.fileType" : "a"
             },
             "260" : {
                 "about.publisher": {
                     "@type" : "CONSTANT:Organization",
-                    "placeOfPublication" : "260.a",
-                    "publisherName" : "260.b",
-                    "dateOfPublication" : "260.c",
-                    "placeOfManufacture" : "260.e"
+                    "placeOfPublication" : "a",
+                    "publisherName" : "b",
+                    "dateOfPublication" : "c",
+                    "placeOfManufacture" : "e"
                 }
             },
             "300" : {
-                "about.extent" : "300.a",
-                "about.baseMaterial" : "300.b",
-                "about.dimensions" : "300.c"
+                "about.extent" : "a",
+                "about.baseMaterial" : "b",
+                "about.dimensions" : "c"
             },
             "490" : {
                 "about.series": {
-                    "title": "490.a",
-                    "part": "490.v",
-                    "issn": "490.x"
+                    "title": "a",
+                    "part": "v",
+                    "issn": "x"
                 }
             },
             "500" : {
-                "about.comment" : "500.a"
+                "about.comment" : "a"
             },
             "504" : {
-                "about.supplementaryContentNote" : "504.a"
+                "about.supplementaryContentNote" : "a"
             },
             "505" : {
-                "about.listOfContents" : "505.a"
+                "about.listOfContents" : "a"
             },
             "520" : {
-                "about.summary" : "520.a"
+                "about.summary" : "a"
             },
             "538" : {
-                "about.systemRequirements" : "538.a"
+                "about.systemRequirements" : "a"
             },
             "599" : {
-                "internalRemark" : "599.a"
+                "internalRemark" : "a"
             },
             "650" : {
                 "about.instanceOf.subjectList" : {
-                    "term" : "650.a",
-                    "system" : "650.2"
+                    "term" : "a",
+                    "formSubdivision" : "v",
+                    "generalSubdivision" : "x",
+                    "geographicSubdivision" : "z",
+                    "system" : "2"
                 }
             }
         },
         "process" : {
+            "005" : {
+                "method" : "mapDateTime",
+                "level" : "modified"
+            },
             "020": [
                 {
                     "method" : "mapIsbn",
@@ -93,6 +107,17 @@
                     "level" : "about.otherIdentifier"
                 }
             ],
+            "024" : [
+                {
+                    "method" : "mapIdentifier",
+                    "level" : "about.otherIdentifier"
+                },
+                {
+                    "method" : "mapStandardIdentifier",
+                    "level" : "about.<<scheme>>"
+                }
+            ]
+            ,
             "072" : {
                 "method" : "mapSubject",
                 "level" : "about.instanceOf.subject"
@@ -103,22 +128,31 @@
             },
             "100": {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.authorList"
+                "level" : "about.instanceOf.<<relator>>"
             },
             "110" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.authorList"
+                "level" : "about.instanceOf.<<relator>>"
             },
             "111" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.authorList"
+                "level" : "about.instanceOf.<<relator>>"
+            },
+            "600" : {
+                "method" : "mapPerson",
+                "level" : "about.instanceOf.subject"
             },
             "700" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.authorList"
+                "level" : "about.instanceOf.<<relator>>"
+            },
+            "710" : {
+                "method" : "mapInstitution",
+                "level" : "about.instanceOf.<<relator>>"
             }
         },
         "handled_elsewhere" : {},
+        "purposefully_ignored" : {"050.b":true,"082.2":true},
         "levels": {
             "about"      : ["008","020","024","028","042","250","256","260","300","490","500","504","505","520","538","typeOfRecord"],
             "instanceOf" : ["082","050","084","245","650","bibLevel"]
@@ -208,13 +242,15 @@
             }
         },
         "relators" : {
-            "aut" : "author",
+            "aut" : "authorList",
             "mus" : "musician",
             "ill" : "illustrator",
             "trl" : "translator",
             "pbd" : "publishingDirector",
             "rpy" : "responsibleParty",
-            "wde" : "woodEngraver"
+            "wde" : "woodEngraver",
+            "edt" : "editor",
+            "oth" : "unspecifiedContributor"
         },
         "subjects" : {
             "sab": {
@@ -276,55 +312,81 @@
     },
     "auth": {
         "mapping": {
+            "001" : {
+                "controlNumber" : "001"
+            },
+            "035" : {
+                "localSystemNumber" : "a9"
+            },
             "040" : {
-                "domain.creatingAgency": "040.a",
-                "domain.transcribingAgency": "040.c",
-                "domain.updatingAgency": "040.d",
-                "domain.lang": "040.b",
-                "domain.rule": "040.e",
-                "domain.subjectScheme": "040.f"
+                "domain.creatingAgency": "a",
+                "domain.transcribingAgency": "c",
+                "domain.updatingAgency": "d",
+                "domain.lang": "b",
+                "domain.rule": "e",
+                "domain.subjectScheme": "f"
             },
             "042" : {
-                "subsetOfScheme" : "042.9"
+                "subsetOfScheme" : "9"
             },
+            "046" : {
+            },
+            "065" : {
+                "otherClassification" : {
+                    "number" : "a",
+                    "system" : "2"
+                }
+            },
+            "082" : {
+                "class-ddc" : "a"
+            },
+            "083" : "082",
             "150" : {
-                "term" : "150.a"
+                "term" : "a"
             },
+            "155" : "150",
             "450" : {
-                "seeAlso" : "450.a"
+                "seeAlso" : "a"
             },
+            "455" : "450",
             "550" : {
-                "topicalTerm" : "550.a"
+                "topicalTerm" : "a"
             },
+            "555" : "550",
             "667" : {
-                "hasAnnotation.internalNote": "667.a"
+                "hasAnnotation.internalNote": "a"
             },
             "670" : {
                 "hasAnnotation.source" : {
-                    "label" : "670.a",
-                    "extractedRelevantPortion" : "670.b",
-                    "uri" : "670.u"
+                    "label" : "a",
+                    "extractedRelevantPortion" : "b",
+                    "uri" : "u"
                 }
             },
             "675" : {
-                "hasAnnotation.sourceNotFound": "675.a"
+                "hasAnnotation.sourceNotFound": "a"
             },
             "678" : {
-                "hasAnnotation.about": "678.a"
+                "hasAnnotation.about": "a"
             },
             "680" : {
-                "hasAnnotation.publicNote": "680.aiu"
+                "hasAnnotation.publicNote": "aiu"
             },
             "856" : {
                 "hasAnnotation.electronicLocationAndAccess": {
-                    "uri": "856.u",
-                    "nonPublicNote": "856.x",
+                    "@id": "u",
+                    "uri": "u",
+                    "nonPublicNote": "x",
                     "publicNote": "z",
                     "materialsSpecified":"3"
                 }
             }
         },
         "process" : {
+            "005" : {
+                "method" : "mapDateTime",
+                "level" : "modified"
+            },
             "100" : {
                 "method" : "mapPerson"
             },
@@ -337,11 +399,20 @@
             "700" : {
                 "method" : "mapPerson"
             },
+            "750" : {
+                "method" : "mapTerm",
+                "level" : "related"
+            },
+            "755" : {
+                "method" : "mapTerm",
+                "level" : "related"
+            },
             "800" : {
                 "method" : "mapPerson"
             }
         },
         "handled_elsewhere": {
+            "046":true,
             "400":true,
             "500":true
         }

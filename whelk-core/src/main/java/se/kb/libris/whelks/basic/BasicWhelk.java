@@ -63,6 +63,13 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
                 docs = convertedList;
             }
         }
+        for (LinkFinder lf : getLinkFinders()) {
+            for (Document doc : docs) {
+                for (Link link : lf.findLinks(doc)) {
+                    doc.withLink(link);
+                }
+            }
+        }
 
         if (docs != null && ((List)docs).size() > 0) {
             for (Component c : getComponents()) {

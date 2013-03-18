@@ -156,8 +156,8 @@ class DocumentRestlet extends BasicWhelkAPI {
 
     def pathEnd = "{identifier}"
     def varPath = true
-    
-    String description = "A GET request with identifier loads a document. A PUT request stores a document."
+
+    String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
 
     DocumentRestlet(Whelk whelk) {
         this.whelk = whelk
@@ -241,6 +241,14 @@ class DocumentRestlet extends BasicWhelkAPI {
                 }
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
+            }
+        }
+        else if (request.method == Method.DELETE) {
+            try {
+                whelk.delete(new URI(path))
+                response.setStatus(Status.SUCCESS_NO_CONTENT)
+            } catch (WhelkRuntimeException wre) {
+                response.setStatus(Status.SERVER_ERROR_INTERNAL, wre.message)
             }
         }
     }

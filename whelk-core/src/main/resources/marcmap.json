@@ -4031,7 +4031,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": true, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Fingerprint Identifier"
@@ -6243,14 +6243,14 @@
           "repeatable": false, 
           "mandatory": true, 
           "label_en": "Subject category code", 
-          "entity": "C/O/E/P"
+          "entity": "ConceptOrObjectOrEventOrPlace"
         }, 
         "x": {
           "id": "subjectCategoryCodeSubdivision", 
           "label_sv": "Kod f\u00f6r underavdelning inom \u00e4mneskategori", 
           "repeatable": true, 
           "label_en": "Subject category code subdivision", 
-          "entity": "C/O/E/P"
+          "entity": "ConceptOrObjectOrEventOrPlace"
         }, 
         "2": {
           "id": "source", 
@@ -6939,7 +6939,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "4": {
           "id": "relatorCode", 
@@ -7043,28 +7043,28 @@
           "repeatable": false, 
           "label_en": "Corporate name or jurisdiction name as entry element", 
           "mandatory": true, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "b": {
           "id": "subordinateUnit", 
           "label_sv": "Namn p\u00e5 underordnad enhet", 
           "repeatable": true, 
           "label_en": "Subordinate unit", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "c": {
           "id": "locationOfMeeting", 
           "label_sv": "Konferensort", 
           "repeatable": false, 
           "label_en": "Location of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "d": {
           "id": "dateOfMeetingOrTreatySigning", 
           "label_sv": "Konferens\u00e5r/F\u00f6rdragsdatum", 
           "repeatable": true, 
           "label_en": "Date of meeting or treaty signing", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "e": {
           "id": "relatorTerm", 
@@ -7091,7 +7091,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "4": {
           "id": "relatorCode", 
@@ -7189,28 +7189,28 @@
           "repeatable": false, 
           "mandatory": true, 
           "label_en": "Meeting name or jurisdiction name as entry element", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "c": {
           "id": "locationOfMeeting", 
           "label_sv": "Konferensort", 
           "repeatable": false, 
           "label_en": "Location of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "d": {
           "id": "dateOfMeeting", 
           "label_sv": "Konferens\u00e5r", 
           "repeatable": false, 
           "label_en": "Date of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "e": {
           "id": "subordinateUnit", 
           "label_sv": "Underordnad enhet", 
           "repeatable": true, 
           "label_en": "Subordinate unit", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "g": {
           "id": "miscellaneousInformation", 
@@ -7236,14 +7236,14 @@
           "label_sv": "Konferensnamn, n\u00e4r $a inneh\u00e5ller namn p\u00e5 administrativ enhet", 
           "repeatable": false, 
           "label_en": "Name of meeting following jurisdiction name entry element", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "u": {
           "id": "affiliation", 
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "4": {
           "id": "relatorCode", 
@@ -8491,7 +8491,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Varying Form Of Title", 
@@ -10573,63 +10573,63 @@
           "repeatable": false, 
           "label_en": "Security classification", 
           "mandatory": true, 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "b": {
           "id": "handlingInstructions", 
           "label_sv": "Hanteringsinstruktioner", 
           "repeatable": true, 
           "label_en": "Handling instructions", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "c": {
           "id": "externalDisseminationInformation", 
           "label_sv": "Uppgift om extern spridning", 
           "repeatable": true, 
           "label_en": "External dissemination information", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "d": {
           "id": "downgradingOrDeclassificationEvent", 
           "label_sv": "Uppgift ang. nedklassning eller frisl\u00e4ppande", 
           "repeatable": false, 
           "label_en": "Downgrading or declassification event", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "e": {
           "id": "classificationSystem", 
           "label_sv": "Klassifikationssystem", 
           "repeatable": false, 
           "label_en": "Classification system", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "f": {
           "id": "countryOfOriginCode", 
           "label_sv": "Kod f\u00f6r ursprungsland (jfr 008/15-17)", 
           "repeatable": false, 
           "label_en": "Country of origin code", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "g": {
           "id": "downgradingDate", 
           "label_sv": "Datum f\u00f6r nedklassning", 
           "repeatable": false, 
           "label_en": "Downgrading date", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "h": {
           "id": "declassificationDate", 
           "label_sv": "Datum f\u00f6r frisl\u00e4ppande", 
           "repeatable": false, 
           "label_en": "Declassification date", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "j": {
           "id": "authorization", 
           "label_sv": "Myndighet ansvarig f\u00f6r nedklassning/frisl\u00e4ppande", 
           "repeatable": true, 
           "label_en": "Authorization", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "6": {
           "id": "linkage", 
@@ -10675,7 +10675,7 @@
           "repeatable": false, 
           "label_en": "Originator control term", 
           "mandatory": true, 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "b": {
           "id": "originatingAgency", 
@@ -10683,21 +10683,21 @@
           "repeatable": true, 
           "label_en": "Originating agency", 
           "mandatory": true, 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "c": {
           "id": "authorizedRecipientsOfMaterial", 
           "label_sv": "Godk\u00e4nda mottagare av material", 
           "repeatable": true, 
           "label_en": "Authorized recipients of material", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "g": {
           "id": "otherRestrictions", 
           "label_sv": "\u00d6vriga restriktioner", 
           "repeatable": true, 
           "label_en": "Other restrictions", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "6": {
           "id": "linkage", 
@@ -10979,7 +10979,7 @@
           "label_sv": "Kod f\u00f6r enhet som priss\u00e4ttningen avser", 
           "repeatable": false, 
           "label_en": "Unit of pricing", 
-          "entity": "Expresson"
+          "entity": "Expression"
         }, 
         "e": {
           "id": "priceNote", 
@@ -12083,7 +12083,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "General Note"
@@ -12133,7 +12133,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "With Note"
@@ -12387,35 +12387,35 @@
           "label_sv": "Villkor f\u00f6r tillg\u00e5ng", 
           "repeatable": false, 
           "label_en": "Terms governing access", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "b": {
           "id": "jurisdiction", 
           "label_sv": "Tillst\u00e5ndsgivare", 
           "repeatable": true, 
           "label_en": "Jurisdiction", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "c": {
           "id": "physicalAccessProvisions", 
           "label_sv": "Fysiska omst\u00e4ndigheter", 
           "repeatable": true, 
           "label_en": "Physical access provisions", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "d": {
           "id": "authorizedUsers", 
           "label_sv": "Godk\u00e4nda anv\u00e4ndare", 
           "repeatable": true, 
           "label_en": "Authorized users", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "e": {
           "id": "authorization", 
           "label_sv": "Laglig grund f\u00f6r restriktion", 
           "repeatable": true, 
           "label_en": "Authorization", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "f": {
           "id": "standardizedTerminologyForAccessRestriction", 
@@ -12461,7 +12461,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Restrictions On Access Note"
@@ -13508,7 +13508,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Study Program Information Note", 
@@ -13634,7 +13634,7 @@
           "label_sv": "Ansvarig institution", 
           "repeatable": true, 
           "label_en": "Agency responsible for reproduction", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "d": {
           "id": "dateOfReproduction", 
@@ -14108,28 +14108,28 @@
           "repeatable": false, 
           "label_en": "Terms governing use and reproduction", 
           "mandatory": true, 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "b": {
           "id": "jurisdiction", 
           "label_sv": "Tillst\u00e5ndsgivare", 
           "repeatable": false, 
           "label_en": "Jurisdiction", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "c": {
           "id": "authorization", 
           "label_sv": "Laglig grund f\u00f6r restriktion", 
           "repeatable": false, 
           "label_en": "Authorization", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "d": {
           "id": "authorizedUsers", 
           "label_sv": "Godk\u00e4nda anv\u00e4ndare", 
           "repeatable": false, 
           "label_en": "Authorized users", 
-          "entity": "Manifest./Item"
+          "entity": "ManifestationOrItem"
         }, 
         "u": {
           "id": "uniformResourceIdentifier", 
@@ -14163,7 +14163,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Terms Governing Use And Reproduction Note"
@@ -14286,7 +14286,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Immediate Source Of Acquisition Note"
@@ -14564,14 +14564,14 @@
           "repeatable": false, 
           "mandatory": true, 
           "label_en": "Biographical or historical note", 
-          "entity": "Person/Corp."
+          "entity": "Agent"
         }, 
         "b": {
           "id": "expansion", 
           "label_sv": "Kompletterande uppgifter", 
           "repeatable": false, 
           "label_en": "Expansion", 
-          "entity": "Person/Corp."
+          "entity": "Agent"
         }, 
         "u": {
           "id": "uniformResourceIdentifier", 
@@ -15122,7 +15122,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Ownership And Custodial History"
@@ -15205,7 +15205,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Copy And Version Identification Note"
@@ -15269,7 +15269,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Binding Information"
@@ -15600,7 +15600,7 @@
           "label_sv": "Ansvarig instans", 
           "repeatable": true, 
           "label_en": "Jurisdiction", 
-          "entity": "Person/Corp."
+          "entity": "Agent"
         }, 
         "i": {
           "id": "methodOfAction", 
@@ -15621,7 +15621,7 @@
           "label_sv": "Person eller institution som  \u00e5tg\u00e4rdar", 
           "repeatable": true, 
           "label_en": "Action agent", 
-          "entity": "Person/Corp."
+          "entity": "Agent"
         }, 
         "l": {
           "id": "status", 
@@ -15696,7 +15696,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Action Note"
@@ -15759,7 +15759,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Accumulation And Frequency Of Use Note"
@@ -15816,7 +15816,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Exhibitions Note"
@@ -16148,7 +16148,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "v": {
           "id": "formSubdivision", 
@@ -16289,28 +16289,28 @@
           "repeatable": false, 
           "label_en": "Corporate name or jurisdiction name as entry element", 
           "mandatory": true, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "b": {
           "id": "subordinateUnit", 
           "label_sv": "Namn p\u00e5 underordnad enhet", 
           "repeatable": true, 
           "label_en": "Subordinate unit", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "c": {
           "id": "locationOfMeeting", 
           "label_sv": "Konferensort", 
           "repeatable": false, 
           "label_en": "Location of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "d": {
           "id": "dateOfMeetingOrTreatySigning", 
           "label_sv": "Konferens\u00e5r/F\u00f6rdragsdatum", 
           "repeatable": true, 
           "label_en": "Date of meeting or treaty signing", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "e": {
           "id": "relatorTerm", 
@@ -16407,7 +16407,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "v": {
           "id": "formSubdivision", 
@@ -16553,28 +16553,28 @@
           "repeatable": false, 
           "mandatory": true, 
           "label_en": "Meeting name or jurisdiction name as entry element", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "c": {
           "id": "locationOfMeeting", 
           "label_sv": "Konferensort", 
           "repeatable": false, 
           "label_en": "Location of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "d": {
           "id": "dateOfMeeting", 
           "label_sv": "Konferens\u00e5r", 
           "repeatable": false, 
           "label_en": "Date of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "e": {
           "id": "subordinateUnit", 
           "label_sv": "Underordnad enhet", 
           "repeatable": true, 
           "label_en": "Subordinate unit", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "f": {
           "id": "dateOfAWork", 
@@ -16635,7 +16635,7 @@
           "label_sv": "Konferensnamn, n\u00e4r $a inneh\u00e5ller namn p\u00e5 administrativ enhet", 
           "repeatable": false, 
           "label_en": "Name of meeting following jurisdiction name entry element", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "s": {
           "id": "version", 
@@ -16656,7 +16656,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "v": {
           "id": "formSubdivision", 
@@ -17217,14 +17217,14 @@
           "repeatable": false, 
           "mandatory": true, 
           "label_en": "Topical term or geographic name", 
-          "entity": "C/O/E/P"
+          "entity": "ConceptOrObjectOrEventOrPlace"
         }, 
         "b": {
           "id": "topicalTermFollowingGeographicName", 
           "label_sv": "Term som f\u00f6ljer geografiskt namn som s\u00f6kelement", 
           "repeatable": false, 
           "label_en": "Topical term following geographic name", 
-          "entity": "C/O/E/P"
+          "entity": "ConceptOrObjectOrEventOrPlace"
         }, 
         "c": {
           "id": "locationOfEvent", 
@@ -17541,7 +17541,7 @@
           "repeatable": true, 
           "mandatory": true, 
           "label_en": "Uncontrolled term", 
-          "entity": "C/O/E/P"
+          "entity": "ConceptOrObjectOrEventOrPlace"
         }, 
         "6": {
           "id": "linkage", 
@@ -17599,14 +17599,14 @@
           "label_sv": "Fokusterm", 
           "repeatable": false, 
           "label_en": "Focus term", 
-          "entity": "C/O/E/P"
+          "entity": "ConceptOrObjectOrEventOrPlace"
         }, 
         "b": {
           "id": "nonFocusTerm", 
           "label_sv": "Term som inte \u00e4r fokusterm", 
           "repeatable": true, 
           "label_en": "Non-focus term", 
-          "entity": "C/O/E/P"
+          "entity": "ConceptOrObjectOrEventOrPlace"
         }, 
         "c": {
           "id": "facetHierarchyDesignation", 
@@ -17761,7 +17761,7 @@
           "repeatable": true, 
           "label_en": "Non-focus term", 
           "mandatory": true, 
-          "entity": "C/O/E/P"
+          "entity": "ConceptOrObjectOrEventOrPlace"
         }, 
         "c": {
           "id": "facetHierarchyDesignation", 
@@ -17836,7 +17836,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Index Term-Genre/Form", 
@@ -18397,7 +18397,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "x": {
           "id": "internationalStandardSerialNumber", 
@@ -18443,7 +18443,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Added Entry-Personal Name", 
@@ -18491,28 +18491,28 @@
           "repeatable": false, 
           "label_en": "Corporate name or jurisdiction name as entry element", 
           "mandatory": true, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "b": {
           "id": "subordinateUnit", 
           "label_sv": "Namn p\u00e5 underordnad enhet", 
           "repeatable": true, 
           "label_en": "Subordinate unit", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "c": {
           "id": "locationOfMeeting", 
           "label_sv": "Konferensort", 
           "repeatable": false, 
           "label_en": "Location of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "d": {
           "id": "dateOfMeetingOrTreatySigning", 
           "label_sv": "Konferens\u00e5r/F\u00f6rdragsdatum", 
           "repeatable": true, 
           "label_en": "Date of meeting or treaty signing", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "e": {
           "id": "relatorTerm", 
@@ -18614,7 +18614,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "x": {
           "id": "internationalStandardSerialNumber", 
@@ -18660,7 +18660,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Added Entry-Corporate Name", 
@@ -18708,28 +18708,28 @@
           "repeatable": false, 
           "mandatory": true, 
           "label_en": "Meeting name or jurisdiction name as entry element", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "c": {
           "id": "locationOfMeeting", 
           "label_sv": "Konferensort", 
           "repeatable": false, 
           "label_en": "Location of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "d": {
           "id": "dateOfMeeting", 
           "label_sv": "Konferens\u00e5r", 
           "repeatable": false, 
           "label_en": "Date of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "e": {
           "id": "subordinateUnit", 
           "label_sv": "Underordnad enhet", 
           "repeatable": true, 
           "label_en": "Subordinate unit", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "f": {
           "id": "dateOfAWork", 
@@ -18816,7 +18816,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "x": {
           "id": "internationalStandardSerialNumber", 
@@ -18862,7 +18862,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Added Entry-Meeting Name", 
@@ -19153,7 +19153,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Added Entry-Uniform Title", 
@@ -19281,7 +19281,7 @@
           "id": "institutionToWhichFieldApplies", 
           "label_en": "Institution to which field applies", 
           "repeatable": false, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }
       }, 
       "label_en": "Added Entry-Uncontrolled Related/Analytical Title", 
@@ -22709,7 +22709,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "v": {
           "id": "volumeSequentialDesignation", 
@@ -22805,28 +22805,28 @@
           "repeatable": false, 
           "label_en": "Corporate name or jurisdiction name as entry element", 
           "mandatory": true, 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "b": {
           "id": "subordinateUnit", 
           "label_sv": "Namn p\u00e5 underordnad enhet", 
           "repeatable": true, 
           "label_en": "Subordinate unit", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "c": {
           "id": "locationOfMeeting", 
           "label_sv": "Konferensort", 
           "repeatable": false, 
           "label_en": "Location of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "d": {
           "id": "dateOfMeetingOrTreatySigning", 
           "label_sv": "Konferens\u00e5r/F\u00f6rdragsdatum", 
           "repeatable": true, 
           "label_en": "Date of meeting or treaty signing", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "e": {
           "id": "relatorTerm", 
@@ -22924,7 +22924,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "v": {
           "id": "volumeSequentialDesignation", 
@@ -23020,28 +23020,28 @@
           "repeatable": false, 
           "mandatory": true, 
           "label_en": "Meeting name or jurisdiction name as entry element", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "c": {
           "id": "locationOfMeeting", 
           "label_sv": "Konferensort", 
           "repeatable": false, 
           "label_en": "Location of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "d": {
           "id": "dateOfMeeting", 
           "label_sv": "Konferens\u00e5r", 
           "repeatable": false, 
           "label_en": "Date of meeting", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "e": {
           "id": "subordinateUnit", 
           "label_sv": "Underordnad enhet", 
           "repeatable": true, 
           "label_en": "Subordinate unit", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "f": {
           "id": "dateOfAWork", 
@@ -23124,7 +23124,7 @@
           "label_sv": "Affiliering", 
           "repeatable": false, 
           "label_en": "Affiliation", 
-          "entity": "Corp.Body"
+          "entity": "CorporateBody"
         }, 
         "v": {
           "id": "volumeSequentialDesignation", 
