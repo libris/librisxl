@@ -35,8 +35,10 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
 
     @Override
     public URI store(Document d) {
-        // mint URI if document needs it
-        List<Document> docs = new ArrayList<Document>();
+    	if (d.getIdentifier() == null || !d.getIdentifier().toString().startsWith("/"+prefix)) {
+            d.setIdentifier(mintIdentifier(d));                   
+    	}
+		List<Document> docs = new ArrayList<Document>();
         docs.add(d);
         store(docs);
         return d.getIdentifier();
