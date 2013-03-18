@@ -141,9 +141,12 @@ class RootRouteRestlet extends BasicWhelkAPI {
                     doc = doc.withLink(link)
                 }
                 identifier = this.whelk.store(doc)
+                response.setEntity(doc.dataAsString, new MediaType(doc.contentType))
+                response.entity.setTag(new Tag(doc.timestamp as String, false))
                 log.debug("Saved document $identifier")
                 response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                response.setLocationRef(request.getOriginalRef().toString())
+                log.info("Redirecting with location ref " + request.getRootRef().toString() + identifier)
+                response.setLocationRef(request.getRootRef().toString() + "${identifier}")
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
             }
