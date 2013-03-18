@@ -37,8 +37,9 @@ class WhelkImpl extends BasicWhelk {
             throw new WhelkRuntimeException("Document does not belong here.")
         }
         try {
-            log.info("[$prefix] Saving document with identifier $d.identifier")
-            return super.store(d)
+            def identifier = super.store(d)
+            log.info("[$prefix] Saving document with identifier $identifier")
+            return identifier
         } catch (WhelkRuntimeException wre) {
             log.error("Failed to save document ${d.identifier}: " + wre.getMessage())
         }
@@ -80,11 +81,16 @@ class WhelkImpl extends BasicWhelk {
                 }
             }
             if (docs.size() > 0) {
-                log.info "Indexing remaining " + docs.size() + " documents."
                 if (ifc) {
                     docs = ifc.convertBulk(docs)
                 }
-                icomp.index(docs, this.prefix)
+                if (icomp == null) {
+                	log.warn("No index components configured for ${this.prefix} whelk.")
+                	counter = 0
+                } else {
+                	log.info "Indexing remaining " + docs.size() + " documents."
+                	icomp?.index(docs, this.prefix)
+                }
             }
         } finally {
             executor.shutdown()
@@ -253,25 +259,10 @@ class WhelkOperator {
 }
 
 @Log
-class ResourceWhelk extends BasicWhelk {
+class ResourceWhelk extends WhelkImpl {
 
     ResourceWhelk(String prefix) {
         super(prefix)
     }
 
-    static main(args) {
-        def propFile = args[0]
-        def jsonFile = args[1]
-        log.info("Converting properties $propFile to json...")
-        def outjson = [:]
-        def mapper = new ObjectMapper()
-        def properties = new Properties()
-        properties.load(this.getClass().getClassLoader().getResourceAsStream("$propFile"))
-        properties.each { key, value ->
-            outjson[key] = value
-        }
-        def file = new File("$jsonFile").createNewFile()
-        file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
-        log.info("Created $jsonFile")
-    }
 }
