@@ -64,6 +64,14 @@
             }
         },
         {
+            "marcstorage": {
+                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
+                "_params" : "work/marcstorage",
+                "_priority" : 0,
+                "_id" : "marcstorage"
+            }
+        },
+        {
             "marcmassager" : {
                 "_class" : "se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter"
             }

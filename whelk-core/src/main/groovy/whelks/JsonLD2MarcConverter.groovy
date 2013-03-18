@@ -5,7 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter implements FormatConverter {
+class  JsonLD2MarcConverter extends MarcCrackerAndLabelerIndexFormatConverter implements IndexFormatConverter {
 
     String requiredContentType = "application/json"
     static final String RAW_LABEL = "unmapped_jsonld"

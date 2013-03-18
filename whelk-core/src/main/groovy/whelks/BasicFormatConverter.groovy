@@ -17,10 +17,10 @@ abstract class BasicFormatConverter extends BasicPlugin {
         if (doc.contentType == requiredContentType && doc.format == requiredFormat) {
             outdocs.addAll(doConvert(doc))
         } else {
-            outdocs << doc
+            outdocs.add(doc)
         }
         return outdocs
     }
 
-    abstract List<Document> doConvert(Document doc);
+    abstract List<Document> doConvert(Document doc)
 }

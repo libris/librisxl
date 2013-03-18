@@ -37,6 +37,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicFormatConverter imp
             json.remove("unknown")
             doclist << new BasicDocument().withData(mapper.writeValueAsBytes(json)).withFormat("jsonld").withContentType("application/json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
         }
+        log.trace("Extraction results: $doclist")
         return doclist
     }
 }

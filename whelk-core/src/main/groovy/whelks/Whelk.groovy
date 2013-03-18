@@ -48,11 +48,16 @@ class WhelkImpl extends BasicWhelk {
     }
 
     @Override
-    void reindex() {
+    void reindex(fromStorage=null) {
         int counter = 0
-        Storage scomp = components.find { it instanceof Storage }
+        Storage scomp
+        if (fromStorage) {
+            scomp = components.find { it instanceof Storage && it.id == fromStorage }
+        } else {
+            scomp = components.find { it instanceof Storage }
+        }
         Index icomp = components.find { it instanceof Index }
-        IndexFormatConverter ifc = plugins.find { it instanceof IndexFormatConverter }
+        def ifcs = plugins.findAll { it instanceof IndexFormatConverter }
 
         log.info("Using $scomp as storage source for reindex.")
 
@@ -69,8 +74,8 @@ class WhelkImpl extends BasicWhelk {
                     def idocs = new ArrayList<Document>(docs)
                     executor.execute(new Runnable() {
                         public void run() {
-                            if (ifc) {
-                                idocs = ifc.convert(idocs)
+                            for (ifc in ifcs) {
+                                idocs = ifc.convertBulk(idocs)
                             }
                             log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
                             log.info("Indexing "+idocs.size()+" documents ... "+"Whelk prefix: "+this.getPrefix())
@@ -81,7 +86,9 @@ class WhelkImpl extends BasicWhelk {
                 }
             }
             if (docs.size() > 0) {
-                if (ifc) {
+                log.info "Indexing remaining " + docs.size() + " documents."
+                for (ifc in ifcs) {
+                    log.trace("Running converter $ifc")
                     docs = ifc.convertBulk(docs)
                 }
                 if (icomp == null) {
@@ -123,9 +130,78 @@ class WhelkImpl extends BasicWhelk {
 }
 
 @Log
-class CombinedWhelk extends BasicWhelk {
+class NewWhelk extends WhelkImpl {
 
-    String indexes
+    NewWhelk(String pfx) {
+        super(pfx)
+    }
+
+    @Override
+    URI store(Document doc) {
+        if (!doc.identifier || !doc.identifier.toString().startsWith("/"+this.prefix+"/")) {
+            doc.identifier = mintIdentifier(doc)
+        }
+        for (storage in storages) {
+            storage.store(doc, this.prefix)
+        }
+
+        addToIndex(doc)
+        addToQuadStore(doc)
+
+        return doc.identifier
+    }
+
+    private void addToIndex(doc) {
+        log.debug("Adding to indexes")
+        def docs = []
+        for (ifc in getIndexFormatConverters()) {
+            log.trace("Calling indexformatconverter $ifc")
+            docs.addAll(ifc.convert(doc))
+        }
+        if (!docs) {
+            docs.add(doc)
+        }
+        for (d in docs) {
+            for (idx in indexes) {
+                idx.index(d, this.prefix)
+            }
+        }
+    }
+
+    private void addToQuadStore(doc) {}
+
+    @Override
+    Iterable<Document> createDocument(data, metadata) {
+        log.info("Creating document")
+        def doc = new BasicDocument().withData(data)
+        metadata.each { param, value ->
+            log.info("Adding $param = $value")
+            doc = doc."with${param.capitalize()}"(value)
+        }
+        def docs = []
+        for (fc in formatConverters) {
+            log.debug("Running formatconverter $fc")
+            docs.addAll(fc.convert(doc))
+        }
+        if (!docs) {
+            docs.add(doc)
+        }
+        for (lf in linkFinders) {
+            log.debug("Running linkfinder $lf")
+            for (d in docs) {
+                for (link in lf.findLinks(d)) {
+                    d.withLink(link)
+                }
+            }
+        }
+        return docs
+    }
+}
+
+@Log
+class CombinedWhelk extends NewWhelk {
+
+    String idxs
 
     CombinedWhelk(String pfx) {
         super(pfx)
@@ -133,7 +209,7 @@ class CombinedWhelk extends BasicWhelk {
 
     void setPrefixes(List idxs) {
         log.trace("Setting indexes: $idxs")
-        this.indexes = idxs.join(",")
+        this.idxs = idxs.join(",")
     }
 
     @Override
@@ -149,7 +225,7 @@ class CombinedWhelk extends BasicWhelk {
     @Override
     SearchResult query(Query q, String indexType) {
         log.trace("query intercepted: $q, $indexType")
-        return super.query(q, this.indexes, indexType)
+        return super.query(q, this.idxs, indexType)
     }
 }
 
@@ -157,7 +233,7 @@ class CombinedWhelk extends BasicWhelk {
  * Used by the local "mock" whelk setup.
  */
 @Log
-class ReindexOnStartupWhelk extends WhelkImpl {
+class ReindexOnStartupWhelk extends NewWhelk {
 
     ReindexOnStartupWhelk(String pfx) {
         super(pfx)
