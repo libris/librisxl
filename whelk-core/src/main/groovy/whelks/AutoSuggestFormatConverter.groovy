@@ -10,7 +10,7 @@ import java.text.Normalizer
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class AutoSuggestFormatConverter extends BasicFormatConverter implements IndexFormatConverter, WhelkAware {
+class AutoSuggestFormatConverter extends BasicIndexFormatConverter implements IndexFormatConverter, WhelkAware {
 
     Whelk whelk
     Whelk bibwhelk

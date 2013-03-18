@@ -31,5 +31,5 @@ public interface Whelk {
     public void reindex();
 
     // factory methods
-    public Iterable<Document> createDocument(byte[] data, Map<String, Object> metadata);
+    public Document createDocument(byte[] data, Map<String, Object> metadata);
 }

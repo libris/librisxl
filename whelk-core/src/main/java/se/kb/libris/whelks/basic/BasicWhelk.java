@@ -225,7 +225,7 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
     }
 
     @Override
-    public Iterable<Document> createDocument(byte[] data, Map<String, Object> metadata) {
+    public Document createDocument(byte[] data, Map<String, Object> metadata) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

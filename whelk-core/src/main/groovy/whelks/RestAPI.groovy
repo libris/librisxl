@@ -215,7 +215,7 @@ class DocumentRestlet extends BasicWhelkAPI {
         else if (request.method == Method.PUT || request.method == Method.POST) {
             try {
                 def identifier
-                def docs = []
+                Document doc = null
                 def headers = request.attributes.get("org.restlet.http.headers")
                 log.trace("headers: $headers")
                 def format = headers.find { it.name.equalsIgnoreCase("Format") }?.value
@@ -225,13 +225,11 @@ class DocumentRestlet extends BasicWhelkAPI {
                     doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withData(request.entity.stream.getBytes())
                 } else {
                     //doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withFormat(format).withData(request.entityAsText)
-                    docs = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString(),"format":format])
+                    doc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString(),"format":format])
                 }
                 if (link != null) {
                     log.trace("Adding link $link to document...")
-                    for (doc in docs) {
-                        doc = doc.withLink(link)
-                    }
+                    doc = doc.withLink(link)
                 }
                 // Check If-Match
                 def ifMatch = headers.find { it.name.equalsIgnoreCase("If-Match") }?.value
@@ -240,9 +238,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                         && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
                     response.setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
-                    for (doc in docs) {
-                        identifier = this.whelk.store(doc)
-                    }
+                    identifier = this.whelk.store(doc)
                     //response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
                     response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                     response.setLocationRef(request.getOriginalRef().toString())

@@ -66,35 +66,30 @@ class WhelkImpl extends BasicWhelk {
 
     private void addToQuadStore(doc) {}
 
+    @Deprecated
     Document createDocument() {
         return new BasicDocument()
     }
 
     @Override
-    Iterable<Document> createDocument(data, metadata) {
+    Document createDocument(data, metadata) {
         log.info("Creating document")
         def doc = new BasicDocument().withData(data)
         metadata.each { param, value ->
             log.info("Adding $param = $value")
             doc = doc."with${param.capitalize()}"(value)
         }
-        def docs = []
         for (fc in formatConverters) {
             log.debug("Running formatconverter $fc")
-            docs.addAll(fc.convert(doc))
-        }
-        if (!docs) {
-            docs.add(doc)
+            doc = fc.convert(doc)
         }
         for (lf in linkFinders) {
             log.debug("Running linkfinder $lf")
-            for (d in docs) {
-                for (link in lf.findLinks(d)) {
-                    d.withLink(link)
-                }
+            for (link in lf.findLinks(doc)) {
+                doc.withLink(link)
             }
         }
-        return docs
+        return doc
     }
 
     @Override
