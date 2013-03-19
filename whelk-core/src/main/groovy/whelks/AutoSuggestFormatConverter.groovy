@@ -10,7 +10,7 @@ import java.text.Normalizer
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class AutoSuggestFormatConverter extends BasicFormatConverter implements FormatConverter, WhelkAware {
+class AutoSuggestFormatConverter extends BasicIndexFormatConverter implements IndexFormatConverter, WhelkAware {
 
     Whelk whelk
     Whelk bibwhelk
@@ -50,7 +50,8 @@ class AutoSuggestFormatConverter extends BasicFormatConverter implements FormatC
                         docs = []
                     }
                 if (r) {
-                    docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json").withLink(link, "basedOn")
+                    //docs << whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json").withLink(link, "basedOn")
+                    docs << whelk.createDocument(r, ["identifier":identifier,"contentType":"application/json","link":new Link(link, "basedOn")])
                 } else {
                     log.warn "Conversion got no content body for $identifier."
                 }

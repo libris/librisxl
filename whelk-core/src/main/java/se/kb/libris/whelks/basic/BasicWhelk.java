@@ -35,15 +35,17 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
 
     @Override
     public URI store(Document d) {
-        // mint URI if document needs it
+        if (d.getIdentifier() == null || !d.getIdentifier().toString().startsWith("/"+prefix)) {
+            d.setIdentifier(mintIdentifier(d));
+        }
         List<Document> docs = new ArrayList<Document>();
         docs.add(d);
-        store(docs);
+        bulkStore(docs);
         return d.getIdentifier();
     }
 
     @Override
-    public void store(Iterable<Document> docs) {
+    public void bulkStore(Iterable<Document> docs) {
         // Pre storage operations
         for (Document doc : docs) {
             if (doc.getIdentifier() == null || !doc.getIdentifier().toString().startsWith("/"+prefix)) {
@@ -52,6 +54,7 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
             for (Trigger t : getTriggers()) { if (t.isEnabled()) { t.beforeStore(doc); } }
         }
 
+        /*
         for (FormatConverter fc : getFormatConverters()) {
             if (((List)docs).size() > 0 && fc.getRequiredFormat().equals(((Document)((List)docs).get(0)).getFormat())) {
                 List<Document> convertedList = new ArrayList<Document>();
@@ -61,6 +64,7 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
                 docs = convertedList;
             }
         }
+        */
         for (LinkFinder lf : getLinkFinders()) {
             for (Document doc : docs) {
                 for (Link link : lf.findLinks(doc)) {
@@ -221,8 +225,8 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
     }
 
     @Override
-    public Document createDocument() {
-        return new BasicDocument();
+    public Document createDocument(byte[] data, Map<String, Object> metadata) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -250,7 +254,7 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
         return ret;
     }
 
-    private List<LinkFinder> getLinkFinders() {
+    protected List<LinkFinder> getLinkFinders() {
         List<LinkFinder> ret = new LinkedList<LinkFinder>();
 
         for (Plugin plugin: plugins)
@@ -276,6 +280,16 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
         for (Plugin plugin: plugins)
             if (plugin instanceof Storage)
                 ret.add((Storage)plugin);
+
+        return ret;
+    }
+
+    protected Iterable<Index> getIndexes() {
+        TreeSet<Index> ret = new TreeSet<Index>();
+
+        for (Plugin plugin: plugins)
+            if (plugin instanceof Index)
+                ret.add((Index)plugin);
 
         return ret;
     }
@@ -408,7 +422,7 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
     public void notify(URI u) {}
     */
 
-    private URI mintIdentifier(Document d) {
+    protected URI mintIdentifier(Document d) {
         try {
             return new URI("/"+prefix.toString() +"/"+ UUID.randomUUID());
         } catch (URISyntaxException ex) {

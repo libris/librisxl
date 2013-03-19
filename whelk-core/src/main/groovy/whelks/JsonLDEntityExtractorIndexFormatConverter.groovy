@@ -7,7 +7,7 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class JsonLDEntityExtractorIndexFormatConverter extends BasicFormatConverter implements IndexFormatConverter {
+class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverter implements IndexFormatConverter {
 
     String requiredContentType = "application/json"
     String requiredFormat = "jsonld"
@@ -37,6 +37,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicFormatConverter imp
             json.remove("unknown")
             doclist << new BasicDocument().withData(mapper.writeValueAsBytes(json)).withFormat("jsonld").withContentType("application/json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
         }
+        log.trace("Extraction results: $doclist")
         return doclist
     }
 }

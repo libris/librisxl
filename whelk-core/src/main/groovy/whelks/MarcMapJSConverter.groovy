@@ -11,7 +11,7 @@ import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
 
 @Log
-class MarcMapJSConverter extends BasicFormatConverter implements IndexFormatConverter {
+class MarcMapJSConverter extends BasicIndexFormatConverter implements IndexFormatConverter {
 
     String id = this.class.name
     boolean enabled = true

@@ -32,26 +32,77 @@ class WhelkImpl extends BasicWhelk {
         return !d.identifier || d.identifier.toString().startsWith("/"+this.prefix+"/")
     }
 
-    URI store(Document d) {
-        if (! belongsHere(d)) {
-            throw new WhelkRuntimeException("Document does not belong here.")
+    @Override
+    URI store(Document doc) {
+        if (!doc.identifier || !doc.identifier.toString().startsWith("/"+this.prefix+"/")) {
+            doc.identifier = mintIdentifier(doc)
         }
-        try {
-            log.info("[$prefix] Saving document with identifier $d.identifier")
-            return super.store(d)
-        } catch (WhelkRuntimeException wre) {
-            log.error("Failed to save document ${d.identifier}: " + wre.getMessage())
+        for (storage in storages) {
+            storage.store(doc, this.prefix)
         }
 
-        return null
+        addToIndex(doc)
+        addToQuadStore(doc)
+
+        return doc.identifier
+    }
+
+    private void addToIndex(doc) {
+        log.debug("Adding to indexes")
+        def docs = []
+        for (ifc in getIndexFormatConverters()) {
+            log.trace("Calling indexformatconverter $ifc")
+            docs.addAll(ifc.convert(doc))
+        }
+        if (!docs) {
+            docs.add(doc)
+        }
+        for (d in docs) {
+            for (idx in indexes) {
+                idx.index(d, this.prefix)
+            }
+        }
+    }
+
+    private void addToQuadStore(doc) {}
+
+    @Deprecated
+    Document createDocument() {
+        return new BasicDocument()
     }
 
     @Override
-    void reindex() {
+    Document createDocument(data, metadata) {
+        log.info("Creating document")
+        def doc = new BasicDocument().withData(data)
+        metadata.each { param, value ->
+            log.info("Adding $param = $value")
+            doc = doc."with${param.capitalize()}"(value)
+        }
+        for (fc in formatConverters) {
+            log.debug("Running formatconverter $fc")
+            doc = fc.convert(doc)
+        }
+        for (lf in linkFinders) {
+            log.debug("Running linkfinder $lf")
+            for (link in lf.findLinks(doc)) {
+                doc.withLink(link)
+            }
+        }
+        return doc
+    }
+
+    @Override
+    void reindex(fromStorage=null) {
         int counter = 0
-        Storage scomp = components.find { it instanceof Storage }
+        Storage scomp
+        if (fromStorage) {
+            scomp = components.find { it instanceof Storage && it.id == fromStorage }
+        } else {
+            scomp = components.find { it instanceof Storage }
+        }
         Index icomp = components.find { it instanceof Index }
-        IndexFormatConverter ifc = plugins.find { it instanceof IndexFormatConverter }
+        def ifcs = plugins.findAll { it instanceof IndexFormatConverter }
 
         log.info("Using $scomp as storage source for reindex.")
 
@@ -68,8 +119,8 @@ class WhelkImpl extends BasicWhelk {
                     def idocs = new ArrayList<Document>(docs)
                     executor.execute(new Runnable() {
                         public void run() {
-                            if (ifc) {
-                                idocs = ifc.convert(idocs)
+                            for (ifc in ifcs) {
+                                idocs = ifc.convertBulk(idocs)
                             }
                             log.debug("Current pool size: " + executor.getPoolSize() + " current active count " + executor.getActiveCount())
                             log.info("Indexing "+idocs.size()+" documents ... "+"Whelk prefix: "+this.getPrefix())
@@ -81,10 +132,17 @@ class WhelkImpl extends BasicWhelk {
             }
             if (docs.size() > 0) {
                 log.info "Indexing remaining " + docs.size() + " documents."
-                if (ifc) {
+                for (ifc in ifcs) {
+                    log.trace("Running converter $ifc")
                     docs = ifc.convertBulk(docs)
                 }
-                icomp.index(docs, this.prefix)
+                if (icomp == null) {
+                    log.warn("No index components configured for ${this.prefix} whelk.")
+                    counter = 0
+                } else {
+                    log.info "Indexing remaining " + docs.size() + " documents."
+                    icomp?.index(docs, this.prefix)
+                }
             }
         } finally {
             executor.shutdown()
@@ -117,9 +175,9 @@ class WhelkImpl extends BasicWhelk {
 }
 
 @Log
-class CombinedWhelk extends BasicWhelk {
+class CombinedWhelk extends WhelkImpl {
 
-    String indexes
+    String idxs
 
     CombinedWhelk(String pfx) {
         super(pfx)
@@ -127,7 +185,7 @@ class CombinedWhelk extends BasicWhelk {
 
     void setPrefixes(List idxs) {
         log.trace("Setting indexes: $idxs")
-        this.indexes = idxs.join(",")
+        this.idxs = idxs.join(",")
     }
 
     @Override
@@ -143,7 +201,7 @@ class CombinedWhelk extends BasicWhelk {
     @Override
     SearchResult query(Query q, String indexType) {
         log.trace("query intercepted: $q, $indexType")
-        return super.query(q, this.indexes, indexType)
+        return super.query(q, this.idxs, indexType)
     }
 }
 
@@ -253,25 +311,10 @@ class WhelkOperator {
 }
 
 @Log
-class ResourceWhelk extends BasicWhelk {
+class ResourceWhelk extends WhelkImpl {
 
     ResourceWhelk(String prefix) {
         super(prefix)
     }
 
-    static main(args) {
-        def propFile = args[0]
-        def jsonFile = args[1]
-        log.info("Converting properties $propFile to json...")
-        def outjson = [:]
-        def mapper = new ObjectMapper()
-        def properties = new Properties()
-        properties.load(this.getClass().getClassLoader().getResourceAsStream("$propFile"))
-        properties.each { key, value ->
-            outjson[key] = value
-        }
-        def file = new File("$jsonFile").createNewFile()
-        file << mapper.defaultPrettyPrintingWriter().writeValueAsString(outjson).getBytes("utf-8")
-        log.info("Created $jsonFile")
-    }
 }

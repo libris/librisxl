@@ -1,26 +1,24 @@
 package se.kb.libris.whelks.basic
 
 import se.kb.libris.whelks.Document
+import se.kb.libris.whelks.plugin.FormatConverter
 
-abstract class BasicFormatConverter extends BasicPlugin {
+abstract class BasicFormatConverter extends BasicPlugin implements FormatConverter {
 
     List<Document> convertBulk(List<Document> docs) {
         def outdocs = []
         for (doc in docs) {
-            outdocs.addAll(convert(doc))
+            outdocs.add(convert(doc))
         }
         return outdocs
     }
 
-    final List<Document> convert(Document doc) {
-        def outdocs = []
+    final Document convert(Document doc) {
         if (doc.contentType == requiredContentType && doc.format == requiredFormat) {
-            outdocs.addAll(doConvert(doc))
-        } else {
-            outdocs << doc
+            doc = doConvert(doc)
         }
-        return outdocs
+        return doc
     }
 
-    abstract List<Document> doConvert(Document doc);
+    abstract Document doConvert(Document doc)
 }

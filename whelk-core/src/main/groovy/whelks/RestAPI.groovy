@@ -57,6 +57,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
             return "/" + getPathEnd()
         }
     }
+
     @Override
     int compareTo(Plugin p) {
         return (this.getOrder() - p.getOrder());
@@ -76,7 +77,7 @@ class DiscoveryAPI extends BasicWhelkAPI {
 
     @Override
     String getPath() {
-        return "/" + this.whelk.prefix + "/"
+        return "/" + this.whelk.prefix + "/discovery"
     }
 
     @Override
@@ -98,12 +99,72 @@ enum DisplayMode {
 }
 
 @Log
+class RootRouteRestlet extends BasicWhelkAPI {
+
+    String description = "Whelk root routing API"
+
+    RootRouteRestlet(Whelk whelk) {
+        this.whelk = whelk
+    }
+
+    @Override
+    String getPath() {
+        return "/" + this.whelk.prefix + "/"
+    }
+
+    @Override
+    def void handle(Request request, Response response) {
+        def discoveryAPI
+        def documentAPI
+        if (request.method == Method.GET) {
+            discoveryAPI = new DiscoveryAPI(this.whelk)
+            def uri = new URI(discoveryAPI.path)
+            log.info "RootRoute API handling route to ${uri} ..."
+            discoveryAPI.handle(request, response)
+        } else if (request.method == Method.PUT) {
+            documentAPI = new DocumentRestlet(this.whelk)
+            documentAPI.handle(request, response)
+        } else if (request.method == Method.POST) {
+            documentAPI = new DocumentRestlet(this.whelk)
+            try {
+                def identifier
+                Document doc = null
+                def headers = request.attributes.get("org.restlet.http.headers")
+                log.trace("headers: $headers")
+                def format = headers.find { it.name.equalsIgnoreCase("Format") }?.value
+                log.debug("format: $format")
+                log.debug("request: $request")
+                def link = headers.find { it.name.equals("link") }?.value
+                doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withData(request.entity.stream.getBytes())
+                if (link != null) {
+                    log.trace("Adding link $link to document...")
+                    doc = doc.withLink(link)
+                }
+                identifier = this.whelk.store(doc)
+                response.setEntity(doc.dataAsString, new MediaType(doc.contentType))
+                response.entity.setTag(new Tag(doc.timestamp as String, false))
+                log.debug("Saved document $identifier")
+                response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
+                log.info("Redirecting with location ref " + request.getRootRef().toString() + identifier)
+                response.setLocationRef(request.getRootRef().toString() + "${identifier}")
+            } catch (WhelkRuntimeException wre) {
+                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
+            }
+        }
+    }
+}
+
+@Log
 class DocumentRestlet extends BasicWhelkAPI {
 
     def pathEnd = "{identifier}"
     def varPath = true
 
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
+
+    DocumentRestlet(Whelk whelk) {
+        this.whelk = whelk
+    }
 
     def _escape_regex(str) {
         def escaped = new StringBuffer()
@@ -126,6 +187,7 @@ class DocumentRestlet extends BasicWhelkAPI {
     def void handle(Request request, Response response) {
         log.debug("reqattr path: " + request.attributes["identifier"])
         String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["identifier"])
+        log.info "Path: $path"
         def mode = DisplayMode.DOCUMENT
         (path, mode) = determineDisplayMode(path)
         boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
@@ -160,9 +222,10 @@ class DocumentRestlet extends BasicWhelkAPI {
                 log.debug("format: $format")
                 def link = headers.find { it.name.equals("link") }?.value
                 if (path == "/") {
-                    doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withDataAsStream(request.entity.stream)
+                    doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withData(request.entity.stream.getBytes())
                 } else {
-                    doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withFormat(format).withData(request.entityAsText)
+                    //doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withFormat(format).withData(request.entityAsText)
+                    doc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString(),"format":format])
                 }
                 if (link != null) {
                     log.trace("Adding link $link to document...")

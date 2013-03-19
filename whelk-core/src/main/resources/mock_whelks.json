@@ -28,7 +28,7 @@
         {
             "resource":{
                 "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["resourcelist", "marcmap"]
+                "_plugins": ["diskstorage", "document", "resourcelist", "marcmap", "search"]
             }
         }
     ],
@@ -61,6 +61,14 @@
                 "_params" : "work/storage",
                 "_priority" : 0
 
+            }
+        },
+        {
+            "marcstorage": {
+                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
+                "_params" : "work/marcstorage",
+                "_priority" : 0,
+                "_id" : "marcstorage"
             }
         },
         {

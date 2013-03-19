@@ -11,7 +11,7 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatConverter, IndexFormatConverter {
+class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatConverter {
 
     String requiredContentType = "application/json"
     String requiredFormat = "marc21"
@@ -118,7 +118,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         return levels
     }
 
-    List<Document> doConvert(Document doc) {
+    Document doConvert(Document doc) {
         def injson = doc.dataAsJson
         def outjson = ["@id":doc.identifier.toString()]
         def rt = detectRecordType(injson)
@@ -141,7 +141,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             }
         }
 
-        return [new BasicDocument(doc).withData(mapper.writeValueAsBytes(outjson)).withFormat("jsonld")]
+        return new BasicDocument(doc).withData(mapper.writeValueAsBytes(outjson)).withFormat("jsonld")
     }
 
     def detectMissing(code, fjson) {
