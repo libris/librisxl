@@ -795,12 +795,12 @@ class ResourceListRestlet extends BasicWhelkAPI {
         "lang": "langcodes.json",
         "country": "countrycodes.json",
         "nationality": "nationalitycodes.json",
-        "function": "functioncodes.json"
+        "relator": "relatorcodes.json"
     ]
     def lang
     def country
     def nationality
-    def function
+    def relator
     def mapper
 
     ResourceListRestlet() {
@@ -828,7 +828,7 @@ class ResourceListRestlet extends BasicWhelkAPI {
             }
         }
         if (!foundParam) {
-            response.setEntity('{"Error":"Use parameter \"lang=all\", \"country=all\", \"nationality=all\" or \"function=all\"."}', MediaType.APPLICATION_JSON)
+            response.setEntity(/{"Error": "Use parameter \"lang=all\", \"country=all\", \"nationality=all\" or \"relator=all\"."}/, MediaType.APPLICATION_JSON)
         }
     }
 }
