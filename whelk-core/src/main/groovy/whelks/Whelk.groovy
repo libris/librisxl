@@ -226,17 +226,26 @@ class CombinedWhelk extends WhelkImpl {
         } else {
             doc = sanityCheck(doc)
 
+            def usedStorages = []
+
             for (storage in storages) {
                 if (rules.storeByFormat[doc.format] == storage.id) {
                     log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
                     storage.store(doc, this.pfxs)
+                    usedStorages << storage
                 }
             }
 
+            def remainingStorages = new ArrayList(storages)
+            for (us in usedStorages) {
+                remainingStorages.remove(us)
+            }
+            log.trace("Remaining storages : $remainingStorages")
+
             doc = performStorageFormatConversion(doc)
 
-            for (storage in storages) {
-                if (rules.storeByFormat[doc.format] == storage.id) {
+            for (storage in remainingStorages) {
+                if (!rules.storeByFormat[doc.format] || rules.storeByFormat[doc.format] == storage.id) {
                     log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
                     storage.store(doc, this.pfxs)
                 }
@@ -249,11 +258,16 @@ class CombinedWhelk extends WhelkImpl {
         }
     }
 
+    Document createDocument(byte[] data, Map<String, Object> metadata) {
+        return createDocument(new String(data), metadata)
+    }
+
+    @Override
     Document createDocument(data, metadata) {
         log.debug("Creating document")
         def doc = new BasicDocument().withData(data)
         metadata.each { param, value ->
-            log.info("Adding $param = $value")
+            log.trace("Adding $param = $value")
             doc = doc."with${param.capitalize()}"(value)
         }
         return doc
