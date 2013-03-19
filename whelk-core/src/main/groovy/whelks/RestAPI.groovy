@@ -854,7 +854,14 @@ class MarcMapRestlet extends BasicWhelkAPI {
     }
 
     def void handle(Request request, Response response) {
-        response.setEntity(mapper.writeValueAsString(marcmap), MediaType.APPLICATION_JSON)
+        def obj = marcmap
+        def partPath = request.resourceRef.queryAsForm.valuesMap["part"]
+        if (partPath) {
+            for (key in partPath.split(/\./)) {
+                obj = obj[key]
+            }
+        }
+        response.setEntity(mapper.writeValueAsString(obj), MediaType.APPLICATION_JSON)
     }
 }
 
