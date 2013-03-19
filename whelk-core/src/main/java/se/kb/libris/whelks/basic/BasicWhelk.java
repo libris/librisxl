@@ -21,6 +21,7 @@ import se.kb.libris.whelks.persistance.JSONSerialisable;
 */
 import se.kb.libris.whelks.plugin.*;
 
+@Deprecated
 public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
@@ -45,7 +46,7 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
     }
 
     @Override
-    public void bulkStore(Iterable<Document> docs) {
+    public Iterable<URI> bulkStore(Iterable<Document> docs) {
         // Pre storage operations
         for (Document doc : docs) {
             if (doc.getIdentifier() == null || !doc.getIdentifier().toString().startsWith("/"+prefix)) {
@@ -108,6 +109,7 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
                 for (Trigger t : getTriggers()) { if (t.isEnabled()) { t.afterStore(doc); } }
             }
         }
+        return null;
     }
 
     /**

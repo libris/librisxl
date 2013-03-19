@@ -2,8 +2,17 @@
     "_whelks": [
         {
             "bib":{
-                "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
+                "_class" : "se.kb.libris.whelks.CombinedWhelk",
+                "prefixes" : ["bib"],
+                "rules" : {
+                    "storeByFormat" : {
+                        "marc21" : "marcstorage",
+                        "jsonld" : "diskstorage"
+                    },
+                    "dontInitialize" : ["localindex"],
+                    "preferredRetrieveFrom" : "diskstorage"
+                },
+                "_plugins": ["localindex", "diskstorage", "marcstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
             }
         },
         {
@@ -22,6 +31,9 @@
             "suggest":{
                 "_class" : "se.kb.libris.whelks.CombinedWhelk",
                 "prefixes" : ["auth", "bib"],
+                "rules" : {
+                    "dontInitialize" : ["localindex"]
+                },
                 "_plugins": [ "localindex", "search", "document", "autocomplete" ]
             }
         },
@@ -57,18 +69,16 @@
         },
         {
             "diskstorage": {
-                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
+                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
                 "_params" : "work/storage",
                 "_priority" : 0
-
             }
         },
         {
             "marcstorage": {
-                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
+                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
                 "_params" : "work/marcstorage",
-                "_priority" : 0,
-                "_id" : "marcstorage"
+                "_priority" : 0
             }
         },
         {
