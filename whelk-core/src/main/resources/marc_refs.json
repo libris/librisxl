@@ -46,11 +46,11 @@
             "260" : {
                 "about.publisher": {
                     "@type" : "CONSTANT:Organization",
-                    "placeOfPublication" : "a",
-                    "publisherName" : "b",
-                    "dateOfPublication" : "c",
-                    "placeOfManufacture" : "e"
-                }
+                    "name" : "b"
+                },
+                "about.placeOfPublication" : "a",
+                "about.dateOfPublication" : "c",
+                "about.placeOfManufacture" : "e"
             },
             "300" : {
                 "about.extent" : "a",
