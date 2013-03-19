@@ -8,9 +8,10 @@
                     "storeByFormat" : {
                         "marc21" : "marcstorage"
                     },
+                    "dontInitialize" : ["index"],
                     "preferredRetrieveFrom" : "diskstorage"
                 },
-                "_plugins": ["localindex", "diskstorage", "marcstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
+                "_plugins": ["index", "diskstorage", "marcstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
             }
         },
         {
@@ -21,15 +22,24 @@
                     "storeByFormat" : {
                         "marc21" : "marcstorage"
                     },
+                    "dontInitialize" : ["index"],
                     "preferredRetrieveFrom" : "diskstorage"
                 },
-                "_plugins": [ "localindex", "diskstorage", "marcstorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
+                "_plugins": [ "index", "diskstorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
             }
         },
         {
             "hold":{
-                "_class" : "se.kb.libris.whelks.ReindexOnStartupWhelk",
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
+                "_class" : "se.kb.libris.whelks.CombinedWhelk",
+                "prefixes" : ["auth"],
+                "rules" : {
+                    "storeByFormat" : {
+                        "marc21" : "marcstorage"
+                    },
+                    "dontInitialize" : ["index"],
+                    "preferredRetrieveFrom" : "diskstorage"
+                },
+                "_plugins": [ "index", "diskstorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
             }
         },
         {
@@ -37,9 +47,9 @@
                 "_class" : "se.kb.libris.whelks.CombinedWhelk",
                 "prefixes" : ["auth", "bib"],
                 "rules" : {
-                    "dontInitialize" : ["localindex"]
+                    "dontInitialize" : ["index"]
                 },
-                "_plugins": [ "localindex", "search", "document", "autocomplete" ]
+                "_plugins": [ "index", "search", "document", "autocomplete" ]
             }
         },
         {
@@ -73,16 +83,22 @@
             }
         },
         {
+            "index": {
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
+                "_unique" : false
+            }
+        },
+        {
             "diskstorage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : "work/storage",
+                "_params" : "/tmp/whelk_storage",
                 "_priority" : 0
             }
         },
         {
             "marcstorage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : "work/marcstorage",
+                "_params" : "/tmp/whelk_marcstorage",
                 "_priority" : 0
             }
         },

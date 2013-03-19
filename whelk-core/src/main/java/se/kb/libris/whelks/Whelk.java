@@ -8,7 +8,7 @@ import se.kb.libris.whelks.plugin.Plugin;
 public interface Whelk {
     // storage
     public URI store(Document d);
-    public void bulkStore(Iterable<Document> d);
+    public Iterable<URI> bulkStore(Iterable<Document> d);
     public Document get(URI identifier);
     public void delete(URI identifier);
 

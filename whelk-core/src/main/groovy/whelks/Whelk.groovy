@@ -28,15 +28,20 @@ class WhelkImpl extends BasicWhelk {
         super(pfx)
     }
 
-    boolean belongsHere(Document d) {
-        return !d.identifier || d.identifier.toString().startsWith("/"+this.prefix+"/")
+    Document sanityCheck(Document d) {
+        if (!d.identifier) {
+            d.identifier = mintIdentifier(doc)
+        }
+        if (!d.identifier.toString().startsWith("/"+this.prefix+"/")) {
+            throw new WhelkRuntimeException("Document with id ${d.identifier} does not belong in whelk with prefix ${this.prefix}")
+        }
+        return d
     }
 
     @Override
     URI store(Document doc) {
-        if (!doc.identifier || !doc.identifier.toString().startsWith("/"+this.prefix+"/")) {
-            doc.identifier = mintIdentifier(doc)
-        }
+        doc = sanityCheck(doc)
+
         for (storage in storages) {
             storage.store(doc, this.prefix)
         }
@@ -47,7 +52,7 @@ class WhelkImpl extends BasicWhelk {
         return doc.identifier
     }
 
-    private void addToIndex(doc) {
+    void addToIndex(doc) {
         log.debug("Adding to indexes")
         def docs = []
         for (ifc in getIndexFormatConverters()) {
@@ -64,25 +69,30 @@ class WhelkImpl extends BasicWhelk {
         }
     }
 
-    private void addToQuadStore(doc) {}
+    void addToQuadStore(doc) {}
 
     @Deprecated
     Document createDocument() {
         return new BasicDocument()
     }
 
-    @Override
-    Document createDocument(data, metadata) {
-        log.info("Creating document")
-        def doc = new BasicDocument().withData(data)
-        metadata.each { param, value ->
-            log.info("Adding $param = $value")
-            doc = doc."with${param.capitalize()}"(value)
-        }
+    Document performStorageFormatConversion(Document doc) {
         for (fc in formatConverters) {
             log.debug("Running formatconverter $fc")
             doc = fc.convert(doc)
         }
+        return doc
+    }
+
+    @Override
+    Document createDocument(data, metadata) {
+        log.debug("Creating document")
+        def doc = new BasicDocument().withData(data)
+        metadata.each { param, value ->
+            log.debug("Adding $param = $value")
+            doc = doc."with${param.capitalize()}"(value)
+        }
+        performStorageFormatConversion(doc)
         for (lf in linkFinders) {
             log.debug("Running linkfinder $lf")
             for (link in lf.findLinks(doc)) {
@@ -177,31 +187,118 @@ class WhelkImpl extends BasicWhelk {
 @Log
 class CombinedWhelk extends WhelkImpl {
 
-    String idxs
+    String pfxs
+    def rules = [:]
 
     CombinedWhelk(String pfx) {
         super(pfx)
     }
 
-    void setPrefixes(List idxs) {
-        log.trace("Setting indexes: $idxs")
-        this.idxs = idxs.join(",")
+    /**
+     * Set by json configuration via WhelkInitializer.
+     */
+    void setPrefixes(List pfxs) {
+        log.trace("Setting indexes: $pfxs")
+        this.pfxs = pfxs.join(",")
+    }
+
+    void setStorageRules(Map r) {
+        log.trace("Setting storagerules: $rules")
+        this.rules = r
     }
 
     @Override
-    void store(Iterable<Document> docs) {
-        throw new WhelkRuntimeException("CombinedWhelk is not designed for storing documents.")
+    Document get(URI uri) {
+        if (!rules.preferredRetrieveFrom) {
+            log.trace("No preferred storage. Using superclass get().")
+            return super.get(uri)
+        } else {
+            log.trace("Attempting retrieve from ${rules.preferredRetrieveFrom}")
+            return storages.find { it.id == rules.preferredRetrieveFrom }?.get(uri, this.prefix)
+        }
+    }
+
+    @Override
+    URI store(Document doc) {
+        if (!rules.storeByFormat) {
+            log.trace("No direction rules for storing. Using superclass store().")
+            return super.store(doc)
+        } else {
+            doc = sanityCheck(doc)
+
+            def usedStorages = []
+
+            for (storage in storages) {
+                if (rules.storeByFormat[doc.format] == storage.id) {
+                    log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
+                    storage.store(doc, this.pfxs)
+                    usedStorages << storage
+                }
+            }
+
+            def remainingStorages = new ArrayList(storages)
+            for (us in usedStorages) {
+                remainingStorages.remove(us)
+            }
+            log.trace("Remaining storages : $remainingStorages")
+
+            doc = performStorageFormatConversion(doc)
+
+            for (storage in remainingStorages) {
+                if (!rules.storeByFormat[doc.format] || rules.storeByFormat[doc.format] == storage.id) {
+                    log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
+                    storage.store(doc, this.pfxs)
+                }
+            }
+
+            addToIndex(doc)
+            addToQuadStore(doc)
+
+            return doc.identifier
+        }
+    }
+
+    Document createDocument(byte[] data, Map<String, Object> metadata) {
+        return createDocument(new String(data), metadata)
+    }
+
+    @Override
+    Document createDocument(data, metadata) {
+        log.debug("Creating document")
+        def doc = new BasicDocument().withData(data)
+        metadata.each { param, value ->
+            log.trace("Adding $param = $value")
+            doc = doc."with${param.capitalize()}"(value)
+        }
+        return doc
+    }
+
+    @Override
+    Iterable<URI> bulkStore(Iterable<Document> docs) {
+        def list = []
+        for (doc in docs) {
+            list << store(doc)
+        }
+        return list
     }
 
     @Override
     protected void initializePlugins() {
-        log.trace("Combined whelk does not initialize plugins.")
+        for (plugin in plugins) {
+            if (rules.dontInitialize?.contains(plugin.id)) {
+                log.trace("Combined whelk does not initialize plugin ${plugin.id}. The rules says so.")
+            } else {
+                log.trace("[${this.prefix}] Initializing ${plugin.id}")
+                plugin.init(this.prefix)
+            }
+
+        }
     }
 
     @Override
     SearchResult query(Query q, String indexType) {
         log.trace("query intercepted: $q, $indexType")
-        return super.query(q, this.idxs, indexType)
+        return super.query(q, this.pfxs, indexType)
     }
 }
 

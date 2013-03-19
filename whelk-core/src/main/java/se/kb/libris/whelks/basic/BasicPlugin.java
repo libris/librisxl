@@ -15,6 +15,7 @@ public class BasicPlugin implements Plugin {
     public void disable() { this.enabled = false; }
     @Override
     public String getId() { return this.id; }
+    public void setId(String i) { this.id = i; }
     @Override 
     public int getOrder() { return order; }
     public void setOrder(int o) { this.order = o; }
