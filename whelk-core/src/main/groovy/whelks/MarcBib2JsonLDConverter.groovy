@@ -159,5 +159,15 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         log.debug("map subject out: $out")
         return out
     }
-}
 
+    static main(args) {
+        def converter = new MarcBib2JsonLDConverter("bib")
+        def mapper = converter.mapper
+        def injson = new File(args[0]).withInputStream { mapper.readValue(it, Map) }
+        def identifier = null
+        def outjson = converter.convertJson(injson, identifier)
+        println mapper.defaultPrettyPrintingWriter().
+                writeValueAsString(outjson)
+    }
+
+}
