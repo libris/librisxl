@@ -2,7 +2,7 @@
     "_whelks": [
         {
             "bib":{
-                "_plugins": ["index", "diskstorage", "marcstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
+                "_plugins": ["index", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
             }
         },
         {
@@ -48,15 +48,8 @@
             }
         },
         {
-            "localindex": {
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
-                "_params" : "work/data",
-                "_unique" : false
-            }
-        },
-        {
             "index": {
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
                 "_unique" : false
             }
         },
@@ -64,13 +57,6 @@
             "diskstorage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
                 "_params" : "/tmp/whelk_storage",
-                "_priority" : 0
-            }
-        },
-        {
-            "marcstorage": {
-                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : "/tmp/whelk_marcstorage",
                 "_priority" : 0
             }
         },
@@ -135,12 +121,6 @@
                             }
             }
         },
-        {
-            "suggestformatconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter",
-                "_params" : "_whelk:bib"
-            }
-        }, 
         {
             "biblistener" : {
                 "_class" : "se.kb.libris.whelks.plugin.Listener",

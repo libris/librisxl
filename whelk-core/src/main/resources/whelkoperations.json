@@ -41,7 +41,7 @@
                 },
                 "_plugins": [ "index", "diskstorage", "marcstorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
             }
-        },
+        }
     ],
     "_plugins": [
         {
