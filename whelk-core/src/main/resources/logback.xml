@@ -26,21 +26,16 @@
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
-  -->
 
- <!-- <logger name="org.elasticsearch">
+  <logger name="org.elasticsearch">
       <level value="warn"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.plugin.MarcAuth2JsonLDConverter">
       <level value="trace"/>
   </logger>
-  -->
-  <!--
   <logger name="se.kb.libris.whelks.plugin.BasicMarc2JsonLDConverter">
       <level value="debug"/>
   </logger>
@@ -49,29 +44,25 @@
   </logger>
   <logger name="se.kb.libris.conch">
       <level value="debug"/>
-  </logger>-->
-  <!--
+  </logger>
   <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
       <level value="trace"/>
   </logger>
        <logger name="se.kb.libris.whelks.imports.BatchImport">
       <level value="debug"/>
-  </logger>-->
-  <!--
+  </logger>
   <logger name="se.kb.libris.whelks.plugin.JsonLD2MarcConverter">
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter">
       <level value="trace"/>
   </logger>
-  -->
-  <!--<logger name="se.kb.libris.whelks.plugin">
+  <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
-  </logger>-->
- <!-- <logger name="se.kb.libris.whelks.component">
+  </logger>
+  <logger name="se.kb.libris.whelks.component">
       <level value="trace"/>
-  </logger>-->
-  <!--
+  </logger>
   <logger name="se.kb.libris.whelks.api">
       <level value="trace"/>
   </logger>
@@ -84,7 +75,6 @@
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.WhelkImpl">
       <level value="trace"/>
   </logger>
@@ -94,13 +84,13 @@
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="debug"/>
   </logger>
-  <!--
  <logger name="se.kb.libris.whelks.api.AutoComplete">
       <level value="debug"/>
   </logger>
  <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
       <level value="trace"/>
-  </logger>-->
+  </logger>
+  -->
 
   <!--
   <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">

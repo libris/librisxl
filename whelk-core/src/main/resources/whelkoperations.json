@@ -84,7 +84,7 @@
         },
         {
             "index": {
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
                 "_unique" : false
             }
         },

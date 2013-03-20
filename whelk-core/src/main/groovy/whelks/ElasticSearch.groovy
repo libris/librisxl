@@ -495,9 +495,9 @@ class ElasticSearchClient extends ElasticSearch {
         if (System.getProperty("elastic.host")) {
             elastichost = System.getProperty("elastic.host")
             elasticcluster = System.getProperty("elastic.cluster")
-            log.debug "Connecting to $elastichost:9300"
+            log.info "Connecting to $elastichost:9300 using cluster $elasticcluster"
             def sb = ImmutableSettings.settingsBuilder()
-            .put("client.transport.ping_timeout", 30)
+            .put("client.transport.ping_timeout", 30000)
             .put("client.transport.sniff", true)
             if (elasticcluster) {
                 sb = sb.put("cluster.name", elasticcluster)

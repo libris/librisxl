@@ -149,8 +149,12 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
                 def (maincode, restcode) = subjectcode.split(/\s+/, 2)
                 subjectcode = maincode+"/"+URLEncoder.encode(restcode)
             } else {
-                if (marcref.get(RTYPE).subjects.get("sab")?.containsKey(subjectcode)) {
-                    out = ["@id":new String(marcref.get(RTYPE).subjects[system][subjectcode])]
+                //if (marcref.get(RTYPE).subjects.get("sab")?.containsKey(subjectcode)) {
+                if (marcref.get(RTYPE).subjects.get(system)?.containsKey(subjectcode)) {
+                    def subjId = marcref.get(RTYPE)?.get(subjects).get(system)?.get(subjectcode)
+                    if (subjId) {
+                        out = ["@id":new String(subjId)]
+                    }
                 }
                 subjectcode = URLEncoder.encode(subjectcode)
             }

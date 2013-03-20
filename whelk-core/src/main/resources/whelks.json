@@ -2,57 +2,132 @@
     "_whelks": [
         {
             "bib":{
-                "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["bundledIndex", "storage", "search", "kitinsearch", "document", "marcmassager"]
+                "_class" : "se.kb.libris.whelks.CombinedWhelk",
+                "prefixes" : ["bib"],
+                "rules" : {
+                    "storeByFormat" : {
+                        "marc21" : "marcstorage"
+                    },
+                    "dontInitialize" : ["index"],
+                    "preferredRetrieveFrom" : "diskstorage"
+                },
+                "_plugins": ["index", "diskstorage", "marcstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
             }
         },
         {
             "auth":{
-                "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": [ "bundledIndex", "storage", "search", "document", "marcmassager" ]
+                "_class" : "se.kb.libris.whelks.CombinedWhelk",
+                "prefixes" : ["auth"],
+                "rules" : {
+                    "storeByFormat" : {
+                        "marc21" : "marcstorage"
+                    },
+                    "dontInitialize" : ["index"],
+                    "preferredRetrieveFrom" : "diskstorage"
+                },
+                "_plugins": [ "index", "diskstorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
+            }
+        },
+        {
+            "hold":{
+                "_class" : "se.kb.libris.whelks.CombinedWhelk",
+                "prefixes" : ["auth"],
+                "rules" : {
+                    "storeByFormat" : {
+                        "marc21" : "marcstorage"
+                    },
+                    "dontInitialize" : ["index"],
+                    "preferredRetrieveFrom" : "diskstorage"
+                },
+                "_plugins": [ "index", "diskstorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
             }
         },
         {
             "suggest":{
-                "_plugins": [ "bundledIndex", "search", "document", "autocomplete"]
-            }
-        }
-    ], 
-        "_plugins": [
-        {
-            "bundledIndex": {
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchNode"
-            }
-        }, 
-        {
-            "index": {
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndexHistory"
-            }
-        }, 
-        {
-            "indexstorage": {
-                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientStorageIndexHistory",
-                "_priority" : 2
-            }
-        }, 
-        {
-            "storage": {
-                "_class" : "se.kb.libris.whelks.component.DiskStorage",
-                "_params" : "/tmp/whelk_storage",
-                "_priority" : 1
-
+                "_class" : "se.kb.libris.whelks.CombinedWhelk",
+                "prefixes" : ["auth", "bib"],
+                "rules" : {
+                    "dontInitialize" : ["index"]
+                },
+                "_plugins": [ "index", "search", "document", "autocomplete" ]
             }
         },
         {
-            "riakstorage" : {
-                "_class" : "se.kb.libris.whelks.component.RiakStorage",
-                "_params" : "_whelkname",
+            "resource":{
+                "_class" : "se.kb.libris.whelks.WhelkImpl",
+                "_plugins": ["diskstorage", "document", "resourcelist", "marcmap", "search"]
+            }
+        }
+    ],
+    "_plugins": [
+        {
+            "metasearch": {
+                "_class": "se.kb.libris.whelks.api.MetadataSearchRestlet"
+            }
+        },
+        {
+            "resourcelist": {
+                "_class": "se.kb.libris.whelks.api.ResourceListRestlet"
+            }
+        },
+        {
+            "marcmap": {
+                "_class": "se.kb.libris.whelks.api.MarcMapRestlet"
+            }
+        },
+        {
+            "localindex": {
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
+                "_params" : "work/data",
+                "_unique" : false
+            }
+        },
+        {
+            "index": {
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
+                "_unique" : false
+            }
+        },
+        {
+            "diskstorage": {
+                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
+                "_params" : "/tmp/whelk_storage",
+                "_priority" : 0
+            }
+        },
+        {
+            "marcstorage": {
+                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
+                "_params" : "/tmp/whelk_marcstorage",
                 "_priority" : 0
             }
         },
         {
             "marcmassager" : {
                 "_class" : "se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter"
+            }
+        },
+        {
+            "bibmarcconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.MarcBib2JsonLDConverter",
+                "_params" : "bib"
+            }
+        },
+        {
+            "holdmarcconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter",
+                "_params" : "hold"
+            }
+        },
+        {
+            "authmarcconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.MarcAuth2JsonLDConverter",
+                "_params" : "auth"
+            }
+        },
+        {
+            "entityextractor" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
             }
         },
         {
@@ -74,7 +149,18 @@
         {
             "autocomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
-                "_params" : ["100.a", "400.a", "500.a"]
+                "_params" : {"queryFields":[
+                              "authoritativeName",
+                              "label"
+                            ],
+                            "infoFields":[
+                              "birthYear",
+                              "deathYear",
+                              "authorOf",
+                              "hasAnnotation.about"
+                            ],
+                            "indexTypes":"Person"
+                            }
             }
         },
         {
@@ -93,6 +179,11 @@
             "authlistener" : {
                 "_class" : "se.kb.libris.whelks.plugin.Listener",
                 "_params" : "_whelk:auth"
+            }
+        },
+        {
+            "jsonldlinkfinder" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkFinder"
             }
         }
     ]

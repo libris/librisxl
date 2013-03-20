@@ -216,8 +216,8 @@ class Harvester implements Runnable {
             log.warn("Failed to parse record \"$mdrecord\": ${ioe.message}.")
             return OAIPMH.ListRecords.resumptionToken
         } catch (Exception e) {
-            log.warn("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
-            log.warn(e.printStackTrace())
+            log.trace("Failed to parse XML document \"${xmlString}\": ${e.message}. Trying to extract resumptionToken and continue. ($url)")
+            log.error("Failed to parse XML document: ${e.message}. Trying to extract resumptionToken and continue. ($url)", e)
             xmlfailed++
             return findResumptionToken(xmlString)
         } finally {
@@ -227,7 +227,7 @@ class Harvester implements Runnable {
                             importedCount.addAndGet(documents.size())
                             float elapsed = ((System.currentTimeMillis() - startTime) / 1000)
                             log.info("Storing " + documents.size() + ". Imported $importedCount documents in $elapsed seconds sofar. That's " + importedCount/elapsed + " docs per sec.")
-                            whelk.store(documents)
+                            whelk.bulkStore(documents)
                         }
                     })
             } else log.debug("Harvest on $url resulted in no documents. xmlstring: ${xmlString}")
