@@ -75,9 +75,11 @@
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger>
+  -->
   <logger name="se.kb.libris.whelks.WhelkImpl">
       <level value="trace"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.CombinedWhelk">
       <level value="trace"/>
   </logger>

@@ -71,11 +71,6 @@ class WhelkImpl extends BasicWhelk {
 
     void addToQuadStore(doc) {}
 
-    @Deprecated
-    Document createDocument() {
-        return new BasicDocument()
-    }
-
     Document performStorageFormatConversion(Document doc) {
         for (fc in formatConverters) {
             log.debug("Running formatconverter $fc")
@@ -92,7 +87,7 @@ class WhelkImpl extends BasicWhelk {
             log.debug("Adding $param = $value")
             doc = doc."with${param.capitalize()}"(value)
         }
-        performStorageFormatConversion(doc)
+        doc = performStorageFormatConversion(doc)
         for (lf in linkFinders) {
             log.debug("Running linkfinder $lf")
             for (link in lf.findLinks(doc)) {

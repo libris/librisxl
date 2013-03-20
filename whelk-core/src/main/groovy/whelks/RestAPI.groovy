@@ -226,6 +226,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 } else {
                     //doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withFormat(format).withData(request.entityAsText)
                     doc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString(),"format":format])
+                    log.info("Created document: ${doc.dataAsJson}")
                 }
                 if (link != null) {
                     log.trace("Adding link $link to document...")
