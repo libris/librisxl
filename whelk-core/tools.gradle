@@ -26,7 +26,7 @@ task reindexData(dependsOn: 'classes', type: JavaExec) {
 */
 
 task whelkOperation(dependsOn: 'classes', type: JavaExec) {
-  description "Run import or reindex. (USAGE: -Dargs='<import|reindex> <whelkname> <config-url> [resource (for import)] [since (for import)] [maxNoOfDocs (for import)]' -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
+  description "Run import or reindex. (USAGE: -Dargs='<import|reindex|rebuild> <whelkname> <config-url> [resource (for import) or sourcestorage (for rebuild)] [since (for import)] [maxNoOfDocs (for import)]' -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
   classpath = sourceSets.main.runtimeClasspath
   main = 'se.kb.libris.whelks.WhelkOperator'
   systemProperty 'elastic.host', System.getProperty('elastic.host', "")

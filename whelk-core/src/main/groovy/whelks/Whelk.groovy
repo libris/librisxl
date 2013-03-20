@@ -297,6 +297,22 @@ class CombinedWhelk extends WhelkImpl {
         log.trace("query intercepted: $q, $indexType")
         return super.query(q, this.pfxs, indexType)
     }
+
+    // Maintenance
+    void rebuild(from) {
+        def sourceStorage = storages.find { it.id == from }
+        if (!sourceStorage) {
+            throw new WhelkRuntimeException("Cannot rebuild from storage $from. No such storage found.")
+        }
+        int counter = 0
+        for (doc in sourceStorage.getAll(this.prefix)) {
+            if (++counter % 1000 == 0) {
+                log.info("Rebuilt $counter records.")
+            }
+            this.store(doc)
+        }
+        log.info("Rebuilt $counter records.")
+    }
 }
 
 /**
@@ -335,6 +351,9 @@ class Tool {
 class WhelkOperator {
 
     static main(args) {
+        if (args.length > 2) {
+            println "WhelkOperator doing ${args[0]} on ${args[1]}. Configuring from ${args[2]}."
+        }
         def operation = (args.length > 0 ? args[0] : null)
         def whelk = (args.length > 2 ? (new WhelkInitializer(new URI(args[2]).toURL().newInputStream()).getWhelks().find { it.prefix == args[1] }) : null)
         def resource = (args.length > 3 ? args[3] : whelk?.prefix)
@@ -356,6 +375,12 @@ class WhelkOperator {
             } else {
                 whelk.reindex()
                 println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
+            }
+        } else if (operation == "rebuild") {
+            try {
+                whelk.rebuild(resource)
+            } catch (groovy.lang.MissingMethodException me) {
+                log.error("Rebuild can only be performed on CombinedWhelks.")
             }
         } else if (operation == "populate" || operation == "rebalance") {
             def target = (args.length > 2 ? (new WhelkInitializer(new URI(args[2]).toURL().newInputStream()).getWhelks().find { it.prefix == resource }) : null)

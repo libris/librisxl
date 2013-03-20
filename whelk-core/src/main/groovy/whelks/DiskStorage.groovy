@@ -170,11 +170,11 @@ class FlatDiskStorage extends DiskStorage {
 /*
  * Utility classes.
  */
+@Log
 class DiskDocumentIterable implements Iterable<Document> {
     File baseDirectory
     DiskDocumentIterable(File bd) {
         this.baseDirectory = bd
-
     }
 
     Iterator<Document> iterator() {
