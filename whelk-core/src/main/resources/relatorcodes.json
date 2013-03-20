@@ -1,0 +1,1336 @@
+[
+  {
+    "code": "acp",
+    "term": "artCopyist",
+    "label_en": "Art copyist",
+    "label_sv": "Konstkopist"
+  },
+  {
+    "code": "act",
+    "term": "actor",
+    "label_en": "Actor",
+    "label_sv": "Skådespelare"
+  },
+  {
+    "code": "adp",
+    "term": "adapter",
+    "label_en": "Adapter",
+    "label_sv": "Bearbetare"
+  },
+  {
+    "code": "aft",
+    "term": "authorOfAfterwordColophonEtc",
+    "label_en": "Author of afterword, colophon, etc.",
+    "label_sv": "Författare till efterskrift, kolofon, etc."
+  },
+  {
+    "code": "anl",
+    "term": "analyst",
+    "label_en": "Analyst",
+    "label_sv": "Analytiker"
+  },
+  {
+    "code": "anm",
+    "term": "animator",
+    "label_en": "Animator",
+    "label_sv": "Animatör"
+  },
+  {
+    "code": "ann",
+    "term": "annotator",
+    "label_en": "Annotator",
+    "label_sv": "Författare till annotation"
+  },
+  {
+    "code": "ant",
+    "term": "bibliographicAntecedent",
+    "label_en": "Bibliographic antecedent",
+    "label_sv": "Bibliografisk föregångare (baserat på)"
+  },
+  {
+    "code": "app",
+    "term": "applicant",
+    "label_en": "Applicant",
+    "label_sv": "Sökande"
+  },
+  {
+    "code": "aqt",
+    "term": "authorInQuotationsOrTextAbstracts",
+    "label_en": "Author in quotations or text abstracts",
+    "label_sv": "Författare till citat eller textutdrag"
+  },
+  {
+    "code": "arc",
+    "term": "architect",
+    "label_en": "Architect",
+    "label_sv": "Arkitekt"
+  },
+  {
+    "code": "ard",
+    "term": "artisticDirector",
+    "label_en": "Artistic director",
+    "label_sv": "Art Director"
+  },
+  {
+    "code": "arr",
+    "term": "arranger",
+    "label_en": "Arranger",
+    "label_sv": "Arrangör av musikalisk komposition"
+  },
+  {
+    "code": "art",
+    "term": "artist",
+    "label_en": "Artist",
+    "label_sv": "Konstnär"
+  },
+  {
+    "code": "asg",
+    "term": "assignee",
+    "label_en": "Assignee",
+    "label_sv": "Innehavare av tryckeri- eller utgivarlicens"
+  },
+  {
+    "code": "asn",
+    "term": "associatedName",
+    "label_en": "Associated name",
+    "label_sv": "Associerat namn"
+  },
+  {
+    "code": "att",
+    "term": "attributedName",
+    "label_en": "Attributed name",
+    "label_sv": "Attribuerat/tillskrivet namn"
+  },
+  {
+    "code": "auc",
+    "term": "auctioneer",
+    "label_en": "Auctioneer",
+    "label_sv": "Auktionsförrättare"
+  },
+  {
+    "code": "aud",
+    "term": "authorOfDialog",
+    "label_en": "Author of dialog",
+    "label_sv": "Författare till dialog"
+  },
+  {
+    "code": "aui",
+    "term": "authorOfIntroduction",
+    "label_en": "Author of introduction",
+    "label_sv": "Författare till förord, introducerande material, etc."
+  },
+  {
+    "code": "aus",
+    "term": "authorOfScreenplay",
+    "label_en": "Author of screenplay",
+    "label_sv": "Författare till filmmanus, etc."
+  },
+  {
+    "code": "aut",
+    "term": "author",
+    "label_en": "Author",
+    "label_sv": "Författare, medförfattare"
+  },
+  {
+    "code": "bdd",
+    "term": "bindingDesigner",
+    "label_en": "Binding designer",
+    "label_sv": "Formgivare av bokband"
+  },
+  {
+    "code": "bjd",
+    "term": "bookjacketDesigner",
+    "label_en": "Bookjacket designer",
+    "label_sv": "Formgivare av skyddsomslag till böcker"
+  },
+  {
+    "code": "bkd",
+    "term": "bookDesigner",
+    "label_en": "Book designer",
+    "label_sv": "Formgivare av bok"
+  },
+  {
+    "code": "bkp",
+    "term": "bookProducer",
+    "label_en": "Book producer",
+    "label_sv": "Producent av böcker etc."
+  },
+  {
+    "code": "blw",
+    "term": "blurbWriter",
+    "label_en": "Blurb writer",
+    "label_sv": "Förlags-/reklamtext"
+  },
+  {
+    "code": "bnd",
+    "term": "binder",
+    "label_en": "Binder",
+    "label_sv": "Bokbindare"
+  },
+  {
+    "code": "bpd",
+    "term": "bookplateDesigner",
+    "label_en": "Bookplate designer",
+    "label_sv": "Formgivare av exlibris (bokägarmärke)"
+  },
+  {
+    "code": "bsl",
+    "term": "bookseller",
+    "label_en": "Bookseller",
+    "label_sv": "Bokhandlare"
+  },
+  {
+    "code": "ccp",
+    "term": "conceptor",
+    "label_en": "Conceptor",
+    "label_sv": "Idé, koncept"
+  },
+  {
+    "code": "chr",
+    "term": "choreographer",
+    "label_en": "Choreographer",
+    "label_sv": "Koreograf"
+  },
+  {
+    "code": "clb",
+    "term": "collaborator",
+    "label_en": "Collaborator",
+    "label_sv": "Redaktionell medarbetare"
+  },
+  {
+    "code": "cli",
+    "term": "client",
+    "label_en": "Client",
+    "label_sv": "Klient"
+  },
+  {
+    "code": "cll",
+    "term": "calligrapher",
+    "label_en": "Calligrapher",
+    "label_sv": "Kalligraf"
+  },
+  {
+    "code": "clr",
+    "term": "colorist",
+    "label_en": "Colorist",
+    "label_sv": "Färg"
+  },
+  {
+    "code": "clt",
+    "term": "collotyper",
+    "label_en": "Collotyper",
+    "label_sv": "Framställare av ljustryck"
+  },
+  {
+    "code": "cmm",
+    "term": "commentator",
+    "label_en": "Commentator",
+    "label_sv": "Kommentator till audiovisuella medier"
+  },
+  {
+    "code": "cmp",
+    "term": "composer",
+    "label_en": "Composer",
+    "label_sv": "Kompositör, tonsättare"
+  },
+  {
+    "code": "cmt",
+    "term": "compositor",
+    "label_en": "Compositor",
+    "label_sv": "Sättare"
+  },
+  {
+    "code": "cnd",
+    "term": "conductor",
+    "label_en": "Conductor",
+    "label_sv": "Dirigent"
+  },
+  {
+    "code": "cng",
+    "term": "cinematographer",
+    "label_en": "Cinematographer",
+    "label_sv": "Filmfotograf"
+  },
+  {
+    "code": "cns",
+    "term": "censor",
+    "label_en": "Censor",
+    "label_sv": "Censor"
+  },
+  {
+    "code": "coe",
+    "term": "contestantAppellee",
+    "label_en": "Contestant -appellee",
+    "label_sv": "[Contestant-appellee: juridisk term ung. motsvarande Åklagare]"
+  },
+  {
+    "code": "col",
+    "term": ",Etc",
+    "label_en": ", etc.",
+    "label_sv": "Samlare"
+  },
+  {
+    "code": "com",
+    "term": "compiler",
+    "label_en": "Compiler",
+    "label_sv": "Sammanställare"
+  },
+  {
+    "code": "con",
+    "term": "conservator",
+    "label_en": "Conservator",
+    "label_sv": "Konservator"
+  },
+  {
+    "code": "cos",
+    "term": "contestant",
+    "label_en": "Contestant",
+    "label_sv": "[Contestant: juridisk term ung. motsvarande Åklagare]"
+  },
+  {
+    "code": "cot",
+    "term": "contestantAppellant",
+    "label_en": "Contestant -appellant",
+    "label_sv": "[Contestant-appellant: juridisk term ung. motsvarande Åklagare]"
+  },
+  {
+    "code": "cov",
+    "term": "coverDesigner",
+    "label_en": "Cover designer",
+    "label_sv": "Formgivare av omslag, etc."
+  },
+  {
+    "code": "cpc",
+    "term": "copyrightClaimant",
+    "label_en": "Copyright claimant",
+    "label_sv": "Upphovsrättssökande"
+  },
+  {
+    "code": "cpe",
+    "term": "complainantAppellee",
+    "label_en": "Complainant-appellee",
+    "label_sv": "[Complainant-appellee: juridisk term ung. motsvarande Kärande, Målsägande]"
+  },
+  {
+    "code": "cph",
+    "term": "copyrightHolder",
+    "label_en": "Copyright holder",
+    "label_sv": "Upphovsrättsinnehavare"
+  },
+  {
+    "code": "cpl",
+    "term": "complainant",
+    "label_en": "Complainant",
+    "label_sv": "[Complainant: juridisk term ung. motsvarande Kärande, Målsägande]"
+  },
+  {
+    "code": "cpt",
+    "term": "complainantAppellant",
+    "label_en": "Complainant-appellant",
+    "label_sv": "[Complainant-appellant: juridisk term ung. motsvarande Kärande, Målsägande]"
+  },
+  {
+    "code": "cre",
+    "term": "autAuthor",
+    "label_en": "aut Author",
+    "label_sv": "Upphov (creator)"
+  },
+  {
+    "code": "crp",
+    "term": "correspondent",
+    "label_en": "Correspondent",
+    "label_sv": "Brevskrivare, mottagare av brev"
+  },
+  {
+    "code": "crr",
+    "term": "corrector",
+    "label_en": "Corrector",
+    "label_sv": "Korrekturläsare av handskrift"
+  },
+  {
+    "code": "csl",
+    "term": "consultant",
+    "label_en": "Consultant",
+    "label_sv": "Konsult"
+  },
+  {
+    "code": "csp",
+    "term": "consultantToAProject",
+    "label_en": "Consultant to a project",
+    "label_sv": "Projektkonsult"
+  },
+  {
+    "code": "cst",
+    "term": "costumeDesigner",
+    "label_en": "Costume designer",
+    "label_sv": "Kostym"
+  },
+  {
+    "code": "ctb",
+    "term": "contributor",
+    "label_en": "Contributor",
+    "label_sv": "Bidragsgivare"
+  },
+  {
+    "code": "cte",
+    "term": "contesteeAppellee",
+    "label_en": "Contestee-appellee",
+    "label_sv": "[Contestee-appellant: juridisk term ung. motsvarande Försvarare]"
+  },
+  {
+    "code": "ctg",
+    "term": "cartographer",
+    "label_en": "Cartographer",
+    "label_sv": "Kartograf Cartographer"
+  },
+  {
+    "code": "ctr",
+    "term": "contractor",
+    "label_en": "Contractor",
+    "label_sv": "Entreprenör, leverantör Contractor"
+  },
+  {
+    "code": "cts",
+    "term": "arcArchitect",
+    "label_en": "arc Architect",
+    "label_sv": "[juridisk term ung. motsvarande Försvarare] Contestee"
+  },
+  {
+    "code": "ctt",
+    "term": "contesteeAppellant",
+    "label_en": "Contestee-appellant",
+    "label_sv": "[juridisk term ung. motsvarande Försvarare]"
+  },
+  {
+    "code": "cur",
+    "term": "curator",
+    "label_en": "Curator",
+    "label_sv": "Utställningsansvarig, utställningskommissarie"
+  },
+  {
+    "code": "cwt",
+    "term": "commentatorForWrittenText",
+    "label_en": "Commentator for written text",
+    "label_sv": "Författare till textkommentar"
+  },
+  {
+    "code": "dbp",
+    "label_sv": "Distributionsort"
+  },
+  {
+    "code": "dfd",
+    "term": "defendant",
+    "label_en": "Defendant",
+    "label_sv": "[Defendant: juridisk term ung. motsvarande Svarande, Tilltalad]"
+  },
+  {
+    "code": "dfe",
+    "term": "defendantAppellee",
+    "label_en": "Defendant-appellee",
+    "label_sv": "[Defendant-appellee: juridisk term ung. motsvarande Svarande, Tilltalad]"
+  },
+  {
+    "code": "dft",
+    "term": "defendantAppellant",
+    "label_en": "Defendant-appellant",
+    "label_sv": "[Defendant-appellant: juridisk term ung. motsvarande Svarande, Tilltalad]"
+  },
+  {
+    "code": "dgg",
+    "term": "degreeGrantor",
+    "label_en": "Degree grantor",
+    "label_sv": "Utfärdare av akademisk examen"
+  },
+  {
+    "code": "dis",
+    "term": "dissertant",
+    "label_en": "Dissertant",
+    "label_sv": "Respondent"
+  },
+  {
+    "code": "dln",
+    "term": "delineator",
+    "label_en": "Delineator",
+    "label_sv": "Teknisk ritare"
+  },
+  {
+    "code": "dnc",
+    "term": "dancer",
+    "label_en": "Dancer",
+    "label_sv": "Dansare"
+  },
+  {
+    "code": "dnr",
+    "term": "donor",
+    "label_en": "Donor",
+    "label_sv": "Donator"
+  },
+  {
+    "code": "dpc",
+    "term": "depicted",
+    "label_en": "Depicted",
+    "label_sv": "Avbildad"
+  },
+  {
+    "code": "dpt",
+    "term": "depositor",
+    "label_en": "Depositor",
+    "label_sv": "Deponerat av"
+  },
+  {
+    "code": "drm",
+    "term": "draftsman",
+    "label_en": "Draftsman",
+    "label_sv": "Ritare, tecknare"
+  },
+  {
+    "code": "drt",
+    "term": "director",
+    "label_en": "Director",
+    "label_sv": "Regissör"
+  },
+  {
+    "code": "dsr",
+    "term": "designer",
+    "label_en": "Designer",
+    "label_sv": "Formgivare"
+  },
+  {
+    "code": "dst",
+    "term": "distributor",
+    "label_en": "Distributor",
+    "label_sv": "Distributör"
+  },
+  {
+    "code": "dtc",
+    "term": "dataContributor",
+    "label_en": "Data contributor",
+    "label_sv": "Katalog- eller metadatakälla"
+  },
+  {
+    "code": "dte",
+    "term": "dedicatee",
+    "label_en": "Dedicatee",
+    "label_sv": "Dedicerat till"
+  },
+  {
+    "code": "dtm",
+    "term": "dataManager",
+    "label_en": "Data manager",
+    "label_sv": "Katalog- eller metadataansvarig"
+  },
+  {
+    "code": "dto",
+    "term": "dedicator",
+    "label_en": "Dedicator",
+    "label_sv": "Författare till dedikation"
+  },
+  {
+    "code": "dub",
+    "term": "dubiousAuthor",
+    "label_en": "Dubious author",
+    "label_sv": "Författare (tvivelaktig)"
+  },
+  {
+    "code": "edt",
+    "term": "editor",
+    "label_en": "Editor",
+    "label_sv": "Utgivare, redaktör, sammanställare"
+  },
+  {
+    "code": "egr",
+    "term": "grantor",
+    "label_en": "grantor",
+    "label_sv": "Gravör"
+  },
+  {
+    "code": "elg",
+    "term": "electrician",
+    "label_en": "Electrician",
+    "label_sv": "Elektriker"
+  },
+  {
+    "code": "elt",
+    "term": "electrotyper",
+    "label_en": "Electrotyper",
+    "label_sv": "Framställare av elektrotyper"
+  },
+  {
+    "code": "eng",
+    "term": "engineer",
+    "label_en": "Engineer",
+    "label_sv": "Ingenjör"
+  },
+  {
+    "code": "etr",
+    "term": "etcher",
+    "label_en": "Etcher",
+    "label_sv": "Etsare"
+  },
+  {
+    "code": "evp",
+    "term": "eventPlace",
+    "label_en": "Event place",
+    "label_sv": "Plats/ort för händelse"
+  },
+  {
+    "code": "exp",
+    "term": "expert",
+    "label_en": "Expert",
+    "label_sv": "Expert"
+  },
+  {
+    "code": "fac",
+    "term": "facsimilist",
+    "label_en": "Facsimilist",
+    "label_sv": "Framställare av faksimil"
+  },
+  {
+    "code": "fld",
+    "term": "fieldDirector",
+    "label_en": "Field director",
+    "label_sv": "Fältchef"
+  },
+  {
+    "code": "flm",
+    "term": "filmEditor",
+    "label_en": "Film editor",
+    "label_sv": "Utgivare av film"
+  },
+  {
+    "code": "fmo",
+    "term": "formerOwner",
+    "label_en": "Former owner",
+    "label_sv": "Tidigare ägare"
+  },
+  {
+    "code": "fnd",
+    "term": "funder",
+    "label_en": "Funder",
+    "label_sv": "Finansiär"
+  },
+  {
+    "code": "fpy",
+    "term": "firstParty",
+    "label_en": "First party",
+    "label_sv": "Första part"
+  },
+  {
+    "code": "frg",
+    "term": "forger",
+    "label_en": "Forger",
+    "label_sv": "Förfalskare"
+  },
+  {
+    "code": "gis",
+    "term": "geographicInformationSpecialist",
+    "label_en": "Geographic information specialist",
+    "label_sv": "Specialist inom geografisk information (GIS)"
+  },
+  {
+    "code": "hnr",
+    "term": "honoree",
+    "label_en": "Honoree",
+    "label_sv": "estskriftsföremål"
+  },
+  {
+    "code": "hst",
+    "term": "host",
+    "label_en": "Host",
+    "label_sv": "Programvärd, programledare"
+  },
+  {
+    "code": "ill",
+    "term": "illustrator",
+    "label_en": "Illustrator",
+    "label_sv": "Illustratör"
+  },
+  {
+    "code": "ilu",
+    "term": "illuminator",
+    "label_en": "Illuminator",
+    "label_sv": "illuminatör"
+  },
+  {
+    "code": "ins",
+    "term": "inscriber",
+    "label_en": "Inscriber",
+    "label_sv": "Författare till inskription"
+  },
+  {
+    "code": "inv",
+    "term": "inventor",
+    "label_en": "Inventor",
+    "label_sv": "Uppfinnare"
+  },
+  {
+    "code": "itr",
+    "term": "instrumentalist",
+    "label_en": "Instrumentalist",
+    "label_sv": "Instrumentalist"
+  },
+  {
+    "code": "ive",
+    "term": "interviewee",
+    "label_en": "Interviewee",
+    "label_sv": "Intervjuobjekt"
+  },
+  {
+    "code": "ivr",
+    "term": "interviewer",
+    "label_en": "Interviewer",
+    "label_sv": "Intervjuare"
+  },
+  {
+    "code": "lbr",
+    "term": "laboratory",
+    "label_en": "Laboratory",
+    "label_sv": "Laboratorium"
+  },
+  {
+    "code": "lbt",
+    "term": "librettist",
+    "label_en": "Librettist",
+    "label_sv": "Librettist"
+  },
+  {
+    "code": "ldr",
+    "term": "laboratoryDirector",
+    "label_en": "Laboratory director",
+    "label_sv": "Laboratoriechef"
+  },
+  {
+    "code": "led",
+    "term": "lead",
+    "label_en": "Lead",
+    "label_sv": "Chef, ledare"
+  },
+  {
+    "code": "lee",
+    "term": "colCollector",
+    "label_en": "col Collector",
+    "label_sv": "[Libellee-appellee: juridisk term ung. motsvarande Svarande, Tilltalad]"
+  },
+  {
+    "code": "lel",
+    "term": "libelee",
+    "label_en": "Libelee",
+    "label_sv": "[Libellee: juridisk term ung. motsvarande Svarande, Tilltalad]"
+  },
+  {
+    "code": "len",
+    "term": "lender",
+    "label_en": "Lender",
+    "label_sv": "Utlånare"
+  },
+  {
+    "code": "let",
+    "term": "libeleeAppellant",
+    "label_en": "Libelee-appellant",
+    "label_sv": "[Libellee-appellant: juridisk term ung. motsvarande Svarande, Tilltalad]"
+  },
+  {
+    "code": "lgd",
+    "term": "lightingDesigner",
+    "label_en": "Lighting designer",
+    "label_sv": "Ljusdesigner, ljussättare"
+  },
+  {
+    "code": "lie",
+    "term": "cllCalligrapher",
+    "label_en": "cll Calligrapher",
+    "label_sv": "[Libelant-appellee: juridisk term ung. motsvarande Kärande, Målsägande]"
+  },
+  {
+    "code": "lil",
+    "term": "libelant",
+    "label_en": "Libelant",
+    "label_sv": "[Libelant: juridisk term ung. motsvarande Kärande, Målsägande]"
+  },
+  {
+    "code": "lit",
+    "term": "libelantAppellant",
+    "label_en": "Libelant-appellant",
+    "label_sv": "[Libelant-appellant: juridisk term ung. motsvarande Kärande, Målsägande]"
+  },
+  {
+    "code": "lsa",
+    "term": "landscapeArchitect",
+    "label_en": "Landscape architect",
+    "label_sv": "Landskapsarkitekt"
+  },
+  {
+    "code": "lse",
+    "term": "licensee",
+    "label_en": "Licensee",
+    "label_sv": "Licensinnehavare"
+  },
+  {
+    "code": "lso",
+    "term": "licensor",
+    "label_en": "Licensor",
+    "label_sv": "Licensutfärdare"
+  },
+  {
+    "code": "ltg",
+    "term": "lithographer",
+    "label_en": "Lithographer",
+    "label_sv": "Litograf"
+  },
+  {
+    "code": "lyr",
+    "term": "lyricist",
+    "label_en": "Lyricist",
+    "label_sv": "Författare till sångtext"
+  },
+  {
+    "code": "mcp",
+    "term": "musicCopyist",
+    "label_en": "Music copyist",
+    "label_sv": "Musikkopist"
+  },
+  {
+    "code": "mdc",
+    "term": "metadataContact",
+    "label_en": "Metadata contact",
+    "label_sv": "Metadataansvarig"
+  },
+  {
+    "code": "mfp",
+    "term": "manufacturePlace",
+    "label_en": "Manufacture place",
+    "label_sv": "Produktions-/tryckort"
+  },
+  {
+    "code": "mfr",
+    "term": "manufacturer",
+    "label_en": "Manufacturer",
+    "label_sv": "Fabrikant, tillverkare"
+  },
+  {
+    "code": "mod",
+    "term": "moderator",
+    "label_en": "Moderator",
+    "label_sv": "Moderator"
+  },
+  {
+    "code": "mon",
+    "term": "monitor",
+    "label_en": "Monitor",
+    "label_sv": "Övervakare, inspektör"
+  },
+  {
+    "code": "mrb",
+    "term": "marbler",
+    "label_en": "Marbler",
+    "label_sv": "Marmorering"
+  },
+  {
+    "code": "mrk",
+    "term": "markupEditor",
+    "label_en": "Markup editor",
+    "label_sv": "Metadatauppmärkare"
+  },
+  {
+    "code": "msd",
+    "term": "musicalDirector",
+    "label_en": "Musical director",
+    "label_sv": "Musikalisk ledare"
+  },
+  {
+    "code": "mte",
+    "term": "metalEngraver",
+    "label_en": "Metal-engraver",
+    "label_sv": "Metallgravör"
+  },
+  {
+    "code": "mus",
+    "term": "musician",
+    "label_en": "Musician",
+    "label_sv": "Musiker"
+  },
+  {
+    "code": "nrt",
+    "term": "narrator",
+    "label_en": "Narrator",
+    "label_sv": "Berättare, inläsare"
+  },
+  {
+    "code": "opn",
+    "term": "opponent",
+    "label_en": "Opponent",
+    "label_sv": "Opponent"
+  },
+  {
+    "code": "orm",
+    "term": "owner",
+    "label_en": "owner",
+    "label_sv": "Mötesarrangör"
+  },
+  {
+    "code": "oth",
+    "term": "unspecifiedContributor",
+    "label_en": "Other",
+    "label_sv": "Medarbetare (ospecificerad)"
+  },
+  {
+    "code": "own",
+    "term": "fpyFirstParty",
+    "label_en": "fpy First party",
+    "label_sv": "Ägare"
+  },
+  {
+    "code": "pat",
+    "term": "patron",
+    "label_en": "Patron",
+    "label_sv": "Mecenat"
+  },
+  {
+    "code": "pbd",
+    "term": "publishingDirector",
+    "label_en": "Publishing director",
+    "label_sv": "Chefredaktör, huvudredaktör"
+  },
+  {
+    "code": "pbl",
+    "term": "publisher",
+    "label_en": "Publisher",
+    "label_sv": "Utgivare"
+  },
+  {
+    "code": "pdr",
+    "term": "projectDirector",
+    "label_en": "Project director",
+    "label_sv": "Projektchef, projektsamordnare"
+  },
+  {
+    "code": "pfr",
+    "term": "proofreader",
+    "label_en": "Proofreader",
+    "label_sv": "Korrekturläsare"
+  },
+  {
+    "code": "pht",
+    "term": "photographer",
+    "label_en": "Photographer",
+    "label_sv": "Fotograf"
+  },
+  {
+    "code": "plt",
+    "term": "platemaker",
+    "label_en": "Platemaker",
+    "label_sv": "Tryckplåtstillverkare"
+  },
+  {
+    "code": "pma",
+    "term": "permittingAgency",
+    "label_en": "Permitting agency",
+    "label_sv": "Tillståndsgivande organ"
+  },
+  {
+    "code": "pmn",
+    "term": "productionManager",
+    "label_en": "Production manager",
+    "label_sv": "Produktionsledning"
+  },
+  {
+    "code": "pop",
+    "term": "printerOfPlates",
+    "label_en": "Printer of plates",
+    "label_sv": "Tryckare av illustrationer"
+  },
+  {
+    "code": "ppm",
+    "term": "papermaker",
+    "label_en": "Papermaker",
+    "label_sv": "Pappersmakare"
+  },
+  {
+    "code": "ppt",
+    "term": "puppeteer",
+    "label_en": "Puppeteer",
+    "label_sv": "Marionettspelare"
+  },
+  {
+    "code": "prc",
+    "term": "processContact",
+    "label_en": "Process contact",
+    "label_sv": "Processansvarig"
+  },
+  {
+    "code": "prd",
+    "term": "productionPersonnel",
+    "label_en": "Production personnel",
+    "label_sv": "Produktionspersonal"
+  },
+  {
+    "code": "prf",
+    "term": "performer",
+    "label_en": "Performer",
+    "label_sv": "Framförande person, spelare, musiker, etc."
+  },
+  {
+    "code": "prg",
+    "term": "programmer",
+    "label_en": "Programmer",
+    "label_sv": "Programmerare"
+  },
+  {
+    "code": "prm",
+    "term": "printmaker",
+    "label_en": "Printmaker",
+    "label_sv": "Tryckmakare"
+  },
+  {
+    "code": "pro",
+    "term": "blwBlurbWriter",
+    "label_en": "blw Blurb writer",
+    "label_sv": "Filmproducent"
+  },
+  {
+    "code": "prp",
+    "term": "productionPlace",
+    "label_en": "Production place",
+    "label_sv": "Konstruktionsort"
+  },
+  {
+    "code": "prt",
+    "term": "printer",
+    "label_en": "Printer",
+    "label_sv": "Tryckare"
+  },
+  {
+    "code": "pta",
+    "term": "patentApplicant",
+    "label_en": "Patent applicant",
+    "label_sv": "Patentsökande"
+  },
+  {
+    "code": "pte",
+    "term": "aftAuthorOfAfterwordColophonEtc",
+    "label_en": "aft Author of afterword, colophon, etc.",
+    "label_sv": "[Plaintiff-appellee: juridisk term ung. motsvarande Kärande, Målsägande]"
+  },
+  {
+    "code": "ptf",
+    "term": "plaintiff",
+    "label_en": "Plaintiff",
+    "label_sv": "[Plaintiff: juridisk term ung. motsvarande Kärande, Målsägande]"
+  },
+  {
+    "code": "pth",
+    "term": "patentHolder",
+    "label_en": "Patent holder",
+    "label_sv": "Patentinnehavare"
+  },
+  {
+    "code": "ptt",
+    "term": "plaintiffAppellant",
+    "label_en": "Plaintiff-appellant",
+    "label_sv": "[Plaintiff-appellant: juridisk term ung. motsvarande Kärande, Målsägande]"
+  },
+  {
+    "code": "pup",
+    "term": "publicationPlace",
+    "label_en": "Publication place",
+    "label_sv": "Utgivnings-/publikationsort"
+  },
+  {
+    "code": "rbr",
+    "term": "rubricator",
+    "label_en": "Rubricator",
+    "label_sv": "Rubricator"
+  },
+  {
+    "code": "rce",
+    "term": "recordingEngineer",
+    "label_en": "Recording engineer",
+    "label_sv": "Inspelningstekniker"
+  },
+  {
+    "code": "rcp",
+    "term": "recipient",
+    "label_en": "Recipient",
+    "label_sv": "Mottagare av korrespondens"
+  },
+  {
+    "code": "red",
+    "term": "redactor",
+    "label_en": "Redactor",
+    "label_sv": "Redigerare"
+  },
+  {
+    "code": "ren",
+    "term": "renderer",
+    "label_en": "Renderer",
+    "label_sv": "Prototyp, visualisering"
+  },
+  {
+    "code": "res",
+    "term": "crrCorrector",
+    "label_en": "crr Corrector",
+    "label_sv": "Forskare"
+  },
+  {
+    "code": "rev",
+    "term": "reviewer",
+    "label_en": "Reviewer",
+    "label_sv": "Recensent"
+  },
+  {
+    "code": "rps",
+    "term": "repository",
+    "label_en": "Repository",
+    "label_sv": "Arkiv (repository)"
+  },
+  {
+    "code": "rpt",
+    "term": "reporter",
+    "label_en": "Reporter",
+    "label_sv": "Reporter, journalist"
+  },
+  {
+    "code": "rpy",
+    "term": "responsibleParty",
+    "label_en": "Responsible party",
+    "label_sv": "Ansvarig utgivare"
+  },
+  {
+    "code": "rse",
+    "term": "respondentAppellee",
+    "label_en": "Respondent-appellee",
+    "label_sv": "[Respondent-appellee: juridisk term ung. motsvarande Svarande, Tilltalad]"
+  },
+  {
+    "code": "rsg",
+    "term": "restager",
+    "label_en": "Restager",
+    "label_sv": "Bearbetare av sceniskt verk"
+  },
+  {
+    "code": "rsp",
+    "term": "respondent",
+    "label_en": "Respondent",
+    "label_sv": "[Respondent: juridisk term ung. motsvarande Svarande, Tilltalad]"
+  },
+  {
+    "code": "rst",
+    "term": "party",
+    "label_en": "party",
+    "label_sv": "[Respondent-appellant: juridisk term ung. motsvarande Svarande, Tilltalad]"
+  },
+  {
+    "code": "rth",
+    "term": "researchTeamHead",
+    "label_en": "Research team head",
+    "label_sv": "Chef för forskargrupp"
+  },
+  {
+    "code": "rtm",
+    "term": "researchTeamMember",
+    "label_en": "Research team member",
+    "label_sv": "Medlem av forskargrupp"
+  },
+  {
+    "code": "sad",
+    "term": "scientificAdvisor",
+    "label_en": "Scientific advisor",
+    "label_sv": "Vetenskaplig rådgivare"
+  },
+  {
+    "code": "sce",
+    "term": "scenarist",
+    "label_en": "Scenarist",
+    "label_sv": "Författare till scenario"
+  },
+  {
+    "code": "scl",
+    "term": "sculptor",
+    "label_en": "Sculptor",
+    "label_sv": "Skulptör"
+  },
+  {
+    "code": "scr",
+    "term": "autAuthor",
+    "label_en": "aut Author",
+    "label_sv": "Skrivare, kopist"
+  },
+  {
+    "code": "sds",
+    "term": "soundDesigner",
+    "label_en": "Sound designer",
+    "label_sv": "Ljudproducent, ljudtekniker"
+  },
+  {
+    "code": "sec",
+    "term": "secretary",
+    "label_en": "Secretary",
+    "label_sv": "Sekreterare"
+  },
+  {
+    "code": "sgn",
+    "term": "signer",
+    "label_en": "Signer",
+    "label_sv": "Signatur"
+  },
+  {
+    "code": "sht",
+    "term": "supportingHost",
+    "label_en": "Supporting host",
+    "label_sv": "Organiserat med stöd av"
+  },
+  {
+    "code": "sng",
+    "term": "singer",
+    "label_en": "Singer",
+    "label_sv": "Sångare"
+  },
+  {
+    "code": "spk",
+    "term": "speaker",
+    "label_en": "Speaker",
+    "label_sv": "Röst, tal"
+  },
+  {
+    "code": "spn",
+    "term": "sponsor",
+    "label_en": "Sponsor",
+    "label_sv": "Sponsor"
+  },
+  {
+    "code": "spy",
+    "term": "secondParty",
+    "label_en": "Second party",
+    "label_sv": "Andra part"
+  },
+  {
+    "code": "srv",
+    "term": "surveyor",
+    "label_en": "Surveyor",
+    "label_sv": "Lantmätare"
+  },
+  {
+    "code": "std",
+    "term": "setDesigner",
+    "label_en": "Set designer",
+    "label_sv": "Scenograf"
+  },
+  {
+    "code": "stl",
+    "term": "storyteller",
+    "label_en": "Storyteller",
+    "label_sv": "Historieberättare"
+  },
+  {
+    "code": "stm",
+    "term": "stageManager",
+    "label_en": "Stage manager",
+    "label_sv": "Inspicient, regiassistent"
+  },
+  {
+    "code": "stn",
+    "term": "standardsBody",
+    "label_en": "Standards body",
+    "label_sv": "Standardiseringsorgan"
+  },
+  {
+    "code": "str",
+    "term": "arcArchitect",
+    "label_en": "arc Architect",
+    "label_sv": "Framställare av stereotyper"
+  },
+  {
+    "code": "tcd",
+    "term": "technicalDirector",
+    "label_en": "Technical director",
+    "label_sv": "Teknisk chef"
+  },
+  {
+    "code": "tch",
+    "term": "evpEventPlace",
+    "label_en": "evp Event place",
+    "label_sv": "Lärare"
+  },
+  {
+    "code": "ths",
+    "term": "thesisAdvisor",
+    "label_en": "Thesis advisor",
+    "label_sv": "Preses"
+  },
+  {
+    "code": "trc",
+    "term": "transcriber",
+    "label_en": "Transcriber",
+    "label_sv": "Avskrivare"
+  },
+  {
+    "code": "trl",
+    "term": "translator",
+    "label_en": "Translator",
+    "label_sv": "Översättare"
+  },
+  {
+    "code": "tyd",
+    "term": "typeDesigner",
+    "label_en": "Type designer",
+    "label_sv": "Formgivare av typsnitt"
+  },
+  {
+    "code": "tyg",
+    "term": "typographer",
+    "label_en": "Typographer",
+    "label_sv": "Typograf"
+  },
+  {
+    "code": "uvp",
+    "term": "universityPlace",
+    "label_en": "University place",
+    "label_sv": "Universitetsort"
+  },
+  {
+    "code": "vdg",
+    "term": "videographer",
+    "label_en": "Videographer",
+    "label_sv": "Videoproducent"
+  },
+  {
+    "code": "voc",
+    "term": "vocalist",
+    "label_en": "Vocalist",
+    "label_sv": "Vokalist"
+  },
+  {
+    "code": "wam",
+    "term": "writerOfAccompanyingMaterial",
+    "label_en": "Writer of accompanying material",
+    "label_sv": "Författare till material som medföljer AV-media"
+  },
+  {
+    "code": "wdc",
+    "term": "woodcutter",
+    "label_en": "Woodcutter",
+    "label_sv": "Framställare av träsnitt"
+  },
+  {
+    "code": "wde",
+    "term": "woodEngraver",
+    "label_en": "Wood-engraver",
+    "label_sv": "Xylograf (trägravyr)"
+  },
+  {
+    "code": "wit",
+    "term": "witness",
+    "label_en": "Witness",
+    "label_sv": "Vittne"
+  },
+  {
+    "code": "9pu",
+    "label_sv": "Primärt upphovsansvarig LIBRIS-definierad kod"
+  },
+  {
+    "code": "grt",
+    "term": "graphicTechnician",
+    "label_en": "Graphic technician",
+    "label_sv": "[Grafisk tekniker] OBSOLET"
+  }
+]

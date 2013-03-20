@@ -241,17 +241,6 @@
                 "2" : ["system"]
             }
         },
-        "relators" : {
-            "aut" : "authorList",
-            "mus" : "musician",
-            "ill" : "illustrator",
-            "trl" : "translator",
-            "pbd" : "publishingDirector",
-            "rpy" : "responsibleParty",
-            "wde" : "woodEngraver",
-            "edt" : "editor",
-            "oth" : "unspecifiedContributor"
-        },
         "subjects" : {
             "sab": {
                 "Lz" : "http://dbpedia.org/resource/Autobiography"

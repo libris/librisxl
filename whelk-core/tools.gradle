@@ -55,6 +55,13 @@ task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
     args(System.getProperty('args', "").split() as String[])
 }
 
+task convertBibMarc2JsonLD(dependsOn: 'classes', type: JavaExec) {
+    description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'se.kb.libris.whelks.plugin.MarcBib2JsonLDConverter'
+    args(System.getProperty('args', "").split() as String[])
+}
+
 task convertMarc2JsonLD(dependsOn: 'classes', type: JavaExec) {
     description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<uri-path> <source> <dest-dir> <rec-type>')"
     classpath = sourceSets.main.runtimeClasspath

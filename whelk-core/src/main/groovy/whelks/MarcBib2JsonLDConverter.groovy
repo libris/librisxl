@@ -6,8 +6,14 @@ import groovy.util.logging.Slf4j as Log
 
 @Log
 class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
+
+    Map relators
+
     MarcBib2JsonLDConverter(String rt) {
         super(rt)
+        relators = getClass().classLoader.getResourceAsStream("relatorcodes.json").withStream {
+            mapper.readValue(it, List).collectEntries { [it.code, it] }
+        }
     }
 
     @Override
@@ -36,7 +42,7 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         if (relcode) {
             section = []
             relcode.split().each {
-                section << ["relator":(marcref.bib.relators[it] ?: "creator")]
+                section << ["relator":(relators[it].term ?: "creator")]
             }
         } else {
             section = [["relator": "authorList"]]
@@ -163,5 +169,15 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         log.debug("map subject out: $out")
         return out
     }
-}
 
+    static main(args) {
+        def converter = new MarcBib2JsonLDConverter("bib")
+        def mapper = converter.mapper
+        def injson = new File(args[0]).withInputStream { mapper.readValue(it, Map) }
+        def identifier = null
+        def outjson = converter.convertJson(injson, identifier)
+        println mapper.defaultPrettyPrintingWriter().
+                writeValueAsString(outjson)
+    }
+
+}

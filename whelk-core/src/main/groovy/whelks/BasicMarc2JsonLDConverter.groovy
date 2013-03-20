@@ -120,7 +120,12 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
     Document doConvert(Document doc) {
         def injson = doc.dataAsJson
-        def outjson = ["@id":doc.identifier.toString()]
+        def outjson = convertJson(injson, doc.identifier.toString())
+        return new BasicDocument(doc).withData(mapper.writeValueAsBytes(outjson)).withFormat("jsonld")
+    }
+
+    def convertJson(injson, identifier) {
+        def outjson = ["@id": identifier]
         def rt = detectRecordType(injson)
         if (rt) {
             outjson["@type"] = rt
@@ -141,7 +146,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             }
         }
 
-        return new BasicDocument(doc).withData(mapper.writeValueAsBytes(outjson)).withFormat("jsonld")
+        return outjson
     }
 
     def detectMissing(code, fjson) {
@@ -294,4 +299,5 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         log.trace("person: $person")
         return person
     }
+
 }
