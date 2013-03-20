@@ -114,21 +114,28 @@ abstract class ElasticSearch extends BasicPlugin {
             .field("enabled", true)
             .field("store", true)
             .endObject()
+            .startObject("_source")
+            .field("enabled", true)
+            .endObject()
             .endObject()
             .endObject()
             log.debug("create: " + mapping.string())
 
-            performExecute(client.admin().indices().prepareCreate(idxpfx).addMapping(storageType, mapping))
-            log.info("Creating mappings ...")
-            mapping = jsonBuilder().startObject()
-            .startObject(idxpfx)
-            .field("date_detection", false)
-            .field("store", true)
-            .endObject()
-            .endObject()
-            log.debug("mapping: " + mapping.string())
-            performExecute(client.admin().indices().preparePutMapping(idxpfx).setType(indexType).setSource(mapping))
+            performExecute(client.admin().indices().prepareCreate(idxpfx).addMapping(indexType, mapping))
+            setTypeMapping(idxpfx, indexType)
         }
+    }
+
+    def setTypeMapping(idxpfx, itype) {
+        log.info("Creating mappings for $idxpfx/$itype ...")
+        XContentBuilder mapping = jsonBuilder().startObject()
+        .startObject(idxpfx)
+        .field("date_detection", false)
+        .field("store", true)
+        .endObject()
+        .endObject()
+        log.debug("mapping: " + mapping.string())
+        performExecute(client.admin().indices().preparePutMapping(idxpfx).setType(itype).setSource(mapping))
     }
 
     def performExecute(def requestBuilder) {
@@ -151,10 +158,24 @@ abstract class ElasticSearch extends BasicPlugin {
         return response
     }
 
+    void checkTypeMapping(idxpfx, entityType) {
+        def mappings = performExecute(client.admin().cluster().prepareState()).state().getMetaData().index(idxpfx).getMappings()
+        if (!mappings.containsKey(entityType)) {
+            log.debug("Mapping for $entityType does not exist. Creating ...")
+            setTypeMapping(idxpfx, entityType)
+        }
+    }
+
+
     void addDocument(Document doc, String addType, String idxpfx) {
         def eid = translateIdentifier(doc.identifier)
         def entityType = doc.tags.find { it.type.toString() == "entityType"}?.value ?: addType
-        log.debug "Should use index ${idxpfx}, type ${entityType} and id ${eid}"
+        // Check if 
+        if (entityType != indexType) {
+            checkTypeMapping(idxpfx, entityType)
+        }
+
+        log.trace "Should use index ${idxpfx}, type ${entityType} and id ${eid}"
         try {
             def irb = client.prepareIndex(idxpfx, entityType, eid)
             if (addType == indexType) {
@@ -164,7 +185,7 @@ abstract class ElasticSearch extends BasicPlugin {
             }
             IndexResponse response = performExecute(irb)
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
-            log.debug("Prepareing metadata indexing with type $indexMetadataType and metadatajson: " + doc.getMetadataJson())
+            log.trace("Prepareing metadata indexing with type $indexMetadataType and metadatajson: " + doc.getMetadataJson())
             irb = client.prepareIndex(idxpfx, indexMetadataType, eid).setSource(doc.getMetadataJson())
             response = performExecute(irb)
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {

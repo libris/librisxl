@@ -75,17 +75,17 @@
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.WhelkImpl">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.CombinedWhelk">
       <level value="trace"/>
   </logger>
+ -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="debug"/>
   </logger>
+ <!--
  <logger name="se.kb.libris.whelks.api.AutoComplete">
       <level value="debug"/>
   </logger>

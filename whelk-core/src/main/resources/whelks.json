@@ -2,43 +2,16 @@
     "_whelks": [
         {
             "bib":{
-                "_class" : "se.kb.libris.whelks.CombinedWhelk",
-                "prefixes" : ["bib"],
-                "rules" : {
-                    "storeByFormat" : {
-                        "marc21" : "marcstorage"
-                    },
-                    "dontInitialize" : ["index"],
-                    "preferredRetrieveFrom" : "diskstorage"
-                },
                 "_plugins": ["index", "diskstorage", "marcstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
             }
         },
         {
             "auth":{
-                "_class" : "se.kb.libris.whelks.CombinedWhelk",
-                "prefixes" : ["auth"],
-                "rules" : {
-                    "storeByFormat" : {
-                        "marc21" : "marcstorage"
-                    },
-                    "dontInitialize" : ["index"],
-                    "preferredRetrieveFrom" : "diskstorage"
-                },
                 "_plugins": [ "index", "diskstorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
             }
         },
         {
             "hold":{
-                "_class" : "se.kb.libris.whelks.CombinedWhelk",
-                "prefixes" : ["auth"],
-                "rules" : {
-                    "storeByFormat" : {
-                        "marc21" : "marcstorage"
-                    },
-                    "dontInitialize" : ["index"],
-                    "preferredRetrieveFrom" : "diskstorage"
-                },
                 "_plugins": [ "index", "diskstorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
             }
         },
@@ -54,7 +27,6 @@
         },
         {
             "resource":{
-                "_class" : "se.kb.libris.whelks.WhelkImpl",
                 "_plugins": ["diskstorage", "document", "resourcelist", "marcmap", "search"]
             }
         }

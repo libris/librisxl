@@ -119,7 +119,9 @@ class DiskStorage extends BasicPlugin implements Storage {
     @Override
     void delete(URI uri, String whelkPrefix) {
         try {
-            if (!new File(buildPath(uri, false)).deleteDir()) {
+            def fn = buildPath(uri, false)
+            log.debug("Deleting $fn")
+            if (!new File(fn).deleteDir()) {
                 log.error("Failed to delete $uri")
                 throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
             }
