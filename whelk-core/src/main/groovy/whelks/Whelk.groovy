@@ -28,16 +28,6 @@ class WhelkImpl extends BasicWhelk {
         super(pfx)
     }
 
-    Document sanityCheck(Document d) {
-        if (!d.identifier) {
-            d.identifier = mintIdentifier(doc)
-        }
-        if (!d.identifier.toString().startsWith("/"+this.prefix+"/")) {
-            throw new WhelkRuntimeException("Document with id ${d.identifier} does not belong in whelk with prefix ${this.prefix}")
-        }
-        return d
-    }
-
     @Override
     URI store(Document doc) {
         doc = sanityCheck(doc)
@@ -51,6 +41,17 @@ class WhelkImpl extends BasicWhelk {
 
         return doc.identifier
     }
+
+    Document sanityCheck(Document d) {
+        if (!d.identifier) {
+            d.identifier = mintIdentifier(d)
+        }
+        if (!d.identifier.toString().startsWith("/"+this.prefix+"/")) {
+            throw new WhelkRuntimeException("Document with id ${d.identifier} does not belong in whelk with prefix ${this.prefix}")
+        }
+        return d
+    }
+
 
     void addToIndex(doc) {
         log.debug("Adding to indexes")
@@ -71,14 +72,6 @@ class WhelkImpl extends BasicWhelk {
 
     void addToQuadStore(doc) {}
 
-    Document performStorageFormatConversion(Document doc) {
-        for (fc in formatConverters) {
-            log.debug("Running formatconverter $fc")
-            doc = fc.convert(doc)
-        }
-        return doc
-    }
-
     @Override
     Document createDocument(data, metadata) {
         log.debug("Creating document")
@@ -96,6 +89,15 @@ class WhelkImpl extends BasicWhelk {
         }
         return doc
     }
+
+    Document performStorageFormatConversion(Document doc) {
+        for (fc in formatConverters) {
+            log.debug("Running formatconverter $fc")
+            doc = fc.convert(doc)
+        }
+        return doc
+    }
+
 
     @Override
     void reindex(fromStorage=null) {
