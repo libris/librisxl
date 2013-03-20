@@ -25,7 +25,7 @@
                     "dontInitialize" : ["index"],
                     "preferredRetrieveFrom" : "diskstorage"
                 },
-                "_plugins": [ "index", "diskstorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
+                "_plugins": [ "index", "diskstorage", "marcstorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
             }
         },
         {
@@ -39,25 +39,9 @@
                     "dontInitialize" : ["index"],
                     "preferredRetrieveFrom" : "diskstorage"
                 },
-                "_plugins": [ "index", "diskstorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
+                "_plugins": [ "index", "diskstorage", "marcstorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
             }
         },
-        {
-            "suggest":{
-                "_class" : "se.kb.libris.whelks.CombinedWhelk",
-                "prefixes" : ["auth", "bib"],
-                "rules" : {
-                    "dontInitialize" : ["index"]
-                },
-                "_plugins": [ "index", "search", "document", "autocomplete" ]
-            }
-        },
-        {
-            "resource":{
-                "_class" : "se.kb.libris.whelks.WhelkImpl",
-                "_plugins": ["diskstorage", "document", "resourcelist", "marcmap", "search"]
-            }
-        }
     ],
     "_plugins": [
         {

@@ -814,8 +814,15 @@ class ResourceListRestlet extends BasicWhelkAPI {
     //TODO:implement get and post/put to storage alt. documentrestlet
 
     def loadCodes(String typeOfCode) {
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode))
-        return mapper.readValue(is, Map)
+        try {
+            return this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode)).withStream {
+                mapper.readValue(it, Map)
+            }
+        } catch (org.codehaus.jackson.map.JsonMappingException jme) {
+            return this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode)).withStream {
+                mapper.readValue(it, List).collectEntries { [it.code, it] }   
+            }
+        }
     }
 
     def void handle(Request request, Response response) {
