@@ -135,7 +135,8 @@ class RootRouteRestlet extends BasicWhelkAPI {
                 log.debug("format: $format")
                 log.debug("request: $request")
                 def link = headers.find { it.name.equals("link") }?.value
-                doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withData(request.entity.stream.getBytes())
+                doc = this.whelk.createDocument(request.entityAsText, ["contentType":request.entity.mediaType.toString(),"format":format])
+                //doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withData(request.entity.stream.getBytes())
                 if (link != null) {
                     log.trace("Adding link $link to document...")
                     doc = doc.withLink(link)
@@ -226,7 +227,6 @@ class DocumentRestlet extends BasicWhelkAPI {
                 } else {
                     //doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withFormat(format).withData(request.entityAsText)
                     doc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString(),"format":format])
-                    log.info("Created document: ${doc.dataAsJson}")
                 }
                 if (link != null) {
                     log.trace("Adding link $link to document...")
@@ -367,6 +367,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             def callback = reqMap.get("callback")
             if (q) {
                 q.addFacet("@type")
+                q.addFacet("about.dateOfPublication")
                 /*
                 q.addFacet("status")
                 q.addFacet("typeOfRecord")
