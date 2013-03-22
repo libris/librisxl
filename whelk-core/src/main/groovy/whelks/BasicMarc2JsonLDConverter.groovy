@@ -125,10 +125,10 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
     }
 
     def convertJson(injson, identifier) {
-        def outjson = ["@id": identifier]
-        def rt = detectRecordType(injson)
+        def outjson = ["@id": identifier, "@type": "Record"]
+        def rt = detectResourceType(injson)
         if (rt) {
-            outjson["@type"] = rt
+            outjson.about = ["@type": rt]
         }
 
         def missing = []
@@ -173,7 +173,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
 
     // Utility methods
-    String detectRecordType(marcjson) {
+    String detectResourceType(marcjson) {
         log.debug("leader: ${marcjson.leader}")
         def typeOfRecord = marcjson.leader[6]
         def bibLevel = marcjson.leader[7]

@@ -366,7 +366,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             }
             def callback = reqMap.get("callback")
             if (q) {
-                q.addFacet("@type")
+                q.addFacet("about['@type']")
                 q.addFacet("about.dateOfPublication")
                 /*
                 q.addFacet("status")
