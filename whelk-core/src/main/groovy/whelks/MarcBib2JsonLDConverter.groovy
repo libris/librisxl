@@ -42,7 +42,7 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         if (relcode) {
             section = []
             relcode.split().each {
-                section << ["relator":(relators[it].term ?: "creator")]
+                section << ["relator":(relators[it]?.term ?: "creator")]
             }
         } else {
             section = [["relator": "authorList"]]
@@ -53,8 +53,13 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
     def mapInstitution(outjson, code, fjson, marcjson) {
         def inst = mapPerson(outjson, code, fjson, marcjson)
         log.debug("inst: $inst")
-        inst[0]["@type"] = "Organization"
-        inst[0].remove("source")
+        if (inst instanceof List) {
+            inst[0]["@type"] = "Organization"
+            inst[0].remove("source")
+        } else {
+            inst["@type"] = "Organization"
+            inst.remove("source")
+        }
         return inst
     }
 
