@@ -1,6 +1,6 @@
 {
   "@context": "/context/libris.jsonld",
-  "@id": "http://libris.kb.se/bib/7149593/data",
+  "@id": "http://libris.kb.se/bib/7149593",
   "@type": "Document",
   "controlNumber": "7149593",
   "creator": {"@type": "Organization", "abbr": "NB"},
@@ -20,7 +20,7 @@
   },
   "bibliographyCode": ["SEE", "BULB", "SLB", "NB", "KVIN"],
   "about": {
-    "@id": "http://libris.kb.se/bib/7149593",
+    "@id": "http://libris.kb.se/resource/bib/7149593",
     "@type": ["Instance", "Book"],
     "typeOfRecord": {
         "code": "a",
@@ -40,9 +40,10 @@
     "placeOfManufacture": {"@type": "Place", "label": "Finland"},
     "placeOfPublication": {"@type": "Place", "label": "Stockholm"},
     "publisher": {"@type": "Organization", "name": "Bonnier"},
-    "pubDate": {"@type": "year", "@value": "1996"},
+    "dateOfPublication": {"@type": "year", "@value": "1996"},
     "termsOfAvailability": "310:00",
     "instanceOf": {
+      "@id": "http://libris.kb.se/resource/bib/7149593#work",
       "@type": ["Work", "Text"],
       "bibLevel": {
           "code" : "m",
