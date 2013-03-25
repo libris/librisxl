@@ -59,18 +59,24 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                     }
                 } else if (fieldcode instanceof Map) {
                     def obj = [:]
+                    def match = false
                     fieldcode.each { item, fcode ->
                         def v
                         if (fcode.startsWith("CONSTANT:")) {
                             v = fcode.substring(9)
                         } else {
                             v = getMarcValueFromField(code, fcode, fjson)
+                            if (v) {
+                                match = true
+                            }
                         }
                         if (v) {
                             obj[(item)] = v
                         }
                     }
-                    outjson = Tools.insertAt(outjson, property, obj)
+                    if (match) {
+                        outjson = Tools.insertAt(outjson, property, obj)
+                    }
                 }
             }
 
@@ -235,12 +241,13 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
     }
 
     def getMarcValueFromField(field, code, fieldjson, joinChar=" ") {
+        def codes = code.toList()
         def codeValues = []
         log.trace("getMarcValueFromField: $field.$code - $fieldjson")
         if (fieldjson instanceof Map) {
             fieldjson.subfields.each { s ->
                 s.each {sc, sv ->
-                    if (sc in code.toList()) {
+                    if (sc in codes) {
                         this.convertedCodes["$field.$sc"] = true
                         codeValues << sv
                     }
@@ -250,7 +257,13 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             return fieldjson
         }
         log.trace("codeValues: $codeValues")
-        return codeValues.join(joinChar)
+        if (!codeValues.size()) {
+            return null
+        } else if (codeValues.size() == 1) {
+            return codeValues[0]
+        } else {
+            return codeValues
+        }
     }
 
     // Mapping methods
