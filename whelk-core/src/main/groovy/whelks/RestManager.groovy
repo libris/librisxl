@@ -80,12 +80,6 @@ class RestManager extends Application {
             }
         }
 
-        /*
-        def dr = new DocumentRestlet()
-        whelks['suggest'].addPlugin(dr)
-        router.attach("{path}", dr).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
-
-        */
         return router
     }
 }

@@ -22,7 +22,7 @@ import se.kb.libris.whelks.persistance.JSONSerialisable;
 import se.kb.libris.whelks.plugin.*;
 
 @Deprecated
-public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSONSerialisable {
+public abstract class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSONSerialisable {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
     private String prefix;
@@ -76,8 +76,8 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
 
         if (docs != null && ((List)docs).size() > 0) {
             for (Component c : getComponents()) {
-                if (c instanceof Storage) {
-                    ((Storage)c).store(docs, this.prefix);
+                if (c instanceof BulkStorage) {
+                    ((BulkStorage)c).bulkStore(docs, this.prefix);
                 }
 
                 if (c instanceof Index) {
@@ -110,13 +110,6 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
             }
         }
         return null;
-    }
-
-    /**
-     * Post construct init method.
-     */
-    @Override
-    public void init() {
     }
 
     @Override
@@ -156,7 +149,6 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
 
     }
 
-    @Override
     public SearchResult query(String query) {
         return query(new Query(query));
     }
@@ -173,21 +165,11 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
     public SearchResult query(Query query, String prefix, String indexType) {
         for (Component c: getComponents())
             if (c instanceof Index)
-                return ((Index)c).query(query, prefix, indexType);
+                return ((Index)c).query(query, prefix);
 
         throw new WhelkRuntimeException("Whelk has no index for searching");
     }
 
-    @Override
-    public LookupResult<? extends Document> lookup(Key key) {
-        for (Component c: getComponents())
-            if (c instanceof Storage)
-                return ((Storage)c).lookup(key);
-
-        throw new WhelkRuntimeException("Whelk has no storage for searching");
-    }
-
-    @Override
     public SparqlResult sparql(String query) {
         for (Component c: getComponents())
             if (c instanceof QuadStore)
@@ -196,7 +178,6 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
         throw new WhelkRuntimeException("Whelk has no quadstore component.");
     }
 
-    @Override
     public Iterable<Document> log() {
         for (Component c: getComponents())
             if (c instanceof Storage)
@@ -205,26 +186,6 @@ public class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSO
         throw new WhelkRuntimeException("Whelk has no storage for searching");
     }
 
-    @Override
-    public Iterable<Document> log(int startIndex) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Iterable<Document> log(URI identifier) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Iterable<Document> log(Date since) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-
-    @Override
-    public void destroy() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 
     @Override
     public Document createDocument(byte[] data, Map<String, Object> metadata) {

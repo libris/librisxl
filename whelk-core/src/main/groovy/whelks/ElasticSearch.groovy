@@ -288,8 +288,17 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    SearchResult query(Query q, String idxpfx, String indexType) {
-        def iType = (indexType == null ? [this.indexType] : indexType.split(","))
+    SearchResult query(Query q, String idxpfx) {
+        def idxtype = null
+        if (q instanceof ElasticQuery) {
+            idxtype = q.indexType
+        }
+        return query(q, idxpfx, idxtype)
+    }
+
+
+    SearchResult query(Query q, String idxpfx, String idxtype) {
+        def iType = (idxtype == null ? [this.indexType] : idxtype.split(","))
         log.debug "Querying index $idxpfx and indextype $iType"
         log.trace "Doing query on $q"
         def idxlist = [idxpfx]
@@ -367,10 +376,6 @@ abstract class ElasticSearch extends BasicPlugin {
             }
         }
         return results
-    }
-
-    SearchResult query(Query q, String idxpfx) {
-       return query(q, idxpfx, indexType)
     }
 
     Document createDocumentFromHit(hit) {

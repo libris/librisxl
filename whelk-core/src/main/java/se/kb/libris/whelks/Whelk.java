@@ -13,22 +13,22 @@ public interface Whelk {
     public void delete(URI identifier);
 
     // search/lookup
-    public SearchResult<? extends Document> query(String query);
+    //public SearchResult<? extends Document> query(String query);
     public SearchResult<? extends Document> query(Query query);
+    public Iterable<Document> loadAll();
+    public Iterable<Document> loadAll(Date since);
 
+    /* Maybe implement later
     public LookupResult<? extends Document> lookup(Key key);
     public SparqlResult sparql(String query);
+    */
 
     // maintenance
-    public void init();
-    public void destroy();
-    public Iterable<Document> log();
-    public Iterable<Document> log(int startIndex);
-    public Iterable<Document> log(URI identifier);
-    public Iterable<Document> log(Date since);
-    public String getPrefix();
-    public Iterable<? extends Plugin> getPlugins();
     public void reindex();
+
+    public String getPrefix();
+    public void addPlugin(Plugin plugin);
+    public Iterable<? extends Plugin> getPlugins();
 
     // factory methods
     public Document createDocument(byte[] data, Map<String, Object> metadata);

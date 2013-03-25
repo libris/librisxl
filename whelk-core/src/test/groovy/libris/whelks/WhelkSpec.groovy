@@ -4,7 +4,7 @@ import spock.lang.Specification
 
 class WhelkSpec extends Specification {
 
-    def whelk = new WhelkImpl("bib")
+    def whelk = new StandardWhelk("bib")
 
     def "should store documents"() {
         given:

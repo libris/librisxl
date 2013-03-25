@@ -42,6 +42,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     void init(String w) {}
 
     String getPath() {
+        log.info("getting path from ${this.whelk}")
         return "/" + this.whelk.prefix + "/" + getPathEnd()
     }
 
@@ -886,13 +887,14 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
         mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def link = queryMap.get("link")
-        def queryStr
+        def queryObj
         def results
         def outjson = new StringBuilder()
         def records = []
         if (link) {
-            queryStr = new Query(link).addField("links.identifier")
-            results = this.whelk.query(queryStr, "metadata")
+            queryObj = new ElasticQuery(link).addField("links.identifier")
+            queryObj.indexType = "metadata"
+            results = this.whelk.query(queryObj)
             results.hits.each {
                 def identifier = it.identifier.toString()
                 def d = whelk.get(new URI(identifier))
