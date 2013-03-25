@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
 datadir=$(dirname $0)/../src/test/resources/marc2jsonld
+use_expected=$1
+
 for d in $datadir/in/*; do
     datatype=`basename $d`
     for f in $datadir/in/$datatype/*.json; do
         id=`basename -s .json $f`
         fmt=marc21
         expected=$datadir/expected/$datatype/$id.json
-        if [[ -e $expected ]]; then
+        if [[ -e $expected && $use_expected == "-e" ]]; then
             f=$expected
             fmt=jsonld
         fi
