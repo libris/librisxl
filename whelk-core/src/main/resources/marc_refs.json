@@ -47,7 +47,7 @@
                 "about.fileType" : "a"
             },
             "260" : {
-                "about.publisher": {
+                "about.publisher+": {
                     "@type" : "CONSTANT:Organization",
                     "name" : "b"
                 },
@@ -61,14 +61,14 @@
                 "about.dimensions" : "c"
             },
             "490" : {
-                "about.series": {
+                "about.series+": {
                     "title": "a",
                     "part": "v",
                     "issn": "x"
                 }
             },
             "500" : {
-                "about.comment" : "a"
+                "about.comment+" : "a"
             },
             "504" : {
                 "about.supplementaryContentNote" : "a"
@@ -86,7 +86,7 @@
                 "internalRemark" : "a"
             },
             "650" : {
-                "about.instanceOf.subjectList" : {
+                "about.instanceOf.subjectList+" : {
                     "term" : "a",
                     "formSubdivision" : "v",
                     "generalSubdivision" : "x",
@@ -107,13 +107,13 @@
                 },
                 {
                     "method" : "mapIdentifier",
-                    "level" : "about.otherIdentifier"
+                    "level" : "about.otherIdentifier+"
                 }
             ],
             "024" : [
                 {
                     "method" : "mapIdentifier",
-                    "level" : "about.otherIdentifier"
+                    "level" : "about.otherIdentifier+"
                 },
                 {
                     "method" : "mapStandardIdentifier",
@@ -123,35 +123,35 @@
             ,
             "072" : {
                 "method" : "mapSubject",
-                "level" : "about.instanceOf.subject"
+                "level" : "about.instanceOf.subject+"
             },
             "084" : {
                 "method" : "mapSubject",
-                "level" : "about.instanceOf.subject"
+                "level" : "about.instanceOf.subject+"
             },
             "100": {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.<<relator>>"
+                "level" : "about.instanceOf.<<relator>>+"
             },
             "110" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.<<relator>>"
+                "level" : "about.instanceOf.<<relator>>+"
             },
             "111" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.<<relator>>"
+                "level" : "about.instanceOf.<<relator>>+"
             },
             "600" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.subject"
+                "level" : "about.instanceOf.subject+"
             },
             "700" : {
                 "method" : "mapPerson",
-                "level" : "about.instanceOf.<<relator>>"
+                "level" : "about.instanceOf.<<relator>>+"
             },
             "710" : {
                 "method" : "mapInstitution",
-                "level" : "about.instanceOf.<<relator>>"
+                "level" : "about.instanceOf.<<relator>>+"
             }
         },
         "handled_elsewhere" : {},
@@ -166,7 +166,6 @@
                 "FL" : "http://dbpedia.org/resource/Science_fiction",
                 "FM" : "http://dbpedia.org/resource/Fantasy_literature"
             }
-
         }
     },
     "hold": {
