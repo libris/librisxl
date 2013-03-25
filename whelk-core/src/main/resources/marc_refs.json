@@ -11,12 +11,21 @@
                 "lccn" : "a"
             },
             "040" : {
-                "domain.creatingAgency": "a",
-                "domain.transcribingAgency": "c",
-                "domain.updatingAgency": "d",
-                "domain.lang": "b",
-                "domain.rule": "e",
-                "domain.subjectScheme": "f"
+                "creatingAgency": {
+                    "@type": "CONSTANT:Organization",
+                    "name": "a"
+                },
+                "transcribingAgency": {
+                    "@type": "CONSTANT:Organization",
+                    "name": "c"
+                },
+                "modifiyingAgency": {
+                    "@type": "CONSTANT:Organization",
+                    "name": "d"
+                },
+                "language": "b",
+                "descriptionRules": "e",
+                "subjectScheme": "f"
             },
             "028" : {
                 "about.edition" : "a",
@@ -26,7 +35,7 @@
                 "localSystemNumber" : "a9"
             },
             "042" : {
-                "about.subsetOfScheme" : "9"
+                "about.bibliographyCode" : "9"
             },
             "050" : {
                 "about.instanceOf.class-lcc" : "a"
@@ -51,9 +60,15 @@
                     "@type" : "CONSTANT:Organization",
                     "name" : "b"
                 },
-                "about.placeOfPublication" : "a",
+                "about.placeOfPublication": {
+                    "@type": "CONSTANT:Place",
+                    "name": "a"
+                },
                 "about.dateOfPublication" : "c",
-                "about.placeOfManufacture" : "e"
+                "about.placeOfManufacture": {
+                    "@type": "CONSTANT:Place",
+                    "name": "e"
+                }
             },
             "300" : {
                 "about.extent" : "a",
@@ -107,13 +122,13 @@
                 },
                 {
                     "method" : "mapIdentifier",
-                    "level" : "about.otherIdentifier+"
+                    "level" : "about.identifier+"
                 }
             ],
             "024" : [
                 {
                     "method" : "mapIdentifier",
-                    "level" : "about.otherIdentifier+"
+                    "level" : "about.identifier+"
                 },
                 {
                     "method" : "mapStandardIdentifier",
