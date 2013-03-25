@@ -4,6 +4,9 @@
             "001" : {
                 "controlNumber" : "001"
             },
+            "003" : {
+                "controlNumberIdentifier": "003"
+            },
             "010" : {
                 "lccn" : "a"
             },
@@ -153,94 +156,6 @@
         },
         "handled_elsewhere" : {},
         "purposefully_ignored" : {"050.b":true,"082.2":true},
-        "levels": {
-            "about"      : ["008","020","024","028","042","250","256","260","300","490","500","504","505","520","538","typeOfRecord"],
-            "instanceOf" : ["082","050","084","245","650","bibLevel"]
-        },
-        "fields": {
-            "001" : "controlNumber",
-            "003" : "controlNumberIdentifier",
-            "004" : false,
-            "005" : "dateAndTimeOfLatestTransaction",
-            "010": {
-                "a" : ["lccn"]
-            },
-            "028" : {
-                "a" : ["edition"],
-                "b" : ["editionPublisher"]
-            },
-            "035" : {
-                "9" : ["localSystemNumber"]
-            },
-            "040" : {
-                "a" : ["creator"],
-                "b" : ["catalogingLanguage"],
-                "c" : ["transliteratingBy"],
-                "d" : ["catalogingChangesBy"]
-            },
-            "042" : {
-                "9" : ["marc:bibliographyCode"]
-            },
-            "050" : {
-                "a" : ["class-lcc"]
-            },
-            "082" : {
-                "a" : ["class-ddc"],
-                "2" : false
-            },
-            "245": {
-                "a" : ["title"],
-                "b" : ["titleRemainder"],
-                "c" : ["statementOfResponsibility"],
-                "h" : ["mediaTerm"]
-            },
-            "250": {
-                "a" : ["edition"]
-            },
-            "256": {
-                "a" : ["fileType"]
-            },
-            "260": {
-                "a" : ["placeOfPublication"],
-                "b" : ["publisherName"],
-                "c" : ["dateOfPublication"],
-                "e" : ["placeOfManufacture"]
-            },
-            "300": {
-                "a" : ["extent"],
-                "b" : ["baseMaterial"],
-                "c" : ["dimensions"]
-            },
-            "490": {
-                "_objectLabel" : "series",
-                "a" : ["title"],
-                "v" : ["part"],
-                "x" : ["issn"]
-            },
-            "500": {
-                "a" : ["comment"]
-            },
-            "599": {
-                "a" : ["internalRemark"]
-            },
-            "504": {
-                "a" : ["supplementaryContentNote"]
-            },
-            "505": {
-                "a" : ["listOfContents"]
-            },
-            "520": {
-                "a" : ["summary"]
-            },
-            "538": {
-                "a" : ["systemRequirements"]
-            },
-            "650": {
-                "_objectLabel" : "subjectList",
-                "a" : ["term"],
-                "2" : ["system"]
-            }
-        },
         "subjects" : {
             "sab": {
                 "Lz" : "http://dbpedia.org/resource/Autobiography"
