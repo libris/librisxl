@@ -344,7 +344,7 @@ abstract class ElasticSearch extends BasicPlugin {
         if (q.facets) {
             q.facets.each {
                 if (it instanceof TermFacet) {
-                    if (it.field.startsWith("@")) {
+                    if (it.field.contains("@")) {
                         srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
                     } else {
                         srb = srb.addFacet(FacetBuilders.termsFacet(it.name).scriptField("_source."+it.field.replaceAll(/\./, ".?")).size(MAX_NUMBER_OF_FACETS))
