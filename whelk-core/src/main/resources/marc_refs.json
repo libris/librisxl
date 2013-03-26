@@ -47,7 +47,7 @@
                 "about.instanceOf.title" : "a",
                 "about.instanceOf.titleRemainder" : "b",
                 "about.instanceOf.statementOfResponsibility" : "c",
-                "about.instanceOf.mediaTerm" : "h"
+                "about.mediaTerm" : "h"
             },
             "250" : {
                 "about.edition" : "a"
@@ -92,7 +92,7 @@
                 "about.listOfContents" : "a"
             },
             "520" : {
-                "about.summary" : "a"
+                "about.instanceOf.summary" : "a"
             },
             "538" : {
                 "about.systemRequirements" : "a"
