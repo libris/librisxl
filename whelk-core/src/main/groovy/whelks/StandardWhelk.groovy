@@ -6,9 +6,7 @@ import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.WhelkRuntimeException
-import se.kb.libris.whelks.persistance.*
 import se.kb.libris.whelks.plugin.*
-import se.kb.libris.whelks.plugin.external.*
 
 import org.codehaus.jackson.map.*
 
