@@ -18,7 +18,7 @@
     "comment": "rdfs:comment",
     "subject": "dc:subject",
 
-    "Document": "foaf:Document",
+    "Record": "foaf:Document",
     "controlNumber": "dc:identifier",
     "creator": "dc:creator",
     "modified": {"@id": "dc:modified", "@type": "xsd:dateTime"},
@@ -59,6 +59,8 @@
     "name": "foaf:name",
     "abbr": "foaf:nick",
     "givenName": "foaf:givenName",
-    "familyName": "foaf:familyName"
+    "familyName": "foaf:familyName",
+
+    "unknown": null
   }
 }
