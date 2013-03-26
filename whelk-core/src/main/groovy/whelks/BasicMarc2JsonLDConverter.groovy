@@ -283,10 +283,14 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         }
         if (dates) {
             person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + ", " + dates
-            dates = dates.split(/-/)
-            person["birthYear"] = dates[0]
-            if (dates.size() > 1) {
-                person["deathYear"] = dates[1]
+            try {
+                dates = dates.split(/-/)
+                person["birthYear"] = dates[0]
+                if (dates.size() > 1) {
+                    person["deathYear"] = dates[1]
+                }
+            } catch (ArrayIndexOutOfBoundsException aioobe) {
+                log.warn("Failed to split date $dates")
             }
         }
         if (fjson.ind1 == "1" && person["authoritativeName"] =~ /, /) {

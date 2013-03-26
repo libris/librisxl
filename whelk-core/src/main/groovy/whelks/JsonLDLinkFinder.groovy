@@ -24,7 +24,9 @@ class JsonLDLinkFinder extends BasicPlugin implements LinkFinder {
             map.each { key, value ->
                 if (key == "@id") {
                     if (value != selfId) {
-                        ids << new Link(new URI(value), type)
+                        value.split().each {
+                            ids << new Link(new URI(it), type)
+                        }
                     }
                 }
                 if (value instanceof Map) {

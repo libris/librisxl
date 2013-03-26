@@ -301,7 +301,7 @@ public class BasicDocument implements Document {
     @Override
     @JsonIgnore
     public Map getDataAsJson() {
-        return mapper.readValue(getDataAsString(), Map)
+        return mapper.readValue(data, Map)
     }
 
     @Override

@@ -46,7 +46,7 @@ public abstract class BasicWhelk implements Whelk, Pluggable { //, JSONInitialis
     }
 
     @Override
-    public Iterable<URI> bulkStore(Iterable<Document> docs) {
+    public void bulkStore(Iterable<Document> docs) {
         // Pre storage operations
         for (Document doc : docs) {
             if (doc.getIdentifier() == null || !doc.getIdentifier().toString().startsWith("/"+prefix)) {
@@ -109,7 +109,6 @@ public abstract class BasicWhelk implements Whelk, Pluggable { //, JSONInitialis
                 for (Trigger t : getTriggers()) { if (t.isEnabled()) { t.afterStore(doc); } }
             }
         }
-        return null;
     }
 
     @Override

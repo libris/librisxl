@@ -27,6 +27,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     def marcmap
     Whelk whelk
     def recordType
+    def marccracker
 
     Marc2JsonLDConverter(def recordType) {
         this.recordType = recordType
@@ -35,6 +36,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
         this.marcref = mapper.readValue(is, Map)
         is = this.getClass().getClassLoader().getResourceAsStream("marcmap.json")
         this.marcmap = mapper.readValue(is, Map)
+        this.marccracker = new MarcCrackerAndLabelerIndexFormatConverter(recordType)
     }
 
    static main(args) {
@@ -771,7 +773,6 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     def createJson(URI identifier, Map injson) {
         def outjson = [:]
         def pfx = identifier.toString().split("/")[1]
-        def marccracker = new MarcCrackerAndLabelerIndexFormatConverter(recordType)
 
         outjson["@context"] = "http://libris.kb.se/contexts/libris.jsonld"
         outjson["@id"] = identifier.toString()

@@ -2,7 +2,7 @@ package se.kb.libris.whelks
 
 import groovy.util.logging.Slf4j as Log
 
-import se.kb.libris.whelks.imports.*
+import se.kb.libris.whelks.importers.*
 
 @Log
 class WhelkOperator {
@@ -19,9 +19,11 @@ class WhelkOperator {
         long startTime = System.currentTimeMillis()
         long time = 0
         if (operation == "import") {
-            def importer = new BatchImport(resource)
-            def nrimports = importer.doImport(whelk, since, numberOfDocs)
-            float elapsed = ((System.currentTimeMillis() - startTime) / 1000)
+            //def importer = new BatchImport(resource)
+            //def nrimports = importer.doImport(whelk, since, numberOfDocs)
+            def importer = new OAIPMHImporter(whelk, resource)
+            def nrimports = importer = importer.doImport(since)
+            def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
 
         } else if (operation == "reindex") {

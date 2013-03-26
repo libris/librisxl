@@ -97,12 +97,10 @@ class CombinedWhelk extends StandardWhelk {
     }
 
     @Override
-    Iterable<URI> bulkStore(Iterable<Document> docs) {
-        def list = []
+    void bulkStore(Iterable<Document> docs) {
         for (doc in docs) {
-            list << store(doc)
+            store(doc)
         }
-        return list
     }
 
     SearchResult query(Query q, String indexType) {
