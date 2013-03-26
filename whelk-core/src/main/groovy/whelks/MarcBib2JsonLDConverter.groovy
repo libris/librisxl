@@ -109,11 +109,11 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
                     def iv = getMarcValueFromField(code, "a", fjson).split(/\s+/, 2)
                     otherIdentifier["identifiedValue"] = iv[0].replaceAll("-", "")
                     if (iv.length > 1) {
-                        otherIdentifier["identifierNote"] = iv[1]
+                        otherIdentifier["comment"] = iv[1]
                     }
                     def toA = getMarcValueFromField(code, "c", fjson)
                     if (toA) {
-                        otherIdentifier["termsOfAvailability"] = ["literal":toA]
+                        otherIdentifier["termsOfAvailability"] = toA
                     }
                     def dep = getMarcValueFromField(code, "z", fjson)
                     if (dep) {
@@ -155,7 +155,7 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         if (marcref.get(RTYPE).subjects.get(system)?.containsKey(subjectcode)) {
             out = ["@id":new String(marcref.get(RTYPE).subjects[system][subjectcode])]
         }
-        if (system.startsWith("kssb/")) {
+        if (system?.startsWith("kssb/")) {
             if (subjectcode =~ /\s/) {
                 def (maincode, restcode) = subjectcode.split(/\s+/, 2)
                 subjectcode = maincode+"/"+URLEncoder.encode(restcode)

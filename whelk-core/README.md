@@ -11,15 +11,12 @@
 
 ### Start the whelk
 
+    $ export JAVA_OPTS="-Dfile.encoding=utf-8"
     $ gradle jettyRun
 
 .. Running at <http://localhost:8080/>
 
 This starts a local whelk, using an embedded elasticsearch and storage configured in `src/main/resources/mock_whelks.json`.
-
-By default, elasticsearch will attempt to use a cluster. To ensure an isolated local instance, use:
-
-    $ gradle jettyRun -Delastic.cluster=$(hostname)-es-local-cluster
 
 ### Import/update local storage from test data
 
