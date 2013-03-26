@@ -41,7 +41,10 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         def relcode = getMarcValueFromField(code, "4", fjson)
         if (relcode) {
             section = []
-            relcode.split().each {
+            if (relcode instanceof String) {
+                relcode = relcode.split()
+            }
+            relcode.each {
                 section << ["relator":(relators[it]?.term ?: "creator")]
             }
         } else {

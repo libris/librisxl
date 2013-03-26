@@ -86,7 +86,7 @@
       <level value="trace"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="debug"/>
+      <level value="trace"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.AutoComplete">
       <level value="debug"/>
