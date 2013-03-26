@@ -48,6 +48,7 @@ class StandardWhelk implements Whelk {
             }
         }
         addToIndex(docs)
+        addToQuadStore(doc)
     }
 
     @Override
@@ -133,12 +134,6 @@ class StandardWhelk implements Whelk {
             doc = fc.convert(doc)
         }
         return doc
-    }
-
-    def performIndexFormatConversion(List<Document> documents) {
-        for (ifc in indexFormatConverters) {
-            documents = convertBulk(documents)
-        }
     }
 
 
