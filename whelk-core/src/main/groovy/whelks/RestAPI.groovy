@@ -797,12 +797,14 @@ class ResourceListRestlet extends BasicWhelkAPI {
         "lang": "langcodes.json",
         "country": "countrycodes.json",
         "nationality": "nationalitycodes.json",
-        "relator": "relatorcodes.json"
+        "relator": "relatorcodes.json",
+        "typedef": "typedefs.json"
     ]
     def lang
     def country
     def nationality
     def relator
+    def typedef
     def mapper
 
     ResourceListRestlet() {

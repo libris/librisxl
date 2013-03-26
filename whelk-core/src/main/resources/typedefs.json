@@ -1,0 +1,30 @@
+{
+  "types": {
+    "Audiobook": {
+      "label_sv": "Ljudbok"
+    },
+    "Book": {
+      "label_sv": "Bok",
+      "termGroups": {}
+    },
+    "EBook": {
+      "subClassOf": "DigitalResource",
+      "label_sv": "E-bok",
+      "termGroups": {
+        "electronic": {
+          "label_sv": "",
+          "properties": {
+            "": {"label_sv": ""}
+          }
+        }
+      }
+    },
+    "ESerial": {
+      "subClassOf": "DigitalResource",
+      "label_sv": "E-serie"
+    },
+    "Serial": {
+      "label_sv": "Serie"
+    }
+  }
+}
