@@ -84,18 +84,16 @@ class StandardWhelk implements Whelk {
     void addToIndex(doc) {
         if (indexes.size() > 0) {
             log.debug("Adding to indexes")
-            def docs
-            if (doc instanceof Document) {
-                docs = [doc]
-            } else {
-                docs = doc
-            }
             for (ifc in getIndexFormatConverters()) {
                 log.trace("Calling indexformatconverter $ifc")
-                docs = ifc.convertBulk(docs)
+                    if (doc instanceof List) {
+                        doc = ifc.convertBulk(doc)
+                    } else {
+                        doc = ifc.convert(doc)
+                    }
             }
             for (idx in indexes) {
-                idx.index(docs, this.prefix)
+                idx.index(doc, this.prefix)
             }
         }
     }
