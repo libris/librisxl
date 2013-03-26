@@ -68,6 +68,7 @@ class RestManager extends Application {
             router.attach(dapi.path, dapi)
             log.debug("Getting APIs for whelk ${it.prefix}")
             for (api in it.getAPIs()) {
+                log.debug("API is $api")
                 if (!api.varPath) {
                     router.attach(api.path, api)
                 }

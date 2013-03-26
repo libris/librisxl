@@ -14,7 +14,7 @@ import org.codehaus.jackson.map.*
 class StandardWhelk implements Whelk {
 
     String prefix
-    Iterable<Plugin> plugins = new TreeSet<Plugin>()
+    List<Plugin> plugins = new ArrayList<Plugin>()
 
 
     StandardWhelk(String pfx) {
@@ -162,7 +162,7 @@ class StandardWhelk implements Whelk {
 
     @Override
     void addPlugin(Plugin plugin) {
-        log.trace("[${this.prefix}] Initializing ${plugin.id}")
+        log.debug("[${this.prefix}] Initializing ${plugin.id}")
         if (plugin instanceof WhelkAware) {
             plugin.setWhelk(this)
         }
@@ -175,8 +175,8 @@ class StandardWhelk implements Whelk {
     def getStorages() { return plugins.findAll { it instanceof Storage } }
     def getIndexes() { return plugins.findAll { it instanceof Index } }
     def getAPIs() { return plugins.findAll { it instanceof API } }
-    def getFormatConverters() { return plugins.findAll { it instanceof FormatConverter } }
-    def getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter } }
+    def getFormatConverters() { return plugins.findAll { it instanceof FormatConverter } as TreeSet}
+    def getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter } as TreeSet }
     def getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
 
 }
