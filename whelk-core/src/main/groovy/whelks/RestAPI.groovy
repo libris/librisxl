@@ -366,7 +366,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             }
             def callback = reqMap.get("callback")
             if (q) {
-                q.addFacet("@type")
+                q.addFacet("about.@type")
                 q.addFacet("about.dateOfPublication")
                 /*
                 q.addFacet("status")
@@ -797,12 +797,14 @@ class ResourceListRestlet extends BasicWhelkAPI {
         "lang": "langcodes.json",
         "country": "countrycodes.json",
         "nationality": "nationalitycodes.json",
-        "relator": "relatorcodes.json"
+        "relator": "relatorcodes.json",
+        "typedef": "typedefs.json"
     ]
     def lang
     def country
     def nationality
     def relator
+    def typedef
     def mapper
 
     ResourceListRestlet() {
@@ -886,13 +888,14 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
         mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def link = queryMap.get("link")
-        def queryStr
+        def queryObj
         def results
         def outjson = new StringBuilder()
         def records = []
         if (link) {
-            queryStr = new Query(link).addField("links.identifier")
-            results = this.whelk.query(queryStr, "metadata")
+            queryObj = new ElasticQuery(link).addField("links.identifier")
+            queryObj.indexType = "metadata"
+            results = this.whelk.query(queryObj)
             results.hits.each {
                 def identifier = it.identifier.toString()
                 def d = whelk.get(new URI(identifier))

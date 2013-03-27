@@ -48,15 +48,19 @@
   <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
       <level value="trace"/>
   </logger>
-       <logger name="se.kb.libris.whelks.imports.BatchImport">
+  -->
+   <logger name="se.kb.libris.whelks.importers.OAIPMHImporter">
       <level value="debug"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.plugin.JsonLD2MarcConverter">
       <level value="trace"/>
   </logger>
+  -->
   <logger name="se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter">
-      <level value="trace"/>
+      <level value="error"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
   </logger>
@@ -68,23 +72,23 @@
   </logger>
   <logger name="se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter">
       <level value="trace"/>
-  </logger>
+  /logger>
   <logger name="se.kb.libris.whelks.basic.BasicDocument">
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger>
-  <logger name="se.kb.libris.whelks.WhelkImpl">
+  <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.CombinedWhelk">
       <level value="trace"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="debug"/>
+      <level value="trace"/>
   </logger>
- <logger name="se.kb.libris.whelks.api.AutoComplete">
+<logger name="se.kb.libris.whelks.api.AutoComplete">
       <level value="debug"/>
   </logger>
  <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">

@@ -12,8 +12,7 @@
       "isbnNote": null,
       "identifier": "identifierForTheManifestation",
       "instanceOf": "rel:expressionManifested",
-      "pubDate": "dateOfPublication",
-      "pubYear": {"@id": "dateOfPublication", "@type": "xsd:gYear"},
+      "yearOfPublication": {"@id": "dateOfPublication", "@type": "xsd:gYear"},
 
       "Work": {"@id": "ent:Expression", "_properties": ["titleProper", "..."]},
       "title": {"@id": "titleProper", "_min": 1, "_max": 1, "_label_sv": "Titel"},

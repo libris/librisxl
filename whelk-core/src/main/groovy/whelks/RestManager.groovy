@@ -68,6 +68,7 @@ class RestManager extends Application {
             router.attach(dapi.path, dapi)
             log.debug("Getting APIs for whelk ${it.prefix}")
             for (api in it.getAPIs()) {
+                log.debug("API is $api")
                 if (!api.varPath) {
                     router.attach(api.path, api)
                 }
@@ -80,12 +81,6 @@ class RestManager extends Application {
             }
         }
 
-        /*
-        def dr = new DocumentRestlet()
-        whelks['suggest'].addPlugin(dr)
-        router.attach("{path}", dr).template.variables.put("path", new Variable(Variable.TYPE_URI_PATH))
-
-        */
         return router
     }
 }

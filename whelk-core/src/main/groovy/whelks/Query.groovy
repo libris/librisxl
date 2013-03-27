@@ -20,6 +20,8 @@ class Query {
     public static final int TERM_FACET = 0
     public static final int QUERY_FACET = 1
 
+    Query() {}
+
     Query(String qstr) {
         this.query = qstr
     }
@@ -152,6 +154,28 @@ class Query {
         }
         facets << (facetgroup!=null ? new QueryFacet(facetgroup, name, field) : new TermFacet(name, field))
         return this
+    }
+}
+
+@Log
+class ElasticQuery extends Query {
+    String indexType
+
+    ElasticQuery() {super()}
+
+    ElasticQuery(String qs) {
+        super(qs)
+    }
+
+    ElasticQuery(Query q) {
+        q.properties.each { name, value ->
+            log.trace("[ElasticQuery] setting $name : $value")
+            try {
+                this."$name" = value
+            } catch (groovy.lang.ReadOnlyPropertyException rope) {
+                log.trace("[ElasticQuery] ${rope.message}")
+            }
+        }
     }
 }
 

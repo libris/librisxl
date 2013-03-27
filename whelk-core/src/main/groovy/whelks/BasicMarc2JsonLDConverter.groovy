@@ -59,18 +59,24 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                     }
                 } else if (fieldcode instanceof Map) {
                     def obj = [:]
+                    def match = false
                     fieldcode.each { item, fcode ->
                         def v
                         if (fcode.startsWith("CONSTANT:")) {
                             v = fcode.substring(9)
                         } else {
                             v = getMarcValueFromField(code, fcode, fjson)
+                            if (v) {
+                                match = true
+                            }
                         }
                         if (v) {
                             obj[(item)] = v
                         }
                     }
-                    outjson = Tools.insertAt(outjson, property, obj)
+                    if (match) {
+                        outjson = Tools.insertAt(outjson, property, obj)
+                    }
                 }
             }
 
@@ -125,10 +131,10 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
     }
 
     def convertJson(injson, identifier) {
-        def outjson = ["@id": identifier]
-        def rt = detectRecordType(injson)
+        def outjson = ["@id": identifier, "@type": "Record"]
+        def rt = detectResourceType(injson)
         if (rt) {
-            outjson["@type"] = rt
+            outjson.about = ["@type": rt]
         }
 
         def missing = []
@@ -173,7 +179,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
 
     // Utility methods
-    String detectRecordType(marcjson) {
+    String detectResourceType(marcjson) {
         log.debug("leader: ${marcjson.leader}")
         def typeOfRecord = marcjson.leader[6]
         def bibLevel = marcjson.leader[7]
@@ -189,10 +195,10 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         }
         def computerMaterial = getControlField("007", marcjson)?.charAt(1)
         if (typeOfRecord == "a" && bibLevel == "m" && carrierType == "c" && computerMaterial == "r") {
-            return "Ebook"
+            return "EBook"
         }
         if (typeOfRecord == "a" && bibLevel == "s" && carrierType == "c" && computerMaterial == "r") {
-            return "Eserial"
+            return "ESerial"
         }
         return null
     }
@@ -235,12 +241,13 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
     }
 
     def getMarcValueFromField(field, code, fieldjson, joinChar=" ") {
+        def codes = code.toList()
         def codeValues = []
         log.trace("getMarcValueFromField: $field.$code - $fieldjson")
         if (fieldjson instanceof Map) {
             fieldjson.subfields.each { s ->
                 s.each {sc, sv ->
-                    if (sc in code.toList()) {
+                    if (sc in codes) {
                         this.convertedCodes["$field.$sc"] = true
                         codeValues << sv
                     }
@@ -250,7 +257,13 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             return fieldjson
         }
         log.trace("codeValues: $codeValues")
-        return codeValues.join(joinChar)
+        if (!codeValues.size()) {
+            return null
+        } else if (codeValues.size() == 1) {
+            return codeValues[0]
+        } else {
+            return codeValues
+        }
     }
 
     // Mapping methods
@@ -270,8 +283,10 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         def numeration = getMarcValueFromField(code, "b", fjson)
         def title = getMarcValueFromField(code, "c", fjson)
         def dates = getMarcValueFromField(code, "d", fjson)
-        person["authoritativeName"] = name.replaceAll(/,$/, "").trim()
-        person["authorizedAccessPoint"] = name.replaceAll(/,$/, "").trim()
+        if (name) {
+            person["authoritativeName"] = name.replaceAll(/,$/, "").trim()
+            person["authorizedAccessPoint"] = name.replaceAll(/,$/, "").trim()
+        }
         if (numeration) {
             person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + " " + numeration
             person["numeration"] = numeration
@@ -283,10 +298,14 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         }
         if (dates) {
             person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + ", " + dates
-            dates = dates.split(/-/)
-            person["birthYear"] = dates[0]
-            if (dates.size() > 1) {
-                person["deathYear"] = dates[1]
+            try {
+                dates = dates.split(/-/)
+                person["birthYear"] = dates[0]
+                if (dates.size() > 1) {
+                    person["deathYear"] = dates[1]
+                }
+            } catch (ArrayIndexOutOfBoundsException aioobe) {
+                log.warn("Failed to split date $dates")
             }
         }
         if (fjson.ind1 == "1" && person["authoritativeName"] =~ /, /) {

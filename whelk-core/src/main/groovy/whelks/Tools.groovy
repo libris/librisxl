@@ -67,8 +67,12 @@ class Tools {
         return result
     }
 
-    static Map insertAt(Map origmap, String path, Object newobject) {
+    static Map insertAt(Map origmap, String path, Object newobject, boolean repeatable=false) {
         if (path) {
+            if (path.endsWith("+")) {
+                path = path[0..-2]
+                repeatable = true
+            }
             def m = origmap
             def keys = path.split(/\./)
             keys.eachWithIndex() { key, i ->
@@ -95,6 +99,8 @@ class Tools {
                     m[lastkey] = [lastvalue]
                 }
                 m[lastkey] << newobject
+            } else if (repeatable) {
+                m[lastkey] = [newobject]
             } else {
                 m[lastkey] = newobject
             }

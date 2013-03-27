@@ -41,8 +41,11 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         def relcode = getMarcValueFromField(code, "4", fjson)
         if (relcode) {
             section = []
-            relcode.split().each {
-                section << ["relator":(relators[it].term ?: "creator")]
+            if (relcode instanceof String) {
+                relcode = relcode.split()
+            }
+            relcode.each {
+                section << ["relator":(relators[it]?.term ?: "creator")]
             }
         } else {
             section = [["relator": "authorList"]]
@@ -53,8 +56,13 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
     def mapInstitution(outjson, code, fjson, marcjson) {
         def inst = mapPerson(outjson, code, fjson, marcjson)
         log.debug("inst: $inst")
-        inst[0]["@type"] = "Organization"
-        inst[0].remove("source")
+        if (inst instanceof List) {
+            inst[0]["@type"] = "Organization"
+            inst[0].remove("source")
+        } else {
+            inst["@type"] = "Organization"
+            inst.remove("source")
+        }
         return inst
     }
 
@@ -104,11 +112,11 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
                     def iv = getMarcValueFromField(code, "a", fjson).split(/\s+/, 2)
                     otherIdentifier["identifiedValue"] = iv[0].replaceAll("-", "")
                     if (iv.length > 1) {
-                        otherIdentifier["identifierNote"] = iv[1]
+                        otherIdentifier["comment"] = iv[1]
                     }
                     def toA = getMarcValueFromField(code, "c", fjson)
                     if (toA) {
-                        otherIdentifier["termsOfAvailability"] = ["literal":toA]
+                        otherIdentifier["termsOfAvailability"] = toA
                     }
                     def dep = getMarcValueFromField(code, "z", fjson)
                     if (dep) {
@@ -150,7 +158,7 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         if (marcref.get(RTYPE).subjects.get(system)?.containsKey(subjectcode)) {
             out = ["@id":new String(marcref.get(RTYPE).subjects[system][subjectcode])]
         }
-        if (system.startsWith("kssb/")) {
+        if (system?.startsWith("kssb/")) {
             if (subjectcode =~ /\s/) {
                 def (maincode, restcode) = subjectcode.split(/\s+/, 2)
                 subjectcode = maincode+"/"+URLEncoder.encode(restcode)

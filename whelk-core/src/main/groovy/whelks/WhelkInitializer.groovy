@@ -22,7 +22,7 @@ class WhelkInitializer {
     def getWhelks() {
         json._whelks.each { w ->
             w.each { wname, meta ->
-                meta._class = meta._class ?: "se.kb.libris.whelks.WhelkImpl"
+                meta._class = meta._class ?: "se.kb.libris.whelks.StandardWhelk"
                 def whelk = Class.forName(meta._class).getConstructor(String.class).newInstance(wname)
                 // Find setters for whelk.
                 meta.each { key, value ->
@@ -34,8 +34,8 @@ class WhelkInitializer {
                 for (p in meta._plugins) {
                     whelk.addPlugin(getPlugin(p, wname))
                 }
-                log.debug("Initializing the whelk")
-                whelk.init()
+                //log.debug("Initializing the whelk")
+                //whelk.init()
                 whelklist << whelk
             }
         }
