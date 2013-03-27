@@ -2,7 +2,7 @@
     "_whelks": [
         {
             "bib":{
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
+                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "cleanupconverter", "entityextractor", "jsonldlinkfinder"]
             }
         },
         {
@@ -85,8 +85,15 @@
             }
         },
         {
+            "cleanupconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter",
+                "_priority" : 0
+            }
+        },
+        {
             "entityextractor" : {
-                "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter",
+                "_priority" : 1
             }
         },
         {
