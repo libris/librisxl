@@ -19,6 +19,7 @@ class OAIPMHImporter {
     String resource
     int nrImported = 0
     int nrDeleted = 0
+    long startTime = 0
 
     OAIPMHImporter(Whelk toWhelk, String fromResource) {
         this.whelk = toWhelk
@@ -31,6 +32,7 @@ class OAIPMHImporter {
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
         }
+        startTime = System.currentTimeMillis()
         log.info("Harvesting OAIPMH data from $urlString")
         URL url = new URL(urlString)
         String resumptionToken = harvest(url)
@@ -97,11 +99,11 @@ class OAIPMHImporter {
             }
         }
         long conversionTime = System.currentTimeMillis()
-        for (doc in documents) {
-            whelk.store(doc)
-        }
+        whelk.bulkStore(documents)
+        int sizeOfBatch = documents.size()
+
         long storageTime = System.currentTimeMillis()
-        log.debug("Loaded sofar: $nrImported. Times (in milliseconds): [Load URL: " +(meanTime - loadStartTime)+ "] [Convert: "+(conversionTime - meanTime)+"] [Store: "+(storageTime - conversionTime)+"]")
+        log.debug("Loaded sofar: $nrImported. Times (in milliseconds): [Load URL: " +(meanTime - loadStartTime)+ "] [Convert: "+(conversionTime - meanTime)+"] [Store: "+(storageTime - conversionTime)+"] Velocity: " + ((sizeOfBatch/((System.currentTimeMillis() - loadStartTime)/1000)) as int) + " docs/sec.")
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
             log.info("Last page is $xmlString")

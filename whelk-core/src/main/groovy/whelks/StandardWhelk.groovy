@@ -46,7 +46,7 @@ class StandardWhelk implements Whelk {
             }
         }
         addToIndex(docs)
-        addToQuadStore(doc)
+        addToQuadStore(docs)
     }
 
     @Override

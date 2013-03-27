@@ -20,12 +20,13 @@ class WhelkOperator {
         long time = 0
         if (operation == "import") {
             //def importer = new BatchImport(resource)
-            //def nrimports = importer.doImport(whelk, since, numberOfDocs)
             def importer = new OAIPMHImporter(whelk, resource)
-            def nrimports = importer = importer.doImport(since)
+            def nrimports = importer.doImport(since)
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
-
+        } else if (operation == "importdump") {
+            def importer = new DumpImporter(whelk, resource, false)
+            def nrimports = importer.doImport()
         } else if (operation == "reindex") {
             if (args.length > 3) { // Reindex a single document
                 println "Reindexing document with identifier $resource"

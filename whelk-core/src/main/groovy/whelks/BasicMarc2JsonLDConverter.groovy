@@ -232,7 +232,14 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             it.each { f, v ->
                 if (f == field) {
                     log.trace("calling getvalue at $f")
-                    values << getMarcValueFromField(field, code, v, joinChar)
+                    def mvff = getMarcValueFromField(field, code, v, joinChar)
+                    if (mvff) {
+                        if (mvff instanceof List) {
+                            values.addAll(mvff)
+                        } else {
+                            values << mvff
+                        }
+                    }
                 }
             }
         }
@@ -297,15 +304,14 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
         }
         if (dates) {
+            if (dates instanceof List) {
+                dates = dates[0]
+            }
             person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + ", " + dates
-            try {
-                dates = dates.split(/-/)
-                person["birthYear"] = dates[0]
-                if (dates.size() > 1) {
-                    person["deathYear"] = dates[1]
-                }
-            } catch (ArrayIndexOutOfBoundsException aioobe) {
-                log.warn("Failed to split date $dates")
+            dates = dates.split(/-/)
+            person["birthYear"] = dates[0]
+            if (dates.size() > 1) {
+                person["deathYear"] = dates[1]
             }
         }
         if (fjson.ind1 == "1" && person["authoritativeName"] =~ /, /) {
