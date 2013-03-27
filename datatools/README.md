@@ -18,7 +18,7 @@ An auth post:
 
 The librisxl backend system has tools for converting ISO2709 to MARC-in-JSON.
 
-## Generate the marcmap
+## Generate the marcmap ##
 
 (Ask a co-worker for the config file sources.)
 
@@ -48,4 +48,25 @@ The librisxl backend system has tools for converting ISO2709 to MARC-in-JSON.
 7. Add frbr hints as entity annotations in the marcmap by running:
 
     $ python frbrize_marcmap.py $FRBR_CSV $MARCMAP > tmpout && mv tmpout $MARCMAP
+
+## Using the marcmap ##
+
+TBD.
+
+## Resource lists ##
+
+Currently, whelk-core/src/main/resources/ contains a number of resource lists with various origins.
+
+nationalitycodes.json
+countrycodes.json
+langcodes.json
+
+### relatorcodes.json ###
+
+Source: http://www.loc.gov/marc/relators/relacode.html
+Additional source: manually added swedish labels
+
+### typedefs.json ###
+
+Source: hand-curated definitions of RDF-based types inferred from MARC.
 

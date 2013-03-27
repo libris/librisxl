@@ -195,10 +195,10 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         }
         def computerMaterial = getControlField("007", marcjson)?.charAt(1)
         if (typeOfRecord == "a" && bibLevel == "m" && carrierType == "c" && computerMaterial == "r") {
-            return "Ebook"
+            return "EBook"
         }
         if (typeOfRecord == "a" && bibLevel == "s" && carrierType == "c" && computerMaterial == "r") {
-            return "Eserial"
+            return "ESerial"
         }
         return null
     }
