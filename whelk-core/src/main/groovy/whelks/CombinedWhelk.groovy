@@ -98,9 +98,45 @@ class CombinedWhelk extends StandardWhelk {
 
     @Override
     void bulkStore(Iterable<Document> docs) {
+        def idocs = []
         for (doc in docs) {
-            store(doc)
+            def usedStorages = []
+
+            for (storage in storages) {
+                if (rules.storeByFormat[doc.format] == storage.id) {
+                    log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
+                    storage.store(doc, this.pfxs)
+                    usedStorages << storage
+                }
+            }
+
+            def remainingStorages = new ArrayList(storages)
+            for (us in usedStorages) {
+                remainingStorages.remove(us)
+            }
+            log.trace("Remaining storages : $remainingStorages")
+
+            boolean ok = true
+
+            try {
+                doc = performStorageFormatConversion(doc)
+                idocs << doc
+            } catch (Exception e) {
+                log.error("Trapped exception ${e.message} for document ${doc.dataAsString}. THIS IS A TEMPORARY SOLUTION AND SHOULD BE REMOVED ASAP! (Blame Markus)", e)
+                ok = false
+            }
+
+            if (ok) {
+                for (storage in remainingStorages) {
+                    if (!rules.storeByFormat[doc.format] || rules.storeByFormat[doc.format] == storage.id) {
+                        log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
+                    storage.store(doc, this.pfxs)
+                    }
+                }
+            }
         }
+        addToIndex(idocs)
+        addToQuadStore(idocs)
     }
 
     SearchResult query(Query q, String indexType) {

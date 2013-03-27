@@ -49,7 +49,7 @@
       <level value="trace"/>
   </logger>
   -->
-   <logger name="se.kb.libris.whelks.importers.OAIPMHImporter">
+   <logger name="se.kb.libris.whelks.importers">
       <level value="debug"/>
   </logger>
   <!--

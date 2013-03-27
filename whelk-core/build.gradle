@@ -90,6 +90,8 @@ dependencies {
     compile 'commons-codec:commons-codec:1.7'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.9'
     compile 'com.basho.riak:riak-client:1.0.6'
+    compile 'stax:stax:1.2.0'
+    compile 'stax:stax-api:1.0.1'
     providedCompile 'javax.servlet:servlet-api:2.5'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }

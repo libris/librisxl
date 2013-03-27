@@ -67,7 +67,21 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
     }
 
     def mapIsbn(outjson, code, fjson, marcjson) {
-        return getMarcValueFromField(code, "a", fjson).split(/\s+/, 2)[0].replaceAll("-", "")
+        def isbn = getMarcValueFromField(code, "a", fjson)
+        if (isbn instanceof List) {
+            def i = []
+            isbn.each {
+                i << it.split(/\s+/, 2)[0].replaceAll("-", "")
+            }
+            return i
+        } else if (isbn) {
+            try {
+                return isbn.split(/\s+/, 2)[0].replaceAll("-", "")
+            } catch (NullPointerException npe) {
+                log.error("ERROR: $isbn")
+                throw npe
+            }
+        }
     }
 
     def detectIdentifierScheme(fjson) {
@@ -109,9 +123,11 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         if (scheme) {
             def otherIdentifier = ["@type":"Identifier","identifierScheme":scheme]
                 if (scheme == "isbn") {
-                    def iv = getMarcValueFromField(code, "a", fjson).split(/\s+/, 2)
-                    otherIdentifier["identifiedValue"] = iv[0].replaceAll("-", "")
-                    if (iv.length > 1) {
+                    def iv = getMarcValueFromField(code, "a", fjson)?.split(/\s+/, 2)
+                    if (iv) {
+                        otherIdentifier["identifiedValue"] = iv[0].replaceAll("-", "")
+                    }
+                    if (iv && iv.length > 1) {
                         otherIdentifier["comment"] = iv[1]
                     }
                     def toA = getMarcValueFromField(code, "c", fjson)
@@ -159,6 +175,9 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
             out = ["@id":new String(marcref.get(RTYPE).subjects[system][subjectcode])]
         }
         if (system?.startsWith("kssb/")) {
+            if (subjectcode instanceof List) {
+                subjectcode = subjectcode[0]
+            }
             if (subjectcode =~ /\s/) {
                 def (maincode, restcode) = subjectcode.split(/\s+/, 2)
                 subjectcode = maincode+"/"+URLEncoder.encode(restcode)
