@@ -290,10 +290,16 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         def numeration = getMarcValueFromField(code, "b", fjson)
         def title = getMarcValueFromField(code, "c", fjson)
         def dates = getMarcValueFromField(code, "d", fjson)
-        if (name) {
+        if (name && name instanceof String) {
             person["authoritativeName"] = name.replaceAll(/,$/, "").trim()
             person["authorizedAccessPoint"] = name.replaceAll(/,$/, "").trim()
-        }
+        } else if (name && name instanceof ArrayList) {
+              name.each {
+                  person["authoritativeName"] = it.replaceAll(/,$/, "").trim()
+                  person["authorizedAccessPoint"] = it.replaceAll(/,$/, "").trim()
+              }
+         }
+        
         if (numeration) {
             person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + " " + numeration
             person["numeration"] = numeration
