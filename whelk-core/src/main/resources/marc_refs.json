@@ -221,6 +221,9 @@
                 "x" : ["shelvingNonpublicNote"],
                 "z" : ["shelvingPublicNote"]
             },
+            "856": {
+                "u" : ["uniformResourceIdentifer"]
+            }
             "866": {
                 "a" : ["textualHoldings"],
                 "x" : ["holdingsNonpublicNote"],
