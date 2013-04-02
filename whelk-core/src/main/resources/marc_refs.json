@@ -218,6 +218,7 @@
                 "i" : ["itemPart"],
                 "j" : ["shelvingControlNumber"],
                 "l" : ["shelvingFormOrTitle"],
+                "t" : ["copyNumber"],
                 "x" : ["shelvingNonpublicNote"],
                 "z" : ["shelvingPublicNote"]
             },

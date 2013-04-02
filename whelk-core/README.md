@@ -43,15 +43,13 @@ First set up configuration of it:
     $ cp src/main/resources/whelks-core.properties.in src/main/resources/whelks-core.properties
     $ vim src/main/resources/whelks-core.properties # ... (ask for directions)
 
-### Run a full import from external sources
+### Perform whelk operations
 
-Warning! Don't do this against klustret unless you know what klustret means.
+Run whelkOperation gradle task to import, reindex or rebuild:
 
-The import task uses this argument syntax:
+    $ gradle whelkOperation -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)]]' -Dwhelk.config.uri=<uri-to-config-json> (-Delastic.host='<host>') (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>')
 
-    <bib|auth> [bib|auth] [since (in milliseconds/negative days/datetime)]
+Example - import documents from 2000-01-01 to mock-whelk from external sources:
 
-Example - import data to bib from resource bib since yesterday:
-
-    $ gradle importData -Dargs='bib bib -1'
+    $ gradle whelkOperation -Dargs='import bib bib 2000-01-01T00:00:00Z' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:src/main/resources/mock_whelks.json
 
