@@ -895,7 +895,7 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
         def records = []
         if (link) {
             queryObj = new ElasticQuery(link).addField("links.identifier")
-            queryObj.indexType = "metadata"
+            queryObj.indexType = "Indexed:Metadata"
             results = this.whelk.query(queryObj)
             results.hits.each {
                 def identifier = it.identifier.toString()
