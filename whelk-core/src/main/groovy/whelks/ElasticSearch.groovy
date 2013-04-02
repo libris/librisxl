@@ -50,8 +50,8 @@ abstract class ElasticSearch extends BasicPlugin {
 
     String URI_SEPARATOR = "::"
 
-    String indexType = "record"
-    String indexMetadataType = "metadata"
+    String indexType = "indexed:document"
+    String indexMetadataType = "indexed:metadata"
     String storageType = "document"
 
     @Override

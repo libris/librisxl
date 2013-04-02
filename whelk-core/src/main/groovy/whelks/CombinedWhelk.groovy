@@ -49,30 +49,7 @@ class CombinedWhelk extends StandardWhelk {
         } else {
             doc = sanityCheck(doc)
 
-            def usedStorages = []
-
-            for (storage in storages) {
-                if (rules.storeByFormat[doc.format] == storage.id) {
-                    log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
-                    storage.store(doc, this.pfxs)
-                    usedStorages << storage
-                }
-            }
-
-            def remainingStorages = new ArrayList(storages)
-            for (us in usedStorages) {
-                remainingStorages.remove(us)
-            }
-            log.trace("Remaining storages : $remainingStorages")
-
-            doc = performStorageFormatConversion(doc)
-
-            for (storage in remainingStorages) {
-                if (!rules.storeByFormat[doc.format] || rules.storeByFormat[doc.format] == storage.id) {
-                    log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
-                    storage.store(doc, this.pfxs)
-                }
-            }
+            addToStorage(doc)
 
             addToIndex(doc)
             addToQuadStore(doc)
@@ -96,46 +73,53 @@ class CombinedWhelk extends StandardWhelk {
         return doc
     }
 
-    @Override
-    void bulkStore(Iterable<Document> docs) {
-        def idocs = []
-        for (doc in docs) {
-            def usedStorages = []
+    void addToStorage(doc) {
+        def usedStorages = []
 
-            for (storage in storages) {
-                if (rules.storeByFormat[doc.format] == storage.id) {
+        for (storage in storages) {
+            if (rules.storeByFormat[doc.format] == storage.id) {
+                log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
+                storage.store(doc, this.pfxs)
+                usedStorages << storage
+            }
+        }
+
+        def remainingStorages = new ArrayList(storages)
+        for (us in usedStorages) {
+            remainingStorages.remove(us)
+        }
+        log.trace("Remaining storages : $remainingStorages")
+
+        try {
+            doc = performStorageFormatConversion(doc)
+            idocs << doc
+        } catch (Exception e) {
+            log.error("Trapped exception ${e.message} for document ${doc.dataAsString}. THIS IS A TEMPORARY SOLUTION AND SHOULD BE REMOVED ASAP! (Blame Markus)", e)
+            ok = false
+        }
+
+        if (ok) {
+            for (storage in remainingStorages) {
+                if (!rules.storeByFormat[doc.format] || rules.storeByFormat[doc.format] == storage.id) {
                     log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
                     storage.store(doc, this.pfxs)
-                    usedStorages << storage
-                }
-            }
-
-            def remainingStorages = new ArrayList(storages)
-            for (us in usedStorages) {
-                remainingStorages.remove(us)
-            }
-            log.trace("Remaining storages : $remainingStorages")
-
-            boolean ok = true
-
-            try {
-                doc = performStorageFormatConversion(doc)
-                idocs << doc
-            } catch (Exception e) {
-                log.error("Trapped exception ${e.message} for document ${doc.dataAsString}. THIS IS A TEMPORARY SOLUTION AND SHOULD BE REMOVED ASAP! (Blame Markus)", e)
-                ok = false
-            }
-
-            if (ok) {
-                for (storage in remainingStorages) {
-                    if (!rules.storeByFormat[doc.format] || rules.storeByFormat[doc.format] == storage.id) {
-                        log.debug("Storing document with format ${doc.format} in storage with id ${storage.id}")
-                    storage.store(doc, this.pfxs)
-                    }
                 }
             }
         }
+    }
+
+
+    @Override
+    void bulkStore(Iterable<Document> docs) {
+        def idocs = []
+        long startTime = System.nanoTime()
+        for (doc in docs) {
+            addToStorage(doc)
+        }
+        long meanTime = System.nanoTime()
+        log.trace("[bulkStore] Time to store: " + ((meanTime - startTime)/1000000))
         addToIndex(idocs)
+        log.trace("[bulkStore] Time to index: " + ((System.nanoTime() - meanTime)/1000000))
         addToQuadStore(idocs)
     }
 

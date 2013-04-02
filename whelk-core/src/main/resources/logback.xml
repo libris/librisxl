@@ -80,7 +80,7 @@
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.StandardWhelk">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <logger name="se.kb.libris.whelks.CombinedWhelk">
       <level value="trace"/>

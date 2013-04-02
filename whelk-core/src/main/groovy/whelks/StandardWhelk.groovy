@@ -11,6 +11,7 @@ import se.kb.libris.whelks.plugin.*
 import org.codehaus.jackson.map.*
 
 @Log
+//@groovy.transform.CompileStatic
 class StandardWhelk implements Whelk {
 
     String prefix
@@ -80,7 +81,6 @@ class StandardWhelk implements Whelk {
         return d
     }
 
-
     void addToIndex(doc) {
         if (indexes.size() > 0) {
             log.debug("Adding to indexes")
@@ -107,16 +107,16 @@ class StandardWhelk implements Whelk {
 
     @Override
     Document createDocument(byte[] data, Map metadata) { return createDocument(new String(data), metadata) }
-    Document createDocument(data, metadata) {
+    Document createDocument(String data, Map metadata) {
         log.debug("Creating document")
-        def doc = new BasicDocument().withData(data)
+        Document doc = new BasicDocument().withData(data)
         metadata.each { param, value ->
-            log.debug("Adding $param = $value")
+            log.trace("Adding $param = $value")
             doc = doc."with${param.capitalize()}"(value)
         }
         doc = performStorageFormatConversion(doc)
         for (lf in linkFinders) {
-            log.debug("Running linkfinder $lf")
+            log.trace("Running linkfinder $lf")
             for (link in lf.findLinks(doc)) {
                 doc.withLink(link)
             }
@@ -126,7 +126,7 @@ class StandardWhelk implements Whelk {
 
     Document performStorageFormatConversion(Document doc) {
         for (fc in formatConverters) {
-            log.debug("Running formatconverter $fc")
+            log.trace("Running formatconverter $fc")
             doc = fc.convert(doc)
         }
         return doc
@@ -169,12 +169,12 @@ class StandardWhelk implements Whelk {
     }
 
     // Sugar methods
-    def getComponents() { return plugins.findAll { it instanceof Component } }
-    def getStorages() { return plugins.findAll { it instanceof Storage } }
-    def getIndexes() { return plugins.findAll { it instanceof Index } }
-    def getAPIs() { return plugins.findAll { it instanceof API } }
-    def getFormatConverters() { return plugins.findAll { it instanceof FormatConverter } as TreeSet}
-    def getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter } as TreeSet }
-    def getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
+    List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
+    List<Storage> getStorages() { return plugins.findAll { it instanceof Storage } }
+    List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
+    List<API> getAPIs() { return plugins.findAll { it instanceof API } }
+    TreeSet<FormatConverter> getFormatConverters() { return plugins.findAll { it instanceof FormatConverter } as TreeSet}
+    TreeSet<IndexFormatConverter> getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter } as TreeSet }
+    List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
 
 }

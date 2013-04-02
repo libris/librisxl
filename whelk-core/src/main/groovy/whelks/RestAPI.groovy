@@ -305,7 +305,8 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
     String description = "Query API with preconfigured parameters for Kitin."
 
     //String defaultBoost = "labels.title:2,labels.author:2,labels.isbn:2"
-    String defaultBoost = "fields.020.subfields.a:5,fields.022.subfields.a:5,fields.100.subfields.a:5,fields.100.subfields.b:5,labels.title:3,fields.600.subfields.a:2,fields.600.subfields.b:2,fields.260.subfields.c:2,fields.008.subfields.yearTime1:2"
+    String defaultBoost = "about.instanceOf.title:5,about.isbn:5,about.instanceOf.authorList.authoritativeName:5,about.instanceOf.subject.authoritativeName:2,about.publisher.name:2"
+    //defaultBoost = "fields.020.subfields.a:5,fields.022.subfields.a:5,fields.100.subfields.a:5,fields.100.subfields.b:5,labels.title:3,fields.600.subfields.a:2,fields.600.subfields.b:2,fields.260.subfields.c:2,fields.008.subfields.yearTime1:2"
 
     def queryFacets = [
         "custom.bookSerial": [
@@ -354,11 +355,9 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
         long startTime = System.currentTimeMillis()
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def q, results
-        /*
         if (!reqMap["boost"]) {
             reqMap["boost"] = defaultBoost
         }
-        */
         try {
             q = new Query(reqMap)
             if (reqMap["f"]) {
