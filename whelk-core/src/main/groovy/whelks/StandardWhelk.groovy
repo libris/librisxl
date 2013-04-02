@@ -11,6 +11,7 @@ import se.kb.libris.whelks.plugin.*
 import org.codehaus.jackson.map.*
 
 @Log
+//@groovy.transform.CompileStatic
 class StandardWhelk implements Whelk {
 
     String prefix
@@ -106,7 +107,6 @@ class StandardWhelk implements Whelk {
 
     @Override
     Document createDocument(byte[] data, Map metadata) { return createDocument(new String(data), metadata) }
-    //@groovy.transform.CompileStatic
     Document createDocument(String data, Map metadata) {
         log.debug("Creating document")
         Document doc = new BasicDocument().withData(data)
@@ -124,7 +124,6 @@ class StandardWhelk implements Whelk {
         return doc
     }
 
-    @groovy.transform.CompileStatic
     Document performStorageFormatConversion(Document doc) {
         for (fc in formatConverters) {
             log.trace("Running formatconverter $fc")

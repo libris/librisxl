@@ -26,7 +26,10 @@ class WhelkOperator {
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else if (operation == "importdump") {
             def importer = new DumpImporter(whelk, resource, false)
-            def nrimports = importer.doImport()
+            def nrimports = importer.doImportFromURL()
+        } else if (operation == "importfile") {
+            def importer = new DumpImporter(whelk, resource, false)
+            def nrimports = importer.doImportFromFile()
         } else if (operation == "reindex") {
             if (args.length > 3) { // Reindex a single document
                 println "Reindexing document with identifier $resource"

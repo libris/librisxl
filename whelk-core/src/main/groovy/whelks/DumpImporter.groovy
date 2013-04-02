@@ -35,19 +35,24 @@ class DumpImporter {
         this.picky = picky
     }
 
-    int doImport() {
-        XMLInputFactory xif = XMLInputFactory.newInstance()
+    int doImportFromFile() {
+        def file = "/data/librisxl/${whelk.prefix}.xml"
+        log.info("Loading dump from $file")
+        XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(file))
+        performImport(xsr)
+    }
+
+    int doImportFromURL() {
         def properties = new Properties()
         properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"))
         def urlString = properties.getProperty("dumpurl").replace("<<resource>>", whelk.prefix)
         log.info("Loading dump from $urlString")
+        XMLInputFactory xif = XMLInputFactory.newInstance()
         XMLStreamReader xsr = xif.createXMLStreamReader(new URL(urlString).newInputStream())
-        /*
-        def file = "/data/librisxl/${whelk.prefix}.xml"
-        log.info("Loading dump from $file")
-        XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(file))
-        */
+        performImport(xsr)
+    }
 
+    int performImport(XMLStreamReader xsr) {
         xsr.nextTag(); // Advance to statements element
         def documents = []
         Transformer optimusPrime = TransformerFactory.newInstance().newTransformer()
