@@ -638,6 +638,9 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
             }
         } else if (recordType.equals("hold")) {
             switch (code) {
+                case "004":
+                    outjson["annotates"] = ["@id":"/bib/${json}" as String]
+                break;
                 default:
                     log.trace("mapfield default code: $code json: ${json}}")
                     def jldMapped = mapDefault(code, json)
@@ -812,6 +815,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                     }
             }
         } else if (recordType.equals("hold")) {
+            outjson["@type"] = "Holding"
             if (injson.containsKey("leader")) {
                 log.trace("Leader: ${injson.leader}}")
                 injson = marccracker.rewriteJson(identifier, injson)
@@ -836,7 +840,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
                             }
                         }
                     }
-                    outjson["@issueMode"] = resourceType
+                    outjson["issueMode"] = resourceType
                 }
             }
         } else if (recordType.equals("auth")) {
