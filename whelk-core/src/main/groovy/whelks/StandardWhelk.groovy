@@ -85,7 +85,7 @@ class StandardWhelk implements Whelk {
         if (indexes.size() > 0) {
             log.debug("Adding to indexes")
             for (ifc in getIndexFormatConverters()) {
-                log.trace("Calling indexformatconverter $ifc")
+                log.debug("Calling indexformatconverter $ifc")
                     if (doc instanceof List) {
                         doc = ifc.convertBulk(doc)
                     } else {
