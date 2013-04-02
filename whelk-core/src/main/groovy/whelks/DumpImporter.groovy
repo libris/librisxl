@@ -2,6 +2,7 @@ package se.kb.libris.whelks.importers
 
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.logging.Slf4j as Log
+import groovy.time.*
 
 import java.text.*
 
@@ -12,6 +13,7 @@ import javax.xml.transform.stax.StAXSource
 import javax.xml.transform.stream.StreamResult
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
@@ -38,19 +40,20 @@ class DumpImporter {
         def properties = new Properties()
         properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"))
         def urlString = properties.getProperty("dumpurl").replace("<<resource>>", whelk.prefix)
-        //log.info("Loading dump from $urlString")
-        //XMLStreamReader xsr = xif.createXMLStreamReader(new URL(urlString).newInputStream())
+        log.info("Loading dump from $urlString")
+        XMLStreamReader xsr = xif.createXMLStreamReader(new URL(urlString).newInputStream())
+        /*
         def file = "/data/librisxl/${whelk.prefix}.xml"
         log.info("Loading dump from $file")
         XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(file))
+        */
 
         xsr.nextTag(); // Advance to statements element
         def documents = []
         Transformer optimusPrime = TransformerFactory.newInstance().newTransformer()
-        long startTime = System.nanoTime()
-        int timeTransforming,timeBuilding
+        Date startTime = new Date()
         while(xsr.nextTag() == XMLStreamConstants.START_ELEMENT) {
-            final long loadStartTime = System.nanoTime()
+            Date loadStartTime = new Date()
             Writer outWriter = new StringWriter()
             Document doc = null
             try {
@@ -64,16 +67,16 @@ class DumpImporter {
             if (doc) {
                 documents << doc
                 if (++nrImported % BATCH_SIZE == 0) {
-                    long preStore = System.nanoTime()
-                    whelk.bulkStore(documents)
-                    int sizeOfBatch = documents.size()
-                    long now = System.nanoTime()
-                    float elapsedTime = (now - loadStartTime)/1000000000
-                    //log.debug("batch: $sizeOfBatch elapsed: $elapsedTime")
-                    log.debug("$nrImported documents stored. Velocity is " + (sizeOfBatch/elapsedTime) + " docs/sec.")
+                    this.whelk.bulkStore(documents)
                     documents = []
+                    def td = TimeCategory.minus(new Date(), loadStartTime)
+                    log.debug("batch: $BATCH_SIZE elapsed: $td")
+                    if (td.millis>0) {
+                        log.debug("$nrImported documents stored. Velocity is " + ((BATCH_SIZE/td.millis)*1000) + " docs/sec.")
+                    }
                 }
             }
+            Date loadEndTime = new Date()
         }
 
         // Handle remainder
