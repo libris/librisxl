@@ -188,7 +188,7 @@ class DocumentRestlet extends BasicWhelkAPI {
     def void handle(Request request, Response response) {
         log.debug("reqattr path: " + request.attributes["identifier"])
         String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["identifier"])
-        log.info "Path: $path"
+        log.debug "Path: $path"
         def mode = DisplayMode.DOCUMENT
         (path, mode) = determineDisplayMode(path)
         boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
@@ -895,7 +895,7 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
         def records = []
         if (link) {
             queryObj = new ElasticQuery(link).addField("links.identifier")
-            queryObj.indexType = "metadata"
+            queryObj.indexType = "Indexed:Metadata"
             results = this.whelk.query(queryObj)
             results.hits.each {
                 def identifier = it.identifier.toString()
