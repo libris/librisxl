@@ -8,14 +8,23 @@ import se.kb.libris.whelks.importers.*
 class WhelkOperator {
 
     static main(args) {
+        URI whelkConfigUri
+        try {
+            whelkConfigUri = new URI(System.getProperty("whelk.config.uri"))
+        } catch (NullPointerException npe) {
+            println "System property 'whelk.config.uri' is needed for whelkoperations."
+            System.exit(1)
+        }
+        WhelkInitializer wi = new WhelkInitializer(whelkConfigUri.toURL().newInputStream())
+
         if (args.length > 2) {
             println "WhelkOperator doing ${args[0]} on ${args[1]}. Configuring from ${args[2]}."
         }
         def operation = (args.length > 0 ? args[0] : null)
-        def whelk = (args.length > 2 ? (new WhelkInitializer(new URI(args[2]).toURL().newInputStream()).getWhelks().find { it.prefix == args[1] }) : null)
-        def resource = (args.length > 3 ? args[3] : whelk?.prefix)
-        def since = (args.length > 4 ? Tool.parseDate(args[4]) : null)
-        def numberOfDocs = (args.length > 5 ? args[5].toInteger() : null)
+        def whelk = (args.length > 1 ? (wi.getWhelks().find { it.prefix == args[1] }) : null)
+        def resource = (args.length > 2 ? args[2] : whelk?.prefix)
+        def since = (args.length > 3 ? Tool.parseDate(args[3]) : null)
+        def numberOfDocs = (args.length > 4 ? args[4].toInteger() : null)
         long startTime = System.currentTimeMillis()
         long time = 0
         if (operation == "import") {
@@ -87,7 +96,7 @@ class WhelkOperator {
             time = (System.currentTimeMillis() - startTime)/1000
             log.info("$count documents read. Total time elapsed: ${time} seconds. That's " + (count/time) + " documents / second.")
         } else {
-            println "Usage: <import|reindex|rebalance|populate> <whelkname> <config-url> [resource (for import)|target (for populate)] [since (for import)]"
+            println "Usage: <import|reindex|rebalance|populate> <whelkname> [resource (for import)|target (for populate)] [since (for import)]"
         }
     }
 }

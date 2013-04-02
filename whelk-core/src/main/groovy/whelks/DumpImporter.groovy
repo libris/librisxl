@@ -56,7 +56,6 @@ class DumpImporter {
         xsr.nextTag(); // Advance to statements element
         def documents = []
         Transformer optimusPrime = TransformerFactory.newInstance().newTransformer()
-        Date startTime = new Date()
         while(xsr.nextTag() == XMLStreamConstants.START_ELEMENT) {
             Date loadStartTime = new Date()
             Writer outWriter = new StringWriter()
@@ -75,13 +74,9 @@ class DumpImporter {
                     this.whelk.bulkStore(documents)
                     documents = []
                     def td = TimeCategory.minus(new Date(), loadStartTime)
-                    log.debug("batch: $BATCH_SIZE elapsed: $td")
-                    if (td.millis>0) {
-                        log.debug("$nrImported documents stored. Velocity is " + ((BATCH_SIZE/td.millis)*1000) + " docs/sec.")
-                    }
+                    log.debug("$nrImported documents stored. Lap time is $td")
                 }
             }
-            Date loadEndTime = new Date()
         }
 
         // Handle remainder
