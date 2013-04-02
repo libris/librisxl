@@ -1,2 +1,5 @@
 username=<apiusername>
 password=<apipassword>
+dumpurl_bib=<URL for continous bib dump>
+dumpurl_auth=<URL for continous auth dump>
+dumpurl_hold=<URL for continous hold dump>

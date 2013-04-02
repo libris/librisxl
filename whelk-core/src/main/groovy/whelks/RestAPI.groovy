@@ -389,7 +389,9 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
         } finally {
-            log.info("Query [" + q?.query + "] completed in " + (System.currentTimeMillis() - startTime) + " milliseconds and resulted in " + results?.numberOfHits + " hits.")
+            def headers = request.attributes.get("org.restlet.http.headers")
+            def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value
+            log.info("Query [" + q?.query + "] completed for $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds and resulted in " + results?.numberOfHits + " hits.")
         }
     }
 }

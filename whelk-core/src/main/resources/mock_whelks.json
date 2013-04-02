@@ -2,7 +2,7 @@
     "_whelks": [
         {
             "bib":{
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder"]
+                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "entityextractor", "jsonldlinkfinder", "cleaner"]
             }
         },
         {
@@ -90,6 +90,11 @@
             }
         },
         {
+            "cleaner" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter"
+            }
+        },
+        {
             "search" : {
                 "_class" : "se.kb.libris.whelks.api.SearchRestlet",
                 "_params" : {"boost" : "labels.title:2"}
@@ -118,7 +123,7 @@
                               "authorOf",
                               "hasAnnotation.about"
                             ],
-                            "indexTypes":"Person"
+                            "indexTypes":"person"
                             }
             }
         },

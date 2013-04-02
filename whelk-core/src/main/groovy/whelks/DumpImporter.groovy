@@ -45,7 +45,7 @@ class DumpImporter {
     int doImportFromURL() {
         def properties = new Properties()
         properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"))
-        def urlString = properties.getProperty("dumpurl").replace("<<resource>>", whelk.prefix)
+        def urlString = properties.getProperty("dumpurl_${whelk.prefix}")
         log.info("Loading dump from $urlString")
         XMLInputFactory xif = XMLInputFactory.newInstance()
         XMLStreamReader xsr = xif.createXMLStreamReader(new URL(urlString).newInputStream())

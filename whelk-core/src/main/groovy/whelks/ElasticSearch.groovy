@@ -50,7 +50,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
     String URI_SEPARATOR = "::"
 
-    String indexType = "indexed:document"
+    String indexType = "record"
     String indexMetadataType = "indexed:metadata"
     String storageType = "document"
 
@@ -169,7 +169,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
     void addDocument(Document doc, String addType, String idxpfx) {
         def eid = translateIdentifier(doc.identifier)
-        def entityType = doc.tags.find { it.type.toString() == "entityType"}?.value ?: addType
+        def entityType = doc.tags.find { it.type.toString() == "entityType"}?.value?.toLowerCase() ?: addType
         // Check if 
         if (entityType != indexType) {
             checkTypeMapping(idxpfx, entityType)
@@ -178,10 +178,10 @@ abstract class ElasticSearch extends BasicPlugin {
         log.trace "Should use index ${idxpfx}, type ${entityType} and id ${eid}"
         try {
             def irb = client.prepareIndex(idxpfx, entityType, eid)
-            if (addType == indexType) {
-                irb.setSource(doc.data)
-            } else {
+            if (entityType == storageType) {
                 irb.setTimestamp(""+doc.getTimestamp()).setSource(doc.toJson())
+            } else {
+                irb.setSource(doc.data)
             }
             IndexResponse response = performExecute(irb)
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
@@ -201,12 +201,16 @@ abstract class ElasticSearch extends BasicPlugin {
                 log.debug("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
-                    if (addType == indexType) {
-                        breq.add(client.prepareIndex(idxpfx, addType, translateIdentifier(doc.identifier)).setSource(doc.data))
+                    def entityType = doc.tags.find { it.type.toString() == "entityType"}?.value?.toLowerCase() ?: addType
+                    if (entityType != indexType) {
+                        checkTypeMapping(idxpfx, entityType)
+                    }
+                    if (entityType == storageType) {
+                        breq.add(client.prepareIndex(idxpfx, entityType, translateIdentifier(doc.identifier)).setSource(doc.data))
+                    } else {
+                        breq.add(client.prepareIndex(idxpfx, entityType, translateIdentifier(doc.identifier)).setSource(doc.data))
                         log.debug("Prepareing index (bulk) of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
                         breq.add(client.prepareIndex(idxpfx, indexMetadataType, translateIdentifier(doc.identifier)).setSource(doc.getMetadataJson()))
-                    } else {
-                        breq.add(client.prepareIndex(idxpfx, addType, translateIdentifier(doc.identifier)).setSource(doc.toJson()))
                     }
                 }
                 def response = performExecute(breq)
