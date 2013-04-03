@@ -38,7 +38,7 @@ class DumpImporter {
         log.info("Loading dump from $file")
         XMLInputFactory xif = XMLInputFactory.newInstance()
         XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(file))
-        performImport(xsr)
+        return performImport(xsr)
     }
 
     int doImportFromURL(URL url) {
@@ -49,7 +49,7 @@ class DumpImporter {
         XMLInputFactory xif = XMLInputFactory.newInstance()
         //XMLStreamReader xsr = xif.createXMLStreamReader(new URL(urlString).newInputStream())
         XMLStreamReader xsr = xif.createXMLStreamReader(url.newInputStream())
-        performImport(xsr)
+        return performImport(xsr)
     }
 
     int performImport(XMLStreamReader xsr) {
@@ -77,7 +77,7 @@ class DumpImporter {
                     //def td = TimeCategory.minus(new Date(), loadStartTime)
                     //log.debug("$nrImported documents stored. Lap time is $td")
                     float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
-                    log.debug("time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
+                    log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
                 }
             }
         }
