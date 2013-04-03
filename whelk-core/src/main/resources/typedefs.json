@@ -1,29 +1,38 @@
 {
   "types": {
     "Audiobook": {
-      "label_sv": "Ljudbok"
+      "term": "Audiobook",
+      "label_sv": "Ljudbok",
+      "termGroups": {
+        "identifers": ["028...", ""],
+        "description": ["...", "(856...)"]
+      }
     },
     "Book": {
+      "term": "Book",
       "label_sv": "Bok",
       "termGroups": {}
     },
-    "EBook": {
-      "subClassOf": "DigitalResource",
-      "label_sv": "E-bok",
+    "DigitalResource": {
+      "term": "DigitalResource",
       "termGroups": {
-        "electronic": {
-          "label_sv": "",
-          "properties": {
-            "": {"label_sv": ""}
-          }
-        }
+        "identifers": ["tag:024:code:2:common (urn, doi, hdl)"],
+        "description": ["256.a", "347 (RDA)", "538.a", "(856...)"]
       }
     },
+    "EBook": {
+      "term": "EBook",
+      "subClassOf": "DigitalResource",
+      "label_sv": "E-bok",
+      "termGroups": {}
+    },
     "ESerial": {
+      "term": "ESerial",
       "subClassOf": "DigitalResource",
       "label_sv": "E-serie"
     },
     "Serial": {
+      "term": "Serial",
       "label_sv": "Serie"
     }
   }
