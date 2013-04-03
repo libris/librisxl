@@ -34,11 +34,11 @@ class WhelkOperator {
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else if (operation == "importdump") {
-            def importer = new DumpImporter(whelk, resource, false)
-            def nrimports = importer.doImportFromURL()
+            def importer = new DumpImporter(whelk, false)
+            def nrimports = importer.doImportFromURL(new URL(resource))
         } else if (operation == "importfile") {
-            def importer = new DumpImporter(whelk, resource, false)
-            def nrimports = importer.doImportFromFile()
+            def importer = new DumpImporter(whelk, false)
+            def nrimports = importer.doImportFromFile(new File(resource))
         } else if (operation == "reindex") {
             if (args.length > 3) { // Reindex a single document
                 println "Reindexing document with identifier $resource"

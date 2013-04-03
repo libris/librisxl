@@ -185,8 +185,8 @@ abstract class ElasticSearch extends BasicPlugin {
             }
             IndexResponse response = performExecute(irb)
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
-            log.trace("Prepareing metadata indexing with type $indexMetadataType and metadatajson: " + doc.getMetadataJson())
-            irb = client.prepareIndex(idxpfx, indexMetadataType, eid).setSource(doc.getMetadataJson())
+            log.trace("Prepareing metadata indexing with type $indexMetadataType and metadatajson: " + doc.g())
+            irb = client.prepareIndex(idxpfx, indexMetadataType, eid).setSource(doc.getMetadataAsJson())
             response = performExecute(irb)
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
             log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
@@ -209,8 +209,8 @@ abstract class ElasticSearch extends BasicPlugin {
                         breq.add(client.prepareIndex(idxpfx, entityType, translateIdentifier(doc.identifier)).setSource(doc.data))
                     } else {
                         breq.add(client.prepareIndex(idxpfx, entityType, translateIdentifier(doc.identifier)).setSource(doc.data))
-                        log.debug("Prepareing index (bulk) of type $indexMetadataType with metadatajson: " + doc.getMetadataJson())
-                        breq.add(client.prepareIndex(idxpfx, indexMetadataType, translateIdentifier(doc.identifier)).setSource(doc.getMetadataJson()))
+                        log.debug("Prepareing index (bulk) of type $indexMetadataType with metadatajson: " + doc.getMetadataAsJson())
+                        breq.add(client.prepareIndex(idxpfx, indexMetadataType, translateIdentifier(doc.identifier)).setSource(doc.getMetadataAsJson()))
                     }
                 }
                 def response = performExecute(breq)

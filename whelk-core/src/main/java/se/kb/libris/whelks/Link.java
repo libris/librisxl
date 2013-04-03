@@ -32,4 +32,12 @@ public class Link {
     public void setIdentifier(URI id) {
         this.identifier = id;
     }
+
+    public String toJson() {
+        return "{\"type\":\""
+              + this.type
+              + "\",\"identifier\":\""
+              + this.identifier.toString()
+              + "\"}";
+    }
 }
