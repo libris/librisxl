@@ -23,33 +23,33 @@ import se.kb.libris.conch.converter.MarcJSONConverter
 class DumpImporter {
 
     Whelk whelk
-    String resource
     int nrImported = 0
     int nrDeleted = 0
     boolean picky
     final int BATCH_SIZE = 1000
 
-    DumpImporter(Whelk toWhelk, String fromResource, boolean picky = true) {
+    DumpImporter(Whelk toWhelk, boolean picky = true) {
         this.whelk = toWhelk
-        this.resource = fromResource
         this.picky = picky
     }
 
-    int doImportFromFile() {
-        def file = "/data/librisxl/${whelk.prefix}.xml"
+    int doImportFromFile(File file) {
+        //def file = "/data/librisxl/${whelk.prefix}.xml"
         log.info("Loading dump from $file")
+        XMLInputFactory xif = XMLInputFactory.newInstance()
         XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(file))
-        performImport(xsr)
+        return performImport(xsr)
     }
 
-    int doImportFromURL() {
+    int doImportFromURL(URL url) {
         def properties = new Properties()
         properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"))
         def urlString = properties.getProperty("dumpurl_${whelk.prefix}")
         log.info("Loading dump from $urlString")
         XMLInputFactory xif = XMLInputFactory.newInstance()
-        XMLStreamReader xsr = xif.createXMLStreamReader(new URL(urlString).newInputStream())
-        performImport(xsr)
+        //XMLStreamReader xsr = xif.createXMLStreamReader(new URL(urlString).newInputStream())
+        XMLStreamReader xsr = xif.createXMLStreamReader(url.newInputStream())
+        return performImport(xsr)
     }
 
     int performImport(XMLStreamReader xsr) {
@@ -57,7 +57,8 @@ class DumpImporter {
         def documents = []
         Transformer optimusPrime = TransformerFactory.newInstance().newTransformer()
         while(xsr.nextTag() == XMLStreamConstants.START_ELEMENT) {
-            Date loadStartTime = new Date()
+            //Date loadStartTime = new Date()
+            long loadStartTime = System.nanoTime()
             Writer outWriter = new StringWriter()
             Document doc = null
             try {
@@ -73,8 +74,10 @@ class DumpImporter {
                 if (++nrImported % BATCH_SIZE == 0) {
                     this.whelk.bulkStore(documents)
                     documents = []
-                    def td = TimeCategory.minus(new Date(), loadStartTime)
-                    log.debug("$nrImported documents stored. Lap time is $td")
+                    //def td = TimeCategory.minus(new Date(), loadStartTime)
+                    //log.debug("$nrImported documents stored. Lap time is $td")
+                    float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
+                    log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
                 }
             }
         }

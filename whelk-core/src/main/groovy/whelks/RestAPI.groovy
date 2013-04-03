@@ -885,34 +885,56 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
     String description = "Query API for metadata search."
 
     def void handle(Request request, Response response) {
-        //TODO: hold som matchar bibid och location
         mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def link = queryMap.get("link")
+        def link = queryMap.get("link", null)
+        def tag = queryMap.get("tag", null)
         def queryObj
+        //def queryStr
         def results
         def outjson = new StringBuilder()
         def records = []
-        if (link) {
-            queryObj = new ElasticQuery(link).addField("links.identifier")
-            queryObj.indexType = "Indexed:Metadata"
+
+        if (link && tag) {
+            queryObj = new ElasticQuery("annotates.@id:${link} AND ${tag}")
+        } else if (link) {
+            queryObj = new ElasticQuery("annotates.@id:${link}")
+        } else if (tag) {
+            queryObj = new ElasticQuery(tag)
+        }
+
+        if (queryObj) {
+            queryObj.indexType = "record"
             results = this.whelk.query(queryObj)
+
             results.hits.each {
-                def identifier = it.identifier.toString()
-                def d = whelk.get(new URI(identifier))
-                records << d.dataAsString
+               def identifier = it.identifier.toString()
+               def d = whelk.get(new URI(identifier))
+               records << d
             }
+
+            /*if (link && tag) {
+                records.eachWithIndex() { doc, i ->
+                    def jsonData = doc.getDataAsJson()
+                    log.info("Location " + doc.getDataAsJson()?.get("location"))
+                    if (jsonData?.get("location") && !jsonData.get("location").equals(tag.trim())) {
+                        records.remove(i)
+                    }
+                }
+            }*/
+
             outjson << "{ \"list\": ["
             records.eachWithIndex() { it, i ->
-                 if (i > 0) {
-                     outjson << ","
-                 }
-                 outjson << it
+                if (i > 0) {
+                    outjson << ","
+                }
+                outjson << it.dataAsString
             }
             outjson << "] }"
             response.setEntity(outjson.toString(), MediaType.APPLICATION_JSON)
+
         } else {
-            response.setEntity('{"Error":"Use parameter \"link=<uri>\"."}', MediaType.APPLICATION_JSON)
+            response.setEntity('{"Error":"Use parameter \"link=<uri>\". and/or \"tag=location:<sigel>\"}', MediaType.APPLICATION_JSON)
         }
     }
 }

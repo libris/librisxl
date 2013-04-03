@@ -2,6 +2,9 @@ package se.kb.libris.whelks
 
 import groovy.util.logging.Slf4j as Log
 
+import java.util.UUID
+import java.net.URI
+import java.net.URISyntaxException
 import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
@@ -10,8 +13,8 @@ import se.kb.libris.whelks.plugin.*
 
 import org.codehaus.jackson.map.*
 
-@Log
 //@groovy.transform.CompileStatic
+@Log
 class StandardWhelk implements Whelk {
 
     String prefix
@@ -106,19 +109,18 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
+    @groovy.transform.CompileStatic
     Document createDocument(byte[] data, Map metadata) { return createDocument(new String(data), metadata) }
-    Document createDocument(String data, Map metadata) {
+    @groovy.transform.CompileStatic
+    Document createDocument(String data, Map<String,Object> metadata) {
         log.debug("Creating document")
         Document doc = new BasicDocument().withData(data)
         metadata.each { param, value ->
-            log.trace("Adding $param = $value")
-            doc = doc."with${param.capitalize()}"(value)
+            doc.metaClass.pickMethod("with${((String)param).capitalize()}", value.getClass()).doMethodInvoke(doc, value)
         }
         doc = performStorageFormatConversion(doc)
         for (lf in linkFinders) {
-            log.trace("Running linkfinder $lf")
             for (link in lf.findLinks(doc)) {
-                log.trace("Found link ${link.identifier}")
                 doc = doc.withLink(link)
             }
         }
@@ -167,6 +169,14 @@ class StandardWhelk implements Whelk {
         }
         plugin.init(this.prefix)
         this.plugins.add(plugin)
+    }
+
+   URI mintIdentifier(Document d) {
+        try {
+            return new URI("/"+prefix.toString() +"/"+ UUID.randomUUID());
+        } catch (URISyntaxException ex) {
+            throw new WhelkRuntimeException("Could not mint URI", ex);
+        }
     }
 
     // Sugar methods

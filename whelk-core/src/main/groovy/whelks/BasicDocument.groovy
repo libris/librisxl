@@ -36,13 +36,13 @@ public class BasicDocument implements Document {
     @IsMetadata
     Set<Link> links = new HashSet<Link>()
 
-    @IsMetadata
+    //@IsMetadata
     Set<Key> keys = new TreeSet<Key>()
 
     @IsMetadata
     Set<Tag> tags = new HashSet<Tag>()
 
-    @IsMetadata
+    //@IsMetadata
     Set<Description> descriptions = new TreeSet<Description>()
 
     @IsMetadata
@@ -99,50 +99,6 @@ public class BasicDocument implements Document {
         }
     }
 
-    /*
-    public Document fromJson2(String jsonString) {
-        log.trace("jsonSource: $jsonString")
-        JsonFactory f = new JsonFactory();
-        JsonParser jp = f.createJsonParser(jsonString);
-        jp.nextToken(); 
-        while (jp.nextToken() != JsonToken.END_OBJECT) {
-            String fieldname = jp.getCurrentName();
-            jp.nextToken(); 
-            if (!fieldname) {break;}
-            if ("data".equals(fieldname)) {
-                data = jp.getBinaryValue()
-            } else if ("identifier".equals(fieldname)) {
-                identifier = new URI(jp.getText())
-            } else if ("size".equals(fieldname)) {
-                size = jp.getLongValue()
-            } else if ("timestamp".equals(fieldname)) {
-                timestamp = jp.getLongValue()
-            } else if ("version".equals(fieldname)) {
-                version = jp.getText()
-            } else if ("contentType".equals(fieldname)) {
-                contentType = jp.getText()
-            }
-        }
-        jp.close(); 
-        return this
-    }
-
-    public Document fromMap(Map map) {
-
-        map.each { key, value ->
-            if (key == "data") {
-                this.data = value.decodeBase64()
-            } else if (key == "identifier") {
-                this.("$key") = new URI(value)
-            } else {
-                this.("$key") = value
-            }
-        }
-
-        return this
-    }
-    */
-
     String toJson() {
         return mapper.writeValueAsString(this)
     }
@@ -150,41 +106,6 @@ public class BasicDocument implements Document {
     Map toMap() {
         return mapper.convertValue(this, Map)
     }
-
-    /*
-    String toJson2() {
-        ByteArrayOutputStream baout = new ByteArrayOutputStream()
-        JsonFactory f = new JsonFactory()
-        JsonGenerator g = f.createJsonGenerator(baout, JsonEncoding.UTF8)
-        g.writeStartObject()
-        this.class.declaredFields.each {
-            if (this.(it.name) && !it.isSynthetic() && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
-                log.trace("${it.name} is ${it.genericType} - " + this.(it.name).class.isPrimitive())
-                if (this.(it.name) instanceof URI) {
-                    log.trace("found a URI identifier")
-                    g.writeStringField(it.name, this.(it.name).toString())
-                } else if (it.type.isArray()) {
-                    log.trace("Found a bytearray")
-                    g.writeBinaryField(it.name, this.(it.name))
-                } else if (it.type.isPrimitive()) {
-                    log.trace("Found a number")
-                    g.writeNumberField(it.name, this.(it.name))
-                } else if (this.(it.name) instanceof String) {
-                    log.trace("Found a string ${it.name}")
-                    g.writeStringField(it.name, this.(it.name).toString())
-                } else {
-                    log.trace("default writing ${it.name}")
-                    g.writeObjectField(it.name, this.(it.name))
-                }
-            }
-        }
-        g.writeEndObject()
-        g.close()
-        String json = new String(baout.toByteArray())
-        log.trace("Generated json: $json")
-        return json
-    }
-    */
 
     @Override
     public byte[] getData() {
@@ -334,6 +255,36 @@ public class BasicDocument implements Document {
     }
 
     @JsonIgnore
+    String getMetadataAsJson() {
+        def elements = []
+        def fields = this.class.declaredFields.findAll {
+            !it.synthetic &&
+            it.getModifiers() != java.lang.reflect.Modifier.TRANSIENT &&
+            it.getAnnotation(IsMetadata.class) != null
+        }
+        for (field in fields) {
+            field.setAccessible(true)
+            if (Set.class.isAssignableFrom(field.type)) {
+                def l = field.get(this).collect {
+                    it.toJson()
+                }
+                elements.add("\"${field.name}\":[" + l.join(",")+"]")
+            } else {
+                String value = field.get(this)?.toString()
+                if (value) {
+                    try {
+                        elements.add("\"${field.name}\":"+field.getLong(this))
+                    } catch (Exception e) {
+                        elements.add("\"${field.name}\":\""+value+"\"")
+                    }
+                }
+            }
+        }
+        return "{"+elements.join(",")+"}"
+    }
+
+    /*
+    @JsonIgnore
     public String getMetadataJson() {
         def mapper = new ObjectMapper()
         def out = this.class.declaredFields.findAll {
@@ -351,6 +302,7 @@ public class BasicDocument implements Document {
         log.trace("Constructed metadatajson: $out")
         return mapper.writeValueAsString(out)
     }
+    */
 
     String getObjectAsJson(def obj) {
         def map = mapper.convertValue(obj, Map)
