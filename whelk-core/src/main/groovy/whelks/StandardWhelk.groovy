@@ -3,6 +3,8 @@ package se.kb.libris.whelks
 import groovy.util.logging.Slf4j as Log
 
 import java.util.UUID
+import java.net.URI
+import java.net.URISyntaxException
 import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
