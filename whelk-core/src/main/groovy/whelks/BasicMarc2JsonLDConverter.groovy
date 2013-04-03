@@ -132,9 +132,15 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
     def convertJson(injson, identifier) {
         def outjson = ["@id": identifier, "@type": "Record"]
-        def rt = detectResourceType(injson)
-        if (rt) {
-            outjson.about = ["@type": rt]
+
+        def ti = computeTypeInfo(injson)
+        outjson.typeOfRecord = ti.typeOfRecord
+        outjson.bibLevel = ti.bibLevel
+        if (ti.instanceType) {
+            outjson.about = ["@type": ti.instanceType]
+            if (ti.workType) {
+                outjson.about.instanceOf = ["@type": ti.workType]
+            }
         }
 
         def missing = []
@@ -179,28 +185,30 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
 
 
     // Utility methods
-    String detectResourceType(marcjson) {
+    Map computeTypeInfo(marcjson) {
         log.debug("leader: ${marcjson.leader}")
         def typeOfRecord = marcjson.leader[6]
         def bibLevel = marcjson.leader[7]
         def carrierType = getControlField("007", marcjson)?.charAt(0)
+        def typeInfo = [typeOfRecord: typeOfRecord, bibLevel: bibLevel]
+
         if (typeOfRecord == "a" && bibLevel == "m" && carrierType != "c") {
-            return "Book"
+            typeInfo.instanceType = "Book"
         }
         if (typeOfRecord == "i" && bibLevel == "m" && carrierType == "s") {
-            return "Audiobook"
+            typeInfo.instanceType = "Audiobook"
         }
         if (typeOfRecord == "a" && bibLevel == "s" && carrierType != "c") {
-            return "Serial"
+            typeInfo.instanceType = "Serial"
         }
         def computerMaterial = getControlField("007", marcjson)?.charAt(1)
         if (typeOfRecord == "a" && bibLevel == "m" && carrierType == "c" && computerMaterial == "r") {
-            return "EBook"
+            typeInfo.instanceType = "EBook"
         }
         if (typeOfRecord == "a" && bibLevel == "s" && carrierType == "c" && computerMaterial == "r") {
-            return "ESerial"
+            typeInfo.instanceType = "ESerial"
         }
-        return null
+        return typeInfo
     }
 
     def dropToRaw(outjson, marcjson) {

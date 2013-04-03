@@ -2,6 +2,9 @@ package se.kb.libris.whelks
 
 import groovy.util.logging.Slf4j as Log
 
+import java.util.UUID
+import java.net.URI
+import java.net.URISyntaxException
 import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
@@ -166,6 +169,14 @@ class StandardWhelk implements Whelk {
         }
         plugin.init(this.prefix)
         this.plugins.add(plugin)
+    }
+
+   URI mintIdentifier(Document d) {
+        try {
+            return new URI("/"+prefix.toString() +"/"+ UUID.randomUUID());
+        } catch (URISyntaxException ex) {
+            throw new WhelkRuntimeException("Could not mint URI", ex);
+        }
     }
 
     // Sugar methods

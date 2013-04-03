@@ -885,34 +885,53 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
     String description = "Query API for metadata search."
 
     def void handle(Request request, Response response) {
-        //TODO: hold som matchar bibid och location
         mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def link = queryMap.get("link")
+        def tag = queryMap.get("tag")
         def queryObj
+        //def queryStr
         def results
         def outjson = new StringBuilder()
         def records = []
+
         if (link) {
             queryObj = new ElasticQuery(link).addField("links.identifier")
+        } else if (tag) {
+            queryObj = new ElasticQuery(tag).addField("tags.value")
+        }
+
+        if (queryObj) {
             queryObj.indexType = "Indexed:Metadata"
             results = this.whelk.query(queryObj)
+
             results.hits.each {
-                def identifier = it.identifier.toString()
-                def d = whelk.get(new URI(identifier))
-                records << d.dataAsString
+               def identifier = it.identifier.toString()
+               def d = whelk.get(new URI(identifier))
+               records << d
             }
+
+            if (link && tag) {
+                records.eachWithIndex() { doc, i ->
+                    log.debug("Location " + doc.toMap().data.location + " tag ${tag}")
+                    if (doc.toMap().data.location && !doc.toMap().data.location.equals(tag)) {
+                        records.remove(i)
+                    }
+                }
+            }
+
             outjson << "{ \"list\": ["
             records.eachWithIndex() { it, i ->
-                 if (i > 0) {
-                     outjson << ","
-                 }
-                 outjson << it
+                if (i > 0) {
+                    outjson << ","
+                }
+                outjson << it.dataAsString
             }
             outjson << "] }"
             response.setEntity(outjson.toString(), MediaType.APPLICATION_JSON)
+
         } else {
-            response.setEntity('{"Error":"Use parameter \"link=<uri>\"."}', MediaType.APPLICATION_JSON)
+            response.setEntity('{"Error":"Use parameter \"link=<uri>\". and/or \"tag=<location>"}', MediaType.APPLICATION_JSON)
         }
     }
 }
