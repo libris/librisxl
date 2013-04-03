@@ -20,4 +20,12 @@ public class Tag {
     public String getValue() {
         return value;
     }
+
+    public String toJson() {
+        return "{\"type\":\""
+              + this.type.toString()
+              + "\",\"value\":\""
+              + this.value
+              + "\"}";
+    }
 }

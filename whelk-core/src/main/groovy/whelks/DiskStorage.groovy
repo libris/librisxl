@@ -57,7 +57,7 @@ class DiskStorage extends BasicPlugin implements Storage {
         File sourcefile = new File(buildPath(doc.identifier, true) + "/" + getBaseFilename(doc.identifier) + (FILE_EXTENSIONS[doc.contentType] ?: ""))
         File metafile = new File(buildPath(doc.identifier, true) + "/"+ getBaseFilename(doc.identifier) + METAFILE_EXTENSION)
         sourcefile.write(doc.dataAsString)
-        metafile.write(doc.toJson())
+        metafile.write(doc.metadataAsJson)
     }
 
     String getBaseFilename(uri) {
