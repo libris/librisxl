@@ -896,15 +896,15 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
         def records = []
 
         if (link && tag) {
-            queryObj = new ElasticQuery("annotates.@id:${link} AND ${tag}")
+            queryObj = new ElasticQuery("${link} AND ${tag}")
         } else if (link) {
-            queryObj = new ElasticQuery("annotates.@id:${link}")
+            queryObj = new ElasticQuery(link)
         } else if (tag) {
             queryObj = new ElasticQuery(tag)
         }
 
         if (queryObj) {
-            queryObj.indexType = "record"
+            queryObj.indexType = "Indexed:Metadata"
             results = this.whelk.query(queryObj)
 
             results.hits.each {
@@ -912,16 +912,6 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
                def d = whelk.get(new URI(identifier))
                records << d
             }
-
-            /*if (link && tag) {
-                records.eachWithIndex() { doc, i ->
-                    def jsonData = doc.getDataAsJson()
-                    log.info("Location " + doc.getDataAsJson()?.get("location"))
-                    if (jsonData?.get("location") && !jsonData.get("location").equals(tag.trim())) {
-                        records.remove(i)
-                    }
-                }
-            }*/
 
             outjson << "{ \"list\": ["
             records.eachWithIndex() { it, i ->
@@ -934,8 +924,9 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
             response.setEntity(outjson.toString(), MediaType.APPLICATION_JSON)
 
         } else {
-            response.setEntity('{"Error":"Use parameter \"link=<uri>\". and/or \"tag=location:<sigel>\"}', MediaType.APPLICATION_JSON)
+            response.setEntity('{"Error":"Use parameter \"link=<uri>\". and/or \"tag=<sigel>\"}', MediaType.APPLICATION_JSON)
         }
     }
+
 }
 
