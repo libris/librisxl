@@ -121,7 +121,8 @@ class StandardWhelk implements Whelk {
         for (lf in linkFinders) {
             log.trace("Running linkfinder $lf")
             for (link in lf.findLinks(doc)) {
-                doc.withLink(link)
+                log.trace("Found link ${link.identifier}")
+                doc = doc.withLink(link)
             }
         }
         return doc
