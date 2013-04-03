@@ -887,22 +887,24 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
     def void handle(Request request, Response response) {
         mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def link = queryMap.get("link")
-        def tag = queryMap.get("tag")
+        def link = queryMap.get("link", null)
+        def tag = queryMap.get("tag", null)
         def queryObj
         //def queryStr
         def results
         def outjson = new StringBuilder()
         def records = []
 
-        if (link) {
-            queryObj = new ElasticQuery(link).addField("links.identifier")
+        if (link && tag) {
+            queryObj = new ElasticQuery("annotates.@id:${link} AND ${tag}")
+        } else if (link) {
+            queryObj = new ElasticQuery("annotates.@id:${link}")
         } else if (tag) {
-            queryObj = new ElasticQuery(tag).addField("tags.value")
+            queryObj = new ElasticQuery(tag)
         }
 
         if (queryObj) {
-            queryObj.indexType = "Indexed:Metadata"
+            queryObj.indexType = "record"
             results = this.whelk.query(queryObj)
 
             results.hits.each {
@@ -911,14 +913,15 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
                records << d
             }
 
-            if (link && tag) {
+            /*if (link && tag) {
                 records.eachWithIndex() { doc, i ->
-                    log.debug("Location " + doc.toMap().data.location + " tag ${tag}")
-                    if (doc.toMap().data.location && !doc.toMap().data.location.equals(tag)) {
+                    def jsonData = doc.getDataAsJson()
+                    log.info("Location " + doc.getDataAsJson()?.get("location"))
+                    if (jsonData?.get("location") && !jsonData.get("location").equals(tag.trim())) {
                         records.remove(i)
                     }
                 }
-            }
+            }*/
 
             outjson << "{ \"list\": ["
             records.eachWithIndex() { it, i ->
@@ -931,7 +934,7 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
             response.setEntity(outjson.toString(), MediaType.APPLICATION_JSON)
 
         } else {
-            response.setEntity('{"Error":"Use parameter \"link=<uri>\". and/or \"tag=<location>"}', MediaType.APPLICATION_JSON)
+            response.setEntity('{"Error":"Use parameter \"link=<uri>\". and/or \"tag=location:<sigel>\"}', MediaType.APPLICATION_JSON)
         }
     }
 }
