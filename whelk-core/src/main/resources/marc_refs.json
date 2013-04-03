@@ -91,6 +91,9 @@
             "505" : {
                 "about.listOfContents" : "a"
             },
+            "511" : {
+                "about.contributorNote" : "a"
+            },
             "520" : {
                 "about.instanceOf.summary" : "a"
             },
