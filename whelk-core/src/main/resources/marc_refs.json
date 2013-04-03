@@ -28,8 +28,8 @@
                 "subjectScheme": "f"
             },
             "028" : {
-                "about.edition" : "a",
-                "about.editionPublisher" : "b"
+                "about.publisherNumber" : "a",
+                "about.publisherNumberSource" : "b"
             },
             "035" : {
                 "localSystemNumber" : "a9"
