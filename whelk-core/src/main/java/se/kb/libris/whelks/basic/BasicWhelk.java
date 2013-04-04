@@ -45,7 +45,6 @@ public abstract class BasicWhelk implements Whelk, Pluggable { //, JSONInitialis
         return d.getIdentifier();
     }
 
-    @Override
     public void bulkStore(Iterable<Document> docs) {
         // Pre storage operations
         for (Document doc : docs) {

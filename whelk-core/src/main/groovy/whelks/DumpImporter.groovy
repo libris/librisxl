@@ -93,7 +93,7 @@ class DumpImporter {
     Document buildDocument(String mdrecord) {
         MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
 
-        String id = record.getControlfields("001").get(0).getData()
+        String id = URLEncoder.encode(record.getControlfields("001").get(0).getData())
         String jsonRec = MarcJSONConverter.toJSONString(record)
 
         Document doc = null

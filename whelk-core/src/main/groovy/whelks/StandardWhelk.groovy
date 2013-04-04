@@ -13,7 +13,6 @@ import se.kb.libris.whelks.plugin.*
 
 import org.codehaus.jackson.map.*
 
-//@groovy.transform.CompileStatic
 @Log
 class StandardWhelk implements Whelk {
 
@@ -33,7 +32,7 @@ class StandardWhelk implements Whelk {
             storage.store(doc, this.prefix)
         }
 
-        addToIndex(doc)
+        addToIndex([doc])
         addToQuadStore(doc)
 
         return doc.identifier
@@ -43,7 +42,8 @@ class StandardWhelk implements Whelk {
      * Requires that all documents have an identifier.
      */
     @Override
-    void bulkStore(Iterable<Document> docs) {
+    @groovy.transform.CompileStatic
+    void bulkStore(List<Document> docs) {
         for (storage in storages) {
             for (doc in docs) {
                 storage.store(doc, this.prefix)
@@ -55,23 +55,23 @@ class StandardWhelk implements Whelk {
 
     @Override
     Document get(URI uri) {
-        return plugins.find { it instanceof Storage }?.get(uri, this.prefix)
+        return storages.get(0)?.get(uri, this.prefix)
     }
 
     @Override
     void delete(URI uri) {
         components.each {
             try {
-                it.delete(uri, this.prefix)
+                ((Component)it).delete(uri, this.prefix)
             } catch (RuntimeException rte) {
-                log.warn("Component ${it.id} failed delete: ${rte.message}")
+                log.warn("Component ${((Component)it).id} failed delete: ${rte.message}")
             }
         }
     }
 
     @Override
     SearchResult<? extends Document> query(Query query) {
-        return plugins.find { it instanceof Index }?.query(query, this.prefix)
+        return indexes.get(0)?.query(query, this.prefix)
     }
 
     Document sanityCheck(Document d) {
@@ -84,19 +84,20 @@ class StandardWhelk implements Whelk {
         return d
     }
 
-    void addToIndex(doc) {
+    @groovy.transform.CompileStatic
+    void addToIndex(List<Document> docs) {
         if (indexes.size() > 0) {
             log.debug("Adding to indexes")
             for (ifc in getIndexFormatConverters()) {
                 log.debug("Calling indexformatconverter $ifc")
-                    if (doc instanceof List) {
-                        doc = ifc.convertBulk(doc)
+                    if (docs.size() > 0) {
+                        docs = ifc.convertBulk(docs)
                     } else {
-                        doc = ifc.convert(doc)
+                        docs = ifc.convert(docs.get(0))
                     }
             }
             for (idx in indexes) {
-                idx.index(doc, this.prefix)
+                idx.index(docs, this.prefix)
             }
         }
     }
@@ -104,7 +105,7 @@ class StandardWhelk implements Whelk {
     void addToQuadStore(doc) {}
 
     @Override
-    Iterable<Document> loadAll(Date since = null) {
+    List<Document> loadAll(Date since = null) {
         throw new UnsupportedOperationException("Not implemented yet")
     }
 
@@ -127,6 +128,7 @@ class StandardWhelk implements Whelk {
         return doc
     }
 
+    @groovy.transform.CompileStatic
     Document performStorageFormatConversion(Document doc) {
         for (fc in formatConverters) {
             log.trace("Running formatconverter $fc")
@@ -140,7 +142,7 @@ class StandardWhelk implements Whelk {
     void reindex() {
         int counter = 0
         long startTime = System.currentTimeMillis()
-        def docs = []
+        List<Document> docs = []
         for (doc in loadAll()) {
             for (ifc in indexFormatConverters) {
                 doc = ifc.convert(doc)
@@ -148,17 +150,17 @@ class StandardWhelk implements Whelk {
             docs << doc
             if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
                 for (index in indexes) {
-                    index.index(docs)
+                    index.index(docs, this.prefix)
                     docs = []
                 }
             }
         }
         if (docs.size() > 0) {
             for (index in indexes) {
-                index.index(docs)
+                index.index(docs, this.prefix)
             }
         }
-        log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds.")
+        log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
     }
 
     @Override
