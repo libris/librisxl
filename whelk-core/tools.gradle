@@ -3,28 +3,6 @@
  */
 import org.gradle.api.plugins.jetty.JettyRun
 
-/*
-task importData(dependsOn: 'classes', type: JavaExec) {
-  description "Run ImportWhelk. USAGE: -Dargs='<bib|auth> [resource] [mode(<default|riak>)] ([since])' -Delastic.host='<host>' (-Delastic.cluster='<cluster>')"
-  classpath = sourceSets.main.runtimeClasspath
-  main = 'se.kb.libris.whelks.ImportWhelk'
-  systemProperty 'elastic.host', System.getProperty('elastic.host', "")
-  systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', "")
-  systemProperty 'file.encoding', System.getProperty('file.encoding', "")
-  args(System.getProperty('args', "").split() as String[])
-  maxHeapSize = '1024m'
-}
-
-task reindexData(dependsOn: 'classes', type: JavaExec) {
-  description "Run ReindexingWhelk. (USAGE: -Dargs='<bib|auth> [resource] [since]') -Delastic.host='<host>' (-Delastic.cluster='<cluster>')"
-  classpath = sourceSets.main.runtimeClasspath
-  main = 'se.kb.libris.whelks.ReindexingWhelk'
-  systemProperty 'elastic.host', System.getProperty('elastic.host', "")
-  systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', "")
-  args(System.getProperty('args', "").split() as String[])
-}
-*/
-
 task whelkOperation(dependsOn: 'classes', type: JavaExec) {
   description "Run import or reindex. (USAGE: -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)] [maxNoOfDocs (for import)]' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
   classpath = sourceSets.main.runtimeClasspath
@@ -78,8 +56,26 @@ task convertJsonLD2Marc(dependsOn: 'classes', type: JavaExec) {
     args(System.getProperty('args', "").split() as String[])
 }
 
+task war(dependsOn: 'classes', type: War, overwrite: true) {
+    doFirst {
+        copy {
+            from('src/main/resources')
+            into('src/main/resources')
+            include('logback.xml.prod')
+            rename('logback.xml.prod','logback.xml')
+        }
+    }
+}
 
 task jettyRun(dependsOn: 'classes', type: JettyRun, overwrite: true) {
+    doFirst {
+        copy {
+            from('src/main/resources')
+            into('src/main/resources')
+            include('logback.xml.dev')
+            rename('logback.xml.dev','logback.xml')
+        }
+    }
     //jettyRun.contextPath = '/'
     jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
 
