@@ -117,7 +117,10 @@ class StandardWhelk implements Whelk {
         log.debug("Creating document")
         Document doc = new BasicDocument().withData(data)
         metadata.each { param, value ->
-            doc.metaClass.pickMethod("with${((String)param).capitalize()}", value.getClass()).doMethodInvoke(doc, value)
+            if (value) {
+                doc.metaClass.pickMethod("with${((String)param).capitalize()}",
+                        value.getClass()).doMethodInvoke(doc, value)
+            }
         }
         doc = performStorageFormatConversion(doc)
         for (lf in linkFinders) {
