@@ -136,8 +136,17 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
         def ti = computeTypeInfo(injson)
         outjson.typeOfRecord = ti.typeOfRecord
         outjson.bibLevel = ti.bibLevel
+        if (ti.encLevel) {
+            outjson.encLevel = ti.encLevel
+        }
+        if (ti.catForm) {
+            outjson.catForm = ti.catForm
+        }
         if (ti.instanceType) {
             outjson.about = ["@type": ti.instanceType]
+            if (ti.carrierType) {
+                outjson.about.carrierType = ti.carrierType
+            }
             if (ti.workType) {
                 outjson.about.instanceOf = ["@type": ti.workType]
             }
@@ -187,27 +196,50 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
     // Utility methods
     Map computeTypeInfo(marcjson) {
         log.debug("leader: ${marcjson.leader}")
-        def typeOfRecord = marcjson.leader[6]
         def bibLevel = marcjson.leader[7]
-        def carrierType = getControlField("007", marcjson)?.charAt(0)
-        def typeInfo = [typeOfRecord: typeOfRecord, bibLevel: bibLevel]
+        def typeOfRecord = marcjson.leader[6]
+        def encLevel = marcjson.leader[17]
+        def catForm = marcjson.leader[18]
 
-        if (typeOfRecord == "a" && bibLevel == "m" && carrierType != "c") {
-            typeInfo.instanceType = "Book"
+        def ctrlField007 = getControlField("007", marcjson)
+        def carrierType = ctrlField007?.charAt(0)
+        def isComputerFile = carrierType == "c"
+        def isOnlineResource = ctrlField007?.startsWith("cr")
+        //def isOpticalDisc = ctrlField007?.startsWith("co")
+
+        def typeInfo = [
+            typeOfRecord: typeOfRecord,
+            bibLevel: bibLevel,
+            carrierType: carrierType,
+            encLevel: encLevel,
+            catForm: catForm
+        ]
+
+        // switching on bibLevel, then typeOfRecord + carrierType
+
+        def isMonographItem = bibLevel == "m"
+        if (isMonographItem) {
+            if (typeOfRecord == "a" && !isComputerFile) {
+                typeInfo.instanceType = "Book"
+            }
+            if (typeOfRecord == "i" && carrierType == "s") {
+                typeInfo.instanceType = "Audiobook"
+            }
+            if (typeOfRecord == "a" && isOnlineResource) {
+                typeInfo.instanceType = "EBook"
+            }
         }
-        if (typeOfRecord == "i" && bibLevel == "m" && carrierType == "s") {
-            typeInfo.instanceType = "Audiobook"
+
+        def isSerial = bibLevel == "s"
+        /*else*/ if (isSerial) {
+            if (typeOfRecord == "a" && !isComputerFile) {
+                typeInfo.instanceType = "Serial"
+            }
+            if (typeOfRecord == "a" && isOnlineResource) {
+                typeInfo.instanceType = "ESerial"
+            }
         }
-        if (typeOfRecord == "a" && bibLevel == "s" && carrierType != "c") {
-            typeInfo.instanceType = "Serial"
-        }
-        def computerMaterial = getControlField("007", marcjson)?.charAt(1)
-        if (typeOfRecord == "a" && bibLevel == "m" && carrierType == "c" && computerMaterial == "r") {
-            typeInfo.instanceType = "EBook"
-        }
-        if (typeOfRecord == "a" && bibLevel == "s" && carrierType == "c" && computerMaterial == "r") {
-            typeInfo.instanceType = "ESerial"
-        }
+
         return typeInfo
     }
 
