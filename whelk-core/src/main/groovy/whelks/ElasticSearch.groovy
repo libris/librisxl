@@ -62,7 +62,7 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    void index(List<Document> doc, String idxpfx) {
+    void index(Iterable<Document> doc, String idxpfx) {
         addDocuments(doc, indexType, idxpfx)
     }
 

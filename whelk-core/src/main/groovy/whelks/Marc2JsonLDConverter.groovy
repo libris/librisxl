@@ -55,6 +55,10 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
 
     def mapDefault(String code, String value) {
         log.trace("mapDefault, string value: $code = $value")
+        if ((code as int) > 8) { // Dont treat something that isn't controlfield
+            log.warn("Got bad value $value at code $code")
+            return false
+        }
         def marcrefValue = marcref.get(recordType).fields[code]
         def out = [:]
         if (marcrefValue) {
@@ -639,7 +643,12 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
         } else if (recordType.equals("hold")) {
             switch (code) {
                 case "004":
-                    outjson["annotates"] = ["@id":"/bib/${json}" as String]
+                    if (json instanceof String && !json.startsWith("[")) {
+                        String encId = URLEncoder.encode(json)
+                        outjson["annotates"] = ["@id":"/bib/${encId}" as String]
+                    } else {
+                        dropToRaw(outjson, raw_lbl, code, json)
+                    }
                 break;
                 default:
                     log.trace("mapfield default code: $code json: ${json}}")

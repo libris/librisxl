@@ -29,6 +29,10 @@ class MarcAuth2JsonLDConverter extends BasicMarc2JsonLDConverter {
             person["deathDate"] = Date.parse("yyyyMMdd", ddf[0]).format("yyyy-MM-dd")
         }
 
+        if (getMarcValueFromField(code, "tvxyz", fjson) != null) {
+            person["@type"] = "NameTitle"
+        }
+
         return person
     }
 

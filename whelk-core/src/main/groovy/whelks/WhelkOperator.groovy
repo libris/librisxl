@@ -18,7 +18,7 @@ class WhelkOperator {
         WhelkInitializer wi = new WhelkInitializer(whelkConfigUri.toURL().newInputStream())
 
         if (args.length > 2) {
-            println "WhelkOperator doing ${args[0]} on ${args[1]}. Configuring from ${args[2]}."
+            println "WhelkOperator doing ${args[0]} on ${args[1]}."
         }
         def operation = (args.length > 0 ? args[0] : null)
         def whelk = (args.length > 1 ? (wi.getWhelks().find { it.prefix == args[1] }) : null)
