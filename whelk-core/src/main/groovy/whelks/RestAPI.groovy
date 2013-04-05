@@ -555,6 +555,7 @@ class AutoComplete extends BasicWhelkAPI {
             query.highlights = namePrefixes
             query.sorting = sortby
             query.fields = namePrefixes
+            query.addBoost(namePrefixes[0], 10)
 
             def results = this.whelk.query(query, types)
             /*
