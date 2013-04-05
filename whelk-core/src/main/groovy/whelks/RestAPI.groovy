@@ -551,10 +551,11 @@ class AutoComplete extends BasicWhelkAPI {
             log.debug("name: $name")
             log.debug("namePrefixes: $namePrefixes")
             LinkedHashMap sortby = new LinkedHashMap<String,String>()
-            sortby['records'] = "desc"
+            //sortby['records'] = "desc"
+            //sortby['@id'] = "asc"
             def query = new Query(name)
             query.highlights = namePrefixes
-            //query.sorting = sortby
+            query.sorting = sortby
             query.fields = namePrefixes
 
             def results = this.whelk.query(query, types)

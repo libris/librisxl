@@ -11,9 +11,11 @@ if [[ "$RESOURCE" == "" ]] || [[ $GOBACK == "" ]]; then
     exit
 fi
 
-CLASSES=wartest/WEB-INF/classes
-LIBS=wartest/WEB-INF/lib
-CONFIG=file:../librisxl/whelk-core/src/main/resources/mock_whelks.json
+WEBAPPS=/var/lib/tomcat6/webapps/whelk-core
+CONFIG=file:/data/librisxl/whelks.json
+
+CLASSES=$WEBAPPS/WEB-INF/classes
+LIBS=$WEBAPPS/WEB-INF/lib
 DATE=$(date -v-$GOBACK +"%Y-%m-%dT%H:%M:%SZ")
 
 echo "get OAIPMH for $RESOURCE since $DATE"
