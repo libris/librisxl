@@ -106,7 +106,7 @@ class OAIPMHImporter {
         log.debug("Loaded sofar: $nrImported. Times (in milliseconds): [Load URL: " +(meanTime - loadStartTime)+ "] [Convert: "+(conversionTime - meanTime)+"] [Store: "+(storageTime - conversionTime)+"] Velocity: " + ((sizeOfBatch/((System.currentTimeMillis() - loadStartTime)/1000)) as int) + " docs/sec.")
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
-            log.info("Last page is $xmlString")
+            log.trace("Last page is $xmlString")
         }
         return OAIPMH.ListRecords.resumptionToken
     }
