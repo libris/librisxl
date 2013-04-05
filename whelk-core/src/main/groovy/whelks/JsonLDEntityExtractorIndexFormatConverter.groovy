@@ -34,7 +34,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
         }
         if (json["@type"]) {
             log.debug("Record has a @type. Adding to entity recordtype.")
-            json.remove("unknown")
+            //json.remove("unknown")
             doclist << new BasicDocument().withData(mapper.writeValueAsBytes(json)).withFormat("jsonld").withContentType("application/json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
         }
         log.trace("Extraction results: $doclist")

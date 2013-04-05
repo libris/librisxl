@@ -29,6 +29,12 @@ class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
         } else {
             section = mapSection(code, fjson)
         }
+
+        if (code == "700" && getMarcValueFromField(code, "t", fjson)) {
+            // TODO: Fix this more elegantly
+            person = null
+        }
+
         if (section) {
             return [person, section]
         } else {

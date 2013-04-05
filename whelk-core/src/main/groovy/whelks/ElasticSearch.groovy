@@ -348,8 +348,11 @@ abstract class ElasticSearch extends BasicPlugin {
         if (q.facets) {
             q.facets.each {
                 if (it instanceof TermFacet) {
+                    log.trace("Building FIELD facet for ${it.field}")
+                    srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
+                } else if (it instanceof ScriptFieldFacet) {
                     if (it.field.contains("@")) {
-                        log.trace("Building FIELD facet for ${it.field}")
+                        log.warn("Forcing FIELD facet for ${it.field}")
                         srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
                     } else {
                         log.trace("Building SCRIPTFIELD facet for ${it.field}")

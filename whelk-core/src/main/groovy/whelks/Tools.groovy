@@ -1,6 +1,7 @@
 package se.kb.libris.conch
 
 import groovy.util.logging.Slf4j as Log
+import java.text.*
 
 @Log
 class Tools {
@@ -126,6 +127,13 @@ class Tools {
             }
         }
         return origmap
+    }
+
+    static String normalizeString(String inString) {
+        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
+            return Normalizer.normalize(inString, Normalizer.Form.NFC)
+        }
+        return inString
     }
 }
 

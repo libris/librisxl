@@ -155,6 +155,15 @@ class Query {
         facets << (facetgroup!=null ? new QueryFacet(facetgroup, name, field) : new TermFacet(name, field))
         return this
     }
+
+    Query addScriptFieldFacet(String name, String field=null) {
+        if (field) {
+            facets << new ScriptFieldFacet(name, field)
+        } else if (name) {
+            facets << new ScriptFieldFacet(name, name)
+        }
+        return this
+    }
 }
 
 @Log
@@ -182,6 +191,10 @@ class ElasticQuery extends Query {
 class TermFacet {
     String name, field
     TermFacet(n, f) { this.name = n; this.field = f; }
+}
+class ScriptFieldFacet {
+    String name, field
+    ScriptFieldFacet(n, f) { this.name = n; this.field = f; }
 }
 
 class QueryFacet {

@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'jetty'
 apply plugin: 'application'
+apply plugin: 'war'
 
 tasks.withType(GroovyCompile) {
   groovyOptions.encoding = 'utf-8'
@@ -27,6 +28,12 @@ run {
 }
 
 mainClassName = 'se.kb.libris.whelks.WhelkOperator'
+
+war {
+    from 'src/main/resources'
+    exclude 'logback_dev.xml'
+    //rename 'logback_prod.xml','WEB-INF/classes/logback.xml'
+}
 
 jar {
     dependsOn configurations.runtime

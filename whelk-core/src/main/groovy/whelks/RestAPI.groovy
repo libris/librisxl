@@ -135,7 +135,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
                 log.debug("format: $format")
                 log.debug("request: $request")
                 def link = headers.find { it.name.equals("link") }?.value
-                doc = this.whelk.createDocument(request.entityAsText, ["contentType":request.entity.mediaType.toString(),"format":format])
+                doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString(),"format":format])
                 //doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withData(request.entity.stream.getBytes())
                 if (link != null) {
                     log.trace("Adding link $link to document...")
@@ -366,13 +366,11 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             def callback = reqMap.get("callback")
             if (q) {
                 q.addFacet("about.@type")
-                q.addFacet("about.dateOfPublication")
+                q.addScriptFieldFacet("about.dateOfPublication")
+                //q.addFacet("about.dateOfPublication")
                 /*
-                q.addFacet("status")
                 q.addFacet("typeOfRecord")
                 q.addFacet("bibLevel")
-                q.addFacet("fields.007.subfields.carrierType")
-                q.addFacet("fields.008.subfields.yearTime1")
                 */
                 //q = addQueryFacets(q)
                 q = expandQuery(q)
