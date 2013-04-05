@@ -61,8 +61,8 @@ task war(dependsOn: 'classes', type: War, overwrite: true) {
         copy {
             from('src/main/resources')
             into('src/main/resources')
-            include('logback.xml.prod')
-            rename('logback.xml.prod','logback.xml')
+            include('logback_prod.xml')
+            rename('logback_prod.xml','logback.xml')
         }
     }
 }
@@ -72,8 +72,8 @@ task jettyRun(dependsOn: 'classes', type: JettyRun, overwrite: true) {
         copy {
             from('src/main/resources')
             into('src/main/resources')
-            include('logback.xml.dev')
-            rename('logback.xml.dev','logback.xml')
+            include('logback_dev.xml')
+            rename('logback_dev.xml','logback.xml')
         }
     }
     //jettyRun.contextPath = '/'
