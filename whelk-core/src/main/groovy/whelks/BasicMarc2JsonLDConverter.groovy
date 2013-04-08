@@ -327,8 +327,8 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             person["@type"] = "Conference"
         }
         def name = getMarcValueFromField(code, "a", fjson)
-        def numeration = getMarcValueFromField(code, "b", fjson)
-        def title = getMarcValueFromField(code, "c", fjson)
+        def numerations = getMarcValueFromField(code, "b", fjson)
+        def titles = getMarcValueFromField(code, "c", fjson)
         def dates = getMarcValueFromField(code, "d", fjson)
         if (name && name instanceof String) {
             person["authoritativeName"] = name.replaceAll(/,$/, "").trim()
@@ -340,14 +340,31 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
               }
          }
 
-        if (numeration) {
-            person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + " " + numeration
-            person["numeration"] = numeration
+        if (numerations) {
+            if (numerations instanceof String) {
+                numerations = [numerations]
+            }
+            for (numeration in numerations) {
+                numeration = numeration.replaceAll(/,$/, "")?.trim()
+                if (person["authoritativeName"]) {
+                    person["authoritativeName"] = person["authoritativeName"] + " " + numeration
+                }
+                person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + " " + numeration
+                person["numeration"] = numeration
+            }
         }
-        if (title) {
-            person["titlesAndOtherWordsAssociatedWithName"] = title
-            person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + ", " + title
-
+        if (titles) {
+            if (titles instanceof String) {
+                titles = [titles]
+            }
+            for (title in titles) {
+                title = title.replaceAll(/,$/, "")?.trim()
+                if (person["authoritativeName"]) {
+                    person["authoritativeName"] = person["authoritativeName"] + ", " + title
+                }
+                person["titlesAndOtherWordsAssociatedWithName"] = title
+                person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + ", " + title
+            }
         }
         if (dates) {
             if (dates instanceof List) {
