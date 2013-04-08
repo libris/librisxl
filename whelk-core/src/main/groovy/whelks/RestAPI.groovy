@@ -534,6 +534,19 @@ class AutoComplete extends BasicWhelkAPI {
         types = lists.get("indexTypes")
     }
 
+    String splitName(String name) {
+        def np = []
+        for (n in name.split(/[\s-_]/)) {
+            if (n[-1] != ' ' && n[-1] != '*' && n.length() > 1) {
+                np << n+"*"
+            } else if (n) {
+                np << n
+            }
+
+        }
+        return np.join(" ")
+    }
+
     @Override
     def void handle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
@@ -543,9 +556,7 @@ class AutoComplete extends BasicWhelkAPI {
         }
         def callback = querymap.get("callback")
         if (name) {
-            if (name[-1] != ' ' && name[-1] != '*') {
-                name = name + "*"
-            }
+            name = splitName(name)
             log.debug("name: $name")
             log.debug("namePrefixes: $namePrefixes")
             LinkedHashMap sortby = new LinkedHashMap<String,String>()
