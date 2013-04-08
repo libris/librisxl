@@ -11,7 +11,9 @@ class MarcAuth2JsonLDConverter extends BasicMarc2JsonLDConverter {
 
     @Override
     def mapPerson(outjson, code, fjson, marcjson) {
+        log.trace("Calling super with $code : $fjson")
         def person = super.mapPerson(outjson, code, fjson, marcjson)
+        log.trace("Mapped person: $person")
         def altLabels = []
         for (f in ["400.a","410.a","411.a","500.a","510.a","511.a"]) {
             altLabels.addAll(getMarcField(f, marcjson))

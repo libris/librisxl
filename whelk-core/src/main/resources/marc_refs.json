@@ -321,9 +321,6 @@
             "111" : {
                 "method" : "mapPerson"
             },
-            "700" : {
-                "method" : "mapPerson"
-            },
             "750" : {
                 "method" : "mapTerm",
                 "level" : "related"

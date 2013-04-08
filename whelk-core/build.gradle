@@ -30,9 +30,14 @@ run {
 mainClassName = 'se.kb.libris.whelks.WhelkOperator'
 
 war {
-    from 'src/main/resources'
-    exclude 'logback_dev.xml'
-    //rename 'logback_prod.xml','WEB-INF/classes/logback.xml'
+    from('src/main/resources') {
+        eachFile {
+            if (it.name == "logback_prod.xml") {
+                it.setPath("WEB-INF/classes/logback")
+                it.setName("logback.xml")
+            }
+        }
+    }
 }
 
 jar {

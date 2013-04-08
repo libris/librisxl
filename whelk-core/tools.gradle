@@ -57,20 +57,42 @@ task convertJsonLD2Marc(dependsOn: 'classes', type: JavaExec) {
 }
 
 /*
-task war(dependsOn: 'classes', type: War, overwrite: true) {
-    doFirst {
-        copy {
-            from('src/main/resources')
-            into('src/main/resources')
-            include('logback_prod.xml')
-            rename('logback_prod.xml','logback.xml')
-        }
+task prodLogging(type: Copy) {
+    copy {
+        from('src/main/resources')
+        into('src/main/resources')
+        include('logback_prod.xml')
+        rename('logback_prod.xml','logback.xml')
+    }
+}
+task devLogging(type: Copy) {
+    copy {
+        from('src/main/resources')
+        into('src/main/resources')
+        include('logback_prod.xml')
+
     }
 }
 */
 
 task jettyRun(dependsOn: 'classes', type: JettyRun, overwrite: true) {
+
+
+    /*
     doFirst {
+        copy {
+            from('src/main/resources') {
+                eachFile {
+                    if (it.name == "logback_dev.xml") {
+                        it.setPath("WEB-INF/classes/logback")
+                        it.setName("logback.xml")
+                    }
+                }
+            }
+        }
+    }
+    */
+    /*
         copy {
             from('src/main/resources')
             into('src/main/resources')
@@ -78,6 +100,7 @@ task jettyRun(dependsOn: 'classes', type: JettyRun, overwrite: true) {
             rename('logback_dev.xml','logback.xml')
         }
     }
+    */
     //jettyRun.contextPath = '/'
     jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
 

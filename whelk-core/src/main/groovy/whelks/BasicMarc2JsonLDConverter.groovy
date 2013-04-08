@@ -339,7 +339,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                   person["authorizedAccessPoint"] = it.replaceAll(/,$/, "").trim()
               }
          }
-        
+
         if (numeration) {
             person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + " " + numeration
             person["numeration"] = numeration
