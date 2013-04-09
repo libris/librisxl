@@ -364,7 +364,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 }
             }
         }
-        log.trace("SearchRequestBuilder: " + srb)
+        log.debug("SearchRequestBuilder: " + srb)
         def response = performExecute(srb)
         log.trace("SearchResponse: " + response)
 
