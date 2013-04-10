@@ -26,7 +26,7 @@ class OAIPMHImporter {
         this.resource = fromResource
     }
 
-    int doImport(Date from = null) {
+    int doImport(Date from = null, int nrOfDocs = -1) {
         getAuthentication()
         String urlString = "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml"
         if (from) {
@@ -37,7 +37,7 @@ class OAIPMHImporter {
         URL url = new URL(urlString)
         String resumptionToken = harvest(url)
         log.debug("resumptionToken: $resumptionToken")
-        while (resumptionToken) {
+        while (resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
             url = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken)
             resumptionToken = harvest(url)
             log.debug("resumptionToken: $resumptionToken")

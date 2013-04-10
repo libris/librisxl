@@ -24,13 +24,13 @@ class WhelkOperator {
         def whelk = (args.length > 1 ? (wi.getWhelks().find { it.prefix == args[1] }) : null)
         def resource = (args.length > 2 ? args[2] : whelk?.prefix)
         def since = (args.length > 3 ? Tool.parseDate(args[3]) : null)
-        def numberOfDocs = (args.length > 4 ? args[4].toInteger() : null)
+        def numberOfDocs = (args.length > 4 ? args[4].toInteger() : -1)
         long startTime = System.currentTimeMillis()
         long time = 0
         if (operation == "import") {
             //def importer = new BatchImport(resource)
             def importer = new OAIPMHImporter(whelk, resource)
-            def nrimports = importer.doImport(since)
+            def nrimports = importer.doImport(since, numberOfDocs)
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else if (operation == "importdump") {

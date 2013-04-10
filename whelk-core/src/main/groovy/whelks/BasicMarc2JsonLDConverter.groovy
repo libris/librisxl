@@ -92,7 +92,12 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
                 log.debug("call method ${proc.method}")
                 if (m) {
                     log.debug("special proc.level: ${m[0]}")
-                    (mapping, params) = "${proc.method}"(outjson, code, fjson, docjson)
+                    def r = "${proc.method}"(outjson, code, fjson, docjson)
+                    if (r) {
+                        (mapping, params) = r
+                    } else if (log.isTraceEnabled()) {
+                        log.trace("Result from methodMapping is $r. No action taken.")
+                    }
                 } else {
                     log.debug("default proc.level: ${proc.level}")
                     mapping = "${proc.method}"(outjson, code, fjson, docjson)
