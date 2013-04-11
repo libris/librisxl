@@ -2,6 +2,8 @@ package se.kb.libris.conch
 
 import groovy.util.logging.Slf4j as Log
 import java.text.*
+import java.util.concurrent.*
+import java.util.concurrent.atomic.*
 
 @Log
 class Tools {
@@ -134,6 +136,62 @@ class Tools {
             return Normalizer.normalize(inString, Normalizer.Form.NFC)
         }
         return inString
+    }
+}
+
+@Log
+class ScalingQueue extends LinkedBlockingQueue {
+    private ThreadPoolExecutor executor
+
+    public ScalingQueue() { super() }
+    public ScalingQueue(int capacity) { super(capacity) }
+
+    public setThreadPoolExecutor(ThreadPoolExecutor executor) {
+        this.executor = executor
+    }
+
+    @Override
+    public boolean offer(Object o) {
+        int allWorkingThreads = executor.getActiveCount()
+        return allWorkingThreads < executor.getPoolSize() && super.offer(o)
+    }
+}
+
+@Log
+class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
+    private final AtomicInteger activeCount = new AtomicInteger()
+
+    public ScalingThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, LinkedBlockingQueue queue) {
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, queue)
+    }
+
+    @Override
+    public int getActiveCount() {
+        return activeCount.get()
+    }
+
+    @Override
+    protected void beforeExecute(Thread t, Runnable r) {
+        activeCount.incrementAndGet()
+        if (getActiveCount() == getCorePoolSize()) {
+            Thread.sleep(1000)
+        }
+    }
+
+    @Override
+    protected void afterExecute(Runnable r, Throwable t) {
+        activeCount.decrementAndGet()
+    }
+}
+
+@Log
+class ForceQueuePolicy implements RejectedExecutionHandler {
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        try {
+            executor.getQueue().put(r)
+        } catch(InterruptedException ie) {
+            throw new Exception(ie)
+        }
     }
 }
 

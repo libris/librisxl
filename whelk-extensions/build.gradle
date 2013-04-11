@@ -1,0 +1,22 @@
+
+task fatjar(type: Jar, dependsOn: jar) {
+    fatjar.description = "Creates a jar containing the classes and all dependencies."
+    from {
+        configurations.runtime.collect {
+            it.isDirectory() ? it : zipTree(it).matching {
+                exclude "META-INF/OSGI*"
+            }
+        }
+    }
+
+    manifest {
+        attributes 'Main-Class': 'se.kb.libris.whelks.WhelkOperator'
+    }
+
+}
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+    flatDir name: 'localDir', dirs: '../lib'
+}

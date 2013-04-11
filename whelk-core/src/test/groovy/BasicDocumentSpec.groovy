@@ -27,6 +27,6 @@ class BasicDocumentSpec extends Specification {
         then:
         map['identifier'] == "/libris/2345"
         map['data'] == ("foo" as byte[])
-        map['links'] == [["type":"default", "identifier":"/libris/1234"]]
+        map['links'] == [["type":"", "identifier":"/libris/1234"]]
     }
 }

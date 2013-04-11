@@ -59,7 +59,6 @@ class ThreadedReindexingWhelk extends StandardWhelk {
 
         long startTime = System.currentTimeMillis()
         List<Document> docs = new ArrayList<Document>()
-        def executor = newScalingThreadPoolExecutor(1,50,60)
         try {
             for (Document doc : scomp.getAll(this.prefix)) {
                 counter++
@@ -105,9 +104,9 @@ class ThreadedReindexingWhelk extends StandardWhelk {
     }
 
     public ExecutorService newScalingThreadPoolExecutor(int min, int max, long keepAliveTime) {
-        ScalingQueue queue = new ScalingQueue()
-        ThreadPoolExecutor executor = new ScalingThreadPoolExecutor(min, max, keepAliveTime, TimeUnit.SECONDS, queue)
-        executor.setRejectedExecutionHandler(new ForceQueuePolicy())
+        se.kb.libris.conch.ScalingQueue queue = new se.kb.libris.conch.ScalingQueue()
+        java.util.concurrent.ThreadPoolExecutor executor = new se.kb.libris.conch.ScalingThreadPoolExecutor(min, max, keepAliveTime, TimeUnit.SECONDS, queue)
+        executor.setRejectedExecutionHandler(new se.kb.libris.conch.ForceQueuePolicy())
         queue.setThreadPoolExecutor(executor)
         return executor
     }

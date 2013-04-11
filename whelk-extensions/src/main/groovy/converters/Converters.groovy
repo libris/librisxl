@@ -1,7 +1,7 @@
 package se.kb.libris.conch.converter
 
 import java.text.Normalizer
-import org.json.simple.*
+//import org.json.simple.*
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.util.marc.Controlfield
@@ -32,7 +32,7 @@ class MarcJSONConverter {
         }
         return builder.toString()
     }
-
+    /* Removed simple-json dependency from build.
     static String not_quite_so_old_toJSONString(MarcRecord record) {
         def json = new JSONObject()
         def fields = new JSONArray()
@@ -61,6 +61,7 @@ class MarcJSONConverter {
 
         return json.toString()
     }
+    */
 
     static String toJSONString(MarcRecord record) {
         def json = mapper.createObjectNode()

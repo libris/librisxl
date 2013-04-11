@@ -17,6 +17,7 @@ import org.apache.commons.io.IOUtils
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import se.kb.libris.conch.converter.MarcJSONConverter
+import se.kb.libris.conch.*
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
@@ -261,61 +262,8 @@ class Harvester implements Runnable {
     }
 }
 
-@Log
-class ScalingQueue extends LinkedBlockingQueue {
-    private ThreadPoolExecutor executor
 
-    public ScalingQueue() { super() }
-    public ScalingQueue(int capacity) { super(capacity) }
 
-    public setThreadPoolExecutor(ThreadPoolExecutor executor) {
-        this.executor = executor
-    }
-
-    @Override
-    public boolean offer(Object o) {
-        int allWorkingThreads = executor.getActiveCount()
-        return allWorkingThreads < executor.getPoolSize() && super.offer(o)
-    }
-}
-
-@Log
-class ForceQueuePolicy implements RejectedExecutionHandler {
-    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-        try {
-            executor.getQueue().put(r)
-        } catch(InterruptedException ie) {
-            throw new Exception(ie)
-        }
-    }
-}
-
-@Log
-class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
-    private final AtomicInteger activeCount = new AtomicInteger()
-
-    public ScalingThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, LinkedBlockingQueue queue) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, queue)
-    }
-
-    @Override
-    public int getActiveCount() {
-        return activeCount.get()
-    }
-
-    @Override
-    protected void beforeExecute(Thread t, Runnable r) {
-        activeCount.incrementAndGet()
-        if (getActiveCount() == getCorePoolSize()) {
-            Thread.sleep(1000)
-        }
-    }
-
-    @Override
-    protected void afterExecute(Runnable r, Throwable t) {
-        activeCount.decrementAndGet()
-    }
-}
 
 @Log
 class MonitorThread implements Runnable {

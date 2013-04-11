@@ -5,8 +5,6 @@ import groovy.util.logging.Slf4j as Log
 import org.restlet.*
 import org.restlet.data.*
 
-import org.json.simple.*
-
 import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.plugin.*
@@ -713,91 +711,6 @@ class SuggestResultsConverter {
     }
 }
 
-@Log
-class OldAutoComplete extends BasicWhelkAPI implements JSONSerialisable, JSONInitialisable {
-
-    def pathEnd = "_complete"
-
-    def namePrefixes = []
-    String description = "Search API for autocompletion. Use parameter name or q."
-
-    /*
-    def void addNamePrefix(String prefix) {
-        namePrefixes << prefix
-    }
-    */
-
-    OldAutoComplete(java.util.ArrayList namePfxs) {
-        namePrefixes.addAll(namePfxs)
-    }
-
-    @Override
-    def void handle(Request request, Response response) {
-        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        String name = querymap.get("name")
-        if (!name) {
-            name = querymap.get("q")
-        }
-        def callback = querymap.get("callback")
-        if (name) {
-            if (name[-1] != ' ' && name[-1] != '*') {
-                name = name + "*"
-            }
-            def names = []
-            namePrefixes.each { p ->
-                def nameparts = []
-                name.split(" ").each {
-                    nameparts << "$p:$it"
-                }
-                names << nameparts.join(" AND ")
-            }
-            //def query = names.join(" OR ")
-            LinkedHashMap sortby = new LinkedHashMap<String,String>()
-            //sortby['100.a'] = "asc"
-            sortby['records'] = "desc"
-            def query = new Query(name)
-            query.highlights = namePrefixes
-            query.sorting = sortby
-            query.fields = namePrefixes
-
-            def results = this.whelk.query(query)
-            def jsonResult = 
-                (callback ? callback + "(" : "") +
-                results.toJson() +
-                (callback ? ");" : "") 
-
-            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
-        } else {
-            response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
-        }
-    }
-
-    @Override
-    public JSONInitialisable init(JSONObject obj) {
-        for (Iterator it = obj.get("prefixes").iterator(); it.hasNext();) {
-            try {
-                def _prefix = it.next();
-                namePrefixes << _prefix.toString()
-            } catch (Exception e) {
-                throw new WhelkRuntimeException(e);
-            }
-        }
-        return this;
-    }
-
-    @Override
-    JSONObject serialize() {
-        JSONObject _api = new JSONObject();
-        _api.put("_classname", this.getClass().getName());
-        JSONArray _prefixes = new JSONArray();
-        namePrefixes.each {
-            _prefixes.add(it)
-        }
-        _api.put("prefixes", _prefixes);
-                
-        return _api;
-    }
-}
 
 @Log
 class ResourceListRestlet extends BasicWhelkAPI {

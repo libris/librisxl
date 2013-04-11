@@ -6,6 +6,8 @@ import groovy.transform.Synchronized
 import java.util.concurrent.*
 import java.util.concurrent.atomic.*
 
+import se.kb.libris.conch.*
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*

@@ -1,13 +1,32 @@
-subprojects {
+allprojects {
+    version "0.1.1"
 
     apply plugin: 'java'
     apply plugin: 'groovy'
 
+    sourceSets {
+        main {
+            java { srcDirs = [] }
+            groovy { srcDir 'src/main/' }
+        }
+        test {
+            groovy { srcDir 'src/test/groovy/' }
+        }
+    }
+}
+
+subprojects {
     repositories {
         mavenCentral()
         maven { url "http://oss.sonatype.org/content/repositories/releases/" }
         maven { url "http://maven.restlet.org/" }
         maven { url "http://repository.codehaus.org/" }
-        flatDir name: 'localDir', dirs: 'lib'
+        flatDir name: 'localDir', dirs: '../lib'
+    }
+}
+
+project(":whelk-extensions") {
+    dependencies {
+        compile project(":whelk-core")
     }
 }
