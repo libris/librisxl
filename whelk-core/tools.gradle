@@ -56,7 +56,6 @@ task convertJsonLD2Marc(dependsOn: 'classes', type: JavaExec) {
     args(System.getProperty('args', "").split() as String[])
 }
 
-/*
 task prodLogging(type: Copy) {
     copy {
         from('src/main/resources')
@@ -65,7 +64,6 @@ task prodLogging(type: Copy) {
         rename('logback_prod.xml','logback.xml')
     }
 }
-*/
 
 task devLogging(dependsOn: 'classes', type: Copy) {
     copy {
@@ -74,6 +72,10 @@ task devLogging(dependsOn: 'classes', type: Copy) {
         include('logback_dev.xml')
         rename('logback_dev.xml','logback.xml')
     }
+}
+
+war {
+    dependsOn prodLogging
 }
 
 task jettyRun(dependsOn: 'devLogging', type: JettyRun, overwrite: true) {

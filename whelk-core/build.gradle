@@ -29,17 +29,6 @@ run {
 
 mainClassName = 'se.kb.libris.whelks.WhelkOperator'
 
-war {
-    from('src/main/resources') {
-        eachFile {
-            if (it.name == "logback_prod.xml") {
-                it.setPath("WEB-INF/classes/logback")
-                it.setName("logback.xml")
-            }
-        }
-    }
-}
-
 jar {
     dependsOn configurations.runtime
         from {
@@ -74,13 +63,6 @@ task depjar(type: Jar, dependsOn: jar) {
 
 apply from: 'tools.gradle'
 
-repositories {
-    mavenCentral()
-    maven { url "http://oss.sonatype.org/content/repositories/releases/" }
-    maven { url "http://maven.restlet.org/" }
-    maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localDir', dirs: 'lib'
-}
 
 dependencies {
     groovy 'org.codehaus.groovy:groovy:2.0.4'
