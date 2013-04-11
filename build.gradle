@@ -30,3 +30,13 @@ project(":whelk-extensions") {
         compile project(":whelk-core")
     }
 }
+
+project(":whelk-webapi") {
+    apply plugin: 'jetty'
+    apply plugin: 'war'
+    dependencies {
+        compile project(":whelk-core")
+        compile project(":whelk-extensions")
+        providedCompile 'javax.servlet:servlet-api:2.5'
+    }
+}

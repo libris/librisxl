@@ -1,7 +1,6 @@
 /**
  * Runtime tools. Use these tasks to invoke compiled tools directly from gradle.
  */
-import org.gradle.api.plugins.jetty.JettyRun
 
 task whelkOperation(dependsOn: 'classes', type: JavaExec) {
   description "Run import or reindex. (USAGE: -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)] [maxNoOfDocs (for import)]' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
@@ -11,7 +10,7 @@ task whelkOperation(dependsOn: 'classes', type: JavaExec) {
   systemProperty 'elastic.host', System.getProperty('elastic.host', "")
   systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', mock_cluster)
   systemProperty 'file.encoding', System.getProperty('file.encoding', "")
-  systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', 'file:src/main/resources/mock_whelks.json')
+  systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', 'file:whelk-webapi/src/main/resources/mock_whelks.json')
   args(System.getProperty('args', "").split() as String[])
 }
 
@@ -54,43 +53,4 @@ task convertJsonLD2Marc(dependsOn: 'classes', type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'se.kb.libris.whelks.plugin.JsonLD2MarcConverter'
     args(System.getProperty('args', "").split() as String[])
-}
-
-task prodLogging(type: Copy) {
-    copy {
-        from('src/main/resources')
-        into('src/main/resources')
-        include('logback_prod.xml')
-        rename('logback_prod.xml','logback.xml')
-    }
-}
-
-task devLogging(dependsOn: 'classes', type: Copy) {
-    copy {
-        from('src/main/resources')
-        into('src/main/resources')
-        include('logback_dev.xml')
-        rename('logback_dev.xml','logback.xml')
-    }
-}
-
-war {
-    dependsOn prodLogging
-}
-
-task jettyRun(dependsOn: 'devLogging', type: JettyRun, overwrite: true) {
-    //jettyRun.contextPath = '/'
-    jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
-
-    def mock_config = "file:src/main/resources/mock_whelks.json"
-    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
-    System.setProperty('file.encoding', System.getProperty('file.encoding', "UTF-8"))
-    System.setProperty('whelk.config.uri', System.getProperty("whelk.config.uri", mock_config))
-
-    if (System.getProperty("whelk.config.uri", "") == mock_config) {
-        System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-    } else {
-        System.setProperty('elastic.host', System.getProperty("elastic.host", ""))
-        System.setProperty('elastic.cluster', System.getProperty('elastic.cluster', ""))
-    }
 }

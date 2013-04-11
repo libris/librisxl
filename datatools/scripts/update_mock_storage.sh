@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-datadir=$(dirname $0)/../src/test/resources/marc2jsonld
+datadir=$(dirname $0)/../../whelk-extensions/src/test/resources/marc2jsonld
 use_expected=$1
 
 for d in $datadir/in/*; do
@@ -13,7 +13,7 @@ for d in $datadir/in/*; do
             f=$expected
             fmt=jsonld
         fi
-        dest_url=http://localhost:8080/whelk-core/$datatype/$id
+        dest_url=http://localhost:8080/whelk-webapi/$datatype/$id
 #        if [ "$datatype" ==  "hold" ]; then
 #            curl -XPUT -H "Content-type:application/json" -H "format:$fmt" -H "link:/bib/7149593" $dest_url --data-binary @$f
 #        else    

@@ -1,0 +1,48 @@
+import org.gradle.api.plugins.jetty.JettyRun
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+    flatDir name: 'localDir', dirs: '../lib'
+}
+
+
+
+task prodLogging(type: Copy) {
+    copy {
+        from('src/main/resources')
+        into('src/main/resources')
+        include('logback_prod.xml')
+        rename('logback_prod.xml','logback.xml')
+    }
+}
+
+task devLogging(dependsOn: 'classes', type: Copy) {
+    copy {
+        from('src/main/resources')
+        into('src/main/resources')
+        include('logback_dev.xml')
+        rename('logback_dev.xml','logback.xml')
+    }
+}
+
+war {
+    dependsOn prodLogging
+}
+
+task jettyRun(dependsOn: 'devLogging', type: JettyRun, overwrite: true) {
+    //jettyRun.contextPath = '/'
+    jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
+
+    def mock_config = "file:whelk-webapi/src/main/resources/mock_whelks.json"
+    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
+    System.setProperty('file.encoding', System.getProperty('file.encoding', "UTF-8"))
+    System.setProperty('whelk.config.uri', System.getProperty("whelk.config.uri", mock_config))
+
+    if (System.getProperty("whelk.config.uri", "") == mock_config) {
+        System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
+    } else {
+        System.setProperty('elastic.host', System.getProperty("elastic.host", ""))
+        System.setProperty('elastic.cluster', System.getProperty('elastic.cluster', ""))
+    }
+}

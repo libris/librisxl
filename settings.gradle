@@ -1,1 +1,1 @@
-include "whelk-core","whelk-extensions"
+include "whelk-core","whelk-extensions","whelk-webapi"

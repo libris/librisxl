@@ -1,6 +1,4 @@
-apply plugin: 'jetty'
 apply plugin: 'application'
-apply plugin: 'war'
 
 //apply from: 'tools.gradle'
 
@@ -43,7 +41,6 @@ dependencies {
     compile 'stax:stax-api:1.0.1'
     compile 'se.kb.libris:marc:1.2.7'
     compile 'org.mozilla:rhino:1.7R4'
-    providedCompile 'javax.servlet:servlet-api:2.5'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
 
