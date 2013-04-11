@@ -65,42 +65,18 @@ task prodLogging(type: Copy) {
         rename('logback_prod.xml','logback.xml')
     }
 }
-task devLogging(type: Copy) {
+*/
+
+task devLogging(dependsOn: 'classes', type: Copy) {
     copy {
         from('src/main/resources')
         into('src/main/resources')
-        include('logback_prod.xml')
-
+        include('logback_dev.xml')
+        rename('logback_dev.xml','logback.xml')
     }
 }
-*/
 
-task jettyRun(dependsOn: 'classes', type: JettyRun, overwrite: true) {
-
-
-    /*
-    doFirst {
-        copy {
-            from('src/main/resources') {
-                eachFile {
-                    if (it.name == "logback_dev.xml") {
-                        it.setPath("WEB-INF/classes/logback")
-                        it.setName("logback.xml")
-                    }
-                }
-            }
-        }
-    }
-    */
-    /*
-        copy {
-            from('src/main/resources')
-            into('src/main/resources')
-            include('logback_dev.xml')
-            rename('logback_dev.xml','logback.xml')
-        }
-    }
-    */
+task jettyRun(dependsOn: 'devLogging', type: JettyRun, overwrite: true) {
     //jettyRun.contextPath = '/'
     jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:src/main/resources/whelks.json')"
 

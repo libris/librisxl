@@ -20,20 +20,22 @@ class OAIPMHImporter {
     int nrImported = 0
     int nrDeleted = 0
     long startTime = 0
+    boolean picky = true
 
     OAIPMHImporter(Whelk toWhelk, String fromResource) {
         this.whelk = toWhelk
         this.resource = fromResource
     }
 
-    int doImport(Date from = null, int nrOfDocs = -1) {
+    int doImport(Date from = null, int nrOfDocs = -1, boolean picky = true) {
         getAuthentication()
+        this.picky = picky
         String urlString = "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml"
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
         }
         startTime = System.currentTimeMillis()
-        log.info("Harvesting OAIPMH data from $urlString")
+        log.info("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
         URL url = new URL(urlString)
         String resumptionToken = harvest(url)
         log.debug("resumptionToken: $resumptionToken")
@@ -72,7 +74,9 @@ class OAIPMHImporter {
                     doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/"+whelk.prefix+"/"+id),"contentType":"application/json","format":"marc21"])
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord")
-                    throw e
+                    if (picky) {
+                        throw e
+                    }
                 }
                 if (it.header.setSpec) {
                     for (sS in it.header.setSpec) {
