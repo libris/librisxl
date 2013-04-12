@@ -1,7 +1,5 @@
 apply plugin: 'application'
 
-//apply from: 'tools.gradle'
-
 task depjar(type: Jar, dependsOn: jar) {
     archiveName = "dependencies.jar"
     dependsOn configurations.runtime

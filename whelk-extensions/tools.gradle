@@ -10,7 +10,7 @@ task whelkOperation(dependsOn: 'classes', type: JavaExec) {
   systemProperty 'elastic.host', System.getProperty('elastic.host', "")
   systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', mock_cluster)
   systemProperty 'file.encoding', System.getProperty('file.encoding', "")
-  systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', 'file:whelk-webapi/src/main/resources/mock_whelks.json')
+  systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', 'file:../mock_whelks.json')
   args(System.getProperty('args', "").split() as String[])
 }
 

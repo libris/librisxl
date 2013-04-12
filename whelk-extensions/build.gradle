@@ -1,3 +1,4 @@
+apply from: 'tools.gradle'
 
 task fatjar(type: Jar, dependsOn: jar) {
     fatjar.description = "Creates a jar containing the classes and all dependencies."
