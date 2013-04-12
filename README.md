@@ -3,6 +3,14 @@
 datatools/
     See datatools/README.md
 
+Libris-XL is divided over three subprojects:
+    whelk-core:
+        contains the core components, whelks and storages, indexes and tripplestores.
+    whelk-extensions:
+        contains extensions to the core components, such as format converters. Stuff used for specific implementations.
+    whelk-webapi:
+        contians the sources for the web API.
+
 ## Dependencies
 
 1. Install gradle from <http://gradle.org/> (or use a package manager, e.g.: brew install gradle).
@@ -42,8 +50,8 @@ For running a proper instance (e.g. in production), you should use a standalone 
 
 First set up configuration of it:
 
-    $ cp src/main/resources/whelks-core.properties.in src/main/resources/whelks-core.properties
-    $ vim src/main/resources/whelks-core.properties # ... (ask for directions)
+    $ cp whelk-extensions/src/main/resources/whelks-core.properties.in whelk-extensions/src/main/resources/whelks-core.properties
+    $ vim whelk-extensions/src/main/resources/whelks-core.properties # ... (ask for directions)
 
 ### Perform whelk operations
 
@@ -51,7 +59,7 @@ Run whelkOperation gradle task to import, reindex or rebuild:
 
     $ gradle whelkOperation -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)]]' -Dwhelk.config.uri=<uri-to-config-json> (-Delastic.host='<host>') (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>')
 
-Example - import documents from 2000-01-01 to mock-whelk from external sources:
+Example - import documents from 2000-01-01 using etc/whelks.json to configure the whelks from external sources:
 
-    $ gradle whelkOperation -Dargs='import bib bib 2000-01-01T00:00:00Z' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:src/main/resources/mock_whelks.json
+    $ gradle whelkOperation -Dargs='import bib bib 2000-01-01T00:00:00Z' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:../etc/whelks.json
 
