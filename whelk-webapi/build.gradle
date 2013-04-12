@@ -7,27 +7,21 @@ repositories {
 }
 
 
-
-task prodLogging(type: Copy) {
-    copy {
-        from('src/main/resources')
-        into('src/main/resources')
-        include('logback_prod.xml')
-        rename('logback_prod.xml','logback.xml')
-    }
-}
-
 task devLogging(dependsOn: 'classes', type: Copy) {
     copy {
-        from('src/main/resources')
-        into('src/main/resources')
+        from('../etc')
         include('logback_dev.xml')
         rename('logback_dev.xml','logback.xml')
+        into "build/resources/main"
     }
 }
 
 war {
-    dependsOn prodLogging
+    from('../etc') {
+        include("logback_prod")
+        rename("logback_prod.xml", "logback.xml")
+        into "WEB-INF/classes"
+    }
 }
 
 task jettyRun(dependsOn: 'devLogging', type: JettyRun, overwrite: true) {
