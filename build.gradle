@@ -13,6 +13,8 @@ allprojects {
             groovy { srcDir 'src/test/groovy/' }
         }
     }
+
+
 }
 
 subprojects {
@@ -22,6 +24,15 @@ subprojects {
         maven { url "http://maven.restlet.org/" }
         maven { url "http://repository.codehaus.org/" }
         flatDir name: 'localDir', dirs: '../lib'
+    }
+
+    task devLogging(dependsOn: 'classes', type: Copy) {
+        copy {
+            from('../etc')
+            include('logback_dev.xml')
+            rename('logback_dev.xml','logback.xml')
+            into "build/resources/main"
+        }
     }
 }
 

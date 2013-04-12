@@ -2,7 +2,8 @@
  * Runtime tools. Use these tasks to invoke compiled tools directly from gradle.
  */
 
-task whelkOperation(dependsOn: 'classes', type: JavaExec) {
+
+task whelkOperation(dependsOn: 'devLogging', type: JavaExec) {
   description "Run import or reindex. (USAGE: -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)] [maxNoOfDocs (for import)]' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
   classpath = sourceSets.main.runtimeClasspath
   main = 'se.kb.libris.whelks.WhelkOperator'
@@ -10,7 +11,7 @@ task whelkOperation(dependsOn: 'classes', type: JavaExec) {
   systemProperty 'elastic.host', System.getProperty('elastic.host', "")
   systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', mock_cluster)
   systemProperty 'file.encoding', System.getProperty('file.encoding', "")
-  systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', 'file:../mock_whelks.json')
+  systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', 'file:../etc/whelkoperations.json')
   args(System.getProperty('args', "").split() as String[])
 }
 

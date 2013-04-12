@@ -6,16 +6,6 @@ repositories {
     flatDir name: 'localDir', dirs: '../lib'
 }
 
-
-task devLogging(dependsOn: 'classes', type: Copy) {
-    copy {
-        from('../etc')
-        include('logback_dev.xml')
-        rename('logback_dev.xml','logback.xml')
-        into "build/resources/main"
-    }
-}
-
 war {
     from('../etc') {
         include("logback_prod")
