@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
+import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 
@@ -39,9 +40,5 @@ class InMemoryStorage extends BasicPlugin implements Storage {
 
     void delete(URI uri, String wp) {
         storage.remove(uri)
-    }
-
-    LookupResult lookup(Key key) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

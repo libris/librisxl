@@ -2,6 +2,7 @@ package se.kb.libris.whelks.plugin.external
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
+import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
 
 import groovy.util.logging.Slf4j as Log

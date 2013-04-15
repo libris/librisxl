@@ -2,8 +2,7 @@ package se.kb.libris.whelks.component
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.basic.BasicDocument
-import se.kb.libris.whelks.basic.BasicPlugin
-import se.kb.libris.whelks.Key
+import se.kb.libris.whelks.plugin.BasicPlugin
 import se.kb.libris.whelks.LookupResult
 import se.kb.libris.whelks.exception.*
 import groovy.util.logging.Slf4j as Log
@@ -262,9 +261,6 @@ class RiakStorage extends RiakClient implements Storage {
         return false
     }*/
 
-    LookupResult<? extends Document> lookup(Key key){
-        throw new UnsupportedOperationException("Not supported yet.")
-    }
 }
 
 @Log

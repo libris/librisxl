@@ -1,4 +1,4 @@
-package se.kb.libris.whelks.basic
+package se.kb.libris.whelks.component
 
 import org.codehaus.jackson.*
 import org.codehaus.jackson.map.*

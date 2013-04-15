@@ -14,6 +14,7 @@ import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 
 @Target(value = ElementType.FIELD)
@@ -35,9 +36,6 @@ public class BasicDocument implements Document {
 
     @IsMetadata
     Set<Link> links = new HashSet<Link>()
-
-    //@IsMetadata
-    Set<Key> keys = new TreeSet<Key>()
 
     @IsMetadata
     Set<Tag> tags = new HashSet<Tag>()

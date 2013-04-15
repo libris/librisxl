@@ -1,7 +1,7 @@
 package se.kb.libris.whelks.basic
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.plugin.FormatConverter
+import se.kb.libris.whelks.plugin.*
 
 abstract class BasicFormatConverter extends BasicPlugin implements FormatConverter {
 

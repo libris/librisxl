@@ -48,11 +48,6 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    LookupResult lookup(Key key) {
-        throw new UnsupportedOperationException("Not supported yet.")
-    }
-
-    @Override
     void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
         File sourcefile = new File(buildPath(doc.identifier, true) + "/" + getBaseFilename(doc.identifier) + (FILE_EXTENSIONS[doc.contentType] ?: ""))
         File metafile = new File(buildPath(doc.identifier, true) + "/"+ getBaseFilename(doc.identifier) + METAFILE_EXTENSION)

@@ -2,7 +2,6 @@ package se.kb.libris.whelks.plugin;
 
 import java.net.URI;
 
-import se.kb.libris.whelks.basic.BasicPlugin;
 import se.kb.libris.whelks.Document;
 import se.kb.libris.whelks.Whelk;
 

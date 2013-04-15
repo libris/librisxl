@@ -1,6 +1,4 @@
-package se.kb.libris.whelks.basic;
-
-import se.kb.libris.whelks.plugin.Plugin;
+package se.kb.libris.whelks.plugin;
 
 public class BasicPlugin implements Plugin {
     private boolean enabled = true;

@@ -22,7 +22,7 @@ import se.kb.libris.whelks.persistance.JSONSerialisable;
 import se.kb.libris.whelks.plugin.*;
 
 @Deprecated
-public abstract class BasicWhelk implements Whelk, Pluggable { //, JSONInitialisable, JSONSerialisable {
+public abstract class BasicWhelk implements Whelk {
     private Random random = new Random();
     private final List<Plugin> plugins = new LinkedList<Plugin>();
     private String prefix;
@@ -195,16 +195,6 @@ public abstract class BasicWhelk implements Whelk, Pluggable { //, JSONInitialis
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    private List<KeyGenerator> getKeyGenerators() {
-        List<KeyGenerator> ret = new LinkedList<KeyGenerator>();
-
-        for (Plugin plugin: plugins)
-            if (plugin instanceof KeyGenerator)
-                ret.add((KeyGenerator)plugin);
-
-        return ret;
-    }
-
     private List<DescriptionExtractor> getDescriptionExtractors() {
         List<DescriptionExtractor> ret = new LinkedList<DescriptionExtractor>();
 
@@ -309,7 +299,6 @@ public abstract class BasicWhelk implements Whelk, Pluggable { //, JSONInitialis
         }
     }
 
-    @Override
     public void addPluginIfNotExists(Plugin plugin) {
         synchronized (plugins) {
             if (! plugins.contains(plugin)) {
@@ -318,7 +307,6 @@ public abstract class BasicWhelk implements Whelk, Pluggable { //, JSONInitialis
         }
     }
 
-    @Override
     public void removePlugin(String id) {
         synchronized (plugins) {
             ListIterator<Plugin> li = plugins.listIterator();

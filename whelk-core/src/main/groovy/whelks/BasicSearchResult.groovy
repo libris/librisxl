@@ -2,6 +2,7 @@ package se.kb.libris.whelks.basic
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.SearchResult
+import se.kb.libris.whelks.component.ElasticJsonMapper
 
 import org.codehaus.jackson.map.ObjectMapper
 

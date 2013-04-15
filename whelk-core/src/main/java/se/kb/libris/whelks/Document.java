@@ -40,7 +40,6 @@ public interface Document {
     public Document withFormat(String format);
 
     public Set<Link> getLinks();
-    public Set<Key> getKeys();
     public Set<Description> getDescriptions();
     public Set<Tag> getTags();
     public String toJson();

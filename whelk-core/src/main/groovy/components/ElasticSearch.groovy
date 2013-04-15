@@ -24,10 +24,9 @@ import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
 import static org.elasticsearch.common.xcontent.XContentFactory.*
 
-//import org.json.simple.*
-
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
+import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
 
 import static se.kb.libris.conch.Tools.*

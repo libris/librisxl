@@ -1,5 +1,6 @@
 package se.kb.libris.whelks.basic
 
+import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.Document
 
 abstract class BasicIndexFormatConverter extends BasicPlugin {
