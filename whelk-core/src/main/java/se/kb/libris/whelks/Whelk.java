@@ -19,7 +19,6 @@ public interface Whelk {
     public Iterable<Document> loadAll(Date since);
 
     /* Maybe implement later
-    public LookupResult<? extends Document> lookup(Key key);
     public SparqlResult sparql(String query);
     */
 
