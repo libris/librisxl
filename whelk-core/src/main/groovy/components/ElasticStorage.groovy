@@ -114,8 +114,8 @@ abstract class ElasticStorage extends ElasticSearch {
     }
 
     @Override
-    def Iterable<Document> updates(Date since) {
-        return new ElasticIterable<Document>(this, since, true)
+    def Iterable<Document> updates(Date since, String idxpfx) {
+        return new ElasticIterable<Document>(this, idxpfx, since, true)
     }
 
 }

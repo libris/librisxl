@@ -7,5 +7,5 @@ import se.kb.libris.whelks.Document;
 
 public interface History extends Component {
     public static final int BATCH_SIZE = 1000;
-    public Iterable<Document> updates(Date since);
+    public Iterable<Document> updates(Date since, String prefix);
 }
