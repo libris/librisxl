@@ -13,34 +13,6 @@ task depjar(type: Jar, dependsOn: jar) {
     }
 }
 
-repositories {
-    mavenCentral()
-    maven { url "http://oss.sonatype.org/content/repositories/releases/" }
-    maven { url "http://maven.restlet.org/" }
-    maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localDir', dirs: '../lib'
-}
-
-dependencies {
-    groovy 'org.codehaus.groovy:groovy:2.0.4'
-    groovy 'commons-cli:commons-cli:1.2'
-    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.9'
-    compile 'ch.qos.logback:logback-classic:1.0.0'
-    compile 'org.slf4j:log4j-over-slf4j:1.6.5'
-    compile 'org.elasticsearch:elasticsearch:0.20.5'
-    compile 'org.elasticsearch:elasticsearch-lang-groovy:1.1.0'
-    compile 'com.spatial4j:spatial4j:0.3'
-    compile 'commons-io:commons-io:2.3'
-    compile 'org.restlet.jse:org.restlet:2.0.15'
-    compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.15'
-    compile 'commons-codec:commons-codec:1.7'
-    compile 'com.basho.riak:riak-client:1.0.6'
-    compile 'stax:stax:1.2.0'
-    compile 'stax:stax-api:1.0.1'
-    compile 'se.kb.libris:marc:1.2.7'
-    compile 'org.mozilla:rhino:1.7R4'
-    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-}
 
 /*
 

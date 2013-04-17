@@ -10,26 +10,29 @@ public interface Document {
     public URI getIdentifier();
     public void setIdentifier(URI identifier);
     public String getVersion();
-    public Date getTimestampAsDate();
-    public long getTimestamp();
-    public Document updateTimestamp();
-
-    public byte[] getData();
-    public byte[] getData(long offset, long length);
-    public String getDataAsString();
-    public Map getDataAsJson();
-    public InputStream getDataAsStream();
-    public InputStream getDataAsStream(long offset, long length);
     public void setVersion(String version);
+    public long getTimestamp();
     public void setTimestamp(long timestamp);
-
-    //public void setData(byte data[]);
-    //public void setData(InputStream data);
+    public byte[] getData();
     public String getContentType();
     public void setContentType(String contentType);
     public String getFormat();
     public void setFormat(String format);
     public long getSize();
+    public Set<Link> getLinks();
+    public Set<Description> getDescriptions();
+    public Set<Tag> getTags();
+
+    public InputStream getDataAsStream();
+    public InputStream getDataAsStream(long offset, long length);
+    public byte[] getData(long offset, long length);
+    public String getDataAsString();
+    public Map getDataAsJson();
+    public Date getTimestampAsDate();
+    public Document updateTimestamp();
+
+    //public void setData(byte data[]);
+    //public void setData(InputStream data);
 
     public Document withIdentifier(String uri);
     public Document withIdentifier(URI uri);
@@ -39,9 +42,6 @@ public interface Document {
     public Document withContentType(String contentType);
     public Document withFormat(String format);
 
-    public Set<Link> getLinks();
-    public Set<Description> getDescriptions();
-    public Set<Tag> getTags();
     public String toJson();
 
     public Document tag(URI type, String value);
