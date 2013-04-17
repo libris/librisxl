@@ -18,39 +18,45 @@ import se.kb.libris.whelks.plugin.*
 class CassandraStorage extends BasicPlugin implements Storage {
 
     int REPLICATION_FACTOR = 1
+    String COLUMN_FAMILY_NAME = "Resource"
+
     Keyspace ksp
     ColumnFamilyTemplate<String, String> template
 
     CassandraStorage() {}
 
     void init(String whelkName) {
-        log.info("Initializing cassandra storage.")
-        Cluster cluster = HFactory.getOrCreateCluster("test-cluster","localhost:9160");
+        String cassandra_host = System.getProperty("cassandra.host")
+        String cassandra_cluster = System.getProperty("cassandra.cluster")
+        log.info("Initializing cassandra storage in cluster $cassandra_cluster at $cassandra_host.")
+        Cluster cluster = HFactory.getOrCreateCluster(cassandra_cluster, cassandra_host+":9160");
         log.debug("Found cluster: $cluster")
-        ColumnFamilyDefinition cfDef = HFactory.createColumnFamilyDefinition("MyKeyspace", "ColumnFamilyName", ComparatorType.BYTESTYPE);
+        ColumnFamilyDefinition cfDef = HFactory.createColumnFamilyDefinition(whelkName, COLUMN_FAMILY_NAME, ComparatorType.BYTESTYPE);
         log.debug("cfDef: $cfDef")
-        KeyspaceDefinition keyspaceDef = cluster.describeKeyspace("MyKeyspace");
+        KeyspaceDefinition keyspaceDef = cluster.describeKeyspace(whelkName);
         log.debug("keyspaceDef: $keyspaceDef")
         if (keyspaceDef == null) {
-            KeyspaceDefinition newKeyspace = HFactory.createKeyspaceDefinition("MyKeyspace", ThriftKsDef.DEF_STRATEGY_CLASS, REPLICATION_FACTOR, Arrays.asList(cfDef));
+            KeyspaceDefinition newKeyspace = HFactory.createKeyspaceDefinition(whelkName, ThriftKsDef.DEF_STRATEGY_CLASS, REPLICATION_FACTOR, Arrays.asList(cfDef));
             log.debug("new keyspace: $newKeyspace")
             cluster.addKeyspace(newKeyspace, true);
-            keyspaceDef = cluster.describeKeyspace("MyKeyspace");
+            keyspaceDef = cluster.describeKeyspace(whelkName);
             log.debug("Retrieved keyspacedef: $keyspaceDef")
         }
-        ksp = HFactory.createKeyspace("MyKeyspace", cluster);
+        ksp = HFactory.createKeyspace(whelkName, cluster);
         log.debug("ksp: $ksp")
-        template = new ThriftColumnFamilyTemplate<String, String>(ksp, "ColumnFamilyName", StringSerializer.get(), StringSerializer.get());
+        template = new ThriftColumnFamilyTemplate<String, String>(ksp, COLUMN_FAMILY_NAME, StringSerializer.get(), StringSerializer.get());
     }
 
 
     @Override
     void store(Document doc, String whelkPrefix) {
         // <String, String> correspond to key and Column name.
-        ColumnFamilyUpdater<String, String> updater = template.createUpdater("a key");
-        updater.setString("domain", "www.datastax.com");
-        updater.setLong("time", System.currentTimeMillis());
+        ColumnFamilyUpdater<String, String> updater = template.createUpdater(doc.identifier.toString());
         log.debug("Storing document ...")
+        updater.setByteArray("data", doc.data)
+        updater.setLong("timestamp", doc.timestamp)
+        updater.setString("format", doc.format)
+        updater.setString("contentType", doc.contentType)
 
         try {
             template.update(updater);
@@ -61,13 +67,15 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     Document get(URI uri, String whelkPrefix) {
+        Document document
         try {
-            ColumnFamilyResult<String, String> res = template.queryColumns("a key");
-            String value = res.getString("domain");
-            // value should be "www.datastax.com" as per our previous insertion.
+            ColumnFamilyResult<String, String> res = template.queryColumns(uri.toString());
+            document = new BasicDocument().withIdentifier(uri).withData(res.getByteArray("data")).withFormat(res.getString("format")).withContentType(res.getString("contentType"))
+            document.setTimestamp(res.getLong("timestamp"))
         } catch (HectorException e) {
-            // do something ...
+            log.error("Exception: ${e.message}", e)
         }
+        return document
     }
 
     @Override

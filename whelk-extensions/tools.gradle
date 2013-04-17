@@ -7,9 +7,12 @@ task whelkOperation(dependsOn: 'devLogging', type: JavaExec) {
   description "Run import or reindex. (USAGE: -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)] [maxNoOfDocs (for import)]' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
   classpath = sourceSets.main.runtimeClasspath
   main = 'se.kb.libris.whelks.WhelkOperator'
-  def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
+  def mock_es_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
+  def mock_c_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-c-cluster"
   systemProperty 'elastic.host', System.getProperty('elastic.host', "")
-  systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', mock_cluster)
+  systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', mock_es_cluster)
+  systemProperty 'cassandra.host', System.getProperty('cassandra.host', "localhost")
+  systemProperty 'cassandra.cluster', System.getProperty('cassandra.cluster', mock_c_cluster)
   systemProperty 'file.encoding', System.getProperty('file.encoding', "")
   systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', 'file:../etc/whelkoperations.json')
   args(System.getProperty('args', "").split() as String[])

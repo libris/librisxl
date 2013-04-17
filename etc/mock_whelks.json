@@ -2,17 +2,17 @@
     "_whelks": [
         {
             "bib":{
-                "_plugins": ["localindex", "diskstorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "cleanupconverter", "entityextractor", "jsonldlinkfinder"]
+                "_plugins": ["localindex", "cassandrastorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "cleanupconverter", "entityextractor", "jsonldlinkfinder"]
             }
         },
         {
             "auth":{
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
+                "_plugins": [ "localindex", "cassandrastorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
             }
         },
         {
             "hold":{
-                "_plugins": [ "localindex", "diskstorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
+                "_plugins": [ "localindex", "cassandrastorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
             }
         },
         {
@@ -27,7 +27,7 @@
         },
         {
             "resource":{
-                "_plugins": ["diskstorage", "document", "resourcelist", "marcmap", "search"]
+                "_plugins": ["cassandrastorage", "document", "resourcelist", "marcmap", "search"]
             }
         }
     ],
@@ -55,10 +55,16 @@
             }
         },
         {
+            "cassandrastorage": {
+                "_class" : "se.kb.libris.whelks.component.CassandraStorage", 
+                "_priority" : 0
+            }
+        },
+        {
             "diskstorage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
                 "_params" : "work/storage",
-                "_priority" : 0
+                "_priority" : 1
             }
         },
         {

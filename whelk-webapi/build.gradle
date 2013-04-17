@@ -20,8 +20,11 @@ task jettyRun(dependsOn: 'devLogging', type: JettyRun, overwrite: true) {
 
     def mock_config = "file:etc/mock_whelks.json"
     def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
+    def mock_c_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-c-cluster"
     System.setProperty('file.encoding', System.getProperty('file.encoding', "UTF-8"))
     System.setProperty('whelk.config.uri', System.getProperty("whelk.config.uri", mock_config))
+    System.setProperty('cassandra.host', System.getProperty('cassandra.host', "localhost"))
+    System.setProperty('cassandra.cluster', System.getProperty('cassandra.cluster', mock_c_cluster))
 
     if (System.getProperty("whelk.config.uri", "") == mock_config) {
         System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
