@@ -21,7 +21,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     String COLUMN_FAMILY_NAME = "Resource"
 
     Keyspace ksp
-    ColumnFamilyTemplate<String, String> template
+    ColumnFamilyTemplate<String, String> cft
 
     CassandraStorage() {}
 
@@ -44,22 +44,21 @@ class CassandraStorage extends BasicPlugin implements Storage {
         }
         ksp = HFactory.createKeyspace(whelkName, cluster);
         log.debug("ksp: $ksp")
-        template = new ThriftColumnFamilyTemplate<String, String>(ksp, COLUMN_FAMILY_NAME, StringSerializer.get(), StringSerializer.get());
+        cft = new ThriftColumnFamilyTemplate<String, String>(ksp, COLUMN_FAMILY_NAME, StringSerializer.get(), StringSerializer.get());
     }
 
 
     @Override
     void store(Document doc, String whelkPrefix) {
         // <String, String> correspond to key and Column name.
-        ColumnFamilyUpdater<String, String> updater = template.createUpdater(doc.identifier.toString());
-        log.debug("Storing document ...")
+        ColumnFamilyUpdater<String, String> updater = cft.createUpdater(doc.identifier.toString());
         updater.setByteArray("data", doc.data)
         updater.setLong("timestamp", doc.timestamp)
-        updater.setString("format", doc.format)
         updater.setString("contentType", doc.contentType)
 
         try {
-            template.update(updater);
+            cft.update(updater);
+            log.debug("Stored document ${doc.identifier} ...")
         } catch (HectorException e) {
             log.error("Exception: ${e.message}", e)
         }
@@ -69,9 +68,11 @@ class CassandraStorage extends BasicPlugin implements Storage {
     Document get(URI uri, String whelkPrefix) {
         Document document
         try {
-            ColumnFamilyResult<String, String> res = template.queryColumns(uri.toString());
-            document = new BasicDocument().withIdentifier(uri).withData(res.getByteArray("data")).withFormat(res.getString("format")).withContentType(res.getString("contentType"))
-            document.setTimestamp(res.getLong("timestamp"))
+            ColumnFamilyResult<String, String> res = cft.queryColumns(uri.toString());
+            if (res) {
+                document = new BasicDocument().withIdentifier(uri).withData(res.getByteArray("data")).withContentType(res.getString("contentType"))
+                document.setTimestamp(res.getLong("timestamp"))
+            }
         } catch (HectorException e) {
             log.error("Exception: ${e.message}", e)
         }
@@ -81,9 +82,9 @@ class CassandraStorage extends BasicPlugin implements Storage {
     @Override
     void delete(URI uri, String prefix) {
         try {
-            template.deleteColumn("key", "column name");
+            cft.deleteRow(uri.toString())
         } catch (HectorException e) {
-            // do something
+            log.error("Exception: ${e.message}", e)
         }
     }
 

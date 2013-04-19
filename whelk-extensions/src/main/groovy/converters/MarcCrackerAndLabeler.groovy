@@ -14,8 +14,7 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class MarcCrackerAndLabelerIndexFormatConverter extends BasicIndexFormatConverter implements IndexFormatConverter {
 
-    String requiredContentType = "application/json"
-    String requiredFormat = "marc21"
+    String requiredContentType = "application/x-marc-json"
     String id = this.class.name
     boolean enabled = true
     ObjectMapper mapper

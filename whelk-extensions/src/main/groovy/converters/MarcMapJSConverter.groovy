@@ -25,8 +25,7 @@ class MarcMapJSConverter extends BasicIndexFormatConverter implements IndexForma
     Scriptable scope = cx.initStandardObjects()
 
     int order = 0
-    String requiredFormat = "marc21"
-    String requiredContentType = "application/json"
+    String requiredContentType = "application/x-marc-json"
 
     MarcMapJSConverter(scriptPath, objName, funcName) {
         this(null, scriptPath, objName, funcName)

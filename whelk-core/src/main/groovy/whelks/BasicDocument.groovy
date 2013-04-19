@@ -28,7 +28,7 @@ public class BasicDocument implements Document {
     URI identifier
 
     @IsMetadata
-    String version = "1", contentType, format
+    String version = "1", contentType
 
     byte[] data
 
@@ -197,12 +197,6 @@ public class BasicDocument implements Document {
     @Override
     public Document withContentType(String contentType) {
         this.contentType = contentType
-        return this
-    }
-
-    @Override
-    public Document withFormat(String format) {
-        this.format = format
         return this
     }
 

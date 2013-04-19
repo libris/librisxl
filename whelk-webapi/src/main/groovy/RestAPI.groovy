@@ -7,6 +7,7 @@ import org.restlet.data.*
 
 import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.http.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
@@ -33,14 +34,15 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     def void disable() {this.enabled = false}
 
     @Override
-    def void setWhelk(Whelk w) {
-        this.whelk = w 
+    void setWhelk(Whelk w) {
+        this.whelk = w
     }
     @Override
     void init(String w) {}
 
     String getPath() {
-        return "/" + this.whelk.prefix + "/" + getPathEnd()
+        def elems = [(this.whelk instanceof HttpWhelk ? this.whelk.contentRoot : this.whelk.id), getPathEnd()]
+        return "/" + elems.findAll { it.length() > 0 }.join("/")
     }
 
     /**
@@ -68,20 +70,16 @@ class DiscoveryAPI extends BasicWhelkAPI {
     ObjectMapper mapper = new ObjectMapper()
 
     String description = "Discovery API"
+    String pathEnd = "discovery"
 
     DiscoveryAPI(Whelk w) {
         this.whelk = w
     }
 
     @Override
-    String getPath() {
-        return "/" + this.whelk.prefix + "/discovery"
-    }
-
-    @Override
     def void handle(Request request, Response response) {
         def info = [:]
-        info["whelk"] = whelk.prefix
+        info["whelk"] = whelk.id
         info["apis"] = whelk.getAPIs().collect {
             [ [ "path" : (it.path) ,
                 "description" : (it.description) ]
@@ -107,7 +105,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
 
     @Override
     String getPath() {
-        return "/" + this.whelk.prefix + "/"
+        return "/" + this.whelk.id + "/"
     }
 
     @Override
@@ -129,12 +127,9 @@ class RootRouteRestlet extends BasicWhelkAPI {
                 Document doc = null
                 def headers = request.attributes.get("org.restlet.http.headers")
                 log.trace("headers: $headers")
-                def format = headers.find { it.name.equalsIgnoreCase("Format") }?.value
-                log.debug("format: $format")
                 log.debug("request: $request")
                 def link = headers.find { it.name.equals("link") }?.value
-                doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString(),"format":format])
-                //doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withData(request.entity.stream.getBytes())
+                doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString()])
                 if (link != null) {
                     log.trace("Adding link $link to document...")
                     doc = doc.withLink(link)
@@ -217,14 +212,11 @@ class DocumentRestlet extends BasicWhelkAPI {
                 Document doc = null
                 def headers = request.attributes.get("org.restlet.http.headers")
                 log.trace("headers: $headers")
-                def format = headers.find { it.name.equalsIgnoreCase("Format") }?.value
-                log.debug("format: $format")
                 def link = headers.find { it.name.equals("link") }?.value
                 if (path == "/") {
                     doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withData(request.entity.stream.getBytes())
                 } else {
-                    //doc = this.whelk.createDocument().withIdentifier(new URI(path)).withContentType(request.entity.mediaType.toString()).withFormat(format).withData(request.entityAsText)
-                    doc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString(),"format":format])
+                    doc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString()])
                 }
                 if (link != null) {
                     log.trace("Adding link $link to document...")

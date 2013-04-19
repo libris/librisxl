@@ -9,8 +9,7 @@ import groovy.util.logging.Slf4j as Log
 @Log
 class JsonLDCleanupIndexFormatConverter extends BasicIndexFormatConverter implements IndexFormatConverter {
 
-    String requiredContentType = "application/json"
-    String requiredFormat = "jsonld"
+    String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
 
     List<Document> doConvert(Document doc) {

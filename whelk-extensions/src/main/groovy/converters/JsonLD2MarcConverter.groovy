@@ -11,8 +11,7 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class  JsonLD2MarcConverter extends BasicFormatConverter {
 
-    String requiredContentType = "application/json"
-    String requiredFormat = "jsonld"
+    String requiredContentType = "application/ld+json"
     static final String RAW_LABEL = "unmapped_jsonld"
     def marcref
     def mapper

@@ -13,8 +13,7 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatConverter {
 
-    String requiredContentType = "application/json"
-    String requiredFormat = "marc21"
+    String requiredContentType = "application/x-marc-json"
     String RTYPE
     ObjectMapper mapper
 

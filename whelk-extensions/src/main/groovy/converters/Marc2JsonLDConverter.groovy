@@ -19,8 +19,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     final static String ABOUT_LABEL = "about"
     final static String INSTANCE_LABEL = "instanceOf"
     final static String MARCMAP_RESOURCE = "/resource/_marcmap"
-    String requiredContentType = "application/json"
-    String requiredFormat = "marc21"
+    String requiredContentType = "application/x-marc-json"
     ObjectMapper mapper
 
     def marcref

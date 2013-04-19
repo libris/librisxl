@@ -1,18 +1,10 @@
 {
     "_whelks": [
         {
-            "bib":{
-                "_plugins": ["localindex", "cassandrastorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "cleanupconverter", "entityextractor", "jsonldlinkfinder"]
-            }
-        },
-        {
-            "auth":{
-                "_plugins": [ "localindex", "cassandrastorage", "search", "document", "authmarcconverter", "entityextractor", "jsonldlinkfinder" ]
-            }
-        },
-        {
-            "hold":{
-                "_plugins": [ "localindex", "cassandrastorage", "search", "document", "metasearch", "holdmarcconverter", "jsonldlinkfinder" ]
+            "libris":{
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+                "_plugins": ["localindex", "cassandrastorage", "search", "kitinsearch", "metasearch", "document", "bibmarcconverter", "authmarcconverter", "holdmarcconverter", "cleanupconverter", "entityextractor", "jsonldlinkfinder"],
+                "contentRoot" : "/"
             }
         },
         {

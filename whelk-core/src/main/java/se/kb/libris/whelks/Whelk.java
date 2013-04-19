@@ -24,11 +24,11 @@ public interface Whelk {
 
     // maintenance
     public void reindex();
-
-    public String getPrefix();
+    public String getId();
     public void addPlugin(Plugin plugin);
     public Iterable<? extends Plugin> getPlugins();
 
     // factory methods
     public Document createDocument(byte[] data, Map<String, Object> metadata);
+    public URI mintIdentifier(Document document);
 }

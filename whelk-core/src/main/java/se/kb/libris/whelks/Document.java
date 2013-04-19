@@ -16,8 +16,6 @@ public interface Document {
     public byte[] getData();
     public String getContentType();
     public void setContentType(String contentType);
-    public String getFormat();
-    public void setFormat(String format);
     public long getSize();
     public Set<Link> getLinks();
     public Set<Description> getDescriptions();
@@ -40,7 +38,6 @@ public interface Document {
     public Document withData(byte[] data);
     public Document withSize(long size);
     public Document withContentType(String contentType);
-    public Document withFormat(String format);
 
     public String toJson();
 

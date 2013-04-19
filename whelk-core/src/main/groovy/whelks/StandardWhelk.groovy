@@ -16,12 +16,11 @@ import org.codehaus.jackson.map.*
 @Log
 class StandardWhelk implements Whelk {
 
-    String prefix
+    String id
     List<Plugin> plugins = new ArrayList<Plugin>()
 
-
-    StandardWhelk(String pfx) {
-        this.prefix = pfx
+    StandardWhelk(String id) {
+        this.id = id
     }
 
     @Override
@@ -29,7 +28,7 @@ class StandardWhelk implements Whelk {
         doc = sanityCheck(doc)
 
         for (storage in storages) {
-            storage.store(doc, this.prefix)
+            storage.store(doc, this.id)
         }
 
         addToIndex([doc])
@@ -46,7 +45,7 @@ class StandardWhelk implements Whelk {
     void bulkStore(List<Document> docs) {
         for (storage in storages) {
             for (doc in docs) {
-                storage.store(doc, this.prefix)
+                storage.store(doc, this.id)
             }
         }
         addToIndex(docs)
@@ -55,14 +54,14 @@ class StandardWhelk implements Whelk {
 
     @Override
     Document get(URI uri) {
-        return storages.get(0)?.get(uri, this.prefix)
+        return storages.get(0)?.get(uri, this.id)
     }
 
     @Override
     void delete(URI uri) {
         components.each {
             try {
-                ((Component)it).delete(uri, this.prefix)
+                ((Component)it).delete(uri, this.id)
             } catch (RuntimeException rte) {
                 log.warn("Component ${((Component)it).id} failed delete: ${rte.message}")
             }
@@ -71,15 +70,12 @@ class StandardWhelk implements Whelk {
 
     @Override
     SearchResult<? extends Document> query(Query query) {
-        return indexes.get(0)?.query(query, this.prefix)
+        return indexes.get(0)?.query(query, this.id)
     }
 
     Document sanityCheck(Document d) {
         if (!d.identifier) {
             d.identifier = mintIdentifier(d)
-        }
-        if (!d.identifier.toString().startsWith("/"+this.prefix+"/")) {
-            throw new WhelkRuntimeException("Document with id ${d.identifier} does not belong in whelk with prefix ${this.prefix}")
         }
         return d
     }
@@ -93,7 +89,7 @@ class StandardWhelk implements Whelk {
                 docs = ifc.convertBulk(docs)
             }
             for (idx in indexes) {
-                idx.index(docs, this.prefix)
+                idx.index(docs, this.id)
             }
         }
     }
@@ -149,14 +145,14 @@ class StandardWhelk implements Whelk {
             docs << doc
             if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
                 for (index in indexes) {
-                    index.index(docs, this.prefix)
+                    index.index(docs, this.id)
                     docs = []
                 }
             }
         }
         if (docs.size() > 0) {
             for (index in indexes) {
-                index.index(docs, this.prefix)
+                index.index(docs, this.id)
             }
         }
         log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
@@ -164,21 +160,29 @@ class StandardWhelk implements Whelk {
 
     @Override
     void addPlugin(Plugin plugin) {
-        log.debug("[${this.prefix}] Initializing ${plugin.id}")
+        log.debug("[${this.id}] Initializing ${plugin.id}")
         if (plugin instanceof WhelkAware) {
             plugin.setWhelk(this)
         }
-        plugin.init(this.prefix)
+        plugin.init(this.id)
         this.plugins.add(plugin)
     }
 
+   @Override
    URI mintIdentifier(Document d) {
-        try {
-            return new URI("/"+prefix.toString() +"/"+ UUID.randomUUID());
-        } catch (URISyntaxException ex) {
-            throw new WhelkRuntimeException("Could not mint URI", ex);
-        }
-    }
+       URI identifier
+       for (minter in uriMinters) {
+           identifier = minter.mint(d)
+       }
+       if (!identifier) {
+           try {
+               identifier = new URI("/"+id.toString() +"/"+ UUID.randomUUID());
+           } catch (URISyntaxException ex) {
+               throw new WhelkRuntimeException("Could not mint URI", ex);
+           }
+       }
+       return identifier
+   }
 
     // Sugar methods
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
@@ -188,5 +192,6 @@ class StandardWhelk implements Whelk {
     TreeSet<FormatConverter> getFormatConverters() { return plugins.findAll { it instanceof FormatConverter } as TreeSet}
     TreeSet<IndexFormatConverter> getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter } as TreeSet }
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
+    List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
 
 }

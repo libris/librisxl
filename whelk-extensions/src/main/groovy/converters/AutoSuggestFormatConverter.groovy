@@ -17,8 +17,7 @@ class AutoSuggestFormatConverter extends BasicIndexFormatConverter implements In
     Whelk bibwhelk
     def w_name
     def suggest_source
-    String requiredContentType = "application/json"
-    String requiredFormat = "marc21"
+    String requiredContentType = "application/x-marc-json"
 
     int order
 

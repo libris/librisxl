@@ -6,5 +6,5 @@ import se.kb.libris.whelks.plugin.Plugin;
 import java.net.URI;
 
 public interface Component extends Plugin {
-    public void delete(URI uri, String prefix);
+    public void delete(URI uri, String whelkId);
 }

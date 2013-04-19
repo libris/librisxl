@@ -8,5 +8,5 @@ public interface Plugin extends Comparable<Plugin> {
     public void enable();
     public void disable();
     public int getOrder();
-    public void init(String whelkName);
+    public void init(String whelkId);
 }

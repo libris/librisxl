@@ -184,7 +184,7 @@ class Harvester implements Runnable {
                     String id = record.getControlfields("001").get(0).getData()
                     String jsonRec = MarcJSONConverter.toJSONString(record)
                     //def doc = new BasicDocument().withData(jsonRec.getBytes("UTF-8")).withIdentifier("/" + whelk.prefix + "/" + id).withContentType("application/json").withFormat("marc21")
-                    def doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/"+whelk.prefix+"/"+id),"contentType":"application/json","format":"marc21"])
+                    def doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/"+whelk.prefix+"/"+id),"contentType":"application/x-marc-json"])
                     if (it.header.setSpec) {
                         for (sS in it.header.setSpec) {
                             if (sS.toString().startsWith("authority:")) {

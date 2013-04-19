@@ -15,7 +15,7 @@ abstract class BasicIndexFormatConverter extends BasicPlugin {
 
     final List<Document> convert(Document doc) {
         def outdocs = []
-        if (doc.contentType == requiredContentType && doc.format == requiredFormat) {
+        if (doc.contentType == requiredContentType) {
             outdocs.addAll(doConvert(doc))
         } else {
             outdocs.add(doc)

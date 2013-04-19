@@ -8,6 +8,5 @@ public interface IndexFormatConverter extends Plugin {
     public List<Document> convertBulk(List<Document> doc);
     public List<Document> convert(Document doc);
     public String getRequiredContentType();
-    public String getRequiredFormat();
     public int getOrder();
 }

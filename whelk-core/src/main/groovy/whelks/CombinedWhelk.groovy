@@ -37,7 +37,7 @@ class CombinedWhelk extends StandardWhelk {
             return super.get(uri)
         } else {
             log.trace("Attempting retrieve from ${rules.preferredRetrieveFrom}")
-            return storages.find { it.id == rules.preferredRetrieveFrom }?.get(uri, this.prefix)
+            return storages.find { it.id == rules.preferredRetrieveFrom }?.get(uri, this.id)
         }
     }
 
@@ -137,7 +137,7 @@ class CombinedWhelk extends StandardWhelk {
             throw new WhelkRuntimeException("Cannot rebuild from storage $from. No such storage found.")
         }
         int counter = 0
-        for (doc in sourceStorage.getAll(this.prefix)) {
+        for (doc in sourceStorage.getAll(this.id)) {
             if (++counter % 1000 == 0) {
                 log.info("Rebuilt $counter records.")
             }
@@ -152,10 +152,10 @@ class CombinedWhelk extends StandardWhelk {
             plugin.setWhelk(this)
         }
         if (rules.dontInitialize?.contains(plugin.id)) {
-            log.trace("[${this.prefix}] Not initializing plugin ${plugin.id}. The rules says so.")
+            log.trace("[${this.id}] Not initializing plugin ${plugin.id}. The rules says so.")
         } else {
-            log.trace("[${this.prefix}] Initializing ${plugin.id}")
-            plugin.init(this.prefix)
+            log.trace("[${this.id}] Initializing ${plugin.id}")
+            plugin.init(this.id)
         }
         this.plugins.add(plugin)
     }

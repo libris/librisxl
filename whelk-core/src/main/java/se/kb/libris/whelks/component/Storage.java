@@ -5,7 +5,7 @@ import java.io.OutputStream;
 import se.kb.libris.whelks.Document;
 
 public interface Storage extends Component {
-    public void store(Document d, String whelkPrefix);
-    public Document get(URI uri, String whelkPrefix);
-    public Iterable<Document> getAll(String whelkPrefix);
+    public void store(Document d, String whelkId);
+    public Document get(URI uri, String whelkId);
+    public Iterable<Document> getAll(String whelkId);
 }
