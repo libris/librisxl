@@ -27,14 +27,15 @@ class DumpImporter {
     int nrDeleted = 0
     boolean picky
     final int BATCH_SIZE = 1000
+    String origin
 
-    DumpImporter(Whelk toWhelk, boolean picky = true) {
+    DumpImporter(Whelk toWhelk, String origin, boolean picky = true) {
         this.whelk = toWhelk
         this.picky = picky
+        this.origin = origin
     }
 
     int doImportFromFile(File file) {
-        //def file = "/data/librisxl/${whelk.prefix}.xml"
         log.info("Loading dump from $file")
         XMLInputFactory xif = XMLInputFactory.newInstance()
         XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(file))
@@ -42,11 +43,6 @@ class DumpImporter {
     }
 
     int doImportFromURL(URL url) {
-        /*
-        def properties = new Properties()
-        properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"))
-        def urlString = properties.getProperty("dumpurl_${whelk.prefix}")
-        */
         log.info("Loading dump from ${url.toString()}")
         XMLInputFactory xif = XMLInputFactory.newInstance()
         //XMLStreamReader xsr = xif.createXMLStreamReader(new URL(urlString).newInputStream())
@@ -101,7 +97,7 @@ class DumpImporter {
         Document doc = null
 
         try {
-            doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/"+whelk.prefix+"/"+id),"contentType":"application/x-marc-json"])
+            doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/"+this.origin+"/"+id),"contentType":"application/x-marc-json+"+this.origin])
         } catch (Exception e) {
             log.error("Failed! (${e.message}) for :\n$mdrecord")
             if (picky) {
