@@ -23,18 +23,18 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 String pident = "${doc.identifier.toString()}/person/$i"
                 person["@id"] = pident
                 person["authorOf"] = doc.identifier
-                doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withFormat("jsonld").withContentType("application/json").withIdentifier(pident).tag("entityType", person["@type"])
+                doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", person["@type"])
             }
         } else if (authList instanceof Map) {
             String pident = "${doc.identifier.toString()}/person/$i"
             authList["@id"] = pident
             authList["authorOf"] = doc.identifier
-            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(authList)).withFormat("jsonld").withContentType("application/json").withIdentifier(pident).tag("entityType", authList["@type"])
+            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(authList)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", authList["@type"])
         }
         if (json["@type"]) {
             log.debug("Record has a @type. Adding to entity recordtype.")
             //json.remove("unknown")
-            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(json)).withFormat("jsonld").withContentType("application/json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
+            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(json)).withContentType("application/ld+json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
         }
         log.trace("Extraction results: $doclist")
         return doclist

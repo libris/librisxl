@@ -19,7 +19,7 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     final static String ABOUT_LABEL = "about"
     final static String INSTANCE_LABEL = "instanceOf"
     final static String MARCMAP_RESOURCE = "/resource/_marcmap"
-    String requiredContentType = "application/x-marc-json"
+    String requiredContentType = "application/x-marc-json+hold"
     ObjectMapper mapper
 
     def marcref
@@ -880,6 +880,6 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     @Override
     Document doConvert(Document idoc) {
         def injson = mapper.readValue(idoc.dataAsString, Map)
-        return new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson))).withFormat("jsonld")
+        return new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson))).withContentType("application/ld+json")
     }
 }

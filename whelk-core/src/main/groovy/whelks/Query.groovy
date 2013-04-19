@@ -166,28 +166,6 @@ class Query {
     }
 }
 
-@Log
-class ElasticQuery extends Query {
-    String indexType
-
-    ElasticQuery() {super()}
-
-    ElasticQuery(String qs) {
-        super(qs)
-    }
-
-    ElasticQuery(Query q) {
-        q.properties.each { name, value ->
-            log.trace("[ElasticQuery] setting $name : $value")
-            try {
-                this."$name" = value
-            } catch (groovy.lang.ReadOnlyPropertyException rope) {
-                log.trace("[ElasticQuery] ${rope.message}")
-            }
-        }
-    }
-}
-
 class TermFacet {
     String name, field
     TermFacet(n, f) { this.name = n; this.field = f; }

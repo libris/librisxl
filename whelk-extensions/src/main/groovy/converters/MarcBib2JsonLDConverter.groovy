@@ -8,6 +8,7 @@ import groovy.util.logging.Slf4j as Log
 class MarcBib2JsonLDConverter extends BasicMarc2JsonLDConverter {
 
     Map relators
+    String requiredContentType = "application/x-marc-json+bib"
 
     MarcBib2JsonLDConverter(String rt) {
         super(rt)

@@ -7,6 +7,7 @@ import org.restlet.data.*
 
 import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.http.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
@@ -135,7 +136,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
                     doc = doc.withLink(link)
                 }
                 identifier = this.whelk.store(doc)
-                response.setEntity(doc.dataAsString, new MediaType(doc.contentType))
+                response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
                 response.entity.setTag(new Tag(doc.timestamp as String, false))
                 log.debug("Saved document $identifier")
                 response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
@@ -195,7 +196,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                     if (mode == DisplayMode.META) {
                         response.setEntity(d.toJson(), MediaType.APPLICATION_JSON)
                     } else {
-                        response.setEntity(d.dataAsString, new MediaType(d.contentType))
+                        response.setEntity(d.dataAsString, LibrisXLMediaType.getMainMediaType(d.contentType))
                     }
                     response.entity.setTag(new Tag(d.timestamp as String, false))
                 } else {
@@ -349,7 +350,8 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             reqMap["boost"] = defaultBoost
         }
         try {
-            q = new Query(reqMap)
+            q = new ElasticQuery(reqMap)
+            q.indexType = "record"
             if (reqMap["f"]) {
                 q.query = (q.query + " " + reqMap["f"]).trim()
             }

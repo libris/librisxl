@@ -14,7 +14,7 @@ class JsonLDCleanupIndexFormatConverterSpec extends Specification {
     def "should return cleaned date"() {
         given:
             def injson = mapper.readValue(testin, Map)
-            def indoc = new BasicDocument().withData(mapper.writeValueAsBytes(injson)).withFormat("jsonld").withContentType("application/json").withIdentifier("bib/1527219")
+            def indoc = new BasicDocument().withData(mapper.writeValueAsBytes(injson)).withContentType("application/ld+json").withIdentifier("bib/1527219")
         expect:
             conv.doConvert(indoc).get(0).getDataAsString() == cleanedout            
         where:

@@ -14,7 +14,9 @@ abstract class BasicFormatConverter extends BasicPlugin implements FormatConvert
     }
 
     final Document convert(Document doc) {
+        log.trace("Document is ${doc.contentType} - required is $requiredContentType")
         if (doc.contentType == requiredContentType) {
+            log.debug("Running converter.")
             doc = doConvert(doc)
         }
         return doc

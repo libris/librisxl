@@ -16,8 +16,8 @@ for d in $datadir/in/*; do
         dest_url=http://localhost:8080/whelk-webapi/$datatype/$id
 #        if [ "$datatype" ==  "hold" ]; then
 #            curl -XPUT -H "Content-type:application/json" -H "format:$fmt" -H "link:/bib/7149593" $dest_url --data-binary @$f
-#        else    
-            curl -XPUT -H "Content-type:application/x-marc-json" $dest_url --data-binary @$f
+#        else
+            curl -XPUT -H "Content-type:application/x-marc-json+$datatype" $dest_url --data-binary @$f
 #        fi
     done
 done

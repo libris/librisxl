@@ -5,6 +5,8 @@ import groovy.util.logging.Slf4j as Log
 @Log
 class MarcAuth2JsonLDConverter extends BasicMarc2JsonLDConverter {
 
+    String requiredContentType = "application/x-marc-json+auth"
+
     MarcAuth2JsonLDConverter(String rt) {
         super(rt)
     }
