@@ -253,7 +253,9 @@ class DocumentRestlet extends BasicWhelkAPI {
 @Log
 class SearchRestlet extends BasicWhelkAPI {
 
-    def pathEnd = "_find"
+    def pathEnd = ""
+    String path = "/{identifier}/_find"
+    def varPath = true
     def defaultQueryParams = [:]
 
     String description = "Generic search API, acception both GET and POST requests. Accepts parameters compatible with the Query object. (Simple usage: ?q=searchterm)"
@@ -266,6 +268,9 @@ class SearchRestlet extends BasicWhelkAPI {
     @Override
     def void handle(Request request, Response response) {
         log.debug "SearchRestlet with path $path"
+        def indexType = request.attributes["identifier"]
+        log.debug "Type: $indexType"
+
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         try {
             this.defaultQueryParams.each { key, value ->
@@ -274,7 +279,10 @@ class SearchRestlet extends BasicWhelkAPI {
                 }
             }
             log.debug("reqMap: $reqMap")
-            def query = new Query(reqMap)
+            def query = new ElasticQuery(reqMap)
+            if (indexType) {
+                query.indexType = indexType
+            }
             def callback = reqMap.get("callback")
             def results = this.whelk.query(query)
             def jsonResult =
@@ -351,7 +359,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
         }
         try {
             q = new ElasticQuery(reqMap)
-            q.indexType = "record"
+            q.indexType = "bib"
             if (reqMap["f"]) {
                 q.query = (q.query + " " + reqMap["f"]).trim()
             }

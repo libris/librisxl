@@ -101,16 +101,15 @@ abstract class ElasticSearch extends BasicPlugin {
 
     String URI_SEPARATOR = "::"
 
-    String indexType = "record"
+    String defaultIndexType = "record"
     String indexMetadataType = "Indexed:Metadata"
-    String storageType = "document"
 
     @Override
-    void init(String idxpfx) {
-        if (!performExecute(client.admin().indices().prepareExists(idxpfx)).exists()) {
+    void init(String indexName) {
+        if (!performExecute(client.admin().indices().prepareExists(indexName)).exists()) {
             log.info("Creating index ...")
             XContentBuilder mapping = jsonBuilder().startObject()
-            .startObject(idxpfx)
+            .startObject(indexName)
             .field("date_detection", false)
             .startObject("_timestamp")
             .field("enabled", true)
@@ -123,52 +122,54 @@ abstract class ElasticSearch extends BasicPlugin {
             .endObject()
             log.debug("create: " + mapping.string())
 
-            performExecute(client.admin().indices().prepareCreate(idxpfx).addMapping(indexType, mapping))
-            setTypeMapping(idxpfx, indexType)
+            performExecute(client.admin().indices().prepareCreate(indexName).addMapping(defaultIndexType, mapping))
+            setTypeMapping(indexName, defaultIndexType)
         }
     }
 
     @Override
-    void delete(URI uri, String idxpfx) {
+    void delete(URI uri, String indexName) {
+        // TODO: Check for all types
         log.debug("Deleting object with identifier $uri")
-        performExecute(client.prepareDelete(idxpfx, indexType, translateIdentifier(uri)))
-        performExecute(client.prepareDelete(idxpfx, storageType, translateIdentifier(uri)))
+        performExecute(client.prepareDelete(indexName, indexType, translateIdentifier(uri)))
     }
 
     @Override
-    void index(Document doc, String idxpfx) {
+    void index(Document doc, String indexName) {
         if (doc) {
-            addDocument(doc, indexType, idxpfx)
+            addDocument(doc, indexType, indexName)
         }
     }
 
     @Override
-    void index(Iterable<Document> doc, String idxpfx) {
-        addDocuments(doc, indexType, idxpfx)
+    void bulkIndex(Iterable<Document> doc, String indexName) {
+        addDocuments(doc, indexName)
     }
 
     @Override
-    SearchResult query(Query q, String idxpfx) {
-        def idxtype = null
+    SearchResult query(Query q, String indexName) {
+        def indexType = null
         if (q instanceof ElasticQuery) {
-            idxtype = q.indexType
+            indexType = q.indexType
         }
-        return query(q, idxpfx, idxtype)
+        return query(q, indexName, indexType)
     }
 
 
-    SearchResult query(Query q, String idxpfx, String idxtype) {
-        def iType = (idxtype == null ? [this.indexType] : idxtype.split(","))
-        log.debug "Querying index $idxpfx and indextype $iType"
+    SearchResult query(Query q, String indexName, String indexType) {
+        log.debug "Querying index $indexName and indextype $indexType"
         log.trace "Doing query on $q"
-        def idxlist = [idxpfx]
-        if (idxpfx.contains(",")) {
-            idxlist = idxpfx.split(",").collect{it.trim()}
+        def idxlist = [indexName]
+        if (indexName.contains(",")) {
+            idxlist = indexName.split(",").collect{it.trim()}
         }
         log.debug("Searching in indexes: $idxlist")
-        def srb = client.prepareSearch(idxlist as String[]).setTypes(iType as String[])
+        def srb = client.prepareSearch(idxlist as String[])
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
+        if (indexType) {
+            srb.setTypes(indexType.split(",") as String[])
+        }
         if (q.query == "*") {
             log.debug("Setting matchAll")
             srb.setQuery(matchAllQuery())
@@ -243,16 +244,16 @@ abstract class ElasticSearch extends BasicPlugin {
         return results
     }
 
-    def setTypeMapping(idxpfx, itype) {
-        log.info("Creating mappings for $idxpfx/$itype ...")
+    def setTypeMapping(indexName, itype) {
+        log.info("Creating mappings for $indexName/$itype ...")
         XContentBuilder mapping = jsonBuilder().startObject()
-        .startObject(idxpfx)
+        .startObject(indexName)
         .field("date_detection", false)
         .field("store", true)
         .endObject()
         .endObject()
         log.debug("mapping: " + mapping.string())
-        performExecute(client.admin().indices().preparePutMapping(idxpfx).setType(itype).setSource(mapping))
+        performExecute(client.admin().indices().preparePutMapping(indexName).setType(itype).setSource(mapping))
     }
 
     def performExecute(def requestBuilder) {
@@ -275,25 +276,25 @@ abstract class ElasticSearch extends BasicPlugin {
         return response
     }
 
-    void checkTypeMapping(idxpfx, entityType) {
-        def mappings = performExecute(client.admin().cluster().prepareState()).state().getMetaData().index(idxpfx).getMappings()
-        if (!mappings.containsKey(entityType)) {
-            log.debug("Mapping for $entityType does not exist. Creating ...")
-            setTypeMapping(idxpfx, entityType)
+    void checkTypeMapping(indexName, indexType) {
+        def mappings = performExecute(client.admin().cluster().prepareState()).state().getMetaData().index(indexName).getMappings()
+        if (!mappings.containsKey(indexType)) {
+            log.debug("Mapping for $indexType does not exist. Creating ...")
+            setTypeMapping(indexName, indexType)
         }
     }
 
-    void addDocument(Document doc, String addType, String idxpfx) {
+    void addDocument(Document doc, String addType, String indexName) {
         def eid = translateIdentifier(doc.identifier)
         def entityType = doc.tags.find { it.type.toString() == "entityType"}?.value?.toLowerCase() ?: addType
         // Check if 
         if (entityType != indexType) {
-            checkTypeMapping(idxpfx, entityType)
+            checkTypeMapping(indexName, entityType)
         }
 
-        log.trace "Should use index ${idxpfx}, type ${entityType} and id ${eid}"
+        log.trace "Should use index ${indexName}, type ${entityType} and id ${eid}"
         try {
-            def irb = client.prepareIndex(idxpfx, entityType, eid)
+            def irb = client.prepareIndex(indexName, entityType, eid)
             if (entityType == storageType) {
                 irb.setTimestamp(""+doc.getTimestamp()).setSource(doc.toJson())
             } else {
@@ -302,32 +303,48 @@ abstract class ElasticSearch extends BasicPlugin {
             IndexResponse response = performExecute(irb)
             log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
             log.trace("Prepareing metadata indexing with type $indexMetadataType and metadatajson: " + doc.g())
-            irb = client.prepareIndex(idxpfx, indexMetadataType, eid).setSource(doc.getMetadataAsJson())
+            irb = client.prepareIndex(indexName, indexMetadataType, eid).setSource(doc.getMetadataAsJson())
             response = performExecute(irb)
         } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
             log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
         }
     }
 
-    void addDocuments(documents, addType, idxpfx) {
+    String determineDocumentType(Document doc) {
+        def idxType = doc.tags.find { it.type.toString() == "entityType"}?.value?.toLowerCase()
+        if (!idxType) {
+            try {
+                idxType = doc.identifier.toString().split("/")[1]
+            } catch (Exception e) {
+                log.error("Tried to use first part of URI ${doc.identifier} as type. Failed: ${e.message}", e)
+            }
+        }
+        if (!idxType) {
+            idxType = defaultIndexType
+        }
+        log.debug("Using type $idxType for document ${doc.identifier}")
+        return idxType
+    }
+
+    void addDocuments(documents, indexName) {
         try {
             if (documents) {
                 def breq = client.prepareBulk()
 
+                def checkedTypes = [defaultIndexType]
+
                 log.debug("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
-                    def entityType = doc.tags.find { it.type.toString() == "entityType"}?.value?.toLowerCase() ?: addType
-                    if (entityType != indexType) {
-                        checkTypeMapping(idxpfx, entityType)
+                    def indexType = determineDocumentType(doc)
+                    def checked = indexType in checkedTypes
+                    if (!checked) {
+                        checkTypeMapping(indexName, indexType)
+                        checkedTypes << indexType
                     }
-                    if (entityType == storageType) {
-                        breq.add(client.prepareIndex(idxpfx, entityType, translateIdentifier(doc.identifier)).setSource(doc.data))
-                    } else {
-                        breq.add(client.prepareIndex(idxpfx, entityType, translateIdentifier(doc.identifier)).setSource(doc.data))
-                        log.debug("Prepareing index (bulk) of type $indexMetadataType with metadatajson: " + doc.getMetadataAsJson())
-                        breq.add(client.prepareIndex(idxpfx, indexMetadataType, translateIdentifier(doc.identifier)).setSource(doc.getMetadataAsJson()))
-                    }
+                    breq.add(client.prepareIndex(indexName, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
+                    log.debug("Prepareing index (bulk) of type $indexMetadataType with metadatajson: " + doc.getMetadataAsJson())
+                    breq.add(client.prepareIndex(indexName, indexMetadataType, translateIdentifier(doc.identifier)).setSource(doc.getMetadataAsJson()))
                 }
                 def response = performExecute(breq)
                 if (response.hasFailures()) {
@@ -356,7 +373,7 @@ abstract class ElasticSearch extends BasicPlugin {
         def pathparts = uri.path.split("/")
         def idelements = []
         pathparts.eachWithIndex() { part, i ->
-            if (i > 1) {
+            if (i > 0) {
                 idelements.add(part)
             }
         }
@@ -393,11 +410,11 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     Document createDocumentFromHit(hit) {
-        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id, hit.index))
+        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
     }
 
-    URI translateIndexIdTo(id, idxpfx) {
-        return new URI("/"+idxpfx+"/"+id.replaceAll(URI_SEPARATOR, "/"))
+    URI translateIndexIdTo(id) {
+        return new URI("/"+id.replaceAll(URI_SEPARATOR, "/"))
     }
 
 }

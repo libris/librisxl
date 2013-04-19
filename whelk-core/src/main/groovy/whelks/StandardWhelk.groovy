@@ -89,7 +89,7 @@ class StandardWhelk implements Whelk {
                 docs = ifc.convertBulk(docs)
             }
             for (idx in indexes) {
-                idx.index(docs, this.id)
+                idx.bulkIndex(docs, this.id)
             }
         }
     }
