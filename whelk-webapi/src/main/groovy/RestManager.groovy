@@ -14,6 +14,7 @@ import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.api.*
+import se.kb.libris.whelks.http.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.plugin.external.*
 
@@ -46,14 +47,14 @@ class RestManager extends Application {
             router.attach(dapi.path, dapi)
             log.debug("Getting APIs for whelk ${it.id}")
             for (api in it.getAPIs()) {
-                log.debug("API is $api")
                 if (!api.varPath) {
+                    log.debug("API is $api")
                     router.attach(api.path, api)
                 }
             }
             for (api in it.getAPIs()) {
-                log.debug("Attaching ${api.class.name} at ${api.path}")
                 if (api.varPath) {
+                    log.debug("Attaching ${api.class.name} at ${api.path}")
                     router.attach(api.path, api).template.variables.put("identifier", new Variable(Variable.TYPE_URI_PATH))
                 } 
             }

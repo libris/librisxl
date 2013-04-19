@@ -80,11 +80,9 @@
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.CombinedWhelk">
       <level value="trace"/>
   </logger>
@@ -99,6 +97,9 @@
       <level value="debug"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
+      <level value="debug"/>
+  </logger>
+<logger name="se.kb.libris.whelks.api.RestManager">
       <level value="debug"/>
   </logger>
   <!--

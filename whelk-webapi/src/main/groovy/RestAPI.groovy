@@ -253,7 +253,7 @@ class DocumentRestlet extends BasicWhelkAPI {
 @Log
 class SearchRestlet extends BasicWhelkAPI {
 
-    def pathEnd = ""
+    //def pathEnd = "_find"
     String path = "/{identifier}/_find"
     def varPath = true
     def defaultQueryParams = [:]
@@ -562,13 +562,14 @@ class AutoComplete extends BasicWhelkAPI {
             LinkedHashMap sortby = new LinkedHashMap<String,String>()
             //sortby['records'] = "desc"
             //sortby['@id'] = "asc"
-            def query = new Query(name)
+            def query = new ElasticQuery(name)
             query.highlights = namePrefixes
             query.sorting = sortby
             query.fields = namePrefixes
             query.addBoost(namePrefixes[0], 10)
+            query.indexType = types
 
-            def results = this.whelk.query(query, types)
+            def results = this.whelk.query(query)
             /*
             def jsonResult = 
                 (callback ? callback + "(" : "") +
@@ -836,7 +837,9 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
             results.hits.each {
                def identifier = it.identifier.toString()
                def d = whelk.get(new URI(identifier))
-               records << d
+               if (d) {
+                   records << d
+               }
             }
 
             outjson << "{ \"list\": ["
