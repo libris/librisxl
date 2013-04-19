@@ -16,6 +16,12 @@ class ElasticQuery extends Query {
     }
     ElasticQuery(Map qmap) {
         super(qmap)
+        if (qmap.get("type")) {
+            this.indexType = qmap.get("type")
+        }
+        if (qmap.get("indexType")) {
+            this.indexType = qmap.get("indexType")
+        }
     }
 
     ElasticQuery(Query q) {

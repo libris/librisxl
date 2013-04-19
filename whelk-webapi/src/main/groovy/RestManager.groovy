@@ -38,28 +38,43 @@ class RestManager extends Application {
 
         log.debug("Looking for suitable APIs to attach")
 
+        def rootwhelk
+
         whelks.each {
-            log.debug("Attaching RootRoute API")
-            def rapi = new RootRouteRestlet(it)
-            router.attach(rapi.path, rapi)
-            log.debug("Attaching Discovery API")
-            def dapi = new DiscoveryAPI(it)
-            router.attach(dapi.path, dapi)
-            log.debug("Getting APIs for whelk ${it.id}")
-            for (api in it.getAPIs()) {
-                if (!api.varPath) {
-                    log.debug("API is $api")
-                    router.attach(api.path, api)
-                }
+            if (it instanceof HttpWhelk && it.contentRoot == "") {
+                rootwhelk = it
+            } else {
+                attachApis(router, it)
             }
-            for (api in it.getAPIs()) {
-                if (api.varPath) {
-                    log.debug("Attaching ${api.class.name} at ${api.path}")
-                    router.attach(api.path, api).template.variables.put("identifier", new Variable(Variable.TYPE_URI_PATH))
-                } 
-            }
+        }
+        log.debug("Attached subwhelks.")
+        if (rootwhelk) {
+            log.debug("Now attaching root whelk.")
+            attachApis(router, rootwhelk)
         }
 
         return router
+    }
+
+    void attachApis(router, whelk) {
+        log.debug("Attaching RootRoute API")
+        def rapi = new RootRouteRestlet(whelk)
+        router.attach(rapi.path, rapi)
+        log.debug("Attaching Discovery API")
+        def dapi = new DiscoveryAPI(whelk)
+        router.attach(dapi.path, dapi)
+        log.debug("Getting APIs for whelk ${whelk.id}")
+        for (api in whelk.getAPIs()) {
+            if (!api.varPath) {
+                log.debug("API is $api")
+                router.attach(api.path, api)
+            }
+        }
+        for (api in whelk.getAPIs()) {
+            if (api.varPath) {
+                log.debug("Attaching ${api.class.name} at ${api.path}")
+                router.attach(api.path, api).template.variables.put("identifier", new Variable(Variable.TYPE_URI_PATH))
+            }
+        }
     }
 }
