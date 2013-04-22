@@ -106,7 +106,7 @@ var marcjson = typeof exports !== 'undefined'? exports : {};
     }
   };
 
-  function parseFixedField(row, dfn, leader) {
+  function parseFixedField(row, dfn, leader, fixprops) {
     var matched = false;
     var converted = {};
     //var matchKey = leader.typeOfRecord.marcKey;
@@ -115,7 +115,7 @@ var marcjson = typeof exports !== 'undefined'? exports : {};
       if (fixmap.matchKeys.indexOf(matchKey) > -1) {
         matched = true;
         fixmap.columns.forEach(function (colDfn) {
-          exports.processFixedCol(row, colDfn, converted);
+          exports.processFixedCol(row, colDfn, converted, fixprops);
         });
       }
     });

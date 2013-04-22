@@ -1,21 +1,24 @@
 var fs = require('fs');
 var marcjson = require('./lib/marcjson');
 
+var marcMapPath = "../whelk-extensions/src/main/resources/marcmap.json"
+var marcmap = require(marcMapPath)
+
+if (!process.argv[2]) {
+  console.log("USAGE: map-marcjson.js REC_TYPE MARC_JSON_FILE [OVERLAY_FILE | -n]")
+  process.exit();
+}
+
 function loadJson(path) {
   var data = fs.readFileSync(path, 'utf-8');
   return JSON.parse(data);
 }
 
-if (!process.argv[2]) {
-  console.log("USAGE: map-marcjson.js MARCMAP_FILE bib MARC_JSON_FILE [OVERLAY_FILE]")
-  process.exit();
-}
-var marcMapPath = process.argv[2];
-var recordType = process.argv[3];
-var marcStructPath = process.argv[4];
-var op = process.argv[5];
+var recordType = process.argv[2];
+var marcStructPath = process.argv[3];
+var op = process.argv[4];
 
-var marcmap = loadJson(marcMapPath), submap = marcmap
+var submap = marcmap;
 if (recordType)
   submap = marcmap[recordType];
 var struct = loadJson(marcStructPath);
@@ -32,4 +35,3 @@ if (op === '-n') {
 }
 
 console.log(JSON.stringify(out, null, 2));
-
