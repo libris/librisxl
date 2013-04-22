@@ -285,32 +285,6 @@ abstract class ElasticSearch extends BasicPlugin {
         }
     }
 
-    void addDocument(Document doc, String addType, String indexName) {
-        def eid = translateIdentifier(doc.identifier)
-        def entityType = doc.tags.find { it.type.toString() == "entityType"}?.value?.toLowerCase() ?: addType
-        // Check if 
-        if (entityType != indexType) {
-            checkTypeMapping(indexName, entityType)
-        }
-
-        log.trace "Should use index ${indexName}, type ${entityType} and id ${eid}"
-        try {
-            def irb = client.prepareIndex(indexName, entityType, eid)
-            if (entityType == storageType) {
-                irb.setTimestamp(""+doc.getTimestamp()).setSource(doc.toJson())
-            } else {
-                irb.setSource(doc.data)
-            }
-            IndexResponse response = performExecute(irb)
-            log.debug "Indexed document with id: ${response.id}, in index ${response.index} with type ${response.type}" 
-            log.trace("Prepareing metadata indexing with type $indexMetadataType and metadatajson: " + doc.g())
-            irb = client.prepareIndex(indexName, indexMetadataType, eid).setSource(doc.getMetadataAsJson())
-            response = performExecute(irb)
-        } catch (org.elasticsearch.index.mapper.MapperParsingException me) {
-            log.error("Failed to index document with id ${doc.identifier}: " + me.getMessage(), me)
-        }
-    }
-
     String determineDocumentType(Document doc) {
         def idxType = doc.tags.find { it.type.toString() == "entityType"}?.value?.toLowerCase()
         if (!idxType) {
@@ -326,6 +300,11 @@ abstract class ElasticSearch extends BasicPlugin {
         log.debug("Using type $idxType for document ${doc.identifier}")
         return idxType
     }
+
+    void addDocument(Document doc, String indexName) {
+        addDocuments([doc], indexName)
+    }
+
 
     void addDocuments(documents, indexName) {
         try {
@@ -344,7 +323,7 @@ abstract class ElasticSearch extends BasicPlugin {
                         checkedTypes << indexType
                     }
                     breq.add(client.prepareIndex(indexName, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
-                    log.debug("Prepareing index (bulk) of type $indexMetadataType with metadatajson: " + doc.getMetadataAsJson())
+                    log.trace("Prepareing index (bulk) of type $indexMetadataType with metadatajson: " + doc.getMetadataAsJson())
                     breq.add(client.prepareIndex(indexName, indexMetadataType, translateIdentifier(doc.identifier)).setSource(doc.getMetadataAsJson()))
                 }
                 def response = performExecute(breq)
