@@ -129,9 +129,10 @@ abstract class ElasticSearch extends BasicPlugin {
 
     @Override
     void delete(URI uri, String indexName) {
-        // TODO: Check for all types
         log.debug("Deleting object with identifier $uri")
-        performExecute(client.prepareDelete(indexName, indexType, translateIdentifier(uri)))
+        def delQuery = termsQuery("_id", translateIdentifier(uri))
+        log.debug("DelQuery: $delQuery")
+        performExecute(client.prepareDeleteByQuery(indexName).setQuery(delQuery))
     }
 
     @Override
