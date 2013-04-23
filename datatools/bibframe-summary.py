@@ -39,7 +39,7 @@ def print_class(c, superclasses=set()):
         if marc:
             lbl += " # " + marc
         print indent + "    " + lbl
-        print_subproperties(prop, c, "       ")
+        print_subproperties(prop, c, indent + "       ")
     for subc in sorted(c.subjects(RDFS.subClassOf)):
         if subc in superclasses:
             print indent, "<=", subc.qname()
