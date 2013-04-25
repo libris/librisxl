@@ -14,6 +14,7 @@
                     "authmarcconverter",
                     "holdmarcconverter",
                     "cleanupconverter",
+                    "cleanupindexconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
                     "autocomplete" ],
@@ -87,14 +88,20 @@
         },
         {
             "cleanupconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter",
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter",
                 "_priority" : 0
+            }
+        },
+        {
+            "cleanupindexconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter",
+                "_priority" : 1
             }
         },
         {
             "entityextractor" : {
                 "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter",
-                "_priority" : 1
+                "_priority" : 2
             }
         },
         {

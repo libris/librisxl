@@ -12,3 +12,4 @@ SCRIPT_DIR=$(dirname $0)
 cd $SCRIPT_DIR
 WHELKS_BUILD=../whelk-extensions/build
 java -cp $WHELKS_BUILD/classes/main/:$WHELKS_BUILD/libs/librisxl.jar se.kb.libris.conch.converter.MarcJSONConverter $SOURCE_MARC
+
