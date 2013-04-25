@@ -24,16 +24,6 @@ class JsonLDCleanupIndexFormatConverter extends BasicIndexFormatConverter implem
             }
             json["about"]["dateOfPublication"] = cleaned_date.replaceAll("[^\\d-0]", "")
         }
-        def title = json.about?.instanceOf?.get("title")
-        if (title) {
-           def cleaned_title
-           if (title instanceof String) {
-              if (title[-1].equals("/")) {
-                  cleaned_title = title[0..-2]
-              }
-              //json["about"]["instanceOf"]["title"] = cleaned_title
-           }
-        }
         doc = doc.withData(mapper.writeValueAsBytes(json))
         //TODO: clean up interpunction 260, 300
         return [doc]

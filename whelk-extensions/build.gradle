@@ -1,6 +1,7 @@
 apply from: 'tools.gradle'
 
 task fatjar(type: Jar, dependsOn: jar) {
+    archiveName = "librisxl.jar"
     fatjar.description = "Creates a jar containing the classes and all dependencies."
     from {
         configurations.runtime.collect {

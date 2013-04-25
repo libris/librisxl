@@ -77,20 +77,3 @@ project(":whelk-webapi") {
         providedCompile 'javax.servlet:servlet-api:2.5'
     }
 }
-
-task fatjar(type: Jar, dependsOn: jar) {
-    archiveName = 'librisxl.jar'
-    fatjar.description = "Creates a jar containing the classes and all dependencies."
-    from {
-        configurations.runtime.collect {
-            it.isDirectory() ? it : zipTree(it).matching {
-                exclude "META-INF/OSGI*"
-            }
-        }
-    }
-
-    manifest {
-        attributes 'Main-Class': 'se.kb.libris.whelks.WhelkOperator'
-    }
-
-}

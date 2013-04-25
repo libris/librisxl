@@ -30,6 +30,9 @@
   <logger name="org.elasticsearch">
       <level value="warn"/>
   </logger>
+  <logger name="se.kb.libris.whelks.plugin">
+      <level value="trace"/>
+  </logger>
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="trace"/>
   </logger>
@@ -102,6 +105,16 @@
 <logger name="se.kb.libris.whelks.api.RestManager">
       <level value="debug"/>
   </logger>
+<logger name="se.kb.libris.whelks.plugin.BasicFormatConverter">
+      <level value="trace"/>
+</logger>
+<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
+      <level value="debug"/>
+</logger>
+<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter">
+      <level value="debug"/>
+</logger>
+
   <!--
  <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
       <level value="trace"/>
