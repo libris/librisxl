@@ -25,7 +25,8 @@ def print_class(c, superclasses=set()):
     subnote = "/ " if superclasses else ""
     superclasses = superclasses | {c}
     otherclasses.discard(c.identifier)
-    print indent + subnote + c.qname()
+    marc = c.value(ABS.marcField)
+    print indent + subnote + c.qname() + (" # " + marc if marc else "")
     props = sorted(c.subjects(RDFS.domain))
     for prop in props:
         if any(prop.objects(RDFS.subPropertyOf)):
