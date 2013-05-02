@@ -77,6 +77,7 @@ class StandardWhelk implements Whelk {
         if (!d.identifier) {
             d.identifier = mintIdentifier(d)
         }
+        d.updateTimestamp()
         return d
     }
 
