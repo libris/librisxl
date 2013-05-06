@@ -15,13 +15,19 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
     Document doConvert(Document doc) {
         def json = mapper.readValue(doc.dataAsString, Map)
 
-        def title = json.about.instanceOf?.get("title")
-        def titleRemainder = json.about.instanceOf?.get("titleRemainder")
-        def statementOfResponsibility = json.about.instanceOf?.get("statementOfResponsibility")
+        def title = json.about?.instanceOf?.get("title")
+        def titleRemainder = json.about?.instanceOf?.get("titleRemainder")
+        def statementOfResponsibility = json.about?.instanceOf?.get("statementOfResponsibility")
         def publisher = json.about?.get("publisher")
-        def placeOfPublication_name = json.about?.get("placeOfPublication")?.get("name")
-        def dateOfPublication = json.about.get("dateOfPublication")
-        def placeOfManufacture_name = json.about?.get("placeOfManufacture")?.get("name")
+        def placeOfPublication_name, placeOfManufacture_name
+        try {
+            placeOfPublication_name = json.about?.get("placeOfPublication")?.get("name")
+            placeOfManufacture_name = json.about?.get("placeOfManufacture")?.get("name")
+        } catch (Exception e) {
+            // TODO: Handle better
+            log.error("Tried to get array data as map: ${e.message}")
+        }
+        def dateOfPublication = json.about?.get("dateOfPublication")
         def extent = json.about?.get("extent")
         def physicalDetails = json.about?.get("physicalDetails")
         def dimensions = json.about?.get("dimensions")
@@ -39,7 +45,7 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
                }
            }
         }
-        if (dateOfPublication.size() > 1 && (dateOfPublication[-1].equals(";") || dateOfPublication[-1].equals(","))) {
+        if (dateOfPublication && dateOfPublication.size() > 1 && (dateOfPublication[-1].equals(";") || dateOfPublication[-1].equals(","))) {
             json["about"]["dateOfPublication"] = dateOfPublication[0..-2].trim()
         }
         if (placeOfPublication_name && placeOfPublication_name.size() > 1) {
@@ -61,7 +67,7 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
                 }
             }
         }
-        if (extent.size() > 1 && (extent[-1].equals("+") || extent[-1].equals(":"))) {
+        if (extent && extent.size() > 1 && (extent[-1].equals("+") || extent[-1].equals(":"))) {
             json["about"]["extent"] = extent[0..-2].trim()
         }
         if (physicalDetails && physicalDetails.size() > 1 && (physicalDetails[-1].equals(";") || physicalDetails[-1].equals("+"))) {

@@ -49,7 +49,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     void store(Document doc, String whelkPrefix) {
-        // <String, String> correspond to key and Column name.
         ColumnFamilyUpdater<String, String> updater = cft.createUpdater(doc.identifier.toString())
         updater.setByteArray("data", doc.data)
         updater.setLong("timestamp", doc.timestamp)
@@ -67,8 +66,9 @@ class CassandraStorage extends BasicPlugin implements Storage {
     Document get(URI uri, String whelkPrefix) {
         Document document
         try {
-            ColumnFamilyResult<String, String> res = cft.queryColumns(uri.toString())
-            if (res) {
+            ColumnFamilyResult<String, String> res = cft.queryColumns([uri.toString()])
+            log.debug("res: $res")
+            if (res?.hasResults()) {
                 document = new BasicDocument().withIdentifier(uri).withData(res.getByteArray("data")).withContentType(res.getString("contentType"))
                 document.setTimestamp(res.getLong("timestamp"))
             }

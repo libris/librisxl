@@ -1,9 +1,18 @@
 package se.kb.libris.whelks.component
 
+import groovy.util.logging.Slf4j as Log
+
 import org.apache.http.client.*
+import org.apache.http.client.utils.*
+import org.apache.http.client.methods.*
+import org.apache.http.entity.*
+import org.apache.http.impl.client.DefaultHttpClient
+
+import se.kb.libris.whelks.*
+import se.kb.libris.whelks.plugin.*
 
 @Log
-HttpGraphStore extends BasicPlugin implements GraphStore {
+class HttpGraphStore extends BasicPlugin implements GraphStore {
 
     HttpClient client
     String graphStorePutURI = "http://localhost/rdfstore"
@@ -20,5 +29,11 @@ HttpGraphStore extends BasicPlugin implements GraphStore {
         put.setEntity(entity)
         def response = client.execute(put)
         log.info("Server response: ${response.statusLine.statusCode}")
+    }
+
+    public void delete(URI uri, String whelkId) {
+    }
+    public SparqlResult sparql(String query) {
+        return null
     }
 }
