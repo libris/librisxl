@@ -28,7 +28,6 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     def varPath = false
     boolean enabled = true
 
-    String id = "RestAPI"
     int order = 0
 
     def void enable() {this.enabled = true}
@@ -63,6 +62,16 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     int compareTo(Plugin p) {
         return (this.getOrder() - p.getOrder());
     }
+
+    abstract void doHandle(Request request, Response response)
+
+    void handle(Request request, Response response) {
+        long startTime = System.currentTimeMillis()
+        doHandle(request, response)
+        def headers = request.attributes.get("org.restlet.http.headers")
+        def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value ?: request.clientInfo.address
+        log.info("Handled ${request.method.toString()} request for ${this.id} from $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
+    }
 }
 
 @Log
@@ -72,13 +81,14 @@ class DiscoveryAPI extends BasicWhelkAPI {
 
     String description = "Discovery API"
     String pathEnd = "discovery"
+    String id = "DiscoveryAPI"
 
     DiscoveryAPI(Whelk w) {
         this.whelk = w
     }
 
     @Override
-    def void handle(Request request, Response response) {
+    void doHandle(Request request, Response response) {
         def info = [:]
         info["whelk"] = whelk.id
         info["apis"] = whelk.getAPIs().collect {
@@ -99,6 +109,7 @@ enum DisplayMode {
 class RootRouteRestlet extends BasicWhelkAPI {
 
     String description = "Whelk root routing API"
+    String id = "RootRoute"
 
     RootRouteRestlet(Whelk whelk) {
         this.whelk = whelk
@@ -110,7 +121,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
     }
 
     @Override
-    def void handle(Request request, Response response) {
+    void doHandle(Request request, Response response) {
         def discoveryAPI
         def documentAPI
         if (request.method == Method.GET) {
@@ -156,6 +167,7 @@ class DocumentRestlet extends BasicWhelkAPI {
     def varPath = true
 
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
+    String id = "DocumentAPI"
 
     DocumentRestlet(Whelk whelk) {
         this.whelk = whelk
@@ -179,7 +191,7 @@ class DocumentRestlet extends BasicWhelkAPI {
         return [path, DisplayMode.DOCUMENT]
     }
 
-    def void handle(Request request, Response response) {
+    void doHandle(Request request, Response response) {
         log.debug("reqattr path: " + request.attributes["identifier"])
         String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["identifier"])
         log.debug "Path: $path"
@@ -257,6 +269,7 @@ class SearchRestlet extends BasicWhelkAPI {
     //String path = "/{identifier}/_find"
     def varPath = false
     def defaultQueryParams = [:]
+    String id = "SearchAPI"
 
     String description = "Generic search API, acception both GET and POST requests. Accepts parameters compatible with the Query object. (Simple usage: ?q=searchterm)"
 
@@ -266,7 +279,7 @@ class SearchRestlet extends BasicWhelkAPI {
     }
 
     @Override
-    def void handle(Request request, Response response) {
+    void doHandle(Request request, Response response) {
         log.debug "SearchRestlet on ${whelk.id} with path $path"
 
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
@@ -295,6 +308,7 @@ class SearchRestlet extends BasicWhelkAPI {
 @Log
 class KitinSearchRestlet2 extends BasicWhelkAPI {
     def pathEnd = "kitin/_search"
+    String id = "KitinSearch"
 
     String description = "Query API with preconfigured parameters for Kitin."
 
@@ -344,8 +358,10 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
         return q
     }
 
+    void doHandle(Request request, Response response) {}
+
     @Override
-    def void handle(Request request, Response response) {
+    void handle(Request request, Response response) {
         long startTime = System.currentTimeMillis()
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def q, results
@@ -390,124 +406,6 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
 }
 
 @Log
-class KitinSearchRestlet extends BasicWhelkAPI {
-
-    def pathEnd = "kitin/_oldsearch"
-    String description = "old crap"
-
-    def facit = [
-        "bibid": ["001"],
-        "f":     ["100.a","505.r","700.a"],
-        "förf":  ["100.a","505.r","700.a"],
-        "isbn":  ["020.az"],
-        "issn":  ["022.amyz"],
-        "t":     ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"],
-        "tit":   ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"],
-        "titel": ["242.ab","245.ab","246.ab","247.ab","249.ab","740.anp"]
-        ]
-
-
-
-    def expandPrefix(query) {
-        println "prefixedQuery: $query"
-        def prefixedValue = query.split(":")
-        println "prefix: " + prefixedValue[0]
-        def expFields = []
-        println "Facit: $facit"
-        if (facit.containsKey(prefixedValue[0])) {
-            println "value: " + facit.get(prefixedValue[0])
-            facit.get(prefixedValue[0]).each {
-                println "it: $it"
-                def fs = it.split(/\./)
-                println "fs: $fs"
-                if (fs.size() > 1) {
-                    for (int i = 0; i < fs[1].length(); i++) {
-                        println "splitted subfields ${fs[1][i]}"
-                        expFields << "fields." + fs[0] + ".subfields." + fs[1][i] + ":" + prefixedValue[1]
-                    }
-                } else {
-                    expFields << "fields." + fs[0] + ":" + prefixedValue[1]
-                }
-            }
-        } else {
-            expFields = [ query ]
-        }
-        println "expFields: $expFields"
-        return expFields
-    }
-
-    def isIsbn(string) {
-        def result = string.trim().replaceAll("-", "").matches("[0-9]{10}|[0-9]{13}")
-        println "Result $result"
-        return result
-    }
-
-    def isIssn(string) {
-        return string.trim().matches("[0-9]{4}-?[0-9]{4}")
-    }
-
-    def splitQuery(q) {
-        q = q.toLowerCase()
-        def bits = q.findAll(/([^\s]+:"[^"]+"|[^\s]+:[^\s]+|"[^"]+"|[^\s]+)\s*/)
-        def newQuery = []
-        def isbnQuery = []
-        bits.eachWithIndex() { it, i ->
-            it = it.trim()
-            println "bit: $it"
-            if (isIsbn(it)) {
-                it = "isbn:$it"
-            }
-            if (isIssn(it)) {
-                it = "issn:$it"
-            }
-            if (it.contains(":")) {
-                if (it.startsWith("isbn:")) {
-                    isbnQuery << expandPrefix(it).join(" OR ")
-                } else {
-                    newQuery << "(" + expandPrefix(it).join(" OR ") + ")"
-                }
-            } else {
-                newQuery << it 
-            }
-        }
-        def query
-        if (newQuery.size() > 0) {
-            query = "(" + newQuery.join(" AND ") + ")"
-        }
-        if (isbnQuery.size() > 0) {
-            def isbnq = "(" + isbnQuery.join(" OR ") + ")"
-            query = (query ? query + " OR " + isbnq : isbnq)
-        }
-        println "query: $query"
-        return query
-    }
-
-    @Override
-    def void handle(Request request, Response response) {
-        def query = request.getResourceRef().getQueryAsForm().getValuesMap()
-        try {
-            def q = new Query(splitQuery(query.get("q")))
-            def callback = query.get("callback")
-            if (q) {
-                q.addFacet("målspråk", "fields.041.subfields.a")
-                q.addFacet("originalspråk", "fields.041.subfields.h")
-                def results = this.whelk.query(q)
-                def jsonResult = 
-                    (callback ? callback + "(" : "") +
-                    results.toJson() +
-                    (callback ? ");" : "") 
-
-                response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
-            } else {
-                response.setEntity("Missing q parameter", MediaType.TEXT_PLAIN)
-            }
-        } catch (WhelkRuntimeException wrte) {
-            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
-        }
-
-    }
-}
-@Log
 class AutoComplete extends BasicWhelkAPI {
 
     def pathEnd = "_complete"
@@ -516,6 +414,7 @@ class AutoComplete extends BasicWhelkAPI {
     def extraInfo = []
     String types
     String description = "Search API for autocompletion. Use parameter name or q."
+    String id = "AutoComplete"
 
     /*
     def void addNamePrefix(String prefix) {
@@ -543,7 +442,7 @@ class AutoComplete extends BasicWhelkAPI {
     }
 
     @Override
-    def void handle(Request request, Response response) {
+    void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
         String name = querymap.get("name")
         if (!name) {
@@ -715,6 +614,7 @@ class ResourceListRestlet extends BasicWhelkAPI {
     def pathEnd = "_resourcelist"
 
     String description = "Query API for language and country codes."
+    String id = "ResourceListAPI"
 
     def codeFiles = [
         "lang": "langcodes.json",
@@ -752,7 +652,7 @@ class ResourceListRestlet extends BasicWhelkAPI {
         }
     }
 
-    def void handle(Request request, Response response) {
+    void doHandle(Request request, Response response) {
         def foundParam = false
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         codeFiles.each { key, value ->
@@ -772,6 +672,7 @@ class MarcMapRestlet extends BasicWhelkAPI {
     def pathEnd = "_marcmap"
 
     String description = "API for marcmap."
+    String id = "MarcMapAPI"
 
     static final String marcmapfile = "marcmap.json"
     def marcmap
@@ -787,7 +688,7 @@ class MarcMapRestlet extends BasicWhelkAPI {
         return mapper.readValue(is, Map)
     }
 
-    def void handle(Request request, Response response) {
+    void doHandle(Request request, Response response) {
         def obj = marcmap
         def partPath = request.resourceRef.queryAsForm.valuesMap["part"]
         if (partPath) {
@@ -805,8 +706,9 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
     def mapper
 
     String description = "Query API for metadata search."
+    String id = "MetadataSearchAPI"
 
-    def void handle(Request request, Response response) {
+    void doHandle(Request request, Response response) {
         mapper = new ObjectMapper()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def link = queryMap.get("link", null)

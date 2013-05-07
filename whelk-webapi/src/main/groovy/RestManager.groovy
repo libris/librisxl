@@ -66,13 +66,13 @@ class RestManager extends Application {
         log.debug("Getting APIs for whelk ${whelk.id}")
         for (api in whelk.getAPIs()) {
             if (!api.varPath) {
-                log.debug("API is $api")
+                log.debug("Attaching strict-path-API ${api.id} at ${api.path}.")
                 router.attach(api.path, api)
             }
         }
         for (api in whelk.getAPIs()) {
             if (api.varPath) {
-                log.debug("Attaching ${api.class.name} at ${api.path}")
+                log.debug("Attaching variable-path-API ${api.id} at ${api.path}.")
                 router.attach(api.path, api).template.variables.put("identifier", new Variable(Variable.TYPE_URI_PATH))
             }
         }

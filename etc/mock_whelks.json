@@ -9,7 +9,7 @@
                     "search",
                     "kitinsearch",
                     "metasearch",
-                    "document",
+                    "documentapi",
                     "bibmarcconverter",
                     "authmarcconverter",
                     "holdmarcconverter",
@@ -23,7 +23,7 @@
         },
         {
             "resource":{
-                "_plugins": ["diskstorage", "document", "resourcelist", "marcmap", "search"]
+                "_plugins": ["diskstorage", "documentapi", "resourcelist", "marcmap", "search"]
             }
         }
     ],
@@ -111,7 +111,7 @@
             }
         },
         {
-            "document" : {
+            "documentapi" : {
                 "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
             }
         },
