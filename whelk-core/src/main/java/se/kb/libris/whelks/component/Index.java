@@ -10,5 +10,4 @@ public interface Index extends Component {
     public void index(Document d, String indexName);
     public void bulkIndex(Iterable<Document> d, String indexName);
     public SearchResult query(Query query, String indexName);
-
 }
