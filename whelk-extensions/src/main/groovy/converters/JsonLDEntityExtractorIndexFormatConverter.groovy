@@ -15,28 +15,32 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     List<Document> doConvert(Document doc) {
         def doclist = [doc]
         def json = mapper.readValue(doc.dataAsString, Map)
-        int i = 0
         def authList = json.about?.instanceOf?.authorList
         if (authList instanceof List) {
             for (person in authList) {
-                i++
-                String pident = "${doc.identifier.toString()}/person/$i"
+                String pident = slugify(person["authorizedAccessPoint"], doc.identifier)
                 person["@id"] = pident
-                person["authorOf"] = doc.identifier
-                doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", person["@type"])
+                person["recordPriority"] = 0
+                doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", person["@type"]).withLink(doc.identifier, "authorOf")
             }
         } else if (authList instanceof Map) {
-            String pident = "${doc.identifier.toString()}/person/$i"
+            String pident = slugify(person["authorizedAccessPoint"], doc.identifier)
             authList["@id"] = pident
-            authList["authorOf"] = doc.identifier
-            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(authList)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", authList["@type"])
+            authList["recordPriority"] = 0
+            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(authList)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", authList["@type"]).withLink(doc.identifier, "authorOf")
         }
         if (json["@type"]) {
             log.debug("Record has a @type. Adding to entity recordtype.")
+            json["recordPriority"] = 1
             json.remove("unknown")
             doclist << new BasicDocument().withData(mapper.writeValueAsBytes(json)).withContentType("application/ld+json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
         }
         log.trace("Extraction results: $doclist")
         return doclist
+    }
+
+    String slugify(String authAccPoint, URI identifier) {
+        String uritype = identifier.path.split("/")[1]
+        return new String("/" + uritype + "/person/"+URLEncoder.encode(authAccPoint))
     }
 }

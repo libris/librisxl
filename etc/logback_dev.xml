@@ -33,9 +33,11 @@
   <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
   </logger>
+  -->
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="trace"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.conch">
       <level value="debug"/>
   </logger>

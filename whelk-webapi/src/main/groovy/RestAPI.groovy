@@ -454,8 +454,9 @@ class AutoComplete extends BasicWhelkAPI {
             log.debug("name: $name")
             log.debug("namePrefixes: $namePrefixes")
             LinkedHashMap sortby = new LinkedHashMap<String,String>()
-            //sortby['records'] = "desc"
-            //sortby['@id'] = "asc"
+            sortby['recordPriority'] = "desc"
+            sortby['_score'] = "desc"
+            sortby['familyName'] = "asc"
             def query = new ElasticQuery(name)
             query.highlights = namePrefixes
             query.sorting = sortby

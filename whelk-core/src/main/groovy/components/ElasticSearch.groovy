@@ -102,7 +102,6 @@ abstract class ElasticSearch extends BasicPlugin {
     String URI_SEPARATOR = "::"
 
     String defaultIndexType = "record"
-    String indexMetadataType = "Indexed:Metadata"
 
     @Override
     void init(String indexName) {
@@ -323,8 +322,6 @@ abstract class ElasticSearch extends BasicPlugin {
                         checkedTypes << indexType
                     }
                     breq.add(client.prepareIndex(indexName, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
-                    log.trace("Prepareing index (bulk) of type $indexMetadataType with metadatajson: " + doc.getMetadataAsJson())
-                    breq.add(client.prepareIndex(indexName, indexMetadataType, translateIdentifier(doc.identifier)).setSource(doc.getMetadataAsJson()))
                 }
                 def response = performExecute(breq)
                 if (response.hasFailures()) {

@@ -6,7 +6,7 @@
     <body>
       <div id="tool">
         <p>Ange din fråga nedan</p>
-        <form method="get" action="http://localhost:9200/libris/_search">
+        <form method="get" action="http://kat.libris.kb.se:9200/bib/_search">
           <input type="hidden" name="pretty" value="true"/>
           <textarea name="source" cols="50" rows="25">
 {
@@ -26,7 +26,7 @@
         "field" : "bibLevel",
         "size" : 200
       }
-    },
+    }
   }
 }
           </textarea>
