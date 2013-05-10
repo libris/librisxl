@@ -36,6 +36,23 @@ Simply run:
 
 to upload all test documents into your local whelk. (See the script for how the actual HTTP PUT is constructed.)
 
+### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)
+
+1. Configure mock whelk with suitable converters, etc/mock-whelks.json
+
+2. Create a jar-file. From root librisxl folder:
+    $ gradle fatjar
+
+3. Run a local mock-configured Http standard whelk. From root librisxl folder:
+    $ export JAVA_OPTS="-Dfile.encoding=utf-8"
+    $ gradle jettyrun
+
+4. Run get-and-put-record script:
+    $ cd datatools
+    $ get-and-put-record.sh <bib|auth|hold> <id>
+
+5. To see JsonLD record: http://localhost:8080/whelk-webapi/bib/7149593
+
 ### Run standalone data conversion on a single document
 
     $ gradle convertMarc2JsonLD -Dargs="/bib/7149593 src/test/resources/marc2jsonld/in/bib/7149593.json build/"
