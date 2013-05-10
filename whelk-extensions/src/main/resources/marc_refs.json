@@ -19,7 +19,7 @@
                     "@type": "CONSTANT:Organization",
                     "name": "c"
                 },
-                "modifiyingAgency": {
+                "modifyingAgency": {
                     "@type": "CONSTANT:Organization",
                     "name": "d"
                 },
