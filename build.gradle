@@ -20,9 +20,7 @@ allprojects {
 subprojects {
     repositories {
         mavenCentral()
-        maven { url "http://oss.sonatype.org/content/repositories/releases/" }
         maven { url "http://maven.restlet.org/" }
-        maven { url "http://repository.codehaus.org/" }
         flatDir name: 'localDir', dirs: '../lib'
     }
 
@@ -37,7 +35,7 @@ subprojects {
     dependencies {
         groovy 'org.codehaus.groovy:groovy:2.0.4'
         groovy 'commons-cli:commons-cli:1.2'
-        compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.9'
+        compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
         compile 'ch.qos.logback:logback-classic:1.0.0'
         compile 'org.slf4j:log4j-over-slf4j:1.6.5'
         compile 'commons-io:commons-io:2.3'
