@@ -327,7 +327,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 if (response.hasFailures()) {
                     log.error "Bulk import has failures."
                     for (re in response.items) {
-                        if (re.failed()) {
+                        if (re.failed) {
                             log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
                             if (log.isTraceEnabled()) {
                                 for (doc in documents) {
