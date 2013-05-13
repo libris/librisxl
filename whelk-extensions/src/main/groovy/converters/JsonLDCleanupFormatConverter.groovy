@@ -12,6 +12,25 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
 
+    def facit = [
+        "about.instanceOf.title" : [":", "/"],
+        "about.instanceOf.titleRemainder" : ["/"],
+        "about.isbn" : [":", ";"],
+        "about.identifier+.comment" : [":", ";"],
+        "about.identifier+.termsOfAvailability" : [":", ";"],
+        "about.instanceOf.dateOfPublication" : [",", ";"],
+        "about.placeOfPublication.name" : [",", ":", ";"],
+        "about.publisher+.name" : [",", ":"],
+        "about.placeOfManufacture.name" : [";"],
+        "about.extent" : ["+", ":"],
+        "about.physicalDetails" : [";", "+"],
+        "about.dimensions" : [";", "+"],
+        "about.edition" : ["/", "=", ","],
+        "about.series+.title" : [".", ",", "=", ";"],
+        "about.series+.part" : [".", ",", "=", ";"],
+        "about.series+.issn" : [".", ",", "=", ";"],
+    ]
+
     Document doConvert(Document doc) {
         def json = mapper.readValue(doc.dataAsString, Map)
 
@@ -62,7 +81,7 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
             json["about"]["dateOfPublication"] = dateOfPublication[0..-2].trim()
         }
         if (placeOfPublication_name && placeOfPublication_name.size() > 1) {
-            if ((json.about?.get("publisher") && placeOfPublication_name[-1].equals(":")) || placeOfPublication_name[-1].equals(",") || placeOfPublication_name[-1].equals(";")) {
+            if ((publisher && placeOfPublication_name[-1].equals(":")) || placeOfPublication_name[-1].equals(",") || placeOfPublication_name[-1].equals(";")) {
                 json["about"]["placeOfPublication"]["name"] = placeOfPublication_name[0..-2].trim()
             }
         }
