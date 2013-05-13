@@ -326,7 +326,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 def response = performExecute(breq)
                 if (response.hasFailures()) {
                     log.error "Bulk import has failures."
-                    for (def re : response.items()) {
+                    for (re in response.items) {
                         if (re.failed()) {
                             log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
                             if (log.isTraceEnabled()) {
