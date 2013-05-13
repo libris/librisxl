@@ -61,13 +61,11 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
         if (dateOfPublication && dateOfPublication.size() > 1 && (dateOfPublication[-1].equals(";") || dateOfPublication[-1].equals(","))) {
             json["about"]["dateOfPublication"] = dateOfPublication[0..-2].trim()
         }
-        //instanceof List
         if (placeOfPublication_name && placeOfPublication_name.size() > 1) {
             if ((json.about?.get("publisher") && placeOfPublication_name[-1].equals(":")) || placeOfPublication_name[-1].equals(",") || placeOfPublication_name[-1].equals(";")) {
                 json["about"]["placeOfPublication"]["name"] = placeOfPublication_name[0..-2].trim()
             }
         }
-        //instance of List
         if (placeOfManufacture_name) {
             if (placeOfManufacture_name[-1].equals(";")) {
                 json["about"]["placeOfManufacture"]["name"] = placeOfManufacture_name[0..-2].trim().replaceAll("[()]","")

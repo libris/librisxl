@@ -105,7 +105,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
     @Override
     void init(String indexName) {
-        if (!performExecute(client.admin().indices().prepareExists(indexName)).exists()) {
+        if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
             log.info("Creating index ...")
             XContentBuilder mapping = jsonBuilder().startObject()
             .startObject(indexName)
@@ -277,7 +277,7 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     void checkTypeMapping(indexName, indexType) {
-        def mappings = performExecute(client.admin().cluster().prepareState()).state().getMetaData().index(indexName).getMappings()
+        def mappings = performExecute(client.admin().cluster().prepareState()).state.metaData.index(indexName).getMappings()
         if (!mappings.containsKey(indexType)) {
             log.debug("Mapping for $indexType does not exist. Creating ...")
             setTypeMapping(indexName, indexType)
@@ -370,7 +370,7 @@ abstract class ElasticSearch extends BasicPlugin {
         for (def f : eFacets) {
             def termcounts = [:]
             try {
-                for (def entry : f.entries()) {
+                for (def entry : f.entries) {
                     termcounts[entry.term] = entry.count
                 }
                 facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
