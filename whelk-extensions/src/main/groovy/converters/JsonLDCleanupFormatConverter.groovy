@@ -94,7 +94,15 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
                   json["about"]["edition"] = edition[0..-2].trim()
             }
         }
-
+        if (series && series instanceof List) {
+            series.eachWithIndex() { x, y ->
+                x.each { k, v ->
+                    if (v && v.size() > 1 && (v[-1].equals(",") || v[-1].equals(".") || v[-1].equals(":") || v[-1].equals(";"))) {
+                        json["about"]["series"][y][(k)] = v[0..-2].trim()
+                    }
+                }
+            }
+        }
         doc = doc.withData(mapper.writeValueAsBytes(json))
         return doc
     }
