@@ -15,27 +15,35 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
     Document doConvert(Document doc) {
         def json = mapper.readValue(doc.dataAsString, Map)
 
-        def title = json.about?.instanceOf?.get("title")
-        def titleRemainder = json.about?.instanceOf?.get("titleRemainder")
-        def statementOfResponsibility = json.about?.instanceOf?.get("statementOfResponsibility")
-        def publisher = json.about?.get("publisher")
-        def placeOfPublication_name, dateOfPublication, placeOfManufacture_name
-        try {
-            placeOfPublication_name = json.about?.get("placeOfPublication")?.get("name")
-            dateOfPublication = json.about?.get("dateOfPublication")
-            placeOfManufacture_name = json.about?.get("placeOfManufacture")?.get("name")
-        } catch (MissingMethodException mme) {
-            log.error("Caught exception. Data is not as expected, maybe wrong type of record?")
-        }
-        def extent = json.about?.get("extent")
-        def physicalDetails = json.about?.get("physicalDetails")
-        def dimensions = json.about?.get("dimensions")
-        def isbn = json.about?.get("isbn")
-        def edition = json.about?.get("edition")
-
+        def title = json.about?.instanceOf?.get("title", null)
+        def titleRemainder = json.about?.instanceOf?.get("titleRemainder", null)
+        def statementOfResponsibility = json.about?.instanceOf?.get("statementOfResponsibility", null)
+        def publisher = json.about?.get("publisher", null)
+        def placeOfPublication_name = json.about?.placeOfPublication?.get("name", null)
+        def dateOfPublication = json.about?.get("dateOfPublication", null)
+        def placeOfManufacture_name = json.about?.placeOfManufacture?.get("name", null)
+        def extent = json.about?.get("extent", null)
+        def physicalDetails = json.about?.get("physicalDetails", null)
+        def dimensions = json.about?.get("dimensions", null)
+        def isbn = json.about?.get("isbn", null)
+        def edition = json.about?.get("edition", null)
+        def identifier = json.about?.get("identifier", null)
+        def series = json.about?.get("series", null)
 
         if (isbn && isbn.size() > 1 && (isbn[-1].equals(":") || isbn[-1].equals(";"))) {
             json["about"]["isbn"] = isbn[0..-2].trim()
+        }
+        if (identifier && identifier instanceof List) {
+            identifier.eachWithIndex() { id, index ->
+                def idComment = id.get("comment", null)
+                if (idComment && idComment.size() > 1 && (idComment[-1].equals(":") || idComment[-1].equals(";"))) {
+                    json["about"]["identifier"][index]["comment"] = idComment[0..-2].trim()
+                }
+                def idTerms = id.get("termsOfAvailability", null)
+                if (idTerms && idTerms.size() > 1 && (idTerms[-1].equals(":") || idTerms[-1].equals(";"))) {
+                    json["about"]["identifier"][index]["termsOfAvailability"] = idTerms[0..-2].trim()
+                }
+            }
         }
         if (title && title.size() > 1) {
            if (titleRemainder && title[-1].equals(":")) {
