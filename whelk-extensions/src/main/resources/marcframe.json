@@ -1,0 +1,200 @@
+{
+
+  "marcTypeFromTypeOfRecord": {
+    "*": "bib",
+    "u": "hold",
+    "v": "hold",
+    "x": "hold",
+    "y": "hold",
+    "z": "auth"
+  },
+
+  "entityTypeMap": {
+    "bib": {
+    },
+    "auth": {
+    },
+    "hold": "Holding"
+  },
+
+  "bib": {
+
+    "fixed": { },
+    "fields": { },
+
+    "000": {
+      "[5:6]": {"id": "status"},
+      "[6:7]": {"id": "typeOfRecord"},
+      "[7:8]": {"id": "bibLevel"},
+      "[8:9]": {"id": "typeOfControl"},
+      "[9:10]": {"id": "characterCoding"},
+      "[17:18]": {"id": "encLevel"},
+      "[18:19]": {"id": "catForm"},
+      "[19:20]": {"id": "linked"},
+      "[20:24]": {"id": "entryMap"}
+    },
+
+    "001": {"domainEntity": "Record", "property": "controlNumber"},
+    "003": {"domainEntity": "Record", "property": "systemName"},
+    "005": {"property": "updated", "parse": {"dateTime": "yyyymmddhhmmss"}, "generated": true},
+
+    "007": {
+      "_Microform": {
+      "6-8": {"propId": "reductionExactRightJustifiedWithLeadingZero"}
+      },
+      "_MotionPicture": {
+        "17-22": {"propId": "filmInspectionDate"}
+      }
+    },
+
+    "006": {
+      "repeats": "008"
+    },
+
+    "008": {
+      "repeatedBy": "006",
+      "[7:11]": {"propId": "yearTime1"},
+      "[11:15]": {"propId": "yearTime2"},
+      "[35:38]": {"propId": "language"},
+
+      "0+6": {"range": "date"},
+      "publicationStatus": {"dateTypeFor": "008.0+6"},
+      "7+4": {"id": "yearTime1", "range": "date"},
+      "11+4": {"id": "yearTime2", "range": "date"},
+      "catalogingSource": {},
+      "modifiedRecord": {"detail": 0},
+      "language": {"sameValueAs": [null]}
+    },
+
+    "020": {
+      "domainEntity": "Instance",
+      "link": "identifier",
+      "rangeEntity": "Identifier",
+      "$a": {
+        "property": "identifierValue",
+        "defaults": {
+          "identifierScheme": "ISBN"
+        }
+      },
+      "$c": {"domainEntity": "Instance", "property": "availability"},
+      "$z": {
+        "property": "identifierValue",
+        "defaults": {
+          "identifierScheme": "ISBN",
+          "identifierStatus": "canceledInvalid"
+        }
+      }
+    },
+
+    "034": {"entity": "Cartography"},
+
+    "035": {"domainEntity": "Record", "$a": {"property": "system-number"}},
+
+    "040": {},
+    "041": {"$a": {"defaultFrom": ["240.a"]}},
+    "042": {},
+    "043": {"ignored": true},
+
+    "050": {"$b": "ignored"},
+    "082": {"$2": "ignored"},
+
+    "084": {
+      "link": "class",
+      "matchDomain": {
+        "Work": {"link": "class"}, "Holding": {"link": "callno"}
+      },
+      "rangeEntity": "ClassificationEntity",
+      "$a": {"property": "classNumber"},
+      "$2": {"property": "classScheme"},
+      "$b": {"property": "classItem"}
+    },
+
+    "100": {
+      "domainEntity": "Work",
+      "rangeEntity": "Person",
+      "matchInd1": {
+        "1": {
+          "$a": {"split": ",", "...": "..."}
+        },
+        "3": {
+          "rangeEntity": "Family"
+        }
+      },
+      "link": "creator",
+      "$a": {"property": "name", "split": ",", "properties": ["familyName", "givenName"], "required": true},
+      "$d": {"property": "lifeSpan", "split": "-", "properties": ["birthYear", "deathYear"], "required": true}
+    },
+
+    "245": {
+      "domainEntity": "Instance",
+      "link": "title",
+      "rangeEntity": "TitleEntity",
+      "i1": {},
+      "i2": {},
+      "$a": {"property": "titleValue"},
+      "$b": {"property": "subtitle"},
+      "$c": {"domainEntity": "Instance", "property": "responsibilityStatement"},
+      "$n": {"property": "partEnumeration"},
+      "$p": {"property": "partTitle"}
+    },
+    "246": {"inherit": "245"},
+
+    "255": {"specificDomainEntities": ["Cartography"]},
+
+    "260": {
+      "domainEntity": "Instance",
+      "link": "provider",
+      "partition": [
+        {"codes": ["a", "b", "c"], "link": "publication"},
+        {"codes": ["e", "f", "g"], "link": "manufacture"}
+      ],
+      "splitByRepetitionAndInterpunctionPattern": "TODO",
+      "rangeEntity": "ProviderEvent",
+      "i1": {"property": "latest", "valueMap": {"2": false, "3": true}},
+      "$a": {"link": "place", "rangeEntity": "Place", "property": "label"},
+      "$b": {"property": "providerName"},
+      "$c": {"property": "providerDate"},
+      "$e": {"link": "place", "rangeEntity": "Place", "property": "label"},
+      "$f": {"property": "providerName"},
+      "$g": {"property": "providerDate"},
+      "$3": {"property": "scopeNote", "position": 0}
+    },
+
+    "300": {
+      "entity": "Instance",
+      "$a": {"property": "extent"},
+      "$c": {"property": "dimensions"},
+      "$b": {"property": "otherPhysicalDetails"},
+      "$e": {"property": "accompanyingMaterial"},
+      "$3": {
+        "previousEndsWith": "+",
+        "property": "materialsSpecified"
+      }
+    },
+
+    "310": {},
+    "321": {},
+    "362": {},
+
+    "440": {"prefer": "490"},
+
+    "500": {"$a": {"domainEntity": "Instance", "property": "note"}},
+
+    "505": {},
+
+    "511": {
+      "matchInd1" {"1": {"link": "participantNote"}},
+      "link": "performerNote"
+    },
+
+    "538": {"$a": {"domainEntity": "Instance", "property": "systemRequirements"}},
+
+    "600": {"inherit": "100", "link": "subject"},
+    "650": {},
+
+    "700": {"inherit": "100", "link": "contributor"},
+    "710": {},
+    "740": {}
+  }
+
+}
