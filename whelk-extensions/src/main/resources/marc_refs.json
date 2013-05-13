@@ -75,6 +75,13 @@
                 "about.physicalDetails" : "b",
                 "about.dimensions" : "c"
             },
+            "440" : {
+                "about.series+": {
+                    "title": "a",
+                    "part": "v",
+                    "issn": "x"
+                }
+            },
             "490" : {
                 "about.series+": {
                     "title": "a",
