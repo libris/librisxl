@@ -105,7 +105,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
     @Override
     void init(String indexName) {
-        if (!performExecute(client.admin().indices().prepareExists(indexName)).exists()) {
+        if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
             log.info("Creating index ...")
             XContentBuilder mapping = jsonBuilder().startObject()
             .startObject(indexName)
@@ -277,7 +277,7 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     void checkTypeMapping(indexName, indexType) {
-        def mappings = performExecute(client.admin().cluster().prepareState()).state().getMetaData().index(indexName).getMappings()
+        def mappings = performExecute(client.admin().cluster().prepareState()).state.metaData.index(indexName).getMappings()
         if (!mappings.containsKey(indexType)) {
             log.debug("Mapping for $indexType does not exist. Creating ...")
             setTypeMapping(indexName, indexType)
@@ -315,19 +315,21 @@ abstract class ElasticSearch extends BasicPlugin {
                 log.debug("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
-                    def indexType = determineDocumentType(doc)
-                    def checked = indexType in checkedTypes
-                    if (!checked) {
-                        checkTypeMapping(indexName, indexType)
-                        checkedTypes << indexType
+                    if (doc) {
+                        def indexType = determineDocumentType(doc)
+                        def checked = indexType in checkedTypes
+                        if (!checked) {
+                            checkTypeMapping(indexName, indexType)
+                            checkedTypes << indexType
+                        }
+                        breq.add(client.prepareIndex(indexName, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
                     }
-                    breq.add(client.prepareIndex(indexName, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
                 }
                 def response = performExecute(breq)
                 if (response.hasFailures()) {
                     log.error "Bulk import has failures."
-                    for (def re : response.items()) {
-                        if (re.failed()) {
+                    for (re in response.items) {
+                        if (re.failed) {
                             log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
                             if (log.isTraceEnabled()) {
                                 for (doc in documents) {
@@ -370,7 +372,7 @@ abstract class ElasticSearch extends BasicPlugin {
         for (def f : eFacets) {
             def termcounts = [:]
             try {
-                for (def entry : f.entries()) {
+                for (def entry : f.entries) {
                     termcounts[entry.term] = entry.count
                 }
                 facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })

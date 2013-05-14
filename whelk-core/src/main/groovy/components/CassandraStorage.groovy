@@ -49,16 +49,20 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     void store(Document doc, String whelkPrefix) {
-        ColumnFamilyUpdater<String, String> updater = cft.createUpdater(doc.identifier.toString())
-        updater.setByteArray("data", doc.data)
-        updater.setLong("timestamp", doc.timestamp)
-        updater.setString("contentType", doc.contentType)
+        if (doc) {
+            ColumnFamilyUpdater<String, String> updater = cft.createUpdater(doc.identifier.toString())
+            updater.setByteArray("data", doc.data)
+            updater.setLong("timestamp", doc.timestamp)
+            updater.setString("contentType", doc.contentType)
 
-        try {
-            cft.update(updater)
-            log.debug("Stored document ${doc.identifier} ...")
-        } catch (HectorException e) {
-            log.error("Exception: ${e.message}", e)
+            try {
+                cft.update(updater)
+                log.debug("Stored document ${doc.identifier} ...")
+            } catch (HectorException e) {
+                log.error("Exception: ${e.message}", e)
+            }
+        } else {
+            log.warn("Received null document. No attempt to store.")
         }
     }
 
