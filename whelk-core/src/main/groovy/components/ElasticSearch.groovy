@@ -315,13 +315,15 @@ abstract class ElasticSearch extends BasicPlugin {
                 log.debug("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
-                    def indexType = determineDocumentType(doc)
-                    def checked = indexType in checkedTypes
-                    if (!checked) {
-                        checkTypeMapping(indexName, indexType)
-                        checkedTypes << indexType
+                    if (doc) {
+                        def indexType = determineDocumentType(doc)
+                        def checked = indexType in checkedTypes
+                        if (!checked) {
+                            checkTypeMapping(indexName, indexType)
+                            checkedTypes << indexType
+                        }
+                        breq.add(client.prepareIndex(indexName, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
                     }
-                    breq.add(client.prepareIndex(indexName, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
                 }
                 def response = performExecute(breq)
                 if (response.hasFailures()) {
