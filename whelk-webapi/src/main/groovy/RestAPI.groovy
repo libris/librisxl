@@ -639,8 +639,6 @@ class ResourceListRestlet extends BasicWhelkAPI {
         }
     }
 
-    //TODO:implement get and post/put to storage alt. documentrestlet
-
     def loadCodes(String typeOfCode) {
         try {
             return this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode)).withStream {
@@ -667,6 +665,16 @@ class ResourceListRestlet extends BasicWhelkAPI {
         }
     }
 }
+
+/*@Log
+class TemplateRestlet extends BasicWhelkAPI {
+    def pathEnd = "_template"
+
+    String description = "API for templates."
+    String id = "TemplateAPI"
+
+    String templateDir =
+}*/
 
 @Log
 class MarcMapRestlet extends BasicWhelkAPI {
