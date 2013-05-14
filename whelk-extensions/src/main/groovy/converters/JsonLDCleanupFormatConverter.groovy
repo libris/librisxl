@@ -21,7 +21,7 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
         "about.instanceOf.dateOfPublication" : [",", ";"],
         "about.placeOfPublication.name" : [",", ":", ";"],
         "about.publisher+.name" : [",", ":"],
-        "about.placeOfManufacture.name" : [";"],
+        "about.placeOfManufacture.name" : [":", ";"],
         "about.extent" : ["+", ":"],
         "about.physicalDetails" : [";", "+"],
         "about.dimensions" : [";", "+"],
@@ -48,6 +48,8 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
         def edition = json.about?.get("edition", null)
         def identifier = json.about?.get("identifier", null)
         def series = json.about?.get("series", null)
+
+        //lägg till hakparentes runt allmän medieterm
 
         if (isbn && isbn.size() > 1 && (isbn[-1].equals(":") || isbn[-1].equals(";"))) {
             json["about"]["isbn"] = isbn[0..-2].trim()
@@ -86,7 +88,7 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
             }
         }
         if (placeOfManufacture_name) {
-            if (placeOfManufacture_name[-1].equals(";")) {
+            if (placeOfManufacture_name[-1].equals(";") || placeOfManufacture_name[-1].equals(":")) {
                 json["about"]["placeOfManufacture"]["name"] = placeOfManufacture_name[0..-2].trim().replaceAll("[()]","")
              } else {
                  json["about"]["placeOfManufacture"]["name"] = placeOfManufacture_name.replaceAll("[()]","")
