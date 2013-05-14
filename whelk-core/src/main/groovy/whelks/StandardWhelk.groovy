@@ -116,9 +116,11 @@ class StandardWhelk implements Whelk {
             }
         }
         doc = performStorageFormatConversion(doc)
-        for (lf in linkFinders) {
-            for (link in lf.findLinks(doc)) {
-                doc = doc.withLink(link)
+        if (doc) {
+            for (lf in linkFinders) {
+                for (link in lf.findLinks(doc)) {
+                    doc = doc.withLink(link)
+                }
             }
         }
         return doc
