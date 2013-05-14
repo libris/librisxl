@@ -66,6 +66,8 @@
       "language": {"sameValueAs": [null]}
     },
 
+    "010": {"domainEntity": "Instance", "property": "lccn"},
+
     "020": {
       "domainEntity": "Instance",
       "link": "identifier",
@@ -86,17 +88,53 @@
       }
     },
 
+    "024": {
+      "domainEntity": "Instance",
+      "link": "identifier",
+      "rangeEntity": "Identifier",
+      "$a": {"property": "identifierValue"},
+      "TODO": "identifierScheme from ind2?"
+    },
+
     "034": {"entity": "Cartography"},
 
-    "035": {"domainEntity": "Record", "$a": {"property": "system-number"}},
+    "035": {
+      "domainEntity": "Record",
+      "$a": {"property": "system-number"},
+      "$9": {"property": "librisIII-number"}
+    },
 
-    "040": {},
+    "040": {
+      "entity": "Record",
+      "$a": {"link": "originalCatalogingAgency", "rangeEntity": "Organization", "property": "name"},
+      "$b": {"property": "language"},
+      "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
+      "$d": {"property": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
+      "$e": {"property": "descriptionRules"}
+    },
     "041": {"$a": {"defaultFrom": ["240.a"]}},
-    "042": {},
+    "042": {
+      "entity": "Record",
+      "$a": {"property": "authenticationCode"},
+      "$9": {"property": "bibliographyCode"}
+    },
     "043": {"ignored": true},
 
-    "050": {"$b": "ignored"},
-    "082": {"$2": "ignored"},
+    "050": {
+      "domainEntity": "Work",
+      "$a": {"property": "class-lcc"},
+      "$b": {"ignored": true}
+    },
+
+    "082": {
+      "domainEntity": "Work",
+      "$a": {"property": "class-ddc"},
+      "$2": {"ignored": true}
+    },
+
+    "072": {
+      "inherit": "084"
+    },
 
     "084": {
       "link": "class",
@@ -124,22 +162,69 @@
       "$a": {"property": "name", "split": ",", "properties": ["familyName", "givenName"], "required": true},
       "$d": {"property": "lifeSpan", "split": "-", "properties": ["birthYear", "deathYear"], "required": true}
     },
+    "110": {
+    },
+    "111": {
+    },
 
+    "210": {
+      "domainEntity": "Instance",
+      "link": "abbreviatedTitle",
+      "rangeEntity": "TitleEntity",
+      "$a": {"property": "titleValue"},
+      "$b": {"property": "titleQualifier"},
+      "$2": {"property": "titleSource"}
+    },
+    "222": {
+      "inherit": "210",
+      "link": "keyTitle",
+      "$2": null
+    },
+    "240": {
+      "domainEntity": "Work",
+      "$a": {"property": "uniformTitle"}
+    },
+    "242": {
+      "inherit": "245",
+      "TODO": "translatedTitle? merge into 245?"
+    },
     "245": {
+      "i1": {},
+      "i2": {},
       "domainEntity": "Instance",
       "link": "title",
       "rangeEntity": "TitleEntity",
-      "i1": {},
-      "i2": {},
       "$a": {"property": "titleValue"},
       "$b": {"property": "subtitle"},
       "$c": {"domainEntity": "Instance", "property": "responsibilityStatement"},
+      "$f": {"property": "titleDate"},
+      "$h": {"domainEntity": "Instance", "property": "mediaTerm"},
       "$n": {"property": "partEnumeration"},
       "$p": {"property": "partTitle"}
     },
-    "246": {"inherit": "245"},
+    "246": {
+      "inherit": "245",
+      "link": "titleVariation"
+    },
+    "247": {
+      "inherit": "245",
+      "link": "titleVariation"
+    },
 
-    "255": {"specificDomainEntities": ["Cartography"]},
+    "250": {
+      "domainEntity": "Instance",
+      "link": "editionStatement",
+      "rangeEntity": "EditionEntity",
+      "$a": {"property": "edition"},
+      "$b": {"property": "editionResponsibility"}
+    },
+
+    "255": {"TODO": {"specificDomainEntities": ["Cartography"]}},
+
+    "256": {
+      "domainEntity": "Instance",
+      "$a": {"property": "fileType"}
+    },
 
     "260": {
       "domainEntity": "Instance",
@@ -148,7 +233,7 @@
         {"codes": ["a", "b", "c"], "link": "publication"},
         {"codes": ["e", "f", "g"], "link": "manufacture"}
       ],
-      "splitByRepetitionAndInterpunctionPattern": "TODO",
+      "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
       "rangeEntity": "ProviderEvent",
       "i1": {"property": "latest", "valueMap": {"2": false, "3": true}},
       "$a": {"link": "place", "rangeEntity": "Place", "property": "label"},
@@ -172,29 +257,55 @@
       }
     },
 
-    "310": {},
+    "310": {
+      "domainEntity": "Instance",
+      "$a": {"property": "frequency"}
+    },
+
     "321": {},
     "362": {},
 
     "440": {"prefer": "490"},
 
     "500": {"$a": {"domainEntity": "Instance", "property": "note"}},
-
-    "505": {},
+    "504": {"$a": {"domainEntity": "Instance", "property": "supplementaryContentNote"}},
+    "505": {"$a": {"domainEntity": "Instance", "property": "listOfContents"}},
+    "508": {"$a": {"domainEntity": "Instance", "property": "creditsNote"}},
 
     "511": {
-      "matchInd1" {"1": {"link": "participantNote"}},
+      "matchInd1": {"1": {"link": "participantNote"}},
       "link": "performerNote"
     },
 
+    "520": {"domainEntity": "Instance", "$a": {"property": "summary"}},
+
     "538": {"$a": {"domainEntity": "Instance", "property": "systemRequirements"}},
 
+    "599": {"$a": {"domainEntity": "Record", "property": "comment"}},
+
     "600": {"inherit": "100", "link": "subject"},
-    "650": {},
+    "610": {"inherit": "110", "link": "subject"},
+    "611": {"inherit": "111", "link": "subject"},
+    "650": {
+      "domain": "Work",
+      "link": "subject",
+      "rangeEntity": "Concept",
+      "$a": {"property": "prefLabel"},
+      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"}
+    },
+    "651": {
+      "inherit": "650",
+      "rangeEntity": "Place",
+      "$a": {"property": "label"}
+    },
 
     "700": {"inherit": "100", "link": "contributor"},
-    "710": {},
-    "740": {}
+    "710": {"inherit": "110"},
+    "711": {"inherit": "111"},
+
+    "740": {},
+
+    "883": {}
   }
 
 }
