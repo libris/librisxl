@@ -199,6 +199,7 @@ class MarcFieldHandler {
         if (rangeEntityName) {
             entity = entity[link] = ["@type": rangeEntityName]
         }
+        def unhandled = []
         value.subfields.each {
             it.each { code, subVal ->
                 def subDfn = subfields[code]
@@ -212,9 +213,11 @@ class MarcFieldHandler {
                     if (subDfn.defaults) {
                         ent += subDfn.defaults
                     }
+                } else {
+                    unhandled << code
                 }
             }
         }
-        return true
+        return unhandled.size() == 0
     }
 }
