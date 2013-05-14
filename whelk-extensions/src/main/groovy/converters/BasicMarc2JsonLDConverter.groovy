@@ -376,6 +376,9 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
             }
             person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + ", " + dates
             dates = dates.split(/-/)
+            if (dates.size() > 1) {
+                person["authorizedAccessPoint"] = person["authorizedAccessPoint"] + "."
+            }
             person["birthYear"] = dates[0]
             if (dates.size() > 1) {
                 person["deathYear"] = dates[1]
