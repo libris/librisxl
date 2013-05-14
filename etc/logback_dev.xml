@@ -33,11 +33,9 @@
   <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.conch">
       <level value="debug"/>
   </logger>
@@ -98,6 +96,7 @@
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
       <level value="trace"/>
   </logger>
+  <!--
 <logger name="se.kb.libris.whelks.api.SearchRestlet">
       <level value="debug"/>
   </logger>
@@ -117,7 +116,6 @@
       <level value="debug"/>
 </logger>
 
-  <!--
  <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
       <level value="trace"/>
   </logger>
