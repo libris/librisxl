@@ -129,32 +129,33 @@ class RootRouteRestlet extends BasicWhelkAPI {
             def uri = new URI(discoveryAPI.path)
             log.info "RootRoute API handling route to ${uri} ..."
             discoveryAPI.handle(request, response)
-        } else if (request.method == Method.PUT) {
+       } else if (request.method == Method.PUT || request.method == Method.POST) {
             documentAPI = new DocumentRestlet(this.whelk)
-            documentAPI.handle(request, response)
-        } else if (request.method == Method.POST) {
-            documentAPI = new DocumentRestlet(this.whelk)
-            try {
-                def identifier
-                Document doc = null
-                def headers = request.attributes.get("org.restlet.http.headers")
-                log.trace("headers: $headers")
-                log.debug("request: $request")
-                def link = headers.find { it.name.equals("link") }?.value
-                doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString()])
-                if (link != null) {
-                    log.trace("Adding link $link to document...")
-                    doc = doc.withLink(link)
+            if (request.attributes?.get("identifier") != null) {
+                documentAPI.handle(request, response)
+            } else {
+                try {
+                    def identifier
+                    Document doc = null
+                    def headers = request.attributes.get("org.restlet.http.headers")
+                    log.trace("headers: $headers")
+                    log.debug("request: $request")
+                    def link = headers.find { it.name.equals("link") }?.value
+                    doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString()])
+                    if (link != null) {
+                        log.trace("Adding link $link to document...")
+                        doc = doc.withLink(link)
+                    }
+                    identifier = this.whelk.store(doc)
+                    response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
+                    response.entity.setTag(new Tag(doc.timestamp as String, false))
+                    log.debug("Saved document $identifier")
+                    response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
+                    log.info("Redirecting with location ref " + request.getRootRef().toString() + identifier)
+                    response.setLocationRef(request.getRootRef().toString() + "${identifier}")
+                } catch (WhelkRuntimeException wre) {
+                    response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
                 }
-                identifier = this.whelk.store(doc)
-                response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
-                response.entity.setTag(new Tag(doc.timestamp as String, false))
-                log.debug("Saved document $identifier")
-                response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                log.info("Redirecting with location ref " + request.getRootRef().toString() + identifier)
-                response.setLocationRef(request.getRootRef().toString() + "${identifier}")
-            } catch (WhelkRuntimeException wre) {
-                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
             }
         }
     }
