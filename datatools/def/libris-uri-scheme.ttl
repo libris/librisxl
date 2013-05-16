@@ -1,0 +1,27 @@
+@prefix coin: <http://purl.org/court/def/2009/coin#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix bf: <http://bibframe.org/vocab/> .
+@base <http://libris.kb.se/> .
+
+</sys/uri/space#> a coin:URISpace;
+    coin:base "http://libris.kb.se";
+    coin:apply coin:ToLowerCase;
+    coin:spaceReplacement "-";
+    coin:template [
+        coin:forType foaf:Document;
+        coin:uriTemplate "/bib/{controlNumber}"
+    ], [
+        coin:forType bf:Instance;
+        coin:uriTemplate "/resource/bib/{recordControlNumber}"
+    ], [
+        coin:forType bf:Work;
+        coin:relFromBase bf:instanceOf;
+        coin:uriTemplate "{+base}#work";
+    ] .
+
+# /bib/
+# /auth/
+# /resource/bib/
+# /resource/auth/
+# /resource/library/{sigel} # unused
+

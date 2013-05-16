@@ -1,0 +1,42 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix : <http://bibframe.org/vocab/> .
+@prefix ext: <http://libris.kb.se/vocab/bibframe-ext#> .
+
+
+:isbn a owl:DatatypeProperty;
+    owl:propertyChainAxiom (
+            [ a owl:ObjectProperty;
+                rdfs:subPropertyOf :identifier;
+                rdfs:range [ a owl:Restriction;
+                        owl:onProperty :identifierScheme; owl:hasValue "ISBN" ] ]
+            :identifierValue ) .
+
+:invalidIsbn a owl:DatatypeProperty;
+    owl:propertyChainAxiom (
+            [ a owl:ObjectProperty;
+                rdfs:subPropertyOf :identifier;
+                rdfs:range [ a owl:Restriction;
+                        owl:onProperty :identifierScheme; owl:hasValue "ISBN" ],
+                           [ a owl:Restriction;
+                        owl:onProperty :identifierStatus; owl:hasValue "invalid" ] ]
+            :identifierValue ) .
+
+
+ext:agentLink a owl:ObjectProperty;
+    owl:inverseOf rdf:subject;
+    owl:range :AgentLink .
+
+ext:AgentLink a owl:Class;
+    owl:subClassOf rdf:Statement, [
+        a owl:Restriction; owl:onProperty ext:relator; owl:allValuesFrom :associatedAgent
+    ] .
+
+ext:relator a owl:ObjectProperty;
+    rdfs:subPropertyOf rdf:predicate;
+    owl:domain ext:AgentLink .
+
+ext:agent a owl:ObjectProperty;
+    rdfs:subPropertyOf rdf:object;
+    owl:domain ext:AgentLink .
+
