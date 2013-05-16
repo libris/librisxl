@@ -36,7 +36,7 @@
 
     "001": {"domainEntity": "Record", "property": "controlNumber"},
     "003": {"domainEntity": "Record", "property": "systemName"},
-    "005": {"property": "updated", "parse": {"dateTime": "yyyymmddhhmmss"}, "generated": true},
+    "005": {"property": "updated", "parse": {"dateTime": "yyyymmddhhmmss"}},
 
     "007": {
       "_Microform": {
@@ -66,11 +66,11 @@
       "language": {"sameValueAs": [null]}
     },
 
-    "010": {"domainEntity": "Instance", "property": "lccn"},
+    "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
 
     "020": {
       "domainEntity": "Instance",
-      "link": "identifier",
+      "addLink": "identifier",
       "rangeEntity": "Identifier",
       "$a": {
         "property": "identifierValue",
@@ -90,7 +90,7 @@
 
     "024": {
       "domainEntity": "Instance",
-      "link": "identifier",
+      "addLink": "identifier",
       "rangeEntity": "Identifier",
       "$a": {"property": "identifierValue"},
       "TODO": "identifierScheme from ind2?"
@@ -105,14 +105,14 @@
     },
 
     "040": {
-      "entity": "Record",
+      "domainEntity": "Record",
       "$a": {"link": "originalCatalogingAgency", "rangeEntity": "Organization", "property": "name"},
       "$b": {"property": "language"},
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
-      "$d": {"property": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
+      "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
       "$e": {"property": "descriptionRules"}
     },
-    "041": {"$a": {"defaultFrom": ["240.a"]}},
+    "TODO:041": {"$a": {"defaultFrom": ["240.a"]}},
     "042": {
       "entity": "Record",
       "$a": {"property": "authenticationCode"},
@@ -163,6 +163,10 @@
       "$d": {"property": "lifeSpan", "split": "-", "properties": ["birthYear", "deathYear"], "required": true}
     },
     "110": {
+      "domainEntity": "Work",
+      "rangeEntity": "Organization",
+      "link": "creator",
+      "$a": {"property": "label"}
     },
     "111": {
     },
@@ -228,10 +232,10 @@
 
     "260": {
       "domainEntity": "Instance",
-      "link": "provider",
-      "partition": [
-        {"codes": ["a", "b", "c"], "link": "publication"},
-        {"codes": ["e", "f", "g"], "link": "manufacture"}
+      "addLink": "provider",
+      "splitLink": [
+        {"codes": ["a", "b", "c"], "addLink": "publication"},
+        {"codes": ["e", "f", "g"], "addLink": "manufacture"}
       ],
       "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
       "rangeEntity": "ProviderEvent",
@@ -273,8 +277,11 @@
     "508": {"$a": {"domainEntity": "Instance", "property": "creditsNote"}},
 
     "511": {
-      "matchInd1": {"1": {"link": "participantNote"}},
-      "link": "performerNote"
+      "$a": {
+        "matchInd1": {"1": {"property": "participantNote"}},
+        "domainEntity": "Instance",
+        "property": "performerNote"
+      }
     },
 
     "520": {"domainEntity": "Instance", "$a": {"property": "summary"}},
@@ -300,7 +307,7 @@
     },
 
     "700": {"inherit": "100", "link": "contributor"},
-    "710": {"inherit": "110"},
+    "710": {"inherit": "110", "link": "contributor"},
     "711": {"inherit": "111"},
 
     "740": {},

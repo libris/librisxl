@@ -155,61 +155,119 @@ class MarcFixedFieldHandler {
     }
 }
 
-class MarcSimpleFieldHandler {
+abstract class BaseMarcFieldHandler {
+
+    abstract boolean convert(marcSource, value, entityMap)
+
+    void addValue(obj, key, value, repeatable) {
+        if (repeatable) {
+            def l = obj[key] ?: []
+            l << value
+            value = l
+        }
+        obj[key] = value
+    }
+
+}
+
+class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     String property
     String domainEntityName
+    boolean repeat = false
     MarcSimpleFieldHandler(fieldDfn) {
-        property = fieldDfn.property
+        if (fieldDfn.addProperty) {
+            property = fieldDfn.addProperty
+            repeat = true
+        } else {
+            property = fieldDfn.property
+        }
         domainEntityName = fieldDfn.domainEntity ?: 'Instance'
     }
     boolean convert(marcSource, value, entityMap) {
         assert property, value
+        // TODO: handle repeatable
         entityMap[domainEntityName][property] = value
         return true
     }
 }
 
-class MarcFieldHandler {
+class MarcFieldHandler extends BaseMarcFieldHandler {
     String ind1
     String ind2
     String domainEntityName
     String link
+    boolean repeatLink = false
     String rangeEntityName
-    String property
-    //Map partitionRules
+    List splitLinkRules
     Map subfields = [:]
     MarcFieldHandler(fieldDfn) {
         ind1 = fieldDfn.i1
         ind2 = fieldDfn.i2
-        domainEntityName = fieldDfn.domainEntityName ?: 'Instance'
-        link = fieldDfn.link
+        domainEntityName = fieldDfn.domainEntity ?: 'Instance'
+        if (fieldDfn.addLink) {
+            link = fieldDfn.addLink
+            repeatLink = true
+        } else {
+            link = fieldDfn.link
+        }
         rangeEntityName = fieldDfn.rangeEntity
-        property = fieldDfn.property
-        //partitionRules = fieldDfn.partition
+        splitLinkRules = fieldDfn.splitLink.collect {
+            [codes: new HashSet(it.codes),
+                link: it.link ?: it.addLink,
+                repeatLink: 'addLink' in it]
+        }
     }
     void addSubfield(code, obj) {
-        // TODO
         subfields[code] = obj
     }
     boolean convert(marcSource, value, entityMap) {
-        // TODO:
-        //def partitions = [:]
         def entity = entityMap[domainEntityName]
         if (!entity) return false
-        if (rangeEntityName) {
-            entity = entity[link] = ["@type": rangeEntityName]
+
+        // TODO: clear unused codeLinkSplits afterwards..
+        def codeLinkSplits = [:]
+        if (splitLinkRules) {
+            assert rangeEntityName
+            splitLinkRules.each { rule ->
+                def newEnt = ["@type": rangeEntityName]
+                addValue(entity, rule.link, newEnt, rule.repeatLink)
+                rule.codes.each {
+                    codeLinkSplits[it] = newEnt
+                }
+            }
+        } else if (rangeEntityName) {
+            def newEnt = ["@type": rangeEntityName]
+            if (repeatLink) {
+                def entList = entity[link]
+                if (entList == null) {
+                    entList = entity[link] = []
+                }
+                entList << newEnt
+            } else {
+                entity[link] = newEnt
+            }
+            entity = newEnt
         }
+
         def unhandled = []
+
         value.subfields.each {
             it.each { code, subVal ->
                 def subDfn = subfields[code]
                 if (subDfn) {
-                    def ent = (subDfn.domainEntity)? entityMap[subDfn.domainEntity] : entity
+                    def ent = (subDfn.domainEntity)?
+                        entityMap[subDfn.domainEntity] : (codeLinkSplits[code] ?: entity)
                     if (subDfn.link) {
                         ent = ent[subDfn.link] = ["@type": subDfn.rangeEntity]
                     }
+                    def property = subDfn.property
+                    def repeat = false
+                    if (subDfn.addProperty) {
+                        property = subDfn.addProperty
+                        repeat = true
+                    }
                     assert subDfn.property
-                    ent[subDfn.property] = subVal
+                    addValue(ent, subDfn.property, subVal, repeat)
                     if (subDfn.defaults) {
                         ent += subDfn.defaults
                     }
@@ -218,6 +276,8 @@ class MarcFieldHandler {
                 }
             }
         }
+
         return unhandled.size() == 0
     }
+
 }
