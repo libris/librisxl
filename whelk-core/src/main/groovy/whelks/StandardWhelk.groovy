@@ -135,7 +135,6 @@ class StandardWhelk implements Whelk {
         return doc
     }
 
-
     @Override
     void reindex() {
         int counter = 0
@@ -196,5 +195,4 @@ class StandardWhelk implements Whelk {
     TreeSet<IndexFormatConverter> getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter } as TreeSet }
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
-
 }

@@ -34,4 +34,9 @@ class ElasticQuery extends Query {
             }
         }
     }
+
+    ElasticQuery withType(String type) {
+        this.indexType = type
+        return this
+    }
 }

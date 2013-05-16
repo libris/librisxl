@@ -33,6 +33,7 @@ class HttpGraphStore extends BasicPlugin implements GraphStore {
 
     public void delete(URI uri, String whelkId) {
     }
+
     public SparqlResult sparql(String query) {
         return null
     }

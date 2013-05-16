@@ -406,6 +406,23 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
     }
 }
 
+
+@Log
+class CompleteExpander extends BasicWhelkAPI {
+    def pathEnd = "_expand"
+    def id = "CompleteExpander"
+
+    void doHandle(Request request, Response response) {
+        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        String url = querymap.get("id")
+        if (url) {
+            def r = whelk.query(new ElasticQuery(url).addField("_id"))
+        } else {
+            response.setEntity('{"error":"Parameter \"id\" is missing."}', MediaType.APPLICATION_JSON)
+        }
+    }
+}
+
 @Log
 class AutoComplete extends BasicWhelkAPI {
 
