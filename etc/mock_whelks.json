@@ -13,7 +13,6 @@
                     "bibmarcconverter",
                     "authmarcconverter",
                     "holdmarcconverter",
-                    "cleanupconverter",
                     "cleanupindexconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
@@ -23,7 +22,8 @@
         },
         {
             "resource":{
-                "_plugins": ["diskstorage", "documentapi", "resourcelist", "marcmap", "search"]
+                "_class" : "se.kb.libris.whelks.ResourceWhelk",
+                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search"]
             }
         }
     ],
