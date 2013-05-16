@@ -58,3 +58,10 @@ task convertJsonLD2Marc(dependsOn: 'classes', type: JavaExec) {
     main = 'se.kb.libris.whelks.plugin.JsonLD2MarcConverter'
     args(System.getProperty('args', "").split() as String[])
 }
+
+task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
+    description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'se.kb.libris.whelks.plugin.MarcFrameConverter'
+    args(System.getProperty('args', "").split() as String[])
+}
