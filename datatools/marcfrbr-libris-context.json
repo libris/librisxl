@@ -1,7 +1,0 @@
-{
-  "@context": {
-    "@vocab": "http://libris.kb.se/def/marcfrbr#",
-    "type": "@type",
-    "id": "@id"
-  }
-}

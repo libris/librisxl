@@ -1,0 +1,81 @@
+{
+  "@context": [{
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "dct": "http://purl.org/dc/terms/",
+    "iana": "http://www.iana.org/assignments/relation/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "bibo": "http://purl.org/ontology/bibo/",
+    "schema": "http://schema.org/",
+    "@vocab": "http://bibframe.org/vocab/",
+    "mf": "http://libris.kb.se/ns/marcframe/"
+  }, {
+    "unknown": null,
+    "marc21": null,
+    "value": "rdf:value",
+    "year": "xsd:gYear",
+    "date": "xsd:date",
+    "dateTime": "xsd:dateTime",
+    "label": "rdfs:label",
+    "comment": "rdfs:comment",
+    "subject": "dct:subject",
+    "publisher": "dct:publisher",
+    "name": "foaf:name",
+    "abbr": "foaf:nick",
+    "givenName": "foaf:givenName",
+    "familyName": "foaf:familyName",
+    "birthYear": {"@id": "schema:birthDate", "@type": "xsd:year"},
+    "deathYear": {"@id": "schema:deathDate", "@type": "xsd:year"}
+  }, {
+    "Record": "foaf:Document",
+    "describedby": "iana:describedby",
+    "controlNumber": "dct:identifier",
+    "creator": "dct:creator",
+    "modified": {"@id": "dct:modified", "@type": "xsd:dateTime"},
+    "about": "foaf:primaryTopic",
+    "bibLevel": "mf:bibLevel",
+    "typeOfRecord": "mf:typeOfRecord",
+    "encLevel": "mf:encLevel",
+    "catForm": "mf:catForm",
+    "localSystemNumber": "mf:localSystemNumber",
+    "status": "mf:status",
+    "code": "mf:code"
+  }, {
+    "Text": "LanguageMaterial",
+    "Book": "bibo:Book",
+    "authorList": {"@id": "bibo:authorList", "@container": "@list"},
+    "pubYear": {"@id": "pubDate", "@type": "xsd:gYear"},
+    "isbnNote": "mf:isbnNote",
+    "availability": "mf:availability",
+    "dimensions": "mf:dimensions",
+    "extent": "mf:extent",
+    "otherPhysicalDetails": "mf:otherPhysicalDetails",
+    "accompanyingMaterial": "mf:accompanyingMaterial",
+    "materialsSpecified": "mf:materialsSpecified"
+  }, {
+    "ProviderEvent": "ProviderEntity"
+  }, {
+    "sequenceNumber": "mf:sequenceNumber",
+    "location": "mf:location",
+    "shelvingLocation": "mf:shelvingLocation",
+    "classificationPart": "mf:classificationPart",
+    "itemPart": "mf:itemPart",
+    "shelvingControlNumber": "mf:shelvingControlNumber",
+    "shelvingFormOrTitle": "mf:shelvingFormOrTitle",
+    "shelvingNonpublicNote": "mf:shelvingNonpublicNote",
+    "shelvingPublicNote": "mf:shelvingPublicNote",
+    "classificationCode": "mf:classificationCode",
+    "classificationCodeSource": "mf:classificationCodeSource",
+    "textualHoldings": "mf:textualHoldings",
+    "subjectPersonName": "mf:subjectPersonName",
+    "subjectTopicalTerm": "mf:subjectTopicalTerm",
+    "subjectGeneralSubdivision": "mf:subjectGeneralSubdivision",
+    "subjectGeographicSubdivision": "mf:subjectGeographicSubdivision",
+    "uncontrolledIndexTerm": "mf:uncontrolledIndexTerm",
+    "indexTermLinkage": "mf:indexTermLinkage",
+    "issueMode": "mf:issueMode",
+    "titlesAndOtherWordsAssociatedWithName": "mf:titlesAndOtherWordsAssociatedWithName",
+    "numeration":"mf:numeration"
+  }]
+}
