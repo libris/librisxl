@@ -38,7 +38,7 @@ class ResourceWhelk extends StandardWhelk {
         super(prefix)
     }
 
-    URI store(Document doc) {
+    URI add(Document doc) {
         doc = sanityCheck(doc)
 
         for (storage in storages) {

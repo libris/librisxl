@@ -66,7 +66,7 @@ class ElasticSearchNode extends ElasticSearch implements Index {
     }
 
     ElasticSearchNode(String dataDir) {
-        log.debug "Creating elastic node"
+        log.info "Starting elastic node"
         def elasticcluster = System.getProperty("elastic.cluster")
         ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
         if (elasticcluster) {
@@ -83,7 +83,7 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         // start it!
         def node = nBuilder.build().start()
         client = node.client()
-        log.debug "Client connected to new ES node"
+        log.info "Client connected to new (local) ES node."
     }
 }
 

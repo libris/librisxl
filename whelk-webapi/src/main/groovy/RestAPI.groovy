@@ -14,6 +14,8 @@ import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
 import se.kb.libris.whelks.persistance.*
 
+import se.kb.libris.utils.isbn.*
+
 import org.codehaus.jackson.map.*
 
 interface RestAPI extends API {
@@ -146,7 +148,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
                         log.trace("Adding link $link to document...")
                         doc = doc.withLink(link)
                     }
-                    identifier = this.whelk.store(doc)
+                    identifier = this.whelk.add(doc)
                     response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
                     response.entity.setTag(new Tag(doc.timestamp as String, false))
                     log.debug("Saved document $identifier")
@@ -243,7 +245,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                         && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
                     response.setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
-                    identifier = this.whelk.store(doc)
+                    identifier = this.whelk.add(doc)
                     //response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
                     response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                     response.setLocationRef(request.getOriginalRef().toString())
@@ -254,7 +256,7 @@ class DocumentRestlet extends BasicWhelkAPI {
         }
         else if (request.method == Method.DELETE) {
             try {
-                whelk.delete(new URI(path))
+                whelk.remove(new URI(path))
                 response.setStatus(Status.SUCCESS_NO_CONTENT)
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.SERVER_ERROR_INTERNAL, wre.message)
@@ -293,7 +295,7 @@ class SearchRestlet extends BasicWhelkAPI {
             log.debug("reqMap: $reqMap")
             def query = new ElasticQuery(reqMap)
             def callback = reqMap.get("callback")
-            def results = this.whelk.query(query)
+            def results = this.whelk.search(query)
             def jsonResult =
                 (callback ? callback + "(" : "") +
                 results.toJson() +
@@ -386,7 +388,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 */
                 //q = addQueryFacets(q)
                 q = expandQuery(q)
-                results = this.whelk.query(q)
+                results = this.whelk.search(q)
                 def jsonResult =
                     (callback ? callback + "(" : "") +
                     results.toJson() +
@@ -406,17 +408,34 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
     }
 }
 
+@Log
+class PresentationFormatter extends BasicWhelkAPI {
+    def pathEnd = "_format"
+    String id = "PresentationFormatter"
+    String description = "Formats data (ISBN-numbers) according to international presention rules."
+    void doHandle(Request request, Response response) {
+        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        String isbnString = querymap.get("isbn")
+        if (isbnString) {
+            String formattedIsbn = IsbnParser.parse(isbnString).toString(true)
+            response.setEntity('{"providedIsbn":"'+isbnString+'","formattedIsbn":"'+formattedIsbn+'"}', MediaType.APPLICATION_JSON)
+        } else {
+            response.setEntity('{"error":"Parameter \"isbn\" is missing."}', MediaType.APPLICATION_JSON)
+        }
+    }
+}
 
 @Log
 class CompleteExpander extends BasicWhelkAPI {
     def pathEnd = "_expand"
-    def id = "CompleteExpander"
+    String id = "CompleteExpander"
+    String description = "Provides useful information about person autorities."
 
     void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
         String url = querymap.get("id")
         if (url) {
-            def r = whelk.query(new ElasticQuery(url).addField("_id"))
+            def r = whelk.search(new ElasticQuery(url).addField("_id"))
         } else {
             response.setEntity('{"error":"Parameter \"id\" is missing."}', MediaType.APPLICATION_JSON)
         }
@@ -449,6 +468,7 @@ class AutoComplete extends BasicWhelkAPI {
     String splitName(String name) {
         def np = []
         for (n in name.split(/[\s-_]/)) {
+            n = n.replaceAll(/\W$+/, "")
             if (n[-1] != ' ' && n[-1] != '*' && n.length() > 1) {
                 np << n+"*"
             } else if (n) {
@@ -482,7 +502,7 @@ class AutoComplete extends BasicWhelkAPI {
             query.addBoost(namePrefixes[0], 10)
             query.indexType = types
 
-            def results = this.whelk.query(query)
+            def results = this.whelk.search(query)
             /*
             def jsonResult = 
                 (callback ? callback + "(" : "") +
@@ -756,7 +776,7 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
 
         if (queryObj) {
             queryObj.indexType = "Indexed:Metadata"
-            results = this.whelk.query(queryObj)
+            results = this.whelk.search(queryObj)
 
             results.hits.each {
                def identifier = it.identifier.toString()

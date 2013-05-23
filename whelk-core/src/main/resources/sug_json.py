@@ -114,7 +114,7 @@ def get_records(f_100, sug_json):
 
         q_all = '((%s) OR (%s)) AND %s' % (q_100, q_700, q_swe)
 
-        response = bibwhelk.query(q_all) 
+        response = bibwhelk.search(q_all) 
         #print "Count: ", response.getNumberOfHits()
         sug_json['records'] = response.getNumberOfHits()
 
@@ -127,7 +127,7 @@ def get_records(f_100, sug_json):
         top_missing = 5 - len(top_3)
         q_all = '(%s) OR (%s)' % (q_100, q_700)
 
-        response = bibwhelk.query(q_all) 
+        response = bibwhelk.search(q_all) 
         #print "Count: ", response.getNumberOfHits()
         sug_json['records'] = response.getNumberOfHits()
         for document in response.hits[:top_missing]:
@@ -233,7 +233,7 @@ if ctype == 'application/json':
             mydoc = suggestwhelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json")
 
             #print "Sparar dokument i whelken daaraa"
-            uri = suggestwhelk.store(mydoc)
+            uri = suggestwhelk.add(mydoc)
 
 if _in_console:
     print r

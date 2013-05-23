@@ -102,7 +102,7 @@ class Listener extends BasicPlugin implements WhelkAware {
             public void run() {
                 log.debug("Pushing ${doc.identifier} to $homewhelk (${homewhelk.prefix})")
                 lastUpdate.set(doc.getTimestamp())
-                homewhelk.store(doc)
+                homewhelk.add(doc)
             }
         })
     }

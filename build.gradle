@@ -1,5 +1,5 @@
 allprojects {
-    version "0.1.2"
+    version "0.2.0"
 
     apply plugin: 'java'
     apply plugin: 'groovy'
@@ -73,6 +73,7 @@ project(":whelk-webapi") {
         compile project(":whelk-extensions")
         compile 'org.restlet.jse:org.restlet:2.0.15'
         compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.15'
+        compile 'se.kb.libris.commons:isbntools:1.0'
         providedCompile 'javax.servlet:servlet-api:2.5'
     }
 }

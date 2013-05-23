@@ -57,7 +57,7 @@ class WhelkOperator {
             if (args.length > 3) { // Reindex a single document
                 println "Reindexing document with identifier $resource"
                 def document = whelk.get(new URI(resource))
-                whelk.store(document)
+                whelk.add(document)
             } else {
                 whelk.reindex()
                 println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
@@ -72,7 +72,7 @@ class WhelkOperator {
             def target = (args.length > 2 ? (new WhelkInitializer(new URI(args[2]).toURL().newInputStream()).getWhelks().find { it.prefix == resource }) : null)
             int count = 0
             def docs = []
-            for (doc in whelk.log()) {
+            for (doc in whelk.loadAll()) {
                 docs << doc
                 count++
                 if (count % 1000 == 0) {
@@ -80,7 +80,7 @@ class WhelkOperator {
                     if (target) {
                         target.store(docs)
                     } else {
-                        whelk.store(docs)
+                        whelk.add(docs)
                     }
                     docs = []
                 }
@@ -90,7 +90,7 @@ class WhelkOperator {
                 if (target) {
                     target.store(docs)
                 } else {
-                    whelk.store(docs)
+                    whelk.add(docs)
                 }
             }
             time = (System.currentTimeMillis() - startTime)/1000
@@ -98,7 +98,7 @@ class WhelkOperator {
         } else if (operation == "benchmark") {
             int count = 0
             def docs = []
-            for (doc in whelk.log()) {
+            for (doc in whelk.loadAll()) {
                 docs << doc
                 count++
                 if (count % 1000 == 0) {

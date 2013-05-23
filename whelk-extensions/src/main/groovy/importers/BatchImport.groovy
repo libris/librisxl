@@ -227,7 +227,7 @@ class Harvester implements Runnable {
                             importedCount.addAndGet(documents.size())
                             float elapsed = ((System.currentTimeMillis() - startTime) / 1000)
                             log.info("Storing " + documents.size() + ". Imported $importedCount documents in $elapsed seconds sofar. That's " + importedCount/elapsed + " docs per sec.")
-                            whelk.bulkStore(documents)
+                            whelk.bulkAdd(documents)
                         }
                     })
             } else log.debug("Harvest on $url resulted in no documents. xmlstring: ${xmlString}")
