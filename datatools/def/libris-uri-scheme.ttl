@@ -24,4 +24,14 @@
 # /resource/bib/
 # /resource/auth/
 # /resource/library/{sigel} # unused
+# /work/1
+
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+</dataset/persons> a void:Dataset;
+    coin:slug "person"^^xsd:anyURI;
+    dct:created "2013-02-11T11:01:00Z"^^xsd:dateTime .
 
