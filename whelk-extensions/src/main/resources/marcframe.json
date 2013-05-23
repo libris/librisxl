@@ -10,11 +10,22 @@
   },
 
   "entityTypeMap": {
-    "bib": {
+    "Authority": {"typeOfRecord": "z", "abstract": true},
+    "Holding": {"typeOfRecord": ["u", "v", "x", "y"]},
+    "Book": {"typeOfRecord": "a", "bibLevel": "m",
+      "instanceTypes": {
+        "Audiobook": {"carrierType": "s"},
+        "CDBook": {"carrierType": "c", "carrierMaterial": "o"},
+        "EBook": {"carrierType": "c", "carrierMaterial": "r"}
+      }
     },
-    "auth": {
+    "Serial": {"typeOfRecord": "a", "bibLevel": "s",
+      "instanceTypes": {
+        "ESerial": {"carrierType": "c", "carrierMaterial": "r"}
+      }
     },
-    "hold": "Holding"
+    "": {"typeOfRecord": "", "bibLevel": "", "abstract": false},
+    "Digital": {"carrierType": "c", "mixin": true}
   },
 
   "bib": {
@@ -48,6 +59,7 @@
     },
 
     "006": {
+      "tokenSyncedWith": "typeOfRecord",
       "repeats": "008"
     },
 
@@ -71,6 +83,9 @@
     "020": {
       "domainEntity": "Instance",
       "addLink": "identifier",
+      "matchDomain": {
+        "EBook": {"addLink": "commonEndeavor"}
+      },
       "rangeEntity": "Identifier",
       "$a": {
         "property": "identifierValue",
@@ -313,6 +328,13 @@
     "740": {},
 
     "883": {}
+  },
+
+  "auth": {
+  },
+
+  "hold": {
+    "entityTypeMap": "Holding"
   }
 
 }

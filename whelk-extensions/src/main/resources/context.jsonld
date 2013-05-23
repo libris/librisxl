@@ -43,6 +43,7 @@
     "code": "mf:code"
   }, {
     "Text": "LanguageMaterial",
+    "Digital": "SoftwareOrMultimedia",
     "Book": "bibo:Book",
     "authorList": {"@id": "bibo:authorList", "@container": "@list"},
     "pubYear": {"@id": "pubDate", "@type": "xsd:gYear"},
