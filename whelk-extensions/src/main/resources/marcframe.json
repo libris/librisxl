@@ -308,12 +308,12 @@
 
     "599": {"$a": {"domainEntity": "Record", "property": "comment"}},
 
-    "600": {"inherit": "100", "link": "subject"},
-    "610": {"inherit": "110", "link": "subject"},
-    "611": {"inherit": "111", "link": "subject"},
+    "600": {"inherit": "100", "addLink": "subject"},
+    "610": {"inherit": "110", "addLink": "subject"},
+    "611": {"inherit": "111", "addLink": "subject"},
     "650": {
       "domain": "Work",
-      "link": "subject",
+      "addLink": "subject",
       "rangeEntity": "Concept",
       "$a": {"property": "prefLabel"},
       "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"}
@@ -330,7 +330,19 @@
 
     "740": {},
 
-    "883": {}
+    "883": {},
+
+    "976": {
+      "domainEntity": "Work",
+      "addLink": "subject",
+      "rangeEntity": "Concept",
+      "TODO": "conceptScheme from ind2?",
+      "$a": {"property": "notation"},
+      "$b": {"property": "prefLabel"}
+      }
+
+    }
+
   },
 
   "auth": {
