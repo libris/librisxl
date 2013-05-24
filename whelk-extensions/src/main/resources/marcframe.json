@@ -34,15 +34,15 @@
     "fields": { },
 
     "000": {
-      "[5:6]": {"id": "status"},
-      "[6:7]": {"id": "typeOfRecord"},
-      "[7:8]": {"id": "bibLevel"},
-      "[8:9]": {"id": "typeOfControl"},
-      "[9:10]": {"id": "characterCoding"},
-      "[17:18]": {"id": "encLevel"},
-      "[18:19]": {"id": "catForm"},
-      "[19:20]": {"id": "linked"},
-      "[20:24]": {"id": "entryMap"}
+      "[5:6]": {"domainEntity": "Record", "property": "status"},
+      "[6:7]": {"domainEntity": "Record", "property": "typeOfRecord"},
+      "[7:8]": {"domainEntity": "Record", "property": "bibLevel"},
+      "[8:9]": {"domainEntity": "Record", "property": "typeOfControl"},
+      "[9:10]": {"domainEntity": "Record", "property": "characterCoding"},
+      "[17:18]": {"domainEntity": "Record", "property": "encLevel"},
+      "[18:19]": {"domainEntity": "Record", "property": "catForm"},
+      "[19:20]": {"domainEntity": "Record", "property": "linked"},
+      "[20:24]": {"domainEntity": "Record", "property": "entryMap"}
     },
 
     "001": {"domainEntity": "Record", "property": "controlNumber"},
@@ -50,6 +50,7 @@
     "005": {"property": "updated", "parse": {"dateTime": "yyyymmddhhmmss"}},
 
     "007": {
+      "[0:0]": {},
       "_Microform": {
       "6-8": {"propId": "reductionExactRightJustifiedWithLeadingZero"}
       },

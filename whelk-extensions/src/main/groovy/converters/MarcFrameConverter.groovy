@@ -44,9 +44,9 @@ class MarcFrame {
     MarcFrame(Map config, Map relators) {
         marcTypeMap = config.marcTypeFromTypeOfRecord.clone()
         this.relators = relators
-        marcConversions["bib"] = new MarcBibConversion(config["bib"])
-        //marcConversions["auth"] = new MarcAuthConversion(config["auth"])
-        //marcConversions["hold"] = new MarcHoldingsConversion(config["hold"])
+        marcConversions["bib"] = new MarcBibConversion(config)
+        //marcConversions["auth"] = new MarcAuthConversion(config)
+        //marcConversions["hold"] = new MarcHoldingsConversion(config)
     }
 
     Map createFrame(marcSource) {
@@ -83,7 +83,7 @@ class BaseMarcConversion {
                     }
                     def start = m[0][1].toInteger()
                     def end = m[0][2].toInteger()
-                    handler.addColumn(obj.id, start, end)
+                    handler.addColumn(obj.domainEntity, obj.property, start, end)
                 } else if ((m = key =~ /^\$(\w+)$/)) {
                     if (handler == null) {
                         handler = new MarcFieldHandler(fieldDfn)
@@ -102,8 +102,10 @@ class BaseMarcConversion {
 
 class MarcBibConversion extends BaseMarcConversion {
 
-    MarcBibConversion(data) {
-        super(data)
+    static FIXED_TAGS = ["000", "006", "007", "008"] as Set
+
+    MarcBibConversion(config) {
+        super(config["bib"])
     }
 
     Map createFrame(marcSource) {
@@ -115,21 +117,36 @@ class MarcBibConversion extends BaseMarcConversion {
             instanceOf: work,
             describedby: record,
         ]
-        def entityMap = [:]
-        [record, instance, work].each {
-            entityMap[it["@type"]] = it
-        }
+        def entityMap = [
+            Record: record,
+            Instance: instance,
+            Work: work
+        ]
+        // TODO: convert fixed and compute type(s)
         fieldHandlers["000"].convert(marcSource, marcSource.leader, entityMap)
-        marcSource.fields.each { row ->
+
+        def otherFields = []
+        marcSource.fields.each { field ->
+            def isFixed = false
+            field.each { tag, value ->
+                isFixed = (tag in FIXED_TAGS)
+                if (isFixed)
+                    fieldHandlers[tag].convert(marcSource, value, entityMap)
+            }
+            if (!isFixed)
+                otherFields << field
+        }
+        otherFields.each { field ->
             def ok = false
-            row.each { tag, value ->
+            field.each { tag, value ->
+                if (tag in FIXED_TAGS) return // handled above
                 def handler = fieldHandlers[tag]
                 if (handler) {
                     ok = handler.convert(marcSource, value, entityMap)
                 }
             }
             if (!ok) {
-                unknown << row
+                unknown << field
             }
         }
         if (unknown) {
@@ -141,17 +158,28 @@ class MarcBibConversion extends BaseMarcConversion {
 
 class MarcFixedFieldHandler {
     def columns = []
-    void addColumn(property, start, end) {
-        columns << new Column(property: property, start: start, end: end)
+    void addColumn(domainEntity, property, start, end) {
+        columns << new Column(domainEntity: domainEntity, property: property, start: start, end: end)
     }
     boolean convert(marcSource, value, entityMap) {
-        // TODO
-        return false
+        columns.each {
+            it.convert(marcSource, value, entityMap)
+        }
+        return true
     }
     class Column {
+        String domainEntity
         String property
         int start
         int end
+        boolean convert(marcSource, value, entityMap) {
+            def token = value.substring(start, end)
+            def entity = entityMap[domainEntity]
+            if (entity == null)
+                return false
+            entity[property] = token
+            return true
+        }
     }
 }
 
