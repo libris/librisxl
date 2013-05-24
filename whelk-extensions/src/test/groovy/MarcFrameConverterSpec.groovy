@@ -52,7 +52,7 @@ class MarcFrameConverterSpec extends Specification {
         def frame = converter.createFrame(marc)
         then:
         frame == [
-            "@type": "Instance",
+            "@type": "Book",
             "title": [
                 "titleValue": "Anteckningar från en ö"
             ],

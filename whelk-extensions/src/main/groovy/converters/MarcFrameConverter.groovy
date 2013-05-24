@@ -110,21 +110,23 @@ class MarcBibConversion extends BaseMarcConversion {
     }
 
     Map createFrame(marcSource) {
-        def record = ["@type": "Record"]
-        def work = ["@type": "Work"]
         def unknown = []
+
+        def record = ["@type": "Record"]
+
+        def entityMap = [Record: record]
+
+        fieldHandlers["000"].convert(marcSource, marcSource.leader, entityMap)
+        // TODO: compute main type(s)
+
+        def work = ["@type": "Work"]
         def instance = [
             "@type": "Instance",
             instanceOf: work,
             describedby: record,
         ]
-        def entityMap = [
-            Record: record,
-            Instance: instance,
-            Work: work
-        ]
-        // TODO: convert fixed and compute type(s)
-        fieldHandlers["000"].convert(marcSource, marcSource.leader, entityMap)
+        entityMap['Instance'] = instance
+        entityMap['Work'] = work
 
         def otherFields = []
         marcSource.fields.each { field ->
@@ -137,6 +139,8 @@ class MarcBibConversion extends BaseMarcConversion {
             if (!isFixed)
                 otherFields << field
         }
+        // TODO: compute specialized type(s)
+
         otherFields.each { field ->
             def ok = false
             field.each { tag, value ->
@@ -240,6 +244,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         } else {
             link = fieldDfn.link
         }
+        // TODO: handle link via subfield! (using relators)
         rangeEntityName = fieldDfn.rangeEntity
         splitLinkRules = fieldDfn.splitLink.collect {
             [codes: new HashSet(it.codes),
