@@ -17,14 +17,15 @@
                     "cleanupconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
-                    "autocomplete" ],
+                    "autocomplete",
+                    "presentationformatter" ],
                 "contentRoot" : "/"
             }
         },
         {
             "resource":{
                 "_class" : "se.kb.libris.whelks.ResourceWhelk",
-                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "presentationformatter"]
+                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search" ]
             }
         }
     ],

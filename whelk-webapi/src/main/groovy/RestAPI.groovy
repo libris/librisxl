@@ -416,9 +416,19 @@ class PresentationFormatter extends BasicWhelkAPI {
     void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
         String isbnString = querymap.get("isbn")
+        boolean checkExists = (querymap.get("check", "false") == "true")
         if (isbnString) {
-            String formattedIsbn = IsbnParser.parse(isbnString).toString(true)
-            response.setEntity('{"providedIsbn":"'+isbnString+'","formattedIsbn":"'+formattedIsbn+'"}', MediaType.APPLICATION_JSON)
+            Isbn isbn = IsbnParser.parse(isbnString)
+            String formattedIsbn = isbn.toString(true)
+            StringBuilder jsonResponse = new StringBuilder("{")
+            jsonResponse << '"providedIsbn":"'+isbnString+'",'
+            jsonResponse << '"formattedIsbn":"'+formattedIsbn+'"'
+            if (checkExists) {
+                def results = whelk.search(new Query(isbn.toString()).addField("about.isbn"))
+                jsonResponse << ',"exists":' + (results.numberOfHits > 0)
+            }
+            jsonResponse << "}"
+            response.setEntity(jsonResponse.toString(), MediaType.APPLICATION_JSON)
         } else {
             response.setEntity('{"error":"Parameter \"isbn\" is missing."}', MediaType.APPLICATION_JSON)
         }
