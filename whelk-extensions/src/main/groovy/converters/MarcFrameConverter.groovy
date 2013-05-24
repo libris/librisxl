@@ -1,5 +1,6 @@
 package se.kb.libris.whelks.plugin
 
+import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 
@@ -227,6 +228,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     boolean repeatLink = false
     String rangeEntityName
     List splitLinkRules
+    Map create
     Map subfields = [:]
     MarcFieldHandler(fieldDfn) {
         ind1 = fieldDfn.i1
@@ -244,6 +246,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 link: it.link ?: it.addLink,
                 repeatLink: 'addLink' in it]
         }
+        create = fieldDfn.create
     }
     void addSubfield(code, obj) {
         subfields[code] = obj
@@ -282,6 +285,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         value.subfields.each {
             it.each { code, subVal ->
                 def subDfn = subfields[code]
+                def handled = false
                 if (subDfn) {
                     def ent = (subDfn.domainEntity)?
                         entityMap[subDfn.domainEntity] : (codeLinkSplits[code] ?: entity)
@@ -294,14 +298,37 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         property = subDfn.addProperty
                         repeat = true
                     }
-                    assert subDfn.property
-                    addValue(ent, subDfn.property, subVal, repeat)
+                    if (subDfn.pattern) {
+                        // TODO: support repeatable?
+                        def pattern = Pattern.compile(subDfn.pattern)
+                        def m = pattern.matcher(subVal)
+                        if (m) {
+                            subDfn.properties.eachWithIndex { prop, i ->
+                                def v = m[0][i + 1]
+                                if (v) ent[prop] = v
+                            }
+                            handled = true
+                        }
+                    }
+                    if (!handled && subDfn.property) {
+                        addValue(ent, subDfn.property, subVal, repeat)
+                        handled = true
+                    }
                     if (subDfn.defaults) {
                         ent += subDfn.defaults
                     }
-                } else {
+                }
+                if (!handled) {
                     unhandled << code
                 }
+            }
+        }
+
+        if (create) {
+            create.each { prop, rule ->
+                def source = rule.source.collect { entity[it] ?: "" } as String[]
+                def v = String.format(rule.format, source)
+                if (v) entity[prop] = v
             }
         }
 

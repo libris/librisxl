@@ -90,6 +90,7 @@
       "rangeEntity": "Identifier",
       "$a": {
         "property": "identifierValue",
+        "pattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?", "properties": ["identifierValue", "identifierNote"],
         "defaults": {
           "identifierScheme": "ISBN"
         }
@@ -175,8 +176,9 @@
         }
       },
       "link": "creator",
-      "$a": {"property": "name", "split": ",", "properties": ["familyName", "givenName"], "required": true},
-      "$d": {"property": "lifeSpan", "split": "-", "properties": ["birthYear", "deathYear"], "required": true}
+      "$a": {"property": "label", "pattern": "([^,]+)(?:,\\s*([^,]+))", "properties": ["familyName", "givenName"], "required": true},
+      "$d": {"property": "lifeSpan", "pattern": "(\\d+)(?:-(\\d+))?", "properties": ["birthYear", "deathYear"], "required": true},
+      "create": {"label": {"format": "%s, %s, %s-%s", "source": ["familyName", "givenName", "birthYear", "deathYear"]}}
     },
     "110": {
       "domainEntity": "Work",
