@@ -60,6 +60,7 @@
     },
 
     "006": {
+      "[0:0]": {},
       "tokenSyncedWith": "typeOfRecord",
       "repeats": "008"
     },
@@ -113,7 +114,7 @@
       "TODO": "identifierScheme from ind2?"
     },
 
-    "034": {"entity": "Cartography"},
+    "034": {"entity": "Cartography", "$_": {}},
 
     "035": {
       "domainEntity": "Record",
@@ -241,7 +242,7 @@
       "$b": {"property": "editionResponsibility"}
     },
 
-    "255": {"TODO": {"specificDomainEntities": ["Cartography"]}},
+    "255": {"TODO": {"specificDomainEntities": ["Cartography"]}, "$_": {}},
 
     "256": {
       "domainEntity": "Instance",
