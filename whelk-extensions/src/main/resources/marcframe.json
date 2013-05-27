@@ -338,6 +338,12 @@
       "$a": {"property": "title"}
     },
 
+    "785": {
+      "addLink": "succeeding",
+      "rangeEntity": "Instance",
+      "$t": {"property": "title"}
+    },
+
     "883": {},
 
     "976": {
