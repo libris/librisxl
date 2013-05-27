@@ -332,7 +332,11 @@
     "710": {"inherit": "110", "addLink": "contributor"},
     "711": {"inherit": "111"},
 
-    "740": {},
+    "740": {
+      "addLink": "relation",
+      "rangeEntity": "Work",
+      "$a": {"property": "title"}
+    },
 
     "883": {},
 

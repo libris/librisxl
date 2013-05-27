@@ -21,6 +21,7 @@
     "comment": "rdfs:comment",
     "subject": "dct:subject",
     "publisher": "dct:publisher",
+    "relation": "dct:relation",
     "name": "foaf:name",
     "abbr": "foaf:nick",
     "givenName": "foaf:givenName",
