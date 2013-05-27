@@ -9,6 +9,10 @@
     "z": "auth"
   },
 
+  "resourceMaps": {
+    "relatorCode": "relatorcodes.json"
+  },
+
   "entityTypeMap": {
     "Authority": {"typeOfRecord": "z", "abstract": true},
     "Holding": {"typeOfRecord": ["u", "v", "x", "y"]},
@@ -174,7 +178,8 @@
           "rangeEntity": "Family"
         }
       },
-      "link": "creator",
+      "addLink": "creator",
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "label", "pattern": "([^,]+)(?:,\\s*([^,]+))", "properties": ["familyName", "givenName"], "required": true},
       "$d": {"property": "lifeSpan", "pattern": "(\\d+)(?:-(\\d+))?", "properties": ["birthYear", "deathYear"], "required": true},
       "create": {"label": {"format": "%s, %s, %s-%s", "source": ["familyName", "givenName", "birthYear", "deathYear"]}}
@@ -297,7 +302,7 @@
       "$a": {
         "matchInd1": {"1": {"property": "participantNote"}},
         "domainEntity": "Instance",
-        "property": "performerNote"
+        "addProperty": "performerNote"
       }
     },
 
@@ -323,8 +328,8 @@
       "$a": {"property": "label"}
     },
 
-    "700": {"inherit": "100", "link": "contributor"},
-    "710": {"inherit": "110", "link": "contributor"},
+    "700": {"inherit": "100", "addLink": "contributor"},
+    "710": {"inherit": "110", "addLink": "contributor"},
     "711": {"inherit": "111"},
 
     "740": {},

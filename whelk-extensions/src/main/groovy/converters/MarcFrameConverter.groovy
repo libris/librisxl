@@ -14,10 +14,13 @@ class MarcFrameConverter {
         def config = loader.getResourceAsStream("marcframe.json").withStream {
             mapper.readValue(it, Map)
         }
-        def relators = loader.getResourceAsStream("relatorcodes.json").withStream {
-            mapper.readValue(it, List).collectEntries { [it.code, it] }
+        def resourceMaps = [:]
+        config.resourceMaps.each { key, sourceRef ->
+            resourceMaps[key] = loader.getResourceAsStream(sourceRef).withStream {
+                mapper.readValue(it, List).collectEntries { [it.code, it] }
+            }
         }
-        conversion = new MarcConversion(config, relators)
+        conversion = new MarcConversion(config, resourceMaps)
     }
 
     Map createFrame(Map marcSource) {
@@ -41,15 +44,13 @@ class MarcConversion {
     Map marcTypeMap = [:]
     def marcHandlers = [:]
     def typeTree = [:]
-    Map relators
+    Map resourceMaps
 
-    MarcConversion(Map config, Map relators) {
+    MarcConversion(Map config, Map resourceMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
-        this.relators = relators
-
+        this.resourceMaps = resourceMaps
         buildTypeTree(config.entityTypeMap)
         buildHandlers(config, 'bib')
-
     }
 
     void buildTypeTree(Map typeMap) {
@@ -119,7 +120,7 @@ class MarcConversion {
                     handler.addColumn(obj.domainEntity, obj.property, start, end)
                 } else if ((m = key =~ /^\$(\w+)$/)) {
                     if (handler == null) {
-                        handler = new MarcFieldHandler(fieldDfn)
+                        handler = new MarcFieldHandler(fieldDfn, resourceMaps)
                     }
                     def code = m[0][1]
                     handler.addSubfield(code, obj)
@@ -255,12 +256,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     String ind2
     String domainEntityName
     String link
+    Map computeLinks
     boolean repeatLink = false
     String rangeEntityName
     List splitLinkRules
     Map create
     Map subfields = [:]
-    MarcFieldHandler(fieldDfn) {
+    Map resourceMaps
+    MarcFieldHandler(fieldDfn, resourceMaps) {
         ind1 = fieldDfn.i1
         ind2 = fieldDfn.i2
         domainEntityName = fieldDfn.domainEntity ?: 'Instance'
@@ -270,14 +273,18 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         } else {
             link = fieldDfn.link
         }
-        // TODO: handle link via subfield! (using relators)
+        computeLinks = fieldDfn.computeLinks?.clone()
+        if (computeLinks) {
+            computeLinks.use = computeLinks.use.replaceFirst(/^\$/, '')
+        }
         rangeEntityName = fieldDfn.rangeEntity
         splitLinkRules = fieldDfn.splitLink.collect {
             [codes: new HashSet(it.codes),
                 link: it.link ?: it.addLink,
                 repeatLink: 'addLink' in it]
         }
-        create = fieldDfn.create
+        create = fieldDfn.create?.clone()
+        this.resourceMaps = resourceMaps
     }
     void addSubfield(code, obj) {
         subfields[code] = obj
@@ -298,15 +305,22 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         } else if (rangeEntityName) {
+            // TODO: mark used subfield as handled
+            def useLinks = Collections.emptyList()
+            if (computeLinks) {
+                def use = computeLinks.use
+                def resourceMap = resourceMaps[computeLinks.mapping]
+                def linkTokens = value.subfields.findAll {
+                    use in it.keySet() }.collect { it.iterator().next().value }
+                useLinks = linkTokens.collect { resourceMap[it]?.term ?: "involved_as_${it}" }
+            }
+            if (!useLinks && link) {
+                useLinks = [link]
+            }
+
             def newEnt = ["@type": rangeEntityName]
-            if (repeatLink) {
-                def entList = entity[link]
-                if (entList == null) {
-                    entList = entity[link] = []
-                }
-                entList << newEnt
-            } else {
-                entity[link] = newEnt
+            useLinks.each {
+                addValue(entity, it, newEnt, repeatLink)
             }
             entity = newEnt
         }
@@ -341,8 +355,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             handled = true
                         }
                     }
-                    if (!handled && subDfn.property) {
-                        addValue(ent, subDfn.property, subVal, repeat)
+                    if (!handled && property) {
+                        addValue(ent, property, subVal, repeat)
                         handled = true
                     }
                     if (subDfn.defaults) {
