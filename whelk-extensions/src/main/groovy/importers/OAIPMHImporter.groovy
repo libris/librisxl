@@ -96,14 +96,14 @@ class OAIPMHImporter {
                 nrImported++
             } else if (it.header.@deleted == 'true') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
-                whelk.delete(new URI(deleteIdentifier))
+                whelk.remove(new URI(deleteIdentifier))
                 nrDeleted++
             } else {
                 throw new WhelkRuntimeException("Failed to handle record: " + createString(it))
             }
         }
         long conversionTime = System.currentTimeMillis()
-        whelk.bulkStore(documents)
+        whelk.bulkAdd(documents)
         int sizeOfBatch = documents.size()
 
         long storageTime = System.currentTimeMillis()

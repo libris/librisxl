@@ -13,17 +13,19 @@
                     "bibmarcconverter",
                     "authmarcconverter",
                     "holdmarcconverter",
-                    "cleanupconverter",
                     "cleanupindexconverter",
+                    "cleanupconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
-                    "autocomplete" ],
+                    "autocomplete",
+                    "presentationformatter" ],
                 "contentRoot" : "/"
             }
         },
         {
             "resource":{
-                "_plugins": ["diskstorage", "documentapi", "resourcelist", "marcmap", "search"]
+                "_class" : "se.kb.libris.whelks.ResourceWhelk",
+                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search" ]
             }
         }
     ],
@@ -44,9 +46,20 @@
             }
         },
         {
+            "presentationformatter": {
+                "_class": "se.kb.libris.whelks.api.PresentationFormatter"
+            }
+        },
+        {
             "localindex": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
                 "_params" : "work/data",
+                "_unique" : false
+            }
+        },
+        {
+            "index": {
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
                 "_unique" : false
             }
         },

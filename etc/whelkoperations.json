@@ -4,7 +4,7 @@
             "libris":{
                 "_class" : "se.kb.libris.whelks.StandardWhelk",
                 "_plugins": [
-                    "localindex",
+                    "index",
                     "diskstorage",
                     "bibmarcconverter",
                     "authmarcconverter",
@@ -21,6 +21,12 @@
             "localindex": {
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
                 "_params" : "work/data",
+                "_unique" : false
+            }
+        },
+        {
+            "index": {
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
                 "_unique" : false
             }
         },

@@ -7,18 +7,17 @@ import se.kb.libris.whelks.plugin.Plugin;
 
 public interface Whelk {
     // storage
-    public URI store(Document d);
-    public void bulkStore(List<Document> d);
+    public URI add(Document d);
+    public void bulkAdd(List<Document> d);
     public Document get(URI identifier);
-    public void delete(URI identifier);
+    public void remove(URI identifier);
 
     // search/lookup
-    //public SearchResult<? extends Document> query(String query);
-    public SearchResult<? extends Document> query(Query query);
+    public SearchResult<? extends Document> search(Query query);
     public Iterable<Document> loadAll();
     public Iterable<Document> loadAll(Date since);
 
-    /* Maybe implement later
+    /* implement later
     public SparqlResult sparql(String query);
     */
 

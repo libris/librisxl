@@ -96,6 +96,9 @@
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
       <level value="trace"/>
   </logger>
+<logger name="se.kb.libris.whelks.api.RestAPI">
+      <level value="debug"/>
+  </logger>
   <!--
 <logger name="se.kb.libris.whelks.api.SearchRestlet">
       <level value="debug"/>

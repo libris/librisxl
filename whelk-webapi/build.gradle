@@ -25,11 +25,6 @@ task jettyRun(dependsOn: 'devLogging', type: JettyRun, overwrite: true) {
     System.setProperty('whelk.config.uri', System.getProperty("whelk.config.uri", mock_config))
     System.setProperty('cassandra.host', System.getProperty('cassandra.host', "localhost"))
     System.setProperty('cassandra.cluster', System.getProperty('cassandra.cluster', mock_c_cluster))
-
-    if (System.getProperty("whelk.config.uri", "") == mock_config) {
-        System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-    } else {
-        System.setProperty('elastic.host', System.getProperty("elastic.host", ""))
-        System.setProperty('elastic.cluster', System.getProperty('elastic.cluster', ""))
-    }
+    System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
+    System.setProperty('elastic.host', System.getProperty("elastic.host", ""))
 }

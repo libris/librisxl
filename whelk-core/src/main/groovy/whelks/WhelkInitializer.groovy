@@ -32,7 +32,9 @@ class WhelkInitializer {
                     }
                 }
                 for (p in meta._plugins) {
-                    whelk.addPlugin(getPlugin(p, wname))
+                    def plugin = getPlugin(p, wname)
+                    log.info("Adding plugin ${plugin.id} to ${whelk.id}")
+                    whelk.addPlugin(plugin)
                 }
                 //log.debug("Initializing the whelk")
                 //whelk.init()

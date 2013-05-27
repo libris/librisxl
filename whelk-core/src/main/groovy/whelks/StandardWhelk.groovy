@@ -24,7 +24,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    URI store(Document doc) {
+    URI add(Document doc) {
         doc = sanityCheck(doc)
 
         for (storage in storages) {
@@ -42,7 +42,7 @@ class StandardWhelk implements Whelk {
      */
     @Override
     @groovy.transform.CompileStatic
-    void bulkStore(List<Document> docs) {
+    void bulkAdd(List<Document> docs) {
         for (storage in storages) {
             for (doc in docs) {
                 storage.store(doc, this.id)
@@ -58,7 +58,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    void delete(URI uri) {
+    void remove(URI uri) {
         components.each {
             try {
                 ((Component)it).delete(uri, this.id)
@@ -69,7 +69,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    SearchResult<? extends Document> query(Query query) {
+    SearchResult<? extends Document> search(Query query) {
         return indexes.get(0)?.query(query, this.id)
     }
 
@@ -116,9 +116,11 @@ class StandardWhelk implements Whelk {
             }
         }
         doc = performStorageFormatConversion(doc)
-        for (lf in linkFinders) {
-            for (link in lf.findLinks(doc)) {
-                doc = doc.withLink(link)
+        if (doc) {
+            for (lf in linkFinders) {
+                for (link in lf.findLinks(doc)) {
+                    doc = doc.withLink(link)
+                }
             }
         }
         return doc
@@ -132,7 +134,6 @@ class StandardWhelk implements Whelk {
         }
         return doc
     }
-
 
     @Override
     void reindex() {
@@ -194,5 +195,4 @@ class StandardWhelk implements Whelk {
     TreeSet<IndexFormatConverter> getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter } as TreeSet }
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
-
 }

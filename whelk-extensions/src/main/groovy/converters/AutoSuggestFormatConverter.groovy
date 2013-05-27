@@ -58,7 +58,7 @@ class AutoSuggestFormatConverter extends BasicIndexFormatConverter implements In
                 /*
                 if (whelk) {
                 def mydoc = whelk.createDocument().withIdentifier(identifier).withData(r).withContentType("application/json");
-                def uri = whelk.store(mydoc)
+                def uri = whelk.add(mydoc)
                 }
                 */
             }
@@ -214,7 +214,7 @@ class AutoSuggestFormatConverter extends BasicIndexFormatConverter implements In
             def q_all = "(($q_100) OR ($q_700)) AND $q_swe"
 
             log.debug("Finding records for author $f_100: $q_all")
-            def response = bibwhelk.query(q_all) 
+            def response = bibwhelk.search(q_all) 
             //print "Count: ", response.getNumberOfHits()
             sug_json["records"] = response.getNumberOfHits()
 
@@ -236,7 +236,7 @@ class AutoSuggestFormatConverter extends BasicIndexFormatConverter implements In
             if (rh < 3) {
                 q_all = "($q_100) OR ($q_700)"
 
-                response = bibwhelk.query(q_all)
+                response = bibwhelk.search(q_all)
                 //print "Count: ", response.getNumberOfHits()
                 sug_json["records"] = response.getNumberOfHits()
                 for (document in response.hits) {

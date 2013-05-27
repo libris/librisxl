@@ -21,7 +21,7 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
         "about.instanceOf.dateOfPublication" : [",", ";"],
         "about.placeOfPublication.name" : [",", ":", ";"],
         "about.publisher+.name" : [",", ":"],
-        "about.placeOfManufacture.name" : [";"],
+        "about.placeOfManufacture.name" : [":", ";"],
         "about.extent" : ["+", ":"],
         "about.physicalDetails" : [";", "+"],
         "about.dimensions" : [";", "+"],
@@ -37,10 +37,10 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
         def title = json.about?.instanceOf?.get("title", null)
         def titleRemainder = json.about?.instanceOf?.get("titleRemainder", null)
         def statementOfResponsibility = json.about?.instanceOf?.get("statementOfResponsibility", null)
-        def publisher = json.about?.get("publisher", null)
-        def placeOfPublication_name = json.about?.placeOfPublication?.get("name", null)
         def dateOfPublication = json.about?.get("dateOfPublication", null)
-        def placeOfManufacture_name = json.about?.placeOfManufacture?.get("name", null)
+        def publisher = json.about?.get("publisher", null)
+        def placeOfPublication = json.about?.get("placeOfPublication", null)
+        def placeOfManufacture = json.about?.get("placeOfManufacture", null)
         def extent = json.about?.get("extent", null)
         def physicalDetails = json.about?.get("physicalDetails", null)
         def dimensions = json.about?.get("dimensions", null)
@@ -77,20 +77,60 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
                }
            }
         }
-        if (dateOfPublication && dateOfPublication.size() > 1 && (dateOfPublication[-1].equals(";") || dateOfPublication[-1].equals(","))) {
-            json["about"]["dateOfPublication"] = dateOfPublication[0..-2].trim()
-        }
-        if (placeOfPublication_name && placeOfPublication_name.size() > 1) {
-            if ((publisher && placeOfPublication_name[-1].equals(":")) || placeOfPublication_name[-1].equals(",") || placeOfPublication_name[-1].equals(";")) {
-                json["about"]["placeOfPublication"]["name"] = placeOfPublication_name[0..-2].trim()
+        if (dateOfPublication && dateOfPublication instanceof List) {
+            dateOfPublication.eachWithIndex() { it, ind ->
+                if (it && it.size() > 1 && (it[-1].equals(";") || it[-1].equals(","))) {
+                    json["about"]["dateOfPublication"][ind] = it[0..-2].trim()
+                }
+            }
+        } else {
+            if (dateOfPublication && dateOfPublication.size() > 1 && (dateOfPublication[-1].equals(";") || dateOfPublication[-1].equals(","))) {
+                json["about"]["dateOfPublication"] = dateOfPublication[0..-2].trim()
             }
         }
-        if (placeOfManufacture_name) {
-            if (placeOfManufacture_name[-1].equals(";")) {
-                json["about"]["placeOfManufacture"]["name"] = placeOfManufacture_name[0..-2].trim().replaceAll("[()]","")
-             } else {
-                 json["about"]["placeOfManufacture"]["name"] = placeOfManufacture_name.replaceAll("[()]","")
-             }
+        if (placeOfPublication) {
+            def place_name
+            if (placeOfPublication instanceof List) {
+                placeOfPublication.eachWithIndex() { pl, i ->
+                    place_name = pl.get("name", null)
+                    if (place_name && place_name.size() > 1) {
+                        if ((publisher && place_name[-1].equals(":")) || place_name[-1].equals(",") || place_name[-1].equals(";")) {
+                            json["about"]["placeOfPublication"][i]["name"] = place_name[0..-2].trim()
+                        }
+                    }
+                }
+            } else {
+                place_name = placeOfPublication.get("name", null)
+                if (place_name && place_name.size() > 1) {
+                    if ((publisher && place_name[-1].equals(":")) || place_name[-1].equals(",") || place_name[-1].equals(";")) {
+                        json["about"]["placeOfPublication"]["name"] = place_name[0..-2].trim()
+                    }
+                }
+            }
+
+        }
+        if (placeOfManufacture) {
+            def manu_name
+            if (placeOfManufacture instanceof List) {
+                placeOfManufacture.eachWithIndex() { it, i ->
+                    manu_name = it.get("name", null)
+                    if (manu_name) {
+                        if (manu_name[-1].equals(";") || manu_name[-1].equals(":")) {
+                            json["about"]["placeOfManufacture"]["name"] = manu_name[0..-2].trim().replaceAll("[()]","")
+                        } else {
+                            json["about"]["placeOfManufacture"][i]["name"] = manu_name.replaceAll("[()]","")
+                        }
+                    }
+                }
+            }
+            manu_name = placeOfManufacture.get("name", null)
+            if (manu_name) {
+                if (manu_name[-1].equals(";") || manu_name[-1].equals(":")) {
+                    json["about"]["placeOfManufacture"]["name"] = manu_name[0..-2].trim().replaceAll("[()]","")
+                 } else {
+                     json["about"]["placeOfManufacture"]["name"] = manu_name.replaceAll("[()]","")
+                 }
+            }
         }
         if (publisher && publisher instanceof List) {
             publisher.eachWithIndex() { it, i ->

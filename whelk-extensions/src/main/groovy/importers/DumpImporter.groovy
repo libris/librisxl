@@ -70,7 +70,7 @@ class DumpImporter {
             if (doc) {
                 documents << doc
                 if (++nrImported % BATCH_SIZE == 0) {
-                    this.whelk.bulkStore(documents)
+                    this.whelk.bulkAdd(documents)
                     documents = []
                     //def td = TimeCategory.minus(new Date(), loadStartTime)
                     //log.debug("$nrImported documents stored. Lap time is $td")
@@ -82,7 +82,7 @@ class DumpImporter {
 
         // Handle remainder
         if (documents.size() > 0) {
-            whelk.bulkStore(documents)
+            whelk.bulkAdd(documents)
         }
 
         return nrImported

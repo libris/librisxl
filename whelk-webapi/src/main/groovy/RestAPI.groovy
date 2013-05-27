@@ -14,6 +14,8 @@ import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
 import se.kb.libris.whelks.persistance.*
 
+import se.kb.libris.utils.isbn.*
+
 import org.codehaus.jackson.map.*
 
 interface RestAPI extends API {
@@ -129,32 +131,33 @@ class RootRouteRestlet extends BasicWhelkAPI {
             def uri = new URI(discoveryAPI.path)
             log.info "RootRoute API handling route to ${uri} ..."
             discoveryAPI.handle(request, response)
-        } else if (request.method == Method.PUT) {
+       } else if (request.method == Method.PUT || request.method == Method.POST) {
             documentAPI = new DocumentRestlet(this.whelk)
-            documentAPI.handle(request, response)
-        } else if (request.method == Method.POST) {
-            documentAPI = new DocumentRestlet(this.whelk)
-            try {
-                def identifier
-                Document doc = null
-                def headers = request.attributes.get("org.restlet.http.headers")
-                log.trace("headers: $headers")
-                log.debug("request: $request")
-                def link = headers.find { it.name.equals("link") }?.value
-                doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString()])
-                if (link != null) {
-                    log.trace("Adding link $link to document...")
-                    doc = doc.withLink(link)
+            if (request.attributes?.get("identifier") != null) {
+                documentAPI.handle(request, response)
+            } else {
+                try {
+                    def identifier
+                    Document doc = null
+                    def headers = request.attributes.get("org.restlet.http.headers")
+                    log.trace("headers: $headers")
+                    log.debug("request: $request")
+                    def link = headers.find { it.name.equals("link") }?.value
+                    doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString()])
+                    if (link != null) {
+                        log.trace("Adding link $link to document...")
+                        doc = doc.withLink(link)
+                    }
+                    identifier = this.whelk.add(doc)
+                    response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
+                    response.entity.setTag(new Tag(doc.timestamp as String, false))
+                    log.debug("Saved document $identifier")
+                    response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
+                    log.info("Redirecting with location ref " + request.getRootRef().toString() + identifier)
+                    response.setLocationRef(request.getRootRef().toString() + "${identifier}")
+                } catch (WhelkRuntimeException wre) {
+                    response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
                 }
-                identifier = this.whelk.store(doc)
-                response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
-                response.entity.setTag(new Tag(doc.timestamp as String, false))
-                log.debug("Saved document $identifier")
-                response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                log.info("Redirecting with location ref " + request.getRootRef().toString() + identifier)
-                response.setLocationRef(request.getRootRef().toString() + "${identifier}")
-            } catch (WhelkRuntimeException wre) {
-                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
             }
         }
     }
@@ -242,7 +245,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                         && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
                     response.setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
-                    identifier = this.whelk.store(doc)
+                    identifier = this.whelk.add(doc)
                     //response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
                     response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                     response.setLocationRef(request.getOriginalRef().toString())
@@ -253,7 +256,7 @@ class DocumentRestlet extends BasicWhelkAPI {
         }
         else if (request.method == Method.DELETE) {
             try {
-                whelk.delete(new URI(path))
+                whelk.remove(new URI(path))
                 response.setStatus(Status.SUCCESS_NO_CONTENT)
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.SERVER_ERROR_INTERNAL, wre.message)
@@ -292,7 +295,7 @@ class SearchRestlet extends BasicWhelkAPI {
             log.debug("reqMap: $reqMap")
             def query = new ElasticQuery(reqMap)
             def callback = reqMap.get("callback")
-            def results = this.whelk.query(query)
+            def results = this.whelk.search(query)
             def jsonResult =
                 (callback ? callback + "(" : "") +
                 results.toJson() +
@@ -377,7 +380,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             def callback = reqMap.get("callback")
             if (q) {
                 q.addFacet("about.@type")
-                q.addScriptFieldFacet("about.dateOfPublication")
+                //q.addScriptFieldFacet("about.dateOfPublication")
                 //q.addFacet("about.dateOfPublication")
                 /*
                 q.addFacet("typeOfRecord")
@@ -385,7 +388,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 */
                 //q = addQueryFacets(q)
                 q = expandQuery(q)
-                results = this.whelk.query(q)
+                results = this.whelk.search(q)
                 def jsonResult =
                     (callback ? callback + "(" : "") +
                     results.toJson() +
@@ -401,6 +404,50 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             def headers = request.attributes.get("org.restlet.http.headers")
             def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value ?: request.clientInfo.address
             log.info("Query [" + q?.query + "] completed for $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds and resulted in " + results?.numberOfHits + " hits.")
+        }
+    }
+}
+
+@Log
+class PresentationFormatter extends BasicWhelkAPI {
+    def pathEnd = "_format"
+    String id = "PresentationFormatter"
+    String description = "Formats data (ISBN-numbers) according to international presention rules."
+    void doHandle(Request request, Response response) {
+        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        String isbnString = querymap.get("isbn")
+        boolean checkExists = (querymap.get("check", "false") == "true")
+        if (isbnString) {
+            Isbn isbn = IsbnParser.parse(isbnString)
+            String formattedIsbn = isbn.toString(true)
+            StringBuilder jsonResponse = new StringBuilder("{")
+            jsonResponse << '"providedIsbn":"'+isbnString+'",'
+            jsonResponse << '"formattedIsbn":"'+formattedIsbn+'"'
+            if (checkExists) {
+                def results = whelk.search(new Query(isbn.toString()).addField("about.isbn"))
+                jsonResponse << ',"exists":' + (results.numberOfHits > 0)
+            }
+            jsonResponse << "}"
+            response.setEntity(jsonResponse.toString(), MediaType.APPLICATION_JSON)
+        } else {
+            response.setEntity('{"error":"Parameter \"isbn\" is missing."}', MediaType.APPLICATION_JSON)
+        }
+    }
+}
+
+@Log
+class CompleteExpander extends BasicWhelkAPI {
+    def pathEnd = "_expand"
+    String id = "CompleteExpander"
+    String description = "Provides useful information about person autorities."
+
+    void doHandle(Request request, Response response) {
+        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        String url = querymap.get("id")
+        if (url) {
+            def r = whelk.search(new ElasticQuery(url).addField("_id"))
+        } else {
+            response.setEntity('{"error":"Parameter \"id\" is missing."}', MediaType.APPLICATION_JSON)
         }
     }
 }
@@ -431,6 +478,7 @@ class AutoComplete extends BasicWhelkAPI {
     String splitName(String name) {
         def np = []
         for (n in name.split(/[\s-_]/)) {
+            n = n.replaceAll(/\W$+/, "")
             if (n[-1] != ' ' && n[-1] != '*' && n.length() > 1) {
                 np << n+"*"
             } else if (n) {
@@ -464,7 +512,7 @@ class AutoComplete extends BasicWhelkAPI {
             query.addBoost(namePrefixes[0], 10)
             query.indexType = types
 
-            def results = this.whelk.query(query)
+            def results = this.whelk.search(query)
             /*
             def jsonResult = 
                 (callback ? callback + "(" : "") +
@@ -639,8 +687,6 @@ class ResourceListRestlet extends BasicWhelkAPI {
         }
     }
 
-    //TODO:implement get and post/put to storage alt. documentrestlet
-
     def loadCodes(String typeOfCode) {
         try {
             return this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode)).withStream {
@@ -667,6 +713,16 @@ class ResourceListRestlet extends BasicWhelkAPI {
         }
     }
 }
+
+/*@Log
+class TemplateRestlet extends BasicWhelkAPI {
+    def pathEnd = "_template"
+
+    String description = "API for templates."
+    String id = "TemplateAPI"
+
+    String templateDir =
+}*/
 
 @Log
 class MarcMapRestlet extends BasicWhelkAPI {
@@ -730,7 +786,7 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
 
         if (queryObj) {
             queryObj.indexType = "Indexed:Metadata"
-            results = this.whelk.query(queryObj)
+            results = this.whelk.search(queryObj)
 
             results.hits.each {
                def identifier = it.identifier.toString()
