@@ -78,8 +78,11 @@ class MarcConversion {
     }
 
     void computeTypes(Map entityMap) {
+        // TODO: remove fixed field remnants once they're subsumed into type?
         def record = entityMap.Record
         def recTypeTree = typeTree[record.typeOfRecord]
+        if (!recTypeTree)
+            return // missing concrete type mapping
         def workTree = recTypeTree[record.bibLevel] ?: recTypeTree['*']
         def workType = workTree.type
         def instanceType = workType // TODO: is this logically sound?
