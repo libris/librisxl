@@ -29,8 +29,8 @@ public interface Document {
     public Date getTimestampAsDate();
     public Document updateTimestamp();
 
-    //public void setData(byte data[]);
-    //public void setData(InputStream data);
+    public Document tag(URI type, String value);
+    public void untag(URI type, String value);
 
     public Document withIdentifier(String uri);
     public Document withIdentifier(URI uri);
@@ -39,14 +39,11 @@ public interface Document {
     public Document withSize(long size);
     public Document withContentType(String contentType);
 
-    public String toJson();
-
-    public Document tag(URI type, String value);
-    public void untag(URI type, String value);
-
     public Document withLink(Link link);
     public Document withLink(String identifier);
     public Document withLink(URI identifier);
     public Document withLink(String identifier, String type);
     public Document withLink(URI identifier, String type);
+
+    public String toJson();
 }

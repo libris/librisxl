@@ -8,25 +8,6 @@
   </appender>
 
   <!--
-  <appender name="FILE-API" class="ch.qos.logback.core.FileAppender">
-      <file>${catalina.base}/logs/whelk.log</file>
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-  </appender>
-  <appender name="FILE-TECH" class="ch.qos.logback.core.FileAppender">
-    <file>${catalina.base}/logs/whelk-tech.log</file>
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-  </appender>
-  <appender name="FILE-QUERY" class="ch.qos.logback.core.FileAppender">
-    <file>${catalina.base}/logs/whelk-query.log</file>
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-  </appender>
-
   <logger name="org.elasticsearch">
       <level value="warn"/>
   </logger>
@@ -97,6 +78,9 @@
       <level value="trace"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.RestAPI">
+      <level value="debug"/>
+  </logger>
+<logger name="se.kb.libris.whelks.api.ISXNTool">
       <level value="debug"/>
   </logger>
   <!--

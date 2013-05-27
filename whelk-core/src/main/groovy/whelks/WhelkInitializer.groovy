@@ -52,7 +52,7 @@ class WhelkInitializer {
                 if (param == "_whelkname") {
                     plist << whelkname
                 } else if (param.startsWith("_whelk:")) {
-                    plist << whelklist.find { it.prefix == params.split(":")[1] }
+                    plist << whelklist.find { it.id == params.split(":")[1] }
                 } else {
                     plist << param
                 }

@@ -17,15 +17,15 @@
                     "cleanupconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
-                    "autocomplete",
-                    "presentationformatter" ],
+                    "autocomplete"
+                    ],
                 "contentRoot" : "/"
             }
         },
         {
             "resource":{
                 "_class" : "se.kb.libris.whelks.ResourceWhelk",
-                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search" ]
+                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool" ]
             }
         }
     ],
@@ -46,8 +46,9 @@
             }
         },
         {
-            "presentationformatter": {
-                "_class": "se.kb.libris.whelks.api.PresentationFormatter"
+            "isxntool": {
+                "_class": "se.kb.libris.whelks.api.ISXNTool",
+                "_params" : "_whelk:libris"
             }
         },
         {
@@ -96,7 +97,7 @@
         {
             "authmarcconverter" : {
                 "_class" : "se.kb.libris.whelks.plugin.MarcAuth2JsonLDConverter",
-                "_params" : "auth"
+                "_params" : "libris"
             }
         },
         {
@@ -153,19 +154,19 @@
         {
             "suggestformatconverter" : {
                 "_class" : "se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter",
-                "_params" : "_whelk:bib"
+                "_params" : "_whelk:libris"
             }
         }, 
         {
             "biblistener" : {
                 "_class" : "se.kb.libris.whelks.plugin.Listener",
-                "_params" : "_whelk:bib"
+                "_params" : "_whelk:libris"
             }
         },
         {
             "authlistener" : {
                 "_class" : "se.kb.libris.whelks.plugin.Listener",
-                "_params" : "_whelk:auth"
+                "_params" : "_whelk:libris"
             }
         },
         {
