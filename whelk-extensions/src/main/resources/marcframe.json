@@ -30,9 +30,6 @@
 
   "bib": {
 
-    "fixed": { },
-    "fields": { },
-
     "000": {
       "[5:6]": {"domainEntity": "Record", "property": "status"},
       "[6:7]": {"domainEntity": "Record", "property": "typeOfRecord"},
@@ -50,7 +47,8 @@
     "005": {"property": "updated", "parse": {"dateTime": "yyyymmddhhmmss"}},
 
     "007": {
-      "[0:0]": {},
+      "[0:1]": {"domainEntity": "Record", "property": "carrierType"},
+      "[1:2]": {"domainEntity": "Record", "property": "carrierMaterial"},
       "_Microform": {
       "6-8": {"propId": "reductionExactRightJustifiedWithLeadingZero"}
       },

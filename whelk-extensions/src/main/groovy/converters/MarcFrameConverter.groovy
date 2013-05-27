@@ -6,7 +6,7 @@ import org.codehaus.jackson.map.ObjectMapper
 
 class MarcFrameConverter {
 
-    MarcFrame mf
+    MarcConversion conversion
     def mapper = new ObjectMapper()
 
     MarcFrameConverter() {
@@ -17,15 +17,11 @@ class MarcFrameConverter {
         def relators = loader.getResourceAsStream("relatorcodes.json").withStream {
             mapper.readValue(it, List).collectEntries { [it.code, it] }
         }
-        mf = new MarcFrame(config, relators)
+        conversion = new MarcConversion(config, relators)
     }
 
     Map createFrame(Map marcSource) {
-        return mf.createFrame(marcSource)
-    }
-
-    String getMarcType(Map marcSource) {
-        return mf.getMarcType(marcSource)
+        return conversion.createFrame(marcSource)
     }
 
     public static void main(String[] args) {
@@ -38,41 +34,77 @@ class MarcFrameConverter {
 }
 
 
-class MarcFrame {
+class MarcConversion {
+
+    static FIXED_TAGS = ["000", "006", "007", "008"] as Set
+
     Map marcTypeMap = [:]
-    Map marcConversions = [:]
+    def marcHandlers = [:]
+    def typeTree = [:]
     Map relators
-    MarcFrame(Map config, Map relators) {
-        marcTypeMap = config.marcTypeFromTypeOfRecord.clone()
+
+    MarcConversion(Map config, Map relators) {
+        marcTypeMap = config.marcTypeFromTypeOfRecord
         this.relators = relators
-        marcConversions["bib"] = new MarcBibConversion(config)
-        //marcConversions["auth"] = new MarcAuthConversion(config)
-        //marcConversions["hold"] = new MarcHoldingsConversion(config)
+
+        buildTypeTree(config.entityTypeMap)
+        buildHandlers(config, 'bib')
+
     }
 
-    Map createFrame(marcSource) {
-        def marcType = getMarcType(marcSource)
-        return marcConversions[marcType].createFrame(marcSource)
+    void buildTypeTree(Map typeMap) {
+        typeMap.each { type, rule ->
+            if (!rule.typeOfRecord) return
+            def recTypeTree = typeTree.get(rule.typeOfRecord, [:])
+            def workTree = null
+            if (rule.bibLevel) {
+                workTree = recTypeTree[rule.bibLevel] = [type: type]
+            } else {
+                workTree = recTypeTree['*'] = [type: type]
+            }
+            if (rule.instanceTypes) {
+                def instanceTree = workTree.instanceTree = [:]
+                rule.instanceTypes.each { itype, irule ->
+                    def carrierTree = instanceTree.get(irule.carrierType, [:])
+                    if (irule.carrierMaterial) {
+                        carrierTree[irule.carrierMaterial] = itype
+                    } else {
+                        recTypeTree['*'] = itype
+                    }
+                }
+            }
+        }
     }
 
-    String getMarcType(marcSource) {
+    void computeTypes(Map entityMap) {
+        def record = entityMap.Record
+        def recTypeTree = typeTree[record.typeOfRecord]
+        def workTree = recTypeTree[record.bibLevel] ?: recTypeTree['*']
+        def workType = workTree.type
+        def instanceType = workType // TODO: is this logically sound?
+        if (workTree.instanceTree) {
+            def carrierTree = workTree.instanceTree[record.carrierType]
+            if (carrierTree)
+                instanceType = carrierTree[record.carrierMaterial] ?: carrierTree['*']
+        }
+        entityMap.Work['@type'] = [entityMap.Work['@type'], workType]
+        if (instanceType)
+            entityMap.Instance['@type'] = [entityMap.Instance['@type'], instanceType]
+    }
+
+    String getMarcCategory(marcSource) {
         def typeOfRecord = marcSource.leader.substring(6, 7)
         return marcTypeMap[typeOfRecord] ?: marcTypeMap['*']
     }
 
-}
-
-class BaseMarcConversion {
-
-    def fieldHandlers = [:]
-    //def entityHandlers = [:]
-
-    BaseMarcConversion(data) {
-        data.each { tag, fieldDfn ->
+    void buildHandlers(config, marcCategory) {
+        def fieldHandlers = marcHandlers[marcCategory] = [:]
+        def subConf = config[marcCategory]
+        subConf.each { tag, fieldDfn ->
             def handler = null
             def m = null
             if (fieldDfn.inherit) {
-                fieldDfn = data[fieldDfn.inherit] + fieldDfn
+                fieldDfn = subConf[fieldDfn.inherit] + fieldDfn
             }
             if (fieldDfn.ignored || fieldDfn.size() == 0) {
                 return
@@ -99,15 +131,6 @@ class BaseMarcConversion {
             fieldHandlers[tag] = handler
         }
     }
-}
-
-class MarcBibConversion extends BaseMarcConversion {
-
-    static FIXED_TAGS = ["000", "006", "007", "008"] as Set
-
-    MarcBibConversion(config) {
-        super(config["bib"])
-    }
 
     Map createFrame(marcSource) {
         def unknown = []
@@ -116,8 +139,9 @@ class MarcBibConversion extends BaseMarcConversion {
 
         def entityMap = [Record: record]
 
+        def fieldHandlers = marcHandlers[getMarcCategory(marcSource)]
+
         fieldHandlers["000"].convert(marcSource, marcSource.leader, entityMap)
-        // TODO: compute main type(s)
 
         def work = ["@type": "Work"]
         def instance = [
@@ -139,7 +163,8 @@ class MarcBibConversion extends BaseMarcConversion {
             if (!isFixed)
                 otherFields << field
         }
-        // TODO: compute specialized type(s)
+
+        computeTypes(entityMap)
 
         otherFields.each { field ->
             def ok = false
@@ -159,6 +184,7 @@ class MarcBibConversion extends BaseMarcConversion {
         }
         return instance
     }
+
 }
 
 class MarcFixedFieldHandler {
