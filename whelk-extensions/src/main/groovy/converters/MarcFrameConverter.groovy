@@ -296,13 +296,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def entity = entityMap[domainEntityName]
         if (!entity) return false
 
-        // TODO: clear unused codeLinkSplits afterwards..
         def codeLinkSplits = [:]
+        // TODO: clear unused codeLinkSplits afterwards..
+        def splitLinkDomain = entity
+        def splitLinks = []
         if (splitLinkRules) {
             assert rangeEntityName
             splitLinkRules.each { rule ->
                 def newEnt = ["@type": rangeEntityName]
-                addValue(entity, rule.link, newEnt, rule.repeatLink)
+                splitLinks << [rule: rule, entity: newEnt]
                 rule.codes.each {
                     codeLinkSplits[it] = newEnt
                 }
@@ -369,6 +371,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 if (!handled) {
                     unhandled << code
                 }
+            }
+        }
+
+        splitLinks.each {
+            if (it.entity.find { k, v -> k != "@type" }) {
+                addValue(splitLinkDomain, it.rule.link, it.entity, it.rule.repeatLink)
             }
         }
 
