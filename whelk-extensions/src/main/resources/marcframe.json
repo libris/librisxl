@@ -28,7 +28,19 @@
         "ESerial": {"carrierType": "c", "carrierMaterial": "r"}
       }
     },
-    "": {"typeOfRecord": "", "bibLevel": "", "abstract": false},
+    "Cartography": {"typeOfRecord": "e", "bibLevel": "m",
+      "instanceTypes": {
+        "CDMap": {"carrierType": "c", "carrierMaterial": "o"}
+      }
+    },
+    "Audio": {"typeOfRecord": "i", "abstract": true,
+      "Audiobook": {"bibLevel": "m", "TODO": "not 655a=Talböcker"}
+    },
+    "Music": {"typeOfRecord": "j", "bibLevel": "m",
+      "instanceTypes": {
+        "MusicCD": {"carrierType": "s", "carrierMaterial": "d"}
+      }
+    },
     "Digital": {"carrierType": "c", "mixin": true}
   },
 
@@ -353,8 +365,6 @@
       "TODO": "conceptScheme from ind2?",
       "$a": {"property": "notation"},
       "$b": {"property": "prefLabel"}
-      }
-
     }
 
   },
