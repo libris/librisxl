@@ -17,7 +17,8 @@
                     "cleanupconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
-                    "autocomplete"
+                    "namecomplete",
+                    "subjcomplete"
                     ],
                 "contentRoot" : "/"
             }
@@ -97,7 +98,7 @@
         {
             "authmarcconverter" : {
                 "_class" : "se.kb.libris.whelks.plugin.MarcAuth2JsonLDConverter",
-                "_params" : "libris"
+                "_params" : "auth"
             }
         },
         {
@@ -135,7 +136,7 @@
             }
         },
         {
-            "autocomplete" : {
+            "namecomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : {"queryFields":[
                               "authoritativeName",
@@ -147,7 +148,25 @@
                               "authorOf",
                               "hasAnnotation.about"
                             ],
+                            "sortby": {
+                                "recordPriority" : "desc",
+                                "_score" : "desc",
+                                "familyName" : "asc"
+                            },
                             "indexTypes":"person"
+                            }
+            }
+        },
+        {
+            "subjcomplete" : {
+                "_class" : "se.kb.libris.whelks.api.AutoComplete",
+                "_params" : {"queryFields":[
+                              "label"
+                            ],
+                            "infoFields":[
+                            ],
+                            "indexTypes":"subject",
+                            "pathEnd":"_subject"
                             }
             }
         },

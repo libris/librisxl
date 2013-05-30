@@ -506,6 +506,8 @@ class AutoComplete extends BasicWhelkAPI {
 
     def namePrefixes = []
     def extraInfo = []
+    def sortby = []
+
     String types
     String description = "Search API for autocompletion. Use parameter name or q."
     String id = "AutoComplete"
@@ -520,6 +522,10 @@ class AutoComplete extends BasicWhelkAPI {
         namePrefixes.addAll(lists.get("queryFields"))
         extraInfo.addAll(lists.get("infoFields"))
         types = lists.get("indexTypes")
+        sortby = lists.get("sortby")
+        if (lists["pathEnd"]) {
+            this.pathEnd = lists.get("pathEnd")
+        }
     }
 
     String splitName(String name) {
@@ -548,10 +554,6 @@ class AutoComplete extends BasicWhelkAPI {
             name = splitName(name)
             log.debug("name: $name")
             log.debug("namePrefixes: $namePrefixes")
-            LinkedHashMap sortby = new LinkedHashMap<String,String>()
-            sortby['recordPriority'] = "desc"
-            sortby['_score'] = "desc"
-            sortby['familyName'] = "asc"
             def query = new ElasticQuery(name)
             query.highlights = namePrefixes
             query.sorting = sortby
