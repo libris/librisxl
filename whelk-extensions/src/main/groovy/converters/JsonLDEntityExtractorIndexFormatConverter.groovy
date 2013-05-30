@@ -11,24 +11,36 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
+    def entityLists = ["person": json.about?.instanceOf?.authList, "subject": json.about?.instanceOf?.subjectList]
+    def entityLinks = ["person": "authorOf", "subject": "subject"]
 
     List<Document> doConvert(Document doc) {
         def doclist = [doc]
         def json = mapper.readValue(doc.dataAsString, Map)
-        def authList = json.about?.instanceOf?.authorList
-        if (authList instanceof List) {
-            for (person in authList) {
-                String pident = slugify(person["authorizedAccessPoint"], doc.identifier)
-                person["@id"] = pident
-                person["recordPriority"] = 0
-                doclist << new BasicDocument().withData(mapper.writeValueAsBytes(person)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", person["@type"]).withLink(doc.identifier, "authorOf")
+
+        entityLists.each { k, entities ->
+                    if (entities) {
+                        if (entities instanceof List) {
+                            for (entity in entities) {
+                                String pident = slugify(entity["authorizedAccessPoint"], doc.identifier, k)
+                                entity["@id"] = pident
+                                entity["recordPriority"] = 0
+                                doclist << new BasicDocument().withData(mapper.writeValueAsBytes(entity)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", entity["@type"]).withLink(doc.identifier, entityLinks[(k)])
+                            }
+                        } else if (entities instanceof Map) {
+                            if (entities.get("authorizedAccessPoint", null)) {
+                                String pident = slugify(entities["authorizedAccessPoint"], doc.identifier, k)
+                            }
+                            entities["@id"] = pident
+                            entities["recordPriority"] = 0
+                            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(entities)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", entities["@type"]).withLink(doc.identifier, entityLinks[(k)])
+                        }
+                   }
+          
             }
-        } else if (authList instanceof Map) {
-            String pident = slugify(person["authorizedAccessPoint"], doc.identifier)
-            authList["@id"] = pident
-            authList["recordPriority"] = 0
-            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(authList)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", authList["@type"]).withLink(doc.identifier, "authorOf")
-        }
+
+        //def authList = json.about?.instanceOf?.authorList
+        
         if (json["@type"]) {
             log.debug("Record has a @type. Adding to entity recordtype.")
             json["recordPriority"] = 1
@@ -39,8 +51,8 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
         return doclist
     }
 
-    String slugify(String authAccPoint, URI identifier) {
+    String slugify(String authAccPoint, URI identifier, String entityType) {
         String uritype = identifier.path.split("/")[1]
-        return new String("/" + uritype + "/person/"+URLEncoder.encode(authAccPoint))
+        return new String("/" + uritype + "/" + entityType + "/" + URLEncoder.encode(authAccPoint))
     }
 }
