@@ -11,12 +11,12 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
-    def entityLists = ["person": json.about?.instanceOf?.authList, "subject": json.about?.instanceOf?.subjectList]
-    def entityLinks = ["person": "authorOf", "subject": "subject"]
-
+    
     List<Document> doConvert(Document doc) {
         def doclist = [doc]
         def json = mapper.readValue(doc.dataAsString, Map)
+        def entityLists = ["person": json.about?.instanceOf?.authList, "subject": json.about?.instanceOf?.subjectList]
+        def entityLinks = ["person": "authorOf", "subject": "subject"]
 
         entityLists.each { k, entities ->
                     if (entities) {
@@ -37,7 +37,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                         }
                    }
           
-            }
+         }
 
         //def authList = json.about?.instanceOf?.authorList
         
