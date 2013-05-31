@@ -105,11 +105,11 @@
   </logger>
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
       <level value="debug"/>
-  </logger>
+  </logger>-->
 <logger name="se.kb.libris.whelks.api.RestManager">
       <level value="debug"/>
   </logger>
-<logger name="se.kb.libris.whelks.plugin.BasicFormatConverter">
+<!--<logger name="se.kb.libris.whelks.plugin.BasicFormatConverter">
       <level value="trace"/>
 </logger>
 <logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
