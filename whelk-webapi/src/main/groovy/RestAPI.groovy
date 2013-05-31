@@ -119,7 +119,11 @@ class RootRouteRestlet extends BasicWhelkAPI {
 
     @Override
     String getPath() {
-        return "/" + this.whelk.id + "/"
+        if (this.whelk instanceof HttpWhelk) {
+            return this.whelk.contentRoot
+        } else {
+            return "/" + this.whelk.id + "/"
+        }
     }
 
     @Override
@@ -131,10 +135,9 @@ class RootRouteRestlet extends BasicWhelkAPI {
             def uri = new URI(discoveryAPI.path)
             log.info "RootRoute API handling route to ${uri} ..."
             discoveryAPI.handle(request, response)
-       } else if (request.method == Method.PUT || request.method == Method.POST) {
-            documentAPI = new DocumentRestlet(this.whelk)
+       } else if (request.method == Method.POST) {
             if (request.attributes?.get("identifier") != null) {
-                documentAPI.handle(request, response)
+                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
             } else {
                 try {
                     def identifier
@@ -158,6 +161,13 @@ class RootRouteRestlet extends BasicWhelkAPI {
                 } catch (WhelkRuntimeException wre) {
                     response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
                 }
+            }
+        } else if (request.method == Method.PUT) {
+            documentAPI = new DocumentRestlet(this.whelk)
+            if (request.attributes?.get("identifier") != null) {
+                documentAPI.handle(request, response)
+            } else {
+                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
             }
         }
     }
@@ -417,8 +427,13 @@ class PresentationFormatter extends BasicWhelkAPI {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
         String isbnString = querymap.get("isbn")
         if (isbnString) {
-            String formattedIsbn = IsbnParser.parse(isbnString).toString(true)
-            response.setEntity('{"providedIsbn":"'+isbnString+'","formattedIsbn":"'+formattedIsbn+'"}', MediaType.APPLICATION_JSON)
+            try {
+                String formattedIsbn = IsbnParser.parse(isbnString).toString(true)
+                response.setEntity('{"providedIsbn":"'+isbnString+'","formattedIsbn":"'+formattedIsbn+'"}', MediaType.APPLICATION_JSON)
+            } catch (java.lang.StringIndexOutOfBoundsException iobe) {
+                response.setEntity('{"error":"Parse error due to wrong parameter length."}', MediaType.APPLICATION_JSON)
+            }
+            
         } else {
             response.setEntity('{"error":"Parameter \"isbn\" is missing."}', MediaType.APPLICATION_JSON)
         }
@@ -512,6 +527,8 @@ class AutoComplete extends BasicWhelkAPI {
             def c = new SuggestResultsConverter(results, [namePrefixes[0]], extraInfo)
 
             response.setEntity(c.toJson(), MediaType.APPLICATION_JSON)
+         //else if (String subject = querymap.get("subject")) {
+             //handle subject
         } else {
             response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
         }
