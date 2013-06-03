@@ -263,7 +263,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     boolean repeatLink = false
     String rangeEntityName
     List splitLinkRules
-    Map create
+    Map construct
     Map subfields = [:]
     Map resourceMaps
     MarcFieldHandler(fieldDfn, resourceMaps) {
@@ -286,7 +286,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 link: it.link ?: it.addLink,
                 repeatLink: 'addLink' in it]
         }
-        create = fieldDfn.create?.clone()
+        construct = fieldDfn.construct?.clone()
         this.resourceMaps = resourceMaps
     }
     void addSubfield(code, obj) {
@@ -380,8 +380,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        if (create) {
-            create.each { prop, rule ->
+        if (construct) {
+            construct.each { prop, rule ->
                 def source = rule.source.collect { entity[it] ?: "" } as String[]
                 def v = String.format(rule.format, source)
                 if (v) entity[prop] = v

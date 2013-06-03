@@ -60,7 +60,7 @@
 
     "001": {"domainEntity": "Record", "property": "controlNumber"},
     "003": {"domainEntity": "Record", "property": "systemName"},
-    "005": {"property": "updated", "parse": {"dateTime": "yyyymmddhhmmss"}},
+    "005": {"domainEntity": "Record", "property": "updated", "parseDateTime": "yyyymmddhhmmss"},
 
     "007": {
       "[0:1]": {"domainEntity": "Record", "property": "carrierType"},
@@ -103,6 +103,17 @@
         "EBook": {"addLink": "commonEndeavor"}
       },
       "rangeEntity": "Identifier",
+      "i1": {
+        "property": "identifierScheme",
+        "TODO:valueMap": {
+          "0": "isrc",
+          "1": "upc",
+          "2": "ismn",
+          "3": "ean",
+          "4": "sici",
+          "7": {"valueFrom": "i2"}
+        }
+      },
       "$a": {
         "property": "identifierValue",
         "pattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?", "properties": ["identifierValue", "identifierNote"],
@@ -124,8 +135,7 @@
       "domainEntity": "Instance",
       "addLink": "identifier",
       "rangeEntity": "Identifier",
-      "$a": {"property": "identifierValue"},
-      "TODO": "identifierScheme from ind2?"
+      "$a": {"property": "identifierValue"}
     },
 
     "034": {"entity": "Cartography", "$_": {}},
@@ -176,7 +186,8 @@
       "rangeEntity": "ClassificationEntity",
       "$a": {"property": "classNumber"},
       "$2": {"property": "classScheme"},
-      "$b": {"property": "classItem"}
+      "$b": {"property": "classItem"},
+      "TODO:uriTemplate": "http://libris.kb.se/kos/{classScheme}/{classNumber}"
     },
 
     "100": {
@@ -194,15 +205,20 @@
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "label", "pattern": "([^,]+)(?:,\\s*([^,]+))", "properties": ["familyName", "givenName"], "required": true},
       "$d": {"property": "lifeSpan", "pattern": "(\\d+)(?:-(\\d+))?", "properties": ["birthYear", "deathYear"], "required": true},
-      "create": {"label": {"format": "%s, %s, %s-%s", "source": ["familyName", "givenName", "birthYear", "deathYear"]}}
+      "construct": {"label": {"format": "%s, %s, %s-%s", "source": ["familyName", "givenName", "birthYear", "deathYear"]}}
     },
     "110": {
       "domainEntity": "Work",
       "rangeEntity": "Organization",
-      "link": "creator",
+      "addLink": "creator",
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "label"}
     },
     "111": {
+      "inherit": "110",
+      "rangeEntity": "Meeting",
+      "$c": {"link": "place", "rangeEntity": "Place", "property": "label"},
+      "$d": "date"
     },
 
     "210": {
@@ -273,7 +289,7 @@
       ],
       "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
       "rangeEntity": "ProviderEvent",
-      "i1": {"property": "latest", "valueMap": {"2": false, "3": true}},
+      "i1": {"property": "latest", "TODO:valueMap": {"2": false, "3": true}},
       "$a": {"link": "place", "rangeEntity": "Place", "property": "label"},
       "$b": {"property": "providerName"},
       "$c": {"property": "providerDate"},
