@@ -41,7 +41,7 @@ class RestManager extends Application {
         def rootwhelk
 
         whelks.each {
-            if (it instanceof HttpWhelk && it.contentRoot == "") {
+            if (it instanceof HttpWhelk && (it.contentRoot == "" || it.contentRoot == "/")) {
                 rootwhelk = it
             } else {
                 attachApis(router, it)
