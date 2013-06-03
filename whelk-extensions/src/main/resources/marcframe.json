@@ -60,7 +60,7 @@
 
     "001": {"domainEntity": "Record", "property": "controlNumber"},
     "003": {"domainEntity": "Record", "property": "systemName"},
-    "005": {"domainEntity": "Record", "property": "updated", "parseDateTime": "yyyymmddhhmmss"},
+    "005": {"domainEntity": "Record", "property": "updated", "TODO:parseDateTime": "yyyymmddhhmmss"},
 
     "007": {
       "[0:1]": {"domainEntity": "Record", "property": "carrierType"},
@@ -138,6 +138,25 @@
       "$a": {"property": "identifierValue"}
     },
 
+    "028": {
+      "domainEntity": "Instance",
+      "$a": {
+        "property": "publisher-number",
+        "TODO:match-i1": {
+          "0": {"property": "issue-number"},
+          "1": {"property": "matrix-number"},
+          "2": {"property": "music-plate"},
+          "3": {"property": "music-publisher"},
+          "4": {"property": "videorecording-identifier"},
+          "5": {"property": "publisher-number"}
+        }
+      },
+      "$b": {
+        "link": "identifierAssigner", "rangeEntity": "Organization", "property": "label"
+      },
+      "repeatable": true
+    },
+
     "034": {"entity": "Cartography", "$_": {}},
 
     "035": {
@@ -152,7 +171,8 @@
       "$b": {"property": "language"},
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
       "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
-      "$e": {"property": "descriptionRules"}
+      "$e": {"property": "descriptionRules"},
+      "$f": {"property": "subjectScheme"}
     },
     "TODO:041": {"$a": {"defaultFrom": ["240.a"]}},
     "042": {
@@ -160,7 +180,7 @@
       "$a": {"property": "authenticationCode"},
       "$9": {"property": "bibliographyCode"}
     },
-    "043": {"ignored": true},
+    "043": {"TODO:ignored": true},
 
     "050": {
       "domainEntity": "Work",
@@ -321,6 +341,23 @@
 
     "440": {"prefer": "490"},
 
+    "440": {
+      "domain": "Work",
+      "addLink": "series",
+      "rangeEntity": "Serial",
+      "$a": {"property": "title"},
+      "$0": {"key": "authorityRecordControlNumber"},
+      "$n": {"addProperty": "numberOfPartOfAWork"},
+      "$p": {"addProperty": "nameOfPartOfAWork"},
+      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "$v": {"property": "volumeNumberSequentialDesignation"},
+      "$x": {"property": "issn"}
+    },
+    "490": {
+      "inherit": "440",
+      "$l": {"property": "callno"}
+    },
+
     "500": {"$a": {"domainEntity": "Instance", "property": "note"}},
     "504": {"$a": {"domainEntity": "Instance", "property": "supplementaryContentNote"}},
     "505": {"$a": {"domainEntity": "Instance", "property": "listOfContents"}},
@@ -346,6 +383,7 @@
     "650": {
       "domain": "Work",
       "addLink": "subject",
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
       "$a": {"property": "prefLabel"},
       "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"}
