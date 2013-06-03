@@ -136,9 +136,8 @@ for tag, field in sorted(marcmap['bib'].items()):
             if (code, sid) in [('6', 'linkage'), ('8', 'fieldLinkAndSequenceNumber')]:
                 continue
             subf = outf['$' + code] = OrderedDict()
-            subf['key'] = sid
-            if show_repeatable and 'repeatable' in subfield:
-                subf['repeatable'] = subfield['repeatable']
+            p_key = 'addProperty' if subfield.get('repeatable', False) else 'property'
+            subf[p_key] = sid
         if len(outf.keys()) > 1 and outf == prevf:
             section[tag] = {'inherit': prevtag}
     if show_repeatable and 'repeatable' in field:
