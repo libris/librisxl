@@ -50,7 +50,9 @@ class MarcConversion {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.resourceMaps = resourceMaps
         buildTypeTree(config.entityTypeMap)
-        buildHandlers(config, 'bib')
+        ['bib', 'auth', 'hold'].each {
+            buildHandlers(config, it)
+        }
     }
 
     void buildTypeTree(Map typeMap) {
@@ -108,7 +110,13 @@ class MarcConversion {
             def handler = null
             def m = null
             if (fieldDfn.inherit) {
-                fieldDfn = subConf[fieldDfn.inherit] + fieldDfn
+                def refTag = tag
+                def ref = fieldDfn.inherit
+                if (ref.contains(':')) {
+                    (ref, refTag) = ref.split(':')
+                }
+                def baseDfn =  (ref in subConf)? subConf[ref] : config[ref][refTag]
+                fieldDfn = baseDfn + fieldDfn
             }
             if (fieldDfn.ignored || fieldDfn.size() == 0) {
                 return

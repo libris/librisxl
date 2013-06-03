@@ -424,10 +424,39 @@
   },
 
   "auth": {
+    "000": {"inherit": "bib"},
+    "001" : {"inherit": "bib"},
+    "005": {},
+    "008": {
+      "[0:0]": {}
+    },
+    "035" : {"inherit": "bib"},
+    "040" : {"inherit": "bib"},
+    "042" : {"inherit": "bib"},
+    "046" : {"TODO": "superDate"},
+    "065" : {"inherit": "bib:084", "TODO": "codes-differ"},
+    "082" : {"inherit": "bib"},
+    "083" : {"inherit": "082"},
+    "100" : {"inherit": "bib", "domainEntity": "Person", "rangeEntity": null, "addLink": null},
+    "110" : {"inherit": "bib", "domainEntity": "Organization", "rangeEntity": null, "addLink": null},
+    "111" : {"inherit": "bib", "domainEntity": "Meeting", "rangeEntity": null, "addLink": null},
+    "150" : {"$a": {"addProperty": "term"}},
+    "155" : {"inherit": "150"},
+    "450" : {"$a": {"addProperty": "seeAlso"}},
+    "455" : {"inherit": "450"},
+    "550" : {"$a": {"addProperty": "topicalTerm"}},
+    "555" : {"inherit": "550"},
+    "667" : {},
+    "670" : {},
+    "675" : {},
+    "678" : {},
+    "680" : {},
+    "750" : {},
+    "755" : {},
+    "856" : {}
   },
 
   "hold": {
-    "entityTypeMap": "Holding"
   }
 
 }
