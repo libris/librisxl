@@ -426,7 +426,7 @@
   "auth": {
     "000": {"inherit": "bib"},
     "001" : {"inherit": "bib"},
-    "005": {},
+    "005": {"inherit": "bib"},
     "008": {
       "[0:0]": {}
     },
@@ -457,6 +457,50 @@
   },
 
   "hold": {
+    "000": {"inherit": "bib"},
+    "001" : {"inherit": "bib"},
+    "005": {"inherit": "bib"},
+    "008": {
+      "[0:0]": {}
+    },
+    "014": {},
+    "084": {"inherit": "bib:650"},
+    "600": {"inherit": "bib:100", "addLink": "subject"},
+    "650": {"inherit": "bib:650"},
+    "653": {},
+    "698": {},
+
+    "852": {
+      "addLink": "hasAnnotation",
+      "rangeEntity": "Holding",
+      "$3": {"property": "materialsSpecified"},
+      "$2": {"property": "sourceOfClassificationOrShelvingScheme"},
+      "$8": {"property": "sequenceNumber"},
+      "$a": {"property": "location"},
+      "$c": {"addProperty": "shelvingLocation"},
+      "$b": {"addProperty": "sublocationOrCollection"},
+      "$e": {"addProperty": "address"},
+      "$d": {"addProperty": "formerShelvingLocation"},
+      "$g": {"addProperty": "nonCodedLocationQualifier"},
+      "$f": {"addProperty": "codedLocationQualifier"},
+      "$i": {"addProperty": "itemPart"},
+      "$h": {"property": "classificationPart"},
+      "$k": {"addProperty": "callNumberPrefix"},
+      "$j": {"property": "shelvingControlNumber"},
+      "$m": {"addProperty": "callNumberSuffix"},
+      "$l": {"property": "shelvingFormOfTitle"},
+      "$n": {"property": "countryCode"},
+      "$q": {"property": "piecePhysicalCondition"},
+      "$p": {"property": "pieceDesignation"},
+      "$s": {"addProperty": "copyrightArticleFeeCode"},
+      "$u": {"addProperty": "uniformResourceIdentifier"},
+      "$t": {"property": "copyNumber"},
+      "$x": {"addProperty": "nonpublicNote"},
+      "$z": {"addProperty": "publicNote"}
+    },
+
+    "856": {},
+    "866": {}
   }
 
 }
