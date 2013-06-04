@@ -445,7 +445,12 @@ class ISXNTool extends BasicWhelkAPI {
         isbnString = isbnString.replaceAll(/[^\dxX]/, "")
         def isbnmap = [:]
         isbnmap["provided"] = providedIsbn
-        Isbn isbn = IsbnParser.parse(isbnString)
+        Isbn isbn = null
+        try {
+            isbn = IsbnParser.parse(isbnString)
+        }  catch (se.kb.libris.utils.isbn.IsbnException iobe) {
+            log.debug("Validation of isbn $isbnString failed: wrong length")
+        }
         if (isbn) {
             log.debug("isbnString: $isbnString")
             String formattedIsbn = isbn.toString(true)
