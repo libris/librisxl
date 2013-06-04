@@ -434,15 +434,7 @@ class ISXNTool extends BasicWhelkAPI {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
         String isbnString = querymap.get("isbn")
         if (isbnString) {
-/*
-            try {
-                String formattedIsbn = IsbnParser.parse(isbnString).toString(true)
-                response.setEntity('{"providedIsbn":"'+isbnString+'","formattedIsbn":"'+formattedIsbn+'"}', MediaType.APPLICATION_JSON)
-            } catch (java.lang.StringIndexOutOfBoundsException iobe) {
-                response.setEntity('{"error":"Parse error due to wrong parameter length."}', MediaType.APPLICATION_JSON)
-            }
- */
-            handleIsbn(isbnString, querymap, request, response)
+           handleIsbn(isbnString, querymap, request, response)
         } else {
             response.setEntity('{"error":"No valid parameter found."}', MediaType.APPLICATION_JSON)
         }
