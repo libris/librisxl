@@ -155,11 +155,13 @@ class MarcConversion {
 
         fieldHandlers["000"].convert(marcSource, marcSource.leader, entityMap)
 
+        // TODO:
+        // * always one record and a primary "thing"
+        // * the type of this thing is determined during processing
         def work = ["@type": "Work"]
         def instance = [
             "@type": "Instance",
-            instanceOf: work,
-            describedby: record,
+            describedby: record
         ]
         entityMap['Instance'] = instance
         entityMap['Work'] = work
@@ -193,6 +195,11 @@ class MarcConversion {
         }
         if (unknown) {
             instance.unknown = unknown
+        }
+
+        // TODO: only(?) bib (monographies), and use a config-defined link..
+        if (work.find { k, v -> k != "@type" }) {
+            instance['instanceOf'] = work
         }
         return instance
     }
@@ -263,9 +270,11 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 }
 
 class MarcFieldHandler extends BaseMarcFieldHandler {
+
     String ind1
     String ind2
     String domainEntityName
+    String resetDomainEntityName
     String link
     Map computeLinks
     boolean repeatLink = false
@@ -274,35 +283,53 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map construct
     Map subfields = [:]
     Map resourceMaps
+
     MarcFieldHandler(fieldDfn, resourceMaps) {
         ind1 = fieldDfn.i1
         ind2 = fieldDfn.i2
-        domainEntityName = fieldDfn.domainEntity ?: 'Instance'
-        if (fieldDfn.addLink) {
-            link = fieldDfn.addLink
-            repeatLink = true
+
+        if (fieldDfn.resetDomainEntity) {
+            // implies no links, no range
+            resetDomainEntityName = fieldDfn.resetDomainEntity
+            domainEntityName = 'Instance'
         } else {
-            link = fieldDfn.link
+            domainEntityName = fieldDfn.domainEntity ?: 'Instance'
+            if (fieldDfn.addLink) {
+                link = fieldDfn.addLink
+                repeatLink = true
+            } else {
+                link = fieldDfn.link
+            }
+            rangeEntityName = fieldDfn.rangeEntity
         }
+
         computeLinks = fieldDfn.computeLinks?.clone()
         if (computeLinks) {
             computeLinks.use = computeLinks.use.replaceFirst(/^\$/, '')
         }
-        rangeEntityName = fieldDfn.rangeEntity
         splitLinkRules = fieldDfn.splitLink.collect {
             [codes: new HashSet(it.codes),
                 link: it.link ?: it.addLink,
                 repeatLink: 'addLink' in it]
         }
+
         construct = fieldDfn.construct?.clone()
         this.resourceMaps = resourceMaps
     }
+
     void addSubfield(code, obj) {
         subfields[code] = obj
     }
+
     boolean convert(marcSource, value, entityMap) {
+        // TODO: run matches to specify local rules
+
         def entity = entityMap[domainEntityName]
         if (!entity) return false
+
+        if (resetDomainEntityName) {
+            entity['@type'] = resetDomainEntityName
+        }
 
         def codeLinkSplits = [:]
         // TODO: clear unused codeLinkSplits afterwards..

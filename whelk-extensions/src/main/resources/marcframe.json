@@ -99,7 +99,7 @@
     "020": {
       "domainEntity": "Instance",
       "addLink": "identifier",
-      "matchDomain": {
+      "match-domain": {
         "EBook": {"addLink": "commonEndeavor"}
       },
       "rangeEntity": "Identifier",
@@ -200,7 +200,7 @@
 
     "084": {
       "link": "class",
-      "matchDomain": {
+      "match-domain": {
         "Work": {"link": "class"}, "Holding": {"link": "callno"}
       },
       "rangeEntity": "ClassificationEntity",
@@ -213,7 +213,7 @@
     "100": {
       "domainEntity": "Work",
       "rangeEntity": "Person",
-      "matchInd1": {
+      "match-i1": {
         "1": {
           "$a": {"split": ",", "...": "..."}
         },
@@ -365,7 +365,7 @@
 
     "511": {
       "$a": {
-        "matchInd1": {"1": {"property": "participantNote"}},
+        "match-i1": {"1": {"addProperty": "participantNote"}},
         "domainEntity": "Instance",
         "addProperty": "performerNote"
       }
@@ -416,7 +416,7 @@
       "domainEntity": "Work",
       "addLink": "subject",
       "rangeEntity": "Concept",
-      "TODO": "conceptScheme from ind2?",
+      "i2": {"property": "conceptScheme", "TODO:valueMap": {}},
       "$a": {"property": "notation"},
       "$b": {"property": "prefLabel"}
     }
@@ -433,27 +433,56 @@
     "035" : {"inherit": "bib"},
     "040" : {"inherit": "bib"},
     "042" : {"inherit": "bib"},
-    "046" : {"TODO": "superDate"},
+    "046" : {
+        "TODO": "parseDateUsingFormatHints",
+        "$f": {"property": "birthDate"},
+        "$g": {"property": "deathDate"}
+    },
     "065" : {"inherit": "bib:084", "TODO": "codes-differ"},
     "082" : {"inherit": "bib"},
-    "083" : {"inherit": "082"},
-    "100" : {"inherit": "bib", "domainEntity": "Person", "rangeEntity": null, "addLink": null},
-    "110" : {"inherit": "bib", "domainEntity": "Organization", "rangeEntity": null, "addLink": null},
-    "111" : {"inherit": "bib", "domainEntity": "Meeting", "rangeEntity": null, "addLink": null},
-    "150" : {"$a": {"addProperty": "term"}},
+    "083" : {"inherit": "bib:082"},
+    "100" : {
+      "inherit": "bib",
+      "resetDomainEntity": "Person",
+      "match-code": {
+        "t v x y z": {"resetDomainEntity": "Work"}
+      }
+    },
+    "110" : {"inherit": "bib", "resetDomainEntity": "Organization"},
+    "111" : {"inherit": "bib", "resetDomainEntity": "Meeting"},
+    "150" : {"resetDomainEntity": "Concept", "$a": {"addProperty": "prefLabel"}},
     "155" : {"inherit": "150"},
-    "450" : {"$a": {"addProperty": "seeAlso"}},
+    "400": {"$a": {"addProperty": "altLabel"}},
+    "410" : {"inherit": "400"},
+    "411" : {"inherit": "400"},
+    "450" : {"$a": {"addProperty": "altLabel"}},
     "455" : {"inherit": "450"},
-    "550" : {"$a": {"addProperty": "topicalTerm"}},
+    "500": {"$a": {"addProperty": "altLabel"}},
+    "510" : {"inherit": "500"},
+    "511" : {"inherit": "500"},
+    "550" : {"$a": {"addProperty": "altLabel"}},
     "555" : {"inherit": "550"},
     "667" : {},
     "670" : {},
     "675" : {},
     "678" : {},
     "680" : {},
-    "750" : {},
-    "755" : {},
-    "856" : {}
+    "750" : {
+      "domainEntity": "Concept",
+      "addLink": "closeMatch",
+      "rangeEntity": "Concept",
+      "$a": {"addProperty": "prefLabel"},
+      "$0": {"addProperty": "notation"},
+      "i2": {
+        "property": "conceptScheme",
+        "TODO:valueMap": {
+          "7": "TODO: from $2",
+          "!4": "TODO: from i2 (resourceMap for thesauri)?"
+        }
+      }
+    },
+    "755" : {"inherit": "750"},
+    "856" : {"$u": {"addProperty": "sameAs"}}
   },
 
   "hold": {
