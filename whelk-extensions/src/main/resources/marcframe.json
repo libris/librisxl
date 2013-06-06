@@ -213,7 +213,7 @@
     "100": {
       "domainEntity": "Work",
       "rangeEntity": "Person",
-      "match-i1": {
+      "TODO:match-i1": {
         "1": {
           "$a": {"split": ",", "...": "..."}
         },
@@ -445,8 +445,12 @@
       "inherit": "bib",
       "resetDomainEntity": "Person",
       "match-code": {
-        "t v x y z": {"resetDomainEntity": "Work"}
-      }
+        "t v x y z": {
+          "TODO-asPrimaryEntity": "Work",
+          "resetDomainEntity": null
+        }
+      },
+      "$t": {"domainEntity": "Work", "property": "title"}
     },
     "110" : {"inherit": "bib", "resetDomainEntity": "Organization"},
     "111" : {"inherit": "bib", "resetDomainEntity": "Meeting"},

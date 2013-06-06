@@ -283,6 +283,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map construct
     Map subfields = [:]
     Map resourceMaps
+    List matchRules = []
 
     MarcFieldHandler(fieldDfn, resourceMaps) {
         ind1 = fieldDfn.i1
@@ -315,6 +316,29 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         construct = fieldDfn.construct?.clone()
         this.resourceMaps = resourceMaps
+
+        def matchDomain = fieldDfn['match-domain']
+        if (matchDomain) {
+            matchRules << new DomainMatchRule(fieldDfn, matchDomain, resourceMaps)
+        }
+        def matchI1 = fieldDfn['match-i1']
+        if (matchI1) {
+            matchRules << new IndMatchRule(fieldDfn, matchI1, 'ind1', resourceMaps)
+        }
+        def matchI2 = fieldDfn['match-i2']
+        if (matchI2) {
+            matchRules << new IndMatchRule(fieldDfn, matchI2, 'ind1', resourceMaps)
+        }
+        def matchCode = fieldDfn['match-code']
+        if (matchCode) {
+            matchRules << new CodeMatchRule(fieldDfn, matchCode, resourceMaps)
+        }
+        // TODO: this hardwires subfields; matches could possibly redefine those(?)
+        matchRules.each {
+            it.ruleMap.values().each {
+                it.subfields = this.subfields
+            }
+        }
     }
 
     void addSubfield(code, obj) {
@@ -322,10 +346,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     boolean convert(marcSource, value, entityMap) {
-        // TODO: run matches to specify local rules
 
         def entity = entityMap[domainEntityName]
         if (!entity) return false
+
+        for (rule in matchRules) {
+            def handler = rule.getHandler(entity, value)
+            if (handler) {
+                // TODO: resolve combined config
+                return handler.convert(marcSource, value, entityMap)
+            }
+        }
 
         if (resetDomainEntityName) {
             entity['@type'] = resetDomainEntityName
@@ -426,4 +457,65 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return unhandled.size() == 0
     }
 
+}
+
+abstract class MatchRule {
+    Map ruleMap = [:]
+    MatchRule(fieldDfn, rules, resourceMaps) {
+        rules.each { key, matchDfn ->
+            def comboDfn = fieldDfn + matchDfn
+            ['match-domain', 'match-i1', 'match-i2', 'match-code'].each {
+                comboDfn.remove(it)
+            }
+            ruleMap[key] = new MarcFieldHandler(comboDfn, resourceMaps)
+        }
+    }
+    MarcFieldHandler getHandler(entity, value) {
+        return ruleMap[getKey(entity, value)]
+    }
+    abstract String getKey(entity, value)
+}
+
+class DomainMatchRule extends MatchRule {
+    DomainMatchRule(fieldDfn, rules, resourceMaps) {
+        super(fieldDfn, rules, resourceMaps)
+    }
+    String getKey(entity, value) {
+        def type = entity['@type']
+        if (type instanceof List)
+            return type[-1]
+        return type
+    }
+}
+
+class IndMatchRule extends MatchRule {
+    String indKey
+    IndMatchRule(fieldDfn, rules, indKey, resourceMaps) {
+        super(fieldDfn, rules, resourceMaps)
+        this.indKey = indKey
+    }
+    String getKey(entity, value) {
+        return value[indKey]
+    }
+}
+
+class CodeMatchRule extends MatchRule {
+    CodeMatchRule(fieldDfn, rules, resourceMaps) {
+        super(fieldDfn, parseRules(rules), resourceMaps)
+    }
+    static Map parseRules(Map rules) {
+        def parsed = [:]
+        rules.each { key, map ->
+            key.split().each { parsed[it] = map }
+        }
+        return parsed
+    }
+    String getKey(entity, value) {
+        for (sub in value.subfields) {
+            for (key in sub.keySet()) {
+                if (key in ruleMap)
+                    return key
+            }
+        }
+    }
 }
