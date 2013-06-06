@@ -55,7 +55,7 @@
       "[17:18]": {"domainEntity": "Record", "property": "encLevel"},
       "[18:19]": {"domainEntity": "Record", "property": "catForm"},
       "[19:20]": {"domainEntity": "Record", "property": "linked"},
-      "[20:24]": {"domainEntity": "Record", "property": "entryMap"}
+      "[20:24]": {"domainEntity": "Record", "property": "entryMap", "default": "4500"}
     },
 
     "001": {"domainEntity": "Record", "property": "controlNumber"},
@@ -470,9 +470,9 @@
     "670" : {},
     "675" : {},
     "678" : {},
-    "680" : {},
+    "680" : {"$i": {"addProperty": "note"}},
     "750" : {
-      "domainEntity": "Concept",
+      "TODO:specific domainEntity": "Concept",
       "addLink": "closeMatch",
       "rangeEntity": "Concept",
       "$a": {"addProperty": "prefLabel"},

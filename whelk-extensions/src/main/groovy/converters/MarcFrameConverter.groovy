@@ -128,7 +128,8 @@ class MarcConversion {
                     }
                     def start = m[0][1].toInteger()
                     def end = m[0][2].toInteger()
-                    handler.addColumn(obj.domainEntity, obj.property, start, end)
+                    handler.addColumn(obj.domainEntity, obj.property,
+                            start, end, obj['default'])
                 } else if ((m = key =~ /^\$(\w+)$/)) {
                     if (handler == null) {
                         handler = new MarcFieldHandler(fieldDfn, resourceMaps)
@@ -208,22 +209,29 @@ class MarcConversion {
 
 class MarcFixedFieldHandler {
     def columns = []
-    void addColumn(domainEntity, property, start, end) {
-        columns << new Column(domainEntity: domainEntity, property: property, start: start, end: end)
+    void addColumn(domainEntity, property, start, end, defaultValue=null) {
+        columns << new Column(
+                domainEntity: domainEntity, property: property,
+                start: start, end: end, defaultValue: defaultValue)
     }
     boolean convert(marcSource, value, entityMap) {
+        def success = true
         columns.each {
-            it.convert(marcSource, value, entityMap)
+            if (!it.convert(marcSource, value, entityMap))
+                success = false
         }
-        return true
+        return success
     }
     class Column {
         String domainEntity
         String property
         int start
         int end
+        String defaultValue
         boolean convert(marcSource, value, entityMap) {
             def token = value.substring(start, end)
+            if (token == " " || token == defaultValue)
+                return true
             def entity = entityMap[domainEntity]
             if (entity == null)
                 return false
