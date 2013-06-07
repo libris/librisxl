@@ -514,8 +514,8 @@ class CompleteExpander extends BasicWhelkAPI {
         if (url) {
             def r = whelk.search(new ElasticQuery(url).addField("_id"))
         } else if (name) {
-            //def r = whelk.search(new ElasticQuery("about.instanceOf.authorList.authorizedAccessPoint.untouched", name).withType("bib"))
-            def r = whelk.search(new ElasticQuery("internalRemark.untouched", name).withType("bib"))
+            def r = whelk.search(new ElasticQuery("about.instanceOf.authorList.authorizedAccessPoint.untouched", name).withType("bib"))
+            //def r = whelk.search(new ElasticQuery("internalRemark.untouched", name).withType("bib"))
             response.setEntity(r.toJson(), MediaType.APPLICATION_JSON)
         } else {
             response.setEntity('{"error":"Parameter \"id\" is missing."}', MediaType.APPLICATION_JSON)
