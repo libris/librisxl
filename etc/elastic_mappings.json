@@ -1,13 +1,26 @@
 {
     "bib" : {
         "properties" : {
-            "authorizedAccessPoint" : {
-                "type" : "multi_field",
-                "fields" : {
-                    "authorizedAccessPoint": { "type" : "string", "index": "analyzed" },
-                    "untouched" : { "type" : "string", "index": "not_analyzed" }
-                }
-            },
+            "about" : {
+                "properties" : {
+                    "instanceOf" : {
+                        "properties" : {
+                            "authorList" : {
+                                "properties": {
+                                    "authorizedAccessPoint" : {
+                                        "type" : "multi_field",
+                                        "fields" : {
+                                            "authorizedAccessPoint": { "type" : "string", "index": "analyzed" },
+                                            "untouched" : { "type" : "string", "index": "not_analyzed" }
+                                        }
+                                    }
+                               }
+                           }
+                        }
+                    }
+                 }
+             },
+            
             "internalRemark" : {
                 "type" : "multi_field",
                 "fields" : {
@@ -16,5 +29,6 @@
                 }
             }
         }
+        
     }
 }
