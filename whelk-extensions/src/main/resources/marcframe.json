@@ -60,7 +60,7 @@
 
     "001": {"domainEntity": "Record", "property": "controlNumber"},
     "003": {"domainEntity": "Record", "property": "systemName"},
-    "005": {"domainEntity": "Record", "property": "updated", "TODO:parseDateTime": "yyyymmddhhmmss"},
+    "005": {"domainEntity": "Record", "property": "updated", "parseDateTime": "yyyyMMddHHmmss.S"},
 
     "007": {
       "[0:1]": {"domainEntity": "Record", "property": "carrierType"},
@@ -207,7 +207,7 @@
       "$a": {"property": "classNumber"},
       "$2": {"property": "classScheme"},
       "$b": {"property": "classItem"},
-      "TODO:uriTemplate": "http://libris.kb.se/kos/{classScheme}/{classNumber}"
+      "TODO:uriTemplate": "/kos/{classScheme}/{classNumber}"
     },
 
     "100": {
@@ -434,7 +434,7 @@
     "040" : {"inherit": "bib"},
     "042" : {"inherit": "bib"},
     "046" : {
-        "TODO": "parseDateUsingFormatHints",
+        "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
         "$g": {"property": "deathDate"}
     },
@@ -492,6 +492,7 @@
   "hold": {
     "000": {"inherit": "bib"},
     "001" : {"inherit": "bib"},
+    "004": {"property": "annotates", "TODO:uriTemplate": "/resource/bib/{v}"},
     "005": {"inherit": "bib"},
     "008": {
       "[0:0]": {}

@@ -4,6 +4,7 @@
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "owl": "http://www.w3.org/2002/07/owl#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
     "dct": "http://purl.org/dc/terms/",
     "iana": "http://www.iana.org/assignments/relation/",
     "foaf": "http://xmlns.com/foaf/0.1/",
@@ -21,6 +22,8 @@
     "dateTime": "xsd:dateTime",
     "label": "rdfs:label",
     "comment": "rdfs:comment",
+    "created": "dct:created",
+    "updated": {"@id": "dct:updated", "@type": "xsd:dateTime"},
     "subject": "dct:subject",
     "publisher": "dct:publisher",
     "relation": "dct:relation",
@@ -29,7 +32,11 @@
     "givenName": "foaf:givenName",
     "familyName": "foaf:familyName",
     "birthYear": {"@id": "schema:birthDate", "@type": "xsd:year"},
-    "deathYear": {"@id": "schema:deathDate", "@type": "xsd:year"}
+    "deathYear": {"@id": "schema:deathDate", "@type": "xsd:year"},
+    "Concept": "skos:Concept",
+    "prefLabel": "skos:prefLabel",
+    "altLabel": "skos:altLabel",
+    "closeMatch": "skos:closeMatch"
   }, {
     "Record": "foaf:Document",
     "describedby": "iana:describedby",

@@ -260,6 +260,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     String property
     String domainEntityName
     boolean repeat = false
+    String dateTimeFormat
     MarcSimpleFieldHandler(fieldDfn) {
         if (fieldDfn.addProperty) {
             property = fieldDfn.addProperty
@@ -268,10 +269,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             property = fieldDfn.property
         }
         domainEntityName = fieldDfn.domainEntity ?: 'Instance'
+        dateTimeFormat = fieldDfn.parseDateTime
     }
     boolean convert(marcSource, value, entityMap) {
         assert property, value
         // TODO: handle repeatable
+        if (dateTimeFormat) {
+            value = Date.parse(dateTimeFormat, value).format("yyyy-MM-dd'T'HH:mm:ss.SZ")
+        }
         entityMap[domainEntityName][property] = value
         return true
     }
