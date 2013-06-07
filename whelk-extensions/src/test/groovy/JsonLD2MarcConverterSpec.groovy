@@ -8,6 +8,8 @@ import groovy.util.logging.Slf4j as Log
 class JsonLD2MarcConverterSpec extends Specification implements Marc2JsonConstants {
 
     def mapper = new ObjectMapper()
+    /* TODO: convert to new test
+
     def vnoc = new JsonLD2MarcConverter()
 
 

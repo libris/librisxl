@@ -3,8 +3,12 @@ package se.kb.libris.whelks.plugin
 import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
+import se.kb.libris.whelks.basic.BasicFormatConverter
+import se.kb.libris.whelks.Document
+import se.kb.libris.whelks.basic.BasicDocument
 
-class MarcFrameConverter {
+
+class MarcFrameConverter extends BasicFormatConverter {
 
     MarcConversion conversion
     def mapper = new ObjectMapper()
@@ -25,6 +29,18 @@ class MarcFrameConverter {
 
     Map createFrame(Map marcSource) {
         return conversion.createFrame(marcSource)
+    }
+
+    @Override
+    String getRequiredContentType() { "application/x-marc-json" }
+
+    @Override
+    Document doConvert(Document doc) {
+        def source = doc.dataAsJson
+        def result = createFrame(source)
+        return new BasicDocument(doc)
+            .withData(mapper.writeValueAsBytes(result))
+            .withContentType("application/ld+json")
     }
 
     public static void main(String[] args) {

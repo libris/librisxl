@@ -10,9 +10,7 @@
                     "kitinsearch",
                     "metasearch",
                     "documentapi",
-                    "bibmarcconverter",
-                    "authmarcconverter",
-                    "holdmarcconverter",
+                    "marcconverter",
                     "cleanupindexconverter",
                     "cleanupconverter",
                     "entityextractor",
@@ -79,26 +77,8 @@
             }
         },
         {
-            "marcmassager" : {
-                "_class" : "se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter"
-            }
-        },
-        {
-            "bibmarcconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.MarcBib2JsonLDConverter",
-                "_params" : "bib"
-            }
-        },
-        {
-            "holdmarcconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.Marc2JsonLDConverter",
-                "_params" : "hold"
-            }
-        },
-        {
-            "authmarcconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.MarcAuth2JsonLDConverter",
-                "_params" : "auth"
+            "marcconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"
             }
         },
         {

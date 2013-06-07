@@ -7,6 +7,8 @@ import groovy.util.logging.Slf4j as Log
 @Log
 class MarcAuth2JsonLDConverterSpec extends Specification {
     def mapper = new ObjectMapper()
+    /* TODO: convert to new test
+
     def conv = new MarcAuth2JsonLDConverter()
 
     def "should map person"() {

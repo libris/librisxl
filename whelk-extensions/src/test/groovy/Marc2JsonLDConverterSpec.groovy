@@ -12,6 +12,8 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
     def whelk = Mock(Whelk) {
         getPrefix() >> "bib"
     }
+    /* TODO: convert to new test
+
     def conv = new Marc2JsonLDConverter()
 
     def "should map document"() {
@@ -157,7 +159,7 @@ class Marc2JsonLDConverterSpec extends Specification implements Marc2JsonConstan
             ["foo":"bar"]                  | ["foo":"beer"]                   | ["foo": ["bar", "beer"]]
             /*
             ["foo":["b1":"b2"]]            | ["foo":["b1":"b3"]]              | ["foo": [["b1":"b2"],["b1":"b3"]]]
-            */
+            * /
             ["key":["v1","v2"]]            | ["key":"v3"]                     | ["key": ["v1","v2","v3"]]
             ["key":["subkey":["v1","v2"]]] | ["key":["subkey":"v3"]]          | ["key": ["subkey":["v1","v2","v3"]]]
             ["key":["subkey":["v1":"v2"]]] | ["key":["subkey":["v3":"v4"]]]   | ["key": ["subkey":["v1":"v2","v3":"v4"]]]
