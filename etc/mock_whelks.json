@@ -162,11 +162,13 @@
             "subjcomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : {"queryFields":[
+                              "authoritativeName",
+                              "term",
                               "label"
                             ],
                             "infoFields":[
                             ],
-                            "indexTypes":"subject",
+                            "indexTypes":"concept",
                             "pathEnd":"_subject"
                             }
             }
