@@ -23,7 +23,6 @@
     "label": "rdfs:label",
     "comment": "rdfs:comment",
     "created": "dct:created",
-    "updated": {"@id": "dct:updated", "@type": "xsd:dateTime"},
     "subject": "dct:subject",
     "publisher": "dct:publisher",
     "relation": "dct:relation",

@@ -60,7 +60,7 @@
 
     "001": {"domainEntity": "Record", "property": "controlNumber"},
     "003": {"domainEntity": "Record", "property": "systemName"},
-    "005": {"domainEntity": "Record", "property": "updated", "parseDateTime": "yyyyMMddHHmmss.S"},
+    "005": {"domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S"},
 
     "007": {
       "[0:1]": {"domainEntity": "Record", "property": "carrierType"},
