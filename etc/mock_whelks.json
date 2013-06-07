@@ -18,6 +18,7 @@
                     "entityextractor",
                     "jsonldlinkfinder",
                     "namecomplete",
+                    "nameexpander",
                     "subjcomplete"
                     ],
                 "contentRoot" : "/"
@@ -168,6 +169,11 @@
                             "indexTypes":"subject",
                             "pathEnd":"_subject"
                             }
+            }
+        },
+        {
+            "nameexpander" : {
+                "_class" : "se.kb.libris.whelks.api.CompleteExpander"
             }
         },
         {

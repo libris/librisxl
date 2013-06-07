@@ -7,12 +7,19 @@ import se.kb.libris.whelks.exception.WhelkRuntimeException
 
 @Log
 class ElasticQuery extends Query {
-    String indexType
+    String indexType, phraseField, phraseValue
+    boolean phraseQuery = false
 
     ElasticQuery() {super()}
 
     ElasticQuery(String qs) {
         super(qs)
+    }
+    ElasticQuery(String field, String value) {
+        super()
+        this.phraseQuery = true
+        this.phraseField = field
+        this.phraseValue = value
     }
     ElasticQuery(Map qmap) {
         super(qmap)
