@@ -505,8 +505,7 @@
     "698": {},
 
     "852": {
-      "addLink": "hasAnnotation",
-      "rangeEntity": "Holding",
+      "resetDomainEntity": "Holding",
       "$3": {"property": "materialsSpecified"},
       "$2": {"property": "sourceOfClassificationOrShelvingScheme"},
       "$8": {"property": "sequenceNumber"},
