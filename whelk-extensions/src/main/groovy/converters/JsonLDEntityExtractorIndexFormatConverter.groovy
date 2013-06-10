@@ -1,7 +1,7 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.basic.*
+import se.kb.libris.whelks.resource.*
 
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
@@ -36,7 +36,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
             log.debug("Record has a @type. Adding to entity recordtype.")
             json["recordPriority"] = 1
             json.remove("unknown")
-            doclist << new BasicDocument().withData(mapper.writeValueAsBytes(json)).withContentType("application/ld+json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
+            doclist << new Document().withData(mapper.writeValueAsBytes(json)).withContentType("application/ld+json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
         }
         if (json.about?.instanceOf?.subjectList) {
             json.about.instanceOf.subjectList.each {
@@ -58,7 +58,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
         }
         entityJson["@id"] = pident
         entityJson["recordPriority"] = 0
-        return new BasicDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", type).withLink(docId, linkType)
+        return new Document().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", type).withLink(docId, linkType)
     }
 
     String slugify(String authAccPoint, URI identifier, String entityType) {

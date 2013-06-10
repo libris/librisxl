@@ -1,7 +1,7 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.basic.*
+import se.kb.libris.whelks.resource.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
@@ -195,7 +195,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicIndexFormatConverte
                 json = appendTags(json, doc)
 
                 try {
-                    outdocs << new BasicDocument(doc).withData(mapper.writeValueAsBytes(json))
+                    outdocs << new Document(doc).withData(mapper.writeValueAsBytes(json))
                 } catch (Exception e) {
                     log.error("Failed to create cracked marc index: ${e.message}")
                     log.error("JSON structure: $json")

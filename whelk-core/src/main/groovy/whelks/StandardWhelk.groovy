@@ -69,7 +69,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    SearchResult<? extends Document> search(Query query) {
+    SearchResult search(Query query) {
         return indexes.get(0)?.query(query, this.id)
     }
 
@@ -108,7 +108,7 @@ class StandardWhelk implements Whelk {
     @groovy.transform.CompileStatic
     Document createDocument(String data, Map<String,Object> metadata) {
         log.debug("Creating document")
-        Document doc = new BasicDocument().withData(data)
+        Document doc = new Document().withData(data)
         metadata.each { param, value ->
             if (value) {
                 doc.metaClass.pickMethod("with${((String)param).capitalize()}",

@@ -131,7 +131,7 @@ class BasicMarc2JsonLDConverter extends BasicFormatConverter implements FormatCo
     Document doConvert(Document doc) {
         def injson = doc.dataAsJson
         def outjson = convertJson(injson, doc.identifier.toString())
-        return new BasicDocument(doc).withData(mapper.writeValueAsBytes(outjson)).withContentType("application/ld+json")
+        return new Document(doc).withData(mapper.writeValueAsBytes(outjson)).withContentType("application/ld+json")
     }
 
     def convertJson(injson, identifier) {

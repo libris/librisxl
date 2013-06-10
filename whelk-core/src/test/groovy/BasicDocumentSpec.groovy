@@ -1,14 +1,14 @@
-package se.kb.libris.whelks.basic
+package se.kb.libris.whelks
 
 import spock.lang.Specification
 
-class BasicDocumentSpec extends Specification {
+class DocumentSpec extends Specification {
 
     def "should copy document"() {
         given:
-        def doc = new BasicDocument().withIdentifier("/bib/123").withData("foo").withContentType("text/plain")
+        def doc = new Document().withIdentifier("/bib/123").withData("foo").withContentType("text/plain")
         when:
-        def newdoc = new BasicDocument(doc)
+        def newdoc = new Document(doc)
         doc.identifier = new URI("/bib/234")
         doc.version = "2"
         then:
@@ -21,7 +21,7 @@ class BasicDocumentSpec extends Specification {
 
     def "should extract map from significant fields"() {
         given:
-        def doc = new BasicDocument().withIdentifier("/libris/2345").withData("foo").withContentType("application/json").withLink("/libris/1234")
+        def doc = new Document().withIdentifier("/libris/2345").withData("foo").withContentType("application/json").withLink("/libris/1234")
         when:
         def map = doc.toMap()
         then:
