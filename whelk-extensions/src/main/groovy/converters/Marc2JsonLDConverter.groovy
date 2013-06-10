@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 
 import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.resource.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
 
 import groovy.util.logging.Slf4j as Log

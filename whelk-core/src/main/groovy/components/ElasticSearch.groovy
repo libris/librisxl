@@ -390,8 +390,8 @@ abstract class ElasticSearch extends BasicPlugin {
         return facets
     }
 
-    Document createDocumentFromHit(hit) {
-        return new Document().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+    IndexDocument createDocumentFromHit(hit) {
+        return new IndexDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
     }
 
     URI translateIndexIdTo(id) {

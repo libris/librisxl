@@ -1,7 +1,7 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.basic.BasicFormatConverter
-import se.kb.libris.whelks.resource.Document
+import se.kb.libris.whelks.Document
 
 import groovy.util.logging.Slf4j as Log
 

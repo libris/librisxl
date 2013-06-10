@@ -23,17 +23,12 @@ import se.kb.libris.whelks.exception.*
 public @interface IsMetadata {}
 
 @Log
-public class Document {
+public class Document extends AbstractDocument {
     @IsMetadata
     URI identifier
 
     @IsMetadata
     String version = "1", contentType
-
-    byte[] data
-
-    @IsMetadata
-    long size
 
     @IsMetadata
     Set<Link> links = new HashSet<Link>()
@@ -155,35 +150,6 @@ public class Document {
 
         this.tags.add(tag)
 
-        return this
-    }
-
-    public Document withData(String dataString) {
-        return withData(dataString.getBytes("UTF-8"))
-    }
-
-    public Document withIdentifier(String uri) {
-        try {
-            this.identifier = new URI(uri)
-        } catch (java.net.URISyntaxException e) {
-            throw new WhelkRuntimeException(e)
-        }
-        return this
-    }
-
-    public Document withIdentifier(URI uri) {
-        this.identifier = uri
-        return this
-    }
-
-    public Document withData(byte[] data) {
-        this.data = data
-        this.size = data.length
-        return this
-    }
-
-    public Document withContentType(String contentType) {
-        this.contentType = contentType
         return this
     }
 
@@ -324,5 +290,16 @@ public class Document {
     Document withLink(String identifier, String type) {
         links << new Link(new URI(identifier), type)
         return this
+    }
+
+    /*
+     * Methods to assist with static typing.
+     */
+    Document withData(byte[] data) {
+        return (Document)super.withData(data)
+    }
+
+    Document withData(String data) {
+        return (Document)super.withData(data)
     }
 }

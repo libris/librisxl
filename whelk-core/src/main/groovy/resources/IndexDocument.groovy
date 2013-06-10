@@ -5,10 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.component.*
 
 @Log
-public class IndexDocument {
-    URI identifier
-    byte[] data
-    String contentType
+class IndexDocument extends AbstractDocument {
 
     Map<String, String[]> matches = new TreeMap<String, String[]>()
 

@@ -1,7 +1,7 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.resource.*
+import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
