@@ -116,7 +116,8 @@
       },
       "$a": {
         "property": "identifierValue",
-        "pattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?", "properties": ["identifierValue", "identifierNote"],
+        "pattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?",
+        "properties": ["identifierValue", "identifierNote"],
         "defaults": {
           "identifierScheme": "ISBN"
         }
@@ -223,9 +224,18 @@
       },
       "addLink": "creator",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "$a": {"property": "label", "pattern": "([^,]+)(?:,\\s*([^,]+))", "properties": ["familyName", "givenName"], "required": true},
-      "$d": {"property": "lifeSpan", "pattern": "(\\d+)(?:-(\\d+))?", "properties": ["birthYear", "deathYear"], "required": true},
-      "construct": {"label": {"format": "%s, %s, %s-%s", "source": ["familyName", "givenName", "birthYear", "deathYear"]}}
+      "$a": {"property": "label", "pattern": "([^,]+)(?:,\\s*([^,]+))",
+        "properties": ["familyName", "givenName"]},
+      "$b": {"property": "numeration"},
+      "$c": {"addProperty": "personTitle"},
+      "$d": {"property": "lifeSpan", "pattern": "(\\d+)(?:-(\\d+))?",
+        "properties": ["birthYear", "deathYear"]},
+      "construct": {
+        "label": {", ": [ "familyName",
+                          {" ": ["givenName", {"(%s)": [1, "numeration"]}]},
+                          "personTitle",
+                          {"%s-%s": [1, "birthYear", "deathYear"]} ]}
+      }
     },
     "110": {
       "domainEntity": "Work",

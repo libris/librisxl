@@ -3,9 +3,9 @@ package se.kb.libris.whelks.plugin
 import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
-import se.kb.libris.whelks.basic.BasicFormatConverter
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.basic.BasicDocument
+import se.kb.libris.whelks.basic.BasicFormatConverter
 
 
 class MarcFrameConverter extends BasicFormatConverter {
@@ -309,7 +309,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     boolean repeatLink = false
     String rangeEntityName
     List splitLinkRules
-    Map construct
+    Map construct = [:]
     Map subfields = [:]
     Map resourceMaps
     List matchRules = []
@@ -343,7 +343,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 repeatLink: 'addLink' in it]
         }
 
-        construct = fieldDfn.construct?.clone()
+        fieldDfn.construct.each { prop, tplt ->
+            construct[prop] = new StringConstruct(tplt)
+        }
         this.resourceMaps = resourceMaps
 
         def matchDomain = fieldDfn['match-domain']
@@ -476,9 +478,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (construct) {
-            construct.each { prop, rule ->
-                def source = rule.source.collect { entity[it] ?: "" } as String[]
-                def v = String.format(rule.format, source)
+            construct.each { prop, tplt ->
+                def v = tplt.expand(entity)
                 if (v) entity[prop] = v
             }
         }
