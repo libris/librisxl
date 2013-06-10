@@ -10,7 +10,7 @@ class MarcFrameConverterSpec extends Specification {
     @Unroll
     def "should detect marc type"() {
         expect:
-        converter.getMarcType(marc) == type
+        converter.conversion.getMarcCategory(marc) == type
         where:
         marc                                    | type
         [leader: "01113cz  a2200421n  4500"]    | "auth"
@@ -40,7 +40,7 @@ class MarcFrameConverterSpec extends Specification {
                     ["a": "Stockholm"],
                     ["b": "Bonnier"],
                     ["c": "1996"],
-                    ["e": "(Finland)"]
+                    ["e": "Finland"]
                 ]]],
                 ["700": ["ind1": "1", "ind2": " ", "subfields": [
                     ["a": "Pietilä, Tuulikki,"],
@@ -54,47 +54,63 @@ class MarcFrameConverterSpec extends Specification {
         frame == [
             "@type": "Book",
             "title": [
+                "@type": "TitleEntity",
                 "titleValue": "Anteckningar från en ö"
             ],
             "responsibilityStatement": "Tove Jansson, Tuulikki Pietilä",
             "publication": [
-                "@type": "ProviderEvent",
-                "providerPlace": "Stockholm",
-                "providerName": "Bonnier",
-                "providerDate": "1996"
+                [
+                    "@type": "ProviderEvent",
+                    "place": ["@type": "Place", "label": "Stockholm"],
+                    "providerName": "Bonnier",
+                    "providerDate": "1996"
+                ],
             ],
             "manufacture": [
-                "@type": "ProviderEvent",
-                "providerPlace": "Finland",
+                [
+                    "@type": "ProviderEvent",
+                    "place": ["@type": "Place", "label": "Finland"],
+                ],
             ],
             "identifier": [
-                "identifierValue": "91-0-056322-6",
-                "identifierScheme": "ISBN",
-                "identifierNote": "inb."
+                [
+                    "@type": "Identifier",
+                    "identifierValue": "91-0-056322-6",
+                    "identifierScheme": "ISBN",
+                    "identifierNote": "inb."
+                ],
             ],
             "instanceOf": [
-                "@type": "Work",
-                "authorList": [
+                "@type": "Book",
+                "creator": [
                     [
                         "@type": "Person",
-                        "authorizedAccessPoint": "Jansson, Tove, 1914-2001",
+                        "label": "Jansson, Tove, 1914-2001",
                         "birthYear": "1914",
                         "deathYear": "2001",
                         "familyName": "Jansson",
                         "givenName": "Tove"
                     ],
+                ],
+                "contributor": [
                     [
                         "@type": "Person",
-                        "authorizedAccessPoint": "Pietil\u00e4, Tuulikki, 1917-",
+                        "label": "Pietil\u00e4, Tuulikki, 1917-",
                         "birthYear": "1917",
                         "familyName": "Pietil\u00e4",
                         "givenName": "Tuulikki"
-                    ]
-                ],
+                    ],
+                ]
             ],
+            "availability": "310:00",
             "describedby": [
                 "@type": "Record",
-                "controlNumber": "7149593"
+                "controlNumber": "7149593",
+                "status": "c",
+                "typeOfRecord": "a",
+                "bibLevel": "m",
+                "characterCoding": "a",
+                "catForm": "a"
             ]
         ]
     }

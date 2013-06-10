@@ -109,9 +109,9 @@ class MarcConversion {
             if (carrierTree)
                 instanceType = carrierTree[record.carrierMaterial] ?: carrierTree['*']
         }
-        entityMap.Work['@type'] = [entityMap.Work['@type'], workType]
+        entityMap.Work['@type'] = workType
         if (instanceType)
-            entityMap.Instance['@type'] = [entityMap.Instance['@type'], instanceType]
+            entityMap.Instance['@type'] = instanceType
     }
 
     String getMarcCategory(marcSource) {
@@ -175,9 +175,8 @@ class MarcConversion {
         // TODO:
         // * always one record and a primary "thing"
         // * the type of this thing is determined during processing
-        def work = ["@type": "Work"]
+        def work = [:]
         def instance = [
-            "@type": "Instance",
             describedby: record
         ]
         entityMap['Instance'] = instance
@@ -462,7 +461,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         handled = true
                     }
                     if (subDfn.defaults) {
-                        ent += subDfn.defaults
+                        subDfn.defaults.each { k, v -> if (!(k in ent)) ent[k] = v }
                     }
                 }
                 if (!handled) {
