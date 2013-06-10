@@ -88,7 +88,7 @@ class MarcConversion {
                     if (irule.carrierMaterial) {
                         carrierTree[irule.carrierMaterial] = itype
                     } else {
-                        recTypeTree['*'] = itype
+                        carrierTree['*'] = itype
                     }
                 }
             }
@@ -102,9 +102,9 @@ class MarcConversion {
         if (!recTypeTree)
             return // missing concrete type mapping
         def workTree = recTypeTree[record.bibLevel] ?: recTypeTree['*']
-        def workType = workTree.type
-        def instanceType = workType // TODO: is this logically sound?
-        if (workTree.instanceTree) {
+        def workType = workTree?.type ?: "Work"
+        def instanceType = "Instance"
+        if (workTree?.instanceTree) {
             def carrierTree = workTree.instanceTree[record.carrierType]
             if (carrierTree)
                 instanceType = carrierTree[record.carrierMaterial] ?: carrierTree['*']
