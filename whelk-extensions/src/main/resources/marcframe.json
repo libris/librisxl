@@ -181,7 +181,7 @@
       "$a": {"property": "authenticationCode"},
       "$9": {"property": "bibliographyCode"}
     },
-    "043": {"TODO:ignored": true},
+    "043": {"ignored": true},
 
     "050": {
       "domainEntity": "Work",

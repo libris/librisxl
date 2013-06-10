@@ -276,6 +276,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     String domainEntityName
     boolean repeat = false
     String dateTimeFormat
+    boolean ignored = false
     MarcSimpleFieldHandler(fieldDfn) {
         if (fieldDfn.addProperty) {
             property = fieldDfn.addProperty
@@ -285,8 +286,11 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
         domainEntityName = fieldDfn.domainEntity ?: 'Instance'
         dateTimeFormat = fieldDfn.parseDateTime
+        fieldDfn.get('ignored', false)
     }
     boolean convert(marcSource, value, entityMap) {
+        if (ignored)
+            return
         assert property, value
         // TODO: handle repeatable
         if (dateTimeFormat) {
@@ -420,6 +424,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             def newEnt = ["@type": rangeEntityName]
+            // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
             useLinks.each {
                 addValue(entity, it, newEnt, repeatLink)
             }
