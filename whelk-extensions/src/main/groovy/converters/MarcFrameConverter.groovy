@@ -102,16 +102,23 @@ class MarcConversion {
         if (!recTypeTree)
             return // missing concrete type mapping
         def workTree = recTypeTree[record.bibLevel] ?: recTypeTree['*']
-        def workType = workTree?.type ?: "Work"
-        def instanceType = "Instance"
+        def workType = workTree?.type
+        def instanceType = null
         if (workTree?.instanceTree) {
             def carrierTree = workTree.instanceTree[record.carrierType]
             if (carrierTree)
                 instanceType = carrierTree[record.carrierMaterial] ?: carrierTree['*']
         }
-        entityMap.Work['@type'] = workType
-        if (instanceType)
-            entityMap.Instance['@type'] = instanceType
+        entityMap.Work['@type'] = workType ?: "Work"
+        def instance = entityMap.Instance
+        if (instanceType) {
+            instance['@type'] = instanceType
+        } else if (workType) {
+            // TODO: is this sound, or are work types "non-manifestations"?
+            instance['@type'] = workType
+        } else {
+            instance['@type'] = "Instance"
+        }
     }
 
     String getMarcCategory(marcSource) {
