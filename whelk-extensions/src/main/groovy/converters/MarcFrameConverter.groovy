@@ -55,7 +55,7 @@ class MarcFrameConverter extends BasicFormatConverter {
 
 class MarcConversion {
 
-    static FIXED_TAGS = ["000", "006", "007", "008"] as Set
+    static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
     Map marcTypeMap = [:]
     def marcHandlers = [:]
@@ -168,14 +168,15 @@ class MarcConversion {
         }
     }
 
-    Map createFrame(marcSource) {
+    Map createFrame(marcSource, recordId=null) {
         def unknown = []
 
-        def record = ["@type": "Record"]
+        def record = ["@type": "Record", "@id": recordId]
 
         def entityMap = [Record: record]
 
-        def fieldHandlers = marcHandlers[getMarcCategory(marcSource)]
+        def marcCat = getMarcCategory(marcSource)
+        def fieldHandlers = marcHandlers[marcCat]
 
         fieldHandlers["000"].convert(marcSource, marcSource.leader, entityMap)
 
@@ -191,22 +192,27 @@ class MarcConversion {
 
         def otherFields = []
         marcSource.fields.each { field ->
-            def isFixed = false
+            def preproc = false
             field.each { tag, value ->
-                isFixed = (tag in FIXED_TAGS)
-                if (isFixed)
+                preproc = (tag in PREPROC_TAGS)
+                if (preproc)
                     fieldHandlers[tag].convert(marcSource, value, entityMap)
             }
-            if (!isFixed)
+            if (!preproc)
                 otherFields << field
         }
 
         computeTypes(entityMap)
 
+        // TODO: make this configurable
+        if (record['@id'] == null) {
+            record['@id'] = "/${marcCat}/${record.controlNumber}" as String
+            instance['@id'] = "/resource/${marcCat}/${record.controlNumber}" as String
+        }
+
         otherFields.each { field ->
             def ok = false
             field.each { tag, value ->
-                if (tag in FIXED_TAGS) return // handled above
                 def handler = fieldHandlers[tag]
                 if (handler) {
                     ok = handler.convert(marcSource, value, entityMap)
@@ -276,14 +282,26 @@ abstract class BaseMarcFieldHandler {
         obj[key] = value
     }
 
+    Map newEntity(type, id=null) {
+        def ent = [:]
+        if (type) ent["@type"] = type
+        if (id) ent["@id"] = id
+        return ent
+    }
+
 }
 
 class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
+
     String property
     String domainEntityName
+    String link
+    String rangeEntityName
+    String uriTemplate
     boolean repeat = false
     String dateTimeFormat
     boolean ignored = false
+
     MarcSimpleFieldHandler(fieldDfn) {
         if (fieldDfn.addProperty) {
             property = fieldDfn.addProperty
@@ -294,18 +312,31 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         domainEntityName = fieldDfn.domainEntity ?: 'Instance'
         dateTimeFormat = fieldDfn.parseDateTime
         fieldDfn.get('ignored', false)
+        link = fieldDfn.link
+        rangeEntityName = fieldDfn.rangeEntity
+        uriTemplate = fieldDfn.uriTemplate
     }
+
     boolean convert(marcSource, value, entityMap) {
         if (ignored)
             return
-        assert property, value
-        // TODO: handle repeatable
+        assert property || uriTemplate, value
         if (dateTimeFormat) {
             value = Date.parse(dateTimeFormat, value).format("yyyy-MM-dd'T'HH:mm:ss.SZ")
         }
-        entityMap[domainEntityName][property] = value
+
+        def ent = entityMap[domainEntityName]
+        if (link) {
+            ent = ent[link] = newEntity(rangeEntityName)
+        }
+        if (uriTemplate)
+            ent['@id'] = uriTemplate.replace('{_}', value)
+        else
+            addValue(ent, property, value, repeat)
+
         return true
     }
+
 }
 
 class MarcFieldHandler extends BaseMarcFieldHandler {
@@ -430,7 +461,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 useLinks = [link]
             }
 
-            def newEnt = ["@type": rangeEntityName]
+            def newEnt = newEntity(rangeEntityName)
+
             // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
             useLinks.each {
                 addValue(entity, it, newEnt, repeatLink)
@@ -448,7 +480,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def ent = (subDfn.domainEntity)?
                         entityMap[subDfn.domainEntity] : (codeLinkSplits[code] ?: entity)
                     if (subDfn.link) {
-                        ent = ent[subDfn.link] = ["@type": subDfn.rangeEntity]
+                        ent = ent[subDfn.link] = newEntity(subDfn.rangeEntity)
                     }
                     def property = subDfn.property
                     def repeat = false

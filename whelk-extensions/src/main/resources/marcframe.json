@@ -502,7 +502,7 @@
   "hold": {
     "000": {"inherit": "bib"},
     "001" : {"inherit": "bib"},
-    "004": {"property": "annotates", "TODO:uriTemplate": "/resource/bib/{v}"},
+    "004": {"link": "annotates", "uriTemplate": "/resource/bib/{_}"},
     "005": {"inherit": "bib"},
     "008": {
       "[0:0]": {}

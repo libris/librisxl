@@ -52,6 +52,7 @@ class MarcFrameConverterSpec extends Specification {
         def frame = converter.createFrame(marc)
         then:
         frame == [
+            "@id": "/resource/bib/7149593",
             "@type": "Book",
             "title": [
                 "@type": "TitleEntity",
@@ -104,6 +105,7 @@ class MarcFrameConverterSpec extends Specification {
             ],
             "availability": "310:00",
             "describedby": [
+                "@id": "/bib/7149593",
                 "@type": "Record",
                 "controlNumber": "7149593",
                 "status": "c",
