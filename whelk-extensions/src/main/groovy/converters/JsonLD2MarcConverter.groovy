@@ -1,7 +1,6 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.basic.BasicFormatConverter
-import se.kb.libris.whelks.basic.BasicDocument
 import se.kb.libris.whelks.Document
 
 import groovy.util.logging.Slf4j as Log
@@ -37,7 +36,7 @@ class  JsonLD2MarcConverter extends BasicFormatConverter {
     }
     
     Document doConvert(Document doc) {
-        if (doc instanceof BasicDocument) {
+        if (doc instanceof Document) {
             return mapDocument(doc.getDataAsJson())
         }
         return null

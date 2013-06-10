@@ -68,7 +68,7 @@ class DiskStorage extends BasicPlugin implements Storage {
         try {
             log.debug("buildPath: " + buildPath(uri, false))
             log.debug("basename: " + getBaseFilename(uri))
-            def document = new BasicDocument(metafile.text)
+            def document = new Document(metafile.text)
             log.debug("ext: " + FILE_EXTENSIONS[document.contentType])
             sourcefile = new File(buildPath(uri, false) + "/" + getBaseFilename(uri) + (FILE_EXTENSIONS[document.contentType] ?: ""))
             document.data = sourcefile.readBytes()
@@ -84,7 +84,7 @@ class DiskStorage extends BasicPlugin implements Storage {
     Document get(URI uri, String whelkPrefix) {
         File f = new File(buildPath(uri, false))
         try {
-            def document = new BasicDocument(f.text)
+            def document = new Document(f.text)
             log.debug("Loading document from disk.")
             return document
         } catch (FileNotFoundException fnfe) {
@@ -213,7 +213,7 @@ class DiskDocumentIterable implements Iterable<Document> {
                 if (currentFile.isFile() && currentFile.length() > 0) {
                     def document
                     if (currentFile.name.endsWith(DiskStorage.METAFILE_EXTENSION)) {
-                        document = new BasicDocument(currentFile.text)
+                        document = new Document(currentFile.text)
                         def fileBaseName = currentFile.parent + "/" + currentFile.name.lastIndexOf('.').with {it != -1 ? currentFile.name[0..<it] : currentFile.name}
                         def sourcefile = new File(fileBaseName + (DiskStorage.FILE_EXTENSIONS[document.contentType] ?: ""))
                         document.data = sourcefile.readBytes()

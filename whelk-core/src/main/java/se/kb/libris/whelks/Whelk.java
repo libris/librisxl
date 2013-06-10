@@ -13,7 +13,7 @@ public interface Whelk {
     public void remove(URI identifier);
 
     // search/lookup
-    public SearchResult<? extends Document> search(Query query);
+    public SearchResult search(Query query);
     public Iterable<Document> loadAll();
     public Iterable<Document> loadAll(Date since);
 

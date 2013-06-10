@@ -11,7 +11,6 @@ import me.prettyprint.cassandra.service.*
 import me.prettyprint.cassandra.service.template.*
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
 
 @Log
@@ -73,7 +72,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
             ColumnFamilyResult<String, String> res = cft.queryColumns([uri.toString()])
             log.debug("res: $res")
             if (res?.hasResults()) {
-                document = new BasicDocument().withIdentifier(uri).withData(res.getByteArray("data")).withContentType(res.getString("contentType"))
+                document = new Document().withIdentifier(uri).withData(res.getByteArray("data")).withContentType(res.getString("contentType"))
                 document.setTimestamp(res.getLong("timestamp"))
             }
         } catch (HectorException e) {

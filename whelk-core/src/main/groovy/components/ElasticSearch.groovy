@@ -227,7 +227,7 @@ abstract class ElasticSearch extends BasicPlugin {
         def response = performExecute(srb)
         log.trace("SearchResponse: " + response)
 
-        def results = new BasicSearchResult(0)
+        def results = new SearchResult(0)
 
         if (response) {
             log.debug "Total hits: ${response.hits.totalHits}"
@@ -390,8 +390,8 @@ abstract class ElasticSearch extends BasicPlugin {
         return facets
     }
 
-    Document createDocumentFromHit(hit) {
-        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+    IndexDocument createDocumentFromHit(hit) {
+        return new IndexDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
     }
 
     URI translateIndexIdTo(id) {

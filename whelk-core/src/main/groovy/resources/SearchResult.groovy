@@ -1,12 +1,12 @@
-package se.kb.libris.whelks.basic
+package se.kb.libris.whelks
 
-import se.kb.libris.whelks.Document
+import se.kb.libris.whelks.IndexDocument
 import se.kb.libris.whelks.SearchResult
 import se.kb.libris.whelks.component.ElasticJsonMapper
 
 import org.codehaus.jackson.map.ObjectMapper
 
-class BasicSearchResult implements SearchResult {
+class SearchResult {
 
     Iterable hits
     Map facets
@@ -14,9 +14,9 @@ class BasicSearchResult implements SearchResult {
 
     long numberOfHits = 0
 
-    BasicSearchResult(long nrHits) {
+    SearchResult(long nrHits) {
         this.numberOfHits = nrHits
-        this.hits = new ArrayList<Document>()
+        this.hits = new ArrayList<IndexDocument>()
         this.mapper = new ElasticJsonMapper()
     }
 
@@ -24,12 +24,12 @@ class BasicSearchResult implements SearchResult {
         this.numberOfHits = nrHits
     }
 
-    void addHit(Document d) {
+    void addHit(IndexDocument d) {
         this.hits.add(d)
     }
 
-    void addHit(Document d, Map<String, String[]> highlightedFields) {
-        def doc = new HighlightedDocument(d, highlightedFields)
+    void addHit(IndexDocument d, Map<String, String[]> highlightedFields) {
+        def doc = new IndexDocument(d, highlightedFields)
         this.hits.add(doc)
     }
 

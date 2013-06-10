@@ -880,6 +880,6 @@ class Marc2JsonLDConverter extends BasicFormatConverter implements WhelkAware, F
     @Override
     Document doConvert(Document idoc) {
         def injson = mapper.readValue(idoc.dataAsString, Map)
-        return new BasicDocument(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson))).withContentType("application/ld+json")
+        return new Document(idoc).withData(mapper.writeValueAsBytes(createJson(idoc.identifier, injson))).withContentType("application/ld+json")
     }
 }
