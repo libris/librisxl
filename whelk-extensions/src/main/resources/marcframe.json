@@ -131,6 +131,27 @@
       }
     },
 
+    "022": {
+      "domainEntity": "Instance",
+      "addLink": "identifier",
+      "rangeEntity": "Identifier",
+      "$a": {
+        "property": "identifierValue",
+        "defaults": {"identifierScheme": "ISSN"}
+      },
+      "$m": {"TODO:addProperty": "canceledIssnL"},
+      "$l": {"TODO:property": "issnL"},
+      "$2": {"TODO:property": "source"},
+      "$y": {"TODO": "inherit:$z + specific: incorrectIssn"},
+      "$z": {
+        "property": "identifierValue",
+        "defaults": {
+          "identifierScheme": "ISSN",
+          "identifierStatus": "canceledInvalid"
+        }
+      }
+    },
+
     "024": {
       "domainEntity": "Instance",
       "addLink": "identifier",
