@@ -41,4 +41,7 @@ abstract class AbstractDocument {
         return new String(data, "UTF-8")
     }
 
+    Map getDataAsMap() {
+        return mapper.readValue(data, Map)
+    }
 }

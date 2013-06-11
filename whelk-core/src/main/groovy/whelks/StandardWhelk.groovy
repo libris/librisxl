@@ -83,14 +83,16 @@ class StandardWhelk implements Whelk {
 
     @groovy.transform.CompileStatic
     void addToIndex(List<Document> docs) {
+        def idxDocs = []
+        idxDocs.addAll(docs)
         if (indexes.size() > 0) {
             log.debug("Adding to indexes")
             for (ifc in getIndexFormatConverters()) {
-                log.debug("Calling indexformatconverter $ifc")
-                docs = ifc.convertBulk(docs)
+                log.debug("Running indexformatconverter $ifc")
+                idxDocs = (List<IndexDocument>)ifc.convertBulk((List<Resource>)idxDocs)
             }
             for (idx in indexes) {
-                idx.bulkIndex(docs, this.id)
+                idx.bulkIndex((List<IndexDocument>)idxDocs, this.id)
             }
         }
     }
@@ -111,10 +113,11 @@ class StandardWhelk implements Whelk {
         Document doc = new Document().withData(data)
         metadata.each { param, value ->
             if (value) {
-                doc.metaClass.pickMethod("with${((String)param).capitalize()}",
-                        value.getClass()).doMethodInvoke(doc, value)
+                doc.metaClass.pickMethod("set${((String)param).capitalize()}",
+                    value.getClass()).doMethodInvoke(doc, value)
             }
         }
+        log.trace("Creation complete for ${doc.identifier} (${doc.contentType})")
         doc = performStorageFormatConversion(doc)
         if (doc) {
             for (lf in linkFinders) {

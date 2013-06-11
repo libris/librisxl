@@ -52,7 +52,7 @@ class MarcMapJSConverter extends BasicIndexFormatConverter implements IndexForma
 
     @Override
     @Override
-    List<Document> doConvert(Document docs) {
+    List<IndexDocument> doConvert(Resource docs) {
         def outdocs = []
         def struct = parseJSON(doc.dataAsString)
         def obj = scope.get(objName, scope)
@@ -60,7 +60,7 @@ class MarcMapJSConverter extends BasicIndexFormatConverter implements IndexForma
         def map = marcmap.get('bib', marcmap)
         def result = func.call(cx, scope, obj, [map, struct] as Object[])
         def repr = NativeJSON.stringify(cx, scope, result, null, 2)
-        outdocs << new Document(doc).withData(repr)
+        outdocs << new IndexDocument().withData(repr).withIdentifier(doc.identifier)
         return outdocs
     }
 

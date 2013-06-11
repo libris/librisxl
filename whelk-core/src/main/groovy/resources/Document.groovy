@@ -20,10 +20,10 @@ import se.kb.libris.whelks.exception.*
 
 @Target(value = ElementType.FIELD)
 @Retention(value = RetentionPolicy.RUNTIME)
-public @interface IsMetadata {}
+@interface IsMetadata {}
 
 @Log
-public class Document extends AbstractDocument {
+class Document extends AbstractDocument implements Resource {
     @IsMetadata
     URI identifier
 
@@ -45,29 +45,29 @@ public class Document extends AbstractDocument {
     @JsonIgnore
     ObjectMapper mapper = new ElasticJsonMapper()
 
-    public Document() {
+    Document() {
         this.timestamp = new Long(new Date().getTime())
     }
 
-    public Document(String jsonString) {
+    Document(String jsonString) {
         fromJson(jsonString)
     }
 
-    public Document(File jsonFile) {
+    Document(File jsonFile) {
         fromJson(jsonFile)
     }
 
     /*
-    public Document(Map map) {
+    Document(Map map) {
         fromMap(map)
     }
     */
 
-    public Document(Document d) {
+    Document(Document d) {
         copy(d)
     }
 
-    public Document fromJson(File jsonFile) {
+    Document fromJson(File jsonFile) {
         try {
             Document newDoc = mapper.readValue(jsonFile, Document)
             copy(newDoc)
@@ -76,7 +76,7 @@ public class Document extends AbstractDocument {
         }
     }
 
-    public Document fromJson(String jsonString) {
+    Document fromJson(String jsonString) {
         try {
             Document newDoc = mapper.readValue(jsonString, Document)
             copy(newDoc)
@@ -101,44 +101,40 @@ public class Document extends AbstractDocument {
         return mapper.convertValue(this, Map)
     }
 
-    public byte[] getData() {
-        return data
-    }
-
-    public byte[] getData(long offset, long length) {
+    byte[] getData(long offset, long length) {
         byte[] ret = new byte[(int)length]
         System.arraycopy(getData(), (int)offset, ret, 0, (int)length)
 
         return ret
     }
 
-    public long getSize() {
+    long getSize() {
         return (size ? size.longValue() : 0L)
     }
 
     @JsonIgnore
-    public Date getTimestampAsDate() {
+    Date getTimestampAsDate() {
         return new Date(timestamp)
     }
 
-    public long getTimestamp() {
+    long getTimestamp() {
         return (timestamp ? timestamp.longValue() : 0L)
     }
 
-    public Document updateTimestamp() {
+    Document updateTimestamp() {
         timestamp = new Date().getTime()
         return this
     }
 
-    public void setTimestamp(long _t) {
+    void setTimestamp(long _t) {
         this.timestamp = _t
     }
 
-    public Document tag(String type, String value) {
+    Document tag(String type, String value) {
         return tag(new URI(type), value)
     }
 
-    public Document tag(URI type, String value) {
+    Document tag(URI type, String value) {
         /*
         synchronized (tags) {
             for (Tag t: tags)
@@ -153,47 +149,20 @@ public class Document extends AbstractDocument {
         return this
     }
 
-    public Document withSize(long size) {
+    Document withSize(long size) {
         this.size = size
         return this
     }
 
     @JsonIgnore
-    public String getDataAsString() {
-        return new String(getData())
-    }
-
-    @JsonIgnore
-    public Map getDataAsJson() {
+    @Deprecated
+    Map getDataAsJson() {
         return mapper.readValue(data, Map)
     }
 
     @JsonIgnore
-    public InputStream getDataAsStream() {
+    InputStream getDataAsStream() {
         return new ByteArrayInputStream(getData())
-    }
-
-    @JsonIgnore
-    public Map getDataAsJsonMap() {
-        def jsonmap = [:]
-        this.class.declaredFields.each {
-            if (this.(it.name) && !it.isSynthetic() && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
-                if (this.(it.name) instanceof URI) {
-                    log.trace("found a URI identifier")
-                    jsonmap[it.name] = this.(it.name).toString()
-                } else if (it.type.isArray()) {
-                    log.trace("Found a bytearray")
-                    def l = []
-                    l.addAll(0, this.(it.name))
-                    jsonmap[it.name] = l
-                } else {
-                    log.trace("default writing ${it.name}")
-                    jsonmap[it.name] = this.(it.name)
-                }
-            }
-        }
-        log.trace "JsonMap: $jsonmap"
-        return jsonmap
     }
 
     @JsonIgnore
@@ -227,7 +196,7 @@ public class Document extends AbstractDocument {
 
     /*
     @JsonIgnore
-    public String getMetadataJson() {
+    String getMetadataJson() {
         def mapper = new ObjectMapper()
         def out = this.class.declaredFields.findAll {
             !it.synthetic &&
@@ -252,11 +221,11 @@ public class Document extends AbstractDocument {
     }
 
     @JsonIgnore
-    public InputStream getDataAsStream(long offset, long length) {
-        return new ByteArrayInputStream(getData(), (int)offset, (int)length)
+    InputStream getDataAsStream(long offset, long length) {
+        return new ByteArrayInputStream(this.data, (int)offset, (int)length)
     }
 
-    public void untag(URI type, String value) {
+    void untag(URI type, String value) {
         synchronized (tags) {
             Set<Tag> remove = new HashSet<Tag>()
 

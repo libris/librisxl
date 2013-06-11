@@ -135,14 +135,14 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    void index(Document doc, String indexName) {
+    void index(IndexDocument doc, String indexName) {
         if (doc) {
             addDocument(doc, indexType, indexName)
         }
     }
 
     @Override
-    void bulkIndex(Iterable<Document> doc, String indexName) {
+    void bulkIndex(Iterable<IndexDocument> doc, String indexName) {
         addDocuments(doc, indexName)
     }
 
@@ -286,8 +286,8 @@ abstract class ElasticSearch extends BasicPlugin {
         }
     }
 
-    String determineDocumentType(Document doc) {
-        def idxType = doc.tags.find { it.type.toString() == "entityType"}?.value?.toLowerCase()
+    String determineDocumentType(IndexDocument doc) {
+        def idxType = doc.type?.toLowerCase()
         if (!idxType) {
             try {
                 idxType = doc.identifier.toString().split("/")[1]
@@ -302,7 +302,7 @@ abstract class ElasticSearch extends BasicPlugin {
         return idxType
     }
 
-    void addDocument(Document doc, String indexName) {
+    void addDocument(IndexDocument doc, String indexName) {
         addDocuments([doc], indexName)
     }
 
