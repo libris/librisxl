@@ -168,7 +168,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicIndexFormatConverte
     }
 
     @Override
-    List<Document> doConvert(Document doc) {
+    List<IndexDocument> doConvert(Resource doc) {
         def outdocs = []
         if (doc.format == this.requiredFormat) {
             log.trace "Start convert on ${doc.dataAsString}"
@@ -195,7 +195,7 @@ class MarcCrackerAndLabelerIndexFormatConverter extends BasicIndexFormatConverte
                 json = appendTags(json, doc)
 
                 try {
-                    outdocs << new Document(doc).withData(mapper.writeValueAsBytes(json))
+                    outdocs << new IndexDocument().withData(mapper.writeValueAsBytes(json)).withIdentifier(doc.identifier).withContentType(doc.contentType)
                 } catch (Exception e) {
                     log.error("Failed to create cracked marc index: ${e.message}")
                     log.error("JSON structure: $json")

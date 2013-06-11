@@ -13,7 +13,6 @@
                     "bibmarcconverter",
                     "authmarcconverter",
                     "holdmarcconverter",
-                    "cleanupindexconverter",
                     "cleanupconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
@@ -106,12 +105,6 @@
             "cleanupconverter" : {
                 "_class" : "se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter",
                 "_priority" : 0
-            }
-        },
-        {
-            "cleanupindexconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter",
-                "_priority" : 1
             }
         },
         {

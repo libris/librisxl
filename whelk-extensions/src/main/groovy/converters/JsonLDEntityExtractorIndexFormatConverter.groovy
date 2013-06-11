@@ -11,9 +11,9 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
-    
-    List<Document> doConvert(Document doc) {
-        def doclist = [doc]
+
+    List<IndexDocument> doConvert(Resource doc) {
+        List<IndexDocument> doclist = [new IndexDocument(doc)]
         def json = mapper.readValue(doc.dataAsString, Map)
         def indexTypeLists = ["person": json.about?.instanceOf?.authorList, "concept": json.about?.instanceOf?.subject]
         def entityLinks = ["person": "authorOf", "concept": "subject"]
@@ -36,7 +36,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
             log.debug("Record has a @type. Adding to entity recordtype.")
             json["recordPriority"] = 1
             json.remove("unknown")
-            doclist << new Document().withData(mapper.writeValueAsBytes(json)).withContentType("application/ld+json").withIdentifier(doc.identifier).tag("entityType", json["@type"])
+            doclist << new IndexDocument(doc).withData(mapper.writeValueAsBytes(json)).withContentType("application/ld+json").withType(json["@type"])
         }
         if (json.about?.instanceOf?.subjectList) {
             json.about.instanceOf.subjectList.each {
@@ -49,7 +49,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
         return doclist
     }
 
-    Document createEntityDoc(def type, def entityJson, def docId, def linkType) {
+    IndexDocument createEntityDoc(def type, def entityJson, def docId, def linkType) {
         String pident
         if (entityJson.get("authorizedAccessPoint", null)) {
             pident = slugify(entityJson.get("authorizedAccessPoint"), docId, type)
@@ -58,7 +58,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
         }
         entityJson["@id"] = pident
         entityJson["recordPriority"] = 0
-        return new Document().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(pident).tag("entityType", type).withLink(docId, linkType)
+        return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(pident).withType(type)
     }
 
     String slugify(String authAccPoint, URI identifier, String entityType) {
