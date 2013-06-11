@@ -11,6 +11,18 @@ abstract class AbstractDocument {
     @IsMetadata
     long size
 
+    void setIdentifier(String uri) {
+        try {
+            this.identifier = new URI(uri)
+        } catch (java.net.URISyntaxException e) {
+            throw new WhelkRuntimeException(e)
+        }
+    }
+
+    void setIdentifier(URI uri) {
+        this.identifier = uri
+    }
+
     def withData(String dataString) {
         return withData(dataString.getBytes("UTF-8"))
     }

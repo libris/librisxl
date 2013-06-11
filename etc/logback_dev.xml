@@ -11,16 +11,14 @@
   <logger name="org.elasticsearch">
       <level value="warn"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.conch">
       <level value="debug"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.MarcAuth2JsonLDConverter">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.BasicMarc2JsonLDConverter">
       <level value="debug"/>
@@ -29,10 +27,10 @@
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.MarcBib2JsonLDConverter">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
    <logger name="se.kb.libris.whelks.importers">
       <level value="debug"/>
@@ -40,11 +38,9 @@
   <logger name="se.kb.libris.whelks.plugin.JsonLD2MarcConverter">
       <level value="trace"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter">
       <level value="error"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
   </logger>
@@ -57,7 +53,7 @@
   <logger name="se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter">
       <level value="trace"/>
   /logger>
-  <logger name="se.kb.libris.whelks.basic.Document">
+  <logger name="se.kb.libris.whelks.basic">
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.WhelkInitializer">
@@ -77,9 +73,6 @@
   </logger>
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
       <level value="trace"/>
-  </logger>
-<logger name="se.kb.libris.whelks.api.RestAPI">
-      <level value="debug"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.ISXNTool">
       <level value="debug"/>
