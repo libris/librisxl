@@ -4,7 +4,6 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.basic.BasicDocument
 import se.kb.libris.whelks.basic.BasicFormatConverter
 
 
@@ -38,7 +37,7 @@ class MarcFrameConverter extends BasicFormatConverter {
     Document doConvert(Document doc) {
         def source = doc.dataAsJson
         def result = createFrame(source)
-        return new BasicDocument(doc)
+        return new Document(doc)
             .withData(mapper.writeValueAsBytes(result))
             .withContentType("application/ld+json")
     }
