@@ -231,7 +231,7 @@
       "$d": {"property": "lifeSpan", "pattern": "(\\d+)(?:-(\\d+))?",
         "properties": ["birthYear", "deathYear"]},
       "construct": {
-        "label": {", ": [ "familyName",
+        "controlledLabel": {", ": [ "familyName",
                           {" ": ["givenName", {"(%s)": [1, "numeration"]}]},
                           "personTitle",
                           {"%s-%s": [1, "birthYear", "deathYear"]} ]}
@@ -336,7 +336,7 @@
       "$b": {"property": "otherPhysicalDetails"},
       "$e": {"property": "accompanyingMaterial"},
       "$3": {
-        "previousEndsWith": "+",
+        "TODO:previousEndsWith": "+",
         "property": "materialsSpecified"
       }
     },
@@ -396,7 +396,8 @@
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
       "$a": {"property": "prefLabel"},
-      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"}
+      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
+      "$0": {"TODO:uriTemplate": "/resource/auth/{_}"}
     },
     "651": {
       "inherit": "650",

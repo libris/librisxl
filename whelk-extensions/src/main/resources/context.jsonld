@@ -35,7 +35,8 @@
     "Concept": "skos:Concept",
     "prefLabel": "skos:prefLabel",
     "altLabel": "skos:altLabel",
-    "closeMatch": "skos:closeMatch"
+    "closeMatch": "skos:closeMatch",
+    "controlledLabel": {"@id": "xf:controlledLabel", "_note": "^foaf:focus / skos:prefLabel"}
   }, {
     "Record": "foaf:Document",
     "describedby": "iana:describedby",
