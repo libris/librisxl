@@ -135,14 +135,14 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    void index(Document doc, String indexName) {
+    void index(IndexDocument doc, String indexName) {
         if (doc) {
             addDocument(doc, indexType, indexName)
         }
     }
 
     @Override
-    void bulkIndex(Iterable<Document> doc, String indexName) {
+    void bulkIndex(Iterable<IndexDocument> doc, String indexName) {
         addDocuments(doc, indexName)
     }
 
@@ -173,6 +173,8 @@ abstract class ElasticSearch extends BasicPlugin {
         if (q.query == "*") {
             log.debug("Setting matchAll")
             srb.setQuery(matchAllQuery())
+        } else if (q.phraseQuery) {
+            srb.setQuery(text(q.phraseField, q.phraseValue))
         } else {
             def query = queryString(q.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
             if (q.fields) {
@@ -225,7 +227,7 @@ abstract class ElasticSearch extends BasicPlugin {
         def response = performExecute(srb)
         log.trace("SearchResponse: " + response)
 
-        def results = new BasicSearchResult(0)
+        def results = new SearchResult(0)
 
         if (response) {
             log.debug "Total hits: ${response.hits.totalHits}"
@@ -284,8 +286,8 @@ abstract class ElasticSearch extends BasicPlugin {
         }
     }
 
-    String determineDocumentType(Document doc) {
-        def idxType = doc.tags.find { it.type.toString() == "entityType"}?.value?.toLowerCase()
+    String determineDocumentType(IndexDocument doc) {
+        def idxType = doc.type?.toLowerCase()
         if (!idxType) {
             try {
                 idxType = doc.identifier.toString().split("/")[1]
@@ -300,7 +302,7 @@ abstract class ElasticSearch extends BasicPlugin {
         return idxType
     }
 
-    void addDocument(Document doc, String indexName) {
+    void addDocument(IndexDocument doc, String indexName) {
         addDocuments([doc], indexName)
     }
 
@@ -388,8 +390,8 @@ abstract class ElasticSearch extends BasicPlugin {
         return facets
     }
 
-    Document createDocumentFromHit(hit) {
-        return new BasicDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+    IndexDocument createDocumentFromHit(hit) {
+        return new IndexDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
     }
 
     URI translateIndexIdTo(id) {

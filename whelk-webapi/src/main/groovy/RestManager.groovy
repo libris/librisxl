@@ -38,31 +38,23 @@ class RestManager extends Application {
 
         log.debug("Looking for suitable APIs to attach")
 
-        def rootwhelk
-
-        whelks.each {
-            if (it instanceof HttpWhelk && it.contentRoot == "") {
-                rootwhelk = it
-            } else {
-                attachApis(router, it)
-            }
+        def sortedWhelks = whelks.sort { -it.contentRoot?.length() }
+        
+        sortedWhelks.each {
+            if (it instanceof HttpWhelk) {
+                def rapi = new RootRouteRestlet(it)
+                log.debug("Attaching RootRoute API at ${rapi.path}")
+                router.attach(rapi.path, rapi)
+                def dapi = new DiscoveryAPI(it)
+                log.debug("Attaching Discovery API at ${dapi.path}")
+                router.attach(dapi.path, dapi)
+            } 
+            attachApis(router, it)
         }
-        log.debug("Attached subwhelks.")
-        if (rootwhelk) {
-            log.debug("Now attaching root whelk.")
-            attachApis(router, rootwhelk)
-        }
-
         return router
     }
 
     void attachApis(router, whelk) {
-        log.debug("Attaching RootRoute API")
-        def rapi = new RootRouteRestlet(whelk)
-        router.attach(rapi.path, rapi)
-        log.debug("Attaching Discovery API")
-        def dapi = new DiscoveryAPI(whelk)
-        router.attach(dapi.path, dapi)
         log.debug("Getting APIs for whelk ${whelk.id}")
         for (api in whelk.getAPIs()) {
             if (!api.varPath) {

@@ -29,7 +29,7 @@ abstract class ElasticStorage extends ElasticSearch {
         if (response && response.exists()) {
             def ts = (response.field("_timestamp") ? response.field("_timestamp").value : null)
             try {
-                return new BasicDocument(response.sourceAsString())
+                return new Document(response.sourceAsString())
             } catch (DocumentException de) {
                 log.error("Failed to created document with uri ${uri} from source - " + de.getMessage(), de)
             }
@@ -88,7 +88,7 @@ abstract class ElasticStorage extends ElasticSearch {
             response.hits.hits.each {
                 if (loadDocuments) {
                     try {
-                        results.add(new BasicDocument(new String(it.source())))
+                        results.add(new Document(new String(it.source())))
                     } catch (DocumentException de) {
                         log.error("Failed to created document with id ${it.id} from source - " + de.getMessage(), de)
                     }

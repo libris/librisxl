@@ -19,7 +19,7 @@ class HttpStandardWhelk extends StandardWhelk implements HttpWhelk {
 
     public void setContentRoot(String r) {
         this.contentRoot = r?.replaceAll(/\/$/, "")
-        log.info("ContentRoot set to $contentRoot")
+        log.info("ContentRoot set to $contentRoot for whelk " + this.id)
     }
 }
 
@@ -34,6 +34,6 @@ class HttpCombinedWhelk extends CombinedWhelk implements HttpWhelk {
 
     public void setContentRoot(String r) {
         this.contentRoot = r?.replaceAll(/\/$/, "")
-        log.info("ContentRoot set to $contentRoot")
+        log.info("ContentRoot set to $contentRoot for whelk " + this.id)
     }
 }

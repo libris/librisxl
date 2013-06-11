@@ -17,7 +17,7 @@ def i = args.length > 4? args[4] as int : 1
 def conv = new MarcMapJSConverter(marcmap, script, obj, func)
 
 def convert = {
-    def source = new BasicDocument().withIdentifier(id).withData(new File(data).text)
+    def source = new Document().withIdentifier(id).withData(new File(data).text)
     return conv.convert(source)[0]
 }
 

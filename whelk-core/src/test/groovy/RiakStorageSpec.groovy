@@ -1,13 +1,13 @@
 package se.kb.libris.whelks.component
 
 import spock.lang.*
-import se.kb.libris.whelks.basic.BasicDocument
+import se.kb.libris.whelks.Document
 import java.net.URI
 
 class RiakStorageSpec extends Specification {
 
     def rs = new RiakStorage("bib")
-    def doc = new BasicDocument().withIdentifier("/bib/777").withData("test").withContentType("text/plain")
+    def doc = new Document().withIdentifier("/bib/777").withData("test").withContentType("text/plain")
     
     def "should store document in riak"(){
         when:

@@ -65,7 +65,7 @@ class CombinedWhelk extends StandardWhelk {
     @Override
     Document createDocument(data, metadata) {
         log.debug("Creating document")
-        def doc = new BasicDocument().withData(data)
+        def doc = new Document().withData(data)
         metadata.each { param, value ->
             log.trace("Adding $param = $value")
             doc = doc."with${param.capitalize()}"(value)

@@ -11,11 +11,11 @@
                     "metasearch",
                     "documentapi",
                     "marcconverter",
-                    "cleanupindexconverter",
                     "cleanupconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
                     "namecomplete",
+                    "nameexpander",
                     "subjcomplete"
                     ],
                 "contentRoot" : "/"
@@ -23,7 +23,7 @@
         },
         {
             "resource":{
-                "_class" : "se.kb.libris.whelks.ResourceWhelk",
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool" ]
             }
         }
@@ -88,12 +88,6 @@
             }
         },
         {
-            "cleanupindexconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter",
-                "_priority" : 1
-            }
-        },
-        {
             "entityextractor" : {
                 "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter",
                 "_priority" : 2
@@ -141,13 +135,20 @@
             "subjcomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : {"queryFields":[
+                              "authoritativeName",
+                              "term",
                               "label"
                             ],
                             "infoFields":[
                             ],
-                            "indexTypes":"subject",
+                            "indexTypes":"concept",
                             "pathEnd":"_subject"
                             }
+            }
+        },
+        {
+            "nameexpander" : {
+                "_class" : "se.kb.libris.whelks.api.CompleteExpander"
             }
         },
         {

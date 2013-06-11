@@ -112,6 +112,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
 
     String description = "Whelk root routing API"
     String id = "RootRoute"
+    def pathEnd = ""
 
     RootRouteRestlet(Whelk whelk) {
         this.whelk = whelk
@@ -119,11 +120,9 @@ class RootRouteRestlet extends BasicWhelkAPI {
 
     @Override
     String getPath() {
-        if (this.whelk instanceof HttpWhelk) {
-            return this.whelk.contentRoot
-        } else {
-            return "/" + this.whelk.id + "/"
-        }
+        if (this.whelk.contentRoot == "") {
+            return "/"
+        } else return "/" + this.whelk.contentRoot + "/"
     }
 
     @Override
@@ -133,34 +132,29 @@ class RootRouteRestlet extends BasicWhelkAPI {
         if (request.method == Method.GET) {
             discoveryAPI = new DiscoveryAPI(this.whelk)
             def uri = new URI(discoveryAPI.path)
-            log.info "RootRoute API handling route to ${uri} ..."
             discoveryAPI.handle(request, response)
-       } else if (request.method == Method.POST) {
-            if (request.attributes?.get("identifier") != null) {
-                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
-            } else {
-                try {
-                    def identifier
-                    Document doc = null
-                    def headers = request.attributes.get("org.restlet.http.headers")
-                    log.trace("headers: $headers")
-                    log.debug("request: $request")
-                    def link = headers.find { it.name.equals("link") }?.value
-                    doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString()])
-                    if (link != null) {
-                        log.trace("Adding link $link to document...")
-                        doc = doc.withLink(link)
-                    }
-                    identifier = this.whelk.add(doc)
-                    response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
-                    response.entity.setTag(new Tag(doc.timestamp as String, false))
-                    log.debug("Saved document $identifier")
-                    response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                    log.info("Redirecting with location ref " + request.getRootRef().toString() + identifier)
-                    response.setLocationRef(request.getRootRef().toString() + "${identifier}")
-                } catch (WhelkRuntimeException wre) {
-                    response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
+        } else if (request.method == Method.POST) {
+            try {
+                def identifier
+                Document doc = null
+                def headers = request.attributes.get("org.restlet.http.headers")
+                log.trace("headers: $headers")
+                log.debug("request: $request")
+                def link = headers.find { it.name.equals("link") }?.value
+                doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString()])
+                if (link != null) {
+                    log.trace("Adding link $link to document...")
+                    doc = doc.withLink(link)
                 }
+                identifier = this.whelk.add(doc)
+                response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
+                response.entity.setTag(new Tag(doc.timestamp as String, false))
+                log.debug("Saved document $identifier")
+                response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
+                log.info("Redirecting with location ref " + request.getRootRef().toString() + identifier)
+                response.setLocationRef(request.getRootRef().toString() + "${identifier}")
+            } catch (WhelkRuntimeException wre) {
+                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
             }
         } else if (request.method == Method.PUT) {
             documentAPI = new DocumentRestlet(this.whelk)
@@ -231,8 +225,11 @@ class DocumentRestlet extends BasicWhelkAPI {
             } catch (WhelkRuntimeException wrte) {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
             }
-        }
-        else if (request.method == Method.PUT || request.method == Method.POST) {
+        } else if (request.method == Method.POST) {
+            if (request.attributes?.get("identifier") != null) {
+                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
+            }
+        } else if (request.method == Method.PUT) {
             try {
                 def identifier
                 Document doc = null
@@ -244,6 +241,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 } else {
                     doc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString()])
                 }
+                log.debug("Created document with id ${doc.identifier}, ct: ${doc.contentType} ($path)")
                 if (link != null) {
                     log.trace("Adding link $link to document...")
                     doc = doc.withLink(link)
@@ -251,8 +249,8 @@ class DocumentRestlet extends BasicWhelkAPI {
                 // Check If-Match
                 def ifMatch = headers.find { it.name.equalsIgnoreCase("If-Match") }?.value
                 if (ifMatch
-                        && this.whelk.get(new URI(path))
-                        && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
+                    && this.whelk.get(new URI(path))
+                    && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
                     response.setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
                     identifier = this.whelk.add(doc)
@@ -307,9 +305,9 @@ class SearchRestlet extends BasicWhelkAPI {
             def callback = reqMap.get("callback")
             def results = this.whelk.search(query)
             def jsonResult =
-                (callback ? callback + "(" : "") +
-                results.toJson() +
-                (callback ? ");" : "")
+            (callback ? callback + "(" : "") +
+            results.toJson() +
+            (callback ? ");" : "")
 
             response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
         } catch (WhelkRuntimeException wrte) {
@@ -331,7 +329,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
 
     def queryFacets = [
         "custom.bookSerial": [
-             //"ebook": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
+            //"ebook": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
              "ebook": "about.marc:typeOfRecord.code:a about.instanceOf.marc:bibLevel.code:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
              "audiobook": "leader.subfields.typeOfRecord:i leader.subfields.bibLevel:m fields.007.subfields.carrierType:s",
              "eserial": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
@@ -395,14 +393,14 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 /*
                 q.addFacet("typeOfRecord")
                 q.addFacet("bibLevel")
-                */
+                 */
                 //q = addQueryFacets(q)
                 q = expandQuery(q)
                 results = this.whelk.search(q)
                 def jsonResult =
-                    (callback ? callback + "(" : "") +
-                    results.toJson() +
-                    (callback ? ");" : "")
+                (callback ? callback + "(" : "") +
+                results.toJson() +
+                (callback ? ");" : "")
 
                 response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
             } else {
@@ -434,14 +432,6 @@ class ISXNTool extends BasicWhelkAPI {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
         String isbnString = querymap.get("isbn")
         if (isbnString) {
-/*
-            try {
-                String formattedIsbn = IsbnParser.parse(isbnString).toString(true)
-                response.setEntity('{"providedIsbn":"'+isbnString+'","formattedIsbn":"'+formattedIsbn+'"}', MediaType.APPLICATION_JSON)
-            } catch (java.lang.StringIndexOutOfBoundsException iobe) {
-                response.setEntity('{"error":"Parse error due to wrong parameter length."}', MediaType.APPLICATION_JSON)
-            }
- */
             handleIsbn(isbnString, querymap, request, response)
         } else {
             response.setEntity('{"error":"No valid parameter found."}', MediaType.APPLICATION_JSON)
@@ -453,7 +443,12 @@ class ISXNTool extends BasicWhelkAPI {
         isbnString = isbnString.replaceAll(/[^\dxX]/, "")
         def isbnmap = [:]
         isbnmap["provided"] = providedIsbn
-        Isbn isbn = IsbnParser.parse(isbnString)
+        Isbn isbn = null
+        try {
+            isbn = IsbnParser.parse(isbnString)
+        }  catch (se.kb.libris.utils.isbn.IsbnException iobe) {
+            log.debug("Validation of isbn $isbnString failed: wrong length")
+        }
         if (isbn) {
             log.debug("isbnString: $isbnString")
             String formattedIsbn = isbn.toString(true)
@@ -487,11 +482,11 @@ class ISXNTool extends BasicWhelkAPI {
                     n += Character.getNumericValue(isbn.charAt(i))*Isbn.weights[i];
                 }
                 n %= 11;
-                    valid = (isbn.charAt(9) == (n == 10 ? 'X' : (""+n).charAt(0)))
-                    log.debug("isbn10 check digit: $n ($valid)")
+                valid = (isbn.charAt(9) == (n == 10 ? 'X' : (""+n).charAt(0)))
+                log.debug("isbn10 check digit: $n ($valid)")
             } else if (isbn.length() == 13) {
                 for (int i=0;i<isbn.length()-1;i++)
-                    n += Character.getNumericValue(isbn.charAt(i))*Isbn.weights13[i];
+                n += Character.getNumericValue(isbn.charAt(i))*Isbn.weights13[i];
                 n = (10 - (n % 10)) % 10;
                 valid = (isbn.charAt(12) == (""+n).charAt(0))
                 log.debug("isbn13 check digit: $n ($valid)")
@@ -513,8 +508,13 @@ class CompleteExpander extends BasicWhelkAPI {
     void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
         String url = querymap.get("id")
+        String name = querymap.get("name")
         if (url) {
             def r = whelk.search(new ElasticQuery(url).addField("_id"))
+        } else if (name) {
+            def r = whelk.search(new ElasticQuery("about.instanceOf.authorList.authorizedAccessPoint.untouched", name).withType("bib"))
+            //def r = whelk.search(new ElasticQuery("internalRemark.untouched", name).withType("bib"))
+            response.setEntity(r.toJson(), MediaType.APPLICATION_JSON)
         } else {
             response.setEntity('{"error":"Parameter \"id\" is missing."}', MediaType.APPLICATION_JSON)
         }
@@ -536,9 +536,9 @@ class AutoComplete extends BasicWhelkAPI {
 
     /*
     def void addNamePrefix(String prefix) {
-        namePrefixes << prefix
+    namePrefixes << prefix
     }
-    */
+     */
 
     AutoComplete(Map lists) {
         namePrefixes.addAll(lists.get("queryFields"))
@@ -586,15 +586,15 @@ class AutoComplete extends BasicWhelkAPI {
             def results = this.whelk.search(query)
             /*
             def jsonResult = 
-                (callback ? callback + "(" : "") +
-                results.toJson() +
-                (callback ? ");" : "") 
-                */
+            (callback ? callback + "(" : "") +
+            results.toJson() +
+            (callback ? ");" : "")
+             */
             def c = new SuggestResultsConverter(results, [namePrefixes[0]], extraInfo)
 
             response.setEntity(c.toJson(), MediaType.APPLICATION_JSON)
-         //else if (String subject = querymap.get("subject")) {
-             //handle subject
+            //else if (String subject = querymap.get("subject")) {
+            //handle subject
         } else {
             response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
         }
@@ -629,10 +629,10 @@ class SuggestResultsConverter {
             list << doc
             /*
             if (it.identifier.toString().contains("/bib/")) {
-                list << doc
-                //list << mapBibRecord(it.identifier, doc)
+            list << doc
+            //list << mapBibRecord(it.identifier, doc)
             }
-            */
+             */
         }
         out["hits"] = results.numberOfHits
         out["list"] = list
@@ -641,56 +641,56 @@ class SuggestResultsConverter {
 
     /*
     def getDeepValue(Map map, String key) {
-        //log.trace("getDeepValue: map = $map, key = $key")
-        def keylist = key.split(/\./)
-        def lastkey = keylist[keylist.length-1]
-        def result
-        for (int i = 0; i < keylist.length; i++) {
-            def k = keylist[i]
-            while (map.containsKey(k)) {
-                if (k == lastkey) {
-                    result = map.get(k)
-                    map = [:]
-                } else {
-                    if (map.get(k) instanceof Map) {
-                        map = map.get(k)
-                    } else {
-                        result = []
-                        for (item in map[k]) {
-                            def dv = getDeepValue(item, keylist[i..-1].join("."))
-                            if (dv) {
-                                result << dv
-                            }
-                        }
-                        map = [:]
-                    }
-                }
-            }
-        }
-        if (!result && (lastkey == key)) {
-            result = findNestedValueForKey(map, key)
-        }
-        return ((result && result instanceof List && result.size() == 1) ? result[0] : result)
+    //log.trace("getDeepValue: map = $map, key = $key")
+    def keylist = key.split(/\./)
+    def lastkey = keylist[keylist.length-1]
+    def result
+    for (int i = 0; i < keylist.length; i++) {
+    def k = keylist[i]
+    while (map.containsKey(k)) {
+    if (k == lastkey) {
+    result = map.get(k)
+    map = [:]
+    } else {
+    if (map.get(k) instanceof Map) {
+    map = map.get(k)
+    } else {
+    result = []
+    for (item in map[k]) {
+    def dv = getDeepValue(item, keylist[i..-1].join("."))
+    if (dv) {
+    result << dv
+    }
+    }
+    map = [:]
+    }
+    }
+    }
+    }
+    if (!result && (lastkey == key)) {
+    result = findNestedValueForKey(map, key)
+    }
+    return ((result && result instanceof List && result.size() == 1) ? result[0] : result)
     }
 
     def findNestedValueForKey(Map map, String key) {
-        def result
-        map.each { k, v ->
-            if (k == key) {
-                result = v
-            } else if (!result && v instanceof Map) {
-                result = findNestedValueForKey(v, key)
-            } else if (!result && v instanceof List) {
-                v.each {
-                    if (it instanceof Map) {
-                        result = findNestedValueForKey(it, key)
-                    }
-                }
-            }
-        }
-        return result
+    def result
+    map.each { k, v ->
+    if (k == key) {
+    result = v
+    } else if (!result && v instanceof Map) {
+    result = findNestedValueForKey(v, key)
+    } else if (!result && v instanceof List) {
+    v.each {
+    if (it instanceof Map) {
+    result = findNestedValueForKey(it, key)
     }
-    */
+    }
+    }
+    }
+    return result
+    }
+     */
 
     def mapAuthRecord(id, r) {
         def name = [:]
@@ -755,8 +755,8 @@ class ResourceListRestlet extends BasicWhelkAPI {
     ResourceListRestlet() {
         mapper = new ObjectMapper()
         codeFiles.each { key, fileName ->
-           log.debug("Load codes $key")
-           this[(key)] = loadCodes(key)
+            log.debug("Load codes $key")
+            this[(key)] = loadCodes(key)
         }
     }
 
@@ -789,12 +789,12 @@ class ResourceListRestlet extends BasicWhelkAPI {
 
 /*@Log
 class TemplateRestlet extends BasicWhelkAPI {
-    def pathEnd = "_template"
+def pathEnd = "_template"
 
-    String description = "API for templates."
-    String id = "TemplateAPI"
+String description = "API for templates."
+String id = "TemplateAPI"
 
-    String templateDir =
+String templateDir =
 }*/
 
 @Log
@@ -862,11 +862,11 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
             results = this.whelk.search(queryObj)
 
             results.hits.each {
-               def identifier = it.identifier.toString()
-               def d = whelk.get(new URI(identifier))
-               if (d) {
-                   records << d
-               }
+                def identifier = it.identifier.toString()
+                def d = whelk.get(new URI(identifier))
+                if (d) {
+                    records << d
+                }
             }
 
             outjson << "{ \"list\": ["

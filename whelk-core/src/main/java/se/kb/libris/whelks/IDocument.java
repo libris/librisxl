@@ -6,7 +6,8 @@ import java.util.Date;
 import java.util.Set;
 import java.util.Map;
 
-public interface Document {
+@Deprecated
+public interface IDocument {
     public URI getIdentifier();
     public void setIdentifier(URI identifier);
     public String getVersion();

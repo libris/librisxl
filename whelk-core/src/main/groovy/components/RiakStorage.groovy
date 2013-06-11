@@ -1,7 +1,6 @@
 package se.kb.libris.whelks.component
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.basic.BasicDocument
 import se.kb.libris.whelks.plugin.BasicPlugin
 import se.kb.libris.whelks.exception.*
 import groovy.util.logging.Slf4j as Log
@@ -225,7 +224,7 @@ class RiakStorage extends RiakClient implements Storage {
             String bucket_name = extractBucketNameFromURI(uri)
             Bucket bucket = getFetchBucket(bucket_name)
             IRiakObject riakObject = bucket.fetch(key).execute()
-            return new BasicDocument().withIdentifier(key).withData(riakObject.value).withContentType(riakObject.getContentType())
+            return new Document().withIdentifier(key).withData(riakObject.value).withContentType(riakObject.getContentType())
         } catch (Exception e){
             log.debug("Exception trying to fetch " + uri.path + " " + e.message)
         }

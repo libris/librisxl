@@ -30,25 +30,6 @@ class ReindexOnStartupWhelk extends StandardWhelk {
     }
 }
 
-
-@Log
-class ResourceWhelk extends StandardWhelk {
-
-    ResourceWhelk(String prefix) {
-        super(prefix)
-    }
-
-    URI add(Document doc) {
-        doc = sanityCheck(doc)
-
-        for (storage in storages) {
-            storage.store(doc, this.id)
-        }
-
-        return doc.identifier
-    }
-}
-
 @Log
 class ThreadedReindexingWhelk extends StandardWhelk {
     ThreadedReindexingWhelk(String pfx) {super(pfx)}
