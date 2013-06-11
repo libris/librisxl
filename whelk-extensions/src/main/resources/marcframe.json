@@ -83,15 +83,14 @@
       "repeatedBy": "006",
       "[7:11]": {"propId": "yearTime1"},
       "[11:15]": {"propId": "yearTime2"},
-      "[35:38]": {"propId": "language"},
+      "[35:38]": {"domainEntity": "Work", "property": "language", "TODO:syncWith": [null]},
 
       "0+6": {"range": "date"},
       "publicationStatus": {"dateTypeFor": "008.0+6"},
       "7+4": {"id": "yearTime1", "range": "date"},
       "11+4": {"id": "yearTime2", "range": "date"},
       "catalogingSource": {},
-      "modifiedRecord": {"detail": 0},
-      "language": {"sameValueAs": [null]}
+      "modifiedRecord": {"detail": 0}
     },
 
     "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
