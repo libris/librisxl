@@ -52,67 +52,67 @@ class MarcFrameConverterSpec extends Specification {
         def frame = converter.createFrame(marc)
         then:
         frame == [
-            "@id": "/resource/bib/7149593",
-            "@type": "Book",
-            "title": [
-                "@type": "TitleEntity",
-                "titleValue": "Anteckningar från en ö"
-            ],
-            "responsibilityStatement": "Tove Jansson, Tuulikki Pietilä",
-            "publication": [
-                [
-                    "@type": "ProviderEvent",
-                    "place": ["@type": "Place", "label": "Stockholm"],
-                    "providerName": "Bonnier",
-                    "providerDate": "1996"
-                ],
-            ],
-            "manufacture": [
-                [
-                    "@type": "ProviderEvent",
-                    "place": ["@type": "Place", "label": "Finland"],
-                ],
-            ],
-            "identifier": [
-                [
-                    "@type": "Identifier",
-                    "identifierValue": "91-0-056322-6",
-                    "identifierScheme": "ISBN",
-                    "identifierNote": "inb."
-                ],
-            ],
-            "instanceOf": [
+            "@id": "/bib/7149593",
+            "@type": "Record",
+            "controlNumber": "7149593",
+            "status": "c",
+            "typeOfRecord": "a",
+            "bibLevel": "m",
+            "characterCoding": "a",
+            "catForm": "a",
+            "about": [
+                "@id": "/resource/bib/7149593",
                 "@type": "Book",
-                "creator": [
+                "title": [
+                    "@type": "TitleEntity",
+                    "titleValue": "Anteckningar från en ö"
+                ],
+                "responsibilityStatement": "Tove Jansson, Tuulikki Pietilä",
+                "publication": [
                     [
-                        "@type": "Person",
-                        "label": "Jansson, Tove, 1914-2001",
-                        "birthYear": "1914",
-                        "deathYear": "2001",
-                        "familyName": "Jansson",
-                        "givenName": "Tove"
+                        "@type": "ProviderEvent",
+                        "place": ["@type": "Place", "label": "Stockholm"],
+                        "providerName": "Bonnier",
+                        "providerDate": "1996"
                     ],
                 ],
-                "contributor": [
+                "manufacture": [
                     [
-                        "@type": "Person",
-                        "label": "Pietil\u00e4, Tuulikki, 1917-",
-                        "birthYear": "1917",
-                        "familyName": "Pietil\u00e4",
-                        "givenName": "Tuulikki"
+                        "@type": "ProviderEvent",
+                        "place": ["@type": "Place", "label": "Finland"],
                     ],
-                ]
-            ],
-            "availability": "310:00",
-            "describedby": [
-                "@id": "/bib/7149593",
-                "@type": "Record",
-                "controlNumber": "7149593",
-                "status": "c",
-                "typeOfRecord": "a",
-                "bibLevel": "m",
-                "characterCoding": "a",
-                "catForm": "a"
+                ],
+                "identifier": [
+                    [
+                        "@type": "Identifier",
+                        "identifierValue": "91-0-056322-6",
+                        "identifierScheme": "ISBN",
+                        "identifierNote": "inb."
+                    ],
+                ],
+                "instanceOf": [
+                    "@type": "Book",
+                    "creator": [
+                        [
+                            "@type": "Person",
+                            "controlledLabel": "Jansson, Tove, 1914-2001",
+                            "birthYear": "1914",
+                            "deathYear": "2001",
+                            "familyName": "Jansson",
+                            "givenName": "Tove"
+                        ],
+                    ],
+                    "contributor": [
+                        [
+                            "@type": "Person",
+                            "controlledLabel": "Pietil\u00e4, Tuulikki, 1917-",
+                            "birthYear": "1917",
+                            "familyName": "Pietil\u00e4",
+                            "givenName": "Tuulikki"
+                        ],
+                    ]
+                ],
+                "availability": "310:00",
             ]
         ]
     }

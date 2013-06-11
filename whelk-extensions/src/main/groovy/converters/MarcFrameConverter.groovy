@@ -184,11 +184,11 @@ class MarcConversion {
         // * always one record and a primary "thing"
         // * the type of this thing is determined during processing
         def work = [:]
-        def instance = [
-            describedby: record
-        ]
+        def instance = [:]
         entityMap['Instance'] = instance
         entityMap['Work'] = work
+
+        record.about = instance
 
         def otherFields = []
         marcSource.fields.each { field ->
@@ -223,14 +223,14 @@ class MarcConversion {
             }
         }
         if (unknown) {
-            instance.unknown = unknown
+            record.unknown = unknown
         }
 
         // TODO: only(?) bib (monographies), and use a config-defined link..
         if (work.find { k, v -> k != "@type" }) {
             instance['instanceOf'] = work
         }
-        return instance
+        return record
     }
 
 }
