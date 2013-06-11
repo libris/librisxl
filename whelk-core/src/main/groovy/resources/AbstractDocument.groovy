@@ -3,9 +3,12 @@ package se.kb.libris.whelks
 import se.kb.libris.whelks.exception.*
 
 abstract class AbstractDocument {
+    @IsMetadata
     URI identifier
     byte[] data
+    @IsMetadata
     String contentType
+    @IsMetadata
     long size
 
     def withData(String dataString) {
@@ -38,10 +41,10 @@ abstract class AbstractDocument {
     }
 
     String getDataAsString() {
-        return new String(data, "UTF-8")
+        return new String(this.data, "UTF-8")
     }
 
     Map getDataAsMap() {
-        return mapper.readValue(data, Map)
+        return mapper.readValue(this.data, Map)
     }
 }

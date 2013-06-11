@@ -25,10 +25,7 @@ import se.kb.libris.whelks.exception.*
 @Log
 class Document extends AbstractDocument implements Resource {
     @IsMetadata
-    URI identifier
-
-    @IsMetadata
-    String version = "1", contentType
+    String version = "1"
 
     @IsMetadata
     Set<Link> links = new HashSet<Link>()
@@ -106,10 +103,6 @@ class Document extends AbstractDocument implements Resource {
         System.arraycopy(getData(), (int)offset, ret, 0, (int)length)
 
         return ret
-    }
-
-    long getSize() {
-        return (size ? size.longValue() : 0L)
     }
 
     @JsonIgnore
