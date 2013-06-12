@@ -3,10 +3,25 @@ package se.kb.libris.whelks
 import se.kb.libris.whelks.exception.*
 
 abstract class AbstractDocument {
+    @IsMetadata
     URI identifier
     byte[] data
+    @IsMetadata
     String contentType
+    @IsMetadata
     long size
+
+    void setIdentifier(String uri) {
+        try {
+            this.identifier = new URI(uri)
+        } catch (java.net.URISyntaxException e) {
+            throw new WhelkRuntimeException(e)
+        }
+    }
+
+    void setIdentifier(URI uri) {
+        this.identifier = uri
+    }
 
     def withData(String dataString) {
         return withData(dataString.getBytes("UTF-8"))
@@ -38,10 +53,10 @@ abstract class AbstractDocument {
     }
 
     String getDataAsString() {
-        return new String(data, "UTF-8")
+        return new String(this.data, "UTF-8")
     }
 
     Map getDataAsMap() {
-        return mapper.readValue(data, Map)
+        return mapper.readValue(this.data, Map)
     }
 }

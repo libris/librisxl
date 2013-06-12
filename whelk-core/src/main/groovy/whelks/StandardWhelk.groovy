@@ -126,6 +126,7 @@ class StandardWhelk implements Whelk {
                 }
             }
         }
+        log.trace("Document ${doc.identifier} has undergone formatconversion.")
         return doc
     }
 

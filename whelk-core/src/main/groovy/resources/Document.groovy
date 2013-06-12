@@ -25,20 +25,13 @@ import se.kb.libris.whelks.exception.*
 @Log
 class Document extends AbstractDocument implements Resource {
     @IsMetadata
-    URI identifier
-
-    @IsMetadata
-    String version = "1", contentType
-
+    String version = "1"
     @IsMetadata
     Set<Link> links = new HashSet<Link>()
-
     @IsMetadata
     Set<Tag> tags = new HashSet<Tag>()
-
     //@IsMetadata
     Set<Description> descriptions = new TreeSet<Description>()
-
     @IsMetadata
     long timestamp = 0
 
@@ -86,8 +79,16 @@ class Document extends AbstractDocument implements Resource {
     }
 
     private void copy(Document d) {
-        this.class.declaredFields.each {
-            if (!it.isSynthetic() && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
+        // First copy superclass fields
+        copyFields(this.class.superclass, d)
+        // Then copy locally declared fields
+        copyFields(this.class, d)
+    }
+
+    private void copyFields(Class c, Document d) {
+        c.declaredFields.each {
+            if (!it.isSynthetic()
+                    && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
                 this.(it.name) = d.(it.name)
             }
         }
@@ -106,10 +107,6 @@ class Document extends AbstractDocument implements Resource {
         System.arraycopy(getData(), (int)offset, ret, 0, (int)length)
 
         return ret
-    }
-
-    long getSize() {
-        return (size ? size.longValue() : 0L)
     }
 
     @JsonIgnore
