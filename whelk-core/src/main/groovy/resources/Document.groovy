@@ -175,6 +175,11 @@ class Document extends AbstractDocument implements Resource {
             it.getModifiers() != java.lang.reflect.Modifier.TRANSIENT &&
             it.getAnnotation(IsMetadata.class) != null
         }
+        fields.addAll(this.class.superclass.declaredFields.findAll {
+            !it.synthetic &&
+            it.getModifiers() != java.lang.reflect.Modifier.TRANSIENT &&
+            it.getAnnotation(IsMetadata.class) != null
+        })
         for (field in fields) {
             field.setAccessible(true)
             if (Set.class.isAssignableFrom(field.type)) {
