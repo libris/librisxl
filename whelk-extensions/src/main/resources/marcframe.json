@@ -268,7 +268,7 @@
       "inherit": "110",
       "rangeEntity": "Meeting",
       "$c": {"link": "place", "rangeEntity": "Place", "property": "label"},
-      "$d": "date"
+      "$d": {"property": "date"}
     },
 
     "210": {

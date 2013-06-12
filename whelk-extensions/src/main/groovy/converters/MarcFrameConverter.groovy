@@ -414,6 +414,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     void addSubfield(code, obj) {
         subfields[code] = obj
+        if (obj) assert subfields[code] instanceof Map
     }
 
     boolean convert(marcSource, value, entityMap) {
