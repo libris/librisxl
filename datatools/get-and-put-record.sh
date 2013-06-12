@@ -14,4 +14,4 @@ curl -s http://libris.kb.se/data/$TYPE/$ID?format=ISO2709 -o $MARCPATH
 $(dirname $0)/convert-iso2709-to-json.sh $MARCPATH > $JSONPATH
 
 #curl -XPUT -H "Content-Type:application/json" "http://devlab.libris.kb.se/whelks-core/$TYPE/$ID" --data-binary @$JSONPATH
-curl -XPUT -H "Content-Type:application/x-marc-json+$TYPE" "http://localhost:8080/whelk-webapi/$TYPE/$ID" --data-binary @$JSONPATH
+curl -XPUT -H "Content-Type:application/x-marc-json" "http://localhost:8080/whelk-webapi/$TYPE/$ID" --data-binary @$JSONPATH
