@@ -55,9 +55,7 @@ to upload all test documents into your local whelk. (See the script for how the 
 
 ### Run standalone data conversion on a single document
 
-    $ gradle convertMarc2JsonLD -Dargs="/bib/7149593 src/test/resources/marc2jsonld/in/bib/7149593.json build/"
-    $ gradle convertJsonLD2Marc -Dargs="build/7149593.json /tmp/"
-
+    $ gradle convertMarc2JsonLD -Dargs=src/test/resources/marc2jsonld/in/bib/7149593.json
 
 ## Setting up a proper instance
 
