@@ -110,6 +110,11 @@ class Document extends AbstractDocument implements Resource {
     }
 
     @JsonIgnore
+    void setIdentifier(URI uri) {
+        super.setIdentifier((URI) uri)
+    }
+
+    @JsonIgnore
     Date getTimestampAsDate() {
         return new Date(timestamp)
     }
