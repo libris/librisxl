@@ -11,6 +11,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
+    def authPoint = ["Person" : "controlledLabel", "Concept" : "prefLabel"]
 
     List<IndexDocument> doConvert(Resource doc) {
         List<IndexDocument> doclist = [new IndexDocument(doc)]
@@ -25,26 +26,17 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
             if (entities) {
                 if (entities instanceof List) {
                     for (entity in entities) {
-                        if (k == "creator" && entity.get("controlledLabel", null)) {
-                            doclist << createEntityDoc("person", entity, entity["controlledLabel"], doc.identifier, "creatorOf")
-                        } else if (k == "contributor" && entity.get("controlledLabel", null)) {
-                            doclist << createEntityDoc("person", entity, entity["controlledLabel"], doc.identifier, "contributor")
-                        } else if (k == "concept" && entity.get("prefLabel", null)) {
-                            doclist << createEntityDoc("concept", entity, entity["prefLabel"], doc.identifier, "subject")
-                        }
+                        def entityDoc = createEntityDoc(entity, doc.identifier, k)
+                        if (entityDoc) {
+                            doclist << entityDoc
+                        }    
                     }
                 } else if (entities instanceof Map) {
-                    /*if (entities.get("controlledLabel", null)) {
-                    doclist << createEntityDoc(k, entities, doc.identifier, entityLinks[(k)])
-                    }*/
-                    if (k == "creator" && entity.get("controlledLabel", null)) {
-                        doclist << createEntityDoc("person", entity, entity["controlledLabel"], doc.identifier, "creatorOf")
-                    } else if (k == "contributor" && entity.get("controlledLabel", null)) {
-                        doclist << createEntityDoc("person", entity, entity["controlledLabel"], doc.identifier, "contributor")
-                    } else if (k == "concept" && entity.get("prefLabel", null)) {
-                        doclist << createEntityDoc("concept", entity, entity["prefLabel"], doc.identifier, "subject")
+                    def entityDoc = createEntityDoc(entities, doc.identifier, k)
+                    if (entityDoc) {
+                        doclist << entityDoc
                     }
-                }
+               }
             }
         }
         if (json["@type"]) {
@@ -57,11 +49,17 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
         return doclist
     }
 
-    IndexDocument createEntityDoc(def type, def entityJson, def authPoint, def docId, def linkType) {
-        String pident = slugify(authPoint, docId, type)
-        entityJson["@id"] = pident
-        entityJson["recordPriority"] = 0
-        return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(pident).withType(type)
+    IndexDocument createEntityDoc(def entityJson, def docId, def linkType) {
+        try {
+            def type = entityJson["@type"]
+            def authPoint = entityJson[(authPoint[(type)])]
+            String pident = slugify(authPoint, docId, type)
+            entityJson["@id"] = pident
+            entityJson["recordPriority"] = 0
+            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(pident).withType(type)
+        } catch (Exception e) {
+            return null
+        }
     }
 
     String slugify(String authAccPoint, URI identifier, String entityType) {
