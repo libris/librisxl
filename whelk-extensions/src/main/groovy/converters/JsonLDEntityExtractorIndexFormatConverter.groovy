@@ -7,7 +7,7 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverter implements IndexFormatConverter {
+class JsonLDEntityExtractorIndexFormatConverter extends BasicSplittingFormatConverter<IndexDocument> implements IndexFormatConverter {
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()

@@ -31,8 +31,8 @@ class StandardWhelk implements Whelk {
             storage.store(doc, this.id)
         }
 
+        addToGraphStore(doc)
         addToIndex([doc])
-        addToQuadStore(doc)
 
         return doc.identifier
     }
@@ -48,8 +48,8 @@ class StandardWhelk implements Whelk {
                 storage.store(doc, this.id)
             }
         }
+        addToGraphStore(docs)
         addToIndex(docs)
-        addToQuadStore(docs)
     }
 
     @Override
@@ -97,7 +97,7 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    void addToQuadStore(doc) {}
+    void addToGraphStore(doc) {}
 
     @Override
     List<Document> loadAll(Date since = null) {

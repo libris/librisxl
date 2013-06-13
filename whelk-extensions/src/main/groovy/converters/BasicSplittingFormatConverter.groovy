@@ -4,18 +4,18 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.Resource
 import se.kb.libris.whelks.IndexDocument
 
-abstract class BasicIndexFormatConverter extends BasicPlugin {
+abstract class BasicSplittingFormatConverter<T> extends BasicPlugin {
 
-    final List<IndexDocument> convertBulk(List<Resource> docs) {
-        List<IndexDocument> outdocs = new ArrayList<IndexDocument>()
+    final List<T> convertBulk(List<Resource> docs) {
+        List<T> outdocs = new ArrayList<IndexDocument>()
         for (doc in docs) {
             outdocs.addAll(convert(doc))
         }
         return outdocs
     }
 
-    final List<IndexDocument> convert(Resource doc) {
-        List<IndexDocument> outdocs = new ArrayList<IndexDocument>()
+    final List<T> convert(Resource doc) {
+        List<T> outdocs = new ArrayList<IndexDocument>()
         if (doc.contentType == requiredContentType) {
             outdocs.addAll(doConvert(doc))
         } else {
@@ -24,5 +24,5 @@ abstract class BasicIndexFormatConverter extends BasicPlugin {
         return outdocs
     }
 
-    abstract List<IndexDocument> doConvert(Resource doc)
+    abstract List<T> doConvert(Resource doc)
 }

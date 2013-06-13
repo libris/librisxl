@@ -22,7 +22,7 @@ class HttpGraphStore extends BasicPlugin implements GraphStore {
         client = new DefaultHttpClient()
     }
 
-    void update(URI graph, Document doc) {
+    void update(URI graph, RDFDescription doc) {
         HttpPut put = new HttpPut(new URIBuilder(graphStorePutURI).addParameter("graph", graph.toString()).build())
         def entity = new ByteArrayEntity(doc.data)
         entity.setContentType(doc.contentType)

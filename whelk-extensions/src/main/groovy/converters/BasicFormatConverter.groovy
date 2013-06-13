@@ -5,10 +5,9 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.plugin.*
 
-@Log
-abstract class BasicFormatConverter extends BasicPlugin implements FormatConverter {
+abstract class BasicFormatConverter extends BasicPlugin {
 
-    List<Document> convertBulk(List<Document> docs) {
+    final List<Document> convertBulk(List<Document> docs) {
         def outdocs = []
         for (doc in docs) {
             outdocs.add(convert(doc))

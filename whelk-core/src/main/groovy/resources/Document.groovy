@@ -50,12 +50,6 @@ class Document extends AbstractDocument implements Resource {
         fromJson(jsonFile)
     }
 
-    /*
-    Document(Map map) {
-        fromMap(map)
-    }
-    */
-
     Document(Document d) {
         copy(d)
     }
