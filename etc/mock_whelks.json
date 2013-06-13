@@ -113,7 +113,7 @@
             "namecomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : {"queryFields":[
-                              "authoritativeName",
+                              "controlledLabel",
                               "label"
                             ],
                             "infoFields":[
@@ -135,7 +135,9 @@
             "subjcomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : {"queryFields":[
-                              "authoritativeName",
+                              "controlledLabel",
+                              "prefLabel",
+                              "notation",
                               "term",
                               "label"
                             ],
