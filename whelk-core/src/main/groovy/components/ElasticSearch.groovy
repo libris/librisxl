@@ -399,6 +399,6 @@ abstract class ElasticSearch extends BasicPlugin {
         id.split(URI_SEPARATOR).each {
             pathelements << java.net.URLEncoder.encode(it, "UTF-8")
         }
-        return  new URI(pathelements.join("/"))
+        return  new URI("/"+pathelements.join("/"))
     }
 }
