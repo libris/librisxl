@@ -27,7 +27,11 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
         if (json.about?.get("@type", null)) {
             log.debug("Found authority entity")
-            doclist << createEntityDoc(json.about, doc.identifier, 0, false)
+            if (json.about.get("@type") == "Person") {
+                doclist << createEntityDoc(json.about, doc.identifier, 10, false)
+            } else {
+                doclist << createEntityDoc(json.about, doc.identifier, 0, false)
+            }
         }
 
         json.about?.each { k, entities ->
@@ -73,8 +77,9 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 def authPoint = entityJson[(authPoint[(type)])]
                 pident = slugify(authPoint, docId, type)
                 entityJson["extractedFrom"] = ["@id":docId]
+            } else {
+                entityJson["@id"] = pident
             }
-            entityJson["@id"] = pident
             entityJson["recordPriority"] = prio
             entityJson.get("unknown", null) ?: entityJson.remove("unknown")
             return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(pident).withType(type)

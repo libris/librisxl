@@ -623,7 +623,7 @@ class SuggestResultsConverter {
             data.remove("unknown")
             def doc = ["data":data]
             doc.identifier = it.identifier
-            if (it.identifier.toString().contains("/auth/")) {
+            if (it.identifier.toString() =~ /\/auth\/\d+/) {
                 doc["authorized"] = true
             }
             list << doc
