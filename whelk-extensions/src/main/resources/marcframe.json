@@ -500,7 +500,7 @@
     "667" : {},
     "670" : {},
     "675" : {},
-    "678" : {},
+    "678" : {"$a": {"addProperty": "note"}},
     "680" : {"$i": {"addProperty": "note"}},
     "750" : {
       "TODO:specific domainEntity": "Concept",
