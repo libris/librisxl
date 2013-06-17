@@ -1,5 +1,7 @@
 package se.kb.libris.whelks.plugin
 
+import groovy.util.logging.Slf4j as Log
+
 import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
@@ -7,6 +9,7 @@ import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.basic.BasicFormatConverter
 
 
+@Log
 class MarcFrameConverter extends BasicFormatConverter {
 
     MarcConversion conversion

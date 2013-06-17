@@ -23,7 +23,7 @@ import se.kb.libris.whelks.exception.*
 @interface IsMetadata {}
 
 @Log
-class Document extends AbstractDocument implements Resource {
+class Document extends Resource {
     @IsMetadata
     String version = "1"
     @IsMetadata

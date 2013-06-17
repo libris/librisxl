@@ -7,14 +7,16 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class JsonLDEntityExtractorIndexFormatConverter extends BasicSplittingFormatConverter<IndexDocument> implements IndexFormatConverter {
+class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverter {
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
     def authPoint = ["Person" : "controlledLabel", "Concept" : "prefLabel"]
 
-    List<IndexDocument> doConvert(Resource doc) {
-        List<IndexDocument> doclist = [new IndexDocument(doc)]
+    List<IndexDocument> doConvert(IndexDocument doc) {
+        log.debug("doConvert. Doc is $doc")
+
+        List<IndexDocument> doclist = [doc]
         def json = mapper.readValue(doc.dataAsString, Map)
         def indexTypeLists = [
             "creator": json.about?.instanceOf?.creator,
@@ -29,7 +31,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicSplittingFormatConv
                         def entityDoc = createEntityDoc(entity, doc.identifier, k)
                         if (entityDoc) {
                             doclist << entityDoc
-                        }    
+                        }
                     }
                 } else if (entities instanceof Map) {
                     def entityDoc = createEntityDoc(entities, doc.identifier, k)

@@ -83,21 +83,35 @@ class StandardWhelk implements Whelk {
 
     @groovy.transform.CompileStatic
     void addToIndex(List<Document> docs) {
-        def idxDocs = []
-        idxDocs.addAll(docs)
+        List<IndexDocument> idxDocs = convertToIndexDocuments(docs)
         if (indexes.size() > 0) {
             log.debug("Adding to indexes")
             for (ifc in getIndexFormatConverters()) {
                 log.debug("Running indexformatconverter $ifc")
-                idxDocs = (List<IndexDocument>)ifc.convertBulk((List<Resource>)idxDocs)
+                idxDocs = ifc.convertBulk(idxDocs)
             }
             for (idx in indexes) {
-                idx.bulkIndex((List<IndexDocument>)idxDocs, this.id)
+                idx.bulkIndex(idxDocs, this.id)
             }
         }
     }
 
     void addToGraphStore(doc) {}
+
+    private List<IndexDocument> convertToIndexDocuments(List<Document> docs) {
+        def idocs = []
+        for (doc in docs) {
+            idocs << new IndexDocument(doc)
+        }
+        return idocs
+    }
+    private List<RDFDescription> convertToRDFDescriptions(List<Document> docs) {
+        def rdocs = []
+        for (doc in docs) {
+            rdocs << new RDFDescription(doc)
+        }
+        return rdocs
+    }
 
     @Override
     List<Document> loadAll(Date since = null) {

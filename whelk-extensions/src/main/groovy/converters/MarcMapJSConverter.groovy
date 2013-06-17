@@ -11,7 +11,7 @@ import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
 
 @Log
-class MarcMapJSConverter extends BasicSplittingFormatConverter<IndexDocument> implements IndexFormatConverter {
+class MarcMapJSConverter extends BasicIndexFormatConverter implements IndexFormatConverter {
 
     String id = this.class.name
     boolean enabled = true
@@ -52,7 +52,7 @@ class MarcMapJSConverter extends BasicSplittingFormatConverter<IndexDocument> im
 
     @Override
     @Override
-    List<IndexDocument> doConvert(Resource docs) {
+    List<IndexDocument> doConvert(IndexDocument docs) {
         def outdocs = []
         def struct = parseJSON(doc.dataAsString)
         def obj = scope.get(objName, scope)
