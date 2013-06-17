@@ -53,7 +53,7 @@ abstract class AbstractDocument {
     }
 
     String getDataAsString() {
-        return new String(this.data, "UTF-8")
+        return this.data as String
     }
 
     Map getDataAsMap() {
