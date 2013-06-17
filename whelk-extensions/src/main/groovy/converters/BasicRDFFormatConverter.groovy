@@ -17,8 +17,6 @@ abstract class BasicRDFFormatConverter extends BasicPlugin implements RDFFormatC
         List<RDFDescription> outdocs = new ArrayList<RDFDescription>()
         if (doc.contentType == requiredContentType) {
             outdocs.addAll(doConvert(doc))
-        } else {
-            outdocs.add(doc)
         }
         return outdocs
     }

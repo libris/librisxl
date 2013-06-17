@@ -11,6 +11,7 @@
                     "metasearch",
                     "documentapi",
                     "marcconverter",
+                    "turtleconverter",
                     "cleanupconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
@@ -79,6 +80,11 @@
         {
             "marcconverter" : {
                 "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"
+            }
+        },
+        {
+            "turtleconverter" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter"
             }
         },
         {
