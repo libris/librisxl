@@ -11,70 +11,79 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
-    
+    def fieldLookUp = [
+            "titleValue_title" : [":", "/"],
+            "subtitle_title" : ["/"],
+            "titleValue_titleVariation" : [":", "/"],
+            "providerDate_publication" : [",", ";"],
+            "providerName_publication" : [",", ":", ";"],
+            "place_publication" : [",", ":"],
+            "place_manufacture" : [":", ";"],
+            "extent" : ["+", ":"],
+            "otherPhysicalDetails" : [";", "+"],
+            "dimensions" : [":", ";", "+"],
+            "edition" : ["/", "=", ","],
+            "title" : [".", ",", "=", ";"],
+            "part" : [".", ",", "=", ";"],
+            "issn" : [".", ",", "=", ";"],
+    ]
+
     Document doConvert(Document doc) {
         def json = mapper.readValue(doc.dataAsString, Map)
-        def fieldLookUp = [
-            "titleValue" : ["title" : [":", "/"]],
-            "providerDate" : ["publication" : [",", ";"]],
-            "providerName" : ["publication" : [",", ":", ";"]],
-            "place" : ["publication" : [",", ":"]],
-            "place" : ["manufacture" : [":", ";"]],
-            "extent" : ["extent" : ["+", ":"]],
-            "otherPhysicalDetails" : ["otherPhysicalDetails" : [";", "+"]],
-            "dimensions" : ["dimensions" : [";", "+"]],
-            "edition" : ["edition" : ["/", "=", ","]],
-            "title" : ["series" : [".", ",", "=", ";"]],
-            "part" : ["series" : [".", ",", "=", ";"]],
-            "issn" : ["series" : [".", ",", "=", ";"]],
-        ]
+        def result = [:]
 
-        fieldLookUp.each { propName, interpunctionMap ->
-            interpunctionMap.each { entityName, interpunctionList ->
-                def entity = json.about.get((entityName), null)
-                if (entity) {
-                    log.debug("Entity ${entity}")
-                    if (entity instanceof String && entity.size() > 1) {
-                        interpunctionList.each {
-                            if (entity[-1].equals(it)) {
-                                json.about[(entityName)] = entity[0..-2].trim()
-                            }
-                        }
-                    } else if (entity instanceof Map) {
-                        if (entity.get((propName), null)) {
-                            interpunctionList.each {
-                                if (entity[(propName)][-1].equals(it)) {
-                                    json.about[(entityName)][(propName)] = entity[(propName)][0..-2].trim()
-                                }
-                            }
-                        }
-                    } else if (entity instanceof List) {
-                        entity.eachWithIndex { entIt, index ->
-                            if (entIt.get((propName), null)) {
-                                if (entIt[(propName)] instanceof String && entIt[(propName)].size() > 1) {
-                                    interpunctionList.each { interpIt ->
-                                        if (entIt[(propName)][-1].equals(interpIt)) {
-                                            json.about[(entityName)][index][(propName)] = entIt[(propName)][0..-2].trim()
-                                        }
-                                    }
-                                } else if (entIt[(propName)] instanceof Map) {
-                                    interpunctionList.each { interpunctionItem ->
-                                        if (entIt[(propName)].get("label", null) && entIt[(propName)]["label"].size() > 1) {
-                                            log.debug("last " + entIt[(propName)]["label"][-1] + " interpIt ${interpunctionItem}")
-                                            if (entIt[(propName)]["label"][-1].equals(interpunctionItem)) {
-                                                json.about[(entityName)][index][(propName)]["label"] = entIt[(propName)]["label"][0..-2].trim()
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+        fieldLookUp.each { entityProp, interpunctionList ->
+            def entityKey
+            def propertyKey = entityProp.split("_").getAt(0)
+            try {
+                entityKey = entityProp.split("_").getAt(1)
+            } catch (Exception e) {
+                entityKey = null
+            }
+            log.debug("EntityKey ${entityKey} property ${propertyKey}")
+            def entity = (entityKey ? json.about?.get(entityKey, null) : json.get("about", null))
+            def prop
+            if (entity && entity instanceof Map) {
+                prop = entity.get(propertyKey, null)
+                result = cleanProperty(prop, entityProp, entityKey, propertyKey, json, -1)
+            } else if (entity instanceof List) {
+                entity.eachWithIndex { entIt, index ->
+                    prop = entIt.get(propertyKey, null)
+                    result = cleanProperty(prop, entityProp, json, entityKey, propertyKey, index)
                 }
             }
         }
 
-    doc = doc.withData(mapper.writeValueAsBytes(json))
-    return doc
-}
+        doc = doc.withData(mapper.writeValueAsBytes(result))
+        return doc
+    }
+
+    //TODO: bara indexera datum
+
+    Map cleanProperty(def theJson, def prop, def entityProp, def entityKey, def propKey, def index) {
+        if (prop && prop instanceof String && prop.size() > 1) {
+            def interpunctionList = fieldLookUp[entityProp]
+            log.debug("interpunctionlist type " + interpunctionList.getClass())
+            for (it in interpunctionList) {
+                //log.debug("Prop type " + prop.getClass() + " it class " + it.getClass() + ${entityKey} + " " + ${propKey})
+                if (prop instanceof String && prop.size() > 1 && prop[-1].equals(it)) {
+                    if (entityKey) {
+                        theJson.about[entityKey][propKey] = prop[0..-2].trim()
+                    } else {
+                        theJson.about[propKey] = prop[0..-2].trim()
+                    }
+                }
+            }
+        } else if (prop instanceof Map) {
+            interpunctionList.each {
+                if (prop.get("label", null) && prop["label"].size() > 1) {
+                    if (prop["label"][-1].equals(it)) {
+                        theJson.about[entityKey][index][propKey]["label"] = prop["label"][0..-2].trim()
+                    }
+                }
+            }
+        }
+    }
+
+
 }
