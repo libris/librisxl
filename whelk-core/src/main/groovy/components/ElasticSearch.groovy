@@ -395,7 +395,10 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     URI translateIndexIdTo(id) {
-        return new URI("/"+id.replaceAll(URI_SEPARATOR, "/"))
+        def pathelements = []
+        id.split(URI_SEPARATOR).each {
+            pathelements << java.net.URLEncoder.encode(it, "UTF-8")
+        }
+        return  new URI("/"+pathelements.join("/"))
     }
-
 }

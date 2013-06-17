@@ -123,7 +123,7 @@
                               "hasAnnotation.about"
                             ],
                             "sortby": {
-                                "recordPriority" : "desc",
+                                "recordPriority" : "asc",
                                 "_score" : "desc",
                                 "familyName" : "asc"
                             },
