@@ -460,15 +460,21 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     use in it.keySet() }.collect { it.iterator().next().value }
                 useLinks = linkTokens.collect { resourceMap[it]?.term ?: "involved_as_${it}" }
             }
-            if (!useLinks && link) {
-                useLinks = [link]
-            }
 
             def newEnt = newEntity(rangeEntityName)
 
             // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
+            def entRef = newEnt
+            if (useLinks) {
+                if (!newEnt['@id'])
+                    newEnt['@id'] = "_:t-${new Date().time}" as String
+                entRef = ['@id': newEnt['@id']]
+            }
+            if (link) {
+                addValue(entity, link, newEnt, repeatLink)
+            }
             useLinks.each {
-                addValue(entity, it, newEnt, repeatLink)
+                addValue(entity, it, entRef, repeatLink)
             }
             entity = newEnt
         }
