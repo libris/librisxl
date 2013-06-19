@@ -1,8 +1,13 @@
 {
   "types": {
+    "Audio": {
+      "term": "Audio",
+      "label_sv": "Ljudmaterial"
+    },
     "Audiobook": {
       "term": "Audiobook",
       "label_sv": "Ljudbok",
+      "subClassOf": ["Audio", "Book"],
       "termGroups": {
         "identifers": ["028...", ""],
         "description": ["...", "(856...)"]
