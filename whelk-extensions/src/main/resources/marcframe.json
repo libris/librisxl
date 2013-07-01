@@ -224,10 +224,10 @@
       "match-domain": {
         "Work": {"link": "class"}, "Holding": {"link": "callno"}
       },
-      "rangeEntity": "ClassificationEntity",
-      "$a": {"property": "classNumber"},
-      "$2": {"property": "classScheme"},
-      "$b": {"property": "classItem"},
+      "rangeEntity": "Concept",
+      "$a": {"property": "notation"},
+      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
+      "$b": {"property": "classItem", "ignored": true},
       "TODO:uriTemplate": "/kos/{classScheme}/{classNumber}"
     },
 
