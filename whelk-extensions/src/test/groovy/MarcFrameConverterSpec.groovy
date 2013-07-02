@@ -93,16 +93,14 @@ class MarcFrameConverterSpec extends Specification {
                 "instanceOf": [
                     "@type": "Book",
                     "creator": [
-                        [
-                            "@type": "Person",
-                            "controlledLabel": "Jansson, Tove, 1914-2001",
-                            "birthYear": "1914",
-                            "deathYear": "2001",
-                            "familyName": "Jansson",
-                            "givenName": "Tove"
-                        ],
+                        "@type": "Person",
+                        "controlledLabel": "Jansson, Tove, 1914-2001",
+                        "birthYear": "1914",
+                        "deathYear": "2001",
+                        "familyName": "Jansson",
+                        "givenName": "Tove"
                     ],
-                    "contributor": [
+                    "contributorList": [
                         [
                             "@type": "Person",
                             "controlledLabel": "Pietil\u00e4, Tuulikki, 1917-",
