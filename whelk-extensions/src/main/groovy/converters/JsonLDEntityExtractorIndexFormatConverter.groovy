@@ -12,8 +12,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
     def authPoint = ["Person" : "controlledLabel", "Concept" : "prefLabel"]
-    def entitiesToExtract = ["creator", "contributor", "subject"]
-    //def entityPriority = ["creator" : 2, "contributor" : 1, "subject" : 0]
+    def entitiesToExtract = ["creator", "contributorList", "subject"]
 
     List<IndexDocument> doConvert(IndexDocument doc) {
 
