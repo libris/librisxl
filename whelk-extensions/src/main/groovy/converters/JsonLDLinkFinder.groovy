@@ -23,7 +23,7 @@ class JsonLDLinkFinder extends BasicPlugin implements LinkFinder {
         if (map instanceof Map) {
             map.each { key, value ->
                 if (key == "@id") {
-                    if (value instanceof String && value != selfId) {
+                    if (value instanceof String && value != selfId && !value.startsWith("_:")) {
                         value.split().each {
                             ids << new Link(new URI(it), type)
                         }
