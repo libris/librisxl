@@ -11,20 +11,9 @@ class JsonLdToTurtle {
     Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language"]
     Map prefixes = [:]
 
-    JsonLdToTurtle(Map contextSrc, OutputStream outStream) {
-        context = [:]
-        def cdef = contextSrc["@context"]
-        if (cdef instanceof List) {
-            cdef.each { context.putAll(it) }
-        } else {
-            context.putAll(cdef)
-        }
-        // TODO: override from context..
-        context.each { k, v ->
-            if (v =~ /#|\/$/) {
-                prefixes[k == "@vocab"? "": k] = v
-            }
-        }
+    JsonLdToTurtle(Map context, OutputStream outStream) {
+        this.context = context.context
+        this.prefixes = context.prefixes
         pw = new PrintWriter(outStream)
     }
 
@@ -78,7 +67,9 @@ class JsonLdToTurtle {
             def term = termFor(key)
             if (term == null || term == keys.id || term == "@context")
                 return
-            vs = (vs instanceof List)? vs : [vs]
+            vs = (vs instanceof List)? vs : vs? [vs] : []
+            if (!vs) // TODO: && not @list
+                return
             if (term == "@type") {
                 term = "a"
                 pw.println(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
@@ -124,14 +115,37 @@ class JsonLdToTurtle {
             pw.print("^^" + termFor(datatype))
     }
 
+    static Map parseContext(Map src) {
+        def context = [:]
+        def cdef = src["@context"]
+        if (cdef instanceof List) {
+            cdef.each { context.putAll(it) }
+        } else {
+            context.putAll(cdef)
+        }
+        // TODO: override from context..
+        def prefixes = [:]
+        context.each { k, v ->
+            if (v =~ /#|\/$/) {
+                prefixes[k == "@vocab"? "": k] = v
+            }
+        }
+        return [context: context, prefixes: prefixes]
+    }
+
+    static OutputStream toTurtle(context, source) {
+        def bos = new ByteArrayOutputStream()
+        def serializer = new JsonLdToTurtle(context, bos)
+        serializer.toTurtle(source)
+        return bos
+    }
+
     static void main(args) {
         def mapper = new ObjectMapper()
-        def data = new File(args[1]).withInputStream { mapper.readValue(it, Map) }
-        def bos = new ByteArrayOutputStream()
-        def context = new File(args[0]).withInputStream { mapper.readValue(it, Map) }
-        def serializer = new JsonLdToTurtle(context, bos)
-        serializer.toTurtle(data)
-        println bos.toString("utf-8")
+        def source = new File(args[1]).withInputStream { mapper.readValue(it, Map) }
+        def contextSrc = new File(args[0]).withInputStream { mapper.readValue(it, Map) }
+        def context = JsonLdToTurtle.parseContext(contextSrc)
+        println JsonLdToTurtle.toTurtle(context, source).toString("utf-8")
     }
 
 }

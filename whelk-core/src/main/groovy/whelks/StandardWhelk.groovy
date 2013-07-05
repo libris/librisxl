@@ -31,7 +31,7 @@ class StandardWhelk implements Whelk {
             storage.store(doc, this.id)
         }
 
-        addToGraphStore(doc)
+        addToGraphStore([doc])
         addToIndex([doc])
 
         return doc.identifier
@@ -96,7 +96,24 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    void addToGraphStore(doc) {}
+    void addToGraphStore(List<Document> docs) {
+        // TODO: what's the intent here? Just the same bytes in a new interface..
+        List<RDFDescription> dataDocs = convertToRDFDescriptions(docs)
+        // TODO: make this a configuration of the whelk
+        def docBaseUri = new URI("http://libris.kb.se/")
+        if (graphStores.size() > 0) {
+            log.debug("Adding to graph stores")
+            for (rc in getRDFFormatConverters()) {
+                log.debug("Running indexformatconverter $rc")
+                dataDocs = rc.convertBulk(dataDocs)
+            }
+            for (store in graphStores) {
+                dataDocs.each {
+                    store.update(docBaseUri.resolve(it.identifier), it)
+                }
+            }
+        }
+    }
 
     private List<IndexDocument> convertToIndexDocuments(List<Document> docs) {
         def idocs = []
@@ -208,9 +225,11 @@ class StandardWhelk implements Whelk {
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
     List<Storage> getStorages() { return plugins.findAll { it instanceof Storage } }
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
+    List<Index> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }
     TreeSet<FormatConverter> getFormatConverters() { return plugins.findAll { it instanceof FormatConverter } as TreeSet}
     TreeSet<IndexFormatConverter> getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter } as TreeSet }
+    TreeSet<RDFFormatConverter> getRDFFormatConverters() { return plugins.findAll { it instanceof RDFFormatConverter } as TreeSet }
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
 }
