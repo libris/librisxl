@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-RESOURCE=$1
-ORIGIN=$2
+TYPE=$1
+RESOURCE=$2
+ORIGIN=$3
 if [[ "$RESOURCE" == "" ]] || [[ $ORIGIN == "" ]]; then
-    echo "Usage $(basename $0) <dump resource>"
+    echo "Usage $(basename $0) <importfile|importdump> <file|url> <bib|hold|auth>"
     echo ""
     exit
 fi
@@ -16,4 +17,4 @@ LIBS=$WEBAPPS/WEB-INF/lib
 
 source $SETENV
 
-java $JAVA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator importdump libris $RESOURCE $ORIGIN
+java $JAVA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator $TYPE libris $RESOURCE $ORIGIN
