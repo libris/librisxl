@@ -1,11 +1,14 @@
 package se.kb.libris.whelks
 
+import groovy.util.logging.Slf4j as Log
+
 import se.kb.libris.whelks.IndexDocument
 import se.kb.libris.whelks.SearchResult
 import se.kb.libris.whelks.component.ElasticJsonMapper
 
 import org.codehaus.jackson.map.ObjectMapper
 
+@Log
 class SearchResult {
 
     Iterable hits
@@ -49,6 +52,20 @@ class SearchResult {
         }
         jsonString << "}"
         return jsonString.toString()
+    }
+
+    String toJson(Map pattern) {
+        log.info("New toJson-method")
+        def result = [:]
+        result['hits'] = numberOfHits
+        result['list'] = []
+        hits.each {
+            result['list'] << it.dataAsMap
+        }
+        if (facets) {
+            result['facets'] = facets
+        }
+        return mapper.writeValueAsString(result)
     }
 
     private jsonifyFacets() {

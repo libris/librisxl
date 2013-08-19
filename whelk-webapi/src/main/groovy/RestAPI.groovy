@@ -399,7 +399,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 results = this.whelk.search(q)
                 def jsonResult =
                 (callback ? callback + "(" : "") +
-                results.toJson() +
+                results.toJson([:]) +
                 (callback ? ");" : "")
 
                 response.setEntity(jsonResult, MediaType.APPLICATION_JSON)

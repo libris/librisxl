@@ -234,9 +234,9 @@ abstract class ElasticSearch extends BasicPlugin {
             results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
                 if (q.highlights) {
-                    results.addHit(createDocumentFromHit(it), convertHighlight(it.highlightFields))
+                    results.addHit(createResultDocumentFromHit(it), convertHighlight(it.highlightFields))
                 } else {
-                    results.addHit(createDocumentFromHit(it))
+                    results.addHit(createResultDocumentFromHit(it))
                 }
             }
             if (q.facets) {
@@ -390,7 +390,7 @@ abstract class ElasticSearch extends BasicPlugin {
         return facets
     }
 
-    IndexDocument createDocumentFromHit(hit) {
+    IndexDocument createResultDocumentFromHit(hit) {
         return new IndexDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
     }
 

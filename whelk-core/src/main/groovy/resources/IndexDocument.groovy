@@ -9,6 +9,7 @@ class IndexDocument extends Resource {
 
     Map<String, String[]> matches = new TreeMap<String, String[]>()
     String type
+    def mapper = new ElasticJsonMapper()
 
     IndexDocument() {}
     IndexDocument(Document d) {
@@ -26,11 +27,18 @@ class IndexDocument extends Resource {
         this.matches = match
     }
 
+    @Override
     String getDataAsString() {
-        def mapper = new ElasticJsonMapper()
         def json = mapper.readValue(super.getDataAsString(), Map)
         json.highlight = matches
         return mapper.writeValueAsString(json)
+    }
+
+    @Override
+    Map getDataAsMap() {
+        def json = mapper.readValue(super.getDataAsString(), Map)
+        json.highlight = matches
+        return json
     }
 
     IndexDocument withType(String t) {
