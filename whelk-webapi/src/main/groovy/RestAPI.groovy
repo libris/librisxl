@@ -13,10 +13,15 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
 import se.kb.libris.whelks.persistance.*
+import se.kb.libris.util.marc.*
+import se.kb.libris.util.marc.io.*
+import se.kb.libris.conch.converter.MarcJSONConverter
 
 import se.kb.libris.utils.isbn.*
 
 import org.codehaus.jackson.map.*
+import groovy.xml.StreamingMarkupBuilder
+import groovy.util.slurpersupport.GPathResult
 
 interface RestAPI extends API {
     String getPath()
@@ -884,5 +889,74 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
         }
     }
 
+}
+
+@Log
+class RemoteSearchRestlet extends BasicWhelkAPI {
+    def pathEnd = "_remotesearch"
+    def mapper
+    
+    String description = "Query API for remote search"
+    String id = "RemoteSearchAPI"
+
+    def remoteTestURL = "http://mproxy.libris.kb.se:8000/LC?version=1.1&operation=searchRetrieve&maximumRecords=10"
+
+    void doHandle(Request request, Response response) {
+        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def query = queryMap.get("q", null)
+        def xmlRecords
+        if (query) {
+            def url = new URL("${remoteTestURL}&query=" + query)
+            try {
+                xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
+            } catch (org.xml.sax.SAXParseException spe) {
+                log.error("Failed to parse XML: ${url.text}")
+                throw spe
+            }
+            def docs = convertXMLRecords(xmlRecords)
+            mapper = new ObjectMapper()
+            def jsonResult
+            for (doc in docs) {
+                docMap = mapper.readValue(doc, Map)
+                def res = mapper.writeValueAsString(docMap)
+                log.debug("RES ${res}")
+                jsonResult += mapper.writeValueAsString(docMap)
+            }
+            log.debug("RESULT: " + jsonResult)
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+        } else {
+            response.setEntity(/{"Error": "Use parameter \"q\"}/, MediaType.APPLICATION_JSON)
+        }
+    }
+
+    List<Document> convertXMLRecords(def xmlRecords) {
+        log.debug("xmlRecords" + xmlRecords.'zs:records')
+        def documents = []
+        xmlRecords?.'zs:records'?.each { rec ->
+            rec.each { it ->
+                log.debug("REC.each it " + createString(it))
+                def marcXmlRecord = it.'zs:recordData'
+                def marcXmlRecordString = createString(marcXmlRecord)
+                if (marcXmlRecordString) {
+                    log.debug("MARCXMLRECORDSTRING: ${marcXmlRecordString}")
+                    MarcRecord record = MarcXmlRecordReader.fromXml(mdrecordString)
+                    String id = record.getControlfields("001").get(0).getData()
+                    String jsonRec = MarcJSONConverter.toJSONString(record)
+                    try {
+                        documents << whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/remote/"+id),"contentType":"application/x-marc-json" ])
+                    } catch (Exception e) {
+                        log.error("Failed! (${e.message}) for :\n$mdrecord")
+                    }
+                }
+            }
+        }
+        return documents
+    }
+
+    String createString(GPathResult root) {
+        return new StreamingMarkupBuilder().bind {
+            out << root
+        }
+    }
 }
 
