@@ -53,7 +53,7 @@ abstract class AbstractDocument {
     }
 
     String getDataAsString() {
-        return this.data as String
+        return this.data.toString()
     }
 
     Map getDataAsMap() {
