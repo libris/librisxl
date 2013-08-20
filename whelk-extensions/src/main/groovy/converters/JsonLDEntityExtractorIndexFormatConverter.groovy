@@ -16,7 +16,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     //def entityPriority = ["creator" : 2, "contributor" : 1, "subject" : 0]
 
     List<IndexDocument> doConvert(Resource doc) {
-        log.debug("resource doc ${doc} doc.data ${doc.data} doc.dataAsString ${doc.dataAsString}")
+        log.debug("resource doc ${doc} doc.data ${doc.data} doc.dataAsString " + doc.getDataAsString())
         List<IndexDocument> doclist = [new IndexDocument(doc)]
         try {
             log.debug("doc data " + doc.dataAsString)
