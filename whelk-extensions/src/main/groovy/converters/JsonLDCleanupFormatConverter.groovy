@@ -29,6 +29,7 @@ class JsonLDCleanupFormatConverter extends BasicFormatConverter {
     ]
 
     Document doConvert(Document doc) {
+        log.debug("doc dataasstring " + doc.dataAsString)
         def json = mapper.readValue(doc.dataAsString, Map)
         def result = [:]
 
