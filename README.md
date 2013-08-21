@@ -16,6 +16,7 @@ Libris-XL is divided over three subprojects:
 1. Install gradle from <http://gradle.org/> (or use a package manager, e.g.: brew install gradle).
 2. Install elasticsearch from <http://elasticsearch.org/> (or use a package manager, e.g.: brew install elasticsearch).
 
+Optionally, see details about using a Graph Store at the end of this document.
 
 ## Working locally
 
@@ -77,4 +78,37 @@ Run whelkOperation gradle task to import, reindex or rebuild:
 Example - import documents from 2000-01-01 using etc/whelks.json to configure the whelks from external sources:
 
     $ gradle whelkOperation -Dargs='import bib bib 2000-01-01T00:00:00Z' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:../etc/whelks.json
+
+## Using a Graph Store
+
+In principle, any Graph Store supporting the SPARQL 1.1 Graph Store HTTP Protocol will work.
+
+1. Install Tomcat, e.g. using Homebrew:
+    $ brew install tomcat
+
+2. Download Sesame from <http://openrdf.org/>
+    - Unpack and put the two war files into a running Tomcat
+    - Go to <http://localhost:8080/openrdf-workbench/> and create a new repository (e.g. "dev-libris")
+
+3. Test the endpoint:
+
+        $ curl -L http://bibframe.org/vocab -o bibframe.rdf
+        $ curl -X PUT -H "Content-Type:application/rdf+xml" "http://localhost:8080/openrdf-sesame/repositories/test-mem/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F" --data @bibframe.ttl
+
+4. To make it work with the default Jetty running via Gradle, configure Tomcat to listen on e.g. 8180, and make sure these whelk components are defined and used:
+
+    {
+        "graphstore": {
+            "_class" : "se.kb.libris.whelks.component.HttpGraphStore", 
+            "_params" : "http://localhost:8180/openrdf-sesame/repositories/dev-libris/rdf-graphs/service"
+        }
+    },
+
+    {
+        "turtleconverter" : {
+            "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter"
+        }
+    },
+
+(For the Homebrew install, server.xml is in "/usr/local/Cellar/tomcat/${TOMCAT_VERSION}/libexec/conf/server.xml".)
 

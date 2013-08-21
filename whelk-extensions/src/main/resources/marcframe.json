@@ -224,10 +224,10 @@
       "match-domain": {
         "Work": {"link": "class"}, "Holding": {"link": "callno"}
       },
-      "rangeEntity": "ClassificationEntity",
-      "$a": {"property": "classNumber"},
-      "$2": {"property": "classScheme"},
-      "$b": {"property": "classItem"},
+      "rangeEntity": "Concept",
+      "$a": {"property": "notation"},
+      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
+      "$b": {"property": "classItem", "ignored": true},
       "TODO:uriTemplate": "/kos/{classScheme}/{classNumber}"
     },
 
@@ -242,7 +242,7 @@
           "rangeEntity": "Family"
         }
       },
-      "addLink": "creator",
+      "link": "creator",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "label", "pattern": "([^,]+)(?:,\\s*([^,]+))",
         "properties": ["familyName", "givenName"]},
@@ -260,7 +260,7 @@
     "110": {
       "domainEntity": "Work",
       "rangeEntity": "Organization",
-      "addLink": "creator",
+      "link": "creator",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "label"}
     },
@@ -425,8 +425,8 @@
       "$a": {"property": "label"}
     },
 
-    "700": {"inherit": "100", "addLink": "contributor"},
-    "710": {"inherit": "110", "addLink": "contributor"},
+    "700": {"inherit": "100", "addLink": "contributorList"},
+    "710": {"inherit": "110", "addLink": "contributorList"},
     "711": {"inherit": "111"},
 
     "740": {

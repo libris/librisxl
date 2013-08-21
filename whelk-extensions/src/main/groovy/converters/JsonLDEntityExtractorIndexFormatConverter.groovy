@@ -7,20 +7,17 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverter implements IndexFormatConverter {
+class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverter {
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
     def authPoint = ["Person" : "controlledLabel", "Concept" : "prefLabel"]
-    def entitiesToExtract = ["creator", "contributor", "subject"]
-    //def entityPriority = ["creator" : 2, "contributor" : 1, "subject" : 0]
+    def entitiesToExtract = ["creator", "contributorList", "subject"]
 
-    List<IndexDocument> doConvert(Resource doc) {
-        log.debug("resource doc ${doc} doc.data ${doc.data} doc.dataAsString " + doc.getDataAsString())
-        List<IndexDocument> doclist = [new IndexDocument(doc)]
-        try {
-            log.debug("doc data " + doc.dataAsString)
-            def json = mapper.readValue(doc.dataAsString, Map)
+    List<IndexDocument> doConvert(IndexDocument doc) {
+
+        List<IndexDocument> doclist = [doc]
+        def json = mapper.readValue(doc.dataAsString, Map)
 
             if (json?.get("@type", null)) {
                 log.debug("Record has a @type. Adding to entity recordtype.")

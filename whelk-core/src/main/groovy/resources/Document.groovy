@@ -23,7 +23,7 @@ import se.kb.libris.whelks.exception.*
 @interface IsMetadata {}
 
 @Log
-class Document extends AbstractDocument implements Resource {
+class Document extends Resource {
     @IsMetadata
     String version = "1"
     @IsMetadata
@@ -49,12 +49,6 @@ class Document extends AbstractDocument implements Resource {
     Document(File jsonFile) {
         fromJson(jsonFile)
     }
-
-    /*
-    Document(Map map) {
-        fromMap(map)
-    }
-    */
 
     Document(Document d) {
         copy(d)

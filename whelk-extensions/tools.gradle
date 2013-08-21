@@ -44,3 +44,10 @@ task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
     main = 'se.kb.libris.whelks.plugin.MarcFrameConverter'
     args(System.getProperty('args', "").split() as String[])
 }
+
+task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
+    description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'se.kb.libris.whelks.plugin.JsonLdToTurtle'
+    args(System.getProperty('args', "").split() as String[])
+}

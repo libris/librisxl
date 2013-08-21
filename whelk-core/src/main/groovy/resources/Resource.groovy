@@ -2,7 +2,7 @@ package se.kb.libris.whelks
 
 import se.kb.libris.whelks.exception.*
 
-abstract class AbstractDocument {
+abstract class Resource {
     @IsMetadata
     URI identifier
     byte[] data
