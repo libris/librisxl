@@ -54,18 +54,53 @@ class SearchResult {
         return jsonString.toString()
     }
 
-    String toJson(Map pattern) {
-        log.info("New toJson-method")
+    String toJson(List keys) {
         def result = [:]
         result['hits'] = numberOfHits
         result['list'] = []
         hits.each {
-            result['list'] << it.dataAsMap
+            def item = [:]
+            def source = it.dataAsMap.asImmutable()
+            for (key in keys) {
+                item = extractStructure(key, item, source)
+            }
+            result['list'] << ['data':item, 'identifier':it.identifier]
         }
         if (facets) {
             result['facets'] = facets
         }
         return mapper.writeValueAsString(result)
+    }
+
+    private Map extractStructure(String keystring, Map result, Map source) {
+        def keylist = keystring.split(/\./)
+        int numkeys = keylist.size() - 1
+        def keyResult = result
+        log.info("Result is currently $result")
+        keylist.eachWithIndex() { key, i ->
+            if (source.containsKey(key)) {
+                def item = source.get(key)
+                log.info("Found $key!!! (${item})")
+                if (item instanceof List || item instanceof Map) {
+                    if (i == numkeys) {
+                        keyResult.put(key, item)
+                    } else {
+                        if (keyResult.containsKey(key)) {
+                            keyResult = keyResult.get(key)
+                        } else {
+                            keyResult.put(key, [:])
+                        }
+                        log.info("value of $key is a collection. Assigning source.")
+                        source = item
+                    }
+                } else {
+                    keyResult.put(key, item)
+                    log.info("value is ${item.getClass().getName()}")
+                }
+            }
+        }
+        //log.info("Item is: " + result)
+        return result
     }
 
     private jsonifyFacets() {
