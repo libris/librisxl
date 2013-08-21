@@ -914,7 +914,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 throw spe
             }
             def docs = convertXMLRecords(xmlRecords)
-            mapper = new ObjectMapper()
+            /*mapper = new ObjectMapper()
             def jsonResult
             for (doc in docs) {
                 docMap = mapper.readValue(doc, Map)
@@ -924,29 +924,35 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
             }
             log.debug("RESULT: " + jsonResult)
             response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+            */
+            //XML response for now...
+            def responseXMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n"
+            for (doc in docs) {
+               responseXMLString += doc
+            }
+            response.setEntity(responseXMLString + "\n</records>", MediaType.APPLICATION_XML)
         } else {
             response.setEntity(/{"Error": "Use parameter \"q\"}/, MediaType.APPLICATION_JSON)
         }
     }
 
     List<Document> convertXMLRecords(def xmlRecords) {
-        log.debug("xmlRecords" + xmlRecords.'zs:records')
         def documents = []
         xmlRecords?.'zs:records'?.each { rec ->
             rec.each { it ->
-                log.debug("REC.each it " + createString(it))
-                def marcXmlRecord = it.'zs:recordData'
+                def marcXmlRecord = it?.'zs:record'?.'zs:recordData'?.'tag0:record'
                 def marcXmlRecordString = createString(marcXmlRecord)
                 if (marcXmlRecordString) {
                     log.debug("MARCXMLRECORDSTRING: ${marcXmlRecordString}")
-                    MarcRecord record = MarcXmlRecordReader.fromXml(mdrecordString)
+                    documents << marcXmlRecordString
+                    /*MarcRecord record = MarcXmlRecordReader.fromXml(marcXmlRecordString)
                     String id = record.getControlfields("001").get(0).getData()
                     String jsonRec = MarcJSONConverter.toJSONString(record)
                     try {
                         documents << whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/remote/"+id),"contentType":"application/x-marc-json" ])
                     } catch (Exception e) {
                         log.error("Failed! (${e.message}) for :\n$mdrecord")
-                    }
+                    } */
                 }
             }
         }
