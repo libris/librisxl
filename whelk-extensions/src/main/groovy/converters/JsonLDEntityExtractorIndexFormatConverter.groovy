@@ -46,9 +46,6 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
             }
             log.debug("Extraction results: $doclist")
         
-        } catch (Exception e) {
-            log.debug("Error trying to extract index entities " + e.getMessage())
-        }
         return doclist
     }
 
