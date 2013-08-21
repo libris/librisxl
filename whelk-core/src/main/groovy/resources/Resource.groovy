@@ -53,7 +53,7 @@ abstract class Resource {
     }
 
     String getDataAsString() {
-        return new String(this.data, "UTF-8")
+        return this.data.toString()
     }
 
     Map getDataAsMap() {

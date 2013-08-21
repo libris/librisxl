@@ -8,6 +8,7 @@
                     "diskstorage",
                     "search",
                     "kitinsearch",
+                    "remotesearch",
                     "metasearch",
                     "documentapi",
                     "marcconverter",
@@ -30,6 +31,11 @@
         }
     ],
     "_plugins": [
+        {
+            "remotesearch": {
+                "_class": "se.kb.libris.whelks.api.RemoteSearchRestlet"
+            }
+        },
         {
             "metasearch": {
                 "_class": "se.kb.libris.whelks.api.MetadataSearchRestlet"

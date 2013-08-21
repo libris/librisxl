@@ -10,10 +10,11 @@
   <!--
   <logger name="org.elasticsearch">
       <level value="warn"/>
-  </logger>
+  </logger>-->
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="debug"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.conch">
       <level value="debug"/>
   </logger>
@@ -90,6 +91,9 @@
 <logger name="se.kb.libris.whelks.api.RestManager">
       <level value="debug"/>
   </logger>
+    <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">
+        <level value="debug"/>
+    </logger>
 <!--
      <logger name="se.kb.libris.whelks.plugin.BasicFormatConverter">
       <level value="trace"/>

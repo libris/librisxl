@@ -3,7 +3,7 @@ import org.gradle.api.plugins.jetty.JettyRun
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localDir', dirs: '../lib'
+    flatDir name: 'localWhelk-webapiDir', dirs: '../lib'
 }
 
 war {
