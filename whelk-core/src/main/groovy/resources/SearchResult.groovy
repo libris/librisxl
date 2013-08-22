@@ -76,11 +76,9 @@ class SearchResult {
         def keylist = keystring.split(/\./)
         int numkeys = keylist.size() - 1
         def keyResult = result
-        log.info("Result is currently $result")
         keylist.eachWithIndex() { key, i ->
             if (source.containsKey(key)) {
                 def item = source.get(key)
-                log.info("Found $key!!! (${item})")
                 if (item instanceof List || item instanceof Map) {
                     if (i == numkeys) {
                         keyResult.put(key, item)
@@ -90,16 +88,13 @@ class SearchResult {
                         } else {
                             keyResult.put(key, [:])
                         }
-                        log.info("value of $key is a collection. Assigning source.")
                         source = item
                     }
                 } else {
                     keyResult.put(key, item)
-                    log.info("value is ${item.getClass().getName()}")
                 }
             }
         }
-        //log.info("Item is: " + result)
         return result
     }
 
