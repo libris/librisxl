@@ -46,7 +46,7 @@ subprojects {
 
 project(":whelk-core") {
     dependencies {
-        compile 'org.elasticsearch:elasticsearch:0.90.0'
+        compile 'org.elasticsearch:elasticsearch:0.90.3'
         compile 'org.elasticsearch:elasticsearch-lang-groovy:1.4.0'
         compile 'com.spatial4j:spatial4j:0.3'
         compile 'com.basho.riak:riak-client:1.0.6'
