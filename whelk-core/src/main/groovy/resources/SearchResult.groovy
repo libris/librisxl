@@ -62,6 +62,7 @@ class SearchResult {
             def item = [:]
             def source = it.dataAsMap.asImmutable()
             for (key in keys) {
+                log.info("key: $key")
                 item = extractStructure(key, item, source)
             }
             result['list'] << ['data':item, 'identifier':it.identifier]
@@ -83,11 +84,10 @@ class SearchResult {
                     if (i == numkeys) {
                         keyResult.put(key, item)
                     } else {
-                        if (keyResult.containsKey(key)) {
-                            keyResult = keyResult.get(key)
-                        } else {
+                        if (!keyResult.containsKey(key)) {
                             keyResult.put(key, [:])
                         }
+                        keyResult = keyResult.get(key)
                         source = item
                     }
                 } else {
