@@ -18,9 +18,15 @@ class StandardWhelk implements Whelk {
 
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
+    // Set by configuration
+    URI docBaseUri
 
     StandardWhelk(String id) {
         this.id = id
+    }
+
+    void setDocBaseUri(String uri) {
+        this.docBaseUri = new URI(uri)
     }
 
     @Override
@@ -83,12 +89,19 @@ class StandardWhelk implements Whelk {
 
     @groovy.transform.CompileStatic
     void addToIndex(List<Document> docs) {
-        List<IndexDocument> idxDocs = convertToIndexDocuments(docs)
+        List<IndexDocument> idxDocs = []
         if (indexes.size() > 0) {
             log.debug("Adding to indexes")
-            for (ifc in getIndexFormatConverters()) {
-                log.debug("Running indexformatconverter $ifc")
-                idxDocs = ifc.convertBulk(idxDocs)
+            boolean hasConverters = false
+            for (doc in docs) {
+                for (ifc in getIndexFormatConverters()) {
+                    log.debug("Running indexformatconverter $ifc")
+                    idxDocs.addAll(ifc.convert(doc))
+                    hasConverters = true
+                }
+                if (!hasConverters) {
+                    idxDocs << new IndexDocument(doc)
+                }
             }
             for (idx in indexes) {
                 idx.bulkIndex(idxDocs, this.id)
@@ -97,15 +110,18 @@ class StandardWhelk implements Whelk {
     }
 
     void addToGraphStore(List<Document> docs) {
-        // TODO: what's the intent here? Just the same bytes in a new interface..
-        List<RDFDescription> dataDocs = convertToRDFDescriptions(docs)
-        // TODO: make this a configuration of the whelk
-        def docBaseUri = new URI("http://libris.kb.se/")
         if (graphStores.size() > 0) {
             log.debug("Adding to graph stores")
-            for (rc in getRDFFormatConverters()) {
-                log.debug("Running indexformatconverter $rc")
-                dataDocs = rc.convertBulk(dataDocs)
+            boolean hasConverters = false
+            for (doc in docs) {
+                for (rc in getRDFFormatConverters()) {
+                    log.debug("Running indexformatconverter $rc")
+                    dataDocs.addAll(rc.convert(doc))
+                    hasConverters = true
+                }
+                if (!hasConverters) {
+                    dataDocs << new RDFDescription(doc)
+                }
             }
             for (store in graphStores) {
                 dataDocs.each {
@@ -115,13 +131,6 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    private List<IndexDocument> convertToIndexDocuments(List<Document> docs) {
-        def idocs = []
-        for (doc in docs) {
-            idocs << new IndexDocument(doc)
-        }
-        return idocs
-    }
     private List<RDFDescription> convertToRDFDescriptions(List<Document> docs) {
         def rdocs = []
         for (doc in docs) {
