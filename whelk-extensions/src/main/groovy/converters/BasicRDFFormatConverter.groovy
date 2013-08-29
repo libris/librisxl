@@ -2,18 +2,11 @@ package se.kb.libris.whelks.basic
 
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.RDFDescription
+import se.kb.libris.whelks.Document
 
 abstract class BasicRDFFormatConverter extends BasicPlugin implements RDFFormatConverter {
 
-    final List<RDFDescription> convertBulk(List<RDFDescription> docs) {
-        List<RDFDescription> outdocs = new ArrayList<RDFDescription>()
-        for (doc in docs) {
-            outdocs.addAll(convert(doc))
-        }
-        return outdocs
-    }
-
-    final List<RDFDescription> convert(RDFDescription doc) {
+    final List<RDFDescription> convert(Document doc) {
         List<RDFDescription> outdocs = new ArrayList<RDFDescription>()
         if (doc.contentType == requiredContentType) {
             outdocs.addAll(doConvert(doc))
@@ -21,5 +14,5 @@ abstract class BasicRDFFormatConverter extends BasicPlugin implements RDFFormatC
         return outdocs
     }
 
-    abstract List<RDFDescription> doConvert(RDFDescription doc)
+    abstract List<RDFDescription> doConvert(Document doc)
 }
