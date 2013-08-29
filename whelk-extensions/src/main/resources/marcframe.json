@@ -193,7 +193,7 @@
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
       "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
       "$e": {"property": "descriptionRules"},
-      "$f": {"property": "subjectScheme"}
+      "$f": {"property": "subjectScheme", "TODO:uriTemplate": "/kos/{_}"}
     },
     "TODO:041": {"$a": {"defaultFrom": ["240.a"]}},
     "042": {
@@ -268,6 +268,10 @@
       "inherit": "110",
       "rangeEntity": "Meeting",
       "$c": {"link": "place", "rangeEntity": "Place", "property": "label"},
+      "$d": {"property": "date"}
+    },
+    "130": {
+      "domainEntity": "Work",
       "$d": {"property": "date"}
     },
 
@@ -407,9 +411,11 @@
 
     "599": {"$a": {"domainEntity": "Record", "property": "comment"}},
 
-    "600": {"inherit": "100", "addLink": "subject"},
-    "610": {"inherit": "110", "addLink": "subject"},
-    "611": {"inherit": "111", "addLink": "subject"},
+    "600": {"inherit": "100", "addLink": "subject", "rangeEntity": "Person"},
+    "610": {"inherit": "110", "addLink": "subject", "rangeEntity": "Organization"},
+    "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
+    "630": {"addLink": "subject", "rangeEntity": "Work"},
+    "648": {"addLink": "subject", "rangeEntity": "Event", "TODO:whatIsA": "ChronologicalConcept"},
     "650": {
       "domain": "Work",
       "addLink": "subject",
@@ -424,6 +430,11 @@
       "rangeEntity": "Place",
       "$a": {"property": "label"}
     },
+    "653": {"TODO": "keyword"},
+    "655" : {"rangeEntity": "Concept", "TODO:whatIsA": "GenreOrForm"},
+
+    "656" : {"rangeEntity": "Profession", "notes": ["unused"]},
+    "657" : {"rangeEntity": "FunctionOrRole", "notes": ["unused"]},
 
     "700": {"inherit": "100", "addLink": "contributorList"},
     "710": {"inherit": "110", "addLink": "contributorList"},
@@ -469,9 +480,30 @@
         "$f": {"property": "birthDate"},
         "$g": {"property": "deathDate"}
     },
-    "065" : {"inherit": "bib:084", "TODO": "codes-differ"},
+    "065" : {
+      "inherit": "083",
+      "TODO-uriTemplate": "/kos/{inScheme.notation}/{notation}",
+      "$2": {
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "property": "notation"
+      }
+    },
     "082" : {"inherit": "bib"},
-    "083" : {"inherit": "bib:082"},
+    "083" : {
+      "addLink": "subject",
+      "match-domain": {
+        "Concept": {"addLink": "closeMatch"},
+        "Work": {"addLink": "subject"}
+      },
+      "rangeEntity": "Concept",
+      "TODO-uriTemplate": "/kos/ddc/{notation}",
+      "$a": {"property": "notation"},
+      "$2": {
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "defaults": {"notation": "DDC"},
+        "property": "version"
+      }
+    },
     "100" : {
       "inherit": "bib",
       "resetDomainEntity": "Person",
@@ -485,17 +517,24 @@
     },
     "110" : {"inherit": "bib", "resetDomainEntity": "Organization"},
     "111" : {"inherit": "bib", "resetDomainEntity": "Meeting"},
-    "150" : {"resetDomainEntity": "Concept", "$a": {"addProperty": "prefLabel"}},
+    "130" : {"inherit": "bib", "resetDomainEntity": "Work"},
+    "148": {"TODO": "ChronologicalConcept"},
+    "150" : {"resetDomainEntity": "Concept", "$a": {"property": "prefLabel"}, "TODO:uriTemplate": "/kos/{scheme}/{_}"},
+    "151": {"TODO": "someLabel"},
     "155" : {"inherit": "150"},
     "400": {"$a": {"addProperty": "altLabel"}},
     "410" : {"inherit": "400"},
     "411" : {"inherit": "400"},
-    "450" : {"$a": {"addProperty": "altLabel"}},
+    "450" : {"$a": {"addProperty": "hiddenLabel"}, "TODO": "hiddenLabel-unless-w||e"},
     "455" : {"inherit": "450"},
     "500": {"$a": {"addProperty": "altLabel"}},
     "510" : {"inherit": "500"},
     "511" : {"inherit": "500"},
-    "550" : {"$a": {"addProperty": "altLabel"}},
+    "550" : {
+      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower"}},
+      "rangeEntity": "Concept",
+      "$a": {"property": "prefLabel"}
+    },
     "555" : {"inherit": "550"},
     "667" : {},
     "670" : {},
@@ -503,8 +542,10 @@
     "678" : {"$a": {"addProperty": "note"}},
     "680" : {"$i": {"addProperty": "note"}},
     "750" : {
-      "TODO:specific domainEntity": "Concept",
-      "addLink": "closeMatch",
+      "match-domain": {
+        "Concept": {"addLink": "closeMatch"},
+        "Work": {"addLink": "subject"}
+      },
       "rangeEntity": "Concept",
       "$a": {"addProperty": "prefLabel"},
       "$0": {"addProperty": "notation"},
