@@ -437,6 +437,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             entity['@type'] = resetDomainEntityName
         }
 
+        def handled = new HashSet()
+
         def codeLinkSplits = [:]
         // TODO: clear unused codeLinkSplits afterwards..
         def splitLinkDomain = entity
@@ -451,21 +453,35 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         } else if (rangeEntityName) {
-            // TODO: mark used subfield as handled
             def useLinks = Collections.emptyList()
             if (computeLinks) {
                 def use = computeLinks.use
-                def resourceMap = resourceMaps[computeLinks.mapping]
-                def linkTokens = value.subfields.findAll {
-                    use in it.keySet() }.collect { it.iterator().next().value }
-                useLinks = linkTokens.collect { resourceMap[it]?.term ?: "involved_as_${it}" }
+                def resourceMap = (computeLinks.mapping instanceof Map)?
+                        computeLinks.mapping : resourceMaps[computeLinks.mapping]
+                if (resourceMaps instanceof List) {
+                    def linkTokens = value.subfields.findAll {
+                        use in it.keySet() }.collect { it.iterator().next().value }
+                    useLinks = linkTokens.collect { resourceMap[it]?.term ?: "involved_as_${it}" }
+                } else {
+                    def linkTokens = value.subfields.findAll {
+                        use in it.keySet() }.collect { it.iterator().next().value }
+                    def useLink = resourceMap[linkTokens[0]]
+                    if (useLink) useLinks = [useLink]
+                }
+                if (useLinks.size() > 0) {
+                    handled << use
+                }
             }
 
             def newEnt = newEntity(rangeEntityName)
 
+            if (useLinks) {
+                repeatLink = true
+            }
+
             // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
             def entRef = newEnt
-            if (useLinks) {
+            if (useLinks && link) {
                 if (!newEnt['@id'])
                     newEnt['@id'] = "_:t-${new Date().time}" as String
                 entRef = ['@id': newEnt['@id']]
@@ -479,12 +495,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             entity = newEnt
         }
 
-        def unhandled = []
+        def unhandled = new HashSet()
 
         value.subfields.each {
             it.each { code, subVal ->
                 def subDfn = subfields[code]
-                def handled = false
+                def ok = false
                 if (subDfn) {
                     def ent = (subDfn.domainEntity)?
                         entityMap[subDfn.domainEntity] : (codeLinkSplits[code] ?: entity)
@@ -506,18 +522,18 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                                 def v = m[0][i + 1]
                                 if (v) ent[prop] = v
                             }
-                            handled = true
+                            ok = true
                         }
                     }
-                    if (!handled && property) {
+                    if (!ok && property) {
                         addValue(ent, property, subVal, repeat)
-                        handled = true
+                        ok = true
                     }
                     if (subDfn.defaults) {
                         subDfn.defaults.each { k, v -> if (!(k in ent)) ent[k] = v }
                     }
                 }
-                if (!handled) {
+                if (!ok && !handled.contains(code)) {
                     unhandled << code
                 }
             }
