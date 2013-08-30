@@ -62,6 +62,7 @@ project(":whelk-extensions") {
         compile 'stax:stax-api:1.0.1'
         compile 'org.mozilla:rhino:1.7R4'
         compile 'se.kb.libris:marc:1.2.7'
+        compile 'com.damnhandy:handy-uri-templates:1.1.7'
     }
 }
 
