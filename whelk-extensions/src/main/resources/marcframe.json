@@ -193,7 +193,7 @@
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
       "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
       "$e": {"property": "descriptionRules"},
-      "$f": {"property": "subjectScheme", "TODO:uriTemplate": "/kos/{_}"}
+      "$f": {"property": "subjectScheme", "TODO:uriTemplate": "/topic/{_}"}
     },
     "TODO:041": {"$a": {"defaultFrom": ["240.a"]}},
     "042": {
@@ -228,7 +228,7 @@
       "$a": {"property": "notation"},
       "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
       "$b": {"property": "classItem", "ignored": true},
-      "TODO:uriTemplate": "/kos/{classScheme}/{classNumber}"
+      "TODO:uriTemplate": "/topic/{classScheme}/{classNumber}"
     },
 
     "100": {
@@ -422,19 +422,22 @@
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
       "$a": {"property": "prefLabel"},
-      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
-      "$0": {"TODO:uriTemplate": "/resource/auth/{_}"}
+      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation",
+             "TODO:if": ". != 4"},
+      "$0": {"TODO:uriTemplate": "/resource/auth/{_}", "ignored": true},
+      "uriTemplate": "/topic/{inScheme.notation}/{prefLabel}"
     },
     "651": {
       "inherit": "650",
       "rangeEntity": "Place",
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "uriTemplate": "/place/{label}"
     },
-    "653": {"TODO": "keyword"},
-    "655" : {"rangeEntity": "Concept", "TODO:whatIsA": "GenreOrForm"},
+    "653": {"$a": {"domainEntity": "Instance", "property": "keyword"}},
+    "655" : {"inherit": "650", "TODO:specifically": "GenreOrForm"},
 
-    "656" : {"rangeEntity": "Profession", "notes": ["unused"]},
-    "657" : {"rangeEntity": "FunctionOrRole", "notes": ["unused"]},
+    "656" : {"rangeEntity": "Profession", "ignored": true},
+    "657" : {"rangeEntity": "FunctionOrRole", "ignored": true},
 
     "700": {"inherit": "100", "addLink": "contributorList"},
     "710": {"inherit": "110", "addLink": "contributorList"},
@@ -482,7 +485,7 @@
     },
     "065" : {
       "inherit": "083",
-      "TODO-uriTemplate": "/kos/{inScheme.notation}/{notation}",
+      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "$2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
         "property": "notation"
@@ -496,7 +499,7 @@
         "Work": {"addLink": "subject"}
       },
       "rangeEntity": "Concept",
-      "TODO-uriTemplate": "/kos/ddc/{notation}",
+      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}",
       "$a": {"property": "notation"},
       "$2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
@@ -504,37 +507,75 @@
         "property": "version"
       }
     },
+
     "100" : {
       "inherit": "bib",
-      "resetDomainEntity": "Person",
+      "definesDomainEntity": "Person",
       "match-code": {
         "t v x y z": {
           "TODO-asPrimaryEntity": "Work",
-          "resetDomainEntity": null
+          "definesDomainEntity": null
         }
       },
       "$t": {"domainEntity": "Work", "property": "title"}
     },
-    "110" : {"inherit": "bib", "resetDomainEntity": "Organization"},
-    "111" : {"inherit": "bib", "resetDomainEntity": "Meeting"},
-    "130" : {"inherit": "bib", "resetDomainEntity": "Work"},
-    "148": {"TODO": "ChronologicalConcept"},
-    "150" : {"resetDomainEntity": "Concept", "$a": {"property": "prefLabel"}, "TODO:uriTemplate": "/kos/{scheme}/{_}"},
-    "151": {"TODO": "someLabel"},
+    "110" : {
+      "inherit": "bib",
+      "definesDomainEntity": "Organization"
+    },
+    "111" : {
+      "inherit": "bib",
+      "definesDomainEntity": "Meeting"
+    },
+    "130" : {
+      "inherit": "bib",
+      "definesDomainEntity": "Work"
+    },
+    "148" : {
+      "definesDomainEntity": "Concept",
+      "TODO": "ChronologicalConcept",
+      "$a": {"property": "prefLabel"},
+      "uriTemplate": "/topic/sao/{prefLabel}"
+    },
+    "150" : {
+      "definesDomainEntity": "Concept",
+      "$a": {"property": "prefLabel"},
+      "$x": {"link": "broader", "property": "prefLabel"},
+      "uriTemplate": "/topic/sao/{prefLabel}"
+    },
+    "151" : {
+      "definesDomainEntity": "Place",
+      "$a": {"property": "label"},
+      "uriTemplate": "/place/{label}"
+    },
     "155" : {"inherit": "150"},
+
     "400": {"$a": {"addProperty": "altLabel"}},
     "410" : {"inherit": "400"},
     "411" : {"inherit": "400"},
-    "450" : {"$a": {"addProperty": "hiddenLabel"}, "TODO": "hiddenLabel-unless-w||e"},
+    "450" : {
+      "$a": {"addProperty": "hiddenLabel"},
+      "match-code": {
+        "x": {
+          "addLink": "replaces",
+          "rangeEntity": "Concept",
+          "TODO-$a": {"link": "broader", "property": "prefLabel"}
+        }
+      },
+      "$x": {"link": "broader", "property": "prefLabel"},
+      "TODO": "whatIs w||e"
+      },
     "455" : {"inherit": "450"},
     "500": {"$a": {"addProperty": "altLabel"}},
-    "510" : {"inherit": "500"},
-    "511" : {"inherit": "500"},
+    "510" : {"inherit": "110", "definesDomainEntity": null, "addLink": "seeAlso", "rangeEntity": "Organization"},
+    "511" : {"inherit": "111", "definesDomainEntity": null, "addLink": "seeAlso", "rangeEntity": "Meeting"},
     "550" : {
-      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower"}},
+      "inherit": "150",
+      "definesDomainEntity": null,
       "rangeEntity": "Concept",
-      "$a": {"property": "prefLabel"}
+      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower"}}
     },
+    "551" : {"inherit": "151"},
     "555" : {"inherit": "550"},
     "667" : {},
     "670" : {},
@@ -577,7 +618,7 @@
     "698": {},
 
     "852": {
-      "resetDomainEntity": "Holding",
+      "definesDomainEntity": "Holding",
       "$3": {"property": "materialsSpecified"},
       "$2": {"property": "sourceOfClassificationOrShelvingScheme"},
       "$8": {"property": "sequenceNumber"},
