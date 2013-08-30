@@ -550,6 +550,15 @@
     },
     "155" : {"inherit": "150"},
 
+    "180" : {
+      "inherit": "150",
+      "$x": {"property": "prefLabel"}
+    },
+    "181" : {
+      "inherit": "151",
+      "$z": {"property": "label"}
+    },
+
     "400": {"$a": {"addProperty": "altLabel"}},
     "410" : {"inherit": "400"},
     "411" : {"inherit": "400"},
