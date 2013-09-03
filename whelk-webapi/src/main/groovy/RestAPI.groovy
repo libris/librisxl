@@ -279,6 +279,21 @@ class DocumentRestlet extends BasicWhelkAPI {
 }
 
 @Log
+class SparqlRestlet extends BasicWhelkAPI {
+    def pathEnd = "_sparql"
+    def varPath = false
+    String id = "SparqlAPI"
+
+    String description = "Provides sparql endpoint to the underlying tripple store."
+
+    @Override
+    void doHandle(Request request, Response response) {
+        ClientResource resource = new ClientResource(this.whelk.graphStores[0].queryURI)
+        response.setEntity(resource.handleOutbound(request))
+    }
+}
+
+@Log
 class SearchRestlet extends BasicWhelkAPI {
 
     def pathEnd = "_find"

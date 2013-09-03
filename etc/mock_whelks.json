@@ -87,7 +87,10 @@
         {
             "graphstore": {
                 "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
-                "_params" : "http://localhost:8084/openrdf-sesame/repositories/dev-libris/rdf-graphs/service",
+                "_params" : {
+                    "graphStoreUri": "http://localhost:8084/openrdf-sesame/repositories/dev-libris/rdf-graphs/service",
+                    "queryUri": "http://localhost:8084/openrdf-sesame/repositories/dev-libris/"
+                },
                 "_priority" : 0
             }
         },

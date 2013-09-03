@@ -18,6 +18,7 @@ class StandardWhelk implements Whelk {
 
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
+
     // Set by configuration
     URI docBaseUri
 
@@ -234,7 +235,7 @@ class StandardWhelk implements Whelk {
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
     List<Storage> getStorages() { return plugins.findAll { it instanceof Storage } }
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
-    List<Index> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
+    List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }
     TreeSet<FormatConverter> getFormatConverters() { return plugins.findAll { it instanceof FormatConverter } as TreeSet}
     TreeSet<IndexFormatConverter> getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter } as TreeSet }
