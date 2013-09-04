@@ -104,6 +104,9 @@
 <logger name="se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter">
       <level value="debug"/>
 </logger>
+<logger name="se.kb.libris.whelks.api.FieldSearchRestlet">
+        <level value="debug"/>
+</logger>
 <!--
  <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
       <level value="trace"/>
