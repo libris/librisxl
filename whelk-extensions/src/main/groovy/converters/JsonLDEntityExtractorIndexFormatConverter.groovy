@@ -24,7 +24,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 doclist << createEntityDoc(json, doc.identifier, 3, false)
             }
 
-            if (json.about?.get("@type", null)) {
+            if (json?.about?.get("@type", null)) {
                 log.debug("Found authority entity")
                 if (json.about.get("@type") == "Person") {
                     doclist << createEntityDoc(json.about, doc.identifier, 10, false)
@@ -33,13 +33,13 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 }
             }
 
-            json.about?.each { k, entities ->
+            json?.about?.each { k, entities ->
                 if (entitiesToExtract.contains(k)) {
                     doclist += extractEntities(k, entities, doc.identifier)
                 }
             }
 
-            json.about?.instanceOf?.each { k, entities ->
+            json?.about?.instanceOf?.each { k, entities ->
                 if (entitiesToExtract.contains(k)) {
                     doclist += extractEntities(k, entities, doc.identifier)
                 }
