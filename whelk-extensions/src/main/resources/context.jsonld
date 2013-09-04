@@ -42,7 +42,7 @@
     "broader": "skos:broader",
     "narrower": "skos:narrower",
     "closeMatch": "skos:closeMatch",
-    "controlledLabel": {"@id": "xf:controlledLabel", "_note": "^foaf:focus / skos:prefLabel"}
+    "controlledLabel": {"@id": "authorizedAccessPoint", "_note": "^foaf:focus / skos:prefLabel"}
   }, {
     "Record": "foaf:Document",
     "describedby": "iana:describedby",
