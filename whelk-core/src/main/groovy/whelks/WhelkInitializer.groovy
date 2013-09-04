@@ -106,6 +106,7 @@ class WhelkInitializer {
                         log.trace("Plugin $label has no parameters.")
                         plugin = Class.forName(meta._class).newInstance()
                     }
+                    assert plugin, "Failed to instantiate plugin: ${plugname} from class ${meta._class} with params ${meta._params}"
                     if (meta._priority) {
                         log.debug("Setting priority ${meta._priority} for plugin $label")
                         plugin.order = meta._priority

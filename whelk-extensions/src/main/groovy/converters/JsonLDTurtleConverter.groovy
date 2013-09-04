@@ -22,7 +22,7 @@ class JsonLDTurtleConverter extends BasicRDFFormatConverter {
         context = JsonLdToTurtle.parseContext(contextSrc)
     }
 
-    List<RDFDescription> doConvert(RDFDescription doc) {
+    List<RDFDescription> doConvert(Document doc) {
         List<RDFDescription> docs = []
         def source = mapper.readValue(doc.data, Map)
         def bytes = JsonLdToTurtle.toTurtle(context, source).toByteArray()

@@ -2,18 +2,11 @@ package se.kb.libris.whelks.basic
 
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.IndexDocument
+import se.kb.libris.whelks.Document
 
 abstract class BasicIndexFormatConverter extends BasicPlugin implements IndexFormatConverter {
 
-    final List<IndexDocument> convertBulk(List<IndexDocument> docs) {
-        List<IndexDocument> outdocs = new ArrayList<IndexDocument>()
-        for (doc in docs) {
-            outdocs.addAll(convert(doc))
-        }
-        return outdocs
-    }
-
-    final List<IndexDocument> convert(IndexDocument doc) {
+    final List<IndexDocument> convert(Document doc) {
         List<IndexDocument> outdocs = new ArrayList<IndexDocument>()
         if (doc.contentType == requiredContentType) {
             outdocs.addAll(doConvert(doc))
@@ -23,5 +16,5 @@ abstract class BasicIndexFormatConverter extends BasicPlugin implements IndexFor
         return outdocs
     }
 
-    abstract List<IndexDocument> doConvert(IndexDocument doc)
+    abstract List<IndexDocument> doConvert(Document doc)
 }

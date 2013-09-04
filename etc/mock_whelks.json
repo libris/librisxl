@@ -6,6 +6,7 @@
                 "_plugins": [
                     "localindex",
                     "diskstorage",
+                    "graphstore",
                     "search",
                     "kitinsearch",
                     "remotesearch",
@@ -13,14 +14,14 @@
                     "documentapi",
                     "marcconverter",
                     "turtleconverter",
-                    "cleanupconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
                     "namecomplete",
                     "nameexpander",
                     "subjcomplete"
                     ],
-                "contentRoot" : "/"
+                "contentRoot" : "/",
+                "docBaseUri" : "http://libris.kb.se/"
             }
         },
         {
@@ -81,6 +82,13 @@
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
                 "_params" : "work/storage",
                 "_priority" : 1
+            }
+        },
+        {
+            "graphstore": {
+                "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
+                "_params" : "http://localhost:8084/openrdf-sesame/repositories/dev-libris/rdf-graphs/service",
+                "_priority" : 0
             }
         },
         {

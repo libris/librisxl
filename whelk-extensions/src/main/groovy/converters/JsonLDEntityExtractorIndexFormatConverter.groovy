@@ -14,9 +14,10 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     def authPoint = ["Person" : "controlledLabel", "Concept" : "prefLabel"]
     def entitiesToExtract = ["creator", "contributorList", "subject"]
 
-    List<IndexDocument> doConvert(IndexDocument doc) {
+    List<IndexDocument> doConvert(Document doc) {
 
-        List<IndexDocument> doclist = [doc]
+        List<IndexDocument> doclist = [new IndexDocument(doc)]
+        log.info("doc data to be deserialized: ${doc.dataAsString}")
         def json = mapper.readValue(doc.dataAsString, Map)
 
             if (json?.get("@type", null)) {
