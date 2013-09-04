@@ -1,5 +1,6 @@
 package se.kb.libris.whelks.api
 
+import com.google.common.net.MediaType
 import groovy.util.logging.Slf4j as Log
 
 import org.restlet.*
@@ -287,7 +288,7 @@ class SearchRestlet extends BasicWhelkAPI {
     def defaultQueryParams = [:]
     String id = "SearchAPI"
 
-    String description = "Generic search API, acception both GET and POST requests. Accepts parameters compatible with the Query object. (Simple usage: ?q=searchterm)"
+    String description = "Generic search API, accepts both GET and POST requests. Accepts parameters compatible with the Query object. (Simple usage: ?q=searchterm)"
 
 
     SearchRestlet(Map queryParams) {
@@ -318,6 +319,32 @@ class SearchRestlet extends BasicWhelkAPI {
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wrte.message)
         }
+    }
+}
+
+@Log
+class FieldSearchRestlet extends BasicWhelkAPI {
+    def pathEnd = "_fieldsearch"
+    String id = "ESFieldSearch"
+
+    String description = "Query API for field searches. For example q=about.instanceOf.creator.controlledLabel.untouched:Strindberg, August"
+
+    void doHandle(Request request, Response response) {
+        def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def callback = reqMap.get("callback")
+        def q = reqMap["q"]
+        def field = q.split(":")[0]
+        def value = q.split(":")[1]
+        def query = new ElasticQuery(field, value).withType("bib")
+        def results = this.whelk.search(query)
+
+        //def field = reqMap.split(":")[0]
+        //def value = reqMap.split(":")[1]
+        def jsonResult =
+            (callback ? callback + "(" : "") +
+                    results.toJson() +
+                    (callback ? ");" : "")
+        response.setEntity(jsonResult, org.restlet.data.MediaType.APPLICATION_JSON)
     }
 }
 
