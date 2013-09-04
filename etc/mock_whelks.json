@@ -18,7 +18,8 @@
                     "jsonldlinkfinder",
                     "namecomplete",
                     "nameexpander",
-                    "subjcomplete"
+                    "subjcomplete",
+                    "fieldsearch"
                     ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
@@ -127,6 +128,11 @@
         {
             "kitinsearch" : {
                 "_class" : "se.kb.libris.whelks.api.KitinSearchRestlet2"
+            }
+        },
+        {
+            "fieldsearch" : {
+                "_class" : "se.kb.libris.whelks.api.FieldSearchRestlet"
             }
         },
         {
