@@ -5,12 +5,12 @@
                 "properties" : {
                     "instanceOf" : {
                         "properties" : {
-                            "authorList" : {
+                            "creator" : {
                                 "properties": {
-                                    "authorizedAccessPoint" : {
+                                    "controlledLabel" : {
                                         "type" : "multi_field",
                                         "fields" : {
-                                            "authorizedAccessPoint": { "type" : "string", "index": "analyzed" },
+                                            "field": { "type" : "string", "index": "analyzed" },
                                             "untouched" : { "type" : "string", "index": "not_analyzed" }
                                         }
                                     }
@@ -19,15 +19,7 @@
                         }
                     }
                  }
-             },
-            
-            "internalRemark" : {
-                "type" : "multi_field",
-                "fields" : {
-                    "internalRemark": { "type" : "string", "index": "analyzed" },
-                    "untouched" : { "type" : "string", "index": "not_analyzed" }
-                }
-            }
+             }
         }
         
     }
