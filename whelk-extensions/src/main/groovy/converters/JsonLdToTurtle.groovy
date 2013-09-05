@@ -87,7 +87,9 @@ class JsonLdToTurtle {
 
             if (revKey) {
                 vs.each {
-                    topObjects << [(keys.id): it[keys.id], (revKey): [(keys.id): s]]
+                    def node = it.clone()
+                    node[revKey] = [(keys.id): s]
+                    topObjects << node
                 }
             } else {
                 if (term == "@type") {
@@ -95,7 +97,7 @@ class JsonLdToTurtle {
                     pw.println(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
                     return
                 }
-                term = term.replaceAll(/%/, /-/) // FIXME: Sesame fails on these kinds of CURIEs..
+                term = term.replaceAll(/%/, /-/) // TODO: only done to help the Sesame turtle parser..
                 pw.print(indent + term + " ")
                 vs.eachWithIndex { v, i ->
                     if (i > 0) pw.print(" , ")
