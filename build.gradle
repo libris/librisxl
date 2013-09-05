@@ -52,6 +52,23 @@ project(":whelk-core") {
         compile 'com.basho.riak:riak-client:1.0.6'
         compile 'org.hectorclient:hector-core:1.1-3'
         compile 'org.apache.httpcomponents:httpclient:4.2.5'
+        def sesameVer = "2.7.6"
+        compile "org.openrdf.sesame:sesame-model:${sesameVer}"
+        compile "org.openrdf.sesame:sesame-repository-api:${sesameVer}"
+        compile "org.openrdf.sesame:sesame-repository-event:${sesameVer}"
+        compile "org.openrdf.sesame:sesame-repository-sail:${sesameVer}"
+        compile "org.openrdf.sesame:sesame-repository-http:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-rio-api:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-rio-rdfxml:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-rio-trix:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-rio-turtle:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-rio-n3:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-rio-ntriples:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-rio-trig:${sesameVer}"
+        compile "org.openrdf.sesame:sesame-sail-api:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-sail-memory:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-sail-nativerdf:${sesameVer}"
+        //compile "org.openrdf.sesame:sesame-sail-inferencer:${sesameVer}"
     }
 }
 
