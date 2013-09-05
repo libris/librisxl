@@ -132,7 +132,8 @@ class JsonLdToTurtle {
             value = obj[keys.value]
             datatype = obj[keys.datatype]
         }
-        pw.print("\"${value.replaceAll(/"/, /\\"/)}\"")
+        def escaped = value.replaceAll(/("|\\)/, /\\$1/)
+        pw.print("\"${escaped}\"")
         if (lang)
             pw.print("@" + lang)
         else if (datatype)
