@@ -576,13 +576,13 @@
       },
     "455" : {"inherit": "450"},
     "500": {"$a": {"addProperty": "altLabel"}},
-    "510" : {"inherit": "110", "definesDomainEntity": null, "addLink": "seeAlso", "rangeEntity": "Organization"},
-    "511" : {"inherit": "111", "definesDomainEntity": null, "addLink": "seeAlso", "rangeEntity": "Meeting"},
+    "510" : {"inherit": "bib:110", "domainEntity": null, "addLink": "seeAlso"},
+    "511" : {"inherit": "bib:111", "definesDomainEntity": null, "addLink": "seeAlso"},
     "550" : {
       "inherit": "150",
       "definesDomainEntity": null,
       "rangeEntity": "Concept",
-      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower"}}
+      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     },
     "551" : {"inherit": "151"},
     "555" : {"inherit": "550"},
@@ -590,7 +590,12 @@
     "670" : {},
     "675" : {},
     "678" : {"$a": {"addProperty": "note"}},
-    "680" : {"$i": {"addProperty": "note"}},
+    "680" : {
+      "match-domain": {
+        "Concept": {"$i": {"addProperty": "scopeNote"}}
+      },
+      "$i": {"addProperty": "note"}
+    },
     "750" : {
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},

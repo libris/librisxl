@@ -138,13 +138,7 @@ class MarcConversion {
             def handler = null
             def m = null
             if (fieldDfn.inherit) {
-                def refTag = tag
-                def ref = fieldDfn.inherit
-                if (ref.contains(':')) {
-                    (ref, refTag) = ref.split(':')
-                }
-                def baseDfn =  (ref in subConf)? subConf[ref] : config[ref][refTag]
-                fieldDfn = baseDfn + fieldDfn
+                fieldDfn = processInherit(config, subConf, tag, fieldDfn)
             }
             if (fieldDfn.ignored || fieldDfn.size() == 0) {
                 return
@@ -174,6 +168,21 @@ class MarcConversion {
             }
             fieldHandlers[tag] = handler
         }
+    }
+
+    def processInherit(config, subConf, tag, fieldDfn) {
+        def ref = fieldDfn.inherit
+        def refTag = tag
+        if (ref.contains(':')) {
+            (ref, refTag) = ref.split(':')
+        }
+        def baseDfn = (ref in subConf)? subConf[ref] : config[ref][refTag]
+        if (baseDfn.inherit) {
+            baseDfn = processInherit(config, subConf, ref ?: refTag, baseDfn)
+        }
+        def merged = baseDfn + fieldDfn
+        merged.remove('inherit')
+        return merged
     }
 
     Map createFrame(marcSource, recordId=null) {
@@ -490,6 +499,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
                 if (useLinks.size() > 0) {
                     handled << use
+                } else {
+                    def link = resourceMap['*']
+                    if (link) {
+                        useLinks = [link]
+                    }
                 }
             }
 
@@ -567,7 +581,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         if (uriTemplate) {
             // TODO: need to run before linking resource above to work with multiply linked
-            entity['sameAs'] = entity['@id'] // TODO: unnecessary?
+            if (entity['@id']) {
+                entity['sameAs'] = entity['@id'] // TODO: unnecessary?
+            }
             entity['@id'] = uriTemplate.expand(uriTemplateParams)
         }
 
