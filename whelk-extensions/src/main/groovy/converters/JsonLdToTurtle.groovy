@@ -20,15 +20,26 @@ class JsonLdToTurtle {
     String termFor(key) {
         if (key.startsWith("@")) {
             return key
+        } else if (key.indexOf(":") > -1) {
+            return key
         } else if (context.containsKey(key)) {
             def kdef = context[key]
             if (kdef == null)
                 return null
             def term = (kdef instanceof Map)? kdef["@id"] : kdef
+            if (term == null)
+                return null
             return (term.indexOf(":") == -1)? ":" + term : term
         } else {
             return ":" + key
         }
+    }
+
+    String revKeyFor(key) {
+        def kdef = context[key]
+        if (!(kdef instanceof Map))
+            return null
+        return kdef["@reverse"]
     }
 
     String refRepr(String ref) {
@@ -65,27 +76,37 @@ class JsonLdToTurtle {
         def topObjects = []
         obj.each { key, vs ->
             def term = termFor(key)
-            if (term == null || term == keys.id || term == "@context")
+            def revKey = (term == null)? revKeyFor(key) : null
+            if (term == null && revKey == null)
+                return
+            if (term == keys.id || term == "@context")
                 return
             vs = (vs instanceof List)? vs : vs? [vs] : []
             if (!vs) // TODO: && not @list
                 return
-            if (term == "@type") {
-                term = "a"
-                pw.println(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
-                return
-            }
-            pw.print(indent + term + " ")
-            vs.eachWithIndex { v, i ->
-                if (i > 0) pw.print(" , ")
-                if (v instanceof Map && keys.id in v) {
-                    topObjects << v
-                    pw.print(refRepr(v[keys.id]))
-                } else {
-                    objectToTurtle(v, level + 1)
+
+            if (revKey) {
+                vs.each {
+                    topObjects << [(keys.id): it[keys.id], (revKey): [(keys.id): s]]
                 }
+            } else {
+                if (term == "@type") {
+                    term = "a"
+                    pw.println(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
+                    return
+                }
+                pw.print(indent + term + " ")
+                vs.eachWithIndex { v, i ->
+                    if (i > 0) pw.print(" , ")
+                    if (v instanceof Map && keys.id in v) {
+                        topObjects << v
+                        pw.print(refRepr(v[keys.id]))
+                    } else {
+                        objectToTurtle(v, level + 1)
+                    }
+                }
+                pw.println(" ;")
             }
-            pw.println(" ;")
         }
         if (level == 0) {
             pw.println(indent + ".")
