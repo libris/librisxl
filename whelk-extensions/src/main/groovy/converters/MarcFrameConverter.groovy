@@ -380,6 +380,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map resourceMaps
     List matchRules = []
 
+    static GENERIC_REL_URI_TEMPLATE = UriTemplate.fromTemplate("generic:{_}")
+
     MarcFieldHandler(tag, fieldDfn, resourceMaps) {
         super(tag)
         ind1 = fieldDfn.i1
@@ -495,7 +497,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     else if (linkDfn instanceof String)
                         linkDfn
                     else
-                        "involved_as_${it}"
+                        GENERIC_REL_URI_TEMPLATE.expand(["_": it])
                 }
                 if (useLinks.size() > 0) {
                     handled << use
