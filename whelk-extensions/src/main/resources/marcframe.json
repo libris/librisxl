@@ -582,7 +582,7 @@
       "inherit": "150",
       "definesDomainEntity": null,
       "rangeEntity": "Concept",
-      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower"}}
+      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     },
     "551" : {"inherit": "151"},
     "555" : {"inherit": "550"},

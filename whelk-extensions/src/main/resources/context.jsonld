@@ -41,6 +41,7 @@
     "notation": "skos:notation",
     "broader": "skos:broader",
     "narrower": "skos:narrower",
+    "related": "skos:related",
     "closeMatch": "skos:closeMatch",
     "controlledLabel": {"@id": "authorizedAccessPoint", "_note": "^foaf:focus / skos:prefLabel"}
   }, {
