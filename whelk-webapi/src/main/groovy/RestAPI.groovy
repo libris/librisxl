@@ -327,19 +327,48 @@ class FieldSearchRestlet extends BasicWhelkAPI {
     def pathEnd = "_fieldsearch"
     String id = "ESFieldSearch"
 
-    String description = "Query API for field searches. For example q=about.instanceOf.creator.controlledLabel.untouched:Strindberg, August"
+    String description = "Query API for field searches. For example q=about.instanceOf.creator.controlledLabel:Strindberg, August"
+
+    def mapper
 
     void doHandle(Request request, Response response) {
+        mapper = new ObjectMapper()
+        def loader = getClass().classLoader
+        def es_mappings = loader.getResourceAsStream("elastic_mappings.json").withStream {
+            mapper.readValue(it, Map)
+        }
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def callback = reqMap.get("callback")
         def q = reqMap["q"]
-        def field = q.split(":")[0]
+        def field = q.split(":")[0] as String
         def value = q.split(":")[1]
-        def query = new ElasticQuery(field, value).withType("bib")
+        def fieldParts = field.tokenize(".")
+        def remainingMap
+        def indexType
+
+        es_mappings.each {
+            indexType = it.key
+            try {
+                remainingMap = it.value.get("properties", null)
+            } catch (Exception e) {
+                remainingMap = it.value
+            }
+            for (str in fieldParts) {
+                log.debug("str $str")
+                log.debug("remainingMap " + remainingMap)
+                if (remainingMap.get(str, null))  {
+                    try {
+                        remainingMap = remainingMap[str].get("properties", null)
+                    } catch (Exception e) {
+                        remainingMap = remainingMap[str]
+                    }
+                }
+            }
+            log.debug("remaining map " + remainingMap)
+        }
+        def query = new ElasticQuery(field + ".untouched", value).withType(indexType)
         def results = this.whelk.search(query)
 
-        //def field = reqMap.split(":")[0]
-        //def value = reqMap.split(":")[1]
         def jsonResult =
             (callback ? callback + "(" : "") +
                     results.toJson() +
