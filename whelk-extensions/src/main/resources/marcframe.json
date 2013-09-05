@@ -193,7 +193,7 @@
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
       "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
       "$e": {"property": "descriptionRules"},
-      "$f": {"property": "subjectScheme", "TODO:uriTemplate": "/topic/{_}"}
+      "9": {"property": "license"}
     },
     "TODO:041": {"$a": {"defaultFrom": ["240.a"]}},
     "042": {
@@ -415,7 +415,11 @@
     "610": {"inherit": "110", "addLink": "subject", "rangeEntity": "Organization"},
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
     "630": {"addLink": "subject", "rangeEntity": "Work"},
-    "648": {"addLink": "subject", "rangeEntity": "Event", "TODO:whatIsA": "ChronologicalConcept"},
+    "648": {
+      "addLink": "subject",
+      "rangeEntity": "Concept",
+      "TODO:inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}
+    },
     "650": {
       "domain": "Work",
       "addLink": "subject",
@@ -434,7 +438,11 @@
       "uriTemplate": "/place/{label}"
     },
     "653": {"$a": {"domainEntity": "Instance", "property": "keyword"}},
-    "655" : {"inherit": "650", "TODO:specifically": "GenreOrForm"},
+    "655" : {
+      "inherit": "650",
+      "addLink": "worktype",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
 
     "656" : {"rangeEntity": "Profession", "ignored": true},
     "657" : {"rangeEntity": "FunctionOrRole", "ignored": true},
@@ -476,7 +484,16 @@
       "[0:0]": {}
     },
     "035" : {"inherit": "bib"},
-    "040" : {"inherit": "bib"},
+    "040" : {
+      "inherit": "bib",
+      "$f": {
+        "domainEntity": "Instance",
+        "TODO:about": "$thing if Concept else $record",
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "TODO:uriTemplate": "/topic/{_}",
+        "property": "notation"
+        }
+    },
     "042" : {"inherit": "bib"},
     "046" : {
         "TODO": "parseDateTimeUsingFormatHints",
@@ -533,8 +550,11 @@
     },
     "148" : {
       "definesDomainEntity": "Concept",
-      "TODO": "ChronologicalConcept",
-      "$a": {"property": "prefLabel"},
+      "TODO": "chronological-concept a Event?",
+      "$a": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
+      },
       "uriTemplate": "/topic/sao/{prefLabel}"
     },
     "150" : {
@@ -548,11 +568,17 @@
       "$a": {"property": "label"},
       "uriTemplate": "/place/{label}"
     },
-    "155" : {"inherit": "150"},
+    "155" : {
+      "inherit": "150",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
 
     "180" : {
       "inherit": "150",
-      "$x": {"property": "prefLabel"}
+      "$x": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/aspects/", "notation": "aspects"}}
+      }
     },
     "181" : {
       "inherit": "151",
@@ -585,7 +611,10 @@
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     },
     "551" : {"inherit": "151"},
-    "555" : {"inherit": "550"},
+    "555" : {
+      "inherit": "550",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
     "667" : {},
     "670" : {},
     "675" : {},
