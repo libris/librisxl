@@ -95,6 +95,7 @@ class JsonLdToTurtle {
                     pw.println(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
                     return
                 }
+                term = term.replaceAll(/%/, /-/) // FIXME: Sesame fails on these kinds of CURIEs..
                 pw.print(indent + term + " ")
                 vs.eachWithIndex { v, i ->
                     if (i > 0) pw.print(" , ")
@@ -147,7 +148,7 @@ class JsonLdToTurtle {
         // TODO: override from context..
         def prefixes = [:]
         context.each { k, v ->
-            if (v =~ /#|\/$/) {
+            if (v instanceof String && v =~ /\W$/) {
                 prefixes[k == "@vocab"? "": k] = v
             }
         }
