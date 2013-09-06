@@ -6,7 +6,6 @@
                 "_plugins": [
                     "localindex",
                     "diskstorage",
-                    "graphstore",
                     "search",
                     "kitinsearch",
                     "remotesearch",
@@ -153,7 +152,8 @@
                                 "_score" : "desc",
                                 "familyName" : "asc"
                             },
-                            "indexTypes":"person"
+                            "indexTypes": "person",
+                            "queryType": "name"
                             }
             }
         },
@@ -169,8 +169,9 @@
                             ],
                             "infoFields":[
                             ],
-                            "indexTypes":"concept",
-                            "pathEnd":"_subject"
+                            "indexTypes": "concept",
+                            "pathEnd": "_subject",
+                            "queryType": "concept"
                             }
             }
         },
