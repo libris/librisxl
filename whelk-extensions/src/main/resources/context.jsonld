@@ -15,6 +15,7 @@
   }, {
     "unknown": null,
     "marc21": null,
+    "generic": "http://libris.kb.se/ns/generic?label=",
     "value": "rdf:value",
     "sameAs": {"@id": "owl:sameAs", "@type": "@id"},
     "year": "xsd:gYear",
@@ -24,7 +25,10 @@
     "comment": "rdfs:comment",
     "created": "dct:created",
     "subject": "dct:subject",
+    "genre": "dct:type",
     "publisher": "dct:publisher",
+    "source": "dct:source",
+    "license": "dct:license",
     "relation": "dct:relation",
     "name": "foaf:name",
     "abbr": "foaf:nick",
@@ -43,6 +47,7 @@
     "narrower": "skos:narrower",
     "related": "skos:related",
     "closeMatch": "skos:closeMatch",
+    "inCollection": {"@reverse": "skos:member", "@type": "@id"},
     "controlledLabel": {"@id": "authorizedAccessPoint", "_note": "^foaf:focus / skos:prefLabel"}
   }, {
     "Record": "foaf:Document",

@@ -87,7 +87,9 @@ class JsonLdToTurtle {
 
             if (revKey) {
                 vs.each {
-                    topObjects << [(keys.id): it[keys.id], (revKey): [(keys.id): s]]
+                    def node = it.clone()
+                    node[revKey] = [(keys.id): s]
+                    topObjects << node
                 }
             } else {
                 if (term == "@type") {
@@ -95,6 +97,7 @@ class JsonLdToTurtle {
                     pw.println(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
                     return
                 }
+                term = term.replaceAll(/%/, /-/) // TODO: only done to help the Sesame turtle parser..
                 pw.print(indent + term + " ")
                 vs.eachWithIndex { v, i ->
                     if (i > 0) pw.print(" , ")
@@ -129,7 +132,8 @@ class JsonLdToTurtle {
             value = obj[keys.value]
             datatype = obj[keys.datatype]
         }
-        pw.print("\"${value.replaceAll(/"/, /\\"/)}\"")
+        def escaped = value.replaceAll(/("|\\)/, /\\$1/)
+        pw.print("\"${escaped}\"")
         if (lang)
             pw.print("@" + lang)
         else if (datatype)
@@ -147,7 +151,7 @@ class JsonLdToTurtle {
         // TODO: override from context..
         def prefixes = [:]
         context.each { k, v ->
-            if (v =~ /#|\/$/) {
+            if (v instanceof String && v =~ /\W$/) {
                 prefixes[k == "@vocab"? "": k] = v
             }
         }

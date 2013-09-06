@@ -193,7 +193,7 @@
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
       "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
       "$e": {"property": "descriptionRules"},
-      "$f": {"property": "subjectScheme", "TODO:uriTemplate": "/topic/{_}"}
+      "9": {"property": "license"}
     },
     "TODO:041": {"$a": {"defaultFrom": ["240.a"]}},
     "042": {
@@ -225,10 +225,10 @@
         "Work": {"link": "class"}, "Holding": {"link": "callno"}
       },
       "rangeEntity": "Concept",
+      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "$a": {"property": "notation"},
       "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
-      "$b": {"property": "classItem", "ignored": true},
-      "TODO:uriTemplate": "/topic/{classScheme}/{classNumber}"
+      "$b": {"property": "classItem", "ignored": true}
     },
 
     "100": {
@@ -415,17 +415,27 @@
     "610": {"inherit": "110", "addLink": "subject", "rangeEntity": "Organization"},
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
     "630": {"addLink": "subject", "rangeEntity": "Work"},
-    "648": {"addLink": "subject", "rangeEntity": "Event", "TODO:whatIsA": "ChronologicalConcept"},
+    "648": {
+      "inherit": "650",
+      "$a": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
+      }
+    },
     "650": {
       "domain": "Work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
+      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
+      "uriTemplateDefaults": {"inScheme.notation": "sao"},
+      "match-code": {
+        "0": {"uriTemplate": "/resource/auth/{notation}"}
+      },
       "$a": {"property": "prefLabel"},
       "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation",
              "TODO:if": ". != 4"},
-      "$0": {"TODO:uriTemplate": "/resource/auth/{_}", "ignored": true},
-      "uriTemplate": "/topic/{inScheme.notation}/{prefLabel}"
+      "$0": {"property": "notation", "ignored": true}
     },
     "651": {
       "inherit": "650",
@@ -434,7 +444,11 @@
       "uriTemplate": "/place/{label}"
     },
     "653": {"$a": {"domainEntity": "Instance", "property": "keyword"}},
-    "655" : {"inherit": "650", "TODO:specifically": "GenreOrForm"},
+    "655" : {
+      "inherit": "650",
+      "addLink": "worktype",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
 
     "656" : {"rangeEntity": "Profession", "ignored": true},
     "657" : {"rangeEntity": "FunctionOrRole", "ignored": true},
@@ -476,8 +490,17 @@
       "[0:0]": {}
     },
     "035" : {"inherit": "bib"},
-    "040" : {"inherit": "bib"},
-    "042" : {"inherit": "bib"},
+    "040" : {
+      "inherit": "bib",
+      "$f": {
+        "domainEntity": "Instance",
+        "IMPROVE:about": "$thing if Concept else $record",
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "/topic/{_}",
+        "property": "notation"
+      }
+    },
+    "042" : {"inherit": "bib", "TODO": "about-inCollection-skönlitteratur"},
     "046" : {
         "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
@@ -488,6 +511,7 @@
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "$2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "/topic/{+_}",
         "property": "notation"
       }
     },
@@ -533,8 +557,11 @@
     },
     "148" : {
       "definesDomainEntity": "Concept",
-      "TODO": "ChronologicalConcept",
-      "$a": {"property": "prefLabel"},
+      "TODO": "chronological-concept a Event?",
+      "$a": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
+      },
       "uriTemplate": "/topic/sao/{prefLabel}"
     },
     "150" : {
@@ -548,11 +575,21 @@
       "$a": {"property": "label"},
       "uriTemplate": "/place/{label}"
     },
-    "155" : {"inherit": "150"},
+    "155" : {
+      "inherit": "150",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
+    "TODO:162" : {
+      "inherit": "150",
+      "TODO": "besättning - musik"
+    },
 
     "180" : {
       "inherit": "150",
-      "$x": {"property": "prefLabel"}
+      "$x": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/aspects/", "notation": "aspects"}}
+      }
     },
     "181" : {
       "inherit": "151",
@@ -585,10 +622,25 @@
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     },
     "551" : {"inherit": "151"},
-    "555" : {"inherit": "550"},
-    "667" : {},
-    "670" : {},
-    "675" : {},
+    "555" : {
+      "inherit": "550",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
+    "TODO:580" : {
+      "TODO": "needed for concepts..."
+    },
+    "667" : {
+      "domainEntity": "Record",
+      "$a": {"addProperty": "note"}
+    },
+    "TODO:670" : {
+      "$a": {"property": "source"},
+      "$b": {"property": "label"},
+      "$u": {"link": "source"}
+    },
+    "TODO:675" : {
+      "$a": {"property": "source"}
+    },
     "678" : {"$a": {"addProperty": "note"}},
     "680" : {
       "match-domain": {
@@ -605,7 +657,7 @@
       "$a": {"addProperty": "prefLabel"},
       "$0": {"addProperty": "notation"},
       "i2": {
-        "property": "conceptScheme",
+        "property": "inScheme",
         "TODO:valueMap": {
           "7": "TODO: from $2",
           "!4": "TODO: from i2 (resourceMap for thesauri)?"

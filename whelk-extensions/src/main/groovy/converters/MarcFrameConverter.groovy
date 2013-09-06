@@ -370,6 +370,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     String domainEntityName
     String definesDomainEntityType
     UriTemplate uriTemplate
+    Map uriTemplateDefaults
     String link
     Map computeLinks
     boolean repeatLink = false
@@ -379,6 +380,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map subfields = [:]
     Map resourceMaps
     List matchRules = []
+
+    static GENERIC_REL_URI_TEMPLATE = UriTemplate.fromTemplate("generic:{_}")
 
     MarcFieldHandler(tag, fieldDfn, resourceMaps) {
         super(tag)
@@ -402,9 +405,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         if (fieldDfn.uriTemplate) {
             uriTemplate = UriTemplate.fromTemplate(fieldDfn.uriTemplate)
+            uriTemplateDefaults = fieldDfn.uriTemplateDefaults
         }
 
-        computeLinks = fieldDfn.computeLinks?.clone()
+        computeLinks = (fieldDfn.computeLinks)? new HashMap(fieldDfn.computeLinks) : [:]
         if (computeLinks) {
             computeLinks.use = computeLinks.use.replaceFirst(/^\$/, '')
         }
@@ -495,7 +499,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     else if (linkDfn instanceof String)
                         linkDfn
                     else
-                        "involved_as_${it}"
+                        GENERIC_REL_URI_TEMPLATE.expand(["_": it])
                 }
                 if (useLinks.size() > 0) {
                     handled << use
@@ -529,7 +533,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             entity = newEnt
         }
 
-        def uriTemplateParams = [:]
+        def uriTemplateParams = (uriTemplateDefaults)? new HashMap(uriTemplateDefaults) : [:]
 
         def unhandled = new HashSet()
 
@@ -542,7 +546,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def ent = (subDfn.domainEntity)?
                         entityMap[subDfn.domainEntity] : (codeLinkSplits[code] ?: entity)
                     if (subDfn.link) {
-                        ent = ent[subDfn.link] = newEntity(subDfn.rangeEntity)
+                        def entId = null
+                        if (subDfn.uriTemplate) {
+                            // TODO: compile subfield definitions
+                            def subUriTemplate = UriTemplate.fromTemplate(subDfn.uriTemplate)
+                            entId = subUriTemplate.expand(["_": subVal])
+                        }
+                        ent = ent[subDfn.link] = newEntity(subDfn.rangeEntity, entId)
                         uriTemplateKey = "${subDfn.link}."
                     }
                     def property = subDfn.property
