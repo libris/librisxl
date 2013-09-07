@@ -135,35 +135,22 @@ class MarcConversion {
         def fieldHandlers = marcHandlers[marcCategory] = [:]
         def subConf = config[marcCategory]
         subConf.each { tag, fieldDfn ->
-            def handler = null
-            def m = null
             if (fieldDfn.inherit) {
                 fieldDfn = processInherit(config, subConf, tag, fieldDfn)
             }
             if (fieldDfn.ignored || fieldDfn.size() == 0) {
                 return
             }
-            fieldDfn.each { key, obj ->
-                if ((m = key =~ /^\[(\d+):(\d+)\]$/)) {
-                    if (handler == null) {
-                        handler = new MarcFixedFieldHandler()
-                    }
-                    def start = m[0][1].toInteger()
-                    def end = m[0][2].toInteger()
-                    handler.addColumn(obj.domainEntity, obj.property,
-                            start, end, obj['default'])
-                } else if ((m = key =~ /^\$(\w+)$/)) {
-                    if (handler == null) {
-                        handler = new MarcFieldHandler(tag, fieldDfn, resourceMaps)
-                        if (handler.definesDomainEntityType != null) {
-                            primaryTags << tag
-                        }
-                    }
-                    def code = m[0][1]
-                    handler.addSubfield(code, obj)
+            def handler = null
+            if (fieldDfn.find { it.key[0] == '[' }) {
+                handler = new MarcFixedFieldHandler(fieldDfn)
+            } else if (fieldDfn.find { it.key[0] == '$' }) {
+                handler = new MarcFieldHandler(tag, fieldDfn, resourceMaps)
+                if (handler.definesDomainEntityType != null) {
+                    primaryTags << tag
                 }
             }
-            if (handler == null) {
+            else {
                 handler = new MarcSimpleFieldHandler(tag, fieldDfn)
             }
             fieldHandlers[tag] = handler
@@ -256,12 +243,22 @@ class MarcConversion {
 }
 
 class MarcFixedFieldHandler {
+
     def columns = []
-    void addColumn(domainEntity, property, start, end, defaultValue=null) {
-        columns << new Column(
-                domainEntity: domainEntity, property: property,
-                start: start, end: end, defaultValue: defaultValue)
+
+    MarcFixedFieldHandler(fieldDfn) {
+        fieldDfn.each { key, obj ->
+            def m = (key =~ /^\[(\d+):(\d+)\]$/)
+            if (m) {
+                def start = m[0][1].toInteger()
+                def end = m[0][2].toInteger()
+                columns << new Column(
+                        domainEntity: obj.domainEntity, property: obj.property,
+                        start: start, end: end, defaultValue: obj['default'])
+            }
+        }
     }
+
     boolean convert(marcSource, value, entityMap) {
         def success = true
         columns.each {
@@ -270,6 +267,7 @@ class MarcFixedFieldHandler {
         }
         return success
     }
+
     class Column {
         String domainEntity
         String property
@@ -287,6 +285,7 @@ class MarcFixedFieldHandler {
             return true
         }
     }
+
 }
 
 abstract class BaseMarcFieldHandler {
@@ -439,10 +438,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (matchCode) {
             matchRules << new CodeMatchRule(fieldDfn, matchCode, resourceMaps)
         }
-        // TODO: this hardwires subfields; matches should be allowed to redefine specific ones(?)
-        matchRules.each {
-            it.ruleMap.values().each {
-                it.subfields = this.subfields
+        fieldDfn.each { key, obj ->
+            def m = key =~ /^\$(\w+)$/
+            if (m) {
+                addSubfield(m[0][1], obj)
             }
         }
     }
