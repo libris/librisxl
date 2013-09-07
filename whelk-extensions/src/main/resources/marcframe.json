@@ -446,7 +446,7 @@
     "653": {"$a": {"domainEntity": "Instance", "property": "keyword"}},
     "655" : {
       "inherit": "650",
-      "addLink": "worktype",
+      "addLink": "genre",
       "uriTemplate": "/topic/saogf/{prefLabel}"
     },
 
