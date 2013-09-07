@@ -17,7 +17,7 @@ AUTOCOMPLETE, PERSON:
 http://<host>:8080/whelk-webapi/_complete?name=tove
 
 AUTOCOMPLETE, CONCEPT:
-http://<host>:8080/whelk-webapi/_subject?name=tove
+http://<host>:8080/whelk-webapi/_subject?concept=tove
 
 EXPAND AUTOCOMPLETE:
 http://<host>:8080/whelk-webapi/_expand?name=Jansson,%20Tove,%201914-2001.
