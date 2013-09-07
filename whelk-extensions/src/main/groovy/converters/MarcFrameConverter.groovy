@@ -544,19 +544,29 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 if (subDfn) {
                     def ent = (subDfn.domainEntity)?
                         entityMap[subDfn.domainEntity] : (codeLinkSplits[code] ?: entity)
-                    if (subDfn.link) {
+
+                    def link = subDfn.link
+                    def linkRepeat = false
+                    if (subDfn.addLink) {
+                        linkRepeat = true
+                        link = subDfn.addLink
+                    }
+                    if (link) {
                         def entId = null
                         if (subDfn.uriTemplate) {
                             // TODO: compile subfield definitions
                             def subUriTemplate = UriTemplate.fromTemplate(subDfn.uriTemplate)
                             entId = subUriTemplate.expand(["_": subVal])
                         }
-                        ent = ent[subDfn.link] = newEntity(subDfn.rangeEntity, entId)
-                        uriTemplateKey = "${subDfn.link}."
+                        def newEnt = newEntity(subDfn.rangeEntity, entId)
+                        addValue(ent, link, newEnt, linkRepeat)
+                        ent = newEnt
+                        uriTemplateKey = "${link}."
                     }
+
                     def property = subDfn.property
-                    uriTemplateKey += property
                     def repeat = false
+                    uriTemplateKey += property
                     if (subDfn.addProperty) {
                         property = subDfn.addProperty
                         repeat = true
@@ -575,9 +585,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     }
                     if (!ok && property) {
                         addValue(ent, property, subVal, repeat)
-                        uriTemplateParams[uriTemplateKey] = subVal
+                        addValue(uriTemplateParams, uriTemplateKey, subVal, true)
                         ok = true
                     }
+
                     if (subDfn.defaults) {
                         subDfn.defaults.each { k, v -> if (!(k in ent)) ent[k] = v }
                     }
