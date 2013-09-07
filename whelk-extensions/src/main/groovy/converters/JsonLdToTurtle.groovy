@@ -59,11 +59,11 @@ class JsonLdToTurtle {
         pw.println()
     }
 
-    void objectToTurtle(obj, level=0) {
+    def objectToTurtle(obj, level=0) {
         def indent = INDENT * (level + 1)
         if (obj instanceof String || obj[keys.value]) {
             toLiteral(obj)
-            return
+            return Collections.emptyList()
         }
         def s = obj[keys.id]
         if (s && obj.size() > 1) {
@@ -71,7 +71,7 @@ class JsonLdToTurtle {
         } else if (level > 0) {
             pw.println("[")
         } else {
-            return
+            return Collections.emptyList()
         }
         def topObjects = []
         obj.each { key, vs ->
@@ -105,7 +105,7 @@ class JsonLdToTurtle {
                         topObjects << v
                         pw.print(refRepr(v[keys.id]))
                     } else {
-                        objectToTurtle(v, level + 1)
+                        topObjects.addAll(objectToTurtle(v, level + 1))
                     }
                 }
                 pw.println(" ;")
@@ -114,11 +114,13 @@ class JsonLdToTurtle {
         if (level == 0) {
             pw.println(indent + ".")
             pw.println()
+            topObjects.each {
+                objectToTurtle(it)
+            }
+            return Collections.emptyList()
         } else {
             pw.print(indent + "]")
-        }
-        topObjects.each {
-            objectToTurtle(it)
+            return topObjects
         }
     }
 
