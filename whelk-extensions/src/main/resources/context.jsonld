@@ -18,6 +18,8 @@
     "generic": "http://libris.kb.se/ns/generic?label=",
     "value": "rdf:value",
     "sameAs": {"@id": "owl:sameAs", "@type": "@id"},
+    "unionOf": {"@id": "owl:unionOf", "@container": "@list"},
+    "intersectionOf": {"@id": "owl:intersectionOf", "@container": "@list"},
     "year": "xsd:gYear",
     "date": "xsd:date",
     "dateTime": "xsd:dateTime",
