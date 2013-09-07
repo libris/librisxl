@@ -226,8 +226,11 @@
       },
       "rangeEntity": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "uriTemplateDefaults": {"inScheme.notation": "kssb"},
       "$a": {"property": "notation"},
-      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
+      "$2": {"link": "inScheme",
+             "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+             "property": "notation"},
       "$b": {"property": "classItem", "ignored": true}
     },
 
@@ -376,7 +379,7 @@
     "440": {"prefer": "490"},
 
     "440": {
-      "domain": "Work",
+      "domainEntity": "Work",
       "addLink": "series",
       "rangeEntity": "Serial",
       "$a": {"property": "title"},
@@ -423,25 +426,39 @@
       }
     },
     "650": {
-      "domain": "Work",
+      "domainEntity": "Instance", "TODO:domainEntity": "Work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "match-code": {
-        "0": {"uriTemplate": "/resource/auth/{notation}"}
+        "x z": {
+          "uriTemplate": "/topic/{+inScheme.notation}/{broader.prefLabel*}",
+          "TODO": "scheme token from $2, compute or else bnode?",
+          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+                 "property": "prefLabel"},
+          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+                 "property": "prefLabel"},
+          "$y": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+                 "property": "prefLabel"},
+          "$z": {"addLink": "broader", "uriTemplate": "/place/{_}",
+                 "property": "prefLabel"}
+        }
       },
       "$a": {"property": "prefLabel"},
-      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation",
+      "$2": {"link": "inScheme",
+             "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+             "property": "notation",
              "TODO:if": ". != 4"},
-      "$0": {"property": "notation", "ignored": true}
+      "$0": {"link": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
+             "ignored": true}
     },
     "651": {
       "inherit": "650",
       "rangeEntity": "Place",
-      "$a": {"property": "label"},
-      "uriTemplate": "/place/{label}"
+      "$a": {"property": "prefLabel"},
+      "uriTemplate": "/place/{prefLabel}"
     },
     "653": {"$a": {"domainEntity": "Instance", "property": "keyword"}},
     "655" : {
@@ -527,6 +544,7 @@
       "$a": {"property": "notation"},
       "$2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "http://dewey.info/scheme/ddc/",
         "defaults": {"notation": "DDC"},
         "property": "version"
       }
@@ -566,14 +584,20 @@
     },
     "150" : {
       "definesDomainEntity": "Concept",
-      "$a": {"property": "prefLabel"},
-      "$x": {"link": "broader", "property": "prefLabel"},
-      "uriTemplate": "/topic/sao/{prefLabel}"
+      "match-code": {
+        "x": {
+          "uriTemplate": "/topic/sao/{broader.prefLabel*}",
+          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
+        }
+      },
+      "uriTemplate": "/topic/sao/{prefLabel}",
+      "$a": {"property": "prefLabel"}
     },
     "151" : {
       "definesDomainEntity": "Place",
-      "$a": {"property": "label"},
-      "uriTemplate": "/place/{label}"
+      "$a": {"property": "prefLabel"},
+      "uriTemplate": "/place/{prefLabel}"
     },
     "155" : {
       "inherit": "150",
@@ -593,7 +617,7 @@
     },
     "181" : {
       "inherit": "151",
-      "$z": {"property": "label"}
+      "$z": {"property": "prefLabel"}
     },
 
     "400": {"$a": {"addProperty": "altLabel"}},
@@ -605,10 +629,11 @@
         "x": {
           "addLink": "replaces",
           "rangeEntity": "Concept",
-          "TODO-$a": {"link": "broader", "property": "prefLabel"}
+          "uriTemplate": "/topic/sao/{broader.prefLabel*}",
+          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
         }
       },
-      "$x": {"link": "broader", "property": "prefLabel"},
       "TODO": "whatIs w||e"
       },
     "455" : {"inherit": "450"},
@@ -634,9 +659,10 @@
       "$a": {"addProperty": "note"}
     },
     "TODO:670" : {
-      "$a": {"property": "source"},
+      "addLink": "source",
+      "$a": {"property": "name"},
       "$b": {"property": "label"},
-      "$u": {"link": "source"}
+      "$u": {"property": "url"}
     },
     "TODO:675" : {
       "$a": {"property": "source"}
@@ -653,8 +679,11 @@
         "Concept": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
       },
+      "TODO:combineMatchRules:match-code": {
+        "x": "like 150, but inScheme from i2 below"
+      },
       "rangeEntity": "Concept",
-      "$a": {"addProperty": "prefLabel"},
+      "$a": {"property": "prefLabel"},
       "$0": {"addProperty": "notation"},
       "i2": {
         "property": "inScheme",
