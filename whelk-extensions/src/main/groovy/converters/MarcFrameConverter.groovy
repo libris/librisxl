@@ -602,7 +602,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (uriTemplate) {
             // TODO: need to run before linking resource above to work with multiply linked
             if (entity['@id']) {
-                entity['sameAs'] = entity['@id'] // TODO: unnecessary?
+                entity['sameAs'] = ['@id': entity['@id']] // TODO: unnecessary?
             }
             entity['@id'] = uriTemplate.expand(uriTemplateParams)
         }
