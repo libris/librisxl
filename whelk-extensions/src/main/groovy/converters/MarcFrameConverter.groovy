@@ -152,6 +152,7 @@ class MarcConversion {
             }
             else {
                 handler = new MarcSimpleFieldHandler(tag, fieldDfn)
+                assert handler.property || handler.uriTemplate, "Incomplete: $tag: $fieldDfn"
             }
             fieldHandlers[tag] = handler
         }
@@ -343,7 +344,6 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     boolean convert(marcSource, value, entityMap) {
         if (ignored)
             return
-        assert property || uriTemplate, value
         if (dateTimeFormat) {
             value = Date.parse(dateTimeFormat, value).format("yyyy-MM-dd'T'HH:mm:ss.SZ")
         }
@@ -444,6 +444,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 addSubfield(m[0][1], obj)
             }
         }
+        if (splitLinkRules) {
+            assert rangeEntityName
+        }
     }
 
     void addSubfield(code, obj) {
@@ -475,7 +478,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def splitLinkDomain = entity
         def splitLinks = []
         if (splitLinkRules) {
-            assert rangeEntityName
             splitLinkRules.each { rule ->
                 def newEnt = ["@type": rangeEntityName]
                 splitLinks << [rule: rule, entity: newEnt]
