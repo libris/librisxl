@@ -698,7 +698,7 @@
       }
     },
     "755" : {"inherit": "750"},
-    "856" : {"$u": {"addProperty": "sameAs"}}
+    "856" : {"$u": {"addLink": "sameAs", "uriTemplate": "{+_}"}}
   },
 
   "hold": {
