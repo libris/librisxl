@@ -495,6 +495,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     use in it.keySet() }.collect { it.iterator().next().value }
                 useLinks = linkTokens.collect {
                     def linkDfn = resourceMap[it]
+                    if (linkDfn == null) {
+                        linkDfn = resourceMap[it.toLowerCase().replaceAll(/[^a-z0-9_-]/, '')]
+                    }
                     if (linkDfn instanceof Map)
                         linkDfn.term
                     else if (linkDfn instanceof String)
