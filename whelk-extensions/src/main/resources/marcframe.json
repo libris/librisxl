@@ -275,6 +275,7 @@
     },
     "130": {
       "domainEntity": "Work",
+      "$a": {"property": "title"},
       "$d": {"property": "date"}
     },
 
@@ -417,7 +418,7 @@
     "600": {"inherit": "100", "addLink": "subject", "rangeEntity": "Person"},
     "610": {"inherit": "110", "addLink": "subject", "rangeEntity": "Organization"},
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
-    "630": {"addLink": "subject", "rangeEntity": "Work"},
+    "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "Work"},
     "648": {
       "inherit": "650",
       "$a": {
@@ -544,7 +545,7 @@
       "$a": {"property": "notation"},
       "$2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
-        "uriTemplate": "http://dewey.info/scheme/ddc/",
+        "uriTemplate": "http://dewey.info/scheme/ddc/{nil}",
         "defaults": {"notation": "DDC"},
         "property": "version"
       }
@@ -651,8 +652,11 @@
       "inherit": "550",
       "uriTemplate": "/topic/saogf/{prefLabel}"
     },
-    "TODO:580" : {
-      "TODO": "needed for concepts..."
+    "580" : {
+      "TODO": "incomplete",
+      "inherit": "180",
+      "definesDomainEntity": null,
+      "rangeEntity": "Concept"
     },
     "667" : {
       "domainEntity": "Record",
