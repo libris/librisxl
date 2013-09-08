@@ -545,7 +545,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             it.each { code, subVal ->
                 def subDfn = subfields[code]
                 def ok = false
-                def uriTemplateKey = ""
+                def uriTemplateKeyBase = ""
                 if (subDfn) {
                     def ent = (subDfn.domainEntity)?
                         entityMap[subDfn.domainEntity] : (codeLinkSplits[code] ?: entity)
@@ -566,16 +566,16 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         def newEnt = newEntity(subDfn.rangeEntity, entId)
                         addValue(ent, link, newEnt, linkRepeat)
                         ent = newEnt
-                        uriTemplateKey = "${link}."
+                        uriTemplateKeyBase = "${link}."
                     }
 
                     def property = subDfn.property
                     def repeat = false
-                    uriTemplateKey += property
                     if (subDfn.addProperty) {
                         property = subDfn.addProperty
                         repeat = true
                     }
+
                     if (subDfn.pattern) {
                         // TODO: support repeatable?
                         def pattern = Pattern.compile(subDfn.pattern)
@@ -583,14 +583,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         if (m) {
                             subDfn.properties.eachWithIndex { prop, i ->
                                 def v = m[0][i + 1]
-                                if (v) ent[prop] = v
+                                if (v) {
+                                    ent[prop] = v
+                                }
+                                addValue(uriTemplateParams, uriTemplateKeyBase + prop, v, true)
                             }
                             ok = true
                         }
                     }
                     if (!ok && property) {
                         addValue(ent, property, subVal, repeat)
-                        addValue(uriTemplateParams, uriTemplateKey, subVal, true)
+                        addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
                         ok = true
                     }
 
