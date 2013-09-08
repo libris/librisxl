@@ -541,13 +541,15 @@
         "Work": {"addLink": "subject"}
       },
       "rangeEntity": "Concept",
-      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}",
+      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.edition}/",
       "$a": {"property": "notation"},
       "$2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
         "uriTemplate": "http://dewey.info/scheme/ddc/{nil}",
         "defaults": {"notation": "DDC"},
-        "property": "version"
+        "property": "version",
+        "pattern": "(\\d+)/swe",
+        "properties": ["edition"]
       }
     },
 
