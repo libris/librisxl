@@ -81,7 +81,7 @@ class JsonLdToTurtle {
                 return
             if (term == keys.id || term == "@context")
                 return
-            vs = (vs instanceof List)? vs : vs? [vs] : []
+            vs = (vs instanceof List)? vs : vs != null? [vs] : []
             if (!vs) // TODO: && not @list
                 return
 
