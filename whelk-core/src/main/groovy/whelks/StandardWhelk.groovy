@@ -113,6 +113,7 @@ class StandardWhelk implements Whelk {
     void addToGraphStore(List<Document> docs) {
         if (graphStores.size() > 0) {
             log.debug("Adding to graph stores")
+            List<Document> dataDocs = []
             boolean hasConverters = false
             for (doc in docs) {
                 for (rc in getRDFFormatConverters()) {

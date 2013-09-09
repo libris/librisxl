@@ -193,7 +193,7 @@
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
       "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
       "$e": {"property": "descriptionRules"},
-      "$f": {"property": "subjectScheme", "TODO:uriTemplate": "/topic/{_}"}
+      "9": {"property": "license"}
     },
     "TODO:041": {"$a": {"defaultFrom": ["240.a"]}},
     "042": {
@@ -225,10 +225,13 @@
         "Work": {"link": "class"}, "Holding": {"link": "callno"}
       },
       "rangeEntity": "Concept",
+      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "uriTemplateDefaults": {"inScheme.notation": "kssb"},
       "$a": {"property": "notation"},
-      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
-      "$b": {"property": "classItem", "ignored": true},
-      "TODO:uriTemplate": "/topic/{classScheme}/{classNumber}"
+      "$2": {"link": "inScheme",
+             "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+             "property": "notation"},
+      "$b": {"property": "classItem", "ignored": true}
     },
 
     "100": {
@@ -272,6 +275,7 @@
     },
     "130": {
       "domainEntity": "Work",
+      "$a": {"property": "title"},
       "$d": {"property": "date"}
     },
 
@@ -376,7 +380,7 @@
     "440": {"prefer": "490"},
 
     "440": {
-      "domain": "Work",
+      "domainEntity": "Work",
       "addLink": "series",
       "rangeEntity": "Serial",
       "$a": {"property": "title"},
@@ -414,27 +418,55 @@
     "600": {"inherit": "100", "addLink": "subject", "rangeEntity": "Person"},
     "610": {"inherit": "110", "addLink": "subject", "rangeEntity": "Organization"},
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
-    "630": {"addLink": "subject", "rangeEntity": "Work"},
-    "648": {"addLink": "subject", "rangeEntity": "Event", "TODO:whatIsA": "ChronologicalConcept"},
+    "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "Work"},
+    "648": {
+      "inherit": "650",
+      "$a": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
+      }
+    },
     "650": {
-      "domain": "Work",
+      "domainEntity": "Instance", "TODO:domainEntity": "Work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
+      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
+      "uriTemplateDefaults": {"inScheme.notation": "sao"},
+      "match-code": {
+        "x z": {
+          "uriTemplate": "/topic/{+inScheme.notation}/{broader.prefLabel*}",
+          "TODO": "scheme token from $2, compute or else bnode?",
+          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+                 "property": "prefLabel"},
+          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+                 "property": "prefLabel"},
+          "$y": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+                 "property": "prefLabel"},
+          "$z": {"addLink": "broader", "uriTemplate": "/place/{_}",
+                 "property": "prefLabel"}
+        }
+      },
       "$a": {"property": "prefLabel"},
-      "$2": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation",
+      "$2": {"link": "inScheme",
+             "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+             "property": "notation",
              "TODO:if": ". != 4"},
-      "$0": {"TODO:uriTemplate": "/resource/auth/{_}", "ignored": true},
-      "uriTemplate": "/topic/{inScheme.notation}/{prefLabel}"
+      "$0": {"link": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
+             "ignored": true}
     },
     "651": {
       "inherit": "650",
       "rangeEntity": "Place",
-      "$a": {"property": "label"},
-      "uriTemplate": "/place/{label}"
+      "$a": {"property": "prefLabel"},
+      "uriTemplate": "/place/{prefLabel}"
     },
     "653": {"$a": {"domainEntity": "Instance", "property": "keyword"}},
-    "655" : {"inherit": "650", "TODO:specifically": "GenreOrForm"},
+    "655" : {
+      "inherit": "650",
+      "addLink": "genre",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
 
     "656" : {"rangeEntity": "Profession", "ignored": true},
     "657" : {"rangeEntity": "FunctionOrRole", "ignored": true},
@@ -476,8 +508,17 @@
       "[0:0]": {}
     },
     "035" : {"inherit": "bib"},
-    "040" : {"inherit": "bib"},
-    "042" : {"inherit": "bib"},
+    "040" : {
+      "inherit": "bib",
+      "$f": {
+        "domainEntity": "Instance",
+        "IMPROVE:about": "$thing if Concept else $record",
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "/topic/{_}",
+        "property": "notation"
+      }
+    },
+    "042" : {"inherit": "bib", "TODO": "about-inCollection-skönlitteratur"},
     "046" : {
         "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
@@ -488,6 +529,7 @@
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "$2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "/topic/{+_}",
         "property": "notation"
       }
     },
@@ -499,12 +541,15 @@
         "Work": {"addLink": "subject"}
       },
       "rangeEntity": "Concept",
-      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}",
+      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.edition}/",
       "$a": {"property": "notation"},
       "$2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "http://dewey.info/scheme/ddc/{nil}",
         "defaults": {"notation": "DDC"},
-        "property": "version"
+        "property": "version",
+        "pattern": "(\\d+)/swe",
+        "properties": ["edition"]
       }
     },
 
@@ -533,30 +578,49 @@
     },
     "148" : {
       "definesDomainEntity": "Concept",
-      "TODO": "ChronologicalConcept",
-      "$a": {"property": "prefLabel"},
+      "TODO": "chronological-concept a Event?",
+      "$a": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
+      },
       "uriTemplate": "/topic/sao/{prefLabel}"
     },
     "150" : {
       "definesDomainEntity": "Concept",
-      "$a": {"property": "prefLabel"},
-      "$x": {"link": "broader", "property": "prefLabel"},
-      "uriTemplate": "/topic/sao/{prefLabel}"
+      "match-code": {
+        "x": {
+          "uriTemplate": "/topic/sao/{broader.prefLabel*}",
+          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
+        }
+      },
+      "uriTemplate": "/topic/sao/{prefLabel}",
+      "$a": {"property": "prefLabel"}
     },
     "151" : {
       "definesDomainEntity": "Place",
-      "$a": {"property": "label"},
-      "uriTemplate": "/place/{label}"
+      "$a": {"property": "prefLabel"},
+      "uriTemplate": "/place/{prefLabel}"
     },
-    "155" : {"inherit": "150"},
+    "155" : {
+      "inherit": "150",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
+    "TODO:162" : {
+      "inherit": "150",
+      "TODO": "besättning - musik"
+    },
 
     "180" : {
       "inherit": "150",
-      "$x": {"property": "prefLabel"}
+      "$x": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/aspects/", "notation": "aspects"}}
+      }
     },
     "181" : {
       "inherit": "151",
-      "$z": {"property": "label"}
+      "$z": {"property": "prefLabel"}
     },
 
     "400": {"$a": {"addProperty": "altLabel"}},
@@ -568,39 +632,67 @@
         "x": {
           "addLink": "replaces",
           "rangeEntity": "Concept",
-          "TODO-$a": {"link": "broader", "property": "prefLabel"}
+          "uriTemplate": "/topic/sao/{broader.prefLabel*}",
+          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
         }
       },
-      "$x": {"link": "broader", "property": "prefLabel"},
       "TODO": "whatIs w||e"
       },
     "455" : {"inherit": "450"},
     "500": {"$a": {"addProperty": "altLabel"}},
-    "510" : {"inherit": "110", "definesDomainEntity": null, "addLink": "seeAlso", "rangeEntity": "Organization"},
-    "511" : {"inherit": "111", "definesDomainEntity": null, "addLink": "seeAlso", "rangeEntity": "Meeting"},
+    "510" : {"inherit": "bib:110", "domainEntity": null, "addLink": "seeAlso"},
+    "511" : {"inherit": "bib:111", "definesDomainEntity": null, "addLink": "seeAlso"},
     "550" : {
       "inherit": "150",
       "definesDomainEntity": null,
       "rangeEntity": "Concept",
-      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower"}}
+      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     },
     "551" : {"inherit": "151"},
-    "555" : {"inherit": "550"},
-    "667" : {},
-    "670" : {},
-    "675" : {},
+    "555" : {
+      "inherit": "550",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
+    "580" : {
+      "TODO": "incomplete",
+      "inherit": "180",
+      "definesDomainEntity": null,
+      "rangeEntity": "Concept"
+    },
+    "667" : {
+      "domainEntity": "Record",
+      "$a": {"addProperty": "note"}
+    },
+    "TODO:670" : {
+      "addLink": "source",
+      "$a": {"property": "name"},
+      "$b": {"property": "label"},
+      "$u": {"property": "url"}
+    },
+    "TODO:675" : {
+      "$a": {"property": "source"}
+    },
     "678" : {"$a": {"addProperty": "note"}},
-    "680" : {"$i": {"addProperty": "note"}},
+    "680" : {
+      "match-domain": {
+        "Concept": {"$i": {"addProperty": "scopeNote"}}
+      },
+      "$i": {"addProperty": "note"}
+    },
     "750" : {
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
       },
+      "TODO:combineMatchRules:match-code": {
+        "x": "like 150, but inScheme from i2 below"
+      },
       "rangeEntity": "Concept",
-      "$a": {"addProperty": "prefLabel"},
+      "$a": {"property": "prefLabel"},
       "$0": {"addProperty": "notation"},
       "i2": {
-        "property": "conceptScheme",
+        "property": "inScheme",
         "TODO:valueMap": {
           "7": "TODO: from $2",
           "!4": "TODO: from i2 (resourceMap for thesauri)?"
@@ -608,7 +700,7 @@
       }
     },
     "755" : {"inherit": "750"},
-    "856" : {"$u": {"addProperty": "sameAs"}}
+    "856" : {"$u": {"addLink": "sameAs", "uriTemplate": "{+_}"}}
   },
 
   "hold": {

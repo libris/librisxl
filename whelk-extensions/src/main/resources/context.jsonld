@@ -15,8 +15,11 @@
   }, {
     "unknown": null,
     "marc21": null,
+    "generic": "http://libris.kb.se/ns/generic?label=",
     "value": "rdf:value",
     "sameAs": {"@id": "owl:sameAs", "@type": "@id"},
+    "unionOf": {"@id": "owl:unionOf", "@container": "@list"},
+    "intersectionOf": {"@id": "owl:intersectionOf", "@container": "@list"},
     "year": "xsd:gYear",
     "date": "xsd:date",
     "dateTime": "xsd:dateTime",
@@ -24,7 +27,11 @@
     "comment": "rdfs:comment",
     "created": "dct:created",
     "subject": "dct:subject",
+    "genre": "dct:type",
     "publisher": "dct:publisher",
+    "source": "dct:source",
+    "license": "dct:license",
+    "replaces": "dct:replaces",
     "relation": "dct:relation",
     "name": "foaf:name",
     "abbr": "foaf:nick",
@@ -39,10 +46,13 @@
     "altLabel": "skos:altLabel",
     "hiddenLabel": "skos:hiddenLabel",
     "notation": "skos:notation",
+    "scopeNote": "skos:scopeNote",
     "broader": "skos:broader",
     "narrower": "skos:narrower",
+    "related": "skos:related",
     "closeMatch": "skos:closeMatch",
-    "controlledLabel": {"@id": "xf:controlledLabel", "_note": "^foaf:focus / skos:prefLabel"}
+    "inCollection": {"@reverse": "skos:member", "@type": "@id"},
+    "controlledLabel": {"@id": "authorizedAccessPoint", "_note": "^foaf:focus / skos:prefLabel"}
   }, {
     "Record": "foaf:Document",
     "describedby": "iana:describedby",

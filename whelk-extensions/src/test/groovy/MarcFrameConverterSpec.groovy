@@ -115,6 +115,44 @@ class MarcFrameConverterSpec extends Specification {
         ]
     }
 
+    def "should convert a concept auth post"() {
+        given:
+        def marc = [
+            "leader": "01341cz  a2200397n  4500",
+            "fields": [
+                ["001": "140482"],
+                ["005": "20130814170612.0"],
+                ["008": "020409 | anznnbabn          |n ana      "],
+                ["150": ["subfields": [["a": "Barnpsykologi"]]]],
+                ["550": ["subfields": [["a": "Psykologi"], ["w": "g"]]]],
+            ]
+        ]
+        when:
+        def frame = converter.createFrame(marc)
+        then:
+        frame == [
+            "@type":"Record",
+            "@id": "/auth/140482",
+            controlNumber: "140482",
+            modified: "2013-08-14T17:06:12.0+0200",
+            status: "c",
+            typeOfRecord: "z",
+            characterCoding: "a",
+            encLevel: "n",
+            about: [
+                "@type": "Concept",
+                "@id": "/topic/sao/Barnpsykologi",
+                sameAs: ["@id": "/resource/auth/140482"],
+                prefLabel: "Barnpsykologi",
+                broader: [
+                    ["@type": "Concept",
+                    "@id": "/topic/sao/Psykologi",
+                     prefLabel: "Psykologi"]
+                ]
+            ]
+        ]
+    }
+
     def "should handle complex 260 fields"() {
     /*
 

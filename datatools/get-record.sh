@@ -5,7 +5,6 @@ if [[ "$TYPE" == "" ]] || [[ "$ID" == "" ]]; then
     echo "Usage $(basename $0) <bib|auth> ID"
     exit
 fi
-set -e -v
 
 MARCPATH=/tmp/$TYPE-$ID.iso2709
 JSONPATH=/tmp/$TYPE-$ID.json

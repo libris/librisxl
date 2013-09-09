@@ -1,5 +1,6 @@
 package se.kb.libris.whelks.api
 
+import com.google.common.net.MediaType
 import groovy.util.logging.Slf4j as Log
 
 import org.restlet.*
@@ -303,7 +304,7 @@ class SearchRestlet extends BasicWhelkAPI {
     def defaultQueryParams = [:]
     String id = "SearchAPI"
 
-    String description = "Generic search API, acception both GET and POST requests. Accepts parameters compatible with the Query object. (Simple usage: ?q=searchterm)"
+    String description = "Generic search API, accepts both GET and POST requests. Accepts parameters compatible with the Query object. (Simple usage: ?q=searchterm)"
 
 
     SearchRestlet(Map queryParams) {
@@ -334,6 +335,66 @@ class SearchRestlet extends BasicWhelkAPI {
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wrte.message)
         }
+    }
+}
+
+@Log
+class FieldSearchRestlet extends BasicWhelkAPI {
+    def pathEnd = "_fieldsearch"
+    String id = "ESFieldSearch"
+
+    String description = "Query API for field searches. For example q=about.instanceOf.creator.controlledLabel:Strindberg, August"
+
+    def mapper
+
+    void doHandle(Request request, Response response) {
+        mapper = new ObjectMapper()
+        def loader = getClass().classLoader
+        def es_mappings = loader.getResourceAsStream("elastic_mappings.json").withStream {
+            mapper.readValue(it, Map)
+        }
+        def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def callback = reqMap.get("callback")
+        def q = reqMap["q"]
+        def field = q.split(":")[0] as String
+        def value = q.split(":")[1]
+        def fieldParts = field.tokenize(".")
+        def remainingMap
+        def indexType
+
+        es_mappings.each {
+            indexType = it.key
+            try {
+                remainingMap = it.value.get("properties", null)
+            } catch (Exception e) {
+                remainingMap = it.value
+            }
+            for (str in fieldParts) {
+                log.debug("str $str")
+                log.debug("remainingMap " + remainingMap)
+                if (remainingMap.get(str, null))  {
+                    try {
+                        remainingMap = remainingMap[str].get("properties", null)
+                    } catch (Exception e) {
+                        remainingMap = remainingMap[str]
+                    }
+                }
+            }
+            //TODO: Check if field is mapped as untouched
+            //TODO: Integrate into searchapi
+            //TODO: index @type och conceptScheme som not_analyzed
+            //TODO: parametrar för @type och conceptScheme
+
+            log.debug("remaining map " + remainingMap)
+        }
+        def query = new ElasticQuery(field + ".untouched", value).withType(indexType)
+        def results = this.whelk.search(query)
+
+        def jsonResult =
+            (callback ? callback + "(" : "") +
+                    results.toJson() +
+                    (callback ? ");" : "")
+        response.setEntity(jsonResult, org.restlet.data.MediaType.APPLICATION_JSON)
     }
 }
 
@@ -427,9 +488,9 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 results.toJson(keys) +
                 (callback ? ");" : "")
 
-                response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+                response.setEntity(jsonResult,  org.restlet.data.MediaType.APPLICATION_JSON)
             } else {
-                response.setEntity("Missing q parameter", MediaType.TEXT_PLAIN)
+                response.setEntity("Missing q parameter",  org.restlet.data.MediaType.TEXT_PLAIN)
             }
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
@@ -555,6 +616,8 @@ class AutoComplete extends BasicWhelkAPI {
     def extraInfo = []
     def sortby = []
 
+    def queryType = "q"
+
     String types
     String description = "Search API for autocompletion. Use parameter name or q."
     String id = "AutoComplete"
@@ -570,8 +633,11 @@ class AutoComplete extends BasicWhelkAPI {
         extraInfo.addAll(lists.get("infoFields"))
         types = lists.get("indexTypes")
         sortby = lists.get("sortby")
-        if (lists["pathEnd"]) {
+        if (lists.get("pathEnd", null)) {
             this.pathEnd = lists.get("pathEnd")
+        }
+        if (lists.get("queryType", null)) {
+            this.queryType = lists.get("queryType")
         }
     }
 
@@ -592,16 +658,15 @@ class AutoComplete extends BasicWhelkAPI {
     @Override
     void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        String name = querymap.get("name")
-        if (!name) {
-            name = querymap.get("q")
-        }
+        log.debug("querytype $queryType")
+        String queryStr = querymap.get(queryType, null)
+
         def callback = querymap.get("callback")
-        if (name) {
-            name = splitName(name)
-            log.debug("name: $name")
+        if (queryStr) {
+            queryStr = splitName(queryStr)
+            log.debug("queryStr: $queryStr")
             log.debug("namePrefixes: $namePrefixes")
-            def query = new ElasticQuery(name)
+            def query = new ElasticQuery(queryStr)
             query.highlights = namePrefixes
             query.sorting = sortby
             query.fields = namePrefixes
@@ -609,19 +674,15 @@ class AutoComplete extends BasicWhelkAPI {
             query.indexType = types
 
             def results = this.whelk.search(query)
-            /*
+
             def jsonResult = 
             (callback ? callback + "(" : "") +
-            results.toJson() +
+                new SuggestResultsConverter(results, [namePrefixes[0]], extraInfo).toJson() +
             (callback ? ");" : "")
-             */
-            def c = new SuggestResultsConverter(results, [namePrefixes[0]], extraInfo)
 
-            response.setEntity(c.toJson(), MediaType.APPLICATION_JSON)
-            //else if (String subject = querymap.get("subject")) {
-            //handle subject
+            response.setEntity(jsonResult, org.restlet.data.MediaType.APPLICATION_JSON)
         } else {
-            response.setEntity('{"error":"Parameter \"name\" is missing."}', MediaType.APPLICATION_JSON)
+            response.setEntity('{"error":"QueryParameter \"name\", \"concept\" or \"q\" is missing."}', org.restlet.data.MediaType.APPLICATION_JSON)
         }
     }
 }

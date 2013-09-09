@@ -9,7 +9,4 @@ fi
 SOURCE_MARC=$(cd $(dirname $SOURCE_MARC); pwd)/$(basename $SOURCE_MARC)
 
 SCRIPT_DIR=$(dirname $0)
-cd $SCRIPT_DIR
-WHELKS_BUILD=../whelk-extensions/build
-java -cp $WHELKS_BUILD/classes/main/:$WHELKS_BUILD/libs/librisxl.jar se.kb.libris.conch.converter.MarcJSONConverter $SOURCE_MARC
-
+cd whelk-extensions/ && gradle --offline -q convertIso2709ToJson -Dargs=$SOURCE_MARC | grep '^{'

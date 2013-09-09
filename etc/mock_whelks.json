@@ -6,7 +6,6 @@
                 "_plugins": [
                     "localindex",
                     "diskstorage",
-                    "graphstore",
                     "search",
                     "sparqlapi",
                     "kitinsearch",
@@ -19,7 +18,8 @@
                     "jsonldlinkfinder",
                     "namecomplete",
                     "nameexpander",
-                    "subjcomplete"
+                    "subjcomplete",
+                    "fieldsearch"
                     ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
@@ -139,6 +139,11 @@
             }
         },
         {
+            "fieldsearch" : {
+                "_class" : "se.kb.libris.whelks.api.FieldSearchRestlet"
+            }
+        },
+        {
             "namecomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : {"queryFields":[
@@ -156,7 +161,8 @@
                                 "_score" : "desc",
                                 "familyName" : "asc"
                             },
-                            "indexTypes":"person"
+                            "indexTypes": "person",
+                            "queryType": "name"
                             }
             }
         },
@@ -172,8 +178,9 @@
                             ],
                             "infoFields":[
                             ],
-                            "indexTypes":"concept",
-                            "pathEnd":"_subject"
+                            "indexTypes": "concept",
+                            "pathEnd": "_subject",
+                            "queryType": "concept"
                             }
             }
         },
