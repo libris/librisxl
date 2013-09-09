@@ -47,6 +47,7 @@
     "hiddenLabel": "skos:hiddenLabel",
     "notation": "skos:notation",
     "scopeNote": "skos:scopeNote",
+    "historyNote": "skos:historyNote",
     "broader": "skos:broader",
     "narrower": "skos:narrower",
     "related": "skos:related",

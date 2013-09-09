@@ -681,6 +681,12 @@
       },
       "$i": {"addProperty": "note"}
     },
+    "688" : {
+      "match-domain": {
+        "Concept": {"$a": {"addProperty": "historyNote"}}
+      },
+      "$a": {"addProperty": "note"}
+    },
     "750" : {
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
