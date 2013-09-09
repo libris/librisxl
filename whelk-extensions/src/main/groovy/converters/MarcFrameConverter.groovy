@@ -24,6 +24,8 @@ class MarcFrameConverter extends BasicFormatConverter {
         }
         def resourceMaps = [:]
         config.resourceMaps.each { key, sourceRef ->
+            if (!(sourceRef instanceof String))
+                return
             resourceMaps[key] = loader.getResourceAsStream(sourceRef).withStream {
                 mapper.readValue(it, List).collectEntries { [it.code, it] }
             }
