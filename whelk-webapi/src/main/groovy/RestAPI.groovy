@@ -472,9 +472,9 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 results.toJson(keys) +
                 (callback ? ");" : "")
 
-                response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+                response.setEntity(jsonResult,  org.restlet.data.MediaType.APPLICATION_JSON)
             } else {
-                response.setEntity("Missing q parameter", MediaType.TEXT_PLAIN)
+                response.setEntity("Missing q parameter",  org.restlet.data.MediaType.TEXT_PLAIN)
             }
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
