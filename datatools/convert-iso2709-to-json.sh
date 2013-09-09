@@ -9,4 +9,4 @@ fi
 SOURCE_MARC=$(cd $(dirname $SOURCE_MARC); pwd)/$(basename $SOURCE_MARC)
 
 SCRIPT_DIR=$(dirname $0)
-cd whelk-extensions/ && gradle --offline -q convertIso2709ToJson -Dargs=$SOURCE_MARC
+cd whelk-extensions/ && gradle --offline -q convertIso2709ToJson -Dargs=$SOURCE_MARC | grep '^{'
