@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import org.restlet.*
 import org.restlet.data.*
+import org.restlet.resource.*
 
 import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
