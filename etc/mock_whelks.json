@@ -8,6 +8,7 @@
                     "diskstorage",
                     "graphstore",
                     "search",
+                    "sparqlapi",
                     "kitinsearch",
                     "remotesearch",
                     "metasearch",
@@ -120,6 +121,11 @@
             "search" : {
                 "_class" : "se.kb.libris.whelks.api.SearchRestlet",
                 "_params" : {"boost" : "labels.title:2"}
+            }
+        },
+        {
+            "sparqlapi" : {
+                "_class" : "se.kb.libris.whelks.api.SparqlRestlet"
             }
         },
         {
