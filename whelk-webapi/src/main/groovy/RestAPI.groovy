@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 
 import org.restlet.*
 import org.restlet.data.*
+import org.restlet.resource.*
 
 import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
@@ -276,6 +277,21 @@ class DocumentRestlet extends BasicWhelkAPI {
                 response.setStatus(Status.SERVER_ERROR_INTERNAL, wre.message)
             }
         }
+    }
+}
+
+@Log
+class SparqlRestlet extends BasicWhelkAPI {
+    def pathEnd = "_sparql"
+    def varPath = false
+    String id = "SparqlAPI"
+
+    String description = "Provides sparql endpoint to the underlying tripple store."
+
+    @Override
+    void doHandle(Request request, Response response) {
+        ClientResource resource = new ClientResource(this.whelk.graphStores[0].queryURI)
+        response.setEntity(resource.handleOutbound(request))
     }
 }
 

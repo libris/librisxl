@@ -17,10 +17,12 @@ class HttpGraphStore extends BasicPlugin implements GraphStore {
 
     HttpClient client
     String graphStoreURI
+    String queryURI
     String id = "httpGraphStoreComponent"
 
-    HttpGraphStore(String graphStoreURI) {
-        this.graphStoreURI = graphStoreURI
+    HttpGraphStore(Map settings) {
+        this.graphStoreURI = settings['graphStoreUri']
+        this.queryURI = settings['queryUri']
         client = new DefaultHttpClient()
     }
 
