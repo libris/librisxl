@@ -538,6 +538,7 @@
       "addLink": "subject",
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
+        "Place": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
       },
       "rangeEntity": "Concept",
