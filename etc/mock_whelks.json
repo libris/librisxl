@@ -7,6 +7,7 @@
                     "localindex",
                     "diskstorage",
                     "search",
+                    "sparqlapi",
                     "kitinsearch",
                     "remotesearch",
                     "metasearch",
@@ -87,7 +88,10 @@
         {
             "graphstore": {
                 "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
-                "_params" : "http://localhost:8084/openrdf-sesame/repositories/dev-libris/rdf-graphs/service",
+                "_params" : {
+                    "graphStoreUri": "http://localhost:8084/openrdf-sesame/repositories/dev-libris/rdf-graphs/service",
+                    "queryUri": "http://localhost:8084/openrdf-sesame/repositories/dev-libris/"
+                },
                 "_priority" : 0
             }
         },
@@ -117,6 +121,11 @@
             "search" : {
                 "_class" : "se.kb.libris.whelks.api.SearchRestlet",
                 "_params" : {"boost" : "labels.title:2"}
+            }
+        },
+        {
+            "sparqlapi" : {
+                "_class" : "se.kb.libris.whelks.api.SparqlRestlet"
             }
         },
         {

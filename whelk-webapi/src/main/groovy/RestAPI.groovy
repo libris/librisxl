@@ -1,10 +1,10 @@
 package se.kb.libris.whelks.api
 
-import com.google.common.net.MediaType
 import groovy.util.logging.Slf4j as Log
 
 import org.restlet.*
 import org.restlet.data.*
+import org.restlet.resource.*
 
 import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.*
@@ -280,6 +280,21 @@ class DocumentRestlet extends BasicWhelkAPI {
 }
 
 @Log
+class SparqlRestlet extends BasicWhelkAPI {
+    def pathEnd = "_sparql"
+    def varPath = false
+    String id = "SparqlAPI"
+
+    String description = "Provides sparql endpoint to the underlying tripple store."
+
+    @Override
+    void doHandle(Request request, Response response) {
+        ClientResource resource = new ClientResource(this.whelk.graphStores[0].queryURI)
+        response.setEntity(resource.handleOutbound(request))
+    }
+}
+
+@Log
 class SearchRestlet extends BasicWhelkAPI {
 
     def pathEnd = "_find"
@@ -378,7 +393,7 @@ class FieldSearchRestlet extends BasicWhelkAPI {
             (callback ? callback + "(" : "") +
                     results.toJson() +
                     (callback ? ");" : "")
-        response.setEntity(jsonResult, org.restlet.data.MediaType.APPLICATION_JSON)
+        response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
     }
 }
 
@@ -472,9 +487,9 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 results.toJson(keys) +
                 (callback ? ");" : "")
 
-                response.setEntity(jsonResult,  org.restlet.data.MediaType.APPLICATION_JSON)
+                response.setEntity(jsonResult,  MediaType.APPLICATION_JSON)
             } else {
-                response.setEntity("Missing q parameter",  org.restlet.data.MediaType.TEXT_PLAIN)
+                response.setEntity("Missing q parameter",  MediaType.TEXT_PLAIN)
             }
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
@@ -664,9 +679,9 @@ class AutoComplete extends BasicWhelkAPI {
                 new SuggestResultsConverter(results, [namePrefixes[0]], extraInfo).toJson() +
             (callback ? ");" : "")
 
-            response.setEntity(jsonResult, org.restlet.data.MediaType.APPLICATION_JSON)
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
         } else {
-            response.setEntity('{"error":"QueryParameter \"name\", \"concept\" or \"q\" is missing."}', org.restlet.data.MediaType.APPLICATION_JSON)
+            response.setEntity('{"error":"QueryParameter \"name\", \"concept\" or \"q\" is missing."}', MediaType.APPLICATION_JSON)
         }
     }
 }

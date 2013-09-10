@@ -538,6 +538,7 @@
       "addLink": "subject",
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
+        "Place": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
       },
       "rangeEntity": "Concept",
@@ -679,6 +680,12 @@
         "Concept": {"$i": {"addProperty": "scopeNote"}}
       },
       "$i": {"addProperty": "note"}
+    },
+    "688" : {
+      "match-domain": {
+        "Concept": {"$a": {"addProperty": "historyNote"}}
+      },
+      "$a": {"addProperty": "note"}
     },
     "750" : {
       "match-domain": {
