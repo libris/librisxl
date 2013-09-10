@@ -10,7 +10,17 @@
   },
 
   "resourceMaps": {
-    "relatorCode": "relatorcodes.json"
+    "relatorCode": "relatorcodes.json",
+    "thesaurus": {
+      "0": "lcsh",
+      "1": "lcsh/csh",
+      "2": "mesh",
+      "3": "nal",
+      "4": null,
+      "5": "csh",
+      "6": "rvm",
+      "7": null
+    }
   },
 
   "entityTypeMap": {
@@ -103,7 +113,7 @@
       },
       "rangeEntity": "Identifier",
       "i1": {
-        "property": "identifierScheme",
+        "TODO:property": "identifierScheme",
         "TODO:valueMap": {
           "0": "isrc",
           "1": "upc",
@@ -347,7 +357,7 @@
       ],
       "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
       "rangeEntity": "ProviderEvent",
-      "i1": {"property": "latest", "TODO:valueMap": {"2": false, "3": true}},
+      "i1": {"TODO:property": "latest", "TODO:valueMap": {"2": false, "3": true}},
       "$a": {"link": "place", "rangeEntity": "Place", "property": "label"},
       "$b": {"property": "providerName"},
       "$c": {"property": "providerDate"},
@@ -398,7 +408,7 @@
 
     "500": {"$a": {"domainEntity": "Instance", "property": "note"}},
     "504": {"$a": {"domainEntity": "Instance", "property": "supplementaryContentNote"}},
-    "505": {"$a": {"domainEntity": "Instance", "property": "listOfContents"}},
+    "505": {"$a": {"domainEntity": "Instance", "addProperty": "listOfContents", "TODO": "$t, $r"}},
     "508": {"$a": {"domainEntity": "Instance", "property": "creditsNote"}},
 
     "511": {
@@ -432,12 +442,15 @@
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
-      "uriTemplateDefaults": {"inScheme.notation": "sao"},
+      "uriTemplateDefaults": {"inScheme.notation": "_"},
       "match-code": {
-        "x z": {
+        "v x y z": {
           "uriTemplate": "/topic/{+inScheme.notation}/{broader.prefLabel*}",
           "TODO": "scheme token from $2, compute or else bnode?",
           "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+                 "property": "prefLabel"},
+          "$v": {"addLink": "broader", "uriTemplate": "/topic/saogf/{_}",
+               "TODO": "only if $2=sao",
                  "property": "prefLabel"},
           "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
                  "property": "prefLabel"},
@@ -448,10 +461,16 @@
         }
       },
       "$a": {"property": "prefLabel"},
+      "i2": {
+        "link": "inScheme",
+        "rangeEntity": "ConceptScheme",
+        "uriTemplate": "/topic/{+_}",
+        "property": "notation",
+        "valueMap": "thesaurus"
+      },
       "$2": {"link": "inScheme",
              "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
-             "property": "notation",
-             "TODO:if": ". != 4"},
+             "property": "notation"},
       "$0": {"link": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
              "ignored": true}
     },
@@ -493,7 +512,12 @@
       "domainEntity": "Work",
       "addLink": "subject",
       "rangeEntity": "Concept",
-      "i2": {"property": "conceptScheme", "TODO:valueMap": {}},
+      "i2": {
+        "link": "inScheme",
+        "property": "notation",
+        "valueMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
+        "TODO": "proper code for sab förkortad"
+      },
       "$a": {"property": "notation"},
       "$b": {"property": "prefLabel"}
     }
@@ -587,16 +611,16 @@
       "uriTemplate": "/topic/sao/{prefLabel}"
     },
     "150" : {
+      "inherit": "bib:650",
+      "addLink": null,
+      "computeLinks": null,
+      "rangeEntity": null,
+      "domainEntity": null,
       "definesDomainEntity": "Concept",
-      "match-code": {
-        "x": {
-          "uriTemplate": "/topic/sao/{broader.prefLabel*}",
-          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
-          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
-        }
-      },
-      "uriTemplate": "/topic/sao/{prefLabel}",
-      "$a": {"property": "prefLabel"}
+      "uriTemplateDefaults": {"inScheme.notation": "sao"},
+      "$2": null,
+      "$9": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
+      "$0": null
     },
     "151" : {
       "definesDomainEntity": "Place",
@@ -688,23 +712,15 @@
       "$a": {"addProperty": "note"}
     },
     "750" : {
+      "inherit": "bib:650",
+      "domainEntity": null,
+      "computeLinks": null,
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
       },
-      "TODO:combineMatchRules:match-code": {
-        "x": "like 150, but inScheme from i2 below"
-      },
-      "rangeEntity": "Concept",
-      "$a": {"property": "prefLabel"},
       "$0": {"addProperty": "notation"},
-      "i2": {
-        "property": "inScheme",
-        "TODO:valueMap": {
-          "7": "TODO: from $2",
-          "!4": "TODO: from i2 (resourceMap for thesauri)?"
-        }
-      }
+      "$2": null
     },
     "755" : {"inherit": "750"},
     "856" : {"$u": {"addLink": "sameAs", "uriTemplate": "{+_}"}}
