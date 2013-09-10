@@ -336,57 +336,27 @@ class SearchRestlet extends BasicWhelkAPI {
         }
     }
 }
-
 @Log
 class FieldSearchRestlet extends BasicWhelkAPI {
-    def pathEnd = "_fieldsearch"
+    def pathEnd = "_fieldsearch/{indexType}/"
     String id = "ESFieldSearch"
-
+    def varPath = true
     String description = "Query API for field searches. For example q=about.instanceOf.creator.controlledLabel:Strindberg, August"
 
-    def mapper
-
     void doHandle(Request request, Response response) {
-        mapper = new ObjectMapper()
-        def loader = getClass().classLoader
-        def es_mappings = loader.getResourceAsStream("elastic_mappings.json").withStream {
-            mapper.readValue(it, Map)
-        }
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def callback = reqMap.get("callback")
         def q = reqMap["q"]
-        def field = q.split(":")[0] as String
-        def value = q.split(":")[1]
-        def fieldParts = field.tokenize(".")
         def remainingMap
-        def indexType
+        def indexType = request.attributes.get("indexType")
 
-        es_mappings.each {
-            indexType = it.key
-            try {
-                remainingMap = it.value.get("properties", null)
-            } catch (Exception e) {
-                remainingMap = it.value
-            }
-            for (str in fieldParts) {
-                log.debug("str $str")
-                log.debug("remainingMap " + remainingMap)
-                if (remainingMap.get(str, null))  {
-                    try {
-                        remainingMap = remainingMap[str].get("properties", null)
-                    } catch (Exception e) {
-                        remainingMap = remainingMap[str]
-                    }
-                }
-            }
-            //TODO: Check if field is mapped as untouched
-            //TODO: Integrate into searchapi
-            //TODO: index @type och conceptScheme som not_analyzed
-            //TODO: parametrar för @type och conceptScheme
-
-            log.debug("remaining map " + remainingMap)
+        if (!indexType) {
+            response.setEntity("Missing \"indexType\" in url", MediaType.PLAIN_TEXT_UTF_8)
         }
-        def query = new ElasticQuery(field + ".untouched", value).withType(indexType)
+
+        log.debug("index type $indexType")
+
+        def query = new ElasticQuery(q).withType(indexType)
         def results = this.whelk.search(query)
 
         def jsonResult =
@@ -399,7 +369,8 @@ class FieldSearchRestlet extends BasicWhelkAPI {
 
 @Log
 class KitinSearchRestlet2 extends BasicWhelkAPI {
-    def pathEnd = "kitin/_search"
+    def pathEnd = "kitin/{indexType}/_search"
+    def varPath = false
     String id = "KitinSearch"
 
     String description = "Query API with preconfigured parameters for Kitin."
@@ -462,7 +433,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
         }
         try {
             q = new ElasticQuery(reqMap)
-            q.indexType = "bib"
+            q.indexType = request.attributes["indexType"]
             if (reqMap["f"]) {
                 q.query = (q.query + " " + reqMap["f"]).trim()
             }
