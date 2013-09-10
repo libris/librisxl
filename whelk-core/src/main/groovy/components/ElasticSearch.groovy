@@ -1,7 +1,7 @@
 package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
-
+import org.codehaus.jackson.map.ObjectMapper
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.SearchResponse
@@ -53,13 +53,14 @@ class ElasticSearchClient extends ElasticSearch {
             client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
             log.debug("... connected")
         } else {
-            throw new WhelkRuntimeException("Unable to initalize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
+            throw new WhelkRuntimeException("Unable to initialize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
         }
     }
 }
 
 @Log
 class ElasticSearchNode extends ElasticSearch implements Index {
+    def mapper
 
     ElasticSearchNode() {
         this(null)
@@ -103,6 +104,8 @@ abstract class ElasticSearch extends BasicPlugin {
 
     String defaultIndexType = "record"
 
+    def defaultMapping
+
     @Override
     void init(String indexName) {
         if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
@@ -122,6 +125,11 @@ abstract class ElasticSearch extends BasicPlugin {
             log.debug("create: " + mapping.string())
 
             performExecute(client.admin().indices().prepareCreate(indexName).addMapping(defaultIndexType, mapping))
+            mapper = new ObjectMapper()
+            def loader = getClass().classLoader
+            defaultMapping = loader.getResourceAsStream("default_mapping.json").withStream {
+                mapper.readValue(it, Map)
+            }
             setTypeMapping(indexName, defaultIndexType)
         }
     }
@@ -248,12 +256,11 @@ abstract class ElasticSearch extends BasicPlugin {
 
     def setTypeMapping(indexName, itype) {
         log.info("Creating mappings for $indexName/$itype ...")
-        XContentBuilder mapping = jsonBuilder().startObject()
-        .startObject(indexName)
-        .field("date_detection", false)
-        .field("store", true)
-        .endObject()
-        .endObject()
+        XContentBuilder mapping = jsonBuilder().startObject().startObject("_default_")
+        defaultMapping.each { k, v ->
+           mapping = mapping.field(k, v)
+        }
+        mapping = mapping.endObject().endObject()
         log.debug("mapping: " + mapping.string())
         performExecute(client.admin().indices().preparePutMapping(indexName).setType(itype).setSource(mapping))
     }
