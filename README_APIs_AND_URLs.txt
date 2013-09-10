@@ -11,7 +11,7 @@ http://<host>:9200/libris/concept/_search?q=tove
 
 ELASTIC SEARCH:
 PUT mapping with prop config:
-curl -XPUT http://<host>:9200/libris/bib/_mapping -d@etc/elastic_mappings.json
+curl -XPUT http://<host>:9200/libris/bib/_mapping -d@whelk-webapi/src/main/resources/elastic_mappings.json
 
 AUTOCOMPLETE, PERSON:
 http://<host>:8080/whelk-webapi/_complete?name=tove
@@ -21,4 +21,7 @@ http://<host>:8080/whelk-webapi/_subject?concept=tove
 
 EXPAND AUTOCOMPLETE:
 http://<host>:8080/whelk-webapi/_expand?name=Jansson,%20Tove,%201914-2001.
+
+KITINSEARCH, EXACT TERM SEARCH:
+http://localhost:8080/whelk-webapi/kitin/auth/_search?q=about.inScheme.notation.untouched:sao
 
