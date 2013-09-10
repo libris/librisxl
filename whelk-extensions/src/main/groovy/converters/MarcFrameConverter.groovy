@@ -24,10 +24,12 @@ class MarcFrameConverter extends BasicFormatConverter {
         }
         def resourceMaps = [:]
         config.resourceMaps.each { key, sourceRef ->
-            if (!(sourceRef instanceof String))
-                return
-            resourceMaps[key] = loader.getResourceAsStream(sourceRef).withStream {
-                mapper.readValue(it, List).collectEntries { [it.code, it] }
+            if (sourceRef instanceof String) {
+                resourceMaps[key] = loader.getResourceAsStream(sourceRef).withStream {
+                    mapper.readValue(it, List).collectEntries { [it.code, it] }
+                }
+            } else {
+                resourceMaps[key] = sourceRef
             }
         }
         conversion = new MarcConversion(config, resourceMaps)
@@ -366,8 +368,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
 class MarcFieldHandler extends BaseMarcFieldHandler {
 
-    String ind1
-    String ind2
+    Map ind1
+    Map ind2
     String domainEntityName
     String definesDomainEntityType
     UriTemplate uriTemplate
@@ -543,6 +545,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def unhandled = new HashSet()
 
+        if (ind1)
+            processSubData(ind1, value.ind1, entity, uriTemplateParams)
+        if (ind2)
+            processSubData(ind2, value.ind2, entity, uriTemplateParams)
+
         value.subfields.each {
             it.each { code, subVal ->
                 def subDfn = subfields[code]
@@ -590,6 +597,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     boolean processSubData(subDfn, subVal, ent, uriTemplateParams) {
         def ok = false
         def uriTemplateKeyBase = ""
+
+        def valueMap = subDfn.valueMap
+        if (valueMap) {
+            if (valueMap instanceof String) // TODO: resolve on init
+                valueMap = resourceMaps[valueMap]
+            subVal = valueMap[subVal]
+            if (subVal == null)
+                return false
+        }
 
         def link = subDfn.link
         def linkRepeat = false
