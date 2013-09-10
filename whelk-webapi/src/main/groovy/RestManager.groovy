@@ -54,6 +54,28 @@ class RestManager extends Application {
         return router
     }
 
+    def findVar(varPath) {
+        def varStr = new StringBuffer()
+        def varBegin = false
+        def varEnd = false
+        for (it in varPath) {
+            switch (it) {
+                case "{":
+                    varBegin = true
+                    break
+                case "}":
+                    varEnd = false
+                    break
+                default:
+                    if (varBegin && !varEnd) {
+                        varStr << it
+                    }
+            }
+        }
+        return varStr.toString()
+    }
+
+
     void attachApis(router, whelk) {
         log.debug("Getting APIs for whelk ${whelk.id}")
         for (api in whelk.getAPIs()) {
@@ -64,8 +86,9 @@ class RestManager extends Application {
         }
         for (api in whelk.getAPIs()) {
             if (api.varPath) {
-                log.debug("Attaching variable-path-API ${api.id} at ${api.path}.")
-                router.attach(api.path, api).template.variables.put("identifier", new Variable(Variable.TYPE_URI_PATH))
+                def indexType = findVar(api.path)
+                log.debug("Attaching variable-path-API ${api.id} at ${api.path}. indextype $indexType")
+                router.attach(api.path, api).template.variables.put(findVar(api.path), new Variable(Variable.TYPE_URI_PATH))
             }
         }
     }
