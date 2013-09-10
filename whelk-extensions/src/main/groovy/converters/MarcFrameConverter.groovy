@@ -539,7 +539,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             entity = newEnt
         }
 
-        def uriTemplateParams = (uriTemplateDefaults)? new HashMap(uriTemplateDefaults) : [:]
+        def uriTemplateParams = [:]
 
         def unhandled = new HashSet()
 
@@ -547,61 +547,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             it.each { code, subVal ->
                 def subDfn = subfields[code]
                 def ok = false
-                def uriTemplateKeyBase = ""
                 if (subDfn) {
                     def ent = (subDfn.domainEntity)?
                         entityMap[subDfn.domainEntity] : (codeLinkSplits[code] ?: entity)
-
-                    def link = subDfn.link
-                    def linkRepeat = false
-                    if (subDfn.addLink) {
-                        linkRepeat = true
-                        link = subDfn.addLink
-                    }
-                    if (link) {
-                        def entId = null
-                        if (subDfn.uriTemplate) {
-                            // TODO: compile subfield definitions
-                            def subUriTemplate = UriTemplate.fromTemplate(subDfn.uriTemplate)
-                            entId = subUriTemplate.expand(["_": subVal])
-                        }
-                        def newEnt = newEntity(subDfn.rangeEntity, entId)
-                        addValue(ent, link, newEnt, linkRepeat)
-                        ent = newEnt
-                        uriTemplateKeyBase = "${link}."
-                    }
-
-                    def property = subDfn.property
-                    def repeat = false
-                    if (subDfn.addProperty) {
-                        property = subDfn.addProperty
-                        repeat = true
-                    }
-
-                    if (subDfn.pattern) {
-                        // TODO: support repeatable?
-                        def pattern = Pattern.compile(subDfn.pattern)
-                        def m = pattern.matcher(subVal)
-                        if (m) {
-                            subDfn.properties.eachWithIndex { prop, i ->
-                                def v = m[0][i + 1]
-                                if (v) {
-                                    ent[prop] = v
-                                }
-                                addValue(uriTemplateParams, uriTemplateKeyBase + prop, v, true)
-                            }
-                            ok = true
-                        }
-                    }
-                    if (!ok && property) {
-                        addValue(ent, property, subVal, repeat)
-                        addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
-                        ok = true
-                    }
-
-                    if (subDfn.defaults) {
-                        subDfn.defaults.each { k, v -> if (!(k in ent)) ent[k] = v }
-                    }
+                    ok = processSubData(subDfn, subVal, ent, uriTemplateParams)
                 }
                 if (!ok && !handled.contains(code)) {
                     unhandled << code
@@ -613,6 +562,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             // TODO: need to run before linking resource above to work with multiply linked
             if (entity['@id']) {
                 entity['sameAs'] = ['@id': entity['@id']] // TODO: unnecessary?
+            }
+
+            uriTemplateDefaults.each { k, v ->
+                if (!uriTemplateParams.containsKey(k))
+                    uriTemplateParams[k] = v
             }
             entity['@id'] = uriTemplate.expand(uriTemplateParams)
         }
@@ -631,6 +585,63 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         return unhandled.size() == 0
+    }
+
+    boolean processSubData(subDfn, subVal, ent, uriTemplateParams) {
+        def ok = false
+        def uriTemplateKeyBase = ""
+
+        def link = subDfn.link
+        def linkRepeat = false
+        if (subDfn.addLink) {
+            linkRepeat = true
+            link = subDfn.addLink
+        }
+        if (link) {
+            def entId = null
+            if (subDfn.uriTemplate) {
+                // TODO: compile subfield definitions
+                def subUriTemplate = UriTemplate.fromTemplate(subDfn.uriTemplate)
+                entId = subUriTemplate.expand(["_": subVal])
+            }
+            def newEnt = newEntity(subDfn.rangeEntity, entId)
+            addValue(ent, link, newEnt, linkRepeat)
+            ent = newEnt
+            uriTemplateKeyBase = "${link}."
+        }
+
+        def property = subDfn.property
+        def repeat = false
+        if (subDfn.addProperty) {
+            property = subDfn.addProperty
+            repeat = true
+        }
+
+        if (subDfn.pattern) {
+            // TODO: support repeatable?
+            def pattern = Pattern.compile(subDfn.pattern)
+            def m = pattern.matcher(subVal)
+            if (m) {
+                subDfn.properties.eachWithIndex { prop, i ->
+                    def v = m[0][i + 1]
+                    if (v) {
+                        ent[prop] = v
+                    }
+                    addValue(uriTemplateParams, uriTemplateKeyBase + prop, v, true)
+                }
+                ok = true
+            }
+        }
+        if (!ok && property) {
+            addValue(ent, property, subVal, repeat)
+            addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
+            ok = true
+        }
+
+        if (subDfn.defaults) {
+            subDfn.defaults.each { k, v -> if (!(k in ent)) ent[k] = v }
+        }
+        return ok
     }
 
 }
