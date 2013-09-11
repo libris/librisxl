@@ -11,8 +11,8 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
-    def authPoint = ["Person" : "controlledLabel", "Concept" : "prefLabel"]
-    def entitiesToExtract = ["creator", "contributorList", "subject"]
+    def authPoint = ["Person" : "controlledLabel", "Concept" : "prefLabel", "ConceptScheme" : "notation"]
+    def entitiesToExtract = ["creator", "contributorList", "subject", "inScheme"]
 
     List<IndexDocument> doConvert(Document doc) {
 
@@ -26,7 +26,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
             }
 
             if (json?.about?.get("@type", null)) {
-                log.debug("Found authority entity")
+                log.debug("Found authority entity. Extracting " + json.about.get("@type"))
                 if (json.about.get("@type") == "Person") {
                     doclist << createEntityDoc(json.about, doc.identifier, 10, false)
                 } else {
@@ -36,13 +36,31 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
             json?.about?.each { k, entities ->
                 if (entitiesToExtract.contains(k)) {
+                    log.debug("Extracting $k")
                     doclist += extractEntities(k, entities, doc.identifier)
                 }
             }
 
             json?.about?.instanceOf?.each { k, entities ->
                 if (entitiesToExtract.contains(k)) {
+                    log.debug("Extracting $k")
                     doclist += extractEntities(k, entities, doc.identifier)
+                }
+            }
+
+            json?.about?.subject?.each {
+                it.each { k , entities ->
+                    if (entitiesToExtract.contains(k)) {
+                        log.debug("Extracting $k")
+                        doclist += extractEntities(k, entities, doc.identifier)
+                    }
+                }
+            }
+
+            json?.about?.inScheme?.each { k, entities ->
+                if (entitiesToExtract.contains(k)) {
+                        log.debug("Extracting $k")
+                        doclist += extractEntities(k, entities, doc.identifier)
                 }
             }
             log.debug("Extraction results: $doclist")
