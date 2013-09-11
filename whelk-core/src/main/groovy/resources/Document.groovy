@@ -272,4 +272,14 @@ class Document extends Resource {
     Document withData(String data) {
         return (Document)super.withData(data)
     }
+
+    Document withLinkInData(Link link) {
+        def dataAsMap = getDataAsMap()
+        if (link.getType().equals("creator")) {
+            dataAsMap["about"]["instanceOf"]["creator"]["@link"] = link.URI.toString()
+        }  else if (link.getType().equals("subject")) {
+            dataAsMap["about"]["instanceOf"]["subject"]["@link"] = link.URI.toString()
+        }
+        return (Document)super.withData(mapper.writeValueAsString(dataAsMap))
+    }
 }
