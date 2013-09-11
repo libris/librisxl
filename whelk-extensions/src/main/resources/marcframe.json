@@ -522,7 +522,8 @@
         "TODO": "proper code for sab förkortad"
       },
       "$a": {"property": "notation"},
-      "$b": {"property": "prefLabel"}
+      "$b": {"property": "prefLabel"},
+      "TODO": "ta bort? automatiskt pålagda - ska gå att få fram via 084.broader"
     }
 
   },
