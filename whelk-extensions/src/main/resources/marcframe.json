@@ -230,9 +230,10 @@
     },
 
     "084": {
-      "link": "class",
+      "domainEntity": "Instance", "TODO:domainEntity": "Work",
+      "addLink": "class",
       "match-domain": {
-        "Work": {"link": "class"}, "Holding": {"link": "callno"}
+        "Work": {"addLink": "class"}, "Holding": {"addLink": "callno"}
       },
       "rangeEntity": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
@@ -509,11 +510,13 @@
     "883": {},
 
     "976": {
-      "domainEntity": "Work",
-      "addLink": "subject",
+      "domainEntity": "Instance", "TODO:domainEntity": "Work",
+      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "addLink": "class",
       "rangeEntity": "Concept",
       "i2": {
-        "link": "inScheme",
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "/topic/{+_}",
         "property": "notation",
         "valueMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
         "TODO": "proper code for sab förkortad"
