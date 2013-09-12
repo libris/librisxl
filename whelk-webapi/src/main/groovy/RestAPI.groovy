@@ -390,6 +390,10 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
         ]
     ]
 
+    def keys = [
+                "bib" : ["about.title.titleValue", "about.instanceOf.creator", "about.instanceOf.contributor"]
+    ]
+
 
     Query addQueryFacets(Query q) {
         for (facetgroup in queryFacets) {
@@ -406,8 +410,8 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
     Query expandQuery(Query q) {
         def newquery = []
         for (queryitem in q.query.split()) {
-            if (queryitem.contains(":")) {
-                def (group, key) = queryitem.split(":")
+            if (queryitem.contains("=")) {
+                def (group, key) = queryitem.split("=")
                 if (queryFacets[group]) {
                     newquery << (queryFacets[group][key] ?: "")
                 } else {
@@ -449,13 +453,23 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
                 //q = addQueryFacets(q)
                 q = expandQuery(q)
                 results = this.whelk.search(q)
-                def keys = ["about.title.titleValue","about.instanceOf.creator", "about.instanceOf.contributor"]
-                if (reqMap["_keys"]) {
-                    keys = reqMap["_keys"].split(":") as List
+                def keyList
+                if (keys.containsKey(q.indexType)) {
+                    keyList = keys[q.indexType]
                 }
+                if (reqMap["_keys"]) {
+                    keyList = reqMap["_keys"].split(":") as List
+                }
+                def extractedResults
+                if (keyList) {
+                    extractedResults = results.toJson(keyList)
+                } else {
+                    extractedResults = results.toJson()
+                }
+
                 def jsonResult =
                 (callback ? callback + "(" : "") +
-                results.toJson(keys) +
+                    extractedResults +
                 (callback ? ");" : "")
 
                 response.setEntity(jsonResult,  MediaType.APPLICATION_JSON)
