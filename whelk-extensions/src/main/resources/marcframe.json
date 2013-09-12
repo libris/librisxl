@@ -447,15 +447,15 @@
       "match-code": {
         "v x y z": {
           "uriTemplate": "/topic/{+inScheme.notation}/{broader.prefLabel*}",
-          "TODO": "scheme token from $2, compute or else bnode?",
-          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+          "TODO": "use uriTemplate:s here only if scheme token in $2 (else bnode)",
+          "$a": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
-          "$v": {"addLink": "broader", "uriTemplate": "/topic/saogf/{_}",
-               "TODO": "only if $2=sao",
+          "$v": {"addLink": "broader", "uriTemplate": "_:{_}",
+               "TODO": "use saogf, but only if $2=sao",
                  "property": "prefLabel"},
-          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+          "$x": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
-          "$y": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+          "$y": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
           "$z": {"addLink": "broader", "uriTemplate": "/place/{_}",
                  "property": "prefLabel"}
