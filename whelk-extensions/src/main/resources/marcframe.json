@@ -230,7 +230,7 @@
     },
 
     "084": {
-      "domainEntity": "Instance", "TODO:domainEntity": "Work",
+      "domainEntity": "Work",
       "addLink": "class",
       "match-domain": {
         "Work": {"addLink": "class"}, "Holding": {"addLink": "callno"}
@@ -438,7 +438,7 @@
       }
     },
     "650": {
-      "domainEntity": "Instance", "TODO:domainEntity": "Work",
+      "domainEntity": "Work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
@@ -447,15 +447,15 @@
       "match-code": {
         "v x y z": {
           "uriTemplate": "/topic/{+inScheme.notation}/{broader.prefLabel*}",
-          "TODO": "scheme token from $2, compute or else bnode?",
-          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+          "TODO": "use uriTemplate:s here only if scheme token in $2 (else bnode)",
+          "$a": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
-          "$v": {"addLink": "broader", "uriTemplate": "/topic/saogf/{_}",
-               "TODO": "only if $2=sao",
+          "$v": {"addLink": "broader", "uriTemplate": "_:{_}",
+               "TODO": "use saogf, but only if $2=sao",
                  "property": "prefLabel"},
-          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+          "$x": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
-          "$y": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}",
+          "$y": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
           "$z": {"addLink": "broader", "uriTemplate": "/place/{_}",
                  "property": "prefLabel"}
@@ -510,7 +510,7 @@
     "883": {},
 
     "976": {
-      "domainEntity": "Instance", "TODO:domainEntity": "Work",
+      "domainEntity": "Work",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "addLink": "class",
       "rangeEntity": "Concept",
@@ -522,7 +522,8 @@
         "TODO": "proper code for sab förkortad"
       },
       "$a": {"property": "notation"},
-      "$b": {"property": "prefLabel"}
+      "$b": {"property": "prefLabel"},
+      "TODO": "ta bort? automatiskt pålagda - ska gå att få fram via 084.broader"
     }
 
   },
