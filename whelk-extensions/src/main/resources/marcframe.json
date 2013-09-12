@@ -230,7 +230,7 @@
     },
 
     "084": {
-      "domainEntity": "Instance", "TODO:domainEntity": "Work",
+      "domainEntity": "Work",
       "addLink": "class",
       "match-domain": {
         "Work": {"addLink": "class"}, "Holding": {"addLink": "callno"}
@@ -438,7 +438,7 @@
       }
     },
     "650": {
-      "domainEntity": "Instance", "TODO:domainEntity": "Work",
+      "domainEntity": "Work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
@@ -510,7 +510,7 @@
     "883": {},
 
     "976": {
-      "domainEntity": "Instance", "TODO:domainEntity": "Work",
+      "domainEntity": "Work",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "addLink": "class",
       "rangeEntity": "Concept",
