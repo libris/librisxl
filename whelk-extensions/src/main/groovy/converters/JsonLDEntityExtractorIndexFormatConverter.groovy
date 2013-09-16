@@ -11,74 +11,56 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
-    def authPoint = ["Person" : "controlledLabel", "Concept" : "prefLabel", "ConceptScheme" : "notation"]
-    def entitiesToExtract = ["creator", "contributorList", "subject", "inScheme"]
+    def authPoint = ["Person": "controlledLabel/label", "Concept": "prefLabel", "ConceptScheme": "notation"]
+    def entitiesToExtract = ["about.inScheme", "about.instanceOf.creator", "about.instanceOf.contributorList"]
 
     List<IndexDocument> doConvert(Document doc) {
+        log.debug("Converting indexdoc $doc.identifier")
 
         List<IndexDocument> doclist = [new IndexDocument(doc)]
-        log.info("doc data to be deserialized: ${doc.dataAsString}")
+
         def json = mapper.readValue(doc.dataAsString, Map)
 
-            if (json?.get("@type", null)) {
-                log.debug("Record has a @type. Adding to entity recordtype.")
-                doclist << createEntityDoc(json, doc.identifier, 3, false)
-            }
+        if (json) {
 
-            if (json?.about?.get("@type", null)) {
-                log.debug("Found authority entity. Extracting " + json.about.get("@type"))
-                if (json.about.get("@type") == "Person") {
+            if (json.about?.get("@type", null)) {
+                if (authPoint.containsKey(json.about.get("@type"))) {
+                    log.debug("Extracting authority entity " + json.about.get("@type"))
                     doclist << createEntityDoc(json.about, doc.identifier, 10, false)
-                } else {
-                    doclist << createEntityDoc(json.about, doc.identifier, 0, false)
                 }
             }
 
-            json?.about?.each { k, entities ->
-                if (entitiesToExtract.contains(k)) {
-                    log.debug("Extracting $k")
-                    doclist += extractEntities(k, entities, doc.identifier)
-                }
-            }
-
-            json?.about?.instanceOf?.each { k, entities ->
-                if (entitiesToExtract.contains(k)) {
-                    log.debug("Extracting $k")
-                    doclist += extractEntities(k, entities, doc.identifier)
-                }
-            }
-
-            json?.about?.subject?.each {
-                it.each { k , entities ->
-                    if (entitiesToExtract.contains(k)) {
-                        log.debug("Extracting $k")
-                        doclist += extractEntities(k, entities, doc.identifier)
+            for (it in entitiesToExtract) {
+                def jsonMap = json
+                def propList = it.tokenize(".")
+                for (prop in propList) {
+                    try {
+                        jsonMap = jsonMap[prop]
+                    } catch (Exception e) {
+                        jsonMap = null
+                        break
                     }
                 }
-            }
-
-            json?.about?.inScheme?.each { k, entities ->
-                if (entitiesToExtract.contains(k)) {
-                        log.debug("Extracting $k")
-                        doclist += extractEntities(k, entities, doc.identifier)
+                if (jsonMap) {
+                    log.debug("Extracting entity $it")
+                    doclist += extractEntities(jsonMap, doc.identifier, 1)
                 }
             }
-            log.debug("Extraction results: $doclist")
-        
+        }
         return doclist
     }
 
-    List<IndexDocument> extractEntities(def key, def entities, def id) {
+    List<IndexDocument> extractEntities(def extractedJson, def id, def prio) {
         List<IndexDocument> entityDocList = []
-        if (entities instanceof List) {
-            for (entity in entities) {
-                def entityDoc = createEntityDoc(entity, id, 1, true)
+        if (extractedJson instanceof List) {
+            for (entity in extractedJson) {
+                def entityDoc = createEntityDoc(entity, id, prio, true)
                 if (entityDoc) {
                     entityDocList << entityDoc
                 }
             }
-        } else if (entities instanceof Map) {
-            def entityDoc = createEntityDoc(entities, id, 1, true)
+        } else if (extractedJson instanceof Map) {
+            def entityDoc = createEntityDoc(extractedJson, id, prio, true)
             if (entityDoc) {
                 entityDocList << entityDoc
             }
@@ -91,17 +73,28 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
             def type = entityJson["@type"]
             String pident = docId
             if (slugifyId) {
-                def authPoint = entityJson[(authPoint[(type)])]
-                pident = slugify(authPoint, docId, type)
-                entityJson["extractedFrom"] = ["@id":docId]
+                def authPath
+                def label = authPoint[type]
+                if (!label) {
+                    log.debug("Type $type not declared for index entity extraction.")
+                    return null
+                }
+                for (l in label.tokenize("/")) {
+                    if (!authPath) {
+                        authPath = entityJson.get(l, null)
+                    }
+                }
+                pident = slugify(authPath, docId, type)
+                entityJson["extractedFrom"] = ["@id": docId]
             } else {
                 entityJson["@id"] = pident
             }
             entityJson["recordPriority"] = prio
             entityJson.get("unknown", null) ?: entityJson.remove("unknown")
+            log.debug("Created indexdoc $pident with prio $prio")
             return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(pident).withType(type)
         } catch (Exception e) {
-            log.debug("Could not create entitydoc ${e}")
+            log.debug("Could not create entitydoc ${e} docId: $docId" + " EntityJson " + mapper.writeValueAsString(entityJson))
             return null
         }
     }
