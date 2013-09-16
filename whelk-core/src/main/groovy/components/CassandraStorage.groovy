@@ -19,10 +19,15 @@ class CassandraStorage extends BasicPlugin implements Storage {
     int REPLICATION_FACTOR = 1
     String COLUMN_FAMILY_NAME = "Resource"
 
+    String requiredContentType
+
     Keyspace ksp
     ColumnFamilyTemplate<String, String> cft
 
     CassandraStorage() {}
+    CassandraStorage(String rct) {
+        this.requiredContentType = rct
+    }
 
     void init(String whelkName) {
         String cassandra_host = System.getProperty("cassandra.host")
@@ -48,7 +53,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     void store(Document doc, String whelkPrefix) {
-        if (doc) {
+        if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
             ColumnFamilyUpdater<String, String> updater = cft.createUpdater(doc.identifier.toString())
             updater.setByteArray("data", doc.data)
             updater.setLong("timestamp", doc.timestamp)
@@ -61,7 +66,11 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 log.error("Exception: ${e.message}", e)
             }
         } else {
-            log.warn("Received null document. No attempt to store.")
+            if (!doc) {
+                log.warn("Received null document. No attempt to store.")
+            } else {
+                log.debug("This storage does not handle document with type ${doc.contentType}")
+            }
         }
     }
 

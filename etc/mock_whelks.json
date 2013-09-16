@@ -6,6 +6,7 @@
                 "_plugins": [
                     "localindex",
                     "diskstorage",
+                    "isostorage",
                     "search",
                     "sparqlapi",
                     "kitinsearch",
@@ -75,14 +76,28 @@
         {
             "cassandrastorage": {
                 "_class" : "se.kb.libris.whelks.component.CassandraStorage", 
+                "_params" : "application/ld+json"
                 "_priority" : 0
             }
         },
         {
             "diskstorage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : "work/storage",
+                "_params" : { 
+                    "storageDir": "work/storage/jsonld",
+                    "contentType": "application/ld+json"
+                },
                 "_priority" : 1
+            }
+        },
+        {
+            "isostorage": {
+                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
+                "_params" : { 
+                    "storageDir": "work/storage/iso",
+                    "contentType": "text/iso2709"
+                },
+                "_priority" : 2
             }
         },
         {

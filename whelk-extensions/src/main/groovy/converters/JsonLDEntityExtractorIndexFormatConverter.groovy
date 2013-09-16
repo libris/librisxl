@@ -17,7 +17,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     List<IndexDocument> doConvert(Document doc) {
 
         List<IndexDocument> doclist = [new IndexDocument(doc)]
-        log.info("doc data to be deserialized: ${doc.dataAsString}")
+        log.debug("doc data to be deserialized: ${doc.dataAsString}")
         def json = mapper.readValue(doc.dataAsString, Map)
 
             if (json?.get("@type", null)) {

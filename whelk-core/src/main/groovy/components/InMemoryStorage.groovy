@@ -12,6 +12,7 @@ import se.kb.libris.whelks.exception.*
 class InMemoryStorage extends BasicPlugin implements Storage {
     def storage = new HashMap<URI, Document>()
     String id = "inmemorystorage"
+    String requiredContentType
     Whelk whelk
     boolean enabled = true
     boolean isEnabled() { return enabled }

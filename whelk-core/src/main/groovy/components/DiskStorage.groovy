@@ -16,10 +16,9 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     String id = "diskstorage"
     String docFolder = "_"
-    Map<URI, Long> inventory
+    String requiredContentType
 
     int PATH_CHUNKS=4
-    final String INVENTORY_FILE = "inventory.data"
 
     static final String METAFILE_EXTENSION = ".entry"
 
@@ -29,12 +28,13 @@ class DiskStorage extends BasicPlugin implements Storage {
         "text/xml" : ".xml"
     ]
 
-    DiskStorage(String directoryName) {
-        StringBuilder dn = new StringBuilder(directoryName)
+    DiskStorage(Map settings) {
+        StringBuilder dn = new StringBuilder(settings['storageDir'])
         while (dn[dn.length()-1] == '/') {
             dn.deleteCharAt(dn.length()-1)
         }
         this.storageDir = dn.toString()
+        this.requiredContentType = settings.get('contentType', null)
 
         log.info("Starting DiskStorage with storageDir $storageDir")
     }
@@ -48,8 +48,8 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
-        if (doc) {
+    void store(Document doc, String whelkPrefix) {
+        if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
             File sourcefile = new File(buildPath(doc.identifier, true) + "/" + getBaseFilename(doc.identifier) + (FILE_EXTENSIONS[doc.contentType] ?: ""))
             File metafile = new File(buildPath(doc.identifier, true) + "/"+ getBaseFilename(doc.identifier) + METAFILE_EXTENSION)
             sourcefile.write(doc.dataAsString)
@@ -79,26 +79,6 @@ class DiskStorage extends BasicPlugin implements Storage {
             return null
         }
     }
-    /*
-    @Override
-    Document get(URI uri, String whelkPrefix) {
-        File f = new File(buildPath(uri, false))
-        try {
-            def document = new Document(f.text)
-            log.debug("Loading document from disk.")
-            return document
-        } catch (FileNotFoundException fnfe) {
-            return null
-        }
-    }
-
-
-    @Override
-    void store(Document doc, String whelkPrefix, boolean saveInventory = true) {
-        File file = new File(buildPath(doc.identifier, true))
-        file.write(doc.toJson())
-    }
-    */
 
     @Override
     Iterable<Document> getAll(String whelkPrefix) {
@@ -109,7 +89,7 @@ class DiskStorage extends BasicPlugin implements Storage {
     @Override
     void store(Iterable<Document> docs, String whelkPrefix) {
         docs.each {
-            store(it, whelkPrefix, false)
+            store(it, whelkPrefix)
         }
     }
 
