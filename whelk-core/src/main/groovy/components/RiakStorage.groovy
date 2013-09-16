@@ -37,6 +37,8 @@ import groovy.transform.Synchronized
 abstract class RiakClient extends BasicPlugin {
 
     static final int PING_CONNECT_TIMEOUT = 4000
+
+    String requiredContentType
     
     boolean pingNode(String host, int port){
         HttpURLConnection connection = null

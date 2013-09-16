@@ -14,6 +14,9 @@ class ElasticStorageClient extends ElasticStorage implements Storage {}
 
 @Log
 abstract class ElasticStorage extends ElasticSearch {
+
+    String requiredContentType
+
     @Override
     public void store(Document doc, String idxpfx) {
         addDocument(doc, storageType, idxpfx)

@@ -43,7 +43,12 @@ class JsonLdToTurtle {
     }
 
     String refRepr(String ref) {
-        return ref.startsWith("_:")? ref : "<${ref}>"
+        return ref.startsWith("_:")? toValidTerm(ref) : "<${ref}>"
+    }
+
+    String toValidTerm(String term) {
+        // TODO: only done to help the sensitive Sesame turtle parser..
+        return term.replaceAll(/%/, /0/).replaceAll(/\./, '')
     }
 
     void toTurtle(obj) {
@@ -97,7 +102,7 @@ class JsonLdToTurtle {
                     pw.println(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
                     return
                 }
-                term = term.replaceAll(/%/, /-/) // TODO: only done to help the Sesame turtle parser..
+                term = toValidTerm(term)
                 pw.print(indent + term + " ")
                 vs.eachWithIndex { v, i ->
                     if (i > 0) pw.print(" , ")
