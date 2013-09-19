@@ -23,7 +23,7 @@ import se.kb.libris.whelks.exception.*
 @interface IsMetadata {}
 
 @Log
-class Document extends Resource {
+public class Document extends Resource {
     @IsMetadata
     String version = "1"
     @IsMetadata
@@ -61,6 +61,7 @@ class Document extends Resource {
         } catch (JsonParseException jpe) {
             throw new DocumentException(jpe)
         }
+        return this
     }
 
     Document fromJson(String jsonString) {
@@ -70,6 +71,7 @@ class Document extends Resource {
         } catch (JsonParseException jpe) {
             throw new DocumentException(jpe)
         }
+        return this
     }
 
     private void copy(Document d) {

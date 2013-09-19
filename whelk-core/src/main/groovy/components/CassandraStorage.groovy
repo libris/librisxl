@@ -68,7 +68,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
         } else {
             if (!doc) {
                 log.warn("Received null document. No attempt to store.")
-            } else {
+            } else if (log.isDebugEnabled()) {
                 log.debug("This storage does not handle document with type ${doc.contentType}")
             }
         }

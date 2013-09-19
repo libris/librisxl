@@ -210,7 +210,6 @@ class DocumentRestlet extends BasicWhelkAPI {
         log.debug "Path: $path"
         def mode = DisplayMode.DOCUMENT
         (path, mode) = determineDisplayMode(path)
-        boolean _raw = (request.getResourceRef().getQueryAsForm().getValuesMap()['_raw'] == 'true')
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
             log.debug " DisplayMode: $mode"
@@ -237,15 +236,20 @@ class DocumentRestlet extends BasicWhelkAPI {
             }
         } else if (request.method == Method.PUT) {
             try {
+                if (path == "/") {
+                    throw new WhelkRuntimeException("PUT requires a proper URI.")
+                }
                 def identifier
                 Document doc = null
+                Document rawdoc = null
                 def headers = request.attributes.get("org.restlet.http.headers")
                 log.trace("headers: $headers")
                 def link = headers.find { it.name.equals("link") }?.value
-                if (path == "/") {
-                    doc = this.whelk.createDocument().withContentType(request.entity.mediaType.toString()).withSize(request.entity.size).withData(request.entity.stream.getBytes())
-                } else {
-                    doc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString()])
+                doc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString()])
+                rawdoc = this.whelk.createDocument(request.entityAsText, ["identifier":new URI(path),"contentType":request.entity.mediaType.toString()], false)
+                if (rawdoc?.contentType == doc?.contentType) {
+                    // No need to doublestore document.
+                    rawdoc = null
                 }
                 log.debug("Created document with id ${doc.identifier}, ct: ${doc.contentType} ($path)")
                 if (link != null) {
@@ -259,8 +263,13 @@ class DocumentRestlet extends BasicWhelkAPI {
                     && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
                     response.setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
+                    if (rawdoc) {
+                        log.debug("Adding raw version of ${rawdoc.identifier}")
+                        this.whelk.add(rawdoc)
+                    }
+                    // If no dedicated storage for the raw type is available,
+                    // make sure the converted version overwrites the raw.
                     identifier = this.whelk.add(doc)
-                    //response.setEntity("Thank you! Document ingested with id ${identifier}\n", MediaType.TEXT_PLAIN)
                     response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                     response.setLocationRef(request.getOriginalRef().toString())
                 }

@@ -10,8 +10,6 @@ abstract class BasicIndexFormatConverter extends BasicPlugin implements IndexFor
         List<IndexDocument> outdocs = new ArrayList<IndexDocument>()
         if (doc.contentType == requiredContentType) {
             outdocs.addAll(doConvert(doc))
-        } else {
-            outdocs.add(doc)
         }
         return outdocs
     }

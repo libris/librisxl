@@ -22,7 +22,7 @@ class WhelkOperator {
         }
         def operation = (args.length > 0 ? args[0] : null)
         def whelk = (args.length > 1 ? (wi.getWhelks().find { it.id == args[1] }) : null)
-        def resource = (args.length > 2 ? args[2] : whelk?.prefix)
+        def resource = (args.length > 2 ? args[2] : whelk?.id)
         def since
         def origin
         try {
@@ -59,7 +59,7 @@ class WhelkOperator {
                 def document = whelk.get(new URI(resource))
                 whelk.add(document)
             } else {
-                whelk.reindex()
+                whelk.reindex("isostorage")
                 println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
             }
         } else if (operation == "rebuild") {

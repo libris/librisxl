@@ -2,12 +2,10 @@ package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
-import java.text.*
-
-import se.kb.libris.whelks.*
-import se.kb.libris.whelks.basic.*
-import se.kb.libris.whelks.exception.*
-import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.Document
+import se.kb.libris.whelks.exception.WhelkRuntimeException
+import se.kb.libris.whelks.plugin.BasicPlugin
+import se.kb.libris.whelks.plugin.Plugin
 
 @Log
 class DiskStorage extends BasicPlugin implements Storage {
@@ -24,6 +22,8 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     static final FILE_EXTENSIONS = [
         "application/json" : ".json",
+        "application/ld+json" : ".jsonld",
+        "application/x-marc-json" : ".json",
         "application/xml" : ".xml",
         "text/xml" : ".xml"
     ]
@@ -82,8 +82,9 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Iterable<Document> getAll(String whelkPrefix) {
-        def baseDir = new File(this.storageDir+"/"+ whelkPrefix)
-        return new DiskDocumentIterable(baseDir)
+        def baseDir = new File(this.storageDir)
+        log.debug("Basedir: $baseDir")
+        return new DiskDocumentIterable<Document>(baseDir)
     }
 
     @Override
@@ -159,7 +160,7 @@ class DiskDocumentIterable implements Iterable<Document> {
     }
 
 
-    class DiskDocumentIterator<Document> implements Iterator {
+    class DiskDocumentIterator implements Iterator<Document> {
 
         private LinkedList<File> fileStack = new LinkedList<File>()
         private Queue<Document> resultQueue = new LinkedList<Document>()
@@ -190,18 +191,15 @@ class DiskDocumentIterable implements Iterable<Document> {
             while (!fileStack.isEmpty() && resultQueue.isEmpty()) {
                 File currentFile = fileStack.pop();
 
-                if (currentFile.isFile() && currentFile.length() > 0) {
-                    def document
-                    if (currentFile.name.endsWith(DiskStorage.METAFILE_EXTENSION)) {
-                        document = new Document(currentFile.text)
-                        def fileBaseName = currentFile.parent + "/" + currentFile.name.lastIndexOf('.').with {it != -1 ? currentFile.name[0..<it] : currentFile.name}
-                        def sourcefile = new File(fileBaseName + (DiskStorage.FILE_EXTENSIONS[document.contentType] ?: ""))
-                        document.data = sourcefile.readBytes()
-                    }
-                    if (document) {
-                        resultQueue.offer(document)
-                    }
-                }
+                if (currentFile.isFile()
+                        && currentFile.length() > 0
+                        && currentFile.name.endsWith(DiskStorage.METAFILE_EXTENSION)) {
+                    def document = new Document(currentFile)
+                    def fileBaseName = currentFile.parent + "/" + currentFile.name.lastIndexOf('.').with {it != -1 ? currentFile.name[0..<it] : currentFile.name}
+                    def sourcefile = new File(fileBaseName + (DiskStorage.FILE_EXTENSIONS[document.contentType] ?: ""))
+                    document.data = sourcefile.readBytes()
+                    resultQueue.offer(document)
+                        }
 
                 if (currentFile.isDirectory()) {
                     fileStack.addAll(Arrays.asList(currentFile.listFiles()))

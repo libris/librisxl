@@ -117,8 +117,8 @@ class WhelkInitializer {
                         plugin.setId(label)
                     }
                     if (!meta._unique 
-                            && !(plugin instanceof WhelkAware) 
-                            && (!meta._param || (meta._param instanceof String && !meta._param.split(",").find {it.startsWith("_")}))) {
+                            && !(plugin instanceof WhelkAware)
+                            && !meta._param) {
                         log.trace "$plugname not unique. Adding instance to map."
                         plugins[label] = plugin
                     }
