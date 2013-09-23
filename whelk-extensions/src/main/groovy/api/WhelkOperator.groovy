@@ -54,10 +54,8 @@ class WhelkOperator {
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else if (operation == "reindex") {
-            if (args.length > 3) { // Reindex a single document
-                println "Reindexing document with identifier $resource"
-                def document = whelk.get(new URI(resource))
-                whelk.add(document)
+            if (args.length > 2) { // Reindex from a specific identifier
+                whelk.reindex("isostorage", resource)
             } else {
                 whelk.reindex("isostorage")
                 println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."

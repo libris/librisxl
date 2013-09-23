@@ -41,7 +41,7 @@ class StandardWhelk implements Whelk {
         addToGraphStore([doc])
         addToIndex([doc])
 
-        return doc.identifier
+        return new URI(doc.identifier)
     }
 
     /**
@@ -94,7 +94,7 @@ class StandardWhelk implements Whelk {
         if (indexes.size() > 0) {
             for (doc in docs) {
                 for (ifc in getIndexFormatConverters()) {
-                    log.debug("Running indexformatconverter $ifc")
+                    log.trace("Running indexformatconverter $ifc")
                     idxDocs.addAll(ifc.convert(doc))
                 }
             }
@@ -114,7 +114,7 @@ class StandardWhelk implements Whelk {
             List<Document> dataDocs = []
             for (doc in docs) {
                 for (rc in getRDFFormatConverters()) {
-                    log.debug("Running indexformatconverter $rc")
+                    log.trace("Running indexformatconverter $rc")
                     dataDocs.addAll(rc.convert(doc))
                 }
             }
@@ -144,11 +144,8 @@ class StandardWhelk implements Whelk {
     @Override
     Iterable<Document> loadAll(String fromStorage = null, Date since = null) {
         def storage = (fromStorage == null ? getStorages()[0] : getStorages().find { it.id == fromStorage })
-        log.debug("Storage is $storage ${storage.id}")
-        def i = storage.getAll(this.id)
-        log.debug("Iterable is $i")
-        log.debug("what is " + i.iterator().next())
-        return i
+        log.debug("Loading all from storage ${storage.id}")
+        return storage.getAll(this.id)
     }
 
     @Override
@@ -191,16 +188,22 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    void reindex(String fromStorage = null) {
+    void reindex(String fromStorage = null, String startAt = null) {
         int counter = 0
         long startTime = System.currentTimeMillis()
         List<Document> docs = []
+        boolean indexing = !startAt
         for (doc in loadAll(fromStorage)) {
-            log.info("Hey, I found ${doc.identifier} in the cupboard!")
-            docs << doc
-            if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
-                addToIndex(docs)
-                docs = []
+            if (startAt && doc.identifier == startAt) {
+                log.debug("Found document with identifier ${startAt}. Starting to index ...")
+                indexing = true
+            }
+            if (indexing) {
+                docs << doc
+                if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
+                    addToIndex(docs)
+                    docs = []
+                }
             }
         }
         if (docs.size() > 0) {

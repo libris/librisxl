@@ -106,11 +106,6 @@ public class Document extends Resource {
     }
 
     @JsonIgnore
-    void setIdentifier(URI uri) {
-        super.setIdentifier((URI) uri)
-    }
-
-    @JsonIgnore
     Date getTimestampAsDate() {
         return new Date(timestamp)
     }

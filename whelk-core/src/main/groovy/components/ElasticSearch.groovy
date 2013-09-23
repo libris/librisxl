@@ -137,7 +137,7 @@ abstract class ElasticSearch extends BasicPlugin {
     @Override
     void delete(URI uri, String indexName) {
         log.debug("Deleting object with identifier $uri")
-        def delQuery = termsQuery("_id", translateIdentifier(uri))
+        def delQuery = termsQuery("_id", translateIdentifier(uri.toString()))
         log.debug("DelQuery: $delQuery")
         performExecute(client.prepareDeleteByQuery(indexName).setQuery(delQuery))
     }
@@ -357,8 +357,8 @@ abstract class ElasticSearch extends BasicPlugin {
         }
     }
 
-    def translateIdentifier(URI uri) {
-        def pathparts = uri.path.split("/")
+    def translateIdentifier(String uri) {
+        def pathparts = new URI(uri).path.split("/")
         def idelements = []
         pathparts.eachWithIndex() { part, i ->
             if (i > 0) {
