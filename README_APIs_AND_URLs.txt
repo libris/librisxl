@@ -13,6 +13,9 @@ ELASTIC SEARCH:
 PUT mapping with prop config:
 curl -XPUT http://<host>:9200/libris/bib/_mapping -d@whelk-webapi/src/main/resources/elastic_mappings.json
 
+ELASTIC SEARCH, ANALYZE INDEXED VALUES FOR A SPECIFIC FIELD:
+curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.untouched" } } } }'
+
 AUTOCOMPLETE, PERSON:
 http://<host>:8080/whelk-webapi/_complete?name=tove
 

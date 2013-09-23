@@ -74,7 +74,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
             String pident = docId
             if (slugifyId) {
                 def authPath
-                def label = authPoint[type]
+                def label = authPoint.get(type, null)
                 if (!label) {
                     log.debug("Type $type not declared for index entity extraction.")
                     return null
