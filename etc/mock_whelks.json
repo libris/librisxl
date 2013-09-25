@@ -16,6 +16,7 @@
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
+                    "linkenhancer",
                     "jsonldlinkfinder",
                     "namecomplete",
                     "nameexpander",
@@ -225,6 +226,16 @@
         {
             "jsonldlinkfinder" : {
                 "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkFinder"
+            }
+        },
+        {
+            "indexbasedenhancer" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDIndexBasedEnhancerFormatConverter"
+            }
+        },
+        {
+            "linkenhancer" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkEnhancerFormatConverter"
             }
         }
     ]
