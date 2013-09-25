@@ -68,30 +68,34 @@ class OAIPMHImporter {
                 String id = record.getControlfields("001").get(0).getData()
                 String jsonRec = MarcJSONConverter.toJSONString(record)
 
+                def links = new HashSet<Link>()
+                def tags = new HashSet<Tag>()
+                if (it.header.setSpec) {
+                    for (sS in it.header.setSpec) {
+                        if (sS.toString().startsWith("authority:")) {
+                            def authURI = new URI("/auth/" + sS.toString().substring(10))
+                            links.add(new Link(authURI, "auth"))
+                        }
+                        if (sS.toString().startsWith("location:")) {
+                            def locationURI = new URI("location")
+                            tags.add(new Tag(locationURI, sS.toString().substring(9)))
+                        }
+                        if (sS.toString().startsWith("bibid:")) {
+                            def bibURI = new URI("/bib/" + sS.toString().substring(6))
+                            docs.add(new Link(bibURI, "bib"))
+                        }
+                    }
+                }
                 def doc
-
                 try {
-                    doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/"+this.resource+"/"+id),"contentType":"application/x-marc-json" ])
+                    doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/"+this.resource+"/"+id),"contentType":"application/x-marc-json", "links": links, "tags": tags])
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord")
                     if (picky) {
                         throw e
                     }
                 }
-                if (it.header.setSpec) {
-                    for (sS in it.header.setSpec) {
-                        if (sS.toString().startsWith("authority:")) {
-                            def auth = "/auth/" + sS.toString().substring(10)
-                            doc = doc.withLink(auth, "authority")
-                        }
-                        if (sS.toString().startsWith("location:")) {
-                            doc = doc.tag("location", sS.toString().substring(9))
-                        }
-                        if (sS.toString().startsWith("bibid:")) {
-                            doc = doc.withLink("/bib/" + sS.toString().substring(6), "bib")
-                        }
-                    }
-                }
+
                 documents << doc
                 nrImported++
             } else if (it.header.@deleted == 'true') {
