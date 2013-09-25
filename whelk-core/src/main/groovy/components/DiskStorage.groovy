@@ -63,14 +63,14 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Document get(URI uri, String whelkPrefix) {
-        File metafile = new File(buildPath(uri, false)+ "/" + getBaseFilename(uri) + METAFILE_EXTENSION)
+        File metafile = new File(buildPath(uri.toString(), false)+ "/" + getBaseFilename(uri) + METAFILE_EXTENSION)
         File sourcefile
         try {
-            log.debug("buildPath: " + buildPath(uri, false))
+            log.debug("buildPath: " + buildPath(uri.toString(), false))
             log.debug("basename: " + getBaseFilename(uri))
             def document = new Document(metafile.text)
             log.debug("ext: " + FILE_EXTENSIONS[document.contentType])
-            sourcefile = new File(buildPath(uri, false) + "/" + getBaseFilename(uri) + (FILE_EXTENSIONS[document.contentType] ?: ""))
+            sourcefile = new File(buildPath(uri.toString(), false) + "/" + getBaseFilename(uri) + (FILE_EXTENSIONS[document.contentType] ?: ""))
             document.data = sourcefile.readBytes()
             log.debug("Loading document from disk.")
             return document
@@ -97,7 +97,7 @@ class DiskStorage extends BasicPlugin implements Storage {
     @Override
     void delete(URI uri, String whelkPrefix) {
         try {
-            def fn = buildPath(uri, false)
+            def fn = buildPath(uri.toString(), false)
             log.debug("Deleting $fn")
             if (!new File(fn).deleteDir()) {
                 log.error("Failed to delete $uri")
@@ -108,9 +108,9 @@ class DiskStorage extends BasicPlugin implements Storage {
         }
     }
 
-    String buildPath(URI id, boolean createDirectories) {
-        def path = this.storageDir + "/" + id.toString().substring(0, id.toString().lastIndexOf("/"))
-        def basename = id.toString().substring(id.toString().lastIndexOf("/")+1)
+    String buildPath(String id, boolean createDirectories) {
+        def path = this.storageDir + "/" + id.substring(0, id.lastIndexOf("/"))
+        def basename = id.substring(id.toString().lastIndexOf("/")+1)
 
         for (int i=0; i*PATH_CHUNKS+PATH_CHUNKS < basename.length(); i++) {
             path = path + "/" + basename[i*PATH_CHUNKS .. i*PATH_CHUNKS+PATH_CHUNKS-1].replaceAll(/[\.]/, "")
@@ -136,8 +136,8 @@ class FlatDiskStorage extends DiskStorage {
 
 
     @Override
-    String buildPath(URI id, boolean createDirectories) {
-        def path = (this.storageDir + "/" + id.path).replaceAll(/\/+/, "/")
+    String buildPath(String id, boolean createDirectories) {
+        def path = (this.storageDir + "/" + new URI(id).path).replaceAll(/\/+/, "/")
         if (createDirectories) {
             new File(path).mkdirs()
         }
@@ -194,7 +194,7 @@ class DiskDocumentIterable implements Iterable<Document> {
                 if (currentFile.isFile()
                         && currentFile.length() > 0
                         && currentFile.name.endsWith(DiskStorage.METAFILE_EXTENSION)) {
-                    def document = new Document(currentFile)
+                    def document = new Document(currentFile.text)
                     def fileBaseName = currentFile.parent + "/" + currentFile.name.lastIndexOf('.').with {it != -1 ? currentFile.name[0..<it] : currentFile.name}
                     def sourcefile = new File(fileBaseName + (DiskStorage.FILE_EXTENSIONS[document.contentType] ?: ""))
                     document.data = sourcefile.readBytes()

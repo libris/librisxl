@@ -4,12 +4,17 @@ import se.kb.libris.whelks.exception.*
 
 public abstract class Resource {
     @IsMetadata
-    URI identifier
+    String identifier
     byte[] data
     @IsMetadata
     String contentType
     @IsMetadata
     long size
+
+    /*
+    void setIdentifier(URI uri) {
+        this.identifier = uri
+    }
 
     void setIdentifier(String uri) {
         try {
@@ -18,10 +23,7 @@ public abstract class Resource {
             throw new WhelkRuntimeException(e)
         }
     }
-
-    void setIdentifier(URI uri) {
-        this.identifier = uri
-    }
+    */
 
     def withData(String dataString) {
         return withData(dataString.getBytes("UTF-8"))

@@ -20,6 +20,7 @@ class WhelkInitializer {
     }
 
     def getWhelks() {
+        def disabled = System.getProperty("whelk.disable", "").split(",")
         json._whelks.each { w ->
             w.each { wname, meta ->
                 meta._class = meta._class ?: "se.kb.libris.whelks.StandardWhelk"
@@ -32,9 +33,13 @@ class WhelkInitializer {
                     }
                 }
                 for (p in meta._plugins) {
-                    def plugin = getPlugin(p, wname)
-                    log.info("Adding plugin ${plugin.id} to ${whelk.id}")
-                    whelk.addPlugin(plugin)
+                    if (!disabled.contains(p)) {
+                        def plugin = getPlugin(p, wname)
+                        log.info("Adding plugin ${plugin.id} to ${whelk.id}")
+                        whelk.addPlugin(plugin)
+                    } else {
+                        log.info("Plugin ${p} has been disabled because you said so.")
+                    }
                 }
                 //log.debug("Initializing the whelk")
                 //whelk.init()
