@@ -73,11 +73,11 @@ First set up configuration of it:
 
 Run whelkOperation gradle task to import, reindex or rebuild:
 
-    $ gradle whelkOperation -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)]]' -Dwhelk.config.uri=<uri-to-config-json> (-Delastic.host='<host>') (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>')
+    $ gradle whelkOperation -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)] [no of docs] [true/false for picky]' -Dwhelk.config.uri=<uri-to-config-json> (-Delastic.host='<host>') (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>')
 
-Example - import documents from 2000-01-01 using etc/whelks.json to configure the whelks from external sources:
+Example - import documents from 2000-01-01 using etc/whelksoperations.json to configure the whelks from external sources:
 
-    $ gradle whelkOperation -Dargs='import bib bib 2000-01-01T00:00:00Z' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:../etc/whelks.json
+    $ gradle whelkOperation -Dargs='import libris bib 2000-01-01T00:00:00Z 10000 true' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:etc/whelkoperations.json
 
 ## Using a Graph Store
 
