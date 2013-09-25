@@ -10,7 +10,7 @@
   <!--
   <logger name="org.elasticsearch">
       <level value="warn"/>
- </logger>-->
+</logger>-->
   <!--<logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">-->
       <!--<level value="debug"/>-->
   <!--</logger>-->
@@ -66,8 +66,7 @@
   </logger>
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
-  </logger>
-  -->
+  </logger> -->
   <!--<logger name="se.kb.libris.whelks.StandardWhelk">-->
       <!--<level value="trace"/>-->
   <!--</logger>-->
