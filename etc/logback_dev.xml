@@ -10,14 +10,21 @@
   <!--
   <logger name="org.elasticsearch">
       <level value="warn"/>
+ </logger>-->
+  <!--<logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">-->
+      <!--<level value="debug"/>-->
+  <!--</logger>-->
+  <logger name="se.kb.libris.whelks.plugin.JsonLDLinkEnhancerFormatConverter">
+       <level value="debug"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.conch">
       <level value="debug"/>
   </logger>
   -->
-  <logger name="se.kb.libris.whelks.plugin.MarcFrameConverter">
-      <level value="debug"/>
-  </logger>
+  <!--<logger name="se.kb.libris.whelks.plugin.MarcFrameConverter">-->
+      <!--<level value="debug"/>-->
+  <!--</logger>-->
   <!--
   <logger name="se.kb.libris.whelks.plugin.BasicMarc2JsonLDConverter">
       <level value="debug"/>
@@ -61,55 +68,58 @@
       <level value="trace"/>
   </logger>
   -->
-  <logger name="se.kb.libris.whelks.StandardWhelk">
-      <level value="debug"/>
-  </logger>
+  <!--<logger name="se.kb.libris.whelks.StandardWhelk">-->
+      <!--<level value="trace"/>-->
+  <!--</logger>-->
   <!--
   <logger name="se.kb.libris.whelks.CombinedWhelk">
       <level value="trace"/>
   </logger>
   -->
- <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="debug"/>
-  </logger>
- <logger name="se.kb.libris.whelks.component.CassandraStorage">
-      <level value="trace"/>
-  </logger>
-<logger name="se.kb.libris.whelks.api.ISXNTool">
-      <level value="debug"/>
-  </logger>
+ <!--<logger name="se.kb.libris.whelks.component.ElasticSearch">-->
+      <!--<level value="debug"/>-->
+  <!--</logger>-->
+ <!--<logger name="se.kb.libris.whelks.component.CassandraStorage">-->
+      <!--<level value="trace"/>-->
+  <!--</logger>-->
+<!--<logger name="se.kb.libris.whelks.api.ISXNTool">-->
+      <!--<level value="debug"/>-->
+  <!--</logger>-->
   <!--
 <logger name="se.kb.libris.whelks.api.SearchRestlet">
       <level value="debug"/>
   </logger>
   -->
-<logger name="se.kb.libris.whelks.api.DocumentRestlet">
-      <level value="debug"/>
-  </logger>
-<logger name="se.kb.libris.whelks.api.RestManager">
-      <level value="debug"/>
-  </logger>
-    <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">
-        <level value="debug"/>
-    </logger>
+<!--<logger name="se.kb.libris.whelks.api.DocumentRestlet">-->
+      <!--<level value="debug"/>-->
+  <!--</logger>-->
+<!--<logger name="se.kb.libris.whelks.api.RestManager">-->
+      <!--<level value="debug"/>-->
+  <!--</logger>-->
+    <!--<logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">-->
+        <!--<level value="debug"/>-->
+    <!--</logger>-->
 <!--
      <logger name="se.kb.libris.whelks.plugin.BasicFormatConverter">
       <level value="trace"/>
 </logger>-->
-<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
-      <level value="debug"/>
-</logger>
-<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter">
-      <level value="debug"/>
-</logger>
-<logger name="se.kb.libris.whelks.api.FieldSearchRestlet">
-        <level value="debug"/>
-</logger>
+<!--<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">-->
+      <!--<level value="debug"/>-->
+<!--</logger>-->
+<!--<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter">-->
+      <!--<level value="debug"/>-->
+<!--</logger>-->
+<!--<logger name="se.kb.libris.whelks.api.FieldSearchRestlet">-->
+        <!--<level value="debug"/>-->
+<!--</logger>-->
 <!--
  <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
       <level value="trace"/>
   </logger>
   -->
+  <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2">
+      <level value="debug"/>
+  </logger>
 
   <!--
   <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">
