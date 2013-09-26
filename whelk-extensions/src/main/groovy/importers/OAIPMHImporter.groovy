@@ -88,7 +88,7 @@ class OAIPMHImporter {
                 }
                 def doc
                 try {
-                    doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/"+this.resource+"/"+id),"contentType":"application/x-marc-json", "links": links, "tags": tags])
+                    doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":"/"+this.resource+"/"+id,"contentType":"application/x-marc-json", "links": links, "tags": tags])
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord")
                     if (picky) {
