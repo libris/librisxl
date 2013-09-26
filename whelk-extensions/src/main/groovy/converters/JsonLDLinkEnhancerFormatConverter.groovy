@@ -20,7 +20,9 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
 
     Document doConvert(Document doc) {
         def changedData = false
-        def json, authDataJson
+        def authDataJson
+
+        def json = mapper.readValue(doc.dataAsString, Map)
 
         for (link in doc.links) {
             if (link.type == "auth") {
@@ -30,7 +32,6 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
                     authDataJson = mapper.readValue(authDoc.dataAsString, Map)
                     switch (authDataJson["about"]["@type"] as String) {
                         case "Person":
-                            json = mapper.readValue(doc.dataAsString, Map)
                             if (json["about"]["instanceOf"].containsKey("creator")) {
                                 def creatorProp = json["about"]["instanceOf"]["creator"]
                                 if (creatorProp instanceof List) {
@@ -50,16 +51,13 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
                             }
                             break
                         case "Concept":
-                            json = mapper.readValue(doc.dataAsString, Map)
                             if (json["about"]["instanceOf"].containsKey("subject")) {
-                                for (subj in json["about"]["instanceOf"]["creator"]) {
+                                json["about"]["instanceOf"]["subject"].eachWithIndex { subj, index ->
                                     if (subj["@type"] == "Concept") {
-                                        subj.eachWithIndex { it, index ->
-                                            it["broader"].eachWithIndex { br, i ->
-                                                if (br["prefLabel"] && br["prefLabel"] == authDataJson["about"]["prefLabel"]) {
-                                                    json["about"]["instanceOf"]["subject"][index]["broader"][i]["@id"] = authDataJson["about"]["@id"]
-                                                    changedData = true
-                                                }
+                                        subj["broader"].eachWithIndex { it, i ->
+                                            if (it["prefLabel"] && it["prefLabel"] == authDataJson["about"]["prefLabel"]) {
+                                                json["about"]["instanceOf"]["subject"][index]["broader"][i]["@id"] = authDataJson["about"]["sameAs"]["@id"]
+                                                changedData = true
                                             }
                                         }
                                     }

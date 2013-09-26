@@ -14,13 +14,16 @@ import se.kb.libris.whelks.component.DiskStorage
 class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
 
     private mapper = new ElasticJsonMapper()
-    def bibDoc, doc, whelk, converter
+    def bibDoc, doc, whelk, converter, docMap
 
     def "convert should insert auth link into bib jsonld"() {
         given:
         whelk = getInitializedWhelk()
         converter = new JsonLDLinkEnhancerFormatConverter()
         converter.setWhelk(whelk)
+        def doclinks = new HashSet<Link>()
+        doclinks.add(new Link(new URI("/auth/94541"), "auth"))
+        doclinks.add(new Link(new URI("/auth/139860"), "auth"))
         bibDoc = makeDoc ([
                 "@id": "/bib/12661",
                 "@type": "Record",
@@ -31,26 +34,40 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
                                 "@type": "Book",
                                 "creator": [
                                         [
-                                         "@type" : "Person",
-                                         "controlledLabel": "Strindberg, August, 1849-1912"
+                                            "@type" : "Person",
+                                            "controlledLabel": "Strindberg, August, 1849-1912"
+                                        ]
+                                ],
+                                "subject": [
+                                        [
+                                            "@type" : "Concept",
+                                            "broader" : [
+                                                    [
+                                                        "@id" : "/topic/sao/Arkiv",
+                                                        "prefLabel" : "Arkiv"
+                                                    ]
+                                            ]
                                         ]
                                 ]
                         ]
                 ]
-        ], new Link(new URI("/auth/94541"), "auth"))
+        ], doclinks)
 
         when:
         doc = converter.doConvert(bibDoc)
+        docMap = mapper.readValue(doc.dataAsString, Map)
         then:
-        mapper.readValue(doc.dataAsString, Map).about.instanceOf.creator[0]."@id" == "/resource/auth/94541"
+        docMap.about.instanceOf.creator[0]."@id" == "/resource/auth/94541"
+        docMap.about.instanceOf.subject[0].broader[0]."@id" == "/resource/auth/139860"
 
     }
 
-    def makeDoc(data, link) {
-        return new Document()
+    def makeDoc(data, links) {
+        def doc = new Document()
                 .withIdentifier("http://libris.kb.se/bib/12661")
                 .withData(mapper.writeValueAsString(data))
-                .withLink(link)
+        doc.links = links
+        return doc
     }
 
     Whelk getInitializedWhelk() {
