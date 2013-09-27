@@ -24,6 +24,8 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
         def doclinks = new HashSet<Link>()
         doclinks.add(new Link(new URI("/auth/94541"), "auth"))
         doclinks.add(new Link(new URI("/auth/139860"), "auth"))
+        doclinks.add(new Link(new URI("/auth/191503"), "auth"))
+        doclinks.add(new Link(new URI("/auth/349968"), "auth"))
         bibDoc = makeDoc ([
                 "@id": "/bib/12661",
                 "@type": "Record",
@@ -33,9 +35,13 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
                         "instanceOf": [
                                 "@type": "Book",
                                 "creator": [
+                                    "@type" : "Person",
+                                    "controlledLabel": "Strindberg, August, 1849-1912"
+                                ],
+                                "contributorList":  [
                                         [
                                             "@type" : "Person",
-                                            "controlledLabel": "Strindberg, August, 1849-1912"
+                                            "label" : "Jansson, Tove, 1914-2001"
                                         ]
                                 ],
                                 "subject": [
@@ -45,6 +51,10 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
                                                     [
                                                         "@id" : "/topic/sao/Arkiv",
                                                         "prefLabel" : "Arkiv"
+                                                    ],
+                                                    [
+                                                            "@id" : "Allegorier",
+                                                            "prefLabel" : "Allegorier"
                                                     ]
                                             ]
                                         ]
@@ -57,8 +67,10 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
         doc = converter.doConvert(bibDoc)
         docMap = mapper.readValue(doc.dataAsString, Map)
         then:
-        docMap.about.instanceOf.creator[0]."@id" == "/resource/auth/94541"
+        docMap.about.instanceOf.creator."@id" == "/resource/auth/94541"
+        docMap.about.instanceOf.contributorList[0]."@id" == "/resource/auth/191503"
         docMap.about.instanceOf.subject[0].broader[0]."@id" == "/resource/auth/139860"
+        docMap.about.instanceOf.subject[0].broader[1]."@id" == "/resource/auth/349968"
 
     }
 
