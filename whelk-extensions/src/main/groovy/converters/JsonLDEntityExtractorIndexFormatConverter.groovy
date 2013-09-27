@@ -71,7 +71,14 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     IndexDocument createEntityDoc(def entityJson, def docId, def prio, def slugifyId) {
         try {
             def type = entityJson["@type"]
-            String pident = docId
+            def entityId
+            if (!slugifyId && type == "Concept") {
+                def sameAsId = entityJson["sameAs"]["@id"]
+                def id = entityJson["@id"]
+                entityId = sameAsId
+                entityJson["@id"] = entityId
+                entityJson["sameAs"]["@id"] = id
+            }
             if (slugifyId) {
                 def authPath
                 def label = authPoint.get(type, null)
@@ -84,17 +91,15 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                         authPath = entityJson.get(l, null)
                     }
                 }
-                pident = slugify(authPath, docId, type)
-                entityJson["extractedFrom"] = ["@id": docId]
-            } else {
-                entityJson["@id"] = pident
+                entityId = slugify(authPath, docId, type)
             }
+            entityJson["extractedFrom"] = ["@id": docId]
             entityJson["recordPriority"] = prio
             entityJson.get("unknown", null) ?: entityJson.remove("unknown")
-            log.debug("Created indexdoc $pident with prio $prio")
-            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(pident).withType(type)
+            log.debug("Created indexdoc $entityId with prio $prio")
+            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(entityId).withType(type)
         } catch (Exception e) {
-            log.debug("Could not create entitydoc ${e} docId: $docId" + " EntityJson " + mapper.writeValueAsString(entityJson))
+            log.debug("Could not create entitydoc ${e} from docId: $docId" + " EntityJson " + mapper.writeValueAsString(entityJson))
             return null
         }
     }
