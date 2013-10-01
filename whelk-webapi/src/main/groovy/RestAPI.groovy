@@ -400,7 +400,15 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
     ]
 
     def keys = [
-                "bib" : ["about.title.titleValue", "about.instanceOf.creator", "about.instanceOf.contributor"]
+                "bib" : [
+                    "about.@type",
+                    "about.title",
+                    "about.responsibilityStatement",
+                    "about.publication",
+                    "about.identifier",
+                    "about.instanceOf.creator",
+                    "about.instanceOf.contributorList"
+                ]
     ]
 
 
