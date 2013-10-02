@@ -32,6 +32,14 @@ subprojects {
             into "build/resources/main"
         }
     }
+    task prodLogging(dependsOn: 'classes', type: Copy) {
+        copy {
+            from('../etc')
+            include('logback_prod.xml')
+            rename('logback_prod.xml','logback.xml')
+            into "build/resources/main"
+        }
+    }
     dependencies {
         groovy 'org.codehaus.groovy:groovy:2.0.4'
         groovy 'commons-cli:commons-cli:1.2'
