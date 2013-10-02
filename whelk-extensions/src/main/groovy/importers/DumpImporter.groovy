@@ -29,7 +29,15 @@ class DumpImporter {
     final int BATCH_SIZE = 1000
     String origin
 
+    File failedLog
+    File exceptionLog
+
+    def progressSpinner = ['/','-','\\','|']
+    int progressSpinnerState = 0
+
     DumpImporter(Whelk toWhelk, String origin, boolean picky = true) {
+        failedLog = new File("failed_ids.log")
+        exceptionLog = new File("exceptions.log")
         this.whelk = toWhelk
         this.picky = picky
         this.origin = origin
@@ -69,8 +77,15 @@ class DumpImporter {
 
             if (doc) {
                 documents << doc
+                printSpinner(nrImported)
                 if (++nrImported % BATCH_SIZE == 0) {
-                    this.whelk.bulkAdd(documents)
+                    try {
+                        this.whelk.bulkAdd(documents)
+                    } catch (WhelkAddException wae) {
+                        failedLog << wae.failedIdentifier
+                    } catch (Exception e) {
+                        e.printStackTrace(new FileWriter(exceptionLog, true))
+                    }
                     documents = []
                     //def td = TimeCategory.minus(new Date(), loadStartTime)
                     //log.debug("$nrImported documents stored. Lap time is $td")
@@ -84,8 +99,14 @@ class DumpImporter {
         if (documents.size() > 0) {
             whelk.bulkAdd(documents)
         }
+        print "Done!\n"
 
         return nrImported
+    }
+
+    void printSpinner(int count) {
+        print "Running dumpimport $count documents imported sofar. ${progressSpinner[progressSpinnerState]}                \r"
+        progressSpinnerState = (progressSpinnerState + 1 >= progressSpinner.size() ? 0 : progressSpinnerState + 1)
     }
 
     Document buildDocument(String mdrecord) {

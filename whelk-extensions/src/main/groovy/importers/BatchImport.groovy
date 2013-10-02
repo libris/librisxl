@@ -243,10 +243,10 @@ class Harvester implements Runnable {
     }
 
     String findResumptionToken(xmlString) {
-        log.info("findResumption ...")
+        log.debug("findResumption ...")
         try {
             String rt = xmlString.split("(<)/?(resumptionToken>)")[1]
-            log.info("Found $rt")
+            log.debug("Found $rt")
             return rt
         } catch (ArrayIndexOutOfBoundsException a) {
             log.warn("Failed to extract resumptionToken from xml:\n$xmlString")
