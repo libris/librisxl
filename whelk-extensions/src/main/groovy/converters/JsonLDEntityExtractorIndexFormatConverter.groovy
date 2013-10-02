@@ -11,7 +11,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
-    def authPoint = ["Person": "controlledLabel/label", "Concept": "prefLabel", "ConceptScheme": "notation"]
+    def authPoint = ["Person": "controlledLabel", "Concept": "prefLabel", "ConceptScheme": "notation"]
     def entitiesToExtract = ["about.inScheme", "about.instanceOf.creator", "about.instanceOf.contributorList"]
 
     List<IndexDocument> doConvert(Document doc) {
@@ -80,18 +80,14 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 entityJson["sameAs"]["@id"] = id
             }
             if (slugifyId) {
-                def authPath
                 def label = authPoint.get(type, null)
+                def authPath = entityJson[label]
                 if (!label) {
                     log.debug("Type $type not declared for index entity extraction.")
                     return null
                 }
-                for (l in label.tokenize("/")) {
-                    if (!authPath) {
-                        authPath = entityJson.get(l, null)
-                    }
-                }
-                entityId = slugify(authPath, docId, type)
+                entityId = slugify(authPath, new URI(docId), type)
+                entityJson["@id"] = entityId
             }
             entityJson["extractedFrom"] = ["@id": docId]
             entityJson["recordPriority"] = prio

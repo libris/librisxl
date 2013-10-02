@@ -60,7 +60,6 @@ class ElasticSearchClient extends ElasticSearch {
 
 @Log
 class ElasticSearchNode extends ElasticSearch implements Index {
-    def mapper
 
     ElasticSearchNode() {
         this(null)
@@ -90,6 +89,8 @@ class ElasticSearchNode extends ElasticSearch implements Index {
 
 @Log
 abstract class ElasticSearch extends BasicPlugin {
+
+    def mapper
 
     Client client
 
