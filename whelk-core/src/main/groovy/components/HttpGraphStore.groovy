@@ -31,10 +31,10 @@ class HttpGraphStore extends BasicPlugin implements GraphStore {
         HttpPut put = new HttpPut(uri)
         def entity = new ByteArrayEntity(doc.data)
         entity.setContentType(doc.contentType)
-        log.info("PUT <${uri}> with content type '${doc.contentType}'")
+        log.debug("PUT <${uri}> with content type '${doc.contentType}'")
         put.setEntity(entity)
         def response = client.execute(put)
-        log.info("Server response: ${response.statusLine.statusCode}")
+        log.debug("Server response: ${response.statusLine.statusCode}")
         EntityUtils.consumeQuietly(response.getEntity())
     }
 

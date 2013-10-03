@@ -338,6 +338,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 def response = performExecute(breq)
                 if (response.hasFailures()) {
                     log.error "Bulk import has failures."
+                    def fails = []
                     for (re in response.items) {
                         if (re.failed) {
                             log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
@@ -348,8 +349,10 @@ abstract class ElasticSearch extends BasicPlugin {
                                     }
                                 }
                             }
+                            fails << translateIndexIdTo(re.id)
                         }
                     }
+                    throw new WhelkAddException(fails)
                 }
             }
         } catch (Exception e) {
@@ -402,11 +405,11 @@ abstract class ElasticSearch extends BasicPlugin {
         return new IndexDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
     }
 
-    URI translateIndexIdTo(id) {
+    String translateIndexIdTo(id) {
         def pathelements = []
         id.split(URI_SEPARATOR).each {
             pathelements << java.net.URLEncoder.encode(it, "UTF-8")
         }
-        return  new URI("/"+pathelements.join("/"))
+        return  new String("/"+pathelements.join("/"))
     }
 }

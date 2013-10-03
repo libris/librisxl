@@ -1,6 +1,10 @@
 package se.kb.libris.whelks.exception;
 
 public class WhelkException extends Exception {
+
+    public WhelkException() {
+        super();
+    }
     public WhelkException(String msg) {
         super(msg);
     }

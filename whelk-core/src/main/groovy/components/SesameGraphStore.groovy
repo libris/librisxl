@@ -28,7 +28,7 @@ class SesameGraphStore extends BasicPlugin implements GraphStore {
         // TODO: not new conn for each? pool?
         def conn = repo.getConnection()
         try {
-            log.info("Store <${graphUri}> with content type '${doc.contentType}'")
+            log.debug("Store <${graphUri}> with content type '${doc.contentType}'")
             def bis = new ByteArrayInputStream(doc.data)
             def graphId = conn.valueFactory.createURI(graphUri.toString())
             conn.add(bis, graphUri.toString(), RDFFormat.TURTLE, [graphId] as Resource[])

@@ -8,7 +8,7 @@ import java.net.URISyntaxException
 import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
-import se.kb.libris.whelks.exception.WhelkRuntimeException
+import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*
 
 import org.codehaus.jackson.map.*
@@ -52,7 +52,11 @@ class StandardWhelk implements Whelk {
     void bulkAdd(List<Document> docs) {
         for (storage in storages) {
             for (doc in docs) {
-                storage.store(doc, this.id)
+                try {
+                    storage.store(doc, this.id)
+                } catch (Exception e) {
+                    throw new WhelkAddException(doc.identifier as String)
+                }
             }
         }
         addToGraphStore(docs)

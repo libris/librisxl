@@ -18,6 +18,15 @@
       "label_sv": "Bok",
       "termGroups": {}
     },
+    "Cartography": {
+      "term": "Cartography",
+      "label_sv": "Kartmaterial"
+    },
+    "CDMap": {
+      "term": "CDMap",
+      "subClassOf": "Cartography",
+      "label_sv": "Kartmaterial på CD"
+    },
     "DigitalResource": {
       "term": "DigitalResource",
       "termGroups": {
@@ -35,6 +44,19 @@
       "term": "ESerial",
       "subClassOf": "DigitalResource",
       "label_sv": "E-serie"
+    },
+    "Instance": {
+      "term": "Instance",
+      "label_sv": "Instans"
+    },
+    "Music": {
+      "term": "Music",
+      "label_sv": "Musik"
+    },
+    "MusicCD": {
+      "term": "MusicCD",
+      "subClassOf": "Music",
+      "label_sv": "Musik-CD"
     },
     "Serial": {
       "term": "Serial",

@@ -83,7 +83,7 @@ class Listener extends BasicPlugin implements WhelkAware {
             def updates = otherwhelk.log(new Date(lastUpdate.get()))
             def iter = updates.iterator()
             if (iter.hasNext()) {
-                log.info("Found updates. Populating documents-list.")
+                log.debug("Found updates. Populating documents-list.")
                 iter.each {
                     notify(it)
                 }
@@ -114,7 +114,7 @@ class Listener extends BasicPlugin implements WhelkAware {
             def updates = otherwhelk.log(timestamp)
             def iter = updates.iterator()
             if (iter.hasNext()) {
-                log.info("Found updates. Populating documents-list.")
+                log.debug("Found updates. Populating documents-list.")
                 iter.each {
                     notify(it)
                 }

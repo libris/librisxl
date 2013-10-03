@@ -78,7 +78,7 @@ class JsonLD2MarcConverterSpec extends Specification implements Marc2JsonConstan
      * Utility
      */
     def loadJson(jsonFile) {
-        log.info("file: marc2jsonld/$jsonFile")
+        log.debug("file: marc2jsonld/$jsonFile")
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("marc2jsonld/"+jsonFile)
         log.trace("stream: $is")
         return mapper.readValue(is, Map)

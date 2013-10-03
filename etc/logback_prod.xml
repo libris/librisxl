@@ -13,12 +13,6 @@
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
-  <appender name="FILE-TECH" class="ch.qos.logback.core.FileAppender">
-    <file>${catalina.base}/logs/whelk-tech.log</file>
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-  </appender>
   <appender name="FILE-QUERY" class="ch.qos.logback.core.FileAppender">
     <file>${catalina.base}/logs/whelk-query.log</file>
     <encoder>
@@ -33,11 +27,8 @@
   <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">
     <appender-ref ref="FILE-QUERY" />
   </logger>
-  <logger name="se.kb.libris.whelks" level="DEBUG">
-    <appender-ref ref="FILE-TECH" />
-  </logger>
 
-  <logger name="se.kb.libris.whelks.api" level="DEBUG">
+  <logger name="se.kb.libris.whelks.api" level="INFO">
     <appender-ref ref="FILE-API" />
   </logger>
 
