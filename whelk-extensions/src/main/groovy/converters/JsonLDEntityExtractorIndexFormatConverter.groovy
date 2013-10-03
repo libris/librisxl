@@ -71,14 +71,6 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     IndexDocument createEntityDoc(def entityJson, def docId, def prio, def slugifyId) {
         try {
             def type = entityJson["@type"]
-            def entityId
-            if (!slugifyId && type == "Concept") {
-                def sameAsId = entityJson["sameAs"]["@id"]
-                def id = entityJson["@id"]
-                entityId = sameAsId
-                entityJson["@id"] = entityId
-                entityJson["sameAs"]["@id"] = id
-            }
             if (slugifyId) {
                 def label = authPoint.get(type, null)
                 def authPath = entityJson[label]
@@ -86,14 +78,14 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                     log.debug("Type $type not declared for index entity extraction.")
                     return null
                 }
-                entityId = slugify(authPath, new URI(docId), type)
+                def entityId = slugify(authPath, new URI(docId), type)
                 entityJson["@id"] = entityId
             }
             entityJson["extractedFrom"] = ["@id": docId]
             entityJson["recordPriority"] = prio
             entityJson.get("unknown", null) ?: entityJson.remove("unknown")
-            log.debug("Created indexdoc $entityId with prio $prio")
-            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(entityId).withType(type)
+            log.debug("Created indexdoc ${entityJson["@id"]} with prio $prio")
+            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(entityJson["@id"]).withType(type)
         } catch (Exception e) {
             log.debug("Could not create entitydoc ${e} from docId: $docId" + " EntityJson " + mapper.writeValueAsString(entityJson))
             return null
