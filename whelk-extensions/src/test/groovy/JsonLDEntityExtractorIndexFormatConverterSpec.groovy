@@ -3,8 +3,9 @@ package se.kb.libris.whelks.plugin
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.component.ElasticJsonMapper
 import spock.lang.*
+import groovy.util.logging.Slf4j as Log
 
-
+@Log
 class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
 
     def converter = new JsonLDEntityExtractorIndexFormatConverter()
@@ -92,7 +93,8 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
         then:
             doclist.size() == 2
             doclist[0].dataAsMap."@id" == "/auth/12345"
-            doclist[1].dataAsMap."@id" == "/resource/auth/12345"
+            doclist[1].dataAsMap."@id" == "/topic/sao/historia"
+            doclist[1].dataAsMap.sameAs."@id" == "/resource/auth/12345"
 
         when:
             doclist = converter.doConvert(makeDoc(conceptScheme, "http://libris.kb.se/auth/1234"))
