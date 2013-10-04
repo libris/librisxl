@@ -331,8 +331,8 @@
 },
 {
     "code": "cre",
-    "term": "autAuthor",
-    "label_en": "aut Author",
+    "term": "creator",
+    "label_en": "Creator",
     "label_sv": "Upphov (creator)"
 },
 {
@@ -415,6 +415,7 @@
 },
 {
     "code": "dbp",
+    "term" :"distributionPlace",
     "label_sv": "Distributionsort"
 },
 {
@@ -1325,6 +1326,7 @@
 },
 {
     "code": "9pu",
+    "term": "primaryRightsHolder",
     "label_sv": "Primärt upphovsansvarig LIBRIS-definierad kod"
 },
 {
