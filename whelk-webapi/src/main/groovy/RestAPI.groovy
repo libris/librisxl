@@ -347,9 +347,9 @@ class SearchRestlet extends BasicWhelkAPI {
 }
 @Log
 class FieldSearchRestlet extends BasicWhelkAPI {
-    def pathEnd = "_fieldsearch/{indexType}/"
+    def pathEnd = "_fieldsearch/{indexType}"
     String id = "ESFieldSearch"
-    def varPath = true
+    def varPath = false
     String description = "Query API for field searches. For example q=about.instanceOf.creator.controlledLabel:Strindberg, August"
 
     void doHandle(Request request, Response response) {
@@ -620,7 +620,7 @@ class AutoComplete extends BasicWhelkAPI {
     def queryType = "q"
 
     String types
-    String description = "Search API for autocompletion. Use parameter name or q."
+    String description = "Search API for autocompletion. For person-completion: use pathend _complete with parameter name. For concept-completion: use _subjcomplete pathend with parameter concept."
     String id = "AutoComplete"
 
     /*
