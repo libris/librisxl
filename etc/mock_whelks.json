@@ -30,7 +30,7 @@
         {
             "resource":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool" ]
+                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool"]
             }
         }
     ],
@@ -186,16 +186,14 @@
             "subjcomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : {"queryFields":[
-                              "controlledLabel",
                               "prefLabel",
                               "notation",
-                              "term",
                               "label"
                             ],
                             "infoFields":[
                             ],
                             "indexTypes": "concept",
-                            "pathEnd": "_subject",
+                            "pathEnd": "_subjcomplete",
                             "queryType": "concept"
                             }
             }
