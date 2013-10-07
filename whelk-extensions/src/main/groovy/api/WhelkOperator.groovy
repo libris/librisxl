@@ -55,9 +55,9 @@ class WhelkOperator {
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else if (operation == "reindex") {
             if (args.length > 2) { // Reindex from a specific identifier
-                whelk.reindex("isostorage", resource)
+                whelk.reindex((String)null, resource)
             } else {
-                whelk.reindex("isostorage")
+                whelk.reindex()
                 println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
             }
         } else if (operation == "rebuild") {

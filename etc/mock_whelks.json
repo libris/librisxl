@@ -5,8 +5,7 @@
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins": [
                     "localindex",
-                    "diskstorage",
-                    "isostorage",
+                    "flatstorage",
                     "search",
                     "sparqlapi",
                     "kitinsearch",
@@ -99,6 +98,16 @@
                     "contentType": "application/x-marc-json"
                 },
                 "_priority" : 2
+            }
+        },
+        {
+            "flatstorage": {
+                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
+                "_params" : { 
+                    "storageDir": "work/storage/main",
+                    "contentType": "application/ld+json"
+                },
+                "_priority" : 1
             }
         },
         {

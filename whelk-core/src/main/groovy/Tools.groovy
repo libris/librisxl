@@ -137,6 +137,12 @@ class Tools {
         }
         return inString
     }
+
+    static void printSpinner(String message, int currentCount) {
+        def progressSpinner = ['/','-','\\','|']
+        int state = currentCount % (progressSpinner.size()-1)
+        print "${message}  ${progressSpinner[state]}                          \r"
+    }
 }
 
 @Log

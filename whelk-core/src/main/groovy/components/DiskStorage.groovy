@@ -52,8 +52,15 @@ class DiskStorage extends BasicPlugin implements Storage {
         if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
             File sourcefile = new File(buildPath(doc.identifier, true) + "/" + getBaseFilename(doc.identifier) + (FILE_EXTENSIONS[doc.contentType] ?: ""))
             File metafile = new File(buildPath(doc.identifier, true) + "/"+ getBaseFilename(doc.identifier) + METAFILE_EXTENSION)
-            sourcefile.write(doc.dataAsString)
-            metafile.write(doc.metadataAsJson)
+            try {
+                sourcefile.write(doc.dataAsString)
+                metafile.write(doc.metadataAsJson)
+            } catch (IOException ioe) {
+                log.info("Creating directories for ${sourcefile.name}")
+                sourcefile.mkdirs()
+                sourcefile.write(doc.dataAsString)
+                metafile.write(doc.metadataAsJson)
+            }
         }
     }
 
@@ -63,6 +70,7 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Document get(URI uri, String whelkPrefix) {
+        log.info("Loading from ${this.getClass()}")
         File metafile = new File(buildPath(uri.toString(), false)+ "/" + getBaseFilename(uri) + METAFILE_EXTENSION)
         File sourcefile
         try {
@@ -119,9 +127,11 @@ class DiskStorage extends BasicPlugin implements Storage {
         if (this.docFolder) {
             path = path + "/" + this.docFolder + "/" + basename
         }
+        /* Disable this
         if (createDirectories) {
             new File(path).mkdirs()
         }
+        */
         return path.replaceAll(/\/+/, "/") //+ "/" + basename
     }
 }
@@ -130,8 +140,8 @@ class DiskStorage extends BasicPlugin implements Storage {
 class FlatDiskStorage extends DiskStorage {
 
 
-    FlatDiskStorage(String directoryName) {
-        super(directoryName)
+    FlatDiskStorage(Map settings) {
+        super(settings)
     }
 
 

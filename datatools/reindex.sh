@@ -18,4 +18,4 @@ LIBS=$WEBAPPS/WEB-INF/lib
 
 source $SETENV
 
-java $JAVA_OPTS $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator $TYPE libris $RESOURCE $ORIGIN
+java $JAVA_OPTS $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator reindex libris $RESOURCE $ORIGIN
