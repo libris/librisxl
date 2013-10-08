@@ -25,6 +25,7 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
         doclinks.add(new Link(new URI("/auth/94541"), "auth"))
         doclinks.add(new Link(new URI("/auth/139860"), "auth"))
         doclinks.add(new Link(new URI("/auth/191503"), "auth"))
+        doclinks.add(new Link(new URI("/auth/140482"), "auth"))
         doclinks.add(new Link(new URI("/auth/349968"), "auth"))
         bibDoc = makeDoc ([
                 "@id": "/bib/12661",
@@ -58,6 +59,13 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
                                                     ]
                                             ]
                                         ]
+                                ],
+                                "class": [
+                                        [
+                                                "@type" : "Concept",
+                                                "prefLabel": "Barnpsykologi",
+                                                "@id": "/topic/sao/Barnpsykologi"
+                                        ]
                                 ]
                         ]
                 ]
@@ -69,8 +77,10 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
         then:
         docMap.about.instanceOf.creator."@id" == "/resource/auth/94541"
         docMap.about.instanceOf.contributorList[0]."@id" == "/resource/auth/191503"
-        docMap.about.instanceOf.subject[0].broader[0]."@id" == "/resource/auth/139860"
-        docMap.about.instanceOf.subject[0].broader[1]."@id" == "/resource/auth/349968"
+        docMap.about.instanceOf.subject[0].broader[0].sameAs."@id" == "/resource/auth/139860"
+        docMap.about.instanceOf.subject[0].broader[1].sameAs."@id" == "/resource/auth/349968"
+        log.info("${docMap.about.instanceOf["class"][0]}")
+        docMap.about.instanceOf["class"][0].sameAs."@id" == "/resource/auth/140482"
 
     }
 
