@@ -40,6 +40,15 @@ subprojects {
             into "build/resources/main"
         }
     }
+    task testWithDevLogging(dependsOn: 'test', type: Copy){
+        copy {
+            from('../etc')
+            include('logback_dev.xml')
+            rename('logback_dev.xml','logback.xml')
+            into "build/resources/main"
+        }
+    }
+
     dependencies {
         groovy 'org.codehaus.groovy:groovy:2.0.4'
         groovy 'commons-cli:commons-cli:1.2'
