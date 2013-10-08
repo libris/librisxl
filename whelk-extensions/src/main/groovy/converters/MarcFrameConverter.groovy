@@ -46,6 +46,7 @@ class MarcFrameConverter extends BasicFormatConverter {
     Document doConvert(Document doc) {
         def source = doc.dataAsJson
         def result = createFrame(source)
+        log.trace("Created frame: $result")
         return new Document(doc)
             .withData(mapper.writeValueAsBytes(result))
             .withContentType("application/ld+json")

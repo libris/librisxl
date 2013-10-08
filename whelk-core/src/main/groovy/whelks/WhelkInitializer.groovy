@@ -38,7 +38,7 @@ class WhelkInitializer {
                         log.info("Adding plugin ${plugin.id} to ${whelk.id}")
                         whelk.addPlugin(plugin)
                     } else {
-                        log.info("Plugin ${p} has been disabled because you said so.")
+                        log.info("Plugin \"${p}\" has been disabled because you said so.")
                     }
                 }
                 //log.debug("Initializing the whelk")

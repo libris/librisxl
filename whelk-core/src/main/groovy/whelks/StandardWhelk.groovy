@@ -5,11 +5,14 @@ import groovy.util.logging.Slf4j as Log
 import java.util.UUID
 import java.net.URI
 import java.net.URISyntaxException
+
 import se.kb.libris.whelks.api.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*
+
+import se.kb.libris.conch.Tools
 
 import org.codehaus.jackson.map.*
 
@@ -22,8 +25,10 @@ class StandardWhelk implements Whelk {
     // Set by configuration
     URI docBaseUri
 
+
     StandardWhelk(String id) {
         this.id = id
+        // Start executorservice
     }
 
     void setDocBaseUri(String uri) {
@@ -49,7 +54,7 @@ class StandardWhelk implements Whelk {
      */
     @Override
     @groovy.transform.CompileStatic
-    void bulkAdd(List<Document> docs) {
+    void bulkAdd(final List<Document> docs) {
         for (storage in storages) {
             for (doc in docs) {
                 try {
@@ -199,18 +204,23 @@ class StandardWhelk implements Whelk {
         boolean indexing = !startAt
         for (doc in loadAll(fromStorage)) {
             if (startAt && doc.identifier == startAt) {
-                log.debug("Found document with identifier ${startAt}. Starting to index ...")
+                log.info("Found document with identifier ${startAt}. Starting to index ...")
                 indexing = true
             }
             if (indexing) {
                 docs << doc
                 if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
+                    addToGraphStore(docs)
                     addToIndex(docs)
                     docs = []
+                    if (log.isInfoEnabled()) {
+                        Tools.printSpinner("Reindexing ${this.id}. ${counter} documents sofar.", counter)
+                    }
                 }
             }
         }
         if (docs.size() > 0) {
+            addToGraphStore(docs)
             addToIndex(docs)
         }
         log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)

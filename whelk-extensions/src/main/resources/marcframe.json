@@ -264,6 +264,7 @@
       "$c": {"addProperty": "personTitle"},
       "$d": {"property": "lifeSpan", "pattern": "(\\d+)(?:-(\\d+))?",
         "properties": ["birthYear", "deathYear"]},
+      "$j": {"TODO:property": "influencedBy"},
       "construct": {
         "controlledLabel": {", ": [ "familyName",
                           {" ": ["givenName", {"(%s)": [1, "numeration"]}]},
@@ -451,14 +452,16 @@
           "$a": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
           "$v": {"addLink": "broader", "uriTemplate": "_:{_}",
-               "TODO": "use saogf, but only if $2=sao",
+               "TODO": "use /topic/saogf/{_}, but only if $2=sao",
                  "property": "prefLabel"},
           "$x": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
           "$y": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
-          "$z": {"addLink": "broader", "uriTemplate": "/place/{_}",
-                 "property": "prefLabel"}
+          "$z": {"addLink": "broader", "uriTemplate": "_:{_}",
+                "TODO": "use /place/{_}, but only if $2=sao",
+                "rangeEntity": "Place",
+                "property": "prefLabel"}
         }
       },
       "$a": {"property": "prefLabel"},

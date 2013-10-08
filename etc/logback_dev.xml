@@ -22,9 +22,9 @@
       <level value="debug"/>
   </logger>
   -->
-  <!--<logger name="se.kb.libris.whelks.plugin.MarcFrameConverter">-->
-      <!--<level value="debug"/>-->
-  <!--</logger>-->
+  <logger name="se.kb.libris.whelks.plugin.MarcFrameConverter">
+      <level value="trace"/>
+  </logger>
   <!--
   <logger name="se.kb.libris.whelks.plugin.BasicMarc2JsonLDConverter">
       <level value="debug"/>

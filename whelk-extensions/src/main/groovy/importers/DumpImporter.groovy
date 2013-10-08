@@ -6,6 +6,8 @@ import groovy.time.*
 
 import java.text.*
 
+import java.util.concurrent.*
+
 import javax.xml.stream.*
 import javax.xml.transform.Transformer
 import javax.xml.transform.TransformerFactory
@@ -31,6 +33,8 @@ class DumpImporter {
 
     File failedLog
     File exceptionLog
+
+    ExecutorService queue
 
     def progressSpinner = ['/','-','\\','|']
     int progressSpinnerState = 0
@@ -59,6 +63,7 @@ class DumpImporter {
     }
 
     int performImport(XMLStreamReader xsr) {
+        queue = Executors.newSingleThreadExecutor()
         xsr.nextTag(); // Advance to statements element
         def documents = []
         Transformer optimusPrime = TransformerFactory.newInstance().newTransformer()
@@ -79,13 +84,7 @@ class DumpImporter {
                 documents << doc
                 printSpinner(nrImported)
                 if (++nrImported % BATCH_SIZE == 0) {
-                    try {
-                        this.whelk.bulkAdd(documents)
-                    } catch (WhelkAddException wae) {
-                        failedLog << wae.failedIdentifier
-                    } catch (Exception e) {
-                        e.printStackTrace(new FileWriter(exceptionLog, true))
-                    }
+                    addDocuments(documents)
                     documents = []
                     //def td = TimeCategory.minus(new Date(), loadStartTime)
                     //log.debug("$nrImported documents stored. Lap time is $td")
@@ -97,9 +96,11 @@ class DumpImporter {
 
         // Handle remainder
         if (documents.size() > 0) {
-            whelk.bulkAdd(documents)
+            addDocuments(documents)
         }
         print "Done!\n"
+
+        queue.shutdown()
 
         return nrImported
     }
@@ -107,6 +108,20 @@ class DumpImporter {
     void printSpinner(int count) {
         print "Running dumpimport $count documents imported sofar. ${progressSpinner[progressSpinnerState]}                \r"
         progressSpinnerState = (progressSpinnerState + 1 >= progressSpinner.size() ? 0 : progressSpinnerState + 1)
+    }
+
+    void addDocuments(final List documents) {
+        queue.execute({
+            try {
+                this.whelk.bulkAdd(documents)
+            } catch (WhelkAddException wae) {
+                for (fi in wae.failedIdentifiers) {
+                    failedLog << "$fi\n"
+                }
+            } catch (Exception e) {
+                e.printStackTrace(new FileWriter(exceptionLog, true))
+            }
+        } as Runnable)
     }
 
     Document buildDocument(String mdrecord) {
@@ -120,7 +135,7 @@ class DumpImporter {
         try {
             doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new String("/"+this.origin+"/"+id),"contentType":"application/x-marc-json"])
         } catch (Exception e) {
-            log.error("Failed! (${e.message}) for :\n$mdrecord")
+            log.error("Failed! (${e.message}) for :\n$mdrecord\nAs JSON:\n$jsonRec")
             if (picky) {
                 throw e
             }
