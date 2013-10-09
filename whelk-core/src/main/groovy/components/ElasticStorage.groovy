@@ -18,13 +18,11 @@ abstract class ElasticStorage extends ElasticSearch {
     String requiredContentType
 
     @Override
-    public void store(Document doc, String idxpfx) {
+    public boolean store(Document doc, String idxpfx) {
         addDocument(doc, storageType, idxpfx)
+        return true
     }
-    @Override
-    public void store(Iterable<Document> doc, String idxpfx) {
-        addDocuments(doc, storageType, idxpfx)
-    }
+
     @Override
     Document get(URI uri, String idxpfx) {
         log.debug("Received GET request for $uri")

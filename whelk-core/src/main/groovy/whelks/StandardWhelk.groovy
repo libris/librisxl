@@ -37,15 +37,19 @@ class StandardWhelk implements Whelk {
 
     @Override
     URI add(Document doc) {
+        boolean stored = false
         doc = sanityCheck(doc)
 
         for (storage in storages) {
-            storage.store(doc, this.id)
+            stored = (storage.store(doc, this.id) || stored)
         }
 
         addToGraphStore([doc])
         addToIndex([doc])
 
+        if (!stored) {
+            throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
+        }
         return new URI(doc.identifier)
     }
 
@@ -55,10 +59,11 @@ class StandardWhelk implements Whelk {
     @Override
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs) {
+        boolean stored = false
         for (storage in storages) {
             for (doc in docs) {
                 try {
-                    storage.store(doc, this.id)
+                    stored = (storage.store(doc, this.id) || stored)
                 } catch (Exception e) {
                     throw new WhelkAddException(doc.identifier as String)
                 }
@@ -66,6 +71,10 @@ class StandardWhelk implements Whelk {
         }
         addToGraphStore(docs)
         addToIndex(docs)
+
+        if (!stored) {
+            throw new WhelkAddException("No suitable storage found for content-type ${docs[0]?.contentType}.", docs*.identifier)
+        }
     }
 
     @Override

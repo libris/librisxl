@@ -19,10 +19,11 @@ class InMemoryStorage extends BasicPlugin implements Storage {
     void enable() {this.enabled = true}
     void disable() {this.enabled = false}
 
-    void store(Document d, String wp) {
+    boolean store(Document d, String wp) {
         println "Extra allt ..."
         log.debug("Saving document $d.identifier to memory.")
         storage.put(d.identifier, d)
+        return true
     }
 
     void store(Iterable<Document> docs, String wp) {

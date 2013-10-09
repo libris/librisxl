@@ -158,7 +158,7 @@ class RiakStorage extends RiakClient implements Storage {
         return riakClient.createBucket(prefix).nVal(n_val).allowSiblings(allow_mult).w(w_quorum).r(r_quorum).execute()
     }
 
-    void store(Document d, String prefix){
+    boolean store(Document d, String prefix){
         int attempt = 0
         int loop_times = 2
 
@@ -194,6 +194,7 @@ class RiakStorage extends RiakClient implements Storage {
                 */
             }
         //}
+        return true
     }
 
     String extractIdFromURI(URI uri) {

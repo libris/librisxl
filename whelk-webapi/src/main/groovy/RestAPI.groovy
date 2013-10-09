@@ -264,14 +264,23 @@ class DocumentRestlet extends BasicWhelkAPI {
                     response.setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
                     if (rawdoc) {
-                        log.debug("Adding raw version of ${rawdoc.identifier}")
-                        this.whelk.add(rawdoc)
+                        try {
+                            log.debug("Adding raw version of ${rawdoc.identifier}")
+                            this.whelk.add(rawdoc)
+                        } catch (WhelkAddException wae) {
+                            log.debug("Failed to add raw version: ${wae.message}")
+                        }
                     }
                     // If no dedicated storage for the raw type is available,
                     // make sure the converted version overwrites the raw.
-                    identifier = this.whelk.add(doc)
-                    response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                    response.setLocationRef(request.getOriginalRef().toString())
+                    try {
+                        identifier = this.whelk.add(doc)
+                        response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
+                        response.setLocationRef(request.getOriginalRef().toString())
+                    } catch (WhelkAddException wae) {
+                        log.warn("Whelk failed to store document: ${wae.message}")
+                        response.setStatus(Status.CLIENT_ERROR_NOT_ACCEPTABLE, wae.message)
+                    }
                 }
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)

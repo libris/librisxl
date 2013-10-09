@@ -52,7 +52,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    void store(Document doc, String whelkPrefix) {
+    boolean store(Document doc, String whelkPrefix) {
         if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
             ColumnFamilyUpdater<String, String> updater = cft.createUpdater(doc.identifier.toString())
             updater.setByteArray("data", doc.data)
@@ -65,6 +65,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
             } catch (HectorException e) {
                 log.error("Exception: ${e.message}", e)
             }
+            return true
         } else {
             if (!doc) {
                 log.warn("Received null document. No attempt to store.")
@@ -72,6 +73,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 log.debug("This storage does not handle document with type ${doc.contentType}")
             }
         }
+        return false
     }
 
     @Override
