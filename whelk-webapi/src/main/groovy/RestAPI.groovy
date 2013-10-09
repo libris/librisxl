@@ -279,7 +279,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                         response.setLocationRef(request.getOriginalRef().toString())
                     } catch (WhelkAddException wae) {
                         log.warn("Whelk failed to store document: ${wae.message}")
-                        response.setStatus(Status.CLIENT_ERROR_NOT_ACCEPTABLE, wae.message)
+                        response.setStatus(Status.CLIENT_ERROR_UNSUPPORTED_MEDIA_TYPE, wae.message)
                     }
                 }
             } catch (WhelkRuntimeException wre) {
