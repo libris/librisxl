@@ -427,8 +427,8 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
     Query expandQuery(Query q) {
         def newquery = []
         for (queryitem in q.query.split()) {
-            if (queryitem.contains("=")) {
-                def (group, key) = queryitem.split("=")
+            if (queryitem.contains(":")) {
+                def (group, key) = queryitem.split(":")
                 if (queryFacets[group]) {
                     newquery << (queryFacets[group][key] ?: "")
                 } else {
@@ -461,6 +461,7 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
             def callback = reqMap.get("callback")
             if (q) {
                 q.addFacet("about.@type")
+                log.debug("Query $q.query Fields: $q.fields Facets: $q.facets")
                 //q.addScriptFieldFacet("about.dateOfPublication")
                 //q.addFacet("about.dateOfPublication")
                 /*
@@ -659,14 +660,13 @@ class AutoComplete extends BasicWhelkAPI {
     @Override
     void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        log.debug("querytype $queryType")
+        log.debug("Handling autocomplete request with queryType: $queryType...")
         String queryStr = querymap.get(queryType, null)
-
+        log.debug("QueryStr: $queryStr")
         def callback = querymap.get("callback")
         if (queryStr) {
             queryStr = splitName(queryStr)
-            log.debug("queryStr: $queryStr")
-            log.debug("namePrefixes: $namePrefixes")
+            log.debug("Query fields added to highlight: $namePrefixes")
             def query = new ElasticQuery(queryStr)
             query.highlights = namePrefixes
             query.sorting = sortby
