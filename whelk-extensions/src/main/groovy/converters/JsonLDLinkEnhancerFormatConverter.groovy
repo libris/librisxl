@@ -41,7 +41,7 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
                                         }
                                     }
                                 } else if (creatorProp instanceof Map) {
-                                    if (creatorProp["@type"] == "Person" && creatorProp["controlledLabel"] == authDataJson["about"]["controlledLabel"]) {
+                                   if (creatorProp["@type"] == "Person" && creatorProp["controlledLabel"] == authDataJson["about"]["controlledLabel"]) {
                                         json["about"]["instanceOf"]["creator"]["@id"] = authDataJson["about"]["@id"]
                                         changedData = true
                                     }
@@ -65,9 +65,19 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
                                     if (subj["@type"] == "Concept") {
                                         subj["broader"].eachWithIndex { it, i ->
                                             if (it.get("prefLabel", null) && it["prefLabel"] == authDataJson["about"]["prefLabel"]) {
-                                                json["about"]["instanceOf"]["subject"][index]["broader"][i]["@id"] = authDataJson["about"]["sameAs"]["@id"]
+                                                json["about"]["instanceOf"]["subject"][index]["broader"][i]["sameAs"] = ["@id": "/resource" + authDataJson["@id"]]
                                                 changedData = true
                                             }
+                                        }
+                                    }
+                                }
+                            }
+                            if (json["about"]["instanceOf"].containsKey("class")) {
+                                json["about"]["instanceOf"]["class"].eachWithIndex { cl, i ->
+                                    if (cl["@type"] == "Concept") {
+                                        if (cl.get("@id", null) && cl["@id"] == authDataJson["about"]["@id"]) {
+                                            json["about"]["instanceOf"]["class"][i]["sameAs"] = ["@id": "/resource" + authDataJson["@id"]]
+                                            changedData = true
                                         }
                                     }
                                 }
