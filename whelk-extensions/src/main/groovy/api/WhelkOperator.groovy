@@ -31,10 +31,7 @@ class WhelkOperator {
             origin = args[3]
         }
         def numberOfDocs = (args.length > 4 ? args[4].toInteger() : -1)
-        boolean picky = false
-        if (args.length > 5) {
-            picky = (args[5] == "true")
-        }
+        boolean picky = (System.getProperty("picky") == "true")
         long startTime = System.currentTimeMillis()
         long time = 0
         if (operation == "import") {
@@ -44,12 +41,12 @@ class WhelkOperator {
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else if (operation == "importdump") {
-            def importer = new DumpImporter(whelk, origin, false)
+            def importer = new DumpImporter(whelk, origin, picky)
             def nrimports = importer.doImportFromURL(new URL(resource))
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else if (operation == "importfile") {
-            def importer = new DumpImporter(whelk, origin, false)
+            def importer = new DumpImporter(whelk, origin, picky)
             def nrimports = importer.doImportFromFile(new File(resource))
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
