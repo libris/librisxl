@@ -48,14 +48,14 @@ class DumpImporter {
     }
 
     int doImportFromFile(File file) {
-        log.info("Loading dump from $file")
+        log.info("Loading dump from $file. Picky mode: $picky")
         XMLInputFactory xif = XMLInputFactory.newInstance()
         XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(file))
         return performImport(xsr)
     }
 
     int doImportFromURL(URL url) {
-        log.info("Loading dump from ${url.toString()}")
+        log.info("Loading dump from ${url.toString()}. Picky mode: $picky")
         XMLInputFactory xif = XMLInputFactory.newInstance()
         //XMLStreamReader xsr = xif.createXMLStreamReader(new URL(urlString).newInputStream())
         XMLStreamReader xsr = xif.createXMLStreamReader(url.newInputStream())
