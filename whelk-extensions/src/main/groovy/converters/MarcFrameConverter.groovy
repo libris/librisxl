@@ -205,7 +205,7 @@ class MarcConversion {
         marcSource.fields.each { field ->
             def determinesType = false
             field.each { tag, value ->
-                if (tag in PREPROC_TAGS) {
+                if (tag in PREPROC_TAGS && tag in fieldHandlers) {
                     fieldHandlers[tag].convert(marcSource, value, entityMap)
                 } else if (tag in primaryTags) {
                     primaryFields << field
