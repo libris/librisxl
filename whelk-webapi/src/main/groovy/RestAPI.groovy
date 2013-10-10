@@ -655,14 +655,14 @@ class AutoComplete extends BasicWhelkAPI {
     String splitName(String name) {
         def np = []
         for (n in name.split(/[\s-_]/)) {
-            n = n.replaceAll(/\W$+/, "")
+            n = n.replaceAll(/\W$+^\*/, "")
             if (n[-1] != ' ' && n[-1] != '*' && n.length() > 1) {
                 np << n+"*"
             } else if (n) {
                 np << n
             }
-
         }
+        log.debug(np.join(" "))
         return np.join(" ")
     }
 
