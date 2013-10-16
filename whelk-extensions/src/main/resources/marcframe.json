@@ -318,7 +318,7 @@
       "domainEntity": "Instance",
       "link": "title",
       "rangeEntity": "TitleEntity",
-      "$a": {"property": "titleValue"},
+      "$a": {"property": "titleValue", "interpunctionChars": ":/"},
       "$b": {"property": "subtitle"},
       "$c": {"domainEntity": "Instance", "property": "responsibilityStatement"},
       "$f": {"property": "titleDate"},
