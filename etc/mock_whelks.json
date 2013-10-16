@@ -195,9 +195,7 @@
             "subjcomplete" : {
                 "_class" : "se.kb.libris.whelks.api.AutoComplete",
                 "_params" : {"queryFields":[
-                              "prefLabel",
-                              "notation",
-                              "label"
+                              "prefLabel"
                             ],
                             "infoFields":[
                             ],
