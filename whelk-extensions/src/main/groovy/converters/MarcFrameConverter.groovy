@@ -367,6 +367,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
 }
 
+@Log
 class MarcFieldHandler extends BaseMarcFieldHandler {
 
     Map ind1
@@ -595,10 +596,27 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return unhandled.size() == 0
     }
 
+    String clearInterpunction(interpunctionChars, subVal) {
+        def val = subVal.trim()
+        if (val.size() > 2) {
+            def chars = interpunctionChars.toCharArray()
+            for (c in chars) {
+                if (val[-1].equals(c.toString())) {
+                    val = val[0..-2]
+                }
+            }
+            return val.toString()
+        }
+        return val
+    }
+
     boolean processSubData(subDfn, subVal, ent, uriTemplateParams) {
         def ok = false
         def uriTemplateKeyBase = ""
 
+        if (subDfn.interpunctionChars) {
+            subVal = clearInterpunction(subDfn.interpunctionChars, subVal)
+        }
         def valueMap = subDfn.valueMap
         if (valueMap) {
             if (valueMap instanceof String) // TODO: resolve on init
