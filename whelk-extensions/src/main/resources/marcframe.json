@@ -322,7 +322,7 @@
       "$b": {"property": "subtitle", "interpunctionChars": "/"},
       "$c": {"domainEntity": "Instance", "property": "responsibilityStatement"},
       "$f": {"property": "titleDate"},
-      "$h": {"domainEntity": "Instance", "property": "mediaTerm"},
+      "$h": {"domainEntity": "Instance", "property": "mediaTerm", "surroundingChars": "[]"},
       "$n": {"property": "partEnumeration"},
       "$p": {"property": "partTitle"}
     },
@@ -360,10 +360,10 @@
       "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
       "rangeEntity": "ProviderEvent",
       "i1": {"TODO:property": "latest", "TODO:valueMap": {"2": false, "3": true}},
-      "$a": {"link": "place", "rangeEntity": "Place", "property": "label"},
+      "$a": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ",:"},
       "$b": {"property": "providerName", "interpunctionChars": ",:;"},
       "$c": {"property": "providerDate", "interpunctionChars": ",;"},
-      "$e": {"link": "place", "rangeEntity": "Place", "property": "label"},
+      "$e": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
       "$f": {"property": "providerName", "interpunctionChars": ",:;"},
       "$g": {"property": "providerDate", "interpunctionChars": ",;"},
       "$3": {"property": "scopeNote", "position": 0}
@@ -371,7 +371,7 @@
 
     "300": {
       "entity": "Instance",
-      "$a": {"property": "extent", "interpunctionChars": "+:"},
+      "$a": {"property": "extent", "interpunctionChars": "+:;"},
       "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
       "$b": {"property": "otherPhysicalDetails", "interpunctionChars": ";+"},
       "$e": {"property": "accompanyingMaterial"},
