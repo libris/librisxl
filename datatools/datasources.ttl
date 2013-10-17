@@ -16,7 +16,7 @@
     void:classPartition [ void:class sdo:Language ] .
 
 <relatorcodes> a dcat:Dataset;
-    void:classPartition [ void:class owl:ObjectProperty ] .
+    void:classPartition [ void:class owl:ObjectProperty ];
     dc:source <relatorcodes/labels-sv.jsonld>;
     dc:source [ a dcat:Distribution;
             dcat:downloadURL <http://id.loc.gov/files/001.csv>;

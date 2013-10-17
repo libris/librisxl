@@ -2,6 +2,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix dc: <http://purl.org/dc/terms/> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix bibo: <http://purl.org/ontology/bibo/> .
@@ -10,7 +11,7 @@
 @prefix ent: <http://rdvocab.info/uri/schema/FRBRentitiesRDA/> .
 @prefix rel: <http://rdvocab.info/RDARelationshipsWEMI/> .
 @prefix dbpedia: <http://dbpedia.org/resource/> .
-@prefix : <http://libris.kb.se/def/marc21#> .
+@prefix : <http://libris.kb.se/def/terms/> .
 @base <http://libris.kb.se/> .
 
 
@@ -45,22 +46,12 @@
       el:titleProper "Anteckningar från en ö";
       el:statementOfResponsibilityRelatingToTitleProper "Tove Jansson, Tuulikki Pietilä";
       el:languageOfTheContent "swe"; #dc:language "sv";
-      bibo:authorList (
-          [ a ent:Person; #owl:sameAs </auth/Jansson,+Tove+1914-2001>;
-                #:similarTo </auth/Jansson,+Tove>;
-            gr2:preferredNameForThePerson "Jansson, Tove"; #variantNameForThePerson
-            foaf:name "Tove Jansson";
-            foaf:surname "Jansson";
-            foaf:givenName "Tove";
-            gr2:dateOfBirth "1914"^^xsd:gYear;
-            gr2:dateOfDeath "2001"^^xsd:gYear ]
-          [ a ent:Person; #owl:sameAs </auth/Pietilä,+Tuulikki+1917->;
-            gr2:preferredNameForThePerson "Pietilä, Tuulikki";
-            foaf:name "Tuulikki Pietilä";
-            foaf:surname "Pietilä";
-            foaf:givenName "Tuulikki";
-            gr2:dateOfBirth "1917"^^xsd:gYear ]
+      :authorizedAccessPoint </auth/Jansson,+Tove+1914-2001>;
+      :accessPointList (
+          </auth/Pietilä,+Tuulikki+1917->
         );
+      dc:creator </resource/auth/Jansson,+Tove+1914-2001>;
+      dc:contributor </resource/auth/Pietilä,+Tuulikki+1917->;
 
       :typeOfRecord "Text: tryck"; #a <http://purl.org/dc/dcmitype/Text>;
       :bibLevel "Monografisk resurs";
@@ -105,4 +96,26 @@
       #:localNotes [ :a "Li:S" ]; # "Litteraturhistoria svensk" (Gc), implied by Gcdz?
 
     ] .
+
+</auth/Jansson,+Tove+1914-2001> a skos:Concept;
+  skos:prefLabel "Jansson, Tove, 1914-2001";
+  foaf:focus </resource/auth/Jansson,+Tove+1914-2001> .
+
+</resource/auth/Jansson,+Tove+1914-2001> a ent:Person;
+  #:similarTo </auth/Jansson,+Tove>;
+  foaf:name "Tove Jansson";
+  foaf:surname "Jansson";
+  foaf:givenName "Tove";
+  gr2:dateOfBirth "1914"^^xsd:gYear;
+  gr2:dateOfDeath "2001"^^xsd:gYear .
+
+</auth/Pietilä,+Tuulikki+1917-> a skos:Concept;
+  skos:prefLabel "Pietilä, Tuulikki, 1917-";
+  foaf:focus </resource/auth/Jansson,+Tove+1914-2001> .
+
+</resource/auth/Pietilä,+Tuulikki+1917-> a ent:Person; 
+  foaf:name "Tuulikki Pietilä";
+  foaf:surname "Pietilä";
+  foaf:givenName "Tuulikki";
+  gr2:dateOfBirth "1917"^^xsd:gYear .
 
