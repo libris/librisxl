@@ -596,14 +596,27 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return unhandled.size() == 0
     }
 
-    String clearInterpunction(interpunctionChars, subVal) {
+    String clearChars(fromWhere, removeChars, subVal) {
         def val = subVal.trim()
         if (val.size() > 2) {
-            def chars = interpunctionChars.toCharArray()
-            for (c in chars) {
-                if (val[-1].equals(c.toString())) {
-                    val = val[0..-2]
-                }
+            def chars = removeChars.toCharArray()
+            switch(fromWhere) {
+                case "trailing":
+                    for (c in chars) {
+                        if (val[-1].equals(c.toString())) {
+                            val = val[0..-2].trim()
+                        }
+                    }
+                    break
+                case "surrounding":
+                    val
+                    for (c in chars) {
+                        if (val[-1].equals(c.toString())) {
+                            val = val[0..-2].trim()
+                        } else if (val[0].equals(c.toString())) {
+                            val = val[1..-1].trim()
+                        }
+                    }
             }
             return val.toString()
         }
@@ -615,8 +628,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def uriTemplateKeyBase = ""
 
         if (subDfn.interpunctionChars) {
-            subVal = clearInterpunction(subDfn.interpunctionChars, subVal)
+            subVal = clearChars("trailing", subDfn.interpunctionChars, subVal)
         }
+        if (subDfn.surroundingChars) {
+            subVal = clearChars("surrounding", subDfn.surroundingChars, subVal)
+        }
+
         def valueMap = subDfn.valueMap
         if (valueMap) {
             if (valueMap instanceof String) // TODO: resolve on init
