@@ -1,0 +1,34 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix sdo: <http://schema.org/> .
+@base <http://libris.kb.se/def/> .
+
+<nationalitycodes> a dcat:Dataset .
+
+<countrycodes> a dcat:Dataset;
+    void:classPartition [ void:class sdo:Country ] .
+
+<langcodes> a dcat:Dataset;
+    void:classPartition [ void:class sdo:Language ] .
+
+<relatorcodes> a dcat:Dataset;
+    void:classPartition [ void:class owl:ObjectProperty ] .
+    dc:source <relatorcodes/labels-sv.jsonld>;
+    dc:source [ a dcat:Distribution;
+            dcat:downloadURL <http://id.loc.gov/files/001.csv>;
+            dcat:mediaType "text/csv"
+        ] .
+
+<relatorcodes/labels-sv.jsonld> dc:format "application/ld+json" .
+
+<worktypes> a dcat:Dataset .
+
+<carriertypes> a dcat:Dataset .
+
+<conceptschemes> a dcat:Dataset;
+    void:classPartition [ void:class skos:ConceptScheme ] .
+

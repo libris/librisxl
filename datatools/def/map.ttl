@@ -1,0 +1,94 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix ptg: <http://protege.stanford.edu/plugins/owl/protege#> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix dctype: <http://purl.org/dc/dcmitype/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdael: <http://rdvocab.info/Elements/> .
+@prefix bf: <http://bibframe.org/vocab/> .
+@prefix sdo: <http://schema.org/> .
+@prefix : <http://libris.kb.se/def/map#> .
+
+: a owl:Ontology;
+    rdfs:comment "This vocabulary serves as a central mapping to public, well-known properties and classes."@en;
+    owl:imports dc:, skos:, foaf:, bibo:, rdael:, sdo:, bf: .
+
+# Various sources beyond the linked defintions themselves:
+# - <http://bibframe.org/documentation/resource-types/#proposal>
+
+
+:UniformWork a owl:Class;
+    rdfs:label "Uniformt verk"@sv;
+    ptg:abstract true;
+    owl:equivalentClass bf:Work;
+    rdfs:subClassOf sdo:CreativeWork .
+
+
+:genre a owl:ObjectProperty;
+    rdfs:label "genre"@sv;
+    rdfs:subPropertyOf sdo:genre;
+    owl:equivalentProperty dc:type, bf:class .
+
+:inCollection a owl:ObjectProperty;
+    owl:inverseOf skos:member;
+    rdfs:domain skos:Concept;
+    rdfs:range skos:Collection .
+
+
+:publisher owl:equivalentProperty dc:publisher, bf:publisher .
+
+
+:Collection a owl:Class;
+    rdfs:label "Samling"@sv;
+    owl:equivalentClass dctype:Collection, bf:Collection .
+
+:DigitalResource a owl:Class;
+    ptg:abstract true;
+    owl:equivalentClass bf:SoftwareOrMultimedia;
+    skos:closeMatch dctype:InteractiveResource, dctype:Software .
+
+:Dataset a owl:Class;
+    rdfs:label "Dataset"@sv;
+    owl:equivalentClass dctype:Dataset, bf:Dataset .
+
+:Image a owl:Class;
+    rdfs:label "Bild"@sv;
+    owl:equivalentClass dctype:Image .
+
+:Text a owl:Class;
+    rdfs:label "Text"@sv;
+    owl:subClassOf :UniformWork;
+    owl:equivalentClass dctype:Text, bf:LanguageMaterial, dc:BibliographicResource .
+
+:StillImage a owl:Class;
+    rdfs:label "Stillbild"@sv;
+    rdfs:subClassOf dctype:Image;
+    owl:equivalentClass bf:StillImage, dctype:StillImage .
+
+:MovingImage a owl:Class;
+    rdfs:label "Rörlig bild"@sv;
+    rdfs:subClassOf dctype:Image;
+    owl:equivalentClass bf:MovingImage, dctype:MovingImage .
+
+:Cartography a owl:Class;
+    rdfs:label "Kartmaterial"@sv;
+    owl:equivalentClass bf:Cartography .
+
+:PhysicalObject a owl:Class;
+    rdfs:label "Föremål"@sv;
+    skos:altLabel "Realia"@sv;
+    owl:equivalentClass dctype:PhysicalObject, bf:ThreeDimensionalObject .
+
+:Sound a owl:Class;
+    rdfs:label "Ljud"@sv;
+    owl:equivalentClass dctype:Sound, bf:Audio .
+
+
+:Holding a owl:Class;
+    rdfs:label "Bestånd"@sv;
+    owl:equivalentClass bf:Holding;
+    rdfs:subClassOf bf:Offer .
+
+:callno rdfs:subPropertyOf :genre, bf:callno, sdo:sku;
+    rdfs:range :Holding .
+
