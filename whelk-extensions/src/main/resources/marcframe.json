@@ -544,6 +544,7 @@
       "$f": {
         "domainEntity": "Instance",
         "IMPROVE:about": "$thing if Concept else $record",
+        "TODO": "inCollection if . = sgp",
         "link": "inScheme", "rangeEntity": "ConceptScheme",
         "uriTemplate": "/topic/{_}",
         "property": "notation"
