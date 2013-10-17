@@ -319,7 +319,7 @@
       "link": "title",
       "rangeEntity": "TitleEntity",
       "$a": {"property": "titleValue", "interpunctionChars": ":/"},
-      "$b": {"property": "subtitle"},
+      "$b": {"property": "subtitle", "interpunctionChars": "/"},
       "$c": {"domainEntity": "Instance", "property": "responsibilityStatement"},
       "$f": {"property": "titleDate"},
       "$h": {"domainEntity": "Instance", "property": "mediaTerm"},
@@ -361,19 +361,19 @@
       "rangeEntity": "ProviderEvent",
       "i1": {"TODO:property": "latest", "TODO:valueMap": {"2": false, "3": true}},
       "$a": {"link": "place", "rangeEntity": "Place", "property": "label"},
-      "$b": {"property": "providerName"},
-      "$c": {"property": "providerDate"},
+      "$b": {"property": "providerName", "interpunctionChars": ",:;"},
+      "$c": {"property": "providerDate", "interpunctionChars": ",;"},
       "$e": {"link": "place", "rangeEntity": "Place", "property": "label"},
-      "$f": {"property": "providerName"},
-      "$g": {"property": "providerDate"},
+      "$f": {"property": "providerName", "interpunctionChars": ",:;"},
+      "$g": {"property": "providerDate", "interpunctionChars": ",;"},
       "$3": {"property": "scopeNote", "position": 0}
     },
 
     "300": {
       "entity": "Instance",
-      "$a": {"property": "extent"},
-      "$c": {"property": "dimensions"},
-      "$b": {"property": "otherPhysicalDetails"},
+      "$a": {"property": "extent", "interpunctionChars": "+:"},
+      "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
+      "$b": {"property": "otherPhysicalDetails", "interpunctionChars": ";+"},
       "$e": {"property": "accompanyingMaterial"},
       "$3": {
         "TODO:previousEndsWith": "+",
@@ -395,13 +395,13 @@
       "domainEntity": "Work",
       "addLink": "series",
       "rangeEntity": "Serial",
-      "$a": {"property": "title"},
+      "$a": {"property": "title", "interpunctionChars": ".,=;"},
       "$0": {"key": "authorityRecordControlNumber"},
       "$n": {"addProperty": "numberOfPartOfAWork"},
-      "$p": {"addProperty": "nameOfPartOfAWork"},
+      "$p": {"addProperty": "nameOfPartOfAWork", "interpunctionChars": ".,=;"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "volumeNumberSequentialDesignation"},
-      "$x": {"property": "issn"}
+      "$x": {"property": "issn", "interpunctionChars": ".,=;"}
     },
     "490": {
       "inherit": "440",
