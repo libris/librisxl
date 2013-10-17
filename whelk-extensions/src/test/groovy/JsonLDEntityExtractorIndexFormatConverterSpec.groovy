@@ -24,8 +24,9 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
                 ]
             ]
         ]
-        def creator = ["@type": "Person", "controlledLabel": "Jansson, Tove, 1914-2001"]
-        def contributorList = [["@type": "Person", "controlledLabel": "Jansson, Tove, 1914-2001"], ["@type": "Person", "controlledLabel": "Jansson, Tove, 1914-2001"]]
+        def creator = ["@type": "Person", "controlledLabel": "Jansson, Tove, 1914-2001", "@id": "/resource/auth/191503"]
+        def creator2 = ["@type": "Person", "controlledLabel": "Svensson, Unauthorized"]
+        def contributorList = [["@type": "Person", "controlledLabel": "Jansson, Tove, 1914-2001", "@id": "/resource/auth/191503"], ["@type": "Person", "controlledLabel": "Hopp, Hej"]]
         def authPerson = [
                 "@id": "/auth/191503",
                 "@type": "Record",
@@ -47,7 +48,7 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
                 ]
         ]
         def conceptScheme =  [
-                "@id": "/auth/12345",
+                "@id": "/auth/123456",
                 "@type": "Record",
                 "about": ["inScheme": ["@type": "ConceptScheme", "@id": "/topic/barn", "notation": "barn"]]
         ]
@@ -65,28 +66,26 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
             copy["about"]["instanceOf"]["creator"] = creator
             doclist = converter.doConvert(makeDoc(copy, "http://libris.kb.se/bib/7149593"))
         then:
-            doclist.size() == 2
+            doclist.size() == 1
             doclist[0].dataAsMap.about."@id" == "/resource/bib/7149593"
-            doclist[1].dataAsMap."@id" == "/bib/Person/Jansson%2C+Tove%2C+1914-2001"
 
         when:
             copy = bib
-            copy["about"]["instanceOf"]["creator"] = creator
+            copy["about"]["instanceOf"]["creator"] = creator2
             copy["about"]["instanceOf"]["contributorList"] = contributorList
             doclist = converter.doConvert(makeDoc(copy, "http://libris.kb.se/bib/7149593"))
         then:
-            doclist.size() == 4
+            doclist.size() == 3
             doclist[0].dataAsMap.about."@id" == "/resource/bib/7149593"
-            doclist[1].dataAsMap."@id" == "/bib/Person/Jansson%2C+Tove%2C+1914-2001"
-            doclist[2].dataAsMap."@id" == "/bib/Person/Jansson%2C+Tove%2C+1914-2001"
-            doclist[3].dataAsMap."@id" == "/bib/Person/Jansson%2C+Tove%2C+1914-2001"
+            doclist[1].dataAsMap."@id" == "/bib/Person/Svensson%2C+Unauthorized"
+            doclist[2].dataAsMap."@id" == "/bib/Person/Hopp%2C+Hej"
 
         when:
             doclist = converter.doConvert(makeDoc(authPerson, "http://libris.kb.se/auth/1234"))
         then:
             doclist.size() == 2
             doclist[0].dataAsMap.about."@id" == "/resource/auth/191503"
-            //doclist[1].dataAsMap."@id" == "/resource/auth/191503"
+            doclist[1].dataAsMap."@id" == "/resource/auth/191503"
 
         when:
             doclist = converter.doConvert(makeDoc(authConcept, "http://libris.kb.se/auth/1234"))
@@ -97,10 +96,10 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
             doclist[1].dataAsMap.sameAs."@id" == "/resource/auth/12345"
 
         when:
-            doclist = converter.doConvert(makeDoc(conceptScheme, "http://libris.kb.se/auth/1234"))
+            doclist = converter.doConvert(makeDoc(conceptScheme, "http://libris.kb.se/auth/123456"))
         then:
             doclist.size() == 2
-            doclist[0].dataAsMap."@id" == "/auth/12345"
+            doclist[0].dataAsMap."@id" == "/auth/123456"
             doclist[1].dataAsMap."@id" == "/auth/ConceptScheme/barn"
 
     }

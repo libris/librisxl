@@ -17,15 +17,21 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     List<IndexDocument> doConvert(Document doc) {
         log.debug("Converting indexdoc $doc.identifier")
 
+        def docType = new URI(doc.identifier).path.split("/")[1]
+
         List<IndexDocument> doclist = [new IndexDocument(doc)]
 
         def json = mapper.readValue(doc.dataAsString, Map)
 
         if (json) {
 
-            if (json.about?.get("@type", null)) {
+            if (json.about?.get("@type")) {
                 if (authPoint.containsKey(json.about.get("@type"))) {
                     log.debug("Extracting authority entity " + json.about.get("@type"))
+                    /*def slugId = false
+                    if (json.about.get("@type").equals("ConceptScheme")) {
+                        slugId = true
+                    } */
                     doclist << createEntityDoc(json.about, doc.identifier, 10, false)
                 }
             }
@@ -43,26 +49,30 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 }
                 if (jsonMap) {
                     log.debug("Extracting entity $it")
-                    doclist += extractEntities(jsonMap, doc.identifier, 1)
+                    doclist += extractEntities(jsonMap, doc.identifier, docType, 1)
                 }
             }
         }
         return doclist
     }
 
-    List<IndexDocument> extractEntities(def extractedJson, def id, def prio) {
+    List<IndexDocument> extractEntities(extractedJson, id, String type, prio) {
         List<IndexDocument> entityDocList = []
         if (extractedJson instanceof List) {
             for (entity in extractedJson) {
-                def entityDoc = createEntityDoc(entity, id, prio, true)
-                if (entityDoc) {
-                    entityDocList << entityDoc
+                if (!(type.equals("bib") && entity.get("@id"))) {  //only extract bib-entity that doesn't link to existing authority
+                    def entityDoc = createEntityDoc(entity, id, prio, true)
+                    if (entityDoc) {
+                        entityDocList << entityDoc
+                    }
                 }
             }
         } else if (extractedJson instanceof Map) {
-            def entityDoc = createEntityDoc(extractedJson, id, prio, true)
-            if (entityDoc) {
-                entityDocList << entityDoc
+            if (!(type.equals("bib") && extractedJson.get("@id"))) {  //only extract bib-entity that doesn't link to existing authority
+                def entityDoc = createEntityDoc(extractedJson, id, prio, true)
+                if (entityDoc) {
+                    entityDocList << entityDoc
+                }
             }
         }
         return entityDocList

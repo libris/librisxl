@@ -313,6 +313,7 @@ class SparqlRestlet extends BasicWhelkAPI {
 }
 
 @Log
+@Deprecated
 class SearchRestlet extends BasicWhelkAPI {
 
     def pathEnd = "_find"
@@ -322,6 +323,7 @@ class SearchRestlet extends BasicWhelkAPI {
     String id = "SearchAPI"
 
     String description = "Generic search API, accepts both GET and POST requests. Accepts parameters compatible with the Query object. (Simple usage: ?q=searchterm)"
+
 
 
     SearchRestlet(Map queryParams) {
@@ -390,6 +392,8 @@ class KitinSearchRestlet2 extends BasicWhelkAPI {
     def pathEnd = "kitin/{indexType}/_search"
     def varPath = false
     String id = "KitinSearch"
+
+    //TODO: Generellt api, flytta ut defaultboost, keys, queryfacets till configureringar
 
     String description = "Query API with preconfigured parameters for Kitin."
 
@@ -619,6 +623,7 @@ class CompleteExpander extends BasicWhelkAPI {
 }
 
 @Log
+@Deprecated
 class AutoComplete extends BasicWhelkAPI {
 
     def pathEnd = "_complete"
