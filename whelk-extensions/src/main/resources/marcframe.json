@@ -731,7 +731,10 @@
       "$2": null
     },
     "755" : {"inherit": "750"},
-    "856" : {"$u": {"addLink": "sameAs", "uriTemplate": "{+_}"}}
+    "856": {
+        "TODO": {"if $x=digipic": {"addLink": "depiction"}},
+        "$u": {"addLink": "sameAs", "uriTemplate": "{+_}"}
+    }
   },
 
   "hold": {
