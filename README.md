@@ -49,7 +49,7 @@ to upload all test documents into your local whelk. (See the script for how the 
     $ gradle jettyrun
 
 4. Run get-and-put-record script:
-    $ cd datatools
+    $ cd scripts
     $ get-and-put-record.sh <bib|auth|hold> <id>
 
 5. To see JsonLD record: http://localhost:8080/whelk-webapi/bib/7149593
