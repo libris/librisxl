@@ -1,34 +1,97 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix void: <http://rdfs.org/ns/void#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix dcat: <http://www.w3.org/ns/dcat#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dc: <http://purl.org/dc/terms/> .
 @prefix sdo: <http://schema.org/> .
 @base <http://libris.kb.se/def/> .
 
-<nationalitycodes> a dcat:Dataset .
 
-<countrycodes> a dcat:Dataset;
-    void:classPartition [ void:class sdo:Country ] .
+</.well-known/void> a void:Dataset;
+    foaf:homepage </> .
 
-<langcodes> a dcat:Dataset;
-    void:classPartition [ void:class sdo:Language ] .
 
-<relatorcodes> a dcat:Dataset;
+# LoC Sources
+
+<http://id.loc.gov/vocabulary/countries> a skos:ConceptScheme .
+
+#<http://id.loc.gov/vocabulary/languages> a skos:ConceptScheme .
+# NOTE: dereference each concept in iso639-2 to get exactMatch for iso639-1/* and languages/*
+<http://id.loc.gov/vocabulary/iso639-2> a skos:ConceptScheme .
+
+<http://id.loc.gov/vocabulary/relators> a skos:ConceptScheme .
+
+
+# Libris Translations
+
+<nationalities> a dcat:Dataset .
+
+<countries> a dcat:Dataset;
+    void:classPartition [ void:class sdo:Country ];
+    dc:source <http://id.loc.gov/vocabulary/countries> .
+
+<languages> a dcat:Dataset;
+    void:classPartition [ void:class sdo:Language ];
+    dc:source <http://id.loc.gov/vocabulary/iso639-2> .
+
+<relators> a dcat:Dataset;
     void:classPartition [ void:class owl:ObjectProperty ];
-    dc:source <relatorcodes/labels-sv.jsonld>;
-    dc:source [ a dcat:Distribution;
-            dcat:downloadURL <http://id.loc.gov/files/001.csv>;
-            dcat:mediaType "text/csv"
-        ] .
+    dc:source <relators/additional.jsonld>;
+    dc:source <relators/labels-sv.jsonld>;
+    dc:source <http://id.loc.gov/vocabulary/relators> .
 
-<relatorcodes/labels-sv.jsonld> dc:format "application/ld+json" .
+<relators/labels-sv.jsonld>
+    dc:language "sv";
+    dcat:mediaType "application/ld+json" .
 
-<worktypes> a dcat:Dataset .
 
-<carriertypes> a dcat:Dataset .
+# Libris Compilations
 
-<conceptschemes> a dcat:Dataset;
+<types> a dcat:Dataset; # work > form > carrier
+    void:classPartition [ void:class owl:Class ] .
+
+<schemes> a dcat:Dataset;
     void:classPartition [ void:class skos:ConceptScheme ] .
+
+<schemes/sao> a skos:ConceptScheme .
+<schemes/saogf> a skos:ConceptScheme .
+<schemes/barn> a skos:ConceptScheme .
+#<schemes/bnb>
+#<schemes/albt/%2Fswe>
+#<schemes/albt>
+#<schemes/aso>
+#<schemes/fao>
+#<schemes/fiaf/2>
+#<schemes/gmgpc/%2Fswe>
+#<schemes/kaab/8>
+#<schemes/kao/%2Feng>
+#<schemes/kao>
+#<schemes/mipfesd/5>
+#<schemes/msc>
+#<schemes/prvt>
+#<schemes/rswk>
+#<schemes/saod>
+#<schemes/saog>
+#<schemes/sbiao>
+#<schemes/sfit>
+#<schemes/sgp>
+#<schemes/shbe>
+#<schemes/sipri>
+
+<schemes/kssb> a skos:ConceptScheme . # 2, 5, 6, 7, 8, 9 + (folkbibliotek, musikalier, musikinspelningar)
+
+
+<http://id.loc.gov/authorities/subjects> a skos:ConceptScheme .
+<http://id.loc.gov/authorities/childrensSubjects> a skos:ConceptScheme .
+<http://id.loc.gov/authorities/genreForms> a skos:ConceptScheme .
+<http://id.loc.gov/vocabulary/graphicMaterials> a skos:ConceptScheme .
+
+<http://id.loc.gov/authorities/classification> a skos:ConceptScheme .
+
+<http://dewey.info/scheme/ddc/> a skos:ConceptScheme .
+
+# agrovoc
+# MeSH
 

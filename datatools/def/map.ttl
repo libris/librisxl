@@ -11,6 +11,7 @@
 @prefix sdo: <http://schema.org/> .
 @prefix : <http://libris.kb.se/def/map#> .
 
+
 : a owl:Ontology;
     rdfs:comment "This vocabulary serves as a central mapping to public, well-known properties and classes."@en;
     owl:imports dc:, skos:, foaf:, bibo:, rdael:, sdo:, bf: .
@@ -35,6 +36,9 @@
     owl:inverseOf skos:member;
     rdfs:domain skos:Concept;
     rdfs:range skos:Collection .
+
+# rdfs:Datatype for variable DateTime expressions.
+# See also: <http://id.loc.gov/datatypes/edtf.html>
 
 
 :publisher owl:equivalentProperty dc:publisher, bf:publisher .
@@ -89,7 +93,7 @@
 :Holding a owl:Class;
     rdfs:label "Bestånd"@sv;
     owl:equivalentClass bf:Holding;
-    rdfs:subClassOf bf:Offer .
+    rdfs:subClassOf bf:Offer, sdo:Offer .
 
 :callno rdfs:subPropertyOf :genre, bf:callno, sdo:sku;
     rdfs:range :Holding .
