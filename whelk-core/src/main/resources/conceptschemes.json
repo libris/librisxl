@@ -2,11 +2,12 @@
   "sao": {"notation": "sao", "label": "Svenska ämnesord"},
   "saogf": {"notation": "saogf", "label": "SAO - Genre och form"},
   "barn": {"notation": "barn", "label": "Barnämnesord"},
+  "sgp": {"@type": "Collection", "notation": "sgp", "label": "Svenska genrebeteckningar för periodika", "homepage": "http://www.kb.se/katalogisering/Svenska-amnesord/genrer-form/tesaurus/"},
+  "gmgpc//swe": {"notation": "gmgpc//swe", "label": "GMGPC (swe)", "comment": "Thesaurus för grafiskt material (TGM)", "homepage": "http://www.kb.se/katalogisering/Svenska-amnesord/genrer-form/tesaurus/"},
   "lcsh": {"notation": "lcsh", "label": "LCSH"},
   "kao": {"notation": "kao", "label": "Kvinnsam"},
   "mesh": {"notation": "mesh", "label": "MeSH"},
   "agrovoc": {"notation": "agrovoc", "label": "AgroVoc"},
   "sfit": {"notation": "sfit", "label": "SFIT"},
-  "prvt": {"notation": "prvt", "label": "PRVT"},
-  "gmgpc//swe": {"notation": "gmgpc//swe", "label": "GMGPC (swe)"}
+  "prvt": {"notation": "prvt", "label": "PRVT"}
 }
