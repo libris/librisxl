@@ -26,7 +26,7 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
 
         for (link in doc.links) {
             if (link.type == "auth") {
-                def authDoc = whelk.get(link.identifier)
+                def authDoc = whelk.get(new URI(link.identifier))
                 if (authDoc) {
                     authDataJson = mapper.readValue(authDoc.dataAsString, Map)
                     switch (authDataJson["about"]["@type"] as String) {

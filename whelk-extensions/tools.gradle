@@ -3,7 +3,7 @@
  */
 
 
-task whelkOperation(dependsOn: 'devLogging', type: JavaExec) {
+task whelkOperation(dependsOn: 'prodLogging', type: JavaExec) {
   description "Run import or reindex. (USAGE: -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)] [maxNoOfDocs (for import)]' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
   classpath = sourceSets.main.runtimeClasspath
   workingDir = ".."
@@ -19,6 +19,7 @@ task whelkOperation(dependsOn: 'devLogging', type: JavaExec) {
   systemProperty 'file.encoding', "UTF-8"
   systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', 'file:etc/whelkoperations.json')
   systemProperty 'whelk.disable', System.getProperty('whelk.disable', null)
+  systemProperty 'picky', System.getProperty('picky', 'false')
   args(System.getProperty('args', "").split() as String[])
 }
 

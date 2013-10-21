@@ -115,6 +115,23 @@ class Document {
         this.data = data
         return this
     }
+    Document withEntry(Map entrydata) {
+        if (entrydata?.get("identifier", null)) {
+            this.identifier = entrydata["identifier"]
+            entrydata.remove("identifier")
+        }
+        if (entrydata) {
+            this.entry.putAll(entrydata)
+        }
+        return this
+    }
+    Document withMeta(Map metadata) {
+        if (metadata) {
+            log.info("metadata: $metadata")
+            this.meta = metadata
+        }
+        return this
+    }
 
     Document withLink(String identifier) {
         if (!meta["links"]) {

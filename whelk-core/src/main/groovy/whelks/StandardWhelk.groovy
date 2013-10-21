@@ -168,17 +168,19 @@ class StandardWhelk implements Whelk {
 
     @Override
     @groovy.transform.CompileStatic
-    Document createDocument(byte[] data, Map metadata, boolean convert=true) { return createDocument(new String(data), metadata, convert) }
+    Document createDocument(byte[] data, Map entrydata, Map<String,Object> metadata=null, boolean convert=true) { return createDocument(new String(data), entrydata, metadata, convert) }
     @groovy.transform.CompileStatic
-    Document createDocument(String data, Map<String,Object> metadata, boolean convert=true) {
+    Document createDocument(String data, Map<String,Object> entrydata, Map<String,Object> metadata=null, boolean convert=true) {
         log.debug("Creating document")
-        Document doc = new Document().withData(data)
+        Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
+        /*
         metadata.each { param, value ->
             if (value) {
                 doc.metaClass.pickMethod("set${((String)param).capitalize()}",
                     value.getClass()).doMethodInvoke(doc, value)
             }
         }
+        */
         log.trace("Creation complete for ${doc.identifier} (${doc.contentType})")
         if (convert) {
             log.trace("Executing storage format conversion.")
