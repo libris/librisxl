@@ -18,28 +18,23 @@ import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 
 
-@Target(value = ElementType.FIELD)
-@Retention(value = RetentionPolicy.RUNTIME)
-@interface IsMetadata {}
 
 @Log
-public class Document extends Resource {
-    @IsMetadata
-    String version = "1"
-    @IsMetadata
-    Set<Link> links = new HashSet<Link>()
-    @IsMetadata
-    Set<Tag> tags = new HashSet<Tag>()
-    //@IsMetadata
-    Set<Description> descriptions = new TreeSet<Description>()
-    @IsMetadata
-    long timestamp = 0
+class Document {
+    String identifier
+    byte[] data
+    Map entry // For "technical" metadata about the record, such as contentType, etc.
+    Map meta  // For extra metadata about the object, e.g. links and such.
 
     @JsonIgnore
-    ObjectMapper mapper = new ElasticJsonMapper()
+    ObjectMapper mapper = new ObjectMapper()
 
+    /*
+     * Constructors
+     */
     Document() {
-        this.timestamp = new Long(new Date().getTime())
+        entry = ["timestamp":new Date().getTime()]
+        meta = [:]
     }
 
     Document(String jsonString) {
@@ -50,44 +45,15 @@ public class Document extends Resource {
         fromJson(jsonFile)
     }
 
-    Document(Document d) {
-        copy(d)
+    /*
+     * Get methods
+     */
+    String getDataAsString() {
+        return new String(this.data)
     }
 
-    Document fromJson(File jsonFile) {
-        try {
-            Document newDoc = mapper.readValue(jsonFile, Document)
-            copy(newDoc)
-        } catch (JsonParseException jpe) {
-            throw new DocumentException(jpe)
-        }
-        return this
-    }
-
-    Document fromJson(String jsonString) {
-        try {
-            Document newDoc = mapper.readValue(jsonString, Document)
-            copy(newDoc)
-        } catch (JsonParseException jpe) {
-            throw new DocumentException(jpe)
-        }
-        return this
-    }
-
-    private void copy(Document d) {
-        // First copy superclass fields
-        copyFields(this.class.superclass, d)
-        // Then copy locally declared fields
-        copyFields(this.class, d)
-    }
-
-    private void copyFields(Class c, Document d) {
-        c.declaredFields.each {
-            if (!it.isSynthetic()
-                    && !(it.getModifiers() & java.lang.reflect.Modifier.TRANSIENT)) {
-                this.(it.name) = d.(it.name)
-            }
-        }
+    Map getDataAsMap() {
+        return mapper.readValue(this.data, Map)
     }
 
     String toJson() {
@@ -97,186 +63,91 @@ public class Document extends Resource {
     Map toMap() {
         return mapper.convertValue(this, Map)
     }
-
     byte[] getData(long offset, long length) {
         byte[] ret = new byte[(int)length]
         System.arraycopy(getData(), (int)offset, ret, 0, (int)length)
-
         return ret
     }
 
-    @JsonIgnore
-    Date getTimestampAsDate() {
-        return new Date(timestamp)
-    }
-
-    long getTimestamp() {
-        return (timestamp ? timestamp.longValue() : 0L)
-    }
-
-    Document updateTimestamp() {
-        timestamp = new Date().getTime()
-        return this
-    }
-
-    void setTimestamp(long _t) {
-        this.timestamp = _t
-    }
-
-    Document tag(String type, String value) {
-        return tag(new URI(type), value)
-    }
-
-    Document tag(URI type, String value) {
-        /*
-        synchronized (tags) {
-            for (Tag t: tags)
-            if (t.getType().equals(type) && t.getValue().equals(value))
-                return t
-        }
-        */
-        Tag tag = new Tag(type, value)
-
-        this.tags.add(tag)
-
-        return this
-    }
-
-    Document withSize(long size) {
-        this.size = size
-        return this
-    }
-
-    @JsonIgnore
-    @Deprecated
-    Map getDataAsJson() {
-        return mapper.readValue(data, Map)
-    }
-
-    @JsonIgnore
-    InputStream getDataAsStream() {
-        return new ByteArrayInputStream(getData())
-    }
-
-    @JsonIgnore
     String getMetadataAsJson() {
-        def elements = []
-        def fields = this.class.declaredFields.findAll {
-            !it.synthetic &&
-            it.getModifiers() != java.lang.reflect.Modifier.TRANSIENT &&
-            it.getAnnotation(IsMetadata.class) != null
-        }
-        fields.addAll(this.class.superclass.declaredFields.findAll {
-            !it.synthetic &&
-            it.getModifiers() != java.lang.reflect.Modifier.TRANSIENT &&
-            it.getAnnotation(IsMetadata.class) != null
-        })
-        for (field in fields) {
-            field.setAccessible(true)
-            if (Set.class.isAssignableFrom(field.type)) {
-                def l = field.get(this).collect {
-                    it.toJson()
-                }
-                elements.add("\"${field.name}\":[" + l.join(",")+"]")
-            } else {
-                String value = field.get(this)?.toString()
-                if (value) {
-                    try {
-                        elements.add("\"${field.name}\":"+field.getLong(this))
-                    } catch (Exception e) {
-                        elements.add("\"${field.name}\":\""+value+"\"")
-                    }
-                }
-            }
-        }
-        return "{"+elements.join(",")+"}"
+        return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "entry":entry])
     }
 
     /*
-    @JsonIgnore
-    String getMetadataJson() {
-        def mapper = new ObjectMapper()
-        def out = this.class.declaredFields.findAll {
-            !it.synthetic &&
-            it.getModifiers() != java.lang.reflect.Modifier.TRANSIENT &&
-            it.getAnnotation(IsMetadata.class) != null
-        }.collectEntries { v ->
-            log.trace("v.type " + v.type)
-            if (v.type == "interface java.util.Set") {
-                [(v.name) : getObjectAsJson(this[v.name])]
-            } else {
-                [(v.name) : this[v.name]]
-            }
-        }
-        log.trace("Constructed metadatajson: $out")
-        return mapper.writeValueAsString(out)
-    }
-    */
-
-    String getObjectAsJson(def obj) {
-        def map = mapper.convertValue(obj, Map)
-        return mapper.writeValueAsString(map)
-    }
-
-    @JsonIgnore
-    InputStream getDataAsStream(long offset, long length) {
-        return new ByteArrayInputStream(this.data, (int)offset, (int)length)
-    }
-
-    void untag(URI type, String value) {
-        synchronized (tags) {
-            Set<Tag> remove = new HashSet<Tag>()
-
-            for (Tag t: tags)
-            if (t.getType().equals(type) && t.getValue().equals(value))
-                remove.add(t)
-
-            tags.removeAll(remove)
-        }
-    }
-
-    Document withLink(Link link) {
-        links << link
+     * Convenience methods
+     */
+    Document withIdentifier(String i) {
+        this.identifier = i
         return this
     }
+    Document withIdentifier(URI uri) {
+        return withIdentifier(uri.toString())
+    }
+
+    String getContentType() { entry["contentType"] }
+
+    Document withContentType(String ctype) {
+        setContentType(ctype)
+        return this
+    }
+
+    void setContentType(String ctype) {
+        this.entry["contentType"] = ctype
+    }
+
+    long getTimestamp() {
+        entry.get("timestamp", 0L)
+    }
+
+    void setTimestamp(long ts) {
+        this.entry["timestamp"] = ts
+    }
+
+    List getLinks() {
+        return meta.get("links", [])
+    }
+
+    Document withData(String dataString) {
+        return withData(dataString.getBytes("UTF-8"))
+    }
+
+    Document withData(byte[] data) {
+        this.data = data
+        return this
+    }
+
     Document withLink(String identifier) {
-        links << new Link(new URI(identifier))
-        return this
-    }
-
-    Document withLink(URI identifier) {
-        links << new Link(identifier)
-        return this
-    }
-
-    Document withLink(URI identifier, String type) {
-        links << new Link(identifier, type)
+        if (!meta["links"]) {
+            meta["links"] = []
+        }
+        def link = ["identifier":identifier,"type":""]
+        meta["links"] << link
         return this
     }
 
     Document withLink(String identifier, String type) {
-        links << new Link(new URI(identifier), type)
+        if (!meta["links"]) {
+            meta["links"] = []
+        }
+        def link = ["identifier":identifier,"type":type]
+        meta["links"] << link
         return this
     }
 
-    /*
-     * Methods to assist with static typing.
+    /**
+     * Takes either a String or a File as argument.
      */
-    Document withData(byte[] data) {
-        return (Document)super.withData(data)
-    }
-
-    Document withData(String data) {
-        return (Document)super.withData(data)
-    }
-
-    Document withLinkInData(Link link) {
-        def dataAsMap = getDataAsMap()
-        if (link.getType().equals("creator")) {
-            dataAsMap["about"]["instanceOf"]["creator"]["@link"] = link.URI.toString()
-        }  else if (link.getType().equals("subject")) {
-            dataAsMap["about"]["instanceOf"]["subject"]["@link"] = link.URI.toString()
+    Document fromJson(json) {
+        try {
+            Document newDoc = mapper.readValue(json, Document)
+            this.identifier = newDoc.identifier
+            this.data = newDoc.data
+            this.entry = newDoc.entry
+            this.meta = newDoc.meta
+        } catch (JsonParseException jpe) {
+            throw new DocumentException(jpe)
         }
-        return (Document)super.withData(mapper.writeValueAsString(dataAsMap))
+        return this
     }
+
 }

@@ -44,12 +44,10 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     @Override
     Document doConvert(Document doc) {
-        def source = doc.dataAsJson
+        def source = doc.dataAsMap
         def result = createFrame(source)
         log.trace("Created frame: $result")
-        return new Document(doc)
-            .withData(mapper.writeValueAsBytes(result))
-            .withContentType("application/ld+json")
+        return doc.withData(mapper.writeValueAsBytes(result)).withContentType("application/ld+json")
     }
 
     public static void main(String[] args) {

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-datadir=$(dirname $0)/../../whelk-extensions/src/test/resources/marc2jsonld
+datadir=$(dirname $0)/../whelk-extensions/src/test/resources/marc2jsonld
 use_expected=$1
 
 for d in $datadir/in/*; do

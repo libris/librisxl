@@ -102,7 +102,7 @@ class StandardWhelk implements Whelk {
         if (!d.identifier) {
             d.identifier = mintIdentifier(d)
         }
-        d.updateTimestamp()
+        d.timestamp = new Date().getTime()
         return d
     }
 
@@ -188,7 +188,7 @@ class StandardWhelk implements Whelk {
         if (doc) {
             for (lf in linkFinders) {
                 for (link in lf.findLinks(doc)) {
-                    doc = doc.withLink(link)
+                    doc = doc.withLink(link.identifier.toString(), link.type)
                 }
             }
         }

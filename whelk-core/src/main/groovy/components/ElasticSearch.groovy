@@ -306,7 +306,7 @@ abstract class ElasticSearch extends BasicPlugin {
         if (!idxType) {
             idxType = defaultIndexType
         }
-        log.debug("Using type $idxType for document ${doc.identifier}")
+        log.trace("Using type $idxType for document ${doc.identifier}")
         return idxType
     }
 
