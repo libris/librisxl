@@ -9,7 +9,7 @@
 @prefix rdael: <http://rdvocab.info/Elements/> .
 @prefix bf: <http://bibframe.org/vocab/> .
 @prefix sdo: <http://schema.org/> .
-@prefix : <http://libris.kb.se/def/map#> .
+@prefix : <http://libris.kb.se/def/terms#> .
 
 
 : a owl:Ontology;
