@@ -135,10 +135,12 @@ class RootRouteRestlet extends BasicWhelkAPI {
     void doHandle(Request request, Response response) {
         def discoveryAPI
         def documentAPI
+        //GET redirects to DiscoveryAPI
         if (request.method == Method.GET) {
             discoveryAPI = new DiscoveryAPI(this.whelk)
             def uri = new URI(discoveryAPI.path)
             discoveryAPI.handle(request, response)
+          //POST saves new document
         } else if (request.method == Method.POST) {
             try {
                 def identifier
@@ -157,7 +159,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
                 response.entity.setTag(new Tag(doc.timestamp as String, false))
                 log.debug("Saved document $identifier")
                 response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                log.info("Redirecting with location ref " + request.getRootRef().toString() + identifier)
+                log.debug("Redirecting with location ref " + request.getRootRef().toString() + identifier)
                 response.setLocationRef(request.getRootRef().toString() + "${identifier}")
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
@@ -355,20 +357,23 @@ class SearchRestlet extends BasicWhelkAPI {
         this.config = indexTypeConfig
     }
 
-    /*Query expandQuery(Query q) {
-        def newQuery = []
-        for (queryitem in q.query.split()) {
-            if (queryitems.contains(":")) {
-                def ()
-            }
+    String splitQuery(String query) {
+        def queryItems = []
+        for (queryItem in query.split(/[\s-_]/)) {
+             if (queryItem.length() > 1 && queryItem[-1] != " " && queryItem[-1] != "*" && !queryItem.contains(":")) {
+                 queryItems << queryItem + "*"
+             } else {
+                 queryItems << queryItem
+             }
         }
-    } */
+        return queryItems.join(" ")
+    }
 
     @Override
     void doHandle(Request request, Response response) {
         long startTime = System.currentTimeMillis()
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def indexType
+        def indexType, results
         try {
             indexType = request.attributes.indexType
         } catch(Exception e) {
@@ -376,10 +381,14 @@ class SearchRestlet extends BasicWhelkAPI {
         }
         log.debug("Handling search request with indextype $indexType")
         def indexConfig = config.indexTypes[indexType]
-        def elasticQuery, results
         def boost = queryMap.boost?.split() ?: indexConfig?.defaultBoost?.split(",")
         def facets = queryMap.facets?.split() ?: indexConfig?.queryFacets?.split(",")
-        elasticQuery = new ElasticQuery(queryMap)
+        /*if (indexConfig?.containsKey("queryStringTokenizerMethod") && indexConfig.queryStringTokenizerMethod.size() > 0) {
+            Method tokenizerMethod = queryStringTokenizer = this.class.getDeclaredMethod(indexConfig.queryStringTokenizerMethod)
+            queryMap.q = tokenizerMethod?.invoke(this, queryMap.q) ?: queryMap.q
+        } */
+        queryMap.q = splitQuery(queryMap.q)
+        def elasticQuery = new ElasticQuery(queryMap)
         elasticQuery.indexType = indexType
         if (facets) {
             for (f in facets) {
@@ -400,7 +409,7 @@ class SearchRestlet extends BasicWhelkAPI {
         }
         elasticQuery.highlights = indexConfig?.get("queryFields")
         elasticQuery.sorting = indexConfig?.get("sortby")
-        log.debug("Query $elasticQuery.query Fields: $elasticQuery.fields Facets: $elasticQuery.facets")
+        log.debug("Query $elasticQuery.query Fields: ${elasticQuery?.get("fields")} Facets: ${elasticQuery?.get("facets")}")
         try {
             def callback = queryMap.get("callback")
             results = this.whelk.search(elasticQuery)
@@ -566,7 +575,7 @@ class AutoComplete extends BasicWhelkAPI {
         def np = []
         for (n in name.split(/[\s-_]/)) {
             n = n.replaceAll(/\W$+^\*/, "")
-            if (n[-1] != ' ' && n[-1] != '*' && n.length() > 1) {
+            if (n.length() > 1 && n[-1] != ' ' && n[-1] != '*') {
                 np << n+"*"
             } else if (n) {
                 np << n
