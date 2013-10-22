@@ -377,8 +377,8 @@ class SearchRestlet extends BasicWhelkAPI {
         log.debug("Handling search request with indextype $indexType")
         def indexConfig = config.indexTypes[indexType]
         def elasticQuery, results
-        def boost = queryMap.boost?.split() ?: indexConfig.defaultBoost?.split(",")
-        def facets = queryMap.facets?.split() ?: indexConfig.queryFacets?.split(",")
+        def boost = queryMap.boost?.split() ?: indexConfig?.defaultBoost?.split(",")
+        def facets = queryMap.facets?.split() ?: indexConfig?.queryFacets?.split(",")
         elasticQuery = new ElasticQuery(queryMap)
         elasticQuery.indexType = indexType
         if (facets) {
@@ -394,17 +394,17 @@ class SearchRestlet extends BasicWhelkAPI {
                 }
             }
         }
-        def fields = indexConfig.get("queryFields")
+        def fields = indexConfig?.get("queryFields")
         if (fields && fields.size() > 0) {
             elasticQuery.fields = fields
         }
-        elasticQuery.highlights = indexConfig.get("queryFields")
-        elasticQuery.sorting = indexConfig.get("sortby")
+        elasticQuery.highlights = indexConfig?.get("queryFields")
+        elasticQuery.sorting = indexConfig?.get("sortby")
         log.debug("Query $elasticQuery.query Fields: $elasticQuery.fields Facets: $elasticQuery.facets")
         try {
             def callback = queryMap.get("callback")
             results = this.whelk.search(elasticQuery)
-            def keyList = queryMap.resultFields?.split() as List ?: indexConfig.get("resultFields")
+            def keyList = queryMap.resultFields?.split() as List ?: indexConfig?.get("resultFields")
             def extractedResults = keyList ? results.toJson(keyList) : results.toJson()
             def jsonResult =
                     (callback ? callback + "(" : "") +
