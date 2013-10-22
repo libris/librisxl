@@ -349,7 +349,11 @@ abstract class ElasticSearch extends BasicPlugin {
                                     }
                                 }
                             }
-                            fails << translateIndexIdTo(re.id)
+                            try {
+                                fails << translateIndexIdTo(re.id)
+                            } catch (Exception e) {
+                                fails << "Failed translation for \"$re\""
+                            }
                         }
                     }
                     throw new WhelkAddException(fails)
