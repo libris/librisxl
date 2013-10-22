@@ -8,19 +8,14 @@
                     "flatstorage",
                     "search",
                     "sparqlapi",
-                    "kitinsearch",
                     "remotesearch",
-                    "metasearch",
                     "documentapi",
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
                     "linkenhancer",
                     "jsonldlinkfinder",
-                    "namecomplete",
-                    "nameexpander",
-                    "subjcomplete",
-                    "fieldsearch"
+                    "nameexpander"
                     ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
@@ -37,11 +32,6 @@
         {
             "remotesearch": {
                 "_class": "se.kb.libris.whelks.api.RemoteSearchRestlet"
-            }
-        },
-        {
-            "metasearch": {
-                "_class": "se.kb.libris.whelks.api.MetadataSearchRestlet"
             }
         },
         {
@@ -131,12 +121,6 @@
             }
         },
         {
-            "cleanupconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter",
-                "_priority" : 0
-            }
-        },
-        {
             "entityextractor" : {
                 "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter",
                 "_priority" : 2
@@ -145,7 +129,60 @@
         {
             "search" : {
                 "_class" : "se.kb.libris.whelks.api.SearchRestlet",
-                "_params" : {"boost" : "labels.title:2"}
+                "_params" : {
+                    "indexTypes" : {
+                        "bib" : {
+                            "queryFields" : [],
+                            "infoFields" : [],
+                            "defaultBoost" : "about.title:5,about.identifier:5,about.instanceOf.contributorList.authoritativeName:5,about.instanceOf.subject.authoritativeName:2,about.publication.name:2",
+                            "sortby": {},
+                            "queryFacets" : "about.@type",
+                            "resultFields" : [
+                                    "about.@type",
+                                    "about.title",
+                                    "about.responsibilityStatement",
+                                    "about.publication",
+                                    "about.identifier",
+                                    "about.instanceOf.creator",
+                                    "about.instanceOf.contributorList"
+                            ]
+                        },
+                        "auth": {
+                            "queryFields": [],
+                            "infoFields": [],
+                            "defaultBoost": "",
+                            "sortby": {}
+                        },
+                        "person" : {
+                            "queryFields":[
+                                "controlledLabel",
+                                "label"
+                            ],
+                            "infoFields":[
+                                "birthYear",
+                                "deathYear",
+                                "authorOf",
+                                "hasAnnotation.about"
+                            ],
+                            "defaultBoost" : "controlledLabel:5",
+                            "sortby": {
+                                "recordPriority" : "asc",
+                                "_score" : "desc",
+                                "controlledLabel" : "asc"
+                            }
+                        },
+                        "concept" : {
+                            "queryFields":[],
+                            "infoFields": [],
+                            "defaultBoost": "prefLabel:5",
+                            "sortby": {
+                                "recordPriority" : "asc",
+                                "_score" : "desc",
+                                "prefLabel" : "asc"
+                            }
+                        }
+                    }
+                }
             }
         },
         {
@@ -159,63 +196,10 @@
             }
         },
         {
-            "kitinsearch" : {
-                "_class" : "se.kb.libris.whelks.api.KitinSearchRestlet2"
-            }
-        },
-        {
-            "fieldsearch" : {
-                "_class" : "se.kb.libris.whelks.api.FieldSearchRestlet"
-            }
-        },
-        {
-            "namecomplete" : {
-                "_class" : "se.kb.libris.whelks.api.AutoComplete",
-                "_params" : {"queryFields":[
-                              "controlledLabel",
-                              "label"
-                            ],
-                            "infoFields":[
-                              "birthYear",
-                              "deathYear",
-                              "authorOf",
-                              "hasAnnotation.about"
-                            ],
-                            "sortby": {
-                                "recordPriority" : "asc",
-                                "_score" : "desc",
-                                "familyName" : "asc"
-                            },
-                            "indexTypes": "person",
-                            "queryType": "name"
-                            }
-            }
-        },
-        {
-            "subjcomplete" : {
-                "_class" : "se.kb.libris.whelks.api.AutoComplete",
-                "_params" : {"queryFields":[
-                              "prefLabel"
-                            ],
-                            "infoFields":[
-                            ],
-                            "indexTypes": "concept",
-                            "pathEnd": "_subjcomplete",
-                            "queryType": "concept"
-                            }
-            }
-        },
-        {
             "nameexpander" : {
                 "_class" : "se.kb.libris.whelks.api.CompleteExpander"
             }
         },
-        {
-            "suggestformatconverter" : {
-                "_class" : "se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter",
-                "_params" : "_whelk:libris"
-            }
-        }, 
         {
             "biblistener" : {
                 "_class" : "se.kb.libris.whelks.plugin.Listener",
@@ -231,11 +215,6 @@
         {
             "jsonldlinkfinder" : {
                 "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkFinder"
-            }
-        },
-        {
-            "indexbasedenhancer" : {
-                "_class" : "se.kb.libris.whelks.plugin.JsonLDIndexBasedEnhancerFormatConverter"
             }
         },
         {

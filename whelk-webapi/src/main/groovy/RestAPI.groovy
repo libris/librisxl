@@ -312,50 +312,7 @@ class SparqlRestlet extends BasicWhelkAPI {
     }
 }
 
-@Log
 @Deprecated
-class SearchRestlet extends BasicWhelkAPI {
-
-    def pathEnd = "_find"
-    //String path = "/{identifier}/_find"
-    def varPath = false
-    def defaultQueryParams = [:]
-    String id = "SearchAPI"
-
-    String description = "Generic search API, accepts both GET and POST requests. Accepts parameters compatible with the Query object. (Simple usage: ?q=searchterm)"
-
-
-
-    SearchRestlet(Map queryParams) {
-        this.defaultQueryParams = queryParams
-    }
-
-    @Override
-    void doHandle(Request request, Response response) {
-        log.debug "SearchRestlet on ${whelk.id} with path $path"
-
-        def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        try {
-            this.defaultQueryParams.each { key, value ->
-                if (!reqMap[key]) {
-                    reqMap[key] = value
-                }
-            }
-            log.debug("reqMap: $reqMap")
-            def query = new ElasticQuery(reqMap)
-            def callback = reqMap.get("callback")
-            def results = this.whelk.search(query)
-            def jsonResult =
-            (callback ? callback + "(" : "") +
-            results.toJson() +
-            (callback ? ");" : "")
-
-            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
-        } catch (WhelkRuntimeException wrte) {
-            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wrte.message)
-        }
-    }
-}
 @Log
 class FieldSearchRestlet extends BasicWhelkAPI {
     def pathEnd = "_fieldsearch/{indexType}"
@@ -367,7 +324,6 @@ class FieldSearchRestlet extends BasicWhelkAPI {
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def callback = reqMap.get("callback")
         def q = reqMap["q"]
-        def remainingMap
         def indexType = request.attributes.get("indexType")
 
         if (!indexType) {
@@ -388,131 +344,80 @@ class FieldSearchRestlet extends BasicWhelkAPI {
 }
 
 @Log
-class KitinSearchRestlet2 extends BasicWhelkAPI {
-    def pathEnd = "kitin/{indexType}/_search"
+class SearchRestlet extends BasicWhelkAPI {
+    def pathEnd = "{indexType}/_search"
     def varPath = false
-    String id = "KitinSearch"
+    String id = "Search"
+    String description = "Generic search query API. User parameters \"q\" for querystring, and optionally \"facets\" and \"boost\"."
+    def config
 
-    //TODO: Generellt api, flytta ut defaultboost, keys, queryfacets till configureringar
-
-    String description = "Query API with preconfigured parameters for Kitin."
-
-    //String defaultBoost = "labels.title:2,labels.author:2,labels.isbn:2"
-    String defaultBoost = "about.instanceOf.title:5,about.isbn:5,about.instanceOf.authorList.authoritativeName:5,about.instanceOf.subject.authoritativeName:2,about.publisher.name:2"
-    //defaultBoost = "fields.020.subfields.a:5,fields.022.subfields.a:5,fields.100.subfields.a:5,fields.100.subfields.b:5,labels.title:3,fields.600.subfields.a:2,fields.600.subfields.b:2,fields.260.subfields.c:2,fields.008.subfields.yearTime1:2"
-
-    def queryFacets = [
-        "custom.bookSerial": [
-            //"ebook": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
-             "ebook": "about.marc:typeOfRecord.code:a about.instanceOf.marc:bibLevel.code:m fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
-             "audiobook": "leader.subfields.typeOfRecord:i leader.subfields.bibLevel:m fields.007.subfields.carrierType:s",
-             "eserial": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s fields.007.subfields.carrierType:c fields.007.subfields.computerMaterial:r",
-             "book": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:m !fields.007.subfields.carrierType:c",
-             "serial": "leader.subfields.typeOfRecord:a leader.subfields.bibLevel:s !fields.007.subfields.carrierType:c"
-        ]
-    ]
-
-    def keys = [
-                "bib" : [
-                    "about.@type",
-                    "about.title",
-                    "about.responsibilityStatement",
-                    "about.publication",
-                    "about.identifier",
-                    "about.instanceOf.creator",
-                    "about.instanceOf.contributorList"
-                ]
-    ]
-
-
-    Query addQueryFacets(Query q) {
-        for (facetgroup in queryFacets) {
-            facetgroup.value.each {fl, qv ->
-                q.addFacet(fl, qv, facetgroup.key)
-            }
-        }
-        return q
+    SearchRestlet(indexTypeConfig) {
+        this.config = indexTypeConfig
     }
 
-    /**
-     * Look for, and expand customFacets.
-     */
-    Query expandQuery(Query q) {
-        def newquery = []
+    /*Query expandQuery(Query q) {
+        def newQuery = []
         for (queryitem in q.query.split()) {
-            if (queryitem.contains(":")) {
-                def (group, key) = queryitem.split(":")
-                if (queryFacets[group]) {
-                    newquery << (queryFacets[group][key] ?: "")
-                } else {
-                    newquery << queryitem
-                }
-            } else {
-                newquery << queryitem
+            if (queryitems.contains(":")) {
+                def ()
             }
         }
-        q.query = newquery.join(" ")
-        return q
-    }
-
-    void doHandle(Request request, Response response) {}
+    } */
 
     @Override
-    void handle(Request request, Response response) {
+    void doHandle(Request request, Response response) {
         long startTime = System.currentTimeMillis()
-        def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def q, results
-        if (!reqMap["boost"]) {
-            reqMap["boost"] = defaultBoost
-        }
+        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def indexType
         try {
-            q = new ElasticQuery(reqMap)
-            q.indexType = request.attributes["indexType"]
-            if (reqMap["f"]) {
-                q.query = (q.query + " " + reqMap["f"]).trim()
+            indexType = request.attributes.indexType
+        } catch(Exception e) {
+            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, MediaType.TEXT_PLAIN)
+        }
+        log.debug("Handling search request with indextype $indexType")
+        def indexConfig = config.indexTypes[indexType]
+        def elasticQuery, results
+        def boost = queryMap.boost?.split() ?: indexConfig?.defaultBoost?.split(",")
+        def facets = queryMap.facets?.split() ?: indexConfig?.queryFacets?.split(",")
+        elasticQuery = new ElasticQuery(queryMap)
+        elasticQuery.indexType = indexType
+        if (facets) {
+            for (f in facets) {
+                elasticQuery.addFacet(f)
             }
-            def callback = reqMap.get("callback")
-            if (q) {
-                q.addFacet("about.@type")
-                log.debug("Query $q.query Fields: $q.fields Facets: $q.facets")
-                //q.addScriptFieldFacet("about.dateOfPublication")
-                //q.addFacet("about.dateOfPublication")
-                /*
-                q.addFacet("typeOfRecord")
-                q.addFacet("bibLevel")
-                 */
-                //q = addQueryFacets(q)
-                q = expandQuery(q)
-                results = this.whelk.search(q)
-                def keyList
-                if (keys.containsKey(q.indexType)) {
-                    keyList = keys[q.indexType]
+        }
+        if (boost) {
+            for (b in boost) {
+                if (b.size() > 0) {
+                    def (k, v) = b.split(":")
+                    elasticQuery.addBoost(k, Long.parseLong(v))
                 }
-                if (reqMap["_keys"]) {
-                    keyList = reqMap["_keys"].split(":") as List
-                }
-                def extractedResults
-                if (keyList) {
-                    extractedResults = results.toJson(keyList)
-                } else {
-                    extractedResults = results.toJson()
-                }
-
-                def jsonResult =
-                (callback ? callback + "(" : "") +
-                    extractedResults +
-                (callback ? ");" : "")
-
-                response.setEntity(jsonResult,  MediaType.APPLICATION_JSON)
-            } else {
-                response.setEntity("Missing q parameter",  MediaType.TEXT_PLAIN)
             }
+        }
+        def fields = indexConfig?.get("queryFields")
+        if (fields && fields.size() > 0) {
+            elasticQuery.fields = fields
+        }
+        elasticQuery.highlights = indexConfig?.get("queryFields")
+        elasticQuery.sorting = indexConfig?.get("sortby")
+        log.debug("Query $elasticQuery.query Fields: $elasticQuery.fields Facets: $elasticQuery.facets")
+        try {
+            def callback = queryMap.get("callback")
+            results = this.whelk.search(elasticQuery)
+            def keyList = queryMap.resultFields?.split() as List ?: indexConfig?.get("resultFields")
+            def extractedResults = keyList ? results.toJson(keyList) : results.toJson()
+            def jsonResult =
+                    (callback ? callback + "(" : "") +
+                        extractedResults +
+                    (callback ? ");" : "")
+
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
         } finally {
             def headers = request.attributes.get("org.restlet.http.headers")
             def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value ?: request.clientInfo.address
-            log.info("Query [" + q?.query + "] completed for $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds and resulted in " + results?.numberOfHits + " hits.")
+            log.info("Query [" + elasticQuery?.query + "] completed for $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds and resulted in " + results?.numberOfHits + " hits.")
         }
     }
 }
@@ -622,8 +527,8 @@ class CompleteExpander extends BasicWhelkAPI {
     }
 }
 
-@Log
 @Deprecated
+@Log
 class AutoComplete extends BasicWhelkAPI {
 
     def pathEnd = "_complete"
@@ -728,71 +633,13 @@ class SuggestResultsConverter {
                 doc["authorized"] = true
             }
             list << doc
-            /*
-            if (it.identifier.toString().contains("/bib/")) {
-            list << doc
-            //list << mapBibRecord(it.identifier, doc)
-            }
-             */
         }
         out["hits"] = results.numberOfHits
         out["list"] = list
         return mapper.writeValueAsString(out)
     }
 
-    /*
-    def getDeepValue(Map map, String key) {
-    //log.trace("getDeepValue: map = $map, key = $key")
-    def keylist = key.split(/\./)
-    def lastkey = keylist[keylist.length-1]
-    def result
-    for (int i = 0; i < keylist.length; i++) {
-    def k = keylist[i]
-    while (map.containsKey(k)) {
-    if (k == lastkey) {
-    result = map.get(k)
-    map = [:]
-    } else {
-    if (map.get(k) instanceof Map) {
-    map = map.get(k)
-    } else {
-    result = []
-    for (item in map[k]) {
-    def dv = getDeepValue(item, keylist[i..-1].join("."))
-    if (dv) {
-    result << dv
-    }
-    }
-    map = [:]
-    }
-    }
-    }
-    }
-    if (!result && (lastkey == key)) {
-    result = findNestedValueForKey(map, key)
-    }
-    return ((result && result instanceof List && result.size() == 1) ? result[0] : result)
-    }
-
-    def findNestedValueForKey(Map map, String key) {
-    def result
-    map.each { k, v ->
-    if (k == key) {
-    result = v
-    } else if (!result && v instanceof Map) {
-    result = findNestedValueForKey(v, key)
-    } else if (!result && v instanceof List) {
-    v.each {
-    if (it instanceof Map) {
-    result = findNestedValueForKey(it, key)
-    }
-    }
-    }
-    }
-    return result
-    }
-     */
-
+    @Deprecated
     def mapAuthRecord(id, r) {
         def name = [:]
         name["identifier"] = id
@@ -815,6 +662,7 @@ class SuggestResultsConverter {
         return name
     }
 
+    @Deprecated
     def mapBibRecord(id, r) {
         def name = [:]
         name["identifier"] = id
@@ -890,16 +738,6 @@ class ResourceListRestlet extends BasicWhelkAPI {
     }
 }
 
-/*@Log
-class TemplateRestlet extends BasicWhelkAPI {
-def pathEnd = "_template"
-
-String description = "API for templates."
-String id = "TemplateAPI"
-
-String templateDir =
-}*/
-
 @Log
 class MarcMapRestlet extends BasicWhelkAPI {
     def pathEnd = "_marcmap"
@@ -933,6 +771,8 @@ class MarcMapRestlet extends BasicWhelkAPI {
     }
 }
 
+
+@Deprecated
 @Log
 class MetadataSearchRestlet extends BasicWhelkAPI {
     def pathEnd = "_metasearch"
