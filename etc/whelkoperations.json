@@ -5,7 +5,7 @@
                 "_class" : "se.kb.libris.whelks.StandardWhelk",
                 "_plugins": [
                     "localindex",
-                    "diskstorage",
+                    "flatstorage",
                     "isostorage",
                     "marcconverter",
                     "turtleconverter",
@@ -68,6 +68,16 @@
                 "_class" : "se.kb.libris.whelks.component.DiskStorage", 
                 "_params" : { 
                     "storageDir": "work/storage/jsonld",
+                    "contentType": "application/ld+json"
+                },
+                "_priority" : 1
+            }
+        },
+        {
+            "flatstorage": {
+                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
+                "_params" : { 
+                    "storageDir": "work/storage/main",
                     "contentType": "application/ld+json"
                 },
                 "_priority" : 1

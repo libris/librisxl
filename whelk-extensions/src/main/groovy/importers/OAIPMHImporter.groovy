@@ -5,12 +5,14 @@ import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
 
 import java.text.*
+import java.util.concurrent.*
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import se.kb.libris.conch.converter.MarcJSONConverter
+import se.kb.libris.conch.Tools
 
 @Log
 class OAIPMHImporter {
@@ -22,7 +24,13 @@ class OAIPMHImporter {
     long startTime = 0
     boolean picky = true
 
+    ExecutorService queue
+    File failedLog
+    File exceptionLog
+
     OAIPMHImporter(Whelk toWhelk, String fromResource) {
+        failedLog = new File("failed_ids.log")
+        exceptionLog = new File("exceptions.log")
         this.whelk = toWhelk
         this.resource = fromResource
     }
@@ -34,6 +42,7 @@ class OAIPMHImporter {
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
         }
+        queue = Executors.newSingleThreadExecutor()
         startTime = System.currentTimeMillis()
         log.info("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
         URL url = new URL(urlString)
@@ -44,14 +53,13 @@ class OAIPMHImporter {
             resumptionToken = harvest(url)
             log.debug("resumptionToken: $resumptionToken")
         }
+        queue.shutdown()
         return nrImported
     }
 
 
     String harvest(URL url) {
-        long loadStartTime = System.currentTimeMillis()
         def xmlString = normalizeString(url.text)
-        long meanTime = System.currentTimeMillis()
         def OAIPMH
         try {
             OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
@@ -68,36 +76,35 @@ class OAIPMHImporter {
                 String id = record.getControlfields("001").get(0).getData()
                 String jsonRec = MarcJSONConverter.toJSONString(record)
 
-                def links = new HashSet<Link>()
-                def tags = new HashSet<Tag>()
+                def links = []
+                //def tags = new HashSet<Map<String,Object>>()
                 if (it.header.setSpec) {
                     for (sS in it.header.setSpec) {
                         if (sS.toString().startsWith("authority:")) {
-                            def authURI = new URI("/auth/" + sS.toString().substring(10))
-                            links.add(new Link(authURI, "auth"))
+                            links.add(["identifier":new String("/auth/" + sS.toString().substring(10)), "type":"auth"])
                         }
+                        /* TODO: This should maybe be in holdings?
                         if (sS.toString().startsWith("location:")) {
-                            def locationURI = new URI("location")
-                            tags.add(new Tag(locationURI, sS.toString().substring(9)))
+                            tags.add(["location", sS.toString().substring(9)])
                         }
+                        */
                         if (sS.toString().startsWith("bibid:")) {
-                            def bibURI = new URI("/bib/" + sS.toString().substring(6))
-                            docs.add(new Link(bibURI, "bib"))
+                            links.add(["identifier":new String("/bib/" + sS.toString().substring(6)), "type":"bib"])
                         }
                     }
                 }
                 def doc
                 try {
-                    doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":"/"+this.resource+"/"+id,"contentType":"application/x-marc-json", "links": links, "tags": tags])
+                    doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":"/"+this.resource+"/"+id,"contentType":"application/x-marc-json"], ["links": links])
+                    documents << doc
+                    nrImported++
+                    Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar.", nrImported)
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord")
                     if (picky) {
                         throw e
                     }
                 }
-
-                documents << doc
-                nrImported++
             } else if (it.header.@deleted == 'true') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                 whelk.remove(new URI(deleteIdentifier))
@@ -106,17 +113,29 @@ class OAIPMHImporter {
                 throw new WhelkRuntimeException("Failed to handle record: " + createString(it))
             }
         }
-        long conversionTime = System.currentTimeMillis()
-        whelk.bulkAdd(documents)
+        //whelk.bulkAdd(documents)
+        addDocuments(documents)
         int sizeOfBatch = documents.size()
 
-        long storageTime = System.currentTimeMillis()
-        log.debug("Loaded sofar: $nrImported. Times (in milliseconds): [Load URL: " +(meanTime - loadStartTime)+ "] [Convert: "+(conversionTime - meanTime)+"] [Store: "+(storageTime - conversionTime)+"] Velocity: " + ((sizeOfBatch/((System.currentTimeMillis() - loadStartTime)/1000)) as int) + " docs/sec.")
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
             log.trace("Last page is $xmlString")
         }
         return OAIPMH.ListRecords.resumptionToken
+    }
+
+    void addDocuments(final List documents) {
+        queue.execute({
+            try {
+                this.whelk.bulkAdd(documents)
+            } catch (WhelkAddException wae) {
+                for (fi in wae.failedIdentifiers) {
+                    failedLog << "$fi\n"
+                }
+            } catch (Exception e) {
+                e.printStackTrace(new FileWriter(exceptionLog, true))
+            }
+        } as Runnable)
     }
 
     private void getAuthentication() {

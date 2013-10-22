@@ -14,7 +14,7 @@ class JsonLDLinkFinder extends BasicPlugin implements LinkFinder {
 
     @Override
     Set<Link> findLinks(Document doc) {
-        def links = collectIds(doc.dataAsJson, "", doc.identifier.toString())
+        def links = collectIds(doc.dataAsMap, "", doc.identifier)
         return links as Set
     }
 

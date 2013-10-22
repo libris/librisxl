@@ -4,12 +4,23 @@ import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.component.*
 
+import org.codehaus.jackson.*
+import org.codehaus.jackson.map.*
+import org.codehaus.jackson.annotate.JsonIgnore
+
 @Log
-class IndexDocument extends Resource {
+class IndexDocument extends Document {
+/*
+}
+
+@Log
+class OldIndexDocument extends Resource {
+*/
 
     Map<String, String[]> matches = new TreeMap<String, String[]>()
     String type
-    def mapper = new ElasticJsonMapper()
+
+    ObjectMapper mapper = new ElasticJsonMapper()
 
     IndexDocument() {}
     IndexDocument(Document d) {
