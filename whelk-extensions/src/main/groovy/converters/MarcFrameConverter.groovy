@@ -566,16 +566,23 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (uriTemplate) {
-            // TODO: need to run before linking resource above to work with multiply linked
-            if (entity['@id']) {
-                entity['sameAs'] = ['@id': entity['@id']] // TODO: unnecessary?
-            }
-
             uriTemplateDefaults.each { k, v ->
                 if (!uriTemplateParams.containsKey(k))
                     uriTemplateParams[k] = v
             }
-            entity['@id'] = uriTemplate.expand(uriTemplateParams)
+
+            // TODO: need to run before linking resource above to work properly
+            // for multiply linked entities.
+            def computedUri = uriTemplate.expand(uriTemplateParams)
+            def altUriRel = "sameAs"
+            if (definesDomainEntityType != null) {
+                entity[altUriRel] = ['@id': computedUri]
+            } else {
+                if (entity['@id']) {
+                    entity[altUriRel] = ['@id': entity['@id']] // TODO: ok as precaution?
+                }
+                entity['@id'] = computedUri
+            }
         }
 
         splitLinks.each {

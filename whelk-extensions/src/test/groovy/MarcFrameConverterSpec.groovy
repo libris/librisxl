@@ -141,8 +141,8 @@ class MarcFrameConverterSpec extends Specification {
             encLevel: "n",
             about: [
                 "@type": "Concept",
-                "@id": "/topic/sao/Barnpsykologi",
-                sameAs: ["@id": "/resource/auth/140482"],
+                "@id": "/resource/auth/140482",
+                sameAs: ["@id": "/topic/sao/Barnpsykologi"],
                 prefLabel: "Barnpsykologi",
                 broader: [
                     ["@type": "Concept",
