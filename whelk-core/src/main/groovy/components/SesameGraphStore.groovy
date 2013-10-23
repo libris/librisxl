@@ -31,7 +31,8 @@ class SesameGraphStore extends BasicPlugin implements GraphStore {
             log.debug("Store <${graphUri}> with content type '${doc.contentType}'")
             def bis = new ByteArrayInputStream(doc.data)
             def graphId = conn.valueFactory.createURI(graphUri.toString())
-            conn.add(bis, graphUri.toString(), RDFFormat.TURTLE, [graphId] as Resource[])
+            //conn.clear(graphId) // TODO: should do this, but it is too slow by default
+            conn.add(bis, graphUri.toString(), RDFFormat.TURTLE, graphId)
         } catch (Exception e) {
             log.error("Error in document ${graphUri} - data:\n${new String(doc.data, 'utf-8')}\n\n")
             throw e
