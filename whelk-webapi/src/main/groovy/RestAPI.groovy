@@ -248,7 +248,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 log.trace("headers: $headers")
                 def link = headers.find { it.name.equals("link") }?.value
                 doc = this.whelk.createDocument(request.entityAsText, ["identifier":path,"contentType":request.entity.mediaType.toString()])
-                rawdoc = this.whelk.createDocument(request.entityAsText, ["identifier":path,"contentType":request.entity.mediaType.toString()], null false)
+                rawdoc = this.whelk.createDocument(request.entityAsText, ["identifier":path,"contentType":request.entity.mediaType.toString()], null, false)
                 if (rawdoc?.contentType == doc?.contentType) {
                     // No need to doublestore document.
                     rawdoc = null
