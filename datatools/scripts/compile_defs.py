@@ -37,7 +37,7 @@ def languages():
         # TODO: separate codes for ISO 639-2 and ISO 639-1 (described in deref:ed data)
         #deref(lang_concept.identifier)
         code = lang_concept.value(SKOS.notation)
-        langobj = items[code] = {'@id': base + code, '@type': 'Concept', 'iso-639-2': code}
+        langobj = items[code] = {'@id': base + code, '@type': 'Concept', 'code': code}
         langobj['matches'] = lang_concept.identifier
         prefLabels = langobj['labelByLang'] = {}
         for label in lang_concept.objects(SKOS.prefLabel):
