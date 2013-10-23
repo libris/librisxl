@@ -626,7 +626,7 @@
       "domainEntity": null,
       "definesDomainEntity": "Concept",
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
-      "TODO:uriTemplateDefaults": "from-current:inScheme.notation",
+      "dependsOn": ["040", "042"],
       "$2": null,
       "$9": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
       "$0": null
