@@ -670,9 +670,26 @@
       "$z": {"property": "prefLabel"}
     },
 
-    "400": {"$a": {"addProperty": "altLabel"}},
-    "410" : {"inherit": "400"},
-    "411" : {"inherit": "400"},
+    "400": {
+      "inherit": "bib:100",
+      "match-code": {
+        "t": {
+          "$t": {"property": "uniformTitle"},
+          "splitLink": [
+            {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "Work"}
+          ],
+          "addLink": "creator"
+        }
+      },
+      "domainEntity": "Instance", "NOTE": "really Work - see 100",
+      "addLink": "hasVersion", "rangeEntity": "Person"
+    },
+    "410": {
+      "inherit": "bib:610", "addLink": "hasVersion"
+    },
+    "411": {
+      "inherit": "bib:611", "addLink": "hasVersion"
+    },
     "450" : {
       "$a": {"addProperty": "hiddenLabel"},
       "match-code": {
@@ -715,14 +732,14 @@
       "domainEntity": "Record",
       "$a": {"addProperty": "note"}
     },
-    "TODO:670" : {
-      "addLink": "source",
-      "$a": {"property": "name"},
-      "$b": {"property": "label"},
+    "670" : {
+      "addLink": "hasForm", "rangeEntity": "Instance",
+      "$a": {"property": "label"},
+      "$b": {"property": "comment"},
       "$u": {"property": "url"}
     },
-    "TODO:675" : {
-      "$a": {"property": "source"}
+    "675" : {
+      "$a": {"property": "label"}
     },
     "678" : {"$a": {"addProperty": "note"}},
     "680" : {

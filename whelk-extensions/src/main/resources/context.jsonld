@@ -72,6 +72,8 @@
     "Text": "LanguageMaterial",
     "Digital": "SoftwareOrMultimedia",
     "Book": "bibo:Book",
+    "hasForm": "dct:hasFormat",
+    "hasVersion": "dct:hasVersion",
     "formOf": "dct:isFormatOf",
     "versionOf": "dct:isVersionOf",
     "authorList": {"@id": "bibo:authorList", "@container": "@list"},
