@@ -172,6 +172,7 @@ class MarcConversion {
         }
         def baseDfn = (ref in subConf)? subConf[ref] : config[ref][refTag]
         if (baseDfn.inherit) {
+            subConf = (ref in config)? config[ref] : subConf
             baseDfn = processInherit(config, subConf, ref ?: refTag, baseDfn)
         }
         def merged = baseDfn + fieldDfn
@@ -402,7 +403,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             definesDomainEntityType = fieldDfn.definesDomainEntity
             domainEntityName = 'Instance'
         } else {
-            domainEntityName = fieldDfn.domainEntity ?: 'Instance'
+            if (fieldDfn.promoteToDomainEntity) {
+                definesDomainEntityType = fieldDfn.promoteToDomainEntity
+                domainEntityName = 'Instance'
+            } else {
+                domainEntityName = fieldDfn.domainEntity ?: 'Instance'
+            }
             if (fieldDfn.addLink) {
                 link = fieldDfn.addLink
                 repeatLink = true
@@ -456,7 +462,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
         if (splitLinkRules) {
-            assert rangeEntityName
+            assert rangeEntityName, "splitLinks requires rangeEntity in: ${fieldDfn}"
         }
     }
 

@@ -603,11 +603,12 @@
       "definesDomainEntity": "Person",
       "match-code": {
         "t v x y z": {
-          "TODO:spliceDomainEntity": "Work",
-          "definesDomainEntity": null
+          "definesDomainEntity": null,
+          "promoteToDomainEntity": "Work",
+          "NOTE": "due to this promote hack, Instance is now Work",
+          "$t": {"domainEntity": "Instance", "property": "uniformTitle"}
         }
-      },
-      "$t": {"domainEntity": "Work", "property": "uniformTitle"}
+      }
     },
     "110" : {
       "inherit": "bib",
