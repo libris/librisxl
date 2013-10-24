@@ -424,6 +424,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         splitLinkRules = fieldDfn.splitLink.collect {
             [codes: new HashSet(it.codes),
                 link: it.link ?: it.addLink,
+                spliceEntityName: it.spliceEntity,
                 repeatLink: 'addLink' in it]
         }
 
@@ -489,15 +490,23 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         // TODO: clear unused codeLinkSplits afterwards..
         def splitLinkDomain = entity
         def splitLinks = []
+        def spliceEntity = null
         if (splitLinkRules) {
             splitLinkRules.each { rule ->
-                def newEnt = ["@type": rangeEntityName]
+                def newEnt = null
+                if (rule.spliceEntityName) {
+                    newEnt = ["@type": rule.spliceEntityName]
+                    spliceEntity = newEnt
+                } else {
+                    newEnt = ["@type": rangeEntityName]
+                }
                 splitLinks << [rule: rule, entity: newEnt]
                 rule.codes.each {
                     codeLinkSplits[it] = newEnt
                 }
             }
-        } else if (rangeEntityName) {
+        }
+        if ((!splitLinks || spliceEntity) && rangeEntityName) {
             def useLinks = Collections.emptyList()
             if (computeLinks) {
                 def use = computeLinks.use
@@ -531,6 +540,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
             if (useLinks) {
                 repeatLink = true
+            }
+
+            if (spliceEntity) {
+                entity = spliceEntity
             }
 
             // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt

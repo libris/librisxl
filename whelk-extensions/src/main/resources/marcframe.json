@@ -287,7 +287,7 @@
     },
     "130": {
       "domainEntity": "Work",
-      "$a": {"property": "title"},
+      "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"}
     },
 
@@ -427,7 +427,19 @@
 
     "599": {"$a": {"domainEntity": "Record", "property": "comment"}},
 
-    "600": {"inherit": "100", "addLink": "subject", "rangeEntity": "Person"},
+    "600": {
+      "inherit": "100",
+      "match-code": {
+        "t": {
+          "$t": {"property": "uniformTitle"},
+          "splitLink": [
+            {"codes": ["t"], "addLink": "subject", "spliceEntity": "Work"}
+          ],
+          "addLink": "creator"
+        }
+      },
+      "addLink": "subject", "rangeEntity": "Person"
+    },
     "610": {"inherit": "110", "addLink": "subject", "rangeEntity": "Organization"},
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
     "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "Work"},
@@ -501,7 +513,7 @@
     "740": {
       "addLink": "relation",
       "rangeEntity": "Work",
-      "$a": {"property": "title"}
+      "$a": {"property": "uniformTitle"}
     },
 
     "785": {
@@ -591,11 +603,11 @@
       "definesDomainEntity": "Person",
       "match-code": {
         "t v x y z": {
-          "TODO-asPrimaryEntity": "Work",
+          "TODO:spliceDomainEntity": "Work",
           "definesDomainEntity": null
         }
       },
-      "$t": {"domainEntity": "Work", "property": "title"}
+      "$t": {"domainEntity": "Work", "property": "uniformTitle"}
     },
     "110" : {
       "inherit": "bib",
