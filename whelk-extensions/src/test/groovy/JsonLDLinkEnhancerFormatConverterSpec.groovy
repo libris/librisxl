@@ -8,7 +8,7 @@ import se.kb.libris.whelks.component.ElasticJsonMapper
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.Whelk
 import se.kb.libris.whelks.StandardWhelk
-import se.kb.libris.whelks.component.DiskStorage
+import se.kb.libris.whelks.component.FlatDiskStorage
 
 @Log
 class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
@@ -88,14 +88,16 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
         def doc = new Document()
                 .withIdentifier("http://libris.kb.se/bib/12661")
                 .withData(mapper.writeValueAsString(data))
-        doc.links = links
+        links.each {
+            doc.withLink(it.identifier.toString(), it.type)
+        }
         return doc
     }
 
     Whelk getInitializedWhelk() {
-          Map settings = ["storageDir": "../work/storage/jsonld", "contentType": "application/ld+json"]
+          Map settings = ["storageDir": "../work/storage/main", "contentType": "application/ld+json"]
           Whelk whelk = new StandardWhelk("libris")
-          whelk.addPlugin(new DiskStorage(settings))
+          whelk.addPlugin(new FlatDiskStorage(settings))
           return whelk
     }
 
