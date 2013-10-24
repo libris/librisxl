@@ -25,8 +25,8 @@ def languages():
             '@base': BASE,
             '@vocab': SKOS,
             'dc': 'http://purl.org/dc/terms/',
-            'code': {'@id': 'notation', '@type': 'dc:ISO639-2'},
-            'tag': {'@id': 'notation', '@type': 'dc:ISO639-1'},
+            'langCode': {'@id': 'notation', '@type': 'dc:ISO639-2'},
+            'langTag': {'@id': 'notation', '@type': 'dc:ISO639-1'},
             'byCode': {'@id': '@graph', '@container': '@index'},
             'matches': {'@id': 'exactMatch', '@type': '@id'},
             'labelByLang': {'@id': 'prefLabel', '@container': '@language'}
@@ -37,7 +37,7 @@ def languages():
         # TODO: separate codes for ISO 639-2 and ISO 639-1 (described in deref:ed data)
         #deref(lang_concept.identifier)
         code = lang_concept.value(SKOS.notation)
-        langobj = items[code] = {'@id': base + code, '@type': 'Concept', 'code': code}
+        langobj = items[code] = {'@id': base + code, '@type': 'Concept', 'langCode': code}
         langobj['matches'] = lang_concept.identifier
         prefLabels = langobj['labelByLang'] = {}
         for label in lang_concept.objects(SKOS.prefLabel):
@@ -52,6 +52,9 @@ if __name__ == '__main__':
     import sys
     args = sys.argv[1:]
     if not args:
+        print "Available datasets:"
+        for k in datasets:
+            print "  %s" % k
         sys.exit()
     dataset = args.pop(0)
     result = datasets[dataset]()

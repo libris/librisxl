@@ -149,6 +149,9 @@ class MarcConversion {
                 handler = new MarcFixedFieldHandler(fieldDfn)
             } else if (fieldDfn.find { it.key[0] == '$' }) {
                 handler = new MarcFieldHandler(tag, fieldDfn, resourceMaps)
+                if (handler.dependsOn) {
+                    primaryTags += handler.dependsOn
+                }
                 if (handler.definesDomainEntityType != null) {
                     primaryTags << tag
                 }
@@ -370,6 +373,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     Map ind1
     Map ind2
+    List<String> dependsOn
     String domainEntityName
     String definesDomainEntityType
     UriTemplate uriTemplate
@@ -390,6 +394,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         super(tag)
         ind1 = fieldDfn.i1
         ind2 = fieldDfn.i2
+
+        dependsOn = fieldDfn.dependsOn
 
         if (fieldDfn.definesDomainEntity) {
             // implies no links, no range
@@ -460,20 +466,22 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     boolean convert(marcSource, value, entityMap) {
 
-        def entity = entityMap[domainEntityName]
-        if (!entity) return false
+        def domainEntity = entityMap[domainEntityName]
+        if (!domainEntity) return false
 
         if (definesDomainEntityType) {
-            entity['@type'] = definesDomainEntityType
+            domainEntity['@type'] = definesDomainEntityType
         }
 
         for (rule in matchRules) {
-            def handler = rule.getHandler(entity, value)
+            def handler = rule.getHandler(domainEntity, value)
             if (handler) {
                 // TODO: resolve combined config
                 return handler.convert(marcSource, value, entityMap)
             }
         }
+
+        def entity = domainEntity
 
         def handled = new HashSet()
 
@@ -566,16 +574,25 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (uriTemplate) {
-            // TODO: need to run before linking resource above to work with multiply linked
-            if (entity['@id']) {
-                entity['sameAs'] = ['@id': entity['@id']] // TODO: unnecessary?
+            uriTemplateDefaults.each { k, v ->
+                if (!uriTemplateParams.containsKey(k)) {
+                    v = getByPath(domainEntity, k) ?: v
+                    uriTemplateParams[k] = v
+                }
             }
 
-            uriTemplateDefaults.each { k, v ->
-                if (!uriTemplateParams.containsKey(k))
-                    uriTemplateParams[k] = v
+            // TODO: need to run before linking resource above to work properly
+            // for multiply linked entities.
+            def computedUri = uriTemplate.expand(uriTemplateParams)
+            def altUriRel = "sameAs"
+            if (definesDomainEntityType != null) {
+                entity[altUriRel] = ['@id': computedUri]
+            } else {
+                if (entity['@id']) {
+                    entity[altUriRel] = ['@id': entity['@id']] // TODO: ok as precaution?
+                }
+                entity['@id'] = computedUri
             }
-            entity['@id'] = uriTemplate.expand(uriTemplateParams)
         }
 
         splitLinks.each {
@@ -592,6 +609,18 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         return unhandled.size() == 0
+    }
+
+    String getByPath(entity, path) {
+        path.split(/\./).each {
+            if (entity) {
+                entity = entity[it]
+                if (entity instanceof List) {
+                    entity = entity[0]
+                }
+            }
+        }
+        return (entity instanceof String)? entity : null
     }
 
     String clearChars(fromWhere, removeChars, subVal) {

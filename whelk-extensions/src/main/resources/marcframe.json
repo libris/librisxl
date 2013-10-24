@@ -61,7 +61,7 @@
       "[6:7]": {"domainEntity": "Record", "property": "typeOfRecord"},
       "[7:8]": {"domainEntity": "Record", "property": "bibLevel"},
       "[8:9]": {"domainEntity": "Record", "property": "typeOfControl"},
-      "[9:10]": {"domainEntity": "Record", "property": "characterCoding"},
+      "[9:10]": {"domainEntity": "Record", "property": "characterCoding", "TODO:assertValue": "a", "note": "characterCoding = utf-8"},
       "[17:18]": {"domainEntity": "Record", "property": "encLevel"},
       "[18:19]": {"domainEntity": "Record", "property": "catForm"},
       "[19:20]": {"domainEntity": "Record", "property": "linked"},
@@ -544,13 +544,13 @@
       "$f": {
         "domainEntity": "Instance",
         "IMPROVE:about": "$thing if Concept else $record",
-        "TODO": "inCollection if . = sgp",
+        "TODO": "inCollection if . = sgp?",
         "link": "inScheme", "rangeEntity": "ConceptScheme",
         "uriTemplate": "/topic/{_}",
         "property": "notation"
       }
     },
-    "042" : {"inherit": "bib", "TODO": "about-inCollection-skönlitteratur"},
+    "042" : {"inherit": "bib", "TODO": "about-inCollection-skönlitteratur?"},
     "046" : {
         "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
@@ -626,6 +626,7 @@
       "domainEntity": null,
       "definesDomainEntity": "Concept",
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
+      "dependsOn": ["040", "042"],
       "$2": null,
       "$9": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
       "$0": null
@@ -682,7 +683,11 @@
       "rangeEntity": "Concept",
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     },
-    "551" : {"inherit": "151"},
+    "551" : {
+        "inherit": "550",
+      "rangeEntity": "Place",
+      "uriTemplate": "/place/{prefLabel}"
+    },
     "555" : {
       "inherit": "550",
       "uriTemplate": "/topic/saogf/{prefLabel}"

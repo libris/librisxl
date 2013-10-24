@@ -141,13 +141,53 @@ class MarcFrameConverterSpec extends Specification {
             encLevel: "n",
             about: [
                 "@type": "Concept",
-                "@id": "/topic/sao/Barnpsykologi",
-                sameAs: ["@id": "/resource/auth/140482"],
+                "@id": "/resource/auth/140482",
+                sameAs: ["@id": "/topic/sao/Barnpsykologi"],
                 prefLabel: "Barnpsykologi",
                 broader: [
                     ["@type": "Concept",
                     "@id": "/topic/sao/Psykologi",
                      prefLabel: "Psykologi"]
+                ]
+            ]
+        ]
+    }
+
+    def "should convert concept with scheme in 040"() {
+        given:
+        def marc = [
+            "leader": "01341cz  a2200397n  4500",
+            "fields": [
+                ["001": "247755"],
+                ["005": "20130814170612.0"],
+                ["040":["subfields":[["f":"barn"]]]],
+                ["008": "020409 | anznnbabn          |n ana      "],
+                ["150": ["subfields": [["a": "Pengar"]]]],
+                ["550": ["subfields": [["a": "Handel"], ["w": "g"]]]],
+            ]
+        ]
+        when:
+        def frame = converter.createFrame(marc)
+        then:
+        frame == [
+            "@type":"Record",
+            "@id": "/auth/247755",
+            controlNumber: "247755",
+            modified: "2013-08-14T17:06:12.0+0200",
+            status: "c",
+            typeOfRecord: "z",
+            characterCoding: "a",
+            encLevel: "n",
+            about: [
+                "@type": "Concept",
+                "@id": "/resource/auth/247755",
+                sameAs: ["@id": "/topic/barn/Pengar"],
+                prefLabel: "Pengar",
+                inScheme: ["@type": "ConceptScheme", "@id": "/topic/barn", notation: "barn"],
+                broader: [
+                    ["@type": "Concept",
+                    "@id": "/topic/barn/Handel",
+                     prefLabel: "Handel"]
                 ]
             ]
         ]
