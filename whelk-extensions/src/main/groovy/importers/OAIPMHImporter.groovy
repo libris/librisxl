@@ -50,7 +50,12 @@ class OAIPMHImporter {
         log.debug("resumptionToken: $resumptionToken")
         while (resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
             url = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken)
-            resumptionToken = harvest(url)
+            try {
+                String rtok = harvest(url)
+                resumptionToken = rtok
+            } catch (XmlParsingFailedException xpfe) {
+                log.warn("Harvesting failed. Retrying ...")
+            }
             log.debug("resumptionToken: $resumptionToken")
         }
         queue.shutdown()
@@ -64,8 +69,8 @@ class OAIPMHImporter {
         try {
             OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
         } catch (org.xml.sax.SAXParseException spe) {
-            log.error("Failed to parse XML: $xmlString")
-            throw spe
+            log.error("Failed to parse XML: $xmlString", spe)
+            throw new XmlParsingFailedException("Failing XML: ($xmlString)", spe)
         }
         def documents = []
         OAIPMH.ListRecords.record.each {
@@ -102,12 +107,17 @@ class OAIPMHImporter {
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord")
                     if (picky) {
+                        log.error("Picky mode enable. Throwing exception", e)
                         throw e
                     }
                 }
             } else if (it.header.@deleted == 'true') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
-                whelk.remove(new URI(deleteIdentifier))
+                try {
+                    whelk.remove(new URI(deleteIdentifier))
+                } catch (Exception e2) {
+                    log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
+                }
                 nrDeleted++
             } else {
                 throw new WhelkRuntimeException("Failed to handle record: " + createString(it))
@@ -166,5 +176,20 @@ class OAIPMHImporter {
         return new StreamingMarkupBuilder().bind{
             out << root
         }
+    }
+}
+
+class XmlParsingFailedException extends Exception {
+    XmlParsingFailedException() {
+        super("Parse failed. Most likely, the received document was empty. Or null.")
+    }
+    XmlParsingFailedException(String msg) {
+        super(msg)
+    }
+    XmlParsingFailedException(Throwable t) {
+        super("Parse failed. Most likely, the received document was empty. Or null.", t)
+    }
+    XmlParsingFailedException(String msg, Throwable t) {
+        super(msg, t)
     }
 }

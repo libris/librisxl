@@ -220,7 +220,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 log.debug("Document received from whelk: $d")
                 if (d) {
                     if (mode == DisplayMode.META) {
-                        response.setEntity(d.toJson(), MediaType.APPLICATION_JSON)
+                        response.setEntity(d.metadataAsJson, MediaType.APPLICATION_JSON)
                     } else {
                         response.setEntity(d.dataAsString, LibrisXLMediaType.getMainMediaType(d.contentType))
                     }
@@ -247,8 +247,8 @@ class DocumentRestlet extends BasicWhelkAPI {
                 def headers = request.attributes.get("org.restlet.http.headers")
                 log.trace("headers: $headers")
                 def link = headers.find { it.name.equals("link") }?.value
-                doc = this.whelk.createDocument(request.entityAsText, ["identifier":path,"contentType":request.entity.mediaType.toString()])
-                rawdoc = this.whelk.createDocument(request.entityAsText, ["identifier":path,"contentType":request.entity.mediaType.toString()], null, false)
+                doc = this.whelk.createDocument(request.entityAsText, ["identifier":path,"contentType":request.entity.mediaType.toString(),"dataset":path.split("/")[1]])
+                rawdoc = this.whelk.createDocument(request.entityAsText, ["identifier":path,"contentType":request.entity.mediaType.toString(),"dataset":path.split("/")[1]], null, false)
                 if (rawdoc?.contentType == doc?.contentType) {
                     // No need to doublestore document.
                     rawdoc = null

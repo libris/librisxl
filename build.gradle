@@ -69,6 +69,8 @@ project(":whelk-core") {
         compile 'com.spatial4j:spatial4j:0.3'
         compile 'com.basho.riak:riak-client:1.0.6'
         compile 'org.hectorclient:hector-core:1.1-3'
+        compile 'com.netflix.astyanax:astyanax-cassandra:1.56.43'
+        compile 'com.netflix.astyanax:astyanax-thrift:1.56.43'
         compile 'org.apache.httpcomponents:httpclient:4.2.5'
         def sesameVer = "2.7.6"
         compile "org.openrdf.sesame:sesame-model:${sesameVer}"
