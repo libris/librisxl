@@ -27,62 +27,60 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
         for (link in doc.links) {
             if (link.type == "auth") {
                 def authDoc = whelk.get(new URI(link.identifier))
-                if (authDoc) {
-                    authDataJson = mapper.readValue(authDoc.dataAsString, Map)
-                    switch (authDataJson["about"]["@type"] as String) {
-                        case "Person":
-                            if (json["about"]["instanceOf"].containsKey("creator")) {
-                                def creatorProp = json["about"]["instanceOf"]["creator"]
-                                if (creatorProp instanceof List) {
-                                    creatorProp.eachWithIndex { c, ind ->
-                                        if (c["@type"] == "Person" && c["controlledLabel"] == authDataJson["about"]["controlledLabel"]) {
-                                            json["about"]["instanceOf"]["creator"][ind]["@id"] = authDataJson["about"]["@id"]
+                if (authDoc == null) {
+                    continue
+                }
+                authDataJson = mapper.readValue(authDoc.dataAsString, Map)
+                def work = json["about"]["instanceOf"]
+                def authItem = authDataJson["about"]
+                switch (authItem["@type"] as String) {
+                    case "Person":
+                        if (work.containsKey("creator")) {
+                            def creator = work["creator"]
+                            if (creator instanceof List) {
+                                creator.each {
+                                    if (updatePersonId(it, authItem))
+                                        changedData = true
+                                }
+                            } else if (creator instanceof Map) {
+                                if (updatePersonId(creator, authItem))
+                                    changedData = true
+                            }
+                        }
+                        if (work.containsKey("contributorList")) {
+                            def contributors = work["contributorList"]
+                            if (contributors instanceof List) {
+                                contributors.each {
+                                    if (updatePersonId(it, authItem, "label"))
+                                        changedData = true
+                                }
+                            }
+                        }
+                        break
+                    case "Concept":
+                        def sameAs = "/resource" + authDataJson["@id"]
+                        if (work.containsKey("subject")) {
+                            def concepts = work["subject"]
+                            concepts.each {
+                                if (it["@type"] == "Concept") {
+                                    it["broader"].each { broader ->
+                                        if (updateConceptId(broader, authItem, sameAs))
                                             changedData = true
-                                        }
                                     }
-                                } else if (creatorProp instanceof Map) {
-                                   if (creatorProp["@type"] == "Person" && creatorProp["controlledLabel"] == authDataJson["about"]["controlledLabel"]) {
-                                        json["about"]["instanceOf"]["creator"]["@id"] = authDataJson["about"]["@id"]
+                                }
+                            }
+                        }
+                        if (work.containsKey("class")) {
+                            def concepts = work["class"]
+                            concepts.each {
+                                if (it["@type"] == "Concept") {
+                                    if (it.get("@id", null) && it["@id"] == authItem["@id"]) {
+                                        it["sameAs"] = ["@id": sameAs]
                                         changedData = true
                                     }
                                 }
                             }
-                            if (json["about"]["instanceOf"].containsKey("contributorList")) {
-                                def contributorProp = json["about"]["instanceOf"]["contributorList"]
-                                if (contributorProp instanceof List) {
-                                    contributorProp.eachWithIndex { c, ind ->
-                                        if (c["@type"] == "Person" && c.get("label", null) == authDataJson["about"]["controlledLabel"]) {
-                                            json["about"]["instanceOf"]["contributorList"][ind]["@id"] = authDataJson["about"]["@id"]
-                                            changedData = true
-                                        }
-                                    }
-                                }
-                            }
-                            break
-                        case "Concept":
-                            if (json["about"]["instanceOf"].containsKey("subject")) {
-                                json["about"]["instanceOf"]["subject"].eachWithIndex { subj, index ->
-                                    if (subj["@type"] == "Concept") {
-                                        subj["broader"].eachWithIndex { it, i ->
-                                            if (it.get("prefLabel", null) && it["prefLabel"] == authDataJson["about"]["prefLabel"]) {
-                                                json["about"]["instanceOf"]["subject"][index]["broader"][i]["sameAs"] = ["@id": "/resource" + authDataJson["@id"]]
-                                                changedData = true
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            if (json["about"]["instanceOf"].containsKey("class")) {
-                                json["about"]["instanceOf"]["class"].eachWithIndex { cl, i ->
-                                    if (cl["@type"] == "Concept") {
-                                        if (cl.get("@id", null) && cl["@id"] == authDataJson["about"]["@id"]) {
-                                            json["about"]["instanceOf"]["class"][i]["sameAs"] = ["@id": "/resource" + authDataJson["@id"]]
-                                            changedData = true
-                                        }
-                                    }
-                                }
-                            }
-                    }
+                        }
                 }
             }
 
@@ -92,7 +90,21 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
         }
         return doc
     }
+
+    boolean updatePersonId(item, authItem, label="controlledLabel") {
+        if (item["@type"] == "Person" && item[label] == authItem["controlledLabel"]) {
+            item["@id"] = authItem["@id"]
+            return true
+        }
+        return false
+    }
+
+    boolean updateConceptId(item, authItem, sameAs) {
+        if (item.get("prefLabel", null) && item["prefLabel"] == authItem["prefLabel"]) {
+            item["sameAs"] = ["@id": sameAs]
+            return true
+        }
+        return false
+    }
+
 }
-
-
-
