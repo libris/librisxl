@@ -21,54 +21,67 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
         whelk = getInitializedWhelk()
         converter = new JsonLDLinkEnhancerFormatConverter()
         converter.setWhelk(whelk)
-        def doclinks = new HashSet<Link>()
-        doclinks.add(new Link(new URI("/auth/94541"), "auth"))
-        doclinks.add(new Link(new URI("/auth/139860"), "auth"))
-        doclinks.add(new Link(new URI("/auth/191503"), "auth"))
-        doclinks.add(new Link(new URI("/auth/140482"), "auth"))
-        doclinks.add(new Link(new URI("/auth/349968"), "auth"))
+        def doclinks = [
+            "/auth/94541",
+            "/auth/139860",
+            "/auth/191503",
+            "/auth/140482",
+            "/auth/349968"
+        ].collect {
+            new Link(new URI(it), "auth")
+        }
         bibDoc = makeDoc ([
-                "@id": "/bib/12661",
-                "@type": "Record",
-                "about": [
-                        "@id": "/resource/bib/12661",
-                        "@type": "Book",
-                        "instanceOf": [
-                                "@type": "Book",
-                                "creator": [
-                                    "@type" : "Person",
-                                    "controlledLabel": "Strindberg, August, 1849-1912"
-                                ],
-                                "contributorList":  [
-                                        [
-                                            "@type" : "Person",
-                                            "label" : "Jansson, Tove, 1914-2001"
-                                        ]
-                                ],
-                                "subject": [
-                                        [
-                                            "@type" : "Concept",
-                                            "broader" : [
-                                                    [
-                                                        "@id" : "/topic/sao/Arkiv",
-                                                        "prefLabel" : "Arkiv"
-                                                    ],
-                                                    [
-                                                            "@id" : "Allegorier",
-                                                            "prefLabel" : "Allegorier"
-                                                    ]
-                                            ]
-                                        ]
-                                ],
-                                "class": [
-                                        [
-                                                "@type" : "Concept",
-                                                "prefLabel": "Barnpsykologi",
-                                                "@id": "/topic/sao/Barnpsykologi"
-                                        ]
-                                ]
+            "@id": "/bib/12661",
+            "@type": "Record",
+            "about": [
+                "@id": "/resource/bib/12661",
+                "@type": "Book",
+                "instanceOf": [
+                    "@type": "Book",
+                    "creator": [
+                        "@type" : "Person",
+                        "controlledLabel": "Strindberg, August, 1849-1912"
+                    ],
+                    "contributorList":  [
+                        [
+                            "@type" : "Person",
+                            "controlledLabel" : "Jansson, Tove, 1914-2001"
                         ]
+                    ],
+                    "subject": [
+                        [
+                            "@type" : "Concept",
+                            "sameAs": ["@id" : "/topic/sao/Arkiv"],
+                            "prefLabel" : "Arkiv"
+                        ],
+                        [
+                            "@type" : "Concept",
+                            "broader" : [
+                                [
+                                    "@id" : "/topic/sao/Arkiv",
+                                ],
+                                [
+                                    "sameAs": ["@id" : "/topic/sao/Arkiv"]
+                                ],
+                                [
+                                    "prefLabel" : "Allegorier"
+                                ]
+                            ]
+                        ]
+                    ],
+                    "class": [
+                        [
+                            "@type" : "Concept",
+                            "prefLabel": "Barnpsykologi",
+                            "sameAs": ["@id": "/topic/sao/Barnpsykologi"]
+                        ],
+                        [
+                            "@type" : "Concept",
+                            "prefLabel" : "Arkiv"
+                        ]
+                    ]
                 ]
+            ]
         ], doclinks)
 
         when:
@@ -77,10 +90,13 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
         then:
         docMap.about.instanceOf.creator."@id" == "/resource/auth/94541"
         docMap.about.instanceOf.contributorList[0]."@id" == "/resource/auth/191503"
-        docMap.about.instanceOf.subject[0].broader[0].sameAs."@id" == "/resource/auth/139860"
-        docMap.about.instanceOf.subject[0].broader[1].sameAs."@id" == "/resource/auth/349968"
-        log.info("${docMap.about.instanceOf["class"][0]}")
-        docMap.about.instanceOf["class"][0].sameAs."@id" == "/resource/auth/140482"
+        docMap.about.instanceOf.subject[0]."@id" == "/resource/auth/139860"
+        docMap.about.instanceOf.subject[1].broader[0]."@id" == "/resource/auth/139860"
+        docMap.about.instanceOf.subject[1].broader[0].sameAs."@id" == "/topic/sao/Arkiv"
+        docMap.about.instanceOf.subject[1].broader[1]."@id" == "/resource/auth/139860"
+        docMap.about.instanceOf.subject[1].broader[2]."@id" == "/resource/auth/349968"
+        docMap.about.instanceOf["class"][0]."@id" == "/resource/auth/140482"
+        docMap.about.instanceOf["class"][1]."@id" == "/resource/auth/139860"
 
     }
 
