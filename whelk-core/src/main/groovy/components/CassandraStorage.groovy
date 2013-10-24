@@ -95,9 +95,12 @@ class CassandraStorage extends BasicPlugin implements Storage {
         log.debug("Received document ${doc.identifier} with contenttype ${doc.contentType}")
         if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
             MutationBatch m = keyspace.prepareMutationBatch()
+            String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
+            log.debug("Saving document with dataset $dataset")
             m.withRow(CF_DOCUMENT, doc.identifier)
                 .putColumn("data", new String(doc.data, "UTF-8"))
                 .putColumn("entry", doc.metadataAsJson)
+                .putColumn("dataset", dataset)
             try {
                 def result = m.execute()
             } catch (ConnectionException ce) {
