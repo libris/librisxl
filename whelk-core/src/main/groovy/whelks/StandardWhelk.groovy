@@ -65,6 +65,7 @@ class StandardWhelk implements Whelk {
                 try {
                     stored = (storage.store(doc, this.id) || stored)
                 } catch (Exception e) {
+                    log.error("Store failed for $doc", e)
                     throw new WhelkAddException(doc.identifier as String)
                 }
             }
@@ -168,7 +169,7 @@ class StandardWhelk implements Whelk {
 
     @Override
     @groovy.transform.CompileStatic
-    Document createDocument(byte[] data, Map entrydata, Map<String,Object> metadata=null, boolean convert=true) { return createDocument(new String(data), entrydata, metadata, convert) }
+    Document createDocument(byte[] data, Map entrydata, Map<String,Object> metadata=null, boolean convert=true) { return createDocument(new String(data, "UTF-8"), entrydata, metadata, convert) }
     @groovy.transform.CompileStatic
     Document createDocument(String data, Map<String,Object> entrydata, Map<String,Object> metadata=null, boolean convert=true) {
         log.debug("Creating document")

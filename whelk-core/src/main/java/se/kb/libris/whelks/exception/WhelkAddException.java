@@ -13,7 +13,7 @@ public class WhelkAddException extends WhelkException {
     }
 
     public WhelkAddException(List<String> idents) {
-        super();
+        super("Failed adding " + idents.size() + " documents.");
         this.failedIdentifiers.addAll(idents);
     }
 

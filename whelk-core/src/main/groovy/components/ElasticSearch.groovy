@@ -351,7 +351,8 @@ abstract class ElasticSearch extends BasicPlugin {
                             }
                             try {
                                 fails << translateIndexIdTo(re.id)
-                            } catch (Exception e) {
+                            } catch (Exception e1) {
+                                log.error("TranslateIndexIdTo cast an exception", e1)
                                 fails << "Failed translation for \"$re\""
                             }
                         }

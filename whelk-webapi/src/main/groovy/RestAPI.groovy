@@ -220,7 +220,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 log.debug("Document received from whelk: $d")
                 if (d) {
                     if (mode == DisplayMode.META) {
-                        response.setEntity(d.toJson(), MediaType.APPLICATION_JSON)
+                        response.setEntity(d.metadataAsJson, MediaType.APPLICATION_JSON)
                     } else {
                         response.setEntity(d.dataAsString, LibrisXLMediaType.getMainMediaType(d.contentType))
                     }

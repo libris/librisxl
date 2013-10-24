@@ -102,12 +102,17 @@ class OAIPMHImporter {
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord")
                     if (picky) {
+                        log.error("Picky mode enable. Throwing exception", e)
                         throw e
                     }
                 }
             } else if (it.header.@deleted == 'true') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
-                whelk.remove(new URI(deleteIdentifier))
+                try {
+                    whelk.remove(new URI(deleteIdentifier))
+                } catch (Exception e2) {
+                    log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
+                }
                 nrDeleted++
             } else {
                 throw new WhelkRuntimeException("Failed to handle record: " + createString(it))

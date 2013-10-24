@@ -127,9 +127,16 @@ class Document {
     }
     Document withMeta(Map metadata) {
         if (metadata) {
-            log.info("metadata: $metadata")
             this.meta = metadata
         }
+        return this
+    }
+
+    /**
+     * Expects a JSON string containing meta and entry as dictionaries.
+     * It's the reverse of getMetadataAsJson().
+     */
+    Document withMetaEntry(String jsonEntry) {
         return this
     }
 
