@@ -389,6 +389,9 @@ class SearchRestlet extends BasicWhelkAPI {
         } */
         queryMap.q = splitQuery(queryMap.q)
         def elasticQuery = new ElasticQuery(queryMap)
+        if (queryMap.f) {
+            elasticQuery.query += " " + queryMap.f
+        }
         elasticQuery.indexType = indexType
         if (facets) {
             for (f in facets) {
