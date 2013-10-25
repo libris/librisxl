@@ -24,6 +24,10 @@ class OAIPMHImporter {
     long startTime = 0
     boolean picky = true
 
+    // Stat tools
+    long meanTime
+    int sizeOfBatch
+
     ExecutorService queue
     File failedLog
     File exceptionLog
@@ -103,7 +107,11 @@ class OAIPMHImporter {
                     doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":"/"+this.resource+"/"+id,"contentType":"application/x-marc-json"], ["links": links])
                     documents << doc
                     nrImported++
-                    Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar.", nrImported)
+                    def velocityMsg = ""
+                    if (sizeOfBatch && meanTime) {
+                        velocityMsg = "Current velocity: " + (1000*(sizeOfBatch / (System.currentTimeMillis() - meanTime))) + " docs/second."
+                    }
+                    Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord")
                     if (picky) {
@@ -123,9 +131,9 @@ class OAIPMHImporter {
                 throw new WhelkRuntimeException("Failed to handle record: " + createString(it))
             }
         }
-        //whelk.bulkAdd(documents)
+        sizeOfBatch = documents.size()
+        meanTime = System.currentTimeMillis()
         addDocuments(documents)
-        int sizeOfBatch = documents.size()
 
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {

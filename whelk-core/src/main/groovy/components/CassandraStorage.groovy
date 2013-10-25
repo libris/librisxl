@@ -2,16 +2,6 @@ package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
-/*
-import me.prettyprint.hector.api.*
-import me.prettyprint.hector.api.factory.*
-import me.prettyprint.hector.api.ddl.*
-import me.prettyprint.hector.api.exceptions.*
-import me.prettyprint.cassandra.serializers.*
-import me.prettyprint.cassandra.service.*
-import me.prettyprint.cassandra.service.template.*
-*/
-
 import com.netflix.astyanax.*
 import com.netflix.astyanax.impl.*
 import com.netflix.astyanax.model.*

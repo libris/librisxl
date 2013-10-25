@@ -6,6 +6,15 @@ repositories {
     flatDir name: 'localWhelk-webapiDir', dirs: '../lib'
 }
 
+task devLogging(dependsOn: 'classes', type: Copy) {
+    copy {
+        from('../etc')
+        include('logback_dev.xml')
+        rename('logback_dev.xml','logback.xml')
+        into "build/resources/main"
+    }
+}
+
 task jettyRun(dependsOn: 'devLogging', type: JettyRun, overwrite: true) {
     //jettyRun.contextPath = '/'
     jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:etc/whelks.json')"
