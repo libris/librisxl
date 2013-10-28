@@ -1,3 +1,10 @@
+loadConfiguration()
+
+def loadConfiguration() {
+    def environment = hasProperty('env') ? env : 'dev'
+    setProperty 'environment', environment
+}
+
 allprojects {
     version "0.3.0"
 
@@ -19,11 +26,24 @@ allprojects {
 }
 
 subprojects {
+
     repositories {
         mavenCentral()
         maven { url "http://maven.restlet.org/" }
         flatDir name: 'localDir', dirs: '../lib'
     }
+
+    task copyConfiguration << {
+        println "Target environment: $environment"
+
+        copy {
+            from "../etc/environment/$environment"
+            into "src/main/resources"
+            include "**/*"
+        }
+    }
+
+    processResources.dependsOn copyConfiguration
 
     /*
     task testWithDevLogging(dependsOn: 'test', type: Copy){
