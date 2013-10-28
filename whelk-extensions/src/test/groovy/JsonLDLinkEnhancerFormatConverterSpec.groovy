@@ -26,7 +26,8 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
             "/auth/139860",
             "/auth/191503",
             "/auth/140482",
-            "/auth/349968"
+            "/auth/349968",
+            "/auth/345526"
         ].collect {
             new Link(new URI(it), "auth")
         }
@@ -67,6 +68,16 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
                                     "prefLabel" : "Allegorier"
                                 ]
                             ]
+                        ],
+                        [
+                            "@type": "Work",
+                            "uniformTitle": "Metamorphoses",
+                            "creator": [
+                                [
+                                    "@type": "Person",
+                                    "controlledLabel": "Ovidius Naso, Publius, 43-"
+                                ]
+                            ]
                         ]
                     ],
                     "class": [
@@ -88,15 +99,17 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
         doc = converter.doConvert(bibDoc)
         docMap = mapper.readValue(doc.dataAsString, Map)
         then:
-        docMap.about.instanceOf.creator."@id" == "/resource/auth/94541"
-        docMap.about.instanceOf.contributorList[0]."@id" == "/resource/auth/191503"
-        docMap.about.instanceOf.subject[0]."@id" == "/resource/auth/139860"
-        docMap.about.instanceOf.subject[1].broader[0]."@id" == "/resource/auth/139860"
-        docMap.about.instanceOf.subject[1].broader[0].sameAs."@id" == "/topic/sao/Arkiv"
-        docMap.about.instanceOf.subject[1].broader[1]."@id" == "/resource/auth/139860"
-        docMap.about.instanceOf.subject[1].broader[2]."@id" == "/resource/auth/349968"
-        docMap.about.instanceOf["class"][0]."@id" == "/resource/auth/140482"
-        docMap.about.instanceOf["class"][1]."@id" == "/resource/auth/139860"
+        def work = docMap.about.instanceOf
+        work.creator."@id" == "/resource/auth/94541"
+        work.contributorList[0]."@id" == "/resource/auth/191503"
+        work.subject[0]."@id" == "/resource/auth/139860"
+        work.subject[1].broader[0]."@id" == "/resource/auth/139860"
+        work.subject[1].broader[0].sameAs."@id" == "/topic/sao/Arkiv"
+        work.subject[1].broader[1]."@id" == "/resource/auth/139860"
+        work.subject[1].broader[2]."@id" == "/resource/auth/349968"
+        work.subject[2]."@id" == "/resource/auth/345526"
+        work["class"][0]."@id" == "/resource/auth/140482"
+        work["class"][1]."@id" == "/resource/auth/139860"
 
     }
 

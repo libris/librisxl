@@ -80,6 +80,17 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
                                 }
                             }
                         }
+                        break
+                    case "Work":
+                        if (work.containsKey("subject")) {
+                            def concepts = work["subject"]
+                            concepts.each {
+                                if (it["@type"] == "Work") {
+                                    if (updateWorkId(it, authItem))
+                                        changedData = true
+                                }
+                            }
+                        }
                 }
             }
 
@@ -109,6 +120,27 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
         if (same || (item["prefLabel"] && item["prefLabel"] == authItem["prefLabel"])) {
             item["@id"] = authItem["@id"]
             return true
+        }
+        return false
+    }
+
+    boolean updateWorkId(item, authItem) {
+        if (item["@type"] == "Work" && item["uniformTitle"] == authItem["uniformTitle"]) {
+            def creator = item.creator
+            if (creator instanceof List)
+                creator = creator[0]
+            def authCreator = authItem.creator
+            if (authCreator instanceof List)
+                authCreator = authCreator[0]
+            if (
+                    (!creator && !authCreator) ||
+                    ((creator && authCreator) &&
+                     (creator["@type"] == "Person" && authCreator["@type"] == "Person" &&
+                      creator["controlledLabel"] == authCreator["controlledLabel"]))
+               ) {
+                item["@id"] = authItem["@id"]
+                return true
+            }
         }
         return false
     }
