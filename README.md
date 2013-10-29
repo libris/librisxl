@@ -9,7 +9,7 @@ Libris-XL is divided over three subprojects:
     whelk-extensions:
         contains extensions to the core components, such as format converters. Stuff used for specific implementations.
     whelk-webapi:
-        contians the sources for the web API.
+        contains the sources for the web API.
 
 ## Dependencies
 
@@ -27,7 +27,7 @@ Optionally, see details about using a Graph Store at the end of this document.
 
 .. Running at <http://localhost:8080/>
 
-This starts a local whelk, using an embedded elasticsearch and storage configured in `etc/mock_whelks.json`.
+This starts a local whelk, using an embedded elasticsearch and storage configured in `etc/environment/dev/whelks.json`.
 
 ### Import/update local storage from test data
 
@@ -39,7 +39,7 @@ to upload all test documents into your local whelk. (See the script for how the 
 
 ### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)
 
-1. Configure mock whelk with suitable converters, etc/mock-whelks.json
+1. Configure mock whelk with suitable converters, etc/environment/dev/whelks.json
 
 2. Create a jar-file. From root librisxl folder:
     $ gradle fatjar
