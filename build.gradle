@@ -1,10 +1,3 @@
-loadConfiguration()
-
-def loadConfiguration() {
-    def environment = hasProperty('env') ? env : 'dev'
-    setProperty 'environment', environment
-}
-
 allprojects {
     version "0.3.0"
 
@@ -34,10 +27,18 @@ subprojects {
     }
 
     task copyConfiguration << {
-        println "Target environment: $environment"
+        ext {
+            try {
+                environment = env
+            } catch (Exception e) {
+                environment = "dev"
+            }
+        }
+
+        println "Target environment: ${environment}"
 
         copy {
-            from "../etc/environment/$environment"
+            from "../etc/environment/${environment}"
             into "src/main/resources"
             include "**/*"
         }
