@@ -37,10 +37,18 @@ subprojects {
     }
 
     task copyConfiguration << {
-        println "Target environment: $environment"
+        ext {
+            try {
+                environment = env
+            } catch (Exception e) {
+                environment = "dev"
+            }
+        }
+
+        println "Target environment: ${environment}"
 
         copy {
-            from "../etc/environment/$environment"
+            from "../etc/environment/${environment}"
             into "src/main/resources"
             include "**/*"
         }

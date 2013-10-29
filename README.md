@@ -33,7 +33,7 @@ This starts a local whelk, using an embedded elasticsearch and storage configure
 
 Simply run:
 
-    $ datatools/scripts/update_mock_storage.sh
+    $ scripts/update_mock_storage.sh
 
 to upload all test documents into your local whelk. (See the script for how the actual HTTP PUT is constructed.)
 
