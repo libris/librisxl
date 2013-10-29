@@ -55,7 +55,7 @@
     foaf:homepage <http://www.ub.gu.se/kvinn/kvinnsam/listor/> .
 
 <prvt> a skos:ConceptScheme;
-    skos:notation "";
+    skos:notation "prvt";
     dc:title "Patent- och registreringsverkets tesaurus"@sv .
 
 <sbiao> a skos:ConceptScheme;
@@ -113,7 +113,7 @@ _:msc a skos:ConceptScheme;
 
 _:mesh a skos:ConceptScheme;
     skos:notation "MeSH";
-    dc:title "Medical Subject Headings";
+    dc:title "Medical Subject Headings"@en;
     rdfs:seeAlso <http://neurocommons.org/page/Bundles/mesh/mesh-skos>;
     foaf:homepage <http://www.nlm.nih.gov/mesh/meshhome.html> .
 
@@ -129,12 +129,12 @@ _:sipri a skos:ConceptScheme;
 
 # LoC
 
-<http://id.loc.gov/authorities/subjects> a skos:ConceptScheme .
+<http://id.loc.gov/authorities/subjects> a skos:ConceptScheme; skos:notation "lcsh" .
 <http://id.loc.gov/authorities/childrensSubjects> a skos:ConceptScheme .
 <http://id.loc.gov/authorities/genreForms> a skos:ConceptScheme .
 <http://id.loc.gov/vocabulary/graphicMaterials> a skos:ConceptScheme .
 
 <http://id.loc.gov/authorities/classification> a skos:ConceptScheme .
 
-<http://dewey.info/scheme/ddc/> a skos:ConceptScheme .
+<http://dewey.info/scheme/ddc/> a skos:ConceptScheme; skos:notation "ddc" .
 

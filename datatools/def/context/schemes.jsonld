@@ -12,6 +12,7 @@
     "comment": "rdfs:comment",
     "seeAlso": {"@id": "rdfs:seeAlso", "@type": "@id"},
     "homepage": {"@id": "foaf:homepage", "@type": "@id"},
+    "byNotation": {"@id": "@graph", "@container": "@index"},
     "@language": "sv"
   }
 }

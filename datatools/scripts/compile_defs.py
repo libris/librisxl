@@ -3,7 +3,10 @@ import sys
 import json
 from rdflib import *
 from rdflib.namespace import SKOS, DCTERMS
+from rdflib_jsonld.serializer import from_rdf
 
+
+scriptpath = lambda pth: os.path.join(os.path.dirname(__file__), pth)
 
 datasets = {}
 def dataset(f):
@@ -16,15 +19,23 @@ BASE = "http://libris.kb.se/"
 
 @dataset
 def terms():
-    source = Graph().parse('datatools/def/terms.ttl', format='turtle')
+    source = Graph().parse(scriptpath('../def/terms.ttl'), format='turtle')
     return source.serialize(format="json-ld", auto_compact=True)
 
 
 @dataset
 def schemes():
-    source = Graph().parse('datatools/def/schemes.ttl', format='turtle')
-    return source.serialize(format="json-ld",
-            context="datatools/def/schemes-context.jsonld")
+    source = Graph().parse(scriptpath('../def/schemes.ttl'), format='turtle')
+    data = from_rdf(source, context_data=scriptpath("../def/context/schemes.jsonld"))
+    data['@context'] = "/def/context/schemes.jsonld"
+    nodes = data.pop('byNotation')
+    nmap = data['byNotation'] = {}
+    for n in nodes:
+        if n['@id'].startswith('_:'):
+            del n['@id']
+        if 'notation' in n:
+            nmap[n['notation']] = n
+    return data
 
 
 @dataset
@@ -36,26 +47,17 @@ def relators():
 @dataset
 def languages():
     base = "/def/%s/" % dataset
-    with open('whelk-core/src/main/resources/langcodes.json') as f:
+    with open(scriptpath('../source/langcodes.json')) as f:
         lang_code_map = json.load(f)
     source = cached_rdf('http://id.loc.gov/vocabulary/iso639-2')
     items = {}
     result = {
-        '@context': {
-            '@base': BASE,
-            '@vocab': SKOS,
-            'dc': DCTERMS,
-            'langCode': {'@id': 'notation', '@type': 'dc:ISO639-2'},
-            'langTag': {'@id': 'notation', '@type': 'dc:ISO639-1'},
-            'byCode': {'@id': '@graph', '@container': '@index'},
-            'matches': {'@id': 'exactMatch', '@type': '@id'},
-            'labelByLang': {'@id': 'prefLabel', '@container': '@language'}
-        },
+        '@context': "/def/context/languages.jsonld",
         'byCode': items
     }
     ISO639_1Lang = u"http://id.loc.gov/vocabulary/iso639-1/iso639-1_Language"
     for lang_concept in map(source.resource, source.subjects(RDF.type, SKOS.Concept)):
-        code = lang_concept.value(SKOS.notation)
+        code = unicode(lang_concept.value(SKOS.notation))
         langobj = items[code] = {'@id': base + code, '@type': 'Concept', 'langCode': code}
         langobj['matches'] = lang_concept.identifier
         langdef = deref(lang_concept.identifier)
@@ -66,7 +68,7 @@ def languages():
         prefLabels = langobj['labelByLang'] = {}
         for label in lang_concept[SKOS.prefLabel]:
             prefLabels[label.language] = label
-        label_sv = lang_code_map.get(code)
+        label_sv = lang_code_map.get((code))
         if label_sv:
             prefLabels['sv'] = label_sv
     return result
