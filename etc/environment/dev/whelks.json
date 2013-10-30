@@ -16,7 +16,7 @@
                     "linkenhancer",
                     "jsonldlinkfinder",
                     "nameexpander"
-                    ],
+                ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
             }
@@ -65,15 +65,15 @@
         },
         {
             "cassandrastorage": {
-                "_class" : "se.kb.libris.whelks.component.CassandraStorage", 
+                "_class" : "se.kb.libris.whelks.component.CassandraStorage",
                 "_params" : "application/ld+json",
                 "_priority" : 0
             }
         },
         {
             "diskstorage": {
-                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : { 
+                "_class" : "se.kb.libris.whelks.component.DiskStorage",
+                "_params" : {
                     "storageDir": "work/storage/jsonld",
                     "contentType": "application/ld+json"
                 },
@@ -82,8 +82,8 @@
         },
         {
             "isostorage": {
-                "_class" : "se.kb.libris.whelks.component.DiskStorage", 
-                "_params" : { 
+                "_class" : "se.kb.libris.whelks.component.DiskStorage",
+                "_params" : {
                     "storageDir": "work/storage/iso",
                     "contentType": "application/x-marc-json"
                 },
@@ -92,8 +92,8 @@
         },
         {
             "flatstorage": {
-                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage", 
-                "_params" : { 
+                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
+                "_params" : {
                     "storageDir": "work/storage/main",
                     "contentType": "application/ld+json"
                 },
@@ -138,13 +138,13 @@
                             "sortby": {},
                             "queryFacets" : "about.@type",
                             "resultFields" : [
-                                    "about.@type",
-                                    "about.title",
-                                    "about.responsibilityStatement",
-                                    "about.publication",
-                                    "about.identifier",
-                                    "about.instanceOf.creator",
-                                    "about.instanceOf.contributorList"
+                                "about.@type",
+                                "about.title",
+                                "about.responsibilityStatement",
+                                "about.publication",
+                                "about.identifier",
+                                "about.instanceOf.creator",
+                                "about.instanceOf.contributorList"
                             ]
                         },
                         "auth": {
