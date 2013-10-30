@@ -10,6 +10,7 @@ import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.*
 import org.elasticsearch.common.transport.*
 import org.elasticsearch.common.settings.ImmutableSettings
+import org.elasticsearch.common.xcontent.ToXContent
 import org.elasticsearch.node.NodeBuilder
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.common.settings.*
@@ -19,6 +20,8 @@ import org.elasticsearch.search.facet.FacetBuilders
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.index.query.*
+import org.elasticsearch.search.sort.FieldSortBuilder
+import org.elasticsearch.search.sort.SortOrder
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
@@ -204,7 +207,8 @@ abstract class ElasticSearch extends BasicPlugin {
         }
         if (q.sorting) {
             q.sorting.each {
-                srb = srb.addSort(it.key, (it.value && it.value.equalsIgnoreCase('desc') ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC))
+                def sortOrder =  it.value && it.value.equalsIgnoreCase('desc') ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC
+                srb = srb.addSort(new FieldSortBuilder(it.key).order(sortOrder).missing("_last").ignoreUnmapped(true))
             }
         }
         if (q.highlights) {
