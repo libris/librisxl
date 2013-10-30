@@ -8,14 +8,16 @@ import se.kb.libris.whelks.importers.*
 class WhelkOperator {
 
     static main(args) {
-        URI whelkConfigUri
+        InputStream whelkConfigInputStream = null
+        InputStream pluginConfigInputStream = null
         try {
-            whelkConfigUri = new URI(System.getProperty("whelk.config.uri"))
+            whelkConfigInputStream = new URI(System.getProperty("whelk.config.uri")).toURL().newInputStream()
+            pluginConfigInputStream = new URI(System.getProperty("plugin.config.uri")).toURL().newInputStream()
         } catch (NullPointerException npe) {
             println "System property 'whelk.config.uri' is needed for whelkoperations."
             System.exit(1)
         }
-        WhelkInitializer wi = new WhelkInitializer(whelkConfigUri.toURL().newInputStream())
+        WhelkInitializer wi = new WhelkInitializer(whelkConfigInputStream, pluginConfigInputStream)
 
         if (args.length > 2) {
             println "WhelkOperator doing ${args[0]} on ${args[1]}."

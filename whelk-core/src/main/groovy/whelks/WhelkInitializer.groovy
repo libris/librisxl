@@ -12,10 +12,15 @@ class WhelkInitializer {
     def whelklist = []
     def plugins = [:]
 
-    WhelkInitializer(InputStream is) {
+    WhelkInitializer(InputStream wis, InputStream pis) {
         Object mapper = new ObjectMapper()
-        if (is) {
-            json = mapper.readValue(is, Map)
+        if (pis) {
+            log.info("Got separate plugin config.")
+            json = mapper.readValue(wis, Map)
+            json["_plugins"] = mapper.readValue(pis, List)
+        } else if (wis) {
+            log.info("Single config file.")
+            json = mapper.readValue(wis, Map)
         }
     }
 

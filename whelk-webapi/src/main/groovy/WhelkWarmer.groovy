@@ -10,9 +10,15 @@ class WhelkWarmer extends org.restlet.ext.servlet.ServerServlet {
         super.init()
         def wi
         if (System.getProperty("whelk.config.uri")) {
-            URI whelkconfig = new URI(System.getProperty("whelk.config.uri"))
+            def wcu = System.getProperty("whelk.config.uri")
+            def pcu = System.getProperty("plugin.config.uri", null)
+            URI whelkconfig = new URI(wcu)
             log.info("Initializing whelks using definitions in $whelkconfig")
-             wi = new WhelkInitializer(whelkconfig.toURL().newInputStream())
+            if (pcu) {
+                wi = new WhelkInitializer(whelkconfig.toURL().newInputStream(), new URI(pcu).toURL().newInputStream())
+            } else {
+                wi = new WhelkInitializer(whelkconfig.toURL().newInputStream(), null)
+            }
         } else {
             // Use default config bundled with application.
             //wi = new WhelkInitializer(this.class.classLoader.getResourceAsStream("mock_whelks.json"))
