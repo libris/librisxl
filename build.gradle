@@ -3,7 +3,7 @@ loadConfiguration()
 def loadConfiguration() {
     def environment = hasProperty('env') ? env : 'dev'
     setProperty 'environment', environment
-    System.setProperty 'whelk.config.uri', 'file:etc/environment/' + environment + '/whelks.json'
+    System.setProperty 'whelk.config.uri', 'file:etc/environment/' + environment + '/whelks_prod.json'
     def encoding = hasProperty('file.encoding') ? file.encoding : 'UTF-8'
     System.setProperty 'file.encoding', encoding
 }
