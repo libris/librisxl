@@ -37,6 +37,7 @@ subprojects {
     }
 
     task copyConfiguration << {
+        /*
         ext {
             try {
                 environment = env
@@ -44,6 +45,7 @@ subprojects {
                 environment = "dev"
             }
         }
+        */
 
         println "Target environment: ${environment}"
 
