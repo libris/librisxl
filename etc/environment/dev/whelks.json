@@ -138,8 +138,8 @@
                             "sortby": {
                                 "recordPriority" : "desc",
                                 "_score" : "desc",
-                                "about.title.titleValue" : "desc",
-                                "about.identifier.identifierValue" : "desc"
+                                "about.title.titleValue" : "asc",
+                                "about.identifier.identifierValue" : "asc"
                             },
                             "queryFacets" : "about.@type",
                             "resultFields" : [
@@ -159,10 +159,10 @@
                             "sortby": {
                                 "recordPriority" : "desc",
                                 "_score" : "desc",
-                                "about.controlledLabel" : "desc",
-                                "about.prefLabel" : "desc",
-                                "about.altLabel" : "desc",
-                                "about.title.titleValue" : "desc"
+                                "about.controlledLabel" : "asc",
+                                "about.prefLabel" : "asc",
+                                "about.altLabel" : "asc",
+                                "about.title.titleValue" : "asc"
                             },
                             "queryFacets" : "about.@type"
                         },
@@ -183,9 +183,9 @@
                             "sortby": {
                                 "recordPriority" : "desc",
                                 "_score" : "desc",
-                                "controlledLabel" : "desc",
-                                "label" : "desc",
-                                "altLabel" : "desc",
+                                "controlledLabel" : "asc",
+                                "label" : "asc",
+                                "altLabel" : "asc",
                                 "@id" : "desc"
                             }
                         },
@@ -201,10 +201,10 @@
                             "sortby": {
                                 "recordPriority" : "desc",
                                 "_score" : "desc",
-                                "prefLabel" : "desc",
-                                "label" : "desc",
-                                "closeMatch.inScheme.prefLabel" : "desc",
-                                "hiddenLabel" : "desc"
+                                "prefLabel" : "asc",
+                                "label" : "asc",
+                                "closeMatch.inScheme.prefLabel" : "asc",
+                                "hiddenLabel" : "asc"
                             }
                         }
                     }
