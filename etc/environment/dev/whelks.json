@@ -134,8 +134,13 @@
                         "bib" : {
                             "queryFields" : [],
                             "infoFields" : [],
-                            "defaultBoost" : "about.title:5,about.identifier:5,about.instanceOf.contributorList.authoritativeName:5,about.instanceOf.subject.authoritativeName:2,about.publication.name:2",
-                            "sortby": {},
+                            "defaultBoost" : "about.title.titleValue:50,about.identifier.identifierValue:50,about.instanceOf.creator.controlledLabel:50, about.instanceOf.contributorList.controlledLabel:10,about.instanceOf.subject.prefLabel:10,about.publication.providerName:10",
+                            "sortby": {
+                                "recordPriority" : "desc",
+                                "_score" : "desc",
+                                "about.title.titleValue" : "desc",
+                                "about.identifier.identifierValue" : "desc"
+                            },
                             "queryFacets" : "about.@type",
                             "resultFields" : [
                                 "about.@type",
@@ -150,8 +155,16 @@
                         "auth": {
                             "queryFields": [],
                             "infoFields": [],
-                            "defaultBoost": "",
-                            "sortby": {}
+                            "defaultBoost": "about.title.titleValue:50,about.controlledLabel:50,about.prefLabel:50,about.altLabel:50",
+                            "sortby": {
+                                "recordPriority" : "desc",
+                                "_score" : "desc",
+                                "about.controlledLabel" : "desc",
+                                "about.prefLabel" : "desc",
+                                "about.altLabel" : "desc",
+                                "about.title.titleValue" : "desc"
+                            },
+                            "queryFacets" : "about.@type"
                         },
                         "person" : {
                             "queryFields":[
@@ -164,21 +177,26 @@
                                 "authorOf",
                                 "hasAnnotation.about"
                             ],
-                            "defaultBoost" : "controlledLabel:5",
+                            "defaultBoost" : "controlledLabel:50, label:50",
                             "sortby": {
-                                "recordPriority" : "asc",
+                                "recordPriority" : "desc",
                                 "_score" : "desc",
-                                "controlledLabel" : "asc"
+                                "controlledLabel" : "desc",
+                                "label" : "desc"
                             }
                         },
                         "concept" : {
-                            "queryFields":[],
+                            "queryFields":[
+                                "prefLabel",
+                                "label"
+                            ],
                             "infoFields": [],
-                            "defaultBoost": "prefLabel:5",
+                            "defaultBoost": "prefLabel:50, label:50",
                             "sortby": {
-                                "recordPriority" : "asc",
+                                "recordPriority" : "desc",
                                 "_score" : "desc",
-                                "prefLabel" : "asc"
+                                "prefLabel" : "asc",
+                                "label" : "desc"
                             }
                         }
                     }
