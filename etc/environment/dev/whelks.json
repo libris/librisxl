@@ -134,7 +134,7 @@
                         "bib" : {
                             "queryFields" : [],
                             "infoFields" : [],
-                            "defaultBoost" : "about.title.titleValue:50,about.identifier.identifierValue:50,about.instanceOf.creator.controlledLabel:50, about.instanceOf.contributorList.controlledLabel:10,about.instanceOf.subject.prefLabel:10,about.publication.providerName:10",
+                            "defaultBoost" : "about.title.titleValue:50,about.identifier.identifierValue:50,about.instanceOf.creator.controlledLabel:50,about.instanceOf.contributorList.controlledLabel:10,about.instanceOf.subject.prefLabel:10,about.publication.providerName:10",
                             "sortby": {
                                 "recordPriority" : "desc",
                                 "_score" : "desc",
@@ -169,7 +169,9 @@
                         "person" : {
                             "queryFields":[
                                 "controlledLabel",
-                                "label"
+                                "label",
+                                "altLabel",
+                                "@id"
                             ],
                             "infoFields":[
                                 "birthYear",
@@ -177,26 +179,32 @@
                                 "authorOf",
                                 "hasAnnotation.about"
                             ],
-                            "defaultBoost" : "controlledLabel:50, label:50",
+                            "defaultBoost" : "controlledLabel:50,label:50,altLabel:20",
                             "sortby": {
                                 "recordPriority" : "desc",
                                 "_score" : "desc",
                                 "controlledLabel" : "desc",
-                                "label" : "desc"
+                                "label" : "desc",
+                                "altLabel" : "desc",
+                                "@id" : "desc"
                             }
                         },
                         "concept" : {
                             "queryFields":[
                                 "prefLabel",
-                                "label"
+                                "label",
+                                "closeMatch.inScheme.prefLabel",
+                                "hiddenLabel"
                             ],
                             "infoFields": [],
-                            "defaultBoost": "prefLabel:50, label:50",
+                            "defaultBoost": "prefLabel:50,label:50,closeMatch.inScheme.prefLabel:30,hiddenLabel:20",
                             "sortby": {
                                 "recordPriority" : "desc",
                                 "_score" : "desc",
-                                "prefLabel" : "asc",
-                                "label" : "desc"
+                                "prefLabel" : "desc",
+                                "label" : "desc",
+                                "closeMatch.inScheme.prefLabel" : "desc",
+                                "hiddenLabel" : "desc"
                             }
                         }
                     }
