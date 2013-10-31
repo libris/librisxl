@@ -81,6 +81,7 @@ class RestManager extends Application {
         for (api in whelk.getAPIs()) {
             if (!api.varPath) {
                 log.debug("Attaching strict-path-API ${api.id} at ${api.path}.")
+                api.setContext(router.context.createChildContext())
                 router.attach(api.path, api)
             }
         }
@@ -88,6 +89,7 @@ class RestManager extends Application {
             if (api.varPath) {
                 def indexType = findVar(api.path)
                 log.debug("Attaching variable-path-API ${api.id} at ${api.path}. indextype $indexType")
+                api.setContext(router.context.createChildContext())
                 router.attach(api.path, api).template.variables.put(findVar(api.path), new Variable(Variable.TYPE_URI_PATH))
             }
         }
