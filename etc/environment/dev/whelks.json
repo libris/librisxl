@@ -155,14 +155,14 @@
                         "auth": {
                             "queryFields": [],
                             "infoFields": [],
-                            "defaultBoost": "about.title.titleValue:50,about.controlledLabel:50,about.prefLabel:50,about.altLabel:50",
+                            "defaultBoost": "about.uniformTitle:50,about.controlledLabel:50,about.prefLabel:50,about.altLabel:50",
                             "sortby": {
                                 "recordPriority" : "desc",
                                 "_score" : "desc",
                                 "about.controlledLabel" : "asc",
                                 "about.prefLabel" : "asc",
                                 "about.altLabel" : "asc",
-                                "about.title.titleValue" : "asc"
+                                "about.uniformTitle" : "asc"
                             },
                             "queryFacets" : "about.@type"
                         },

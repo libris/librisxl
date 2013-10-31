@@ -24,7 +24,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     Keyspace keyspace
     String requiredContentType
 
-    ColumnFamily<String,Map> CF_DOCUMENT = new ColumnFamily<String, String>(
+    ColumnFamily<String,String> CF_DOCUMENT = new ColumnFamily<String, String>(
         "Document",
         StringSerializer.get(),
         StringSerializer.get(),
@@ -141,78 +141,55 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     Iterable<Document> getAll(String whelkPrefix) {
-        return new CassandraIterable()
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                Rows<String, String> rows
+                try {
+                    rows = keyspace.prepareQuery(CF_DOCUMENT)
+                    .getAllRows()
+                    .setRowLimit(10)
+                    .withColumnRange(new RangeBuilder().setLimit(10).build())
+                    .setExceptionCallback(new ExceptionCallback() {
+                        @Override
+                        public boolean onException(ConnectionException e) {
+                            try {
+                                log.warn("Cassandra threw exception. Holding for a second ...")
+                        Thread.sleep(1000);
+                        } catch (InterruptedException e1) {
+                        }
+                        return true
+                        }})
+                    .execute().getResult()
+                } catch (ConnectionException e) {
+                    log.error("Cassandra Query failed.", e)
+                    throw e
+                }
+                return new CassandraIterator(rows)
+            }
+        }
     }
 
 }
 
-@Log
-class CassandraIterable implements Iterable<Document> {
+class CassandraIterator implements Iterator<Document> {
 
-    private Keyspace keyspace
+    private Iterator iter
 
-    CassandraIterable(Keyspace ksp) {
-        keyspace = ksp
+    CassandraIterator(Rows rows) {
+        iter = rows.iterator()
     }
 
-
-    Iterator<Document> iterator() {
-        return new CassandraIterator(keyspace)
+    public boolean hasNext() {
+        return iter.hasNext()
     }
 
-    class CassandraIterator implements Iterator<Document> {
-
-        private Queue<Document> resultQueue = new LinkedList<Document>()
-        private Keyspace keyspace
-
-        CassandraIterator(Keyspace ksp) {
-            this.keyspace = ksp
-        }
-
-        public boolean hasNext() {
-            if (resultQueue.isEmpty()) {
-                populateResults()
-            }
-            return !resultQueue.isEmpty()
-        }
-
-        public Document next() {
-            if (resultQueue.isEmpty()) {
-                populateResults()
-            }
-            return resultQueue.poll()
-        }
-
-        private void populateResults() {
-            Rows<String, String> rows;
-            try {
-                rows = keyspace.prepareQuery(CF_DOCUMENT)
-                .getAllRows()
-                .setRowLimit(10)
-                .withColumnRange(new RangeBuilder().setLimit(10).build())
-                .setExceptionCallback(new ExceptionCallback() {
-                    @Override
-                    public boolean onException(ConnectionException e) {
-                        try {
-                            log.warn("Cassandra threw exception. Holding for a second ...")
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e1) {
-                        }
-                    return true;
-                    }})
-                .execute().getResult();
-            } catch (ConnectionException e) {
-                log.error("Cassandra Query failed.", e)
-                throw e
-            }
-
-
-            // This will never throw an exception
-            for (Row<String, String> row : rows.getResult()) {
-                log.info("ROW: " + row.getKey() + " " + row.getColumns().size());
-            }
-        }
-
-        void remove() {}
+    public Document next() {
+        Row<String,String> row = iter.next()
+        return new Document()
+        .withIdentifier(row.getKey())
+        .withData(row.columns.getColumnByName("data").byteValue)
+        .withMetaEntry(row.columns.getColumnByName("entry").stringValue)
     }
+
+    void remove() {}
 }
