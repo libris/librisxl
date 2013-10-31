@@ -141,69 +141,55 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     Iterable<Document> getAll(String whelkPrefix) {
-        return new CassandraIterable(keyspace, CF_DOCUMENT)
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                Rows<String, String> rows
+                try {
+                    rows = keyspace.prepareQuery(CF_DOCUMENT)
+                    .getAllRows()
+                    .setRowLimit(10)
+                    .withColumnRange(new RangeBuilder().setLimit(10).build())
+                    .setExceptionCallback(new ExceptionCallback() {
+                        @Override
+                        public boolean onException(ConnectionException e) {
+                            try {
+                                log.warn("Cassandra threw exception. Holding for a second ...")
+                        Thread.sleep(1000);
+                        } catch (InterruptedException e1) {
+                        }
+                        return true
+                        }})
+                    .execute().getResult()
+                } catch (ConnectionException e) {
+                    log.error("Cassandra Query failed.", e)
+                    throw e
+                }
+                return new CassandraIterator(rows)
+            }
+        }
     }
 
 }
 
-@Log
-class CassandraIterable implements Iterable<Document> {
+class CassandraIterator implements Iterator<Document> {
 
-    private Keyspace keyspace
-    ColumnFamily CF_DOCUMENT
+    private Iterator iter
 
-    CassandraIterable(Keyspace ksp, ColumnFamily cf) {
-        keyspace = ksp
-        this.CF_DOCUMENT = cf
+    CassandraIterator(Rows rows) {
+        iter = rows.iterator()
     }
 
-
-    Iterator<Document> iterator() {
-        Rows<String, String> rows
-        try {
-            rows = keyspace.prepareQuery(CF_DOCUMENT)
-            .getAllRows()
-            .setRowLimit(10)
-            .withColumnRange(new RangeBuilder().setLimit(10).build())
-            .setExceptionCallback(new ExceptionCallback() {
-                @Override
-                public boolean onException(ConnectionException e) {
-                    try {
-                        log.warn("Cassandra threw exception. Holding for a second ...")
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e1) {
-                    }
-                return true
-                }})
-            .execute().getResult()
-        } catch (ConnectionException e) {
-            log.error("Cassandra Query failed.", e)
-            throw e
-        }
-        return new CassandraIterator(rows)
+    public boolean hasNext() {
+        return iter.hasNext()
     }
 
-    class CassandraIterator implements Iterator<Document> {
-
-        private Queue<Document> resultQueue = new LinkedList<Document>()
-        private Iterator iter
-
-        CassandraIterator(Rows rows) {
-            iter = rows.iterator()
-        }
-
-        public boolean hasNext() {
-            return iter.hasNext()
-        }
-
-        public Document next() {
-            Row<String,String> row = iter.next()
-            return new Document()
-                .withIdentifier(row.getKey())
-                .withData(row.columns.getColumnByName("data").byteValue)
-                .withMetaEntry(row.columns.getColumnByName("entry").stringValue)
-        }
-
-        void remove() {}
+    public Document next() {
+        Row<String,String> row = iter.next()
+        return new Document()
+        .withIdentifier(row.getKey())
+        .withData(row.columns.getColumnByName("data").byteValue)
+        .withMetaEntry(row.columns.getColumnByName("entry").stringValue)
     }
+
+    void remove() {}
 }
