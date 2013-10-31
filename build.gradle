@@ -1,8 +1,13 @@
 loadConfiguration()
 
 def loadConfiguration() {
-    def environment = hasProperty('env') ? env : 'dev'
-    setProperty 'environment', environment
+    ext {
+        try {
+           environment = env
+        } catch (MissingPropertyException mpe) {
+            environment = "dev"
+        }
+    }
     System.setProperty 'whelk.config.uri', 'file:etc/environment/' + environment + '/whelks.json'
     System.setProperty 'plugin.config.uri', 'file:etc/plugins.json'
     def encoding = hasProperty('file.encoding') ? file.encoding : 'UTF-8'
@@ -38,16 +43,6 @@ subprojects {
     }
 
     task copyConfiguration << {
-        /*
-        ext {
-            try {
-                environment = env
-            } catch (Exception e) {
-                environment = "dev"
-            }
-        }
-        */
-
         println "Target environment: ${environment}"
 
         copy {
