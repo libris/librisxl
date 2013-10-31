@@ -8,5 +8,4 @@ import java.util.List;
 public interface RDFFormatConverter extends Plugin {
     public List<RDFDescription> convert(Document doc);
     public String getRequiredContentType();
-    public int getOrder();
 }

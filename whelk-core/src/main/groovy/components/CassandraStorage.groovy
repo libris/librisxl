@@ -10,6 +10,7 @@ import com.netflix.astyanax.connectionpool.*
 import com.netflix.astyanax.connectionpool.impl.*
 import com.netflix.astyanax.serializers.*
 import com.netflix.astyanax.thrift.*
+import com.netflix.astyanax.util.*
 
 import com.google.common.collect.ImmutableMap
 
@@ -140,7 +141,78 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     Iterable<Document> getAll(String whelkPrefix) {
-        return null
+        return new CassandraIterable()
     }
 
+}
+
+@Log
+class CassandraIterable implements Iterable<Document> {
+
+    private Keyspace keyspace
+
+    CassandraIterable(Keyspace ksp) {
+        keyspace = ksp
+    }
+
+
+    Iterator<Document> iterator() {
+        return new CassandraIterator(keyspace)
+    }
+
+    class CassandraIterator implements Iterator<Document> {
+
+        private Queue<Document> resultQueue = new LinkedList<Document>()
+        private Keyspace keyspace
+
+        CassandraIterator(Keyspace ksp) {
+            this.keyspace = ksp
+        }
+
+        public boolean hasNext() {
+            if (resultQueue.isEmpty()) {
+                populateResults()
+            }
+            return !resultQueue.isEmpty()
+        }
+
+        public Document next() {
+            if (resultQueue.isEmpty()) {
+                populateResults()
+            }
+            return resultQueue.poll()
+        }
+
+        private void populateResults() {
+            Rows<String, String> rows;
+            try {
+                rows = keyspace.prepareQuery(CF_DOCUMENT)
+                .getAllRows()
+                .setRowLimit(10)
+                .withColumnRange(new RangeBuilder().setLimit(10).build())
+                .setExceptionCallback(new ExceptionCallback() {
+                    @Override
+                    public boolean onException(ConnectionException e) {
+                        try {
+                            log.warn("Cassandra threw exception. Holding for a second ...")
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e1) {
+                        }
+                    return true;
+                    }})
+                .execute().getResult();
+            } catch (ConnectionException e) {
+                log.error("Cassandra Query failed.", e)
+                throw e
+            }
+
+
+            // This will never throw an exception
+            for (Row<String, String> row : rows.getResult()) {
+                log.info("ROW: " + row.getKey() + " " + row.getColumns().size());
+            }
+        }
+
+        void remove() {}
+    }
 }

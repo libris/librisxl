@@ -8,5 +8,4 @@ import java.util.List;
 public interface IndexFormatConverter extends Plugin {
     public List<IndexDocument> convert(Document doc);
     public String getRequiredContentType();
-    public int getOrder();
 }
