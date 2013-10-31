@@ -25,6 +25,11 @@ class RestManager extends Application {
 
     RestManager(Context parentContext) {
         super(parentContext)
+
+        //tunnelService.extensionsTunnel = true
+        metadataService.addExtension("ttl", MediaType.APPLICATION_RDF_TURTLE)
+        metadataService.addExtension("jsonld", new MediaType("application/ld+json"))
+
         log.debug("Using file encoding: " + System.getProperty("file.encoding"));
         log.debug("Retrievieng whelks from JNDI ...")
         whelks = new javax.naming.InitialContext().lookup("whelks")
