@@ -51,7 +51,8 @@
 :DigitalResource a owl:Class;
     ptg:abstract true;
     owl:equivalentClass bf:SoftwareOrMultimedia;
-    skos:closeMatch dctype:InteractiveResource, dctype:Software .
+    #rdfs:subClassOf [ owl:unionOf (dctype:InteractiveResource dctype:Software) ]
+    rdfs:subClassOf dctype:InteractiveResource, dctype:Software .
 
 :Dataset a owl:Class;
     rdfs:label "Dataset"@sv;
@@ -63,7 +64,7 @@
 
 :Text a owl:Class;
     rdfs:label "Text"@sv;
-    owl:subClassOf :UniformWork;
+    rdfs:subClassOf :UniformWork;
     owl:equivalentClass dctype:Text, bf:LanguageMaterial, dc:BibliographicResource .
 
 :StillImage a owl:Class;

@@ -10,11 +10,13 @@ import com.netflix.astyanax.connectionpool.*
 import com.netflix.astyanax.connectionpool.impl.*
 import com.netflix.astyanax.serializers.*
 import com.netflix.astyanax.thrift.*
+import com.netflix.astyanax.util.*
 
 import com.google.common.collect.ImmutableMap
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.exception.*
 
 @Log
 class CassandraStorage extends BasicPlugin implements Storage {
@@ -127,131 +129,90 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     void delete(URI uri, String prefix) {
+        log.debug("Deleting document $uri")
+        MutationBatch m = keyspace.prepareMutationBatch()
+        m.withRow(CF_DOCUMENT, uri.toString()).delete()
+        try {
+            def result = m.execute()
+        } catch (ConnectionException ce) {
+            throw new WhelkRuntimeException("Failed to delete document with identifier $uri", ce)
+        }
     }
 
     @Override
     Iterable<Document> getAll(String whelkPrefix) {
-        return null
+        return new CassandraIterable()
     }
 
 }
 
-/*
 @Log
-class HectorCassandraStorage extends BasicPlugin implements Storage {
+class CassandraIterable implements Iterable<Document> {
 
-    int REPLICATION_FACTOR = 1
-    String COLUMN_FAMILY_NAME = "Resource"
+    private Keyspace keyspace
 
-    String requiredContentType
-
-    Keyspace ksp
-    ColumnFamilyTemplate<String, String> cft
-
-    HectorCassandraStorage() {}
-    HectorCassandraStorage(String rct) {
-        this.requiredContentType = rct
+    CassandraIterable(Keyspace ksp) {
+        keyspace = ksp
     }
 
-    void init(String whelkName) {
-        String cassandra_host = System.getProperty("cassandra.host")
-        String cassandra_cluster = System.getProperty("cassandra.cluster")
-        log.info("Initializing cassandra storage in cluster $cassandra_cluster at $cassandra_host.")
-        Cluster cluster = HFactory.getOrCreateCluster(cassandra_cluster, cassandra_host+":9160")
-        log.debug("Found cluster: $cluster")
-        ColumnFamilyDefinition cfDef = HFactory.createColumnFamilyDefinition(whelkName, COLUMN_FAMILY_NAME, ComparatorType.BYTESTYPE)
-        log.debug("cfDef: $cfDef")
-        KeyspaceDefinition keyspaceDef = cluster.describeKeyspace(whelkName)
-        log.debug("keyspaceDef: $keyspaceDef")
-        if (keyspaceDef == null) {
-            KeyspaceDefinition newKeyspace = HFactory.createKeyspaceDefinition(whelkName, ThriftKsDef.DEF_STRATEGY_CLASS, REPLICATION_FACTOR, Arrays.asList(cfDef))
-            log.debug("new keyspace: $newKeyspace")
-            cluster.addKeyspace(newKeyspace, true)
-            keyspaceDef = cluster.describeKeyspace(whelkName)
-            log.debug("Retrieved keyspacedef: $keyspaceDef")
+
+    Iterator<Document> iterator() {
+        return new CassandraIterator(keyspace)
+    }
+
+    class CassandraIterator implements Iterator<Document> {
+
+        private Queue<Document> resultQueue = new LinkedList<Document>()
+        private Keyspace keyspace
+
+        CassandraIterator(Keyspace ksp) {
+            this.keyspace = ksp
         }
-        ksp = HFactory.createKeyspace(whelkName, cluster)
-        log.debug("ksp: $ksp")
-        cft = new ThriftColumnFamilyTemplate<String, String>(ksp, COLUMN_FAMILY_NAME, StringSerializer.get(), StringSerializer.get())
-    }
 
-    @Override
-    boolean store(Document doc, String whelkPrefix) {
-        if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
-            ColumnFamilyUpdater<String, String> updater = cft.createUpdater(doc.identifier)
-            updater.setByteArray("data", doc.data)
-            updater.setLong("timestamp", doc.timestamp)
-            updater.setString("contentType", doc.contentType)
+        public boolean hasNext() {
+            if (resultQueue.isEmpty()) {
+                populateResults()
+            }
+            return !resultQueue.isEmpty()
+        }
 
+        public Document next() {
+            if (resultQueue.isEmpty()) {
+                populateResults()
+            }
+            return resultQueue.poll()
+        }
+
+        private void populateResults() {
+            Rows<String, String> rows;
             try {
-                cft.update(updater)
-                log.debug("Stored document ${doc.identifier} ...")
-            } catch (HectorException e) {
-                log.error("Exception: ${e.message}", e)
+                rows = keyspace.prepareQuery(CF_DOCUMENT)
+                .getAllRows()
+                .setRowLimit(10)
+                .withColumnRange(new RangeBuilder().setLimit(10).build())
+                .setExceptionCallback(new ExceptionCallback() {
+                    @Override
+                    public boolean onException(ConnectionException e) {
+                        try {
+                            log.warn("Cassandra threw exception. Holding for a second ...")
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e1) {
+                        }
+                    return true;
+                    }})
+                .execute().getResult();
+            } catch (ConnectionException e) {
+                log.error("Cassandra Query failed.", e)
+                throw e
             }
-            return true
-        } else {
-            if (!doc) {
-                log.warn("Received null document. No attempt to store.")
-            } else if (log.isDebugEnabled()) {
-                log.debug("This storage does not handle document with type ${doc.contentType}")
+
+
+            // This will never throw an exception
+            for (Row<String, String> row : rows.getResult()) {
+                log.info("ROW: " + row.getKey() + " " + row.getColumns().size());
             }
         }
-        return false
-    }
 
-    @Override
-    Document get(URI uri, String whelkPrefix) {
-        Document document
-        try {
-            ColumnFamilyResult<String, String> res = cft.queryColumns([uri.toString()])
-            log.debug("res: $res")
-            if (res?.hasResults()) {
-                document = new Document().withIdentifier(uri).withData(res.getByteArray("data")).withContentType(res.getString("contentType"))
-                document.setTimestamp(res.getLong("timestamp"))
-            }
-        } catch (HectorException e) {
-            log.error("Exception: ${e.message}", e)
-        }
-        return document
-    }
-
-    @Override
-    void delete(URI uri, String prefix) {
-        try {
-            cft.deleteRow(uri.toString())
-        } catch (HectorException e) {
-            log.error("Exception: ${e.message}", e)
-        }
-    }
-
-    @Override
-    Iterable<Document> getAll(String whelkPrefix) {
-        return null
+        void remove() {}
     }
 }
-
-@Entity
-@DiscriminatorValue("document")
-class CassandraDocument {
-    @Id
-    String identifier
-    @Column(name="data")
-    byte[] data
-    @Column(name="entry")
-    Map entry
-    @Column(name="meta")
-    Map meta
-
-    CassandraDocument(final Document d) {
-        this.identifier = d.identifier
-        this.data = d.data
-        this.entry = d.entry
-        this.meta = d.meta
-    }
-
-    Document toDocument() {
-        return new Document(identifier=this.identifier, data=this.data, entry=this.entry, meta=this.meta)
-    }
-}
-*/

@@ -1,0 +1,29 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "@vocab": "http://www.w3.org/2002/07/owl#",
+    "equivalentClass": { "@type": "@id"},
+    "equivalentProperty": { "@type": "@id"},
+    "sameAs": { "@type": "@id"},
+    "imports": { "@type": "@id"},
+    "Property": "rdf:Property",
+    "label": "rdfs:label",
+    "comment": "rdfs:comment",
+    "prefLabel": "http://www.w3.org/2004/02/skos/core#prefLabel",
+    "altLabel": "http://www.w3.org/2004/02/skos/core#altLabel",
+    "notation": {"@id": "http://www.w3.org/2004/02/skos/core#notation", "@language": null},
+    "label_en": {"@id": "label", "@language": "en"},
+    "comment_en": {"@id": "comment", "@language": "en"},
+    "prefLabel_en": {"@id": "prefLabel", "@language": "en"},
+    "altLabel_en": {"@id": "altLabel", "@language": "en"},
+    "abstract": "http://protege.stanford.edu/plugins/owl/protege#abstract",
+    "subClassOf": {"@id": "rdfs:subClassOf", "@type": "@id"},
+    "subPropertyOf": {"@id": "rdfs:subPropertyOf", "@type": "@id"},
+    "unionOf": {"@id": "owl:unionOf", "@container": "@list", "@type": "@id"},
+    "domain": {"@id": "rdfs:domain", "@type": "@id"},
+    "range": {"@id": "rdfs:range", "@type": "@id"},
+    "isDefinedBy": {"@id": "rdfs:isDefinedBy", "@type": "@id"},
+    "seeAlso": {"@id": "rdfs:seeAlso", "@type": "@id"}
+  }
+}

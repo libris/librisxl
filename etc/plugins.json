@@ -1,0 +1,213 @@
+[
+{
+    "remotesearch": {
+        "_class": "se.kb.libris.whelks.api.RemoteSearchRestlet"
+    }
+},
+{
+    "resourcelist": {
+        "_class": "se.kb.libris.whelks.api.ResourceListRestlet"
+    }
+},
+{
+    "marcmap": {
+        "_class": "se.kb.libris.whelks.api.MarcMapRestlet"
+    }
+},
+{
+    "isxntool": {
+        "_class": "se.kb.libris.whelks.api.ISXNTool",
+        "_params" : "_whelk:libris"
+    }
+},
+{
+    "localindex": {
+        "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
+        "_params" : "work/data",
+        "_unique" : false
+    }
+},
+{
+    "index": {
+        "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
+        "_unique" : false
+    }
+},
+{
+    "cassandrastorage": {
+        "_class" : "se.kb.libris.whelks.component.CassandraStorage",
+        "_params" : "application/ld+json",
+        "_priority" : 0
+    }
+},
+{
+    "diskstorage": {
+        "_class" : "se.kb.libris.whelks.component.DiskStorage",
+        "_params" : {
+            "storageDir": "work/storage/jsonld",
+            "contentType": "application/ld+json"
+        },
+        "_priority" : 1
+    }
+},
+{
+    "isostorage": {
+        "_class" : "se.kb.libris.whelks.component.DiskStorage",
+        "_params" : {
+            "storageDir": "work/storage/iso",
+            "contentType": "application/x-marc-json"
+        },
+        "_priority" : 2
+    }
+},
+{
+    "flatstorage": {
+        "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
+        "_params" : {
+            "storageDir": "work/storage/main",
+            "contentType": "application/ld+json"
+        },
+        "_priority" : 1
+    }
+},
+{
+    "graphstore": {
+        "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
+        "_params" : {
+            "graphStoreUri": "http://localhost:8084/openrdf-sesame/repositories/dev-libris/rdf-graphs/service",
+            "queryUri": "http://localhost:8084/openrdf-sesame/repositories/dev-libris/"
+        },
+        "_priority" : 0
+    }
+},
+{
+    "marcconverter" : {
+        "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"
+    }
+},
+{
+    "turtleconverter" : {
+        "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter"
+    }
+},
+{
+    "entityextractor" : {
+        "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter",
+        "_priority" : 2
+    }
+},
+{
+    "search" : {
+        "_class" : "se.kb.libris.whelks.api.SearchRestlet",
+        "_params" : {
+            "indexTypes" : {
+                "bib" : {
+                    "queryFields" : [],
+                    "infoFields" : [],
+                    "defaultBoost" : "about.title.titleValue:50,about.identifier.identifierValue:50,about.instanceOf.creator.controlledLabel:50, about.instanceOf.contributorList.controlledLabel:10,about.instanceOf.subject.prefLabel:10,about.publication.providerName:10",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.title.titleValue" : "desc",
+                        "about.identifier.identifierValue" : "desc"
+                    },
+                    "queryFacets" : "about.@type",
+                    "resultFields" : [
+                        "about.@type",
+                    "about.title",
+                    "about.responsibilityStatement",
+                    "about.publication",
+                    "about.identifier",
+                    "about.instanceOf.creator",
+                    "about.instanceOf.contributorList"
+                        ]
+                },
+                "auth": {
+                    "queryFields": [],
+                    "infoFields": [],
+                    "defaultBoost": "about.title.titleValue:50,about.controlledLabel:50,about.prefLabel:50,about.altLabel:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.controlledLabel" : "desc",
+                        "about.prefLabel" : "desc",
+                        "about.altLabel" : "desc",
+                        "about.title.titleValue" : "desc"
+                    },
+                    "queryFacets" : "about.@type"
+                },
+                "person" : {
+                    "queryFields":[
+                        "controlledLabel",
+                    "label"
+                        ],
+                    "infoFields":[
+                        "birthYear",
+                    "deathYear",
+                    "authorOf",
+                    "hasAnnotation.about"
+                        ],
+                    "defaultBoost" : "controlledLabel:50, label:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "controlledLabel" : "desc",
+                        "label" : "desc"
+                    }
+                },
+                "concept" : {
+                    "queryFields":[
+                        "prefLabel",
+                    "label"
+                        ],
+                    "infoFields": [],
+                    "defaultBoost": "prefLabel:50, label:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "prefLabel" : "asc",
+                        "label" : "desc"
+                    }
+                }
+            }
+        }
+    }
+},
+{
+    "sparqlapi" : {
+        "_class" : "se.kb.libris.whelks.api.SparqlRestlet"
+    }
+},
+{
+    "documentapi" : {
+        "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
+    }
+},
+{
+    "nameexpander" : {
+        "_class" : "se.kb.libris.whelks.api.CompleteExpander"
+    }
+},
+{
+    "biblistener" : {
+        "_class" : "se.kb.libris.whelks.plugin.Listener",
+        "_params" : "_whelk:libris"
+    }
+},
+{
+    "authlistener" : {
+        "_class" : "se.kb.libris.whelks.plugin.Listener",
+        "_params" : "_whelk:libris"
+    }
+},
+{
+    "jsonldlinkfinder" : {
+        "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkFinder"
+    }
+},
+{
+    "linkenhancer" : {
+        "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkEnhancerFormatConverter"
+    }
+}
+]

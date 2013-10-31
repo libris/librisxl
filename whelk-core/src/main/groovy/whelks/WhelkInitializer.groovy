@@ -12,10 +12,15 @@ class WhelkInitializer {
     def whelklist = []
     def plugins = [:]
 
-    WhelkInitializer(InputStream is) {
+    WhelkInitializer(InputStream wis, InputStream pis) {
         Object mapper = new ObjectMapper()
-        if (is) {
-            json = mapper.readValue(is, Map)
+        if (pis) {
+            log.info("Got separate plugin config.")
+            json = mapper.readValue(wis, Map)
+            json["_plugins"] = mapper.readValue(pis, List)
+        } else if (wis) {
+            log.info("Single config file.")
+            json = mapper.readValue(wis, Map)
         }
     }
 
@@ -112,10 +117,12 @@ class WhelkInitializer {
                         plugin = Class.forName(meta._class).newInstance()
                     }
                     assert plugin, "Failed to instantiate plugin: ${plugname} from class ${meta._class} with params ${meta._params}"
+                    /* Plugin order removed.
                     if (meta._priority) {
                         log.debug("Setting priority ${meta._priority} for plugin $label")
                         plugin.order = meta._priority
                     }
+                    */
                     if (meta._id) {
                         plugin.id = meta._id
                     } else {
