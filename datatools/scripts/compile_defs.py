@@ -26,18 +26,17 @@ def terms():
     return to_jsonld(source, "owl", {
             "index": {"@id": "@graph", "@container": "@index"},
             "@language": "sv"
-            },
-            index=('index', '#'))
+            }, index=('index', '#'))
 
 
 @dataset
 def schemes():
     source = Graph().parse(scriptpath('../def/schemes.ttl'), format='turtle')
     return to_jsonld(source, "skos", {
-        "byNotation": {"@id": "@graph", "@container": "@index"},
-        "@base": BASE,
-        "@language": "sv"
-        }, index=('byNotation', 'notation'))
+            "byNotation": {"@id": "@graph", "@container": "@index"},
+            "@base": BASE,
+            "@language": "sv"
+            }, index=('byNotation', 'notation'))
 
 
 @dataset
@@ -48,11 +47,12 @@ def relators():
 
     data = to_jsonld(source, "owl", {
             "byNotation": {"@id": "@graph", "@container": "@index"},
-            "@base": BASE, "@language": "sv"
+            "@base": BASE,
+            "@language": "sv"
             }, index=('byNotation', 'notation'))
 
     extend(data['byNotation'], 'funktionskoder.tsv', 'sv',
-            make_term='label_en', iri_template="/def/relators/{term}",
+            term_source='label_en', iri_template="/def/relators/{term}",
             addtype='ObjectProperty',
             relation='equivalentProperty')
 
@@ -115,10 +115,10 @@ def countries():
             oftype=SKOS.Concept)
 
     data = to_jsonld(source, "skos", {
-        "byNotation": {"@id": "@graph", "@container": "@index"},
-        "@base": BASE,
-        "@language": "sv"
-        }, index=('byNotation', 'notation'))
+            "byNotation": {"@id": "@graph", "@container": "@index"},
+            "@base": BASE,
+            "@language": "sv"
+            }, index=('byNotation', 'notation'))
 
     extend(data['byNotation'], 'landskoder.tsv', 'sv',
             iri_template="/def/countries/{notation}",
@@ -184,15 +184,15 @@ def to_jsonld(source, contextref, contextobj=None, index=None):
 
 
 def extend(index, extradata, lang, keys=('label', 'comment'),
-        make_term=None, iri_template=None, addtype=None, relation=None):
+        term_source=None, iri_template=None, addtype=None, relation=None):
     fpath = scriptpath('../source/%s' % extradata)
     extras = load_data(fpath)
     for key, item in extras.items():
         iri = None
         if iri_template:
             term = item.pop('term', None)
-            if not term and make_term:
-                term = to_camel_case(item[make_term])
+            if not term and term_source:
+                term = to_camel_case(item[term_source])
             if term:
                 iri = iri_template.format(term=term)
         node = index.get(key)
