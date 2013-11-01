@@ -67,10 +67,11 @@ def languages():
         '@context': [
             "/def/context/skos.jsonld",
             {
-                "@base": BASE,
                 "langCode": {"@id": "notation", "@type": "dc:ISO639-2"},
                 "langTag": {"@id": "notation", "@type": "dc:ISO639-1"},
-                "byCode": {"@id": "@graph", "@container": "@index"}
+                "byCode": {"@id": "@graph", "@container": "@index"},
+                "@base": BASE,
+                "@language": "sv"
             }
         ]
     }
