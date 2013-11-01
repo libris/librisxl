@@ -1,0 +1,224 @@
+code	label_sv	comment_sv	label_en	term
+acp	Konstkopist		Art copyist	
+act	Skådespelare		Actor	
+adp	Bearbetare		Adapter	
+aft	Författare till efterskrift, kolofon, etc.		Author of afterword, colophon, etc.	
+anl	Analytiker		Analyst	
+anm	Animatör		Animator	
+ann	Författare till annotation		Annotator	
+ant	Bibliografisk föregångare (baserat på)		Bibliographic antecedent	
+app	Sökande		Applicant	
+aqt	Författare till citat eller textutdrag		Author in quotations or text abstracts	
+arc	Arkitekt		Architect	
+ard	Art Director		Artistic director	
+arr	Arrangör av musikalisk komposition		Arranger	
+art	Konstnär		Artist	
+asg	Innehavare av tryckeri- eller utgivarlicens		Assignee	
+asn	Associerat namn		Associated name	
+att	Attribuerat/tillskrivet namn		Attributed name	
+auc	Auktionsförrättare		Auctioneer	
+aud	Författare till dialog		Author of dialog	
+aui	Författare till förord, introducerande material, etc.		Author of introduction	
+aus	Författare till filmmanus, etc.		Author of screenplay	
+aut	Författare, medförfattare		Author	
+bdd	Formgivare av bokband		Binding designer	
+bjd	Formgivare av skyddsomslag till böcker		Bookjacket designer	
+bkd	Formgivare av bok		Book designer	
+bkp	Producent av böcker etc.		Book producer	
+blw	Förlags-/reklamtext		Blurb writer	
+bnd	Bokbindare		Binder	
+bpd	Formgivare av exlibris (bokägarmärke)		Bookplate designer	
+bsl	Bokhandlare		Bookseller	
+ccp	Idé, koncept		Conceptor	
+chr	Koreograf		Choreographer	
+clb	Redaktionell medarbetare		Collaborator	
+cli	Klient		Client	
+cll	Kalligraf		Calligrapher	
+clr	Färg		Colorist	
+clt	Framställare av ljustryck		Collotyper	
+cmm	Kommentator till audiovisuella medier		Commentator	
+cmp	Kompositör, tonsättare		Composer	
+cmt	Sättare		Compositor	
+cnd	Dirigent		Conductor	
+cng	Filmfotograf		Cinematographer	
+cns	Censor		Censor	
+coe	[Contestant-appellee: juridisk term ung. motsvarande Åklagare]		Contestant -appellee	
+col	Samlare		Collector	
+com	Sammanställare		Compiler	
+con	Konservator		Conservator	
+cos	[Contestant: juridisk term ung. motsvarande Åklagare]		Contestant	
+cot	[Contestant-appellant: juridisk term ung. motsvarande Åklagare]		Contestant -appellant	
+cov	Formgivare av omslag, etc.		Cover designer	
+cpc	Upphovsrättssökande		Copyright claimant	
+cpe	[Complainant-appellee: juridisk term ung. motsvarande Kärande, Målsägande]		Complainant-appellee	
+cph	Upphovsrättsinnehavare		Copyright holder	
+cpl	[Complainant: juridisk term ung. motsvarande Kärande, Målsägande]		Complainant	
+cpt	[Complainant-appellant: juridisk term ung. motsvarande Kärande, Målsägande]		Complainant-appellant	
+cre	Upphov (creator)		Creator	
+crp	Brevskrivare, mottagare av brev		Correspondent	
+crr	Korrekturläsare av handskrift		Corrector	
+csl	Konsult		Consultant	
+csp	Projektkonsult		Consultant to a project	
+cst	Kostym		Costume designer	
+ctb	Bidragsgivare		Contributor	
+cte	[Contestee-appellant: juridisk term ung. motsvarande Försvarare]		Contestee-appellee	
+ctg	Kartograf Cartographer		Cartographer	
+ctr	Entreprenör, leverantör Contractor		Contractor	
+cts	[juridisk term ung. motsvarande Försvarare] Contestee		arc Architect	
+ctt	[juridisk term ung. motsvarande Försvarare]		Contestee-appellant	
+cur	Utställningsansvarig, utställningskommissarie		Curator	
+cwt	Författare till textkommentar		Commentator for written text	
+dbp	Distributionsort			distributionPlace
+dfd	[Defendant: juridisk term ung. motsvarande Svarande, Tilltalad]		Defendant	
+dfe	[Defendant-appellee: juridisk term ung. motsvarande Svarande, Tilltalad]		Defendant-appellee	
+dft	[Defendant-appellant: juridisk term ung. motsvarande Svarande, Tilltalad]		Defendant-appellant	
+dgg	Utfärdare av akademisk examen		Degree grantor	
+dis	Respondent		Dissertant	
+dln	Teknisk ritare		Delineator	
+dnc	Dansare		Dancer	
+dnr	Donator		Donor	
+dpc	Avbildad		Depicted	
+dpt	Deponerat av		Depositor	
+drm	Ritare, tecknare		Draftsman	
+drt	Regissör		Director	
+dsr	Formgivare		Designer	
+dst	Distributör		Distributor	
+dtc	Katalog- eller metadatakälla		Data contributor	
+dte	Dedicerat till		Dedicatee	
+dtm	Katalog- eller metadataansvarig		Data manager	
+dto	Författare till dedikation		Dedicator	
+dub	Författare (tvivelaktig)		Dubious author	
+edt	Utgivare, redaktör, sammanställare		Editor	
+egr	Gravör		grantor	
+elg	Elektriker		Electrician	
+elt	Framställare av elektrotyper		Electrotyper	
+eng	Ingenjör		Engineer	
+etr	Etsare		Etcher	
+evp	Plats/ort för händelse		Event place	
+exp	Expert		Expert	
+fac	Framställare av faksimil		Facsimilist	
+fld	Fältchef		Field director	
+flm	Utgivare av film		Film editor	
+fmo	Tidigare ägare		Former owner	
+fnd	Finansiär		Funder	
+fpy	Första part		First party	
+frg	Förfalskare		Forger	
+gis	Specialist inom geografisk information (GIS)		Geographic information specialist	
+hnr	estskriftsföremål		Honoree	
+hst	Programvärd, programledare		Host	
+ill	Illustratör		Illustrator	
+ilu	illuminatör		Illuminator	
+ins	Författare till inskription		Inscriber	
+inv	Uppfinnare		Inventor	
+itr	Instrumentalist		Instrumentalist	
+ive	Intervjuobjekt		Interviewee	
+ivr	Intervjuare		Interviewer	
+lbr	Laboratorium		Laboratory	
+lbt	Librettist		Librettist	
+ldr	Laboratoriechef		Laboratory director	
+led	Chef, ledare		Lead	
+lee	[Libellee-appellee: juridisk term ung. motsvarande Svarande, Tilltalad]		col Collector	
+lel	[Libellee: juridisk term ung. motsvarande Svarande, Tilltalad]		Libelee	
+len	Utlånare		Lender	
+let	[Libellee-appellant: juridisk term ung. motsvarande Svarande, Tilltalad]		Libelee-appellant	
+lgd	Ljusdesigner, ljussättare		Lighting designer	
+lie	[Libelant-appellee: juridisk term ung. motsvarande Kärande, Målsägande]		cll Calligrapher	
+lil	[Libelant: juridisk term ung. motsvarande Kärande, Målsägande]		Libelant	
+lit	[Libelant-appellant: juridisk term ung. motsvarande Kärande, Målsägande]		Libelant-appellant	
+lsa	Landskapsarkitekt		Landscape architect	
+lse	Licensinnehavare		Licensee	
+lso	Licensutfärdare		Licensor	
+ltg	Litograf		Lithographer	
+lyr	Författare till sångtext		Lyricist	
+mcp	Musikkopist		Music copyist	
+mdc	Metadataansvarig		Metadata contact	
+mfp	Produktions-/tryckort		Manufacture place	
+mfr	Fabrikant, tillverkare		Manufacturer	
+mod	Moderator		Moderator	
+mon	Övervakare, inspektör		Monitor	
+mrb	Marmorering		Marbler	
+mrk	Metadatauppmärkare		Markup editor	
+msd	Musikalisk ledare		Musical director	
+mte	Metallgravör		Metal-engraver	
+mus	Musiker		Musician	
+nrt	Berättare, inläsare		Narrator	
+opn	Opponent		Opponent	
+orm	Mötesarrangör		owner	
+oth	Medarbetare (ospecificerad)		Other	unspecifiedContributor
+own	Ägare		fpy First party	
+pat	Mecenat		Patron	
+pbd	Chefredaktör, huvudredaktör		Publishing director	
+pbl	Utgivare		Publisher	
+pdr	Projektchef, projektsamordnare		Project director	
+pfr	Korrekturläsare		Proofreader	
+pht	Fotograf		Photographer	
+plt	Tryckplåtstillverkare		Platemaker	
+pma	Tillståndsgivande organ		Permitting agency	
+pmn	Produktionsledning		Production manager	
+pop	Tryckare av illustrationer		Printer of plates	
+ppm	Pappersmakare		Papermaker	
+ppt	Marionettspelare		Puppeteer	
+prc	Processansvarig		Process contact	
+prd	Produktionspersonal		Production personnel	
+prf	Framförande person, spelare, musiker, etc.		Performer	
+prg	Programmerare		Programmer	
+prm	Tryckmakare		Printmaker	
+pro	Filmproducent		blw Blurb writer	
+prp	Konstruktionsort		Production place	
+prt	Tryckare		Printer	
+pta	Patentsökande		Patent applicant	
+pte	[Plaintiff-appellee: juridisk term ung. motsvarande Kärande, Målsägande]		aft Author of afterword, colophon, etc.	
+ptf	[Plaintiff: juridisk term ung. motsvarande Kärande, Målsägande]		Plaintiff	
+pth	Patentinnehavare		Patent holder	
+ptt	[Plaintiff-appellant: juridisk term ung. motsvarande Kärande, Målsägande]		Plaintiff-appellant	
+pup	Utgivnings-/publikationsort		Publication place	
+rbr	Rubricator		Rubricator	
+rce	Inspelningstekniker		Recording engineer	
+rcp	Mottagare av korrespondens		Recipient	
+red	Redigerare		Redactor	
+ren	Prototyp, visualisering		Renderer	
+res	Forskare		crr Corrector	
+rev	Recensent		Reviewer	
+rps	Arkiv (repository)		Repository	
+rpt	Reporter, journalist		Reporter	
+rpy	Ansvarig utgivare		Responsible party	
+rse	[Respondent-appellee: juridisk term ung. motsvarande Svarande, Tilltalad]		Respondent-appellee	
+rsg	Bearbetare av sceniskt verk		Restager	
+rsp	[Respondent: juridisk term ung. motsvarande Svarande, Tilltalad]		Respondent	
+rst	[Respondent-appellant: juridisk term ung. motsvarande Svarande, Tilltalad]		party	
+rth	Chef för forskargrupp		Research team head	
+rtm	Medlem av forskargrupp		Research team member	
+sad	Vetenskaplig rådgivare		Scientific advisor	
+sce	Författare till scenario		Scenarist	
+scl	Skulptör		Sculptor	
+scr	Skrivare, kopist		aut Author	
+sds	Ljudproducent, ljudtekniker		Sound designer	
+sec	Sekreterare		Secretary	
+sgn	Signatur		Signer	
+sht	Organiserat med stöd av		Supporting host	
+sng	Sångare		Singer	
+spk	Röst, tal		Speaker	
+spn	Sponsor		Sponsor	
+spy	Andra part		Second party	
+srv	Lantmätare		Surveyor	
+std	Scenograf		Set designer	
+stl	Historieberättare		Storyteller	
+stm	Inspicient, regiassistent		Stage manager	
+stn	Standardiseringsorgan		Standards body	
+str	Framställare av stereotyper		arc Architect	
+tcd	Teknisk chef		Technical director	
+tch	Lärare		evp Event place	
+ths	Preses		Thesis advisor	
+trc	Avskrivare		Transcriber	
+trl	Översättare		Translator	
+tyd	Formgivare av typsnitt		Type designer	
+tyg	Typograf		Typographer	
+uvp	Universitetsort		University place	
+vdg	Videoproducent		Videographer	
+voc	Vokalist		Vocalist	
+wam	Författare till material som medföljer AV-media		Writer of accompanying material	
+wdc	Framställare av träsnitt		Woodcutter	
+wde	Xylograf (trägravyr)		Wood-engraver	
+wit	Vittne		Witness	
+9pu	Primärt upphovsansvarig	LIBRIS-definierad kod		primaryRightsHolder
+grt	[Grafisk tekniker] OBSOLET		Graphic technician	
