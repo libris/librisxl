@@ -357,18 +357,6 @@ class SearchRestlet extends BasicWhelkAPI {
         this.config = indexTypeConfig
     }
 
-    String splitQuery(String query) {
-        def queryItems = []
-        for (queryItem in query.split(/[\s-_]/)) {
-             if (queryItem.length() > 1 && queryItem[-1] != " " && queryItem[-1] != "*" && !queryItem.contains(":")) {
-                 queryItems << queryItem + "*"
-             } else {
-                 queryItems << queryItem
-             }
-        }
-        return queryItems.join(" ")
-    }
-
     @Override
     void doHandle(Request request, Response response) {
         long startTime = System.currentTimeMillis()
@@ -387,7 +375,6 @@ class SearchRestlet extends BasicWhelkAPI {
             Method tokenizerMethod = queryStringTokenizer = this.class.getDeclaredMethod(indexConfig.queryStringTokenizerMethod)
             queryMap.q = tokenizerMethod?.invoke(this, queryMap.q) ?: queryMap.q
         } */
-        queryMap.q = splitQuery(queryMap.q)
         def elasticQuery = new ElasticQuery(queryMap)
         if (queryMap.f) {
             elasticQuery.query += " " + queryMap.f
