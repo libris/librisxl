@@ -1,0 +1,495 @@
+code	label_sv	comment_sv
+9fd	Forndanska 	-1500
+9fs	Fornsvenska 	-1500
+9ft	Fornlågtyska 	ca 850-1050
+9sl	Lulesamiska 	obsolet kod, använd smj
+9so	Östsamiska 	obsolet kod, använd smn (Enare-), sms (Skolt-) el. smi (Samiska)
+9ss	Sydsamiska 	obsolet kod, använd sma
+___	Uppgift saknas	
+aar	Afar	
+abk	Abchaziska	
+ace	Achinese	
+ach	Acoli	
+ada	Adangme	
+ady	Adygeiska	
+afa	Afro-asiatiskt språk	
+afh	Afrihili 	artificiellt språk
+afr	Afrikaans	
+ain	Ainu	
+aka	Akan	
+akk	Akkadiska	
+alb	Albanska	
+ale	Aleutiska	
+alg	Algonkinskt språk	
+alt	Sydaltaiska	
+amh	Amhariska	
+ang	Fornengelska 	ca 450-1100
+anp	Angika	
+apa	Apachiskt språk	
+ara	Arabiska	
+arc	Arameiska	
+arg	Aragonsk spanska	
+arm	Armeniska	
+arn	Araukanska 	Mapuche
+arp	Arapaho	
+art	Artificiellt språk	
+arw	Arawakiska	
+asm	Assamesiska	
+ast	Asturiska 	Bable
+ath	Athapaskiskt språk	
+aus	Australiskt språk	
+ava	Avariskt språk	
+ave	Avestiska	
+awa	Awadhi	
+aym	Aymara	
+aze	Azerbajdzjanska	
+bad	Bandaspråk	
+bai	Bamilekespråk	
+bak	Basjkiriska	
+bal	Baluchi	
+bam	Bambara	
+ban	Balinesiska	
+baq	Baskiska	
+bas	Basa 	Bantuspråk
+bat	Baltiskt språk	
+bej	Beyja	
+bel	Vitryska	
+bem	Bemba	
+ben	Bengali	
+ber	Berberspråk	
+bho	Bhojpuri	
+bih	Bihari	
+bik	Bikol	
+bin	Edo 	Bini
+bis	Bislama	
+bla	Svartfotindianernas språk 	Siksika
+bnt	Bantuspråk	
+bos	Bosniska	
+bra	Braj	
+bre	Bretonska	
+btk	Batak	
+bua	Burjatiska	
+bug	Buginesiska	
+bul	Bulgariska	
+bur	Burmanska	
+byn	Bilin	
+cad	Caddo	
+cai	Centralamerikanskt indianspråk	
+car	Karibiska	
+cat	Katalanska	
+cau	Kaukasiskt språk	
+ceb	Cebuano	
+cel	Keltiskt språk	
+cha	Chamorro	
+chb	Chibcha	
+che	Tjetjenska	
+chg	Chagatai	
+chi	Kinesiska	
+chk	Chuukesiska 	Truk
+chm	Mari 	Tjeremissiska
+chn	Chinook	
+cho	Choctaw	
+chp	Chopi	
+chr	Cherokesiska	
+chu	Fornkyrkslaviska	
+chv	Tjuvasjiska	
+chy	Cheyenne	
+cmc	Chamic	
+cop	Koptiska	
+cor	Korniska	
+cos	Korsikanska	
+cpe	Pidgin-engelska	
+cpf	Franskt kreolspråk	
+cpp	Portugisiskt kreolspråk	
+cre	Cree	
+crh	Krimtatariska 	Krimturkiska
+crp	Kreol-/Pidginspråk	
+csb	Kasjubiska	
+cus	Kusjitiskt språk	
+cze	Tjeckiska	
+dak	Dakota	
+dan	Danska	
+dar	Darginska 	Dargwa
+day	Dayak	
+del	Delaware	
+den	Slave	
+dgr	Dogrib	
+din	Dinka	
+div	Divehi	
+doi	Dogri	
+dra	Dravidiskt språk	
+dsb	Lågsorbiska	
+dua	Duala	
+dum	Medelnederländska 	ca 1050-1350
+dut	Nederländska	
+dyu	Dyula	
+dzo	Bhutanesiska 	Dzongkha
+efi	Efik	
+egy	Fornegyptiska	
+eka	Ekajuk	
+elx	Elamitiska	
+eng	Engelska	
+enm	Medelengelska 	ca 1100-1500
+epo	Esperanto	
+est	Estniska	
+ewe	Ewe	
+ewo	Ewondo	
+fan	Fang	
+fao	Färöiska	
+fat	Fanti	
+fij	Fidjianska	
+fil	Filipino	
+fin	Finska	
+fiu	Finsk-ugriskt språk	
+fon	Fon	
+fre	Franska	
+frm	Medelfranska 	ca 1300-1600
+fro	Fornfranska 	ca 842-1300
+frr	Nordfrisiska	
+frs	Östfrisiska	
+fry	Frisiska	
+ful	Fulani	
+fur	Friuliska	
+gaa	Ga	
+gay	Gayo	
+gba	Gbaya	
+gem	Germanskt språk	
+geo	Georgiska	
+ger	Tyska	
+gez	Fornetiopiska 	geez
+gil	Gilbertesiska	
+gla	Höglandsskotska	
+gle	Iriska	
+glg	Galiciska	
+glv	Manx	
+gmh	Medelhögtyska 	ca 1050-1500
+goh	Fornhögtyska 	ca 750-1050
+gon	Gondi	
+gor	Gorontalo	
+got	Gotiska	
+grb	Grebo	
+grc	Grekiska, klassisk 	-1453
+gre	Nygrekiska 	1453-
+grn	Guarani	
+gsw	Schweizertyska	
+guj	Gujarati	
+gwi	Gwichin	
+hai	Haida	
+hat	Haitiska 	Haitisk kreol
+hau	Haussa	
+haw	Hawaiiska	
+heb	Hebreiska	
+her	Herero	
+hil	Hiligaynon	
+him	Pahari 	Himachali
+hin	Hindi	
+hit	Hettitiskt språk	
+hmn	Hmongspråk	
+hmo	Hirimotu	
+hrv	Kroatiska	
+hsb	Högsorbiska	
+hun	Ungerska	
+hup	Hupa	
+iba	Iban	
+ibo	Ibo 	Igbo
+ice	Isländska	
+ido	Ido	
+iii	Sichuan Yi	
+ijo	Ijo	
+iku	Inuktitut	
+ile	Interlingue	
+ilo	Iloko	
+ina	Interlingua 	International Auxiliary Language Association
+inc	Indo-ariskt språk	
+ind	Indonesiska	
+ine	Indoeuropeiskt språk	
+inh	Ingusj	
+ipk	Inupiaq	
+ira	Iranskt språk	
+iro	Irokesiskt språk	
+ita	Italienska	
+jav	Javanska	
+jbo	Lojban 	artificiellt språk
+jpn	Japanska	
+jpr	Judepersiska	
+jrb	Judearabiska	
+kaa	Karakalpakiska	
+kab	Kabyliska	
+kac	Kachin	
+kal	Grönländska 	Kalaallit oqaasi
+kam	Kamba	
+kan	Kanaresiska 	Kannada
+kar	Karen	
+kas	Kashmiri	
+kau	Kanuri	
+kaw	Fornjavanska 	Kawi
+kaz	Kazakiska	
+kbd	Kabardinska 	Östtjerkessiska
+kha	Khasi	
+khi	Khoisanspråk	
+khm	Kambodjanska 	Khmer
+kho	Sakiska 	Khotanesiska
+kik	Kikuyu	
+kin	Rwanda	
+kir	Kirgisiska	
+kmb	Mbundu 	Kimbundu
+kok	Konkani	
+kom	Komi	
+kon	Kikongo	
+kor	Koreanska	
+kos	Kusaie	
+kpe	Kpelle	
+krc	Karachay-Balkar	
+krl	Karelska	
+kro	Kru	
+kru	Kurukh	
+kua	Ovambo 	Kuanyama
+kum	Kumyk	
+kur	Kurdiska	
+kut	Kutenai	
+lad	Spanjolska 	Ladino
+lah	Lahnda	
+lam	Lamba 	Zambia och Kongo
+lao	Laotiska	
+lat	Latin	
+lav	Lettiska	
+lez	Lezginska	
+lim	Limburgisch	
+lin	Lingala	
+lit	Litauiska	
+lol	Lolo 	Mongo
+loz	Lozi	
+ltz	Luxemburgiska 	Letzebuergesch
+lua	Luba-Lulua	
+lub	Luba-Katanga	
+lug	Luganda	
+lui	Luiseno	
+lun	Lunda	
+luo	Luo 	Kenya och Tanzania
+lus	Mizo 	Lushai
+mac	Makedonska	
+mad	Madurese	
+mag	Magahi	
+mah	Marshallesiska	
+mai	Maithili	
+mak	Makasar	
+mal	Malayalam	
+man	Mande	
+mao	Maori	
+map	Austronesiskt språk	
+mar	Marathi	
+mas	Massajiska	
+may	Malajiska	
+mdf	Moksha	
+mdr	Mandar	
+men	Mende	
+mga	Medeliriska 	ca 1100-1550
+mic	Mic-mac	
+min	Minangkabau	
+mis	Övrig språk	
+mkh	Mon-khmerspråk	
+mlg	Malagasy	
+mlt	Maltesiska	
+mnc	Manchu	
+mni	Manipuri	
+mno	Manobospråk	
+moh	Mohawk	
+mol	Moldaviska 	obsolet, använd rum (rumänska)
+mon	Mongoliskt språk	
+mos	Mossi	
+mul	Flerspråkigt verk	
+mun	Munda	
+mus	Muskogee	
+mwl	Mirandese	
+mwr	Marwari	
+myn	Maya-språk	
+myv	Erzya	
+nah	Nahuatl	
+nai	Nordamerikanskt indianspråk	
+nap	Neapolitansk italienska	
+nau	Nauruanska	
+nav	Navaho	
+nbl	Ndebele 	Sydafrika
+nde	Ndebele 	Zimbabwe
+ndo	Ndonga	
+nds	Lågtyska	
+nep	Nepali	
+new	Newari	
+nia	Nias	
+nic	Niger-/Kongospråk	
+niu	Niuean	
+nno	Nynorsk	
+nob	Bokmål 	Norska (nor) föredras
+nog	Nogaiska	
+non	Fornisländska	
+nor	Norska	
+nqo	N'Ko	
+nso	Nordsotho	
+nub	Nubiskt språk	
+nwc	Fornnewari	
+nya	Nyanja	
+nym	Nyamwezi	
+nyn	Nyankole	
+nyo	Nyoro	
+nzi	Nzima	
+oci	Langue d'oc 	1500-
+oji	Odjibwa 	Chippewa
+ori	Oriya	
+orm	Oromo	
+osa	Osage	
+oss	Ossetiska	
+ota	Ottomanska	
+oto	Otomispråk	
+paa	Papuanskt språk	
+pag	Pangasinan	
+pal	Pahlavi 	Medelpersiska
+pam	Pampanga	
+pan	Panjabi	
+pap	Papiamento	
+pau	Palauan	
+peo	Fornpersiska 	ca 600-400 f.Kr.
+per	Persiska	
+phi	Filippinskt språk	
+phn	Feniciska	
+pli	Pali	
+pol	Polska	
+pon	Ponape	
+por	Portugisiska	
+pra	Prakritspråk	
+pro	Provensalska 	-1500
+pus	Pashto	
+que	Quechua	
+rai	Gujuri 	obsolet, använd raj (rajasthani)
+raj	Rajasthani	
+rap	Rapanui	
+rar	Rarotongan	
+roa	Romanskt språk	
+roh	Rätoromanska	
+rom	Romani	
+rum	Rumänska	
+run	Rundi	
+rup	Arumanska	
+rus	Ryska	
+sad	Sandawe	
+sag	Sango	
+sah	Jakutiska	
+sai	Sydamerikanskt indianspråk	
+sal	Saliskt språk	
+sam	Samaritanska	
+san	Sanskrit	
+sas	Sasak	
+sat	Santali	
+scn	Siciliansk italienska	
+sco	Skotska	
+sel	Selkup	
+sem	Semitiskt språk	
+sga	Forniriska 	-1100
+sgn	Teckenspråk	
+shn	Shan	
+sid	Sidami	
+sin	Singalesiska	
+sio	Sioux-språk	
+sit	Sino-tibetanskt språk	
+sla	Slaviskt språk	
+slo	Slovakiska	
+slv	Slovenska	
+sma	Sydsamiska	
+sme	Nordsamiska	
+smi	Samiskt språk 	används restriktivt, se Enare-, Lule-, Nord-, Skolt- o. Sydsamiska
+smj	Lulesamiska	
+smn	Enaresamiska	
+smo	Samoanska	
+sms	Skoltsamiska	
+sna	Shona	
+snd	Sindhi	
+snk	Soninke	
+sog	Sogdiska	
+som	Somali	
+son	Songhai	
+sot	Sotho	
+spa	Spanska	
+srd	Sardiska	
+srn	Sranan	
+srp	Serbiska	
+srr	Serer	
+ssa	Nilo-sahariskt språk	
+ssw	Swazi	
+suk	Sukuma	
+sun	Sundanesiska	
+sus	Susu	
+sux	Sumeriska	
+swa	Swahili	
+swe	Svenska	
+syc	Syriska 	klassisk
+syr	Syriska 	modern
+tah	Tahitiska	
+tai	Thaispråk	
+tam	Tamil	
+tat	Tatariska	
+tel	Telugo	
+tem	Temne	
+ter	Tereno	
+tet	Tetum	
+tgk	Tadzjikiska	
+tgl	Tagalog	
+tha	Thailändska	
+tib	Tibetanska	
+tig	TigrÃ	
+tir	Tigrinja	
+tiv	Tivi	
+tkl	Tokelauiska	
+tlh	Klingon 	artificiellt språk
+tli	Tlingit	
+tmh	Tamashek	
+tog	Tonga 	Nyasa
+ton	Tonga 	Tongaöarna
+tpi	Tok Pisin	
+tsi	Tsimshian	
+tsn	Tswana	
+tso	Tsonga	
+tuk	Turkmeniska	
+tum	Tumbuka	
+tup	Tupíspråk	
+tur	Turkiska	
+tut	Altaiskt språk	
+tvl	Tuvaluan	
+twi	Twi	
+tyv	Tuvinska	
+udm	Udmurtiska 	Votjakiska
+uga	Ugaritiska	
+uig	Uiguriska	
+ukr	Ukrainska	
+umb	Umbundu	
+und	Odefinierat språk	
+urd	Urdu	
+uzb	Uzbekiska	
+vai	Vai	
+ven	Venda	
+vie	Vietnamesiska	
+vol	VolapÂ¸k	
+vot	Votiska	
+wak	Wakusjiskt språk	
+wal	Walamo 	Wolayta
+war	Waray	
+was	Washo	
+wel	Kymriska	
+wen	Sorbiskt (vendiskt) språk	
+wln	Vallonska	
+wol	Wolof	
+xal	Kalmuckiska	
+xho	Xhosa	
+yao	Yao 	Afrika
+yap	Yap	
+yid	Jiddisch	
+yor	Yoruba	
+ypk	Eskimåspråk 	Yupik-språk
+zap	Zapotek	
+zbl	Blissymboler	
+zen	Zenaga	
+zha	Zhuang	
+znd	Zandespråk	
+zul	Zulu	
+zun	Zuni	
+zxx	Icke-språkligt medium	
+zza	Zaza	
+|||	Inget försök att koda	
