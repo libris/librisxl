@@ -114,27 +114,16 @@ abstract class ElasticSearch extends BasicPlugin {
     void init(String indexName) {
         if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
             log.info("Creating index ...")
-            XContentBuilder mapping = jsonBuilder().startObject()
-            .startObject(indexName)
-            .field("date_detection", false)
-            .startObject("_timestamp")
-            .field("enabled", true)
-            .field("store", true)
-            .endObject()
-            .startObject("_source")
-            .field("enabled", true)
-            .endObject()
-            .endObject()
-            .endObject()
-            log.debug("create: " + mapping.string())
-
-            performExecute(client.admin().indices().prepareCreate(indexName).addMapping(defaultIndexType, mapping))
-            mapper = new ObjectMapper()
-            def loader = getClass().classLoader
-            defaultMapping = loader.getResourceAsStream("default_mapping.json").withStream {
-                mapper.readValue(it, Map)
-            }
+            performExecute(client.admin().indices().prepareCreate(indexName))
             setTypeMapping(indexName, defaultIndexType)
+        }
+    }
+
+    void loadMapping() {
+        mapper = new ObjectMapper()
+        def loader = getClass().classLoader
+        defaultMapping = loader.getResourceAsStream("default_mapping.json").withStream {
+            mapper.readValue(it, Map)
         }
     }
 
@@ -167,8 +156,7 @@ abstract class ElasticSearch extends BasicPlugin {
         return query(q, indexName, indexType)
     }
 
-
-    SearchResult query(Query q, String indexName, String indexType) {
+SearchResult query(Query q, String indexName, String indexType) {
         log.debug "Querying index $indexName and indextype $indexType"
         log.trace "Doing query on $q"
         def idxlist = [indexName]
@@ -262,6 +250,9 @@ abstract class ElasticSearch extends BasicPlugin {
     def setTypeMapping(indexName, itype) {
         log.info("Creating mappings for $indexName/$itype ...")
         XContentBuilder mapping = jsonBuilder().startObject().startObject("_default_")
+        if (!defaultMapping) {
+            loadMapping()
+        }
         defaultMapping.each { k, v ->
            mapping = mapping.field(k, v)
         }
