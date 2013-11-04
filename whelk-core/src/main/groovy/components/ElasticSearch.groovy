@@ -61,6 +61,8 @@ class ElasticSearchClient extends ElasticSearch {
     }
 }
 
+//TODO: Move all settings (general and index level) to config files and make creation of index and changing of settings to separate operation tasks
+
 @Log
 class ElasticSearchNode extends ElasticSearch implements Index {
 
@@ -114,7 +116,27 @@ abstract class ElasticSearch extends BasicPlugin {
     void init(String indexName) {
         if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
             log.info("Creating index ...")
-            performExecute(client.admin().indices().prepareCreate(indexName))
+            XContentBuilder indexSettings = jsonBuilder().startObject()
+                    .startObject("analysis")
+                        .startObject("analyzer")
+                            .startObject("standard")
+                                .field("tokenizer", "standard")
+                                .field("filter", ["lowercase", "swe_light_stemmer", "swe_stop_filter"])
+                            .endObject()
+                        .endObject()
+                        .startObject("filter")
+                            .startObject("swe_light_stemmer")
+                                .field("type", "stemmer")
+                                .field("name", "light_swedish")
+                            .endObject()
+                            .startObject("swe_stop_filter")
+                                .field("type", "stop")
+                                .field("stopwords", ["_swedish_"])
+                            .endObject()
+                        .endObject()
+                    .endObject()
+            .endObject()
+            performExecute(client.admin().indices().prepareCreate(indexName).setSettings(indexSettings))
             setTypeMapping(indexName, defaultIndexType)
         }
     }
