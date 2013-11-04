@@ -1,5 +1,22 @@
 {
-
+        "analysis" : {
+            "analyzer" : {
+                "my_analyzer" : {
+                    "tokenizer" : "standard",
+                    "filter" : ["standard", "lowercase", "swe_light_stemmer", "swe_stop_filter"]
+                }
+            },
+            "filter" : {
+                "swe_light_stemmer" : {
+                    "type" : "stemmer",
+                    "name" : "light_swedish"
+                },
+                "swe_stop_filter": {
+                    "type": "stop",
+                    "stopwords": ["_swedish_"]
+                }
+            }
+        },
         "date_detection" : false,
         "store" : true,
         "dynamic_templates" : [
