@@ -36,11 +36,6 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     def varPath = false
     boolean enabled = true
 
-    int order = 0
-
-    def void enable() {this.enabled = true}
-    def void disable() {this.enabled = false}
-
     @Override
     void setWhelk(Whelk w) {
         this.whelk = w
