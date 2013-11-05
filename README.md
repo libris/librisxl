@@ -62,6 +62,21 @@ to upload all test documents into your local whelk. (See the script for how the 
 
 For running a proper instance (e.g. in production), you should use a standalone elasticsearch instance, and deploy a whelk war into a webapp container.
 
+## Environment Configuration
+
+The application requires a couple of environment variables to be defined:
+
+    file.encoding=utf8
+    whelk.config.uri=file:///<path-to-whelks.json>
+    plugin.config.uri=file:///<path-to-plugins.json>
+    elastic.host=<hostname>
+    elastic.cluster=<clustername>
+    info.aduna.platform.appdata.basedir=/<path-to-aduna>
+
+If you are serving the Web API using Tomcat, you may be able to define these (via JAVA_OPTS), in:
+
+    $CATALINA_HOME/bin/setenv.sh
+
 ### Configure standalone elasticsearch
 
 First set up configuration of it:
