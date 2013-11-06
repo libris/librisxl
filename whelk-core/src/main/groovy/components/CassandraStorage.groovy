@@ -25,7 +25,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     String requiredContentType
 
     ColumnFamily<String,String> CF_DOCUMENT = new ColumnFamily<String, String>(
-        "Document",
+        "document",
         StringSerializer.get(),
         StringSerializer.get(),
     )
@@ -140,25 +140,34 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Iterable<Document> getAll(String dataset) {
+    Iterable<Document> getAll(String dataset = null) {
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 Rows<String, String> rows
                 try {
-                    rows = keyspace.prepareQuery(CF_DOCUMENT)
-                    .getAllRows()
+                    def q
+                    if (dataset) {
+                        log.debug("Using query: dataset=$dataset")
+                        q = keyspace.prepareQuery(CF_DOCUMENT).searchWithIndex()
+                            .addExpression().whereColumn("dataset")
+                            .equals().value(dataset)
+                    } else {
+                        log.debug("Using allrows()")
+                        q = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
+                            .setExceptionCallback(new ExceptionCallback() {
+                                @Override
+                                public boolean onException(ConnectionException e) {
+                                    try {
+                                        log.warn("Cassandra threw exception. Holding for a second ...")
+                                        Thread.sleep(1000);
+                                } catch (InterruptedException e1) {
+                                }
+                                return true
+                                }})
+                    }
+                    rows = q
                     .setRowLimit(10)
                     .withColumnRange(new RangeBuilder().setLimit(10).build())
-                    .setExceptionCallback(new ExceptionCallback() {
-                        @Override
-                        public boolean onException(ConnectionException e) {
-                            try {
-                                log.warn("Cassandra threw exception. Holding for a second ...")
-                                Thread.sleep(1000);
-                        } catch (InterruptedException e1) {
-                        }
-                        return true
-                        }})
                     .execute().getResult()
                 } catch (ConnectionException e) {
                     log.error("Cassandra Query failed.", e)

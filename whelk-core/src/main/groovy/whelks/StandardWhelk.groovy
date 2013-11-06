@@ -175,10 +175,10 @@ class StandardWhelk implements Whelk {
     Iterable<Document> loadAll(Date since) { return loadAll(null, since)}
 
     @Override
-    Iterable<Document> loadAll(String fromStorage = null, Date since = null) {
-        def storage = (fromStorage == null ? getStorages()[0] : getStorages().find { it.id == fromStorage })
+    Iterable<Document> loadAll(String dataset = null, Date since = null) {
+        def storage = getStorages()[0]
         log.debug("Loading all from storage ${storage.id}")
-        return storage.getAll(this.id)
+        return storage.getAll(dataset)
     }
 
     @Override
