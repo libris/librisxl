@@ -24,7 +24,15 @@
         {
             "resource":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool"]
+                "_plugins" : [
+                    "diskstorage",
+                    "documentapi",
+                    "localdefinitiondata",
+                    "resourcelist",
+                    "marcmap",
+                    "search",
+                    "isxntool"
+                ]
             }
         }
     ],
@@ -33,6 +41,10 @@
             "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
             "_params" : "work/data",
             "_unique" : false
+        },
+        "localdefinitiondata": {
+            "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
+            "_params": "datatools/build/"
         }
     }
 }

@@ -1,0 +1,171 @@
+{
+  "@context": [
+    "/def/context/owl.jsonld",
+    {
+      "@language": "sv",
+      "index": {
+        "@container": "@index",
+        "@id": "@graph"
+      }
+    }
+  ],
+  "index": {
+    "Cartography": {
+      "@id": "http://libris.kb.se/def/terms#Cartography",
+      "@type": "Class",
+      "equivalentClass": "http://bibframe.org/vocab/Cartography",
+      "label": "Kartmaterial"
+    },
+    "Collection": {
+      "@id": "http://libris.kb.se/def/terms#Collection",
+      "@type": "Class",
+      "equivalentClass": [
+        "http://bibframe.org/vocab/Collection",
+        "http://purl.org/dc/dcmitype/Collection"
+      ],
+      "label": "Samling"
+    },
+    "Dataset": {
+      "@id": "http://libris.kb.se/def/terms#Dataset",
+      "@type": "Class",
+      "equivalentClass": [
+        "http://bibframe.org/vocab/Dataset",
+        "http://purl.org/dc/dcmitype/Dataset"
+      ],
+      "label": "Dataset"
+    },
+    "DigitalResource": {
+      "@id": "http://libris.kb.se/def/terms#DigitalResource",
+      "@type": "Class",
+      "abstract": true,
+      "equivalentClass": "http://bibframe.org/vocab/SoftwareOrMultimedia",
+      "subClassOf": [
+        "http://purl.org/dc/dcmitype/Software",
+        "http://purl.org/dc/dcmitype/InteractiveResource"
+      ]
+    },
+    "Holding": {
+      "@id": "http://libris.kb.se/def/terms#Holding",
+      "@type": "Class",
+      "equivalentClass": "http://bibframe.org/vocab/Holding",
+      "label": "Bestånd",
+      "subClassOf": [
+        "http://bibframe.org/vocab/Offer",
+        "http://schema.org/Offer"
+      ]
+    },
+    "Image": {
+      "@id": "http://libris.kb.se/def/terms#Image",
+      "@type": "Class",
+      "equivalentClass": "http://purl.org/dc/dcmitype/Image",
+      "label": "Bild"
+    },
+    "MovingImage": {
+      "@id": "http://libris.kb.se/def/terms#MovingImage",
+      "@type": "Class",
+      "equivalentClass": [
+        "http://bibframe.org/vocab/MovingImage",
+        "http://purl.org/dc/dcmitype/MovingImage"
+      ],
+      "label": "Rörlig bild",
+      "subClassOf": "http://purl.org/dc/dcmitype/Image"
+    },
+    "PhysicalObject": {
+      "@id": "http://libris.kb.se/def/terms#PhysicalObject",
+      "@type": "Class",
+      "altLabel": "Realia",
+      "equivalentClass": [
+        "http://purl.org/dc/dcmitype/PhysicalObject",
+        "http://bibframe.org/vocab/ThreeDimensionalObject"
+      ],
+      "label": "Föremål"
+    },
+    "Sound": {
+      "@id": "http://libris.kb.se/def/terms#Sound",
+      "@type": "Class",
+      "equivalentClass": [
+        "http://bibframe.org/vocab/Audio",
+        "http://purl.org/dc/dcmitype/Sound"
+      ],
+      "label": "Ljud"
+    },
+    "StillImage": {
+      "@id": "http://libris.kb.se/def/terms#StillImage",
+      "@type": "Class",
+      "equivalentClass": [
+        "http://bibframe.org/vocab/StillImage",
+        "http://purl.org/dc/dcmitype/StillImage"
+      ],
+      "label": "Stillbild",
+      "subClassOf": "http://purl.org/dc/dcmitype/Image"
+    },
+    "Text": {
+      "@id": "http://libris.kb.se/def/terms#Text",
+      "@type": "Class",
+      "equivalentClass": [
+        "http://purl.org/dc/dcmitype/Text",
+        "http://bibframe.org/vocab/LanguageMaterial",
+        "http://purl.org/dc/terms/BibliographicResource"
+      ],
+      "label": "Text",
+      "subClassOf": "http://libris.kb.se/def/terms#UniformWork"
+    },
+    "UniformWork": {
+      "@id": "http://libris.kb.se/def/terms#UniformWork",
+      "@type": "Class",
+      "abstract": true,
+      "equivalentClass": "http://bibframe.org/vocab/Work",
+      "label": "Uniformt verk",
+      "subClassOf": "http://schema.org/CreativeWork"
+    },
+    "callno": {
+      "@id": "http://libris.kb.se/def/terms#callno",
+      "range": "http://libris.kb.se/def/terms#Holding",
+      "subPropertyOf": [
+        "http://schema.org/sku",
+        "http://bibframe.org/vocab/callno",
+        "http://libris.kb.se/def/terms#genre"
+      ]
+    },
+    "genre": {
+      "@id": "http://libris.kb.se/def/terms#genre",
+      "@type": "ObjectProperty",
+      "equivalentProperty": [
+        "http://purl.org/dc/terms/type",
+        "http://bibframe.org/vocab/class"
+      ],
+      "label": "genre",
+      "subPropertyOf": "http://schema.org/genre"
+    },
+    "http://libris.kb.se/def/terms#": {
+      "@id": "http://libris.kb.se/def/terms#",
+      "@type": "Ontology",
+      "comment_en": "This vocabulary serves as a central mapping to public, well-known properties and classes.",
+      "imports": [
+        "http://purl.org/dc/terms/",
+        "http://schema.org/",
+        "http://purl.org/ontology/bibo/",
+        "http://xmlns.com/foaf/0.1/",
+        "http://rdvocab.info/Elements/",
+        "http://bibframe.org/vocab/",
+        "http://www.w3.org/2004/02/skos/core#"
+      ]
+    },
+    "inCollection": {
+      "@id": "http://libris.kb.se/def/terms#inCollection",
+      "@type": "ObjectProperty",
+      "domain": "http://www.w3.org/2004/02/skos/core#Concept",
+      "inverseOf": {
+        "@id": "http://www.w3.org/2004/02/skos/core#member"
+      },
+      "range": "http://www.w3.org/2004/02/skos/core#Collection"
+    },
+    "publisher": {
+      "@id": "http://libris.kb.se/def/terms#publisher",
+      "equivalentProperty": [
+        "http://purl.org/dc/terms/publisher",
+        "http://bibframe.org/vocab/publisher"
+      ]
+    }
+  }
+}

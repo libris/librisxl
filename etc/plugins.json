@@ -5,6 +5,10 @@
     "resourcelist": {
         "_class": "se.kb.libris.whelks.api.ResourceListRestlet"
     },
+    "definitiondata": {
+        "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
+        "_params": "work/def/"
+    },
     "marcmap": {
         "_class": "se.kb.libris.whelks.api.MarcMapRestlet"
     },

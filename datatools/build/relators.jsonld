@@ -1,0 +1,3079 @@
+{
+  "@context": [
+    "/def/context/owl.jsonld",
+    {
+      "@base": "http://libris.kb.se/",
+      "@language": "sv",
+      "byNotation": {
+        "@container": "@index",
+        "@id": "@graph"
+      }
+    }
+  ],
+  "byNotation": {
+    "9pu": {
+      "@id": "/def/relators/primaryRightsHolder",
+      "@type": "ObjectProperty",
+      "comment": "LIBRIS-definierad kod",
+      "label": "Primärt upphovsansvarig"
+    },
+    "abr": {
+      "@id": "http://id.loc.gov/vocabulary/relators/abr",
+      "@type": "ObjectProperty",
+      "label_en": "Abridger",
+      "notation": "abr",
+      "prefLabel_en": "Abridger",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "acp": {
+      "@id": "/def/relators/artCopyist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/acp",
+      "label": "Konstkopist",
+      "label_en": "Art copyist",
+      "notation": "acp",
+      "prefLabel_en": "Art copyist",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "act": {
+      "@id": "/def/relators/actor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/act",
+      "label": "Skådespelare",
+      "label_en": "Actor",
+      "notation": "act",
+      "prefLabel_en": "Actor",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/prf"
+      ]
+    },
+    "adi": {
+      "@id": "http://id.loc.gov/vocabulary/relators/adi",
+      "@type": "ObjectProperty",
+      "label_en": "Art director",
+      "notation": "adi",
+      "prefLabel_en": "Art director",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "adp": {
+      "@id": "/def/relators/adapter",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/adp",
+      "label": "Bearbetare",
+      "label_en": "Adapter",
+      "notation": "adp",
+      "prefLabel_en": "Adapter",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "aft": {
+      "@id": "/def/relators/authorOfAfterwordColophonEtc",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/aft",
+      "label": "Författare till efterskrift, kolofon, etc.",
+      "label_en": "Author of afterword, colophon, etc.",
+      "notation": "aft",
+      "prefLabel_en": "Author of afterword, colophon, etc.",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/aut",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "anl": {
+      "@id": "/def/relators/analyst",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/anl",
+      "label": "Analytiker",
+      "label_en": "Analyst",
+      "notation": "anl",
+      "prefLabel_en": "Analyst",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "anm": {
+      "@id": "/def/relators/animator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/anm",
+      "label": "Animatör",
+      "label_en": "Animator",
+      "notation": "anm",
+      "prefLabel_en": "Animator",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "ann": {
+      "@id": "/def/relators/annotator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ann",
+      "label": "Författare till annotation",
+      "label_en": "Annotator",
+      "notation": "ann",
+      "prefLabel_en": "Annotator",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "ant": {
+      "@id": "/def/relators/bibliographicAntecedent",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ant",
+      "label": "Bibliografisk föregångare (baserat på)",
+      "label_en": "Bibliographic antecedent",
+      "notation": "ant",
+      "prefLabel_en": "Bibliographic antecedent",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "ape": {
+      "@id": "http://id.loc.gov/vocabulary/relators/ape",
+      "@type": "ObjectProperty",
+      "label_en": "Appellee",
+      "notation": "ape",
+      "prefLabel_en": "Appellee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "apl": {
+      "@id": "http://id.loc.gov/vocabulary/relators/apl",
+      "@type": "ObjectProperty",
+      "label_en": "Appellant",
+      "notation": "apl",
+      "prefLabel_en": "Appellant",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "app": {
+      "@id": "/def/relators/applicant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/app",
+      "label": "Sökande",
+      "label_en": "Applicant",
+      "notation": "app",
+      "prefLabel_en": "Applicant",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "aqt": {
+      "@id": "/def/relators/authorInQuotationsOrTextAbstracts",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/aqt",
+      "label": "Författare till citat eller textutdrag",
+      "label_en": "Author in quotations or text abstracts",
+      "notation": "aqt",
+      "prefLabel_en": "Author in quotations or text abstracts",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/aut",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "arc": {
+      "@id": "/def/relators/architect",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/arc",
+      "label": "Arkitekt",
+      "label_en": "Architect",
+      "notation": "arc",
+      "prefLabel_en": "Architect",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "ard": {
+      "@id": "/def/relators/artisticDirector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ard",
+      "label": "Art Director",
+      "label_en": "Artistic director",
+      "notation": "ard",
+      "prefLabel_en": "Artistic director",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "arr": {
+      "@id": "/def/relators/arranger",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/arr",
+      "label": "Arrangör av musikalisk komposition",
+      "label_en": "Arranger",
+      "notation": "arr",
+      "prefLabel_en": "Arranger",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "art": {
+      "@id": "/def/relators/artist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/art",
+      "label": "Konstnär",
+      "label_en": "Artist",
+      "notation": "art",
+      "prefLabel_en": "Artist",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "asg": {
+      "@id": "/def/relators/assignee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/asg",
+      "label": "Innehavare av tryckeri- eller utgivarlicens",
+      "label_en": "Assignee",
+      "notation": "asg",
+      "prefLabel_en": "Assignee",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "asn": {
+      "@id": "/def/relators/associatedName",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/asn",
+      "label": "Associerat namn",
+      "label_en": "Associated name",
+      "notation": "asn",
+      "prefLabel_en": "Associated name",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "ato": {
+      "@id": "http://id.loc.gov/vocabulary/relators/ato",
+      "@type": "ObjectProperty",
+      "label_en": "Autographer",
+      "notation": "ato",
+      "prefLabel_en": "Autographer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "att": {
+      "@id": "/def/relators/attributedName",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/att",
+      "label": "Attribuerat/tillskrivet namn",
+      "label_en": "Attributed name",
+      "notation": "att",
+      "prefLabel_en": "Attributed name",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "auc": {
+      "@id": "/def/relators/auctioneer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/auc",
+      "label": "Auktionsförrättare",
+      "label_en": "Auctioneer",
+      "notation": "auc",
+      "prefLabel_en": "Auctioneer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "aud": {
+      "@id": "/def/relators/authorOfDialog",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/aud",
+      "label": "Författare till dialog",
+      "label_en": "Author of dialog",
+      "notation": "aud",
+      "prefLabel_en": "Author of dialog",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/aut",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "aui": {
+      "@id": "/def/relators/authorOfIntroduction",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/aui",
+      "label": "Författare till förord, introducerande material, etc.",
+      "label_en": "Author of introduction, etc.",
+      "notation": "aui",
+      "prefLabel_en": "Author of introduction, etc.",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/aut",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "aus": {
+      "@id": "/def/relators/authorOfScreenplay",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/aus",
+      "label": "Författare till filmmanus, etc.",
+      "label_en": "Screenwriter",
+      "notation": "aus",
+      "prefLabel_en": "Screenwriter",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/aut"
+      ]
+    },
+    "aut": {
+      "@id": "/def/relators/author",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/aut",
+      "label": "Författare, medförfattare",
+      "label_en": "Author",
+      "notation": "aut",
+      "prefLabel_en": "Author",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "bdd": {
+      "@id": "/def/relators/bindingDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/bdd",
+      "label": "Formgivare av bokband",
+      "label_en": "Binding designer",
+      "notation": "bdd",
+      "prefLabel_en": "Binding designer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "bjd": {
+      "@id": "/def/relators/bookjacketDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/bjd",
+      "label": "Formgivare av skyddsomslag till böcker",
+      "label_en": "Bookjacket designer",
+      "notation": "bjd",
+      "prefLabel_en": "Bookjacket designer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "bkd": {
+      "@id": "/def/relators/bookDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/bkd",
+      "label": "Formgivare av bok",
+      "label_en": "Book designer",
+      "notation": "bkd",
+      "prefLabel_en": "Book designer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "bkp": {
+      "@id": "/def/relators/bookProducer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/bkp",
+      "label": "Producent av böcker etc.",
+      "label_en": "Book producer",
+      "notation": "bkp",
+      "prefLabel_en": "Book producer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "blw": {
+      "@id": "/def/relators/blurbWriter",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/blw",
+      "label": "Förlags-/reklamtext",
+      "label_en": "Blurb writer",
+      "notation": "blw",
+      "prefLabel_en": "Blurb writer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "bnd": {
+      "@id": "/def/relators/binder",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/bnd",
+      "label": "Bokbindare",
+      "label_en": "Binder",
+      "notation": "bnd",
+      "prefLabel_en": "Binder",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "bpd": {
+      "@id": "/def/relators/bookplateDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/bpd",
+      "label": "Formgivare av exlibris (bokägarmärke)",
+      "label_en": "Bookplate designer",
+      "notation": "bpd",
+      "prefLabel_en": "Bookplate designer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "brd": {
+      "@id": "http://id.loc.gov/vocabulary/relators/brd",
+      "@type": "ObjectProperty",
+      "label_en": "Broadcaster",
+      "notation": "brd",
+      "prefLabel_en": "Broadcaster",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "brl": {
+      "@id": "http://id.loc.gov/vocabulary/relators/brl",
+      "@type": "ObjectProperty",
+      "label_en": "Braille embosser",
+      "notation": "brl",
+      "prefLabel_en": "Braille embosser",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "bsl": {
+      "@id": "/def/relators/bookseller",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/bsl",
+      "label": "Bokhandlare",
+      "label_en": "Bookseller",
+      "notation": "bsl",
+      "prefLabel_en": "Bookseller",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "cas": {
+      "@id": "http://id.loc.gov/vocabulary/relators/cas",
+      "@type": "ObjectProperty",
+      "label_en": "Caster",
+      "notation": "cas",
+      "prefLabel_en": "Caster",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "ccp": {
+      "@id": "/def/relators/conceptor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ccp",
+      "label": "Idé, koncept",
+      "label_en": "Conceptor",
+      "notation": "ccp",
+      "prefLabel_en": "Conceptor",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "chr": {
+      "@id": "/def/relators/choreographer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/chr",
+      "label": "Koreograf",
+      "label_en": "Choreographer",
+      "notation": "chr",
+      "prefLabel_en": "Choreographer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "clb": {
+      "@id": "/def/relators/collaborator",
+      "@type": "ObjectProperty",
+      "label": "Redaktionell medarbetare"
+    },
+    "cli": {
+      "@id": "/def/relators/client",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cli",
+      "label": "Klient",
+      "label_en": "Client",
+      "notation": "cli",
+      "prefLabel_en": "Client",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "cll": {
+      "@id": "/def/relators/calligrapher",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cll",
+      "label": "Kalligraf",
+      "label_en": "Calligrapher",
+      "notation": "cll",
+      "prefLabel_en": "Calligrapher",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "clr": {
+      "@id": "/def/relators/colorist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/clr",
+      "label": "Färg",
+      "label_en": "Colorist",
+      "notation": "clr",
+      "prefLabel_en": "Colorist",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "clt": {
+      "@id": "/def/relators/collotyper",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/clt",
+      "label": "Framställare av ljustryck",
+      "label_en": "Collotyper",
+      "notation": "clt",
+      "prefLabel_en": "Collotyper",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "cmm": {
+      "@id": "/def/relators/commentator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cmm",
+      "label": "Kommentator till audiovisuella medier",
+      "label_en": "Commentator",
+      "notation": "cmm",
+      "prefLabel_en": "Commentator",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/prf"
+      ]
+    },
+    "cmp": {
+      "@id": "/def/relators/composer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cmp",
+      "label": "Kompositör, tonsättare",
+      "label_en": "Composer",
+      "notation": "cmp",
+      "prefLabel_en": "Composer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "cmt": {
+      "@id": "/def/relators/compositor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cmt",
+      "label": "Sättare",
+      "label_en": "Compositor",
+      "notation": "cmt",
+      "prefLabel_en": "Compositor",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "cnd": {
+      "@id": "/def/relators/conductor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cnd",
+      "label": "Dirigent",
+      "label_en": "Conductor",
+      "notation": "cnd",
+      "prefLabel_en": "Conductor",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/prf",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "cng": {
+      "@id": "/def/relators/cinematographer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cng",
+      "label": "Filmfotograf",
+      "label_en": "Cinematographer",
+      "notation": "cng",
+      "prefLabel_en": "Cinematographer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "cns": {
+      "@id": "/def/relators/censor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cns",
+      "label": "Censor",
+      "label_en": "Censor",
+      "notation": "cns",
+      "prefLabel_en": "Censor",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "coe": {
+      "@id": "/def/relators/contestantAppellee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/coe",
+      "label": "[Contestant-appellee: juridisk term ung. motsvarande Åklagare]",
+      "label_en": "Contestant-appellee",
+      "notation": "coe",
+      "prefLabel_en": "Contestant-appellee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/cos",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "col": {
+      "@id": "/def/relators/collector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/col",
+      "label": "Samlare",
+      "label_en": "Collector",
+      "notation": "col",
+      "prefLabel_en": "Collector",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/cur",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "com": {
+      "@id": "/def/relators/compiler",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/com",
+      "label": "Sammanställare",
+      "label_en": "Compiler",
+      "notation": "com",
+      "prefLabel_en": "Compiler",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "con": {
+      "@id": "/def/relators/conservator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/con",
+      "label": "Konservator",
+      "label_en": "Conservator",
+      "notation": "con",
+      "prefLabel_en": "Conservator",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "cor": {
+      "@id": "http://id.loc.gov/vocabulary/relators/cor",
+      "@type": "ObjectProperty",
+      "label_en": "Collection registrar",
+      "notation": "cor",
+      "prefLabel_en": "Collection registrar",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/cur",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "cos": {
+      "@id": "/def/relators/contestant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cos",
+      "label": "[Contestant: juridisk term ung. motsvarande Åklagare]",
+      "label_en": "Contestant",
+      "notation": "cos",
+      "prefLabel_en": "Contestant",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "cot": {
+      "@id": "/def/relators/contestantAppellant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cot",
+      "label": "[Contestant-appellant: juridisk term ung. motsvarande Åklagare]",
+      "label_en": "Contestant-appellant",
+      "notation": "cot",
+      "prefLabel_en": "Contestant-appellant",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/cos"
+      ]
+    },
+    "cou": {
+      "@id": "http://id.loc.gov/vocabulary/relators/cou",
+      "@type": "ObjectProperty",
+      "label_en": "Court governed",
+      "notation": "cou",
+      "prefLabel_en": "Court governed",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "cov": {
+      "@id": "/def/relators/coverDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cov",
+      "label": "Formgivare av omslag, etc.",
+      "label_en": "Cover designer",
+      "notation": "cov",
+      "prefLabel_en": "Cover designer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "cpc": {
+      "@id": "/def/relators/copyrightClaimant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cpc",
+      "label": "Upphovsrättssökande",
+      "label_en": "Copyright claimant",
+      "notation": "cpc",
+      "prefLabel_en": "Copyright claimant",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "cpe": {
+      "@id": "/def/relators/complainantAppellee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cpe",
+      "label": "[Complainant-appellee: juridisk term ung. motsvarande Kärande, Målsägande]",
+      "label_en": "Complainant-appellee",
+      "notation": "cpe",
+      "prefLabel_en": "Complainant-appellee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/cpl",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "cph": {
+      "@id": "/def/relators/copyrightHolder",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cph",
+      "label": "Upphovsrättsinnehavare",
+      "label_en": "Copyright holder",
+      "notation": "cph",
+      "prefLabel_en": "Copyright holder",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "cpl": {
+      "@id": "/def/relators/complainant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cpl",
+      "label": "[Complainant: juridisk term ung. motsvarande Kärande, Målsägande]",
+      "label_en": "Complainant",
+      "notation": "cpl",
+      "prefLabel_en": "Complainant",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "cpt": {
+      "@id": "/def/relators/complainantAppellant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cpt",
+      "label": "[Complainant-appellant: juridisk term ung. motsvarande Kärande, Målsägande]",
+      "label_en": "Complainant-appellant",
+      "notation": "cpt",
+      "prefLabel_en": "Complainant-appellant",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/cpl"
+      ]
+    },
+    "cre": {
+      "@id": "/def/relators/creator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cre",
+      "label": "Upphov (creator)",
+      "label_en": "Creator",
+      "notation": "cre",
+      "prefLabel_en": "Creator",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/creator",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "crp": {
+      "@id": "/def/relators/correspondent",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/crp",
+      "label": "Brevskrivare, mottagare av brev",
+      "label_en": "Correspondent",
+      "notation": "crp",
+      "prefLabel_en": "Correspondent",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "crr": {
+      "@id": "/def/relators/corrector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/crr",
+      "label": "Korrekturläsare av handskrift",
+      "label_en": "Corrector",
+      "notation": "crr",
+      "prefLabel_en": "Corrector",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "crt": {
+      "@id": "http://id.loc.gov/vocabulary/relators/crt",
+      "@type": "ObjectProperty",
+      "label_en": "Court reporter",
+      "notation": "crt",
+      "prefLabel_en": "Court reporter",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "csl": {
+      "@id": "/def/relators/consultant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/csl",
+      "label": "Konsult",
+      "label_en": "Consultant",
+      "notation": "csl",
+      "prefLabel_en": "Consultant",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "csp": {
+      "@id": "/def/relators/consultantToAProject",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/csp",
+      "label": "Projektkonsult",
+      "label_en": "Consultant to a project",
+      "notation": "csp",
+      "prefLabel_en": "Consultant to a project",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "cst": {
+      "@id": "/def/relators/costumeDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cst",
+      "label": "Kostym",
+      "label_en": "Costume designer",
+      "notation": "cst",
+      "prefLabel_en": "Costume designer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "ctb": {
+      "@id": "/def/relators/contributor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ctb",
+      "label": "Bidragsgivare",
+      "label_en": "Contributor",
+      "notation": "ctb",
+      "prefLabel_en": "Contributor",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "cte": {
+      "@id": "/def/relators/contesteeAppellee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cte",
+      "label": "[Contestee-appellant: juridisk term ung. motsvarande Försvarare]",
+      "label_en": "Contestee-appellee",
+      "notation": "cte",
+      "prefLabel_en": "Contestee-appellee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/cts"
+      ]
+    },
+    "ctg": {
+      "@id": "/def/relators/cartographer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ctg",
+      "label": "Kartograf Cartographer",
+      "label_en": "Cartographer",
+      "notation": "ctg",
+      "prefLabel_en": "Cartographer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "ctr": {
+      "@id": "/def/relators/contractor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ctr",
+      "label": "Entreprenör, leverantör Contractor",
+      "label_en": "Contractor",
+      "notation": "ctr",
+      "prefLabel_en": "Contractor",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "cts": {
+      "@id": "/def/relators/arcArchitect",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cts",
+      "label": "[juridisk term ung. motsvarande Försvarare] Contestee",
+      "label_en": "Contestee",
+      "notation": "cts",
+      "prefLabel_en": "Contestee",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "ctt": {
+      "@id": "/def/relators/contesteeAppellant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ctt",
+      "label": "[juridisk term ung. motsvarande Försvarare]",
+      "label_en": "Contestee-appellant",
+      "notation": "ctt",
+      "prefLabel_en": "Contestee-appellant",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/cts"
+      ]
+    },
+    "cur": {
+      "@id": "/def/relators/curator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cur",
+      "label": "Utställningsansvarig, utställningskommissarie",
+      "label_en": "Curator",
+      "notation": "cur",
+      "prefLabel_en": "Curator",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "cwt": {
+      "@id": "/def/relators/commentatorForWrittenText",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/cwt",
+      "label": "Författare till textkommentar",
+      "label_en": "Commentator for written text",
+      "notation": "cwt",
+      "prefLabel_en": "Commentator for written text",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "dbp": {
+      "@id": "/def/relators/distributionPlace",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dbp",
+      "label": "Distributionsort",
+      "label_en": "Distribution place",
+      "notation": "dbp",
+      "prefLabel_en": "Distribution place",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "dfd": {
+      "@id": "/def/relators/defendant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dfd",
+      "label": "[Defendant: juridisk term ung. motsvarande Svarande, Tilltalad]",
+      "label_en": "Defendant",
+      "notation": "dfd",
+      "prefLabel_en": "Defendant",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "dfe": {
+      "@id": "/def/relators/defendantAppellee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dfe",
+      "label": "[Defendant-appellee: juridisk term ung. motsvarande Svarande, Tilltalad]",
+      "label_en": "Defendant-appellee",
+      "notation": "dfe",
+      "prefLabel_en": "Defendant-appellee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/dfd"
+      ]
+    },
+    "dft": {
+      "@id": "/def/relators/defendantAppellant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dft",
+      "label": "[Defendant-appellant: juridisk term ung. motsvarande Svarande, Tilltalad]",
+      "label_en": "Defendant-appellant",
+      "notation": "dft",
+      "prefLabel_en": "Defendant-appellant",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/dfd"
+      ]
+    },
+    "dgg": {
+      "@id": "/def/relators/degreeGrantor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dgg",
+      "label": "Utfärdare av akademisk examen",
+      "label_en": "Degree granting institution",
+      "notation": "dgg",
+      "prefLabel_en": "Degree granting institution",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "dis": {
+      "@id": "/def/relators/dissertant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dis",
+      "label": "Respondent",
+      "label_en": "Dissertant",
+      "notation": "dis",
+      "prefLabel_en": "Dissertant",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "dln": {
+      "@id": "/def/relators/delineator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dln",
+      "label": "Teknisk ritare",
+      "label_en": "Delineator",
+      "notation": "dln",
+      "prefLabel_en": "Delineator",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "dnc": {
+      "@id": "/def/relators/dancer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dnc",
+      "label": "Dansare",
+      "label_en": "Dancer",
+      "notation": "dnc",
+      "prefLabel_en": "Dancer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/prf",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "dnr": {
+      "@id": "/def/relators/donor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dnr",
+      "label": "Donator",
+      "label_en": "Donor",
+      "notation": "dnr",
+      "prefLabel_en": "Donor",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/fmo",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "dpc": {
+      "@id": "/def/relators/depicted",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dpc",
+      "label": "Avbildad",
+      "label_en": "Depicted",
+      "notation": "dpc",
+      "prefLabel_en": "Depicted",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/subject"
+      ]
+    },
+    "dpt": {
+      "@id": "/def/relators/depositor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dpt",
+      "label": "Deponerat av",
+      "label_en": "Depositor",
+      "notation": "dpt",
+      "prefLabel_en": "Depositor",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/own",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "drm": {
+      "@id": "/def/relators/draftsman",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/drm",
+      "label": "Ritare, tecknare",
+      "label_en": "Draftsman",
+      "notation": "drm",
+      "prefLabel_en": "Draftsman",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "drt": {
+      "@id": "/def/relators/director",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/drt",
+      "label": "Regissör",
+      "label_en": "Director",
+      "notation": "drt",
+      "prefLabel_en": "Director",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "dsr": {
+      "@id": "/def/relators/designer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dsr",
+      "label": "Formgivare",
+      "label_en": "Designer",
+      "notation": "dsr",
+      "prefLabel_en": "Designer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "dst": {
+      "@id": "/def/relators/distributor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dst",
+      "label": "Distributör",
+      "label_en": "Distributor",
+      "notation": "dst",
+      "prefLabel_en": "Distributor",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/prv",
+        "http://purl.org/dc/elements/1.1/publisher",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "dtc": {
+      "@id": "/def/relators/dataContributor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dtc",
+      "label": "Katalog- eller metadatakälla",
+      "label_en": "Data contributor",
+      "notation": "dtc",
+      "prefLabel_en": "Data contributor",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "dte": {
+      "@id": "/def/relators/dedicatee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dte",
+      "label": "Dedicerat till",
+      "label_en": "Dedicatee",
+      "notation": "dte",
+      "prefLabel_en": "Dedicatee",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "dtm": {
+      "@id": "/def/relators/dataManager",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dtm",
+      "label": "Katalog- eller metadataansvarig",
+      "label_en": "Data manager",
+      "notation": "dtm",
+      "prefLabel_en": "Data manager",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "dto": {
+      "@id": "/def/relators/dedicator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dto",
+      "label": "Författare till dedikation",
+      "label_en": "Dedicator",
+      "notation": "dto",
+      "prefLabel_en": "Dedicator",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "dub": {
+      "@id": "/def/relators/dubiousAuthor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/dub",
+      "label": "Författare (tvivelaktig)",
+      "label_en": "Dubious author",
+      "notation": "dub",
+      "prefLabel_en": "Dubious author",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "edc": {
+      "@id": "http://id.loc.gov/vocabulary/relators/edc",
+      "@type": "ObjectProperty",
+      "label_en": "Editor of compilation",
+      "notation": "edc",
+      "prefLabel_en": "Editor of compilation",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "edm": {
+      "@id": "http://id.loc.gov/vocabulary/relators/edm",
+      "@type": "ObjectProperty",
+      "label_en": "Editor of moving image work",
+      "notation": "edm",
+      "prefLabel_en": "Editor of moving image work",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "edt": {
+      "@id": "/def/relators/editor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/edt",
+      "label": "Utgivare, redaktör, sammanställare",
+      "label_en": "Editor",
+      "notation": "edt",
+      "prefLabel_en": "Editor",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "egr": {
+      "@id": "/def/relators/grantor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/egr",
+      "label": "Gravör",
+      "label_en": "Engraver",
+      "notation": "egr",
+      "prefLabel_en": "Engraver",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "elg": {
+      "@id": "/def/relators/electrician",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/elg",
+      "label": "Elektriker",
+      "label_en": "Electrician",
+      "notation": "elg",
+      "prefLabel_en": "Electrician",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "elt": {
+      "@id": "/def/relators/electrotyper",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/elt",
+      "label": "Framställare av elektrotyper",
+      "label_en": "Electrotyper",
+      "notation": "elt",
+      "prefLabel_en": "Electrotyper",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "eng": {
+      "@id": "/def/relators/engineer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/eng",
+      "label": "Ingenjör",
+      "label_en": "Engineer",
+      "notation": "eng",
+      "prefLabel_en": "Engineer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "enj": {
+      "@id": "http://id.loc.gov/vocabulary/relators/enj",
+      "@type": "ObjectProperty",
+      "label_en": "Enacting jurisdiction",
+      "notation": "enj",
+      "prefLabel_en": "Enacting jurisdiction",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "etr": {
+      "@id": "/def/relators/etcher",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/etr",
+      "label": "Etsare",
+      "label_en": "Etcher",
+      "notation": "etr",
+      "prefLabel_en": "Etcher",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "evp": {
+      "@id": "/def/relators/eventPlace",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/evp",
+      "label": "Plats/ort för händelse",
+      "label_en": "Event place",
+      "notation": "evp",
+      "prefLabel_en": "Event place",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "exp": {
+      "@id": "/def/relators/expert",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/exp",
+      "label": "Expert",
+      "label_en": "Expert",
+      "notation": "exp",
+      "prefLabel_en": "Expert",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "fac": {
+      "@id": "/def/relators/facsimilist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/fac",
+      "label": "Framställare av faksimil",
+      "label_en": "Facsimilist",
+      "notation": "fac",
+      "prefLabel_en": "Facsimilist",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "fds": {
+      "@id": "http://id.loc.gov/vocabulary/relators/fds",
+      "@type": "ObjectProperty",
+      "label_en": "Film distributor",
+      "notation": "fds",
+      "prefLabel_en": "Film distributor",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/dst",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "fld": {
+      "@id": "/def/relators/fieldDirector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/fld",
+      "label": "Fältchef",
+      "label_en": "Field director",
+      "notation": "fld",
+      "prefLabel_en": "Field director",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "flm": {
+      "@id": "/def/relators/filmEditor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/flm",
+      "label": "Utgivare av film",
+      "label_en": "Film editor",
+      "notation": "flm",
+      "prefLabel_en": "Film editor",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/edm",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "fmd": {
+      "@id": "http://id.loc.gov/vocabulary/relators/fmd",
+      "@type": "ObjectProperty",
+      "label_en": "Film director",
+      "notation": "fmd",
+      "prefLabel_en": "Film director",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/drt"
+      ]
+    },
+    "fmk": {
+      "@id": "http://id.loc.gov/vocabulary/relators/fmk",
+      "@type": "ObjectProperty",
+      "label_en": "Filmmaker",
+      "notation": "fmk",
+      "prefLabel_en": "Filmmaker",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/drt"
+      ]
+    },
+    "fmo": {
+      "@id": "/def/relators/formerOwner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/fmo",
+      "label": "Tidigare ägare",
+      "label_en": "Former owner",
+      "notation": "fmo",
+      "prefLabel_en": "Former owner",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "fmp": {
+      "@id": "http://id.loc.gov/vocabulary/relators/fmp",
+      "@type": "ObjectProperty",
+      "label_en": "Film producer",
+      "notation": "fmp",
+      "prefLabel_en": "Film producer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/pro",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "fnd": {
+      "@id": "/def/relators/funder",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/fnd",
+      "label": "Finansiär",
+      "label_en": "Funder",
+      "notation": "fnd",
+      "prefLabel_en": "Funder",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "fpy": {
+      "@id": "/def/relators/firstParty",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/fpy",
+      "label": "Första part",
+      "label_en": "First party",
+      "notation": "fpy",
+      "prefLabel_en": "First party",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "frg": {
+      "@id": "/def/relators/forger",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/frg",
+      "label": "Förfalskare",
+      "label_en": "Forger",
+      "notation": "frg",
+      "prefLabel_en": "Forger",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "gis": {
+      "@id": "/def/relators/geographicInformationSpecialist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/gis",
+      "label": "Specialist inom geografisk information (GIS)",
+      "label_en": "Geographic information specialist",
+      "notation": "gis",
+      "prefLabel_en": "Geographic information specialist",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "grt": {
+      "@id": "/def/relators/graphicTechnician",
+      "@type": "ObjectProperty",
+      "label": "[Grafisk tekniker] OBSOLET"
+    },
+    "his": {
+      "@id": "http://id.loc.gov/vocabulary/relators/his",
+      "@type": "ObjectProperty",
+      "label_en": "Host institution",
+      "notation": "his",
+      "prefLabel_en": "Host institution",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/hst",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "hnr": {
+      "@id": "/def/relators/honoree",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/hnr",
+      "label": "estskriftsföremål",
+      "label_en": "Honoree",
+      "notation": "hnr",
+      "prefLabel_en": "Honoree",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "hst": {
+      "@id": "/def/relators/host",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/hst",
+      "label": "Programvärd, programledare",
+      "label_en": "Host",
+      "notation": "hst",
+      "prefLabel_en": "Host",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/prf"
+      ]
+    },
+    "ill": {
+      "@id": "/def/relators/illustrator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ill",
+      "label": "Illustratör",
+      "label_en": "Illustrator",
+      "notation": "ill",
+      "prefLabel_en": "Illustrator",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "ilu": {
+      "@id": "/def/relators/illuminator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ilu",
+      "label": "illuminatör",
+      "label_en": "Illuminator",
+      "notation": "ilu",
+      "prefLabel_en": "Illuminator",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "ins": {
+      "@id": "/def/relators/inscriber",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ins",
+      "label": "Författare till inskription",
+      "label_en": "Inscriber",
+      "notation": "ins",
+      "prefLabel_en": "Inscriber",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "inv": {
+      "@id": "/def/relators/inventor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/inv",
+      "label": "Uppfinnare",
+      "label_en": "Inventor",
+      "notation": "inv",
+      "prefLabel_en": "Inventor",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "isb": {
+      "@id": "http://id.loc.gov/vocabulary/relators/isb",
+      "@type": "ObjectProperty",
+      "label_en": "Issuing body",
+      "notation": "isb",
+      "prefLabel_en": "Issuing body",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "itr": {
+      "@id": "/def/relators/instrumentalist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/itr",
+      "label": "Instrumentalist",
+      "label_en": "Instrumentalist",
+      "notation": "itr",
+      "prefLabel_en": "Instrumentalist",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/prf",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "ive": {
+      "@id": "/def/relators/interviewee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ive",
+      "label": "Intervjuobjekt",
+      "label_en": "Interviewee",
+      "notation": "ive",
+      "prefLabel_en": "Interviewee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "ivr": {
+      "@id": "/def/relators/interviewer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ivr",
+      "label": "Intervjuare",
+      "label_en": "Interviewer",
+      "notation": "ivr",
+      "prefLabel_en": "Interviewer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "jud": {
+      "@id": "http://id.loc.gov/vocabulary/relators/jud",
+      "@type": "ObjectProperty",
+      "label_en": "Judge",
+      "notation": "jud",
+      "prefLabel_en": "Judge",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "jug": {
+      "@id": "http://id.loc.gov/vocabulary/relators/jug",
+      "@type": "ObjectProperty",
+      "label_en": "Jurisdiction governed",
+      "notation": "jug",
+      "prefLabel_en": "Jurisdiction governed",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "lbr": {
+      "@id": "/def/relators/laboratory",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lbr",
+      "label": "Laboratorium",
+      "label_en": "Laboratory",
+      "notation": "lbr",
+      "prefLabel_en": "Laboratory",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "lbt": {
+      "@id": "/def/relators/librettist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lbt",
+      "label": "Librettist",
+      "label_en": "Librettist",
+      "notation": "lbt",
+      "prefLabel_en": "Librettist",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/aut"
+      ]
+    },
+    "ldr": {
+      "@id": "/def/relators/laboratoryDirector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ldr",
+      "label": "Laboratoriechef",
+      "label_en": "Laboratory director",
+      "notation": "ldr",
+      "prefLabel_en": "Laboratory director",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "led": {
+      "@id": "/def/relators/lead",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/led",
+      "label": "Chef, ledare",
+      "label_en": "Lead",
+      "notation": "led",
+      "prefLabel_en": "Lead",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "lee": {
+      "@id": "/def/relators/colCollector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lee",
+      "label": "[Libellee-appellee: juridisk term ung. motsvarande Svarande, Tilltalad]",
+      "label_en": "Libelee-appellee",
+      "notation": "lee",
+      "prefLabel_en": "Libelee-appellee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/lei",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "lel": {
+      "@id": "/def/relators/libelee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lel",
+      "label": "[Libellee: juridisk term ung. motsvarande Svarande, Tilltalad]",
+      "label_en": "Libelee",
+      "notation": "lel",
+      "prefLabel_en": "Libelee",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "len": {
+      "@id": "/def/relators/lender",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/len",
+      "label": "Utlånare",
+      "label_en": "Lender",
+      "notation": "len",
+      "prefLabel_en": "Lender",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "let": {
+      "@id": "/def/relators/libeleeAppellant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/let",
+      "label": "[Libellee-appellant: juridisk term ung. motsvarande Svarande, Tilltalad]",
+      "label_en": "Libelee-appellant",
+      "notation": "let",
+      "prefLabel_en": "Libelee-appellant",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/lel"
+      ]
+    },
+    "lgd": {
+      "@id": "/def/relators/lightingDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lgd",
+      "label": "Ljusdesigner, ljussättare",
+      "label_en": "Lighting designer",
+      "notation": "lgd",
+      "prefLabel_en": "Lighting designer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "lie": {
+      "@id": "/def/relators/cllCalligrapher",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lie",
+      "label": "[Libelant-appellee: juridisk term ung. motsvarande Kärande, Målsägande]",
+      "label_en": "Libelant-appellee",
+      "notation": "lie",
+      "prefLabel_en": "Libelant-appellee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/lil"
+      ]
+    },
+    "lil": {
+      "@id": "/def/relators/libelant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lil",
+      "label": "[Libelant: juridisk term ung. motsvarande Kärande, Målsägande]",
+      "label_en": "Libelant",
+      "notation": "lil",
+      "prefLabel_en": "Libelant",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "lit": {
+      "@id": "/def/relators/libelantAppellant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lit",
+      "label": "[Libelant-appellant: juridisk term ung. motsvarande Kärande, Målsägande]",
+      "label_en": "Libelant-appellant",
+      "notation": "lit",
+      "prefLabel_en": "Libelant-appellant",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/lil"
+      ]
+    },
+    "lsa": {
+      "@id": "/def/relators/landscapeArchitect",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lsa",
+      "label": "Landskapsarkitekt",
+      "label_en": "Landscape architect",
+      "notation": "lsa",
+      "prefLabel_en": "Landscape architect",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/arc",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "lse": {
+      "@id": "/def/relators/licensee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lse",
+      "label": "Licensinnehavare",
+      "label_en": "Licensee",
+      "notation": "lse",
+      "prefLabel_en": "Licensee",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "lso": {
+      "@id": "/def/relators/licensor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lso",
+      "label": "Licensutfärdare",
+      "label_en": "Licensor",
+      "notation": "lso",
+      "prefLabel_en": "Licensor",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "ltg": {
+      "@id": "/def/relators/lithographer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ltg",
+      "label": "Litograf",
+      "label_en": "Lithographer",
+      "notation": "ltg",
+      "prefLabel_en": "Lithographer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "lyr": {
+      "@id": "/def/relators/lyricist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/lyr",
+      "label": "Författare till sångtext",
+      "label_en": "Lyricist",
+      "notation": "lyr",
+      "prefLabel_en": "Lyricist",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/aut"
+      ]
+    },
+    "mcp": {
+      "@id": "/def/relators/musicCopyist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mcp",
+      "label": "Musikkopist",
+      "label_en": "Music copyist",
+      "notation": "mcp",
+      "prefLabel_en": "Music copyist",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "mdc": {
+      "@id": "/def/relators/metadataContact",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mdc",
+      "label": "Metadataansvarig",
+      "label_en": "Metadata contact",
+      "notation": "mdc",
+      "prefLabel_en": "Metadata contact",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "mfp": {
+      "@id": "/def/relators/manufacturePlace",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mfp",
+      "label": "Produktions-/tryckort",
+      "label_en": "Manufacture place",
+      "notation": "mfp",
+      "prefLabel_en": "Manufacture place",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "mfr": {
+      "@id": "/def/relators/manufacturer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mfr",
+      "label": "Fabrikant, tillverkare",
+      "label_en": "Manufacturer",
+      "notation": "mfr",
+      "prefLabel_en": "Manufacturer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/prv",
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "mod": {
+      "@id": "/def/relators/moderator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mod",
+      "label": "Moderator",
+      "label_en": "Moderator",
+      "notation": "mod",
+      "prefLabel_en": "Moderator",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/prf"
+      ]
+    },
+    "mon": {
+      "@id": "/def/relators/monitor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mon",
+      "label": "Övervakare, inspektör",
+      "label_en": "Monitor",
+      "notation": "mon",
+      "prefLabel_en": "Monitor",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "mrb": {
+      "@id": "/def/relators/marbler",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mrb",
+      "label": "Marmorering",
+      "label_en": "Marbler",
+      "notation": "mrb",
+      "prefLabel_en": "Marbler",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "mrk": {
+      "@id": "/def/relators/markupEditor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mrk",
+      "label": "Metadatauppmärkare",
+      "label_en": "Markup editor",
+      "notation": "mrk",
+      "prefLabel_en": "Markup editor",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "msd": {
+      "@id": "/def/relators/musicalDirector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/msd",
+      "label": "Musikalisk ledare",
+      "label_en": "Musical director",
+      "notation": "msd",
+      "prefLabel_en": "Musical director",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "mte": {
+      "@id": "/def/relators/metalEngraver",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mte",
+      "label": "Metallgravör",
+      "label_en": "Metal-engraver",
+      "notation": "mte",
+      "prefLabel_en": "Metal-engraver",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/egr",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "mus": {
+      "@id": "/def/relators/musician",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/mus",
+      "label": "Musiker",
+      "label_en": "Musician",
+      "notation": "mus",
+      "prefLabel_en": "Musician",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "nrt": {
+      "@id": "/def/relators/narrator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/nrt",
+      "label": "Berättare, inläsare",
+      "label_en": "Narrator",
+      "notation": "nrt",
+      "prefLabel_en": "Narrator",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/prf",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "opn": {
+      "@id": "/def/relators/opponent",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/opn",
+      "label": "Opponent",
+      "label_en": "Opponent",
+      "notation": "opn",
+      "prefLabel_en": "Opponent",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "org": {
+      "@id": "http://id.loc.gov/vocabulary/relators/org",
+      "@type": "ObjectProperty",
+      "label_en": "Originator",
+      "notation": "org",
+      "prefLabel_en": "Originator",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "orm": {
+      "@id": "/def/relators/owner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/orm",
+      "label": "Mötesarrangör",
+      "label_en": "Organizer of meeting",
+      "notation": "orm",
+      "prefLabel_en": "Organizer of meeting",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "osp": {
+      "@id": "http://id.loc.gov/vocabulary/relators/osp",
+      "@type": "ObjectProperty",
+      "label_en": "Onscreen presenter",
+      "notation": "osp",
+      "prefLabel_en": "Onscreen presenter",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/prf",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "oth": {
+      "@id": "/def/relators/unspecifiedContributor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/oth",
+      "label": "Medarbetare (ospecificerad)",
+      "label_en": "Other",
+      "notation": "oth",
+      "prefLabel_en": "Other",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "own": {
+      "@id": "/def/relators/fpyFirstParty",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/own",
+      "label": "Ägare",
+      "label_en": "Owner",
+      "notation": "own",
+      "prefLabel_en": "Owner",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pan": {
+      "@id": "http://id.loc.gov/vocabulary/relators/pan",
+      "@type": "ObjectProperty",
+      "label_en": "Panelist",
+      "notation": "pan",
+      "prefLabel_en": "Panelist",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/prf"
+      ]
+    },
+    "pat": {
+      "@id": "/def/relators/patron",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pat",
+      "label": "Mecenat",
+      "label_en": "Patron",
+      "notation": "pat",
+      "prefLabel_en": "Patron",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pbd": {
+      "@id": "/def/relators/publishingDirector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pbd",
+      "label": "Chefredaktör, huvudredaktör",
+      "label_en": "Publishing director",
+      "notation": "pbd",
+      "prefLabel_en": "Publishing director",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pbl": {
+      "@id": "/def/relators/publisher",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pbl",
+      "label": "Utgivare",
+      "label_en": "Publisher",
+      "notation": "pbl",
+      "prefLabel_en": "Publisher",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/prv",
+        "http://purl.org/dc/elements/1.1/publisher",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "pdr": {
+      "@id": "/def/relators/projectDirector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pdr",
+      "label": "Projektchef, projektsamordnare",
+      "label_en": "Project director",
+      "notation": "pdr",
+      "prefLabel_en": "Project director",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pfr": {
+      "@id": "/def/relators/proofreader",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pfr",
+      "label": "Korrekturläsare",
+      "label_en": "Proofreader",
+      "notation": "pfr",
+      "prefLabel_en": "Proofreader",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pht": {
+      "@id": "/def/relators/photographer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pht",
+      "label": "Fotograf",
+      "label_en": "Photographer",
+      "notation": "pht",
+      "prefLabel_en": "Photographer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "plt": {
+      "@id": "/def/relators/platemaker",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/plt",
+      "label": "Tryckplåtstillverkare",
+      "label_en": "Platemaker",
+      "notation": "plt",
+      "prefLabel_en": "Platemaker",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "pma": {
+      "@id": "/def/relators/permittingAgency",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pma",
+      "label": "Tillståndsgivande organ",
+      "label_en": "Permitting agency",
+      "notation": "pma",
+      "prefLabel_en": "Permitting agency",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pmn": {
+      "@id": "/def/relators/productionManager",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pmn",
+      "label": "Produktionsledning",
+      "label_en": "Production manager",
+      "notation": "pmn",
+      "prefLabel_en": "Production manager",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pop": {
+      "@id": "/def/relators/printerOfPlates",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pop",
+      "label": "Tryckare av illustrationer",
+      "label_en": "Printer of plates",
+      "notation": "pop",
+      "prefLabel_en": "Printer of plates",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "ppm": {
+      "@id": "/def/relators/papermaker",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ppm",
+      "label": "Pappersmakare",
+      "label_en": "Papermaker",
+      "notation": "ppm",
+      "prefLabel_en": "Papermaker",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "ppt": {
+      "@id": "/def/relators/puppeteer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ppt",
+      "label": "Marionettspelare",
+      "label_en": "Puppeteer",
+      "notation": "ppt",
+      "prefLabel_en": "Puppeteer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/prf",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "pra": {
+      "@id": "http://id.loc.gov/vocabulary/relators/pra",
+      "@type": "ObjectProperty",
+      "label_en": "Praeses",
+      "notation": "pra",
+      "prefLabel_en": "Praeses",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "prc": {
+      "@id": "/def/relators/processContact",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/prc",
+      "label": "Processansvarig",
+      "label_en": "Process contact",
+      "notation": "prc",
+      "prefLabel_en": "Process contact",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "prd": {
+      "@id": "/def/relators/productionPersonnel",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/prd",
+      "label": "Produktionspersonal",
+      "label_en": "Production personnel",
+      "notation": "prd",
+      "prefLabel_en": "Production personnel",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "pre": {
+      "@id": "http://id.loc.gov/vocabulary/relators/pre",
+      "@type": "ObjectProperty",
+      "label_en": "Presenter",
+      "notation": "pre",
+      "prefLabel_en": "Presenter",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "prf": {
+      "@id": "/def/relators/performer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/prf",
+      "label": "Framförande person, spelare, musiker, etc.",
+      "label_en": "Performer",
+      "notation": "prf",
+      "prefLabel_en": "Performer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "prg": {
+      "@id": "/def/relators/programmer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/prg",
+      "label": "Programmerare",
+      "label_en": "Programmer",
+      "notation": "prg",
+      "prefLabel_en": "Programmer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "prm": {
+      "@id": "/def/relators/printmaker",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/prm",
+      "label": "Tryckmakare",
+      "label_en": "Printmaker",
+      "notation": "prm",
+      "prefLabel_en": "Printmaker",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "prn": {
+      "@id": "http://id.loc.gov/vocabulary/relators/prn",
+      "@type": "ObjectProperty",
+      "label_en": "Production company",
+      "notation": "prn",
+      "prefLabel_en": "Production company",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "pro": {
+      "@id": "/def/relators/blwBlurbWriter",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pro",
+      "label": "Filmproducent",
+      "label_en": "Producer",
+      "notation": "pro",
+      "prefLabel_en": "Producer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/prv",
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "prp": {
+      "@id": "/def/relators/productionPlace",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/prp",
+      "label": "Konstruktionsort",
+      "label_en": "Production place",
+      "notation": "prp",
+      "prefLabel_en": "Production place",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "prs": {
+      "@id": "http://id.loc.gov/vocabulary/relators/prs",
+      "@type": "ObjectProperty",
+      "label_en": "Production designer",
+      "notation": "prs",
+      "prefLabel_en": "Production designer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "prt": {
+      "@id": "/def/relators/printer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/prt",
+      "label": "Tryckare",
+      "label_en": "Printer",
+      "notation": "prt",
+      "prefLabel_en": "Printer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "prv": {
+      "@id": "http://id.loc.gov/vocabulary/relators/prv",
+      "@type": "ObjectProperty",
+      "label_en": "Provider",
+      "notation": "prv",
+      "prefLabel_en": "Provider",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pta": {
+      "@id": "/def/relators/patentApplicant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pta",
+      "label": "Patentsökande",
+      "label_en": "Patent applicant",
+      "notation": "pta",
+      "prefLabel_en": "Patent applicant",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pte": {
+      "@id": "/def/relators/aftAuthorOfAfterwordColophonEtc",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pte",
+      "label": "[Plaintiff-appellee: juridisk term ung. motsvarande Kärande, Målsägande]",
+      "label_en": "Plaintiff-appellee",
+      "notation": "pte",
+      "prefLabel_en": "Plaintiff-appellee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/ptf",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "ptf": {
+      "@id": "/def/relators/plaintiff",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ptf",
+      "label": "[Plaintiff: juridisk term ung. motsvarande Kärande, Målsägande]",
+      "label_en": "Plaintiff",
+      "notation": "ptf",
+      "prefLabel_en": "Plaintiff",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "pth": {
+      "@id": "/def/relators/patentHolder",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pth",
+      "label": "Patentinnehavare",
+      "label_en": "Patent holder",
+      "notation": "pth",
+      "prefLabel_en": "Patent holder",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "ptt": {
+      "@id": "/def/relators/plaintiffAppellant",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ptt",
+      "label": "[Plaintiff-appellant: juridisk term ung. motsvarande Kärande, Målsägande]",
+      "label_en": "Plaintiff-appellant",
+      "notation": "ptt",
+      "prefLabel_en": "Plaintiff-appellant",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/ptf",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "pup": {
+      "@id": "/def/relators/publicationPlace",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/pup",
+      "label": "Utgivnings-/publikationsort",
+      "label_en": "Publication place",
+      "notation": "pup",
+      "prefLabel_en": "Publication place",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "rbr": {
+      "@id": "/def/relators/rubricator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rbr",
+      "label": "Rubricator",
+      "label_en": "Rubricator",
+      "notation": "rbr",
+      "prefLabel_en": "Rubricator",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "rcd": {
+      "@id": "http://id.loc.gov/vocabulary/relators/rcd",
+      "@type": "ObjectProperty",
+      "label_en": "Recordist",
+      "notation": "rcd",
+      "prefLabel_en": "Recordist",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "rce": {
+      "@id": "/def/relators/recordingEngineer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rce",
+      "label": "Inspelningstekniker",
+      "label_en": "Recording engineer",
+      "notation": "rce",
+      "prefLabel_en": "Recording engineer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "rcp": {
+      "@id": "/def/relators/recipient",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rcp",
+      "label": "Mottagare av korrespondens",
+      "label_en": "Addressee",
+      "notation": "rcp",
+      "prefLabel_en": "Addressee",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "rdd": {
+      "@id": "http://id.loc.gov/vocabulary/relators/rdd",
+      "@type": "ObjectProperty",
+      "label_en": "Radio director",
+      "notation": "rdd",
+      "prefLabel_en": "Radio director",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/drt",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "red": {
+      "@id": "/def/relators/redactor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/red",
+      "label": "Redigerare",
+      "label_en": "Redaktor",
+      "notation": "red",
+      "prefLabel_en": "Redaktor",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "ren": {
+      "@id": "/def/relators/renderer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ren",
+      "label": "Prototyp, visualisering",
+      "label_en": "Renderer",
+      "notation": "ren",
+      "prefLabel_en": "Renderer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "res": {
+      "@id": "/def/relators/crrCorrector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/res",
+      "label": "Forskare",
+      "label_en": "Researcher",
+      "notation": "res",
+      "prefLabel_en": "Researcher",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "rev": {
+      "@id": "/def/relators/reviewer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rev",
+      "label": "Recensent",
+      "label_en": "Reviewer",
+      "notation": "rev",
+      "prefLabel_en": "Reviewer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "rpc": {
+      "@id": "http://id.loc.gov/vocabulary/relators/rpc",
+      "@type": "ObjectProperty",
+      "label_en": "Radio producer",
+      "notation": "rpc",
+      "prefLabel_en": "Radio producer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/pro"
+      ]
+    },
+    "rps": {
+      "@id": "/def/relators/repository",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rps",
+      "label": "Arkiv (repository)",
+      "label_en": "Repository",
+      "notation": "rps",
+      "prefLabel_en": "Repository",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "rpt": {
+      "@id": "/def/relators/reporter",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rpt",
+      "label": "Reporter, journalist",
+      "label_en": "Reporter",
+      "notation": "rpt",
+      "prefLabel_en": "Reporter",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "rpy": {
+      "@id": "/def/relators/responsibleParty",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rpy",
+      "label": "Ansvarig utgivare",
+      "label_en": "Responsible party",
+      "notation": "rpy",
+      "prefLabel_en": "Responsible party",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "rse": {
+      "@id": "/def/relators/respondentAppellee",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rse",
+      "label": "[Respondent-appellee: juridisk term ung. motsvarande Svarande, Tilltalad]",
+      "label_en": "Respondent-appellee",
+      "notation": "rse",
+      "prefLabel_en": "Respondent-appellee",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/rsp",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "rsg": {
+      "@id": "/def/relators/restager",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rsg",
+      "label": "Bearbetare av sceniskt verk",
+      "label_en": "Restager",
+      "notation": "rsg",
+      "prefLabel_en": "Restager",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "rsp": {
+      "@id": "/def/relators/respondent",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rsp",
+      "label": "[Respondent: juridisk term ung. motsvarande Svarande, Tilltalad]",
+      "label_en": "Respondent",
+      "notation": "rsp",
+      "prefLabel_en": "Respondent",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "rsr": {
+      "@id": "http://id.loc.gov/vocabulary/relators/rsr",
+      "@type": "ObjectProperty",
+      "label_en": "Restorationist",
+      "notation": "rsr",
+      "prefLabel_en": "Restorationist",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "rst": {
+      "@id": "/def/relators/party",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rst",
+      "label": "[Respondent-appellant: juridisk term ung. motsvarande Svarande, Tilltalad]",
+      "label_en": "Respondent-appellant",
+      "notation": "rst",
+      "prefLabel_en": "Respondent-appellant",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/rsp"
+      ]
+    },
+    "rth": {
+      "@id": "/def/relators/researchTeamHead",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rth",
+      "label": "Chef för forskargrupp",
+      "label_en": "Research team head",
+      "notation": "rth",
+      "prefLabel_en": "Research team head",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "rtm": {
+      "@id": "/def/relators/researchTeamMember",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/rtm",
+      "label": "Medlem av forskargrupp",
+      "label_en": "Research team member",
+      "notation": "rtm",
+      "prefLabel_en": "Research team member",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "sad": {
+      "@id": "/def/relators/scientificAdvisor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/sad",
+      "label": "Vetenskaplig rådgivare",
+      "label_en": "Scientific advisor",
+      "notation": "sad",
+      "prefLabel_en": "Scientific advisor",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "sce": {
+      "@id": "/def/relators/scenarist",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/sce",
+      "label": "Författare till scenario",
+      "label_en": "Scenarist",
+      "notation": "sce",
+      "prefLabel_en": "Scenarist",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "scl": {
+      "@id": "/def/relators/sculptor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/scl",
+      "label": "Skulptör",
+      "label_en": "Sculptor",
+      "notation": "scl",
+      "prefLabel_en": "Sculptor",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/aut"
+      ]
+    },
+    "scr": {
+      "@id": "/def/relators/autAuthor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/scr",
+      "label": "Skrivare, kopist",
+      "label_en": "Scribe",
+      "notation": "scr",
+      "prefLabel_en": "Scribe",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "sds": {
+      "@id": "/def/relators/soundDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/sds",
+      "label": "Ljudproducent, ljudtekniker",
+      "label_en": "Sound designer",
+      "notation": "sds",
+      "prefLabel_en": "Sound designer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "sec": {
+      "@id": "/def/relators/secretary",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/sec",
+      "label": "Sekreterare",
+      "label_en": "Secretary",
+      "notation": "sec",
+      "prefLabel_en": "Secretary",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "sgd": {
+      "@id": "http://id.loc.gov/vocabulary/relators/sgd",
+      "@type": "ObjectProperty",
+      "label_en": "Stage director",
+      "notation": "sgd",
+      "prefLabel_en": "Stage director",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "sgn": {
+      "@id": "/def/relators/signer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/sgn",
+      "label": "Signatur",
+      "label_en": "Signer",
+      "notation": "sgn",
+      "prefLabel_en": "Signer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "sht": {
+      "@id": "/def/relators/supportingHost",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/sht",
+      "label": "Organiserat med stöd av",
+      "label_en": "Supporting host",
+      "notation": "sht",
+      "prefLabel_en": "Supporting host",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "sll": {
+      "@id": "http://id.loc.gov/vocabulary/relators/sll",
+      "@type": "ObjectProperty",
+      "label_en": "Seller",
+      "notation": "sll",
+      "prefLabel_en": "Seller",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/fmo",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "sng": {
+      "@id": "/def/relators/singer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/sng",
+      "label": "Sångare",
+      "label_en": "Singer",
+      "notation": "sng",
+      "prefLabel_en": "Singer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/prf",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "spk": {
+      "@id": "/def/relators/speaker",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/spk",
+      "label": "Röst, tal",
+      "label_en": "Speaker",
+      "notation": "spk",
+      "prefLabel_en": "Speaker",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/prf"
+      ]
+    },
+    "spn": {
+      "@id": "/def/relators/sponsor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/spn",
+      "label": "Sponsor",
+      "label_en": "Sponsor",
+      "notation": "spn",
+      "prefLabel_en": "Sponsor",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "spy": {
+      "@id": "/def/relators/secondParty",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/spy",
+      "label": "Andra part",
+      "label_en": "Second party",
+      "notation": "spy",
+      "prefLabel_en": "Second party",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "srv": {
+      "@id": "/def/relators/surveyor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/srv",
+      "label": "Lantmätare",
+      "label_en": "Surveyor",
+      "notation": "srv",
+      "prefLabel_en": "Surveyor",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "std": {
+      "@id": "/def/relators/setDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/std",
+      "label": "Scenograf",
+      "label_en": "Set designer",
+      "notation": "std",
+      "prefLabel_en": "Set designer",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "stg": {
+      "@id": "http://id.loc.gov/vocabulary/relators/stg",
+      "@type": "ObjectProperty",
+      "label_en": "Setting",
+      "notation": "stg",
+      "prefLabel_en": "Setting",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "stl": {
+      "@id": "/def/relators/storyteller",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/stl",
+      "label": "Historieberättare",
+      "label_en": "Storyteller",
+      "notation": "stl",
+      "prefLabel_en": "Storyteller",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/prf"
+      ]
+    },
+    "stm": {
+      "@id": "/def/relators/stageManager",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/stm",
+      "label": "Inspicient, regiassistent",
+      "label_en": "Stage manager",
+      "notation": "stm",
+      "prefLabel_en": "Stage manager",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "stn": {
+      "@id": "/def/relators/standardsBody",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/stn",
+      "label": "Standardiseringsorgan",
+      "label_en": "Standards body",
+      "notation": "stn",
+      "prefLabel_en": "Standards body",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "str": {
+      "@id": "/def/relators/arcArchitect",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/str",
+      "label": "Framställare av stereotyper",
+      "label_en": "Stereotyper",
+      "notation": "str",
+      "prefLabel_en": "Stereotyper",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "tcd": {
+      "@id": "/def/relators/technicalDirector",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/tcd",
+      "label": "Teknisk chef",
+      "label_en": "Technical director",
+      "notation": "tcd",
+      "prefLabel_en": "Technical director",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "tch": {
+      "@id": "/def/relators/evpEventPlace",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/tch",
+      "label": "Lärare",
+      "label_en": "Teacher",
+      "notation": "tch",
+      "prefLabel_en": "Teacher",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/prf"
+      ]
+    },
+    "ths": {
+      "@id": "/def/relators/thesisAdvisor",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/ths",
+      "label": "Preses",
+      "label_en": "Thesis advisor",
+      "notation": "ths",
+      "prefLabel_en": "Thesis advisor",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "tld": {
+      "@id": "http://id.loc.gov/vocabulary/relators/tld",
+      "@type": "ObjectProperty",
+      "label_en": "Television director",
+      "notation": "tld",
+      "prefLabel_en": "Television director",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/drt"
+      ]
+    },
+    "tlp": {
+      "@id": "http://id.loc.gov/vocabulary/relators/tlp",
+      "@type": "ObjectProperty",
+      "label_en": "Television producer",
+      "notation": "tlp",
+      "prefLabel_en": "Television producer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://id.loc.gov/vocabulary/relators/pro"
+      ]
+    },
+    "trc": {
+      "@id": "/def/relators/transcriber",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/trc",
+      "label": "Avskrivare",
+      "label_en": "Transcriber",
+      "notation": "trc",
+      "prefLabel_en": "Transcriber",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "trl": {
+      "@id": "/def/relators/translator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/trl",
+      "label": "Översättare",
+      "label_en": "Translator",
+      "notation": "trl",
+      "prefLabel_en": "Translator",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "tyd": {
+      "@id": "/def/relators/typeDesigner",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/tyd",
+      "label": "Formgivare av typsnitt",
+      "label_en": "Type designer",
+      "notation": "tyd",
+      "prefLabel_en": "Type designer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "tyg": {
+      "@id": "/def/relators/typographer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/tyg",
+      "label": "Typograf",
+      "label_en": "Typographer",
+      "notation": "tyg",
+      "prefLabel_en": "Typographer",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "uvp": {
+      "@id": "/def/relators/universityPlace",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/uvp",
+      "label": "Universitetsort",
+      "label_en": "University place",
+      "notation": "uvp",
+      "prefLabel_en": "University place",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    },
+    "vdg": {
+      "@id": "/def/relators/videographer",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/vdg",
+      "label": "Videoproducent",
+      "label_en": "Videographer",
+      "notation": "vdg",
+      "prefLabel_en": "Videographer",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "voc": {
+      "@id": "/def/relators/vocalist",
+      "@type": "ObjectProperty",
+      "label": "Vokalist"
+    },
+    "wac": {
+      "@id": "http://id.loc.gov/vocabulary/relators/wac",
+      "@type": "ObjectProperty",
+      "label_en": "Writer of added commentary",
+      "notation": "wac",
+      "prefLabel_en": "Writer of added commentary",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "wal": {
+      "@id": "http://id.loc.gov/vocabulary/relators/wal",
+      "@type": "ObjectProperty",
+      "label_en": "Writer of added lyrics",
+      "notation": "wal",
+      "prefLabel_en": "Writer of added lyrics",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/wat"
+      ]
+    },
+    "wam": {
+      "@id": "/def/relators/writerOfAccompanyingMaterial",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/wam",
+      "label": "Författare till material som medföljer AV-media",
+      "label_en": "Writer of accompanying material",
+      "notation": "wam",
+      "prefLabel_en": "Writer of accompanying material",
+      "subPropertyOf": [
+        "http://purl.org/dc/elements/1.1/contributor",
+        "http://id.loc.gov/vocabulary/relators/role"
+      ]
+    },
+    "wat": {
+      "@id": "http://id.loc.gov/vocabulary/relators/wat",
+      "@type": "ObjectProperty",
+      "label_en": "Writer of added text",
+      "notation": "wat",
+      "prefLabel_en": "Writer of added text",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "wdc": {
+      "@id": "/def/relators/woodcutter",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/wdc",
+      "label": "Framställare av träsnitt",
+      "label_en": "Woodcutter",
+      "notation": "wdc",
+      "prefLabel_en": "Woodcutter",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "wde": {
+      "@id": "/def/relators/woodEngraver",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/wde",
+      "label": "Xylograf (trägravyr)",
+      "label_en": "Wood engraver",
+      "notation": "wde",
+      "prefLabel_en": "Wood engraver",
+      "subPropertyOf": [
+        "http://id.loc.gov/vocabulary/relators/role",
+        "http://purl.org/dc/elements/1.1/contributor"
+      ]
+    },
+    "wit": {
+      "@id": "/def/relators/witness",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://id.loc.gov/vocabulary/relators/wit",
+      "label": "Vittne",
+      "label_en": "Witness",
+      "notation": "wit",
+      "prefLabel_en": "Witness",
+      "subPropertyOf": "http://id.loc.gov/vocabulary/relators/role"
+    }
+  }
+}
