@@ -17,6 +17,8 @@
     "homepage": {"@id": "foaf:homepage", "@type": "@id"},
     "@vocab": "http://www.w3.org/2004/02/skos/core#",
     "notation": {"@language": null},
+    "langCode": {"@id": "notation", "@type": "dc:ISO639-2"},
+    "langTag": {"@id": "notation", "@type": "dc:ISO639-1"},
     "matches": {"@id": "closeMatch", "@type": "@id"},
     "equals": {"@id": "exactMatch", "@type": "@id"}
   }
