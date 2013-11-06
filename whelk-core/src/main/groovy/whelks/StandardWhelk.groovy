@@ -55,7 +55,7 @@ class StandardWhelk implements Whelk {
         doc = sanityCheck(doc)
 
         for (storage in storages) {
-            stored = (storage.store(doc, this.id) || stored)
+            stored = (storage.store(doc) || stored)
         }
 
         addToGraphStore([doc])
@@ -77,7 +77,7 @@ class StandardWhelk implements Whelk {
         for (storage in storages) {
             for (doc in docs) {
                 try {
-                    stored = (storage.store(doc, this.id) || stored)
+                    stored = (storage.store(doc) || stored)
                 } catch (Exception e) {
                     log.error("Store failed for $doc", e)
                     throw new WhelkAddException(doc.identifier as String)
@@ -94,14 +94,14 @@ class StandardWhelk implements Whelk {
 
     @Override
     Document get(URI uri) {
-        return storages.get(0)?.get(uri, this.id)
+        return storages.get(0)?.get(uri)
     }
 
     @Override
     void remove(URI uri) {
         components.each {
             try {
-                ((Component)it).delete(uri, this.id)
+                ((Component)it).delete(uri)
             } catch (RuntimeException rte) {
                 log.warn("Component ${((Component)it).id} failed delete: ${rte.message}")
             }
