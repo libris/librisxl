@@ -1,0 +1,17 @@
+{
+    "analysis" : {
+        "analyzer" : {
+            "default" : {
+                "tokenizer" : "standard",
+                "filter" : ["swe_light_stemmer", "lowercase"]
+            }
+
+        },
+        "filter" : {
+            "swe_light_stemmer" : {
+                "type" : "stemmer",
+                "name" : "light_swedish"
+            }
+        }
+    }
+}
