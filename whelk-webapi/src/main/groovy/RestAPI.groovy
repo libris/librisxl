@@ -36,11 +36,6 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     def varPath = false
     boolean enabled = true
 
-    int order = 0
-
-    def void enable() {this.enabled = true}
-    def void disable() {this.enabled = false}
-
     @Override
     void setWhelk(Whelk w) {
         this.whelk = w
@@ -679,6 +674,7 @@ class SuggestResultsConverter {
 }
 
 
+@Deprecated
 @Log
 class ResourceListRestlet extends BasicWhelkAPI {
     def pathEnd = "_resourcelist"
@@ -736,6 +732,26 @@ class ResourceListRestlet extends BasicWhelkAPI {
         }
     }
 }
+
+@Log
+class DefinitionDataRestlet extends Directory implements RestAPI {
+    Whelk whelk
+    String id = "DefinitionDataAPI"
+    String path = "/def"
+    boolean enabled = true
+    def varPath = false
+    void init(String w) {}
+
+    DefinitionDataRestlet(String fileRoot) {
+        super(null, fileRoot)
+    }
+
+    DefinitionDataRestlet(Whelk whelk, String fileRoot) {
+        super(null, whelk.fileBaseUri.resolve(fileRoot) as String)
+        this.whelk = whelk
+    }
+}
+
 
 @Log
 class MarcMapRestlet extends BasicWhelkAPI {
