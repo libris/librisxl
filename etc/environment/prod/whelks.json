@@ -5,17 +5,19 @@
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins": [
                     "index",
-                    "cassandrastorage",
+                    "flatstorage",
                     "search",
-                    "sparqlapi",
                     "remotesearch",
+                    "metasearch",
                     "documentapi",
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
-                    "linkenhancer",
                     "jsonldlinkfinder",
-                    "nameexpander"
+                    "namecomplete",
+                    "nameexpander",
+                    "subjcomplete",
+                    "fieldsearch"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
@@ -24,7 +26,7 @@
         {
             "resource":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool"]
+                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool" ]
             }
         }
     ]
