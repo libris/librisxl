@@ -154,7 +154,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                         public boolean onException(ConnectionException e) {
                             try {
                                 log.warn("Cassandra threw exception. Holding for a second ...")
-                        Thread.sleep(1000);
+                                Thread.sleep(1000);
                         } catch (InterruptedException e1) {
                         }
                         return true
@@ -185,10 +185,12 @@ class CassandraIterator implements Iterator<Document> {
 
     public Document next() {
         Row<String,String> row = iter.next()
-        return new Document()
+        def doc = new Document()
         .withIdentifier(row.getKey())
         .withData(row.columns.getColumnByName("data").byteValue)
         .withMetaEntry(row.columns.getColumnByName("entry").stringValue)
+        log.debug("Next yielded ${doc.identifier}")
+        return doc
     }
 
     void remove() {}
