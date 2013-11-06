@@ -12,12 +12,12 @@ class WhelkInitializer {
     def whelklist = []
     def plugins = [:]
 
-    WhelkInitializer(InputStream wis, InputStream pis) {
+    WhelkInitializer(InputStream wis, InputStream pis=null) {
         Object mapper = new ObjectMapper()
         if (pis) {
             log.info("Got separate plugin config.")
             json = mapper.readValue(wis, Map)
-            json["_plugins"] = mapper.readValue(pis, List)
+            json["_plugins"] = mapper.readValue(pis, Map)
         } else if (wis) {
             log.info("Single config file.")
             json = mapper.readValue(wis, Map)
@@ -80,61 +80,59 @@ class WhelkInitializer {
             return plugins[plugname]
         }
         def plugin
-        json._plugins.each { p ->
-            p.each { label, meta ->
-                if (label == plugname) {
-                    if (meta._params) {
-                        log.trace("Plugin $label has parameters.")
-                        def params = translateParams(meta._params, whelkname)
-                        log.debug("Plugin parameter: ${params}")
-                        def pclasses = params.collect { it.class }
-                        try {
-                            def c = Class.forName(meta._class).getConstructor(pclasses as Class[])
-                            log.debug("c: $c")
-                            plugin = c.newInstance(params as Object[])
-                            log.debug("plugin: $plugin")
-                        } catch (NoSuchMethodException nsme) {
-                            log.debug("Constructor not found the easy way. Trying to find assignable class.")
-                            for (cnstr in Class.forName(meta._class).getConstructors()) {
-                                log.trace("Found constructor for ${meta._class}: $cnstr")
-                                log.trace("Parameter types: " + cnstr.getParameterTypes())
-                                boolean match = true
-                                int i = 0
-                                for (pt in cnstr.getParameterTypes()) {
-                                    log.trace("Loop parameter type: $pt")
-                                    log.trace("Check against: " + params[i])
-                                    if (!pt.isAssignableFrom(params[i++].getClass())) {
-                                        match = false
-                                    }
-                                }
-                                if (match) {
-                                    plugin = cnstr.newInstance(params as Object[])
-                                    break;
+        json._plugins.each { label, meta ->
+            if (label == plugname) {
+                if (meta._params) {
+                    log.trace("Plugin $label has parameters.")
+                    def params = translateParams(meta._params, whelkname)
+                    log.debug("Plugin parameter: ${params}")
+                    def pclasses = params.collect { it.class }
+                    try {
+                        def c = Class.forName(meta._class).getConstructor(pclasses as Class[])
+                        log.debug("c: $c")
+                        plugin = c.newInstance(params as Object[])
+                        log.debug("plugin: $plugin")
+                    } catch (NoSuchMethodException nsme) {
+                        log.debug("Constructor not found the easy way. Trying to find assignable class.")
+                        for (cnstr in Class.forName(meta._class).getConstructors()) {
+                            log.trace("Found constructor for ${meta._class}: $cnstr")
+                            log.trace("Parameter types: " + cnstr.getParameterTypes())
+                            boolean match = true
+                            int i = 0
+                            for (pt in cnstr.getParameterTypes()) {
+                                log.trace("Loop parameter type: $pt")
+                                log.trace("Check against: " + params[i])
+                                if (!pt.isAssignableFrom(params[i++].getClass())) {
+                                    match = false
                                 }
                             }
+                            if (match) {
+                                plugin = cnstr.newInstance(params as Object[])
+                                break;
+                            }
                         }
-                    } else {
-                        log.trace("Plugin $label has no parameters.")
-                        plugin = Class.forName(meta._class).newInstance()
                     }
-                    assert plugin, "Failed to instantiate plugin: ${plugname} from class ${meta._class} with params ${meta._params}"
-                    /* Plugin order removed.
-                    if (meta._priority) {
-                        log.debug("Setting priority ${meta._priority} for plugin $label")
-                        plugin.order = meta._priority
-                    }
-                    */
-                    if (meta._id) {
-                        plugin.id = meta._id
-                    } else {
-                        plugin.setId(label)
-                    }
-                    if (!meta._unique 
-                            && !(plugin instanceof WhelkAware)
-                            && !meta._param) {
-                        log.trace "$plugname not unique. Adding instance to map."
-                        plugins[label] = plugin
-                    }
+                } else {
+                    log.trace("Plugin $label has no parameters.")
+                    plugin = Class.forName(meta._class).newInstance()
+                }
+                assert plugin, "Failed to instantiate plugin: ${plugname} from class ${meta._class} with params ${meta._params}"
+                /* Plugin order removed.
+                if (meta._priority) {
+                    log.debug("Setting priority ${meta._priority} for plugin $label")
+                    plugin.order = meta._priority
+                }
+                */
+                if (meta._id) {
+                    plugin.id = meta._id
+                } else {
+                    plugin.setId(label)
+                }
+                if (!meta._unique 
+                        && !(plugin instanceof WhelkAware)
+                        && !meta._param) {
+                    log.trace "$plugname not unique. Adding instance to map."
+                    plugins[label] = plugin
                 }
             }
         }

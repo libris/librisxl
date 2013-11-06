@@ -25,7 +25,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     String requiredContentType
 
     ColumnFamily<String,String> CF_DOCUMENT = new ColumnFamily<String, String>(
-        "Document",
+        "document",
         StringSerializer.get(),
         StringSerializer.get(),
     )
@@ -83,7 +83,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
 
     @Override
-    boolean store(Document doc, String whelkPrefix) {
+    boolean store(Document doc) {
         log.debug("Received document ${doc.identifier} with contenttype ${doc.contentType}")
         if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
             MutationBatch m = keyspace.prepareMutationBatch()
@@ -111,7 +111,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Document get(URI uri, String whelkPrefix) {
+    Document get(URI uri) {
         OperationResult<ColumnList<String>> operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri.toString()).execute()
         ColumnList<String> res = operation.getResult()
 
@@ -128,7 +128,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    void delete(URI uri, String prefix) {
+    void delete(URI uri) {
         log.debug("Deleting document $uri")
         MutationBatch m = keyspace.prepareMutationBatch()
         m.withRow(CF_DOCUMENT, uri.toString()).delete()
@@ -140,25 +140,34 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Iterable<Document> getAll(String whelkPrefix) {
+    Iterable<Document> getAll(String dataset = null) {
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 Rows<String, String> rows
                 try {
-                    rows = keyspace.prepareQuery(CF_DOCUMENT)
-                    .getAllRows()
+                    def q
+                    if (dataset) {
+                        log.debug("Using query: dataset=$dataset")
+                        q = keyspace.prepareQuery(CF_DOCUMENT).searchWithIndex()
+                            .addExpression().whereColumn("dataset")
+                            .equals().value(dataset)
+                    } else {
+                        log.debug("Using allrows()")
+                        q = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
+                            .setExceptionCallback(new ExceptionCallback() {
+                                @Override
+                                public boolean onException(ConnectionException e) {
+                                    try {
+                                        log.warn("Cassandra threw exception. Holding for a second ...")
+                                        Thread.sleep(1000);
+                                } catch (InterruptedException e1) {
+                                }
+                                return true
+                                }})
+                    }
+                    rows = q
                     .setRowLimit(10)
                     .withColumnRange(new RangeBuilder().setLimit(10).build())
-                    .setExceptionCallback(new ExceptionCallback() {
-                        @Override
-                        public boolean onException(ConnectionException e) {
-                            try {
-                                log.warn("Cassandra threw exception. Holding for a second ...")
-                        Thread.sleep(1000);
-                        } catch (InterruptedException e1) {
-                        }
-                        return true
-                        }})
                     .execute().getResult()
                 } catch (ConnectionException e) {
                     log.error("Cassandra Query failed.", e)
@@ -171,6 +180,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
 }
 
+@Log
 class CassandraIterator implements Iterator<Document> {
 
     private Iterator iter
@@ -185,10 +195,12 @@ class CassandraIterator implements Iterator<Document> {
 
     public Document next() {
         Row<String,String> row = iter.next()
-        return new Document()
+        def doc = new Document()
         .withIdentifier(row.getKey())
         .withData(row.columns.getColumnByName("data").byteValue)
         .withMetaEntry(row.columns.getColumnByName("entry").stringValue)
+        log.debug("Next yielded ${doc.identifier}")
+        return doc
     }
 
     void remove() {}

@@ -48,7 +48,7 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    boolean store(Document doc, String whelkPrefix) {
+    boolean store(Document doc) {
         if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
             File sourcefile = new File(buildPath(doc.identifier, true) + "/" + getBaseFilename(doc.identifier) + (FILE_EXTENSIONS[doc.contentType] ?: ""))
             File metafile = new File(buildPath(doc.identifier, true) + "/"+ getBaseFilename(doc.identifier) + METAFILE_EXTENSION)
@@ -71,7 +71,7 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Document get(URI uri, String whelkPrefix) {
+    Document get(URI uri) {
         log.info("Loading from ${this.getClass()}")
         File metafile = new File(buildPath(uri.toString(), false)+ "/" + getBaseFilename(uri) + METAFILE_EXTENSION)
         File sourcefile
@@ -91,21 +91,21 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Iterable<Document> getAll(String whelkPrefix) {
+    Iterable<Document> getAll(String dataset) {
         def baseDir = new File(this.storageDir)
         log.debug("Basedir: $baseDir")
         return new DiskDocumentIterable<Document>(baseDir)
     }
 
     @Override
-    void store(Iterable<Document> docs, String whelkPrefix) {
+    void store(Iterable<Document> docs) {
         docs.each {
-            store(it, whelkPrefix)
+            store(it)
         }
     }
 
     @Override
-    void delete(URI uri, String whelkPrefix) {
+    void delete(URI uri) {
         try {
             def fn = buildPath(uri.toString(), false)
             log.debug("Deleting $fn")
