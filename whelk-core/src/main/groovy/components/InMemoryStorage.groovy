@@ -19,7 +19,7 @@ class InMemoryStorage extends BasicPlugin implements Storage {
     void enable() {this.enabled = true}
     void disable() {this.enabled = false}
 
-    boolean store(Document d, String wp) {
+    boolean store(Document d) {
         println "Extra allt ..."
         log.debug("Saving document $d.identifier to memory.")
         storage.put(d.identifier, d)
@@ -36,11 +36,11 @@ class InMemoryStorage extends BasicPlugin implements Storage {
         throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    Document get(URI uri, String wp) {
+    Document get(URI uri) {
         return storage.get(uri)
     }
 
-    void delete(URI uri, String wp) {
+    void delete(URI uri) {
         storage.remove(uri)
     }
 }

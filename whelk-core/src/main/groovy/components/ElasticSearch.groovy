@@ -150,7 +150,7 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    void delete(URI uri, String indexName) {
+    void delete(URI uri) {
         log.debug("Deleting object with identifier $uri")
         def delQuery = termsQuery("_id", translateIdentifier(uri.toString()))
         log.debug("DelQuery: $delQuery")

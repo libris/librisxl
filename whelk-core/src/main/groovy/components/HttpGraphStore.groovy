@@ -38,7 +38,7 @@ class HttpGraphStore extends BasicPlugin implements GraphStore {
         EntityUtils.consumeQuietly(response.getEntity())
     }
 
-    public void delete(URI uri, String whelkId) {
+    public void delete(URI uri) {
     }
 
     public SparqlResult sparql(String query) {
