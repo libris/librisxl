@@ -17,7 +17,7 @@ import org.elasticsearch.common.settings.*
 import org.elasticsearch.search.highlight.*
 import org.elasticsearch.action.count.CountResponse
 import org.elasticsearch.search.facet.FacetBuilders
-import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.index.query.*
 import org.elasticsearch.search.sort.FieldSortBuilder
@@ -110,47 +110,30 @@ abstract class ElasticSearch extends BasicPlugin {
 
     String defaultIndexType = "record"
 
-    def defaultMapping
+    def defaultMapping, es_settings
 
     @Override
     void init(String indexName) {
         if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
             log.info("Creating index ...")
-            XContentBuilder indexSettings = jsonBuilder().startObject()
-                    .startObject("analysis")
-                        .startObject("analyzer")
-                            .startObject("standard")
-                                .field("tokenizer", "standard")
-                                .field("filter", ["lowercase", "swe_light_stemmer", "swe_stop_filter"])
-                            .endObject()
-                        .endObject()
-                        .startObject("filter")
-                            .startObject("swe_light_stemmer")
-                                .field("type", "stemmer")
-                                .field("name", "light_swedish")
-                            .endObject()
-                            .startObject("swe_stop_filter")
-                                .field("type", "stop")
-                                .field("stopwords", ["_swedish_"])
-                            .endObject()
-                        .endObject()
-                    .endObject()
-            .endObject()
-            performExecute(client.admin().indices().prepareCreate(indexName).setSettings(indexSettings))
+            es_settings = loadJson("es_settings.json")
+            performExecute(client.admin().indices().prepareCreate(indexName).setSettings(es_settings))
             setTypeMapping(indexName, defaultIndexType)
         }
     }
 
-    void loadMapping() {
+    def loadJson(file) {
+        def json
         mapper = new ObjectMapper()
         def loader = getClass().classLoader
-        defaultMapping = loader.getResourceAsStream("default_mapping.json").withStream {
+        json = loader.getResourceAsStream(file).withStream {
             mapper.readValue(it, Map)
         }
+        return json
     }
 
     @Override
-    void delete(URI uri, String indexName) {
+    void delete(URI uri) {
         log.debug("Deleting object with identifier $uri")
         def delQuery = termsQuery("_id", translateIdentifier(uri.toString()))
         log.debug("DelQuery: $delQuery")
@@ -273,7 +256,7 @@ SearchResult query(Query q, String indexName, String indexType) {
         log.info("Creating mappings for $indexName/$itype ...")
         XContentBuilder mapping = jsonBuilder().startObject().startObject("_default_")
         if (!defaultMapping) {
-            loadMapping()
+            defaultMapping = loadJson("default_mapping.json")
         }
         defaultMapping.each { k, v ->
            mapping = mapping.field(k, v)
