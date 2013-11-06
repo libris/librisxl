@@ -14,13 +14,18 @@ class WhelkInitializer {
 
     WhelkInitializer(InputStream wis, InputStream pis=null) {
         Object mapper = new ObjectMapper()
+        log.info("Read config")
+        json = mapper.readValue(wis, Map)
         if (pis) {
-            log.info("Got separate plugin config.")
-            json = mapper.readValue(wis, Map)
-            json["_plugins"] = mapper.readValue(pis, Map)
-        } else if (wis) {
-            log.info("Single config file.")
-            json = mapper.readValue(wis, Map)
+            log.info("Load separate plugin config")
+            def extConf = mapper.readValue(pis, Map)
+            def plugConf = json["_plugins"]
+            if (plugConf) {
+                plugConf.putAll(extConf)
+            } else {
+                plugConf = extConf
+            }
+            json["_plugins"] = plugConf
         }
     }
 

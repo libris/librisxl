@@ -13,14 +13,21 @@ class WhelkInitializerSpec extends Specification {
                             "_plugins": ["basic1", "basic2"]
                         }
                     }
-                ]
+                ],
+                "_plugins": {
+                    "basic2": {
+                        "_class" : "se.kb.libris.whelks.TestPlugin",
+                        "_params": "default"
+                    }
+                }
             }""".bytes),
             new ByteArrayInputStream("""{
                 "basic1": {
                     "_class" : "se.kb.libris.whelks.plugin.BasicPlugin"
                 },
                 "basic2": {
-                    "_class" : "se.kb.libris.whelks.plugin.BasicPlugin"
+                    "_class" : "se.kb.libris.whelks.TestPlugin",
+                    "_params": "override"
                 }
             }""".bytes))
 
@@ -46,4 +53,18 @@ class WhelkInitializerSpec extends Specification {
         params == [whelks[0], "other"]
     }
 
+    def "should override plugin definition"() {
+        given:
+        def plugin = wi.getPlugin("basic2", "default")
+        expect:
+        plugin.token == "override"
+    }
+
+}
+
+class TestPlugin extends se.kb.libris.whelks.plugin.BasicPlugin {
+    String token
+    TestPlugin(String token) {
+        this.token = token
+    }
 }
