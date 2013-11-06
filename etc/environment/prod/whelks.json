@@ -5,19 +5,15 @@
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins": [
                     "index",
-                    "flatstorage",
+                    "cassandrastorage",
                     "search",
                     "remotesearch",
-                    "metasearch",
                     "documentapi",
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
-                    "namecomplete",
-                    "nameexpander",
-                    "subjcomplete",
-                    "fieldsearch"
+                    "nameexpander"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
