@@ -24,29 +24,15 @@ class StandardWhelk implements Whelk {
 
     // Set by configuration
     URI docBaseUri
-    URI fileBaseUri
 
 
     StandardWhelk(String id) {
         this.id = id
-        setFileBaseUri("")
         // Start executorservice
     }
 
     void setDocBaseUri(String uri) {
         this.docBaseUri = new URI(uri)
-    }
-
-    void setFileBaseUri(String uri) {
-        if (uri.indexOf(":") == -1) {
-            def path = uri.startsWith("/")? uri :
-                    System.getProperty("user.dir") + "/" + uri
-            uri = "file://" + path
-        }
-        if (!uri.endsWith("/")) {
-            uri += "/"
-        }
-        this.fileBaseUri = new URI(uri)
     }
 
     @Override
