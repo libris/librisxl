@@ -27,5 +27,12 @@
                 "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool"]
             }
         }
-    ]
+    ],
+    "_plugins": {
+        "localindex": {
+            "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
+            "_params" : "work/data",
+            "_unique" : false
+        }
+    }
 }

@@ -12,11 +12,6 @@
         "_class": "se.kb.libris.whelks.api.ISXNTool",
         "_params" : "_whelk:libris"
     },
-    "localindex": {
-        "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
-        "_params" : "work/data",
-        "_unique" : false
-    },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
         "_unique" : false
