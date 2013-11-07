@@ -20,10 +20,6 @@
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
         "_unique" : false
     },
-    "localindex": {
-        "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
-        "_unique" : false
-    },
     "cassandrastorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : "application/ld+json",
