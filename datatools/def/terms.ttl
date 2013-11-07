@@ -9,6 +9,7 @@
 @prefix rdael: <http://rdvocab.info/Elements/> .
 @prefix bf: <http://bibframe.org/vocab/> .
 @prefix sdo: <http://schema.org/> .
+@prefix iana: <http://www.iana.org/assignments/relation/> .
 @prefix : <http://libris.kb.se/def/terms#> .
 
 
@@ -98,4 +99,18 @@
 
 :callno rdfs:subPropertyOf :genre, bf:callno, sdo:sku;
     rdfs:range :Holding .
+
+
+:Record a owl:Class;
+    rdfs:label "Post"@sv;
+    rdfs:subClassOf foaf:Document .
+
+:about a owl:ObjectProperty;
+    owl:equivalentProperty sdo:about;
+    rdfs:subPropertyOf foaf:primaryTopic .
+
+:describedBy a owl:ObjectProperty;
+    owl:inverseOf :about;
+    owl:equivalentProperty iana:describedby;
+    rdfs:subPropertyOf foaf:isPrimaryTopicOf .
 
