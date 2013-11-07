@@ -24,57 +24,81 @@ class CassandraStorage extends BasicPlugin implements Storage {
     Keyspace keyspace
     String requiredContentType
 
-    ColumnFamily<String,String> CF_DOCUMENT = new ColumnFamily<String, String>(
-        "document",
-        StringSerializer.get(),
-        StringSerializer.get(),
-    )
+    final static String CF_DOCUMENT_NAME = "document"
+    final static String COL_NAME_IDENTIFIER = "identifier"
+    final static String COL_NAME_DATA = "data"
+    final static String COL_NAME_ENTRY = "entry"
+    final static String COL_NAME_DATASET = "dataset"
+    final static String CREATE_TABLE_STATEMENT =
+      String.format("CREATE TABLE %s (%s varchar, %s blob, %s varchar, %s varchar, PRIMARY KEY (%s)) WITH COMPACT STORAGE",
+          CF_DOCUMENT_NAME, COL_NAME_IDENTIFIER, COL_NAME_DATA, COL_NAME_ENTRY, COL_NAME_DATASET,
+          COL_NAME_IDENTIFIER)
 
-    void init(String whelkName) {
-        String cassandra_host = System.getProperty("cassandra.host")
-        String cassandra_cluster = System.getProperty("cassandra.cluster")
-        log.debug("Configuring Cassandra at ${cassandra_host}")
-        log.debug("Setting up context.")
-        AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
-            .forCluster(cassandra_cluster)
-            .forKeyspace(whelkName)
-            .withAstyanaxConfiguration(
-                new AstyanaxConfigurationImpl()
-                    .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
-                    .setCqlVersion("3.0.0")
-                    .setTargetCassandraVersion("1.2")
-            )
-            .withConnectionPoolConfiguration(
-                new ConnectionPoolConfigurationImpl("WhelkConnectionPool")
-                    .setPort(9160)
-                    .setMaxConnsPerHost(1)
-                    .setSeeds(cassandra_host+":9160")
-            )
-            .withConnectionPoolMonitor(
-                new CountingConnectionPoolMonitor()
-            )
-            .buildKeyspace(ThriftFamilyFactory.getInstance());
+    final static String CREATE_INDEX_STATEMENT =
+        String.format("CREATE INDEX %s ON %s (%s)",
+            COL_NAME_DATASET, CF_DOCUMENT_NAME, COL_NAME_DATASET)
 
-        context.start();
-        keyspace = context.getClient();
+      ColumnFamily<String,String> CF_DOCUMENT = ColumnFamily.newColumnFamily(
+          CF_DOCUMENT_NAME,
+          StringSerializer.get(),
+          StringSerializer.get())
 
-        try {
-            keyspace.describeKeyspace()
-        } catch (Exception e) {
-            log.debug("Creating keyspace.")
-            keyspace.createKeyspace(
-                ImmutableMap.<String, Object>builder()
-                .put("strategy_options", ImmutableMap.<String, Object>builder()
-                .put("replication_factor", "1")
-                .build())
-                .put("strategy_class",     "SimpleStrategy")
-                .build()
-            )
+      void init(String whelkName) {
+          String cassandra_host = System.getProperty("cassandra.host")
+          String cassandra_cluster = System.getProperty("cassandra.cluster")
+          log.debug("Configuring Cassandra at ${cassandra_host}")
+          log.debug("Setting up context.")
+          AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
+          .forCluster(cassandra_cluster)
+          .forKeyspace(whelkName)
+          .withAstyanaxConfiguration(
+              new AstyanaxConfigurationImpl()
+              .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
+              .setCqlVersion("3.0.0")
+              .setTargetCassandraVersion("1.2")
+          )
+          .withConnectionPoolConfiguration(
+              new ConnectionPoolConfigurationImpl("WhelkConnectionPool")
+              .setPort(9160)
+              .setMaxConnsPerHost(1)
+              .setSeeds(cassandra_host+":9160")
+          )
+          .withConnectionPoolMonitor(
+              new CountingConnectionPoolMonitor()
+          )
+          .buildKeyspace(ThriftFamilyFactory.getInstance());
 
-            log.debug("Creating columnfamily.")
-            keyspace.createColumnFamily(CF_DOCUMENT, null)
-        }
-    }
+          context.start();
+          keyspace = context.getClient();
+
+          try {
+              def r = keyspace.describeKeyspace()
+              log.debug("keyspace: $r")
+          } catch (Exception e) {
+              log.debug("Creating keyspace.")
+              keyspace.createKeyspace(
+                  ImmutableMap.<String, Object>builder()
+                  .put("strategy_options", ImmutableMap.<String, Object>builder()
+                  .put("replication_factor", "1")
+                  .build())
+                  .put("strategy_class",     "SimpleStrategy")
+                  .build()
+              )
+
+              log.debug("Creating tables and indexes.")
+
+              log.debug("CQL: "+CREATE_TABLE_STATEMENT)
+              def result = keyspace
+                  .prepareQuery(CF_DOCUMENT)
+                  .withCql(CREATE_TABLE_STATEMENT)
+                  .execute();
+              log.debug("CQL: "+CREATE_INDEX_STATEMENT)
+              result = keyspace
+                  .prepareQuery(CF_DOCUMENT)
+                  .withCql(CREATE_INDEX_STATEMENT)
+                  .execute();
+          }
+      }
 
     CassandraStorage() {}
     CassandraStorage(String rct) {
@@ -88,11 +112,12 @@ class CassandraStorage extends BasicPlugin implements Storage {
         if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
             MutationBatch m = keyspace.prepareMutationBatch()
             String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
-            log.debug("Saving document with dataset $dataset")
+            log.debug("Saving document ${doc.identifier} with dataset $dataset")
             m.withRow(CF_DOCUMENT, doc.identifier)
-                .putColumn("data", new String(doc.data, "UTF-8"))
-                .putColumn("entry", doc.metadataAsJson)
-                .putColumn("dataset", dataset)
+                .putColumn(COL_NAME_IDENTIFIER , doc.identifier)
+                .putColumn(COL_NAME_DATA, new String(doc.data, "UTF-8"), null)
+                .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
+                .putColumn(COL_NAME_DATASET, dataset, null)
             try {
                 def result = m.execute()
             } catch (ConnectionException ce) {
@@ -120,9 +145,9 @@ class CassandraStorage extends BasicPlugin implements Storage {
         if (res.size() > 0) {
             log.debug("Digging up a document with identifier $uri from storage.")
             return new Document()
-            .withIdentifier(uri)
-            .withData(res.getColumnByName("data").getByteArrayValue())
-            .withMetaEntry(res.getColumnByName("entry").getStringValue())
+                .withIdentifier(res.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
+                .withData(res.getColumnByName(COL_NAME_DATA).getByteArrayValue())
+                .withMetaEntry(res.getColumnByName(COL_NAME_ENTRY).getStringValue())
         }
         return null
     }
