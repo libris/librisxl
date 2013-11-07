@@ -1,0 +1,3029 @@
+{
+  "@context": [
+    "/def/context/skos.jsonld",
+    {
+      "@base": "http://libris.kb.se/",
+      "@language": "sv",
+      "byCode": {
+        "@container": "@index",
+        "@id": "@graph"
+      }
+    }
+  ],
+  "byCode": {
+    "aar": {
+      "@id": "/def/languages/aar",
+      "@type": "Concept",
+      "langCode": "aar",
+      "prefLabel": "Afar"
+    },
+    "abk": {
+      "@id": "/def/languages/abk",
+      "@type": "Concept",
+      "langCode": "abk",
+      "prefLabel": "Abchaziska"
+    },
+    "ace": {
+      "@id": "/def/languages/ace",
+      "@type": "Concept",
+      "langCode": "ace",
+      "prefLabel": "Achinese"
+    },
+    "ach": {
+      "@id": "/def/languages/ach",
+      "@type": "Concept",
+      "langCode": "ach",
+      "prefLabel": "Acoli"
+    },
+    "ada": {
+      "@id": "/def/languages/ada",
+      "@type": "Concept",
+      "langCode": "ada",
+      "prefLabel": "Adangme"
+    },
+    "ady": {
+      "@id": "/def/languages/ady",
+      "@type": "Concept",
+      "langCode": "ady",
+      "prefLabel": "Adygeiska"
+    },
+    "afa": {
+      "@id": "/def/languages/afa",
+      "@type": "Concept",
+      "langCode": "afa",
+      "prefLabel": "Afro-asiatiskt språk"
+    },
+    "afh": {
+      "@id": "/def/languages/afh",
+      "@type": "Concept",
+      "langCode": "afh",
+      "prefLabel": "Afrihili"
+    },
+    "afr": {
+      "@id": "/def/languages/afr",
+      "@type": "Concept",
+      "langCode": "afr",
+      "prefLabel": "Afrikaans"
+    },
+    "ain": {
+      "@id": "/def/languages/ain",
+      "@type": "Concept",
+      "langCode": "ain",
+      "prefLabel": "Ainu"
+    },
+    "aka": {
+      "@id": "/def/languages/aka",
+      "@type": "Concept",
+      "langCode": "aka",
+      "prefLabel": "Akan"
+    },
+    "akk": {
+      "@id": "/def/languages/akk",
+      "@type": "Concept",
+      "langCode": "akk",
+      "prefLabel": "Akkadiska"
+    },
+    "alb": {
+      "@id": "/def/languages/alb",
+      "@type": "Concept",
+      "langCode": "alb",
+      "prefLabel": "Albanska"
+    },
+    "ale": {
+      "@id": "/def/languages/ale",
+      "@type": "Concept",
+      "langCode": "ale",
+      "prefLabel": "Aleutiska"
+    },
+    "alg": {
+      "@id": "/def/languages/alg",
+      "@type": "Concept",
+      "langCode": "alg",
+      "prefLabel": "Algonkinskt språk"
+    },
+    "alt": {
+      "@id": "/def/languages/alt",
+      "@type": "Concept",
+      "langCode": "alt",
+      "prefLabel": "Sydaltaiska"
+    },
+    "amh": {
+      "@id": "/def/languages/amh",
+      "@type": "Concept",
+      "langCode": "amh",
+      "prefLabel": "Amhariska"
+    },
+    "ang": {
+      "@id": "/def/languages/ang",
+      "@type": "Concept",
+      "langCode": "ang",
+      "prefLabel": "Fornengelska"
+    },
+    "anp": {
+      "@id": "/def/languages/anp",
+      "@type": "Concept",
+      "langCode": "anp",
+      "prefLabel": "Angika"
+    },
+    "apa": {
+      "@id": "/def/languages/apa",
+      "@type": "Concept",
+      "langCode": "apa",
+      "prefLabel": "Apachiskt språk"
+    },
+    "ara": {
+      "@id": "/def/languages/ara",
+      "@type": "Concept",
+      "langCode": "ara",
+      "prefLabel": "Arabiska"
+    },
+    "arc": {
+      "@id": "/def/languages/arc",
+      "@type": "Concept",
+      "langCode": "arc",
+      "prefLabel": "Arameiska"
+    },
+    "arg": {
+      "@id": "/def/languages/arg",
+      "@type": "Concept",
+      "langCode": "arg",
+      "prefLabel": "Aragonsk spanska"
+    },
+    "arm": {
+      "@id": "/def/languages/arm",
+      "@type": "Concept",
+      "langCode": "arm",
+      "prefLabel": "Armeniska"
+    },
+    "arn": {
+      "@id": "/def/languages/arn",
+      "@type": "Concept",
+      "langCode": "arn",
+      "prefLabel": "Araukanska"
+    },
+    "arp": {
+      "@id": "/def/languages/arp",
+      "@type": "Concept",
+      "langCode": "arp",
+      "prefLabel": "Arapaho"
+    },
+    "art": {
+      "@id": "/def/languages/art",
+      "@type": "Concept",
+      "langCode": "art",
+      "prefLabel": "Artificiellt språk"
+    },
+    "arw": {
+      "@id": "/def/languages/arw",
+      "@type": "Concept",
+      "langCode": "arw",
+      "prefLabel": "Arawakiska"
+    },
+    "asm": {
+      "@id": "/def/languages/asm",
+      "@type": "Concept",
+      "langCode": "asm",
+      "prefLabel": "Assamesiska"
+    },
+    "ast": {
+      "@id": "/def/languages/ast",
+      "@type": "Concept",
+      "langCode": "ast",
+      "prefLabel": "Asturiska"
+    },
+    "ath": {
+      "@id": "/def/languages/ath",
+      "@type": "Concept",
+      "langCode": "ath",
+      "prefLabel": "Athapaskiskt språk"
+    },
+    "aus": {
+      "@id": "/def/languages/aus",
+      "@type": "Concept",
+      "langCode": "aus",
+      "prefLabel": "Australiskt språk"
+    },
+    "ava": {
+      "@id": "/def/languages/ava",
+      "@type": "Concept",
+      "langCode": "ava",
+      "prefLabel": "Avariskt språk"
+    },
+    "ave": {
+      "@id": "/def/languages/ave",
+      "@type": "Concept",
+      "langCode": "ave",
+      "prefLabel": "Avestiska"
+    },
+    "awa": {
+      "@id": "/def/languages/awa",
+      "@type": "Concept",
+      "langCode": "awa",
+      "prefLabel": "Awadhi"
+    },
+    "aym": {
+      "@id": "/def/languages/aym",
+      "@type": "Concept",
+      "langCode": "aym",
+      "prefLabel": "Aymara"
+    },
+    "aze": {
+      "@id": "/def/languages/aze",
+      "@type": "Concept",
+      "langCode": "aze",
+      "prefLabel": "Azerbajdzjanska"
+    },
+    "bad": {
+      "@id": "/def/languages/bad",
+      "@type": "Concept",
+      "langCode": "bad",
+      "prefLabel": "Bandaspråk"
+    },
+    "bai": {
+      "@id": "/def/languages/bai",
+      "@type": "Concept",
+      "langCode": "bai",
+      "prefLabel": "Bamilekespråk"
+    },
+    "bak": {
+      "@id": "/def/languages/bak",
+      "@type": "Concept",
+      "langCode": "bak",
+      "prefLabel": "Basjkiriska"
+    },
+    "bal": {
+      "@id": "/def/languages/bal",
+      "@type": "Concept",
+      "langCode": "bal",
+      "prefLabel": "Baluchi"
+    },
+    "bam": {
+      "@id": "/def/languages/bam",
+      "@type": "Concept",
+      "langCode": "bam",
+      "prefLabel": "Bambara"
+    },
+    "ban": {
+      "@id": "/def/languages/ban",
+      "@type": "Concept",
+      "langCode": "ban",
+      "prefLabel": "Balinesiska"
+    },
+    "baq": {
+      "@id": "/def/languages/baq",
+      "@type": "Concept",
+      "langCode": "baq",
+      "prefLabel": "Baskiska"
+    },
+    "bas": {
+      "@id": "/def/languages/bas",
+      "@type": "Concept",
+      "langCode": "bas",
+      "prefLabel": "Basa"
+    },
+    "bat": {
+      "@id": "/def/languages/bat",
+      "@type": "Concept",
+      "langCode": "bat",
+      "prefLabel": "Baltiskt språk"
+    },
+    "bej": {
+      "@id": "/def/languages/bej",
+      "@type": "Concept",
+      "langCode": "bej",
+      "prefLabel": "Beyja"
+    },
+    "bel": {
+      "@id": "/def/languages/bel",
+      "@type": "Concept",
+      "langCode": "bel",
+      "prefLabel": "Vitryska"
+    },
+    "bem": {
+      "@id": "/def/languages/bem",
+      "@type": "Concept",
+      "langCode": "bem",
+      "prefLabel": "Bemba"
+    },
+    "ben": {
+      "@id": "/def/languages/ben",
+      "@type": "Concept",
+      "langCode": "ben",
+      "prefLabel": "Bengali"
+    },
+    "ber": {
+      "@id": "/def/languages/ber",
+      "@type": "Concept",
+      "langCode": "ber",
+      "prefLabel": "Berberspråk"
+    },
+    "bho": {
+      "@id": "/def/languages/bho",
+      "@type": "Concept",
+      "langCode": "bho",
+      "prefLabel": "Bhojpuri"
+    },
+    "bih": {
+      "@id": "/def/languages/bih",
+      "@type": "Concept",
+      "langCode": "bih",
+      "prefLabel": "Bihari"
+    },
+    "bik": {
+      "@id": "/def/languages/bik",
+      "@type": "Concept",
+      "langCode": "bik",
+      "prefLabel": "Bikol"
+    },
+    "bin": {
+      "@id": "/def/languages/bin",
+      "@type": "Concept",
+      "langCode": "bin",
+      "prefLabel": "Edo"
+    },
+    "bis": {
+      "@id": "/def/languages/bis",
+      "@type": "Concept",
+      "langCode": "bis",
+      "prefLabel": "Bislama"
+    },
+    "bla": {
+      "@id": "/def/languages/bla",
+      "@type": "Concept",
+      "langCode": "bla",
+      "prefLabel": "Svartfotindianernas språk"
+    },
+    "bnt": {
+      "@id": "/def/languages/bnt",
+      "@type": "Concept",
+      "langCode": "bnt",
+      "prefLabel": "Bantuspråk"
+    },
+    "bod": {
+      "@id": "/def/languages/bod",
+      "@type": "Concept",
+      "langCode": "bod"
+    },
+    "bos": {
+      "@id": "/def/languages/bos",
+      "@type": "Concept",
+      "langCode": "bos",
+      "prefLabel": "Bosniska"
+    },
+    "bra": {
+      "@id": "/def/languages/bra",
+      "@type": "Concept",
+      "langCode": "bra",
+      "prefLabel": "Braj"
+    },
+    "bre": {
+      "@id": "/def/languages/bre",
+      "@type": "Concept",
+      "langCode": "bre",
+      "prefLabel": "Bretonska"
+    },
+    "btk": {
+      "@id": "/def/languages/btk",
+      "@type": "Concept",
+      "langCode": "btk",
+      "prefLabel": "Batak"
+    },
+    "bua": {
+      "@id": "/def/languages/bua",
+      "@type": "Concept",
+      "langCode": "bua",
+      "prefLabel": "Burjatiska"
+    },
+    "bug": {
+      "@id": "/def/languages/bug",
+      "@type": "Concept",
+      "langCode": "bug",
+      "prefLabel": "Buginesiska"
+    },
+    "bul": {
+      "@id": "/def/languages/bul",
+      "@type": "Concept",
+      "langCode": "bul",
+      "prefLabel": "Bulgariska"
+    },
+    "bur": {
+      "@id": "/def/languages/bur",
+      "@type": "Concept",
+      "langCode": "bur",
+      "prefLabel": "Burmanska"
+    },
+    "byn": {
+      "@id": "/def/languages/byn",
+      "@type": "Concept",
+      "langCode": "byn",
+      "prefLabel": "Bilin"
+    },
+    "cad": {
+      "@id": "/def/languages/cad",
+      "@type": "Concept",
+      "langCode": "cad",
+      "prefLabel": "Caddo"
+    },
+    "cai": {
+      "@id": "/def/languages/cai",
+      "@type": "Concept",
+      "langCode": "cai",
+      "prefLabel": "Centralamerikanskt indianspråk"
+    },
+    "car": {
+      "@id": "/def/languages/car",
+      "@type": "Concept",
+      "langCode": "car",
+      "prefLabel": "Karibiska"
+    },
+    "cat": {
+      "@id": "/def/languages/cat",
+      "@type": "Concept",
+      "langCode": "cat",
+      "prefLabel": "Katalanska"
+    },
+    "cau": {
+      "@id": "/def/languages/cau",
+      "@type": "Concept",
+      "langCode": "cau",
+      "prefLabel": "Kaukasiskt språk"
+    },
+    "ceb": {
+      "@id": "/def/languages/ceb",
+      "@type": "Concept",
+      "langCode": "ceb",
+      "prefLabel": "Cebuano"
+    },
+    "cel": {
+      "@id": "/def/languages/cel",
+      "@type": "Concept",
+      "langCode": "cel",
+      "prefLabel": "Keltiskt språk"
+    },
+    "ces": {
+      "@id": "/def/languages/ces",
+      "@type": "Concept",
+      "langCode": "ces"
+    },
+    "cha": {
+      "@id": "/def/languages/cha",
+      "@type": "Concept",
+      "langCode": "cha",
+      "prefLabel": "Chamorro"
+    },
+    "chb": {
+      "@id": "/def/languages/chb",
+      "@type": "Concept",
+      "langCode": "chb",
+      "prefLabel": "Chibcha"
+    },
+    "che": {
+      "@id": "/def/languages/che",
+      "@type": "Concept",
+      "langCode": "che",
+      "prefLabel": "Tjetjenska"
+    },
+    "chg": {
+      "@id": "/def/languages/chg",
+      "@type": "Concept",
+      "langCode": "chg",
+      "prefLabel": "Chagatai"
+    },
+    "chi": {
+      "@id": "/def/languages/chi",
+      "@type": "Concept",
+      "langCode": "chi",
+      "prefLabel": "Kinesiska"
+    },
+    "chk": {
+      "@id": "/def/languages/chk",
+      "@type": "Concept",
+      "langCode": "chk",
+      "prefLabel": "Chuukesiska"
+    },
+    "chm": {
+      "@id": "/def/languages/chm",
+      "@type": "Concept",
+      "langCode": "chm",
+      "prefLabel": "Mari"
+    },
+    "chn": {
+      "@id": "/def/languages/chn",
+      "@type": "Concept",
+      "langCode": "chn",
+      "prefLabel": "Chinook"
+    },
+    "cho": {
+      "@id": "/def/languages/cho",
+      "@type": "Concept",
+      "langCode": "cho",
+      "prefLabel": "Choctaw"
+    },
+    "chp": {
+      "@id": "/def/languages/chp",
+      "@type": "Concept",
+      "langCode": "chp",
+      "prefLabel": "Chopi"
+    },
+    "chr": {
+      "@id": "/def/languages/chr",
+      "@type": "Concept",
+      "langCode": "chr",
+      "prefLabel": "Cherokesiska"
+    },
+    "chu": {
+      "@id": "/def/languages/chu",
+      "@type": "Concept",
+      "langCode": "chu",
+      "prefLabel": "Fornkyrkslaviska"
+    },
+    "chv": {
+      "@id": "/def/languages/chv",
+      "@type": "Concept",
+      "langCode": "chv",
+      "prefLabel": "Tjuvasjiska"
+    },
+    "chy": {
+      "@id": "/def/languages/chy",
+      "@type": "Concept",
+      "langCode": "chy",
+      "prefLabel": "Cheyenne"
+    },
+    "cmc": {
+      "@id": "/def/languages/cmc",
+      "@type": "Concept",
+      "langCode": "cmc",
+      "prefLabel": "Chamic"
+    },
+    "cop": {
+      "@id": "/def/languages/cop",
+      "@type": "Concept",
+      "langCode": "cop",
+      "prefLabel": "Koptiska"
+    },
+    "cor": {
+      "@id": "/def/languages/cor",
+      "@type": "Concept",
+      "langCode": "cor",
+      "prefLabel": "Korniska"
+    },
+    "cos": {
+      "@id": "/def/languages/cos",
+      "@type": "Concept",
+      "langCode": "cos",
+      "prefLabel": "Korsikanska"
+    },
+    "cpe": {
+      "@id": "/def/languages/cpe",
+      "@type": "Concept",
+      "langCode": "cpe",
+      "prefLabel": "Pidgin-engelska"
+    },
+    "cpf": {
+      "@id": "/def/languages/cpf",
+      "@type": "Concept",
+      "langCode": "cpf",
+      "prefLabel": "Franskt kreolspråk"
+    },
+    "cpp": {
+      "@id": "/def/languages/cpp",
+      "@type": "Concept",
+      "langCode": "cpp",
+      "prefLabel": "Portugisiskt kreolspråk"
+    },
+    "cre": {
+      "@id": "/def/languages/cre",
+      "@type": "Concept",
+      "langCode": "cre",
+      "prefLabel": "Cree"
+    },
+    "crh": {
+      "@id": "/def/languages/crh",
+      "@type": "Concept",
+      "langCode": "crh",
+      "prefLabel": "Krimtatariska"
+    },
+    "crp": {
+      "@id": "/def/languages/crp",
+      "@type": "Concept",
+      "langCode": "crp",
+      "prefLabel": "Kreol-/Pidginspråk"
+    },
+    "csb": {
+      "@id": "/def/languages/csb",
+      "@type": "Concept",
+      "langCode": "csb",
+      "prefLabel": "Kasjubiska"
+    },
+    "cus": {
+      "@id": "/def/languages/cus",
+      "@type": "Concept",
+      "langCode": "cus",
+      "prefLabel": "Kusjitiskt språk"
+    },
+    "cym": {
+      "@id": "/def/languages/cym",
+      "@type": "Concept",
+      "langCode": "cym"
+    },
+    "cze": {
+      "@id": "/def/languages/cze",
+      "@type": "Concept",
+      "langCode": "cze",
+      "prefLabel": "Tjeckiska"
+    },
+    "dak": {
+      "@id": "/def/languages/dak",
+      "@type": "Concept",
+      "langCode": "dak",
+      "prefLabel": "Dakota"
+    },
+    "dan": {
+      "@id": "/def/languages/dan",
+      "@type": "Concept",
+      "langCode": "dan",
+      "prefLabel": "Danska"
+    },
+    "dar": {
+      "@id": "/def/languages/dar",
+      "@type": "Concept",
+      "langCode": "dar",
+      "prefLabel": "Darginska"
+    },
+    "day": {
+      "@id": "/def/languages/day",
+      "@type": "Concept",
+      "langCode": "day",
+      "prefLabel": "Dayak"
+    },
+    "del": {
+      "@id": "/def/languages/del",
+      "@type": "Concept",
+      "langCode": "del",
+      "prefLabel": "Delaware"
+    },
+    "den": {
+      "@id": "/def/languages/den",
+      "@type": "Concept",
+      "langCode": "den",
+      "prefLabel": "Slave"
+    },
+    "deu": {
+      "@id": "/def/languages/deu",
+      "@type": "Concept",
+      "langCode": "deu"
+    },
+    "dgr": {
+      "@id": "/def/languages/dgr",
+      "@type": "Concept",
+      "langCode": "dgr",
+      "prefLabel": "Dogrib"
+    },
+    "din": {
+      "@id": "/def/languages/din",
+      "@type": "Concept",
+      "langCode": "din",
+      "prefLabel": "Dinka"
+    },
+    "div": {
+      "@id": "/def/languages/div",
+      "@type": "Concept",
+      "langCode": "div",
+      "prefLabel": "Divehi"
+    },
+    "doi": {
+      "@id": "/def/languages/doi",
+      "@type": "Concept",
+      "langCode": "doi",
+      "prefLabel": "Dogri"
+    },
+    "dra": {
+      "@id": "/def/languages/dra",
+      "@type": "Concept",
+      "langCode": "dra",
+      "prefLabel": "Dravidiskt språk"
+    },
+    "dsb": {
+      "@id": "/def/languages/dsb",
+      "@type": "Concept",
+      "langCode": "dsb",
+      "prefLabel": "Lågsorbiska"
+    },
+    "dua": {
+      "@id": "/def/languages/dua",
+      "@type": "Concept",
+      "langCode": "dua",
+      "prefLabel": "Duala"
+    },
+    "dum": {
+      "@id": "/def/languages/dum",
+      "@type": "Concept",
+      "langCode": "dum",
+      "prefLabel": "Medelnederländska"
+    },
+    "dut": {
+      "@id": "/def/languages/dut",
+      "@type": "Concept",
+      "langCode": "dut",
+      "prefLabel": "Nederländska"
+    },
+    "dyu": {
+      "@id": "/def/languages/dyu",
+      "@type": "Concept",
+      "langCode": "dyu",
+      "prefLabel": "Dyula"
+    },
+    "dzo": {
+      "@id": "/def/languages/dzo",
+      "@type": "Concept",
+      "langCode": "dzo",
+      "prefLabel": "Bhutanesiska"
+    },
+    "efi": {
+      "@id": "/def/languages/efi",
+      "@type": "Concept",
+      "langCode": "efi",
+      "prefLabel": "Efik"
+    },
+    "egy": {
+      "@id": "/def/languages/egy",
+      "@type": "Concept",
+      "langCode": "egy",
+      "prefLabel": "Fornegyptiska"
+    },
+    "eka": {
+      "@id": "/def/languages/eka",
+      "@type": "Concept",
+      "langCode": "eka",
+      "prefLabel": "Ekajuk"
+    },
+    "ell": {
+      "@id": "/def/languages/ell",
+      "@type": "Concept",
+      "langCode": "ell"
+    },
+    "elx": {
+      "@id": "/def/languages/elx",
+      "@type": "Concept",
+      "langCode": "elx",
+      "prefLabel": "Elamitiska"
+    },
+    "eng": {
+      "@id": "/def/languages/eng",
+      "@type": "Concept",
+      "langCode": "eng",
+      "prefLabel": "Engelska"
+    },
+    "enm": {
+      "@id": "/def/languages/enm",
+      "@type": "Concept",
+      "langCode": "enm",
+      "prefLabel": "Medelengelska"
+    },
+    "epo": {
+      "@id": "/def/languages/epo",
+      "@type": "Concept",
+      "langCode": "epo",
+      "prefLabel": "Esperanto"
+    },
+    "est": {
+      "@id": "/def/languages/est",
+      "@type": "Concept",
+      "langCode": "est",
+      "prefLabel": "Estniska"
+    },
+    "eus": {
+      "@id": "/def/languages/eus",
+      "@type": "Concept",
+      "langCode": "eus"
+    },
+    "ewe": {
+      "@id": "/def/languages/ewe",
+      "@type": "Concept",
+      "langCode": "ewe",
+      "prefLabel": "Ewe"
+    },
+    "ewo": {
+      "@id": "/def/languages/ewo",
+      "@type": "Concept",
+      "langCode": "ewo",
+      "prefLabel": "Ewondo"
+    },
+    "fan": {
+      "@id": "/def/languages/fan",
+      "@type": "Concept",
+      "langCode": "fan",
+      "prefLabel": "Fang"
+    },
+    "fao": {
+      "@id": "/def/languages/fao",
+      "@type": "Concept",
+      "langCode": "fao",
+      "prefLabel": "Färöiska"
+    },
+    "fas": {
+      "@id": "/def/languages/fas",
+      "@type": "Concept",
+      "langCode": "fas"
+    },
+    "fat": {
+      "@id": "/def/languages/fat",
+      "@type": "Concept",
+      "langCode": "fat",
+      "prefLabel": "Fanti"
+    },
+    "fij": {
+      "@id": "/def/languages/fij",
+      "@type": "Concept",
+      "langCode": "fij",
+      "prefLabel": "Fidjianska"
+    },
+    "fil": {
+      "@id": "/def/languages/fil",
+      "@type": "Concept",
+      "langCode": "fil",
+      "prefLabel": "Filipino"
+    },
+    "fin": {
+      "@id": "/def/languages/fin",
+      "@type": "Concept",
+      "langCode": "fin",
+      "prefLabel": "Finska"
+    },
+    "fiu": {
+      "@id": "/def/languages/fiu",
+      "@type": "Concept",
+      "langCode": "fiu",
+      "prefLabel": "Finsk-ugriskt språk"
+    },
+    "fon": {
+      "@id": "/def/languages/fon",
+      "@type": "Concept",
+      "langCode": "fon",
+      "prefLabel": "Fon"
+    },
+    "fra": {
+      "@id": "/def/languages/fra",
+      "@type": "Concept",
+      "langCode": "fra"
+    },
+    "fre": {
+      "@id": "/def/languages/fre",
+      "@type": "Concept",
+      "langCode": "fre",
+      "prefLabel": "Franska"
+    },
+    "frm": {
+      "@id": "/def/languages/frm",
+      "@type": "Concept",
+      "langCode": "frm",
+      "prefLabel": "Medelfranska"
+    },
+    "fro": {
+      "@id": "/def/languages/fro",
+      "@type": "Concept",
+      "langCode": "fro",
+      "prefLabel": "Fornfranska"
+    },
+    "frr": {
+      "@id": "/def/languages/frr",
+      "@type": "Concept",
+      "langCode": "frr",
+      "prefLabel": "Nordfrisiska"
+    },
+    "frs": {
+      "@id": "/def/languages/frs",
+      "@type": "Concept",
+      "langCode": "frs",
+      "prefLabel": "Östfrisiska"
+    },
+    "fry": {
+      "@id": "/def/languages/fry",
+      "@type": "Concept",
+      "langCode": "fry",
+      "prefLabel": "Frisiska"
+    },
+    "ful": {
+      "@id": "/def/languages/ful",
+      "@type": "Concept",
+      "langCode": "ful",
+      "prefLabel": "Fulani"
+    },
+    "fur": {
+      "@id": "/def/languages/fur",
+      "@type": "Concept",
+      "langCode": "fur",
+      "prefLabel": "Friuliska"
+    },
+    "gaa": {
+      "@id": "/def/languages/gaa",
+      "@type": "Concept",
+      "langCode": "gaa",
+      "prefLabel": "Ga"
+    },
+    "gay": {
+      "@id": "/def/languages/gay",
+      "@type": "Concept",
+      "langCode": "gay",
+      "prefLabel": "Gayo"
+    },
+    "gba": {
+      "@id": "/def/languages/gba",
+      "@type": "Concept",
+      "langCode": "gba",
+      "prefLabel": "Gbaya"
+    },
+    "gem": {
+      "@id": "/def/languages/gem",
+      "@type": "Concept",
+      "langCode": "gem",
+      "prefLabel": "Germanskt språk"
+    },
+    "geo": {
+      "@id": "/def/languages/geo",
+      "@type": "Concept",
+      "langCode": "geo",
+      "prefLabel": "Georgiska"
+    },
+    "ger": {
+      "@id": "/def/languages/ger",
+      "@type": "Concept",
+      "langCode": "ger",
+      "prefLabel": "Tyska"
+    },
+    "gez": {
+      "@id": "/def/languages/gez",
+      "@type": "Concept",
+      "langCode": "gez",
+      "prefLabel": "Fornetiopiska"
+    },
+    "gil": {
+      "@id": "/def/languages/gil",
+      "@type": "Concept",
+      "langCode": "gil",
+      "prefLabel": "Gilbertesiska"
+    },
+    "gla": {
+      "@id": "/def/languages/gla",
+      "@type": "Concept",
+      "langCode": "gla",
+      "prefLabel": "Höglandsskotska"
+    },
+    "gle": {
+      "@id": "/def/languages/gle",
+      "@type": "Concept",
+      "langCode": "gle",
+      "prefLabel": "Iriska"
+    },
+    "glg": {
+      "@id": "/def/languages/glg",
+      "@type": "Concept",
+      "langCode": "glg",
+      "prefLabel": "Galiciska"
+    },
+    "glv": {
+      "@id": "/def/languages/glv",
+      "@type": "Concept",
+      "langCode": "glv",
+      "prefLabel": "Manx"
+    },
+    "gmh": {
+      "@id": "/def/languages/gmh",
+      "@type": "Concept",
+      "langCode": "gmh",
+      "prefLabel": "Medelhögtyska"
+    },
+    "goh": {
+      "@id": "/def/languages/goh",
+      "@type": "Concept",
+      "langCode": "goh",
+      "prefLabel": "Fornhögtyska"
+    },
+    "gon": {
+      "@id": "/def/languages/gon",
+      "@type": "Concept",
+      "langCode": "gon",
+      "prefLabel": "Gondi"
+    },
+    "gor": {
+      "@id": "/def/languages/gor",
+      "@type": "Concept",
+      "langCode": "gor",
+      "prefLabel": "Gorontalo"
+    },
+    "got": {
+      "@id": "/def/languages/got",
+      "@type": "Concept",
+      "langCode": "got",
+      "prefLabel": "Gotiska"
+    },
+    "grb": {
+      "@id": "/def/languages/grb",
+      "@type": "Concept",
+      "langCode": "grb",
+      "prefLabel": "Grebo"
+    },
+    "grc": {
+      "@id": "/def/languages/grc",
+      "@type": "Concept",
+      "langCode": "grc",
+      "prefLabel": "Grekiska, klassisk"
+    },
+    "gre": {
+      "@id": "/def/languages/gre",
+      "@type": "Concept",
+      "langCode": "gre",
+      "prefLabel": "Nygrekiska"
+    },
+    "grn": {
+      "@id": "/def/languages/grn",
+      "@type": "Concept",
+      "langCode": "grn",
+      "prefLabel": "Guarani"
+    },
+    "gsw": {
+      "@id": "/def/languages/gsw",
+      "@type": "Concept",
+      "langCode": "gsw",
+      "prefLabel": "Schweizertyska"
+    },
+    "guj": {
+      "@id": "/def/languages/guj",
+      "@type": "Concept",
+      "langCode": "guj",
+      "prefLabel": "Gujarati"
+    },
+    "gwi": {
+      "@id": "/def/languages/gwi",
+      "@type": "Concept",
+      "langCode": "gwi",
+      "prefLabel": "Gwichin"
+    },
+    "hai": {
+      "@id": "/def/languages/hai",
+      "@type": "Concept",
+      "langCode": "hai",
+      "prefLabel": "Haida"
+    },
+    "hat": {
+      "@id": "/def/languages/hat",
+      "@type": "Concept",
+      "langCode": "hat",
+      "prefLabel": "Haitiska"
+    },
+    "hau": {
+      "@id": "/def/languages/hau",
+      "@type": "Concept",
+      "langCode": "hau",
+      "prefLabel": "Haussa"
+    },
+    "haw": {
+      "@id": "/def/languages/haw",
+      "@type": "Concept",
+      "langCode": "haw",
+      "prefLabel": "Hawaiiska"
+    },
+    "heb": {
+      "@id": "/def/languages/heb",
+      "@type": "Concept",
+      "langCode": "heb",
+      "prefLabel": "Hebreiska"
+    },
+    "her": {
+      "@id": "/def/languages/her",
+      "@type": "Concept",
+      "langCode": "her",
+      "prefLabel": "Herero"
+    },
+    "hil": {
+      "@id": "/def/languages/hil",
+      "@type": "Concept",
+      "langCode": "hil",
+      "prefLabel": "Hiligaynon"
+    },
+    "him": {
+      "@id": "/def/languages/him",
+      "@type": "Concept",
+      "langCode": "him",
+      "prefLabel": "Pahari"
+    },
+    "hin": {
+      "@id": "/def/languages/hin",
+      "@type": "Concept",
+      "langCode": "hin",
+      "prefLabel": "Hindi"
+    },
+    "hit": {
+      "@id": "/def/languages/hit",
+      "@type": "Concept",
+      "langCode": "hit",
+      "prefLabel": "Hettitiskt språk"
+    },
+    "hmn": {
+      "@id": "/def/languages/hmn",
+      "@type": "Concept",
+      "langCode": "hmn",
+      "prefLabel": "Hmongspråk"
+    },
+    "hmo": {
+      "@id": "/def/languages/hmo",
+      "@type": "Concept",
+      "langCode": "hmo",
+      "prefLabel": "Hirimotu"
+    },
+    "hrv": {
+      "@id": "/def/languages/hrv",
+      "@type": "Concept",
+      "langCode": "hrv",
+      "prefLabel": "Kroatiska"
+    },
+    "hsb": {
+      "@id": "/def/languages/hsb",
+      "@type": "Concept",
+      "langCode": "hsb",
+      "prefLabel": "Högsorbiska"
+    },
+    "hun": {
+      "@id": "/def/languages/hun",
+      "@type": "Concept",
+      "langCode": "hun",
+      "prefLabel": "Ungerska"
+    },
+    "hup": {
+      "@id": "/def/languages/hup",
+      "@type": "Concept",
+      "langCode": "hup",
+      "prefLabel": "Hupa"
+    },
+    "hye": {
+      "@id": "/def/languages/hye",
+      "@type": "Concept",
+      "langCode": "hye"
+    },
+    "iba": {
+      "@id": "/def/languages/iba",
+      "@type": "Concept",
+      "langCode": "iba",
+      "prefLabel": "Iban"
+    },
+    "ibo": {
+      "@id": "/def/languages/ibo",
+      "@type": "Concept",
+      "langCode": "ibo",
+      "prefLabel": "Ibo"
+    },
+    "ice": {
+      "@id": "/def/languages/ice",
+      "@type": "Concept",
+      "langCode": "ice",
+      "prefLabel": "Isländska"
+    },
+    "ido": {
+      "@id": "/def/languages/ido",
+      "@type": "Concept",
+      "langCode": "ido",
+      "prefLabel": "Ido"
+    },
+    "iii": {
+      "@id": "/def/languages/iii",
+      "@type": "Concept",
+      "langCode": "iii",
+      "prefLabel": "Sichuan Yi"
+    },
+    "ijo": {
+      "@id": "/def/languages/ijo",
+      "@type": "Concept",
+      "langCode": "ijo",
+      "prefLabel": "Ijo"
+    },
+    "iku": {
+      "@id": "/def/languages/iku",
+      "@type": "Concept",
+      "langCode": "iku",
+      "prefLabel": "Inuktitut"
+    },
+    "ile": {
+      "@id": "/def/languages/ile",
+      "@type": "Concept",
+      "langCode": "ile",
+      "prefLabel": "Interlingue"
+    },
+    "ilo": {
+      "@id": "/def/languages/ilo",
+      "@type": "Concept",
+      "langCode": "ilo",
+      "prefLabel": "Iloko"
+    },
+    "ina": {
+      "@id": "/def/languages/ina",
+      "@type": "Concept",
+      "langCode": "ina",
+      "prefLabel": "Interlingua"
+    },
+    "inc": {
+      "@id": "/def/languages/inc",
+      "@type": "Concept",
+      "langCode": "inc",
+      "prefLabel": "Indo-ariskt språk"
+    },
+    "ind": {
+      "@id": "/def/languages/ind",
+      "@type": "Concept",
+      "langCode": "ind",
+      "prefLabel": "Indonesiska"
+    },
+    "ine": {
+      "@id": "/def/languages/ine",
+      "@type": "Concept",
+      "langCode": "ine",
+      "prefLabel": "Indoeuropeiskt språk"
+    },
+    "inh": {
+      "@id": "/def/languages/inh",
+      "@type": "Concept",
+      "langCode": "inh",
+      "prefLabel": "Ingusj"
+    },
+    "ipk": {
+      "@id": "/def/languages/ipk",
+      "@type": "Concept",
+      "langCode": "ipk",
+      "prefLabel": "Inupiaq"
+    },
+    "ira": {
+      "@id": "/def/languages/ira",
+      "@type": "Concept",
+      "langCode": "ira",
+      "prefLabel": "Iranskt språk"
+    },
+    "iro": {
+      "@id": "/def/languages/iro",
+      "@type": "Concept",
+      "langCode": "iro",
+      "prefLabel": "Irokesiskt språk"
+    },
+    "isl": {
+      "@id": "/def/languages/isl",
+      "@type": "Concept",
+      "langCode": "isl"
+    },
+    "ita": {
+      "@id": "/def/languages/ita",
+      "@type": "Concept",
+      "langCode": "ita",
+      "prefLabel": "Italienska"
+    },
+    "jav": {
+      "@id": "/def/languages/jav",
+      "@type": "Concept",
+      "langCode": "jav",
+      "prefLabel": "Javanska"
+    },
+    "jbo": {
+      "@id": "/def/languages/jbo",
+      "@type": "Concept",
+      "langCode": "jbo",
+      "prefLabel": "Lojban"
+    },
+    "jpn": {
+      "@id": "/def/languages/jpn",
+      "@type": "Concept",
+      "langCode": "jpn",
+      "prefLabel": "Japanska"
+    },
+    "jpr": {
+      "@id": "/def/languages/jpr",
+      "@type": "Concept",
+      "langCode": "jpr",
+      "prefLabel": "Judepersiska"
+    },
+    "jrb": {
+      "@id": "/def/languages/jrb",
+      "@type": "Concept",
+      "langCode": "jrb",
+      "prefLabel": "Judearabiska"
+    },
+    "kaa": {
+      "@id": "/def/languages/kaa",
+      "@type": "Concept",
+      "langCode": "kaa",
+      "prefLabel": "Karakalpakiska"
+    },
+    "kab": {
+      "@id": "/def/languages/kab",
+      "@type": "Concept",
+      "langCode": "kab",
+      "prefLabel": "Kabyliska"
+    },
+    "kac": {
+      "@id": "/def/languages/kac",
+      "@type": "Concept",
+      "langCode": "kac",
+      "prefLabel": "Kachin"
+    },
+    "kal": {
+      "@id": "/def/languages/kal",
+      "@type": "Concept",
+      "langCode": "kal",
+      "prefLabel": "Grönländska"
+    },
+    "kam": {
+      "@id": "/def/languages/kam",
+      "@type": "Concept",
+      "langCode": "kam",
+      "prefLabel": "Kamba"
+    },
+    "kan": {
+      "@id": "/def/languages/kan",
+      "@type": "Concept",
+      "langCode": "kan",
+      "prefLabel": "Kanaresiska"
+    },
+    "kar": {
+      "@id": "/def/languages/kar",
+      "@type": "Concept",
+      "langCode": "kar",
+      "prefLabel": "Karen"
+    },
+    "kas": {
+      "@id": "/def/languages/kas",
+      "@type": "Concept",
+      "langCode": "kas",
+      "prefLabel": "Kashmiri"
+    },
+    "kat": {
+      "@id": "/def/languages/kat",
+      "@type": "Concept",
+      "langCode": "kat"
+    },
+    "kau": {
+      "@id": "/def/languages/kau",
+      "@type": "Concept",
+      "langCode": "kau",
+      "prefLabel": "Kanuri"
+    },
+    "kaw": {
+      "@id": "/def/languages/kaw",
+      "@type": "Concept",
+      "langCode": "kaw",
+      "prefLabel": "Fornjavanska"
+    },
+    "kaz": {
+      "@id": "/def/languages/kaz",
+      "@type": "Concept",
+      "langCode": "kaz",
+      "prefLabel": "Kazakiska"
+    },
+    "kbd": {
+      "@id": "/def/languages/kbd",
+      "@type": "Concept",
+      "langCode": "kbd",
+      "prefLabel": "Kabardinska"
+    },
+    "kha": {
+      "@id": "/def/languages/kha",
+      "@type": "Concept",
+      "langCode": "kha",
+      "prefLabel": "Khasi"
+    },
+    "khi": {
+      "@id": "/def/languages/khi",
+      "@type": "Concept",
+      "langCode": "khi",
+      "prefLabel": "Khoisanspråk"
+    },
+    "khm": {
+      "@id": "/def/languages/khm",
+      "@type": "Concept",
+      "langCode": "khm",
+      "prefLabel": "Kambodjanska"
+    },
+    "kho": {
+      "@id": "/def/languages/kho",
+      "@type": "Concept",
+      "langCode": "kho",
+      "prefLabel": "Sakiska"
+    },
+    "kik": {
+      "@id": "/def/languages/kik",
+      "@type": "Concept",
+      "langCode": "kik",
+      "prefLabel": "Kikuyu"
+    },
+    "kin": {
+      "@id": "/def/languages/kin",
+      "@type": "Concept",
+      "langCode": "kin",
+      "prefLabel": "Rwanda"
+    },
+    "kir": {
+      "@id": "/def/languages/kir",
+      "@type": "Concept",
+      "langCode": "kir",
+      "prefLabel": "Kirgisiska"
+    },
+    "kmb": {
+      "@id": "/def/languages/kmb",
+      "@type": "Concept",
+      "langCode": "kmb",
+      "prefLabel": "Mbundu"
+    },
+    "kok": {
+      "@id": "/def/languages/kok",
+      "@type": "Concept",
+      "langCode": "kok",
+      "prefLabel": "Konkani"
+    },
+    "kom": {
+      "@id": "/def/languages/kom",
+      "@type": "Concept",
+      "langCode": "kom",
+      "prefLabel": "Komi"
+    },
+    "kon": {
+      "@id": "/def/languages/kon",
+      "@type": "Concept",
+      "langCode": "kon",
+      "prefLabel": "Kikongo"
+    },
+    "kor": {
+      "@id": "/def/languages/kor",
+      "@type": "Concept",
+      "langCode": "kor",
+      "prefLabel": "Koreanska"
+    },
+    "kos": {
+      "@id": "/def/languages/kos",
+      "@type": "Concept",
+      "langCode": "kos",
+      "prefLabel": "Kusaie"
+    },
+    "kpe": {
+      "@id": "/def/languages/kpe",
+      "@type": "Concept",
+      "langCode": "kpe",
+      "prefLabel": "Kpelle"
+    },
+    "krc": {
+      "@id": "/def/languages/krc",
+      "@type": "Concept",
+      "langCode": "krc",
+      "prefLabel": "Karachay-Balkar"
+    },
+    "krl": {
+      "@id": "/def/languages/krl",
+      "@type": "Concept",
+      "langCode": "krl",
+      "prefLabel": "Karelska"
+    },
+    "kro": {
+      "@id": "/def/languages/kro",
+      "@type": "Concept",
+      "langCode": "kro",
+      "prefLabel": "Kru"
+    },
+    "kru": {
+      "@id": "/def/languages/kru",
+      "@type": "Concept",
+      "langCode": "kru",
+      "prefLabel": "Kurukh"
+    },
+    "kua": {
+      "@id": "/def/languages/kua",
+      "@type": "Concept",
+      "langCode": "kua",
+      "prefLabel": "Ovambo"
+    },
+    "kum": {
+      "@id": "/def/languages/kum",
+      "@type": "Concept",
+      "langCode": "kum",
+      "prefLabel": "Kumyk"
+    },
+    "kur": {
+      "@id": "/def/languages/kur",
+      "@type": "Concept",
+      "langCode": "kur",
+      "prefLabel": "Kurdiska"
+    },
+    "kut": {
+      "@id": "/def/languages/kut",
+      "@type": "Concept",
+      "langCode": "kut",
+      "prefLabel": "Kutenai"
+    },
+    "lad": {
+      "@id": "/def/languages/lad",
+      "@type": "Concept",
+      "langCode": "lad",
+      "prefLabel": "Spanjolska"
+    },
+    "lah": {
+      "@id": "/def/languages/lah",
+      "@type": "Concept",
+      "langCode": "lah",
+      "prefLabel": "Lahnda"
+    },
+    "lam": {
+      "@id": "/def/languages/lam",
+      "@type": "Concept",
+      "langCode": "lam",
+      "prefLabel": "Lamba"
+    },
+    "lao": {
+      "@id": "/def/languages/lao",
+      "@type": "Concept",
+      "langCode": "lao",
+      "prefLabel": "Laotiska"
+    },
+    "lat": {
+      "@id": "/def/languages/lat",
+      "@type": "Concept",
+      "langCode": "lat",
+      "prefLabel": "Latin"
+    },
+    "lav": {
+      "@id": "/def/languages/lav",
+      "@type": "Concept",
+      "langCode": "lav",
+      "prefLabel": "Lettiska"
+    },
+    "lez": {
+      "@id": "/def/languages/lez",
+      "@type": "Concept",
+      "langCode": "lez",
+      "prefLabel": "Lezginska"
+    },
+    "lim": {
+      "@id": "/def/languages/lim",
+      "@type": "Concept",
+      "langCode": "lim",
+      "prefLabel": "Limburgisch"
+    },
+    "lin": {
+      "@id": "/def/languages/lin",
+      "@type": "Concept",
+      "langCode": "lin",
+      "prefLabel": "Lingala"
+    },
+    "lit": {
+      "@id": "/def/languages/lit",
+      "@type": "Concept",
+      "langCode": "lit",
+      "prefLabel": "Litauiska"
+    },
+    "lol": {
+      "@id": "/def/languages/lol",
+      "@type": "Concept",
+      "langCode": "lol",
+      "prefLabel": "Lolo"
+    },
+    "loz": {
+      "@id": "/def/languages/loz",
+      "@type": "Concept",
+      "langCode": "loz",
+      "prefLabel": "Lozi"
+    },
+    "ltz": {
+      "@id": "/def/languages/ltz",
+      "@type": "Concept",
+      "langCode": "ltz",
+      "prefLabel": "Luxemburgiska"
+    },
+    "lua": {
+      "@id": "/def/languages/lua",
+      "@type": "Concept",
+      "langCode": "lua",
+      "prefLabel": "Luba-Lulua"
+    },
+    "lub": {
+      "@id": "/def/languages/lub",
+      "@type": "Concept",
+      "langCode": "lub",
+      "prefLabel": "Luba-Katanga"
+    },
+    "lug": {
+      "@id": "/def/languages/lug",
+      "@type": "Concept",
+      "langCode": "lug",
+      "prefLabel": "Luganda"
+    },
+    "lui": {
+      "@id": "/def/languages/lui",
+      "@type": "Concept",
+      "langCode": "lui",
+      "prefLabel": "Luiseno"
+    },
+    "lun": {
+      "@id": "/def/languages/lun",
+      "@type": "Concept",
+      "langCode": "lun",
+      "prefLabel": "Lunda"
+    },
+    "luo": {
+      "@id": "/def/languages/luo",
+      "@type": "Concept",
+      "langCode": "luo",
+      "prefLabel": "Luo"
+    },
+    "lus": {
+      "@id": "/def/languages/lus",
+      "@type": "Concept",
+      "langCode": "lus",
+      "prefLabel": "Mizo"
+    },
+    "mac": {
+      "@id": "/def/languages/mac",
+      "@type": "Concept",
+      "langCode": "mac",
+      "prefLabel": "Makedonska"
+    },
+    "mad": {
+      "@id": "/def/languages/mad",
+      "@type": "Concept",
+      "langCode": "mad",
+      "prefLabel": "Madurese"
+    },
+    "mag": {
+      "@id": "/def/languages/mag",
+      "@type": "Concept",
+      "langCode": "mag",
+      "prefLabel": "Magahi"
+    },
+    "mah": {
+      "@id": "/def/languages/mah",
+      "@type": "Concept",
+      "langCode": "mah",
+      "prefLabel": "Marshallesiska"
+    },
+    "mai": {
+      "@id": "/def/languages/mai",
+      "@type": "Concept",
+      "langCode": "mai",
+      "prefLabel": "Maithili"
+    },
+    "mak": {
+      "@id": "/def/languages/mak",
+      "@type": "Concept",
+      "langCode": "mak",
+      "prefLabel": "Makasar"
+    },
+    "mal": {
+      "@id": "/def/languages/mal",
+      "@type": "Concept",
+      "langCode": "mal",
+      "prefLabel": "Malayalam"
+    },
+    "man": {
+      "@id": "/def/languages/man",
+      "@type": "Concept",
+      "langCode": "man",
+      "prefLabel": "Mande"
+    },
+    "mao": {
+      "@id": "/def/languages/mao",
+      "@type": "Concept",
+      "langCode": "mao",
+      "prefLabel": "Maori"
+    },
+    "map": {
+      "@id": "/def/languages/map",
+      "@type": "Concept",
+      "langCode": "map",
+      "prefLabel": "Austronesiskt språk"
+    },
+    "mar": {
+      "@id": "/def/languages/mar",
+      "@type": "Concept",
+      "langCode": "mar",
+      "prefLabel": "Marathi"
+    },
+    "mas": {
+      "@id": "/def/languages/mas",
+      "@type": "Concept",
+      "langCode": "mas",
+      "prefLabel": "Massajiska"
+    },
+    "may": {
+      "@id": "/def/languages/may",
+      "@type": "Concept",
+      "langCode": "may",
+      "prefLabel": "Malajiska"
+    },
+    "mdf": {
+      "@id": "/def/languages/mdf",
+      "@type": "Concept",
+      "langCode": "mdf",
+      "prefLabel": "Moksha"
+    },
+    "mdr": {
+      "@id": "/def/languages/mdr",
+      "@type": "Concept",
+      "langCode": "mdr",
+      "prefLabel": "Mandar"
+    },
+    "men": {
+      "@id": "/def/languages/men",
+      "@type": "Concept",
+      "langCode": "men",
+      "prefLabel": "Mende"
+    },
+    "mga": {
+      "@id": "/def/languages/mga",
+      "@type": "Concept",
+      "langCode": "mga",
+      "prefLabel": "Medeliriska"
+    },
+    "mic": {
+      "@id": "/def/languages/mic",
+      "@type": "Concept",
+      "langCode": "mic",
+      "prefLabel": "Mic-mac"
+    },
+    "min": {
+      "@id": "/def/languages/min",
+      "@type": "Concept",
+      "langCode": "min",
+      "prefLabel": "Minangkabau"
+    },
+    "mis": {
+      "@id": "/def/languages/mis",
+      "@type": "Concept",
+      "langCode": "mis",
+      "prefLabel": "Övrig språk"
+    },
+    "mkd": {
+      "@id": "/def/languages/mkd",
+      "@type": "Concept",
+      "langCode": "mkd"
+    },
+    "mkh": {
+      "@id": "/def/languages/mkh",
+      "@type": "Concept",
+      "langCode": "mkh",
+      "prefLabel": "Mon-khmerspråk"
+    },
+    "mlg": {
+      "@id": "/def/languages/mlg",
+      "@type": "Concept",
+      "langCode": "mlg",
+      "prefLabel": "Malagasy"
+    },
+    "mlt": {
+      "@id": "/def/languages/mlt",
+      "@type": "Concept",
+      "langCode": "mlt",
+      "prefLabel": "Maltesiska"
+    },
+    "mnc": {
+      "@id": "/def/languages/mnc",
+      "@type": "Concept",
+      "langCode": "mnc",
+      "prefLabel": "Manchu"
+    },
+    "mni": {
+      "@id": "/def/languages/mni",
+      "@type": "Concept",
+      "langCode": "mni",
+      "prefLabel": "Manipuri"
+    },
+    "mno": {
+      "@id": "/def/languages/mno",
+      "@type": "Concept",
+      "langCode": "mno",
+      "prefLabel": "Manobospråk"
+    },
+    "moh": {
+      "@id": "/def/languages/moh",
+      "@type": "Concept",
+      "langCode": "moh",
+      "prefLabel": "Mohawk"
+    },
+    "mon": {
+      "@id": "/def/languages/mon",
+      "@type": "Concept",
+      "langCode": "mon",
+      "prefLabel": "Mongoliskt språk"
+    },
+    "mos": {
+      "@id": "/def/languages/mos",
+      "@type": "Concept",
+      "langCode": "mos",
+      "prefLabel": "Mossi"
+    },
+    "mri": {
+      "@id": "/def/languages/mri",
+      "@type": "Concept",
+      "langCode": "mri"
+    },
+    "msa": {
+      "@id": "/def/languages/msa",
+      "@type": "Concept",
+      "langCode": "msa"
+    },
+    "mul": {
+      "@id": "/def/languages/mul",
+      "@type": "Concept",
+      "langCode": "mul",
+      "prefLabel": "Flerspråkigt verk"
+    },
+    "mun": {
+      "@id": "/def/languages/mun",
+      "@type": "Concept",
+      "langCode": "mun",
+      "prefLabel": "Munda"
+    },
+    "mus": {
+      "@id": "/def/languages/mus",
+      "@type": "Concept",
+      "langCode": "mus",
+      "prefLabel": "Muskogee"
+    },
+    "mwl": {
+      "@id": "/def/languages/mwl",
+      "@type": "Concept",
+      "langCode": "mwl",
+      "prefLabel": "Mirandese"
+    },
+    "mwr": {
+      "@id": "/def/languages/mwr",
+      "@type": "Concept",
+      "langCode": "mwr",
+      "prefLabel": "Marwari"
+    },
+    "mya": {
+      "@id": "/def/languages/mya",
+      "@type": "Concept",
+      "langCode": "mya"
+    },
+    "myn": {
+      "@id": "/def/languages/myn",
+      "@type": "Concept",
+      "langCode": "myn",
+      "prefLabel": "Maya-språk"
+    },
+    "myv": {
+      "@id": "/def/languages/myv",
+      "@type": "Concept",
+      "langCode": "myv",
+      "prefLabel": "Erzya"
+    },
+    "nah": {
+      "@id": "/def/languages/nah",
+      "@type": "Concept",
+      "langCode": "nah",
+      "prefLabel": "Nahuatl"
+    },
+    "nai": {
+      "@id": "/def/languages/nai",
+      "@type": "Concept",
+      "langCode": "nai",
+      "prefLabel": "Nordamerikanskt indianspråk"
+    },
+    "nap": {
+      "@id": "/def/languages/nap",
+      "@type": "Concept",
+      "langCode": "nap",
+      "prefLabel": "Neapolitansk italienska"
+    },
+    "nau": {
+      "@id": "/def/languages/nau",
+      "@type": "Concept",
+      "langCode": "nau",
+      "prefLabel": "Nauruanska"
+    },
+    "nav": {
+      "@id": "/def/languages/nav",
+      "@type": "Concept",
+      "langCode": "nav",
+      "prefLabel": "Navaho"
+    },
+    "nbl": {
+      "@id": "/def/languages/nbl",
+      "@type": "Concept",
+      "langCode": "nbl",
+      "prefLabel": "Ndebele"
+    },
+    "nde": {
+      "@id": "/def/languages/nde",
+      "@type": "Concept",
+      "langCode": "nde",
+      "prefLabel": "Ndebele"
+    },
+    "ndo": {
+      "@id": "/def/languages/ndo",
+      "@type": "Concept",
+      "langCode": "ndo",
+      "prefLabel": "Ndonga"
+    },
+    "nds": {
+      "@id": "/def/languages/nds",
+      "@type": "Concept",
+      "langCode": "nds",
+      "prefLabel": "Lågtyska"
+    },
+    "nep": {
+      "@id": "/def/languages/nep",
+      "@type": "Concept",
+      "langCode": "nep",
+      "prefLabel": "Nepali"
+    },
+    "new": {
+      "@id": "/def/languages/new",
+      "@type": "Concept",
+      "langCode": "new",
+      "prefLabel": "Newari"
+    },
+    "nia": {
+      "@id": "/def/languages/nia",
+      "@type": "Concept",
+      "langCode": "nia",
+      "prefLabel": "Nias"
+    },
+    "nic": {
+      "@id": "/def/languages/nic",
+      "@type": "Concept",
+      "langCode": "nic",
+      "prefLabel": "Niger-/Kongospråk"
+    },
+    "niu": {
+      "@id": "/def/languages/niu",
+      "@type": "Concept",
+      "langCode": "niu",
+      "prefLabel": "Niuean"
+    },
+    "nld": {
+      "@id": "/def/languages/nld",
+      "@type": "Concept",
+      "langCode": "nld"
+    },
+    "nno": {
+      "@id": "/def/languages/nno",
+      "@type": "Concept",
+      "langCode": "nno",
+      "prefLabel": "Nynorsk"
+    },
+    "nob": {
+      "@id": "/def/languages/nob",
+      "@type": "Concept",
+      "langCode": "nob",
+      "prefLabel": "Bokmål"
+    },
+    "nog": {
+      "@id": "/def/languages/nog",
+      "@type": "Concept",
+      "langCode": "nog",
+      "prefLabel": "Nogaiska"
+    },
+    "non": {
+      "@id": "/def/languages/non",
+      "@type": "Concept",
+      "langCode": "non",
+      "prefLabel": "Fornisländska"
+    },
+    "nor": {
+      "@id": "/def/languages/nor",
+      "@type": "Concept",
+      "langCode": "nor",
+      "prefLabel": "Norska"
+    },
+    "nqo": {
+      "@id": "/def/languages/nqo",
+      "@type": "Concept",
+      "langCode": "nqo",
+      "prefLabel": "N'Ko"
+    },
+    "nso": {
+      "@id": "/def/languages/nso",
+      "@type": "Concept",
+      "langCode": "nso",
+      "prefLabel": "Nordsotho"
+    },
+    "nub": {
+      "@id": "/def/languages/nub",
+      "@type": "Concept",
+      "langCode": "nub",
+      "prefLabel": "Nubiskt språk"
+    },
+    "nwc": {
+      "@id": "/def/languages/nwc",
+      "@type": "Concept",
+      "langCode": "nwc",
+      "prefLabel": "Fornnewari"
+    },
+    "nya": {
+      "@id": "/def/languages/nya",
+      "@type": "Concept",
+      "langCode": "nya",
+      "prefLabel": "Nyanja"
+    },
+    "nym": {
+      "@id": "/def/languages/nym",
+      "@type": "Concept",
+      "langCode": "nym",
+      "prefLabel": "Nyamwezi"
+    },
+    "nyn": {
+      "@id": "/def/languages/nyn",
+      "@type": "Concept",
+      "langCode": "nyn",
+      "prefLabel": "Nyankole"
+    },
+    "nyo": {
+      "@id": "/def/languages/nyo",
+      "@type": "Concept",
+      "langCode": "nyo",
+      "prefLabel": "Nyoro"
+    },
+    "nzi": {
+      "@id": "/def/languages/nzi",
+      "@type": "Concept",
+      "langCode": "nzi",
+      "prefLabel": "Nzima"
+    },
+    "oci": {
+      "@id": "/def/languages/oci",
+      "@type": "Concept",
+      "langCode": "oci",
+      "prefLabel": "Langue d'oc"
+    },
+    "oji": {
+      "@id": "/def/languages/oji",
+      "@type": "Concept",
+      "langCode": "oji",
+      "prefLabel": "Odjibwa"
+    },
+    "ori": {
+      "@id": "/def/languages/ori",
+      "@type": "Concept",
+      "langCode": "ori",
+      "prefLabel": "Oriya"
+    },
+    "orm": {
+      "@id": "/def/languages/orm",
+      "@type": "Concept",
+      "langCode": "orm",
+      "prefLabel": "Oromo"
+    },
+    "osa": {
+      "@id": "/def/languages/osa",
+      "@type": "Concept",
+      "langCode": "osa",
+      "prefLabel": "Osage"
+    },
+    "oss": {
+      "@id": "/def/languages/oss",
+      "@type": "Concept",
+      "langCode": "oss",
+      "prefLabel": "Ossetiska"
+    },
+    "ota": {
+      "@id": "/def/languages/ota",
+      "@type": "Concept",
+      "langCode": "ota",
+      "prefLabel": "Ottomanska"
+    },
+    "oto": {
+      "@id": "/def/languages/oto",
+      "@type": "Concept",
+      "langCode": "oto",
+      "prefLabel": "Otomispråk"
+    },
+    "paa": {
+      "@id": "/def/languages/paa",
+      "@type": "Concept",
+      "langCode": "paa",
+      "prefLabel": "Papuanskt språk"
+    },
+    "pag": {
+      "@id": "/def/languages/pag",
+      "@type": "Concept",
+      "langCode": "pag",
+      "prefLabel": "Pangasinan"
+    },
+    "pal": {
+      "@id": "/def/languages/pal",
+      "@type": "Concept",
+      "langCode": "pal",
+      "prefLabel": "Pahlavi"
+    },
+    "pam": {
+      "@id": "/def/languages/pam",
+      "@type": "Concept",
+      "langCode": "pam",
+      "prefLabel": "Pampanga"
+    },
+    "pan": {
+      "@id": "/def/languages/pan",
+      "@type": "Concept",
+      "langCode": "pan",
+      "prefLabel": "Panjabi"
+    },
+    "pap": {
+      "@id": "/def/languages/pap",
+      "@type": "Concept",
+      "langCode": "pap",
+      "prefLabel": "Papiamento"
+    },
+    "pau": {
+      "@id": "/def/languages/pau",
+      "@type": "Concept",
+      "langCode": "pau",
+      "prefLabel": "Palauan"
+    },
+    "peo": {
+      "@id": "/def/languages/peo",
+      "@type": "Concept",
+      "langCode": "peo",
+      "prefLabel": "Fornpersiska"
+    },
+    "per": {
+      "@id": "/def/languages/per",
+      "@type": "Concept",
+      "langCode": "per",
+      "prefLabel": "Persiska"
+    },
+    "phi": {
+      "@id": "/def/languages/phi",
+      "@type": "Concept",
+      "langCode": "phi",
+      "prefLabel": "Filippinskt språk"
+    },
+    "phn": {
+      "@id": "/def/languages/phn",
+      "@type": "Concept",
+      "langCode": "phn",
+      "prefLabel": "Feniciska"
+    },
+    "pli": {
+      "@id": "/def/languages/pli",
+      "@type": "Concept",
+      "langCode": "pli",
+      "prefLabel": "Pali"
+    },
+    "pol": {
+      "@id": "/def/languages/pol",
+      "@type": "Concept",
+      "langCode": "pol",
+      "prefLabel": "Polska"
+    },
+    "pon": {
+      "@id": "/def/languages/pon",
+      "@type": "Concept",
+      "langCode": "pon",
+      "prefLabel": "Ponape"
+    },
+    "por": {
+      "@id": "/def/languages/por",
+      "@type": "Concept",
+      "langCode": "por",
+      "prefLabel": "Portugisiska"
+    },
+    "pra": {
+      "@id": "/def/languages/pra",
+      "@type": "Concept",
+      "langCode": "pra",
+      "prefLabel": "Prakritspråk"
+    },
+    "pro": {
+      "@id": "/def/languages/pro",
+      "@type": "Concept",
+      "langCode": "pro",
+      "prefLabel": "Provensalska"
+    },
+    "pus": {
+      "@id": "/def/languages/pus",
+      "@type": "Concept",
+      "langCode": "pus",
+      "prefLabel": "Pashto"
+    },
+    "qaa-qtz": {
+      "@id": "/def/languages/qaa-qtz",
+      "@type": "Concept",
+      "langCode": "qaa-qtz"
+    },
+    "que": {
+      "@id": "/def/languages/que",
+      "@type": "Concept",
+      "langCode": "que",
+      "prefLabel": "Quechua"
+    },
+    "raj": {
+      "@id": "/def/languages/raj",
+      "@type": "Concept",
+      "langCode": "raj",
+      "prefLabel": "Rajasthani"
+    },
+    "rap": {
+      "@id": "/def/languages/rap",
+      "@type": "Concept",
+      "langCode": "rap",
+      "prefLabel": "Rapanui"
+    },
+    "rar": {
+      "@id": "/def/languages/rar",
+      "@type": "Concept",
+      "langCode": "rar",
+      "prefLabel": "Rarotongan"
+    },
+    "roa": {
+      "@id": "/def/languages/roa",
+      "@type": "Concept",
+      "langCode": "roa",
+      "prefLabel": "Romanskt språk"
+    },
+    "roh": {
+      "@id": "/def/languages/roh",
+      "@type": "Concept",
+      "langCode": "roh",
+      "prefLabel": "Rätoromanska"
+    },
+    "rom": {
+      "@id": "/def/languages/rom",
+      "@type": "Concept",
+      "langCode": "rom",
+      "prefLabel": "Romani"
+    },
+    "ron": {
+      "@id": "/def/languages/ron",
+      "@type": "Concept",
+      "langCode": "ron"
+    },
+    "rum": {
+      "@id": "/def/languages/rum",
+      "@type": "Concept",
+      "langCode": "rum",
+      "prefLabel": "Rumänska"
+    },
+    "run": {
+      "@id": "/def/languages/run",
+      "@type": "Concept",
+      "langCode": "run",
+      "prefLabel": "Rundi"
+    },
+    "rup": {
+      "@id": "/def/languages/rup",
+      "@type": "Concept",
+      "langCode": "rup",
+      "prefLabel": "Arumanska"
+    },
+    "rus": {
+      "@id": "/def/languages/rus",
+      "@type": "Concept",
+      "langCode": "rus",
+      "prefLabel": "Ryska"
+    },
+    "sad": {
+      "@id": "/def/languages/sad",
+      "@type": "Concept",
+      "langCode": "sad",
+      "prefLabel": "Sandawe"
+    },
+    "sag": {
+      "@id": "/def/languages/sag",
+      "@type": "Concept",
+      "langCode": "sag",
+      "prefLabel": "Sango"
+    },
+    "sah": {
+      "@id": "/def/languages/sah",
+      "@type": "Concept",
+      "langCode": "sah",
+      "prefLabel": "Jakutiska"
+    },
+    "sai": {
+      "@id": "/def/languages/sai",
+      "@type": "Concept",
+      "langCode": "sai",
+      "prefLabel": "Sydamerikanskt indianspråk"
+    },
+    "sal": {
+      "@id": "/def/languages/sal",
+      "@type": "Concept",
+      "langCode": "sal",
+      "prefLabel": "Saliskt språk"
+    },
+    "sam": {
+      "@id": "/def/languages/sam",
+      "@type": "Concept",
+      "langCode": "sam",
+      "prefLabel": "Samaritanska"
+    },
+    "san": {
+      "@id": "/def/languages/san",
+      "@type": "Concept",
+      "langCode": "san",
+      "prefLabel": "Sanskrit"
+    },
+    "sas": {
+      "@id": "/def/languages/sas",
+      "@type": "Concept",
+      "langCode": "sas",
+      "prefLabel": "Sasak"
+    },
+    "sat": {
+      "@id": "/def/languages/sat",
+      "@type": "Concept",
+      "langCode": "sat",
+      "prefLabel": "Santali"
+    },
+    "scn": {
+      "@id": "/def/languages/scn",
+      "@type": "Concept",
+      "langCode": "scn",
+      "prefLabel": "Siciliansk italienska"
+    },
+    "sco": {
+      "@id": "/def/languages/sco",
+      "@type": "Concept",
+      "langCode": "sco",
+      "prefLabel": "Skotska"
+    },
+    "sel": {
+      "@id": "/def/languages/sel",
+      "@type": "Concept",
+      "langCode": "sel",
+      "prefLabel": "Selkup"
+    },
+    "sem": {
+      "@id": "/def/languages/sem",
+      "@type": "Concept",
+      "langCode": "sem",
+      "prefLabel": "Semitiskt språk"
+    },
+    "sga": {
+      "@id": "/def/languages/sga",
+      "@type": "Concept",
+      "langCode": "sga",
+      "prefLabel": "Forniriska"
+    },
+    "sgn": {
+      "@id": "/def/languages/sgn",
+      "@type": "Concept",
+      "langCode": "sgn",
+      "prefLabel": "Teckenspråk"
+    },
+    "shn": {
+      "@id": "/def/languages/shn",
+      "@type": "Concept",
+      "langCode": "shn",
+      "prefLabel": "Shan"
+    },
+    "sid": {
+      "@id": "/def/languages/sid",
+      "@type": "Concept",
+      "langCode": "sid",
+      "prefLabel": "Sidami"
+    },
+    "sin": {
+      "@id": "/def/languages/sin",
+      "@type": "Concept",
+      "langCode": "sin",
+      "prefLabel": "Singalesiska"
+    },
+    "sio": {
+      "@id": "/def/languages/sio",
+      "@type": "Concept",
+      "langCode": "sio",
+      "prefLabel": "Sioux-språk"
+    },
+    "sit": {
+      "@id": "/def/languages/sit",
+      "@type": "Concept",
+      "langCode": "sit",
+      "prefLabel": "Sino-tibetanskt språk"
+    },
+    "sla": {
+      "@id": "/def/languages/sla",
+      "@type": "Concept",
+      "langCode": "sla",
+      "prefLabel": "Slaviskt språk"
+    },
+    "slk": {
+      "@id": "/def/languages/slk",
+      "@type": "Concept",
+      "langCode": "slk"
+    },
+    "slo": {
+      "@id": "/def/languages/slo",
+      "@type": "Concept",
+      "langCode": "slo",
+      "prefLabel": "Slovakiska"
+    },
+    "slv": {
+      "@id": "/def/languages/slv",
+      "@type": "Concept",
+      "langCode": "slv",
+      "prefLabel": "Slovenska"
+    },
+    "sma": {
+      "@id": "/def/languages/sma",
+      "@type": "Concept",
+      "langCode": "sma",
+      "prefLabel": "Sydsamiska"
+    },
+    "sme": {
+      "@id": "/def/languages/sme",
+      "@type": "Concept",
+      "langCode": "sme",
+      "prefLabel": "Nordsamiska"
+    },
+    "smi": {
+      "@id": "/def/languages/smi",
+      "@type": "Concept",
+      "langCode": "smi",
+      "prefLabel": "Samiskt språk"
+    },
+    "smj": {
+      "@id": "/def/languages/smj",
+      "@type": "Concept",
+      "langCode": "smj",
+      "prefLabel": "Lulesamiska"
+    },
+    "smn": {
+      "@id": "/def/languages/smn",
+      "@type": "Concept",
+      "langCode": "smn",
+      "prefLabel": "Enaresamiska"
+    },
+    "smo": {
+      "@id": "/def/languages/smo",
+      "@type": "Concept",
+      "langCode": "smo",
+      "prefLabel": "Samoanska"
+    },
+    "sms": {
+      "@id": "/def/languages/sms",
+      "@type": "Concept",
+      "langCode": "sms",
+      "prefLabel": "Skoltsamiska"
+    },
+    "sna": {
+      "@id": "/def/languages/sna",
+      "@type": "Concept",
+      "langCode": "sna",
+      "prefLabel": "Shona"
+    },
+    "snd": {
+      "@id": "/def/languages/snd",
+      "@type": "Concept",
+      "langCode": "snd",
+      "prefLabel": "Sindhi"
+    },
+    "snk": {
+      "@id": "/def/languages/snk",
+      "@type": "Concept",
+      "langCode": "snk",
+      "prefLabel": "Soninke"
+    },
+    "sog": {
+      "@id": "/def/languages/sog",
+      "@type": "Concept",
+      "langCode": "sog",
+      "prefLabel": "Sogdiska"
+    },
+    "som": {
+      "@id": "/def/languages/som",
+      "@type": "Concept",
+      "langCode": "som",
+      "prefLabel": "Somali"
+    },
+    "son": {
+      "@id": "/def/languages/son",
+      "@type": "Concept",
+      "langCode": "son",
+      "prefLabel": "Songhai"
+    },
+    "sot": {
+      "@id": "/def/languages/sot",
+      "@type": "Concept",
+      "langCode": "sot",
+      "prefLabel": "Sotho"
+    },
+    "spa": {
+      "@id": "/def/languages/spa",
+      "@type": "Concept",
+      "langCode": "spa",
+      "prefLabel": "Spanska"
+    },
+    "sqi": {
+      "@id": "/def/languages/sqi",
+      "@type": "Concept",
+      "langCode": "sqi"
+    },
+    "srd": {
+      "@id": "/def/languages/srd",
+      "@type": "Concept",
+      "langCode": "srd",
+      "prefLabel": "Sardiska"
+    },
+    "srn": {
+      "@id": "/def/languages/srn",
+      "@type": "Concept",
+      "langCode": "srn",
+      "prefLabel": "Sranan"
+    },
+    "srp": {
+      "@id": "/def/languages/srp",
+      "@type": "Concept",
+      "langCode": "srp",
+      "prefLabel": "Serbiska"
+    },
+    "srr": {
+      "@id": "/def/languages/srr",
+      "@type": "Concept",
+      "langCode": "srr",
+      "prefLabel": "Serer"
+    },
+    "ssa": {
+      "@id": "/def/languages/ssa",
+      "@type": "Concept",
+      "langCode": "ssa",
+      "prefLabel": "Nilo-sahariskt språk"
+    },
+    "ssw": {
+      "@id": "/def/languages/ssw",
+      "@type": "Concept",
+      "langCode": "ssw",
+      "prefLabel": "Swazi"
+    },
+    "suk": {
+      "@id": "/def/languages/suk",
+      "@type": "Concept",
+      "langCode": "suk",
+      "prefLabel": "Sukuma"
+    },
+    "sun": {
+      "@id": "/def/languages/sun",
+      "@type": "Concept",
+      "langCode": "sun",
+      "prefLabel": "Sundanesiska"
+    },
+    "sus": {
+      "@id": "/def/languages/sus",
+      "@type": "Concept",
+      "langCode": "sus",
+      "prefLabel": "Susu"
+    },
+    "sux": {
+      "@id": "/def/languages/sux",
+      "@type": "Concept",
+      "langCode": "sux",
+      "prefLabel": "Sumeriska"
+    },
+    "swa": {
+      "@id": "/def/languages/swa",
+      "@type": "Concept",
+      "langCode": "swa",
+      "prefLabel": "Swahili"
+    },
+    "swe": {
+      "@id": "/def/languages/swe",
+      "@type": "Concept",
+      "langCode": "swe",
+      "prefLabel": "Svenska"
+    },
+    "syc": {
+      "@id": "/def/languages/syc",
+      "@type": "Concept",
+      "langCode": "syc",
+      "prefLabel": "Syriska"
+    },
+    "syr": {
+      "@id": "/def/languages/syr",
+      "@type": "Concept",
+      "langCode": "syr",
+      "prefLabel": "Syriska"
+    },
+    "tah": {
+      "@id": "/def/languages/tah",
+      "@type": "Concept",
+      "langCode": "tah",
+      "prefLabel": "Tahitiska"
+    },
+    "tai": {
+      "@id": "/def/languages/tai",
+      "@type": "Concept",
+      "langCode": "tai",
+      "prefLabel": "Thaispråk"
+    },
+    "tam": {
+      "@id": "/def/languages/tam",
+      "@type": "Concept",
+      "langCode": "tam",
+      "prefLabel": "Tamil"
+    },
+    "tat": {
+      "@id": "/def/languages/tat",
+      "@type": "Concept",
+      "langCode": "tat",
+      "prefLabel": "Tatariska"
+    },
+    "tel": {
+      "@id": "/def/languages/tel",
+      "@type": "Concept",
+      "langCode": "tel",
+      "prefLabel": "Telugo"
+    },
+    "tem": {
+      "@id": "/def/languages/tem",
+      "@type": "Concept",
+      "langCode": "tem",
+      "prefLabel": "Temne"
+    },
+    "ter": {
+      "@id": "/def/languages/ter",
+      "@type": "Concept",
+      "langCode": "ter",
+      "prefLabel": "Tereno"
+    },
+    "tet": {
+      "@id": "/def/languages/tet",
+      "@type": "Concept",
+      "langCode": "tet",
+      "prefLabel": "Tetum"
+    },
+    "tgk": {
+      "@id": "/def/languages/tgk",
+      "@type": "Concept",
+      "langCode": "tgk",
+      "prefLabel": "Tadzjikiska"
+    },
+    "tgl": {
+      "@id": "/def/languages/tgl",
+      "@type": "Concept",
+      "langCode": "tgl",
+      "prefLabel": "Tagalog"
+    },
+    "tha": {
+      "@id": "/def/languages/tha",
+      "@type": "Concept",
+      "langCode": "tha",
+      "prefLabel": "Thailändska"
+    },
+    "tib": {
+      "@id": "/def/languages/tib",
+      "@type": "Concept",
+      "langCode": "tib",
+      "prefLabel": "Tibetanska"
+    },
+    "tig": {
+      "@id": "/def/languages/tig",
+      "@type": "Concept",
+      "langCode": "tig",
+      "prefLabel": "TigrÃ"
+    },
+    "tir": {
+      "@id": "/def/languages/tir",
+      "@type": "Concept",
+      "langCode": "tir",
+      "prefLabel": "Tigrinja"
+    },
+    "tiv": {
+      "@id": "/def/languages/tiv",
+      "@type": "Concept",
+      "langCode": "tiv",
+      "prefLabel": "Tivi"
+    },
+    "tkl": {
+      "@id": "/def/languages/tkl",
+      "@type": "Concept",
+      "langCode": "tkl",
+      "prefLabel": "Tokelauiska"
+    },
+    "tlh": {
+      "@id": "/def/languages/tlh",
+      "@type": "Concept",
+      "langCode": "tlh",
+      "prefLabel": "Klingon"
+    },
+    "tli": {
+      "@id": "/def/languages/tli",
+      "@type": "Concept",
+      "langCode": "tli",
+      "prefLabel": "Tlingit"
+    },
+    "tmh": {
+      "@id": "/def/languages/tmh",
+      "@type": "Concept",
+      "langCode": "tmh",
+      "prefLabel": "Tamashek"
+    },
+    "tog": {
+      "@id": "/def/languages/tog",
+      "@type": "Concept",
+      "langCode": "tog",
+      "prefLabel": "Tonga"
+    },
+    "ton": {
+      "@id": "/def/languages/ton",
+      "@type": "Concept",
+      "langCode": "ton",
+      "prefLabel": "Tonga"
+    },
+    "tpi": {
+      "@id": "/def/languages/tpi",
+      "@type": "Concept",
+      "langCode": "tpi",
+      "prefLabel": "Tok Pisin"
+    },
+    "tsi": {
+      "@id": "/def/languages/tsi",
+      "@type": "Concept",
+      "langCode": "tsi",
+      "prefLabel": "Tsimshian"
+    },
+    "tsn": {
+      "@id": "/def/languages/tsn",
+      "@type": "Concept",
+      "langCode": "tsn",
+      "prefLabel": "Tswana"
+    },
+    "tso": {
+      "@id": "/def/languages/tso",
+      "@type": "Concept",
+      "langCode": "tso",
+      "prefLabel": "Tsonga"
+    },
+    "tuk": {
+      "@id": "/def/languages/tuk",
+      "@type": "Concept",
+      "langCode": "tuk",
+      "prefLabel": "Turkmeniska"
+    },
+    "tum": {
+      "@id": "/def/languages/tum",
+      "@type": "Concept",
+      "langCode": "tum",
+      "prefLabel": "Tumbuka"
+    },
+    "tup": {
+      "@id": "/def/languages/tup",
+      "@type": "Concept",
+      "langCode": "tup",
+      "prefLabel": "Tupíspråk"
+    },
+    "tur": {
+      "@id": "/def/languages/tur",
+      "@type": "Concept",
+      "langCode": "tur",
+      "prefLabel": "Turkiska"
+    },
+    "tut": {
+      "@id": "/def/languages/tut",
+      "@type": "Concept",
+      "langCode": "tut",
+      "prefLabel": "Altaiskt språk"
+    },
+    "tvl": {
+      "@id": "/def/languages/tvl",
+      "@type": "Concept",
+      "langCode": "tvl",
+      "prefLabel": "Tuvaluan"
+    },
+    "twi": {
+      "@id": "/def/languages/twi",
+      "@type": "Concept",
+      "langCode": "twi",
+      "prefLabel": "Twi"
+    },
+    "tyv": {
+      "@id": "/def/languages/tyv",
+      "@type": "Concept",
+      "langCode": "tyv",
+      "prefLabel": "Tuvinska"
+    },
+    "udm": {
+      "@id": "/def/languages/udm",
+      "@type": "Concept",
+      "langCode": "udm",
+      "prefLabel": "Udmurtiska"
+    },
+    "uga": {
+      "@id": "/def/languages/uga",
+      "@type": "Concept",
+      "langCode": "uga",
+      "prefLabel": "Ugaritiska"
+    },
+    "uig": {
+      "@id": "/def/languages/uig",
+      "@type": "Concept",
+      "langCode": "uig",
+      "prefLabel": "Uiguriska"
+    },
+    "ukr": {
+      "@id": "/def/languages/ukr",
+      "@type": "Concept",
+      "langCode": "ukr",
+      "prefLabel": "Ukrainska"
+    },
+    "umb": {
+      "@id": "/def/languages/umb",
+      "@type": "Concept",
+      "langCode": "umb",
+      "prefLabel": "Umbundu"
+    },
+    "und": {
+      "@id": "/def/languages/und",
+      "@type": "Concept",
+      "langCode": "und",
+      "prefLabel": "Odefinierat språk"
+    },
+    "urd": {
+      "@id": "/def/languages/urd",
+      "@type": "Concept",
+      "langCode": "urd",
+      "prefLabel": "Urdu"
+    },
+    "uzb": {
+      "@id": "/def/languages/uzb",
+      "@type": "Concept",
+      "langCode": "uzb",
+      "prefLabel": "Uzbekiska"
+    },
+    "vai": {
+      "@id": "/def/languages/vai",
+      "@type": "Concept",
+      "langCode": "vai",
+      "prefLabel": "Vai"
+    },
+    "ven": {
+      "@id": "/def/languages/ven",
+      "@type": "Concept",
+      "langCode": "ven",
+      "prefLabel": "Venda"
+    },
+    "vie": {
+      "@id": "/def/languages/vie",
+      "@type": "Concept",
+      "langCode": "vie",
+      "prefLabel": "Vietnamesiska"
+    },
+    "vol": {
+      "@id": "/def/languages/vol",
+      "@type": "Concept",
+      "langCode": "vol",
+      "prefLabel": "VolapÂ¸k"
+    },
+    "vot": {
+      "@id": "/def/languages/vot",
+      "@type": "Concept",
+      "langCode": "vot",
+      "prefLabel": "Votiska"
+    },
+    "wak": {
+      "@id": "/def/languages/wak",
+      "@type": "Concept",
+      "langCode": "wak",
+      "prefLabel": "Wakusjiskt språk"
+    },
+    "wal": {
+      "@id": "/def/languages/wal",
+      "@type": "Concept",
+      "langCode": "wal",
+      "prefLabel": "Walamo"
+    },
+    "war": {
+      "@id": "/def/languages/war",
+      "@type": "Concept",
+      "langCode": "war",
+      "prefLabel": "Waray"
+    },
+    "was": {
+      "@id": "/def/languages/was",
+      "@type": "Concept",
+      "langCode": "was",
+      "prefLabel": "Washo"
+    },
+    "wel": {
+      "@id": "/def/languages/wel",
+      "@type": "Concept",
+      "langCode": "wel",
+      "prefLabel": "Kymriska"
+    },
+    "wen": {
+      "@id": "/def/languages/wen",
+      "@type": "Concept",
+      "langCode": "wen",
+      "prefLabel": "Sorbiskt (vendiskt) språk"
+    },
+    "wln": {
+      "@id": "/def/languages/wln",
+      "@type": "Concept",
+      "langCode": "wln",
+      "prefLabel": "Vallonska"
+    },
+    "wol": {
+      "@id": "/def/languages/wol",
+      "@type": "Concept",
+      "langCode": "wol",
+      "prefLabel": "Wolof"
+    },
+    "xal": {
+      "@id": "/def/languages/xal",
+      "@type": "Concept",
+      "langCode": "xal",
+      "prefLabel": "Kalmuckiska"
+    },
+    "xho": {
+      "@id": "/def/languages/xho",
+      "@type": "Concept",
+      "langCode": "xho",
+      "prefLabel": "Xhosa"
+    },
+    "yao": {
+      "@id": "/def/languages/yao",
+      "@type": "Concept",
+      "langCode": "yao",
+      "prefLabel": "Yao"
+    },
+    "yap": {
+      "@id": "/def/languages/yap",
+      "@type": "Concept",
+      "langCode": "yap",
+      "prefLabel": "Yap"
+    },
+    "yid": {
+      "@id": "/def/languages/yid",
+      "@type": "Concept",
+      "langCode": "yid",
+      "prefLabel": "Jiddisch"
+    },
+    "yor": {
+      "@id": "/def/languages/yor",
+      "@type": "Concept",
+      "langCode": "yor",
+      "prefLabel": "Yoruba"
+    },
+    "ypk": {
+      "@id": "/def/languages/ypk",
+      "@type": "Concept",
+      "langCode": "ypk",
+      "prefLabel": "Eskimåspråk"
+    },
+    "zap": {
+      "@id": "/def/languages/zap",
+      "@type": "Concept",
+      "langCode": "zap",
+      "prefLabel": "Zapotek"
+    },
+    "zbl": {
+      "@id": "/def/languages/zbl",
+      "@type": "Concept",
+      "langCode": "zbl",
+      "prefLabel": "Blissymboler"
+    },
+    "zen": {
+      "@id": "/def/languages/zen",
+      "@type": "Concept",
+      "langCode": "zen",
+      "prefLabel": "Zenaga"
+    },
+    "zgh": {
+      "@id": "/def/languages/zgh",
+      "@type": "Concept",
+      "langCode": "zgh"
+    },
+    "zha": {
+      "@id": "/def/languages/zha",
+      "@type": "Concept",
+      "langCode": "zha",
+      "prefLabel": "Zhuang"
+    },
+    "zho": {
+      "@id": "/def/languages/zho",
+      "@type": "Concept",
+      "langCode": "zho"
+    },
+    "znd": {
+      "@id": "/def/languages/znd",
+      "@type": "Concept",
+      "langCode": "znd",
+      "prefLabel": "Zandespråk"
+    },
+    "zul": {
+      "@id": "/def/languages/zul",
+      "@type": "Concept",
+      "langCode": "zul",
+      "prefLabel": "Zulu"
+    },
+    "zun": {
+      "@id": "/def/languages/zun",
+      "@type": "Concept",
+      "langCode": "zun",
+      "prefLabel": "Zuni"
+    },
+    "zxx": {
+      "@id": "/def/languages/zxx",
+      "@type": "Concept",
+      "langCode": "zxx",
+      "prefLabel": "Icke-språkligt medium"
+    },
+    "zza": {
+      "@id": "/def/languages/zza",
+      "@type": "Concept",
+      "langCode": "zza",
+      "prefLabel": "Zaza"
+    }
+  }
+}
