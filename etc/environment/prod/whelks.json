@@ -23,12 +23,9 @@
             "resource":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins" : [
-                    "diskstorage",
-                    "documentapi",
                     "definitiondata",
                     "resourcelist",
                     "marcmap",
-                    "search",
                     "isxntool"
                 ]
             }
