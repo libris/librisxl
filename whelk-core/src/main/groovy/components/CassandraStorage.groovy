@@ -73,7 +73,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
         try {
             def r = keyspace.describeKeyspace()
-            log.debug("keyspace: $r")
+            log.debug("Keyspace in place: $r")
         } catch (Exception e) {
             log.debug("Creating keyspace.")
             keyspace.createKeyspace(
