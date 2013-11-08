@@ -66,10 +66,11 @@
   </logger>
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
-  </logger> -->
-  <!--<logger name="se.kb.libris.whelks.StandardWhelk">-->
-      <!--<level value="trace"/>-->
-  <!--</logger>-->
+  </logger> 
+  -->
+  <logger name="se.kb.libris.whelks.StandardWhelk">
+      <level value="trace"/>
+  </logger>
   <!--
   <logger name="se.kb.libris.whelks.CombinedWhelk">
       <level value="trace"/>
@@ -102,9 +103,9 @@
      <logger name="se.kb.libris.whelks.plugin.BasicFormatConverter">
       <level value="trace"/>
 </logger>-->
-<!--<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">-->
-      <!--<level value="debug"/>-->
-<!--</logger>-->
+    <logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
+          <level value="debug"/>
+        </logger>
 <!--<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter">-->
       <!--<level value="debug"/>-->
 <!--</logger>-->
