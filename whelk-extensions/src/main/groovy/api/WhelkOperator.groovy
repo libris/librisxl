@@ -25,6 +25,7 @@ class WhelkOperator {
         def operation = (args.length > 0 ? args[0] : null)
         def whelk = (args.length > 1 ? (wi.getWhelks().find { it.id == args[1] }) : null)
         def resource = (args.length > 2 ? args[2] : whelk?.id)
+        def serviceUrl = (args.length > 3 ? args[3] : null)
         def since
         def origin
         try {
@@ -38,7 +39,7 @@ class WhelkOperator {
         long time = 0
         if (operation == "import") {
             //def importer = new BatchImport(resource)
-            def importer = new OAIPMHImporter(whelk, resource)
+            def importer = new OAIPMHImporter(whelk, resource, serviceUrl)
             def nrimports = importer.doImport(since, numberOfDocs, picky)
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
