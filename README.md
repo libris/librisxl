@@ -37,6 +37,20 @@ Simply run:
 
 to upload all test documents into your local whelk. (See the script for how the actual HTTP PUT is constructed.)
 
+Or better, create a local OAI-PMH dump of examples and run a full import:
+
+    $ python scripts/assemble_oaipmh_records.py apibeta:beta scripts/example_records.tsv /tmp/oaidump
+    $ (cd /tmp/oaidump && python -m SimpleHTTPServer)
+    <CTRL-Z>
+    $ bg
+    $ gradle whelkOperation -Dargs='import libris auth http://localhost:8000/auth' -Dwhelk.config.uri=file://$(pwd)/etc/local-whelkoperations.json
+    $ gradle whelkOperation -Dargs='import libris bib http://localhost:8000/bib' -Dwhelk.config.uri=file://$(pwd)/etc/local-whelkoperations.json
+    $ fg
+    <CTRL-C>
+
+(The benefit of this is that out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
+
+
 ### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)
 
 1. Configure mock whelk with suitable converters, etc/environment/dev/whelks.json
