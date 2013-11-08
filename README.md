@@ -39,7 +39,7 @@ to upload all test documents into your local whelk. (See the script for how the 
 
 Or better, create a local OAI-PMH dump of examples and run a full import:
 
-    $ python scripts/assemble_oaipmh_records.py apibeta:beta scripts/example_records.tsv /tmp/oaidump
+    $ python scripts/assemble_oaipmh_records.py *******:**** scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer)
     <CTRL-Z>
     $ bg
