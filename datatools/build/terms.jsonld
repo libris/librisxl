@@ -20,8 +20,8 @@
       "@id": "http://libris.kb.se/def/terms#Collection",
       "@type": "Class",
       "equivalentClass": [
-        "http://bibframe.org/vocab/Collection",
-        "http://purl.org/dc/dcmitype/Collection"
+        "http://purl.org/dc/dcmitype/Collection",
+        "http://bibframe.org/vocab/Collection"
       ],
       "label": "Samling"
     },
@@ -29,8 +29,8 @@
       "@id": "http://libris.kb.se/def/terms#Dataset",
       "@type": "Class",
       "equivalentClass": [
-        "http://bibframe.org/vocab/Dataset",
-        "http://purl.org/dc/dcmitype/Dataset"
+        "http://purl.org/dc/dcmitype/Dataset",
+        "http://bibframe.org/vocab/Dataset"
       ],
       "label": "Dataset"
     },
@@ -64,8 +64,8 @@
       "@id": "http://libris.kb.se/def/terms#MovingImage",
       "@type": "Class",
       "equivalentClass": [
-        "http://bibframe.org/vocab/MovingImage",
-        "http://purl.org/dc/dcmitype/MovingImage"
+        "http://purl.org/dc/dcmitype/MovingImage",
+        "http://bibframe.org/vocab/MovingImage"
       ],
       "label": "Rörlig bild",
       "subClassOf": "http://purl.org/dc/dcmitype/Image"
@@ -75,17 +75,23 @@
       "@type": "Class",
       "altLabel": "Realia",
       "equivalentClass": [
-        "http://purl.org/dc/dcmitype/PhysicalObject",
-        "http://bibframe.org/vocab/ThreeDimensionalObject"
+        "http://bibframe.org/vocab/ThreeDimensionalObject",
+        "http://purl.org/dc/dcmitype/PhysicalObject"
       ],
       "label": "Föremål"
+    },
+    "Record": {
+      "@id": "http://libris.kb.se/def/terms#Record",
+      "@type": "Class",
+      "label": "Post",
+      "subClassOf": "http://xmlns.com/foaf/0.1/Document"
     },
     "Sound": {
       "@id": "http://libris.kb.se/def/terms#Sound",
       "@type": "Class",
       "equivalentClass": [
-        "http://bibframe.org/vocab/Audio",
-        "http://purl.org/dc/dcmitype/Sound"
+        "http://purl.org/dc/dcmitype/Sound",
+        "http://bibframe.org/vocab/Audio"
       ],
       "label": "Ljud"
     },
@@ -93,8 +99,8 @@
       "@id": "http://libris.kb.se/def/terms#StillImage",
       "@type": "Class",
       "equivalentClass": [
-        "http://bibframe.org/vocab/StillImage",
-        "http://purl.org/dc/dcmitype/StillImage"
+        "http://purl.org/dc/dcmitype/StillImage",
+        "http://bibframe.org/vocab/StillImage"
       ],
       "label": "Stillbild",
       "subClassOf": "http://purl.org/dc/dcmitype/Image"
@@ -103,9 +109,9 @@
       "@id": "http://libris.kb.se/def/terms#Text",
       "@type": "Class",
       "equivalentClass": [
+        "http://purl.org/dc/terms/BibliographicResource",
         "http://purl.org/dc/dcmitype/Text",
-        "http://bibframe.org/vocab/LanguageMaterial",
-        "http://purl.org/dc/terms/BibliographicResource"
+        "http://bibframe.org/vocab/LanguageMaterial"
       ],
       "label": "Text",
       "subClassOf": "http://libris.kb.se/def/terms#UniformWork"
@@ -118,14 +124,29 @@
       "label": "Uniformt verk",
       "subClassOf": "http://schema.org/CreativeWork"
     },
+    "about": {
+      "@id": "http://libris.kb.se/def/terms#about",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://schema.org/about",
+      "subPropertyOf": "http://xmlns.com/foaf/0.1/primaryTopic"
+    },
     "callno": {
       "@id": "http://libris.kb.se/def/terms#callno",
       "range": "http://libris.kb.se/def/terms#Holding",
       "subPropertyOf": [
-        "http://schema.org/sku",
         "http://bibframe.org/vocab/callno",
+        "http://schema.org/sku",
         "http://libris.kb.se/def/terms#genre"
       ]
+    },
+    "describedBy": {
+      "@id": "http://libris.kb.se/def/terms#describedBy",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.iana.org/assignments/relation/describedby",
+      "inverseOf": {
+        "@id": "http://libris.kb.se/def/terms#about"
+      },
+      "subPropertyOf": "http://xmlns.com/foaf/0.1/isPrimaryTopicOf"
     },
     "genre": {
       "@id": "http://libris.kb.se/def/terms#genre",
@@ -142,12 +163,12 @@
       "@type": "Ontology",
       "comment_en": "This vocabulary serves as a central mapping to public, well-known properties and classes.",
       "imports": [
-        "http://purl.org/dc/terms/",
-        "http://schema.org/",
-        "http://purl.org/ontology/bibo/",
-        "http://xmlns.com/foaf/0.1/",
         "http://rdvocab.info/Elements/",
         "http://bibframe.org/vocab/",
+        "http://purl.org/ontology/bibo/",
+        "http://purl.org/dc/terms/",
+        "http://schema.org/",
+        "http://xmlns.com/foaf/0.1/",
         "http://www.w3.org/2004/02/skos/core#"
       ]
     },
@@ -163,8 +184,8 @@
     "publisher": {
       "@id": "http://libris.kb.se/def/terms#publisher",
       "equivalentProperty": [
-        "http://purl.org/dc/terms/publisher",
-        "http://bibframe.org/vocab/publisher"
+        "http://bibframe.org/vocab/publisher",
+        "http://purl.org/dc/terms/publisher"
       ]
     }
   }
