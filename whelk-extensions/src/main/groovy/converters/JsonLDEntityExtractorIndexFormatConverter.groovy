@@ -21,7 +21,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
         List<IndexDocument> doclist = [new IndexDocument(doc)]
 
-        def json = mapper.readValue(doc.dataAsString, Map)
+        def json = doc.dataAsMap
 
         if (json) {
 

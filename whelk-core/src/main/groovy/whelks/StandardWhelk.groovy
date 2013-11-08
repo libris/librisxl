@@ -214,12 +214,14 @@ class StandardWhelk implements Whelk {
         long startTime = System.currentTimeMillis()
         List<Document> docs = []
         boolean indexing = !startAt
+        log.debug("Indexing is $indexing")
         for (doc in loadAll(fromStorage)) {
             if (startAt && doc.identifier == startAt) {
                 log.info("Found document with identifier ${startAt}. Starting to index ...")
                 indexing = true
             }
             if (indexing) {
+                log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
                 docs << doc
                 if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
                     addToGraphStore(docs)
@@ -231,7 +233,9 @@ class StandardWhelk implements Whelk {
                 }
             }
         }
+        log.debug("Went through all documents. Processing remainder.")
         if (docs.size() > 0) {
+            log.trace("Reindexing remaining ${docs.size()} documents")
             addToGraphStore(docs)
             addToIndex(docs)
         }
