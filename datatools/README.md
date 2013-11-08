@@ -15,3 +15,8 @@ Additional source: manually added swedish labels
 
 Source: hand-curated definitions of RDF-based types inferred from MARC.
 
+
+## Generate the definition datasets
+
+  $ python datatools/scripts/compile_defs.py -c datatools/cache/ -o datatools/build/
+

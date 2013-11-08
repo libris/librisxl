@@ -24,8 +24,38 @@
         {
             "resource":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool"]
+                "_plugins" : [
+                    "localdefinitiondata",
+                    "resourcelist",
+                    "marcmap",
+                    "isxntool"
+                ]
             }
         }
-    ]
+    ],
+    "_plugins": {
+        "localindex": {
+            "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
+            "_params" : "work/data",
+            "_unique" : false
+        },
+        "flatstorage": {
+            "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
+            "_params" : {
+                "storageDir": "work/storage/main",
+                "contentType": "application/ld+json"
+            }
+        },
+        "diskstorage": {
+            "_class" : "se.kb.libris.whelks.component.DiskStorage",
+            "_params" : {
+                "storageDir": "work/storage/jsonld",
+                "contentType": "application/ld+json"
+            }
+        },
+        "localdefinitiondata": {
+            "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
+            "_params": "datatools/build/"
+        }
+    }
 }

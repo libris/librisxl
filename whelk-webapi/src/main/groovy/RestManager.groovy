@@ -26,7 +26,7 @@ class RestManager extends Application {
     RestManager(Context parentContext) {
         super(parentContext)
 
-        tunnelService.extensionsTunnel = true
+        tunnelService.extensionsTunnel = false
         metadataService.addExtension("ttl", MediaType.APPLICATION_RDF_TURTLE)
         metadataService.addExtension("jsonld", new MediaType("application/ld+json"))
 

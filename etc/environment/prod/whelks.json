@@ -22,7 +22,12 @@
         {
             "resource":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : ["diskstorage", "documentapi", "resourcelist", "marcmap", "search", "isxntool" ]
+                "_plugins" : [
+                    "definitiondata",
+                    "resourcelist",
+                    "marcmap",
+                    "isxntool"
+                ]
             }
         }
     ]

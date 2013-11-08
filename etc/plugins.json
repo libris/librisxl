@@ -5,6 +5,10 @@
     "resourcelist": {
         "_class": "se.kb.libris.whelks.api.ResourceListRestlet"
     },
+    "definitiondata": {
+        "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
+        "_params": "/data/librisxl/def/"
+    },
     "marcmap": {
         "_class": "se.kb.libris.whelks.api.MarcMapRestlet"
     },
@@ -12,51 +16,20 @@
         "_class": "se.kb.libris.whelks.api.ISXNTool",
         "_params" : "_whelk:libris"
     },
-    "localindex": {
-        "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
-        "_params" : "work/data",
-        "_unique" : false
-    },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
         "_unique" : false
     },
     "cassandrastorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
-        "_params" : "application/ld+json",
-        "_priority" : 0
-    },
-    "diskstorage": {
-        "_class" : "se.kb.libris.whelks.component.DiskStorage",
-        "_params" : {
-            "storageDir": "work/storage/jsonld",
-            "contentType": "application/ld+json"
-        },
-        "_priority" : 1
-    },
-    "isostorage": {
-        "_class" : "se.kb.libris.whelks.component.DiskStorage",
-        "_params" : {
-            "storageDir": "work/storage/iso",
-            "contentType": "application/x-marc-json"
-        },
-        "_priority" : 2
-    },
-    "flatstorage": {
-        "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
-        "_params" : {
-            "storageDir": "work/storage/main",
-            "contentType": "application/ld+json"
-        },
-        "_priority" : 1
+        "_params" : "application/ld+json"
     },
     "graphstore": {
         "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
         "_params" : {
             "graphStoreUri": "http://localhost:8084/openrdf-sesame/repositories/dev-libris/rdf-graphs/service",
             "queryUri": "http://localhost:8084/openrdf-sesame/repositories/dev-libris/"
-        },
-        "_priority" : 0
+        }
     },
     "marcconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"
@@ -65,8 +38,7 @@
         "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter"
     },
     "entityextractor" : {
-        "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter",
-        "_priority" : 2
+        "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
     },
     "search" : {
         "_class" : "se.kb.libris.whelks.api.SearchRestlet",

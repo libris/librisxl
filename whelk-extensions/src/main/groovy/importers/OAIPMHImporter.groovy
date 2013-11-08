@@ -17,8 +17,11 @@ import se.kb.libris.conch.Tools
 @Log
 class OAIPMHImporter {
 
+    static SERVICE_BASE_URL = "http://data.libris.kb.se/"
+
     Whelk whelk
     String resource
+    String serviceUrl
     int nrImported = 0
     int nrDeleted = 0
     long startTime = 0
@@ -32,17 +35,19 @@ class OAIPMHImporter {
     File failedLog
     File exceptionLog
 
-    OAIPMHImporter(Whelk toWhelk, String fromResource) {
+    OAIPMHImporter(Whelk toWhelk, String fromResource, String serviceUrl=null) {
         failedLog = new File("failed_ids.log")
         exceptionLog = new File("exceptions.log")
         this.whelk = toWhelk
+        assert whelk
         this.resource = fromResource
+        this.serviceUrl = serviceUrl ?: SERVICE_BASE_URL + resource
     }
 
     int doImport(Date from = null, int nrOfDocs = -1, boolean picky = true) {
         getAuthentication()
         this.picky = picky
-        String urlString = "http://data.libris.kb.se/"+this.resource+"/oaipmh/?verb=ListRecords&metadataPrefix=marcxml"
+        String urlString =  serviceUrl + "/oaipmh/?verb=ListRecords&metadataPrefix=marcxml"
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
         }
@@ -53,7 +58,7 @@ class OAIPMHImporter {
         String resumptionToken = harvest(url)
         log.debug("resumptionToken: $resumptionToken")
         while (resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
-            url = new URL("http://data.libris.kb.se/" + this.resource + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken)
+            url = new URL(serviceUrl + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken)
             try {
                 String rtok = harvest(url)
                 resumptionToken = rtok

@@ -60,22 +60,23 @@ def relators():
 
 
 @dataset
-def languages():
+def languages(partition=True):
     source = cached_rdf('http://id.loc.gov/vocabulary/iso639-2')
 
-    data = {
+    basecontext = "/def/context/skos.jsonld"
+    langcontext = {
+        "@base": BASE,
+        "@language": "sv"
+    }
+    dataset = {
         '@context': [
-            "/def/context/skos.jsonld",
-            {
-                "langCode": {"@id": "notation", "@type": "dc:ISO639-2"},
-                "langTag": {"@id": "notation", "@type": "dc:ISO639-1"},
-                "byCode": {"@id": "@graph", "@container": "@index"},
-                "@base": BASE,
-                "@language": "sv"
-            }
+            basecontext,
+            dict(langcontext, byCode={"@id": "@graph", "@container": "@index"})
         ]
     }
-    data['byCode'] = items = {}
+
+    dataset['byCode'] = items = {}
+    subdocs = {}
 
     extras = load_data(scriptpath('../source/spraakkoder.tsv'))
 
@@ -84,29 +85,37 @@ def languages():
     for lang_concept in map(source.resource, source.subjects(RDF.type, SKOS.Concept)):
         code = unicode(lang_concept.value(SKOS.notation))
 
-        langobj = items[code] = {
+        summary = items[code] = {
             '@id': "/def/languages/%s" % code,
             '@type': 'Concept',
-            'langCode': code,
-            'matches': lang_concept.identifier
+            'langCode': code
         }
+        if partition:
+            subdoc = subdocs[code] = {"@context": [basecontext, langcontext]}
+            subdoc.update(summary)
+        else:
+            subdoc = summary
+        subdoc['matches'] = lang_concept.identifier
 
         langdef = deref(lang_concept.identifier)
         for variant in langdef[SKOS.exactMatch]:
             if variant.graph[variant.identifier : RDF.type : ISO639_1Lang]:
                 iso639_1 = variant.value(SKOS.notation)
-                langobj['langTag'] = iso639_1
+                subdoc['langTag'] = iso639_1
 
         for label in lang_concept[SKOS.prefLabel]:
             if label.language == 'en':
-                langobj['prefLabel_en'] = unicode(label)
+                subdoc['prefLabel_en'] = unicode(label)
                 break
 
         item = extras.get((code))
         if item:
-            langobj['prefLabel'] = item['label_sv']
+            summary['prefLabel'] = subdoc['prefLabel'] = item['label_sv']
 
-    return data
+    if partition:
+        return dataset, subdocs
+    else:
+        return dataset
 
 
 @dataset
@@ -261,32 +270,45 @@ def cached_rdf(fpath):
     return source.parse(fpath)
 
 
-def run(names, output, cache):
+def run(names, outdir, cache):
     global CACHEDIR
     if cache:
         CACHEDIR = cache
     for name in names:
         if len(names) > 1:
             print "Dataset:", name
+        resultset = {}
         data = datasets[name]()
-        result = _serialize(data)
-        if result and output:
-            outfile = os.path.join(output, "%s.jsonld" % name)
-            outdir = os.path.dirname(outfile)
-            if not os.path.isdir(outdir):
-                os.makedirs(outdir)
-            fp = open(outfile, 'w')
+        if isinstance(data, tuple):
+            data, subdocs = data
+            resultset = {}
+            resultset["%s/index" % name] = data
+            for subname, subdoc in subdocs.items():
+                resultset["%s/%s" % (name, subname)] = subdoc
         else:
-            fp = sys.stdout
-        try:
-            if result:
-                fp.write(result)
-            else:
-                print "N/A"
-            print
-        finally:
-            if fp is not sys.stdout:
-                fp.close()
+            resultset[name] = data
+        for name, data in resultset.items():
+            _output(name, data, outdir)
+        print
+
+def _output(name, data, outdir):
+    result = _serialize(data)
+    if result and outdir:
+        outfile = os.path.join(outdir, "%s.jsonld" % name)
+        outdir = os.path.dirname(outfile)
+        if not os.path.isdir(outdir):
+            os.makedirs(outdir)
+        fp = open(outfile, 'w')
+    else:
+        fp = sys.stdout
+    try:
+        if result:
+            fp.write(result)
+        else:
+            print "N/A"
+    finally:
+        if fp is not sys.stdout:
+            fp.close()
 
 def _serialize(data):
     if isinstance(data, (list, dict)):
@@ -302,15 +324,15 @@ if __name__ == '__main__':
     from optparse import OptionParser
     op = OptionParser("Usage: %prog [-h] [-o OUTPUT_DIR] [DATASET..]",
             description="Available datasets: " + ", ".join(datasets))
-    op.add_option('-o', '--output', type=str, help="Output directory")
+    op.add_option('-o', '--outdir', type=str, help="Output directory")
     op.add_option('-c', '--cache', type=str, help="Cache directory")
     opts, args = op.parse_args()
 
     if not args:
-        if opts.output:
+        if opts.outdir:
             args = list(datasets)
         else:
             op.print_usage()
             op.exit()
 
-    run(args, opts.output, opts.cache)
+    run(args, opts.outdir, opts.cache)

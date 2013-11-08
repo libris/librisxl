@@ -260,9 +260,7 @@ class MarcFixedFieldHandler {
             if (m) {
                 def start = m[0][1].toInteger()
                 def end = m[0][2].toInteger()
-                columns << new Column(
-                        domainEntity: obj.domainEntity, property: obj.property,
-                        start: start, end: end, defaultValue: obj['default'])
+                columns << new Column(obj, start, end, obj['default'])
             }
         }
     }
@@ -276,21 +274,21 @@ class MarcFixedFieldHandler {
         return success
     }
 
-    class Column {
-        String domainEntity
-        String property
+    class Column extends MarcSimpleFieldHandler {
         int start
         int end
         String defaultValue
+        Column(fieldDfn, start, end, defaultValue) {
+            super(null, fieldDfn)
+            this.start = start
+            this.end = end
+            this.defaultValue = defaultValue
+        }
         boolean convert(marcSource, value, entityMap) {
             def token = value.substring(start, end)
             if (token == " " || token == defaultValue)
                 return true
-            def entity = entityMap[domainEntity]
-            if (entity == null)
-                return false
-            entity[property] = token
-            return true
+            return super.convert(marcSource, token, entityMap)
         }
     }
 
@@ -342,20 +340,22 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
         domainEntityName = fieldDfn.domainEntity ?: 'Instance'
         dateTimeFormat = fieldDfn.parseDateTime
-        fieldDfn.get('ignored', false)
+        ignored = fieldDfn.get('ignored', false)
         link = fieldDfn.link
         rangeEntityName = fieldDfn.rangeEntity
         uriTemplate = fieldDfn.uriTemplate
     }
 
     boolean convert(marcSource, value, entityMap) {
-        if (ignored)
+        if (ignored || !(property || link))
             return
         if (dateTimeFormat) {
             value = Date.parse(dateTimeFormat, value).format("yyyy-MM-dd'T'HH:mm:ss.SZ")
         }
 
         def ent = entityMap[domainEntityName]
+        if (ent == null)
+            return false
         if (link) {
             ent = ent[link] = newEntity(rangeEntityName)
         }

@@ -1,0 +1,158 @@
+{
+  "@context": [
+    "/def/context/skos.jsonld",
+    {
+      "@base": "http://libris.kb.se/",
+      "@language": "sv",
+      "byNotation": {
+        "@container": "@index",
+        "@id": "@graph"
+      }
+    }
+  ],
+  "byNotation": {
+    "MeSH": {
+      "@type": "ConceptScheme",
+      "homepage": "http://www.nlm.nih.gov/mesh/meshhome.html",
+      "notation": "MeSH",
+      "seeAlso": "http://neurocommons.org/page/Bundles/mesh/mesh-skos",
+      "title_en": "Medical Subject Headings"
+    },
+    "agrovoc": {
+      "@type": "ConceptScheme",
+      "notation": "agrovoc"
+    },
+    "albt//swe": {
+      "@id": "/def/schemes/albt",
+      "@type": "ConceptScheme",
+      "notation": "albt//swe",
+      "title": "Arbetslivsbibliotekets tesaurus"
+    },
+    "barn": {
+      "@id": "/def/schemes/barn",
+      "@type": "ConceptScheme",
+      "notation": "barn"
+    },
+    "bnb": {
+      "@type": "ConceptScheme",
+      "notation": "bnb",
+      "title_en": "British National Bibliography"
+    },
+    "ddc": {
+      "@id": "http://dewey.info/scheme/ddc/",
+      "@type": "ConceptScheme",
+      "notation": "ddc"
+    },
+    "fao": {
+      "@type": "ConceptScheme",
+      "homepage": "http://agris.fao.org/?InfoT=Subject&Language=EN",
+      "notation": "fao"
+    },
+    "fiaf": {
+      "@type": "ConceptScheme",
+      "notation": "fiaf",
+      "title_en": "International Federation of Film Archives"
+    },
+    "gmgpc//swe": {
+      "@id": "/def/schemes/gmgpc",
+      "homepage": "http://www.kb.se/katalogisering/Svenska-amnesord/genrer-form/tesaurus/",
+      "notation": "gmgpc//swe",
+      "title": "Tesaurus för grafiskt material"
+    },
+    "kao": {
+      "@id": "/def/schemes/kao",
+      "@type": "ConceptScheme",
+      "hasVersion": {
+        "@id": "_:ub1bL50C19"
+      },
+      "homepage": "http://www.ub.gu.se/kvinn/kvinnsam/listor/",
+      "language": "sv",
+      "notation": "kao",
+      "title": "KVINNSAM"
+    },
+    "kao//eng": {
+      "language": "en",
+      "notation": "kao//eng"
+    },
+    "kssb": {
+      "@id": "/def/schemes/kssb",
+      "@type": "ConceptScheme",
+      "notation": "kssb",
+      "title": "SAB-klassifikation"
+    },
+    "lcsh": {
+      "@id": "http://id.loc.gov/authorities/subjects",
+      "@type": "ConceptScheme",
+      "notation": "lcsh"
+    },
+    "mipfesd": {
+      "@type": "ConceptScheme",
+      "notation": "mipfesd",
+      "title_en": "Marcrothesaurus for information processing in the field of economic and social development (OECD)"
+    },
+    "msc": {
+      "@type": "ConceptScheme",
+      "comment_en": "Providence, RI: American Mathematical Society",
+      "notation": "msc",
+      "title_en": "Mathematical subject classification"
+    },
+    "prvt": {
+      "@id": "/def/schemes/prvt",
+      "@type": "ConceptScheme",
+      "notation": "prvt",
+      "title": "Patent- och registreringsverkets tesaurus"
+    },
+    "rswk": {
+      "@type": "ConceptScheme",
+      "homepage": "http://deposit.ddb.de/ep/netpub/89/96/96/967969689/_data_stat/www.dbi-berlin.de/dbi_pub/einzelpu/regelw/rswk/rswk_00.htm",
+      "notation": "rswk",
+      "title": {
+        "@language": "de",
+        "@value": "Regeln für den Schlagwortkatalog (Deutsches Bibliotheksinstitut)"
+      }
+    },
+    "sao": {
+      "@id": "/def/schemes/sao",
+      "@type": "ConceptScheme",
+      "notation": "sao"
+    },
+    "saogf": {
+      "@id": "/def/schemes/saogf",
+      "@type": "ConceptScheme",
+      "notation": "saogf"
+    },
+    "sbiao": {
+      "@id": "/def/schemes/sbiao",
+      "@type": "ConceptScheme",
+      "homepage": "http://www.sbi.kb.se/sv/Biblioteket/Soka/Amnesordsindex/Teoretiska-amnesord/",
+      "notation": "sbiao",
+      "title": "Svenska barnboksinstitutets ämnesordsindex för teoretisk litteratur"
+    },
+    "sfit": {
+      "@id": "/def/schemes/sfit",
+      "@type": "ConceptScheme",
+      "notation": "sfit",
+      "title": "Svenska filminstitutets tesaurus"
+    },
+    "sgp": {
+      "@id": "/def/schemes/sgp",
+      "@type": "ConceptScheme",
+      "homepage": "http://www.kb.se/katalogisering/Svenska-amnesord/genrer-form/tidskrifter/",
+      "notation": "sgp",
+      "title": "Svenska genrebeteckningar för periodika"
+    },
+    "shbe": {
+      "@id": "/def/schemes/shbe",
+      "@type": "ConceptScheme",
+      "comment": "Handelshögskolans i Stockholm bibliotek",
+      "notation": "shbe",
+      "title_en": "Subject headings in business and economics"
+    },
+    "sipri": {
+      "@type": "ConceptScheme",
+      "homepage": "http://www.sipri.org/library/thesaurus/thesaurus.html/",
+      "notation": "sipri",
+      "title_en": "SIPRI Library thesaurus"
+    }
+  }
+}

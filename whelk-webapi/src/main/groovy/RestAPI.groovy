@@ -743,13 +743,21 @@ class DefinitionDataRestlet extends Directory implements RestAPI {
     void init(String w) {}
 
     DefinitionDataRestlet(String fileRoot) {
-        super(null, fileRoot)
+        super(null, toAbsoluteFileUri(fileRoot) as String)
     }
 
-    DefinitionDataRestlet(Whelk whelk, String fileRoot) {
-        super(null, whelk.fileBaseUri.resolve(fileRoot) as String)
-        this.whelk = whelk
+    static URI toAbsoluteFileUri(String path) {
+        if (path.indexOf(":") == -1) {
+            path = path.startsWith("/")? path :
+                    System.getProperty("user.dir") + "/" + path
+            path = "file://" + path
+        }
+        if (!path.endsWith("/")) {
+            path += "/"
+        }
+        return new URI(path)
     }
+
 }
 
 
