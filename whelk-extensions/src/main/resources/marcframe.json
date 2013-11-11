@@ -93,7 +93,11 @@
       "repeatedBy": "006",
       "[7:11]": {"propId": "yearTime1"},
       "[11:15]": {"propId": "yearTime2"},
-      "[35:38]": {"domainEntity": "Work", "link": "language", "uriTemplate": "/def/language/{_}"},
+      "[35:38]": {
+        "domainEntity": "Work",
+        "link": "language",
+        "uriTemplate": "/def/languages/{_}"
+      },
 
       "0+6": {"range": "date"},
       "publicationStatus": {"dateTypeFor": "008.0+6"},
