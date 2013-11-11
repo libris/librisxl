@@ -129,7 +129,7 @@
     "documentapi" : {
         "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
     },
-    "nameexpander" : {
+    "completeexpander" : {
         "_class" : "se.kb.libris.whelks.api.CompleteExpander"
     },
     "biblistener" : {

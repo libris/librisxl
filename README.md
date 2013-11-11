@@ -95,8 +95,8 @@ If you are serving the Web API using Tomcat, you may be able to define these (vi
 
 First set up configuration of it:
 
-    $ cp whelk-extensions/src/main/resources/whelks-core.properties.in whelk-extensions/src/main/resources/whelks-core.properties
-    $ vim whelk-extensions/src/main/resources/whelks-core.properties # ... (ask for directions)
+    $ cp whelk-extensions/src/main/resources/oaipmh.properties.in whelk-extensions/src/main/resources/oaipmh.properties
+    $ vim whelk-extensions/src/main/resources/oaipmh.properties # ... (ask for directions)
 
 ### Perform whelk operations
 

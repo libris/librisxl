@@ -503,21 +503,19 @@ class ISXNTool extends BasicWhelkAPI {
 class CompleteExpander extends BasicWhelkAPI {
     def pathEnd = "_expand"
     String id = "CompleteExpander"
-    String description = "Provides useful information about person autorities."
+    String description = "Provides useful information about authorities."
 
     void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        String type = querymap.get("type")
         String url = querymap.get("id")
-        String name = querymap.get("name")
-        if (url) {
-            def r = whelk.search(new ElasticQuery(url).addField("_id"))
-        } else if (name) {
-            def r = whelk.search(new ElasticQuery("about.instanceOf.authorList.authorizedAccessPoint.untouched", name).withType("bib"))
-            //def r = whelk.search(new ElasticQuery("internalRemark.untouched", name).withType("bib"))
-            response.setEntity(r.toJson(), MediaType.APPLICATION_JSON)
+        def result
+        if (type && url) {
+            result = whelk.search(new ElasticQuery(url).addField("about.instanceOf.creator.@id").addField("about.instanceOf.contributorList.@id"))
         } else {
-            response.setEntity('{"error":"Parameter \"id\" is missing."}', MediaType.APPLICATION_JSON)
+            response.setEntity('{"error":"Parameter \"type\" and/or \"id\" are missing."}', MediaType.APPLICATION_JSON)
         }
+        response.setEntity(result.toJson(["about.title.titleValue", "originalCatalogingAgency.name"]), MediaType.APPLICATION_JSON)
     }
 }
 
