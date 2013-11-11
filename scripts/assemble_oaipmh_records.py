@@ -7,7 +7,7 @@ import os
 baseurl = 'http://data.libris.kb.se/{rectype}/oaipmh/?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/{record}'
 
 args = argv[1:]
-auth = tuple(args.pop(0).split(':'))
+name, passwd = args.pop(0).split(':')
 
 if args[0].endswith('.tsv'):
     records = []
@@ -25,12 +25,11 @@ def make_root():
     root = etree.Element('OAI-PMH', nsmap={None: "http://www.openarchives.org/OAI/2.0/"})
     etree.SubElement(root, 'responseDate').text = "1970-01-01T00:00:00Z"
     etree.SubElement(root, 'request', attrib=dict(
-    verb="ListRecords",
-    resumptionToken="null|2001-12-11T23:00:00Z|107000|null|null|marcxml",
-    metadataPrefix="marcxml"
-    )).text = "http://data.libris.kb.se/auth/oaipmh"
+        verb="ListRecords",
+        resumptionToken="null|2001-12-11T23:00:00Z|107000|null|null|marcxml",
+        metadataPrefix="marcxml"
+        )).text = "http://data.libris.kb.se/auth/oaipmh"
     return root
-
 
 partitions = {}
 for record in records:
@@ -42,7 +41,7 @@ for record in records:
                 etree.SubElement(root, 'ListRecords'))
     root, reclist = partitions[rectype]
     url = baseurl.format(**vars())
-    res = requests.get(url, auth=auth, stream=True)
+    res = requests.get(url, auth=(name, passwd), stream=True)
     record_root = etree.parse(res.raw)
     record_data = record_root.find('/*/*')
     if record_data is None:

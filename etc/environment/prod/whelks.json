@@ -12,6 +12,7 @@
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
+                    "linkenhancer",
                     "jsonldlinkfinder",
                     "completeexpander"
                 ],
