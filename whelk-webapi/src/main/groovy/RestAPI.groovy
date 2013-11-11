@@ -505,19 +505,17 @@ class CompleteExpander extends BasicWhelkAPI {
     String id = "CompleteExpander"
     String description = "Provides useful information about authorities."
 
-    //TODO: in param: auth-id, search for matches in type (=bib)
-
     void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
         String type = querymap.get("type")
         String url = querymap.get("id")
         def result
         if (type && url) {
-            result = whelk.search(new ElasticQuery(url).addField("about.instanceOf.creator.@id", "about.instanceOf.contributorList.@id"))
+            result = whelk.search(new ElasticQuery(url).addField("about.instanceOf.creator.@id").addField("about.instanceOf.contributorList.@id"))
         } else {
-            response.setEntity('{"error":"Parameter \"type\" and/or \"id\" is missing."}', MediaType.APPLICATION_JSON)
+            response.setEntity('{"error":"Parameter \"type\" and/or \"id\" are missing."}', MediaType.APPLICATION_JSON)
         }
-        response.setEntity(result.toJson(), MediaType.APPLICATION_JSON)
+        response.setEntity(result.toJson(["about.title.titleValue", "originalCatalogingAgency.name"]), MediaType.APPLICATION_JSON)
     }
 }
 
