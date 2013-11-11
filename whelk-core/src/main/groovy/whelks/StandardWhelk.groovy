@@ -96,7 +96,7 @@ class StandardWhelk implements Whelk {
 
     @Override
     SearchResult search(Query query) {
-        return indexes.get(0)?.query(query, this.id)
+        return indexes.get(0)?.query(query)
     }
 
     Document sanityCheck(Document d) {
@@ -119,7 +119,7 @@ class StandardWhelk implements Whelk {
             }
             if (idxDocs) {
                 for (idx in indexes) {
-                    idx.bulkIndex(idxDocs, this.id)
+                    idx.bulkIndex(idxDocs)
                 }
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
@@ -214,7 +214,10 @@ class StandardWhelk implements Whelk {
         long startTime = System.currentTimeMillis()
         List<Document> docs = []
         boolean indexing = !startAt
-        log.debug("Indexing is $indexing")
+        log.debug("Requesting new index.")
+        for (index in indexes) {
+            index.createNewCurrentIndex()
+        }
         for (doc in loadAll(fromStorage)) {
             if (startAt && doc.identifier == startAt) {
                 log.info("Found document with identifier ${startAt}. Starting to index ...")
@@ -240,6 +243,9 @@ class StandardWhelk implements Whelk {
             addToIndex(docs)
         }
         log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
+        for (index in indexes) {
+            index.reMapAliases()
+        }
     }
 
     @Override

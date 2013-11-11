@@ -109,17 +109,47 @@ abstract class ElasticSearch extends BasicPlugin {
     String URI_SEPARATOR = "::"
 
     String defaultIndexType = "record"
+    String elasticIndex
+    String currentIndex
 
     def defaultMapping, es_settings
 
     @Override
     void init(String indexName) {
-        if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
-            log.info("Creating index ...")
-            es_settings = loadJson("es_settings.json")
-            performExecute(client.admin().indices().prepareCreate(indexName).setSettings(es_settings))
-            setTypeMapping(indexName, defaultIndexType)
+        this.elasticIndex = indexName
+        // client.admin().indices().prepareAliases().addAlias("my_index", "my_alias").removeAlias("my_old_index", "my_alias").execute().actionGet();
+        if (!performExecute(client.admin().indices().prepareExists(elasticIndex)).exists) {
+            createNewCurrentIndex()
+            log.debug("Will create alias $elasticIndex -> $currentIndex")
+            performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, elasticIndex))
+        } else {
+            this.currentIndex = getRealIndexFor(elasticIndex)
+            log.info("Using currentIndex: $currentIndex")
+            if (this.currentIndex == null) {
+                throw new WhelkRuntimeException("Unable to find a real current index for $elasticIndex")
+            }
         }
+    }
+
+    String getRealIndexFor(String alias) {
+        def aliases = performExecute(client.admin().cluster().prepareState()).state.metaData.aliases()
+        log.debug("aliases: $aliases")
+        return aliases[alias]?.keySet().iterator().next()
+    }
+
+    void createNewCurrentIndex() {
+        log.info("Creating index ...")
+        es_settings = loadJson("es_settings.json")
+        this.currentIndex = "${elasticIndex}-" + new Date().format("yyyyMMdd.HHmmss")
+        log.debug("Will create index $currentIndex.")
+        performExecute(client.admin().indices().prepareCreate(currentIndex).setSettings(es_settings))
+        setTypeMapping(currentIndex, defaultIndexType)
+    }
+
+    void reMapAliases() {
+        def oldIndex = getRealIndexFor(elasticIndex)
+        log.debug("Resetting alias \"$elasticIndex\" from \"$oldIndex\" to \"$currentIndex\".")
+        performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, elasticIndex).removeAlias(oldIndex, elasticIndex))
     }
 
     def loadJson(file) {
@@ -137,31 +167,31 @@ abstract class ElasticSearch extends BasicPlugin {
         log.debug("Deleting object with identifier $uri")
         def delQuery = termsQuery("_id", translateIdentifier(uri.toString()))
         log.debug("DelQuery: $delQuery")
-        performExecute(client.prepareDeleteByQuery(indexName).setQuery(delQuery))
+        performExecute(client.prepareDeleteByQuery(elasticIndex).setQuery(delQuery))
     }
 
     @Override
-    void index(IndexDocument doc, String indexName) {
+    void index(IndexDocument doc) {
         if (doc) {
-            addDocument(doc, indexType, indexName)
+            addDocument(doc)
         }
     }
 
     @Override
-    void bulkIndex(Iterable<IndexDocument> doc, String indexName) {
-        addDocuments(doc, indexName)
+    void bulkIndex(Iterable<IndexDocument> doc) {
+        addDocuments(doc)
     }
 
     @Override
-    SearchResult query(Query q, String indexName) {
+    SearchResult query(Query q) {
         def indexType = null
         if (q instanceof ElasticQuery) {
             indexType = q.indexType
         }
-        return query(q, indexName, indexType)
+        return query(q, elasticIndex, indexType)
     }
 
-SearchResult query(Query q, String indexName, String indexType) {
+    SearchResult query(Query q, String indexName, String indexType) {
         log.debug "Querying index $indexName and indextype $indexType"
         log.trace "Doing query on $q"
         def idxlist = [indexName]
@@ -310,12 +340,12 @@ SearchResult query(Query q, String indexName, String indexType) {
         return idxType
     }
 
-    void addDocument(IndexDocument doc, String indexName) {
-        addDocuments([doc], indexName)
+    void addDocument(IndexDocument doc) {
+        addDocuments([doc])
     }
 
 
-    void addDocuments(documents, indexName) {
+    void addDocuments(documents) {
         try {
             if (documents) {
                 def breq = client.prepareBulk()
@@ -329,10 +359,10 @@ SearchResult query(Query q, String indexName, String indexType) {
                         def indexType = determineDocumentType(doc)
                         def checked = indexType in checkedTypes
                         if (!checked) {
-                            checkTypeMapping(indexName, indexType)
+                            checkTypeMapping(currentIndex, indexType)
                             checkedTypes << indexType
                         }
-                        breq.add(client.prepareIndex(indexName, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
+                        breq.add(client.prepareIndex(currentIndex, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
                     }
                 }
                 def response = performExecute(breq)
