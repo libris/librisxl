@@ -134,7 +134,11 @@ abstract class ElasticSearch extends BasicPlugin {
     String getRealIndexFor(String alias) {
         def aliases = performExecute(client.admin().cluster().prepareState()).state.metaData.aliases()
         log.debug("aliases: $aliases")
-        return aliases[alias]?.keySet().iterator().next()
+        def ri
+        if (aliases.containsKey(alias)) {
+            ri = aliases[alias]?.keySet().iterator().next()
+        }
+        return (ri ? ri : alias)
     }
 
     void createNewCurrentIndex() {
