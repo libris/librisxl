@@ -13,7 +13,7 @@
                     "turtleconverter",
                     "entityextractor",
                     "jsonldlinkfinder",
-                    "nameexpander"
+                    "completeexpander"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
