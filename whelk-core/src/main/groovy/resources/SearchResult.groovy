@@ -54,7 +54,7 @@ class SearchResult {
         return jsonString.toString()
     }
 
-    String toJson(List keys) {
+    Map toMap(List keys) {
         def result = [:]
         result['hits'] = numberOfHits
         result['list'] = []
@@ -70,6 +70,11 @@ class SearchResult {
         if (facets) {
             result['facets'] = facets
         }
+        return result
+    }
+
+    String toJson(List keys) {
+        def result = toMap(keys)
         return mapper.writeValueAsString(result)
     }
 
