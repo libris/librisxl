@@ -501,21 +501,45 @@ class ISXNTool extends BasicWhelkAPI {
 
 @Log
 class CompleteExpander extends BasicWhelkAPI {
-    def pathEnd = "_expand"
+    def pathEnd = "_expand/{identifier}"
     String id = "CompleteExpander"
     String description = "Provides useful information about authorities."
 
+    def varPath = false
+
     void doHandle(Request request, Response response) {
-        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        String type = querymap.get("type")
-        String url = querymap.get("id")
-        def result
-        if (type && url) {
-            result = whelk.search(new ElasticQuery(url).addField("about.instanceOf.creator.@id").addField("about.instanceOf.contributorList.@id"))
-        } else {
-            response.setEntity('{"error":"Parameter \"type\" and/or \"id\" are missing."}', MediaType.APPLICATION_JSON)
+        def identifier
+        def resultMap
+        def mapper = new ObjectMapper()
+        try {
+            identifier = request.attributes.indexType
+        } catch(Exception e) {
+            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, MediaType.TEXT_PLAIN)
         }
-        response.setEntity(result.toJson(["about.title.titleValue", "originalCatalogingAgency.name"]), MediaType.APPLICATION_JSON)
+        def result, relator, authDoc
+        authDoc = whelk.get(new URI(identifier))
+        def authDataMap = authDoc.getDataAsMap()
+        if (authDataMap.about.@type == "person") {
+                result = whelk.search(new ElasticQuery("/resource/" + identifier).addField("about.instanceOf.creator.@id").addFacet("about.@type"))
+                relator = "creator"
+                if (result.numberOfHits == 0) {
+                    result = whelk.search(new ElasticQuery("/resource/" + identifier).addField("about.instanceOf.contributorList.@id").addFacet("about.@type"))
+                    relator = "contributor"
+                }
+                resultMap = result.toMap(["about.@type", "about.title.titleValue", "originalCatalogingAgency.name", "function", "exampleTitle"])
+                resultMap.list.eachWithIndex() { r, i ->
+                    if (resultMap.list[i].get("data", null)) {
+                        resultMap.list[i].data["function"] = relator
+                        //TODO: number of holds
+                        if (relator.equals("creator")) {
+                            resultMap["extraKnowledge"] = ["exampleTitle" : resultMap.list[i].data.about.title.titleValue]
+                        }
+                    }
+                }
+        }  else if (authDataMap.about.@type == "concept") {
+
+        }
+        response.setEntity(mapper.writeValueAsString(resultMap), MediaType.APPLICATION_JSON)
     }
 }
 
