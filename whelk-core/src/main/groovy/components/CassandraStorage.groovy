@@ -152,7 +152,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
         log.debug("Operation result size: ${res.size()}")
 
         if (res.size() > 0) {
-            log.debug("Digging up a document with identifier $uri from storage.")
+            log.debug("Digging up a document with identifier $uri from ${this.id}.")
                 return new Document()
                 .withIdentifier(res.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
                 .withData(res.getColumnByName(COL_NAME_DATA).getByteArrayValue())
