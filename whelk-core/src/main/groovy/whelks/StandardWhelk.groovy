@@ -60,8 +60,8 @@ class StandardWhelk implements Whelk {
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs) {
         boolean stored = false
-        for (storage in storages) {
-            for (doc in docs) {
+        for (doc in docs) {
+            for (storage in storages) {
                 try {
                     stored = (storage.store(doc) || stored)
                 } catch (Exception e) {
@@ -74,7 +74,7 @@ class StandardWhelk implements Whelk {
         addToIndex(docs)
 
         if (!stored) {
-            throw new WhelkAddException("No suitable storage found for content-type ${docs[0]?.contentType}.", docs*.identifier)
+            throw new WhelkAddException("No suitable storage found.", docs*.identifier)
         }
     }
 
@@ -96,7 +96,7 @@ class StandardWhelk implements Whelk {
 
     @Override
     SearchResult search(Query query) {
-        return indexes.get(0)?.query(query, this.id)
+        return indexes.get(0)?.query(query)
     }
 
     Document sanityCheck(Document d) {
@@ -119,7 +119,7 @@ class StandardWhelk implements Whelk {
             }
             if (idxDocs) {
                 for (idx in indexes) {
-                    idx.bulkIndex(idxDocs, this.id)
+                    idx.bulkIndex(idxDocs)
                 }
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
@@ -188,11 +188,9 @@ class StandardWhelk implements Whelk {
             doc = performStorageFormatConversion(doc)
             log.trace("Document ${doc.identifier} has undergone formatconversion.")
         }
-        if (doc) {
-            for (lf in linkFinders) {
-                for (link in lf.findLinks(doc)) {
-                    doc = doc.withLink(link.identifier.toString(), link.type)
-                }
+        for (lf in linkFinders) {
+            for (link in lf.findLinks(doc)) {
+                doc = doc.withLink(link.identifier.toString(), link.type)
             }
         }
         log.debug("Returning document ${doc.identifier} (${doc.contentType})")
@@ -209,13 +207,18 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    void reindex(String fromStorage = null, String startAt = null) {
+    void reindex(String dataset = null, String startAt = null) {
         int counter = 0
         long startTime = System.currentTimeMillis()
         List<Document> docs = []
         boolean indexing = !startAt
-        log.debug("Indexing is $indexing")
-        for (doc in loadAll(fromStorage)) {
+        if (dataset) {
+            log.debug("Requesting new index.")
+            for (index in indexes) {
+                index.createNewCurrentIndex()
+            }
+        }
+        for (doc in loadAll(dataset)) {
             if (startAt && doc.identifier == startAt) {
                 log.info("Found document with identifier ${startAt}. Starting to index ...")
                 indexing = true
@@ -240,6 +243,11 @@ class StandardWhelk implements Whelk {
             addToIndex(docs)
         }
         log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
+        if (dataset) {
+            for (index in indexes) {
+                index.reMapAliases()
+            }
+        }
     }
 
     @Override

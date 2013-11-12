@@ -50,7 +50,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
         log.debug("Setting up context.")
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
         .forCluster(cassandra_cluster)
-        .forKeyspace(whelkName)
+        .forKeyspace(whelkName+"_"+this.id)
         .withAstyanaxConfiguration(
             new AstyanaxConfigurationImpl()
             .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
@@ -105,33 +105,32 @@ class CassandraStorage extends BasicPlugin implements Storage {
         this.requiredContentType = rct
     }
 
-
     @Override
     boolean store(Document doc) {
         log.debug("Received document ${doc.identifier} with contenttype ${doc.contentType}")
-            if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
-                MutationBatch m = keyspace.prepareMutationBatch()
-                String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
-                log.debug("Saving document ${doc.identifier} with dataset $dataset")
-                m.withRow(CF_DOCUMENT, doc.identifier)
-                .putColumn(COL_NAME_IDENTIFIER , doc.identifier)
-                .putColumn(COL_NAME_DATA, new String(doc.data, "UTF-8"), null)
-                .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
-                .putColumn(COL_NAME_DATASET, dataset, null)
-                try {
-                    def result = m.execute()
-                } catch (ConnectionException ce) {
-                    log.error("Connection failed", ce)
-                    return false
-                }
-                return true
-            } else {
-                if (!doc) {
-                    log.warn("Received null document. No attempt to store.")
-                } else if (log.isDebugEnabled()) {
-                    log.debug("This storage does not handle document with type ${doc.contentType}")
-                }
+        if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
+            MutationBatch m = keyspace.prepareMutationBatch()
+            String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
+            log.debug("Saving document ${doc.identifier} with dataset $dataset")
+            m.withRow(CF_DOCUMENT, doc.identifier)
+            .putColumn(COL_NAME_IDENTIFIER , doc.identifier)
+            .putColumn(COL_NAME_DATA, new String(doc.data, "UTF-8"), null)
+            .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
+            .putColumn(COL_NAME_DATASET, dataset, null)
+            try {
+                def result = m.execute()
+            } catch (ConnectionException ce) {
+                log.error("Connection failed", ce)
+                return false
             }
+            return true
+        } else {
+            if (!doc) {
+                log.warn("Received null document. No attempt to store.")
+            } else if (log.isDebugEnabled()) {
+                log.debug("This storage (${this.id}) does not handle document with type ${doc.contentType}. Not saving ${doc.identifier}")
+            }
+        }
         return false
     }
 

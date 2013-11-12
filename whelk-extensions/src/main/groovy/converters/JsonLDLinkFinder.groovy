@@ -14,7 +14,10 @@ class JsonLDLinkFinder extends BasicPlugin implements LinkFinder {
 
     @Override
     Set<Link> findLinks(Document doc) {
-        def links = collectIds(doc.dataAsMap, "", doc.identifier)
+        def links = []
+        if (doc && (doc.contentType == "application/json" || doc.contentType == "application/ld+json")) {
+            links = collectIds(doc.dataAsMap, "", doc.identifier)
+        }
         return links as Set
     }
 

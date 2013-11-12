@@ -83,6 +83,7 @@ class OAIPMHImporter {
         }
         def documents = []
         OAIPMH.ListRecords.record.each {
+            def rawrecord = createString(it)
             def mdrecord = createString(it.metadata.record)
             if (mdrecord) {
                 MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
@@ -107,18 +108,21 @@ class OAIPMHImporter {
                         }
                     }
                 }
-                def doc
+                def doc, rawdoc
                 try {
-                    doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":"/"+this.resource+"/"+id,"contentType":"application/x-marc-json"], ["links": links])
+                    rawdoc = whelk.createDocument(rawrecord.getBytes("UTF-8"), ["identifier":"/"+this.resource+"/"+id,"dataset":this.resource,"contentType":"text/xml"], null, false)
+                    doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":"/"+this.resource+"/"+id,"dataset":this.resource,"contentType":"application/x-marc-json"], ["links": links])
                     documents << doc
+                    documents << rawdoc
                     nrImported++
+                    sizeOfBatch++
                     def velocityMsg = ""
                     if (sizeOfBatch && meanTime) {
                         velocityMsg = "Current velocity: " + (1000*(sizeOfBatch / (System.currentTimeMillis() - meanTime))) + " docs/second."
                     }
                     Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                 } catch (Exception e) {
-                    log.error("Failed! (${e.message}) for :\n$mdrecord")
+                    log.error("Failed! (${e.message}) for :\n$mdrecord", e)
                     if (picky) {
                         log.error("Picky mode enable. Throwing exception", e)
                         throw e
@@ -136,10 +140,9 @@ class OAIPMHImporter {
                 throw new WhelkRuntimeException("Failed to handle record: " + createString(it))
             }
         }
-        sizeOfBatch = documents.size()
         meanTime = System.currentTimeMillis()
         addDocuments(documents)
-
+        sizeOfBatch = 0
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
             log.trace("Last page is $xmlString")
