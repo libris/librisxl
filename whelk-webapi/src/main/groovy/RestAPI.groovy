@@ -343,7 +343,7 @@ class FieldSearchRestlet extends BasicWhelkAPI {
 @Log
 class SearchRestlet extends BasicWhelkAPI {
     def pathEnd = "{indexType}/_search"
-    def varPath = false
+    def varPath = true
     String id = "Search"
     String description = "Generic search query API. User parameters \"q\" for querystring, and optionally \"facets\" and \"boost\"."
     def config
@@ -501,7 +501,9 @@ class ISXNTool extends BasicWhelkAPI {
 
 @Log
 class CompleteExpander extends BasicWhelkAPI {
-    def pathEnd = "_expand"
+    def pathEnd = "_expand/{identifier}"
+    def varPath = true
+
     String id = "CompleteExpander"
     String description = "Provides useful information about authorities."
 

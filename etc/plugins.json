@@ -27,7 +27,7 @@
     "oaipmhstorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : {
-            "requiredContentType":"text/xml",
+            "requiredContentType":"text/oaipmh+xml",
             "keyspaceSuffix":"_oaipmhstorage"
         }
     },

@@ -44,7 +44,7 @@ class RestManager extends Application {
         log.debug("Looking for suitable APIs to attach")
 
         def sortedWhelks = whelks.sort { -it.contentRoot?.length() }
-        
+
         sortedWhelks.each {
             if (it instanceof HttpWhelk) {
                 def rapi = new RootRouteRestlet(it)
