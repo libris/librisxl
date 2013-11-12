@@ -24,6 +24,13 @@
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : "application/ld+json"
     },
+    "oaipmhstorage": {
+        "_class" : "se.kb.libris.whelks.component.CassandraStorage",
+        "_params" : {
+            "requiredContentType":"text/oaipmh+xml",
+            "keyspaceSuffix":"_oaipmhstorage"
+        }
+    },
     "graphstore": {
         "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
         "_params" : {
