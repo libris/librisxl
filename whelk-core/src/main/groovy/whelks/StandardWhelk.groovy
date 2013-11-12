@@ -60,8 +60,8 @@ class StandardWhelk implements Whelk {
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs) {
         boolean stored = false
-        for (storage in storages) {
-            for (doc in docs) {
+        for (doc in docs) {
+            for (storage in storages) {
                 try {
                     stored = (storage.store(doc) || stored)
                 } catch (Exception e) {
@@ -74,7 +74,7 @@ class StandardWhelk implements Whelk {
         addToIndex(docs)
 
         if (!stored) {
-            throw new WhelkAddException("No suitable storage found for content-type ${docs[0]?.contentType}.", docs*.identifier)
+            throw new WhelkAddException("No suitable storage found.", docs*.identifier)
         }
     }
 
@@ -188,11 +188,9 @@ class StandardWhelk implements Whelk {
             doc = performStorageFormatConversion(doc)
             log.trace("Document ${doc.identifier} has undergone formatconversion.")
         }
-        if (doc) {
-            for (lf in linkFinders) {
-                for (link in lf.findLinks(doc)) {
-                    doc = doc.withLink(link.identifier.toString(), link.type)
-                }
+        for (lf in linkFinders) {
+            for (link in lf.findLinks(doc)) {
+                doc = doc.withLink(link.identifier.toString(), link.type)
             }
         }
         log.debug("Returning document ${doc.identifier} (${doc.contentType})")
