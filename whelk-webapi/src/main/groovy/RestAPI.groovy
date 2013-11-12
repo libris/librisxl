@@ -24,6 +24,7 @@ import org.codehaus.jackson.map.*
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 
+
 interface RestAPI extends API {
     String getPath()
 }
@@ -202,7 +203,8 @@ class DocumentRestlet extends BasicWhelkAPI {
     }
 
     void doHandle(Request request, Response response) {
-        log.debug("reqattr path: " + request.attributes["identifier"])
+        log.debug("DocumentAPI request with path: $path and pathEnd: $pathEnd Whelk contentroot: ${this.whelk.contentRoot}")
+        log.debug("Identifier: " + request.attributes["identifier"])
         String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["identifier"])
         log.debug "Path: $path"
         def mode = DisplayMode.DOCUMENT
@@ -504,15 +506,14 @@ class CompleteExpander extends BasicWhelkAPI {
     def pathEnd = "_expand/{identifier}"
     String id = "CompleteExpander"
     String description = "Provides useful information about authorities."
-
-    def varPath = false
+    def varPath = true
 
     void doHandle(Request request, Response response) {
         def identifier
         def resultMap
         def mapper = new ObjectMapper()
         try {
-            identifier = request.attributes.indexType
+            identifier = request.attributes.identifier
         } catch(Exception e) {
             response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, MediaType.TEXT_PLAIN)
         }
