@@ -23,6 +23,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     Keyspace keyspace
     String requiredContentType
+    String keyspaceSuffix = ""
 
     final String CF_DOCUMENT_NAME = "document"
     final String COL_NAME_IDENTIFIER = "identifier"
@@ -50,7 +51,9 @@ class CassandraStorage extends BasicPlugin implements Storage {
         log.debug("Setting up context.")
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
         .forCluster(cassandra_cluster)
-        .forKeyspace(whelkName+"_"+this.id)
+        // TODO: Replace keyspaceSuffix with id-based suffix
+        //.forKeyspace(whelkName+"_"+this.id)
+        .forKeyspace(whelkName+keyspaceSuffix)
         .withAstyanaxConfiguration(
             new AstyanaxConfigurationImpl()
             .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
@@ -103,6 +106,13 @@ class CassandraStorage extends BasicPlugin implements Storage {
     CassandraStorage() {}
     CassandraStorage(String rct) {
         this.requiredContentType = rct
+    }
+    /**
+     * TODO: Replace this with id-based keyspacesuffixing
+     */
+    CassandraStorage(Map settings) {
+        this.requiredContentType = settings.get("requiredContentType", null)
+        this.keyspaceSuffix = settings.get("keyspaceSuffix", "")
     }
 
     @Override

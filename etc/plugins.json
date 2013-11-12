@@ -26,7 +26,10 @@
     },
     "oaipmhstorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
-        "_params" : "text/xml"
+        "_params" : {
+            "requiredContentType":"text/xml",
+            "keyspaceSuffix":"_oaipmhstorage"
+        }
     },
     "graphstore": {
         "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
