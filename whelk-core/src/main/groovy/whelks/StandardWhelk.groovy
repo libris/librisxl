@@ -209,16 +209,18 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    void reindex(String fromStorage = null, String startAt = null) {
+    void reindex(String dataset = null, String startAt = null) {
         int counter = 0
         long startTime = System.currentTimeMillis()
         List<Document> docs = []
         boolean indexing = !startAt
-        log.debug("Requesting new index.")
-        for (index in indexes) {
-            index.createNewCurrentIndex()
+        if (dataset) {
+            log.debug("Requesting new index.")
+            for (index in indexes) {
+                index.createNewCurrentIndex()
+            }
         }
-        for (doc in loadAll(fromStorage)) {
+        for (doc in loadAll(dataset)) {
             if (startAt && doc.identifier == startAt) {
                 log.info("Found document with identifier ${startAt}. Starting to index ...")
                 indexing = true
@@ -243,8 +245,10 @@ class StandardWhelk implements Whelk {
             addToIndex(docs)
         }
         log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-        for (index in indexes) {
-            index.reMapAliases()
+        if (dataset) {
+            for (index in indexes) {
+                index.reMapAliases()
+            }
         }
     }
 
