@@ -7,6 +7,7 @@
                     "localindex",
                     "flatstorage",
                     "search",
+                    "completeexpander",
                     "sparqlapi",
                     "remotesearch",
                     "documentapi",
@@ -14,8 +15,7 @@
                     "turtleconverter",
                     "entityextractor",
                     "linkenhancer",
-                    "jsonldlinkfinder",
-                    "completeexpander"
+                    "jsonldlinkfinder"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"

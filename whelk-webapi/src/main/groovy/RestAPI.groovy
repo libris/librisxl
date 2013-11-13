@@ -520,11 +520,12 @@ class CompleteExpander extends BasicWhelkAPI {
         def result, relator, authDoc
         authDoc = whelk.get(new URI(identifier))
         def authDataMap = authDoc.getDataAsMap()
-        if (authDataMap.about.@type == "person") {
-                result = whelk.search(new ElasticQuery("/resource/" + identifier).addField("about.instanceOf.creator.@id").addFacet("about.@type"))
+        def idQuery = "\\/resource\\/" + identifier.replace("/", "\\/")
+        if (authDataMap.about."@type" == "Person") {
+                result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.creator.@id").addFacet("about.@type"))
                 relator = "creator"
                 if (result.numberOfHits == 0) {
-                    result = whelk.search(new ElasticQuery("/resource/" + identifier).addField("about.instanceOf.contributorList.@id").addFacet("about.@type"))
+                    result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.contributorList.@id").addFacet("about.@type"))
                     relator = "contributor"
                 }
                 resultMap = result.toMap(["about.@type", "about.title.titleValue", "originalCatalogingAgency.name", "function", "exampleTitle"])
@@ -537,7 +538,7 @@ class CompleteExpander extends BasicWhelkAPI {
                         }
                     }
                 }
-        }  else if (authDataMap.about.@type == "concept") {
+        }  else if (authDataMap.about."type" == "Concept") {
 
         }
         response.setEntity(mapper.writeValueAsString(resultMap), MediaType.APPLICATION_JSON)
