@@ -117,11 +117,11 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     boolean store(Document doc) {
-        log.debug("Received document ${doc.identifier} with contenttype ${doc.contentType}")
+        log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}")
         if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
             MutationBatch m = keyspace.prepareMutationBatch()
             String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
-            log.debug("Saving document ${doc.identifier} with dataset $dataset")
+            log.trace("Saving document ${doc.identifier} with dataset $dataset")
             m.withRow(CF_DOCUMENT, doc.identifier)
             .putColumn(COL_NAME_IDENTIFIER , doc.identifier)
             .putColumn(COL_NAME_DATA, new String(doc.data, "UTF-8"), null)

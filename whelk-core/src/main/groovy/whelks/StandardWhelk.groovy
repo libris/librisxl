@@ -36,16 +36,34 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    URI add(Document doc) {
-        boolean stored = false
-        doc = sanityCheck(doc)
+    URI add(byte[] data,
+            Map<String, Object> entrydata,
+            Map<String, Object> metadata) {
+        Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
+        return add(doc)
+    }
 
+    @Override
+    @groovy.transform.CompileStatic
+    URI add(Document doc, boolean justStore = false) {
+        boolean stored = false
+        Map<String,Document> docs = [doc.contentType:doc]
+        for (fc in formatConverters) {
+            log.trace("Running formatconverter $fc for ${doc.contentType}")
+            doc = fc.convert(doc)
+            docs.put(doc.contentType, doc)
+        }
         for (storage in storages) {
-            stored = (storage.store(doc) || stored)
+            for (d in docs.values()) {
+                log.trace("Trying doc ${d.identifier} with ct ${d.contentType} in ${storage.id}")
+                stored = (storage.store(d) || stored)
+            }
         }
 
-        addToGraphStore([doc])
-        addToIndex([doc])
+        if (!justStore) {
+            addToGraphStore([doc])
+            addToIndex([doc])
+        }
 
         if (!stored) {
             throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
@@ -59,23 +77,11 @@ class StandardWhelk implements Whelk {
     @Override
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs) {
-        boolean stored = false
         for (doc in docs) {
-            for (storage in storages) {
-                try {
-                    stored = (storage.store(doc) || stored)
-                } catch (Exception e) {
-                    log.error("Store failed for $doc", e)
-                    throw new WhelkAddException(doc.identifier as String)
-                }
-            }
+            add(doc, true)
         }
         addToGraphStore(docs)
         addToIndex(docs)
-
-        if (!stored) {
-            throw new WhelkAddException("No suitable storage found.", docs*.identifier)
-        }
     }
 
     @Override
@@ -291,4 +297,22 @@ class StandardWhelk implements Whelk {
     List<RDFFormatConverter> getRDFFormatConverters() { return plugins.findAll { it instanceof RDFFormatConverter }}
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
+
+    @Deprecated
+    URI oldadd(Document doc) {
+        boolean stored = false
+        doc = sanityCheck(doc)
+
+        for (storage in storages) {
+            stored = (storage.store(doc) || stored)
+        }
+
+        addToGraphStore([doc])
+        addToIndex([doc])
+
+        if (!stored) {
+            throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
+        }
+        return new URI(doc.identifier)
+    }
 }

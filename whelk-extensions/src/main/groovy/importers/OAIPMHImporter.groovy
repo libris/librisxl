@@ -18,6 +18,7 @@ import se.kb.libris.conch.Tools
 class OAIPMHImporter {
 
     static SERVICE_BASE_URL = "http://data.libris.kb.se/"
+    static final String OUT_CONTENT_TYPE = "text/oaipmh+xml"
 
     Whelk whelk
     String resource
@@ -89,8 +90,8 @@ class OAIPMHImporter {
                 MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
 
                 String id = record.getControlfields("001").get(0).getData()
-                String jsonRec = MarcJSONConverter.toJSONString(record)
 
+                /*
                 def links = []
                 //def tags = new HashSet<Map<String,Object>>()
                 if (it.header.setSpec) {
@@ -98,33 +99,29 @@ class OAIPMHImporter {
                         if (sS.toString().startsWith("authority:")) {
                             links.add(["identifier":new String("/auth/" + sS.toString().substring(10)), "type":"auth"])
                         }
-                        /* TODO: This should maybe be in holdings?
-                        if (sS.toString().startsWith("location:")) {
-                            tags.add(["location", sS.toString().substring(9)])
-                        }
-                        */
                         if (sS.toString().startsWith("bibid:")) {
                             links.add(["identifier":new String("/bib/" + sS.toString().substring(6)), "type":"bib"])
                         }
                     }
                 }
-                def doc, rawdoc
+                */
+                def doc
                 try {
-                    rawdoc = whelk.createDocument(rawrecord.getBytes("UTF-8"), ["identifier":"/"+this.resource+"/"+id,"dataset":this.resource,"contentType":"text/xml"], null, false)
-                    doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":"/"+this.resource+"/"+id,"dataset":this.resource,"contentType":"application/x-marc-json"], ["links": links])
+                    doc = new Document()
+                        .withData(rawrecord.getBytes("UTF-8"))
+                        .withEntry(["identifier":"/"+this.resource+"/"+id,"dataset":this.resource,"contentType":OUT_CONTENT_TYPE])
                     documents << doc
-                    documents << rawdoc
                     nrImported++
                     sizeOfBatch++
                     def velocityMsg = ""
                     if (sizeOfBatch && meanTime) {
                         velocityMsg = "Current velocity: " + (1000*(sizeOfBatch / (System.currentTimeMillis() - meanTime))) + " docs/second."
                     }
-                    Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
+                    //Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord", e)
                     if (picky) {
-                        log.error("Picky mode enable. Throwing exception", e)
+                        log.error("Picky mode enabled. Throwing exception", e)
                         throw e
                     }
                 }
@@ -159,7 +156,7 @@ class OAIPMHImporter {
                     failedLog << "$fi\n"
                 }
             } catch (Exception e) {
-                e.printStackTrace(new FileWriter(exceptionLog, true))
+                e.printStackTrace(new PrintWriter(exceptionLog))
             }
         } as Runnable)
     }

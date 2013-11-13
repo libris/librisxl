@@ -8,6 +8,9 @@ import se.kb.libris.whelks.plugin.Plugin;
 public interface Whelk {
     // storage
     public URI add(Document d);
+    public URI add(byte[] data,
+            Map<String, Object> entrydata,
+            Map<String, Object> metadata);
     public void bulkAdd(List<Document> d);
     public Document get(URI identifier);
     public void remove(URI identifier);
@@ -28,6 +31,8 @@ public interface Whelk {
     public Iterable<? extends Plugin> getPlugins();
 
     // factory methods
-    public Document createDocument(byte[] data, Map<String, Object> metadata);
+    public Document createDocument(byte[] data,
+            Map<String, Object> entrydata,
+            Map<String, Object> metadata);
     public URI mintIdentifier(Document document);
 }

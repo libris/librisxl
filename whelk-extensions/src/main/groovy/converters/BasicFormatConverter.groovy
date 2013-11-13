@@ -15,14 +15,15 @@ abstract class BasicFormatConverter extends BasicPlugin implements FormatConvert
         return outdocs
     }
 
-    final Document convert(Document doc) {
+    final Document convert(final Document doc) {
         log.debug("Document is ${doc.contentType} - required is $requiredContentType")
+        Document newdocument = doc
         if (doc.contentType == requiredContentType) {
             log.debug("Running converter.")
-            doc = doConvert(doc)
+            newdocument = doConvert(doc)
         }
-        return doc
+        return newdocument
     }
 
-    abstract Document doConvert(Document doc)
+    abstract Document doConvert(final Document doc)
 }

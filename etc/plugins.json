@@ -152,5 +152,14 @@
     },
     "linkenhancer" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkEnhancerFormatConverter"
+    },
+    "oaipmhxmlconverter" : {
+        "_class" : "se.kb.libris.whelks.plugin.OaiPmhXmlConverter",
+        "_params" : {
+            "specUriMapping" : {
+                "authority" : "auth",
+                "bibid" : "bib"
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@
       <!--<level value="debug"/>-->
   <!--</logger>-->
   <logger name="se.kb.libris.whelks.plugin.JsonLDLinkEnhancerFormatConverter">
-       <level value="debug"/>
+       <level value="info"/>
   </logger>
   <!--
   <logger name="se.kb.libris.conch">
@@ -23,7 +23,7 @@
   </logger>
   -->
   <logger name="se.kb.libris.whelks.plugin.MarcFrameConverter">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
   <logger name="se.kb.libris.whelks.plugin.BasicMarc2JsonLDConverter">
@@ -52,7 +52,7 @@
   </logger>
   -->
   <logger name="se.kb.libris.whelks.component">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
   <logger name="se.kb.libris.whelks.api">
@@ -69,7 +69,7 @@
   </logger> 
   -->
   <logger name="se.kb.libris.whelks.StandardWhelk">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
   <logger name="se.kb.libris.whelks.CombinedWhelk">
@@ -79,9 +79,9 @@
  <!--<logger name="se.kb.libris.whelks.component.ElasticSearch">-->
       <!--<level value="debug"/>-->
   <!--</logger>-->
- <!--<logger name="se.kb.libris.whelks.component.CassandraStorage">-->
-      <!--<level value="trace"/>-->
-  <!--</logger>-->
+     <logger name="se.kb.libris.whelks.component.CassandraStorage">
+          <level value="debug"/>
+      </logger>
 <!--<logger name="se.kb.libris.whelks.api.ISXNTool">-->
       <!--<level value="debug"/>-->
   <!--</logger>-->
