@@ -6,7 +6,9 @@
                 "_plugins": [
                     "index",
                     "cassandrastorage",
+                    "oaipmhstorage",
                     "search",
+                    "oaipmhxmlconverter",
                     "remotesearch",
                     "documentapi",
                     "marcconverter",
