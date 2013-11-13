@@ -218,24 +218,28 @@ class StandardWhelk implements Whelk {
                 index.createNewCurrentIndex()
             }
         }
-        for (doc in loadAll(dataset)) {
-            if (startAt && doc.identifier == startAt) {
-                log.info("Found document with identifier ${startAt}. Starting to index ...")
-                indexing = true
-            }
-            if (indexing) {
-                log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
-                docs << doc
-                if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
-                    addToGraphStore(docs)
-                    addToIndex(docs)
-                    docs = []
-                    if (log.isInfoEnabled()) {
-                        Tools.printSpinner("Reindexing ${this.id}. ${counter} documents sofar.", counter)
+            for (doc in loadAll(dataset)) {
+                if (startAt && doc.identifier == startAt) {
+                    log.info("Found document with identifier ${startAt}. Starting to index ...")
+                    indexing = true
+                }
+                if (indexing) {
+                    log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
+                    docs << doc
+                    if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
+                        addToGraphStore(docs)
+                        try {
+                            addToIndex(docs)
+                        } catch (WhelkAddException wae) {
+                            log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                        }
+                        docs = []
+                        if (log.isInfoEnabled()) {
+                            Tools.printSpinner("Reindexing ${this.id}. ${counter} documents sofar.", counter)
+                        }
                     }
                 }
             }
-        }
         log.debug("Went through all documents. Processing remainder.")
         if (docs.size() > 0) {
             log.trace("Reindexing remaining ${docs.size()} documents")
