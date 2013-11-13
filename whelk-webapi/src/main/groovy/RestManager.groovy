@@ -40,21 +40,21 @@ class RestManager extends Application {
     synchronized Restlet createInboundRoot() {
         def ctx = getContext()
         def router = new Router(ctx)
+        def allAPIs
 
         log.debug("Looking for suitable APIs to attach")
 
-        def sortedWhelks = whelks.sort { -it.contentRoot?.length() }
+        whelks.each {  whelk ->
+            log.debug("Getting APIs for whelk ${whelk.id}")
 
-        sortedWhelks.each {
-            if (it instanceof HttpWhelk) {
-                def rapi = new RootRouteRestlet(it)
-                log.debug("Attaching RootRoute API at ${rapi.path}")
-                router.attach(rapi.path, rapi)
-                def dapi = new DiscoveryAPI(it)
-                log.debug("Attaching Discovery API at ${dapi.path}")
-                router.attach(dapi.path, dapi)
-            } 
-            attachApis(router, it)
+            allAPIs = whelk.getAPIs()
+
+            if (whelk instanceof HttpWhelk) {
+                allAPIs << new RootRouteRestlet(whelk)
+                allAPIs << new DiscoveryAPI(whelk)
+            }
+
+            router = attachApis(router, allAPIs)
         }
         return router
     }
@@ -80,23 +80,19 @@ class RestManager extends Application {
         return varStr.toString()
     }
 
-
-    void attachApis(router, whelk) {
-        log.debug("Getting APIs for whelk ${whelk.id}")
-        for (api in whelk.getAPIs()) {
-            if (!api.varPath) {
-                log.debug("Attaching strict-path-API ${api.id} at ${api.path}.")
-                api.setContext(router.context.createChildContext())
-                router.attach(api.path, api)
-            }
-        }
-        for (api in whelk.getAPIs()) {
+    Router attachApis(router, apis) {
+        def var
+        for (api in apis) {
+            api.setContext(router.context.createChildContext())
             if (api.varPath) {
-                def indexType = findVar(api.path)
-                log.debug("Attaching variable-path-API ${api.id} at ${api.path}. indextype $indexType")
-                api.setContext(router.context.createChildContext())
-                router.attach(api.path, api).template.variables.put(findVar(api.path), new Variable(Variable.TYPE_URI_PATH))
+                var = findVar(api.path)
+                log.debug("Attaching variable-path-API ${api.id} at ${api.path}. Putting uri-path variable $var")
+                router.attach(api.path, api).template.variables.put(var, new Variable(Variable.TYPE_URI_PATH))
+            } else {
+               log.debug("Attaching strict-path-API ${api.id} at ${api.path}.")
+               router.attach(api.path, api)
             }
         }
+        return router
     }
 }
