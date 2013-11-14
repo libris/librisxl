@@ -96,7 +96,11 @@
       "[35:38]": {
         "domainEntity": "Work",
         "link": "language",
-        "uriTemplate": "/def/languages/{_}"
+        "uriTemplate": "/def/languages/{_}",
+        "matchUriToken": "^\\w{2,3}$",
+        "spec": {
+          "matches": ["swe", "sv"], "notMatches": ["N/A", " ", "---", "en-US", "en_us"]
+        }
       },
 
       "0+6": {"range": "date"},
