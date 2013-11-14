@@ -11,6 +11,8 @@ auth/189316	(100 0_ ‡a Homeros, ‡d 700-talet f.Kr.)
 auth/191503
 auth/191698	(100 0_ ‡a Johannes ‡b XXIII, ‡c påve, ‡d 1881-1963)
 auth/193755	(100 0_ ‡a Karl ‡b XIV Johan, ‡c kung av Sverige och Norge, ‡d 1763-1844)
+auth/193552	Bachman, Richard
+auth/210204	King, Stephen
 auth/201439	(100 1_ ‡a Tjechov, Anton, ‡d 1860-1904) --> se särskilt förklarande fras (#i), forskningsbiblioteksform resp. originalform
 auth/202195	(100 0_ ‡a Li, Li, ‡d 1961-) -- borde vara 100 0_
 auth/209046
@@ -32,6 +34,12 @@ auth/346221	(100 3_ ‡a Bernadotte, ‡c kungahus) --> normalt bara som ämneso
 auth/349968
 auth/74212	(100 1_ ‡a Mao, Zedong, ‡d 1893-1976)
 auth/94541	(100 1_ ‡a Strindberg, August, ‡d 1849-1912)
+auth/353616	Allmän genre/formterm saogf: Analys och tolkning
+auth/245329	Skönlitterär genre/formterm (kod Skon) som ingår i saogf-listan: Biografiska romaner
+auth/215816	Genre/formterm för periodika (kod NLT)som ingår i saogf-listan: Barntidningar
+auth/323836	Genre/formterm för barn- och ungdomslitteratur (listkod barn) kommer inom kort att kodas om och ingå i saogf-listan enligt konstruktion ovan: Allåldersböcker
+auth/283168	Genre/formterm för grafiskt material som ingår i TGM-listan (kod gmgpc//swe): Affischer (behöver synkroniseras/harmoniseras med existerande, t.ex. 365601)
+auth/365601	Allmän genre/formterm som ingår i saogf-listan: Affischer
 bib/10796401
 bib/11279947
 bib/11311266
