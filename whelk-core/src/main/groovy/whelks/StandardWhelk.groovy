@@ -69,8 +69,18 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Document get(URI uri) {
-        return storages.get(0)?.get(uri)
+    Document get(URI uri, List contentTypes=null) {
+        if (contentTypes) {
+            for (contentType in contentTypes) {
+                log.trace("Looking for $contentType storage.")
+                def s = getStorage(contentType)
+                if (s) {
+                    log.debug("Found $contentType storage.")
+                    return s.get(uri)
+                }
+            }
+        }
+        return storage.get(uri)
     }
 
     @Override
@@ -179,7 +189,6 @@ class StandardWhelk implements Whelk {
 
     @Override
     Iterable<Document> loadAll(String dataset = null, Date since = null) {
-        def storage = getStorages()[0]
         log.debug("Loading all from storage ${storage.id}")
         return storage.getAll(dataset)
     }
@@ -283,7 +292,9 @@ class StandardWhelk implements Whelk {
     // Sugar methods
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
     List<Storage> getStorages() { return plugins.findAll { it instanceof Storage } }
+    Storage getStorage() { return plugins.find { it instanceof Storage } }
     List<Storage> getStorages(String rct) { return plugins.findAll { it instanceof Storage && it.requiredContentType == rct} }
+    Storage getStorage(String rct) { return plugins.find { it instanceof Storage && (rct == "*/*" || it.requiredContentType == rct)} }
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }
@@ -293,21 +304,4 @@ class StandardWhelk implements Whelk {
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
 
-    @Deprecated
-    URI oldadd(Document doc) {
-        boolean stored = false
-        doc = sanityCheck(doc)
-
-        for (storage in storages) {
-            stored = (storage.store(doc) || stored)
-        }
-
-        addToGraphStore([doc])
-        addToIndex([doc])
-
-        if (!stored) {
-            throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
-        }
-        return new URI(doc.identifier)
-    }
 }

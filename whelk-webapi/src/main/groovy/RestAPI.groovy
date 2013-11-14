@@ -208,12 +208,21 @@ class DocumentRestlet extends BasicWhelkAPI {
         String path = path.replaceAll(_escape_regex(pathEnd), request.attributes["identifier"])
         log.debug "Path: $path"
         def mode = DisplayMode.DOCUMENT
+        def headers = request.attributes.get("org.restlet.http.headers")
         (path, mode) = determineDisplayMode(path)
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
             log.debug " DisplayMode: $mode"
+            def accepting = headers.find {
+                    it.name.equalsIgnoreCase("accept")
+                }?.value?.split(",").collect {
+                    int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
+                    it.substring(0,last)
+                }
+
+            log.debug("Accepting $accepting")
             try {
-                def d = whelk.get(new URI(path))
+                def d = whelk.get(new URI(path), accepting)
                 log.debug("Document received from whelk: $d")
                 if (d) {
                     if (mode == DisplayMode.META) {
@@ -239,7 +248,6 @@ class DocumentRestlet extends BasicWhelkAPI {
                     throw new WhelkRuntimeException("PUT requires a proper URI.")
                 }
                 def identifier
-                def headers = request.attributes.get("org.restlet.http.headers")
                 log.trace("headers: $headers")
                 def link = headers.find { it.name.equals("link") }?.value
                 def entry = [

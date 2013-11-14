@@ -90,9 +90,9 @@
       <level value="debug"/>
   </logger>
   -->
-<!--<logger name="se.kb.libris.whelks.api.DocumentRestlet">-->
-      <!--<level value="debug"/>-->
-  <!--</logger>
+<logger name="se.kb.libris.whelks.api.DocumentRestlet">
+      <level value="debug"/>
+  </logger>
        -->
 <logger name="se.kb.libris.whelks.api.RestManager">
       <level value="debug"/>
