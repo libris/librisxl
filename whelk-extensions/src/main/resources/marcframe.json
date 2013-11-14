@@ -756,7 +756,7 @@
     },
     "667" : {
       "domainEntity": "Record",
-      "$a": {"addProperty": "note"}
+      "$a": {"addProperty": "editorialNote"}
     },
     "670" : {
       "domainEntity": "Record",
