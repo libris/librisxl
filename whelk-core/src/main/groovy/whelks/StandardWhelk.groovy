@@ -69,15 +69,13 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Document get(URI uri, List contentTypes=null) {
-        if (contentTypes) {
-            for (contentType in contentTypes) {
-                log.trace("Looking for $contentType storage.")
-                def s = getStorage(contentType)
-                if (s) {
-                    log.debug("Found $contentType storage.")
-                    return s.get(uri)
-                }
+    Document get(URI uri, List contentTypes=[]) {
+        for (contentType in contentTypes) {
+            log.trace("Looking for $contentType storage.")
+            def s = getStorage(contentType)
+            if (s) {
+                log.debug("Found $contentType storage.")
+                return s.get(uri)
             }
         }
         return storage.get(uri)
@@ -121,9 +119,9 @@ class StandardWhelk implements Whelk {
             docs.put(doc.contentType, doc)
         }
         for (d in docs.values()) {
-            for (storage in getStorages(d.contentType)) {
-                log.trace("Sending doc ${d.identifier} with ct ${d.contentType} to ${storage.id}")
-                stored = (storage.store(d) || stored)
+            for (stin getStorages(d.contentType)) {
+                log.trace("Sending doc ${d.identifier} with ct ${d.contentType} to ${st.id}")
+                stored = (st.store(d) || stored)
             }
         }
         if (!stored) {
@@ -185,12 +183,17 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Iterable<Document> loadAll(Date since) { return loadAll(null, since)}
+    Iterable<Document> loadAll(Date since) { return loadAll(null, null, since)}
 
     @Override
-    Iterable<Document> loadAll(String dataset = null, Date since = null) {
-        log.debug("Loading all from storage ${storage.id}")
-        return storage.getAll(dataset)
+    Iterable<Document> loadAll(String dataset = null, String storageId = null, Date since = null) {
+        if (storageId) {
+            def st = getStorages().find { it.id == storageId }
+        } else {
+            def st = getStorage()
+        }
+        log.debug("Loading all from storage ${st.id}")
+        return st.getAll(dataset)
     }
 
     @Override
