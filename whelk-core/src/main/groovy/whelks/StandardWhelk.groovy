@@ -45,29 +45,12 @@ class StandardWhelk implements Whelk {
 
     @Override
     @groovy.transform.CompileStatic
-    URI add(Document doc, boolean justStore = false) {
-        boolean stored = false
-        Map<String,Document> docs = [(doc.contentType): doc]
-        for (fc in formatConverters) {
-            log.trace("Running formatconverter $fc for ${doc.contentType}")
-            doc = fc.convert(doc)
-            docs.put(doc.contentType, doc)
-        }
-        for (d in docs.values()) {
-            for (storage in getStorages(d.contentType)) {
-                log.trace("Sending doc ${d.identifier} with ct ${d.contentType} to ${storage.id}")
-                stored = (storage.store(d) || stored)
-            }
-        }
+    URI add(Document doc) {
 
-        if (!justStore) {
-            addToGraphStore([doc])
-            addToIndex([doc])
-        }
+        doc = addToStorage(doc)
+        addToGraphStore([doc])
+        addToIndex([doc])
 
-        if (!stored) {
-            throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
-        }
         return new URI(doc.identifier)
     }
 
@@ -77,11 +60,12 @@ class StandardWhelk implements Whelk {
     @Override
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs) {
+        List<Document> convertedDocs = []
         for (doc in docs) {
-            add(doc, true)
+            convertedDocs.add(addToStorage(doc))
         }
-        addToGraphStore(docs)
-        addToIndex(docs)
+        addToGraphStore(convertedDocs)
+        addToIndex(convertedDocs)
     }
 
     @Override
@@ -113,9 +97,36 @@ class StandardWhelk implements Whelk {
         return d
     }
 
+    /**
+     * Handles conversion for a document and stores each converted version into suitable storage. 
+     * @return The final resulting document, after all format conversions
+     */
+    @groovy.transform.CompileStatic
+    Document addToStorage(Document doc) {
+        boolean stored = false
+        Map<String,Document> docs = [(doc.contentType): doc]
+        for (fc in formatConverters) {
+            log.trace("Running formatconverter $fc for ${doc.contentType}")
+            doc = fc.convert(doc)
+            docs.put(doc.contentType, doc)
+        }
+        for (d in docs.values()) {
+            for (storage in getStorages(d.contentType)) {
+                log.trace("Sending doc ${d.identifier} with ct ${d.contentType} to ${storage.id}")
+                stored = (storage.store(d) || stored)
+            }
+        }
+        if (!stored) {
+            throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
+        }
+        return doc
+    }
+
     @groovy.transform.CompileStatic
     void addToIndex(List<Document> docs) {
         List<IndexDocument> idxDocs = []
+        log.debug("Number of documents to index: ${docs.size()}")
+        log.debug("Sample ct: " + docs[0].contentType)
         if (indexes.size() > 0) {
             for (doc in docs) {
                 for (ifc in getIndexFormatConverters()) {
