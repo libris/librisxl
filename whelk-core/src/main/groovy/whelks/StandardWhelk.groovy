@@ -110,7 +110,7 @@ class StandardWhelk implements Whelk {
      * @return The final resulting document, after all format conversions
      */
     @groovy.transform.CompileStatic
-    Document addToStorage(Document doc) {
+    Document addToStorage(Document doc, String excemptStorage = null) {
         boolean stored = false
         Map<String,Document> docs = [(doc.contentType): doc]
         for (fc in formatConverters) {
@@ -119,9 +119,11 @@ class StandardWhelk implements Whelk {
             docs.put(doc.contentType, doc)
         }
         for (d in docs.values()) {
-            for (stin getStorages(d.contentType)) {
-                log.trace("Sending doc ${d.identifier} with ct ${d.contentType} to ${st.id}")
-                stored = (st.store(d) || stored)
+            for (st in  getStorages(d.contentType)) {
+                if (st.id != excemptStorage) {
+                    log.trace("Sending doc ${d.identifier} with ct ${d.contentType} to ${st.id}")
+                    stored = (st.store(d) || stored)
+                }
             }
         }
         if (!stored) {
@@ -187,12 +189,13 @@ class StandardWhelk implements Whelk {
 
     @Override
     Iterable<Document> loadAll(String dataset = null, String storageId = null, Date since = null) {
+        def st
         if (storageId) {
-            def st = getStorages().find { it.id == storageId }
+            st = getStorages().find { it.id == storageId }
         } else {
-            def st = getStorage()
+            st = getStorage()
         }
-        log.debug("Loading all from storage ${st.id}")
+        log.debug("Loading "+(dataset ? dataset : "all")+" from storage ${st.id}")
         return st.getAll(dataset)
     }
 
@@ -224,7 +227,7 @@ class StandardWhelk implements Whelk {
         long startTime = System.currentTimeMillis()
         List<Document> docs = []
         boolean indexing = !startAt
-        if (dataset) {
+        if (!dataset) {
             log.debug("Requesting new index.")
             for (index in indexes) {
                 index.createNewCurrentIndex()
@@ -259,11 +262,61 @@ class StandardWhelk implements Whelk {
             addToIndex(docs)
         }
         log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-        if (dataset) {
+        if (!dataset) {
             for (index in indexes) {
                 index.reMapAliases()
             }
         }
+    }
+
+    void rebuild(String fromStorage, String dataset = null) {
+        long startTime = System.currentTimeMillis()
+        int counter = 0
+        def docs = []
+        if (!dataset) {
+            log.debug("Requesting new index.")
+            for (index in indexes) {
+                index.createNewCurrentIndex()
+            }
+        } else {
+            log.debug("Rebuilding for dataset $dataset")
+        }
+
+        for (doc in loadAll(dataset, fromStorage)) {
+            log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
+            try {
+                docs << addToStorage(doc, fromStorage)
+            } catch (WhelkAddException wae) {
+                log.trace("Expected exception ${wae.message}")
+            }
+            if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
+                addToGraphStore(docs)
+                try {
+                    addToIndex(docs)
+                } catch (WhelkAddException wae) {
+                    log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                }
+                docs = []
+                if (log.isInfoEnabled()) {
+                    Tools.printSpinner("Reindexing ${this.id}. ${counter} documents sofar.", counter)
+                }
+            }
+        }
+        log.debug("Went through all documents. Processing remainder.")
+        if (docs.size() > 0) {
+            log.trace("Reindexing remaining ${docs.size()} documents")
+            addToGraphStore(docs)
+            addToIndex(docs)
+        }
+        log.info("Rebuilt $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
+
+
+        if (!dataset) {
+            for (index in indexes) {
+                index.reMapAliases()
+            }
+        }
+
     }
 
     @Override

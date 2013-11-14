@@ -28,13 +28,13 @@ class WhelkOperator {
         cli.s(longOpt:'since', "since Date (yyyy-MM-dd'T'hh:mm:ss) for OAIPMH", required:false, args:1)
         cli.n(longOpt:'num', "maximum number of document to import", required:false, args:1)
         cli.p(longOpt:'picky', "picky (true|false)", required:false, args:1)
+        cli._(longOpt:'fromStorage', 'used for rebuild. from which storage to read source data.', required:false, args:1, argName:'storage id')
 
         def opt = cli.parse(args)
         if (!opt) {
             return
         }
         def whelk = wi.getWhelks().find { it.id == opt.w }
-        def resource = (opt.r ? opt.r : whelk)
         def operation = opt.o
         boolean picky = (System.getProperty("picky") == "true")
         long startTime = System.currentTimeMillis()
@@ -75,10 +75,11 @@ class WhelkOperator {
                 println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
             }
         } else if (operation == "rebuild") {
-            try {
-                whelk.rebuild(resource)
-            } catch (groovy.lang.MissingMethodException me) {
-                log.error("Rebuild can only be performed on CombinedWhelks.")
+            if (opt.fromStorage) {
+                String dataset = (opt.dataset ? opt.dataset : null)
+                whelk.rebuild(opt.fromStorage, dataset)
+            } else {
+                println cli.usage()
             }
         } else if (operation == "populate" || operation == "rebalance") {
             /*
