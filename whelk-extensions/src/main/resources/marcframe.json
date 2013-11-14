@@ -689,6 +689,14 @@
           "addLink": "creator"
         }
       },
+      "match-domain": {
+        "Person": {
+          "addLink": "sameAs",
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$d": {"property": null, "TODO": "if same as 100.$d (plus drop similar duplicate properties)"}
+        }
+      },
       "domainEntity": "Instance", "NOTE": "really Work - see 100",
       "addLink": "hasVersion", "rangeEntity": "Person"
     },
@@ -712,7 +720,17 @@
       "TODO": "whatIs w||e"
       },
     "455" : {"inherit": "450"},
-    "500": {"$a": {"addProperty": "altLabel"}},
+    "500": {
+      "inherit": "bib:100",
+      "TODO": "this is really a link to other auth post..",
+      "domainEntity": "Instance", "NOTE": "not really though - see 100",
+      "match-domain": {
+        "Person": {
+          "addLink": "hasPersona",
+          "rangeEntity": "Persona"
+        }
+      }
+    },
     "510" : {"inherit": "bib:110", "domainEntity": null, "addLink": "seeAlso"},
     "511" : {"inherit": "bib:111", "definesDomainEntity": null, "addLink": "seeAlso"},
     "550" : {
@@ -741,7 +759,8 @@
       "$a": {"addProperty": "note"}
     },
     "670" : {
-      "addLink": "hasForm", "rangeEntity": "Instance",
+      "domainEntity": "Record",
+      "addLink": "source", "rangeEntity": "Instance",
       "$a": {"property": "label"},
       "$b": {"property": "comment"},
       "$u": {"property": "url"}
