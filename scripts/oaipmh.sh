@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-RESOURCE=$1
-SINCE=$2
+DATASET=$1
+SINCE=""
 EXTRA_OPTS=$3
-if [[ "$RESOURCE" == "" ]]; then
+if [[ "$DATASET" == "" ]]; then
     echo "Usage $(basename $0) <OAIPMH resource> <since date>"
     echo ""
     echo "  Example: Start an OAIPMH import from bib since july 24th 2012:"
@@ -14,6 +14,9 @@ if [[ "$RESOURCE" == "" ]]; then
     echo ""
     exit
 fi
+if [[ "$2" != "" ]]; then
+    SINCE="-s $2"
+fi
 
 WEBAPPS=/var/lib/tomcat6/webapps/whelk
 SETENV=%(envscript)s
@@ -23,4 +26,4 @@ LIBS=$WEBAPPS/WEB-INF/lib
 
 source $SETENV
 
-java $JAVA_OPTS $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator import libris $RESOURCE $SINCE
+java $JAVA_OPTS $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o import -w libris -d $DATASET $SINCE
