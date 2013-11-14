@@ -53,9 +53,9 @@ class StandardWhelk implements Whelk {
             doc = fc.convert(doc)
             docs.put(doc.contentType, doc)
         }
-        for (storage in storages) {
-            for (d in docs.values()) {
-                log.trace("Trying doc ${d.identifier} with ct ${d.contentType} in ${storage.id}")
+        for (d in docs.values()) {
+            for (storage in getStorages(d.contentType)) {
+                log.trace("Sending doc ${d.identifier} with ct ${d.contentType} to ${storage.id}")
                 stored = (storage.store(d) || stored)
             }
         }
@@ -180,18 +180,10 @@ class StandardWhelk implements Whelk {
     Document createDocument(String data, Map<String,Object> entrydata, Map<String,Object> metadata=null, boolean convert=true) {
         log.debug("Creating document")
         Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
-        /*
-        metadata.each { param, value ->
-            if (value) {
-                doc.metaClass.pickMethod("set${((String)param).capitalize()}",
-                    value.getClass()).doMethodInvoke(doc, value)
-            }
-        }
-        */
         log.trace("Creation complete for ${doc.identifier} (${doc.contentType})")
         if (convert) {
             log.trace("Executing storage format conversion.")
-            doc = performStorageFormatConversion(doc)
+            for (fc in formatConverters) { doc = fc.convert(doc) }
             log.trace("Document ${doc.identifier} has undergone formatconversion.")
         }
         for (lf in linkFinders) {
@@ -200,15 +192,6 @@ class StandardWhelk implements Whelk {
             }
         }
         log.debug("Returning document ${doc.identifier} (${doc.contentType})")
-        return doc
-    }
-
-    @groovy.transform.CompileStatic
-    Document performStorageFormatConversion(Document doc) {
-        for (fc in formatConverters) {
-            log.trace("Running formatconverter $fc")
-            doc = fc.convert(doc)
-        }
         return doc
     }
 
@@ -289,6 +272,7 @@ class StandardWhelk implements Whelk {
     // Sugar methods
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
     List<Storage> getStorages() { return plugins.findAll { it instanceof Storage } }
+    List<Storage> getStorages(String rct) { return plugins.findAll { it instanceof Storage && it.requiredContentType == rct} }
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }

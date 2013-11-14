@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
-RESOURCE=$1
+DATASET=""
 EXTRA_OPTS=$2
+if [[ "$1" != "" ]]; then
+    DATASET="-d $1"
+fi
 
 WEBAPPS=/var/lib/tomcat6/webapps/whelk
 SETENV=%(envscript)s
@@ -11,4 +14,4 @@ LIBS=$WEBAPPS/WEB-INF/lib
 
 source $SETENV
 
-java $JAVA_OPTS $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator reindex libris $RESOURCE
+wava $JAVA_OPTS $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o reindex -w libris $DATASET
