@@ -110,6 +110,7 @@ class OAIPMHImporter {
                     doc = new Document()
                         .withData(rawrecord.getBytes("UTF-8"))
                         .withEntry(["identifier":"/"+this.resource+"/"+id,"dataset":this.resource,"contentType":OUT_CONTENT_TYPE])
+                    whelk.add(doc)
                     documents << doc
                     nrImported++
                     sizeOfBatch++
@@ -138,7 +139,7 @@ class OAIPMHImporter {
             }
         }
         meanTime = System.currentTimeMillis()
-        addDocuments(documents)
+        //addDocuments(documents)
         sizeOfBatch = 0
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
