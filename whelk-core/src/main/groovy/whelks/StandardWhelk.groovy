@@ -180,14 +180,6 @@ class StandardWhelk implements Whelk {
     Document createDocument(String data, Map<String,Object> entrydata, Map<String,Object> metadata=null, boolean convert=true) {
         log.debug("Creating document")
         Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
-        /*
-        metadata.each { param, value ->
-            if (value) {
-                doc.metaClass.pickMethod("set${((String)param).capitalize()}",
-                    value.getClass()).doMethodInvoke(doc, value)
-            }
-        }
-        */
         log.trace("Creation complete for ${doc.identifier} (${doc.contentType})")
         if (convert) {
             log.trace("Executing storage format conversion.")
@@ -280,7 +272,7 @@ class StandardWhelk implements Whelk {
     // Sugar methods
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
     List<Storage> getStorages() { return plugins.findAll { it instanceof Storage } }
-    List<Storage> getStorages(String rct) { return plugins.findAll { it instanceof Storage && it.requiredContentType = rct} }
+    List<Storage> getStorages(String rct) { return plugins.findAll { it instanceof Storage && it.requiredContentType == rct} }
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }

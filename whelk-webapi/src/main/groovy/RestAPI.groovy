@@ -239,22 +239,24 @@ class DocumentRestlet extends BasicWhelkAPI {
                     throw new WhelkRuntimeException("PUT requires a proper URI.")
                 }
                 def identifier
-                Document doc = null
-                Document rawdoc = null
                 def headers = request.attributes.get("org.restlet.http.headers")
                 log.trace("headers: $headers")
                 def link = headers.find { it.name.equals("link") }?.value
-                doc = this.whelk.createDocument(request.entityAsText, ["identifier":path,"contentType":request.entity.mediaType.toString(),"dataset":path.split("/")[1]])
-                rawdoc = this.whelk.createDocument(request.entityAsText, ["identifier":path,"contentType":request.entity.mediaType.toString(),"dataset":path.split("/")[1]], null, false)
-                if (rawdoc?.contentType == doc?.contentType) {
-                    // No need to doublestore document.
-                    rawdoc = null
-                }
-                log.debug("Created document with id ${doc.identifier}, ct: ${doc.contentType} ($path)")
+                def entry = [
+                    "identifier":path,
+                    "contentType":request.entity.mediaType.toString(),
+                    "dataset":path.split("/")[1]
+                    ]
+                def meta = null
                 if (link != null) {
                     log.trace("Adding link $link to document...")
-                    doc = doc.withLink(link)
+                    meta = [
+                        "links": [
+                            ["identifier":link,"type":""]
+                        ]
+                    ]
                 }
+
                 // Check If-Match
                 def ifMatch = headers.find { it.name.equalsIgnoreCase("If-Match") }?.value
                 if (ifMatch
@@ -262,18 +264,12 @@ class DocumentRestlet extends BasicWhelkAPI {
                     && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
                     response.setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
-                    if (rawdoc) {
-                        try {
-                            log.debug("Adding raw version of ${rawdoc.identifier}")
-                            this.whelk.add(rawdoc)
-                        } catch (WhelkAddException wae) {
-                            log.debug("Failed to add raw version: ${wae.message}")
-                        }
-                    }
-                    // If no dedicated storage for the raw type is available,
-                    // make sure the converted version overwrites the raw.
                     try {
-                        identifier = this.whelk.add(doc)
+                        identifier = this.whelk.add(
+                            request.entityAsText.getBytes("UTF-8"),
+                            entry,
+                            meta
+                            )
                         response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                         response.setLocationRef(request.getOriginalRef().toString())
                     } catch (WhelkAddException wae) {
