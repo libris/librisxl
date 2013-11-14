@@ -327,6 +327,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     String link
     String rangeEntityName
     String uriTemplate
+    Pattern matchUriToken = null
     boolean repeat = false
     String dateTimeFormat
     boolean ignored = false
@@ -345,6 +346,17 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         link = fieldDfn.link
         rangeEntityName = fieldDfn.rangeEntity
         uriTemplate = fieldDfn.uriTemplate
+        if (fieldDfn.matchUriToken) {
+            matchUriToken = Pattern.compile(fieldDfn.matchUriToken)
+            if (fieldDfn.spec) {
+                fieldDfn.spec.matches.each {
+                    assert matchUriToken.matcher(it).matches()
+                }
+                fieldDfn.spec.notMatches.each {
+                    assert !matchUriToken.matcher(it).matches()
+                }
+            }
+        }
     }
 
     boolean convert(marcSource, value, entityMap) {
@@ -360,10 +372,16 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         if (link) {
             ent = ent[link] = newEntity(rangeEntityName)
         }
-        if (uriTemplate)
-            ent['@id'] = uriTemplate.replace('{_}', value)
-        else
+        if (uriTemplate) {
+            if (!matchUriToken || matchUriToken.matcher(value).matches()) {
+                ent['@id'] = uriTemplate.replace('{_}', value)
+            } else {
+                ent['@value'] = value
+            }
+        }
+        else {
             addValue(ent, property, value, repeat)
+        }
 
         return true
     }
