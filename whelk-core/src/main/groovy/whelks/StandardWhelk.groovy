@@ -47,7 +47,7 @@ class StandardWhelk implements Whelk {
     @groovy.transform.CompileStatic
     URI add(Document doc, boolean justStore = false) {
         boolean stored = false
-        Map<String,Document> docs = [doc.contentType:doc]
+        Map<String,Document> docs = [(doc.contentType): doc]
         for (fc in formatConverters) {
             log.trace("Running formatconverter $fc for ${doc.contentType}")
             doc = fc.convert(doc)

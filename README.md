@@ -43,8 +43,8 @@ Or better, create a local OAI-PMH dump of examples and run a full import:
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer)
     <CTRL-Z>
     $ bg
-    $ gradle whelkOperation -Dargs='import libris auth http://localhost:8000/auth' -Dwhelk.config.uri=file://$(pwd)/etc/local-whelkoperations.json
-    $ gradle whelkOperation -Dargs='import libris bib http://localhost:8000/bib' -Dwhelk.config.uri=file://$(pwd)/etc/local-whelkoperations.json
+    $ gradle whelkOperation -Dargs='-o import -w libris -d auth -u http://localhost:8000/auth' -Dwhelk.config.uri=file://$(pwd)/etc/local-whelkoperations.json
+    $ gradle whelkOperation -Dargs='-o import -w libris -d bib -u http://localhost:8000/bib' -Dwhelk.config.uri=file://$(pwd)/etc/local-whelkoperations.json
     $ fg
     <CTRL-C>
 
@@ -102,11 +102,21 @@ First set up configuration of it:
 
 Run whelkOperation gradle task to import, reindex or rebuild:
 
-    $ gradle whelkOperation -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)] [no of docs] [true/false for picky]' -Dwhelk.config.uri=<uri-to-config-json> (-Delastic.host='<host>') (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>')
+    $ gradle whelkOperation -Dargs='ARGS' -Dwhelk.config.uri=<uri-to-config-json> (-Delastic.host='<host>') (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>')
+   
+   Where ARGS is:
+     -d,--dataset <arg>      dataset (bib|auth|hold)
+     -n,--num <arg>          maximum number of document to import
+     -o,--operation <arg>    which operation to perform (import|reindex|etc)
+     -p,--picky <arg>        picky (true|false)
+     -s,--since <arg>        since Date (yyyy-MM-dd'T'hh:mm:ss) for OAIPMH
+     -u,--serviceUrl <URL>   serviceUrl for OAIPMH
+     -w,--whelk <arg>        the name of the whelk to perform operation on
+                             e.g. libris
 
 Example - import documents from 2000-01-01 using etc/whelksoperations.json to configure the whelks from external sources:
 
-    $ gradle whelkOperation -Dargs='import libris bib 2000-01-01T00:00:00Z 10000 true' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:etc/whelkoperations.json
+    $ gradle whelkOperation -Dargs='-o import -w libris -d bib -s 2000-01-01T00:00:00Z -n 10000 -p true' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:etc/whelkoperations.json
 
 ## Using a Graph Store
 

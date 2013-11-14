@@ -4,7 +4,7 @@
 
 
 task whelkOperation(dependsOn: 'classes', type: JavaExec) {
-  description "Run import or reindex. (USAGE: -Dargs='<import|reindex|rebuild> <whelkname> [resource (for import) or sourcestorage (for rebuild)] [since (for import)] [maxNoOfDocs (for import)]' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
+  description "Run import or reindex. (USAGE: -Dargs='<call without for usage instructions>' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
   classpath = sourceSets.main.runtimeClasspath
   workingDir = ".."
   main = 'se.kb.libris.whelks.WhelkOperator'
