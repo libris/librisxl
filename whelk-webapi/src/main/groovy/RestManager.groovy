@@ -44,7 +44,9 @@ class RestManager extends Application {
 
         log.debug("Looking for suitable APIs to attach")
 
-        whelks.each {  whelk ->
+        def sortedwhelks = whelks.sort( {a, b -> b.contentRoot.length() <=> a.contentRoot.length() } )
+
+        sortedwhelks.each {  whelk ->
             log.debug("Getting APIs for whelk ${whelk.id}")
 
             allAPIs = whelk.getAPIs()
