@@ -117,7 +117,7 @@ class OAIPMHImporter {
                     if (sizeOfBatch && meanTime) {
                         velocityMsg = "Current velocity: " + (1000*(sizeOfBatch / (System.currentTimeMillis() - meanTime))) + " docs/second."
                     }
-                    //Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
+                    Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord", e)
                     if (picky) {
