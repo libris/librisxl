@@ -2,28 +2,6 @@
  * Runtime tools. Use these tasks to invoke compiled tools directly from gradle.
  */
 
-
-task whelkOperation(dependsOn: 'classes', type: JavaExec) {
-  description "Run import or reindex. (USAGE: -Dargs='<call without for usage instructions>' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
-  classpath = sourceSets.main.runtimeClasspath
-  workingDir = ".."
-  main = 'se.kb.libris.whelks.WhelkOperator'
-  minHeapSize = "2g"
-  maxHeapSize = "2g"
-  def mock_es_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
-  def mock_c_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-c-cluster"
-  systemProperty 'elastic.host', System.getProperty('elastic.host', "")
-  systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', mock_es_cluster)
-  systemProperty 'cassandra.host', System.getProperty('cassandra.host', "localhost")
-  systemProperty 'cassandra.cluster', System.getProperty('cassandra.cluster', mock_c_cluster)
-  systemProperty 'file.encoding', "UTF-8"
-  systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', 'file:etc/whelkoperations.json')
-  systemProperty 'plugin.config.uri', System.getProperty('plugin.config.uri', null)
-  systemProperty 'whelk.disable', System.getProperty('whelk.disable', null)
-  systemProperty 'picky', System.getProperty('picky', 'false')
-  args(System.getProperty('args', "").split() as String[])
-}
-
 task(groovy, dependsOn: 'classes', type: JavaExec) {
   description "Run a Groovy Script (USAGE: -Dargs='<script> [...]')"
   classpath = sourceSets.main.runtimeClasspath
