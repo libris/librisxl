@@ -20,7 +20,7 @@ class WhelkOperator {
         }
         WhelkInitializer wi = new WhelkInitializer(whelkConfigInputStream, pluginConfigInputStream)
 
-        def cli = new CliBuilder(usage: 'whelkoperation')
+        def cli = new CliBuilder(usage: 'whelkoperation', posix:true)
         cli.o(longOpt:'operation', "which operation to perform (import|reindex|rebuild|etc)", required:true, args: 1)
         cli.w(longOpt:'whelk', "the name of the whelk to perform operation on e.g. libris", required:true, args: 1)
         cli.d(longOpt:'dataset', "dataset (bib|auth|hold)", required:false, args:1)
