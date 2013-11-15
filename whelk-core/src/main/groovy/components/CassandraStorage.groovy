@@ -52,8 +52,8 @@ class CassandraStorage extends BasicPlugin implements Storage {
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
         .forCluster(cassandra_cluster)
         // TODO: Replace keyspaceSuffix with id-based suffix
-        //.forKeyspace(whelkName+"_"+this.id)
-        .forKeyspace(whelkName+keyspaceSuffix)
+        .forKeyspace(whelkName+"_"+this.id)
+        //.forKeyspace(whelkName+keyspaceSuffix)
         .withAstyanaxConfiguration(
             new AstyanaxConfigurationImpl()
             .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
