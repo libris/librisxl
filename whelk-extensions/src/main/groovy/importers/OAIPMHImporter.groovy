@@ -91,20 +91,6 @@ class OAIPMHImporter {
 
                 String id = record.getControlfields("001").get(0).getData()
 
-                /*
-                def links = []
-                //def tags = new HashSet<Map<String,Object>>()
-                if (it.header.setSpec) {
-                    for (sS in it.header.setSpec) {
-                        if (sS.toString().startsWith("authority:")) {
-                            links.add(["identifier":new String("/auth/" + sS.toString().substring(10)), "type":"auth"])
-                        }
-                        if (sS.toString().startsWith("bibid:")) {
-                            links.add(["identifier":new String("/bib/" + sS.toString().substring(6)), "type":"bib"])
-                        }
-                    }
-                }
-                */
                 def doc
                 try {
                     doc = new Document()
@@ -117,7 +103,9 @@ class OAIPMHImporter {
                     if (sizeOfBatch && meanTime) {
                         velocityMsg = "Current velocity: " + (1000*(sizeOfBatch / (System.currentTimeMillis() - meanTime))) + " docs/second."
                     }
-                    Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
+                    if (log.isInfoEnabled() && !log.isDebugEnabled()) {
+                        Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
+                    }
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord", e)
                     if (picky) {
