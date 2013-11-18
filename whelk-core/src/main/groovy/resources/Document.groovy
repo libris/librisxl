@@ -70,6 +70,7 @@ class Document {
     }
 
     String getMetadataAsJson() {
+        log.trace("For $identifier. Meta is: $meta, entry is: $entry")
         return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "entry":entry])
     }
 
@@ -118,8 +119,8 @@ class Document {
     Document withEntry(Map entrydata) {
         if (entrydata?.get("identifier", null)) {
             this.identifier = entrydata["identifier"]
-            entrydata.remove("identifier")
         }
+        entrydata.remove("identifier")
         if (entrydata) {
             this.entry.putAll(entrydata)
         }
@@ -139,7 +140,7 @@ class Document {
     Document withMetaEntry(String jsonEntry) {
         Map metaEntry = mapper.readValue(jsonEntry, Map)
         this.entry = metaEntry.entry
-        this.meta = metaEntry.metadata
+        this.meta = metaEntry.meta
         return this
     }
 

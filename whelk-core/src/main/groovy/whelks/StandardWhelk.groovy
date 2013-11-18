@@ -297,9 +297,9 @@ class StandardWhelk implements Whelk {
                     log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
                 }
                 docs = []
-                if (log.isInfoEnabled()) {
-                    Tools.printSpinner("Reindexing ${this.id}. ${counter} documents sofar.", counter)
-                }
+            }
+            if (log.isInfoEnabled()) {
+                Tools.printSpinner("Rebuilding ${this.id} from ${fromStorage}. ${counter} documents sofar.", counter)
             }
         }
         log.debug("Went through all documents. Processing remainder.")

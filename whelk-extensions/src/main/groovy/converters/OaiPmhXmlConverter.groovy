@@ -26,6 +26,9 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
         String rstring = createString(xml.metadata.record)
         MarcRecord record = MarcXmlRecordReader.fromXml(rstring)
 
+
+        log.debug("Creating new document ${document.identifier} from doc with entry: ${document.entry} and meta: ${document.meta}")
+
         String jsonRec = MarcJSONConverter.toJSONString(record)
 
         def doc = new Document()
@@ -38,11 +41,14 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
             for (spec in xml.header.setSpec) {
                 for (key in SPEC_URI_MAP.keySet()) {
                     if (spec.toString().startsWith(key+":")) {
-                        doc.withLink(new String("/"+SPEC_URI_MAP[key]+"/" + spec.toString().substring(key.length()+1)), key)
+                        def link = new String("/"+SPEC_URI_MAP[key]+"/" + spec.toString().substring(key.length()+1))
+                        log.trace("Adding link $link ($key) to ${doc.identifier}")
+                        doc.withLink(link, SPEC_URI_MAP[key])
                     }
                 }
             }
         }
+        log.debug("Document ${doc.identifier} created successfully with entry: ${doc.entry} and meta: ${doc.meta}")
 
         return doc.withContentType(resultContentType)
     }

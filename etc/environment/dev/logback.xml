@@ -97,10 +97,10 @@
     <!--<logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">-->
         <!--<level value="debug"/>-->
     <!--</logger>-->
-<!--
-     <logger name="se.kb.libris.whelks.plugin.BasicFormatConverter">
+     <logger name="se.kb.libris.whelks.plugin.OaiPmhXmlConverter">
       <level value="trace"/>
 </logger>
+<!--
     <logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
           <level value="debug"/>
         </logger>
