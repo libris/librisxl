@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import com.netflix.astyanax.*
 import com.netflix.astyanax.impl.*
 import com.netflix.astyanax.model.*
+import com.netflix.astyanax.query.*
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException
 import com.netflix.astyanax.connectionpool.*
 import com.netflix.astyanax.connectionpool.impl.*
@@ -177,18 +178,18 @@ class CassandraStorage extends BasicPlugin implements Storage {
     Iterable<Document> getAll(String dataset = null) {
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
-                Rows<String, String> rows
+                def query
                 try {
-                    def q
                     if (dataset) {
                         log.debug("Using query: dataset=$dataset")
-                        q = keyspace.prepareQuery(CF_DOCUMENT).searchWithIndex()
+                        query = keyspace.prepareQuery(CF_DOCUMENT).searchWithIndex()
+                        .autoPaginateRows(true)
                         .addExpression().whereColumn("dataset")
                         .equals().value(dataset)
                     } else {
                         log.debug("Using allrows()")
-                        q = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
-                        .setExceptionCallback(new ExceptionCallback() {
+                        query = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
+                            .setExceptionCallback(new ExceptionCallback() {
                             @Override
                             public boolean onException(ConnectionException e) {
                                 try {
@@ -199,15 +200,14 @@ class CassandraStorage extends BasicPlugin implements Storage {
                             return true
                             }})
                     }
-                    rows = q
-                    .setRowLimit(10)
-                    .withColumnRange(new RangeBuilder().setLimit(10).build())
-                    .execute().getResult()
+                    query = query
+                        .setRowLimit(10)
+                        .withColumnRange(new RangeBuilder().setLimit(10).build())
                 } catch (ConnectionException e) {
                     log.error("Cassandra Query failed.", e)
                     throw e
                 }
-                return new CassandraIterator(rows)
+                return new CassandraIterator(query)
             }
         }
     }
@@ -215,13 +215,21 @@ class CassandraStorage extends BasicPlugin implements Storage {
     class CassandraIterator implements Iterator<Document> {
 
         private Iterator iter
+        def query
 
-        CassandraIterator(Rows rows) {
-            iter = rows.iterator()
+        CassandraIterator(q) {
+            this.query = q
+            iter = query.execute().getResult().iterator()
         }
 
         public boolean hasNext() {
-            return iter.hasNext()
+            boolean hn = iter.hasNext()
+            if (!hn && (query instanceof IndexQuery)) {
+                log.trace("Refilling rows (for indexquery)")
+                iter = query.execute().getResult().iterator()
+                hn = iter.hasNext()
+            }
+            return hn
         }
 
         public Document next() {
