@@ -189,6 +189,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     } else {
                         log.debug("Using allrows()")
                         query = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
+                        /*
                             .setExceptionCallback(new ExceptionCallback() {
                             @Override
                             public boolean onException(ConnectionException e) {
@@ -199,6 +200,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                             }
                             return true
                             }})
+                        */
                     }
                     query = query
                         .setRowLimit(10)
@@ -223,22 +225,41 @@ class CassandraStorage extends BasicPlugin implements Storage {
         }
 
         public boolean hasNext() {
-            boolean hn = iter.hasNext()
-            if (!hn && (query instanceof IndexQuery)) {
-                log.trace("Refilling rows (for indexquery)")
-                iter = query.execute().getResult().iterator()
-                hn = iter.hasNext()
+            boolean hn,success = false
+            while (!success) {
+                try {
+                    hn = iter.hasNext()
+                    if (!hn && (query instanceof IndexQuery)) {
+                        log.trace("Refilling rows (for indexquery)")
+                        iter = query.execute().getResult().iterator()
+                        hn = iter.hasNext()
+                    }
+                    success = true
+                } catch (Exception ce) {
+                    log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...")
+                    Thread.sleep(1000)
+                }
             }
             return hn
         }
 
         public Document next() {
-            Row<String,String> row = iter.next()
-            def doc = new Document()
-            .withIdentifier(row.columns.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
-            .withData(row.columns.getColumnByName(COL_NAME_DATA).getByteArrayValue())
-            .withMetaEntry(row.columns.getColumnByName(COL_NAME_ENTRY).getStringValue())
-            log.trace("Next yielded ${doc.identifier}")
+            boolean success = false
+            def doc
+            while (!success) {
+                try {
+                    Row<String,String> row = iter.next()
+                    doc = new Document()
+                        .withIdentifier(row.columns.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
+                        .withData(row.columns.getColumnByName(COL_NAME_DATA).getByteArrayValue())
+                        .withMetaEntry(row.columns.getColumnByName(COL_NAME_ENTRY).getStringValue())
+                    success = true
+                    log.trace("Next yielded ${doc.identifier}")
+                } catch (Exception ce) {
+                    log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...")
+                    Thread.sleep(1000)
+                }
+            }
             return doc
         }
 
