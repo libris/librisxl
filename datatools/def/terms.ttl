@@ -1,10 +1,12 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix ptg: <http://protege.stanford.edu/plugins/owl/protege#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dc: <http://purl.org/dc/terms/> .
 @prefix dctype: <http://purl.org/dc/dcmitype/> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix persona: <http://www.pipian.com/schemas/foaf/persona#> .
 @prefix bibo: <http://purl.org/ontology/bibo/> .
 @prefix rdael: <http://rdvocab.info/Elements/> .
 @prefix bf: <http://bibframe.org/vocab/> .
@@ -20,6 +22,19 @@
 # Various sources beyond the linked defintions themselves:
 # - <http://bibframe.org/documentation/resource-types/#proposal>
 
+
+:Record a owl:Class;
+    rdfs:label "Post"@sv;
+    rdfs:subClassOf foaf:Document .
+
+:about a owl:ObjectProperty;
+    owl:equivalentProperty sdo:about;
+    rdfs:subPropertyOf foaf:primaryTopic .
+
+:describedBy a owl:ObjectProperty;
+    owl:inverseOf :about;
+    owl:equivalentProperty iana:describedby;
+    rdfs:subPropertyOf foaf:isPrimaryTopicOf .
 
 :UniformWork a owl:Class;
     rdfs:label "Uniformt verk"@sv;
@@ -40,9 +55,6 @@
 
 # rdfs:Datatype for variable DateTime expressions.
 # See also: <http://id.loc.gov/datatypes/edtf.html>
-
-
-:publisher owl:equivalentProperty dc:publisher, bf:publisher .
 
 
 :Collection a owl:Class;
@@ -101,16 +113,46 @@
     rdfs:range :Holding .
 
 
-:Record a owl:Class;
-    rdfs:label "Post"@sv;
-    rdfs:subClassOf foaf:Document .
+:ProviderEvent a owl:Class;
+    rdfs:subClassOf prov:Activity, bf:ProviderEntity .
 
-:about a owl:ObjectProperty;
-    owl:equivalentProperty sdo:about;
-    rdfs:subPropertyOf foaf:primaryTopic .
 
-:describedBy a owl:ObjectProperty;
-    owl:inverseOf :about;
-    owl:equivalentProperty iana:describedby;
-    rdfs:subPropertyOf foaf:isPrimaryTopicOf .
+:publisher owl:equivalentProperty dc:publisher, bf:publisher .
+
+
+:Person a owl:Class;
+    owl:equivalentClass foaf:Person, sdo:Person .
+
+:sameAs a owl:ObjectProperty;
+    rdfs:subPropertyOf owl:sameAs .
+
+:Persona a owl:Class;
+    rdfs:subClassOf :Person;
+    owl:equivalentClass persona:Persona .
+
+:hasPersona a owl:ObjectProperty;
+    rdfs:subPropertyOf rdfs:seeAlso;
+    owl:equivalentProperty persona:hasPersona .
+
+:attributedTo a owl:ObjectProperty;
+    rdfs:label "Huvuduppslag"@sv;
+    owl:equivalentProperty prov:wasAttributedTo .
+
+:associatedWith a owl:ObjectProperty;
+    rdfs:label "Biuppslag"@sv;
+    owl:equivalentProperty prov:wasAssociatedWith .
+
+:qualifiedAttribution a owl:ObjectProperty;
+    rdfs:label "Huvuduppslag"@sv;
+    owl:equivalentProperty prov:qualifiedAttribution .
+
+:qualifiedAssociation a owl:ObjectProperty;
+    rdfs:label "Biuppslag"@sv;
+    owl:equivalentProperty prov:qualifiedAssociation .
+
+:agent a owl:ObjectProperty;
+    owl:equivalentProperty prov:agent .
+
+:role a owl:ObjectProperty;
+    owl:equivalentProperty prov:hadRole .
 
