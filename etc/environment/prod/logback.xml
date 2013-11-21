@@ -24,7 +24,7 @@
       <level value="error"/>
   </logger>
 
-  <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">
+  <logger name="se.kb.libris.whelks.api.SearchRestlet" level="INFO">
     <appender-ref ref="FILE-QUERY" />
   </logger>
 
