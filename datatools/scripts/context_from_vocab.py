@@ -8,7 +8,7 @@ CLASS_TYPES = {RDFS.Class, OWL.Class, RDFS.Datatype}
 PROP_TYPES = {RDF.Property, OWL.ObjectProperty, OWL.DatatypeProperty}
 
 
-def context_from_vocab(graph):
+def context_from_vocab(graph, dest_vocab=None, ns_pref_order=None):
     terms = set()
     for s in graph.subjects():
         if not isinstance(s, URIRef):
@@ -17,25 +17,30 @@ def context_from_vocab(graph):
         in_source_vocab = True # TODO: provide source and target vocab(s)
         if in_source_vocab:
             terms.add(r)
+    dest_vocab = graph.store.namespace(dest_vocab)
     prefixes = set()
     defs = {}
     for term in terms:
-        dfn = termdef(term)
+        dfn = termdef(term, ns_pref_order)
         if dfn:
             curie = dfn.get('@reverse') or dfn['@id'] if isinstance(dfn, dict) else dfn
             if ':' in curie:
                 pfx = curie.split(':', 1)[0]
                 prefixes.add(pfx)
-            defs[unicode(term.qname())] = dfn
+            key = unicode(term.qname())
+            if key != dfn:
+                defs[key] = dfn
     ns = {}
     for pfx, iri in graph.namespaces():
         if pfx in prefixes:
             ns[pfx] = iri
         elif pfx == "":
             ns["@vocab"] = iri
+    if dest_vocab:
+        ns["@vocab"] = dest_vocab
     return {"@context": [ns, defs]}
 
-def termdef(term):
+def termdef(term, ns_pref_order=None):
     types = set(o.id for o in term.objects(RDF.type))
     is_class = types & CLASS_TYPES
     is_prop = types & PROP_TYPES
@@ -47,8 +52,13 @@ def termdef(term):
     else:
         equiv = OWL.equivalentProperty
         subof = RDFS.subPropertyOf
-    # TODO: get all target candidates, select first based on target vocab order
-    target_term = term.value(OWL.sameAs) or term.value(equiv) or term.value(subof)
+    for pred in OWL.sameAs, equiv, subof:
+        mapped = get_preferred(term, pred, ns_pref_order)
+        if mapped:
+            target_term = mapped
+            break
+    else:
+        target_term = None
 
     curie = unicode((target_term or term).qname())
     if is_class:
@@ -88,6 +98,20 @@ def termdef(term):
     else:
         return curie
 
+def get_preferred(term, pred, ns_pref_order=None):
+    ns_pref_order = ns_pref_order or []
+    current, current_index = None, len(ns_pref_order)
+    candidate = None
+    for candidate in term.objects(pred):
+        pfx = candidate.qname().split(':')[0]
+        try:
+            index = ns_pref_order.index(pfx)
+            if index <= current_index:
+                current, current_index = candidate, index
+        except ValueError:
+            pass
+    return current or candidate
+
 def extend(context, overlay):
     ns, defs = context['@context']
     overlay = overlay.get('@context') or overlay
@@ -106,10 +130,12 @@ if __name__ == '__main__':
     args = sys.argv[1:]
     fpath = args.pop(0)
     overlay_fpath = args.pop(0) if args else None
+    dest_vocab = args.pop(0) if args else None
+    ns_pref_order = ['sdo', 'dc', 'dctype', 'prov', 'bf']
 
     fmt = 'n3' if fpath.endswith(('.n3', '.ttl')) else 'xml'
     graph = Graph().parse(fpath, format=fmt)
-    context = context_from_vocab(graph)
+    context = context_from_vocab(graph, dest_vocab=dest_vocab, ns_pref_order=ns_pref_order)
     if overlay_fpath:
         with open(overlay_fpath) as fp:
             overlay = json.load(fp)
