@@ -1,10 +1,12 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix ptg: <http://protege.stanford.edu/plugins/owl/protege#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dc: <http://purl.org/dc/terms/> .
 @prefix dctype: <http://purl.org/dc/dcmitype/> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix persona: <http://www.pipian.com/schemas/foaf/persona#> .
 @prefix bibo: <http://purl.org/ontology/bibo/> .
 @prefix rdael: <http://rdvocab.info/Elements/> .
 @prefix bf: <http://bibframe.org/vocab/> .
@@ -21,12 +23,46 @@
 # - <http://bibframe.org/documentation/resource-types/#proposal>
 
 
+##
+# Common Properties
+
+:label a owl:DatatypeProperty;
+    owl:equivalentProperty rdfs:label .
+:comment a owl:DatatypeProperty;
+    owl:equivalentProperty rdfs:comment .
+
+# TODO: use AnnotationProperty istead of DatatypeProperty where applicable
+
+##
+# Records
+
+:Record a owl:Class;
+    rdfs:label "Post"@sv;
+    rdfs:subClassOf foaf:Document .
+
+:about a owl:ObjectProperty;
+    owl:equivalentProperty sdo:about;
+    rdfs:subPropertyOf foaf:primaryTopic .
+
+:describedBy a owl:ObjectProperty;
+    owl:inverseOf :about;
+    owl:equivalentProperty iana:describedby;
+    rdfs:subPropertyOf foaf:isPrimaryTopicOf .
+
+:controlNumber a owl:DatatypeProperty;
+    owl:equivalentProperty dc:identifier .
+
+# TODO: rdfs:Datatype for variable DateTime expressions.
+# See also: <http://id.loc.gov/datatypes/edtf.html>
+
+##
+# Works
+
 :UniformWork a owl:Class;
     rdfs:label "Uniformt verk"@sv;
     ptg:abstract true;
     owl:equivalentClass bf:Work;
     rdfs:subClassOf sdo:CreativeWork .
-
 
 :genre a owl:ObjectProperty;
     rdfs:label "genre"@sv;
@@ -38,18 +74,14 @@
     rdfs:domain skos:Concept;
     rdfs:range skos:Collection .
 
-# rdfs:Datatype for variable DateTime expressions.
-# See also: <http://id.loc.gov/datatypes/edtf.html>
-
-
-:publisher owl:equivalentProperty dc:publisher, bf:publisher .
-
+:sameAs a owl:ObjectProperty;
+    rdfs:subPropertyOf owl:sameAs .
 
 :Collection a owl:Class;
     rdfs:label "Samling"@sv;
     owl:equivalentClass dctype:Collection, bf:Collection .
 
-:DigitalResource a owl:Class;
+:DigitalResource a owl:Class; # :Digital
     ptg:abstract true;
     owl:equivalentClass bf:SoftwareOrMultimedia;
     #rdfs:subClassOf [ owl:unionOf (dctype:InteractiveResource dctype:Software) ]
@@ -63,6 +95,8 @@
     rdfs:label "Bild"@sv;
     owl:equivalentClass dctype:Image .
 
+#Book a owl:Class;
+#    owl:equivalentClass bibo:Book .
 :Text a owl:Class;
     rdfs:label "Text"@sv;
     rdfs:subClassOf :UniformWork;
@@ -92,6 +126,103 @@
     owl:equivalentClass dctype:Sound, bf:Audio .
 
 
+##
+# Parts, Events, Relations
+
+:ProviderEvent a owl:Class;
+    rdfs:subClassOf prov:Activity, bf:ProviderEntity .
+
+:creator a owl:ObjectProperty;
+    owl:equivalentProperty dc:creator .
+
+:publisher a owl:ObjectProperty;
+    owl:equivalentProperty dc:publisher, bf:publisher .
+
+:hasVersion a owl:ObjectProperty;
+    owl:equivalentProperty dc:hasVersion .
+:license a owl:ObjectProperty;
+    owl:equivalentProperty dc:license .
+:modified a owl:ObjectProperty;
+    owl:equivalentProperty dc:modified .
+:relation a owl:ObjectProperty;
+    owl:equivalentProperty dc:relation .
+:replaces a owl:ObjectProperty;
+    owl:equivalentProperty dc:replaces .
+:source a owl:ObjectProperty;
+    owl:equivalentProperty dc:source .
+:subject a owl:ObjectProperty;
+    owl:equivalentProperty dc:subject .
+
+##
+# Agents
+
+:Person a owl:Class;
+    owl:equivalentClass foaf:Person, sdo:Person .
+
+:name a owl:ObjectProperty;
+    owl:equivalentProperty foaf:name .
+
+:Persona a owl:Class;
+    rdfs:subClassOf :Person;
+    owl:equivalentClass persona:Persona .
+
+:hasPersona a owl:ObjectProperty;
+    rdfs:subPropertyOf rdfs:seeAlso;
+    owl:equivalentProperty persona:hasPersona .
+
+:attributedTo a owl:ObjectProperty;
+    rdfs:label "Huvuduppslag"@sv;
+    owl:equivalentProperty prov:wasAttributedTo .
+
+:associatedWith a owl:ObjectProperty;
+    rdfs:label "Biuppslag"@sv;
+    owl:equivalentProperty prov:wasAssociatedWith .
+
+:qualifiedAttribution a owl:ObjectProperty;
+    rdfs:label "Huvuduppslag"@sv;
+    owl:equivalentProperty prov:qualifiedAttribution .
+
+:qualifiedAssociation a owl:ObjectProperty;
+    rdfs:label "Biuppslag"@sv;
+    owl:equivalentProperty prov:qualifiedAssociation .
+
+:agent a owl:ObjectProperty;
+    owl:equivalentProperty prov:agent .
+
+:role a owl:ObjectProperty;
+    owl:equivalentProperty prov:hadRole .
+
+
+##
+# Topics / Concept Codes / Subject Headings
+
+:Concept a owl:Class;
+    owl:equivalentClass skos:Concept .
+:ConceptScheme a owl:Class;
+    owl:equivalentClass skos:ConceptScheme .
+:altLabel a owl:DatatypeProperty;
+    owl:equivalentProperty skos:altLabel .
+:broader a owl:ObjectProperty;
+    owl:equivalentProperty skos:broader .
+:closeMatch a owl:ObjectProperty;
+    owl:equivalentProperty skos:closeMatch .
+:hiddenLabel a owl:DatatypeProperty;
+    owl:equivalentProperty skos:hiddenLabel .
+:historyNote a owl:DatatypeProperty;
+    owl:equivalentProperty skos:historyNote .
+:inScheme a owl:ObjectProperty;
+    owl:equivalentProperty skos:inScheme .
+:notation a owl:DatatypeProperty;
+    owl:equivalentProperty skos:notation .
+:prefLabel a owl:DatatypeProperty;
+    owl:equivalentProperty skos:prefLabel .
+:scopeNote a owl:DatatypeProperty;
+    owl:equivalentProperty skos:scopeNote .
+
+
+##
+# Holdings
+
 :Holding a owl:Class;
     rdfs:label "Bestånd"@sv;
     owl:equivalentClass bf:Holding;
@@ -100,17 +231,42 @@
 :callno rdfs:subPropertyOf :genre, bf:callno, sdo:sku;
     rdfs:range :Holding .
 
-
-:Record a owl:Class;
-    rdfs:label "Post"@sv;
-    rdfs:subClassOf foaf:Document .
-
-:about a owl:ObjectProperty;
-    owl:equivalentProperty sdo:about;
-    rdfs:subPropertyOf foaf:primaryTopic .
-
-:describedBy a owl:ObjectProperty;
-    owl:inverseOf :about;
-    owl:equivalentProperty iana:describedby;
-    rdfs:subPropertyOf foaf:isPrimaryTopicOf .
+# ...
+@prefix xf: <http://libris.kb.se/ns/extframe/> .
+:accompanyingMaterial a owl:ObjectProperty;
+    owl:equivalentProperty xf:accompanyingMaterial .
+:availability a owl:ObjectProperty;
+    owl:equivalentProperty xf:availability .
+:bibLevel a owl:ObjectProperty;
+    owl:equivalentProperty xf:bibLevel .
+:catForm a owl:ObjectProperty;
+    owl:equivalentProperty xf:catForm .
+:classificationPart a owl:ObjectProperty;
+    owl:equivalentProperty xf:classificationPart .
+:dimensions a owl:DatatypeProperty;
+    owl:equivalentProperty xf:dimensions .
+:encLevel a owl:ObjectProperty;
+    owl:equivalentProperty xf:encLevel .
+:extent a owl:DatatypeProperty;
+    owl:equivalentProperty xf:extent .
+:itemPart a owl:ObjectProperty;
+    owl:equivalentProperty xf:itemPart .
+:location a owl:ObjectProperty;
+    owl:equivalentProperty xf:location .
+:materialsSpecified a owl:ObjectProperty;
+    owl:equivalentProperty xf:materialsSpecified .
+:numeration a owl:DatatypeProperty;
+    owl:equivalentProperty xf:numeration .
+:otherPhysicalDetails a owl:DatatypeProperty;
+    owl:equivalentProperty xf:otherPhysicalDetails .
+:sequenceNumber a owl:DatatypeProperty;
+    owl:equivalentProperty xf:sequenceNumber .
+:shelvingControlNumber a owl:DatatypeProperty;
+    owl:equivalentProperty xf:shelvingControlNumber .
+:shelvingLocation a owl:ObjectProperty;
+    owl:equivalentProperty xf:shelvingLocation .
+:status a owl:ObjectProperty;
+    owl:equivalentProperty xf:status .
+:typeOfRecord a owl:ObjectProperty;
+    owl:equivalentProperty xf:typeOfRecord .
 
