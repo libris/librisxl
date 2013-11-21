@@ -14,7 +14,8 @@ if args[0].endswith('.tsv'):
     with open(args[0], 'rb') as fp:
         reader = csv.reader(fp, dialect='excel-tab')
         for row in reader:
-            records.append(row[0])
+            if row:
+                records.append(row[0])
     if args[1]:
         outdir = args[1]
 else:
