@@ -1,0 +1,13 @@
+{
+  "@context": {
+    "birthYear": {"@id": "birthDate", "@type": "gYear"},
+    "deathYear": {"@id": "deathDate", "@type": "gYear"},
+    "associatedWith": {"@container": "@set"},
+    "generic": "http://libris.kb.se/ns/generic?label=",
+    "unknown": null,
+    "_note": null,
+    "recordPriority": null,
+    "highlight": null,
+    "extractedFrom": "describedBy"
+  }
+}

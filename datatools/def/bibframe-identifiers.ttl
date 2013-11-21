@@ -29,7 +29,7 @@ ext:agentLink a owl:ObjectProperty;
 
 ext:AgentLink a owl:Class;
     owl:subClassOf rdf:Statement, [
-        a owl:Restriction; owl:onProperty ext:relator; owl:allValuesFrom :associatedAgent
+        a owl:Restriction; owl:onProperty ext:relator; owl:hasValue :associatedAgent
     ] .
 
 ext:relator a owl:ObjectProperty;
