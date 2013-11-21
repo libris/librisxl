@@ -8,6 +8,7 @@ auth/176404	(100 0_ ‡a Birger Jarl, ‡d d. 1266)
 auth/180036	(100 0_ ‡a Birgitta, ‡c helgon, ‡d 1303-1373)
 auth/184982	(100 1_ ‡a Eliot, T. S. ‡q (Thomas Stearns), ‡d 1888-1965)
 auth/189316	(100 0_ ‡a Homeros, ‡d 700-talet f.Kr.)
+auth/191493 Lars Jansson (förekommer som contributor)
 auth/191503
 auth/191698	(100 0_ ‡a Johannes ‡b XXIII, ‡c påve, ‡d 1881-1963)
 auth/193755	(100 0_ ‡a Karl ‡b XIV Johan, ‡c kung av Sverige och Norge, ‡d 1763-1844)
@@ -69,8 +70,11 @@ bib/48077
 bib/5067018
 bib/5299954
 bib/6128247
+bib/664491	(länkar till Tove Jansson auth/19153 som creator)
 bib/7149593
+bib/816912	(länkar till Lars Jansson auth/191493 som contributor)
 bib/8261338
+bib/827126	Mumintrollet (länkar till Tove Jansson auth/19153 som creator)
 bib/8558889
 bib/12739812	person och institution
 bib/13457927	Kjellström, Rolf: Nybyggarliv i Vilhelmina med person + 2 institutioner
@@ -102,3 +106,4 @@ hold/718815
 hold/718817
 hold/718818
 hold/718819
+
