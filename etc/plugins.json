@@ -83,6 +83,17 @@
                     },
                     "queryFacets" : "about.@type"
                 },
+                "hold": {
+                    "queryFields": [],
+                    "infoFields": [],
+                    "defaultBoost": "about.sublocationOrCollection:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.sublocationOrCollection" : "asc"
+                    },
+                    "queryFacets" : "about.annotates.@id"
+                },
                 "person" : {
                     "queryFields":[
                         "controlledLabel",
