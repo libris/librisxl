@@ -88,16 +88,32 @@ def termdef(term):
     else:
         return curie
 
+def extend(context, overlay):
+    ns, defs = context['@context']
+    overlay = overlay.get('@context') or overlay
+    for term, dfn in overlay.items():
+        if term in defs:
+            v = defs[term]
+            if isinstance(v, basestring):
+                v = defs[term] = {'@id': v}
+            v.update(dfn)
+        else:
+            defs[term] = dfn
+
 
 if __name__ == '__main__':
     import sys
     args = sys.argv[1:]
     fpath = args.pop(0)
-    prefix = args.pop(0) if args else None
+    overlay_fpath = args.pop(0) if args else None
 
     fmt = 'n3' if fpath.endswith(('.n3', '.ttl')) else 'xml'
     graph = Graph().parse(fpath, format=fmt)
     context = context_from_vocab(graph)
+    if overlay_fpath:
+        with open(overlay_fpath) as fp:
+            overlay = json.load(fp)
+        extend(context, overlay)
     s = json.dumps(context, sort_keys=True, indent=2, separators=(',', ': '),
             ensure_ascii=False).encode('utf-8')
     print s
