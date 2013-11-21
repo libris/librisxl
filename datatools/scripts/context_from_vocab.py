@@ -4,7 +4,7 @@ from rdflib.resource import Resource
 Resource.id = Resource.identifier
 
 
-CLASS_TYPES = {RDFS.Class, OWL.Class}
+CLASS_TYPES = {RDFS.Class, OWL.Class, RDFS.Datatype}
 PROP_TYPES = {RDF.Property, OWL.ObjectProperty, OWL.DatatypeProperty}
 
 
@@ -22,7 +22,7 @@ def context_from_vocab(graph):
     for term in terms:
         dfn = termdef(term)
         if dfn:
-            curie = dfn['@id'] if isinstance(dfn, dict) else dfn
+            curie = dfn.get('@reverse') or dfn['@id'] if isinstance(dfn, dict) else dfn
             if ':' in curie:
                 pfx = curie.split(':', 1)[0]
                 prefixes.add(pfx)
@@ -48,9 +48,9 @@ def termdef(term):
         equiv = OWL.equivalentProperty
         subof = RDFS.subPropertyOf
     # TODO: get all target candidates, select first based on target vocab order
-    target_term = term.value(equiv) or term.value(subof) or term
+    target_term = term.value(OWL.sameAs) or term.value(equiv) or term.value(subof)
 
-    curie = unicode(target_term.qname())
+    curie = unicode((target_term or term).qname())
     if is_class:
         return curie
 
@@ -72,8 +72,12 @@ def termdef(term):
     else:
         container = None
 
-    if datatype or container:
-        dfn = {"@id": curie}
+    reverse = None if target_term else term.value(OWL.inverseOf)
+    if reverse or datatype or container:
+        if reverse:
+            dfn = {"@reverse": unicode(reverse.qname())}
+        else:
+            dfn = {"@id": curie}
         if datatype:
             dfn["@type"] = datatype
         elif datatype is False:
