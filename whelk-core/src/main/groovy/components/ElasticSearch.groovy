@@ -74,6 +74,7 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         log.info "Starting elastic node"
         def elasticcluster = System.getProperty("elastic.cluster")
         ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
+        sb.put("node.name", "Parasite")
         if (elasticcluster) {
             sb = sb.put("cluster.name", elasticcluster)
         } else {
@@ -88,6 +89,8 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         // start it!
         def node = nBuilder.build().start()
         client = node.client()
+        // Make sure everything is in place
+        Thread.sleep(1000)
         log.info "Client connected to new (local) ES node."
     }
 }

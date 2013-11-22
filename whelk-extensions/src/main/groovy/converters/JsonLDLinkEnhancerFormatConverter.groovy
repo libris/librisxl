@@ -33,7 +33,7 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
             //Find entity
             if (propValue instanceof List) {
                 propValue.each {
-                    if (entity instanceof Map) {
+                    if (it instanceof Map) {
                         entity = it
                         entityType = it.get("@type")
                     }
@@ -75,6 +75,7 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
         }
 
         if (changedData) {
+            log.debug("Document has changed.")
             return doc.withData(mapper.writeValueAsString(json))
         }
 
