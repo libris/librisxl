@@ -60,6 +60,7 @@ class OAIPMHImporter {
         log.debug("resumptionToken: $resumptionToken")
         while (resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
             url = new URL(serviceUrl + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken)
+            log.info("Harvesting $url")
             try {
                 String rtok = harvest(url)
                 resumptionToken = rtok
@@ -68,6 +69,11 @@ class OAIPMHImporter {
             }
             log.debug("resumptionToken: $resumptionToken")
         }
+        log.debug("Flushing ...")
+        queue.execute({
+            this.whelk.flush()
+        } as Runnable)
+        log.debug("Shutting down queue")
         queue.shutdown()
         return nrImported
     }

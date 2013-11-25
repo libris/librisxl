@@ -3,6 +3,7 @@ package se.kb.libris.whelks
 import groovy.util.logging.Slf4j as Log
 
 import java.util.UUID
+import java.util.concurrent.BlockingQueue
 import java.net.URI
 import java.net.URISyntaxException
 
@@ -22,13 +23,13 @@ class StandardWhelk implements Whelk {
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
 
+    private BlockingQueue queue
+
     // Set by configuration
     URI docBaseUri
 
-
     StandardWhelk(String id) {
         this.id = id
-        // Start executorservice
     }
 
     void setDocBaseUri(String uri) {
@@ -70,15 +71,23 @@ class StandardWhelk implements Whelk {
 
     @Override
     Document get(URI uri, List contentTypes=[]) {
+        Document doc
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
             def s = getStorage(contentType)
             if (s) {
                 log.debug("Found $contentType storage.")
-                return s.get(uri)
+                doc = s.get(uri)
             }
         }
-        return storage.get(uri)
+        if (!doc) {
+            doc = storage.get(uri)
+        }
+        if (doc?.identifier) {
+            log.debug("Adding ${doc.identifier} to prawn queue")
+            queue.put(doc.identifier)
+        }
+        return doc
     }
 
     @Override
@@ -344,12 +353,26 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
+    void flush() {
+        log.info("Flushing data.")
+        // TODO: Implement storage and graphstore flush if necessary
+        for (i in indexes) {
+            i.flush()
+        }
+    }
+
+    @Override
     void addPlugin(Plugin plugin) {
         log.debug("[${this.id}] Initializing ${plugin.id}")
         if (plugin instanceof WhelkAware) {
             plugin.setWhelk(this)
         }
         plugin.init(this.id)
+        if (plugin instanceof Prawn) {
+            log.debug("[${this.id}] Starting Prawn: ${plugin.id}")
+            queue = plugin.getQueue()
+            (new Thread(plugin)).start()
+        }
         this.plugins.add(plugin)
     }
 

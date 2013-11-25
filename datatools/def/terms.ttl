@@ -1,5 +1,7 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix ptg: <http://protege.stanford.edu/plugins/owl/protege#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dc: <http://purl.org/dc/terms/> .
@@ -9,6 +11,7 @@
 @prefix persona: <http://www.pipian.com/schemas/foaf/persona#> .
 @prefix bibo: <http://purl.org/ontology/bibo/> .
 @prefix rdael: <http://rdvocab.info/Elements/> .
+@prefix edtf: <http://id.loc.gov/datatypes/edtf/> .
 @prefix bf: <http://bibframe.org/vocab/> .
 @prefix sdo: <http://schema.org/> .
 @prefix iana: <http://www.iana.org/assignments/relation/> .
@@ -26,12 +29,51 @@
 ##
 # Common Properties
 
+# .. use rdfs:range rdf:langString where applicable?
+
 :label a owl:DatatypeProperty;
     owl:equivalentProperty rdfs:label .
 :comment a owl:DatatypeProperty;
     owl:equivalentProperty rdfs:comment .
+:value a owl:DatatypeProperty;
+    owl:equivalentProperty rdf:value .
 
-# TODO: use AnnotationProperty istead of DatatypeProperty where applicable
+:seeAlso a owl:ObjectProperty;
+    rdfs:subPropertyOf rdfs:seeAlso .
+
+:sameAs a owl:ObjectProperty;
+    rdfs:subPropertyOf owl:sameAs .
+
+:identifiedBy a owl:ObjectProperty;
+    owl:equivalentProperty sdo:sameAs .
+
+:date a rdfs:Datatype;
+    owl:sameAs xsd:date .
+:time a rdfs:Datatype;
+    owl:sameAs xsd:time .
+:dateTime a rdfs:Datatype;
+    owl:sameAs xsd:dateTime .
+:gYear a rdfs:Datatype;
+    owl:sameAs xsd:gYear .
+:gMonth a rdfs:Datatype;
+    owl:sameAs xsd:gMonth .
+:gDay a rdfs:Datatype;
+    owl:sameAs xsd:gDay .
+:gYearMonth a rdfs:Datatype;
+    owl:sameAs xsd:gYearMonth .
+:gMonthDay a rdfs:Datatype;
+    owl:sameAs xsd:gMonthDay .
+
+:anyDateTime a rdfs:Datatype;
+    rdfs:comment "Used for dates, dates and times, and intervals."@en;
+    owl:equivalentClass edtf:EDTF-level0 .
+:approxDateTime a rdfs:Datatype;
+    rdfs:comment "Used for approximate or unspecified dates, dates and times, and intervals."@en;
+    owl:equivalentClass edtf:EDTF-level1 .
+:partialDateTime a rdfs:Datatype;
+    rdfs:comment "Used for dates, dates and times, and intervals combining precise elements with uncertain, approximate, or unspecified parts. Also applicable for sets of dates."@en;
+    owl:equivalentClass edtf:EDTF-level2 .
+
 
 ##
 # Records
@@ -52,30 +94,23 @@
 :controlNumber a owl:DatatypeProperty;
     owl:equivalentProperty dc:identifier .
 
-# TODO: rdfs:Datatype for variable DateTime expressions.
-# See also: <http://id.loc.gov/datatypes/edtf.html>
 
 ##
 # Works
 
-:UniformWork a owl:Class;
+#:UniformWork
+:Work a owl:Class;
     rdfs:label "Uniformt verk"@sv;
     ptg:abstract true;
     owl:equivalentClass bf:Work;
     rdfs:subClassOf sdo:CreativeWork .
 
-:genre a owl:ObjectProperty;
-    rdfs:label "genre"@sv;
-    rdfs:subPropertyOf sdo:genre;
-    owl:equivalentProperty dc:type, bf:class .
-
-:inCollection a owl:ObjectProperty;
-    owl:inverseOf skos:member;
-    rdfs:domain skos:Concept;
-    rdfs:range skos:Collection .
-
-:sameAs a owl:ObjectProperty;
-    rdfs:subPropertyOf owl:sameAs .
+#:CreativeWork
+:Instance a owl:Class;
+    rdfs:label "Manifestation"@sv;
+    ptg:abstract true;
+    owl:equivalentClass bf:Instance;
+    rdfs:subClassOf sdo:CreativeWork .
 
 :Collection a owl:Class;
     rdfs:label "Samling"@sv;
@@ -125,6 +160,16 @@
     rdfs:label "Ljud"@sv;
     owl:equivalentClass dctype:Sound, bf:Audio .
 
+#Audiobook
+#CDBook
+#CDMap
+#Digital
+#EBook
+#ESerial
+#EditionEntity
+#Music
+#MusicCD
+
 
 ##
 # Parts, Events, Relations
@@ -140,27 +185,127 @@
 
 :hasVersion a owl:ObjectProperty;
     owl:equivalentProperty dc:hasVersion .
+
 :license a owl:ObjectProperty;
     owl:equivalentProperty dc:license .
+
+:created a owl:ObjectProperty;
+    owl:equivalentProperty dc:created;
+    rdfs:range xsd:dateTime .
+
 :modified a owl:ObjectProperty;
-    owl:equivalentProperty dc:modified .
+    owl:equivalentProperty dc:modified;
+    rdfs:range xsd:dateTime .
+
+:language a owl:ObjectProperty;
+    rdfs:subPropertyOf dc:language;
+    rdfs:range sdo:Language .
+
+:format a owl:ObjectProperty;
+    owl:equivalentProperty dc:format .
+
+:formatOf a owl:ObjectProperty;
+    owl:equivalentProperty dc:isFormatOf .
+
+:hasFormat a owl:ObjectProperty;
+    owl:equivalentProperty dc:hasFormat .
+
+:versionOf a owl:ObjectProperty;
+    owl:equivalentProperty dc:isVersionOf .
+
+:hasVersion a owl:ObjectProperty;
+    owl:equivalentProperty dc:hasVersion .
+
+:references a owl:ObjectProperty;
+    owl:equivalentProperty dc:references .
+
+:referencedBy a owl:ObjectProperty;
+    owl:inverseOf :references;
+    owl:equivalentProperty dc:isReferencedBy .
+
 :relation a owl:ObjectProperty;
     owl:equivalentProperty dc:relation .
+
 :replaces a owl:ObjectProperty;
     owl:equivalentProperty dc:replaces .
+
 :source a owl:ObjectProperty;
     owl:equivalentProperty dc:source .
+
 :subject a owl:ObjectProperty;
     owl:equivalentProperty dc:subject .
+
+:keyword a owl:ObjectProperty;
+    owl:equivalentProperty sdo:keywords;
+    rdfs:subPropertyOf dc:subject;
+    rdfs:range xsd:string .
+
+:authorList a owl:ObjectProperty;
+    owl:equivalentProperty bibo:authorList;
+    rdfs:range rdf:List .
+
+:contributorList a owl:ObjectProperty;
+    owl:equivalentProperty bibo:contributorList;
+    rdfs:range rdf:List .
+
+:genre a owl:ObjectProperty;
+    rdfs:label "genre"@sv;
+    rdfs:subPropertyOf sdo:genre;
+    owl:equivalentProperty dc:type, bf:class .
+
+:version a owl:ObjectProperty;
+    owl:equivalentProperty sdo:version .
+
+#instanceOf
+#commonEndeavor
+
 
 ##
 # Agents
 
+:name a owl:ObjectProperty;
+    owl:equivalentProperty foaf:name .
+
+:attributedTo a owl:ObjectProperty;
+    rdfs:label "Huvuduppslag"@sv;
+    owl:equivalentProperty prov:wasAttributedTo .
+
+:influencedBy a owl:ObjectProperty;
+    rdfs:label "Biuppslag"@sv;
+    owl:equivalentProperty prov:wasInfluencedBy .
+
+:qualifiedAttribution a owl:ObjectProperty;
+    rdfs:label "Detaljerat huvuduppslag"@sv;
+    owl:equivalentProperty prov:qualifiedAttribution .
+
+:qualifiedInfluence a owl:ObjectProperty;
+    rdfs:label "Detaljerat biuppslag"@sv;
+    owl:equivalentProperty prov:qualifiedInfluence .
+
+:agent a owl:ObjectProperty;
+    owl:equivalentProperty prov:agent .
+
+:role a owl:ObjectProperty;
+    owl:equivalentProperty prov:hadRole .
+
 :Person a owl:Class;
     owl:equivalentClass foaf:Person, sdo:Person .
 
-:name a owl:ObjectProperty;
-    owl:equivalentProperty foaf:name .
+#titlesAndOtherWordsAssociatedWithName / personTitle
+:jobTitle a owl:ObjectProperty;
+    owl:equivalentProperty sdo:jobTitle, foaf:title .
+
+:familyName a owl:ObjectProperty;
+    owl:equivalentProperty sdo:familyName, foaf:familyName .
+
+:givenName a owl:ObjectProperty;
+    owl:equivalentProperty sdo:givenName, foaf:givenName .
+
+:birthDate a owl:ObjectProperty;
+    owl:equivalentProperty sdo:birthDate .
+
+:deathDate a owl:ObjectProperty;
+    owl:equivalentProperty sdo:deathDate .
 
 :Persona a owl:Class;
     rdfs:subClassOf :Person;
@@ -170,27 +315,18 @@
     rdfs:subPropertyOf rdfs:seeAlso;
     owl:equivalentProperty persona:hasPersona .
 
-:attributedTo a owl:ObjectProperty;
-    rdfs:label "Huvuduppslag"@sv;
-    owl:equivalentProperty prov:wasAttributedTo .
+:Organization a owl:Class;
+    owl:equivalentClass sdo:Organization .
 
-:associatedWith a owl:ObjectProperty;
-    rdfs:label "Biuppslag"@sv;
-    owl:equivalentProperty prov:wasAssociatedWith .
+:Place a owl:Class;
+    owl:equivalentClass sdo:Place .
 
-:qualifiedAttribution a owl:ObjectProperty;
-    rdfs:label "Huvuduppslag"@sv;
-    owl:equivalentProperty prov:qualifiedAttribution .
+#generalSubdivision
+#geographicSubdivision
 
-:qualifiedAssociation a owl:ObjectProperty;
-    rdfs:label "Biuppslag"@sv;
-    owl:equivalentProperty prov:qualifiedAssociation .
-
-:agent a owl:ObjectProperty;
-    owl:equivalentProperty prov:agent .
-
-:role a owl:ObjectProperty;
-    owl:equivalentProperty prov:hadRole .
+:controlledLabel a owl:DatatypeProperty;
+    owl:equivalentProperty bf:authorizedAccessPoint .
+    #owl:propertyChainAxiom ( [owl:inverseOf foaf:focus] skos:prefLabel ) .
 
 
 ##
@@ -212,12 +348,21 @@
     owl:equivalentProperty skos:historyNote .
 :inScheme a owl:ObjectProperty;
     owl:equivalentProperty skos:inScheme .
+:narrower a owl:ObjectProperty;
+    owl:equivalentProperty skos:narrower .
 :notation a owl:DatatypeProperty;
     owl:equivalentProperty skos:notation .
 :prefLabel a owl:DatatypeProperty;
     owl:equivalentProperty skos:prefLabel .
+:related a owl:ObjectProperty;
+    owl:equivalentProperty skos:related .
 :scopeNote a owl:DatatypeProperty;
     owl:equivalentProperty skos:scopeNote .
+
+:inCollection a owl:ObjectProperty;
+    owl:inverseOf skos:member;
+    rdfs:domain skos:Concept;
+    rdfs:range skos:Collection .
 
 
 ##
@@ -231,7 +376,8 @@
 :callno rdfs:subPropertyOf :genre, bf:callno, sdo:sku;
     rdfs:range :Holding .
 
-# ...
+
+# .. TODO: work-in-progress
 @prefix xf: <http://libris.kb.se/ns/extframe/> .
 :accompanyingMaterial a owl:ObjectProperty;
     owl:equivalentProperty xf:accompanyingMaterial .
@@ -269,4 +415,57 @@
     owl:equivalentProperty xf:status .
 :typeOfRecord a owl:ObjectProperty;
     owl:equivalentProperty xf:typeOfRecord .
+
+# .. used but undefined
+#address
+#authenticationCode
+#bibliographicRecordControlNumber
+#bibliographyCode
+#callNumberPrefix
+#callNumberSuffix
+#carrierMaterial
+#characterCoding
+#codedLocationQualifier
+#copyNumber
+#copyrightArticleFeeCode
+#countryCode
+#depiction
+#descriptionRules
+#editionStatement
+#editorialNote
+#entryMap
+#fileType
+#formerShelvingLocation
+#lccn
+#librisIII-number
+#lifeSpan
+#listOfContents
+#mediaTerm
+#modifyingAgency
+#nameOfPartOfAWork
+#nonCodedLocationQualifier
+#nonpublicNote
+#numberOfPartOfAWork
+#originalCatalogingAgency
+#participantNote
+#pieceDesignation
+#piecePhysicalCondition
+#place
+#publicNote
+#shelvingFormOfTitle
+#sourceOfClassificationOrShelvingScheme
+#sublocationOrCollection
+#systemName
+#systemRequirements
+#transcribingAgency
+#typeOfControl
+#uniformResourceIdentifier
+#url
+#volumeNumberSequentialDesignation
+
+# .. older, unused
+#localSystemNumber
+#shelvingNonPublicNote
+#shelvingPublicNote
+#textualHoldings
 

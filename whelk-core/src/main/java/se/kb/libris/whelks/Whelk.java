@@ -25,10 +25,14 @@ public interface Whelk {
     */
 
     // maintenance
-    public void reindex();
-    public String getId();
+    public String getId(); // Whelk ID
+
     public void addPlugin(Plugin plugin);
     public Iterable<? extends Plugin> getPlugins();
+
+    public void rebuild(String fromStorage);
+    public void reindex();
+    public void flush();
 
     // factory methods
     public Document createDocument(byte[] data,
