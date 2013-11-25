@@ -14,8 +14,9 @@
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
-                    "linkenhancer",
+                    "linkcompleter",
                     "jsonldlinkfinder",
+                    "indexlinkfinder",
                     "completeexpander"
                 ],
                 "contentRoot" : "/",
