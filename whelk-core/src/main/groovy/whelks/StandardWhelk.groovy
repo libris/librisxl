@@ -69,16 +69,23 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Document get(URI uri, List contentTypes=[]) {
+    Document get(URI uri, List contentTypes=[], reIndex = true) {
+        Document doc
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
             def s = getStorage(contentType)
             if (s) {
                 log.debug("Found $contentType storage.")
-                return s.get(uri)
+                doc = s.get(uri)
             }
         }
-        return storage.get(uri)
+        if (!doc) {
+            doc = storage.get(uri)
+        }
+        if (reIndex) {
+            addToIndex([doc])
+        }
+        return doc
     }
 
     @Override
@@ -269,6 +276,7 @@ class StandardWhelk implements Whelk {
         }
     }
 
+    @Override
     void rebuild(String fromStorage, String dataset = null) {
         long startTime = System.currentTimeMillis()
         int counter = 0
@@ -317,6 +325,15 @@ class StandardWhelk implements Whelk {
             }
         }
 
+    }
+
+    @Override
+    void flush() {
+        log.info("Flushing data.")
+        // TODO: Implement storage and graphstore flush if necessary
+        for (i in indexes) {
+            i.flush()
+        }
     }
 
     @Override

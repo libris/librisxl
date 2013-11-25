@@ -29,6 +29,7 @@ public interface Whelk {
     public String getId();
     public void addPlugin(Plugin plugin);
     public Iterable<? extends Plugin> getPlugins();
+    public void flush();
 
     // factory methods
     public Document createDocument(byte[] data,

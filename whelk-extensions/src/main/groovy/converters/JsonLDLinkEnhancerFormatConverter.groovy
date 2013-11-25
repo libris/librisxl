@@ -43,8 +43,8 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
                 entityType = propValue.get("@type")
             }
 
-            log.info("$entityType")
-            log.info("$entity")
+            log.trace("entityType: $entityType")
+            log.trace("entity: $entity")
 
             //Try to update entity.@id with matching linked documents
             if (entityType && !entity.containsKey("@value"))  {
@@ -59,10 +59,10 @@ class JsonLDLinkEnhancerFormatConverter extends BasicFormatConverter implements 
                     esQuery = new ElasticQuery(searchStr)
                     esQuery.indexType = entityType
 
-                    log.info("Performing search on: $searchStr ...") //or search auth with @type?
+                    log.trace("Performing search on: $searchStr ...") //or search auth with @type?
                     result = whelk.search(esQuery)
 
-                    log.info("Number of hits: ${result.numberOfHits}")
+                    log.trace("Number of hits: ${result.numberOfHits}")
 
                     if (result.numberOfHits == 1) {
                         entity["@id"] = "/resource" + result.hits[0]["identifier"]

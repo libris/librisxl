@@ -14,11 +14,9 @@
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="debug"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.plugin.JsonLDLinkEnhancerFormatConverter">
        <level value="debug"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.conch">
       <level value="debug"/>
   </logger>
@@ -37,9 +35,11 @@
   <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
       <level value="debug"/>
   </logger>
+  -->
    <logger name="se.kb.libris.whelks.importers">
       <level value="debug"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.plugin.JsonLD2MarcConverter">
       <level value="trace"/>
   </logger>
@@ -96,11 +96,10 @@
   </logger>
     <!--<logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">-->
         <!--<level value="debug"/>-->
-    <!--</logger>-->
+    <!--</logger>
      <logger name="se.kb.libris.whelks.plugin.OaiPmhXmlConverter">
       <level value="trace"/>
 </logger>
-<!--
     <logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
           <level value="debug"/>
         </logger>
@@ -115,10 +114,6 @@
       <level value="trace"/>
   </logger>
   -->
-  <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2">
-      <level value="debug"/>
-  </logger>
-
   <!--
   <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">
     <appender-ref ref="FILE-QUERY" />

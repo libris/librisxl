@@ -15,6 +15,7 @@ import org.elasticsearch.node.NodeBuilder
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.search.highlight.*
+import org.elasticsearch.action.admin.indices.flush.*
 import org.elasticsearch.action.count.CountResponse
 import org.elasticsearch.search.facet.FacetBuilders
 import org.elasticsearch.common.xcontent.XContentBuilder
@@ -89,8 +90,6 @@ class ElasticSearchNode extends ElasticSearch implements Index {
         // start it!
         def node = nBuilder.build().start()
         client = node.client()
-        // Make sure everything is in place
-        Thread.sleep(1000)
         log.info "Client connected to new (local) ES node."
     }
 }
@@ -159,6 +158,12 @@ abstract class ElasticSearch extends BasicPlugin {
         performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, elasticIndex).removeAlias(oldIndex, elasticIndex))
     }
 
+    void flush() {
+        log.debug("Flushing indices.")
+        def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
+        log.debug("Flush response: $flushresponse")
+    }
+
     def loadJson(file) {
         def json
         mapper = new ObjectMapper()
@@ -199,13 +204,13 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     SearchResult query(Query q, String indexName, String indexType) {
-        log.debug "Querying index $indexName and indextype $indexType"
+        log.trace "Querying index $indexName and indextype $indexType"
         log.trace "Doing query on $q"
         def idxlist = [indexName]
         if (indexName.contains(",")) {
             idxlist = indexName.split(",").collect{it.trim()}
         }
-        log.debug("Searching in indexes: $idxlist")
+        log.trace("Searching in indexes: $idxlist")
         def srb = client.prepareSearch(idxlist as String[])
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
@@ -266,14 +271,14 @@ abstract class ElasticSearch extends BasicPlugin {
                 }
             }
         }
-        log.debug("SearchRequestBuilder: " + srb)
+        log.trace("SearchRequestBuilder: " + srb)
         def response = performExecute(srb)
         log.trace("SearchResponse: " + response)
 
         def results = new SearchResult(0)
 
         if (response) {
-            log.debug "Total hits: ${response.hits.totalHits}"
+            log.trace "Total hits: ${response.hits.totalHits}"
             results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
                 if (q.highlights) {
