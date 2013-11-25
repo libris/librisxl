@@ -3,6 +3,7 @@ package se.kb.libris.whelks
 import groovy.util.logging.Slf4j as Log
 
 import java.util.UUID
+import java.util.concurrent.BlockingQueue
 import java.net.URI
 import java.net.URISyntaxException
 
@@ -22,13 +23,13 @@ class StandardWhelk implements Whelk {
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
 
+    private BlockingQueue queue
+
     // Set by configuration
     URI docBaseUri
 
-
     StandardWhelk(String id) {
         this.id = id
-        // Start executorservice
     }
 
     void setDocBaseUri(String uri) {
@@ -69,7 +70,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Document get(URI uri, List contentTypes=[], reIndex = true) {
+    Document get(URI uri, List contentTypes=[]) {
         Document doc
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
@@ -82,8 +83,9 @@ class StandardWhelk implements Whelk {
         if (!doc) {
             doc = storage.get(uri)
         }
-        if (reIndex) {
-            addToIndex([doc])
+        if (doc?.identifier) {
+            log.debug("Adding ${doc.identifier} to prawn queue")
+            queue.put(doc.identifier)
         }
         return doc
     }
@@ -343,6 +345,11 @@ class StandardWhelk implements Whelk {
             plugin.setWhelk(this)
         }
         plugin.init(this.id)
+        if (plugin instanceof Prawn) {
+            log.debug("[${this.id}] Starting Prawn: ${plugin.id}")
+            queue = plugin.getQueue()
+            (new Thread(plugin)).start()
+        }
         this.plugins.add(plugin)
     }
 

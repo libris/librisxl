@@ -57,9 +57,11 @@
   <logger name="se.kb.libris.whelks.api">
       <level value="trace"/>
   </logger>
-  <logger name="se.kb.libris.whelks.plugin.external.AutoSuggestFormatConverter">
+  -->
+  <logger name="se.kb.libris.whelks.plugin.IndexingPrawn">
       <level value="trace"/>
-  /logger>
+  </logger>
+  <!--
   <logger name="se.kb.libris.whelks.basic">
       <level value="trace"/>
   </logger>

@@ -169,5 +169,8 @@
                 "bibid" : "bib"
             }
         }
+    },
+    "indexingprawn" : {
+        "_class" : "se.kb.libris.whelks.plugin.IndexingPrawn"
     }
 }
