@@ -270,17 +270,17 @@
     rdfs:label "Huvuduppslag"@sv;
     owl:equivalentProperty prov:wasAttributedTo .
 
-:associatedWith a owl:ObjectProperty;
+:influencedBy a owl:ObjectProperty;
     rdfs:label "Biuppslag"@sv;
-    owl:equivalentProperty prov:wasAssociatedWith .
+    owl:equivalentProperty prov:wasInfluencedBy .
 
 :qualifiedAttribution a owl:ObjectProperty;
-    rdfs:label "Huvuduppslag"@sv;
+    rdfs:label "Detaljerat huvuduppslag"@sv;
     owl:equivalentProperty prov:qualifiedAttribution .
 
-:qualifiedAssociation a owl:ObjectProperty;
-    rdfs:label "Biuppslag"@sv;
-    owl:equivalentProperty prov:qualifiedAssociation .
+:qualifiedInfluence a owl:ObjectProperty;
+    rdfs:label "Detaljerat biuppslag"@sv;
+    owl:equivalentProperty prov:qualifiedInfluence .
 
 :agent a owl:ObjectProperty;
     owl:equivalentProperty prov:agent .
