@@ -7,4 +7,5 @@ import java.util.List;
 public interface FormatConverter extends Plugin {
     public Document convert(Document doc);
     public String getRequiredContentType();
+    public String getResultContentType();
 }

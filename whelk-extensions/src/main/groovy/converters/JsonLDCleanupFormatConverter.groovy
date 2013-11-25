@@ -11,6 +11,7 @@ import groovy.util.logging.Slf4j as Log
 class JsonLDCleanupFormatConverter extends BasicFormatConverter {
 
     String requiredContentType = "application/ld+json"
+    String resultContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
     def fieldLookUp = [
             "titleValue_title" : [":", "/"],

@@ -7,10 +7,12 @@ import se.kb.libris.whelks.component.ElasticQuery
 import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
 
+@Deprecated
 @Log
 class JsonLDIndexBasedEnhancerFormatConverter extends BasicFormatConverter implements WhelkAware {
 
     String requiredContentType = "application/ld+json"
+    String resultContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
     def whelk
 
