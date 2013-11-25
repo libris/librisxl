@@ -53,6 +53,7 @@ class WhelkOperator {
             def nrimports = importer.doImport(since, nums, picky)
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
+
             /*
         } else if (operation == "importdump") {
             def importer = new DumpImporter(whelk, origin, picky)
@@ -80,6 +81,14 @@ class WhelkOperator {
                 whelk.rebuild(opt.fromStorage, dataset)
             } else {
                 println cli.usage()
+            }
+        } else if (operation == "linkfindandcomplete") {
+            if (!opt.dataset) {
+                println cli.usage()
+            } else {
+                println "Running linkfinders and completion in ${opt.dataset} in ${opt.whelk}"
+                whelk.findLinks(opt.dataset)
+                whelk.runFilters(opt.dataset)
             }
         } else if (operation == "populate" || operation == "rebalance") {
             /*
