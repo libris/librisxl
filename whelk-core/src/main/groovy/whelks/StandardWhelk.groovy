@@ -209,7 +209,13 @@ class StandardWhelk implements Whelk {
         log.trace("Creation complete for ${doc.identifier} (${doc.contentType})")
         if (convert) {
             log.trace("Executing storage format conversion.")
-            for (fc in formatConverters) { doc = fc.convert(doc) }
+            for (fc in formatConverters) {
+                doc = fc.convert(doc)
+                /*if (fc.resultContentType != doc.contentType) {
+                    log.info("Document conversion has not resulted in expected contentType..")
+                    continue
+                }*/
+            }
             log.trace("Document ${doc.identifier} has undergone formatconversion.")
         }
         for (lf in linkFinders) {
@@ -267,6 +273,24 @@ class StandardWhelk implements Whelk {
                 index.reMapAliases()
             }
         }
+    }
+
+    void findLinks(String dataset) {
+       for (doc in loadAll(dataset)) {
+            for (linkFinder in getLinkFinders()) {
+                doc.links.addAll(linkFinder.findLinks(doc))
+            }
+            add(doc)
+       }
+    }
+
+    void runFilters(String dataset) {
+       for (doc in loadAll(dataset)) {
+           for (filter in getFilters()) {
+               doc = filter.doFilter(doc)
+           }
+           add(doc)
+       }
     }
 
     void rebuild(String fromStorage, String dataset = null) {
@@ -359,5 +383,6 @@ class StandardWhelk implements Whelk {
     List<RDFFormatConverter> getRDFFormatConverters() { return plugins.findAll { it instanceof RDFFormatConverter }}
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
+    List<Filter> getFilters() { return plugins.findAll { it instanceof Filter }}
 
 }
