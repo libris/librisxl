@@ -72,7 +72,7 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Document get(URI uri) {
-        log.info("Loading from ${this.getClass()}")
+        log.trace("Loading from ${this.getClass()}")
         File metafile = new File(buildPath(uri.toString(), false)+ "/" + getBaseFilename(uri) + METAFILE_EXTENSION)
         File sourcefile
         try {

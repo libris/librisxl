@@ -171,6 +171,10 @@
         }
     },
     "indexingprawn" : {
-        "_class" : "se.kb.libris.whelks.plugin.IndexingPrawn"
+        "_class" : "se.kb.libris.whelks.plugin.IndexingPrawn",
+        "_params" : {
+            "batchSize" : 1000,
+            "timeout" : 60000
+        }
     }
 }

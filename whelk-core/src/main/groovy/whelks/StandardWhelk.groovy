@@ -23,13 +23,14 @@ class StandardWhelk implements Whelk {
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
 
-    private BlockingQueue queue
+    private List<BlockingQueue> queues
 
     // Set by configuration
     URI docBaseUri
 
     StandardWhelk(String id) {
         this.id = id
+        queues = new ArrayList<BlockingQueue>()
     }
 
     void setDocBaseUri(String uri) {
@@ -83,9 +84,11 @@ class StandardWhelk implements Whelk {
         if (!doc) {
             doc = storage.get(uri)
         }
-        if (doc?.identifier) {
+        if (doc) {
             log.debug("Adding ${doc.identifier} to prawn queue")
-            queue.put(doc.identifier)
+            for (queue in queues) {
+                queue.put(doc)
+            }
         }
         return doc
     }
@@ -145,7 +148,7 @@ class StandardWhelk implements Whelk {
     void addToIndex(List<Document> docs) {
         List<IndexDocument> idxDocs = []
         log.debug("Number of documents to index: ${docs.size()}")
-        log.debug("Sample ct: " + docs[0].contentType)
+        log.trace("Sample ct: " + docs[0].contentType)
         if (indexes.size() > 0) {
             for (doc in docs) {
                 for (ifc in getIndexFormatConverters()) {
@@ -347,7 +350,7 @@ class StandardWhelk implements Whelk {
         plugin.init(this.id)
         if (plugin instanceof Prawn) {
             log.debug("[${this.id}] Starting Prawn: ${plugin.id}")
-            queue = plugin.getQueue()
+            queues.add(plugin.getQueue())
             (new Thread(plugin)).start()
         }
         this.plugins.add(plugin)
