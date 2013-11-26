@@ -285,15 +285,19 @@ class StandardWhelk implements Whelk {
     }
 
     void findLinks(String dataset) {
-       for (doc in loadAll(dataset)) {
+        log.info("Trying to findLinks for ${dataset}... ")
+        for (doc in loadAll(dataset)) {
+            log.debug("Finding links for ${doc.identifier} ...")
             for (linkFinder in getLinkFinders()) {
-                doc.links.addAll(linkFinder.findLinks(doc))
+                log.debug("LinkFinder ${linkFinder}")
+                doc.addLinks(linkFinder.findLinks(doc))
             }
             add(doc)
        }
     }
 
     void runFilters(String dataset) {
+       log.info("Running filters for ${dataset} ...")
        for (doc in loadAll(dataset)) {
            for (filter in getFilters()) {
                doc = filter.doFilter(doc)
