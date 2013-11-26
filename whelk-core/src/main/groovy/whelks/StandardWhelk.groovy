@@ -221,7 +221,13 @@ class StandardWhelk implements Whelk {
         log.trace("Creation complete for ${doc.identifier} (${doc.contentType})")
         if (convert) {
             log.trace("Executing storage format conversion.")
-            for (fc in formatConverters) { doc = fc.convert(doc) }
+            for (fc in formatConverters) {
+                doc = fc.convert(doc)
+                /*if (fc.resultContentType != doc.contentType) {
+                    log.info("Document conversion has not resulted in expected contentType..")
+                    continue
+                }*/
+            }
             log.trace("Document ${doc.identifier} has undergone formatconversion.")
         }
         for (lf in linkFinders) {
@@ -281,7 +287,28 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    @Override
+    void findLinks(String dataset) {
+        log.info("Trying to findLinks for ${dataset}... ")
+        for (doc in loadAll(dataset)) {
+            log.debug("Finding links for ${doc.identifier} ...")
+            for (linkFinder in getLinkFinders()) {
+                log.debug("LinkFinder ${linkFinder}")
+                doc.addLinks(linkFinder.findLinks(doc))
+            }
+            add(doc)
+       }
+    }
+
+    void runFilters(String dataset) {
+       log.info("Running filters for ${dataset} ...")
+       for (doc in loadAll(dataset)) {
+           for (filter in getFilters()) {
+               doc = filter.doFilter(doc)
+           }
+           add(doc)
+       }
+    }
+
     void rebuild(String fromStorage, String dataset = null) {
         long startTime = System.currentTimeMillis()
         int counter = 0
@@ -386,5 +413,6 @@ class StandardWhelk implements Whelk {
     List<RDFFormatConverter> getRDFFormatConverters() { return plugins.findAll { it instanceof RDFFormatConverter }}
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
+    List<Filter> getFilters() { return plugins.findAll { it instanceof Filter }}
 
 }

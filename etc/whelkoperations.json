@@ -10,8 +10,9 @@
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
+                    "linkcompleter",
                     "jsonldlinkfinder",
-                    "linkenhancer"
+                    "indexlinkfinder"
                     ]
             }
         }
@@ -221,8 +222,8 @@
             }
         },
         {
-            "linkenhancer" : {
-                "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkEnhancerFormatConverter"
+            "linkcompleter" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter"
             }
         }
     ]

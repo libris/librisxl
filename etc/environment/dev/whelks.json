@@ -4,7 +4,7 @@
             "libris":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins": [
-                    "localindex",
+                    "index",
                     "flatstorage",
                     "search",
                     "oaipmhxmlconverter",
@@ -15,8 +15,9 @@
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
-                    "linkenhancer",
+                    "linkcompleter",
                     "jsonldlinkfinder",
+                    "indexlinkfinder",
                     "indexingprawn"
                 ],
                 "contentRoot" : "/",

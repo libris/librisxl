@@ -158,8 +158,11 @@
     "jsonldlinkfinder" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkFinder"
     },
-    "linkenhancer" : {
-        "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkEnhancerFormatConverter"
+    "indexlinkfinder" : {
+        "_class" : "se.kb.libris.whelks.plugin.IndexLinkFinder"
+    },
+    "linkcompleter" : {
+        "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter"
     },
     "oaipmhxmlconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.OaiPmhXmlConverter",

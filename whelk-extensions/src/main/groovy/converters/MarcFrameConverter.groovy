@@ -40,6 +40,9 @@ class MarcFrameConverter extends BasicFormatConverter {
     }
 
     @Override
+    String getResultContentType() { "application/ld+json" }
+
+    @Override
     String getRequiredContentType() { "application/x-marc-json" }
 
     @Override
