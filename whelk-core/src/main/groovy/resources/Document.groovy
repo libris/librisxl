@@ -104,11 +104,21 @@ class Document {
         this.entry["timestamp"] = ts
     }
 
+    void addLinks(Set<Link> links) {
+        if (!meta.get("links")) {
+            meta["links"] = []
+        }
+        for (link in links) {
+            meta.links << ["identifier": link.identifier, "type": link.type]
+        }
+    }
+
     void addLinks(List<Link> links) {
-        if (meta.get("links"))
-            meta.links.addAll(links)
-        else {
-            meta["links"] = links
+        if (!meta.get("links")) {
+            meta["links"] = []
+        }
+        for (link in links) {
+            meta.links << ["identifier": link.identifier, "type": link.type]
         }
     }
 
