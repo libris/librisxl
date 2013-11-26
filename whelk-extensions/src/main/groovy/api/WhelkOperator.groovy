@@ -86,7 +86,7 @@ class WhelkOperator {
             if (!opt.dataset) {
                 println cli.usage()
             } else {
-                println "Running linkfinders and completion in ${opt.dataset} in ${opt.whelk}"
+                println "Running linkfinders and filters for ${opt.dataset} in ${opt.whelk}"
                 whelk.findLinks(opt.dataset)
                 whelk.runFilters(opt.dataset)
             }
