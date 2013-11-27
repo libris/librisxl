@@ -14,6 +14,7 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
 import se.kb.libris.whelks.persistance.*
+import se.kb.libris.whelks.result.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import se.kb.libris.conch.converter.MarcJSONConverter

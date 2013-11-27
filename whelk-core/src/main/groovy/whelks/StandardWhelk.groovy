@@ -12,6 +12,7 @@ import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.result.*
 
 import se.kb.libris.conch.Tools
 
@@ -293,7 +294,9 @@ class StandardWhelk implements Whelk {
             log.debug("Finding links for ${doc.identifier} ...")
             for (linkFinder in getLinkFinders()) {
                 log.debug("LinkFinder ${linkFinder}")
-                doc.addLinks(linkFinder.findLinks(doc))
+                for (link in linkFindex.findLinks(doc)) {
+                    doc.withLink(link.identifier, link.type)
+                }
             }
             add(doc)
        }

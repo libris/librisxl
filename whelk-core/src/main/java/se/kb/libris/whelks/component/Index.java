@@ -4,7 +4,7 @@ import java.net.URI;
 import java.util.*;
 import se.kb.libris.whelks.Query;
 import se.kb.libris.whelks.IndexDocument;
-import se.kb.libris.whelks.SearchResult;
+import se.kb.libris.whelks.result.SearchResult;
 
 public interface Index extends Component {
     public void index(IndexDocument d);

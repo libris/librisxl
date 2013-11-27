@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.*;
 import se.kb.libris.whelks.plugin.Plugin;
+import se.kb.libris.whelks.result.SearchResult;
+import se.kb.libris.whelks.result.SparqlResult;
 
 public interface Whelk {
     // storage

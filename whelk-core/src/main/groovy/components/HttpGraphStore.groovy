@@ -11,6 +11,7 @@ import org.apache.http.util.EntityUtils
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.result.*
 
 @Log
 class HttpGraphStore extends BasicPlugin implements GraphStore {

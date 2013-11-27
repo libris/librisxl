@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.result.*
 import se.kb.libris.whelks.exception.WhelkRuntimeException
 
 @Log

@@ -147,14 +147,6 @@
     "completeexpander" : {
         "_class" : "se.kb.libris.whelks.api.CompleteExpander"
     },
-    "biblistener" : {
-        "_class" : "se.kb.libris.whelks.plugin.Listener",
-        "_params" : "_whelk:libris"
-    },
-    "authlistener" : {
-        "_class" : "se.kb.libris.whelks.plugin.Listener",
-        "_params" : "_whelk:libris"
-    },
     "jsonldlinkfinder" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkFinder"
     },
