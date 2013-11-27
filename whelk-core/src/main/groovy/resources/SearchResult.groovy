@@ -1,9 +1,8 @@
-package se.kb.libris.whelks
+package se.kb.libris.whelks.result
 
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.IndexDocument
-import se.kb.libris.whelks.SearchResult
 import se.kb.libris.whelks.component.ElasticJsonMapper
 
 import org.codehaus.jackson.map.ObjectMapper

@@ -147,14 +147,6 @@
     "completeexpander" : {
         "_class" : "se.kb.libris.whelks.api.CompleteExpander"
     },
-    "biblistener" : {
-        "_class" : "se.kb.libris.whelks.plugin.Listener",
-        "_params" : "_whelk:libris"
-    },
-    "authlistener" : {
-        "_class" : "se.kb.libris.whelks.plugin.Listener",
-        "_params" : "_whelk:libris"
-    },
     "jsonldlinkfinder" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkFinder"
     },
@@ -174,6 +166,10 @@
         }
     },
     "indexingprawn" : {
-        "_class" : "se.kb.libris.whelks.plugin.IndexingPrawn"
+        "_class" : "se.kb.libris.whelks.plugin.IndexingPrawn",
+        "_params" : {
+            "batchSize" : 1000,
+            "timeout" : 60000
+        }
     }
 }

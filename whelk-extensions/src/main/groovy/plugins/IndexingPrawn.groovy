@@ -9,41 +9,42 @@ import se.kb.libris.whelks.Document
 @Log
 class IndexingPrawn extends BasicPlugin implements Prawn, WhelkAware {
 
-    private final BlockingQueue<String> queue
+    private final BlockingQueue<Document> queue = new LinkedBlockingQueue<Document>()
     Whelk whelk
 
-    String id = "prawn"
-
     // Wait for batch size until performing operation
-    final int BATCH_SIZE = 1000
+    int BATCH_SIZE = 1000
     // Or until timeout
-    final int TIMEOUT = 10 * 1000// in seconds
+    int TIMEOUT = 10 * 1000// in seconds
 
-    IndexingPrawn() {
-        queue = new LinkedBlockingQueue<String>()
+    IndexingPrawn(Map settings) {
+        this.BATCH_SIZE = settings.get("batchSize", BATCH_SIZE).intValue()
+        this.TIMEOUT = settings.get("timeout", TIMEOUT).intValue()
     }
 
     void run() {
-        Set uris = new HashSet<String>()
-        long startTime = System.nanoTime()
+        Map docs = [:]
+        long timestamp = System.nanoTime()
         while (true) {
-            def uri = queue.take()
-            log.debug("Got $uri from queue")
-            uris.add(uri)
-            if (uris.size() >= BATCH_SIZE
-                    || (uris.size() > 0 && ((System.nanoTime() - startTime) / 1000000) > TIMEOUT)) {
-                log.debug("Running reindex batch.")
-                reindex(uris)
-                uris = new HashSet<String>()
-                startTime = System.nanoTime()
+            def doc = queue.take()
+            log.debug("Got ${doc.identifier} from queue")
+            docs.put(doc.identifier, doc)
+            long diff = ((System.nanoTime() - timestamp) / 1000000)
+            if (docs.size() >= BATCH_SIZE
+                    || (!docs.empty &&  diff > TIMEOUT)) {
+                log.debug("$diff time elapsed since last run. We're doing this.")
+                reindex(docs.values() as List)
+                docs = [:]
+                timestamp = System.nanoTime()
             }
         }
     }
 
-    void reindex(final Set<String> uris) {
-        List<Document> docs = uris.collect { whelk.get(new URI(it)) }
-        log.debug("Re-adding ${docs.size()} documents to index for whelk ${whelk.id}")
-        whelk.addToIndex(docs)
+    void reindex(final List<Document> docs) {
+        if (docs.size() > 0) {
+            log.debug("Re-adding ${docs.size()} documents to index for whelk ${whelk.id}")
+            whelk.addToIndex(docs)
+        }
     }
 
     BlockingQueue getQueue() {

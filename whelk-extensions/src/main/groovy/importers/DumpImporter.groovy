@@ -133,7 +133,7 @@ class DumpImporter {
         Document doc = null
 
         try {
-            doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new String("/"+this.origin+"/"+id),"contentType":"application/x-marc-json"])
+            doc = new Document().withData(jsonRec.getBytes("UTF-8")).withEntry(["identifier":new String("/"+this.origin+"/"+id),"contentType":"application/x-marc-json"])
         } catch (Exception e) {
             log.error("Failed! (${e.message}) for :\n$mdrecord\nAs JSON:\n$jsonRec")
             if (picky) {

@@ -31,6 +31,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.*
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.result.*
 import se.kb.libris.whelks.exception.*
 
 import static se.kb.libris.conch.Tools.*

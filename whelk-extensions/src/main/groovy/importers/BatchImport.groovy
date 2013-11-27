@@ -183,7 +183,7 @@ class Harvester implements Runnable {
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
                     String id = record.getControlfields("001").get(0).getData()
                     String jsonRec = MarcJSONConverter.toJSONString(record)
-                    def doc = whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/"+this.resource+"/"+id),"contentType":"application/x-marc-json+"+this.resource])
+                    def doc = new Document().withData(jsonRec.getBytes("UTF-8")).withEntry(["identifier":new URI("/"+this.resource+"/"+id),"contentType":"application/x-marc-json+"+this.resource])
                     if (it.header.setSpec) {
                         for (sS in it.header.setSpec) {
                             if (sS.toString().startsWith("authority:")) {

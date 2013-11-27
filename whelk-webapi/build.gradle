@@ -43,7 +43,7 @@ task whelkOperation(dependsOn: 'classes', type: JavaExec) {
   systemProperty 'file.encoding', "UTF-8"
   systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', null)
   systemProperty 'plugin.config.uri', System.getProperty('plugin.config.uri', null)
-  systemProperty 'whelk.disable', System.getProperty('whelk.disable', null)
+  systemProperty 'disable.plugins', System.getProperty('disable.plugins', 'indexingprawn')
   systemProperty 'picky', System.getProperty('picky', 'false')
   args(System.getProperty('args', "").split() as String[])
 }

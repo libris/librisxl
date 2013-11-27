@@ -10,6 +10,7 @@ import org.openrdf.rio.RDFFormat
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.result.*
 
 @Log
 class SesameGraphStore extends BasicPlugin implements GraphStore {

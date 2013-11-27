@@ -49,11 +49,9 @@
   <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.component">
       <level value="debug"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.api">
       <level value="trace"/>
   </logger>
@@ -78,8 +76,8 @@
  <!--<logger name="se.kb.libris.whelks.component.ElasticSearch">-->
       <!--<level value="debug"/>-->
   <!--</logger>-->
-     <logger name="se.kb.libris.whelks.component.CassandraStorage">
-          <level value="trace"/>
+     <logger name="se.kb.libris.whelks.component.DiskStorage">
+          <level value="info"/>
       </logger>
 <!--<logger name="se.kb.libris.whelks.api.ISXNTool">-->
       <!--<level value="debug"/>-->
@@ -88,15 +86,13 @@
 <logger name="se.kb.libris.whelks.api.SearchRestlet">
       <level value="debug"/>
   </logger>
-  -->
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
       <level value="debug"/>
   </logger>
-       -->
 <logger name="se.kb.libris.whelks.api.RestManager">
       <level value="debug"/>
   </logger>
-    <!--<logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">-->
+    <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">-->
         <!--<level value="debug"/>-->
     <!--</logger>
      <logger name="se.kb.libris.whelks.plugin.OaiPmhXmlConverter">

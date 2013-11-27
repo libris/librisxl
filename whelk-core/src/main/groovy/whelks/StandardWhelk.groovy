@@ -12,6 +12,7 @@ import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.result.*
 
 import se.kb.libris.conch.Tools
 
@@ -23,13 +24,14 @@ class StandardWhelk implements Whelk {
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
 
-    private BlockingQueue queue
+    private List<BlockingQueue> queues
 
     // Set by configuration
     URI docBaseUri
 
     StandardWhelk(String id) {
         this.id = id
+        queues = new ArrayList<BlockingQueue>()
     }
 
     void setDocBaseUri(String uri) {
@@ -83,9 +85,12 @@ class StandardWhelk implements Whelk {
         if (!doc) {
             doc = storage.get(uri)
         }
-        if (doc?.identifier && queue) {
+
+        if (doc?.identifier && queues) {
             log.debug("Adding ${doc.identifier} to prawn queue")
-            queue.put(doc.identifier)
+            for (queue in queues) {
+                queue.put(doc)
+            }
         }
         return doc
     }
@@ -127,6 +132,14 @@ class StandardWhelk implements Whelk {
             doc = fc.convert(doc)
             docs.put(doc.contentType, doc)
         }
+        /*
+            for (lf in linkFinders) {
+                log.debug("Using linkfinder ${lf.id}")
+                for (link in lf.findLinks(doc)) {
+                    doc = doc.withLink(link.identifier.toString(), link.type)
+                }
+            }
+            */
         for (d in docs.values()) {
             for (st in  getStorages(d.contentType)) {
                 if (st.id != excemptStorage) {
@@ -141,11 +154,14 @@ class StandardWhelk implements Whelk {
         return doc
     }
 
+    Document prepareDocumentForStorage(Document doc) {
+    }
+
     @groovy.transform.CompileStatic
     void addToIndex(List<Document> docs) {
         List<IndexDocument> idxDocs = []
         log.debug("Number of documents to index: ${docs.size()}")
-        log.debug("Sample ct: " + docs[0].contentType)
+        log.trace("Sample ct: " + docs[0].contentType)
         if (indexes.size() > 0) {
             for (doc in docs) {
                 for (ifc in getIndexFormatConverters()) {
@@ -208,6 +224,7 @@ class StandardWhelk implements Whelk {
         return st.getAll(dataset)
     }
 
+    /*
     @Override
     @groovy.transform.CompileStatic
     Document createDocument(byte[] data, Map entrydata, Map<String,Object> metadata=null, boolean convert=true) { return createDocument(new String(data, "UTF-8"), entrydata, metadata, convert) }
@@ -220,10 +237,6 @@ class StandardWhelk implements Whelk {
             log.trace("Executing storage format conversion.")
             for (fc in formatConverters) {
                 doc = fc.convert(doc)
-                /*if (fc.resultContentType != doc.contentType) {
-                    log.info("Document conversion has not resulted in expected contentType..")
-                    continue
-                }*/
             }
             log.trace("Document ${doc.identifier} has undergone formatconversion.")
         }
@@ -235,6 +248,7 @@ class StandardWhelk implements Whelk {
         log.debug("Returning document ${doc.identifier} (${doc.contentType})")
         return doc
     }
+    */
 
     @Override
     void reindex(String dataset = null, String startAt = null) {
@@ -290,7 +304,9 @@ class StandardWhelk implements Whelk {
             log.debug("Finding links for ${doc.identifier} ...")
             for (linkFinder in getLinkFinders()) {
                 log.debug("LinkFinder ${linkFinder}")
-                doc.addLinks(linkFinder.findLinks(doc))
+                for (link in linkFinder.findLinks(doc)) {
+                    doc.withLink(link.identifier.toString(), link.type)
+                }
             }
             add(doc)
        }
@@ -300,6 +316,7 @@ class StandardWhelk implements Whelk {
        log.info("Running filters for ${dataset} ...")
        for (doc in loadAll(dataset)) {
            for (filter in getFilters()) {
+               log.debug("Running filter ${filter.id}")
                doc = filter.doFilter(doc)
            }
            add(doc)
@@ -374,7 +391,7 @@ class StandardWhelk implements Whelk {
         plugin.init(this.id)
         if (plugin instanceof Prawn) {
             log.debug("[${this.id}] Starting Prawn: ${plugin.id}")
-            queue = plugin.getQueue()
+            queues.add(plugin.getQueue())
             (new Thread(plugin)).start()
         }
         this.plugins.add(plugin)

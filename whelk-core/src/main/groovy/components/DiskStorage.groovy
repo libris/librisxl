@@ -72,7 +72,7 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Document get(URI uri) {
-        log.debug("Loading from ${this.getClass()}")
+        log.trace("Loading from ${this.getClass()}")
         File metafile = new File(buildPath(uri.toString(), false)+ "/" + getBaseFilename(uri) + METAFILE_EXTENSION)
         File sourcefile
         try {
@@ -91,8 +91,8 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Iterable<Document> getAll(String dataset) {
-        def baseDir = new File(this.storageDir)
+    Iterable<Document> getAll(String dataset = null) {
+        def baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
         log.debug("Basedir: $baseDir")
         return new DiskDocumentIterable<Document>(baseDir)
     }
