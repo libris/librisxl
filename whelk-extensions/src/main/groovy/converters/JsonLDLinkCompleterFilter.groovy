@@ -20,11 +20,12 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
     }
 
     def loadRelatedDocs(Document doc) {
-        relatedDocs = [:]
+        def relatedDocs = [:]
         for (link in doc.links) {
-            log.info("Doc has ${link.type} -link to ${link.identifier}")
-            if (link.type == "auth") {  //handling links to "auth" docs
-                relatedDocs[link.identifier] = whelk.get(new URI(link.identifier))
+            log.debug("Doc has ${link.type} -link to ${link.identifier}")
+            def linkedDoc = whelk.get(new URI(link.identifier))
+            if (linkedDoc && link.type == "auth") {  //handling links to "auth" docs
+                relatedDocs[link.identifier] = linkedDoc
             }
         }
         return relatedDocs
@@ -56,28 +57,31 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
             }
 
             //Try to update entity.@id with matching linked documents
-            if (entityType && !entity.containsKey("@value"))  {
+            if (entityType && !entity.containsKey("@value"))  {   //&& !entity.containsKey("@id")  ?
                 changedData = updatePropertyWithLinks(entity, relatedDocs)
             }
 
         }
+        if (changedData) {
+            return doc.withData(mapper.writeValueAsString(json))
+        }
 
-        return doc.withData(mapper.writeValueAsString(json))
+        return doc
 
     }
 
     boolean updatePropertyWithLinks(property, relatedDocs) {
         boolean updated = false
-        def relatedDocJson, relatedItem, updateAction
+        def relatedDocMap, relatedItem, updateAction
         if (relatedDocs.size() > 0) {
-            for (relatedDoc in relatedDocs) {
-                relatedDocJson = mapper.readValue(relatedDoc.dataAsString, Map)
-                relatedItem = relatedDocJson.about
+            relatedDocs.each { docId, doc ->
+                relatedDocMap = doc.dataAsMap
+                relatedItem = relatedDocMap.about ?: relatedDocMap
                 if (relatedItem.get("@type") == property.get("@type")) {
                     try {
                         updateAction = "update" + property["@type"] + "Id"
                         updated = "$updateAction"(property, relatedItem)
-                        log.debug("$updated")
+                        log.trace("$updated")
                     } catch (Exception e) {
                         log.debug("Could not update property of type ${property["@type"]}")
                         updated = false

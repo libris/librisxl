@@ -10,20 +10,24 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class IndexLinkFinder extends BasicPlugin implements LinkFinder {
+class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper
     def whelk
 
     def searchLabel = ["Person" : "controlledLabel", "Concept" : "prefLabel"]
 
-    public IndexLinkFinder(Whelk whelk) {
+    public IndexLinkFinder(def whelk) {
+        this.whelk = whelk
+    }
+
+    void setWhelk(Whelk whelk) {
         this.whelk = whelk
     }
 
     @Override
     Set<Link> findLinks(Document doc) {
-        log.info("Trying to find links for ${doc.identifier}")
+        log.debug("Trying to find links for ${doc.identifier}")
         def links = []
         mapper = new ObjectMapper()
         def json = mapper.readValue(doc.dataAsString, Map)
@@ -49,28 +53,29 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder {
                     }
                 }
                 if (propValue instanceof Map) {
-                    ids.addAll(collect(propValue, propKey, selfId))
+                    ids.addAll(collectIds(propValue, propKey, selfId))
                 }
 
-                if (map.containsKey("@type") && !map.containsKey("@value"))  {
+                if (map.containsKey("@type") && !map.containsKey("@value"))  { //&& !map.containsKey("@id") ?
                     //Try to to find matching authority entities using es-search
                     labelKey = searchLabel.get(map["@type"])
-                    if (labelKey) {
-                        searchStr = "$labelKey:${map.get(labelKey)}"
+                    if (labelKey && map.containsKey(labelKey)) {
+                        def searchTerm = URLEncoder.encode(map.get(labelKey), "UTF-8")
+                        searchStr = "$labelKey:$searchTerm"
                         esQuery = new ElasticQuery(searchStr)
                         esQuery.indexType = map["@type"].toLowerCase() //or search auth with @type?
 
-                        log.info("Performing search on: $searchStr ...")
+                        log.trace("Performing search on: $searchStr ...")
                         result = whelk.search(esQuery)
 
-                        log.info("Number of hits: ${result.numberOfHits}")
-                        resultJson = mapper.readValue(results.toJson(), Map)
+                        log.trace("Number of hits: ${result.numberOfHits}")
+                        resultJson = mapper.readValue(result.toJson(), Map)
 
                         if (resultJson.hits > 0) {
                             for (r in resultJson.list) {
                                 ids << new Link(new URI(r["identifier"]), "auth")
                             }
-                            log.debug("Result data: " + mapper.writeValueAsString(json))
+                            log.trace("Result data: " + mapper.writeValueAsString(resultJson))
                         }
                     }
 
