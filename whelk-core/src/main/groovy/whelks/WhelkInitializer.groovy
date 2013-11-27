@@ -30,7 +30,7 @@ class WhelkInitializer {
     }
 
     def getWhelks() {
-        def disabled = System.getProperty("whelk.disable", "").split(",")
+        def disabled = System.getProperty("disable.plugins", "").split(",")
         json._whelks.each { w ->
             w.each { wname, meta ->
                 meta._class = meta._class ?: "se.kb.libris.whelks.StandardWhelk"
