@@ -83,7 +83,7 @@ class StandardWhelk implements Whelk {
         if (!doc) {
             doc = storage.get(uri)
         }
-        if (doc?.identifier) {
+        if (doc?.identifier && queue) {
             log.debug("Adding ${doc.identifier} to prawn queue")
             queue.put(doc.identifier)
         }
