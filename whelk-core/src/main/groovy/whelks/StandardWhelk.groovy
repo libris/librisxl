@@ -131,6 +131,14 @@ class StandardWhelk implements Whelk {
             doc = fc.convert(doc)
             docs.put(doc.contentType, doc)
         }
+        /*
+            for (lf in linkFinders) {
+                log.debug("Using linkfinder ${lf.id}")
+                for (link in lf.findLinks(doc)) {
+                    doc = doc.withLink(link.identifier.toString(), link.type)
+                }
+            }
+            */
         for (d in docs.values()) {
             for (st in  getStorages(d.contentType)) {
                 if (st.id != excemptStorage) {
@@ -143,6 +151,9 @@ class StandardWhelk implements Whelk {
             throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
         }
         return doc
+    }
+
+    Document prepareDocumentForStorage(Document doc) {
     }
 
     @groovy.transform.CompileStatic
@@ -212,6 +223,7 @@ class StandardWhelk implements Whelk {
         return st.getAll(dataset)
     }
 
+    /*
     @Override
     @groovy.transform.CompileStatic
     Document createDocument(byte[] data, Map entrydata, Map<String,Object> metadata=null, boolean convert=true) { return createDocument(new String(data, "UTF-8"), entrydata, metadata, convert) }
@@ -224,10 +236,6 @@ class StandardWhelk implements Whelk {
             log.trace("Executing storage format conversion.")
             for (fc in formatConverters) {
                 doc = fc.convert(doc)
-                /*if (fc.resultContentType != doc.contentType) {
-                    log.info("Document conversion has not resulted in expected contentType..")
-                    continue
-                }*/
             }
             log.trace("Document ${doc.identifier} has undergone formatconversion.")
         }
@@ -239,6 +247,7 @@ class StandardWhelk implements Whelk {
         log.debug("Returning document ${doc.identifier} (${doc.contentType})")
         return doc
     }
+    */
 
     @Override
     void reindex(String dataset = null, String startAt = null) {
@@ -294,8 +303,8 @@ class StandardWhelk implements Whelk {
             log.debug("Finding links for ${doc.identifier} ...")
             for (linkFinder in getLinkFinders()) {
                 log.debug("LinkFinder ${linkFinder}")
-                for (link in linkFindex.findLinks(doc)) {
-                    doc.withLink(link.identifier, link.type)
+                for (link in linkFinder.findLinks(doc)) {
+                    doc.withLink(link.identifier.toString(), link.type)
                 }
             }
             add(doc)
@@ -306,6 +315,7 @@ class StandardWhelk implements Whelk {
        log.info("Running filters for ${dataset} ...")
        for (doc in loadAll(dataset)) {
            for (filter in getFilters()) {
+               log.debug("Running filter ${filter.id}")
                doc = filter.doFilter(doc)
            }
            add(doc)

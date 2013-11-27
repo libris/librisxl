@@ -91,8 +91,8 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Iterable<Document> getAll(String dataset) {
-        def baseDir = new File(this.storageDir)
+    Iterable<Document> getAll(String dataset = null) {
+        def baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
         log.debug("Basedir: $baseDir")
         return new DiskDocumentIterable<Document>(baseDir)
     }

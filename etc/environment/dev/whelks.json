@@ -45,14 +45,14 @@
         "flatstorage": {
             "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
             "_params" : {
-                "storageDir": "work/storage/main",
+                "storageDir": "work/storage/flat/main",
                 "contentType": "application/ld+json"
             }
         },
         "diskstorage": {
             "_class" : "se.kb.libris.whelks.component.DiskStorage",
             "_params" : {
-                "storageDir": "work/storage/jsonld",
+                "storageDir": "work/storage/disk/jsonld",
                 "contentType": "application/ld+json"
             }
         },

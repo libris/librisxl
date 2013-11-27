@@ -146,7 +146,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
                 log.trace("headers: $headers")
                 log.debug("request: $request")
                 def link = headers.find { it.name.equals("link") }?.value
-                doc = this.whelk.createDocument(Tools.normalizeString(request.entityAsText), ["contentType":request.entity.mediaType.toString()])
+                doc = new Document().withData(Tools.normalizeString(request.entityAsText)).withEntry(["contentType":request.entity.mediaType.toString()])
                 if (link != null) {
                     log.trace("Adding link $link to document...")
                     doc = doc.withLink(link)
@@ -935,14 +935,6 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 if (marcXmlRecordString) {
                     log.debug("MARCXMLRECORDSTRING: ${marcXmlRecordString}")
                     documents << marcXmlRecordString
-                    /*MarcRecord record = MarcXmlRecordReader.fromXml(marcXmlRecordString)
-                    String id = record.getControlfields("001").get(0).getData()
-                    String jsonRec = MarcJSONConverter.toJSONString(record)
-                    try {
-                        documents << whelk.createDocument(jsonRec.getBytes("UTF-8"), ["identifier":new URI("/remote/"+id),"contentType":"application/x-marc-json" ])
-                    } catch (Exception e) {
-                        log.error("Failed! (${e.message}) for :\n$mdrecord")
-                    } */
                 }
             }
         }

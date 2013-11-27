@@ -76,8 +76,8 @@
  <!--<logger name="se.kb.libris.whelks.component.ElasticSearch">-->
       <!--<level value="debug"/>-->
   <!--</logger>-->
-     <logger name="se.kb.libris.whelks.component.CassandraStorage">
-          <level value="trace"/>
+     <logger name="se.kb.libris.whelks.component.DiskStorage">
+          <level value="info"/>
       </logger>
 <!--<logger name="se.kb.libris.whelks.api.ISXNTool">-->
       <!--<level value="debug"/>-->

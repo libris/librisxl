@@ -37,8 +37,10 @@ public interface Whelk {
     public void flush();
 
     // factory methods
+    /*
     public Document createDocument(byte[] data,
             Map<String, Object> entrydata,
             Map<String, Object> metadata);
+            */
     public URI mintIdentifier(Document document);
 }
