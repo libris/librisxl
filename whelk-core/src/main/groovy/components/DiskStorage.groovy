@@ -72,7 +72,7 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Document get(URI uri) {
-        log.info("Loading from ${this.getClass()}")
+        log.debug("Loading from ${this.getClass()}")
         File metafile = new File(buildPath(uri.toString(), false)+ "/" + getBaseFilename(uri) + METAFILE_EXTENSION)
         File sourcefile
         try {
@@ -85,7 +85,7 @@ class DiskStorage extends BasicPlugin implements Storage {
             log.debug("Loading document from disk.")
             return document
         } catch (FileNotFoundException fnfe) {
-            log.warn("File $sourcefile or $metafile not found.")
+            log.trace("File $sourcefile or $metafile not found.")
             return null
         }
     }
