@@ -177,5 +177,4 @@ class Document {
         }
         return this
     }
-
 }

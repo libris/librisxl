@@ -12,8 +12,6 @@ class IndexingPrawn extends BasicPlugin implements Prawn, WhelkAware {
     private final BlockingQueue<Document> queue = new LinkedBlockingQueue<Document>()
     Whelk whelk
 
-    String id = "prawn"
-
     // Wait for batch size until performing operation
     int BATCH_SIZE = 1000
     // Or until timeout
