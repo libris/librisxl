@@ -10,8 +10,9 @@
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
-                    "linkenhancer",
-                    "jsonldlinkfinder"
+                    "linkcompleter",
+                    "jsonldlinkfinder",
+                    "indexlinkfinder"
                 ],
                 "docBaseUri": "http://libris.kb.se/"
             }
