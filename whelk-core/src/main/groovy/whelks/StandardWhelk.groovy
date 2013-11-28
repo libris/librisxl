@@ -179,6 +179,7 @@ class StandardWhelk implements Whelk {
     }
 
     void addToGraphStore(List<Document> docs) {
+        log.debug("addToGraphStore ${docs.size()}")
         if (graphStores.size() > 0) {
             log.debug("Adding to graph stores")
             List<Document> dataDocs = []
@@ -222,32 +223,6 @@ class StandardWhelk implements Whelk {
         log.debug("Loading "+(dataset ? dataset : "all")+" from storage ${st.id}")
         return st.getAll(dataset)
     }
-
-    /*
-    @Override
-    @groovy.transform.CompileStatic
-    Document createDocument(byte[] data, Map entrydata, Map<String,Object> metadata=null, boolean convert=true) { return createDocument(new String(data, "UTF-8"), entrydata, metadata, convert) }
-    @groovy.transform.CompileStatic
-    Document createDocument(String data, Map<String,Object> entrydata, Map<String,Object> metadata=null, boolean convert=true) {
-        log.debug("Creating document")
-        Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
-        log.trace("Creation complete for ${doc.identifier} (${doc.contentType})")
-        if (convert) {
-            log.trace("Executing storage format conversion.")
-            for (fc in formatConverters) {
-                doc = fc.convert(doc)
-            }
-            log.trace("Document ${doc.identifier} has undergone formatconversion.")
-        }
-        for (lf in linkFinders) {
-            for (link in lf.findLinks(doc)) {
-                doc = doc.withLink(link.identifier.toString(), link.type)
-            }
-        }
-        log.debug("Returning document ${doc.identifier} (${doc.contentType})")
-        return doc
-    }
-    */
 
     @Override
     void reindex(String dataset = null, String startAt = null) {

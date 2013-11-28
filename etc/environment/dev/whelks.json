@@ -6,6 +6,7 @@
                 "_plugins": [
                     "localindex",
                     "flatstorage",
+                    "sesamegraphstore",
                     "search",
                     "oaipmhxmlconverter",
                     "completeexpander",

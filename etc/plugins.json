@@ -28,6 +28,10 @@
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : "text/oaipmh+xml"
     },
+    "sesamegraphstore" : {
+        "_class" : "se.kb.libris.whelks.component.SesameGraphStore",
+        "_params" : "http://localhost:8084/openrdf-sesame,dev-libris"
+    },
     "graphstore": {
         "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
         "_params" : {
