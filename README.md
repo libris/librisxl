@@ -40,9 +40,7 @@ to upload all test documents into your local whelk. (See the script for how the 
 Or better, create a local OAI-PMH dump of examples and run a full import:
 
     $ python scripts/assemble_oaipmh_records.py *******:**** scripts/example_records.tsv /tmp/oaidump
-    $ (cd /tmp/oaidump && python -m SimpleHTTPServer)
-    <CTRL-Z>
-    $ bg
+    $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
     $ gradle whelkOperation -Dargs='-o import -w libris -d auth -u http://localhost:8000/auth' -Dwhelk.config.uri=file://$(pwd)/etc/local-whelkoperations.json
     $ gradle whelkOperation -Dargs='-o import -w libris -d bib -u http://localhost:8000/bib' -Dwhelk.config.uri=file://$(pwd)/etc/local-whelkoperations.json
     $ fg
