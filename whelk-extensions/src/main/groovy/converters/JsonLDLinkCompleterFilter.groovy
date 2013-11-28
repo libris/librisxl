@@ -24,7 +24,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         def links = doc.getLinks()
         if (links.size() > 0) {
             for (link in links) {
-                log.debug("Doc has ${link.type}-link to ${link.identifier}")
+                log.trace("Doc has ${link.type}-link to ${link.identifier}")
                 def linkedDoc = whelk.get(new URI(link.identifier))
                 if (linkedDoc) {  //&& link.type == "auth" ?? type=authority from importer, type=<relation> from linkfinders
                     relatedDocs[link.identifier] = linkedDoc
@@ -46,7 +46,8 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                 return prop
             else {
                 prop.each { k, v ->
-                   findMapProperty(v)
+                    if (!v instanceof String)
+                        findMapProperty(v)
                 }
             }
         }
@@ -54,40 +55,39 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
     }
 
     Document doFilter(Document doc) {
-        log.debug("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
+        log.trace("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
         def changedData = false
-        def entity, json, work
+        def entity, json, work, deepMap
         def relatedDocs = loadRelatedDocs(doc)
 
         if (relatedDocs.size() > 0) {
             json = mapper.readValue(doc.dataAsString, Map)
-            work = json.about?.instanceOf ? json.about.instanceOf : json.about
+            work = json.about?.instanceOf ?: json.about
 
-            //For each property in incoming document, find entity-object property (is a Map and has a @type, but not a @value)
+            //For each property in incoming document, find entity-object property (=is a Map and has a @type, but not a @value)
             work.each { propKey, propValue ->
 
                 if (!propValue instanceof String) {
 
                     entity = findMapProperty(propValue)
-                    log.trace("Entity $entity")
 
-                    //Try to update entity.@id with matching linked documents
-                    changedData = updatePropertyWithLinks(entity, relatedDocs)
-
-                    //Find entity-object property within entity
-                    //TODO: better recursive way
-                    def deepMap
-                    entity.each { k, v ->
-                        if (!v instanceof String)
-                            deepMap = findMapProperty(v)
-                    }
-
-                    if (deepMap) {
-                        log.debug("$deepMap")
-                        changedData = updatePropertyWithLinks(deepMap, relatedDocs) || changedData
+                    if (entity) {
+                        log.trace("Entity $entity")
+                        //Try to update entity.@id with matching linked documents
+                        changedData = updatePropertyWithLinks(entity, relatedDocs)
+                        //Find entity-object property within entity
+                        entity.each { k, v ->
+                            if (!v instanceof String)
+                                deepMap = findMapProperty(v)
+                        }
+                        if (deepMap) {
+                            log.trace("$deepMap")
+                            changedData = updatePropertyWithLinks(deepMap, relatedDocs) || changedData
+                        }
                     }
                 }
             }
+            log.trace("Changed data? $changedData")
             if (changedData) {
                 return doc.withData(mapper.writeValueAsString(json))
             }

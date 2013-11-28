@@ -27,7 +27,7 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
 
     @Override
     Set<Link> findLinks(Document doc) {
-        log.debug("Running IndexLinkFinder, trying to find links for ${doc.identifier} ...")
+        log.trace("Running IndexLinkFinder, trying to find links for ${doc.identifier} ...")
         def links = []
         mapper = new ObjectMapper()
         def json = mapper.readValue(doc.dataAsString, Map)
