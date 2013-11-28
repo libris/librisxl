@@ -1,38 +1,38 @@
-auth/128699
+auth/128699	Socialdepartementet
 auth/137267	(100 1_ ‡a Larsson, Christer, ‡d 1950-, ‡c bibliotekarie)
-auth/139860
-auth/140482
-auth/156486
+auth/139860	Arkiv; SAO
+auth/140482	Barnpsykologi; SAO
+auth/156486	Pengar; SAO
 auth/169409	(100 1_ ‡a Beethoven, Ludwig van, ‡d 1770-1827. ‡t Kvintett, ‡m piano, oboe, klarinett, horn, fagott, ‡n op. 16, ‡r Ess-dur; ‡o arr. piano, stråkar)
 auth/176404	(100 0_ ‡a Birger Jarl, ‡d d. 1266)
 auth/180036	(100 0_ ‡a Birgitta, ‡c helgon, ‡d 1303-1373)
 auth/184982	(100 1_ ‡a Eliot, T. S. ‡q (Thomas Stearns), ‡d 1888-1965)
 auth/189316	(100 0_ ‡a Homeros, ‡d 700-talet f.Kr.)
 auth/191493	Lars Jansson (förekommer som contributor)
-auth/191503
+auth/191503	Jansson, Tove
 auth/191698	(100 0_ ‡a Johannes ‡b XXIII, ‡c påve, ‡d 1881-1963)
 auth/193755	(100 0_ ‡a Karl ‡b XIV Johan, ‡c kung av Sverige och Norge, ‡d 1763-1844)
 auth/193552	Bachman, Richard
 auth/210204	King, Stephen
 auth/201439	(100 1_ ‡a Tjechov, Anton, ‡d 1860-1904) --> se särskilt förklarande fras (#i), forskningsbiblioteksform resp. originalform
 auth/202195	(100 0_ ‡a Li, Li, ‡d 1961-) -- borde vara 100 0_
-auth/209046
+auth/209046	Hindenburg, Bernhard von, 1859-
 auth/209925	(100 0_ ‡a E-Type, ‡d 1965-)
 auth/214608	(100 1_ ‡a Beethoven, Ludwig van, ‡d 1770-1827. ‡t Fantasi, ‡m piano, blandad kör, orkester, ‡n op. 80, ‡r c-moll)
 auth/217613	(100 0_ ‡a Johannes de Hese, ‡d 13/1400-talet)
 auth/223194	(100 1_ ‡a Beethoven, Ludwig van, ‡d 1770-1827. ‡t Konsert, ‡m pianotrio, orkester, ‡n op. 56, ‡r C-dur, 'Trippelkonserten')
-auth/247755
+auth/247755	Pengar; barnämnesord
 auth/249363	(100 0_ ‡a Arnaldur Indriðason, ‡d 1961-)
-auth/249882
-auth/254498
+auth/249882	Tsunamier; SAO
+auth/254498	Lagerlöf, Selma
 auth/260334	(100 3_ ‡a Wallenberg, ‡c släkt) --> normalt bara som ämnesord
-auth/280498
-auth/297742
+auth/280498	Tsunamier; barnämnesord
+auth/297742	Oljetryck; SAOGF
 auth/328892	(100 1_ ‡a Ramelov, Matthias, ‡d verksam 1660-)
 auth/330247	(100 0_ ‡a Gideon ‡c (biblisk gestalt))
-auth/345526
+auth/345526	Metamorphoses av Ovidius Naso, Publius; namn/titel (verkspost)
 auth/346221	(100 3_ ‡a Bernadotte, ‡c kungahus) --> normalt bara som ämnesord
-auth/349968
+auth/349968	Allegorier; SAOGF (Skon)
 auth/74212	(100 1_ ‡a Mao, Zedong, ‡d 1893-1976)
 auth/94541	(100 1_ ‡a Strindberg, August, ‡d 1849-1912)
 auth/353616	Allmän genre/formterm saogf: Analys och tolkning
@@ -49,6 +49,7 @@ auth/121848	Kungl. biblioteket
 auth/307262	Codex Gigas
 auth/173676	Stockholm
 auth/222136	Ödessymfonin
+
 bib/10796401
 bib/11279947
 bib/11311266
@@ -83,6 +84,7 @@ bib/827126	Mumintrollet (länkar till Tove Jansson auth/19153 som creator)
 bib/8558889
 bib/12739812	person och institution
 bib/13457927	Kjellström, Rolf: Nybyggarliv i Vilhelmina med person + 2 institutioner
+
 hold/15726821
 hold/15958795
 hold/18472436
