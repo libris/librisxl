@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import org.openrdf.model.Resource
 import org.openrdf.repository.Repository
+import org.openrdf.repository.RepositoryConnection
 import org.openrdf.repository.http.HTTPRepository
 import org.openrdf.rio.RDFFormat
 
@@ -18,16 +19,20 @@ class SesameGraphStore extends BasicPlugin implements GraphStore {
     String sesameServer
     String repositoryID
     Repository repo
+    RepositoryConnection conn
     String id = "sesameGraphStoreComponent"
 
     SesameGraphStore(String sesameServer, String repositoryID) {
         repo = new HTTPRepository(sesameServer, repositoryID)
         repo.initialize()
+        conn = repo.getConnection()
     }
 
     void update(URI graphUri, RDFDescription doc) {
-        // TODO: not new conn for each? pool?
-        def conn = repo.getConnection()
+        if (!conn.open) {
+            log.debug("Connection is closed. Reopening.")
+            conn = repo.getConnection()
+        }
         try {
             log.debug("Store <${graphUri}> with content type '${doc.contentType}'")
             def bis = new ByteArrayInputStream(doc.data)

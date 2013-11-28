@@ -17,7 +17,8 @@
                     "linkcompleter",
                     "jsonldlinkfinder",
                     "indexlinkfinder",
-                    "completeexpander"
+                    "completeexpander",
+                    "indexingprawn"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
