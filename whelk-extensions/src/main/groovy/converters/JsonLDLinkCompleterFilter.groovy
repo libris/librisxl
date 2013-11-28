@@ -21,49 +21,76 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     def loadRelatedDocs(Document doc) {
         def relatedDocs = [:]
-        for (link in doc.links) {
-            log.debug("Doc has ${link.type} -link to ${link.identifier}")
-            def linkedDoc = whelk.get(new URI(link.identifier))
-            if (linkedDoc && link.type == "auth") {  //handling links to "auth" docs
-                relatedDocs[link.identifier] = linkedDoc
+        def links = doc.getLinks()
+        if (links.size() > 0) {
+            for (link in links) {
+                log.debug("Doc has ${link.type}-link to ${link.identifier}")
+                def linkedDoc = whelk.get(new URI(link.identifier))
+                if (linkedDoc) {  //&& link.type == "auth" ?? type=authority from importer, type=<relation> from linkfinders
+                    relatedDocs[link.identifier] = linkedDoc
+                }
             }
         }
         return relatedDocs
     }
 
+    def findMapProperty(prop) {
+        if (prop instanceof List) {
+            for (p in prop) {
+                if (!prop instanceof String)
+                    findMapProperty(p)
+            }
+        }
+        if (prop instanceof Map) {
+            if (prop.get("@type") && !prop.containsKey("@value")) //&& !prop.containsKey("@id")  ?
+                return prop
+            else {
+                prop.each { k, v ->
+                   findMapProperty(v)
+                }
+            }
+        }
+        return null
+    }
+
     Document doFilter(Document doc) {
-        log.info("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
+        log.debug("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
         def changedData = false
-        def entityType, entity
+        def entity, json, work
         def relatedDocs = loadRelatedDocs(doc)
 
-        def json = mapper.readValue(doc.dataAsString, Map)
-        def work = json.about?.instanceOf ? json.about.instanceOf : json.about
+        if (relatedDocs.size() > 0) {
+            json = mapper.readValue(doc.dataAsString, Map)
+            work = json.about?.instanceOf ? json.about.instanceOf : json.about
 
-        //For each property in incoming document
-        work.each { propKey, propValue ->
+            //For each property in incoming document, find entity-object property (is a Map and has a @type, but not a @value)
+            work.each { propKey, propValue ->
 
-            //Find entity
-            if (propValue instanceof List) {
-                propValue.each {
-                    if (it instanceof Map) {
-                        entity = it
-                        entityType = it.get("@type")
+                if (!propValue instanceof String) {
+
+                    entity = findMapProperty(propValue)
+                    log.trace("Entity $entity")
+
+                    //Try to update entity.@id with matching linked documents
+                    changedData = updatePropertyWithLinks(entity, relatedDocs)
+
+                    //Find entity-object property within entity
+                    //TODO: better recursive way
+                    def deepMap
+                    entity.each { k, v ->
+                        if (!v instanceof String)
+                            deepMap = findMapProperty(v)
+                    }
+
+                    if (deepMap) {
+                        log.debug("$deepMap")
+                        changedData = updatePropertyWithLinks(deepMap, relatedDocs) || changedData
                     }
                 }
-            }  else if (propValue instanceof Map) {
-                entity = propValue
-                entityType = propValue.get("@type")
             }
-
-            //Try to update entity.@id with matching linked documents
-            if (entityType && !entity.containsKey("@value"))  {   //&& !entity.containsKey("@id")  ?
-                changedData = updatePropertyWithLinks(entity, relatedDocs)
+            if (changedData) {
+                return doc.withData(mapper.writeValueAsString(json))
             }
-
-        }
-        if (changedData) {
-            return doc.withData(mapper.writeValueAsString(json))
         }
 
         return doc
@@ -73,21 +100,20 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
     boolean updatePropertyWithLinks(property, relatedDocs) {
         boolean updated = false
         def relatedDocMap, relatedItem, updateAction
-        if (relatedDocs.size() > 0) {
-            relatedDocs.each { docId, doc ->
+        relatedDocs.each { docId, doc ->
                 relatedDocMap = doc.dataAsMap
                 relatedItem = relatedDocMap.about ?: relatedDocMap
                 if (relatedItem.get("@type") == property.get("@type")) {
                     try {
                         updateAction = "update" + property["@type"] + "Id"
+                        log.trace("$updateAction")
                         updated = "$updateAction"(property, relatedItem)
                         log.trace("$updated")
                     } catch (Exception e) {
-                        log.debug("Could not update property of type ${property["@type"]}")
+                        log.trace("Could not update property of type ${property["@type"]}")
                         updated = false
                     }
                 }
-            }
         }
         return updated
     }

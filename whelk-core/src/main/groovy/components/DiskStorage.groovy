@@ -85,7 +85,7 @@ class DiskStorage extends BasicPlugin implements Storage {
             log.debug("Loading document from disk.")
             return document
         } catch (FileNotFoundException fnfe) {
-            log.warn("File $sourcefile or $metafile not found.")
+            log.trace("File $sourcefile or $metafile not found.")
             return null
         }
     }
