@@ -14,9 +14,14 @@
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="debug"/>
   </logger>
-  <logger name="se.kb.libris.whelks.plugin.JsonLDLinkEnhancerFormatConverter">
-       <level value="debug"/>
+  -->
+  <logger name="se.kb.libris.whelks.plugin.JsonLDLinkFinder">
+       <level value="trace"/>
   </logger>
+  <logger name="se.kb.libris.whelks.plugin.IndexLinkFinder">
+       <level value="trace"/>
+  </logger>
+  <!--
   <logger name="se.kb.libris.conch">
       <level value="debug"/>
   </logger>
@@ -61,10 +66,10 @@
   <logger name="se.kb.libris.whelks.plugin.IndexingPrawn">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.basic">
       <level value="trace"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger> 

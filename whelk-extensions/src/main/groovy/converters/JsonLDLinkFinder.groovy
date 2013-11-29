@@ -28,6 +28,7 @@ class JsonLDLinkFinder extends BasicPlugin implements LinkFinder {
                 if (key == "@id") {
                     if (value instanceof String && value != selfId && !value.startsWith("_:")) {
                         value.split().each {
+                            log.trace("Adding link of type $type: $it")
                             ids << new Link(new URI(it), type)
                         }
                     }

@@ -132,14 +132,6 @@ class StandardWhelk implements Whelk {
             doc = fc.convert(doc)
             docs.put(doc.contentType, doc)
         }
-        /*
-            for (lf in linkFinders) {
-                log.debug("Using linkfinder ${lf.id}")
-                for (link in lf.findLinks(doc)) {
-                    doc = doc.withLink(link.identifier.toString(), link.type)
-                }
-            }
-            */
         for (d in docs.values()) {
             for (st in  getStorages(d.contentType)) {
                 if (st.id != excemptStorage) {

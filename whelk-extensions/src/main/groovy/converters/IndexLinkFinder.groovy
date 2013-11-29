@@ -30,9 +30,9 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
         log.trace("Running IndexLinkFinder, trying to find links for ${doc.identifier} ...")
         def links = []
         mapper = new ObjectMapper()
-        def json = mapper.readValue(doc.dataAsString, Map)
         if (doc && (doc.contentType == "application/json" || doc.contentType == "application/ld+json")) {
-            links = collectIds(json, "", doc.identifier)
+            log.trace("Doc is ${doc.contentType}. Collecting ids ...")
+            links = collectIds(doc.dataAsMap, "", doc.identifier)
         }
         return links as Set
     }
@@ -40,6 +40,8 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
     def collectIds(prop, type, selfId) {
         def ids = []
         def labelKey, searchStr, esQuery, result, resultJson
+
+        log.trace("prop is $prop")
 
         if (prop instanceof Map) {
             prop.each { propKey, propValue ->
