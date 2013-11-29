@@ -41,15 +41,15 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
         def ids = []
         def labelKey, searchStr, esQuery, result, resultJson
 
-        log.trace("prop is $prop")
-
         if (prop instanceof Map) {
             prop.each { propKey, propValue ->
                 if (propValue instanceof Map && propValue.containsKey("@type") && !propValue.containsKey("@value")) {
 
                     //Try to to find matching authority entities using es-search
                     labelKey = searchLabel.get(propValue["@type"])
+                    log.trace("labelKey: $labelKey")
                     if (labelKey && propValue.containsKey(labelKey)) {
+                        log.trace("Examining ...")
                         def searchTerm = URLEncoder.encode(propValue.get(labelKey), "UTF-8")
                         searchStr = "$labelKey:$searchTerm"
                         esQuery = new ElasticQuery(searchStr)

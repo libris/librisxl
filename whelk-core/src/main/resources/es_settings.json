@@ -3,7 +3,8 @@
         "analyzer" : {
             "default" : {
                 "tokenizer" : "standard",
-                "filter" : ["swe_light_stemmer", "lowercase"]
+                "filter" : ["swe_light_stemmer", "lowercase"],
+                "stopwords" : "_none_"
             }
 
         },

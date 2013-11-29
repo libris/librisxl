@@ -120,7 +120,6 @@ abstract class ElasticSearch extends BasicPlugin {
     @Override
     void init(String indexName) {
         this.elasticIndex = indexName
-        // client.admin().indices().prepareAliases().addAlias("my_index", "my_alias").removeAlias("my_old_index", "my_alias").execute().actionGet();
         if (!performExecute(client.admin().indices().prepareExists(elasticIndex)).exists) {
             createNewCurrentIndex()
             log.debug("Will create alias $elasticIndex -> $currentIndex")
