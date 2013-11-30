@@ -11,16 +11,16 @@ import se.kb.libris.whelks.StandardWhelk
 import se.kb.libris.whelks.component.FlatDiskStorage
 
 @Log
-class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
+class JsonLDLinkCompleterFilterSpec extends Specification {
 
     private mapper = new ElasticJsonMapper()
-    def bibDoc, doc, whelk, converter, docMap
+    def bibDoc, doc, whelk, filter, docMap
 
     def "convert should insert auth link into bib jsonld"() {
         given:
         whelk = getInitializedWhelk()
-        converter = new JsonLDLinkEnhancerFormatConverter()
-        converter.setWhelk(whelk)
+        filter = new JsonLDLinkCompleterFilter()
+        filter.setWhelk(whelk)
         def doclinks = [
             "/auth/94541",
             "/auth/139860",
@@ -59,12 +59,15 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
                             "@type" : "Concept",
                             "broader" : [
                                 [
+                                    "@type" : "Concept",
                                     "@id" : "/topic/sao/Arkiv",
                                 ],
                                 [
+                                    "@type" : "Concept",
                                     "sameAs": ["@id" : "/topic/sao/Arkiv"]
                                 ],
                                 [
+                                    "@type" : "Concept",
                                     "prefLabel" : "Allegorier"
                                 ]
                             ]
@@ -96,7 +99,7 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
         ], doclinks)
 
         when:
-        doc = converter.doConvert(bibDoc)
+        doc = filter.doFilter(bibDoc)
         docMap = mapper.readValue(doc.dataAsString, Map)
         then:
         def work = docMap.about.instanceOf
@@ -124,7 +127,7 @@ class JsonLDLinkEnhancerFormatConverterSpec extends Specification {
     }
 
     Whelk getInitializedWhelk() {
-          Map settings = ["storageDir": "../work/storage/main", "contentType": "application/ld+json"]
+          Map settings = ["storageDir": "../work/storage/flat/main", "contentType": "application/ld+json"]
           Whelk whelk = new StandardWhelk("libris")
           whelk.addPlugin(new FlatDiskStorage(settings))
           return whelk

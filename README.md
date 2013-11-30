@@ -41,12 +41,14 @@ Or better, create a local OAI-PMH dump of examples and run a full import:
 
     $ python scripts/assemble_oaipmh_records.py *******:**** scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
-    $ gradle whelkOperation -Dargs='-o import -w libris -d auth -u http://localhost:8000/auth'
-    $ gradle whelkOperation -Dargs='-o import -w libris -d bib -u http://localhost:8000/bib'
+    $ for d in auth bib; do gradle whelkOperation -Dargs="-o import -w libris -d $d -u http://localhost:8000/$d"; done
+    $ gradle whelkOperation -Dargs='-o linkfindandcomplete -w libris -d bib --fromstorage flatstorage'
     $ fg
     <CTRL-C>
 
 (The benefit of this is that out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
+
+You need to add `-Ddisable.plugins="sesamegraphstore"` to the invokations above unless you have set up a graph store (see below).
 
 
 ### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)
