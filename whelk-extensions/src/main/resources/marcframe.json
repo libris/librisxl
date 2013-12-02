@@ -728,7 +728,7 @@
       "match-domain": {
         "Person": {
           "addLink": "hasPersona",
-          "rangeEntity": "Persona"
+          "rangeEntity": "Person"
         }
       }
     },
