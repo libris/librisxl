@@ -23,7 +23,7 @@ class JsonLDIndexBasedEnhancerFormatConverter extends BasicFormatConverter imple
     Document doConvert(Document doc) {
         def json = mapper.readValue(doc.dataAsString, Map)
 
-        HashMap<String, HashMap<String, String>> linksMap = ["creator": ["@type": "Person", "propertyPath": "about.instanceOf.creator", "searchStr": "controlledLabel", "indexType": "auth", "findIn": "about.controlledLabel"]]
+        HashMap<String, HashMap<String, String>> linksMap = ["attributedTo": ["@type": "Person", "propertyPath": "about.instanceOf.attributedTo", "searchStr": "controlledLabel", "indexType": "auth", "findIn": "about.controlledLabel"]]
 
         linksMap.each { key, props ->
             def propertyPath = props["propertyPath"]
@@ -59,11 +59,11 @@ class JsonLDIndexBasedEnhancerFormatConverter extends BasicFormatConverter imple
                             String extractedLink
                             for (r in resultJson.list) {
                                 extractedLink = r["identifier"]
-                                json["about"]["instanceOf"]["creator"][i++]["@id"] = extractedLink
+                                json["about"]["instanceOf"]["attributedTo"][i++]["@id"] = extractedLink
                             }
                             log.debug("Extracted link: $extractedLink")
                             log.debug("Result data: " + mapper.writeValueAsString(json))
-                            doc = doc.withData(mapper.writeValueAsString(json)).withLink(extractedLink, "creator")
+                            doc = doc.withData(mapper.writeValueAsString(json)).withLink(extractedLink, "attributedTo")
                         }
                     }
                 }

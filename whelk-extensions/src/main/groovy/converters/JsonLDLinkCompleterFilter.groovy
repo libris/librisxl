@@ -125,17 +125,17 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     boolean updateWorkId(item, relatedItem) {
         if (item["uniformTitle"] == relatedItem["uniformTitle"]) {
-            def creator = item.creator
-            if (creator instanceof List)
-                creator = creator[0]
-            def authCreator = relatedItem.creator
-            if (authCreator instanceof List)
-                authCreator = authCreator[0]
+            def attributedTo = item.attributedTo
+            if (attributedTo instanceof List)
+                attributedTo = attributedTo[0]
+            def authObject = relatedItem.attributedTo
+            if (authObject instanceof List)
+                authObject = authObject[0]
             if (
-                    (!creator && !authCreator) ||
-                    ((creator && authCreator) &&
-                     (creator["@type"] == "Person" && authCreator["@type"] == "Person" &&
-                      creator["controlledLabel"] == authCreator["controlledLabel"]))
+                    (!attributedTo && !authObject) ||
+                    ((attributedTo && authObject) &&
+                     (attributedTo["@type"] == "Person" && authObject["@type"] == "Person" &&
+                      attributedTo["controlledLabel"] == authObject["controlledLabel"]))
             ) {
                 item["@id"] = relatedItem["@id"]
                 return true

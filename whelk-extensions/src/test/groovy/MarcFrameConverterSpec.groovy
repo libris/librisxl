@@ -92,7 +92,7 @@ class MarcFrameConverterSpec extends Specification {
                 ],
                 "instanceOf": [
                     "@type": "Book",
-                    "creator": [
+                    "attributedTo": [
                         "@type": "Person",
                         "controlledLabel": "Jansson, Tove, 1914-2001",
                         "birthYear": "1914",
@@ -100,7 +100,7 @@ class MarcFrameConverterSpec extends Specification {
                         "familyName": "Jansson",
                         "givenName": "Tove"
                     ],
-                    "contributorList": [
+                    "influencedBy": [
                         [
                             "@type": "Person",
                             "controlledLabel": "Pietil\u00e4, Tuulikki, 1917-",

@@ -264,7 +264,7 @@
           "rangeEntity": "Family"
         }
       },
-      "link": "creator",
+      "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "label", "pattern": "([^,]+)(?:,\\s*([^,]+))",
         "properties": ["familyName", "givenName"]},
@@ -283,7 +283,7 @@
     "110": {
       "domainEntity": "Work",
       "rangeEntity": "Organization",
-      "link": "creator",
+      "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "label"}
     },
@@ -443,7 +443,7 @@
           "splitLink": [
             {"codes": ["t"], "addLink": "subject", "spliceEntity": "Work"}
           ],
-          "addLink": "creator"
+          "addLink": "attributedTo"
         }
       },
       "addLink": "subject", "rangeEntity": "Person"
@@ -514,8 +514,8 @@
     "656" : {"rangeEntity": "Profession", "ignored": true},
     "657" : {"rangeEntity": "FunctionOrRole", "ignored": true},
 
-    "700": {"inherit": "100", "addLink": "contributorList"},
-    "710": {"inherit": "110", "addLink": "contributorList"},
+    "700": {"inherit": "100", "addLink": "influencedBy"},
+    "710": {"inherit": "110", "addLink": "influencedBy"},
     "711": {"inherit": "111"},
 
     "740": {
@@ -687,7 +687,7 @@
           "splitLink": [
             {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "Work"}
           ],
-          "addLink": "creator"
+          "addLink": "attributedTo"
         }
       },
       "match-domain": {
