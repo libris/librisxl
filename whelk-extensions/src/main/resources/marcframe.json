@@ -416,10 +416,10 @@
       "$l": {"property": "callno"}
     },
 
-    "500": {"$a": {"domainEntity": "Instance", "property": "note"}},
-    "504": {"$a": {"domainEntity": "Instance", "property": "supplementaryContentNote"}},
+    "500": {"$a": {"domainEntity": "Instance", "addProperty": "note"}},
+    "504": {"$a": {"domainEntity": "Instance", "addProperty": "supplementaryContentNote"}},
     "505": {"$a": {"domainEntity": "Instance", "addProperty": "listOfContents", "TODO": "$t, $r"}},
-    "508": {"$a": {"domainEntity": "Instance", "property": "creditsNote"}},
+    "508": {"$a": {"domainEntity": "Instance", "addProperty": "creditsNote"}},
 
     "511": {
       "$a": {
@@ -429,11 +429,11 @@
       }
     },
 
-    "520": {"domainEntity": "Instance", "$a": {"property": "summary"}},
+    "520": {"domainEntity": "Instance", "$a": {"addProperty": "summary"}},
 
-    "538": {"$a": {"domainEntity": "Instance", "property": "systemRequirements"}},
+    "538": {"$a": {"domainEntity": "Instance", "addProperty": "systemRequirements"}},
 
-    "599": {"$a": {"domainEntity": "Record", "property": "comment"}},
+    "599": {"$a": {"domainEntity": "Record", "addProperty": "comment"}},
 
     "600": {
       "inherit": "100",
@@ -728,7 +728,7 @@
       "match-domain": {
         "Person": {
           "addLink": "hasPersona",
-          "rangeEntity": "Persona"
+          "rangeEntity": "Person"
         }
       }
     },
