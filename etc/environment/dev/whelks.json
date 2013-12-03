@@ -17,7 +17,6 @@
                     "turtleconverter",
                     "entityextractor",
                     "linkcompleter",
-                    "jsonldlinkfinder",
                     "indexlinkfinder",
                     "indexingprawn"
                 ],
