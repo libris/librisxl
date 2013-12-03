@@ -24,9 +24,9 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
                 ]
             ]
         ]
-        def creator = ["@type": "Person", "controlledLabel": "Jansson, Tove, 1914-2001", "@id": "/resource/auth/191503"]
-        def creator2 = ["@type": "Person", "controlledLabel": "Svensson, Unauthorized"]
-        def contributorList = [["@type": "Person", "controlledLabel": "Jansson, Tove, 1914-2001", "@id": "/resource/auth/191503"], ["@type": "Person", "controlledLabel": "Hopp, Hej"]]
+        def person1 = ["@type": "Person", "controlledLabel": "Jansson, Tove, 1914-2001", "@id": "/resource/auth/191503"]
+        def person2 = ["@type": "Person", "controlledLabel": "Svensson, Unauthorized"]
+        def persons = [["@type": "Person", "controlledLabel": "Jansson, Tove, 1914-2001", "@id": "/resource/auth/191503"], ["@type": "Person", "controlledLabel": "Hopp, Hej"]]
         def authPerson = [
                 "@id": "/auth/191503",
                 "@type": "Record",
@@ -63,7 +63,7 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
 
         when:
             copy = bib
-            copy["about"]["instanceOf"]["creator"] = creator
+            copy["about"]["instanceOf"]["attributedTo"] = person1
             doclist = converter.doConvert(makeDoc(copy, "http://libris.kb.se/bib/7149593"))
         then:
             doclist.size() == 1
@@ -71,8 +71,8 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
 
         when:
             copy = bib
-            copy["about"]["instanceOf"]["creator"] = creator2
-            copy["about"]["instanceOf"]["contributorList"] = contributorList
+            copy["about"]["instanceOf"]["attributedTo"] = person2
+            copy["about"]["instanceOf"]["influencedBy"] = persons
             doclist = converter.doConvert(makeDoc(copy, "http://libris.kb.se/bib/7149593"))
         then:
             doclist.size() == 3

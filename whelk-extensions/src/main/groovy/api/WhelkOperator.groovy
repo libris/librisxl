@@ -29,6 +29,7 @@ class WhelkOperator {
         cli.n(longOpt:'num', "maximum number of document to import", required:false, args:1)
         cli.p(longOpt:'picky', "picky (true|false)", required:false, args:1)
         cli._(longOpt:'fromStorage', 'used for rebuild. from which storage to read source data.', required:false, args:1, argName:'storage id')
+        cli._(longOpt:'silent', 'used by OAIPMH. If silent, the spinner is not shown during imports.', required:false)
 
         def opt = cli.parse(args)
         if (!opt) {
@@ -50,7 +51,7 @@ class WhelkOperator {
             println "Import from OAIPMH"
             //def importer = new BatchImport(resource)
             def importer = new OAIPMHImporter(whelk, opt.d, surl)
-            def nrimports = importer.doImport(since, nums, picky)
+            def nrimports = importer.doImport(since, nums, picky, opt.silent)
             def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
 

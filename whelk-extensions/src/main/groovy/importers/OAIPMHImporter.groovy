@@ -27,6 +27,7 @@ class OAIPMHImporter {
     int nrDeleted = 0
     long startTime = 0
     boolean picky = true
+    boolean silent = false
 
     // Stat tools
     long meanTime
@@ -45,9 +46,10 @@ class OAIPMHImporter {
         this.serviceUrl = serviceUrl ?: SERVICE_BASE_URL + resource
     }
 
-    int doImport(Date from = null, int nrOfDocs = -1, boolean picky = true) {
+    int doImport(Date from = null, int nrOfDocs = -1, boolean picky = true, boolean silent = false) {
         getAuthentication()
         this.picky = picky
+        this.silent = silent
         String urlString =  serviceUrl + "/oaipmh/?verb=ListRecords&metadataPrefix=marcxml"
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -109,7 +111,7 @@ class OAIPMHImporter {
                     if (sizeOfBatch && meanTime) {
                         velocityMsg = "Current velocity: " + (1000*(sizeOfBatch / (System.currentTimeMillis() - meanTime))) + " docs/second."
                     }
-                    if (log.isInfoEnabled() && !log.isDebugEnabled()) {
+                    if (!silent && log.isInfoEnabled() && !log.isDebugEnabled()) {
                         Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                     }
                 } catch (Exception e) {

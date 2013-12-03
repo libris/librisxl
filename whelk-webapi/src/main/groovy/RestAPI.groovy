@@ -321,7 +321,7 @@ class FieldSearchRestlet extends BasicWhelkAPI {
     def pathEnd = "_fieldsearch/{indexType}"
     String id = "ESFieldSearch"
     def varPath = false
-    String description = "Query API for field searches. For example q=about.instanceOf.creator.controlledLabel:Strindberg, August"
+    String description = "Query API for field searches. For example q=about.instanceOf.attributedTo.controlledLabel:Strindberg, August"
 
     void doHandle(Request request, Response response) {
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
@@ -526,18 +526,18 @@ class CompleteExpander extends BasicWhelkAPI {
         def authDataMap = authDoc.getDataAsMap()
         def idQuery = "\\/resource\\/" + identifier.replace("/", "\\/")
         if (authDataMap.about."@type" == "Person") {
-                result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.creator.@id").addFacet("about.@type"))
-                relator = "creator"
+                result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.attributedTo.@id").addFacet("about.@type"))
+                relator = "attributedTo"
                 if (result.numberOfHits == 0) {
-                    result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.contributorList.@id").addFacet("about.@type"))
-                    relator = "contributor"
+                    result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.influencedBy.@id").addFacet("about.@type"))
+                    relator = "influencedBy"
                 }
                 resultMap = result.toMap(["about.@type", "about.title.titleValue", "originalCatalogingAgency.name", "function", "exampleTitle"])
                 resultMap.list.eachWithIndex() { r, i ->
                     if (resultMap.list[i].get("data", null)) {
                         resultMap.list[i].data["function"] = relator
                         //TODO: number of holds
-                        if (relator.equals("creator")) {
+                        if (relator.equals("attributedTo")) {
                             resultMap["extraKnowledge"] = ["exampleTitle" : resultMap.list[i].data.about.title.titleValue]
                         }
                     }

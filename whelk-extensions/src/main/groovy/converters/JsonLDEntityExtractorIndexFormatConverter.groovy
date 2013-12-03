@@ -12,7 +12,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
     def authPoint = ["Person": "controlledLabel", "Concept": "prefLabel", "ConceptScheme": "notation"]
-    def entitiesToExtract = ["about.inScheme", "about.instanceOf.creator", "about.instanceOf.contributorList"]
+    def entitiesToExtract = ["about.inScheme", "about.instanceOf.attributedTo", "about.instanceOf.influencedBy"]
 
     List<IndexDocument> doConvert(Document doc) {
         log.debug("Converting indexdoc $doc.identifier")
@@ -80,6 +80,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
     IndexDocument createEntityDoc(def entityJson, def docId, def prio, def slugifyId) {
         try {
+            def indexId = entityJson["@id"]
             def type = entityJson["@type"]
             if (slugifyId) {
                 def label = authPoint.get(type, null)
@@ -88,14 +89,13 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                     log.debug("Type $type not declared for index entity extraction.")
                     return null
                 }
-                def entityId = slugify(authPath, new URI(docId), type)
-                entityJson["@id"] = entityId
+                indexId = slugify(authPath, new URI(docId), type)
             }
             entityJson["extractedFrom"] = ["@id": docId]
             entityJson["recordPriority"] = prio
             entityJson.get("unknown", null) ?: entityJson.remove("unknown")
-            log.debug("Created indexdoc ${entityJson["@id"]} with prio $prio")
-            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(entityJson["@id"]).withType(type)
+            log.debug("Created indexdoc ${indexId} with prio $prio")
+            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(indexId).withType(type)
         } catch (Exception e) {
             log.debug("Could not create entitydoc ${e} from docId: $docId" + " EntityJson " + mapper.writeValueAsString(entityJson))
             return null

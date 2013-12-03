@@ -48,7 +48,7 @@ Or better, create a local OAI-PMH dump of examples and run a full import:
 
 (The benefit of this is that out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
 
-You need to add `-Ddisable.plugins="sesamegraphstore"` to the invokations above unless you have set up a graph store (see below).
+You need to add `-Ddisable.plugins="indexingprawn,sesamegraphstore"` to the invokations above unless you have set up a graph store (see below).
 
 
 ### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)

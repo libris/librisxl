@@ -39,11 +39,11 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
                 "@type": "Book",
                 "instanceOf": [
                     "@type": "Book",
-                    "creator": [
+                    "attributedTo": [
                         "@type" : "Person",
                         "controlledLabel": "Strindberg, August, 1849-1912"
                     ],
-                    "contributorList":  [
+                    "influencedBy":  [
                         [
                             "@type" : "Person",
                             "controlledLabel" : "Jansson, Tove, 1914-2001"
@@ -75,7 +75,7 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
                         [
                             "@type": "Work",
                             "uniformTitle": "Metamorphoses",
-                            "creator": [
+                            "attributedTo": [
                                 [
                                     "@type": "Person",
                                     "controlledLabel": "Ovidius Naso, Publius, 43-"
@@ -103,8 +103,8 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
         docMap = mapper.readValue(doc.dataAsString, Map)
         then:
         def work = docMap.about.instanceOf
-        work.creator."@id" == "/resource/auth/94541"
-        work.contributorList[0]."@id" == "/resource/auth/191503"
+        work.attributedTo."@id" == "/resource/auth/94541"
+        work.influencedBy[0]."@id" == "/resource/auth/191503"
         work.subject[0]."@id" == "/resource/auth/139860"
         work.subject[1].broader[0]."@id" == "/resource/auth/139860"
         work.subject[1].broader[0].sameAs."@id" == "/topic/sao/Arkiv"
