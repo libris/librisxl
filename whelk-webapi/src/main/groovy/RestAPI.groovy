@@ -18,7 +18,6 @@ import se.kb.libris.whelks.result.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import se.kb.libris.conch.converter.MarcJSONConverter
-
 import se.kb.libris.utils.isbn.*
 
 import org.codehaus.jackson.map.*
@@ -889,62 +888,114 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
     String description = "Query API for remote search"
     String id = "RemoteSearchAPI"
 
-    def remoteTestURL = "http://mproxy.libris.kb.se:8000/LC?version=1.1&operation=searchRetrieve&maximumRecords=10"
+    String remoteURL
+
+    def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10"]
+
+    RemoteSearchRestlet(urlString) {
+        remoteURL = urlString
+    }
 
     void doHandle(Request request, Response response) {
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def query = queryMap.get("q", null)
-        def xmlRecords
+        def xmlRecords, queryStr, url, jsonResult, xmlDoc, id, xMarcJsonDoc, jsonRec, jsonDoc
+        def docStrings = []
+        MarcRecord record
+        OaiPmhXmlConverter oaiPmhXmlConverter
+        MarcFrameConverter marcFrameConverter
+
         if (query) {
-            def url = new URL("${remoteTestURL}&query=" + query)
+            urlParams.each { k, v ->
+                if (!queryStr) {
+                    queryStr = "?"
+                } else {
+                    queryStr += "&"
+                }
+                queryStr += k + "=" + v
+            }
+            url = new URL(remoteURL + queryStr + "&query=" + query)
+
             try {
+
                 xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
+                docStrings = getXMLRecordStrings(xmlRecords)
+
+                for (docString in docStrings) {
+
+                        /*def responseXMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n"
+                        for (doc in docStrings) {
+                           responseXMLString += doc
+                        }
+                        response.setEntity(responseXMLString + "\n</records>", MediaType.APPLICATION_XML) */
+
+                        //Create MarcRecord from xml string and get id
+                        record = MarcXmlRecordReader.fromXml(docString)
+                        id = record.getControlfields("001").get(0).getData()
+
+                        //Create Document with raw xml string as data
+                        xmlDoc = new Document()
+                                .withData(docString.getBytes("UTF-8"))
+                                .withEntry(["identifier": "/external/"+id, "dataset": "external", "contentType": "text/oaipmh+xml"])
+                        log.trace("XmlDoc: $xmlDoc")
+
+                        //Convert xmlDoc to x-marc-json (marcxml in json)
+                        jsonRec = MarcJSONConverter.toJSONString(record)
+                        xMarcJsonDoc = new Document()
+                            .withData(jsonRec.getBytes("UTF-8"))
+                            .withIdentifier(xmlDoc.identifier)
+                            .withEntry(xmlDoc.entry)
+                            .withMeta(xmlDoc.meta)
+
+                        //Convert xMarcJsonDoc to ld+json
+                        marcFrameConverter = new MarcFrameConverter()
+                        jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
+
+                        mapper = new ObjectMapper()
+                        jsonResult += mapper.writeValueAsString(jsonDoc.dataAsMap)
+                }
+
             } catch (org.xml.sax.SAXParseException spe) {
-                log.error("Failed to parse XML: ${url.text}")
-                throw spe
+                    log.error("Failed to parse XML: ${url.text}")
+                    throw spe
+            } catch (Exception e) {
+                    log.error("Could not convert document from $docStrings")
+                    throw e
             }
-            def docs = convertXMLRecords(xmlRecords)
-            /*mapper = new ObjectMapper()
-            def jsonResult
-            for (doc in docs) {
-                docMap = mapper.readValue(doc, Map)
-                def res = mapper.writeValueAsString(docMap)
-                log.debug("RES ${res}")
-                jsonResult += mapper.writeValueAsString(docMap)
-            }
-            log.debug("RESULT: " + jsonResult)
-            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
-            */
-            //XML response for now...
-            def responseXMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n"
-            for (doc in docs) {
-               responseXMLString += doc
-            }
-            response.setEntity(responseXMLString + "\n</records>", MediaType.APPLICATION_XML)
+
         } else {
             response.setEntity(/{"Error": "Use parameter \"q\"}/, MediaType.APPLICATION_JSON)
         }
+
+        if (!jsonResult) {
+            response.setStatus(Status.SUCCESS_NO_CONTENT)
+        }
+        response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+
     }
 
-    List<Document> convertXMLRecords(def xmlRecords) {
-        def documents = []
+    List<String> getXMLRecordStrings(xmlRecords) {
+        def xmlRecs = new ArrayList<String>()
         xmlRecords?.'zs:records'?.each { rec ->
             rec.each { it ->
                 def marcXmlRecord = it?.'zs:record'?.'zs:recordData'?.'tag0:record'
                 def marcXmlRecordString = createString(marcXmlRecord)
                 if (marcXmlRecordString) {
-                    log.debug("MARCXMLRECORDSTRING: ${marcXmlRecordString}")
-                    documents << marcXmlRecordString
+                    xmlRecs << removeNamespacePrefixes(marcXmlRecordString)
                 }
             }
         }
-        return documents
+        return xmlRecs
     }
 
     String createString(GPathResult root) {
         return new StreamingMarkupBuilder().bind {
             out << root
         }
+    }
+
+    String removeNamespacePrefixes(String xmlStr) {
+        return xmlStr.replaceAll("tag0:", "").replaceAll("zs:", "")
     }
 }
 
