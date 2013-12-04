@@ -104,6 +104,8 @@
                         "controlledLabel",
                         "label",
                         "altLabel",
+                        "sameAs.controlledLabel",
+                        "hasPersona.controlledLabel",
                         "@id"
                     ],
                     "infoFields":[
