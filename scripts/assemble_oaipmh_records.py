@@ -1,6 +1,11 @@
 import csv
 import requests
-from lxml import etree
+try:
+    import lxml
+    from lxml import etree
+except ImportError:
+    lxml = None
+    from xml.etree import ElementTree as etree
 from sys import argv, stdout, stderr
 import os
 
@@ -22,14 +27,16 @@ else:
     outdir = None
     records = args
 
+OAI_NS = "http://www.openarchives.org/OAI/2.0/"
+
 def make_root():
-    root = etree.Element('OAI-PMH', nsmap={None: "http://www.openarchives.org/OAI/2.0/"})
+    root = etree.Element('OAI-PMH', **{'nsmap': {None: OAI_NS}} if lxml else {'xmlns': OAI_NS})
     etree.SubElement(root, 'responseDate').text = "1970-01-01T00:00:00Z"
-    etree.SubElement(root, 'request', attrib=dict(
-        verb="ListRecords",
-        resumptionToken="null|2001-12-11T23:00:00Z|107000|null|null|marcxml",
-        metadataPrefix="marcxml"
-        )).text = "http://data.libris.kb.se/auth/oaipmh"
+    etree.SubElement(root, 'request',
+            verb="ListRecords",
+            resumptionToken="null|2001-12-11T23:00:00Z|107000|null|null|marcxml",
+            metadataPrefix="marcxml"
+        ).text = "http://data.libris.kb.se/auth/oaipmh"
     return root
 
 partitions = {}
@@ -59,7 +66,8 @@ for name, (root, reclist) in partitions.items():
         fp = open(fpath, 'w')
     else:
         fp = stdout
-    fp.write(etree.tostring(root, pretty_print=True, encoding='UTF-8'))
+    kwargs = {'pretty_print': True} if lxml else {}
+    fp.write(etree.tostring(root, encoding='UTF-8', **kwargs))
     if outdir:
         fp.close()
     else:
