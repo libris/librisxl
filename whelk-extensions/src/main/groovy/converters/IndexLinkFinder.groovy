@@ -15,7 +15,7 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
     ObjectMapper mapper
     def whelk
 
-    def searchLabel = ["Person" : "controlledLabel", "Concept" : "prefLabel"]
+    def searchLabel = ["Person" : "controlledLabel", "Concept" : "prefLabel", "Organization" : "label"]
 
     public IndexLinkFinder(def whelk) {
         this.whelk = whelk
@@ -31,7 +31,7 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
         def links = []
         mapper = new ObjectMapper()
         if (doc && (doc.contentType == "application/json" || doc.contentType == "application/ld+json")) {
-            log.trace("Doc is ${doc.contentType}. Collecting ids ...")
+            log.trace("Doc is ${doc.contentType}. Collecting ids ... dataAsMap is of type ${doc.dataAsMap.getClass()}")
             links = collectIds(doc.dataAsMap, "", doc.identifier)
         }
         return links as Set
@@ -39,19 +39,21 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
 
     def collectIds(prop, type, selfId) {
         def ids = []
-        def labelKey, searchStr, esQuery, result, resultJson
+        def labelKey, searchStr, esQuery, result, resultJson, searchTerm, urlSearchTerm
 
         if (prop instanceof Map) {
             prop.each { propKey, propValue ->
                 if (propValue instanceof Map && propValue.containsKey("@type") && !propValue.containsKey("@value")) {
-
+                    log.trace("Property entity type: ${propValue."@type"}")
                     //Try to to find matching authority entities using es-search
                     labelKey = searchLabel.get(propValue["@type"])
-                    log.trace("labelKey: $labelKey")
                     if (labelKey && propValue.containsKey(labelKey)) {
                         log.trace("Examining ...")
-                        def searchTerm = URLEncoder.encode(propValue.get(labelKey), "UTF-8")
-                        searchStr = "$labelKey:$searchTerm"
+                        searchTerm = URLEncoder.encode(propValue.get(labelKey), "UTF-8")
+                        if (propValue.get("label")) {
+                            labelSearchTerm = URLEncoder.encode(propValue["label"], "UTF-8")
+                        }
+                        searchStr = labelSearchTerm ? "$labelKey:$searchTerm" : "$labelKey:$searchTerm label:$labelSearchTerm"
                         esQuery = new ElasticQuery(searchStr)
                         esQuery.indexType = propValue["@type"].toLowerCase() //or search auth with @type?
 
@@ -78,6 +80,7 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
                         ids.addAll(collectIds(it, propKey, selfId))
                     }
                 }
+
             }
 
         }
