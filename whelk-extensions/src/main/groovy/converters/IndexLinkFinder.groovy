@@ -39,7 +39,7 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
 
     def collectIds(prop, type, selfId) {
         def ids = []
-        def labelKey, searchStr, esQuery, result, resultJson, searchTerm, urlSearchTerm
+        def labelKey, searchStr, esQuery, result, resultJson, searchTerm, labelSearchTerm
 
         if (prop instanceof Map) {
             prop.each { propKey, propValue ->
