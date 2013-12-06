@@ -899,7 +899,8 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
     void doHandle(Request request, Response response) {
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def query = queryMap.get("q", null)
-        def xmlRecords, queryStr, url, jsonResult, xmlDoc, id, xMarcJsonDoc, jsonRec, jsonDoc
+        def xmlRecords, queryStr, url, xmlDoc, id, xMarcJsonDoc, jsonRec, jsonDoc
+        def resultList = []
         def docStrings = []
         MarcRecord record
         OaiPmhXmlConverter oaiPmhXmlConverter
@@ -920,7 +921,6 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
 
                 xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
                 docStrings = getXMLRecordStrings(xmlRecords)
-
                 for (docString in docStrings) {
 
                         /*def responseXMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n"
@@ -933,14 +933,16 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                         record = MarcXmlRecordReader.fromXml(docString)
                         id = record.getControlfields("001").get(0).getData()
 
+                        log.trace("Marcxmlrecordreader for $id done")
+
                         //Create Document with raw xml string as data
                         xmlDoc = new Document()
                                 .withData(docString.getBytes("UTF-8"))
                                 .withEntry(["identifier": "/external/"+id, "dataset": "external", "contentType": "text/oaipmh+xml"])
-                        log.trace("XmlDoc: $xmlDoc")
 
                         //Convert xmlDoc to x-marc-json (marcxml in json)
                         jsonRec = MarcJSONConverter.toJSONString(record)
+                        log.trace("Marcjsonconverter for $id done")
                         xMarcJsonDoc = new Document()
                             .withData(jsonRec.getBytes("UTF-8"))
                             .withIdentifier(xmlDoc.identifier)
@@ -950,9 +952,10 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                         //Convert xMarcJsonDoc to ld+json
                         marcFrameConverter = new MarcFrameConverter()
                         jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
+                        log.trace("Marcframeconverter for $id done")
 
                         mapper = new ObjectMapper()
-                        jsonResult += mapper.writeValueAsString(jsonDoc.dataAsMap)
+                        resultList << jsonDoc.dataAsMap
                 }
 
             } catch (org.xml.sax.SAXParseException spe) {
@@ -967,22 +970,23 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
             response.setEntity(/{"Error": "Use parameter \"q\"}/, MediaType.APPLICATION_JSON)
         }
 
-        if (!jsonResult) {
+        if (!resultList) {
             response.setStatus(Status.SUCCESS_NO_CONTENT)
         }
-        response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+
+        def results = ["hits": resultList.size().toString(), "list": resultList]
+        response.setEntity(mapper.writeValueAsString(results), MediaType.APPLICATION_JSON)
 
     }
 
     List<String> getXMLRecordStrings(xmlRecords) {
         def xmlRecs = new ArrayList<String>()
-        xmlRecords?.'zs:records'?.each { rec ->
-            rec.each { it ->
-                def marcXmlRecord = it?.'zs:record'?.'zs:recordData'?.'tag0:record'
-                def marcXmlRecordString = createString(marcXmlRecord)
-                if (marcXmlRecordString) {
-                    xmlRecs << removeNamespacePrefixes(marcXmlRecordString)
-                }
+        def allRecords = xmlRecords?.'zs:records'?.'zs:record'
+        for (record in allRecords) {
+            def recordData = record.'zs:recordData'
+            def marcXmlRecord = createString(recordData.'tag0:record')
+            if (marcXmlRecord) {
+                xmlRecs << removeNamespacePrefixes(marcXmlRecord)
             }
         }
         return xmlRecs
