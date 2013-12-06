@@ -39,7 +39,7 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
 
     def collectIds(prop, type, selfId) {
         def ids = []
-        def labelKey, searchStr, esQuery, result, resultJson, searchTerm, labelSearchTerm
+        def labelKey, searchStr, esQuery, result, resultJson, searchTerm
 
         if (prop instanceof Map) {
             prop.each { propKey, propValue ->
@@ -50,10 +50,7 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
                     if (labelKey && propValue.containsKey(labelKey)) {
                         log.trace("Examining ...")
                         searchTerm = URLEncoder.encode(propValue.get(labelKey), "UTF-8")
-                        if (propValue.get("label")) {
-                            labelSearchTerm = URLEncoder.encode(propValue["label"], "UTF-8")
-                        }
-                        searchStr = labelSearchTerm ? "$labelKey:$searchTerm" : "$labelKey:$searchTerm label:$labelSearchTerm"
+                        searchStr = "$labelKey:$searchTerm"
                         esQuery = new ElasticQuery(searchStr)
                         esQuery.indexType = propValue["@type"].toLowerCase() //or search auth with @type?
 
