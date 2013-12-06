@@ -331,18 +331,20 @@ class FieldSearchRestlet extends BasicWhelkAPI {
 
         if (!indexType) {
             response.setEntity("Missing \"indexType\" in url", MediaType.PLAIN_TEXT_UTF_8)
+        } else {
+            log.debug("index type $indexType")
+
+            def query = new ElasticQuery(q).withType(indexType)
+            def results = this.whelk.search(query)
+
+            def jsonResult =
+                (callback ? callback + "(" : "") +
+                        results.toJson() +
+                        (callback ? ");" : "")
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+
         }
 
-        log.debug("index type $indexType")
-
-        def query = new ElasticQuery(q).withType(indexType)
-        def results = this.whelk.search(query)
-
-        def jsonResult =
-            (callback ? callback + "(" : "") +
-                    results.toJson() +
-                    (callback ? ");" : "")
-        response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
     }
 }
 
@@ -360,66 +362,72 @@ class SearchRestlet extends BasicWhelkAPI {
 
     @Override
     void doHandle(Request request, Response response) {
-        long startTime = System.currentTimeMillis()
-        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def indexType, results
-        try {
+            long startTime = System.currentTimeMillis()
+            def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+            def indexType, results
+
             indexType = request.attributes.indexType
-        } catch(Exception e) {
-            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, MediaType.TEXT_PLAIN)
-        }
-        log.debug("Handling search request with indextype $indexType")
-        def indexConfig = config.indexTypes[indexType]
-        def boost = queryMap.boost?.split() ?: indexConfig?.defaultBoost?.split(",")
-        def facets = queryMap.facets?.split() ?: indexConfig?.queryFacets?.split(",")
-        /*if (indexConfig?.containsKey("queryStringTokenizerMethod") && indexConfig.queryStringTokenizerMethod.size() > 0) {
-            Method tokenizerMethod = queryStringTokenizer = this.class.getDeclaredMethod(indexConfig.queryStringTokenizerMethod)
-            queryMap.q = tokenizerMethod?.invoke(this, queryMap.q) ?: queryMap.q
-        } */
-        def elasticQuery = new ElasticQuery(queryMap)
-        if (queryMap.f) {
-            elasticQuery.query += " " + queryMap.f
-        }
-        elasticQuery.indexType = indexType
-        if (facets) {
-            for (f in facets) {
-                elasticQuery.addFacet(f)
+
+            log.debug("Handling search request with indextype $indexType")
+            def indexConfig = config.indexTypes[indexType]
+            def boost = queryMap.boost?.split() ?: indexConfig?.defaultBoost?.split(",")
+            def facets = queryMap.facets?.split() ?: indexConfig?.queryFacets?.split(",")
+            /*if (indexConfig?.containsKey("queryStringTokenizerMethod") && indexConfig.queryStringTokenizerMethod.size() > 0) {
+                Method tokenizerMethod = queryStringTokenizer = this.class.getDeclaredMethod(indexConfig.queryStringTokenizerMethod)
+                queryMap.q = tokenizerMethod?.invoke(this, queryMap.q) ?: queryMap.q
+            } */
+            def elasticQuery = new ElasticQuery(queryMap)
+            if (queryMap.f) {
+                elasticQuery.query += " " + queryMap.f
             }
-        }
-        if (boost) {
-            for (b in boost) {
-                if (b.size() > 0) {
-                    def (k, v) = b.split(":")
-                    elasticQuery.addBoost(k, Long.parseLong(v))
+            elasticQuery.indexType = indexType
+            if (facets) {
+                for (f in facets) {
+                    elasticQuery.addFacet(f)
                 }
             }
-        }
-        def fields = indexConfig?.get("queryFields")
-        if (fields && fields.size() > 0) {
-            elasticQuery.fields = fields
-        }
-        elasticQuery.highlights = indexConfig?.get("queryFields")
-        elasticQuery.sorting = indexConfig?.get("sortby")
-        log.debug("Query $elasticQuery.query Fields: ${elasticQuery?.get("fields")} Facets: ${elasticQuery?.get("facets")}")
-        try {
-            def callback = queryMap.get("callback")
-            results = this.whelk.search(elasticQuery)
-            def keyList = queryMap.resultFields?.split() as List ?: indexConfig?.get("resultFields")
-            def extractedResults = keyList ? results.toJson(keyList) : results.toJson()
-            def jsonResult =
-                    (callback ? callback + "(" : "") +
-                        extractedResults +
-                    (callback ? ");" : "")
+            if (boost) {
+                for (b in boost) {
+                    if (b.size() > 0) {
+                        def (k, v) = b.split(":")
+                        elasticQuery.addBoost(k, Long.parseLong(v))
+                    }
+                }
+            }
+            def fields = indexConfig?.get("queryFields")
+            if (fields && fields.size() > 0) {
+                elasticQuery.fields = fields
+            }
 
-            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
-        } catch (WhelkRuntimeException wrte) {
-            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
-        } finally {
-            def headers = request.attributes.get("org.restlet.http.headers")
-            def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value ?: request.clientInfo.address
-            log.info("Query [" + elasticQuery?.query + "] completed for $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds and resulted in " + results?.numberOfHits + " hits.")
+            elasticQuery.highlights = indexConfig?.get("queryFields")
+            elasticQuery.sorting = indexConfig?.get("sortby")
+            log.debug("Query $elasticQuery.query Fields: ${elasticQuery?.get("fields")} Facets: ${elasticQuery?.get("facets")}")
+
+            try {
+
+                def callback = queryMap.get("callback")
+                results = this.whelk.search(elasticQuery)
+                def keyList = queryMap.resultFields?.split() as List ?: indexConfig?.get("resultFields")
+                def extractedResults = keyList ? results.toJson(keyList) : results.toJson()
+                def jsonResult =
+                        (callback ? callback + "(" : "") +
+                            extractedResults +
+                        (callback ? ");" : "")
+
+                response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+
+            } catch (WhelkRuntimeException wrte) {
+
+                response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+
+            } finally {
+
+                def headers = request.attributes.get("org.restlet.http.headers")
+                def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value ?: request.clientInfo.address
+                log.info("Query [" + elasticQuery?.query + "] completed for $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds and resulted in " + results?.numberOfHits + " hits.")
+
+            }
         }
-    }
 }
 
 @Log
@@ -513,39 +521,52 @@ class CompleteExpander extends BasicWhelkAPI {
     String description = "Provides useful information about authorities."
 
     void doHandle(Request request, Response response) {
-        def identifier
-        def resultMap
+        def identifier, result, relator, authDoc, resultMap, authDataMap, idQuery
         def mapper = new ObjectMapper()
-        try {
+
+        if (!request.attributes.get("identifier")) {
+            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
+        } else {
             identifier = request.attributes.identifier
-        } catch(Exception e) {
-            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, MediaType.TEXT_PLAIN)
-        }
-        def result, relator, authDoc
-        authDoc = whelk.get(new URI(identifier))
-        def authDataMap = authDoc.getDataAsMap()
-        def idQuery = "\\/resource\\/" + identifier.replace("/", "\\/")
-        if (authDataMap.about."@type" == "Person") {
-                result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.attributedTo.@id").addFacet("about.@type"))
-                relator = "attributedTo"
-                if (result.numberOfHits == 0) {
-                    result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.influencedBy.@id").addFacet("about.@type"))
-                    relator = "influencedBy"
-                }
-                resultMap = result.toMap(["about.@type", "about.title.titleValue", "originalCatalogingAgency.name", "function", "exampleTitle"])
-                resultMap.list.eachWithIndex() { r, i ->
-                    if (resultMap.list[i].get("data", null)) {
-                        resultMap.list[i].data["function"] = relator
-                        //TODO: number of holds
-                        if (relator.equals("attributedTo")) {
-                            resultMap["extraKnowledge"] = ["exampleTitle" : resultMap.list[i].data.about.title.titleValue]
+            authDoc = whelk.get(new URI(identifier))
+            if (!authDoc) {
+                response.setStatus(Status.CLIENT_ERROR_NOT_FOUND)
+            } else {
+                authDataMap = authDoc.getDataAsMap()
+                idQuery = "\\/resource\\/" + identifier.replace("/", "\\/")
+
+                if (authDataMap.about."@type" == "Person") {
+                    result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.attributedTo.@id").addFacet("about.@type"))
+                    relator = "attributedTo"
+                    if (result.numberOfHits == 0) {
+                        result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.influencedBy.@id").addFacet("about.@type"))
+                        relator = "influencedBy"
+                    }
+                    if (result.numberOfHits > 0) {
+                        resultMap = result.toMap(["about.@type", "about.title.titleValue", "originalCatalogingAgency.name", "function", "exampleTitle"])
+                        resultMap.list.eachWithIndex() { r, i ->
+                            if (resultMap.list[i].get("data", null)) {
+                                resultMap.list[i].data["function"] = relator
+                                //TODO: number of holds
+                                if (relator.equals("attributedTo")) {
+                                    resultMap["extraKnowledge"] = ["exampleTitle" : resultMap.list[i].data.about.title.titleValue]
+                                }
+                            }
                         }
                     }
-                }
-        }  else if (authDataMap.about."type" == "Concept") {
 
+                }  else if (authDataMap.about."type" == "Concept") {
+                    //TODO
+                }
+
+                if (!resultMap) {
+                    response.setStatus(Status.CLIENT_ERROR_NOT_FOUND)
+                } else {
+                    response.setEntity(mapper.writeValueAsString(resultMap), MediaType.APPLICATION_JSON)
+                }
+
+            }
         }
-        response.setEntity(mapper.writeValueAsString(resultMap), MediaType.APPLICATION_JSON)
     }
 }
 
