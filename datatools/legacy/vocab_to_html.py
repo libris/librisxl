@@ -6,7 +6,10 @@ from chameleon import PageTemplate
 VANN = Namespace("http://purl.org/vocab/vann/")
 SCHEMA = Namespace("http://schema.org/")
 
-graph = Graph().parse(sys.stdin, format='turtle')
+args = sys.argv[1:]
+for fpath in args:
+    with open(fpath) as fp:
+        graph = Graph().parse(fp, format='turtle')
 
 with open(os.path.join(os.path.dirname(__file__), 'vocab-tplt.html')) as f:
     render = PageTemplate(f.read())
