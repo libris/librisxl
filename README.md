@@ -42,7 +42,7 @@ Or better, create a local OAI-PMH dump of examples and run a full import:
     $ python scripts/assemble_oaipmh_records.py *******:**** scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
     $ for d in auth bib; do gradle whelkOperation -Dargs="-o import -w libris -d $d -u http://localhost:8000/$d"; done
-    $ gradle whelkOperation -Dargs='-o linkfindandcomplete -w libris -d bib --fromstorage flatstorage'
+    $ gradle whelkOperation -Dargs='-o linkfindandcomplete -w libris -d bib'
     $ fg
     <CTRL-C>
 
@@ -132,7 +132,7 @@ In principle, any Graph Store supporting the SPARQL 1.1 Graph Store HTTP Protoco
 3. Test the endpoint:
 
         $ curl -L http://bibframe.org/vocab -o bibframe.rdf
-        $ curl -X PUT -H "Content-Type:application/rdf+xml" "http://localhost:8080/openrdf-sesame/repositories/test-mem/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F" --data @bibframe.ttl
+        $ curl -X PUT -H "Content-Type:application/rdf+xml" "http://localhost:8080/openrdf-sesame/repositories/test-mem/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F" --data @bibframe.rdf
 
 4. To make it work with the default Jetty running via Gradle, configure Tomcat to listen on e.g. 8180, and make sure these whelk components are defined and used:
 
