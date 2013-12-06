@@ -25,6 +25,16 @@
       ],
       "label": "Samling"
     },
+    "Concept": {
+      "@id": "http://libris.kb.se/def/terms#Concept",
+      "@type": "Class",
+      "equivalentClass": "http://www.w3.org/2004/02/skos/core#Concept"
+    },
+    "ConceptScheme": {
+      "@id": "http://libris.kb.se/def/terms#ConceptScheme",
+      "@type": "Class",
+      "equivalentClass": "http://www.w3.org/2004/02/skos/core#ConceptScheme"
+    },
     "Dataset": {
       "@id": "http://libris.kb.se/def/terms#Dataset",
       "@type": "Class",
@@ -40,8 +50,8 @@
       "abstract": true,
       "equivalentClass": "http://bibframe.org/vocab/SoftwareOrMultimedia",
       "subClassOf": [
-        "http://purl.org/dc/dcmitype/Software",
-        "http://purl.org/dc/dcmitype/InteractiveResource"
+        "http://purl.org/dc/dcmitype/InteractiveResource",
+        "http://purl.org/dc/dcmitype/Software"
       ]
     },
     "Holding": {
@@ -60,6 +70,14 @@
       "equivalentClass": "http://purl.org/dc/dcmitype/Image",
       "label": "Bild"
     },
+    "Instance": {
+      "@id": "http://libris.kb.se/def/terms#Instance",
+      "@type": "Class",
+      "abstract": true,
+      "equivalentClass": "http://bibframe.org/vocab/Instance",
+      "label": "Manifestation",
+      "subClassOf": "http://schema.org/CreativeWork"
+    },
     "MovingImage": {
       "@id": "http://libris.kb.se/def/terms#MovingImage",
       "@type": "Class",
@@ -70,15 +88,47 @@
       "label": "Rörlig bild",
       "subClassOf": "http://purl.org/dc/dcmitype/Image"
     },
+    "Organization": {
+      "@id": "http://libris.kb.se/def/terms#Organization",
+      "@type": "Class",
+      "equivalentClass": "http://schema.org/Organization"
+    },
+    "Person": {
+      "@id": "http://libris.kb.se/def/terms#Person",
+      "@type": "Class",
+      "equivalentClass": [
+        "http://xmlns.com/foaf/0.1/Person",
+        "http://schema.org/Person"
+      ]
+    },
+    "Persona": {
+      "@id": "http://libris.kb.se/def/terms#Persona",
+      "@type": "Class",
+      "equivalentClass": "http://www.pipian.com/schemas/foaf/persona#Persona",
+      "subClassOf": "http://libris.kb.se/def/terms#Person"
+    },
     "PhysicalObject": {
       "@id": "http://libris.kb.se/def/terms#PhysicalObject",
       "@type": "Class",
       "altLabel": "Realia",
       "equivalentClass": [
-        "http://bibframe.org/vocab/ThreeDimensionalObject",
-        "http://purl.org/dc/dcmitype/PhysicalObject"
+        "http://purl.org/dc/dcmitype/PhysicalObject",
+        "http://bibframe.org/vocab/ThreeDimensionalObject"
       ],
       "label": "Föremål"
+    },
+    "Place": {
+      "@id": "http://libris.kb.se/def/terms#Place",
+      "@type": "Class",
+      "equivalentClass": "http://schema.org/Place"
+    },
+    "ProviderEvent": {
+      "@id": "http://libris.kb.se/def/terms#ProviderEvent",
+      "@type": "Class",
+      "subClassOf": [
+        "http://www.w3.org/ns/prov#Activity",
+        "http://bibframe.org/vocab/ProviderEntity"
+      ]
     },
     "Record": {
       "@id": "http://libris.kb.se/def/terms#Record",
@@ -90,8 +140,8 @@
       "@id": "http://libris.kb.se/def/terms#Sound",
       "@type": "Class",
       "equivalentClass": [
-        "http://purl.org/dc/dcmitype/Sound",
-        "http://bibframe.org/vocab/Audio"
+        "http://bibframe.org/vocab/Audio",
+        "http://purl.org/dc/dcmitype/Sound"
       ],
       "label": "Ljud"
     },
@@ -99,8 +149,8 @@
       "@id": "http://libris.kb.se/def/terms#StillImage",
       "@type": "Class",
       "equivalentClass": [
-        "http://purl.org/dc/dcmitype/StillImage",
-        "http://bibframe.org/vocab/StillImage"
+        "http://bibframe.org/vocab/StillImage",
+        "http://purl.org/dc/dcmitype/StillImage"
       ],
       "label": "Stillbild",
       "subClassOf": "http://purl.org/dc/dcmitype/Image"
@@ -110,14 +160,14 @@
       "@type": "Class",
       "equivalentClass": [
         "http://purl.org/dc/terms/BibliographicResource",
-        "http://purl.org/dc/dcmitype/Text",
-        "http://bibframe.org/vocab/LanguageMaterial"
+        "http://bibframe.org/vocab/LanguageMaterial",
+        "http://purl.org/dc/dcmitype/Text"
       ],
       "label": "Text",
       "subClassOf": "http://libris.kb.se/def/terms#UniformWork"
     },
-    "UniformWork": {
-      "@id": "http://libris.kb.se/def/terms#UniformWork",
+    "Work": {
+      "@id": "http://libris.kb.se/def/terms#Work",
       "@type": "Class",
       "abstract": true,
       "equivalentClass": "http://bibframe.org/vocab/Work",
@@ -130,14 +180,135 @@
       "equivalentProperty": "http://schema.org/about",
       "subPropertyOf": "http://xmlns.com/foaf/0.1/primaryTopic"
     },
+    "accompanyingMaterial": {
+      "@id": "http://libris.kb.se/def/terms#accompanyingMaterial",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/accompanyingMaterial"
+    },
+    "agent": {
+      "@id": "http://libris.kb.se/def/terms#agent",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/ns/prov#agent"
+    },
+    "altLabel": {
+      "@id": "http://libris.kb.se/def/terms#altLabel",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#altLabel"
+    },
+    "anyDateTime": {
+      "@id": "http://libris.kb.se/def/terms#anyDateTime",
+      "@type": "rdfs:Datatype",
+      "comment_en": "Used for dates, dates and times, and intervals.",
+      "equivalentClass": "http://id.loc.gov/datatypes/edtf/EDTF-level0"
+    },
+    "approxDateTime": {
+      "@id": "http://libris.kb.se/def/terms#approxDateTime",
+      "@type": "rdfs:Datatype",
+      "comment_en": "Used for approximate or unspecified dates, dates and times, and intervals.",
+      "equivalentClass": "http://id.loc.gov/datatypes/edtf/EDTF-level1"
+    },
+    "attributedTo": {
+      "@id": "http://libris.kb.se/def/terms#attributedTo",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/ns/prov#wasAttributedTo",
+      "label": "Huvuduppslag"
+    },
+    "authorList": {
+      "@id": "http://libris.kb.se/def/terms#authorList",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/ontology/bibo/authorList",
+      "range": "rdf:List"
+    },
+    "availability": {
+      "@id": "http://libris.kb.se/def/terms#availability",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/availability"
+    },
+    "bibLevel": {
+      "@id": "http://libris.kb.se/def/terms#bibLevel",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/bibLevel"
+    },
+    "birthDate": {
+      "@id": "http://libris.kb.se/def/terms#birthDate",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://schema.org/birthDate"
+    },
+    "broader": {
+      "@id": "http://libris.kb.se/def/terms#broader",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#broader"
+    },
     "callno": {
       "@id": "http://libris.kb.se/def/terms#callno",
       "range": "http://libris.kb.se/def/terms#Holding",
       "subPropertyOf": [
+        "http://libris.kb.se/def/terms#genre",
         "http://bibframe.org/vocab/callno",
-        "http://schema.org/sku",
-        "http://libris.kb.se/def/terms#genre"
+        "http://schema.org/sku"
       ]
+    },
+    "catForm": {
+      "@id": "http://libris.kb.se/def/terms#catForm",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/catForm"
+    },
+    "classificationPart": {
+      "@id": "http://libris.kb.se/def/terms#classificationPart",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/classificationPart"
+    },
+    "closeMatch": {
+      "@id": "http://libris.kb.se/def/terms#closeMatch",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#closeMatch"
+    },
+    "comment": {
+      "@id": "http://libris.kb.se/def/terms#comment",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "rdfs:comment"
+    },
+    "contributorList": {
+      "@id": "http://libris.kb.se/def/terms#contributorList",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/ontology/bibo/contributorList",
+      "range": "rdf:List"
+    },
+    "controlNumber": {
+      "@id": "http://libris.kb.se/def/terms#controlNumber",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/identifier"
+    },
+    "controlledLabel": {
+      "@id": "http://libris.kb.se/def/terms#controlledLabel",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://bibframe.org/vocab/authorizedAccessPoint"
+    },
+    "created": {
+      "@id": "http://libris.kb.se/def/terms#created",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/created",
+      "range": "http://www.w3.org/2001/XMLSchema#dateTime"
+    },
+    "creator": {
+      "@id": "http://libris.kb.se/def/terms#creator",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/creator"
+    },
+    "date": {
+      "@id": "http://libris.kb.se/def/terms#date",
+      "@type": "rdfs:Datatype",
+      "sameAs": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "dateTime": {
+      "@id": "http://libris.kb.se/def/terms#dateTime",
+      "@type": "rdfs:Datatype",
+      "sameAs": "http://www.w3.org/2001/XMLSchema#dateTime"
+    },
+    "deathDate": {
+      "@id": "http://libris.kb.se/def/terms#deathDate",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://schema.org/deathDate"
     },
     "describedBy": {
       "@id": "http://libris.kb.se/def/terms#describedBy",
@@ -147,6 +318,64 @@
         "@id": "http://libris.kb.se/def/terms#about"
       },
       "subPropertyOf": "http://xmlns.com/foaf/0.1/isPrimaryTopicOf"
+    },
+    "dimensions": {
+      "@id": "http://libris.kb.se/def/terms#dimensions",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/dimensions"
+    },
+    "encLevel": {
+      "@id": "http://libris.kb.se/def/terms#encLevel",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/encLevel"
+    },
+    "extent": {
+      "@id": "http://libris.kb.se/def/terms#extent",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/extent"
+    },
+    "familyName": {
+      "@id": "http://libris.kb.se/def/terms#familyName",
+      "@type": "ObjectProperty",
+      "equivalentProperty": [
+        "http://xmlns.com/foaf/0.1/familyName",
+        "http://schema.org/familyName"
+      ]
+    },
+    "format": {
+      "@id": "http://libris.kb.se/def/terms#format",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/format"
+    },
+    "formatOf": {
+      "@id": "http://libris.kb.se/def/terms#formatOf",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/isFormatOf"
+    },
+    "gDay": {
+      "@id": "http://libris.kb.se/def/terms#gDay",
+      "@type": "rdfs:Datatype",
+      "sameAs": "http://www.w3.org/2001/XMLSchema#gDay"
+    },
+    "gMonth": {
+      "@id": "http://libris.kb.se/def/terms#gMonth",
+      "@type": "rdfs:Datatype",
+      "sameAs": "http://www.w3.org/2001/XMLSchema#gMonth"
+    },
+    "gMonthDay": {
+      "@id": "http://libris.kb.se/def/terms#gMonthDay",
+      "@type": "rdfs:Datatype",
+      "sameAs": "http://www.w3.org/2001/XMLSchema#gMonthDay"
+    },
+    "gYear": {
+      "@id": "http://libris.kb.se/def/terms#gYear",
+      "@type": "rdfs:Datatype",
+      "sameAs": "http://www.w3.org/2001/XMLSchema#gYear"
+    },
+    "gYearMonth": {
+      "@id": "http://libris.kb.se/def/terms#gYearMonth",
+      "@type": "rdfs:Datatype",
+      "sameAs": "http://www.w3.org/2001/XMLSchema#gYearMonth"
     },
     "genre": {
       "@id": "http://libris.kb.se/def/terms#genre",
@@ -158,19 +387,58 @@
       "label": "genre",
       "subPropertyOf": "http://schema.org/genre"
     },
+    "givenName": {
+      "@id": "http://libris.kb.se/def/terms#givenName",
+      "@type": "ObjectProperty",
+      "equivalentProperty": [
+        "http://schema.org/givenName",
+        "http://xmlns.com/foaf/0.1/givenName"
+      ]
+    },
+    "hasFormat": {
+      "@id": "http://libris.kb.se/def/terms#hasFormat",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/hasFormat"
+    },
+    "hasPersona": {
+      "@id": "http://libris.kb.se/def/terms#hasPersona",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.pipian.com/schemas/foaf/persona#hasPersona",
+      "subPropertyOf": "rdfs:seeAlso"
+    },
+    "hasVersion": {
+      "@id": "http://libris.kb.se/def/terms#hasVersion",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/hasVersion"
+    },
+    "hiddenLabel": {
+      "@id": "http://libris.kb.se/def/terms#hiddenLabel",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#hiddenLabel"
+    },
+    "historyNote": {
+      "@id": "http://libris.kb.se/def/terms#historyNote",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#historyNote"
+    },
     "http://libris.kb.se/def/terms#": {
       "@id": "http://libris.kb.se/def/terms#",
       "@type": "Ontology",
       "comment_en": "This vocabulary serves as a central mapping to public, well-known properties and classes.",
       "imports": [
-        "http://rdvocab.info/Elements/",
+        "http://schema.org/",
+        "http://purl.org/dc/terms/",
         "http://bibframe.org/vocab/",
         "http://purl.org/ontology/bibo/",
-        "http://purl.org/dc/terms/",
-        "http://schema.org/",
+        "http://rdvocab.info/Elements/",
         "http://xmlns.com/foaf/0.1/",
         "http://www.w3.org/2004/02/skos/core#"
       ]
+    },
+    "identifiedBy": {
+      "@id": "http://libris.kb.se/def/terms#identifiedBy",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://schema.org/sameAs"
     },
     "inCollection": {
       "@id": "http://libris.kb.se/def/terms#inCollection",
@@ -181,12 +449,227 @@
       },
       "range": "http://www.w3.org/2004/02/skos/core#Collection"
     },
+    "inScheme": {
+      "@id": "http://libris.kb.se/def/terms#inScheme",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#inScheme"
+    },
+    "influencedBy": {
+      "@id": "http://libris.kb.se/def/terms#influencedBy",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/ns/prov#wasInfluencedBy",
+      "label": "Biuppslag"
+    },
+    "itemPart": {
+      "@id": "http://libris.kb.se/def/terms#itemPart",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/itemPart"
+    },
+    "jobTitle": {
+      "@id": "http://libris.kb.se/def/terms#jobTitle",
+      "@type": "ObjectProperty",
+      "equivalentProperty": [
+        "http://schema.org/jobTitle",
+        "http://xmlns.com/foaf/0.1/title"
+      ]
+    },
+    "keyword": {
+      "@id": "http://libris.kb.se/def/terms#keyword",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://schema.org/keywords",
+      "range": "http://www.w3.org/2001/XMLSchema#string",
+      "subPropertyOf": "http://purl.org/dc/terms/subject"
+    },
+    "label": {
+      "@id": "http://libris.kb.se/def/terms#label",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "rdfs:label"
+    },
+    "language": {
+      "@id": "http://libris.kb.se/def/terms#language",
+      "@type": "ObjectProperty",
+      "range": "http://schema.org/Language",
+      "subPropertyOf": "http://purl.org/dc/terms/language"
+    },
+    "license": {
+      "@id": "http://libris.kb.se/def/terms#license",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/license"
+    },
+    "location": {
+      "@id": "http://libris.kb.se/def/terms#location",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/location"
+    },
+    "materialsSpecified": {
+      "@id": "http://libris.kb.se/def/terms#materialsSpecified",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/materialsSpecified"
+    },
+    "modified": {
+      "@id": "http://libris.kb.se/def/terms#modified",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/modified",
+      "range": "http://www.w3.org/2001/XMLSchema#dateTime"
+    },
+    "name": {
+      "@id": "http://libris.kb.se/def/terms#name",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://xmlns.com/foaf/0.1/name"
+    },
+    "narrower": {
+      "@id": "http://libris.kb.se/def/terms#narrower",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#narrower"
+    },
+    "notation": {
+      "@id": "http://libris.kb.se/def/terms#notation",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#notation"
+    },
+    "numeration": {
+      "@id": "http://libris.kb.se/def/terms#numeration",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/numeration"
+    },
+    "otherPhysicalDetails": {
+      "@id": "http://libris.kb.se/def/terms#otherPhysicalDetails",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/otherPhysicalDetails"
+    },
+    "partialDateTime": {
+      "@id": "http://libris.kb.se/def/terms#partialDateTime",
+      "@type": "rdfs:Datatype",
+      "comment_en": "Used for dates, dates and times, and intervals combining precise elements with uncertain, approximate, or unspecified parts. Also applicable for sets of dates.",
+      "equivalentClass": "http://id.loc.gov/datatypes/edtf/EDTF-level2"
+    },
+    "prefLabel": {
+      "@id": "http://libris.kb.se/def/terms#prefLabel",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#prefLabel"
+    },
     "publisher": {
       "@id": "http://libris.kb.se/def/terms#publisher",
+      "@type": "ObjectProperty",
       "equivalentProperty": [
-        "http://bibframe.org/vocab/publisher",
-        "http://purl.org/dc/terms/publisher"
+        "http://purl.org/dc/terms/publisher",
+        "http://bibframe.org/vocab/publisher"
       ]
+    },
+    "qualifiedAttribution": {
+      "@id": "http://libris.kb.se/def/terms#qualifiedAttribution",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/ns/prov#qualifiedAttribution",
+      "label": "Detaljerat huvuduppslag"
+    },
+    "qualifiedInfluence": {
+      "@id": "http://libris.kb.se/def/terms#qualifiedInfluence",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/ns/prov#qualifiedInfluence",
+      "label": "Detaljerat biuppslag"
+    },
+    "referencedBy": {
+      "@id": "http://libris.kb.se/def/terms#referencedBy",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/isReferencedBy",
+      "inverseOf": {
+        "@id": "http://libris.kb.se/def/terms#references"
+      }
+    },
+    "references": {
+      "@id": "http://libris.kb.se/def/terms#references",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/references"
+    },
+    "related": {
+      "@id": "http://libris.kb.se/def/terms#related",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#related"
+    },
+    "relation": {
+      "@id": "http://libris.kb.se/def/terms#relation",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/relation"
+    },
+    "replaces": {
+      "@id": "http://libris.kb.se/def/terms#replaces",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/replaces"
+    },
+    "role": {
+      "@id": "http://libris.kb.se/def/terms#role",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://www.w3.org/ns/prov#hadRole"
+    },
+    "sameAs": {
+      "@id": "http://libris.kb.se/def/terms#sameAs",
+      "@type": "ObjectProperty",
+      "subPropertyOf": "http://www.w3.org/2002/07/owl#sameAs"
+    },
+    "scopeNote": {
+      "@id": "http://libris.kb.se/def/terms#scopeNote",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://www.w3.org/2004/02/skos/core#scopeNote"
+    },
+    "seeAlso": {
+      "@id": "http://libris.kb.se/def/terms#seeAlso",
+      "@type": "ObjectProperty",
+      "subPropertyOf": "rdfs:seeAlso"
+    },
+    "sequenceNumber": {
+      "@id": "http://libris.kb.se/def/terms#sequenceNumber",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/sequenceNumber"
+    },
+    "shelvingControlNumber": {
+      "@id": "http://libris.kb.se/def/terms#shelvingControlNumber",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/shelvingControlNumber"
+    },
+    "shelvingLocation": {
+      "@id": "http://libris.kb.se/def/terms#shelvingLocation",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/shelvingLocation"
+    },
+    "source": {
+      "@id": "http://libris.kb.se/def/terms#source",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/source"
+    },
+    "status": {
+      "@id": "http://libris.kb.se/def/terms#status",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/status"
+    },
+    "subject": {
+      "@id": "http://libris.kb.se/def/terms#subject",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/subject"
+    },
+    "time": {
+      "@id": "http://libris.kb.se/def/terms#time",
+      "@type": "rdfs:Datatype",
+      "sameAs": "http://www.w3.org/2001/XMLSchema#time"
+    },
+    "typeOfRecord": {
+      "@id": "http://libris.kb.se/def/terms#typeOfRecord",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://libris.kb.se/ns/extframe/typeOfRecord"
+    },
+    "value": {
+      "@id": "http://libris.kb.se/def/terms#value",
+      "@type": "DatatypeProperty",
+      "equivalentProperty": "rdf:value"
+    },
+    "version": {
+      "@id": "http://libris.kb.se/def/terms#version",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://schema.org/version"
+    },
+    "versionOf": {
+      "@id": "http://libris.kb.se/def/terms#versionOf",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://purl.org/dc/terms/isVersionOf"
     }
   }
 }

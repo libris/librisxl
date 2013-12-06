@@ -234,10 +234,11 @@ def load_data(fpath):
             else 'excel-tab' if fpath.endswith('.tsv')
             else None)
     if csv_dialect:
+        encoding = 'latin-1'
         with open(fpath, 'rb') as fp:
             reader = csv.DictReader(fp, dialect=csv_dialect)
             return {item.pop('code'):
-                        {k: v.decode('utf-8').strip()
+                        {k: v.decode(encoding).strip()
                             for (k, v) in item.items() if v}
                     for item in reader}
     else:

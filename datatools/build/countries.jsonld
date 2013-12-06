@@ -23,7 +23,7 @@
     "abc": {
       "@id": "/def/countries/abc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada))",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/abc",
       "label": "Alberta",
       "label_en": "Alberta",
@@ -33,7 +33,7 @@
     "aca": {
       "@id": "/def/countries/aca",
       "@type": "Concept",
-      "comment": "Se Australien",
+      "comment": "Se \"at\" (Australien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/aca",
       "label": "Australian Capital Territory",
       "label_en": "Australian Capital Territory",
@@ -88,7 +88,7 @@
     "aku": {
       "@id": "/def/countries/aku",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/aku",
       "label": "Alaska",
       "label_en": "Alaska",
@@ -98,7 +98,7 @@
     "alu": {
       "@id": "/def/countries/alu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/alu",
       "label": "Alabama",
       "label_en": "Alabama",
@@ -144,7 +144,7 @@
     "aru": {
       "@id": "/def/countries/aru",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/aru",
       "label": "Arkansas",
       "label_en": "Arkansas",
@@ -199,7 +199,7 @@
     "azu": {
       "@id": "/def/countries/azu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/azu",
       "label": "Arizona",
       "label_en": "Arizona",
@@ -227,7 +227,7 @@
     "bcc": {
       "@id": "/def/countries/bcc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Se \"xxc\" (Kanada))",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/bcc",
       "label": "British Columbia",
       "label_en": "British Columbia",
@@ -373,7 +373,7 @@
       "@id": "/def/countries/bv",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/bv",
-      "label": "Bouvetöya",
+      "label": "Bouvetön",
       "label_en": "Bouvet Island",
       "notation": "bv",
       "prefLabel_en": "Bouvet Island"
@@ -397,8 +397,10 @@
       "prefLabel_en": "Brunei"
     },
     "ca": {
-      "@id": "http://id.loc.gov/vocabulary/countries/ca",
+      "@id": "/def/countries/ca",
       "@type": "Concept",
+      "exactMatch": "http://id.loc.gov/vocabulary/countries/ca",
+      "label": "Karibiska Nederländerna",
       "label_en": "Caribbean Netherlands",
       "notation": "ca",
       "prefLabel_en": "Caribbean Netherlands"
@@ -406,7 +408,7 @@
     "cau": {
       "@id": "/def/countries/cau",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/cau",
       "label": "Kalifornien",
       "label_en": "California",
@@ -452,9 +454,9 @@
     "cf": {
       "@id": "/def/countries/cf",
       "@type": "Concept",
-      "comment": "Brazzaville",
+      "comment": "Även Republiken Kongo",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/cf",
-      "label": "Kongo",
+      "label": "Kongo-Brazzaville",
       "label_en": "Congo (Brazzaville)",
       "notation": "cf",
       "prefLabel_en": "Congo (Brazzaville)"
@@ -462,8 +464,9 @@
     "cg": {
       "@id": "/def/countries/cg",
       "@type": "Concept",
+      "comment": "Även Demokratiska Republiken Kongo; f.d. Zaire",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/cg",
-      "label": "Kongo (Kinshasa), f.d. Zaire",
+      "label": "Kongo-Kinshasa",
       "label_en": "Congo (Democratic Republic)",
       "notation": "cg",
       "prefLabel_en": "Congo (Democratic Republic)"
@@ -471,7 +474,7 @@
     "ch": {
       "@id": "/def/countries/ch",
       "@type": "Concept",
-      "comment": "1949-",
+      "comment": "1949-; även Republiken Kina",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ch",
       "label": "Taiwan",
       "label_en": "China (Republic : 1949- )",
@@ -524,8 +527,10 @@
       "prefLabel_en": "Cameroon"
     },
     "co": {
-      "@id": "http://id.loc.gov/vocabulary/countries/co",
+      "@id": "/def/countries/co",
       "@type": "Concept",
+      "exactMatch": "http://id.loc.gov/vocabulary/countries/co",
+      "label": "Curaçao",
       "label_en": "Curaçao",
       "notation": "co",
       "prefLabel_en": "Curaçao"
@@ -533,7 +538,7 @@
     "cou": {
       "@id": "/def/countries/cou",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/cou",
       "label": "Colorado",
       "label_en": "Colorado",
@@ -561,7 +566,7 @@
     "ctu": {
       "@id": "/def/countries/ctu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ctu",
       "label": "Connecticut",
       "label_en": "Connecticut",
@@ -616,7 +621,7 @@
     "dcu": {
       "@id": "/def/countries/dcu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/dcu",
       "label": "District of Columbia",
       "label_en": "District of Columbia",
@@ -626,7 +631,7 @@
     "deu": {
       "@id": "/def/countries/deu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/deu",
       "label": "Delaware",
       "label_en": "Delaware",
@@ -708,7 +713,7 @@
     "enk": {
       "@id": "/def/countries/enk",
       "@type": "Concept",
-      "comment": "se Storbritannien",
+      "comment": "Se \"xxk\" (Storbritannien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/enk",
       "label": "England",
       "label_en": "England",
@@ -728,7 +733,7 @@
       "@id": "/def/countries/es",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/es",
-      "label": "Salvador",
+      "label": "El Salvador",
       "label_en": "El Salvador",
       "notation": "es",
       "prefLabel_en": "El Salvador"
@@ -790,7 +795,7 @@
     "flu": {
       "@id": "/def/countries/flu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/flu",
       "label": "Florida",
       "label_en": "Florida",
@@ -800,8 +805,9 @@
     "fm": {
       "@id": "/def/countries/fm",
       "@type": "Concept",
+      "comment": "Även Mikronesiska federationen",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/fm",
-      "label": "Mikronesien",
+      "label": "Mikronesiens federerade stater",
       "label_en": "Micronesia (Federated States)",
       "notation": "fm",
       "prefLabel_en": "Micronesia (Federated States)"
@@ -845,7 +851,7 @@
     "gau": {
       "@id": "/def/countries/gau",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/gau",
       "label": "Georgia",
       "label_en": "Georgia",
@@ -999,7 +1005,7 @@
     "hiu": {
       "@id": "/def/countries/hiu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/hiu",
       "label": "Hawaii",
       "label_en": "Hawaii",
@@ -1010,7 +1016,7 @@
       "@id": "/def/countries/hm",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/hm",
-      "label": "Heard and McDonald Islands",
+      "label": "Heard- och McDonaldöarna",
       "label_en": "Heard and McDonald Islands",
       "notation": "hm",
       "prefLabel_en": "Heard and McDonald Islands"
@@ -1045,7 +1051,7 @@
     "iau": {
       "@id": "/def/countries/iau",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/iau",
       "label": "Iowa",
       "label_en": "Iowa",
@@ -1064,7 +1070,7 @@
     "idu": {
       "@id": "/def/countries/idu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/idu",
       "label": "Idaho",
       "label_en": "Idaho",
@@ -1092,7 +1098,7 @@
     "ilu": {
       "@id": "/def/countries/ilu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ilu",
       "label": "Illinois",
       "label_en": "Illinois",
@@ -1102,7 +1108,7 @@
     "inu": {
       "@id": "/def/countries/inu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/inu",
       "label": "Indiana",
       "label_en": "Indiana",
@@ -1166,9 +1172,8 @@
     "iy": {
       "@id": "/def/countries/iy",
       "@type": "Concept",
-      "comment": "neutral zon",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/iy",
-      "label": "Irak - Saudi-Arabien",
+      "label": "Irak - Saudiarabien neutral zon",
       "label_en": "Iraq-Saudi Arabia Neutral Zone",
       "notation": "iy",
       "prefLabel_en": "Iraq-Saudi Arabia Neutral Zone"
@@ -1186,7 +1191,7 @@
       "@id": "/def/countries/ji",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ji",
-      "label": "Johnston Island",
+      "label": "Johnstonatollen",
       "label_en": "Johnston Atoll",
       "notation": "ji",
       "prefLabel_en": "Johnston Atoll"
@@ -1222,7 +1227,7 @@
       "@id": "/def/countries/kg",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/kg",
-      "label": "Kirgisistan",
+      "label": "Kirgizistan",
       "label_en": "Kyrgyzstan",
       "notation": "kg",
       "prefLabel_en": "Kyrgyzstan"
@@ -1230,8 +1235,9 @@
     "kn": {
       "@id": "/def/countries/kn",
       "@type": "Concept",
+      "comment": "Även Demokratiska Folkrepubliken Korea",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/kn",
-      "label": "Demokratiska Folkrepubliken Korea",
+      "label": "Nordkorea",
       "label_en": "Korea (North)",
       "notation": "kn",
       "prefLabel_en": "Korea (North)"
@@ -1239,8 +1245,9 @@
     "ko": {
       "@id": "/def/countries/ko",
       "@type": "Concept",
+      "comment": "Även Republiken Korea",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ko",
-      "label": "Republiken Korea",
+      "label": "Sydkorea",
       "label_en": "Korea (South)",
       "notation": "ko",
       "prefLabel_en": "Korea (South)"
@@ -1248,7 +1255,7 @@
     "ksu": {
       "@id": "/def/countries/ksu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ksu",
       "label": "Kansas",
       "label_en": "Kansas",
@@ -1276,7 +1283,7 @@
     "kyu": {
       "@id": "/def/countries/kyu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/kyu",
       "label": "Kentucky",
       "label_en": "Kentucky",
@@ -1286,8 +1293,9 @@
     "kz": {
       "@id": "/def/countries/kz",
       "@type": "Concept",
+      "comment": "Även Kazachstan",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/kz",
-      "label": "Kazachstan",
+      "label": "Kazakstan",
       "label_en": "Kazakhstan",
       "notation": "kz",
       "prefLabel_en": "Kazakhstan"
@@ -1295,7 +1303,7 @@
     "lau": {
       "@id": "/def/countries/lau",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/lau",
       "label": "Louisiana",
       "label_en": "Louisiana",
@@ -1386,7 +1394,7 @@
     "mau": {
       "@id": "/def/countries/mau",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/mau",
       "label": "Massachusetts",
       "label_en": "Massachusetts",
@@ -1396,7 +1404,7 @@
     "mbc": {
       "@id": "/def/countries/mbc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/mbc",
       "label": "Manitoba",
       "label_en": "Manitoba",
@@ -1415,7 +1423,7 @@
     "mdu": {
       "@id": "/def/countries/mdu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/mdu",
       "label": "Maryland",
       "label_en": "Maryland",
@@ -1425,7 +1433,7 @@
     "meu": {
       "@id": "/def/countries/meu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/meu",
       "label": "Maine",
       "label_en": "Maine",
@@ -1453,7 +1461,7 @@
     "miu": {
       "@id": "/def/countries/miu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/miu",
       "label": "Michigan",
       "label_en": "Michigan",
@@ -1499,7 +1507,7 @@
     "mnu": {
       "@id": "/def/countries/mnu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/mnu",
       "label": "Minnesota",
       "label_en": "Minnesota",
@@ -1518,7 +1526,7 @@
     "mou": {
       "@id": "/def/countries/mou",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/mou",
       "label": "Missouri",
       "label_en": "Missouri",
@@ -1555,7 +1563,7 @@
     "msu": {
       "@id": "/def/countries/msu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/msu",
       "label": "Mississippi",
       "label_en": "Mississippi",
@@ -1565,7 +1573,7 @@
     "mtu": {
       "@id": "/def/countries/mtu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/mtu",
       "label": "Montana",
       "label_en": "Montana",
@@ -1629,7 +1637,7 @@
     "nbu": {
       "@id": "/def/countries/nbu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nbu",
       "label": "Nebraska",
       "label_en": "Nebraska",
@@ -1639,7 +1647,7 @@
     "ncu": {
       "@id": "/def/countries/ncu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ncu",
       "label": "North Carolina",
       "label_en": "North Carolina",
@@ -1649,7 +1657,7 @@
     "ndu": {
       "@id": "/def/countries/ndu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ndu",
       "label": "North Dakota",
       "label_en": "North Dakota",
@@ -1668,7 +1676,7 @@
     "nfc": {
       "@id": "/def/countries/nfc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nfc",
       "label": "Newfoundland och Labrador",
       "label_en": "Newfoundland and Labrador",
@@ -1687,7 +1695,7 @@
     "nhu": {
       "@id": "/def/countries/nhu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nhu",
       "label": "New Hampshire",
       "label_en": "New Hampshire",
@@ -1697,7 +1705,7 @@
     "nik": {
       "@id": "/def/countries/nik",
       "@type": "Concept",
-      "comment": "se Storbritannien",
+      "comment": "Se \"xxk\" (Storbritannien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nik",
       "label": "Nordirland",
       "label_en": "Northern Ireland",
@@ -1707,7 +1715,7 @@
     "nju": {
       "@id": "/def/countries/nju",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nju",
       "label": "New Jersey",
       "label_en": "New Jersey",
@@ -1717,7 +1725,7 @@
     "nkc": {
       "@id": "/def/countries/nkc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nkc",
       "label": "New Brunswick",
       "label_en": "New Brunswick",
@@ -1736,7 +1744,7 @@
     "nmu": {
       "@id": "/def/countries/nmu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nmu",
       "label": "New Mexico",
       "label_en": "New Mexico",
@@ -1791,7 +1799,7 @@
     "nsc": {
       "@id": "/def/countries/nsc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nsc",
       "label": "Nova Scotia",
       "label_en": "Nova Scotia",
@@ -1801,7 +1809,7 @@
     "ntc": {
       "@id": "/def/countries/ntc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ntc",
       "label": "North West Territories",
       "label_en": "Northwest Territories",
@@ -1820,7 +1828,7 @@
     "nuc": {
       "@id": "/def/countries/nuc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nuc",
       "label": "Nunavut",
       "label_en": "Nunavut",
@@ -1830,7 +1838,7 @@
     "nvu": {
       "@id": "/def/countries/nvu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nvu",
       "label": "Nevada",
       "label_en": "Nevada",
@@ -1858,7 +1866,7 @@
     "nyu": {
       "@id": "/def/countries/nyu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/nyu",
       "label": "New York",
       "label_en": "New York (State)",
@@ -1877,7 +1885,7 @@
     "ohu": {
       "@id": "/def/countries/ohu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ohu",
       "label": "Ohio",
       "label_en": "Ohio",
@@ -1887,7 +1895,7 @@
     "oku": {
       "@id": "/def/countries/oku",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/oku",
       "label": "Oklahoma",
       "label_en": "Oklahoma",
@@ -1897,7 +1905,7 @@
     "onc": {
       "@id": "/def/countries/onc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/onc",
       "label": "Ontario",
       "label_en": "Ontario",
@@ -1907,7 +1915,7 @@
     "oru": {
       "@id": "/def/countries/oru",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/oru",
       "label": "Oregon",
       "label_en": "Oregon",
@@ -1926,7 +1934,7 @@
     "pau": {
       "@id": "/def/countries/pau",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/pau",
       "label": "Pennsylvania",
       "label_en": "Pennsylvania",
@@ -1937,7 +1945,7 @@
       "@id": "/def/countries/pc",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/pc",
-      "label": "Pitcairn Island",
+      "label": "Pitcairnöarna",
       "label_en": "Pitcairn Island",
       "notation": "pc",
       "prefLabel_en": "Pitcairn Island"
@@ -1981,7 +1989,7 @@
     "pic": {
       "@id": "/def/countries/pic",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/pic",
       "label": "Prince Edward Island",
       "label_en": "Prince Edward Island",
@@ -2072,7 +2080,7 @@
     "qea": {
       "@id": "/def/countries/qea",
       "@type": "Concept",
-      "comment": "se Australien",
+      "comment": "Se \"at\" (Australien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/qea",
       "label": "Queensland",
       "label_en": "Queensland",
@@ -2082,7 +2090,7 @@
     "quc": {
       "@id": "/def/countries/quc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/quc",
       "label": "Quebec",
       "label_en": "Québec (Province)",
@@ -2119,7 +2127,7 @@
     "riu": {
       "@id": "/def/countries/riu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/riu",
       "label": "Rhode Island",
       "label_en": "Rhode Island",
@@ -2157,14 +2165,16 @@
       "@id": "/def/countries/sa",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/sa",
-      "label": "Sydafrikanska republiken",
+      "label": "Sydafrika",
       "label_en": "South Africa",
       "notation": "sa",
       "prefLabel_en": "South Africa"
     },
     "sc": {
-      "@id": "http://id.loc.gov/vocabulary/countries/sc",
+      "@id": "/def/countries/sc",
       "@type": "Concept",
+      "exactMatch": "http://id.loc.gov/vocabulary/countries/sc",
+      "label": "Saint-Barthélemy",
       "label_en": "Saint-Barthélemy",
       "notation": "sc",
       "prefLabel_en": "Saint-Barthélemy"
@@ -2172,7 +2182,7 @@
     "scu": {
       "@id": "/def/countries/scu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/scu",
       "label": "South Carolina",
       "label_en": "South Carolina",
@@ -2180,8 +2190,10 @@
       "prefLabel_en": "South Carolina"
     },
     "sd": {
-      "@id": "http://id.loc.gov/vocabulary/countries/sd",
+      "@id": "/def/countries/sd",
       "@type": "Concept",
+      "exactMatch": "http://id.loc.gov/vocabulary/countries/sd",
+      "label": "Sydsudan",
       "label_en": "South Sudan",
       "notation": "sd",
       "prefLabel_en": "South Sudan"
@@ -2189,7 +2201,7 @@
     "sdu": {
       "@id": "/def/countries/sdu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/sdu",
       "label": "South Dakota",
       "label_en": "South Dakota",
@@ -2209,7 +2221,7 @@
       "@id": "/def/countries/sf",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/sf",
-      "label": "Sèo Thomé och Principe",
+      "label": "São Tomé och Principe",
       "label_en": "Sao Tome and Principe",
       "notation": "sf",
       "prefLabel_en": "Sao Tome and Principe"
@@ -2269,8 +2281,10 @@
       "prefLabel_en": "San Marino"
     },
     "sn": {
-      "@id": "http://id.loc.gov/vocabulary/countries/sn",
+      "@id": "/def/countries/sn",
       "@type": "Concept",
+      "exactMatch": "http://id.loc.gov/vocabulary/countries/sn",
+      "label": "Sint Maarten",
       "label_en": "Sint Maarten",
       "notation": "sn",
       "prefLabel_en": "Sint Maarten"
@@ -2278,7 +2292,7 @@
     "snc": {
       "@id": "/def/countries/snc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/snc",
       "label": "Saskatchewan",
       "label_en": "Saskatchewan",
@@ -2331,8 +2345,10 @@
       "prefLabel_en": "Western Sahara"
     },
     "st": {
-      "@id": "http://id.loc.gov/vocabulary/countries/st",
+      "@id": "/def/countries/st",
       "@type": "Concept",
+      "exactMatch": "http://id.loc.gov/vocabulary/countries/st",
+      "label": "Saint-Martin",
       "label_en": "Saint-Martin",
       "notation": "st",
       "prefLabel_en": "Saint-Martin"
@@ -2340,7 +2356,7 @@
     "stk": {
       "@id": "/def/countries/stk",
       "@type": "Concept",
-      "comment": "se Storbritannien",
+      "comment": "Se \"xxk\" (Storbritannien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/stk",
       "label": "Skottland",
       "label_en": "Scotland",
@@ -2351,7 +2367,7 @@
       "@id": "/def/countries/su",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/su",
-      "label": "Saudi-Arabien",
+      "label": "Saudiarabien",
       "label_en": "Saudi Arabia",
       "notation": "su",
       "prefLabel_en": "Saudi Arabia"
@@ -2458,7 +2474,7 @@
     "tma": {
       "@id": "/def/countries/tma",
       "@type": "Concept",
-      "comment": "se Australien",
+      "comment": "Se \"at\" (Australien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/tma",
       "label": "Tasmanien",
       "label_en": "Tasmania",
@@ -2468,7 +2484,7 @@
     "tnu": {
       "@id": "/def/countries/tnu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/tnu",
       "label": "Tennessee",
       "label_en": "Tennessee",
@@ -2523,7 +2539,7 @@
     "txu": {
       "@id": "/def/countries/txu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/txu",
       "label": "Texas",
       "label_en": "Texas",
@@ -2569,7 +2585,7 @@
     "uik": {
       "@id": "/def/countries/uik",
       "@type": "Concept",
-      "comment": "se Storbritannien",
+      "comment": "Se \"xxk\" (Storbritannien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/uik",
       "label": "Diverse brittiska öar",
       "label_en": "United Kingdom Misc. Islands",
@@ -2597,7 +2613,7 @@
     "utu": {
       "@id": "/def/countries/utu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/utu",
       "label": "Utah",
       "label_en": "Utah",
@@ -2634,7 +2650,7 @@
     "vau": {
       "@id": "/def/countries/vau",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/vau",
       "label": "Virginia",
       "label_en": "Virginia",
@@ -2698,7 +2714,7 @@
     "vra": {
       "@id": "/def/countries/vra",
       "@type": "Concept",
-      "comment": "se Australien",
+      "comment": "Se \"at\" (Australien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/vra",
       "label": "Victoria",
       "label_en": "Victoria",
@@ -2708,7 +2724,7 @@
     "vtu": {
       "@id": "/def/countries/vtu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/vtu",
       "label": "Vermont",
       "label_en": "Vermont",
@@ -2718,7 +2734,7 @@
     "wau": {
       "@id": "/def/countries/wau",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/wau",
       "label": "Washington",
       "label_en": "Washington (State)",
@@ -2728,7 +2744,7 @@
     "wea": {
       "@id": "/def/countries/wea",
       "@type": "Concept",
-      "comment": "se Australien",
+      "comment": "Se \"at\" (Australien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/wea",
       "label": "Western Australia",
       "label_en": "Western Australia",
@@ -2747,7 +2763,7 @@
     "wiu": {
       "@id": "/def/countries/wiu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/wiu",
       "label": "Wisconsin",
       "label_en": "Wisconsin",
@@ -2775,7 +2791,7 @@
     "wlk": {
       "@id": "/def/countries/wlk",
       "@type": "Concept",
-      "comment": "se Storbritannien",
+      "comment": "Se \"xxk\" (Storbritannien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/wlk",
       "label": "Wales",
       "label_en": "Wales",
@@ -2786,7 +2802,7 @@
       "@id": "/def/countries/ws",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ws",
-      "label": "Västra Samoa",
+      "label": "Samoa",
       "label_en": "Samoa",
       "notation": "ws",
       "prefLabel_en": "Samoa"
@@ -2794,7 +2810,7 @@
     "wvu": {
       "@id": "/def/countries/wvu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/wvu",
       "label": "West Virginia",
       "label_en": "West Virginia",
@@ -2804,7 +2820,7 @@
     "wyu": {
       "@id": "/def/countries/wyu",
       "@type": "Concept",
-      "comment": "se Förenta staterna",
+      "comment": "Se \"xxu\" (Förenta staterna)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/wyu",
       "label": "Wyoming",
       "label_en": "Wyoming",
@@ -2825,7 +2841,7 @@
       "@id": "/def/countries/xb",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xb",
-      "label": "Cocos (Keeling) Islands",
+      "label": "Kokosöarna",
       "label_en": "Cocos (Keeling) Islands",
       "notation": "xb",
       "prefLabel_en": "Cocos (Keeling) Islands"
@@ -2842,8 +2858,9 @@
     "xd": {
       "@id": "/def/countries/xd",
       "@type": "Concept",
+      "comment": "Även Saint Christopher och Nevis",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xd",
-      "label": "S:t Christopher och Nevis",
+      "label": "Saint Kitts och Nevis",
       "label_en": "Saint Kitts-Nevis",
       "notation": "xd",
       "prefLabel_en": "Saint Kitts-Nevis"
@@ -2869,7 +2886,7 @@
     "xga": {
       "@id": "/def/countries/xga",
       "@type": "Concept",
-      "comment": "se Australien",
+      "comment": "Se \"at\" (Australien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xga",
       "label": "Coral Sea Islands Territory",
       "label_en": "Coral Sea Islands Territory",
@@ -2888,8 +2905,9 @@
     "xj": {
       "@id": "/def/countries/xj",
       "@type": "Concept",
+      "comment": "Även Saint Helena",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xj",
-      "label": "S:t Helena",
+      "label": "Sankta Helena",
       "label_en": "Saint Helena",
       "notation": "xj",
       "prefLabel_en": "Saint Helena"
@@ -2898,7 +2916,7 @@
       "@id": "/def/countries/xk",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xk",
-      "label": "S:t Lucia",
+      "label": "Saint Lucia",
       "label_en": "Saint Lucia",
       "notation": "xk",
       "prefLabel_en": "Saint Lucia"
@@ -2907,7 +2925,7 @@
       "@id": "/def/countries/xl",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xl",
-      "label": "S:t Pierre och Miquelon",
+      "label": "Saint-Pierre och Miquelon",
       "label_en": "Saint Pierre and Miquelon",
       "notation": "xl",
       "prefLabel_en": "Saint Pierre and Miquelon"
@@ -2916,7 +2934,7 @@
       "@id": "/def/countries/xm",
       "@type": "Concept",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xm",
-      "label": "S:t Vincent",
+      "label": "Saint Vincent och Grenadinerna",
       "label_en": "Saint Vincent and the Grenadines",
       "notation": "xm",
       "prefLabel_en": "Saint Vincent and the Grenadines"
@@ -2933,7 +2951,7 @@
     "xna": {
       "@id": "/def/countries/xna",
       "@type": "Concept",
-      "comment": "se Australien",
+      "comment": "Se \"at\" (Australien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xna",
       "label": "New South Wales",
       "label_en": "New South Wales",
@@ -2952,9 +2970,9 @@
     "xoa": {
       "@id": "/def/countries/xoa",
       "@type": "Concept",
-      "comment": "se Australien",
+      "comment": "Se \"at\" (Australien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xoa",
-      "label": "Northern Territories",
+      "label": "Northern Territory",
       "label_en": "Northern Territory",
       "notation": "xoa",
       "prefLabel_en": "Northern Territory"
@@ -2962,6 +2980,7 @@
     "xp": {
       "@id": "/def/countries/xp",
       "@type": "Concept",
+      "comment": "Även Nansha-öarna",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xp",
       "label": "Spratlyöarna",
       "label_en": "Spratly Island",
@@ -2980,7 +2999,7 @@
     "xra": {
       "@id": "/def/countries/xra",
       "@type": "Concept",
-      "comment": "se Australien",
+      "comment": "Se \"at\" (Australien)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/xra",
       "label": "South Australia",
       "label_en": "South Australia",
@@ -3053,7 +3072,7 @@
     "ykc": {
       "@id": "/def/countries/ykc",
       "@type": "Concept",
-      "comment": "se Kanada",
+      "comment": "Se \"xxc\" (Kanada)",
       "exactMatch": "http://id.loc.gov/vocabulary/countries/ykc",
       "label": "Yukon Territory",
       "label_en": "Yukon Territory",

@@ -27,13 +27,13 @@
       "@id": "/def/languages/ace",
       "@type": "Concept",
       "langCode": "ace",
-      "prefLabel": "Achinese"
+      "prefLabel": "Achenesiska"
     },
     "ach": {
       "@id": "/def/languages/ach",
       "@type": "Concept",
       "langCode": "ach",
-      "prefLabel": "Acoli"
+      "prefLabel": "Acholi"
     },
     "ada": {
       "@id": "/def/languages/ada",
@@ -51,7 +51,7 @@
       "@id": "/def/languages/afa",
       "@type": "Concept",
       "langCode": "afa",
-      "prefLabel": "Afro-asiatiskt språk"
+      "prefLabel": "Afro-asiatiska språk (övriga)"
     },
     "afh": {
       "@id": "/def/languages/afh",
@@ -99,7 +99,7 @@
       "@id": "/def/languages/alg",
       "@type": "Concept",
       "langCode": "alg",
-      "prefLabel": "Algonkinskt språk"
+      "prefLabel": "Algonkinska språk (övriga)"
     },
     "alt": {
       "@id": "/def/languages/alt",
@@ -129,7 +129,7 @@
       "@id": "/def/languages/apa",
       "@type": "Concept",
       "langCode": "apa",
-      "prefLabel": "Apachiskt språk"
+      "prefLabel": "Apachiska språk (övriga)"
     },
     "ara": {
       "@id": "/def/languages/ara",
@@ -147,7 +147,7 @@
       "@id": "/def/languages/arg",
       "@type": "Concept",
       "langCode": "arg",
-      "prefLabel": "Aragonsk spanska"
+      "prefLabel": "Aragonska"
     },
     "arm": {
       "@id": "/def/languages/arm",
@@ -159,7 +159,7 @@
       "@id": "/def/languages/arn",
       "@type": "Concept",
       "langCode": "arn",
-      "prefLabel": "Araukanska"
+      "prefLabel": "Mapudungun"
     },
     "arp": {
       "@id": "/def/languages/arp",
@@ -171,7 +171,7 @@
       "@id": "/def/languages/art",
       "@type": "Concept",
       "langCode": "art",
-      "prefLabel": "Artificiellt språk"
+      "prefLabel": "Konstgjorda språk (övriga)"
     },
     "arw": {
       "@id": "/def/languages/arw",
@@ -195,19 +195,19 @@
       "@id": "/def/languages/ath",
       "@type": "Concept",
       "langCode": "ath",
-      "prefLabel": "Athapaskiskt språk"
+      "prefLabel": "Athapaskiska språk (övriga)"
     },
     "aus": {
       "@id": "/def/languages/aus",
       "@type": "Concept",
       "langCode": "aus",
-      "prefLabel": "Australiskt språk"
+      "prefLabel": "Australiska språk (övriga)"
     },
     "ava": {
       "@id": "/def/languages/ava",
       "@type": "Concept",
       "langCode": "ava",
-      "prefLabel": "Avariskt språk"
+      "prefLabel": "Avariska språk"
     },
     "ave": {
       "@id": "/def/languages/ave",
@@ -255,7 +255,7 @@
       "@id": "/def/languages/bal",
       "@type": "Concept",
       "langCode": "bal",
-      "prefLabel": "Baluchi"
+      "prefLabel": "Baluchiska"
     },
     "bam": {
       "@id": "/def/languages/bam",
@@ -285,7 +285,7 @@
       "@id": "/def/languages/bat",
       "@type": "Concept",
       "langCode": "bat",
-      "prefLabel": "Baltiskt språk"
+      "prefLabel": "Baltiska språk (övriga)"
     },
     "bej": {
       "@id": "/def/languages/bej",
@@ -315,7 +315,7 @@
       "@id": "/def/languages/ber",
       "@type": "Concept",
       "langCode": "ber",
-      "prefLabel": "Berberspråk"
+      "prefLabel": "Berberspråk (övriga)"
     },
     "bho": {
       "@id": "/def/languages/bho",
@@ -351,13 +351,13 @@
       "@id": "/def/languages/bla",
       "@type": "Concept",
       "langCode": "bla",
-      "prefLabel": "Svartfotindianernas språk"
+      "prefLabel": "Siksiká"
     },
     "bnt": {
       "@id": "/def/languages/bnt",
       "@type": "Concept",
       "langCode": "bnt",
-      "prefLabel": "Bantuspråk"
+      "prefLabel": "Bantuspråk (övriga)"
     },
     "bod": {
       "@id": "/def/languages/bod",
@@ -374,7 +374,7 @@
       "@id": "/def/languages/bra",
       "@type": "Concept",
       "langCode": "bra",
-      "prefLabel": "Braj"
+      "prefLabel": "Braj Basha"
     },
     "bre": {
       "@id": "/def/languages/bre",
@@ -428,7 +428,7 @@
       "@id": "/def/languages/cai",
       "@type": "Concept",
       "langCode": "cai",
-      "prefLabel": "Centralamerikanskt indianspråk"
+      "prefLabel": "Centralamerikanska indianspråk (övriga)"
     },
     "car": {
       "@id": "/def/languages/car",
@@ -446,7 +446,7 @@
       "@id": "/def/languages/cau",
       "@type": "Concept",
       "langCode": "cau",
-      "prefLabel": "Kaukasiskt språk"
+      "prefLabel": "Kaukasiska språk (övriga)"
     },
     "ceb": {
       "@id": "/def/languages/ceb",
@@ -458,7 +458,7 @@
       "@id": "/def/languages/cel",
       "@type": "Concept",
       "langCode": "cel",
-      "prefLabel": "Keltiskt språk"
+      "prefLabel": "Keltiska språk (övriga)"
     },
     "ces": {
       "@id": "/def/languages/ces",
@@ -505,7 +505,7 @@
       "@id": "/def/languages/chm",
       "@type": "Concept",
       "langCode": "chm",
-      "prefLabel": "Mari"
+      "prefLabel": "Mariska"
     },
     "chn": {
       "@id": "/def/languages/chn",
@@ -553,7 +553,7 @@
       "@id": "/def/languages/cmc",
       "@type": "Concept",
       "langCode": "cmc",
-      "prefLabel": "Chamic"
+      "prefLabel": "Chamicspråk"
     },
     "cop": {
       "@id": "/def/languages/cop",
@@ -577,19 +577,19 @@
       "@id": "/def/languages/cpe",
       "@type": "Concept",
       "langCode": "cpe",
-      "prefLabel": "Pidgin-engelska"
+      "prefLabel": "Kreol- och Pidginspråk, engelskbaserade (övriga)"
     },
     "cpf": {
       "@id": "/def/languages/cpf",
       "@type": "Concept",
       "langCode": "cpf",
-      "prefLabel": "Franskt kreolspråk"
+      "prefLabel": "Kreol- och Pidginspråk, franskbaserade (övriga)"
     },
     "cpp": {
       "@id": "/def/languages/cpp",
       "@type": "Concept",
       "langCode": "cpp",
-      "prefLabel": "Portugisiskt kreolspråk"
+      "prefLabel": "Kreol- och Pidginspråk, portugisiskbaserade (övriga)"
     },
     "cre": {
       "@id": "/def/languages/cre",
@@ -607,7 +607,7 @@
       "@id": "/def/languages/crp",
       "@type": "Concept",
       "langCode": "crp",
-      "prefLabel": "Kreol-/Pidginspråk"
+      "prefLabel": "Kreol- och Pidginspråk (övriga)"
     },
     "csb": {
       "@id": "/def/languages/csb",
@@ -619,7 +619,7 @@
       "@id": "/def/languages/cus",
       "@type": "Concept",
       "langCode": "cus",
-      "prefLabel": "Kusjitiskt språk"
+      "prefLabel": "Kusjitiska språk (övriga)"
     },
     "cym": {
       "@id": "/def/languages/cym",
@@ -701,7 +701,7 @@
       "@id": "/def/languages/dra",
       "@type": "Concept",
       "langCode": "dra",
-      "prefLabel": "Dravidiskt språk"
+      "prefLabel": "Dravidiska språk (övriga)"
     },
     "dsb": {
       "@id": "/def/languages/dsb",
@@ -713,7 +713,7 @@
       "@id": "/def/languages/dua",
       "@type": "Concept",
       "langCode": "dua",
-      "prefLabel": "Duala"
+      "prefLabel": "Dioula"
     },
     "dum": {
       "@id": "/def/languages/dum",
@@ -730,14 +730,13 @@
     "dyu": {
       "@id": "/def/languages/dyu",
       "@type": "Concept",
-      "langCode": "dyu",
-      "prefLabel": "Dyula"
+      "langCode": "dyu"
     },
     "dzo": {
       "@id": "/def/languages/dzo",
       "@type": "Concept",
       "langCode": "dzo",
-      "prefLabel": "Bhutanesiska"
+      "prefLabel": "dzongkha"
     },
     "efi": {
       "@id": "/def/languages/efi",
@@ -749,7 +748,7 @@
       "@id": "/def/languages/egy",
       "@type": "Concept",
       "langCode": "egy",
-      "prefLabel": "Fornegyptiska"
+      "prefLabel": "Egyptiska"
     },
     "eka": {
       "@id": "/def/languages/eka",
@@ -854,7 +853,7 @@
       "@id": "/def/languages/fiu",
       "@type": "Concept",
       "langCode": "fiu",
-      "prefLabel": "Finsk-ugriskt språk"
+      "prefLabel": "Finsk-ugriska språk (övriga)"
     },
     "fon": {
       "@id": "/def/languages/fon",
@@ -907,7 +906,7 @@
       "@id": "/def/languages/ful",
       "@type": "Concept",
       "langCode": "ful",
-      "prefLabel": "Fulani"
+      "prefLabel": "Fula"
     },
     "fur": {
       "@id": "/def/languages/fur",
@@ -937,7 +936,7 @@
       "@id": "/def/languages/gem",
       "@type": "Concept",
       "langCode": "gem",
-      "prefLabel": "Germanskt språk"
+      "prefLabel": "Germanska språk (övriga)"
     },
     "geo": {
       "@id": "/def/languages/geo",
@@ -955,19 +954,19 @@
       "@id": "/def/languages/gez",
       "@type": "Concept",
       "langCode": "gez",
-      "prefLabel": "Fornetiopiska"
+      "prefLabel": "Ge'ez"
     },
     "gil": {
       "@id": "/def/languages/gil",
       "@type": "Concept",
       "langCode": "gil",
-      "prefLabel": "Gilbertesiska"
+      "prefLabel": "Kiribatiska"
     },
     "gla": {
       "@id": "/def/languages/gla",
       "@type": "Concept",
       "langCode": "gla",
-      "prefLabel": "Höglandsskotska"
+      "prefLabel": "Skotsk gäliska"
     },
     "gle": {
       "@id": "/def/languages/gle",
@@ -1003,7 +1002,7 @@
       "@id": "/def/languages/gon",
       "@type": "Concept",
       "langCode": "gon",
-      "prefLabel": "Gondi"
+      "prefLabel": "Gond"
     },
     "gor": {
       "@id": "/def/languages/gor",
@@ -1039,7 +1038,7 @@
       "@id": "/def/languages/grn",
       "@type": "Concept",
       "langCode": "grn",
-      "prefLabel": "Guarani"
+      "prefLabel": "Guaraní"
     },
     "gsw": {
       "@id": "/def/languages/gsw",
@@ -1057,7 +1056,7 @@
       "@id": "/def/languages/gwi",
       "@type": "Concept",
       "langCode": "gwi",
-      "prefLabel": "Gwichin"
+      "prefLabel": "Gwich'in"
     },
     "hai": {
       "@id": "/def/languages/hai",
@@ -1069,13 +1068,13 @@
       "@id": "/def/languages/hat",
       "@type": "Concept",
       "langCode": "hat",
-      "prefLabel": "Haitiska"
+      "prefLabel": "Haitisk kreol"
     },
     "hau": {
       "@id": "/def/languages/hau",
       "@type": "Concept",
       "langCode": "hau",
-      "prefLabel": "Haussa"
+      "prefLabel": "Hausa"
     },
     "haw": {
       "@id": "/def/languages/haw",
@@ -1117,7 +1116,7 @@
       "@id": "/def/languages/hit",
       "@type": "Concept",
       "langCode": "hit",
-      "prefLabel": "Hettitiskt språk"
+      "prefLabel": "Hettitiska språk"
     },
     "hmn": {
       "@id": "/def/languages/hmn",
@@ -1129,7 +1128,7 @@
       "@id": "/def/languages/hmo",
       "@type": "Concept",
       "langCode": "hmo",
-      "prefLabel": "Hirimotu"
+      "prefLabel": "Hiri Motu"
     },
     "hrv": {
       "@id": "/def/languages/hrv",
@@ -1176,7 +1175,7 @@
       "@id": "/def/languages/ice",
       "@type": "Concept",
       "langCode": "ice",
-      "prefLabel": "Isländska"
+      "prefLabel": "IslÃ¤ndska"
     },
     "ido": {
       "@id": "/def/languages/ido",
@@ -1212,7 +1211,7 @@
       "@id": "/def/languages/ilo",
       "@type": "Concept",
       "langCode": "ilo",
-      "prefLabel": "Iloko"
+      "prefLabel": "Ilokano"
     },
     "ina": {
       "@id": "/def/languages/ina",
@@ -1224,7 +1223,7 @@
       "@id": "/def/languages/inc",
       "@type": "Concept",
       "langCode": "inc",
-      "prefLabel": "Indo-ariskt språk"
+      "prefLabel": "Indo-ariska språk (övriga)"
     },
     "ind": {
       "@id": "/def/languages/ind",
@@ -1236,31 +1235,31 @@
       "@id": "/def/languages/ine",
       "@type": "Concept",
       "langCode": "ine",
-      "prefLabel": "Indoeuropeiskt språk"
+      "prefLabel": "Indoeuropeiska språk (övriga)"
     },
     "inh": {
       "@id": "/def/languages/inh",
       "@type": "Concept",
       "langCode": "inh",
-      "prefLabel": "Ingusj"
+      "prefLabel": "Ingusjiska"
     },
     "ipk": {
       "@id": "/def/languages/ipk",
       "@type": "Concept",
       "langCode": "ipk",
-      "prefLabel": "Inupiaq"
+      "prefLabel": "Iñupiaq"
     },
     "ira": {
       "@id": "/def/languages/ira",
       "@type": "Concept",
       "langCode": "ira",
-      "prefLabel": "Iranskt språk"
+      "prefLabel": "Iranska språk (övriga)"
     },
     "iro": {
       "@id": "/def/languages/iro",
       "@type": "Concept",
       "langCode": "iro",
-      "prefLabel": "Irokesiskt språk"
+      "prefLabel": "Irokesiska språk (övriga)"
     },
     "isl": {
       "@id": "/def/languages/isl",
@@ -1337,13 +1336,13 @@
       "@id": "/def/languages/kan",
       "@type": "Concept",
       "langCode": "kan",
-      "prefLabel": "Kanaresiska"
+      "prefLabel": "Kannada"
     },
     "kar": {
       "@id": "/def/languages/kar",
       "@type": "Concept",
       "langCode": "kar",
-      "prefLabel": "Karen"
+      "prefLabel": "Karenspråk"
     },
     "kas": {
       "@id": "/def/languages/kas",
@@ -1420,7 +1419,7 @@
       "@id": "/def/languages/kir",
       "@type": "Concept",
       "langCode": "kir",
-      "prefLabel": "Kirgisiska"
+      "prefLabel": "Kirgiziska"
     },
     "kmb": {
       "@id": "/def/languages/kmb",
@@ -1468,7 +1467,7 @@
       "@id": "/def/languages/krc",
       "@type": "Concept",
       "langCode": "krc",
-      "prefLabel": "Karachay-Balkar"
+      "prefLabel": "Karatjajbalkariska"
     },
     "krl": {
       "@id": "/def/languages/krl",
@@ -1480,19 +1479,19 @@
       "@id": "/def/languages/kro",
       "@type": "Concept",
       "langCode": "kro",
-      "prefLabel": "Kru"
+      "prefLabel": "Kruspråk (övriga)"
     },
     "kru": {
       "@id": "/def/languages/kru",
       "@type": "Concept",
       "langCode": "kru",
-      "prefLabel": "Kurukh"
+      "prefLabel": "indisk kurux"
     },
     "kua": {
       "@id": "/def/languages/kua",
       "@type": "Concept",
       "langCode": "kua",
-      "prefLabel": "Ovambo"
+      "prefLabel": "Oshiwambo"
     },
     "kum": {
       "@id": "/def/languages/kum",
@@ -1516,7 +1515,7 @@
       "@id": "/def/languages/lad",
       "@type": "Concept",
       "langCode": "lad",
-      "prefLabel": "Spanjolska"
+      "prefLabel": "Ladion"
     },
     "lah": {
       "@id": "/def/languages/lah",
@@ -1558,7 +1557,7 @@
       "@id": "/def/languages/lim",
       "@type": "Concept",
       "langCode": "lim",
-      "prefLabel": "Limburgisch"
+      "prefLabel": "Limburgiska"
     },
     "lin": {
       "@id": "/def/languages/lin",
@@ -1576,7 +1575,7 @@
       "@id": "/def/languages/lol",
       "@type": "Concept",
       "langCode": "lol",
-      "prefLabel": "Lolo"
+      "prefLabel": "Mongo"
     },
     "loz": {
       "@id": "/def/languages/loz",
@@ -1612,7 +1611,7 @@
       "@id": "/def/languages/lui",
       "@type": "Concept",
       "langCode": "lui",
-      "prefLabel": "Luiseno"
+      "prefLabel": "Luiseño"
     },
     "lun": {
       "@id": "/def/languages/lun",
@@ -1642,7 +1641,7 @@
       "@id": "/def/languages/mad",
       "@type": "Concept",
       "langCode": "mad",
-      "prefLabel": "Madurese"
+      "prefLabel": "Maduresiska"
     },
     "mag": {
       "@id": "/def/languages/mag",
@@ -1690,7 +1689,7 @@
       "@id": "/def/languages/map",
       "@type": "Concept",
       "langCode": "map",
-      "prefLabel": "Austronesiskt språk"
+      "prefLabel": "Austronesiska språk"
     },
     "mar": {
       "@id": "/def/languages/mar",
@@ -1702,7 +1701,7 @@
       "@id": "/def/languages/mas",
       "@type": "Concept",
       "langCode": "mas",
-      "prefLabel": "Massajiska"
+      "prefLabel": "Maa"
     },
     "may": {
       "@id": "/def/languages/may",
@@ -1714,13 +1713,13 @@
       "@id": "/def/languages/mdf",
       "@type": "Concept",
       "langCode": "mdf",
-      "prefLabel": "Moksha"
+      "prefLabel": "Moksja"
     },
     "mdr": {
       "@id": "/def/languages/mdr",
       "@type": "Concept",
       "langCode": "mdr",
-      "prefLabel": "Mandar"
+      "prefLabel": "Mandarin"
     },
     "men": {
       "@id": "/def/languages/men",
@@ -1738,7 +1737,7 @@
       "@id": "/def/languages/mic",
       "@type": "Concept",
       "langCode": "mic",
-      "prefLabel": "Mic-mac"
+      "prefLabel": "Mi'kmaq"
     },
     "min": {
       "@id": "/def/languages/min",
@@ -1750,7 +1749,7 @@
       "@id": "/def/languages/mis",
       "@type": "Concept",
       "langCode": "mis",
-      "prefLabel": "Övrig språk"
+      "prefLabel": "Övriga språk"
     },
     "mkd": {
       "@id": "/def/languages/mkd",
@@ -1761,13 +1760,13 @@
       "@id": "/def/languages/mkh",
       "@type": "Concept",
       "langCode": "mkh",
-      "prefLabel": "Mon-khmerspråk"
+      "prefLabel": "Mon-khmerspråk (övriga)"
     },
     "mlg": {
       "@id": "/def/languages/mlg",
       "@type": "Concept",
       "langCode": "mlg",
-      "prefLabel": "Malagasy"
+      "prefLabel": "Malagassiska"
     },
     "mlt": {
       "@id": "/def/languages/mlt",
@@ -1779,13 +1778,13 @@
       "@id": "/def/languages/mnc",
       "@type": "Concept",
       "langCode": "mnc",
-      "prefLabel": "Manchu"
+      "prefLabel": "Manchuiska"
     },
     "mni": {
       "@id": "/def/languages/mni",
       "@type": "Concept",
       "langCode": "mni",
-      "prefLabel": "Manipuri"
+      "prefLabel": "Meitei"
     },
     "mno": {
       "@id": "/def/languages/mno",
@@ -1803,13 +1802,13 @@
       "@id": "/def/languages/mon",
       "@type": "Concept",
       "langCode": "mon",
-      "prefLabel": "Mongoliskt språk"
+      "prefLabel": "Mongoliska språk"
     },
     "mos": {
       "@id": "/def/languages/mos",
       "@type": "Concept",
       "langCode": "mos",
-      "prefLabel": "Mossi"
+      "prefLabel": "Mòoré"
     },
     "mri": {
       "@id": "/def/languages/mri",
@@ -1825,25 +1824,25 @@
       "@id": "/def/languages/mul",
       "@type": "Concept",
       "langCode": "mul",
-      "prefLabel": "Flerspråkigt verk"
+      "prefLabel": "Flera språk"
     },
     "mun": {
       "@id": "/def/languages/mun",
       "@type": "Concept",
       "langCode": "mun",
-      "prefLabel": "Munda"
+      "prefLabel": "Mundaspråk (övriga)"
     },
     "mus": {
       "@id": "/def/languages/mus",
       "@type": "Concept",
       "langCode": "mus",
-      "prefLabel": "Muskogee"
+      "prefLabel": "Muskogeanska"
     },
     "mwl": {
       "@id": "/def/languages/mwl",
       "@type": "Concept",
       "langCode": "mwl",
-      "prefLabel": "Mirandese"
+      "prefLabel": "Mirandesiska"
     },
     "mwr": {
       "@id": "/def/languages/mwr",
@@ -1860,7 +1859,7 @@
       "@id": "/def/languages/myn",
       "@type": "Concept",
       "langCode": "myn",
-      "prefLabel": "Maya-språk"
+      "prefLabel": "Mayaspråk"
     },
     "myv": {
       "@id": "/def/languages/myv",
@@ -1878,13 +1877,13 @@
       "@id": "/def/languages/nai",
       "@type": "Concept",
       "langCode": "nai",
-      "prefLabel": "Nordamerikanskt indianspråk"
+      "prefLabel": "Nordamerikanska indianspråk (övriga)"
     },
     "nap": {
       "@id": "/def/languages/nap",
       "@type": "Concept",
       "langCode": "nap",
-      "prefLabel": "Neapolitansk italienska"
+      "prefLabel": "Neapolitanska"
     },
     "nau": {
       "@id": "/def/languages/nau",
@@ -1896,19 +1895,19 @@
       "@id": "/def/languages/nav",
       "@type": "Concept",
       "langCode": "nav",
-      "prefLabel": "Navaho"
+      "prefLabel": "Navajo"
     },
     "nbl": {
       "@id": "/def/languages/nbl",
       "@type": "Concept",
       "langCode": "nbl",
-      "prefLabel": "Ndebele"
+      "prefLabel": "Sydndebele"
     },
     "nde": {
       "@id": "/def/languages/nde",
       "@type": "Concept",
       "langCode": "nde",
-      "prefLabel": "Ndebele"
+      "prefLabel": "Nordndebele"
     },
     "ndo": {
       "@id": "/def/languages/ndo",
@@ -1920,7 +1919,7 @@
       "@id": "/def/languages/nds",
       "@type": "Concept",
       "langCode": "nds",
-      "prefLabel": "Lågtyska"
+      "prefLabel": "LÃ¥gtyska"
     },
     "nep": {
       "@id": "/def/languages/nep",
@@ -1944,7 +1943,7 @@
       "@id": "/def/languages/nic",
       "@type": "Concept",
       "langCode": "nic",
-      "prefLabel": "Niger-/Kongospråk"
+      "prefLabel": "Niger-/Kongospråk (övriga)"
     },
     "niu": {
       "@id": "/def/languages/niu",
@@ -1961,7 +1960,7 @@
       "@id": "/def/languages/nno",
       "@type": "Concept",
       "langCode": "nno",
-      "prefLabel": "Nynorsk"
+      "prefLabel": "Nynorska"
     },
     "nob": {
       "@id": "/def/languages/nob",
@@ -2003,7 +2002,7 @@
       "@id": "/def/languages/nub",
       "@type": "Concept",
       "langCode": "nub",
-      "prefLabel": "Nubiskt språk"
+      "prefLabel": "Nubiska språk"
     },
     "nwc": {
       "@id": "/def/languages/nwc",
@@ -2015,7 +2014,7 @@
       "@id": "/def/languages/nya",
       "@type": "Concept",
       "langCode": "nya",
-      "prefLabel": "Nyanja"
+      "prefLabel": "Chichewa"
     },
     "nym": {
       "@id": "/def/languages/nym",
@@ -2045,13 +2044,13 @@
       "@id": "/def/languages/oci",
       "@type": "Concept",
       "langCode": "oci",
-      "prefLabel": "Langue d'oc"
+      "prefLabel": "Occitanska"
     },
     "oji": {
       "@id": "/def/languages/oji",
       "@type": "Concept",
       "langCode": "oji",
-      "prefLabel": "Odjibwa"
+      "prefLabel": "Ojibwa"
     },
     "ori": {
       "@id": "/def/languages/ori",
@@ -2081,7 +2080,7 @@
       "@id": "/def/languages/ota",
       "@type": "Concept",
       "langCode": "ota",
-      "prefLabel": "Ottomanska"
+      "prefLabel": "Osmanska"
     },
     "oto": {
       "@id": "/def/languages/oto",
@@ -2093,7 +2092,7 @@
       "@id": "/def/languages/paa",
       "@type": "Concept",
       "langCode": "paa",
-      "prefLabel": "Papuanskt språk"
+      "prefLabel": "Papuanska språk (övriga)"
     },
     "pag": {
       "@id": "/def/languages/pag",
@@ -2117,7 +2116,7 @@
       "@id": "/def/languages/pan",
       "@type": "Concept",
       "langCode": "pan",
-      "prefLabel": "Panjabi"
+      "prefLabel": "Punjabi"
     },
     "pap": {
       "@id": "/def/languages/pap",
@@ -2129,7 +2128,7 @@
       "@id": "/def/languages/pau",
       "@type": "Concept",
       "langCode": "pau",
-      "prefLabel": "Palauan"
+      "prefLabel": "Palauiska"
     },
     "peo": {
       "@id": "/def/languages/peo",
@@ -2147,7 +2146,7 @@
       "@id": "/def/languages/phi",
       "@type": "Concept",
       "langCode": "phi",
-      "prefLabel": "Filippinskt språk"
+      "prefLabel": "Filippinska språk (övriga)"
     },
     "phn": {
       "@id": "/def/languages/phn",
@@ -2171,7 +2170,7 @@
       "@id": "/def/languages/pon",
       "@type": "Concept",
       "langCode": "pon",
-      "prefLabel": "Ponape"
+      "prefLabel": "Pohnpei"
     },
     "por": {
       "@id": "/def/languages/por",
@@ -2218,19 +2217,19 @@
       "@id": "/def/languages/rap",
       "@type": "Concept",
       "langCode": "rap",
-      "prefLabel": "Rapanui"
+      "prefLabel": "Rapa nui"
     },
     "rar": {
       "@id": "/def/languages/rar",
       "@type": "Concept",
       "langCode": "rar",
-      "prefLabel": "Rarotongan"
+      "prefLabel": "Rarotongesiska"
     },
     "roa": {
       "@id": "/def/languages/roa",
       "@type": "Concept",
       "langCode": "roa",
-      "prefLabel": "Romanskt språk"
+      "prefLabel": "Romanska språk (övriga)"
     },
     "roh": {
       "@id": "/def/languages/roh",
@@ -2259,13 +2258,13 @@
       "@id": "/def/languages/run",
       "@type": "Concept",
       "langCode": "run",
-      "prefLabel": "Rundi"
+      "prefLabel": "Kirundi"
     },
     "rup": {
       "@id": "/def/languages/rup",
       "@type": "Concept",
       "langCode": "rup",
-      "prefLabel": "Arumanska"
+      "prefLabel": "Arumänska"
     },
     "rus": {
       "@id": "/def/languages/rus",
@@ -2486,7 +2485,7 @@
       "@id": "/def/languages/som",
       "@type": "Concept",
       "langCode": "som",
-      "prefLabel": "Somali"
+      "prefLabel": "Somaliska"
     },
     "son": {
       "@id": "/def/languages/son",
@@ -2539,7 +2538,7 @@
       "@id": "/def/languages/ssa",
       "@type": "Concept",
       "langCode": "ssa",
-      "prefLabel": "Nilo-sahariskt språk"
+      "prefLabel": "Nilo-sahariska språk (övriga)"
     },
     "ssw": {
       "@id": "/def/languages/ssw",
@@ -2587,13 +2586,13 @@
       "@id": "/def/languages/syc",
       "@type": "Concept",
       "langCode": "syc",
-      "prefLabel": "Syriska"
+      "prefLabel": "Syriska, klassisk"
     },
     "syr": {
       "@id": "/def/languages/syr",
       "@type": "Concept",
       "langCode": "syr",
-      "prefLabel": "Syriska"
+      "prefLabel": "Syriska, modern"
     },
     "tah": {
       "@id": "/def/languages/tah",
@@ -2671,7 +2670,7 @@
       "@id": "/def/languages/tig",
       "@type": "Concept",
       "langCode": "tig",
-      "prefLabel": "TigrÃ"
+      "prefLabel": "Tigré"
     },
     "tir": {
       "@id": "/def/languages/tir",
@@ -2863,7 +2862,7 @@
       "@id": "/def/languages/vol",
       "@type": "Concept",
       "langCode": "vol",
-      "prefLabel": "VolapÂ¸k"
+      "prefLabel": "Volapük"
     },
     "vot": {
       "@id": "/def/languages/vot",

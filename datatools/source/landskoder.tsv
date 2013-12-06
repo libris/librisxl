@@ -1,336 +1,381 @@
-code	label_sv	comment_sv
-9a	Ã…land	
-aa	Albanien	
-abc	Alberta 	se Kanada
-aca	Australian Capital Territory 	Se Australien
-ae	Algeriet	
-af	Afghanistan	
-ag	Argentina	
-ai	Armenien	
-aj	Azerbajdzjan	
-aku	Alaska 	se FÃ¶renta staterna
-alu	Alabama 	se FÃ¶renta staterna
-am	Anguilla	
-an	Andorra	
-ao	Angola	
-aq	Antigua och Barbuda	
-aru	Arkansas 	se FÃ¶renta staterna
-as	Amerikanska Samoa	
-at	Australien	
-au	Ã–sterrike	
-aw	Aruba	
-ay	Antarktis	
-azu	Arizona 	se FÃ¶renta staterna
-ba	Bahrain	
-bb	Barbados	
-bcc	British Columbia 	se Kanada
-bd	Burundi	
-be	Belgien	
-bf	Bahamas	
-bg	Bangladesh	
-bh	Belize	
-bi	Brittiska territorier i Indiska oceanen	
-bl	Brasilien	
-bm	Bermuda	
-bn	Bosnien-Hercegovina	
-bo	Bolivia	
-bp	SalomonÃ¶arna	
-br	Burma	
-bs	Botswana	
-bt	Bhutan	
-bu	Bulgarien	
-bv	BouvetÃ¶ya	
-bw	Vitryssland	
-bx	Brunei	
-cau	Kalifornien 	se FÃ¶renta staterna
-cb	Kambodja	
-cc	Kina	
-cd	Tchad	
-ce	Sri Lanka	
-cf	Kongo 	Brazzaville
-cg	Kongo (Kinshasa), f.d. Zaire	
-ch	Taiwan 	1949-
-ci	Kroatien	
-cj	CaymanÃ¶arna	
-ck	Colombia	
-cl	Chile	
-cm	Kamerun	
-cou	Colorado 	se FÃ¶renta staterna
-cq	Comorerna	
-cr	Costa Rica	
-cs	Tjeckoslovakien 	t.o.m. 1992
-ctu	Connecticut 	se FÃ¶renta staterna
-cu	Kuba	
-cv	Cap Verde	
-cw	CookÃ¶arna	
-cx	Centralafrikanska republiken	
-cy	Cypern	
-dcu	District of Columbia 	se FÃ¶renta staterna
-deu	Delaware 	se FÃ¶renta staterna
-dk	Danmark	
-dm	Benin	
-dq	Dominica	
-dr	Dominikanska republiken	
-ea	Eritrea	
-ec	Ecuador	
-eg	Ekvatorialguinea	
-em	Ã–sttimor	
-enk	England 	se Storbritannien
-er	Estland	
-es	Salvador	
-et	Etiopien	
-fa	FÃ¤rÃ¶arna	
-fg	Franska Guyana	
-fi	Finland	
-fj	Fiji	
-fk	FalklandsÃ¶arna	
-flu	Florida 	se FÃ¶renta staterna
-fm	Mikronesien	
-fp	Franska Polynesien	
-fr	Frankrike	
-fs	Terres australes et antarctiques franÃ§aises	
-ft	Djibouti	
-gau	Georgia 	se FÃ¶renta staterna
-gb	Kiribati	
-gd	Grenada	
-ge	Tyska Demokratiska Republiken 	t.o.m. 1990
-gh	Ghana	
-gi	Gibraltar	
-gl	GrÃ¶nland	
-gm	Gambia	
-go	Gabon	
-gp	Guadeloupe	
-gr	Grekland	
-gs	Georgien	
-gt	Guatemala	
-gu	Guam	
-gv	Guinea	
-gw	Tyskland	
-gy	Guyana	
-gz	Gazaremsan	
-hiu	Hawaii 	se FÃ¶renta staterna
-hk	Hongkong 	t.o.m. 1999
-hm	Heard and McDonald Islands	
-ho	Honduras	
-ht	Haiti	
-hu	Ungern	
-iau	Iowa 	se FÃ¶renta staterna
-ic	Island	
-idu	Idaho 	se FÃ¶renta staterna
-ie	Irland	
-ii	Indien	
-ilu	Illinois 	se FÃ¶renta staterna
-inu	Indiana 	se FÃ¶renta staterna
-io	Indonesien	
-iq	Irak	
-ir	Iran	
-is	Israel	
-it	Italien	
-iv	Elfenbenskusten	
-iy	Irak - Saudi-Arabien 	neutral zon
-ja	Japan	
-ji	Johnston Island	
-jm	Jamaica	
-jo	Jordanien	
-ke	Kenya	
-kg	Kirgisistan	
-kn	Demokratiska Folkrepubliken Korea	
-ko	Republiken Korea	
-ksu	Kansas 	se FÃ¶renta staterna
-ku	Kuwait	
-kv	Kosovo	
-kyu	Kentucky 	se FÃ¶renta staterna
-kz	Kazachstan	
-lau	Louisiana 	se FÃ¶renta staterna
-lb	Liberia	
-le	Libanon	
-lh	Liechtenstein	
-li	Litauen	
-lo	Lesotho	
-ls	Laos	
-lu	Luxemburg	
-lv	Lettland	
-ly	Libyen	
-mau	Massachusetts 	se FÃ¶renta staterna
-mbc	Manitoba 	se Kanada
-mc	Monaco	
-mdu	Maryland 	se FÃ¶renta staterna
-meu	Maine 	se FÃ¶renta staterna
-mf	Mauritius	
-mg	Madagaskar	
-mh	Macao 	t.o.m. 1999
-miu	Michigan 	se FÃ¶renta staterna
-mj	Montserrat	
-mk	Oman	
-ml	Mali	
-mm	Malta	
-mnu	Minnesota 	se FÃ¶renta staterna
-mo	Montenegro	
-mou	Missouri 	se FÃ¶renta staterna
-mp	Mongoliet	
-mq	Martinique	
-mr	Marocko	
-msu	Mississippi 	se FÃ¶renta staterna
-mtu	Montana 	se FÃ¶renta staterna
-mu	Mauretanien	
-mv	Moldavien	
-mw	Malawi	
-mx	Mexiko	
-my	Malaysia	
-mz	MoÃ§ambique	
-na	NederlÃ¤ndska Antillerna	
-nbu	Nebraska 	se FÃ¶renta staterna
-ncu	North Carolina 	se FÃ¶renta staterna
-ndu	North Dakota 	se FÃ¶renta staterna
-ne	NederlÃ¤nderna	
-nfc	Newfoundland och Labrador 	se Kanada
-ng	Niger	
-nhu	New Hampshire 	se FÃ¶renta staterna
-nik	Nordirland 	se Storbritannien
-nju	New Jersey 	se FÃ¶renta staterna
-nkc	New Brunswick 	se Kanada
-nl	Nya Caledonien	
-nmu	New Mexico 	se FÃ¶renta staterna
-nn	Vanuatu	
-no	Norge	
-np	Nepal	
-nq	Nicaragua	
-nr	Nigeria	
-nsc	Nova Scotia 	se Kanada
-ntc	North West Territories 	se Kanada
-nu	Nauru	
-nuc	Nunavut 	se Kanada
-nvu	Nevada 	se FÃ¶renta staterna
-nw	Nordmarianerna	
-nx	NorfolkÃ¶n	
-nyu	New York 	se FÃ¶renta staterna
-nz	Nya Zeeland	
-ohu	Ohio 	se FÃ¶renta staterna
-oku	Oklahoma 	se FÃ¶renta staterna
-onc	Ontario 	se Kanada
-oru	Oregon 	se FÃ¶renta staterna
-ot	Mayotte	
-pau	Pennsylvania 	se FÃ¶renta staterna
-pc	Pitcairn Island	
-pe	Peru	
-pf	ParacelÃ¶arna	
-pg	Guinea-Bissau	
-ph	Filippinerna	
-pic	Prince Edward Island 	se Kanada
-pk	Pakistan	
-pl	Polen	
-pn	Panama	
-po	Portugal	
-pp	Papua Nya Guinea	
-pr	Puerto Rico	
-pw	Palau	
-py	Paraguay	
-qa	Qatar	
-qea	Queensland 	se Australien
-quc	Quebec 	se Kanada
-rb	Serbien	
-re	RÃ©union	
-rh	Zimbabwe	
-riu	Rhode Island 	se FÃ¶renta staterna
-rm	RumÃ¤nien	
-ru	Ryssland	
-rw	Rwanda	
-sa	Sydafrikanska republiken	
-scu	South Carolina 	se FÃ¶renta staterna
-sdu	South Dakota 	se FÃ¶renta staterna
-se	Seychellerna	
-sf	SÃ¨o ThomÃ© och Principe	
-sg	Senegal	
-sh	Spanska Nordafrika	
-si	Singapore	
-sj	Sudan	
-sl	Sierra Leone	
-sm	San Marino	
-snc	Saskatchewan 	se Kanada
-so	Somalia	
-sp	Spanien	
-sq	Swaziland	
-sr	Surinam	
-ss	VÃ¤stra Sahara	
-stk	Skottland 	se Storbritannien
-su	Saudi-Arabien	
-sw	Sverige	
-sx	Namibia	
-sy	Syrien	
-sz	Schweiz	
-ta	Tadzjikistan	
-tc	Turks and Caicos Islands	
-tg	Togo	
-th	Thailand	
-ti	Tunisien	
-tk	Turkmenistan	
-tl	Tokelau	
-tma	Tasmanien 	se Australien
-tnu	Tennessee 	se FÃ¶renta staterna
-to	Tonga	
-tr	Trinidad och Tobago	
-ts	FÃ¶renade Arabemiraten	
-tu	Turkiet	
-tv	Tuvalu	
-txu	Texas 	se FÃ¶renta staterna
-tz	Tanzania	
-ua	Egypten	
-uc	Amerikanska Ã¶ar i Karibiska havet	
-ug	Uganda	
-uik	Diverse brittiska Ã¶ar 	se Storbritannien
-un	Ukraina	
-up	Amerikanska Ã¶ar i Stilla havet	
-utu	Utah 	se FÃ¶renta staterna
-uv	Burkina Faso	
-uy	Uruguay	
-uz	Uzbekistan	
-vau	Virginia 	se FÃ¶renta staterna
-vb	Brittiska JungfuÃ¶arna	
-vc	Vatikanstaten	
-ve	Venezuela	
-vi	Amerikanska JungfruÃ¶arna	
-vm	Vietnam	
-vp	Utgivningsland varierar	
-vra	Victoria 	se Australien
-vtu	Vermont 	se FÃ¶renta staterna
-wau	Washington 	se FÃ¶renta staterna
-wea	Western Australia 	se Australien
-wf	Wallis och Futuna	
-wiu	Wisconsin 	se FÃ¶renta staterna
-wj	VÃ¤stbanken	
-wk	Wake	
-wlk	Wales 	se Storbritannien
-ws	VÃ¤stra Samoa	
-wvu	West Virginia 	se FÃ¶renta staterna
-wyu	Wyoming 	se FÃ¶renta staterna
-xa	JulÃ¶n 	Indiska oceanen
-xb	Cocos (Keeling) Islands	
-xc	Maldiverna	
-xd	S:t Christopher och Nevis	
-xe	MarshallÃ¶arna	
-xf	MidwayÃ¶arna	
-xga	Coral Sea Islands Territory 	se Australien
-xh	Niue	
-xj	S:t Helena	
-xk	S:t Lucia	
-xl	S:t Pierre och Miquelon	
-xm	S:t Vincent	
-xn	Makedonien	
-xna	New South Wales 	se Australien
-xo	Slovakien	
-xoa	Northern Territories 	se Australien
-xp	SpratlyÃ¶arna	
-xr	Tjeckien	
-xra	South Australia 	se Australien
-xs	Sydgeorgien och SydsandwichÃ¶arna	
-xv	Slovenien	
-xx	Utgivningsland okÃ¤nt / Ej specificerat	
-xxc	Kanada	
-xxk	Storbritannien	
-xxr	Sovjetunionen 	t.o.m. 1991
-xxu	FÃ¶renta staterna	
-ye	Jemen	
-ykc	Yukon Territory 	se Kanada
-ys	Demokratiska Folkrepubliken Jemen 	t.o.m. 1990
-yu	Serbien och Montenegro 	t.o.m. april 2007
-za	Zambia	
+code	label_sv	comment_sv	map_to_code
+9a	Åland	Librisdefinierad kod	
+aa	Albanien		
+abc	Alberta 	"Se ""xxc"" (Kanada))"	
+ac	Ashmore and Cartier Islands	Obsolet	
+aca	Australian Capital Territory 	"Se ""at"" (Australien)"	
+ae	Algeriet		
+af	Afghanistan		
+ag	Argentina		
+ai	Armenien		
+air	Armeniska SSR	"Före juni 1992; använd ""ai"" (Armenien)"	ai
+aj	Azerbajdzjan		
+ajr	Azerbajdzjanska SSR	"Före juni 1992; använd ""aj"" (Azerbajdjan)"	aj
+aku	Alaska 	"Se ""xxu"" (Förenta staterna)"	
+alu	Alabama 	"Se ""xxu"" (Förenta staterna)"	
+am	Anguilla		
+an	Andorra		
+ao	Angola		
+aq	Antigua och Barbuda		
+aru	Arkansas 	"Se ""xxu"" (Förenta staterna)"	
+as	Amerikanska Samoa		
+at	Australien		
+au	Österrike		
+aw	Aruba		
+ay	Antarktis		
+azu	Arizona 	"Se ""xxu"" (Förenta staterna)"	
+ba	Bahrain		
+bb	Barbados		
+bcc	British Columbia 	"Se ""xxc"" (Se ""xxc"" (Kanada))"	
+bd	Burundi		
+be	Belgien		
+bf	Bahamas		
+bg	Bangladesh		
+bh	Belize		
+bi	Brittiska territorier i Indiska oceanen		
+bl	Brasilien		
+bm	Bermuda		
+bn	Bosnien-Hercegovina		
+bo	Bolivia		
+bp	Salomonöarna		
+br	Burma		
+bs	Botswana		
+bt	Bhutan		
+bu	Bulgarien		
+bv	Bouvetön		
+bw	Vitryssland		
+bwr	Vitryska SSR	"Före juni 1992; använd ""bw"" (Vitryssland)"	bw
+bx	Brunei		
+ca	Karibiska Nederländerna		
+cau	Kalifornien 	"Se ""xxu"" (Förenta staterna)"	
+cb	Kambodja		
+cc	Kina		
+cd	Tchad		
+ce	Sri Lanka		
+cf	Kongo-Brazzaville	Även Republiken Kongo	
+cg	Kongo-Kinshasa	"Även Demokratiska Republiken Kongo; f.d. Zaire"	
+ch	Taiwan 	"1949-; även Republiken Kina"	
+ci	Kroatien		
+cj	Caymanöarna		
+ck	Colombia		
+cl	Chile		
+cm	Kamerun		
+cn	Kanada	"Obsolet: använd ""xxc"" (Kanada)"	xxc
+co	Curaçao		
+cou	Colorado 	"Se ""xxu"" (Förenta staterna)"	
+cp	Canton and Elderbury Islands	Obsolet	
+cq	Comorerna		
+cr	Costa Rica		
+cs	Tjeckoslovakien 	"Före maj 1993; använd ""cx"" (Tjeckien) resp. ""xo"" (Slovakien)"	
+ctu	Connecticut 	"Se ""xxu"" (Förenta staterna)"	
+cu	Kuba		
+cv	Cap Verde		
+cw	Cooköarna		
+cx	Centralafrikanska republiken		
+cy	Cypern		
+cz	Canal Zone	"För jan. 1985; använd ""pn"" (Panama)"	pn
+dcu	District of Columbia 	"Se ""xxu"" (Förenta staterna)"	
+deu	Delaware 	"Se ""xxu"" (Förenta staterna)"	
+dk	Danmark		
+dm	Benin		
+dq	Dominica		
+dr	Dominikanska republiken		
+ea	Eritrea		
+ec	Ecuador		
+eg	Ekvatorialguinea		
+em	Östtimor		
+enk	England 	"Se ""xxk"" (Storbritannien)"	
+er	Estland		
+err	Estniska SSR	"Före okt. 1992; använd ""er"" (Estland)"	er
+es	El Salvador		
+et	Etiopien		
+fa	Färöarna		
+fg	Franska Guyana		
+fi	Finland		
+fj	Fiji		
+fk	Falklandsöarna		
+flu	Florida 	"Se ""xxu"" (Förenta staterna)"	
+fm	Mikronesiens federerade stater	Även Mikronesiska federationen	
+fp	Franska Polynesien		
+fr	Frankrike		
+fs	Terres australes et antarctiques françaises		
+ft	Djibouti		
+gau	Georgia 	"Se ""xxu"" (Förenta staterna)"	
+gb	Kiribati		
+gd	Grenada		
+ge	Tyska Demokratiska Republiken 	T.o.m. 1990	
+gh	Ghana		
+gi	Gibraltar		
+gl	Grönland		
+gm	Gambia		
+gn	Gilbert- och Elliceöarna	"Före okt. 1978; använd ""gb"" (Kiribati)"	
+go	Gabon		
+gp	Guadeloupe		
+gr	Grekland		
+gs	Georgien		
+gsr	Georgiska SSR	"Före juni 1992; använd ""gs"" (Georgien)"	
+gt	Guatemala		
+gu	Guam		
+gv	Guinea		
+gw	Tyskland		
+gy	Guyana		
+gz	Gazaremsan		
+hiu	Hawaii 	"Se ""xxu"" (Förenta staterna)"	
+hk	Hongkong 	"Före okt. 1997; använd ""cc"" (Kina)"	cc
+hm	Heard- och McDonaldöarna		
+ho	Honduras		
+ht	Haiti		
+hu	Ungern		
+iau	Iowa 	"Se ""xxu"" (Förenta staterna)"	
+ic	Island		
+idu	Idaho 	"Se ""xxu"" (Förenta staterna)"	
+ie	Irland		
+ii	Indien		
+ilu	Illinois 	"Se ""xxu"" (Förenta staterna)"	
+inu	Indiana 	"Se ""xxu"" (Förenta staterna)"	
+io	Indonesien		
+iq	Irak		
+ir	Iran		
+is	Israel		
+it	Italien		
+iu	Israel-Syrien Demilitariserade zoner	"Före jan. 1978; använd ""is"" (Israel)"	is
+iv	Elfenbenskusten		
+iw	Israel-Jordanine demilitariserade zoner	"Före jan. 1978; använd ""is"" (Israel)"	is
+iy	Irak - Saudiarabien neutral zon 		
+ja	Japan		
+ji	Johnstonatollen		
+jm	Jamaica		
+jn	Jan Mayen	"Före mars 1988; använd ""no"" (Norge)"	no
+jo	Jordanien		
+ke	Kenya		
+kg	Kirgizistan		
+kgr	Kirgiziska SSR	"Före juni 1992: använd ""kg"" (Kirgizistan)"	kg
+kn	Nordkorea	Även Demokratiska Folkrepubliken Korea	
+ko	Sydkorea	Även Republiken Korea	
+ksu	Kansas 	"Se ""xxu"" (Förenta staterna)"	
+ku	Kuwait		
+kv	Kosovo		
+kyu	Kentucky 	"Se ""xxu"" (Förenta staterna)"	
+kz	Kazakstan	Även Kazachstan	
+kzr	Kazakiska SSR	"Före juni 1992; använd ""kz"" (Kazakstan)"	kz
+lau	Louisiana 	"Se ""xxu"" (Förenta staterna)"	
+lb	Liberia		
+le	Libanon		
+lh	Liechtenstein		
+li	Litauen		
+lir	Litauiska SSR	"Före juni 1992; använd ""li"" (Litauen)"	li
+ln	Mellersta och södra Line Islands	"Före okt. 1978; använd ""gb"" (Kiribati)"	gb
+lo	Lesotho		
+ls	Laos		
+lu	Luxemburg		
+lv	Lettland		
+lvr	Lettiska SSR	"För juni 1992;  använd ""lv"" (Lettland)"	lv
+ly	Libyen		
+mau	Massachusetts 	"Se ""xxu"" (Förenta staterna)"	
+mbc	Manitoba 	"Se ""xxc"" (Kanada)"	
+mc	Monaco		
+mdu	Maryland 	"Se ""xxu"" (Förenta staterna)"	
+meu	Maine 	"Se ""xxu"" (Förenta staterna)"	
+mf	Mauritius		
+mg	Madagaskar		
+mh	Macao 	"Före maj 2000; använd ""cc"" (Kina)"	cc
+miu	Michigan 	"Se ""xxu"" (Förenta staterna)"	
+mj	Montserrat		
+mk	Oman		
+ml	Mali		
+mm	Malta		
+mnu	Minnesota 	"Se ""xxu"" (Förenta staterna)"	
+mo	Montenegro		
+mou	Missouri 	"Se ""xxu"" (Förenta staterna)"	
+mp	Mongoliet		
+mq	Martinique		
+mr	Marocko		
+msu	Mississippi 	"Se ""xxu"" (Förenta staterna)"	
+mtu	Montana 	"Se ""xxu"" (Förenta staterna)"	
+mu	Mauretanien		
+mv	Moldavien		
+mvr	Moldaviska SSR	"Före juni 1992; använd ""mv"" (Moldavien)"	mv
+mw	Malawi		
+mx	Mexiko		
+my	Malaysia		
+mz	Moçambique		
+na	Nederländska Antillerna	Före dec. 2011	
+nbu	Nebraska 	"Se ""xxu"" (Förenta staterna)"	
+ncu	North Carolina 	"Se ""xxu"" (Förenta staterna)"	
+ndu	North Dakota 	"Se ""xxu"" (Förenta staterna)"	
+ne	Nederländerna		
+nfc	Newfoundland och Labrador 	"Se ""xxc"" (Kanada)"	
+ng	Niger		
+nhu	New Hampshire 	"Se ""xxu"" (Förenta staterna)"	
+nik	Nordirland 	"Se ""xxk"" (Storbritannien)"	
+nju	New Jersey 	"Se ""xxu"" (Förenta staterna)"	
+nkc	New Brunswick 	"Se ""xxc"" (Kanada)"	
+nl	Nya Caledonien		
+nw	Norra Marianerna	Även Northen Mariana Islands	
+nmu	New Mexico 	"Se ""xxu"" (Förenta staterna)"	
+nn	Vanuatu		
+no	Norge		
+np	Nepal		
+nq	Nicaragua		
+nr	Nigeria		
+nsc	Nova Scotia 	"Se ""xxc"" (Kanada)"	
+ntc	North West Territories 	"Se ""xxc"" (Kanada)"	
+nu	Nauru		
+nuc	Nunavut 	"Se ""xxc"" (Kanada)"	
+nvu	Nevada 	"Se ""xxu"" (Förenta staterna)"	
+nw	Nordmarianerna		
+nx	Norfolkön		
+nyu	New York 	"Se ""xxu"" (Förenta staterna)"	
+nz	Nya Zeeland		
+ohu	Ohio 	"Se ""xxu"" (Förenta staterna)"	
+oku	Oklahoma 	"Se ""xxu"" (Förenta staterna)"	
+onc	Ontario 	"Se ""xxc"" (Kanada)"	
+oru	Oregon 	"Se ""xxu"" (Förenta staterna)"	
+ot	Mayotte		
+pau	Pennsylvania 	"Se ""xxu"" (Förenta staterna)"	
+pc	Pitcairnöarna		
+pe	Peru		
+pf	Paracelöarna		
+pg	Guinea-Bissau		
+ph	Filippinerna		
+pic	Prince Edward Island 	"Se ""xxc"" (Kanada)"	
+pk	Pakistan		
+pl	Polen		
+pn	Panama		
+po	Portugal		
+pp	Papua Nya Guinea		
+pr	Puerto Rico		
+pt	Portugisiska Timor	"Före jan. 1978; använd ""io"" (Indonesien)"	io
+pw	Palau		
+py	Paraguay		
+qa	Qatar		
+qea	Queensland 	"Se ""at"" (Australien)"	
+quc	Quebec 	"Se ""xxc"" (Kanada)"	
+rb	Serbien		
+re	Réunion		
+rh	Zimbabwe		
+riu	Rhode Island 	"Se ""xxu"" (Förenta staterna)"	
+rm	Rumänien		
+ru	Ryssland		
+rur	Ryska SFSR	"Före juni 1992; använd ""ru"" (Ryssland)"	ru
+rw	Rwanda		
+ry	Södra Ryukyuöarna	"Före jan. 1978; använd ""ja"" (Japan)"	
+sa	Sydafrika		
+sb	Svalbard	Obsolet	
+sc	Saint-Barthélemy		
+scu	South Carolina 	"Se ""xxu"" (Förenta staterna)"	
+sd	Sydsudan		
+sdu	South Dakota 	"Se ""xxu"" (Förenta staterna)"	
+se	Seychellerna		
+sf	São Tomé och Principe		
+sg	Senegal		
+sh	Spanska Nordafrika		
+si	Singapore		
+sj	Sudan		
+sk	Sikkim	Obsolet	
+sl	Sierra Leone		
+sm	San Marino		
+sn	Sint Maarten		
+snc	Saskatchewan 	"Se ""xxc"" (Kanada)"	
+so	Somalia		
+sp	Spanien		
+sq	Swaziland		
+sr	Surinam		
+ss	Västra Sahara		
+st	Saint-Martin		
+stk	Skottland 	"Se ""xxk"" (Storbritannien)"	
+su	Saudiarabien		
+sv	Swan Islands	Obsolet	
+sw	Sverige		
+sx	Namibia		
+sy	Syrien		
+sz	Schweiz		
+ta	Tadzjikistan		
+tar	Tadzjikistan	"Obsolet; använd ""ta"" (Tadzjikistan)"	ta
+tc	Turks and Caicos Islands		
+tg	Togo		
+th	Thailand		
+ti	Tunisien		
+tk	Turkmenistan		
+tkr	Turkmenistan	"Obsolet; använd ""tk"" (Turkmenistan)"	tk
+tl	Tokelau		
+tma	Tasmanien 	"Se ""at"" (Australien)"	
+tnu	Tennessee 	"Se ""xxu"" (Förenta staterna)"	
+to	Tonga		
+tr	Trinidad och Tobago		
+ts	Förenade Arabemiraten		
+tt	Trust Territory of the Pacific Islands	Obsolet	
+tu	Turkiet		
+tv	Tuvalu		
+txu	Texas 	"Se ""xxu"" (Förenta staterna)"	
+tz	Tanzania		
+ua	Egypten		
+uc	Amerikanska öar i Karibiska havet		
+ug	Uganda		
+ui	Diverse brittiska öar 	"Obsolet; använd ""xxk"" (Storbritannien) eller ""uik"" (Diverse brittiska öar)"	uik
+uik	Diverse brittiska öar 	"Se ""xxk"" (Storbritannien)"	
+uk	Storbritannien	"Obsolet; använd ""xxk"" (Storbritannien)"	xxk
+un	Ukraina		
+unr	Ukraina	"Obsolet; använd ""un"" (Ukraina)"	un
+up	Amerikanska öar i Stilla havet		
+ur	Sovjetunionen 	"Före mars 1988; använd ""xxr"" (Sovjetunionen)"	xxr
+us	Förenta staterna	"Obsolet; använd ""xxu"" (Förenta staterna)"	xxu
+utu	Utah 	"Se ""xxu"" (Förenta staterna)"	
+uv	Burkina Faso		
+uy	Uruguay		
+uz	Uzbekistan		
+uzr	Uzbekistan	"Obsolet; använd ""uz"" (Uzbekistan)"	uz
+vau	Virginia 	"Se ""xxu"" (Förenta staterna)"	
+vb	Brittiska Jungfuöarna		
+vc	Vatikanstaten		
+ve	Venezuela		
+vi	Amerikanska Jungfruöarna		
+vm	Vietnam		
+vn	Nordvietnam	"Före jan. 1978; använd ""vm"" (Vietnam)"	vm
+vp	Utgivningsland varierar		
+vra	Victoria 	"Se ""at"" (Australien)"	
+vs	Sydvietnam	"Före jan. 1978; använd ""vm"" (Vietnam)"	vm
+vtu	Vermont 	"Se ""xxu"" (Förenta staterna)"	
+wau	Washington 	"Se ""xxu"" (Förenta staterna)"	
+wb	Västberlin	"Före jan. 1990; använd ""gw"" (Tyskland)"	gw
+wea	Western Australia 	"Se ""at"" (Australien)"	
+wf	Wallis och Futuna		
+wiu	Wisconsin 	"Se ""xxu"" (Förenta staterna)"	
+wj	Västbanken		
+wk	Wake		
+wlk	Wales 	"Se ""xxk"" (Storbritannien)"	
+ws	Samoa		
+wvu	West Virginia 	"Se ""xxu"" (Förenta staterna)"	
+wyu	Wyoming 	"Se ""xxu"" (Förenta staterna)"	
+xa	Julön 	Indiska oceanen	
+xb	Kokosöarna		
+xc	Maldiverna		
+xd	Saint Kitts och Nevis	Även Saint Christopher och Nevis	
+xe	Marshallöarna		
+xf	Midwayöarna		
+xga	Coral Sea Islands Territory 	"Se ""at"" (Australien)"	
+xh	Niue		
+xi	Saintt Kitts-Nevis-Anguilla	"Före jan. 1985; använd ""xd"" (Saint Kitts och Nevis) resp. ""am"" (Anguilla)"	
+xj	Sankta Helena	Även Saint Helena	
+xk	Saint Lucia		
+xl	Saint-Pierre och Miquelon		
+xm	Saint Vincent och Grenadinerna		
+xn	Makedonien		
+xna	New South Wales 	"Se ""at"" (Australien)"	
+xo	Slovakien		
+xoa	Northern Territory	"Se ""at"" (Australien)"	
+xp	Spratlyöarna	Även Nansha-öarna	
+xr	Tjeckien		
+xra	South Australia 	"Se ""at"" (Australien)"	
+xs	Sydgeorgien och Sydsandwichöarna		
+xv	Slovenien		
+xx	Utgivningsland okänt / Ej specificerat		
+xxc	Kanada		
+xxk	Storbritannien		
+xxr	Sovjetunionen 	"April 1988 - juni 1992; jfr ""ur"" (Sovjetunionen)"	
+xxu	Förenta staterna		
+ye	Jemen		
+ykc	Yukon Territory 	"Se ""xxc"" (Kanada)"	
+ys	Demokratiska Folkrepubliken Jemen 	T.o.m. 1990	
+yu	Serbien och Montenegro 	T.o.m. april 2007	
+za	Zambia		

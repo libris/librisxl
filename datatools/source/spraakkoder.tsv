@@ -1,71 +1,71 @@
 code	label_sv	comment_sv
-9fd	Forndanska 	-1500
-9fs	Fornsvenska 	-1500
-9ft	FornlÃ¥gtyska 	ca 850-1050
-9sl	Lulesamiska 	obsolet kod, anvÃ¤nd smj
-9so	Ã–stsamiska 	obsolet kod, anvÃ¤nd smn (Enare-), sms (Skolt-) el. smi (Samiska)
-9ss	Sydsamiska 	obsolet kod, anvÃ¤nd sma
-___	Uppgift saknas	
-aar	Afar	
+   	Uppgift saknas	
+9fd	Forndanska 	-1500 (Librisdefinierad kod)
+9fs	Fornsvenska 	-1500 (Librisdefinierad kod)
+9ft	Fornlågtyska 	Ca 850-1050 (Librisdefinierad kod)
+9sl	Lulesamiska 	"Obsolet Librisdefinierad kod: använd ""smj"""
+9so	Östsamiska 	"Obsolet Librisdefinierad kod: använd ""smn"" (enaresamiska), ""sms"" (skoltsamiska) eller ""smi"" (samiska)"
+9ss	Sydsamiska 	"Obsolet Librisdefinierad kod: använd ""sma"""
+aar	Afar	Även afariska
 abk	Abchaziska	
-ace	Achinese	
-ach	Acoli	
+ace	Achenesiska	Även atjehnesiska
+ach	Acholi	
 ada	Adangme	
 ady	Adygeiska	
-afa	Afro-asiatiskt sprÃ¥k	
-afh	Afrihili 	artificiellt sprÃ¥k
+afa	Afro-asiatiska språk (övriga)	
+afh	Afrihili 	Konstgjort språk
 afr	Afrikaans	
 ain	Ainu	
 aka	Akan	
 akk	Akkadiska	
 alb	Albanska	
 ale	Aleutiska	
-alg	Algonkinskt sprÃ¥k	
+alg	Algonkinska språk (övriga)	
 alt	Sydaltaiska	
-amh	Amhariska	
-ang	Fornengelska 	ca 450-1100
+amh	Amhariska	Även amharinja
+ang	Fornengelska 	Ca 450-1100
 anp	Angika	
-apa	Apachiskt sprÃ¥k	
+apa	Apachiska språk (övriga)	
 ara	Arabiska	
 arc	Arameiska	
-arg	Aragonsk spanska	
+arg	Aragonska	
 arm	Armeniska	
-arn	Araukanska 	Mapuche
+arn	Mapudungun 	Även arakuanska, mapuche
 arp	Arapaho	
-art	Artificiellt sprÃ¥k	
+art	Konstgjorda språk (övriga)	
 arw	Arawakiska	
-asm	Assamesiska	
-ast	Asturiska 	Bable
-ath	Athapaskiskt sprÃ¥k	
-aus	Australiskt sprÃ¥k	
-ava	Avariskt sprÃ¥k	
-ave	Avestiska	
+asm	Assamesiska	Även asamiya
+ast	Asturiska 	Även bable
+ath	Athapaskiska språk (övriga)	
+aus	Australiska språk (övriga)	
+ava	Avariska språk	
+ave	Avestiska	Även pazand
 awa	Awadhi	
 aym	Aymara	
-aze	Azerbajdzjanska	
-bad	BandasprÃ¥k	
-bai	BamilekesprÃ¥k	
+aze	Azerbajdzjanska	Även azeri, azeriska
+bad	Bandaspråk	
+bai	Bamilekespråk 	
 bak	Basjkiriska	
-bal	Baluchi	
+bal	Baluchiska	
 bam	Bambara	
 ban	Balinesiska	
 baq	Baskiska	
-bas	Basa 	BantusprÃ¥k
-bat	Baltiskt sprÃ¥k	
+bas	Basa 	bantuspråk
+bat	Baltiska språk (övriga)	
 bej	Beyja	
 bel	Vitryska	
 bem	Bemba	
-ben	Bengali	
-ber	BerbersprÃ¥k	
+ben	Bengali	Även bengaliska
+ber	Berberspråk (övriga)	
 bho	Bhojpuri	
 bih	Bihari	
-bik	Bikol	
-bin	Edo 	Bini
+bik	Bikol	Även bicolano
+bin	Edo 	Även bini
 bis	Bislama	
-bla	Svartfotindianernas sprÃ¥k 	Siksika
-bnt	BantusprÃ¥k	
+bla	Siksiká	"Svartfotindianernas språk; även pikanii "
+bnt	Bantuspråk (övriga)	
 bos	Bosniska	
-bra	Braj	
+bra	Braj Basha	
 bre	Bretonska	
 btk	Batak	
 bua	Burjatiska	
@@ -74,19 +74,19 @@ bul	Bulgariska
 bur	Burmanska	
 byn	Bilin	
 cad	Caddo	
-cai	Centralamerikanskt indiansprÃ¥k	
+cai	Centralamerikanska indianspråk (övriga)	
 car	Karibiska	
 cat	Katalanska	
-cau	Kaukasiskt sprÃ¥k	
-ceb	Cebuano	
-cel	Keltiskt sprÃ¥k	
+cau	Kaukasiska språk (övriga)	
+ceb	Cebuano	Även visaya, bisaya
+cel	Keltiska språk (övriga)	
 cha	Chamorro	
 chb	Chibcha	
 che	Tjetjenska	
 chg	Chagatai	
 chi	Kinesiska	
-chk	Chuukesiska 	Truk
-chm	Mari 	Tjeremissiska
+chk	Chuukesiska 	Även truk
+chm	Mariska 	Även mari, tjeremissiska
 chn	Chinook	
 cho	Choctaw	
 chp	Chopi	
@@ -94,181 +94,181 @@ chr	Cherokesiska
 chu	Fornkyrkslaviska	
 chv	Tjuvasjiska	
 chy	Cheyenne	
-cmc	Chamic	
+cmc	Chamicspråk	
 cop	Koptiska	
 cor	Korniska	
 cos	Korsikanska	
-cpe	Pidgin-engelska	
-cpf	Franskt kreolsprÃ¥k	
-cpp	Portugisiskt kreolsprÃ¥k	
-cre	Cree	
-crh	Krimtatariska 	Krimturkiska
-crp	Kreol-/PidginsprÃ¥k	
+cpe	Kreol- och Pidginspråk, engelskbaserade (övriga)	
+cpf	Kreol- och Pidginspråk, franskbaserade (övriga)	
+cpp	Kreol- och Pidginspråk, portugisiskbaserade (övriga)	
+cre	Cree	Även cri
+crh	Krimtatariska 	Även krimturkiska
+crp	Kreol- och Pidginspråk (övriga)	
 csb	Kasjubiska	
-cus	Kusjitiskt sprÃ¥k	
+cus	Kusjitiska språk (övriga)	
 cze	Tjeckiska	
 dak	Dakota	
 dan	Danska	
-dar	Darginska 	Dargwa
-day	Dayak	
+dar	Darginska 	Även dargwa
+day	Dayak	Även dajakiska
 del	Delaware	
 den	Slave	
 dgr	Dogrib	
 din	Dinka	
 div	Divehi	
 doi	Dogri	
-dra	Dravidiskt sprÃ¥k	
-dsb	LÃ¥gsorbiska	
+dra	Dravidiska språk (övriga)	
+dsb	Lågsorbiska	
 dua	Duala	
-dum	MedelnederlÃ¤ndska 	ca 1050-1350
-dut	NederlÃ¤ndska	
-dyu	Dyula	
-dzo	Bhutanesiska 	Dzongkha
+dum	Medelnederländska 	Ca 1050-1350
+dut	Nederländska	
+dua	Dioula	Även dyula
+dzo	dzongkha 	Även bhutanesiska
 efi	Efik	
-egy	Fornegyptiska	
+egy	Egyptiska	"Även fornegyptiska; hit bl.a. hieroglyglyfer samt hieatisk och demotisk skrift"
 eka	Ekajuk	
 elx	Elamitiska	
 eng	Engelska	
-enm	Medelengelska 	ca 1100-1500
+enm	Medelengelska 	Ca 1100-1500
 epo	Esperanto	
 est	Estniska	
 ewe	Ewe	
 ewo	Ewondo	
 fan	Fang	
-fao	FÃ¤rÃ¶iska	
+fao	Färöiska	
 fat	Fanti	
 fij	Fidjianska	
 fil	Filipino	
 fin	Finska	
-fiu	Finsk-ugriskt sprÃ¥k	
+fiu	Finsk-ugriska språk (övriga)	
 fon	Fon	
 fre	Franska	
-frm	Medelfranska 	ca 1300-1600
-fro	Fornfranska 	ca 842-1300
+frm	Medelfranska 	Ca 1300-1600
+fro	Fornfranska 	Ca 842-1300
 frr	Nordfrisiska	
-frs	Ã–stfrisiska	
+frs	Östfrisiska	
 fry	Frisiska	
-ful	Fulani	
+ful	Fula	
 fur	Friuliska	
 gaa	Ga	
 gay	Gayo	
 gba	Gbaya	
-gem	Germanskt sprÃ¥k	
+gem	Germanska språk (övriga)	
 geo	Georgiska	
 ger	Tyska	
-gez	Fornetiopiska 	geez
-gil	Gilbertesiska	
-gla	HÃ¶glandsskotska	
+gez	Ge'ez 	Även fornetiopiska
+gil	Kiribatiska	Även gilbertesiska
+gla	Skotsk gäliska	Även höglandsskotska
 gle	Iriska	
-glg	Galiciska	
+glg	Galiciska	Även manniska
 glv	Manx	
-gmh	MedelhÃ¶gtyska 	ca 1050-1500
-goh	FornhÃ¶gtyska 	ca 750-1050
-gon	Gondi	
+gmh	Medelhögtyska 	ca 1050-1500
+goh	Fornhögtyska 	ca 750-1050
+gon	Gond	
 gor	Gorontalo	
 got	Gotiska	
 grb	Grebo	
 grc	Grekiska, klassisk 	-1453
 gre	Nygrekiska 	1453-
-grn	Guarani	
+grn	Guaraní	
 gsw	Schweizertyska	
 guj	Gujarati	
-gwi	Gwichin	
+gwi	Gwich'in	
 hai	Haida	
-hat	Haitiska 	Haitisk kreol
-hau	Haussa	
+hat	Haitisk kreol 	Även haitisk kreol
+hau	Hausa	
 haw	Hawaiiska	
 heb	Hebreiska	
 her	Herero	
 hil	Hiligaynon	
-him	Pahari 	Himachali
+him	Pahari 	Även himachali
 hin	Hindi	
-hit	Hettitiskt sprÃ¥k	
-hmn	HmongsprÃ¥k	
-hmo	Hirimotu	
+hit	Hettitiska språk	
+hmn	Hmongspråk	
+hmo	Hiri Motu	
 hrv	Kroatiska	
-hsb	HÃ¶gsorbiska	
+hsb	Högsorbiska	
 hun	Ungerska	
 hup	Hupa	
 iba	Iban	
-ibo	Ibo 	Igbo
+ibo	Ibo 	Även igbo
 ice	IslÃ¤ndska	
 ido	Ido	
 iii	Sichuan Yi	
 ijo	Ijo	
 iku	Inuktitut	
-ile	Interlingue	
-ilo	Iloko	
-ina	Interlingua 	International Auxiliary Language Association
-inc	Indo-ariskt sprÃ¥k	
+ile	Interlingue	Även occidental
+ilo	Ilokano	Även ilocano
+ina	Interlingua 	"International Auxiliary Language Association; konstgjort språk"
+inc	Indo-ariska språk (övriga)	
 ind	Indonesiska	
-ine	Indoeuropeiskt sprÃ¥k	
-inh	Ingusj	
-ipk	Inupiaq	
-ira	Iranskt sprÃ¥k	
-iro	Irokesiskt sprÃ¥k	
+ine	Indoeuropeiska språk (övriga)	
+inh	Ingusjiska	
+ipk	Iñupiaq	Även inupiaq, inupiak, inupiatun
+ira	Iranska språk (övriga)	
+iro	Irokesiska språk (övriga)	
 ita	Italienska	
 jav	Javanska	
-jbo	Lojban 	artificiellt sprÃ¥k
+jbo	Lojban 	Konstgjort språk
 jpn	Japanska	
 jpr	Judepersiska	
 jrb	Judearabiska	
 kaa	Karakalpakiska	
 kab	Kabyliska	
 kac	Kachin	
-kal	GrÃ¶nlÃ¤ndska 	Kalaallit oqaasi
+kal	Grönländska 	Även kalaallisut
 kam	Kamba	
-kan	Kanaresiska 	Kannada
-kar	Karen	
+kan	Kannada 	Även kanaresiska
+kar	Karenspråk	
 kas	Kashmiri	
 kau	Kanuri	
-kaw	Fornjavanska 	Kawi
-kaz	Kazakiska	
-kbd	Kabardinska 	Ã–sttjerkessiska
+kaw	Fornjavanska 	Även kawi
+kaz	Kazakiska	Även kazach
+kbd	Kabardinska 	Även östtjerkessiska, östcircassiska
 kha	Khasi	
-khi	KhoisansprÃ¥k	
-khm	Kambodjanska 	Khmer
-kho	Sakiska 	Khotanesiska
-kik	Kikuyu	
-kin	Rwanda	
-kir	Kirgisiska	
-kmb	Mbundu 	Kimbundu
+khi	Khoisanspråk	
+khm	Kambodjanska 	Även khmer
+kho	Sakiska 	Även khotanesiska, khotansakiska
+kik	Kikuyu	Även gikuyu
+kin	Rwanda	Även kinyarwanda
+kir	Kirgiziska	
+kmb	Mbundu 	Även kimbundu
 kok	Konkani	
 kom	Komi	
-kon	Kikongo	
+kon	Kikongo	Även koongo, kongo
 kor	Koreanska	
 kos	Kusaie	
 kpe	Kpelle	
-krc	Karachay-Balkar	
+krc	Karatjajbalkariska	
 krl	Karelska	
-kro	Kru	
-kru	Kurukh	
-kua	Ovambo 	Kuanyama
+kro	Kruspråk (övriga)	
+kru	indisk kurux	
+kua	Oshiwambo 	Även oshivambo, ndongaspråk
 kum	Kumyk	
 kur	Kurdiska	
 kut	Kutenai	
-lad	Spanjolska 	Ladino
+lad	Ladion 	Även judisk spanska
 lah	Lahnda	
 lam	Lamba 	Zambia och Kongo
 lao	Laotiska	
 lat	Latin	
 lav	Lettiska	
 lez	Lezginska	
-lim	Limburgisch	
+lim	Limburgiska	
 lin	Lingala	
 lit	Litauiska	
-lol	Lolo 	Mongo
+lol	Mongo 	Även lolo
 loz	Lozi	
-ltz	Luxemburgiska 	Letzebuergesch
+ltz	Luxemburgiska 	Även lëtzebuergesch
 lua	Luba-Lulua	
 lub	Luba-Katanga	
-lug	Luganda	
-lui	Luiseno	
+lug	Luganda	Även ganda
+lui	Luiseño	
 lun	Lunda	
 luo	Luo 	Kenya och Tanzania
 lus	Mizo 	Lushai
 mac	Makedonska	
-mad	Madurese	
+mad	Maduresiska	Även madura
 mag	Magahi	
 mah	Marshallesiska	
 mai	Maithili	
@@ -276,105 +276,105 @@ mak	Makasar
 mal	Malayalam	
 man	Mande	
 mao	Maori	
-map	Austronesiskt sprÃ¥k	
+map	Austronesiska språk	
 mar	Marathi	
-mas	Massajiska	
+mas	Maa	Även massaj
 may	Malajiska	
-mdf	Moksha	
-mdr	Mandar	
+mdf	Moksja	
+mdr	Mandarin	
 men	Mende	
-mga	Medeliriska 	ca 1100-1550
-mic	Mic-mac	
+mga	Medeliriska 	Ca 1100-1550
+mic	Mi'kmaq	Även micmac
 min	Minangkabau	
-mis	Ã–vrig sprÃ¥k	
-mkh	Mon-khmersprÃ¥k	
-mlg	Malagasy	
+mis	Övriga språk	
+mkh	Mon-khmerspråk (övriga)	
+mlg	Malagassiska	
 mlt	Maltesiska	
-mnc	Manchu	
-mni	Manipuri	
-mno	ManobosprÃ¥k	
+mnc	Manchuiska	Även manchuriska
+mni	Meitei	Även manipuri, meiteilon
+mno	Manobospråk	
 moh	Mohawk	
-mol	Moldaviska 	obsolet, anvÃ¤nd rum (rumÃ¤nska)
-mon	Mongoliskt sprÃ¥k	
-mos	Mossi	
-mul	FlersprÃ¥kigt verk	
-mun	Munda	
-mus	Muskogee	
-mwl	Mirandese	
+mol	Moldaviska 	"Obsolet, använd ""rum"" (rumänska)"
+mon	Mongoliska språk	
+mos	Mòoré	Även mossi
+mul	Flera språk	
+mun	Mundaspråk (övriga)	
+mus	Muskogeanska	
+mwl	Mirandesiska	
 mwr	Marwari	
-myn	Maya-sprÃ¥k	
-myv	Erzya	
-nah	Nahuatl	
-nai	Nordamerikanskt indiansprÃ¥k	
-nap	Neapolitansk italienska	
+myn	Mayaspråk	Även mayanska språk
+myv	Erzya	Även erzia
+nah	Nahuatl	Även aztekiska
+nai	Nordamerikanska indianspråk (övriga)	
+nap	Neapolitanska	Även napolitanska
 nau	Nauruanska	
-nav	Navaho	
-nbl	Ndebele 	Sydafrika
-nde	Ndebele 	Zimbabwe
+nav	Navajo	Även navaho
+nbl	Sydndebele 	Sydafrika
+nde	Nordndebele 	Zimbabwe
 ndo	Ndonga	
 nds	LÃ¥gtyska	
 nep	Nepali	
 new	Newari	
 nia	Nias	
-nic	Niger-/KongosprÃ¥k	
+nic	Niger-/Kongospråk (övriga)	
 niu	Niuean	
-nno	Nynorsk	
-nob	BokmÃ¥l 	Norska (nor) fÃ¶redras
+nno	Nynorska	"jfr ""nor"" (norska)"
+nob	Bokmål 	"""nor"" (norska) föredras"
 nog	Nogaiska	
-non	FornislÃ¤ndska	
+non	Fornisländska	
 nor	Norska	
 nqo	N'Ko	
 nso	Nordsotho	
-nub	Nubiskt sprÃ¥k	
+nub	Nubiska språk	
 nwc	Fornnewari	
-nya	Nyanja	
+nya	Chichewa	Även nyanja
 nym	Nyamwezi	
 nyn	Nyankole	
 nyo	Nyoro	
 nzi	Nzima	
-oci	Langue d'oc 	1500-
-oji	Odjibwa 	Chippewa
+oci	Occitanska 	"1500-; även langue d'oc"
+oji	Ojibwa 	Även chippewa
 ori	Oriya	
 orm	Oromo	
 osa	Osage	
 oss	Ossetiska	
-ota	Ottomanska	
-oto	OtomisprÃ¥k	
-paa	Papuanskt sprÃ¥k	
+ota	Osmanska	Även ottomanska
+oto	Otomispråk	
+paa	Papuanska språk (övriga)	
 pag	Pangasinan	
-pal	Pahlavi 	Medelpersiska
+pal	Pahlavi 	Även medelpersiska
 pam	Pampanga	
-pan	Panjabi	
+pan	Punjabi	Även panjabi
 pap	Papiamento	
-pau	Palauan	
-peo	Fornpersiska 	ca 600-400 f.Kr.
+pau	Palauiska	
+peo	Fornpersiska 	Ca 600-400 f.Kr.
 per	Persiska	
-phi	Filippinskt sprÃ¥k	
-phn	Feniciska	
+phi	Filippinska språk (övriga)	
+phn	Feniciska	Även puniska
 pli	Pali	
 pol	Polska	
-pon	Ponape	
+pon	Pohnpei	Även ponape
 por	Portugisiska	
-pra	PrakritsprÃ¥k	
-pro	Provensalska 	-1500
+pra	Prakritspråk	
+pro	Provensalska 	Även provençalska
 pus	Pashto	
 que	Quechua	
-rai	Gujuri 	obsolet, anvÃ¤nd raj (rajasthani)
+rai	Gujuri 	"Obsolet; använd ""raj"" (rajasthani)"
 raj	Rajasthani	
-rap	Rapanui	
-rar	Rarotongan	
-roa	Romanskt sprÃ¥k	
-roh	RÃ¤toromanska	
+rap	Rapa nui	Även rapanui
+rar	Rarotongesiska	
+roa	Romanska språk (övriga)	
+roh	Rätoromanska	
 rom	Romani	
-rum	RumÃ¤nska	
-run	Rundi	
-rup	Arumanska	
+rum	Rumänska	
+run	Kirundi	Även rundi
+rup	Arumänska	Även aromuniska, aromaniska
 rus	Ryska	
 sad	Sandawe	
 sag	Sango	
 sah	Jakutiska	
-sai	Sydamerikanskt indiansprÃ¥k	
-sal	Saliskt sprÃ¥k	
+sai	Sydamerikanskt indianspråk	
+sal	Saliskt språk	
 sam	Samaritanska	
 san	Sanskrit	
 sas	Sasak	
@@ -382,20 +382,20 @@ sat	Santali
 scn	Siciliansk italienska	
 sco	Skotska	
 sel	Selkup	
-sem	Semitiskt sprÃ¥k	
+sem	Semitiskt språk	
 sga	Forniriska 	-1100
-sgn	TeckensprÃ¥k	
+sgn	Teckenspråk	
 shn	Shan	
 sid	Sidami	
 sin	Singalesiska	
-sio	Sioux-sprÃ¥k	
-sit	Sino-tibetanskt sprÃ¥k	
-sla	Slaviskt sprÃ¥k	
+sio	Sioux-språk	
+sit	Sino-tibetanskt språk	
+sla	Slaviskt språk	
 slo	Slovakiska	
 slv	Slovenska	
 sma	Sydsamiska	
 sme	Nordsamiska	
-smi	Samiskt sprÃ¥k 	anvÃ¤nds restriktivt, se Enare-, Lule-, Nord-, Skolt- o. Sydsamiska
+smi	Samiskt språk 	"Används restriktivt; se ""smn"" (enaresamiska), ""smj"" (lulesamiska), ""sme"" (nordsamiska), ""sms"" (skoltsamiska) och ""sma"" (sydsamiska)"
 smj	Lulesamiska	
 smn	Enaresamiska	
 smo	Samoanska	
@@ -404,7 +404,7 @@ sna	Shona
 snd	Sindhi	
 snk	Soninke	
 sog	Sogdiska	
-som	Somali	
+som	Somaliska	
 son	Songhai	
 sot	Sotho	
 spa	Spanska	
@@ -412,7 +412,7 @@ srd	Sardiska
 srn	Sranan	
 srp	Serbiska	
 srr	Serer	
-ssa	Nilo-sahariskt sprÃ¥k	
+ssa	Nilo-sahariska språk (övriga)	
 ssw	Swazi	
 suk	Sukuma	
 sun	Sundanesiska	
@@ -420,10 +420,10 @@ sus	Susu
 sux	Sumeriska	
 swa	Swahili	
 swe	Svenska	
-syc	Syriska 	klassisk
-syr	Syriska 	modern
+syc	Syriska, klassisk	
+syr	Syriska, modern	
 tah	Tahitiska	
-tai	ThaisprÃ¥k	
+tai	Thaispråk	
 tam	Tamil	
 tat	Tatariska	
 tel	Telugo	
@@ -432,26 +432,26 @@ ter	Tereno
 tet	Tetum	
 tgk	Tadzjikiska	
 tgl	Tagalog	
-tha	ThailÃ¤ndska	
+tha	Thailändska	
 tib	Tibetanska	
-tig	TigrÃƒÂˆ	
+tig	Tigré	
 tir	Tigrinja	
 tiv	Tivi	
 tkl	Tokelauiska	
-tlh	Klingon 	artificiellt sprÃ¥k
+tlh	Klingon 	Konstgjort språk
 tli	Tlingit	
 tmh	Tamashek	
 tog	Tonga 	Nyasa
-ton	Tonga 	TongaÃ¶arna
+ton	Tonga 	Tongaöarna
 tpi	Tok Pisin	
 tsi	Tsimshian	
 tsn	Tswana	
 tso	Tsonga	
 tuk	Turkmeniska	
 tum	Tumbuka	
-tup	TupÃ­sprÃ¥k	
+tup	Tupíspråk	
 tur	Turkiska	
-tut	Altaiskt sprÃ¥k	
+tut	Altaiskt språk	
 tvl	Tuvaluan	
 twi	Twi	
 tyv	Tuvinska	
@@ -460,20 +460,20 @@ uga	Ugaritiska
 uig	Uiguriska	
 ukr	Ukrainska	
 umb	Umbundu	
-und	Odefinierat sprÃ¥k	
+und	Odefinierat språk	
 urd	Urdu	
 uzb	Uzbekiska	
 vai	Vai	
 ven	Venda	
 vie	Vietnamesiska	
-vol	VolapÃ‚Â¸k	
+vol	Volapük	
 vot	Votiska	
-wak	Wakusjiskt sprÃ¥k	
+wak	Wakusjiskt språk	
 wal	Walamo 	Wolayta
 war	Waray	
 was	Washo	
 wel	Kymriska	
-wen	Sorbiskt (vendiskt) sprÃ¥k	
+wen	Sorbiskt (vendiskt) språk	
 wln	Vallonska	
 wol	Wolof	
 xal	Kalmuckiska	
@@ -482,14 +482,14 @@ yao	Yao 	Afrika
 yap	Yap	
 yid	Jiddisch	
 yor	Yoruba	
-ypk	EskimÃ¥sprÃ¥k 	Yupik-sprÃ¥k
+ypk	Eskimåspråk 	Yupik-språk
 zap	Zapotek	
 zbl	Blissymboler	
 zen	Zenaga	
 zha	Zhuang	
-znd	ZandesprÃ¥k	
+znd	Zandespråk	
 zul	Zulu	
 zun	Zuni	
-zxx	Icke-sprÃ¥kligt medium	
+zxx	Icke-språkligt medium	
 zza	Zaza	
-|||	Inget fÃ¶rsÃ¶k att koda	
+|||	Inget försök att koda	
