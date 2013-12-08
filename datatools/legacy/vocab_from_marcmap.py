@@ -103,7 +103,7 @@ VANN = Namespace("http://purl.org/vocab/vann/")
 LF = Namespace("http://purl.org/net/927/libframe#")
 LTAX = Namespace("http://purl.org/net/927/libframe/taxonomy#")
 
-DOMAIN = SCHEMA.domain
+DOMAIN = SCHEMA.domainIncludes
 
 
 graph = Graph()
