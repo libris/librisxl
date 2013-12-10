@@ -13,6 +13,7 @@
   "byNotation": {
     "MeSH": {
       "@type": "ConceptScheme",
+      "alternative": "MeSH",
       "homepage": "http://www.nlm.nih.gov/mesh/meshhome.html",
       "notation": "MeSH",
       "seeAlso": "http://neurocommons.org/page/Bundles/mesh/mesh-skos",
@@ -20,7 +21,8 @@
     },
     "agrovoc": {
       "@type": "ConceptScheme",
-      "notation": "agrovoc"
+      "notation": "agrovoc",
+      "title_en": "AgroVoc"
     },
     "albt//swe": {
       "@id": "/def/schemes/albt",
@@ -31,7 +33,8 @@
     "barn": {
       "@id": "/def/schemes/barn",
       "@type": "ConceptScheme",
-      "notation": "barn"
+      "notation": "barn",
+      "title": "Barnämnesord"
     },
     "bnb": {
       "@type": "ConceptScheme",
@@ -63,7 +66,7 @@
       "@id": "/def/schemes/kao",
       "@type": "ConceptScheme",
       "hasVersion": {
-        "@id": "_:ub1bL50C19"
+        "@id": "_:ub1bL53C19"
       },
       "homepage": "http://www.ub.gu.se/kvinn/kvinnsam/listor/",
       "language": "sv",
@@ -83,7 +86,9 @@
     "lcsh": {
       "@id": "http://id.loc.gov/authorities/subjects",
       "@type": "ConceptScheme",
-      "notation": "lcsh"
+      "alternative": "LCSH",
+      "notation": "lcsh",
+      "title_en": "Library of Congress Subject Headings"
     },
     "mipfesd": {
       "@type": "ConceptScheme",
@@ -99,6 +104,7 @@
     "prvt": {
       "@id": "/def/schemes/prvt",
       "@type": "ConceptScheme",
+      "alternative": "PRVT",
       "notation": "prvt",
       "title": "Patent- och registreringsverkets tesaurus"
     },
@@ -114,12 +120,14 @@
     "sao": {
       "@id": "/def/schemes/sao",
       "@type": "ConceptScheme",
-      "notation": "sao"
+      "notation": "sao",
+      "title": "Svenska ämnesord"
     },
     "saogf": {
       "@id": "/def/schemes/saogf",
       "@type": "ConceptScheme",
-      "notation": "saogf"
+      "notation": "saogf",
+      "title": "SAO - Genre och form"
     },
     "sbiao": {
       "@id": "/def/schemes/sbiao",
@@ -131,6 +139,7 @@
     "sfit": {
       "@id": "/def/schemes/sfit",
       "@type": "ConceptScheme",
+      "alternative": "SFIT",
       "notation": "sfit",
       "title": "Svenska filminstitutets tesaurus"
     },
