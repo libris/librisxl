@@ -30,46 +30,67 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
         log.trace("Running IndexLinkFinder, trying to find links for ${doc.identifier} ...")
         def links = []
         mapper = new ObjectMapper()
+
         if (doc && (doc.contentType == "application/json" || doc.contentType == "application/ld+json")) {
+
             log.trace("Doc is ${doc.contentType}. Collecting ids ... dataAsMap is of type ${doc.dataAsMap.getClass()}")
             links = collectIds(doc.dataAsMap, "", doc.identifier)
         }
+
         return links as Set
+    }
+
+    def performSearch(prop, propValue) {
+        def labelKey, searchStr, esQuery, searchTerm
+
+        log.trace("Property entity type: $propValue")
+
+        labelKey = searchLabel.get(propValue)
+
+        if (labelKey && prop.containsKey(labelKey)) {
+
+            searchTerm = URLEncoder.encode(prop.get(labelKey), "UTF-8")
+            searchStr = "$labelKey:$searchTerm"
+            esQuery = new ElasticQuery(searchStr)
+            esQuery.indexType = propValue.toLowerCase() //or search auth with @type?
+
+            log.trace("Performing search on: $searchStr ... using indextype ${esQuery.indexType}")
+            return whelk.search(esQuery)
+        }
     }
 
     def collectIds(prop, type, selfId) {
         def ids = []
-        def labelKey, searchStr, esQuery, result, resultJson, searchTerm
+        def result, resultJson
 
         if (prop instanceof Map) {
+
             prop.each { propKey, propValue ->
-                if (propValue instanceof Map && propValue.containsKey("@type") && !propValue.containsKey("@value")) {
-                    log.trace("Property entity type: ${propValue."@type"}")
-                    //Try to to find matching authority entities using es-search
-                    labelKey = searchLabel.get(propValue["@type"])
-                    if (labelKey && propValue.containsKey(labelKey)) {
-                        log.trace("Examining ...")
-                        searchTerm = URLEncoder.encode(propValue.get(labelKey), "UTF-8")
-                        searchStr = "$labelKey:$searchTerm"
-                        esQuery = new ElasticQuery(searchStr)
-                        esQuery.indexType = propValue["@type"].toLowerCase() //or search auth with @type?
 
-                        log.trace("Performing search on: $searchStr ...")
-                        result = whelk.search(esQuery)
+                if (propKey == "@type" && !prop.containsKey("@value")) {
+                    result = performSearch(prop, propValue)
+                } else if (propKey == "@id" && (type == "broader" || type == "narrower") && !prop.containsKey("@value")) {
+                    result = performSearch(prop, "Concept")
+                }
 
-                        log.trace("Number of hits: ${result.numberOfHits}")
-                        resultJson = mapper.readValue(result.toJson(), Map)
-
-                        if (resultJson.hits > 0) {
-                            for (r in resultJson.list) {
-                                if (r["identifier"] != selfId && r["identifier"] != "/resource" + selfId)  {
-                                    ids << new Link(new URI(r["identifier"]), propKey)
-                                    log.debug("Added link of type: $propKey to ${r["identifier"]} to doc with id $selfId")
-                                }
+                if (result) {
+                    log.trace("Number of hits: ${result.numberOfHits}")
+                    resultJson = mapper.readValue(result.toJson(), Map)
+                    if (resultJson.hits > 0) {
+                        for (r in resultJson.list) {
+                            if (r["identifier"] != selfId && r["identifier"] != "/resource" + selfId)  {
+                                ids << new Link(new URI(r["identifier"]), type)
+                                log.debug("Added link of type: $type to ${r["identifier"]} to doc with id $selfId")
                             }
-                            log.trace("Result data: " + mapper.writeValueAsString(resultJson))
                         }
+                        log.trace("Result data: " + mapper.writeValueAsString(resultJson))
                     }
+
+                    result = null
+                }
+
+                if (propValue instanceof Map) {
+                    ids.addAll(collectIds(propValue, propKey, selfId))
                 }
 
                 if (propValue instanceof List) {
@@ -85,4 +106,3 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
         return ids
     }
 }
-
