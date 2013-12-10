@@ -25,12 +25,15 @@
 #}
 
 <sao> a skos:ConceptScheme;
+    dc:title "Svenska ämnesord"@sv;
     skos:notation "sao" .
 
 <saogf> a skos:ConceptScheme;
+    dc:title "SAO - Genre och form"@sv;
     skos:notation "saogf" .
 
 <barn> a skos:ConceptScheme;
+    dc:title "Barnämnesord"@sv;
     skos:notation "barn" .
 
 <albt> a skos:ConceptScheme;
@@ -56,7 +59,8 @@
 
 <prvt> a skos:ConceptScheme;
     skos:notation "prvt";
-    dc:title "Patent- och registreringsverkets tesaurus"@sv .
+    dc:title "Patent- och registreringsverkets tesaurus"@sv;
+    dc:alternative "PRVT" .
 
 <sbiao> a skos:ConceptScheme;
     skos:notation "sbiao";
@@ -65,7 +69,8 @@
 
 <sfit> a skos:ConceptScheme;
     skos:notation "sfit";
-    dc:title "Svenska filminstitutets tesaurus"@sv .
+    dc:title "Svenska filminstitutets tesaurus"@sv;
+    dc:alternative "SFIT" .
 
 <sgp> a skos:ConceptScheme;
     skos:notation "sgp";
@@ -88,6 +93,7 @@
 # External Schemes
 
 _:agrovoc a skos:ConceptScheme;
+    dc:title "AgroVoc"@en;
     skos:notation "agrovoc" .
 
 _:bnb a skos:ConceptScheme;
@@ -114,6 +120,7 @@ _:msc a skos:ConceptScheme;
 _:mesh a skos:ConceptScheme;
     skos:notation "MeSH";
     dc:title "Medical Subject Headings"@en;
+    dc:alternative "MeSH";
     rdfs:seeAlso <http://neurocommons.org/page/Bundles/mesh/mesh-skos>;
     foaf:homepage <http://www.nlm.nih.gov/mesh/meshhome.html> .
 
@@ -129,7 +136,10 @@ _:sipri a skos:ConceptScheme;
 
 # LoC
 
-<http://id.loc.gov/authorities/subjects> a skos:ConceptScheme; skos:notation "lcsh" .
+<http://id.loc.gov/authorities/subjects> a skos:ConceptScheme;
+    dc:title "Library of Congress Subject Headings"@en;
+    dc:alternative "LCSH";
+    skos:notation "lcsh" .
 <http://id.loc.gov/authorities/childrensSubjects> a skos:ConceptScheme .
 <http://id.loc.gov/authorities/genreForms> a skos:ConceptScheme .
 <http://id.loc.gov/vocabulary/graphicMaterials> a skos:ConceptScheme .
