@@ -763,7 +763,7 @@
       "domainEntity": "Record",
       "addLink": "source", "rangeEntity": "Instance",
       "$a": {"property": "label"},
-      "$b": {"property": "comment"},
+      "$b": {"property": "citation"},
       "$u": {"property": "url"}
     },
     "675" : {
