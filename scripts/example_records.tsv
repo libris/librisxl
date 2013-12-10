@@ -50,6 +50,8 @@ auth/307262	Codex Gigas
 auth/173676	Stockholm
 auth/222136	Ödessymfonin
 auth/301182	Historia
+auth/283867	Reseaffischer
+auth/283168	Affischer, har about.narrower.prefLabel:Reseaffischer
 
 bib/10796401	subject.broader:historia
 bib/11279947
@@ -69,7 +71,7 @@ bib/13543149
 bib/13584984
 bib/13884869
 bib/13973072
-bib/14006223
+bib/14006223	har subject.broader.prefLabel:Aktiemarknad
 bib/3222798
 bib/3678656
 bib/4582889
@@ -84,7 +86,7 @@ bib/8261338
 bib/827126	Mumintrollet (länkar till Tove Jansson auth/19153 som attributedTo)
 bib/8558889
 bib/12739812	person och institution
-bib/13457927	Kjellström, Rolf: Nybyggarliv i Vilhelmina med person + 2 institutioner
+bib/13457927	Kjellström, Rolf: Nybyggarliv i Vilhelmina med person + 2 institutioner. Har subject.broader.prefLabel:historia
 
 hold/15726821
 hold/15958795
