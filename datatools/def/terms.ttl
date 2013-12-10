@@ -232,6 +232,9 @@
 :source a owl:ObjectProperty;
     owl:equivalentProperty dc:source .
 
+:citation a owl:ObjectProperty;
+    owl:equivalentProperty sdo:citation .
+
 :subject a owl:ObjectProperty;
     owl:equivalentProperty dc:subject .
 
