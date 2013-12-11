@@ -355,6 +355,8 @@
     owl:equivalentProperty skos:narrower .
 :notation a owl:DatatypeProperty;
     owl:equivalentProperty skos:notation .
+:note a owl:DatatypeProperty;
+    owl:equivalentProperty skos:note .
 :prefLabel a owl:DatatypeProperty;
     owl:equivalentProperty skos:prefLabel .
 :related a owl:ObjectProperty;
