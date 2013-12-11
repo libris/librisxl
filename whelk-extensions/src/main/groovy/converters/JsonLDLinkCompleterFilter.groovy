@@ -19,7 +19,8 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         def relatedDocs = [:]
         for (link in doc.getLinks()) {
             log.trace("Doc has ${link.type}-link to ${link.identifier}")
-            def linkedDoc = whelk.get(new URI(link.identifier))
+            def idStr = link.identifier.replace("/resource", "")
+            def linkedDoc = whelk.get(new URI(idStr))
             if (linkedDoc) { //&& link.type == "auth" ??
                 //type=authority from importer, type=<relation> from linkfinders
                 relatedDocs[link.identifier] = linkedDoc
@@ -33,7 +34,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
     Document doFilter(Document doc) {
         log.trace("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
         def changedData = false
-        def entity, json, work, deepMap
+        def json, work
         def relatedDocs = loadRelatedDocs(doc)
 
         if (relatedDocs.size() > 0) {
@@ -90,7 +91,6 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                     updateAction = "update" + obj["@type"] + "Id"
                     log.trace("$updateAction")
                     updated = "$updateAction"(obj, relatedItem)
-                    log.trace("$updated")
                 } catch (Exception e) {
                     log.trace("Could not update object of type ${obj["@type"]}")
                     updated = false
@@ -101,30 +101,55 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
     }
 
     boolean updatePersonId(item, relatedItem) {
-        if (item["controlledLabel"] == relatedItem["controlledLabel"]) {
+        if (item["controlledLabel"] == relatedItem["controlledLabel"]) {  //ignore case in comparison?
             item["@id"] = relatedItem["@id"]
             return true
         }
         return false
+    }
+
+    def updateSameAsAndId(item, relatedItem) {
+        item["sameAs"] = ["@id": item["@id"]]
+        item["@id"] = relatedItem["@id"]
+        log.trace("${item}")
     }
 
     boolean updateConceptId(item, relatedItem) {
+        def changed = false
         def authItemSameAs = relatedItem.get("sameAs")?.get("@id")
         if (item["@id"] && item["@id"] == authItemSameAs) {
-            item["sameAs"] = ["@id": item["@id"]]
-            item["@id"] = relatedItem["@id"]
+            updateSameAsAndId(item, relatedItem)
             return true
         }
         def same = item.get("sameAs")?.get("@id") == authItemSameAs
-        if (same || (item["prefLabel"] && item["prefLabel"] == relatedItem["prefLabel"])) {
+        if (same || (item["prefLabel"] && item["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"]))) {
             item["@id"] = relatedItem["@id"]
             return true
         }
-        return false
+        def broader = item.get("broader")
+        def narrower = item.get("narrower")
+        if (broader && broader instanceof List) {
+            broader.each { bConcept ->
+                if (bConcept.get("prefLabel") && bConcept["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"])) {
+                    updateSameAsAndId(bConcept, relatedItem)
+                    changed = true
+                }
+            }
+        }
+        if (narrower && narrower instanceof List) {
+            narrower.each { nConcept ->
+                if (nConcept.get("prefLabel") && nConcept["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"])) {
+                    updateSameAsAndId(nConcept, relatedItem)
+                    changed = true
+                }
+            }
+        }
+
+        return changed
     }
 
     boolean updateWorkId(item, relatedItem) {
-        if (item["uniformTitle"] == relatedItem["uniformTitle"]) {
+        if (item["uniformTitle"] == relatedItem["uniformTitle"]) { //ignore case in comparison?
             def attributedTo = item.attributedTo
             if (attributedTo instanceof List)
                 attributedTo = attributedTo[0]
@@ -135,7 +160,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                     (!attributedTo && !authObject) ||
                     ((attributedTo && authObject) &&
                      (attributedTo["@type"] == "Person" && authObject["@type"] == "Person" &&
-                      attributedTo["controlledLabel"] == authObject["controlledLabel"]))
+                      attributedTo["controlledLabel"] == authObject["controlledLabel"]))  //ignore case in comparison?
             ) {
                 item["@id"] = relatedItem["@id"]
                 return true
