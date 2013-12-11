@@ -20,8 +20,8 @@
       "@id": "http://libris.kb.se/def/terms#Collection",
       "@type": "Class",
       "equivalentClass": [
-        "http://purl.org/dc/dcmitype/Collection",
-        "http://bibframe.org/vocab/Collection"
+        "http://bibframe.org/vocab/Collection",
+        "http://purl.org/dc/dcmitype/Collection"
       ],
       "label": "Samling"
     },
@@ -82,8 +82,8 @@
       "@id": "http://libris.kb.se/def/terms#MovingImage",
       "@type": "Class",
       "equivalentClass": [
-        "http://purl.org/dc/dcmitype/MovingImage",
-        "http://bibframe.org/vocab/MovingImage"
+        "http://bibframe.org/vocab/MovingImage",
+        "http://purl.org/dc/dcmitype/MovingImage"
       ],
       "label": "Rörlig bild",
       "subClassOf": "http://purl.org/dc/dcmitype/Image"
@@ -97,8 +97,8 @@
       "@id": "http://libris.kb.se/def/terms#Person",
       "@type": "Class",
       "equivalentClass": [
-        "http://xmlns.com/foaf/0.1/Person",
-        "http://schema.org/Person"
+        "http://schema.org/Person",
+        "http://xmlns.com/foaf/0.1/Person"
       ]
     },
     "Persona": {
@@ -140,8 +140,8 @@
       "@id": "http://libris.kb.se/def/terms#Sound",
       "@type": "Class",
       "equivalentClass": [
-        "http://bibframe.org/vocab/Audio",
-        "http://purl.org/dc/dcmitype/Sound"
+        "http://purl.org/dc/dcmitype/Sound",
+        "http://bibframe.org/vocab/Audio"
       ],
       "label": "Ljud"
     },
@@ -159,9 +159,9 @@
       "@id": "http://libris.kb.se/def/terms#Text",
       "@type": "Class",
       "equivalentClass": [
+        "http://purl.org/dc/dcmitype/Text",
         "http://purl.org/dc/terms/BibliographicResource",
-        "http://bibframe.org/vocab/LanguageMaterial",
-        "http://purl.org/dc/dcmitype/Text"
+        "http://bibframe.org/vocab/LanguageMaterial"
       ],
       "label": "Text",
       "subClassOf": "http://libris.kb.se/def/terms#UniformWork"
@@ -244,14 +244,19 @@
       "range": "http://libris.kb.se/def/terms#Holding",
       "subPropertyOf": [
         "http://libris.kb.se/def/terms#genre",
-        "http://bibframe.org/vocab/callno",
-        "http://schema.org/sku"
+        "http://schema.org/sku",
+        "http://bibframe.org/vocab/callno"
       ]
     },
     "catForm": {
       "@id": "http://libris.kb.se/def/terms#catForm",
       "@type": "ObjectProperty",
       "equivalentProperty": "http://libris.kb.se/ns/extframe/catForm"
+    },
+    "citation": {
+      "@id": "http://libris.kb.se/def/terms#citation",
+      "@type": "ObjectProperty",
+      "equivalentProperty": "http://schema.org/citation"
     },
     "classificationPart": {
       "@id": "http://libris.kb.se/def/terms#classificationPart",
@@ -338,8 +343,8 @@
       "@id": "http://libris.kb.se/def/terms#familyName",
       "@type": "ObjectProperty",
       "equivalentProperty": [
-        "http://xmlns.com/foaf/0.1/familyName",
-        "http://schema.org/familyName"
+        "http://schema.org/familyName",
+        "http://xmlns.com/foaf/0.1/familyName"
       ]
     },
     "format": {
@@ -391,8 +396,8 @@
       "@id": "http://libris.kb.se/def/terms#givenName",
       "@type": "ObjectProperty",
       "equivalentProperty": [
-        "http://schema.org/givenName",
-        "http://xmlns.com/foaf/0.1/givenName"
+        "http://xmlns.com/foaf/0.1/givenName",
+        "http://schema.org/givenName"
       ]
     },
     "hasFormat": {
@@ -426,13 +431,13 @@
       "@type": "Ontology",
       "comment_en": "This vocabulary serves as a central mapping to public, well-known properties and classes.",
       "imports": [
-        "http://schema.org/",
-        "http://purl.org/dc/terms/",
         "http://bibframe.org/vocab/",
+        "http://www.w3.org/2004/02/skos/core#",
         "http://purl.org/ontology/bibo/",
-        "http://rdvocab.info/Elements/",
+        "http://schema.org/",
         "http://xmlns.com/foaf/0.1/",
-        "http://www.w3.org/2004/02/skos/core#"
+        "http://rdvocab.info/Elements/",
+        "http://purl.org/dc/terms/"
       ]
     },
     "identifiedBy": {
@@ -469,8 +474,8 @@
       "@id": "http://libris.kb.se/def/terms#jobTitle",
       "@type": "ObjectProperty",
       "equivalentProperty": [
-        "http://schema.org/jobTitle",
-        "http://xmlns.com/foaf/0.1/title"
+        "http://xmlns.com/foaf/0.1/title",
+        "http://schema.org/jobTitle"
       ]
     },
     "keyword": {
