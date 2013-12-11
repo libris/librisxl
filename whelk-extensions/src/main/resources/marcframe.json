@@ -416,7 +416,7 @@
       "$l": {"property": "callno"}
     },
 
-    "500": {"$a": {"domainEntity": "Instance", "addProperty": "note"}},
+    "500": {"$a": {"domainEntity": "Instance", "addProperty": "comment"}},
     "504": {"$a": {"domainEntity": "Instance", "addProperty": "supplementaryContentNote"}},
     "505": {"$a": {"domainEntity": "Instance", "addProperty": "listOfContents", "TODO": "$t, $r"}},
     "508": {"$a": {"domainEntity": "Instance", "addProperty": "creditsNote"}},
@@ -771,16 +771,10 @@
     },
     "678" : {"$a": {"addProperty": "note"}},
     "680" : {
-      "match-domain": {
-        "Concept": {"$i": {"addProperty": "scopeNote"}}
-      },
-      "$i": {"addProperty": "note"}
+      "$i": {"addProperty": "scopeNote"}
     },
     "688" : {
-      "match-domain": {
-        "Concept": {"$a": {"addProperty": "historyNote"}}
-      },
-      "$a": {"addProperty": "note"}
+      "$a": {"addProperty": "historyNote"}
     },
     "750" : {
       "inherit": "bib:650",
