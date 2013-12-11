@@ -40,7 +40,9 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         if (relatedDocs.size() > 0) {
             json = mapper.readValue(doc.dataAsString, Map)
             work = json.about?.instanceOf ?: json.about
-
+            if (json.about?.get("originalCatalogingAgency")) {
+                work["originalCatalogingAgency"] = json.about["originalCatalogingAgency"]
+            }
             work.each { key, value ->
                 changedData = findAndUpdateEntityIds(value, relatedDocs) || changedData
             }
@@ -165,6 +167,20 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                 item["@id"] = relatedItem["@id"]
                 return true
             }
+        }
+        return false
+    }
+
+
+    //TODO: lookup for example NB=Kungl. biblioteket ??
+    boolean updateOrganizationId(item, relatedItem) {
+        if (item["name"] == relatedItem["name"]) {
+            item["@id"] = relatedItem["@id"]
+            return true
+        }
+        if (item["label"] == relatedItem["label"]) {
+            item["@id"] = relatedItem["@id"]
+            return true
         }
         return false
     }
