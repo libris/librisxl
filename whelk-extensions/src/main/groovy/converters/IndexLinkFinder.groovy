@@ -70,7 +70,8 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
                 if (propKey == "@type" && !prop.containsKey("@value")) {
                     result = performSearch(prop, propValue)
                 } else if (propKey == "@id" && (type == "broader" || type == "narrower") && !prop.containsKey("@value")) {
-                    result = performSearch(prop, "Concept")
+                    type = "Concept"
+                    result = performSearch(prop, type)
                 }
 
                 if (result) {
