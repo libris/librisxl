@@ -169,7 +169,7 @@ class OAIPMHImporter {
                     }
                 });
         } catch (Exception ex) {
-            log.error("Exception: $ex")
+            log.error("Exception getting authentication credentials: $ex")
         }
     }
 

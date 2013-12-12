@@ -5,6 +5,8 @@ import se.kb.libris.whelks.basic.BasicFormatConverter
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.Whelk
 
+import static se.kb.libris.conch.Tools.*
+
 import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
 
@@ -86,7 +88,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         boolean updated = false
         def relatedDocMap, relatedItem, updateAction
         relatedDocs.each { docId, doc ->
-            relatedDocMap = doc.dataAsMap
+            relatedDocMap = getDataAsMap(doc)
             relatedItem = relatedDocMap.about ?: relatedDocMap
             if (relatedItem.get("@type") == obj.get("@type")) {
                 try {

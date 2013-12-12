@@ -52,10 +52,6 @@ class Document {
         return new String(this.data)
     }
 
-    Map getDataAsMap() {
-        return mapper.readValue(this.data, Map)
-    }
-
     String toJson() {
         return mapper.writeValueAsString(this)
     }

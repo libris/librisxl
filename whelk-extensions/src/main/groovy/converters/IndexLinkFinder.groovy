@@ -5,6 +5,8 @@ import se.kb.libris.whelks.Whelk
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.Link
 
+import static se.kb.libris.conch.Tools.*
+
 import groovy.util.logging.Slf4j as Log
 
 import org.codehaus.jackson.map.ObjectMapper
@@ -34,7 +36,7 @@ class IndexLinkFinder extends BasicPlugin implements LinkFinder, WhelkAware {
         if (doc && (doc.contentType == "application/json" || doc.contentType == "application/ld+json")) {
 
             log.trace("Doc is ${doc.contentType}. Collecting ids ...")
-            links = collectIds(doc.dataAsMap, "", doc.identifier)
+            links = collectIds(getDataAsMap(doc), "", doc.identifier)
         }
 
         return links as Set

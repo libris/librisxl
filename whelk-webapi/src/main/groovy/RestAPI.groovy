@@ -7,6 +7,7 @@ import org.restlet.data.*
 import org.restlet.resource.*
 
 import se.kb.libris.conch.Tools
+import static se.kb.libris.conch.Tools.*
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.http.*
@@ -401,7 +402,7 @@ class SearchRestlet extends BasicWhelkAPI {
 
             elasticQuery.highlights = indexConfig?.get("queryFields")
             elasticQuery.sorting = indexConfig?.get("sortby")
-            log.debug("Query $elasticQuery.query Fields: ${elasticQuery?.get("fields")} Facets: ${elasticQuery?.get("facets")}")
+            log.debug("Query $elasticQuery.query Fields: ${elasticQuery.fields} Facets: ${elasticQuery.facets}")
 
             try {
 
@@ -532,7 +533,7 @@ class CompleteExpander extends BasicWhelkAPI {
             if (!authDoc) {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND)
             } else {
-                authDataMap = authDoc.getDataAsMap()
+                authDataMap = getDataAsMap(authDoc)
                 idQuery = "\\/resource\\/" + identifier.replace("/", "\\/")
 
                 if (authDataMap.about."@type" == "Person") {
@@ -976,7 +977,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                         log.trace("Marcframeconverter for $id done")
 
                         mapper = new ObjectMapper()
-                        resultList << jsonDoc.dataAsMap
+                        resultList << getDataAsMap(jsonDoc)
                 }
 
             } catch (org.xml.sax.SAXParseException spe) {

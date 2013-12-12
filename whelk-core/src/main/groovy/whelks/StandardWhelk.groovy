@@ -63,10 +63,12 @@ class StandardWhelk implements Whelk {
     @Override
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs) {
+        log.debug("Bulk add ${docs.size()} document")
         List<Document> convertedDocs = []
         for (doc in docs) {
             convertedDocs.add(addToStorage(doc))
         }
+        log.debug("${convertedDocs.size()} docs left to index and stuff ...")
         addToGraphStore(convertedDocs)
         addToIndex(convertedDocs)
     }
