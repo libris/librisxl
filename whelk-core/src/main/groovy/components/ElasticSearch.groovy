@@ -172,7 +172,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 mapper.readValue(it, Map)
             }
         } catch (NullPointerException npe) {
-            log.debug("No explicit mappings found for type.")
+            log.debug("File ${file.getName()} not found.")
         }
         return json
     }
