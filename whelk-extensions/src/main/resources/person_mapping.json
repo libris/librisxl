@@ -1,0 +1,15 @@
+{
+        "date_detection" : false,
+        "_timestamp" : {
+            "enabled" : true,
+            "store" : true
+        },
+        "_source" : {
+            "enabled" : true
+        },
+        "store" : true,
+        "_all" : {
+            "type" : "string",
+            "analyzer" : "completer"
+        }
+}

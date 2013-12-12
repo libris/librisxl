@@ -73,23 +73,23 @@
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger> 
-  -->
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.importers">
       <level value="debug"/>
   </logger>
- <!--<logger name="se.kb.libris.whelks.component.ElasticSearch">-->
-      <!--<level value="debug"/>-->
-  <!--</logger>-->
+ -->
+ <logger name="se.kb.libris.whelks.component.ElasticSearch">
+      <level value="trace"/>
+  </logger>
+  <!--
      <logger name="se.kb.libris.whelks.component.DiskStorage">
           <level value="info"/>
       </logger>
-<!--<logger name="se.kb.libris.whelks.api.ISXNTool">-->
-      <!--<level value="debug"/>-->
-  <!--</logger>-->
-  <!--
+ <logger name="se.kb.libris.whelks.api.ISXNTool">
+      <level value="debug"/>
+  </logger>
 <logger name="se.kb.libris.whelks.api.SearchRestlet">
       <level value="debug"/>
   </logger>

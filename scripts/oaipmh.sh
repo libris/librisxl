@@ -15,7 +15,7 @@ if [[ "$DATASET" == "" ]]; then
     exit
 fi
 if [[ "$2" != "" ]]; then
-    SINCE="-s $2"
+    SINCE="-s $2 --silent"
 fi
 
 WEBAPPS=/var/lib/tomcat6/webapps/whelk
@@ -26,4 +26,4 @@ LIBS=$WEBAPPS/WEB-INF/lib
 
 source $SETENV
 
-java $JAVA_OPTS -Ddisable.plugins="indexingprawn" $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o import -w libris -d $DATASET $SINCE
+java $JAVA_OPTS -Ddisable.plugins="indexingprawn" $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o import -w libris -d $DATASET $SINCE $
