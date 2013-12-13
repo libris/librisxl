@@ -39,12 +39,16 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
         if (relatedDocs.size() > 0) {
             json = mapper.readValue(doc.dataAsString, Map)
-            work = json.about?.instanceOf ?: json.about
-            if (json.about?.get("originalCatalogingAgency")) {
-                work["originalCatalogingAgency"] = json.about["originalCatalogingAgency"]
-            }
+            work = json.get("about")
             work.each { key, value ->
+                log.trace("trying to find and update entity $key")
                 changedData = findAndUpdateEntityIds(value, relatedDocs) || changedData
+            }
+            if (work.get("instanceOf")) {
+                work."instanceOf".each {  k, v ->
+                    log.trace("trying to find and update instanceof entity $k")
+                    changedData = findAndUpdateEntityIds(v, relatedDocs) || changedData
+                }
             }
             log.trace("Changed data? $changedData")
             if (changedData) {
@@ -91,8 +95,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
             if (relatedItem.get("@type") == obj.get("@type")) {
                 try {
                     updateAction = "update" + obj["@type"] + "Id"
-                    log.trace("$updateAction")
-                    updated = "$updateAction"(obj, relatedItem)
+                    updated = "$updateAction"(obj, relatedItem, docId)
                 } catch (Exception e) {
                     log.trace("Could not update object of type ${obj["@type"]}")
                     updated = false
@@ -102,7 +105,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         return updated
     }
 
-    boolean updatePersonId(item, relatedItem) {
+    boolean updatePersonId(item, relatedItem, relatedDocId) {
         if (item["controlledLabel"] == relatedItem["controlledLabel"]) {  //ignore case in comparison?
             item["@id"] = relatedItem["@id"]
             return true
@@ -110,13 +113,13 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         return false
     }
 
-    def updateSameAsAndId(item, relatedItem) {
+    def updateSameAsAndId(item, relatedItem, relatedDocId) {
         item["sameAs"] = ["@id": item["@id"]]
         item["@id"] = relatedItem["@id"]
         log.trace("${item}")
     }
 
-    boolean updateConceptId(item, relatedItem) {
+    boolean updateConceptId(item, relatedItem, relatedDocId) {
         def changed = false
         def authItemSameAs = relatedItem.get("sameAs")?.get("@id")
         if (item["@id"] && item["@id"] == authItemSameAs) {
@@ -150,7 +153,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         return changed
     }
 
-    boolean updateWorkId(item, relatedItem) {
+    boolean updateWorkId(item, relatedItem, relatedDocId) {
         if (item["uniformTitle"] == relatedItem["uniformTitle"]) { //ignore case in comparison?
             def attributedTo = item.attributedTo
             if (attributedTo instanceof List)
@@ -164,7 +167,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                      (attributedTo["@type"] == "Person" && authObject["@type"] == "Person" &&
                       attributedTo["controlledLabel"] == authObject["controlledLabel"]))  //ignore case in comparison?
             ) {
-                item["@id"] = relatedItem["@id"]
+                item["@id"] = relatedItem["@id"] ?: relatedDocId
                 return true
             }
         }
@@ -173,7 +176,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
 
     //TODO: lookup for example NB=Kungl. biblioteket ??
-    boolean updateOrganizationId(item, relatedItem) {
+    boolean updateOrganizationId(item, relatedItem, relatedDocId) {
         if (item["name"] == relatedItem["name"]) {
             item["@id"] = relatedItem["@id"]
             return true
