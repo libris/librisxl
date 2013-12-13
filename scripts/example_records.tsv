@@ -50,7 +50,7 @@ auth/307262	Codex Gigas
 auth/173676	Stockholm
 auth/222136	Ödessymfonin
 auth/301182	Historia
-auth/283867	Reseaffischer
+auth/283867	Reseaffischer, har about.broader.prefLabel:Affischer
 auth/283168	Affischer, har about.narrower.prefLabel:Reseaffischer
 
 bib/10796401	subject.broader:historia
@@ -72,6 +72,7 @@ bib/13584984
 bib/13884869
 bib/13973072
 bib/14006223	har subject.broader.prefLabel:Aktiemarknad
+bib/2912361	har relation.@type=Work, relation.uniformTitle:Metamorphoses (auth/345526)
 bib/3222798
 bib/3678656
 bib/4582889
