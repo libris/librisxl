@@ -166,10 +166,13 @@ abstract class ElasticSearch extends BasicPlugin {
 
     def loadJson(file) {
         def json
-        mapper = new ObjectMapper()
-        def loader = getClass().classLoader
-        json = loader.getResourceAsStream(file).withStream {
-            mapper.readValue(it, Map)
+        mapper = mapper ?: new ObjectMapper()
+        try {
+            json = getClass().classLoader.getResourceAsStream(file).withStream {
+                mapper.readValue(it, Map)
+            }
+        } catch (NullPointerException npe) {
+            log.debug("No explicit mappings found for type.")
         }
         return json
     }
@@ -300,7 +303,8 @@ abstract class ElasticSearch extends BasicPlugin {
         if (!defaultMapping) {
             defaultMapping = loadJson("default_mapping.json")
         }
-        defaultMapping.each { k, v ->
+        def typeMapping = loadJson("${itype}_mapping.json") ?: defaultMapping
+        typeMapping.each { k, v ->
            mapping = mapping.field(k, v)
         }
         mapping = mapping.endObject().endObject()

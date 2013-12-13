@@ -8,6 +8,8 @@ import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.basic.BasicFormatConverter
 
+import static se.kb.libris.conch.Tools.*
+
 import com.damnhandy.uri.template.UriTemplate
 
 
@@ -47,7 +49,7 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     @Override
     Document doConvert(final Document doc) {
-        def source = doc.dataAsMap
+        def source = getDataAsMap(doc)
         def result = createFrame(source)
         log.trace("Created frame: $result")
 

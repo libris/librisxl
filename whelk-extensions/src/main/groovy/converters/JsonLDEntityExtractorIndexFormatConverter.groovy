@@ -3,6 +3,8 @@ package se.kb.libris.whelks.plugin
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 
+import static se.kb.libris.conch.Tools.*
+
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
@@ -21,7 +23,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
 
         List<IndexDocument> doclist = [new IndexDocument(doc)]
 
-        def json = doc.dataAsMap
+        def json = getDataAsMap(doc)
 
         if (json) {
 

@@ -3,8 +3,13 @@
         "analyzer" : {
             "default" : {
                 "tokenizer" : "standard",
-                "filter" : ["swe_light_stemmer", "lowercase"],
+                "filter" : ["lowercase", "swe_light_stemmer"],
                 "stopwords" : "_none_"
+            },
+            "completer" : {
+                "type" : "custom",
+                "tokenizer" : "lowercase",
+                "filter" : "custom_edge_ngram"
             }
 
         },
@@ -12,6 +17,11 @@
             "swe_light_stemmer" : {
                 "type" : "stemmer",
                 "name" : "light_swedish"
+            },
+            "custom_edge_ngram" : {
+                "type" : "edgeNGram",
+                "min_gram" : 2,
+                "max_gram" : 50
             }
         }
     }

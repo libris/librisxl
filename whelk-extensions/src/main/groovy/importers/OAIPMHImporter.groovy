@@ -62,7 +62,7 @@ class OAIPMHImporter {
         log.debug("resumptionToken: $resumptionToken")
         while (resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
             url = new URL(serviceUrl + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken)
-            log.info("Harvesting $url")
+            log.trace("Harvesting $url")
             try {
                 String rtok = harvest(url)
                 resumptionToken = rtok
@@ -169,7 +169,7 @@ class OAIPMHImporter {
                     }
                 });
         } catch (Exception ex) {
-            log.error("Exception: $ex")
+            log.error("Exception getting authentication credentials: $ex")
         }
     }
 
