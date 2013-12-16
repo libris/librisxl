@@ -580,7 +580,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def entRef = newEnt
             if (useLinks && link) {
                 if (!newEnt['@id'])
-                    newEnt['@id'] = "_:t-${new Date().time}" as String
+                    newEnt['@id'] = "_:t-${UUID.randomUUID()}" as String
                 entRef = ['@id': newEnt['@id']]
             }
             if (link) {
