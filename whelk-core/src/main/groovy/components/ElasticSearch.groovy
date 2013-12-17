@@ -172,7 +172,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 mapper.readValue(it, Map)
             }
         } catch (NullPointerException npe) {
-            log.debug("File ${file.getName()} not found.")
+            log.trace("File ${file.getName()} not found.")
         }
         return json
     }
@@ -308,7 +308,7 @@ abstract class ElasticSearch extends BasicPlugin {
            mapping = mapping.field(k, v)
         }
         mapping = mapping.endObject().endObject()
-        log.debug("mapping: " + mapping.string())
+        log.debug("mapping for $indexName/$itype: " + mapping.string())
         performExecute(client.admin().indices().preparePutMapping(indexName).setType(itype).setSource(mapping))
     }
 
