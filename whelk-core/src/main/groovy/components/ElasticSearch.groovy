@@ -172,7 +172,7 @@ abstract class ElasticSearch extends BasicPlugin {
                 mapper.readValue(it, Map)
             }
         } catch (NullPointerException npe) {
-            log.trace("File ${file.getName()} not found.")
+            log.trace("File $file not found.")
         }
         return json
     }
