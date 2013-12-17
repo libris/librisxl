@@ -4,9 +4,15 @@ import groovy.util.logging.Slf4j as Log
 import java.text.*
 import java.util.concurrent.*
 import java.util.concurrent.atomic.*
+import org.codehaus.jackson.map.*
+
+import se.kb.libris.whelks.*
 
 @Log
 class Tools {
+
+    static ObjectMapper staticMapper = new ObjectMapper()
+
     /**
      * Detects the content-type of supplied data.
      * TODO: Implement properly.
@@ -142,6 +148,10 @@ class Tools {
         def progressSpinner = ['/','-','\\','|']
         int state = currentCount % (progressSpinner.size()-1)
         print "${message}  ${progressSpinner[state]}                          \r"
+    }
+
+    static Map getDataAsMap(Document doc) {
+        return staticMapper.readValue(doc.getDataAsString(), Map)
     }
 }
 

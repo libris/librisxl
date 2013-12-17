@@ -105,7 +105,7 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
     }
 
     def makeDoc(data, id) {
-        return new Document()
+        return new IndexDocument()
             .withIdentifier(id)
             .withData(mapper.writeValueAsBytes(data))
     }

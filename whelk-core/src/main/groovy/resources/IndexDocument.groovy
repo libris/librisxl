@@ -45,7 +45,6 @@ class OldIndexDocument extends Resource {
         return mapper.writeValueAsString(json)
     }
 
-    @Override
     Map getDataAsMap() {
         def json = mapper.readValue(super.getDataAsString(), Map)
         json.highlight = matches

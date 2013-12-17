@@ -8,7 +8,11 @@ import se.kb.libris.whelks.importers.*
 @Log
 class WhelkOperator {
 
+    static String LOCKFILE_NAME = "whelkoperator.lck"
+    static String DEFAULT_LOCKFILE_PATH = "/var/run"
+
     static main(args) {
+        File lockFile = lockFile()
         InputStream whelkConfigInputStream = null
         InputStream pluginConfigInputStream = null
         try {
@@ -137,6 +141,40 @@ class WhelkOperator {
         } else {
             println cli.usage()
         }
+        log.trace("Deleting lockfile ${lockFile.absolutePath}.")
+        lockFile.delete()
+    }
+
+    static File lockFile() {
+        File lockFile
+        [DEFAULT_LOCKFILE_PATH+"/"+LOCKFILE_NAME, LOCKFILE_NAME].eachWithIndex() { fn, n ->
+            if (!lockFile) {
+                lockFile = new File(fn)
+                if (lockFile.exists()) {
+                    println("")
+                    println("Lock file ${lockFile.absolutePath} found. Cancelling operation.")
+                    System.exit(0)
+                }
+                log.trace("checking ${lockFile.absolutePath} ...")
+                try {
+                    lockFile.createNewFile()
+                    log.trace("File created.")
+                    if (n > 0) {
+                        println("")
+                        println("Warning: Failed to create lockfile in $DEFAULT_LOCKFILE_PATH. Setting lockfile locally.")
+                    }
+                } catch (IOException ioe) {
+                    log.debug("Unable to write file.")
+                    lockFile = null
+                }
+            }
+        }
+        if (!lockFile) {
+            println("")
+            println("Fatal: Unable to write lock file.")
+            System.exit(1)
+        }
+        return lockFile
     }
 }
 

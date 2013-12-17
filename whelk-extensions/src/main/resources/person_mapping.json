@@ -11,31 +11,31 @@
         "properties" : {
             "controlledLabel" : {
                 "type" : "string",
-                "analyzer" : "completer"
+                "index_analyzer" : "completer"
             },
             "label" : {
                 "type" : "string",
-                "analyzer" : "completer"
+                "index_analyzer" : "completer"
             },
             "altLabel" : {
                 "type" : "string",
-                "analyzer" : "completer"
+                "index_analyzer" : "completer"
             },
             "name" : {
                 "type" : "string",
-                "analyzer" : "completer"
+                "index_analyzer" : "completer"
             },
             "familyName" : {
                 "type" : "string",
-                "analyzer" : "completer"
+                "index_analyzer" : "completer"
             },
             "givenName" : {
                 "type" : "string",
-                "analyzer" : "completer"
+                "index_analyzer" : "completer"
             },
             "sameAs.controlledLabel" : {
                 "type" : "string",
-                "analyzer" : "completer"
+                "index_analyzer" : "completer"
             },
             "@id" : {
                 "type" : "string",

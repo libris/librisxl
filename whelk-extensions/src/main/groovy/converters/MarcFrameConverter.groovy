@@ -8,6 +8,8 @@ import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.basic.BasicFormatConverter
 
+import static se.kb.libris.conch.Tools.*
+
 import com.damnhandy.uri.template.UriTemplate
 
 
@@ -47,7 +49,7 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     @Override
     Document doConvert(final Document doc) {
-        def source = doc.dataAsMap
+        def source = getDataAsMap(doc)
         def result = createFrame(source)
         log.trace("Created frame: $result")
 
@@ -578,7 +580,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def entRef = newEnt
             if (useLinks && link) {
                 if (!newEnt['@id'])
-                    newEnt['@id'] = "_:t-${new Date().time}" as String
+                    newEnt['@id'] = "_:t-${UUID.randomUUID()}" as String
                 entRef = ['@id': newEnt['@id']]
             }
             if (link) {
