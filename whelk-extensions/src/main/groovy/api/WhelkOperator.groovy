@@ -92,8 +92,9 @@ class WhelkOperator {
                 println cli.usage()
             } else {
                 println "Running linkfinders and filters for ${opt.dataset} in ${opt.whelk}"
-                whelk.findLinks(opt.dataset)
-                whelk.runFilters(opt.dataset)
+                def ds = (opt.dataset == "all" : null)
+                //whelk.findLinks(ds)
+                whelk.runFilters(ds)
             }
         } else if (operation == "populate" || operation == "rebalance") {
             /*
