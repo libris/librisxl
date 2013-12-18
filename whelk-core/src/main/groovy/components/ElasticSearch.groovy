@@ -164,7 +164,7 @@ abstract class ElasticSearch extends BasicPlugin {
         log.debug("Flush response: $flushresponse")
     }
 
-    def loadJson(file) {
+    def loadJson(String file) {
         def json
         mapper = mapper ?: new ObjectMapper()
         try {
