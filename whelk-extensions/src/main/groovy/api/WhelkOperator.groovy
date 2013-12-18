@@ -92,7 +92,7 @@ class WhelkOperator {
                 println cli.usage()
             } else {
                 println "Running linkfinders and filters for ${opt.dataset} in ${opt.whelk}"
-                def ds = (opt.dataset == "all" : null)
+                def ds = (opt.dataset == "all" ? null : opt.dataset)
                 //whelk.findLinks(ds)
                 whelk.runFilters(ds)
             }
