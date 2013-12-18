@@ -282,14 +282,37 @@ class StandardWhelk implements Whelk {
     }
 
     void runFilters(String dataset) {
-       log.info("Running filters for ${dataset} ...")
-       for (doc in loadAll(dataset)) {
-           for (filter in getFilters()) {
-               log.debug("Running filter ${filter.id}")
-               doc = filter.doFilter(doc)
-           }
-           add(doc)
-       }
+        log.info("Running filters for ${dataset} ...")
+        long startTime = System.currentTimeMillis()
+        int counter = 0
+        def docs = []
+        for (doc in loadAll(dataset)) {
+            for (filter in getFilters()) {
+                log.debug("Running filter ${filter.id}")
+                docs << addToStorage(filter.doFilter(doc))
+                //doc = filter.doFilter(doc)
+                if (++counter % 1000 == 0) {
+                    addToGraphStore(docs)
+                    try {
+                        addToIndex(docs)
+                    } catch (WhelkAddException wae) {
+                        log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                    }
+                    docs = []
+                }
+                if (log.isInfoEnabled()) {
+                    Tools.printSpinner("Filtering ${this.id}. ${counter} documents sofar.", counter)
+                }
+            }
+        }
+        log.debug("Went through all documents. Processing remainder.")
+        if (docs.size() > 0) {
+            log.trace("Reindexing remaining ${docs.size()} documents")
+            addToGraphStore(docs)
+            addToIndex(docs)
+        }
+        log.info("Filtered $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
+
     }
 
     void rebuild(String fromStorage, String dataset = null) {
