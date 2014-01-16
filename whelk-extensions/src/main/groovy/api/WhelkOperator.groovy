@@ -83,7 +83,7 @@ class WhelkOperator {
         } else if (operation == "rebuild") {
             if (opt.fromStorage) {
                 String dataset = (opt.dataset ? opt.dataset : null)
-                whelk.rebuild(opt.fromStorage, dataset)
+                whelk.reindex(dataset, opt.fromStorage)
             } else {
                 println cli.usage()
             }
@@ -96,39 +96,10 @@ class WhelkOperator {
                 //whelk.findLinks(ds)
                 whelk.runFilters(ds)
             }
-        } else if (operation == "populate" || operation == "rebalance") {
-            /*
-            def target = (args.length > 2 ? (new WhelkInitializer(new URI(args[2]).toURL().newInputStream()).getWhelks().find { it.prefix == resource }) : null)
-            int count = 0
-            def docs = []
-            for (doc in whelk.loadAll()) {
-                docs << doc
-                count++
-                if (count % 1000 == 0) {
-                    log.info("Storing "+ docs.size()+ " documents in " + (target ? target.prefix : "all components") + " ... ($count total)")
-                    if (target) {
-                        target.store(docs)
-                    } else {
-                        whelk.add(docs)
-                    }
-                    docs = []
-                }
-            }
-            if (docs.size() > 0) {
-                count += docs.size()
-                if (target) {
-                    target.store(docs)
-                } else {
-                    whelk.add(docs)
-                }
-            }
-            time = (System.currentTimeMillis() - startTime)/1000
-            println "Whelk ${whelk.prefix} is ${operation}d. $count documents in $time seconds."
-            */
         } else if (operation == "benchmark") {
             int count = 0
             def docs = []
-            for (doc in whelk.loadAll()) {
+            for (doc in whelk.loadAll((opt.d ? opt.d : null))) {
                 docs << doc
                 count++
                 if (count % 1000 == 0) {
@@ -138,7 +109,7 @@ class WhelkOperator {
                 }
             }
             time = (System.currentTimeMillis() - startTime)/1000
-            log.info("$count documents read. Total time elapsed: ${time} seconds. That's " + (count/time) + " documents / second.")
+            log.info("$count documents read. Total time elapsed: ${time} seconds.")
         } else {
             println cli.usage()
         }

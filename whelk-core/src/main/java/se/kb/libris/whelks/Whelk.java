@@ -22,9 +22,7 @@ public interface Whelk {
     public Iterable<Document> loadAll();
     public Iterable<Document> loadAll(Date since);
 
-    /* implement later
-    public SparqlResult sparql(String query);
-    */
+    public InputStream sparql(String query);
 
     // maintenance
     public String getId(); // Whelk ID
@@ -32,7 +30,6 @@ public interface Whelk {
     public void addPlugin(Plugin plugin);
     public Iterable<? extends Plugin> getPlugins();
 
-    public void rebuild(String fromStorage);
     public void reindex();
     public void flush();
 

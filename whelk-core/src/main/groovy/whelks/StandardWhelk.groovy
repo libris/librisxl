@@ -113,6 +113,11 @@ class StandardWhelk implements Whelk {
         return indexes.get(0)?.query(query)
     }
 
+    @Override
+    InputStream sparql(String query) {
+        return graphStore?.sparql(query)
+    }
+
     Document sanityCheck(Document d) {
         if (!d.identifier) {
             d.identifier = mintIdentifier(d)
@@ -122,7 +127,7 @@ class StandardWhelk implements Whelk {
     }
 
     /**
-     * Handles conversion for a document and stores each converted version into suitable storage. 
+     * Handles conversion for a document and stores each converted version into suitable storage.
      * @return The final resulting document, after all format conversions
      */
     @groovy.transform.CompileStatic
@@ -146,9 +151,6 @@ class StandardWhelk implements Whelk {
             throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
         }
         return doc
-    }
-
-    Document prepareDocumentForStorage(Document doc) {
     }
 
     @groovy.transform.CompileStatic
@@ -196,6 +198,7 @@ class StandardWhelk implements Whelk {
         }
     }
 
+    /*
     private List<RDFDescription> convertToRDFDescriptions(List<Document> docs) {
         def rdocs = []
         for (doc in docs) {
@@ -203,6 +206,7 @@ class StandardWhelk implements Whelk {
         }
         return rdocs
     }
+    */
 
     @Override
     Iterable<Document> loadAll(Date since) { return loadAll(null, null, since)}
@@ -220,7 +224,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    void reindex(String dataset = null, String startAt = null) {
+    void reindex(String dataset = null, String fromStorage = null, String startAt = null) {
         int counter = 0
         long startTime = System.currentTimeMillis()
         List<Document> docs = []
@@ -231,28 +235,37 @@ class StandardWhelk implements Whelk {
                 index.createNewCurrentIndex()
             }
         }
-            for (doc in loadAll(dataset)) {
-                if (startAt && doc.identifier == startAt) {
-                    log.info("Found document with identifier ${startAt}. Starting to index ...")
-                    indexing = true
-                }
-                if (indexing) {
-                    log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
+        for (doc in loadAll(dataset, fromStorage)) {
+            if (startAt && doc.identifier == startAt) {
+                log.info("Found document with identifier ${startAt}. Starting to index ...")
+                indexing = true
+            }
+            if (indexing) {
+                log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
+                if (fromStorage) {
+                    log.trace("Rebuilding storage from $fromStorage")
+                    try {
+                        docs << addToStorage(doc, fromStorage)
+                    } catch (WhelkAddException wae) {
+                        log.trace("Expected exception ${wae.message}")
+                    }
+                } else {
                     docs << doc
-                    if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
-                        addToGraphStore(docs)
-                        try {
-                            addToIndex(docs)
-                        } catch (WhelkAddException wae) {
-                            log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
-                        }
-                        docs = []
-                        if (log.isInfoEnabled()) {
-                            Tools.printSpinner("Reindexing ${this.id}. ${counter} documents sofar.", counter)
-                        }
+                }
+                if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
+                    addToGraphStore(docs)
+                    try {
+                        addToIndex(docs)
+                    } catch (WhelkAddException wae) {
+                        log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                    }
+                    docs = []
+                    if (log.isInfoEnabled()) {
+                        Tools.printSpinner("Reindexing ${this.id}. ${counter} documents sofar.", counter)
                     }
                 }
             }
+        }
         log.debug("Went through all documents. Processing remainder.")
         if (docs.size() > 0) {
             log.trace("Reindexing remaining ${docs.size()} documents")
@@ -267,54 +280,7 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    void findLinks(String dataset) {
-        log.info("Trying to findLinks for ${dataset}... ")
-        for (doc in loadAll(dataset)) {
-            log.debug("Finding links for ${doc.identifier} ...")
-            for (linkFinder in getLinkFinders()) {
-                log.debug("LinkFinder ${linkFinder}")
-                for (link in linkFinder.findLinks(doc)) {
-                    doc.withLink(link.identifier.toString(), link.type)
-                }
-            }
-            add(doc)
-       }
-    }
-
-    void runFilters(String dataset) {
-        log.info("Running filters for ${dataset} ...")
-        long startTime = System.currentTimeMillis()
-        int counter = 0
-        def docs = []
-        for (doc in loadAll(dataset)) {
-            for (filter in getFilters()) {
-                log.debug("Running filter ${filter.id}")
-                docs << addToStorage(filter.doFilter(doc))
-                //doc = filter.doFilter(doc)
-                if (++counter % 1000 == 0) {
-                    addToGraphStore(docs)
-                    try {
-                        addToIndex(docs)
-                    } catch (WhelkAddException wae) {
-                        log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
-                    }
-                    docs = []
-                }
-                if (log.isInfoEnabled()) {
-                    Tools.printSpinner("Filtering ${this.id}. ${counter} documents sofar.", counter)
-                }
-            }
-        }
-        log.debug("Went through all documents. Processing remainder.")
-        if (docs.size() > 0) {
-            log.trace("Reindexing remaining ${docs.size()} documents")
-            addToGraphStore(docs)
-            addToIndex(docs)
-        }
-        log.info("Filtered $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-
-    }
-
+    /*
     void rebuild(String fromStorage, String dataset = null) {
         long startTime = System.currentTimeMillis()
         int counter = 0
@@ -362,6 +328,55 @@ class StandardWhelk implements Whelk {
                 index.reMapAliases()
             }
         }
+
+    }
+    */
+
+    void findLinks(String dataset) {
+        log.info("Trying to findLinks for ${dataset}... ")
+        for (doc in loadAll(dataset)) {
+            log.debug("Finding links for ${doc.identifier} ...")
+            for (linkFinder in getLinkFinders()) {
+                log.debug("LinkFinder ${linkFinder}")
+                for (link in linkFinder.findLinks(doc)) {
+                    doc.withLink(link.identifier.toString(), link.type)
+                }
+            }
+            add(doc)
+       }
+    }
+
+    void runFilters(String dataset) {
+        log.info("Running filters for ${dataset} ...")
+        long startTime = System.currentTimeMillis()
+        int counter = 0
+        def docs = []
+        for (doc in loadAll(dataset)) {
+            for (filter in getFilters()) {
+                log.debug("Running filter ${filter.id}")
+                docs << addToStorage(filter.doFilter(doc))
+                //doc = filter.doFilter(doc)
+                if (++counter % 1000 == 0) {
+                    addToGraphStore(docs)
+                    try {
+                        addToIndex(docs)
+                    } catch (WhelkAddException wae) {
+                        log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                    }
+                    docs = []
+                }
+                if (log.isInfoEnabled()) {
+                    Tools.printSpinner("Filtering ${this.id}. ${counter} documents sofar.", counter)
+                }
+            }
+        }
+        log.debug("Went through all documents. Processing remainder.")
+        if (docs.size() > 0) {
+            log.trace("Reindexing remaining ${docs.size()} documents")
+            addToGraphStore(docs)
+            addToIndex(docs)
+        }
+        log.info("Filtered $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
 
     }
 
@@ -413,6 +428,7 @@ class StandardWhelk implements Whelk {
     Storage getStorage(String rct) { return plugins.find { it instanceof Storage && (rct == "*/*" || it.requiredContentType == rct)} }
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
+    GraphStore getGraphStore() { return plugins.find { it instanceof GraphStore } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }
     List<FormatConverter> getFormatConverters() { return plugins.findAll { it instanceof FormatConverter }}
     List<IndexFormatConverter> getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter }}

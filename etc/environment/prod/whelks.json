@@ -16,8 +16,7 @@
                     "entityextractor",
                     "linkcompleter",
                     "indexlinkfinder",
-                    "completeexpander",
-                    "indexingprawn"
+                    "completeexpander"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"

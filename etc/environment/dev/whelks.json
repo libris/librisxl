@@ -16,8 +16,7 @@
                     "turtleconverter",
                     "entityextractor",
                     "linkcompleter",
-                    "indexlinkfinder",
-                    "indexingprawn"
+                    "indexlinkfinder"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"

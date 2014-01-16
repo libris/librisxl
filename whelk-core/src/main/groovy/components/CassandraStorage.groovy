@@ -189,21 +189,9 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     } else {
                         log.debug("Using allrows()")
                         query = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
-                        /*
-                            .setExceptionCallback(new ExceptionCallback() {
-                            @Override
-                            public boolean onException(ConnectionException e) {
-                                try {
-                                    log.warn("Cassandra threw exception. Holding for a second ...")
-                            Thread.sleep(1000);
-                            } catch (InterruptedException e1) {
-                            }
-                            return true
-                            }})
-                        */
                     }
                     query = query
-                        .setRowLimit(10)
+                        .setRowLimit(100)
                         .withColumnRange(new RangeBuilder().setLimit(10).build())
                 } catch (ConnectionException e) {
                     log.error("Cassandra Query failed.", e)
