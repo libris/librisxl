@@ -85,10 +85,10 @@
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="trace"/>
   </logger>
+ <logger name="se.kb.libris.whelks.component.SesameGraphStore">
+      <level value="trace"/>
+  </logger>
   <!--
-     <logger name="se.kb.libris.whelks.component.DiskStorage">
-          <level value="info"/>
-      </logger>
  <logger name="se.kb.libris.whelks.api.ISXNTool">
       <level value="debug"/>
   </logger>

@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import org.restlet.*
 import org.restlet.data.*
 import org.restlet.resource.*
+import org.restlet.representation.*
 
 import se.kb.libris.conch.Tools
 import static se.kb.libris.conch.Tools.*
@@ -311,8 +312,30 @@ class SparqlRestlet extends BasicWhelkAPI {
 
     @Override
     void doHandle(Request request, Response response) {
-        ClientResource resource = new ClientResource(this.whelk.graphStores[0].queryURI)
+        def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def query = reqMap.get("query")
+        log.info("Query in API: $query")
+
+        def is = whelk.sparql(query)
+
+        Representation ir = new OutputRepresentation(MediaType.TEXT_PLAIN) {
+            @Override
+            public void write(OutputStream realOutput) throws IOException {
+                byte[] b = new byte[8]
+                int read
+                while ((read = is.read(b)) != -1) {
+                    realOutput.write(b, 0, read)
+                    realOutput.flush()
+                }
+            }
+        }
+
+        /*
+        ClientResource resource = new ClientResource(this.whelk.graphStore.queryURI)
         response.setEntity(resource.handleOutbound(request))
+        */
+        log.debug("Sending outputrepresentation.")
+        response.setEntity(ir)
     }
 }
 

@@ -7,6 +7,17 @@ import org.openrdf.repository.Repository
 import org.openrdf.repository.RepositoryConnection
 import org.openrdf.repository.http.HTTPRepository
 import org.openrdf.rio.RDFFormat
+import org.openrdf.rio.RDFWriter
+import org.openrdf.rio.RDFWriterRegistry
+import org.openrdf.query.Query
+import org.openrdf.query.QueryLanguage
+import org.openrdf.query.TupleQuery
+import org.openrdf.query.TupleQueryResult
+import org.openrdf.query.resultio.TupleQueryResultWriter
+import org.openrdf.query.resultio.TupleQueryResultWriterRegistry
+import org.openrdf.query.GraphQuery
+import org.openrdf.query.GraphQueryResult
+import org.openrdf.query.QueryEvaluationException
 
 
 import se.kb.libris.whelks.*
@@ -50,7 +61,67 @@ class SesameGraphStore extends BasicPlugin implements GraphStore {
     public void delete(URI graphUri) {
     }
 
-    public InputStream sparql(String query) {
-        return null
+    public InputStream sparql(String sparql) {
+        if (!conn.open) {
+            log.debug("Connection is closed. Reopening.")
+            conn = repo.getConnection()
+        }
+        log.debug("Received query: $sparql")
+        Query query = conn.prepareQuery(QueryLanguage.SPARQL, sparql)
+        log.debug("Query is ${query.getClass().getName()}")
+        if (query instanceof GraphQuery) {
+            final GraphQueryResult result = ((GraphQuery) query).evaluate()
+            try {
+                ByteArrayOutputStream out = new ByteArrayOutputStream()
+                RDFWriter writer = RDFWriterRegistry.getInstance().get(
+                    RDFFormat.RDFXML).getWriter(out)
+                writer.startRDF()
+                while (result.hasNext()) {
+                    writer.handleStatement(result.next())
+                }
+                writer.endRDF()
+
+            } finally {
+                try {
+                    result.close()
+                } catch (QueryEvaluationException e) {
+                    throw new AssertionError(e)
+                }
+            }
+            log.debug("Sending inputstream")
+            return new ByteArrayInputStream(out.toByteArray())
+        }
+        if (query instanceof TupleQuery) {
+            final TupleQueryResult result = ((TupleQuery) query).evaluate()
+            ByteArrayOutputStream out = new ByteArrayOutputStream()
+            TupleQueryResultWriter writer = TupleQueryResultWriterRegistry.getInstance().get(TupleQueryResultFormat.SPARQL).getWriter(out)
+            try {
+                writer.startQueryResult(result.getBindingNames())
+                while (result.hasNext()) {
+                    writer.handleSolution(result.next())
+                }
+                writer.endQueryResult()
+                log.debug("Sending tuple inputstream")
+                return new ByteArrayInputStream(out.toByteArray()) {
+                    @Override
+                    public void close() throws IOException {
+                        try {
+                            super.close()
+                        } finally {
+                            try {
+                                result.close()
+                            } catch (QueryEvaluationException e) {
+                                throw new AssertionError(e)
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                throw new AssertionError(e)
+            }
+
+        }
+        log.debug("Sending crap")
+        return new ByteArrayInputStream("This is crap".getBytes())
     }
 }
