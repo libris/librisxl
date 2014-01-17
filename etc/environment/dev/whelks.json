@@ -11,6 +11,7 @@
                     "oaipmhxmlconverter",
                     "completeexpander",
                     "sparqlapi",
+                    "httpsparqlapi",
                     "remotesearch",
                     "documentapi",
                     "marcconverter",

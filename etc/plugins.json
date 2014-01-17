@@ -150,6 +150,9 @@
     "sparqlapi" : {
         "_class" : "se.kb.libris.whelks.api.SparqlRestlet"
     },
+    "httpsparqlapi" : {
+        "_class" : "se.kb.libris.whelks.api.HttpSparqlRestlet"
+    },
     "documentapi" : {
         "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
     },

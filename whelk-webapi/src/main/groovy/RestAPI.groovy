@@ -318,7 +318,7 @@ class SparqlRestlet extends BasicWhelkAPI {
 
         def is = whelk.sparql(query)
 
-        Representation ir = new OutputRepresentation(MediaType.TEXT_PLAIN) {
+        Representation ir = new OutputRepresentation(mediaType(query)) {
             @Override
             public void write(OutputStream realOutput) throws IOException {
                 byte[] b = new byte[8]
@@ -330,12 +330,35 @@ class SparqlRestlet extends BasicWhelkAPI {
             }
         }
 
-        /*
-        ClientResource resource = new ClientResource(this.whelk.graphStore.queryURI)
-        response.setEntity(resource.handleOutbound(request))
-        */
         log.debug("Sending outputrepresentation.")
         response.setEntity(ir)
+    }
+
+    MediaType mediaType(String query) {
+        if (!query) {
+            return MediaType.PLAIN_TEXT_UTF_8
+        }
+        if (query.toUpperCase().contains("SELECT") || query.toUpperCase().contains("ASK")) {
+            return MediaType.APPLICATION_SPARQL_RESULTS_XML
+        } else {
+            return MediaType.APPLICATION_RDF_XML
+        }
+    }
+}
+
+
+@Log
+class HttpSparqlRestlet extends BasicWhelkAPI {
+    def pathEnd = "_httpsparql"
+    def varPath = "false"
+    String id = "HttpSparqlAPI"
+
+    String description = "Provides direct proxy access to the underlying tripple store."
+
+    @Override
+    void doHandle(Request request, Response response) {
+        ClientResource resource = new ClientResource(this.whelk.graphStore.queryURI)
+        response.setEntity(resource.handleOutbound(request))
     }
 }
 

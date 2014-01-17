@@ -13,10 +13,15 @@ import org.openrdf.query.Query
 import org.openrdf.query.QueryLanguage
 import org.openrdf.query.TupleQuery
 import org.openrdf.query.TupleQueryResult
+import org.openrdf.query.resultio.TupleQueryResultFormat
 import org.openrdf.query.resultio.TupleQueryResultWriter
 import org.openrdf.query.resultio.TupleQueryResultWriterRegistry
+import org.openrdf.query.resultio.BooleanQueryResultFormat
+import org.openrdf.query.resultio.BooleanQueryResultWriter
+import org.openrdf.query.resultio.BooleanQueryResultWriterRegistry
 import org.openrdf.query.GraphQuery
 import org.openrdf.query.GraphQueryResult
+import org.openrdf.query.BooleanQuery
 import org.openrdf.query.QueryEvaluationException
 
 
@@ -116,6 +121,18 @@ class SesameGraphStore extends BasicPlugin implements GraphStore {
                         }
                     }
                 }
+            } catch (Exception e) {
+                throw new AssertionError(e)
+            }
+
+        }
+        if (query instanceof BooleanQuery) {
+            final boolean result = ((BooleanQuery) query).evaluate()
+            ByteArrayOutputStream out = new ByteArrayOutputStream()
+            BooleanQueryResultWriter writer = BooleanQueryResultWriterRegistry.getInstance().get(BooleanQueryResultFormat.SPARQL).getWriter(out)
+            try {
+                writer.write(result)
+                return new ByteArrayInputStream(out.toByteArray())
             } catch (Exception e) {
                 throw new AssertionError(e)
             }

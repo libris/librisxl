@@ -105,6 +105,7 @@ project(":whelk-core") {
         compile "org.openrdf.sesame:sesame-repository-event:${sesameVer}"
         compile "org.openrdf.sesame:sesame-repository-sail:${sesameVer}"
         compile "org.openrdf.sesame:sesame-repository-http:${sesameVer}"
+        compile "org.openrdf.sesame:sesame-repository-sparql:${sesameVer}"
         //compile "org.openrdf.sesame:sesame-rio-api:${sesameVer}"
         //compile "org.openrdf.sesame:sesame-rio-rdfxml:${sesameVer}"
         //compile "org.openrdf.sesame:sesame-rio-trix:${sesameVer}"
