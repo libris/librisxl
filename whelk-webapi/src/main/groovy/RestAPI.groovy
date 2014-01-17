@@ -312,9 +312,8 @@ class SparqlRestlet extends BasicWhelkAPI {
 
     @Override
     void doHandle(Request request, Response response) {
-        def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def query = reqMap.get("query")
-        log.info("Query in API: $query")
+        def form = new Form(request.getEntity())
+        def query = form.getFirstValue("query")
 
         def is = whelk.sparql(query)
 
@@ -371,6 +370,7 @@ class FieldSearchRestlet extends BasicWhelkAPI {
     String description = "Query API for field searches. For example q=about.instanceOf.attributedTo.controlledLabel:Strindberg, August"
 
     void doHandle(Request request, Response response) {
+
         def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def callback = reqMap.get("callback")
         def q = reqMap["q"]

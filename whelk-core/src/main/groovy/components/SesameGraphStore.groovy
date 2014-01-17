@@ -71,10 +71,10 @@ class SesameGraphStore extends BasicPlugin implements GraphStore {
             log.debug("Connection is closed. Reopening.")
             conn = repo.getConnection()
         }
-        log.debug("Received query: $sparql")
+        log.trace("Received query: $sparql")
         Query query = conn.prepareQuery(QueryLanguage.SPARQL, sparql)
-        log.debug("Query is ${query.getClass().getName()}")
         if (query instanceof GraphQuery) {
+            log.trace("Executing graphquery")
             final GraphQueryResult result = ((GraphQuery) query).evaluate()
             try {
                 ByteArrayOutputStream out = new ByteArrayOutputStream()
@@ -93,10 +93,10 @@ class SesameGraphStore extends BasicPlugin implements GraphStore {
                     throw new AssertionError(e)
                 }
             }
-            log.debug("Sending inputstream")
             return new ByteArrayInputStream(out.toByteArray())
         }
         if (query instanceof TupleQuery) {
+            log.trace("Executing tuplequery")
             final TupleQueryResult result = ((TupleQuery) query).evaluate()
             ByteArrayOutputStream out = new ByteArrayOutputStream()
             TupleQueryResultWriter writer = TupleQueryResultWriterRegistry.getInstance().get(TupleQueryResultFormat.SPARQL).getWriter(out)
@@ -127,6 +127,7 @@ class SesameGraphStore extends BasicPlugin implements GraphStore {
 
         }
         if (query instanceof BooleanQuery) {
+            log.trace("Executing booleanquery")
             final boolean result = ((BooleanQuery) query).evaluate()
             ByteArrayOutputStream out = new ByteArrayOutputStream()
             BooleanQueryResultWriter writer = BooleanQueryResultWriterRegistry.getInstance().get(BooleanQueryResultFormat.SPARQL).getWriter(out)
