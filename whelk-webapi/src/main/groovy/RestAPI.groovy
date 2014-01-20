@@ -315,7 +315,14 @@ class SparqlRestlet extends BasicWhelkAPI {
         def form = new Form(request.getEntity())
         def query = form.getFirstValue("query")
 
-        def is = whelk.sparql(query)
+        InputStream is
+        try {
+            is = whelk.sparql(query)
+        } catch (Exception e) {
+            is = new ByteArrayInputStream(e.message.bytes)
+            query = null
+            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
+        }
 
         Representation ir = new OutputRepresentation(mediaType(query)) {
             @Override
@@ -335,7 +342,7 @@ class SparqlRestlet extends BasicWhelkAPI {
 
     MediaType mediaType(String query) {
         if (!query) {
-            return MediaType.PLAIN_TEXT_UTF_8
+            return MediaType.TEXT_PLAIN
         }
         if (query.toUpperCase().contains("SELECT") || query.toUpperCase().contains("ASK")) {
             return MediaType.APPLICATION_SPARQL_RESULTS_XML
@@ -377,7 +384,7 @@ class FieldSearchRestlet extends BasicWhelkAPI {
         def indexType = request.attributes.get("indexType")
 
         if (!indexType) {
-            response.setEntity("Missing \"indexType\" in url", MediaType.PLAIN_TEXT_UTF_8)
+            response.setEntity("Missing \"indexType\" in url", MediaType.TEXT_PLAIN)
         } else {
             log.debug("index type $indexType")
 
