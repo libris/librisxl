@@ -13,7 +13,7 @@ for d in $datadir/in/*; do
             f=$expected
             fmt=jsonld
         fi
-        dest_url=http://localhost:8080/whelk-webapi/$datatype/$id
+        dest_url=http://localhost:8180/whelk-webapi/$datatype/$id
         echo "Putting $datatype/$id to <$dest_url> .."
         curl -XPUT -H "Content-type:application/x-marc-json" $dest_url --data-binary @$f
     done
