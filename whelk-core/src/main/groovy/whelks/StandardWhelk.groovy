@@ -156,9 +156,9 @@ class StandardWhelk implements Whelk {
     @groovy.transform.CompileStatic
     void addToIndex(List<Document> docs, List<String> sIndeces = null) {
         List<IndexDocument> idxDocs = []
-        log.debug("Number of documents to index: ${docs.size()}")
-        log.trace("Sample ct: " + docs[0].contentType)
-        if (indexes.size() > 0 && (!sIndeces || indexes.find { ((Index)it).id in sIndeces } )) {
+        def activeIndexes = (sIndeces ? indexes.findAll { ((Index)it).id in sIndeces } : indexes)
+        if (activeIndexes.size() > 0) {
+            log.debug("Number of documents to index: ${docs.size()}")
             for (doc in docs) {
                 for (ifc in getIndexFormatConverters()) {
                     log.trace("Running indexformatconverter $ifc")
@@ -167,10 +167,8 @@ class StandardWhelk implements Whelk {
             }
             if (idxDocs) {
                 for (idx in indexes) {
-                    if (!sIndeces || idx.id in sIndeces) {
-                        log.trace("${idx.id} qualifies for indexing")
-                        idx.bulkIndex(idxDocs)
-                    }
+                    log.trace("${idx.id} qualifies for indexing")
+                    idx.bulkIndex(idxDocs)
                 }
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
@@ -179,8 +177,9 @@ class StandardWhelk implements Whelk {
     }
 
     void addToGraphStore(List<Document> docs, List<String> gStores = null) {
-        log.debug("addToGraphStore ${docs.size()}")
-        if (graphStores.size() > 0 && (!gStores || graphStores.find { ((GraphStore)it).id in gStores } )) {
+        def activeGraphStores = (gStores ? graphStores.findAll { it.id in gStores } : graphStores)
+        if (activeGraphStores.size() > 0) {
+            log.debug("addToGraphStore ${docs.size()}")
             log.debug("Adding to graph stores")
             List<Document> dataDocs = []
             for (doc in docs) {
@@ -190,17 +189,16 @@ class StandardWhelk implements Whelk {
                 }
             }
             if (dataDocs) {
-                for (store in graphStores) {
-                    if (!gStores || store.id in gStores) {
-                        log.trace("${store.id} qualifies for adding.")
-                        dataDocs.each {
-                            store.update(docBaseUri.resolve(it.identifier), it)
-                        }
+                for (store in activeGraphStores) {
+                    dataDocs.each {
+                        store.update(docBaseUri.resolve(it.identifier), it)
                     }
                 }
             } else (isDebugEnabled()) {
                 log.debug("No graphs to update.")
             }
+        } else {
+            log.info("Coudn't find any suitable graphstores ... $activeGraphStores")
         }
     }
 
@@ -289,58 +287,6 @@ class StandardWhelk implements Whelk {
             }
         }
     }
-
-    /*
-    void rebuild(String fromStorage, String dataset = null) {
-        long startTime = System.currentTimeMillis()
-        int counter = 0
-        def docs = []
-        if (!dataset) {
-            log.debug("Requesting new index.")
-            for (index in indexes) {
-                index.createNewCurrentIndex()
-            }
-        } else {
-            log.debug("Rebuilding for dataset $dataset")
-        }
-
-        for (doc in loadAll(dataset, fromStorage)) {
-            log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
-            try {
-                docs << addToStorage(doc, fromStorage)
-            } catch (WhelkAddException wae) {
-                log.trace("Expected exception ${wae.message}")
-            }
-            if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
-                addToGraphStore(docs)
-                try {
-                    addToIndex(docs)
-                } catch (WhelkAddException wae) {
-                    log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
-                }
-                docs = []
-            }
-            if (log.isInfoEnabled()) {
-                Tools.printSpinner("Rebuilding ${this.id} from ${fromStorage}. ${counter} documents sofar.", counter)
-            }
-        }
-        log.debug("Went through all documents. Processing remainder.")
-        if (docs.size() > 0) {
-            log.trace("Reindexing remaining ${docs.size()} documents")
-            addToGraphStore(docs)
-            addToIndex(docs)
-        }
-        log.info("Rebuilt $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-
-
-        if (!dataset) {
-            for (index in indexes) {
-                index.reMapAliases()
-            }
-        }
-
-    }
-    */
 
     void findLinks(String dataset) {
         log.info("Trying to findLinks for ${dataset}... ")

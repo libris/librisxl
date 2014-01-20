@@ -113,10 +113,15 @@ Run whelkOperation gradle task to import, reindex or rebuild:
      -u,--serviceUrl <URL>   serviceUrl for OAIPMH
      -w,--whelk <arg>        the name of the whelk to perform operation on
                              e.g. libris
+     -c,--component <arg>    which components to use for reindexing (defaults to all)
 
 Example - import a maximum of 10000 documents since 2000-01-01 using etc/whelksoperations.json to configure the whelks from external sources:
 
     $ gradle whelkOperation -Dargs='-o import -w libris -d bib -s 2000-01-01T00:00:00Z -n 10000 -p true' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:etc/whelkoperations.json
+
+Example - "reindex" tripple store, performing load from storage, turtle conversion and adding to tripple store:
+
+    $ gradle whelkOperation -Dargs='-o reindex -w libris -c sesamegraphstore'
 
 ## Using a Graph Store
 
