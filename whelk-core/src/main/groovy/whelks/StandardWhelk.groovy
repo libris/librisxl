@@ -158,7 +158,7 @@ class StandardWhelk implements Whelk {
         List<IndexDocument> idxDocs = []
         log.debug("Number of documents to index: ${docs.size()}")
         log.trace("Sample ct: " + docs[0].contentType)
-        if (indexes.size() > 0) {
+        if (indexes.size() > 0 && (!sIndeces || indexes.find { ((Index)it).id in sIndeces } )) {
             for (doc in docs) {
                 for (ifc in getIndexFormatConverters()) {
                     log.trace("Running indexformatconverter $ifc")
@@ -180,7 +180,7 @@ class StandardWhelk implements Whelk {
 
     void addToGraphStore(List<Document> docs, List<String> gStores = null) {
         log.debug("addToGraphStore ${docs.size()}")
-        if (graphStores.size() > 0) {
+        if (graphStores.size() > 0 && (!gStores || graphStores.find { ((GraphStore)it).id in gStores } )) {
             log.debug("Adding to graph stores")
             List<Document> dataDocs = []
             for (doc in docs) {
@@ -236,9 +236,11 @@ class StandardWhelk implements Whelk {
         List<Document> docs = []
         boolean indexing = !startAt
         if (!dataset) {
-            log.debug("Requesting new index.")
             for (index in indexes) {
-                index.createNewCurrentIndex()
+                if (index in selectedCompontents) {
+                    log.debug("Requesting new index for ${index.id}.")
+                    index.createNewCurrentIndex()
+                }
             }
         }
         for (doc in loadAll(dataset, fromStorage)) {
@@ -275,13 +277,15 @@ class StandardWhelk implements Whelk {
         log.debug("Went through all documents. Processing remainder.")
         if (docs.size() > 0) {
             log.trace("Reindexing remaining ${docs.size()} documents")
-            addToGraphStore(docs)
-            addToIndex(docs)
+            addToGraphStore(docs, selectedCompontents)
+            addToIndex(docs, selectedCompontents)
         }
         log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
         if (!dataset) {
             for (index in indexes) {
-                index.reMapAliases()
+                if (index in selectedCompontents) {
+                    index.reMapAliases()
+                }
             }
         }
     }
