@@ -119,7 +119,7 @@ Example - import a maximum of 10000 documents since 2000-01-01 using etc/whelkso
 
     $ gradle whelkOperation -Dargs='-o import -w libris -d bib -s 2000-01-01T00:00:00Z -n 10000 -p true' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:etc/whelkoperations.json
 
-Example - "reindex" tripple store, performing load from storage, turtle conversion and adding to tripple store:
+Example - "reindex" triple store, performing load from storage, turtle conversion and adding to triple store:
 
     $ gradle whelkOperation -Dargs='-o reindex -w libris -c sesamegraphstore'
 
@@ -127,15 +127,24 @@ Example - "reindex" tripple store, performing load from storage, turtle conversi
 
 In principle, any Graph Store supporting the SPARQL 1.1 Graph Store HTTP Protocol will work.
 
-1. Install Tomcat, e.g. using Homebrew:
+### Installing Sesame
+
+1. Install Tomcat (unless present on your system). E.g.:
+
     $ brew install tomcat
 
-2. Download Sesame from <http://openrdf.org/>
-    - Unpack and put the two war files into a running Tomcat
-    - Go to <http://localhost:8080/openrdf-workbench/> and create a new repository (e.g. "dev-libris")
+2. Download the Sesame distro (SDK) from <http://openrdf.org/>.
 
-3. Test the endpoint:
+3. Unpack and put the two war files into a running Tomcat. E.g.:
 
-        $ curl -L http://bibframe.org/vocab -o bibframe.rdf
-        $ curl -X PUT -H "Content-Type:application/rdf+xml" "http://localhost:8080/openrdf-sesame/repositories/test-mem/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F" --data @bibframe.rdf
+    $ cp war/openrdf-{sesame,workbench}.war /usr/local/Cellar/tomcat/7.0.39/libexec/webapps/
+
+4. Go to <http://localhost:8080/openrdf-workbench/> and create a new repository (named e.g. "dev-libris", using indexes "spoc,posc,opsc,cspo").
+
+5. Test the repository endpoint:
+
+    # Get the bibframe vocabulary, store it, then remove it:
+    $ curl -L http://bibframe.org/vocab -o bibframe.rdf
+    $ curl -X PUT -H "Content-Type:application/rdf+xml" "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F" --data @bibframe.rdf
+    $ curl -X DELETE "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F"
 
