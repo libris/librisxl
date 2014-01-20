@@ -1,15 +1,19 @@
 # Libris-XL
 
-datatools/
+Libris-XL is divided over three subprojects:
+
+* whelk-core:
+    contains the core components, whelks and storages, indexes and triplestores.
+* whelk-extensions:
+    contains extensions to the core components, such as format converters. Stuff used for specific implementations.
+* whelk-webapi:
+    contains the sources for the web API.
+
+Also:
+
+* datatools:
     See datatools/README.md
 
-Libris-XL is divided over three subprojects:
-    whelk-core:
-        contains the core components, whelks and storages, indexes and tripplestores.
-    whelk-extensions:
-        contains extensions to the core components, such as format converters. Stuff used for specific implementations.
-    whelk-webapi:
-        contains the sources for the web API.
 
 ## Dependencies
 
@@ -48,7 +52,7 @@ Or better, create a local OAI-PMH dump of examples and run a full import:
 
 (The benefit of this is that out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
 
-You need to add `-Ddisable.plugins="indexingprawn,sesamegraphstore"` to the invokations above unless you have set up a graph store (see below).
+You need to add `-Ddisable.plugins="indexingprawn,sesamegraphstore"` to the invocations above unless you have set up a graph store (see below).
 
 
 ### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)
@@ -56,17 +60,20 @@ You need to add `-Ddisable.plugins="indexingprawn,sesamegraphstore"` to the invo
 1. Configure mock whelk with suitable converters, etc/environment/dev/whelks.json
 
 2. Create a jar-file. From root librisxl folder:
-    $ gradle fatjar
+
+        $ gradle fatjar
 
 3. Run a local mock-configured Http standard whelk. From root librisxl folder:
-    $ export JAVA_OPTS="-Dfile.encoding=utf-8"
-    $ gradle jettyrun
+
+        $ export JAVA_OPTS="-Dfile.encoding=utf-8"
+        $ gradle jettyrun
 
 4. Run get-and-put-record script:
-    $ cd scripts
-    $ get-and-put-record.sh <bib|auth|hold> <id>
 
-5. To see JsonLD record: http://localhost:8180/whelk-webapi/bib/7149593
+        $ cd scripts
+        $ get-and-put-record.sh <bib|auth|hold> <id>
+
+5. To see JsonLD record, go to <http://localhost:8180/whelk-webapi/bib/7149593>
 
 ### Run standalone data conversion on a single document
 
@@ -104,7 +111,8 @@ Run whelkOperation gradle task to import, reindex or rebuild:
 
     $ gradle whelkOperation -Dargs='ARGS' -Dwhelk.config.uri=<uri-to-config-json> (-Delastic.host='<host>') (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>')
    
-   Where ARGS is:
+Where ARGS is:
+
      -d,--dataset <arg>      dataset (bib|auth|hold)
      -n,--num <arg>          maximum number of document to import
      -o,--operation <arg>    which operation to perform (import|reindex|etc)
@@ -131,20 +139,20 @@ In principle, any Graph Store supporting the SPARQL 1.1 Graph Store HTTP Protoco
 
 1. Install Tomcat (unless present on your system). E.g.:
 
-    $ brew install tomcat
+        $ brew install tomcat
 
 2. Download the Sesame distro (SDK) from <http://openrdf.org/>.
 
 3. Unpack and put the two war files into a running Tomcat. E.g.:
 
-    $ cp war/openrdf-{sesame,workbench}.war /usr/local/Cellar/tomcat/7.0.39/libexec/webapps/
+        $ cp war/openrdf-{sesame,workbench}.war /usr/local/Cellar/tomcat/7.0.39/libexec/webapps/
 
 4. Go to <http://localhost:8080/openrdf-workbench/> and create a new repository (named e.g. "dev-libris", using indexes "spoc,posc,opsc,cspo").
 
 5. Test the repository endpoint:
 
-    # Get the bibframe vocabulary, store it, then remove it:
-    $ curl -L http://bibframe.org/vocab -o bibframe.rdf
-    $ curl -X PUT -H "Content-Type:application/rdf+xml" "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F" --data @bibframe.rdf
-    $ curl -X DELETE "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F"
+        # Get the bibframe vocabulary, store it, then remove it:
+        $ curl -L http://bibframe.org/vocab -o bibframe.rdf
+        $ curl -X PUT -H "Content-Type:application/rdf+xml" "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F" --data @bibframe.rdf
+        $ curl -X DELETE "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F"
 
