@@ -154,7 +154,7 @@ class StandardWhelk implements Whelk {
     }
 
     @groovy.transform.CompileStatic
-    void addToIndex(List<Document> docs) {
+    void addToIndex(List<Document> docs, List<String> sIndeces = null) {
         List<IndexDocument> idxDocs = []
         log.debug("Number of documents to index: ${docs.size()}")
         log.trace("Sample ct: " + docs[0].contentType)
@@ -167,7 +167,10 @@ class StandardWhelk implements Whelk {
             }
             if (idxDocs) {
                 for (idx in indexes) {
-                    idx.bulkIndex(idxDocs)
+                    if (!sIndeces || idx.id in sIndeces) {
+                        log.trace("${idx.id} qualifies for indexing")
+                        idx.bulkIndex(idxDocs)
+                    }
                 }
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
@@ -175,7 +178,7 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    void addToGraphStore(List<Document> docs) {
+    void addToGraphStore(List<Document> docs, List<String> gStores = null) {
         log.debug("addToGraphStore ${docs.size()}")
         if (graphStores.size() > 0) {
             log.debug("Adding to graph stores")
@@ -188,8 +191,11 @@ class StandardWhelk implements Whelk {
             }
             if (dataDocs) {
                 for (store in graphStores) {
-                    dataDocs.each {
-                        store.update(docBaseUri.resolve(it.identifier), it)
+                    if (!gStores || store.id in gStores) {
+                        log.trace("${store.id} qualifies for adding.")
+                        dataDocs.each {
+                            store.update(docBaseUri.resolve(it.identifier), it)
+                        }
                     }
                 }
             } else (isDebugEnabled()) {
@@ -224,7 +230,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    void reindex(String dataset = null, String fromStorage = null, String startAt = null) {
+    void reindex(String dataset = null, List<String> selectedCompontents = null, String fromStorage = null, String startAt = null) {
         int counter = 0
         long startTime = System.currentTimeMillis()
         List<Document> docs = []
@@ -253,9 +259,9 @@ class StandardWhelk implements Whelk {
                     docs << doc
                 }
                 if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
-                    addToGraphStore(docs)
+                    addToGraphStore(docs, selectedCompontents)
                     try {
-                        addToIndex(docs)
+                        addToIndex(docs, selectedCompontents)
                     } catch (WhelkAddException wae) {
                         log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
                     }

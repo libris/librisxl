@@ -32,6 +32,7 @@ class WhelkOperator {
         cli.s(longOpt:'since', "since Date (yyyy-MM-dd'T'hh:mm:ss) for OAIPMH", required:false, args:1)
         cli.n(longOpt:'num', "maximum number of document to import", required:false, args:1)
         cli.p(longOpt:'picky', "picky (true|false)", required:false, args:1)
+        cli.c(longOpt:'component', "which components to use for reindexing (defaults to 'all')", required: false, args: 1)
         cli._(longOpt:'fromStorage', 'used for rebuild. from which storage to read source data.', required:false, args:1, argName:'storage id')
         cli._(longOpt:'silent', 'used by OAIPMH. If silent, the spinner is not shown during imports.', required:false)
 
@@ -72,18 +73,22 @@ class WhelkOperator {
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
             */
         } else if (opt.o == "reindex") {
+            def selectedComponents = null
+            if (opt.c) {
+                selectedComponents = opt.c.split(",") as List<String>
+            }
             if (opt.d) { // Reindex from a specific dataset
-                println "Reindex all documents in ${opt.d} in ${opt.w}"
+                println "Reindex all documents in ${opt.d} in ${opt.w} into components: ${(opt.c ? selectedComponents : 'all of them')}"
                 whelk.reindex(opt.dataset)
             } else {
-                println "Reindex all documents in ${opt.w}"
-                whelk.reindex()
+                println "Reindex all documents in ${opt.w} into components: ${(opt.c ? selectedComponents : 'all of them')}"
+                whelk.reindex(null, selectedComponents)
                 println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
             }
         } else if (operation == "rebuild") {
             if (opt.fromStorage) {
                 String dataset = (opt.dataset ? opt.dataset : null)
-                whelk.reindex(dataset, opt.fromStorage)
+                whelk.reindex(dataset, (opt.c ? opt.c.split(",") : null), opt.fromStorage)
             } else {
                 println cli.usage()
             }
