@@ -33,11 +33,18 @@
         "_class" : "se.kb.libris.whelks.component.SesameGraphStore",
         "_params" : "http://localhost:8080/openrdf-sesame,dev-libris"
     },
-    "graphstore": {
+    "sesamehttpgraphstore": {
         "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
         "_params" : {
             "graphStoreUri": "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service",
             "queryUri": "http://localhost:8080/openrdf-sesame/repositories/dev-libris/"
+        }
+    },
+    "fusekigraphstore": {
+        "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
+        "_params" : {
+            "graphStoreUri": "http://localhost:3030/libris/data",
+            "queryUri": "http://localhost:3030/libris/query"
         }
     },
     "marcconverter" : {

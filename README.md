@@ -135,7 +135,7 @@ Example - "reindex" triple store, performing load from storage, turtle conversio
 
 In principle, any Graph Store supporting the SPARQL 1.1 Graph Store HTTP Protocol will work.
 
-### Installing Sesame
+### Using Sesame
 
 1. Install Tomcat (unless present on your system). E.g.:
 
@@ -149,10 +149,23 @@ In principle, any Graph Store supporting the SPARQL 1.1 Graph Store HTTP Protoco
 
 4. Go to <http://localhost:8080/openrdf-workbench/> and create a new repository (named e.g. "dev-libris", using indexes "spoc,posc,opsc,cspo").
 
-5. Test the repository endpoint:
+If you like to, test the repository endpoint:
 
-        # Get the bibframe vocabulary, store it, then remove it:
-        $ curl -L http://bibframe.org/vocab -o bibframe.rdf
-        $ curl -X PUT -H "Content-Type:application/rdf+xml" "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F" --data @bibframe.rdf
-        $ curl -X DELETE "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F"
+    # Get the bibframe vocabulary, store it, then remove it:
+    $ curl -L http://bibframe.org/vocab -o bibframe.rdf
+    $ curl -X PUT -H "Content-Type:application/rdf+xml" "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F" --data @bibframe.rdf
+    $ curl -X DELETE "http://localhost:8080/openrdf-sesame/repositories/dev-libris/rdf-graphs/service?graph=http%3A%2F%2Fbibframe.org%2Fvocab%2F"
+
+### Using Fuseki
+
+1. Download Fuseki from <http://jena.apache.org/download/>
+2. Unpack it where you prefer 3d party tools/services (e.g. in /opt/fuseki)
+3. Start a non-persistent in-memory server for quick local testing:
+
+        $ ./fuseki-server --update --memTDB --set tdb:unionDefaultGraph=true /libris
+
+This is now available as:
+
+    $ GRAPH_STORE=http://localhost:3030/libris/data
+    $ ENDPOINT=http://localhost:3030/libris/query
 
