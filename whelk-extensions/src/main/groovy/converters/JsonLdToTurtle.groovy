@@ -8,12 +8,14 @@ class JsonLdToTurtle {
 
     PrintWriter pw
     Map context
+    String base
     Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language"]
     Map prefixes = [:]
 
-    JsonLdToTurtle(Map context, OutputStream outStream) {
+    JsonLdToTurtle(Map context, OutputStream outStream, String base=null) {
         this.context = context.context
         this.prefixes = context.prefixes
+        this.base = base
         pw = new PrintWriter(outStream)
     }
 
@@ -60,6 +62,9 @@ class JsonLdToTurtle {
     void prelude() {
         prefixes.each { k, v ->
             pw.println("@prefix ${k}: <${v}> .")
+        }
+        if (base) {
+            pw.println("@base <${base}> .")
         }
         pw.println()
     }
@@ -165,9 +170,9 @@ class JsonLdToTurtle {
         return [context: context, prefixes: prefixes]
     }
 
-    static OutputStream toTurtle(context, source) {
+    static OutputStream toTurtle(context, source, base=null) {
         def bos = new ByteArrayOutputStream()
-        def serializer = new JsonLdToTurtle(context, bos)
+        def serializer = new JsonLdToTurtle(context, bos, base)
         serializer.toTurtle(source)
         return bos
     }

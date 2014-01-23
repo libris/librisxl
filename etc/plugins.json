@@ -44,7 +44,8 @@
         "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"
     },
     "turtleconverter" : {
-        "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter"
+        "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter",
+      "_params": "context.jsonld, http://libris.kb.se/resource/"
     },
     "entityextractor" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
