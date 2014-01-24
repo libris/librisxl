@@ -12,20 +12,22 @@ class JsonLDTurtleConverter extends BasicRDFFormatConverter {
 
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
-    def context = null
+    def context
+    def base
 
-    JsonLDTurtleConverter() {
+    JsonLDTurtleConverter(String contextPath, String base=null) {
         def loader = getClass().classLoader
-        def contextSrc = loader.getResourceAsStream("context.jsonld").withStream {
+        def contextSrc = loader.getResourceAsStream(contextPath).withStream {
             mapper.readValue(it, Map)
         }
         context = JsonLdToTurtle.parseContext(contextSrc)
+        this.base = base
     }
 
     List<RDFDescription> doConvert(Document doc) {
         List<RDFDescription> docs = []
         def source = mapper.readValue(doc.data, Map)
-        def bytes = JsonLdToTurtle.toTurtle(context, source).toByteArray()
+        def bytes = JsonLdToTurtle.toTurtle(context, source, base).toByteArray()
         docs << new RDFDescription(identifier: doc.identifier, data: bytes, contentType: "text/turtle")
         return docs
     }
