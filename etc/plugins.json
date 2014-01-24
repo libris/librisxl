@@ -19,7 +19,7 @@
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
-        "_unique" : false
+        "_unique" : true
     },
     "cassandrastorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
@@ -48,6 +48,9 @@
     },
     "entityextractor" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
+    },
+    "defsindexconverter" : {
+        "_class" : "se.kb.libris.whelks.plugin.DefsIndexFormatConverter"
     },
     "search" : {
         "_class" : "se.kb.libris.whelks.api.SearchRestlet",

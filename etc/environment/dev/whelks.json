@@ -1,6 +1,21 @@
 {
     "_whelks": [
         {
+            "def":{
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+                "_plugins" : [
+                    "flatstorage",
+                    "localindex",
+                    "sesamegraphstore",
+                    "turtleconverter",
+                    "defsindexconverter",
+                    "search",
+                    "documentapi"
+                ],
+                "docBaseUri" : "http://libris.kb.se/"
+            }
+        },
+        {
             "libris":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins": [
@@ -28,8 +43,6 @@
             "resource":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins" : [
-                    "localdefinitiondata",
-                    "resourcelist",
                     "marcmap",
                     "isxntool"
                 ]
@@ -40,7 +53,7 @@
         "localindex": {
             "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
             "_params" : "work/data",
-            "_unique" : false
+            "_unique" : true
         },
         "flatstorage": {
             "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",

@@ -335,7 +335,7 @@ abstract class ElasticSearch extends BasicPlugin {
     void checkTypeMapping(indexName, indexType) {
         def mappings = performExecute(client.admin().cluster().prepareState()).state.metaData.index(indexName).getMappings()
         if (!mappings.containsKey(indexType)) {
-            log.debug("Mapping for $indexType does not exist. Creating ...")
+            log.debug("Mapping for $indexName/$indexType does not exist. Creating ...")
             setTypeMapping(indexName, indexType)
         }
     }
@@ -344,7 +344,8 @@ abstract class ElasticSearch extends BasicPlugin {
         def idxType = doc.type?.toLowerCase()
         if (!idxType) {
             try {
-                idxType = doc.identifier.toString().split("/")[1]
+                def identParts = doc.identifier.toString().split("/")
+                idxType = (identParts[1] == elasticIndex && identParts.size() > 3 ? identParts[2] : identParts[1])
             } catch (Exception e) {
                 log.error("Tried to use first part of URI ${doc.identifier} as type. Failed: ${e.message}", e)
             }
@@ -362,6 +363,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
 
     void addDocuments(documents) {
+        log.trace("Called addDocuments on elastic running currentIndex $currentIndex")
         try {
             if (documents) {
                 def breq = client.prepareBulk()

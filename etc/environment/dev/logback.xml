@@ -69,11 +69,9 @@
   <logger name="se.kb.libris.whelks.basic">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger> 
-  -->
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="trace"/>
   </logger>
@@ -92,12 +90,14 @@
  <logger name="se.kb.libris.whelks.api.ISXNTool">
       <level value="debug"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.SearchRestlet">
+  -->
+<logger name="se.kb.libris.whelks.api">
       <level value="debug"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
-      <level value="debug"/>
+      <level value="trace"/>
   </logger>
+  <!--
 <logger name="se.kb.libris.whelks.api.RestManager">
       <level value="debug"/>
   </logger>

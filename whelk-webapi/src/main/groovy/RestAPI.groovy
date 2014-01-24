@@ -163,6 +163,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
             }
         } else if (request.method == Method.PUT) {
+            log.debug("Received PUT request for ${this.whelk.id}")
             documentAPI = new DocumentRestlet(this.whelk)
             if (request.attributes?.get("identifier") != null) {
                 documentAPI.handle(request, response)

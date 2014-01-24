@@ -153,6 +153,10 @@ class Tools {
     static Map getDataAsMap(Document doc) {
         return staticMapper.readValue(doc.getDataAsString(), Map)
     }
+
+    static String getMapAsString(Map map) {
+        return staticMapper.writeValueAsString(map)
+    }
 }
 
 @Log

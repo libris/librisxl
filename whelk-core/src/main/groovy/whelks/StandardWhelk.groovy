@@ -142,7 +142,7 @@ class StandardWhelk implements Whelk {
         for (d in docs.values()) {
             for (st in  getStorages(d.contentType)) {
                 if (st.id != excemptStorage) {
-                    log.trace("Sending doc ${d.identifier} with ct ${d.contentType} to ${st.id}")
+                    log.trace("[${this.id}] Sending doc ${d.identifier} with ct ${d.contentType} to ${st.id}")
                     stored = (st.store(d) || stored)
                 }
             }
@@ -167,7 +167,7 @@ class StandardWhelk implements Whelk {
             }
             if (idxDocs) {
                 for (idx in indexes) {
-                    log.trace("${idx.id} qualifies for indexing")
+                    log.trace("[${this.id}] ${idx.id} qualifies for indexing")
                     idx.bulkIndex(idxDocs)
                 }
             } else if (log.isDebugEnabled()) {
