@@ -321,9 +321,12 @@ class SparqlRestlet extends BasicWhelkAPI {
             is = whelk.sparql(query)
         } catch (Exception e) {
             is = new ByteArrayInputStream(e.message.bytes)
+            log.warn("Query $query resulted in error: ${e.message}", e)
             query = null
             response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
         }
+
+        log.debug("Creating outputrepresentation.")
 
         Representation ir = new OutputRepresentation(mediaType(query)) {
             @Override
@@ -353,7 +356,8 @@ class SparqlRestlet extends BasicWhelkAPI {
     }
 }
 
-
+/*
+@Deprecated
 @Log
 class HttpSparqlRestlet extends BasicWhelkAPI {
     def pathEnd = "_httpsparql"
@@ -368,6 +372,7 @@ class HttpSparqlRestlet extends BasicWhelkAPI {
         response.setEntity(resource.handleOutbound(request))
     }
 }
+*/
 
 @Deprecated
 @Log

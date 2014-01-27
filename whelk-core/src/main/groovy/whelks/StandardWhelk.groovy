@@ -115,7 +115,7 @@ class StandardWhelk implements Whelk {
 
     @Override
     InputStream sparql(String query) {
-        return graphStore?.sparql(query)
+        return sparqlEndpoint?.sparql(query)
     }
 
     Document sanityCheck(Document d) {
@@ -385,6 +385,8 @@ class StandardWhelk implements Whelk {
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     GraphStore getGraphStore() { return plugins.find { it instanceof GraphStore } }
+    List<SparqlEndpoint> getSparqlEndpoint() { return plugins.findAll { it instanceof SparqlEndpoint } }
+    SparqlEndpoint getSparqlEndpoint() { return plugins.find { it instanceof SparqlEndpoint } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }
     List<FormatConverter> getFormatConverters() { return plugins.findAll { it instanceof FormatConverter }}
     List<IndexFormatConverter> getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter }}

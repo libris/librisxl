@@ -91,10 +91,10 @@
       <level value="debug"/>
   </logger>
   -->
-<logger name="se.kb.libris.whelks.api">
-      <level value="debug"/>
-  </logger>
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
+      <level value="trace"/>
+  </logger>
+<logger name="se.kb.libris.whelks.api.SparqlRestlet">
       <level value="trace"/>
   </logger>
   <!--

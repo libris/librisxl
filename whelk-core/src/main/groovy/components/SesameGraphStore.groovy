@@ -30,7 +30,7 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.result.*
 
 @Log
-class SesameGraphStore extends BasicPlugin implements GraphStore {
+class SesameGraphStore extends BasicPlugin implements GraphStore,SparqlEndpoint {
 
     String sesameServer
     String repositoryID

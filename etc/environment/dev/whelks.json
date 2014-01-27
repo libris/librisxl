@@ -22,6 +22,7 @@
                     "localindex",
                     "flatstorage",
                     "sesamegraphstore",
+                    "sesamehttpendpoint",
                     "search",
                     "oaipmhxmlconverter",
                     "completeexpander",
