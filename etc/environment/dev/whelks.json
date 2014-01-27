@@ -21,8 +21,8 @@
                 "_plugins": [
                     "localindex",
                     "flatstorage",
-                    "sesamegraphstore",
                     "sesamehttpendpoint",
+                    "sesamegraphstore",
                     "search",
                     "oaipmhxmlconverter",
                     "completeexpander",
