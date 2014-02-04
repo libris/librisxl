@@ -4,7 +4,7 @@ Libris-XL is divided over three subprojects:
 
 * whelk-core:
     contains the core components, whelks and storages, indexes and triplestores.
-* whelk-extensions:
+* ext-libris:
     contains extensions to the core components, such as format converters. Stuff used for specific implementations.
 * whelk-webapi:
     contains the sources for the web API.
@@ -102,8 +102,8 @@ If you are serving the Web API using Tomcat, you may be able to define these (vi
 
 First set up configuration of it:
 
-    $ cp whelk-extensions/src/main/resources/oaipmh.properties.in whelk-extensions/src/main/resources/oaipmh.properties
-    $ vim whelk-extensions/src/main/resources/oaipmh.properties # ... (ask for directions)
+    $ cp ext-libris/src/main/resources/oaipmh.properties.in ext-libris/src/main/resources/oaipmh.properties
+    $ vim ext-libris/src/main/resources/oaipmh.properties # ... (ask for directions)
 
 ### Perform whelk operations
 

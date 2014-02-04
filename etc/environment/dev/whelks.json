@@ -1,77 +1,93 @@
 {
     "_whelks": [
-        {
-            "def":{
-                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : [
-                    "flatstorage",
-                    "localindex",
-                    "sesamegraphstore",
-                    "turtleconverter",
-                    "defsindexconverter",
-                    "search",
-                    "documentapi"
+    {
+        "def":{
+            "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+            "_plugins" : [
+                "flatstorage",
+            "localindex",
+            "sesamegraphstore",
+            "turtleconverter",
+            "defsindexconverter",
+            "search",
+            "documentapi"
                 ],
-                "docBaseUri" : "http://libris.kb.se/"
-            }
-        },
-        {
-            "libris":{
-                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins": [
-                    "localindex",
-                    "flatstorage",
-                    "sesamehttpendpoint",
-                    "sesamegraphstore",
-                    "search",
-                    "oaipmhxmlconverter",
-                    "completeexpander",
-                    "sparqlapi",
-                    "remotesearch",
-                    "documentapi",
-                    "marcconverter",
-                    "turtleconverter",
-                    "entityextractor",
-                    "linkcompleter",
-                    "indexlinkfinder"
-                ],
-                "contentRoot" : "/",
-                "docBaseUri" : "http://libris.kb.se/"
-            }
-        },
-        {
-            "resource":{
-                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : [
-                    "marcmap",
-                    "isxntool"
-                ]
-            }
+            "docBaseUri" : "http://libris.kb.se/"
         }
-    ],
-    "_plugins": {
-        "localindex": {
-            "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
-            "_params" : "work/data",
-            "_unique" : true
-        },
-        "flatstorage": {
-            "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
-            "_params" : {
-                "storageDir": "work/storage/flat/main",
-                "contentType": "application/ld+json"
-            }
-        },
-        "diskstorage": {
-            "_class" : "se.kb.libris.whelks.component.DiskStorage",
-            "_params" : {
-                "storageDir": "work/storage/disk/jsonld",
-                "contentType": "application/ld+json"
-            }
-        },
-        "localdefinitiondata": {
-            "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
-            "_params": "datatools/build/"
+    },
+    {
+        "libris":{
+            "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+            "_plugins": [
+                "localindex",
+            "flatstorage",
+            "sesamehttpendpoint",
+            "sesamegraphstore",
+            "search",
+            "oaipmhxmlconverter",
+            "completeexpander",
+            "sparqlapi",
+            "remotesearch",
+            "documentapi",
+            "marcconverter",
+            "turtleconverter",
+            "entityextractor",
+            "linkcompleter",
+            "indexlinkfinder"
+                ],
+            "contentRoot" : "/",
+            "docBaseUri" : "http://libris.kb.se/"
+        }
+    },
+    {
+        "swepub":{
+            "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+            "_plugins" : [
+                "swepubstorage",
+                "documentapi"
+                ]
+        }
+    },
+    {
+        "resource":{
+            "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+            "_plugins" : [
+                "marcmap",
+            "isxntool"
+                ]
         }
     }
+    ],
+        "_plugins": {
+            "localindex": {
+                "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
+                "_params" : "work/data",
+                "_unique" : true
+            },
+            "flatstorage": {
+                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
+                "_params" : {
+                    "storageDir": "work/storage/flat/main",
+                    "contentType": "application/ld+json"
+                }
+            },
+            "swepubstorage": {
+                "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
+                "_params" : {
+                    "storageDir": "work/storage/flat/swepub",
+                    "contentType": "application/mods+xml"
+                }
+            },
+            "diskstorage": {
+                "_class" : "se.kb.libris.whelks.component.DiskStorage",
+                "_params" : {
+                    "storageDir": "work/storage/disk/jsonld",
+                    "contentType": "application/ld+json"
+                }
+            },
+            "localdefinitiondata": {
+                "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
+                "_params": "datatools/build/"
+            }
+        }
 }

@@ -1,6 +1,7 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.Document
+import se.kb.libris.whelks.IndexDocument
 import se.kb.libris.whelks.component.ElasticJsonMapper
 import spock.lang.*
 import groovy.util.logging.Slf4j as Log

@@ -120,7 +120,7 @@ project(":whelk-core") {
     }
 }
 
-project(":whelk-extensions") {
+project(":ext-libris") {
     dependencies {
         compile project(":whelk-core")
         compile 'stax:stax:1.2.0'
@@ -131,9 +131,10 @@ project(":whelk-extensions") {
     }
 }
 
-project(":whelk-ext-swepub") {
+project(":ext-swepub") {
     dependencies {
         compile project(":whelk-core")
+        compile project(":ext-libris")
     }
 }
 
@@ -142,7 +143,7 @@ project(":whelk-webapi") {
     apply plugin: 'war'
     dependencies {
         compile project(":whelk-core")
-        compile project(":whelk-extensions")
+        compile project(":ext-libris")
         compile 'org.restlet.jse:org.restlet:2.0.15'
         compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.15'
         compile 'se.kb.libris.commons:isbntools:1.0'

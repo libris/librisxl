@@ -4,3 +4,5 @@
 /ext-*/build
 .*.swp
 /work
+/ext-*/**/whelks.json
+/ext-*/**/logback.xml

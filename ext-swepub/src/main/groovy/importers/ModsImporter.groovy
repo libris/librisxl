@@ -1,6 +1,7 @@
 package se.kb.libris.whelks.swepub.importers
 
-import se.kb.libris.whelks.importers
+import se.kb.libris.whelks.importers.*
+import se.kb.libris.whelks.*
 
 class ModsImporter extends DumpImporter {
 
