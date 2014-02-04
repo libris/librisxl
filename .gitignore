@@ -1,4 +1,6 @@
 .gradle
-/whelk-*/build
+/whelk-core/build
+/whelk-webapi/build
+/ext-*/build
 .*.swp
 /work
