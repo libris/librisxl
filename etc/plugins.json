@@ -51,7 +51,10 @@
     },
     "turtleconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter",
-      "_params": "context.jsonld, http://libris.kb.se/resource/"
+        "_params": "context.jsonld, http://libris.kb.se/resource/"
+    },
+    "swepubturtleconverter" : {
+        "_class" : "se.kb.libris.whelks.swepub.plugin.SwepubTurtleConverter"
     },
     "entityextractor" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"

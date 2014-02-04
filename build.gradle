@@ -131,6 +131,12 @@ project(":whelk-extensions") {
     }
 }
 
+project(":whelk-ext-swepub") {
+    dependencies {
+        compile project(":whelk-core")
+    }
+}
+
 project(":whelk-webapi") {
     apply plugin: 'jetty'
     apply plugin: 'war'

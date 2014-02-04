@@ -21,6 +21,8 @@ import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import se.kb.libris.conch.converter.MarcJSONConverter
 
+import static se.kb.libris.conch.Tools.*
+
 @Log
 class DumpImporter {
 
@@ -76,18 +78,17 @@ class DumpImporter {
                 optimusPrime.transform(new StAXSource(xsr), new StreamResult(outWriter))
                 String xmlString = normalizeString(outWriter.toString())
                 doc = buildDocument(xmlString)
+                doc = whelk.sanityCheck(doc)
             } catch (javax.xml.stream.XMLStreamException xse) {
                 log.error("Skipping document, error in stream: ${xse.message}")
             }
 
             if (doc) {
                 documents << doc
-                printSpinner(nrImported)
+                printSpinner("Running dumpimport. $nrImported documents imported sofar.", nrImported)
                 if (++nrImported % BATCH_SIZE == 0) {
                     addDocuments(documents)
                     documents = []
-                    //def td = TimeCategory.minus(new Date(), loadStartTime)
-                    //log.debug("$nrImported documents stored. Lap time is $td")
                     float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
                     log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
                 }
@@ -105,10 +106,12 @@ class DumpImporter {
         return nrImported
     }
 
+    /*
     void printSpinner(int count) {
         print "Running dumpimport $count documents imported sofar. ${progressSpinner[progressSpinnerState]}                \r"
         progressSpinnerState = (progressSpinnerState + 1 >= progressSpinner.size() ? 0 : progressSpinnerState + 1)
     }
+    */
 
     void addDocuments(final List documents) {
         queue.execute({

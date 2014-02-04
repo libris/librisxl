@@ -1,0 +1,45 @@
+{
+        "date_detection" : false,
+        "_timestamp" : {
+            "enabled" : true,
+            "store" : true
+        },
+        "_source" : {
+            "enabled" : true
+        },
+        "store" : true,
+        "properties" : {
+            "controlledLabel" : {
+                "type" : "string",
+                "index_analyzer" : "completer"
+            },
+            "label" : {
+                "type" : "string",
+                "index_analyzer" : "completer"
+            },
+            "altLabel" : {
+                "type" : "string",
+                "index_analyzer" : "completer"
+            },
+            "name" : {
+                "type" : "string",
+                "index_analyzer" : "completer"
+            },
+            "familyName" : {
+                "type" : "string",
+                "index_analyzer" : "completer"
+            },
+            "givenName" : {
+                "type" : "string",
+                "index_analyzer" : "completer"
+            },
+            "sameAs.controlledLabel" : {
+                "type" : "string",
+                "index_analyzer" : "completer"
+            },
+            "@id" : {
+                "type" : "string",
+                "index" : "not_analyzed"
+            }
+        }
+}

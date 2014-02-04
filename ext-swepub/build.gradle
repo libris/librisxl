@@ -1,0 +1,5 @@
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+    flatDir name: 'localWhelk-extensionsDir', dirs: '../lib'
+}
