@@ -5,12 +5,12 @@
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins" : [
                 "flatstorage",
-            "localindex",
-            "sesamegraphstore",
-            "turtleconverter",
-            "defsindexconverter",
-            "search",
-            "documentapi"
+                "localindex",
+                "sesamegraphstore",
+                "turtleconverter",
+                "defsindexconverter",
+                "search",
+                "documentapi"
                 ],
             "docBaseUri" : "http://libris.kb.se/"
         }
@@ -20,20 +20,20 @@
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins": [
                 "localindex",
-            "flatstorage",
-            "sesamehttpendpoint",
-            "sesamegraphstore",
-            "search",
-            "oaipmhxmlconverter",
-            "completeexpander",
-            "sparqlapi",
-            "remotesearch",
-            "documentapi",
-            "marcconverter",
-            "turtleconverter",
-            "entityextractor",
-            "linkcompleter",
-            "indexlinkfinder"
+                "flatstorage",
+                "sesamehttpendpoint",
+                "sesamegraphstore",
+                "search",
+                "oaipmhxmlconverter",
+                "completeexpander",
+                "sparqlapi",
+                "remotesearch",
+                "documentapi",
+                "marcconverter",
+                "turtleconverter",
+                "entityextractor",
+                "linkcompleter",
+                "indexlinkfinder"
                 ],
             "contentRoot" : "/",
             "docBaseUri" : "http://libris.kb.se/"

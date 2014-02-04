@@ -68,9 +68,18 @@ class StandardWhelk implements Whelk {
         for (doc in docs) {
             convertedDocs.add(addToStorage(doc))
         }
-        log.debug("${convertedDocs.size()} docs left to index and stuff ...")
-        addToGraphStore(convertedDocs)
-        addToIndex(convertedDocs)
+        try {
+            log.debug("${convertedDocs.size()} docs left to triplify ...")
+            addToGraphStore(convertedDocs)
+        } catch (Exception e) {
+            log.error("Failed adding documents to graphstore: ${e.message}", e)
+        }
+        try {
+            log.debug("${convertedDocs.size()} docs left to index ...")
+            addToIndex(convertedDocs)
+        } catch (Exception e) {
+            log.error("Failed indexing documents: ${e.message}", e)
+        }
     }
 
     @Override
