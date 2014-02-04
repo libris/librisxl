@@ -42,8 +42,6 @@ class DumpImporter {
     int progressSpinnerState = 0
 
     DumpImporter(Whelk toWhelk, String origin, boolean picky = true) {
-        failedLog = new File("failed_ids.log")
-        exceptionLog = new File("exceptions.log")
         this.whelk = toWhelk
         this.picky = picky
         this.origin = origin
@@ -118,10 +116,16 @@ class DumpImporter {
             try {
                 this.whelk.bulkAdd(documents)
             } catch (WhelkAddException wae) {
+                if (!failedLog) {
+                    failedLog = new File("failed_ids.log")
+                }
                 for (fi in wae.failedIdentifiers) {
                     failedLog << "$fi\n"
                 }
             } catch (Exception e) {
+                if (!exceptionLog) {
+                    exceptionLog = new File("exceptions.log")
+                }
                 e.printStackTrace(new FileWriter(exceptionLog, true))
             }
         } as Runnable)

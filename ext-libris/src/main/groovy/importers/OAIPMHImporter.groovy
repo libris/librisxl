@@ -38,8 +38,6 @@ class OAIPMHImporter {
     File exceptionLog
 
     OAIPMHImporter(Whelk toWhelk, String fromResource, String serviceUrl=null) {
-        failedLog = new File("failed_ids.log")
-        exceptionLog = new File("exceptions.log")
         this.whelk = toWhelk
         assert whelk
         this.resource = fromResource
@@ -148,10 +146,16 @@ class OAIPMHImporter {
             try {
                 this.whelk.bulkAdd(documents)
             } catch (WhelkAddException wae) {
+                if (!failedLog) {
+                    failedLog = new File("failed_ids.log")
+                }
                 for (fi in wae.failedIdentifiers) {
                     failedLog << "$fi\n"
                 }
             } catch (Exception e) {
+                if (!exceptionLog) {
+                    exceptionLog = new File("exceptions.log")
+                }
                 e.printStackTrace(new PrintWriter(exceptionLog))
             }
         } as Runnable)

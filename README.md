@@ -125,7 +125,7 @@ Where ARGS is:
 
 Example - import a maximum of 10000 documents since 2000-01-01 using etc/whelksoperations.json to configure the whelks from external sources:
 
-    $ gradle whelkOperation -Dargs='-o import -w libris -d bib -s 2000-01-01T00:00:00Z -n 10000 -p true' -Dfile.encoding='utf-8' -Dwhelk.config.uri=file:etc/whelkoperations.json
+    $ gradle whelkOperation -Dargs='-o import -w libris -d bib -s 2000-01-01T00:00:00Z -n 10000 -p true' -Dfile.encoding='utf-8'
 
 Example - "reindex" triple store, performing load from storage, turtle conversion and adding to triple store:
 
