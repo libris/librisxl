@@ -6,7 +6,7 @@
             "_plugins" : [
                 "flatstorage",
                 "localindex",
-                "sesamegraphstore",
+                "fusekigraphstore",
                 "turtleconverter",
                 "defsindexconverter",
                 "search",
@@ -21,8 +21,7 @@
             "_plugins": [
                 "localindex",
                 "flatstorage",
-                "sesamehttpendpoint",
-                "sesamegraphstore",
+                "fusekigraphstore",
                 "search",
                 "oaipmhxmlconverter",
                 "completeexpander",
