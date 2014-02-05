@@ -1,4 +1,5 @@
 import json
+from operator import itemgetter as iget
 
 def packaged(data, known=None):
     for o in data.values():
@@ -22,7 +23,7 @@ def packaged(data, known=None):
 def print_summary(data, known=None):
     for mtype, fields in packaged(data, known):
         print '#', mtype
-        for field, subfields in sorted(fields, key=lambda t: t[0]):
+        for field, subfields in sorted(fields, key=iget(0)):
             print field, ", ".join(subfields) if subfields else "(FIXED)"
         print
 
@@ -57,16 +58,28 @@ def _get_known(marcframe):
                 for tag, dfn in marcframe[mtype].items()
             } for mtype in ('bib', 'auth', 'hold')}
 
+def query_results_to_tsv(data):
+    rows = ((key.split('.', 1)[1], stats['total'], stats['terms'])
+            for key, stats in data['facets'].items())
+
+    for key, total, values in sorted(rows, key=iget(1), reverse=True):
+        tag, code = key.split('.')
+        vals = (u", ".join("%(term)s (%(count)s)" % v for v in values))
+        print (u"%s\t%s\t%s\t%s" % (tag, code, total, vals)).encode('utf-8')
+
+
 if __name__ == '__main__':
     from optparse import OptionParser
     op = OptionParser()
     op.add_option('-f', '--facet-for-type', type=str, help="Generate facet query for type")
     op.add_option('-s', '--es-server', type=str, help="name:port of elasticsearch server")
+    op.add_option('-t', '--make-tsv', action='store_true', help="Digest query results into TSV data")
     opts, args = op.parse_args()
 
-    fpath = args.pop(0)
-    with open(fpath) as fp:
-        data = json.load(fp)
+    if args:
+        fpath = args.pop(0)
+        with open(fpath) as fp:
+            data = json.load(fp)
 
     if args:
         fpath = args.pop(0)
@@ -88,5 +101,8 @@ if __name__ == '__main__':
     if opts.facet_for_type:
         facet_query = ",\n".join(to_facet_query(data, opts.facet_for_type, known))
         print cmd_str  % (opts.es_server, opts.facet_for_type, facet_query)
+    elif opts.make_tsv:
+        import sys
+        query_results_to_tsv(json.load(sys.stdin))
     else:
         print_summary(data, known)
