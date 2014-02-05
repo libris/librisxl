@@ -11,17 +11,19 @@ import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
+import se.kb.libris.whelks.plugin.*
 import se.kb.libris.conch.converter.MarcJSONConverter
 import se.kb.libris.conch.Tools
 
 @Log
-class OAIPMHImporter {
+class OAIPMHImporter extends BasicPlugin implements Importer {
 
     static SERVICE_BASE_URL = "http://data.libris.kb.se/"
     static final String OUT_CONTENT_TYPE = "text/oaipmh+xml"
 
     Whelk whelk
-    String resource
+    String dataset
+
     String serviceUrl
     int nrImported = 0
     int nrDeleted = 0
@@ -37,18 +39,19 @@ class OAIPMHImporter {
     File failedLog
     File exceptionLog
 
-    OAIPMHImporter(Whelk toWhelk, String fromResource, String serviceUrl=null) {
-        this.whelk = toWhelk
-        assert whelk
-        this.resource = fromResource
-        this.serviceUrl = serviceUrl ?: SERVICE_BASE_URL + resource
+    OAIPMHImporter() {}
+
+    OAIPMHImporter(Map settings) {
+        this.serviceUrl = settings.get('serviceUrl',null)
     }
 
-    int doImport(Date from = null, int nrOfDocs = -1, boolean picky = true, boolean silent = false) {
+    int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
         getAuthentication()
+        this.dataset = dataset
         this.picky = picky
         this.silent = silent
-        String urlString =  serviceUrl + "/oaipmh/?verb=ListRecords&metadataPrefix=marcxml"
+
+        String urlString =  (serviceUrl ?: SERVICE_BASE_URL + "/"+dataset+"/oaipmh/") + "?verb=ListRecords&metadataPrefix=marcxml"
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
         }
@@ -101,7 +104,7 @@ class OAIPMHImporter {
                 try {
                     doc = new Document()
                         .withData(rawrecord.getBytes("UTF-8"))
-                        .withEntry(["identifier":"/"+this.resource+"/"+id,"dataset":this.resource,"contentType":OUT_CONTENT_TYPE])
+                        .withEntry(["identifier":"/"+this.dataset+"/"+id,"dataset":this.dataset,"contentType":OUT_CONTENT_TYPE])
                     documents << doc
                     nrImported++
                     sizeOfBatch++
@@ -110,7 +113,7 @@ class OAIPMHImporter {
                         velocityMsg = "Current velocity: " + (1000*(sizeOfBatch / (System.currentTimeMillis() - meanTime))) + " docs/second."
                     }
                     if (!silent && log.isInfoEnabled() && !log.isDebugEnabled()) {
-                        Tools.printSpinner("Running OAIPMH ${this.resource} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
+                        Tools.printSpinner("Running OAIPMH ${this.dataset} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                     }
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord", e)

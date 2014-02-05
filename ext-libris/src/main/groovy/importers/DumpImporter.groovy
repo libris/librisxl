@@ -17,6 +17,7 @@ import javax.xml.transform.stream.StreamResult
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
+import se.kb.libris.whelks.plugin.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import se.kb.libris.conch.converter.MarcJSONConverter
@@ -24,27 +25,36 @@ import se.kb.libris.conch.converter.MarcJSONConverter
 import static se.kb.libris.conch.Tools.*
 
 @Log
-class DumpImporter {
+class DumpImporter extends BasicPlugin implements Importer {
 
     Whelk whelk
     int nrImported = 0
     int nrDeleted = 0
     boolean picky
     final int BATCH_SIZE = 1000
-    String origin
+    String dataset
+    int maxDocs
+
 
     File failedLog
     File exceptionLog
 
     ExecutorService queue
 
-    def progressSpinner = ['/','-','\\','|']
-    int progressSpinnerState = 0
-
-    DumpImporter(Whelk toWhelk, String origin, boolean picky = true) {
+    /*
+    DumpImporter(Whelk toWhelk, String dataset, boolean picky = true) {
         this.whelk = toWhelk
         this.picky = picky
-        this.origin = origin
+        this.dataset = dataset
+    }
+    */
+
+    @Override
+    int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URL resource) {
+        this.dataset = dataset
+        this.picky = picky
+        this.maxDocs = nrOfDocs
+        return doImportFromURL(resource)
     }
 
     int doImportFromFile(File file) {
@@ -90,6 +100,9 @@ class DumpImporter {
                     float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
                     log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
                 }
+                if (nrImported >= maxDocs) {
+                    break
+                }
             }
         }
 
@@ -103,13 +116,6 @@ class DumpImporter {
 
         return nrImported
     }
-
-    /*
-    void printSpinner(int count) {
-        print "Running dumpimport $count documents imported sofar. ${progressSpinner[progressSpinnerState]}                \r"
-        progressSpinnerState = (progressSpinnerState + 1 >= progressSpinner.size() ? 0 : progressSpinnerState + 1)
-    }
-    */
 
     void addDocuments(final List documents) {
         queue.execute({
@@ -140,7 +146,7 @@ class DumpImporter {
         Document doc = null
 
         try {
-            doc = new Document().withData(jsonRec.getBytes("UTF-8")).withEntry(["identifier":new String("/"+this.origin+"/"+id),"contentType":"application/x-marc-json"])
+            doc = new Document().withData(jsonRec.getBytes("UTF-8")).withEntry(["identifier":new String("/"+this.dataset+"/"+id),"contentType":"application/x-marc-json"])
         } catch (Exception e) {
             log.error("Failed! (${e.message}) for :\n$mdrecord\nAs JSON:\n$jsonRec")
             if (picky) {

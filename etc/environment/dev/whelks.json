@@ -32,7 +32,10 @@
                 "turtleconverter",
                 "entityextractor",
                 "linkcompleter",
-                "indexlinkfinder"
+                "indexlinkfinder",
+                "oaipmhimporter",
+                "marcimporter",
+                "modsimporter"
                 ],
             "contentRoot" : "/",
             "docBaseUri" : "http://libris.kb.se/"

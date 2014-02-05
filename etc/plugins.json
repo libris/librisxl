@@ -193,5 +193,20 @@
             "batchSize" : 1000,
             "timeout" : 60000
         }
+    },
+    "oaipmhimporter" : {
+        "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter"
+    },
+    "marcimporter" : {
+        "_class" : "se.kb.libris.whelks.importers.DumpImporter"
+    },
+    "modsimporter" : {
+        "_class" : "se.kb.libris.whelks.swepub.importers.ModsImporter"
+    },
+    "swepuboaipmhimporter" : {
+        "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
+        "_param" : {
+            "serviceUrl" : "http://api.libris.kb.se/swepub/oaipmh/SWEPUB"
+        }
     }
 }

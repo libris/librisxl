@@ -403,5 +403,7 @@ class StandardWhelk implements Whelk {
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
     List<Filter> getFilters() { return plugins.findAll { it instanceof Filter }}
+    Importer getImporter(String id) { return plugins.find { it instanceof Importer && it.id == id } }
+    List<Importer> getImporters() { return plugins.findAll { it instanceof Importer } }
 
 }

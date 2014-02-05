@@ -27,17 +27,19 @@ class WhelkOperator {
         def cli = new CliBuilder(usage: 'whelkoperation', posix:true)
         cli.o(longOpt:'operation', "which operation to perform (import|reindex|rebuild|etc)", required:true, args: 1)
         cli.w(longOpt:'whelk', "the name of the whelk to perform operation on e.g. libris", required:true, args: 1)
-        cli.d(longOpt:'dataset', "dataset (bib|auth|hold)", required:false, args:1)
-        cli.u(longOpt:'serviceUrl', "serviceUrl for OAIPMH", required:false, args:1, argName:'URL')
+        cli.d(longOpt:'dataset', "dataset (e.g. bib|auth|hold)", required:false, args:1)
+        cli.u(longOpt:'serviceUrl', "URL for imports. Can be an OAIPMH service URL, the URL of a dump, or a filename.", required:false, args:1, argName:'URL')
         cli.s(longOpt:'since', "since Date (yyyy-MM-dd'T'hh:mm:ss) for OAIPMH", required:false, args:1)
         cli.n(longOpt:'num', "maximum number of document to import", required:false, args:1)
         cli.p(longOpt:'picky', "picky (true|false)", required:false, args:1)
-        cli.c(longOpt:'component', "which components to use for reindexing (defaults to 'all')", required: false, args: 1)
+        cli.c(longOpt:'component', "which component to use (defaults to 'all')", required: false, args: 1)
         cli._(longOpt:'fromStorage', 'used for rebuild. from which storage to read source data.', required:false, args:1, argName:'storage id')
-        cli._(longOpt:'silent', 'used by OAIPMH. If silent, the spinner is not shown during imports.', required:false)
+        cli._(longOpt:'silent', 'used by imports. If silent, the spinner is not shown during imports.', required:false)
 
         def opt = cli.parse(args)
         if (!opt) {
+            log.trace("Deleting lockfile ${lockFile.absolutePath}.")
+            lockFile.delete()
             return
         }
         def whelk = wi.getWhelks().find { it.id == opt.w }
@@ -47,18 +49,57 @@ class WhelkOperator {
         long time = 0
         if (opt.o == "import") {
             if (!opt.d) {
-                println "Dataset is required for OAIPMH import."
+                println "Dataset is required for import."
+                log.trace("Deleting lockfile ${lockFile.absolutePath}.")
+                lockFile.delete()
                 return
             }
-            def surl = (opt.u ? opt.u : null)
-            def since = (opt.s ? Tool.parseDate(opt.s) : null)
+            def importer = null
+            if (opt.c) {
+                importer = whelk.getImporter(opt.c)
+            } else {
+                def importers = whelk.getImporters()
+                if (importers.size() > 1) {
+                    println "Multiple importers available for ${whelk.id}, you need to specify one with the '-c' argument."
+                        log.trace("Deleting lockfile ${lockFile.absolutePath}.")
+                        lockFile.delete()
+                        return
+                } else {
+                    try {
+                        importer = importers[0]
+                    } catch (IndexOutOfBoundsException e) { }
+                }
+            }
+            if (!importer) {
+                println "Couldn't find any importers working for ${whelk.id}."
+                log.trace("Deleting lockfile ${lockFile.absolutePath}.")
+                lockFile.delete()
+                return
+            }
+            int nrimports = 0
             int nums = (opt.n ? opt.n.toInteger() : -1)
-            println "Import from OAIPMH"
-            //def importer = new BatchImport(resource)
-            def importer = new OAIPMHImporter(whelk, opt.d, surl)
-            def nrimports = importer.doImport(since, nums, picky, opt.silent)
-            def elapsed = ((System.currentTimeMillis() - startTime) / 1000)
-            println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
+            if (importer instanceof OAIPMHImporter) {
+                if (opt.u) {
+                    importer.serviceUrl = opt.u
+                }
+                def since = (opt.s ? Tool.parseDate(opt.s) : null)
+                println "Import from OAIPMH"
+                nrimports = importer.doImport(opt.d, nums, opt.silent, picky, since)
+            } else {
+                if (!opt.u) {
+                    println "URL is required for import."
+                    log.trace("Deleting lockfile ${lockFile.absolutePath}.")
+                    lockFile.delete()
+                    return
+                }
+                nrimports = importer.doImportFromURL(new URL(opt.u))
+            }
+            long elapsed = ((System.currentTimeMillis() - startTime) / 1000)
+            if (nrimports > 0 && elapsed > 0) {
+                println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
+            } else {
+                println "Nothing imported ..."
+            }
 
             /*
         } else if (operation == "importdump") {
