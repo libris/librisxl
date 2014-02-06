@@ -78,11 +78,12 @@ class WhelkOperator {
             }
             int nrimports = 0
             int nums = (opt.n ? opt.n.toInteger() : -1)
-            if (importer instanceof OAIPMHImporter) {
+            log.info("Importer name: ${importer.getClass().getName()}")
+            if (importer.getClass().getName() == "OAIPMHImporter") {
                 if (opt.u) {
                     importer.serviceUrl = opt.u
                 }
-                def since = (opt.s ? Tool.parseDate(opt.s) : null)
+                Date since = (opt.s ? Tool.parseDate(opt.s) : null)
                 println "Import from OAIPMH"
                 nrimports = importer.doImport(opt.d, nums, opt.silent, picky, since)
             } else {
@@ -92,7 +93,7 @@ class WhelkOperator {
                     lockFile.delete()
                     return
                 }
-                nrimports = importer.doImportFromURL(new URL(opt.u))
+                nrimports = importer.doImport(opt.d, nums, opt.silent, picky, new URL(opt.u))
             }
             long elapsed = ((System.currentTimeMillis() - startTime) / 1000)
             if (nrimports > 0 && elapsed > 0) {
