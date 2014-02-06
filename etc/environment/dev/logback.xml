@@ -14,15 +14,15 @@
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="debug"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.plugin.JsonLDLinkFinder">
        <level value="trace"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.IndexLinkFinder">
        <level value="trace"/>
   </logger>
+  -->
   <logger name="se.kb.libris.conch">
-      <level value="debug"/>
+      <level value="trace"/>
   </logger>
   <!--
   <logger name="se.kb.libris.whelks.plugin.MarcFrameConverter">
@@ -54,15 +54,12 @@
   <logger name="se.kb.libris.whelks.plugin">
       <level value="trace"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.component">
       <level value="debug"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.api">
       <level value="trace"/>
   </logger>
-  -->
   <logger name="se.kb.libris.whelks.plugin.IndexingPrawn">
       <level value="trace"/>
   </logger>
@@ -75,29 +72,24 @@
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.importers">
       <level value="debug"/>
   </logger>
- -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="trace"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.SesameGraphStore">
       <level value="trace"/>
   </logger>
-  <!--
  <logger name="se.kb.libris.whelks.api.ISXNTool">
       <level value="debug"/>
   </logger>
-  -->
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
       <level value="trace"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.SparqlRestlet">
       <level value="trace"/>
   </logger>
-  <!--
 <logger name="se.kb.libris.whelks.api.RestManager">
       <level value="debug"/>
   </logger>

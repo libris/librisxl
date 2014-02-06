@@ -30,7 +30,7 @@ class DumpImporter extends BasicPlugin implements Importer {
     Whelk whelk
     int nrImported = 0
     int nrDeleted = 0
-    boolean picky
+    boolean picky, silent
     final int BATCH_SIZE = 1000
     String dataset
     int maxDocs
@@ -55,6 +55,7 @@ class DumpImporter extends BasicPlugin implements Importer {
     int doImport(String dataset, int nrOfDocs, boolean silent, boolean picky, URL resource = null) {
         this.dataset = dataset
         this.picky = picky
+        this.silent = silent
         this.maxDocs = nrOfDocs
         assert resource
         return doImportFromURL(resource)
@@ -77,16 +78,53 @@ class DumpImporter extends BasicPlugin implements Importer {
 
     int performImport(XMLStreamReader xsr) {
         queue = Executors.newSingleThreadExecutor()
-        xsr.nextTag(); // Advance to statements element
         def documents = []
         Transformer optimusPrime = TransformerFactory.newInstance().newTransformer()
-        log.info("Transformer at the ready.")
         long loadStartTime = System.nanoTime()
-        int eventType = xsr.nextTag()
-        while(eventType == XMLStreamConstants.START_ELEMENT) {
-            String localName = xsr.getLocalName()
-            log.debug("Local name: $localName")
-            if (localName == startTransformingAtElement) {
+
+/* Snip */
+      int event = xsr.getEventType();
+
+      while (true) {
+          Document doc = null
+          if (event == XMLStreamConstants.START_ELEMENT && xsr.getLocalName() == startTransformingAtElement) {
+              try {
+                  Writer outWriter = new StringWriter()
+                  optimusPrime.transform(new StAXSource(xsr), new StreamResult(outWriter))
+                  String xmlString = normalizeString(outWriter.toString())
+                  doc = buildDocument(xmlString)
+              } catch (javax.xml.stream.XMLStreamException xse) {
+                  log.error("Skipping document, error in stream: ${xse.message}")
+              }
+              if (doc) {
+                  documents << doc
+                  if (log.isInfoEnabled() && !silent) {
+                      printSpinner("Running dumpimport. $nrImported documents imported sofar.", nrImported)
+                  }
+                  if (++nrImported % BATCH_SIZE == 0) {
+                      addDocuments(documents)
+                      documents = []
+                      float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
+                      log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
+                  }
+                  if (nrImported >= maxDocs) {
+                      log.debug("Max number of docs ($maxDocs) reached. Breaking ...")
+                      break
+                  }
+              }
+          }
+
+          if (!xsr.hasNext()) {
+              break
+          }
+          event = xsr.next()
+      }
+
+/*
+
+        while(true) {
+            log.debug("eventtype: $eventType, " + (eventType == XMLStreamConstants.START_ELEMENT ? xsr.getLocalName() : "unknown entity"))
+            if (eventType == XMLStreamConstants.START_ELEMENT && xsr.getLocalName() == startTransformingAtElement) {
                 log.debug("Found me a nice element to transform ...")
                 Writer outWriter = new StringWriter()
                 Document doc = null
@@ -100,30 +138,28 @@ class DumpImporter extends BasicPlugin implements Importer {
                     log.error("Skipping document, error in stream: ${xse.message}")
                 }
 
-                if (doc) {
-                    documents << doc
-                    printSpinner("Running dumpimport. $nrImported documents imported sofar.", nrImported)
-                    if (++nrImported % BATCH_SIZE == 0) {
-                        addDocuments(documents)
-                        documents = []
-                        float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
-                        log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
-                    }
-                    if (nrImported >= maxDocs) {
-                        log.debug("Max number of docs ($maxDocs) reached. Breaking ...")
-                        break
-                    }
-                }
             } else {
                 log.debug("Advancing ...")
                 eventType = xsr.nextTag()
+                if (eventType == XMLStreamConstants.START_ELEMENT) {
+                    log.debug("nextTag yielded ${xsr.getLocalName()}")
+                }
+                while (eventType != XMLStreamConstants.START_ELEMENT) {
+                    log.debug("Trodding through $eventType")
+                    eventType = xsr.nextTag()
+                }
+            }
+            if (!xsr.hasNext()) {
+                log.debug("End of file. Stopping ..")
             }
         }
+        log.debug("Done looping.")
 
         // Handle remainder
         if (documents.size() > 0) {
             addDocuments(documents)
         }
+        */
         print "Done!\n"
 
         queue.shutdown()
