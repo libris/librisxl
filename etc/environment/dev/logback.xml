@@ -21,10 +21,10 @@
   <logger name="se.kb.libris.whelks.plugin.IndexLinkFinder">
        <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.conch">
       <level value="debug"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.plugin.MarcFrameConverter">
       <level value="debug"/>
   </logger>
@@ -41,8 +41,8 @@
       <level value="debug"/>
   </logger>
   -->
-   <logger name="se.kb.libris.whelks.importers">
-      <level value="debug"/>
+   <logger name="se.kb.libris.whelks.swepub.importers.ModsImporter">
+      <level value="trace"/>
   </logger>
   <!--
   <logger name="se.kb.libris.whelks.plugin.JsonLD2MarcConverter">

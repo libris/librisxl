@@ -50,6 +50,9 @@ Or better, create a local OAI-PMH dump of examples and run a full import:
     $ fg
     <CTRL-C>
 
+
+    gradle whelkOperation -Dargs='-n 100 -w libris -d bib -o import -c oaipmhimporter -u http://localhost:8000/bib/oaipmh/'
+
 (The benefit of this is that out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
 
 You need to add `-Ddisable.plugins="indexingprawn,sesamegraphstore"` to the invocations above unless you have set up a graph store (see below).

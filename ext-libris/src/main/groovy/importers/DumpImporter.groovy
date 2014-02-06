@@ -35,6 +35,8 @@ class DumpImporter extends BasicPlugin implements Importer {
     String dataset
     int maxDocs
 
+    String startTransformingAtElement = "record"
+
 
     File failedLog
     File exceptionLog
@@ -78,32 +80,43 @@ class DumpImporter extends BasicPlugin implements Importer {
         xsr.nextTag(); // Advance to statements element
         def documents = []
         Transformer optimusPrime = TransformerFactory.newInstance().newTransformer()
-        while(xsr.nextTag() == XMLStreamConstants.START_ELEMENT) {
-            //Date loadStartTime = new Date()
-            long loadStartTime = System.nanoTime()
-            Writer outWriter = new StringWriter()
-            Document doc = null
-            try {
-                optimusPrime.transform(new StAXSource(xsr), new StreamResult(outWriter))
-                String xmlString = normalizeString(outWriter.toString())
-                doc = buildDocument(xmlString)
-                doc = whelk.sanityCheck(doc)
-            } catch (javax.xml.stream.XMLStreamException xse) {
-                log.error("Skipping document, error in stream: ${xse.message}")
-            }
+        log.info("Transformer at the ready.")
+        long loadStartTime = System.nanoTime()
+        int eventType = xsr.nextTag()
+        while(eventType == XMLStreamConstants.START_ELEMENT) {
+            String localName = xsr.getLocalName()
+            log.debug("Local name: $localName")
+            if (localName == startTransformingAtElement) {
+                log.debug("Found me a nice element to transform ...")
+                Writer outWriter = new StringWriter()
+                Document doc = null
+                try {
+                    optimusPrime.transform(new StAXSource(xsr), new StreamResult(outWriter))
+                    String xmlString = normalizeString(outWriter.toString())
+                    log.info("xmlString: $xmlString")
+                    doc = buildDocument(xmlString)
+                    doc = whelk.sanityCheck(doc)
+                } catch (javax.xml.stream.XMLStreamException xse) {
+                    log.error("Skipping document, error in stream: ${xse.message}")
+                }
 
-            if (doc) {
-                documents << doc
-                printSpinner("Running dumpimport. $nrImported documents imported sofar.", nrImported)
-                if (++nrImported % BATCH_SIZE == 0) {
-                    addDocuments(documents)
-                    documents = []
-                    float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
-                    log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
+                if (doc) {
+                    documents << doc
+                    printSpinner("Running dumpimport. $nrImported documents imported sofar.", nrImported)
+                    if (++nrImported % BATCH_SIZE == 0) {
+                        addDocuments(documents)
+                        documents = []
+                        float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
+                        log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
+                    }
+                    if (nrImported >= maxDocs) {
+                        log.debug("Max number of docs ($maxDocs) reached. Breaking ...")
+                        break
+                    }
                 }
-                if (nrImported >= maxDocs) {
-                    break
-                }
+            } else {
+                log.debug("Advancing ...")
+                eventType = xsr.nextTag()
             }
         }
 

@@ -79,7 +79,7 @@ class WhelkOperator {
             int nrimports = 0
             int nums = (opt.n ? opt.n.toInteger() : -1)
             log.info("Importer name: ${importer.getClass().getName()}")
-            if (importer.getClass().getName() == "OAIPMHImporter") {
+            if (importer.getClass().getName() == "se.kb.libris.whelks.importers.OAIPMHImporter") {
                 if (opt.u) {
                     importer.serviceUrl = opt.u
                 }
