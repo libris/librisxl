@@ -244,7 +244,7 @@ class StandardWhelk implements Whelk {
         boolean indexing = !startAt
         if (!dataset) {
             for (index in indexes) {
-                if (index in selectedCompontents) {
+                if (!selectedCompontents || index in selectedCompontents) {
                     log.debug("Requesting new index for ${index.id}.")
                     index.createNewCurrentIndex()
                 }
@@ -290,7 +290,7 @@ class StandardWhelk implements Whelk {
         log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
         if (!dataset) {
             for (index in indexes) {
-                if (index in selectedCompontents) {
+                if (!selectedCompontents || index in selectedCompontents) {
                     index.reMapAliases()
                 }
             }
