@@ -45,13 +45,10 @@ Or better, create a local OAI-PMH dump of examples and run a full import:
 
     $ python scripts/assemble_oaipmh_records.py *******:**** scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
-    $ for d in auth bib; do gradle whelkOperation -Dargs="-o import -w libris -d $d -u http://localhost:8000/$d"; done
+    $ for d in auth bib; do gradle whelkOperation -Dargs="-o import -w libris -c oaipmhimporter -d $d -u http://localhost:8000/$d/oaipmh"; done
     $ gradle whelkOperation -Dargs='-o linkfindandcomplete -w libris -d bib'
     $ fg
     <CTRL-C>
-
-
-    gradle whelkOperation -Dargs='-n 100 -w libris -d bib -o import -c oaipmhimporter -u http://localhost:8000/bib/oaipmh/'
 
 (The benefit of this is that out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
 
