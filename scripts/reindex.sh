@@ -6,7 +6,7 @@ if [[ "$1" != "" ]]; then
     DATASET="-d $1"
 fi
 
-WEBAPPS=/var/lib/tomcat6/webapps/whelk
+WEBAPPS=%(tomcat_webapps)s/whelk
 SETENV=%(envscript)s
 
 CLASSES=$WEBAPPS/WEB-INF/classes
