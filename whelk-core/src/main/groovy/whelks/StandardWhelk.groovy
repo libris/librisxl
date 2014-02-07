@@ -69,13 +69,13 @@ class StandardWhelk implements Whelk {
             convertedDocs.add(addToStorage(doc))
         }
         try {
-            log.debug("${convertedDocs.size()} docs left to triplify ...")
+            log.trace("${convertedDocs.size()} docs left to triplify ...")
             addToGraphStore(convertedDocs)
         } catch (Exception e) {
             log.error("Failed adding documents to graphstore: ${e.message}", e)
         }
         try {
-            log.debug("${convertedDocs.size()} docs left to index ...")
+            log.trace("${convertedDocs.size()} docs left to index ...")
             addToIndex(convertedDocs)
         } catch (Exception e) {
             log.error("Failed indexing documents: ${e.message}", e)
@@ -130,6 +130,7 @@ class StandardWhelk implements Whelk {
     Document sanityCheck(Document d) {
         if (!d.identifier) {
             d.identifier = mintIdentifier(d)
+            log.debug("Document was missing identifier. Setting identifier ${d.identifier}")
         }
         d.timestamp = new Date().getTime()
         return d
@@ -182,6 +183,8 @@ class StandardWhelk implements Whelk {
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
             }
+        } else {
+            log.info("Couldn't find any suitable indexes ... $activeIndexes")
         }
     }
 
@@ -207,7 +210,7 @@ class StandardWhelk implements Whelk {
                 log.debug("No graphs to update.")
             }
         } else {
-            log.info("Coudn't find any suitable graphstores ... $activeGraphStores")
+            log.info("Couldn't find any suitable graphstores ... $activeGraphStores")
         }
     }
 

@@ -34,8 +34,7 @@
                 "linkcompleter",
                 "indexlinkfinder",
                 "oaipmhimporter",
-                "marcimporter",
-                "modsimporter"
+                "marcimporter"
                 ],
             "contentRoot" : "/",
             "docBaseUri" : "http://libris.kb.se/"
@@ -46,7 +45,8 @@
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins" : [
                 "swepubstorage",
-                "documentapi"
+                "documentapi",
+                "modsimporter"
                 ]
         }
     },

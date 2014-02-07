@@ -198,14 +198,20 @@
         "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter"
     },
     "marcimporter" : {
-        "_class" : "se.kb.libris.whelks.importers.DumpImporter"
+        "_class" : "se.kb.libris.whelks.importers.DumpImporter", 
+        "_params" : {
+            "startTransformingAtElement" : "record"
+        }
     },
     "modsimporter" : {
-        "_class" : "se.kb.libris.whelks.swepub.importers.ModsImporter"
+        "_class" : "se.kb.libris.whelks.swepub.importers.ModsImporter",
+        "_params" : {
+            "startTransformingAtElement" : "record"
+        }
     },
     "swepuboaipmhimporter" : {
         "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
-        "_param" : {
+        "_params" : {
             "serviceUrl" : "http://api.libris.kb.se/swepub/oaipmh/SWEPUB"
         }
     }

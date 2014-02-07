@@ -35,13 +35,17 @@ class DumpImporter extends BasicPlugin implements Importer {
     String dataset
     int maxDocs
 
-    String startTransformingAtElement = "record"
+    String startTransformingAtElement
 
 
     File failedLog
     File exceptionLog
 
     ExecutorService queue
+
+    DumpImporter(Map settings) {
+        this.startTransformingAtElement = settings.get('startTransformingAtElement', null)
+    }
 
     /*
     DumpImporter(Whelk toWhelk, String dataset, boolean picky = true) {
@@ -87,12 +91,13 @@ class DumpImporter extends BasicPlugin implements Importer {
 
       while (true) {
           Document doc = null
-          if (event == XMLStreamConstants.START_ELEMENT && xsr.getLocalName() == startTransformingAtElement) {
+          if (event == XMLStreamConstants.START_ELEMENT && (!startTransformingAtElement || xsr.getLocalName() == startTransformingAtElement)) {
               try {
                   Writer outWriter = new StringWriter()
                   optimusPrime.transform(new StAXSource(xsr), new StreamResult(outWriter))
                   String xmlString = normalizeString(outWriter.toString())
                   doc = buildDocument(xmlString)
+                  doc = whelk.sanityCheck(doc)
               } catch (javax.xml.stream.XMLStreamException xse) {
                   log.error("Skipping document, error in stream: ${xse.message}")
               }
@@ -119,6 +124,11 @@ class DumpImporter extends BasicPlugin implements Importer {
           }
           event = xsr.next()
       }
+
+      // Handle remainder
+        if (documents.size() > 0) {
+            addDocuments(documents)
+        }
 
 /*
 
