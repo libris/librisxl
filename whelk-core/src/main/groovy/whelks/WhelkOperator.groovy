@@ -9,7 +9,7 @@ import se.kb.libris.whelks.importers.*
 class WhelkOperator {
 
     static String LOCKFILE_NAME = "whelkoperator.lck"
-    static String DEFAULT_LOCKFILE_PATH = "/var/run"
+    static String DEFAULT_LOCKFILE_PATH = "/var/run/whelkoperator"
 
     static main(args) {
         File lockFile = lockFile()
