@@ -23,7 +23,7 @@ import se.kb.libris.whelks.exception.*
 class Document {
     String identifier
     byte[] data
-    Map entry // For "technical" metadata about the record, such as contentType, etc.
+    Map entry // For "technical" metadata about the record, such as contentType, timestamp, etc.
     Map meta  // For extra metadata about the object, e.g. links and such.
 
     @JsonIgnore
@@ -100,8 +100,14 @@ class Document {
         this.entry["timestamp"] = ts
     }
 
+
     List getLinks() {
         return meta.get("links", [])
+    }
+
+    Document withTimestamp(long ts) {
+        setTimestamp(ts)
+        return this
     }
 
     Document withData(String dataString) {

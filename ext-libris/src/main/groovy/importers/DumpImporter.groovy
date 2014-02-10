@@ -130,46 +130,6 @@ class DumpImporter extends BasicPlugin implements Importer {
             addDocuments(documents)
         }
 
-/*
-
-        while(true) {
-            log.debug("eventtype: $eventType, " + (eventType == XMLStreamConstants.START_ELEMENT ? xsr.getLocalName() : "unknown entity"))
-            if (eventType == XMLStreamConstants.START_ELEMENT && xsr.getLocalName() == startTransformingAtElement) {
-                log.debug("Found me a nice element to transform ...")
-                Writer outWriter = new StringWriter()
-                Document doc = null
-                try {
-                    optimusPrime.transform(new StAXSource(xsr), new StreamResult(outWriter))
-                    String xmlString = normalizeString(outWriter.toString())
-                    log.info("xmlString: $xmlString")
-                    doc = buildDocument(xmlString)
-                    doc = whelk.sanityCheck(doc)
-                } catch (javax.xml.stream.XMLStreamException xse) {
-                    log.error("Skipping document, error in stream: ${xse.message}")
-                }
-
-            } else {
-                log.debug("Advancing ...")
-                eventType = xsr.nextTag()
-                if (eventType == XMLStreamConstants.START_ELEMENT) {
-                    log.debug("nextTag yielded ${xsr.getLocalName()}")
-                }
-                while (eventType != XMLStreamConstants.START_ELEMENT) {
-                    log.debug("Trodding through $eventType")
-                    eventType = xsr.nextTag()
-                }
-            }
-            if (!xsr.hasNext()) {
-                log.debug("End of file. Stopping ..")
-            }
-        }
-        log.debug("Done looping.")
-
-        // Handle remainder
-        if (documents.size() > 0) {
-            addDocuments(documents)
-        }
-        */
         print "Done!\n"
 
         queue.shutdown()
