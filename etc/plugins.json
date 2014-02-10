@@ -84,7 +84,8 @@
                         "about.publication",
                         "about.identifier",
                         "about.instanceOf.attributedTo",
-                        "about.instanceOf.influencedBy"
+                        "about.instanceOf.influencedBy",
+                        "encLevel"
                     ]
                 },
                 "auth": {
