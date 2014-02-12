@@ -1,5 +1,4 @@
 apply plugin: 'application'
-apply from: 'tools.gradle'
 
 task depjar(type: Jar, dependsOn: jar) {
     archiveName = "dependencies.jar"
@@ -40,3 +39,16 @@ attributes 'Main-Class': mainClassName
 }
 */
 
+
+task(groovy, dependsOn: 'classes', type: JavaExec) {
+  description "Run a Groovy Script (USAGE: -Dargs='<script> [...]')"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'groovy.ui.GroovyMain'
+  args(System.getProperty('args', "").split() as String[])
+}
+
+task(console, dependsOn: 'classes', type: JavaExec) {
+  description "Launch a Groovy Console"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'groovy.ui.Console'
+}
