@@ -1,0 +1,10 @@
+{
+  "Person": {
+    "shared": ["birthYear", "deathYear", "personTitle"],
+    "common": ["familyName", "givenName"],
+    "special": ["name", "numeration"]
+  },
+  "Concept": ["prefLabel", "inScheme"],
+  "ConceptScheme": ["notation"],
+  "Work": ["title", "attributedTo"]
+}
