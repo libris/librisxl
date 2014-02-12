@@ -1,23 +1,27 @@
-/*
-task fatjar(type: Jar, dependsOn: jar) {
-    archiveName = "librisxl.jar"
-    fatjar.description = "Creates a jar containing the classes and all dependencies."
-    from {
-        configurations.runtime.collect {
-            it.isDirectory() ? it : zipTree(it).matching {
-                exclude "META-INF/OSGI*"
-            }
-        }
-    }
 
-    manifest {
-        attributes 'Main-Class': 'se.kb.libris.whelks.WhelkOperator'
-    }
-
-}
-*/
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
     flatDir name: 'localWhelk-extensionsDir', dirs: '../lib'
+}
+
+task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
+    description "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'se.kb.libris.conch.converter.MarcJSONConverter'
+    args(System.getProperty('args', "").split() as String[])
+}
+
+task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
+    description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'se.kb.libris.whelks.plugin.MarcFrameConverter'
+    args(System.getProperty('args', "").split() as String[])
+}
+
+task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
+    description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'se.kb.libris.whelks.plugin.JsonLdToTurtle'
+    args(System.getProperty('args', "").split() as String[])
 }

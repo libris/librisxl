@@ -200,8 +200,8 @@
 
     "035": {
       "domainEntity": "Record",
-      "$a": {"property": "system-number"},
-      "$9": {"property": "librisIII-number"}
+      "$a": {"addProperty": "systemNumber"},
+      "$9": {"addProperty": "librisIIINumber"}
     },
 
     "040": {
@@ -789,7 +789,7 @@
     },
     "755" : {"inherit": "750"},
     "856": {
-        "TODO": {"if $x=digipic": {"addLink": "depiction"}},
+        "TODO": {"if $x=digipic or $y=bild": {"addLink": "depiction"}},
         "$u": {"addLink": "sameAs", "uriTemplate": "{+_}"}
     }
   },
