@@ -39,6 +39,8 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     def varPath = false
     boolean enabled = true
 
+    String logMessage = "Handled #REQUESTMETHOD# for #API_ID#"
+
     @Override
     void setWhelk(Whelk w) {
         this.whelk = w
@@ -76,7 +78,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
         doHandle(request, response)
         def headers = request.attributes.get("org.restlet.http.headers")
         def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value ?: request.clientInfo.address
-        log.info("Handled ${request.method.toString()} request for ${this.id} from $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
+        log.info(logMessage.replaceAll("#REQUESTMETHOD#", request.method.toString()).replaceAll("#API_ID#", this.id) + " from $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
     }
 }
 
@@ -409,6 +411,34 @@ class FieldSearchRestlet extends BasicWhelkAPI {
 }
 
 @Log
+class HoldCounter extends SearchRestlet {
+    def pathEnd = "_libcount"
+    def varPath = false
+    String id = "HoldingsCounter"
+    String description = "Custom search API for counting holdings."
+
+    HoldCounter(indexTypeConfig) {
+        super(indexTypeConfig)
+    }
+
+    @Override
+    void doHandle(Request request, Response response) {
+        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        log.info("queryMap: $queryMap")
+        queryMap.put('q', queryMap.get('id', null))
+        queryMap.remove('id')
+        queryMap.put('fields','about.annotates.@id')
+
+        try {
+            response.setEntity(performQuery(queryMap, "hold"), MediaType.APPLICATION_JSON)
+        } catch (WhelkRuntimeException wrte) {
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+
+        }
+    }
+}
+
+@Log
 class SearchRestlet extends BasicWhelkAPI {
     def pathEnd = "{indexType}/_search"
     def varPath = true
@@ -416,27 +446,39 @@ class SearchRestlet extends BasicWhelkAPI {
     String description = "Generic search query API. User parameters \"q\" for querystring, and optionally \"facets\" and \"boost\"."
     def config
 
+
     SearchRestlet(indexTypeConfig) {
         this.config = indexTypeConfig
+        if (config.path) {
+            this.pathEnd = config.path
+        }
     }
 
     @Override
     void doHandle(Request request, Response response) {
-            long startTime = System.currentTimeMillis()
-            def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-            def indexType, results
+        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def indexType = request.attributes?.indexType ?: config.defaultIndexType
+        try {
 
-            indexType = request.attributes.indexType
+            response.setEntity(performQuery(queryMap, indexType), MediaType.APPLICATION_JSON)
+
+        } catch (WhelkRuntimeException wrte) {
+
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+        }
+    }
+
+    String performQuery(queryMap, indexType) {
+        long startTime = System.currentTimeMillis()
+        def elasticQuery = new ElasticQuery(queryMap)
+        try {
+            def results
 
             log.debug("Handling search request with indextype $indexType")
             def indexConfig = config.indexTypes[indexType]
             def boost = queryMap.boost?.split() ?: indexConfig?.defaultBoost?.split(",")
             def facets = queryMap.facets?.split() ?: indexConfig?.queryFacets?.split(",")
-            /*if (indexConfig?.containsKey("queryStringTokenizerMethod") && indexConfig.queryStringTokenizerMethod.size() > 0) {
-                Method tokenizerMethod = queryStringTokenizer = this.class.getDeclaredMethod(indexConfig.queryStringTokenizerMethod)
-                queryMap.q = tokenizerMethod?.invoke(this, queryMap.q) ?: queryMap.q
-            } */
-            def elasticQuery = new ElasticQuery(queryMap)
+
             if (queryMap.f) {
                 elasticQuery.query += " " + queryMap.f
             }
@@ -462,32 +504,21 @@ class SearchRestlet extends BasicWhelkAPI {
             elasticQuery.highlights = indexConfig?.get("queryFields")
             elasticQuery.sorting = indexConfig?.get("sortby")
             log.debug("Query $elasticQuery.query Fields: ${elasticQuery.fields} Facets: ${elasticQuery.facets}")
+            def callback = queryMap.get("callback")
+            results = this.whelk.search(elasticQuery)
+            def keyList = queryMap.resultFields?.split() as List ?: indexConfig?.get("resultFields")
+            def extractedResults = keyList ? results.toJson(keyList) : results.toJson()
+            def jsonResult =
+            (callback ? callback + "(" : "") +
+            extractedResults +
+            (callback ? ");" : "")
 
-            try {
-
-                def callback = queryMap.get("callback")
-                results = this.whelk.search(elasticQuery)
-                def keyList = queryMap.resultFields?.split() as List ?: indexConfig?.get("resultFields")
-                def extractedResults = keyList ? results.toJson(keyList) : results.toJson()
-                def jsonResult =
-                        (callback ? callback + "(" : "") +
-                            extractedResults +
-                        (callback ? ");" : "")
-
-                response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
-
-            } catch (WhelkRuntimeException wrte) {
-
-                response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
-
-            } finally {
-
-                def headers = request.attributes.get("org.restlet.http.headers")
-                def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value ?: request.clientInfo.address
-                log.info("Query [" + elasticQuery?.query + "] completed for $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds and resulted in " + results?.numberOfHits + " hits.")
-
-            }
+            return jsonResult
+        } finally {
+            this.logMessage = "Query [" + elasticQuery?.query + "] completed resulting in " + results?.numberOfHits + " hits"
         }
+    }
+
 }
 
 @Log
@@ -975,6 +1006,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
 
     RemoteSearchRestlet(urlString) {
         remoteURL = urlString
+        mapper = new ObjectMapper()
     }
 
     void doHandle(Request request, Response response) {
@@ -996,10 +1028,10 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 }
                 queryStr += k + "=" + v
             }
-            url = new URL(remoteURL + queryStr + "&query=" + query)
+            url = new URL(remoteURL + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
 
             try {
-
+                log.debug("requesting data from url: $url")
                 xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
                 docStrings = getXMLRecordStrings(xmlRecords)
                 for (docString in docStrings) {
@@ -1035,7 +1067,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                         jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
                         log.trace("Marcframeconverter for $id done")
 
-                        mapper = new ObjectMapper()
+                        //mapper = new ObjectMapper()
                         resultList << getDataAsMap(jsonDoc)
                 }
 

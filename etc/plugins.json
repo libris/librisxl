@@ -62,6 +62,18 @@
     "defsindexconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.DefsIndexFormatConverter"
     },
+    "libcount" : {
+        "_class" : "se.kb.libris.whelks.api.HoldCounter",
+        "_params" : {
+            "path" : "_libcount",
+            "defaultIndexType"  : "hold",
+            "indexTypes" : {
+                "hold" : {
+                    "queryFields" : ["about.annotates.@id"]
+                }
+            }
+        }
+    },
     "search" : {
         "_class" : "se.kb.libris.whelks.api.SearchRestlet",
         "_params" : {

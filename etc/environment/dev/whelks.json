@@ -27,6 +27,7 @@
                 "completeexpander",
                 "sparqlapi",
                 "remotesearch",
+                "libcount",
                 "documentapi",
                 "marcconverter",
                 "turtleconverter",

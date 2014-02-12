@@ -92,8 +92,8 @@ subprojects {
 
 project(":whelk-core") {
     dependencies {
-        compile 'org.elasticsearch:elasticsearch:0.90.7'
-        compile 'org.elasticsearch:elasticsearch-lang-groovy:1.4.0'
+        compile 'org.elasticsearch:elasticsearch:0.90.11'
+        compile 'org.elasticsearch:elasticsearch-lang-groovy:1.5.0'
         compile 'com.spatial4j:spatial4j:0.3'
         compile 'com.basho.riak:riak-client:1.0.6'
         compile 'com.netflix.astyanax:astyanax-cassandra:1.56.43'
