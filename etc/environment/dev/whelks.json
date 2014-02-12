@@ -55,8 +55,9 @@
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins" : [
                 "marcmap",
-            "isxntool"
-                ]
+                "localdefinitiondata",
+                "isxntool"
+              ]
         }
     }
     ],
