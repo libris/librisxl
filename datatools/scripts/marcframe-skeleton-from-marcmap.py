@@ -2,7 +2,7 @@ from collections import OrderedDict
 import json
 
 
-fpath = "whelk-extensions/src/main/resources/marcmap.json"
+fpath = "ext-libris/src/main/resources/marcmap.json"
 with open(fpath) as f:
     marcmap = json.load(f)
 
