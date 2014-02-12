@@ -739,12 +739,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             repeat = true
         }
 
-        if (subDfn.pattern) {
+        if (subDfn.splitValuePattern) {
             // TODO: support repeatable?
-            def pattern = Pattern.compile(subDfn.pattern)
-            def m = pattern.matcher(subVal)
+            def splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
+            def m = splitValuePattern.matcher(subVal)
             if (m) {
-                subDfn.properties.eachWithIndex { prop, i ->
+                subDfn.splitValueProperties.eachWithIndex { prop, i ->
                     def v = m[0][i + 1]
                     if (v) {
                         ent[prop] = v
