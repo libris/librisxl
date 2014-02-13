@@ -424,13 +424,20 @@ class HoldCounter extends SearchRestlet {
     @Override
     void doHandle(Request request, Response response) {
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        log.info("queryMap: $queryMap")
-        queryMap.put('q', queryMap.get('id', null))
-        queryMap.remove('id')
+        def idparam = queryMap.get("id")//.replaceAll("/", "\\/")
+        log.info("idparam: $idparam")
+        /*
+        queryMap.put('q', idparam)
         queryMap.put('fields','about.annotates.@id')
+        log.info("queryMap: $queryMap")
+        queryMap.remove('id')
+        */
+
+        def elasticQuery = new ElasticQuery("about.annotates.@id", idparam)
+        elasticQuery.indexType = config.defaultIndexType
 
         try {
-            response.setEntity(performQuery(queryMap, "hold"), MediaType.APPLICATION_JSON)
+            response.setEntity(performQuery(elasticQuery), MediaType.APPLICATION_JSON)
         } catch (WhelkRuntimeException wrte) {
             response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
 
@@ -458,27 +465,10 @@ class SearchRestlet extends BasicWhelkAPI {
     void doHandle(Request request, Response response) {
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def indexType = request.attributes?.indexType ?: config.defaultIndexType
-        try {
-
-            response.setEntity(performQuery(queryMap, indexType), MediaType.APPLICATION_JSON)
-
-        } catch (WhelkRuntimeException wrte) {
-
-            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
-        }
-    }
-
-    String performQuery(queryMap, indexType) {
-        long startTime = System.currentTimeMillis()
-        def elasticQuery = new ElasticQuery(queryMap)
-        try {
-            def results
-
-            log.debug("Handling search request with indextype $indexType")
-            def indexConfig = config.indexTypes[indexType]
-            def boost = queryMap.boost?.split() ?: indexConfig?.defaultBoost?.split(",")
-            def facets = queryMap.facets?.split() ?: indexConfig?.queryFacets?.split(",")
-
+        def indexConfig = config.indexTypes[indexType]
+        def boost = queryMap.boost?.split() ?: indexConfig?.defaultBoost?.split(",")
+        def facets = queryMap.facets?.split() ?: indexConfig?.queryFacets?.split(",")
+        def elasticQuery = new ElasticQuery(queryMap.q)
             if (queryMap.f) {
                 elasticQuery.query += " " + queryMap.f
             }
@@ -503,17 +493,38 @@ class SearchRestlet extends BasicWhelkAPI {
 
             elasticQuery.highlights = indexConfig?.get("queryFields")
             elasticQuery.sorting = indexConfig?.get("sortby")
-            log.debug("Query $elasticQuery.query Fields: ${elasticQuery.fields} Facets: ${elasticQuery.facets}")
+        try {
             def callback = queryMap.get("callback")
-            results = this.whelk.search(elasticQuery)
-            def keyList = queryMap.resultFields?.split() as List ?: indexConfig?.get("resultFields")
-            def extractedResults = keyList ? results.toJson(keyList) : results.toJson()
             def jsonResult =
             (callback ? callback + "(" : "") +
-            extractedResults +
+            performQuery(elasticQuery) +
             (callback ? ");" : "")
 
-            return jsonResult
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+
+        } catch (WhelkRuntimeException wrte) {
+
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+        }
+    }
+
+    String performQuery(elasticQuery) {
+        long startTime = System.currentTimeMillis()
+        //def elasticQuery = new ElasticQuery(queryMap)
+        log.debug("elasticQuery: ${elasticQuery.query}")
+        def results
+        try {
+
+            log.debug("Handling search request with indextype $elasticQuery.indexType")
+            def indexConfig = config.indexTypes[elasticQuery.indexType]
+
+            log.debug("Query $elasticQuery.query Fields: ${elasticQuery.fields} Facets: ${elasticQuery.facets}")
+            results = this.whelk.search(elasticQuery)
+            def keyList = indexConfig?.get("resultFields")
+            log.info("keyList: $keyList")
+            def extractedResults = keyList != null ? results.toJson(keyList) : results.toJson()
+
+            return extractedResults
         } finally {
             this.logMessage = "Query [" + elasticQuery?.query + "] completed resulting in " + results?.numberOfHits + " hits"
         }

@@ -36,6 +36,7 @@ class SearchResult {
     }
 
     String toJson() {
+        log.info("Manual toJson()")
         def jsonString = new StringBuilder()
         jsonString << "{"
         jsonString << "\"hits\": " << numberOfHits << ","
@@ -74,6 +75,7 @@ class SearchResult {
 
     String toJson(List keys) {
         def result = toMap(keys)
+        log.info("toJson by $keys")
         return mapper.writeValueAsString(result)
     }
 

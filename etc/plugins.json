@@ -69,7 +69,9 @@
             "defaultIndexType"  : "hold",
             "indexTypes" : {
                 "hold" : {
-                    "queryFields" : ["about.annotates.@id"]
+                    "queryFields" : ["about.annotates.@id"],
+                    "resultFields" : [
+                    ]
                 }
             }
         }
