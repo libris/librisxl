@@ -26,4 +26,4 @@ LIBS=$WEBAPPS/WEB-INF/lib
 
 source $SETENV
 
-java $JAVA_OPTS -Ddisable.plugins="indexingprawn" $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o import -w libris -d $DATASET $SINCE
+java $JAVA_OPTS -Ddisable.plugins="indexingprawn" $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o import -w libris -c oaipmhimporter -d $DATASET $SINCE

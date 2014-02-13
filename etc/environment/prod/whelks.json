@@ -7,19 +7,34 @@
                     "index",
                     "cassandrastorage",
                     "oaipmhstorage",
+                    "fusekigraphstore",
                     "search",
                     "oaipmhxmlconverter",
+                    "completeexpander",
+                    "sparqlapi",
                     "remotesearch",
+                    "libcount",
                     "documentapi",
                     "marcconverter",
                     "turtleconverter",
                     "entityextractor",
                     "linkcompleter",
                     "indexlinkfinder",
-                    "completeexpander"
+                    "oaipmhimporter",
+                    "marcimporter"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
+            }
+        },
+        {
+            "swepub":{
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+                "_plugins" : [
+                    "cassandrastorage",
+                    "documentapi",
+                    "modsimporter"
+                    ]
             }
         },
         {
