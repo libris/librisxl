@@ -133,8 +133,8 @@
       },
       "$a": {
         "property": "identifierValue",
-        "pattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?",
-        "properties": ["identifierValue", "identifierNote"],
+        "splitValuePattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?",
+        "splitValueProperties": ["identifierValue", "identifierNote"],
         "defaults": {
           "identifierScheme": "ISBN"
         }
@@ -266,12 +266,12 @@
       },
       "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "$a": {"property": "name", "pattern": "([^,]+)(?:,\\s*([^,]+))",
-        "properties": ["familyName", "givenName"]},
+      "$a": {"property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+        "splitValueProperties": ["familyName", "givenName"]},
       "$b": {"property": "numeration"},
       "$c": {"addProperty": "personTitle"},
-      "$d": {"property": "lifeSpan", "pattern": "(\\d+)(?:-(\\d+))?",
-        "properties": ["birthYear", "deathYear"]},
+      "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:-(\\d+))?",
+        "splitValueProperties": ["birthYear", "deathYear"]},
       "$j": {"TODO:property": "influencedBy"},
       "construct": {
         "controlledLabel": {", ": [ "familyName",
@@ -602,8 +602,8 @@
         "uriTemplate": "http://dewey.info/scheme/ddc/{nil}",
         "defaults": {"notation": "DDC"},
         "property": "version",
-        "pattern": "(\\d+)/swe",
-        "properties": ["edition"]
+        "splitValuePattern": "(\\d+)/swe",
+        "splitValueProperties": ["edition"]
       }
     },
 
@@ -695,7 +695,7 @@
           "addLink": "sameAs",
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
-          "$d": {"property": null, "TODO": "if same as 100.$d (plus drop similar duplicate properties)"}
+          "$d": {"property": null, "TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
         }
       },
       "domainEntity": "Instance", "NOTE": "really Work - see 100",
