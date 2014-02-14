@@ -479,6 +479,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (matchCode) {
             matchRules << new CodeMatchRule(fieldDfn, matchCode, resourceMaps)
         }
+        def matchPattern = fieldDfn['match-pattern']
+        if (matchPattern) {
+            matchRules << new CodePatternMatchRule(fieldDfn, matchPattern, resourceMaps)
+        }
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
             if (m) {
@@ -508,6 +512,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def handler = rule.getHandler(domainEntity, value)
             if (handler) {
                 // TODO: resolve combined config
+                if (rule instanceof CodePatternMatchRule) {
+                    //assert handler.convert(marcSource, value, entityMap)
+                }
                 return handler.convert(marcSource, value, entityMap)
             }
         }
@@ -629,10 +636,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def computedUri = uriTemplate.expand(uriTemplateParams)
             def altUriRel = "sameAs"
             if (definesDomainEntityType != null) {
-                entity[altUriRel] = ['@id': computedUri]
+                addValue(entity, altUriRel, ['@id': computedUri], true)
             } else {
                 if (entity['@id']) {
-                    entity[altUriRel] = ['@id': entity['@id']] // TODO: ok as precaution?
+                    // TODO: ok as precaution?
+                    addValue(entity, altUriRel, ['@id': entity['@id']], true)
                 }
                 entity['@id'] = computedUri
             }
@@ -730,6 +738,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             addValue(ent, link, newEnt, linkRepeat)
             ent = newEnt
             uriTemplateKeyBase = "${link}."
+            ok = true
         }
 
         def property = subDfn.property
@@ -739,6 +748,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             repeat = true
         }
 
+        def didSplit = false
         if (subDfn.splitValuePattern) {
             // TODO: support repeatable?
             def splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
@@ -751,10 +761,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     }
                     addValue(uriTemplateParams, uriTemplateKeyBase + prop, v, true)
                 }
+                didSplit = true
                 ok = true
             }
         }
-        if (!ok && property) {
+        if (!didSplit && property) {
             addValue(ent, property, subVal, repeat)
             addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
             ok = true
@@ -773,7 +784,7 @@ abstract class MatchRule {
     MatchRule(fieldDfn, rules, resourceMaps) {
         rules.each { key, matchDfn ->
             def comboDfn = fieldDfn + matchDfn
-            ['match-domain', 'match-i1', 'match-i2', 'match-code'].each {
+            ['match-domain', 'match-i1', 'match-i2', 'match-code', 'match-pattern'].each {
                 comboDfn.remove(it)
             }
             def tag = null
@@ -827,5 +838,43 @@ class CodeMatchRule extends MatchRule {
                     return key
             }
         }
+    }
+}
+
+class CodePatternMatchRule extends MatchRule {
+    Map<String, Map> patterns = [:]
+    CodePatternMatchRule(fieldDfn, rules, resourceMaps) {
+        super(fieldDfn, parseRules(rules), resourceMaps)
+        fillPatternCombos(rules)
+    }
+    static Map parseRules(Map rules) {
+        def parsed = [:]
+        rules.each { code, patternMap ->
+            assert code[0] == '$' // IMPROVE: don't require code prefix?
+            code = code.substring(1)
+            patternMap.each { pattern, map ->
+                parsed["${code} ${pattern}"] = map
+            }
+        }
+        return parsed
+    }
+    Map fillPatternCombos(Map rules) {
+        rules.each { code, patternMap ->
+            code = code.substring(1)
+            patternMap.each { pattern, map ->
+                patterns[code] = [pattern: ~pattern, key: "${code} ${pattern}"]
+            }
+        }
+    }
+    String getKey(entity, value) {
+        def key
+        for (sub in value.subfields) {
+            sub.each { code, codeval ->
+                def combo = patterns[code]
+                if (combo && combo.pattern.matcher(codeval))
+                    key = combo.key
+            }
+        }
+        return key
     }
 }

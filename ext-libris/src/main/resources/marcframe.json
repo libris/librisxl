@@ -200,6 +200,14 @@
 
     "035": {
       "domainEntity": "Record",
+      "match-pattern": {
+        "$a": {
+          "^http://dbpedia\\.org/": {
+            "domainEntity": "Instance",
+            "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
+          }
+        }
+      },
       "$a": {"addProperty": "systemNumber"},
       "$9": {"addProperty": "librisIIINumber"}
     },
@@ -495,7 +503,7 @@
       "$2": {"link": "inScheme",
              "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
              "property": "notation"},
-      "$0": {"link": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
+      "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
              "ignored": true}
     },
     "651": {
