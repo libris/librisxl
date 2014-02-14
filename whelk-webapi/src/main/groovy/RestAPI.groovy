@@ -435,6 +435,7 @@ class HoldCounter extends SearchRestlet {
 
         def elasticQuery = new ElasticQuery("about.annotates.@id", idparam)
         elasticQuery.indexType = config.defaultIndexType
+        elasticQuery.n = 0
 
         try {
             response.setEntity(performQuery(elasticQuery), MediaType.APPLICATION_JSON)
@@ -516,7 +517,7 @@ class SearchRestlet extends BasicWhelkAPI {
         try {
 
             log.debug("Handling search request with indextype $elasticQuery.indexType")
-            def indexConfig = config.indexTypes[elasticQuery.indexType]
+            def indexConfig = config.indexTypes?.get(elasticQuery.indexType, null)
 
             log.debug("Query $elasticQuery.query Fields: ${elasticQuery.fields} Facets: ${elasticQuery.facets}")
             results = this.whelk.search(elasticQuery)

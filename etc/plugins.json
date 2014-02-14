@@ -66,14 +66,7 @@
         "_class" : "se.kb.libris.whelks.api.HoldCounter",
         "_params" : {
             "path" : "_libcount",
-            "defaultIndexType"  : "hold",
-            "indexTypes" : {
-                "hold" : {
-                    "queryFields" : ["about.annotates.@id"],
-                    "resultFields" : [
-                    ]
-                }
-            }
+            "defaultIndexType"  : "hold"
         }
     },
     "search" : {
