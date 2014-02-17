@@ -512,9 +512,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def handler = rule.getHandler(domainEntity, value)
             if (handler) {
                 // TODO: resolve combined config
-                if (rule instanceof CodePatternMatchRule) {
-                    //assert handler.convert(marcSource, value, entityMap)
-                }
                 return handler.convert(marcSource, value, entityMap)
             }
         }
@@ -525,7 +522,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def codeLinkSplits = [:]
         // TODO: clear unused codeLinkSplits afterwards..
-        def splitLinkDomain = entity
         def splitLinks = []
         def spliceEntity = null
         if (splitLinkRules) {
@@ -648,7 +644,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         splitLinks.each {
             if (it.entity.find { k, v -> k != "@type" }) {
-                addValue(splitLinkDomain, it.rule.link, it.entity, it.rule.repeatLink)
+                addValue(domainEntity, it.rule.link, it.entity, it.rule.repeatLink)
             }
         }
 
