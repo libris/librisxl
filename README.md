@@ -33,15 +33,13 @@ Optionally, see details about using a Graph Store at the end of this document.
 
 This starts a local whelk, using an embedded elasticsearch and storage configured in `etc/environment/dev/whelks.json`.
 
+### Install script requirements
+
+    $ pip install -r scripts/requirements.txt
+
 ### Import/update local storage from test data
 
-Simply run:
-
-    $ scripts/update_mock_storage.sh
-
-to upload all test documents into your local whelk. (See the script for how the actual HTTP PUT is constructed.)
-
-Or better, create a local OAI-PMH dump of examples and run a full import:
+Create a local OAI-PMH dump of examples and run a full import:
 
     $ python scripts/assemble_oaipmh_records.py *******:**** scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
@@ -50,9 +48,11 @@ Or better, create a local OAI-PMH dump of examples and run a full import:
     $ fg
     <CTRL-C>
 
-(The benefit of this is that out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
+(Using the OAI-PMH dump makes out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
 
-You need to add `-Ddisable.plugins="indexingprawn,sesamegraphstore"` to the invocations above unless you have set up a graph store (see below).
+Unless you have set up a graph store (see below), you need to add `-Ddisable.plugins="fusekigraphstore"` to the invocations above to avoid error messages.
+
+There is also a script, `scripts/update_mock_storage.sh`, for uploading test documents into your local whelk. (See the script for how the actual HTTP PUT is constructed.) However, this does not create the necessary links between bib and auth.
 
 
 ### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)
