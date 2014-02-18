@@ -1,5 +1,5 @@
 WHELK-WEBAPI, DOCUMENT API:
-http://<host>:8080/whelk-webapi/bib/7149593
+http://<host>:<PORT>/whelk-webapi/bib/7149593
 
 ELASTIC SEARCH, INDEX SEARCH API:
 Find 'tove' in libris index, index-typedoc 'person':
@@ -13,12 +13,13 @@ ELASTIC SEARCH, ANALYZE INDEXED VALUES FOR A SPECIFIC FIELD:
 curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.untouched" } } } }'
 
 WHELK-WEBAPI, SEARCH API:
-http://<host>:8080/whelk-webapi/<indextype>/q=(<field>:)strindberg
+http://<host>:<PORT>/whelk-webapi/<indextype>/_search?q=(<field>:)strindberg
 
 INDEX TYPES:
 bib, auth, person, concept, organization, conceptscheme ...
 
 EXPAND AUTOCOMPLETE:
-http://<host>:8080/whelk-webapi/_expand?name=Jansson,%20Tove,%201914-2001.
+http://<host>:<PORT>/whelk-webapi/_expand?name=Jansson,%20Tove,%201914-2001.
 
-
+REMOTESEARCH
+http://<host>:<PORT>/whelk-webapi/_remotesearch?q=astrid
