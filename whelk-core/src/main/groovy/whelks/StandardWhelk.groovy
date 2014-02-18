@@ -373,11 +373,6 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Plugin getPlugin(String pluginId) {
-        return plugins.find { it.id == pluginId }
-    }
-
-    @Override
     URI mintIdentifier(Document d) {
         URI identifier
             for (minter in uriMinters) {
