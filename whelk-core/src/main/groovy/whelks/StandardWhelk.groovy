@@ -372,21 +372,26 @@ class StandardWhelk implements Whelk {
         this.plugins.add(plugin)
     }
 
-   @Override
-   URI mintIdentifier(Document d) {
-       URI identifier
-       for (minter in uriMinters) {
-           identifier = minter.mint(d)
-       }
-       if (!identifier) {
-           try {
-               identifier = new URI("/"+id.toString() +"/"+ UUID.randomUUID());
-           } catch (URISyntaxException ex) {
-               throw new WhelkRuntimeException("Could not mint URI", ex);
-           }
-       }
-       return identifier
-   }
+    @Override
+    Plugin getPlugin(String pluginId) {
+        return plugins.find { it.id == pluginId }
+    }
+
+    @Override
+    URI mintIdentifier(Document d) {
+        URI identifier
+            for (minter in uriMinters) {
+                identifier = minter.mint(d)
+            }
+        if (!identifier) {
+            try {
+                identifier = new URI("/"+id.toString() +"/"+ UUID.randomUUID());
+            } catch (URISyntaxException ex) {
+                throw new WhelkRuntimeException("Could not mint URI", ex);
+            }
+        }
+        return identifier
+    }
 
     // Sugar methods
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }

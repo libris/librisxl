@@ -1074,11 +1074,19 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
 
     String remoteURL
 
+    MarcFrameConverter marcFrameConverter
+
     def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10"]
 
     RemoteSearchRestlet(urlString) {
         remoteURL = urlString
         mapper = new ObjectMapper()
+    }
+
+    void init(String wn) {
+        log.info("plugins: ${whelk.plugins}")
+        marcFrameConverter = whelk.plugins.find { it instanceof FormatConverter && it.resultContentType == "application/ld+json" && it.requiredContentType == "application/x-marc-json" }
+        assert marcFrameConverter
     }
 
     void doHandle(Request request, Response response) {
@@ -1089,7 +1097,6 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         def docStrings = []
         MarcRecord record
         OaiPmhXmlConverter oaiPmhXmlConverter
-        MarcFrameConverter marcFrameConverter
 
         if (query) {
             urlParams.each { k, v ->
@@ -1135,12 +1142,11 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                             .withMeta(xmlDoc.meta)
 
                         //Convert xMarcJsonDoc to ld+json
-                        marcFrameConverter = new MarcFrameConverter()
                         jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
                         log.trace("Marcframeconverter for $id done")
 
                         //mapper = new ObjectMapper()
-                        resultList << getDataAsMap(jsonDoc)
+                        resultList << ["data":getDataAsMap(jsonDoc)]
                 }
 
             } catch (org.xml.sax.SAXParseException spe) {

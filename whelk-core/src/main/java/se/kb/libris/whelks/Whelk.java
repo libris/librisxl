@@ -29,6 +29,7 @@ public interface Whelk {
 
     public void addPlugin(Plugin plugin);
     public Iterable<? extends Plugin> getPlugins();
+    public Plugin getPlugin(String pluginId);
 
     public void reindex();
     public void flush();
