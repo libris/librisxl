@@ -4,8 +4,9 @@ try:
     import lxml
     from lxml import etree
 except ImportError:
-    lxml = None
-    from xml.etree import ElementTree as etree
+    raise
+    #lxml = None
+    #from xml.etree import ElementTree as etree
 from sys import argv, stdout, stderr
 import os
 

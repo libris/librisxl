@@ -142,13 +142,44 @@ class MarcFrameConverterSpec extends Specification {
             about: [
                 "@type": "Concept",
                 "@id": "/resource/auth/140482",
-                sameAs: ["@id": "/topic/sao/Barnpsykologi"],
+                sameAs: [["@id": "/topic/sao/Barnpsykologi"]],
                 prefLabel: "Barnpsykologi",
                 broader: [
                     ["@type": "Concept",
                     "@id": "/topic/sao/Psykologi",
                      prefLabel: "Psykologi"]
                 ]
+            ]
+        ]
+    }
+
+    def "should convert dbpedia uri in 035 to sameAs of instance"() {
+        given:
+        def marc = [
+            "leader": "01341cz  a2200397n  4500",
+            "leader": "01784cz  a2200397n  4500",
+            "fields": [
+                ["001": "94541"],
+                ["100": ["subfields": [["a": "Strindberg"]]]],
+                ["035": ["subfields": [["a": "http://dbpedia.org/resource/August_Strindberg"]]]],
+            ]
+        ]
+        when:
+        def frame = converter.createFrame(marc)
+        then:
+        frame == [
+            "@type":"Record",
+            "@id": "/auth/94541",
+            controlNumber: "94541",
+            status: "c",
+            typeOfRecord: "z",
+            characterCoding: "a",
+            encLevel: "n",
+            about: [
+                "@type": "Person",
+                "@id": "/resource/auth/94541",
+                "name": "Strindberg",
+                sameAs: [["@id": "http://dbpedia.org/resource/August_Strindberg"]]
             ]
         ]
     }
@@ -181,7 +212,7 @@ class MarcFrameConverterSpec extends Specification {
             about: [
                 "@type": "Concept",
                 "@id": "/resource/auth/247755",
-                sameAs: ["@id": "/topic/barn/Pengar"],
+                sameAs: [["@id": "/topic/barn/Pengar"]],
                 prefLabel: "Pengar",
                 inScheme: ["@type": "ConceptScheme", "@id": "/topic/barn", notation: "barn"],
                 broader: [

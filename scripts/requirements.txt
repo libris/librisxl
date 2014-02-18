@@ -1,4 +1,4 @@
-requests==2.0.1
+requests>=2.0.1
 rdflib
 lxml
 git+https://github.com/RDFLib/rdflib-jsonld.git
