@@ -520,79 +520,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def handled = new HashSet()
 
-        def codeLinkSplits = [:]
-        // TODO: clear unused codeLinkSplits afterwards..
-        def splitLinks = []
-        def spliceEntity = null
-        if (splitLinkRules) {
-            splitLinkRules.each { rule ->
-                def newEnt = null
-                if (rule.spliceEntityName) {
-                    newEnt = ["@type": rule.spliceEntityName]
-                    spliceEntity = newEnt
-                } else {
-                    newEnt = ["@type": rangeEntityName]
-                }
-                splitLinks << [rule: rule, entity: newEnt]
-                rule.codes.each {
-                    codeLinkSplits[it] = newEnt
-                }
-            }
-        }
-        if ((!splitLinks || spliceEntity) && rangeEntityName) {
-            def useLinks = Collections.emptyList()
-            if (computeLinks) {
-                def use = computeLinks.use
-                def resourceMap = (computeLinks.mapping instanceof Map)?
-                        computeLinks.mapping : resourceMaps[computeLinks.mapping]
-                def linkTokens = value.subfields.findAll {
-                    use in it.keySet() }.collect { it.iterator().next().value }
-                useLinks = linkTokens.collect {
-                    def linkDfn = resourceMap[it]
-                    if (linkDfn == null) {
-                        linkDfn = resourceMap[it.toLowerCase().replaceAll(/[^a-z0-9_-]/, '')]
-                    }
-                    if (linkDfn instanceof Map)
-                        linkDfn.term
-                    else if (linkDfn instanceof String)
-                        linkDfn
-                    else
-                        GENERIC_REL_URI_TEMPLATE.expand(["_": it])
-                }
-                if (useLinks.size() > 0) {
-                    handled << use
-                } else {
-                    def link = resourceMap['*']
-                    if (link) {
-                        useLinks = [link]
-                    }
-                }
-            }
-
-            def newEnt = newEntity(rangeEntityName)
-
-            if (useLinks) {
-                repeatLink = true
-            }
-
-            if (spliceEntity) {
-                entity = spliceEntity
-            }
-
-            // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
-            def entRef = newEnt
-            if (useLinks && link) {
-                if (!newEnt['@id'])
-                    newEnt['@id'] = "_:t-${UUID.randomUUID()}" as String
-                entRef = ['@id': newEnt['@id']]
-            }
-            if (link) {
-                addValue(entity, link, newEnt, repeatLink)
-            }
-            useLinks.each {
-                addValue(entity, it, entRef, repeatLink)
-            }
-            entity = newEnt
+        def linkage = computeLinkage(entity, value, handled)
+        if (linkage.newEntity) {
+            entity = linkage.newEntity
         }
 
         def uriTemplateParams = [:]
@@ -610,7 +540,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 def ok = false
                 if (subDfn) {
                     def ent = (subDfn.domainEntity)?
-                        entityMap[subDfn.domainEntity] : (codeLinkSplits[code] ?: entity)
+                        entityMap[subDfn.domainEntity] :
+                        (linkage.codeLinkSplits[code] ?: entity)
                     ok = processSubData(subDfn, subVal, ent, uriTemplateParams)
                 }
                 if (!ok && !handled.contains(code)) {
@@ -642,7 +573,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        splitLinks.each {
+        linkage.splitResults.each {
             if (it.entity.find { k, v -> k != "@type" }) {
                 addValue(domainEntity, it.rule.link, it.entity, it.rule.repeatLink)
             }
@@ -656,6 +587,87 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         return unhandled.size() == 0
+    }
+
+    def computeLinkage(entity, value, handled) {
+        def codeLinkSplits = [:]
+        // TODO: clear unused codeLinkSplits afterwards..
+        def splitResults = []
+        def spliceEntity = null
+        if (splitLinkRules) {
+            splitLinkRules.each { rule ->
+                def newEnt = null
+                if (rule.spliceEntityName) {
+                    newEnt = ["@type": rule.spliceEntityName]
+                    spliceEntity = newEnt
+                } else {
+                    newEnt = ["@type": rangeEntityName]
+                }
+                splitResults << [rule: rule, entity: newEnt]
+                rule.codes.each {
+                    codeLinkSplits[it] = newEnt
+                }
+            }
+        }
+        def newEnt = null
+        if ((!splitResults || spliceEntity) && rangeEntityName) {
+            def useLinks = Collections.emptyList()
+            if (computeLinks) {
+                def use = computeLinks.use
+                def resourceMap = (computeLinks.mapping instanceof Map)?
+                        computeLinks.mapping : resourceMaps[computeLinks.mapping]
+                def linkTokens = value.subfields.findAll {
+                    use in it.keySet() }.collect { it.iterator().next().value }
+                useLinks = linkTokens.collect {
+                    def linkDfn = resourceMap[it]
+                    if (linkDfn == null) {
+                        linkDfn = resourceMap[it.toLowerCase().replaceAll(/[^a-z0-9_-]/, '')]
+                    }
+                    if (linkDfn instanceof Map)
+                        linkDfn.term
+                    else if (linkDfn instanceof String)
+                        linkDfn
+                    else
+                        GENERIC_REL_URI_TEMPLATE.expand(["_": it])
+                }
+                if (useLinks.size() > 0) {
+                    handled << use
+                } else {
+                    def link = resourceMap['*']
+                    if (link) {
+                        useLinks = [link]
+                    }
+                }
+            }
+
+            newEnt = newEntity(rangeEntityName)
+
+            if (useLinks) {
+                repeatLink = true
+            }
+            if (spliceEntity) {
+                entity = spliceEntity
+            }
+
+            // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
+            def entRef = newEnt
+            if (useLinks && link) {
+                if (!newEnt['@id'])
+                    newEnt['@id'] = "_:t-${UUID.randomUUID()}" as String
+                entRef = ['@id': newEnt['@id']]
+            }
+            if (link) {
+                addValue(entity, link, newEnt, repeatLink)
+            }
+            useLinks.each {
+                addValue(entity, it, entRef, repeatLink)
+            }
+        }
+        return [
+            codeLinkSplits: codeLinkSplits,
+            splitResults: splitResults,
+            newEntity: newEnt
+        ]
     }
 
     String getByPath(entity, path) {
