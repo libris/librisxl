@@ -1076,7 +1076,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
 
     MarcFrameConverter marcFrameConverter
 
-    def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10"]
+    def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
 
     RemoteSearchRestlet(urlString) {
         remoteURL = urlString
@@ -1092,11 +1092,16 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
     void doHandle(Request request, Response response) {
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def query = queryMap.get("q", null)
+        int start = queryMap.get("start", "0") as int
+        int n = queryMap.get("n", "10") as int
         def xmlRecords, queryStr, url, xmlDoc, id, xMarcJsonDoc, jsonRec, jsonDoc
         def results
         def docStrings = []
         MarcRecord record
         OaiPmhXmlConverter oaiPmhXmlConverter
+
+        urlParams['maximumRecords'] = n
+        urlParams['startRecord'] = (start < 1 ? 1 : start)
 
         if (query) {
             urlParams.each { k, v ->
@@ -1112,8 +1117,9 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
             try {
                 log.debug("requesting data from url: $url")
                 xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
+                int numHits = xmlRecords.'zs:numberOfRecords'.toInteger()
                 docStrings = getXMLRecordStrings(xmlRecords)
-                results = new SearchResult(docStrings.size())
+                results = new SearchResult(numHits)
                 for (docString in docStrings) {
 
                         /*def responseXMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n"
@@ -1168,11 +1174,6 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         }
 
         response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
-        /*
-        def results = ["hits": resultList.size().toString(), "list": resultList]
-        response.setEntity(mapper.writeValueAsString(results), MediaType.APPLICATION_JSON)
-
-    */
 
     }
 
