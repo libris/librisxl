@@ -199,6 +199,11 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
+    InputStream rawQuery(String query) {
+
+    }
+
+    @Override
     SearchResult query(Query q) {
         def indexType = null
         if (q instanceof ElasticQuery) {

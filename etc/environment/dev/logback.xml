@@ -79,7 +79,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.SesameGraphStore">
@@ -94,12 +94,12 @@
 <logger name="se.kb.libris.whelks.api.SparqlRestlet">
       <level value="trace"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.RestManager">
-      <level value="debug"/>
-  </logger>
   -->
+<logger name="se.kb.libris.whelks.Document">
+      <level value="trace"/>
+  </logger>
     <logger name="se.kb.libris.whelks.api.SearchRestlet">-->
-        <level value="debug"/>
+        <level value="trace"/>
     </logger>
     <!--
      <logger name="se.kb.libris.whelks.plugin.OaiPmhXmlConverter">

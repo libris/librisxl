@@ -529,7 +529,7 @@ class SearchRestlet extends BasicWhelkAPI {
         def indexConfig = config.indexTypes[indexType]
         def boost = queryMap.boost?.split() ?: indexConfig?.defaultBoost?.split(",")
         def facets = queryMap.facets?.split() ?: indexConfig?.queryFacets?.split(",")
-        def elasticQuery = new ElasticQuery(queryMap.q)
+        def elasticQuery = new ElasticQuery(queryMap)
             if (queryMap.f) {
                 elasticQuery.query += " " + queryMap.f
             }

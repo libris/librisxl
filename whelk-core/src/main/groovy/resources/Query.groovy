@@ -30,14 +30,17 @@ class Query {
         def q = null
         if (qmap.get("query")) {
             q = qmap.get("query")
+            log.trace("Set q: $q")
         }
         else if (qmap.get("q")) {
             q = qmap.get("q")
+            log.trace("Set q: $q")
         }
         if (q) {
             this.query = q
             if (qmap.get("hl")) {
                 for (def hl : qmap.get("hl").split(",")) {
+                    log.trace("Set hl: $hl")
                     addHighlight(hl)
                 }
             }
@@ -48,6 +51,7 @@ class Query {
                         o = o.substring(1)
                         direction = "DESC"
                     }
+                    log.trace("Set order $o ($direction)")
                     addSort(o, direction)
                 }
             }
@@ -58,11 +62,13 @@ class Query {
                         o = o.substring(1)
                         direction = "DESC"
                     }
+                    log.trace("Set order $o ($direction)")
                     addSort(o, direction)
                 }
             }
             if (qmap.get("fields")) {
                 for (def f : qmap.get("fields").split(",")) {
+                    log.trace("Set field: $f")
                     if (f.contains(":")) {
                         addField(f.split(":")[0], new Float(f.split(":")[1]))
                     } else {
@@ -72,6 +78,7 @@ class Query {
             }
             if (qmap.get("boost")) {
                 for (b in qmap.get("boost").split(",")) {
+                    log.trace("Set boost: $b")
                     try {
                         addBoost(b.split(":")[0], new Float(b.split(":")[1]))
                     } catch (Exception e) {
@@ -81,6 +88,7 @@ class Query {
             }
             if (qmap.get("facets")) {
                 for (def fct : qmap.get("facets").split(",")) {
+                    log.trace("Set facet: $fct")
                     def f = fct.split(":")
                     def flabel = null
                     def fvalue = null
@@ -96,9 +104,11 @@ class Query {
             }
             if (qmap.get("start")) {
                 start = new Integer(qmap.get("start"))
+                log.trace("Set start: $start")
             }
             if (qmap.get("n")) {
                 n = new Integer(qmap.get("n"))
+                log.trace("Set n: $n")
             }
         } else {
             throw new WhelkRuntimeException("Trying to create empty query.")
