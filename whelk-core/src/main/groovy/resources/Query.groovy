@@ -51,6 +51,16 @@ class Query {
                     addSort(o, direction)
                 }
             }
+            if (qmap.get("sort")) {
+                for (def o : qmap.get("sort").split(",")) {
+                    def direction = "ASC"
+                    if (o && o.startsWith("-")) {
+                        o = o.substring(1)
+                        direction = "DESC"
+                    }
+                    addSort(o, direction)
+                }
+            }
             if (qmap.get("fields")) {
                 for (def f : qmap.get("fields").split(",")) {
                     if (f.contains(":")) {

@@ -171,6 +171,14 @@
     "sparqlapi" : {
         "_class" : "se.kb.libris.whelks.api.SparqlRestlet"
     },
+    "elasticapi" : {
+        "_class" : "se.kb.libris.whelks.api.HttpAPIRestlet",
+        "_params" : {
+            "pathEnd" : "_elastic",
+            "varPath" : true
+        }
+
+    },
     "documentapi" : {
         "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
     },

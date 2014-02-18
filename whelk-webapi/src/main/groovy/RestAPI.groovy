@@ -306,6 +306,66 @@ class DocumentRestlet extends BasicWhelkAPI {
 }
 
 @Log
+class HttpAPIRestlet extends BasicWhelkAPI {
+    def pathEnd = "_sparql"
+    def varPath = false
+    String id = "SparqlAPI"
+
+    String description = "Provides sparql endpoint to the underlying tripple store."
+
+    HttpAPIRestlet(Map settings) {
+        super(settings)
+        this.pathEnd = settings['pathEnd']
+        this.varPath = settings.get('varPath', false)
+        assert this.pathEnd
+    }
+
+    @Override
+    void doHandle(Request request, Response response) {
+        def form = new Form(request.getEntity())
+        def query = form.getFirstValue("query")
+
+        InputStream is
+        try {
+            is = whelk.sparql(query)
+        } catch (Exception e) {
+            is = new ByteArrayInputStream(e.message.bytes)
+            log.warn("Query $query resulted in error: ${e.message}", e)
+            query = null
+            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
+        }
+
+        log.debug("Creating outputrepresentation.")
+
+        Representation ir = new OutputRepresentation(mediaType(query)) {
+            @Override
+            public void write(OutputStream realOutput) throws IOException {
+                byte[] b = new byte[8]
+                int read
+                while ((read = is.read(b)) != -1) {
+                    realOutput.write(b, 0, read)
+                    realOutput.flush()
+                }
+            }
+        }
+
+        log.debug("Sending outputrepresentation.")
+        response.setEntity(ir)
+    }
+
+    MediaType mediaType(String query) {
+        if (!query) {
+            return MediaType.TEXT_PLAIN
+        }
+        if (query.toUpperCase().contains("SELECT") || query.toUpperCase().contains("ASK")) {
+            return MediaType.APPLICATION_SPARQL_RESULTS_XML
+        } else {
+            return MediaType.APPLICATION_RDF_XML
+        }
+    }
+}
+
+@Log
 class SparqlRestlet extends BasicWhelkAPI {
     def pathEnd = "_sparql"
     def varPath = false
