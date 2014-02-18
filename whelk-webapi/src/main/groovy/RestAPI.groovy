@@ -1093,7 +1093,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
         def query = queryMap.get("q", null)
         def xmlRecords, queryStr, url, xmlDoc, id, xMarcJsonDoc, jsonRec, jsonDoc
-        def resultList = []
+        def results
         def docStrings = []
         MarcRecord record
         OaiPmhXmlConverter oaiPmhXmlConverter
@@ -1113,6 +1113,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 log.debug("requesting data from url: $url")
                 xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
                 docStrings = getXMLRecordStrings(xmlRecords)
+                results = new SearchResult(docStrings.size())
                 for (docString in docStrings) {
 
                         /*def responseXMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n"
@@ -1146,7 +1147,8 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                         log.trace("Marcframeconverter for $id done")
 
                         //mapper = new ObjectMapper()
-                        resultList << ["data":getDataAsMap(jsonDoc)]
+
+                        results.addHit(new IndexDocument(jsonDoc))
                 }
 
             } catch (org.xml.sax.SAXParseException spe) {
@@ -1161,12 +1163,16 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
             response.setEntity(/{"Error": "Use parameter \"q\"}/, MediaType.APPLICATION_JSON)
         }
 
-        if (!resultList) {
+        if (!results) {
             response.setStatus(Status.SUCCESS_NO_CONTENT)
         }
 
+        response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
+        /*
         def results = ["hits": resultList.size().toString(), "list": resultList]
         response.setEntity(mapper.writeValueAsString(results), MediaType.APPLICATION_JSON)
+
+    */
 
     }
 
