@@ -396,8 +396,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 @Log
 class MarcFieldHandler extends BaseMarcFieldHandler {
 
-    Map ind1
-    Map ind2
+    MarcSubFieldHandler ind1
+    MarcSubFieldHandler ind2
     List<String> dependsOn
     String domainEntityName
     String definesDomainEntityType
@@ -409,7 +409,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     String rangeEntityName
     List splitLinkRules
     Map construct = [:]
-    Map subfields = [:]
+    Map<String, MarcSubFieldHandler> subfields = [:]
     Map resourceMaps
     List matchRules = []
 
@@ -417,8 +417,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     MarcFieldHandler(tag, fieldDfn, resourceMaps) {
         super(tag)
-        ind1 = fieldDfn.i1
-        ind2 = fieldDfn.i2
+        this.resourceMaps = resourceMaps
+        ind1 = fieldDfn.i1? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
+        ind2 = fieldDfn.i2? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
 
         dependsOn = fieldDfn.dependsOn
 
@@ -461,7 +462,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         fieldDfn.construct.each { prop, tplt ->
             construct[prop] = new StringConstruct(tplt)
         }
-        this.resourceMaps = resourceMaps
 
         def matchDomain = fieldDfn['match-domain']
         if (matchDomain) {
@@ -469,11 +469,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
         def matchI1 = fieldDfn['match-i1']
         if (matchI1) {
-            matchRules << new IndMatchRule(fieldDfn, matchI1, 'ind1', resourceMaps)
+            matchRules << new IndMatchRule(fieldDfn, matchI1, 'i1', resourceMaps)
         }
         def matchI2 = fieldDfn['match-i2']
         if (matchI2) {
-            matchRules << new IndMatchRule(fieldDfn, matchI2, 'ind1', resourceMaps)
+            matchRules << new IndMatchRule(fieldDfn, matchI2, 'i2', resourceMaps)
         }
         def matchCode = fieldDfn['match-code']
         if (matchCode) {
@@ -494,9 +494,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
     }
 
-    void addSubfield(code, obj) {
-        subfields[code] = obj
-        if (obj) assert subfields[code] instanceof Map
+    void addSubfield(code, dfn) {
+        subfields[code] = dfn? new MarcSubFieldHandler(this, code, dfn) : null
     }
 
     boolean convert(marcSource, value, entityMap) {
@@ -529,20 +528,21 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def unhandled = new HashSet()
 
+        // TODO: track unhandled indicators
         if (ind1)
-            processSubData(ind1, value.ind1, entity, uriTemplateParams)
+            ind1.convertSubValue(value.ind1, entity, uriTemplateParams)
         if (ind2)
-            processSubData(ind2, value.ind2, entity, uriTemplateParams)
+            ind2.convertSubValue(value.ind2, entity, uriTemplateParams)
 
         value.subfields.each {
             it.each { code, subVal ->
                 def subDfn = subfields[code]
                 def ok = false
                 if (subDfn) {
-                    def ent = (subDfn.domainEntity)?
-                        entityMap[subDfn.domainEntity] :
+                    def ent = (subDfn.domainEntityName)?
+                        entityMap[subDfn.domainEntityName] :
                         (linkage.codeLinkSplits[code] ?: entity)
-                    ok = processSubData(subDfn, subVal, ent, uriTemplateParams)
+                    ok = subDfn.convertSubValue(subVal, ent, uriTemplateParams)
                 }
                 if (!ok && !handled.contains(code)) {
                     unhandled << code
@@ -682,107 +682,133 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return (entity instanceof String)? entity : null
     }
 
-    String clearChars(fromWhere, removeChars, subVal) {
-        def val = subVal.trim()
-        if (val.size() > 2) {
-            def chars = removeChars.toCharArray()
-            switch(fromWhere) {
-                case "trailing":
-                    for (c in chars) {
-                        if (val[-1].equals(c.toString())) {
-                            val = val[0..-2].trim()
-                        }
-                    }
-                    break
-                case "surrounding":
-                    val
-                    for (c in chars) {
-                        if (val[-1].equals(c.toString())) {
-                            val = val[0..-2].trim()
-                        } else if (val[0].equals(c.toString())) {
-                            val = val[1..-1].trim()
-                        }
-                    }
-            }
-            return val.toString()
+}
+
+class MarcSubFieldHandler {
+
+    MarcFieldHandler fieldHandler
+    String code
+    String domainEntityName
+    char[] interpunctionChars
+    char[] surroundingChars
+    Map valueMap
+    String link
+    boolean repeatLink
+    String property
+    boolean repeatProperty
+    String rangeEntityName
+    UriTemplate subUriTemplate
+    Pattern splitValuePattern
+    List<String> splitValueProperties
+    Map defaults
+
+    MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
+        this.fieldHandler = fieldHandler
+        this.code = code
+        domainEntityName = subDfn.domainEntity
+        interpunctionChars = subDfn.interpunctionChars?.toCharArray()
+        surroundingChars = subDfn.surroundingChars?.toCharArray()
+        def valueMap = subDfn.valueMap
+        this.valueMap = (valueMap instanceof String)?
+                            fieldHandler.resourceMaps[valueMap] : valueMap
+        link = subDfn.link
+        repeatLink = false
+        if (subDfn.addLink) {
+            repeatLink = true
+            link = subDfn.addLink
         }
-        return val
+        property = subDfn.property
+        repeatProperty = false
+        if (subDfn.addProperty) {
+            property = subDfn.addProperty
+            repeatProperty = true
+        }
+        rangeEntityName = subDfn.rangeEntity
+        if (subDfn.uriTemplate) {
+            subUriTemplate = UriTemplate.fromTemplate(subDfn.uriTemplate)
+        }
+        if (subDfn.splitValuePattern) {
+            // TODO: support repeatable?
+            splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
+            splitValueProperties = subDfn.splitValueProperties
+        }
+        defaults = subDfn.defaults
     }
 
-    boolean processSubData(subDfn, subVal, ent, uriTemplateParams) {
+    boolean convertSubValue(subVal, ent, uriTemplateParams) {
         def ok = false
         def uriTemplateKeyBase = ""
 
-        if (subDfn.interpunctionChars) {
-            subVal = clearChars("trailing", subDfn.interpunctionChars, subVal)
-        }
-        if (subDfn.surroundingChars) {
-            subVal = clearChars("surrounding", subDfn.surroundingChars, subVal)
-        }
+        if (subVal)
+            subVal = clearChars(subVal)
 
-        def valueMap = subDfn.valueMap
         if (valueMap) {
-            if (valueMap instanceof String) // TODO: resolve on init
-                valueMap = resourceMaps[valueMap]
             subVal = valueMap[subVal]
             if (subVal == null)
                 return false
         }
 
-        def link = subDfn.link
-        def linkRepeat = false
-        if (subDfn.addLink) {
-            linkRepeat = true
-            link = subDfn.addLink
-        }
         if (link) {
             def entId = null
-            if (subDfn.uriTemplate) {
-                // TODO: compile subfield definitions
-                def subUriTemplate = UriTemplate.fromTemplate(subDfn.uriTemplate)
+            if (subUriTemplate) {
                 entId = subUriTemplate.expand(["_": subVal])
             }
-            def newEnt = newEntity(subDfn.rangeEntity, entId)
-            addValue(ent, link, newEnt, linkRepeat)
+            def newEnt = fieldHandler.newEntity(rangeEntityName, entId)
+            fieldHandler.addValue(ent, link, newEnt, repeatLink)
             ent = newEnt
             uriTemplateKeyBase = "${link}."
             ok = true
         }
 
-        def property = subDfn.property
-        def repeat = false
-        if (subDfn.addProperty) {
-            property = subDfn.addProperty
-            repeat = true
-        }
-
         def didSplit = false
-        if (subDfn.splitValuePattern) {
-            // TODO: support repeatable?
-            def splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
+        if (splitValuePattern) {
             def m = splitValuePattern.matcher(subVal)
             if (m) {
-                subDfn.splitValueProperties.eachWithIndex { prop, i ->
+                splitValueProperties.eachWithIndex { prop, i ->
                     def v = m[0][i + 1]
                     if (v) {
                         ent[prop] = v
                     }
-                    addValue(uriTemplateParams, uriTemplateKeyBase + prop, v, true)
+                    fieldHandler.addValue(uriTemplateParams, uriTemplateKeyBase + prop, v, true)
                 }
                 didSplit = true
                 ok = true
             }
         }
         if (!didSplit && property) {
-            addValue(ent, property, subVal, repeat)
-            addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
+            fieldHandler.addValue(ent, property, subVal, repeatProperty)
+            fieldHandler.addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
             ok = true
         }
 
-        if (subDfn.defaults) {
-            subDfn.defaults.each { k, v -> if (!(k in ent)) ent[k] = v }
+        if (defaults) {
+            defaults.each { k, v -> if (!(k in ent)) ent[k] = v }
         }
         return ok
+    }
+
+    String clearChars(subVal) {
+        def val = subVal.trim()
+        if (val.size() > 2) {
+            if (interpunctionChars) {
+                for (c in interpunctionChars) {
+                    if (val[-1].equals(c.toString())) {
+                        val = val[0..-2].trim()
+                    }
+                }
+            }
+            if (surroundingChars) {
+                for (c in surroundingChars) {
+                    if (val[-1].equals(c.toString())) {
+                        val = val[0..-2].trim()
+                    } else if (val[0].equals(c.toString())) {
+                        val = val[1..-1].trim()
+                    }
+                }
+        }
+            return val.toString()
+        }
+        return val
     }
 
 }
