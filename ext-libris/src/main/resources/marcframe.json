@@ -225,7 +225,7 @@
     "042": {
       "entity": "Record",
       "$a": {"property": "authenticationCode"},
-      "$9": {"property": "bibliographyCode"}
+      "$9": {"addProperty": "bibliographyCode"}
     },
     "043": {"ignored": true},
 
