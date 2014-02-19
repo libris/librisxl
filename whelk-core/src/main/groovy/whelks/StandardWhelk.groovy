@@ -83,18 +83,18 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Document get(URI uri, List contentTypes=[]) {
+    Document get(URI uri, version=null, List contentTypes=[]) {
         Document doc
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
             def s = getStorage(contentType)
             if (s) {
                 log.debug("Found $contentType storage.")
-                doc = s.get(uri)
+                doc = s.get(uri, version)
             }
         }
         if (!doc) {
-            doc = storage.get(uri)
+            doc = storage.get(uri, version)
         }
 
         if (doc?.identifier && queues) {
@@ -150,10 +150,19 @@ class StandardWhelk implements Whelk {
             docs.put(doc.contentType, doc)
         }
         for (d in docs.values()) {
-            for (st in  getStorages(d.contentType)) {
+            for (st in getStorages(d.contentType)) {
                 if (st.id != excemptStorage) {
                     log.trace("[${this.id}] Sending doc ${d.identifier} with ct ${d.contentType} to ${st.id}")
-                    stored = (st.store(d) || stored)
+                    try {
+                        stored = (st.store(d) || stored)
+                    } catch (DocumentException de) {
+                        if (de.exceptionType == DocumentException.IDENTICAL_DOCUMENT) {
+                            log.debug("Identical document already in storage.")
+                            stored = true
+                        } else {
+                            throw de
+                        }
+                    }
                 }
             }
         }
@@ -206,7 +215,7 @@ class StandardWhelk implements Whelk {
                         store.update(docBaseUri.resolve(it.identifier), it)
                     }
                 }
-            } else (isDebugEnabled()) {
+            } else if (log.isDebugEnabled()) {
                 log.debug("No graphs to update.")
             }
         } else {
@@ -392,7 +401,7 @@ class StandardWhelk implements Whelk {
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
     List<Storage> getStorages() { return plugins.findAll { it instanceof Storage } }
     Storage getStorage() { return plugins.find { it instanceof Storage } }
-    List<Storage> getStorages(String rct) { return plugins.findAll { it instanceof Storage && it.requiredContentType == rct} }
+    List<Storage> getStorages(String rct) { return plugins.findAll { it instanceof Storage && (!it.requiredContentType || it.requiredContentType == rct)} }
     Storage getStorage(String rct) { return plugins.find { it instanceof Storage && (rct == "*/*" || it.requiredContentType == rct)} }
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }

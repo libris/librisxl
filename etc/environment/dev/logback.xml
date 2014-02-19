@@ -81,6 +81,9 @@
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="info"/>
   </logger>
+ <logger name="se.kb.libris.whelks.component.CassandraStorage">
+      <level value="trace"/>
+  </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.SesameGraphStore">
       <level value="trace"/>

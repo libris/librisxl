@@ -218,6 +218,7 @@ class DocumentRestlet extends BasicWhelkAPI {
         if (request.method == Method.GET) {
             log.debug "Request path: ${path}"
             log.debug " DisplayMode: $mode"
+            def version = request.getResourceRef().getQueryAsForm().getValuesMap().get("version", null)
             def accepting = headers.find {
                     it.name.equalsIgnoreCase("accept")
                 }?.value?.split(",").collect {
@@ -227,7 +228,8 @@ class DocumentRestlet extends BasicWhelkAPI {
 
             log.debug("Accepting $accepting")
             try {
-                def d = whelk.get(new URI(path), accepting)
+                log.debug("We want version $version")
+                def d = whelk.get(new URI(path), version, accepting)
                 log.debug("Document received from whelk: $d")
                 if (d) {
                     if (mode == DisplayMode.META) {

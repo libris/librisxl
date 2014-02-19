@@ -2,6 +2,8 @@ package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
+import java.util.UUID
+
 import com.netflix.astyanax.*
 import com.netflix.astyanax.impl.*
 import com.netflix.astyanax.model.*
@@ -23,6 +25,7 @@ import se.kb.libris.whelks.exception.*
 class CassandraStorage extends BasicPlugin implements Storage {
 
     Keyspace keyspace
+    Keyspace versionsKeyspace
     String requiredContentType
     String keyspaceSuffix = ""
 
@@ -46,15 +49,18 @@ class CassandraStorage extends BasicPlugin implements Storage {
         StringSerializer.get())
 
     void init(String whelkName) {
+        keyspace = setupKeyspace(whelkName+"_"+this.id)
+        versionsKeyspace = setupKeyspace(whelkName+"_"+this.id+"_versions")
+    }
+
+    Keyspace setupKeyspace(String keyspaceName) {
         String cassandra_host = System.getProperty("cassandra.host")
         String cassandra_cluster = System.getProperty("cassandra.cluster")
         log.debug("Configuring Cassandra at ${cassandra_host}")
         log.debug("Setting up context.")
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
         .forCluster(cassandra_cluster)
-        // TODO: Replace keyspaceSuffix with id-based suffix
-        .forKeyspace(whelkName+"_"+this.id)
-        //.forKeyspace(whelkName+keyspaceSuffix)
+        .forKeyspace(keyspaceName)
         .withAstyanaxConfiguration(
             new AstyanaxConfigurationImpl()
             .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
@@ -73,14 +79,14 @@ class CassandraStorage extends BasicPlugin implements Storage {
         .buildKeyspace(ThriftFamilyFactory.getInstance());
 
         context.start();
-        keyspace = context.getClient();
+        Keyspace ksp = context.getClient();
 
         try {
-            def r = keyspace.describeKeyspace()
+            def r = ksp.describeKeyspace()
             log.debug("Keyspace in place: $r")
         } catch (Exception e) {
             log.debug("Creating keyspace.")
-            keyspace.createKeyspace(
+            ksp.createKeyspace(
                 ImmutableMap.<String, Object>builder()
                 .put("strategy_options", ImmutableMap.<String, Object>builder()
                 .put("replication_factor", "1")
@@ -92,16 +98,17 @@ class CassandraStorage extends BasicPlugin implements Storage {
             log.debug("Creating tables and indexes.")
 
             log.debug("CQL: "+CREATE_TABLE_STATEMENT)
-            def result = keyspace
+            def result = ksp
             .prepareQuery(CF_DOCUMENT)
             .withCql(CREATE_TABLE_STATEMENT)
             .execute();
             log.debug("CQL: "+CREATE_INDEX_STATEMENT)
-            result = keyspace
+            result = ksp
             .prepareQuery(CF_DOCUMENT)
             .withCql(CREATE_INDEX_STATEMENT)
             .execute();
         }
+        return ksp
     }
 
     CassandraStorage() {}
@@ -117,13 +124,41 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    boolean store(Document doc) {
+    boolean store(Document doc, checkDigest = true) {
+        return store(doc.identifier, doc, keyspace, checkDigest)
+    }
+
+    boolean store(String key, Document doc, Keyspace ksp, boolean checkDigest, boolean checkExisting = true) {
         log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}")
-        if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
-            MutationBatch m = keyspace.prepareMutationBatch()
+        if (doc && (!checkExisting || !requiredContentType || requiredContentType == doc.contentType)) {
+            def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
+            if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
+                throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
+            }
+            if (existingDocument) {
+                log.trace("Found changes in ${existingDocument.entry.checksum} (orig) and ${doc.entry.checksum} (new)")
+                def entry = existingDocument.entry
+                int version = (entry.version ?: 1) as int
+                doc.entry.version = (version+1)
+                String versionedKey = doc.identifier+"?version="+version
+                // Create versions
+                def versions = entry.versions ?: [:]
+                versions[""+version] = ["timestamp" : entry.timestamp, "checksum":entry.checksum]
+                doc.entry.versions = versions
+
+                log.debug("existingDocument entry: $entry")
+                log.debug("new document entry: ${doc.entry}")
+                doc = doc.mergeEntry(entry)
+                log.debug("new document entry after merge: ${doc.entry}")
+                log.debug("Saving versioned document with versionedKey $versionedKey")
+                store(versionedKey, existingDocument, versionsKeyspace, false, false)
+            }
+
+            // Commence saving
+            MutationBatch m = ksp.prepareMutationBatch()
             String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
-            log.trace("Saving document ${doc.identifier} with dataset $dataset")
-            m.withRow(CF_DOCUMENT, doc.identifier)
+            log.trace("Saving document ${key} with dataset $dataset")
+            m.withRow(CF_DOCUMENT, key)
             .putColumn(COL_NAME_IDENTIFIER , doc.identifier)
             .putColumn(COL_NAME_DATA, new String(doc.data, "UTF-8"), null)
             .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
@@ -139,27 +174,57 @@ class CassandraStorage extends BasicPlugin implements Storage {
             if (!doc) {
                 log.warn("Received null document. No attempt to store.")
             } else if (log.isDebugEnabled()) {
-                log.debug("This storage (${this.id}) does not handle document with type ${doc.contentType}. Not saving ${doc.identifier}")
+                log.debug("This storage (${this.id}) does not handle document with type ${doc.contentType}. Not saving ${key}")
             }
         }
         return false
     }
 
     @Override
-    Document get(URI uri) {
-        OperationResult<ColumnList<String>> operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri.toString()).execute()
+    Document get(URI uri, version=null) {
+        return get(uri.toString(), version)
+    }
+
+    Document get(String uri, version=null) {
+        Document document = null
+        log.trace("Version is $version")
+
+        OperationResult<ColumnList<String>> operation
+        if (version) {
+            operation = versionsKeyspace.prepareQuery(CF_DOCUMENT).getKey(uri+"?version=$version").execute()
+        } else {
+            operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri).execute()
+        }
         ColumnList<String> res = operation.getResult()
 
-        log.debug("Operation result size: ${res.size()}")
+        log.trace("Search operation result size: ${res.size()}")
 
         if (res.size() > 0) {
             log.debug("Digging up a document with identifier $uri from ${this.id}.")
-                return new Document()
+            document = new Document()
                 .withIdentifier(res.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
                 .withData(res.getColumnByName(COL_NAME_DATA).getByteArrayValue())
                 .withMetaEntry(res.getColumnByName(COL_NAME_ENTRY).getStringValue())
         }
-        return null
+        /*
+        if (version) {
+            log.debug("Version $version requested.")
+            def versionedKey = document.entry?.versions?.get(version, null)?.versionedKey
+            log.trace("Version $version has versionedKey $versionedKey")
+            if (versionedKey) {
+                operation = versionsKeyspace.prepareQuery(CF_DOCUMENT).getKey(versionedKey).execute()
+                res = operation.getResult()
+                if (res.size() > 0) {
+                    log.debug("Found document version $version with identifier $uri from ${this.id}.")
+                    document = new Document()
+                        .withIdentifier(res.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
+                        .withData(res.getColumnByName(COL_NAME_DATA).getByteArrayValue())
+                        .withMetaEntry(res.getColumnByName(COL_NAME_ENTRY).getStringValue())
+                }
+            }
+        }
+        */
+        return document
     }
 
     @Override

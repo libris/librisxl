@@ -22,8 +22,7 @@
         "_unique" : true
     },
     "cassandrastorage": {
-        "_class" : "se.kb.libris.whelks.component.CassandraStorage",
-        "_params" : "application/ld+json"
+        "_class" : "se.kb.libris.whelks.component.CassandraStorage"
     },
     "oaipmhstorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",

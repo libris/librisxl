@@ -8,6 +8,7 @@ import java.net.URI
 import java.util.*
 import java.nio.ByteBuffer
 import java.lang.annotation.*
+import java.security.MessageDigest
 
 import org.codehaus.jackson.*
 import org.codehaus.jackson.map.*
@@ -70,11 +71,17 @@ class Document {
         return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "entry":entry])
     }
 
+    void setData(byte[] data) {
+        this.data = data
+        calculateChecksum()
+    }
+
     /*
      * Convenience methods
      */
     Document withIdentifier(String i) {
         this.identifier = i
+        this.entry['identifier'] = i
         return this
     }
     Document withIdentifier(URI uri) {
@@ -116,13 +123,13 @@ class Document {
 
     Document withData(byte[] data) {
         this.data = data
+        calculateChecksum()
         return this
     }
     Document withEntry(Map entrydata) {
         if (entrydata?.get("identifier", null)) {
             this.identifier = entrydata["identifier"]
         }
-        entrydata.remove("identifier")
         if (entrydata) {
             this.entry.putAll(entrydata)
         }
@@ -178,5 +185,30 @@ class Document {
             throw new DocumentException(jpe)
         }
         return this
+    }
+
+    Document mergeEntry(Map entryData) {
+        entryData.each { k, v ->
+            if (!this.entry.containsKey(k)
+                && k != "version"
+                && k != "contentType"
+                && k != "checksum"
+                && k != "timestamp") {
+                log.info("Setting $k = $v")
+                this.entry.put(k, v)
+            }
+        }
+        return this
+    }
+
+    private void calculateChecksum() {
+        MessageDigest m = MessageDigest.getInstance("MD5")
+        m.reset()
+        m.update(data)
+        byte[] digest = m.digest()
+        BigInteger bigInt = new BigInteger(1,digest)
+        String hashtext = bigInt.toString(16)
+        log.debug("calculated checksum: $hashtext")
+        this.entry['checksum'] = hashtext
     }
 }
