@@ -58,9 +58,20 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     public static void main(String[] args) {
         def converter = new MarcFrameConverter()
-        def source = converter.mapper.readValue(new File(args[0]), Map)
-        def frame = converter.createFrame(source)
-        converter.mapper.writeValue(System.out, frame)
+        def fpath = args[0]
+        def cmd = null
+        if (args.length > 1) {
+            cmd = args[0]
+            fpath = args[1]
+        }
+        def source = converter.mapper.readValue(new File(fpath), Map)
+        def result = null
+        if (cmd == "revert") {
+            result = converter.conversion.revert(source)
+        } else {
+            result = converter.createFrame(source)
+        }
+        converter.mapper.writeValue(System.out, result)
     }
 
 }
@@ -254,6 +265,40 @@ class MarcConversion {
         return record
     }
 
+    Map revert(data) {
+        def marc = [:]
+        def fields = []
+        marc['fields'] = fields
+        def recType = "bib" // TODO: compute from about-type
+        def fieldHandlers = marcHandlers[recType]
+        fieldHandlers.each { tag, handler ->
+            def value = handler.revert(data)
+            if (tag == "000") {
+                marc.leader = value
+            } else {
+                if (value == null)
+                    return
+                if (value instanceof List) {
+                    value.each {
+                        fields << [(tag): it]
+                    }
+                } else {
+                    fields << [(tag): value]
+                }
+            }
+        }
+        return marc
+    }
+
+    static Map getEntity(handler, Map data) {
+        if (handler.domainEntityName == 'Record')
+            return data
+        if (handler.domainEntityName == 'Work')
+            return data.about.instanceOf
+        else
+            return data.about
+    }
+
 }
 
 class MarcFixedFieldHandler {
@@ -280,6 +325,19 @@ class MarcFixedFieldHandler {
         return success
     }
 
+    def revert(Map data) {
+        def value = new StringBuilder(" " * (columns[-1].end + 1))
+        for (col in columns) {
+            def obj = col.revert(data)
+            // TODO: ambiguity trouble if this is a List!
+            if (obj instanceof List) obj = obj[0]
+            if (obj) {
+                value[col.start..col.end] = obj
+            }
+        }
+        return value.toString()
+    }
+
     class Column extends MarcSimpleFieldHandler {
         int start
         int end
@@ -296,6 +354,12 @@ class MarcFixedFieldHandler {
                 return true
             return super.convert(marcSource, token, entityMap)
         }
+        def revert(Map data) {
+            def v = super.revert(data)
+            if (v == null && defaultValue)
+                return defaultValue
+            return v
+        }
     }
 
 }
@@ -306,6 +370,8 @@ abstract class BaseMarcFieldHandler {
     BaseMarcFieldHandler(tag) { this.tag = tag }
 
     abstract boolean convert(marcSource, value, entityMap)
+
+    abstract def revert(Map data)
 
     void addValue(obj, key, value, repeatable) {
         if (repeatable) {
@@ -326,6 +392,8 @@ abstract class BaseMarcFieldHandler {
 }
 
 class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
+
+    static final String DT_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SZ"
 
     String property
     String domainEntityName
@@ -368,7 +436,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         if (ignored || !(property || link))
             return
         if (dateTimeFormat) {
-            value = Date.parse(dateTimeFormat, value).format("yyyy-MM-dd'T'HH:mm:ss.SZ")
+            value = Date.parse(dateTimeFormat, value).format(DT_FORMAT)
         }
 
         def ent = entityMap[domainEntityName]
@@ -389,6 +457,21 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
 
         return true
+    }
+
+    def revert(Map data) {
+        def entity = MarcConversion.getEntity(this, data)
+        if (link)
+            entity = entity[link]
+        if (property) {
+            def v = entity[property]
+            if (dateTimeFormat)
+                return Date.parse(DT_FORMAT, v).format(dateTimeFormat)
+            return v
+        } else {
+            /// TODO: check link, reverse uriTemplate, ...
+            return "???"
+        }
     }
 
 }
@@ -682,6 +765,39 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return (entity instanceof String)? entity : null
     }
 
+    def revert(Map data) {
+        // TODO; this need to be able to return a list, depending on groups of properties
+        def entity = MarcConversion.getEntity(this, data)
+        def linkedEntities = null
+        if (link) {
+            linkedEntities = entity[link]
+            if (!(linkedEntities instanceof List)) // should be if repeat == true
+                linkedEntities = [linkedEntities]
+        }
+        def entities = linkedEntities ?: [entity]
+        return entities.collect {
+            revertOne(data, it)
+        }.findAll()
+    }
+
+    def revertOne(Map data, Map currentEntity) {
+        def i1 = ind1? ind1.revert(data, currentEntity) : null
+        def i2 = ind2? ind2.revert(data, currentEntity) : null
+        def subs = []
+        subfields.collect { code, subhandler ->
+            if (!subhandler)
+                return
+            def value = subhandler.revert(data, currentEntity)
+            if (value instanceof List) {
+                value.each {
+                    subs << [(code): it]
+                }
+            } else if (value != null) {
+                subs << [(code): value]
+            }
+        }
+        return subs.length? [ind1: i1, ind2: i2, subfields: subs] : null
+    }
 }
 
 class MarcSubFieldHandler {
@@ -809,6 +925,32 @@ class MarcSubFieldHandler {
             return val.toString()
         }
         return val
+    }
+
+    def revert(Map data, Map currentEntity) {
+        def entity = domainEntityName?
+            MarcConversion.getEntity(this, data) : currentEntity
+        // TODO: taking list[0] not enough – need to at least produce result list
+        if (entity == null)
+            return null
+        if (link) {
+            entity = entity[link]
+            if (entity instanceof List) entity = entity[0]
+        }
+        if (entity == null)
+            return null
+        // TODO: match defaults only if not set by other subfield...
+        if (defaults && defaults.any { p, o -> entity[p] != o })
+            return null
+        if (splitValueProperties) {
+            def vs = splitValueProperties.collect { entity[it] }.findAll()
+            // TODO: revert splitValuePattern, check if prop
+            if (vs.size() == splitValueProperties.size())
+                return vs.join(" ")
+        }
+        if (property) {
+            return entity[property]
+        }
     }
 
 }
