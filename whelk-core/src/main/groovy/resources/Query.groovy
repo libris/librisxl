@@ -86,6 +86,8 @@ class Query {
                     }
                 }
             }
+            if (qmap.get("range")) {
+            }
             if (qmap.get("filter")) {
                 for (f in qmap.get("filter").split(",")) {
                     log.trace("Set filter: $f")

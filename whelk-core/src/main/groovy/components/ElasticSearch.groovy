@@ -23,6 +23,7 @@ import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.index.query.*
 import org.elasticsearch.search.sort.FieldSortBuilder
 import org.elasticsearch.search.sort.SortOrder
+import org.elasticsearch.index.query.FilterBuilders.*
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*

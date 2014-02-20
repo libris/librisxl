@@ -70,6 +70,10 @@ class DiskStorage extends BasicPlugin implements Storage {
         uri.toString().substring(uri.toString().lastIndexOf("/")+1)
     }
 
+    Document get(String uri) {
+        return get(new URI(uri))
+    }
+
     @Override
     Document get(URI uri) {
         log.trace("Loading from ${this.getClass()}")
