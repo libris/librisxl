@@ -243,4 +243,14 @@ class MarcFrameConverterSpec extends Specification {
     */
     }
 
+    def "should extract token"() {
+        expect:
+        MarcSimpleFieldHandler.extractToken(tplt, uri) == token
+        where:
+        tplt            | uri               | token
+        "/item/{_}"     | "/item/thing"     | "thing"
+        "/item/{_}/eng" | "/item/thing/eng" | "thing"
+        "/item/{_}/swe" | "/item/thing/eng" | null
+    }
+
 }
