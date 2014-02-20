@@ -14,7 +14,7 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     String id = "diskstorage"
     String docFolder = "_"
-    String requiredContentType
+    List contentTypes
 
     int PATH_CHUNKS=4
 
@@ -34,7 +34,7 @@ class DiskStorage extends BasicPlugin implements Storage {
             dn.deleteCharAt(dn.length()-1)
         }
         this.storageDir = dn.toString()
-        this.requiredContentType = settings.get('contentType', null)
+        this.contentTypes = settings.get('contentTypes', null)
 
         log.info("Starting DiskStorage with storageDir $storageDir")
     }
@@ -49,7 +49,7 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     boolean store(Document doc) {
-        if (doc && (!requiredContentType || requiredContentType == doc.contentType)) {
+        if (doc && handlesContent(doc.contentType)) {
             File sourcefile = new File(buildPath(doc.identifier, true) + "/" + getBaseFilename(doc.identifier) + (FILE_EXTENSIONS[doc.contentType] ?: ""))
             File metafile = new File(buildPath(doc.identifier, true) + "/"+ getBaseFilename(doc.identifier) + METAFILE_EXTENSION)
             try {
@@ -135,6 +135,11 @@ class DiskStorage extends BasicPlugin implements Storage {
         }
         */
         return path.replaceAll(/\/+/, "/") //+ "/" + basename
+    }
+
+    @Override
+    boolean handlesContent(String ctype) {
+        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
     }
 }
 

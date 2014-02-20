@@ -73,21 +73,21 @@
                 "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
                 "_params" : {
                     "storageDir": "work/storage/flat/main",
-                    "contentType": "application/ld+json"
+                    "contentTypes": ["application/ld+json"]
                 }
             },
             "swepubstorage": {
                 "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",
                 "_params" : {
                     "storageDir": "work/storage/flat/swepub",
-                    "contentType": "application/mods+xml"
+                    "contentTypes": ["application/mods+xml"]
                 }
             },
             "diskstorage": {
                 "_class" : "se.kb.libris.whelks.component.DiskStorage",
                 "_params" : {
                     "storageDir": "work/storage/disk/jsonld",
-                    "contentType": "application/ld+json"
+                    "contentTypes": ["application/ld+json"]
                 }
             },
             "localdefinitiondata": {

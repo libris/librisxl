@@ -71,11 +71,6 @@ class Document {
         return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "entry":entry])
     }
 
-    void setData(byte[] data) {
-        this.data = data
-        calculateChecksum()
-    }
-
     /*
      * Convenience methods
      */

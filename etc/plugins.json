@@ -23,11 +23,19 @@
     },
     "cassandrastorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
-        "_params" : "application/ld+json"
+        "_params" : {
+            "contentTypes" : [ 
+                "application/ld+json", 
+                "application/json",
+                "text/plain"
+            ]
+        }
     },
     "oaipmhstorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
-        "_params" : "text/oaipmh+xml"
+        "_params" : {
+            "contentTypes" : [ "text/oaipmh+xml" ]
+        }
     },
     "sesamegraphstore" : {
         "_class" : "se.kb.libris.whelks.component.SesameGraphStore",

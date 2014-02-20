@@ -34,7 +34,8 @@ class OldIndexDocument extends Resource {
         this.contentType = d.contentType
     }
     IndexDocument(IndexDocument d, Map<String, String[]> match) {
-        withData(d.getData()).withIdentifier(d.identifier).withContentType(d.contentType)
+        this.data = d.getData()
+        withIdentifier(d.identifier).withContentType(d.contentType)
         this.matches = match
     }
 
@@ -53,6 +54,12 @@ class OldIndexDocument extends Resource {
 
     IndexDocument withType(String t) {
         this.type = t
+        return this
+    }
+
+    @Override
+    IndexDocument withData(byte[] d) {
+        this.data = d
         return this
     }
 }

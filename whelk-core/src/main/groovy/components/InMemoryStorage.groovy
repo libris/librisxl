@@ -43,4 +43,8 @@ class InMemoryStorage extends BasicPlugin implements Storage {
     void delete(URI uri) {
         storage.remove(uri)
     }
+    @Override
+    boolean handlesContent(String ctype) {
+        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
+    }
 }

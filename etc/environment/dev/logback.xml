@@ -71,7 +71,7 @@
   </logger> 
   -->
   <logger name="se.kb.libris.whelks.StandardWhelk">
-      <level value="debug"/>
+      <level value="trace"/>
   </logger>
   <!--
   <logger name="se.kb.libris.whelks.importers">
@@ -79,7 +79,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="info"/>
+      <level value="trace"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
       <level value="trace"/>

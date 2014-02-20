@@ -26,8 +26,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     Keyspace keyspace
     Keyspace versionsKeyspace
-    String requiredContentType
-    String keyspaceSuffix = ""
+    List contentTypes
 
     final String CF_DOCUMENT_NAME = "document"
     final String COL_NAME_IDENTIFIER = "identifier"
@@ -111,16 +110,9 @@ class CassandraStorage extends BasicPlugin implements Storage {
         return ksp
     }
 
-    CassandraStorage() {}
-    CassandraStorage(String rct) {
-        this.requiredContentType = rct
-    }
-    /**
-     * TODO: Replace this with id-based keyspacesuffixing
-     */
     CassandraStorage(Map settings) {
-        this.requiredContentType = settings.get("requiredContentType", null)
-        this.keyspaceSuffix = settings.get("keyspaceSuffix", "")
+        super()
+        this.contentTypes = settings.get("contentTypes", null)
     }
 
     @Override
@@ -130,7 +122,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     boolean store(String key, Document doc, Keyspace ksp, boolean checkDigest, boolean checkExisting = true) {
         log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}")
-        if (doc && (!checkExisting || !requiredContentType || requiredContentType == doc.contentType)) {
+        if (doc && (handlesContent(doc.contentType) || !checkExisting)) {
             def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
             if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
                 throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
@@ -206,24 +198,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 .withData(res.getColumnByName(COL_NAME_DATA).getByteArrayValue())
                 .withMetaEntry(res.getColumnByName(COL_NAME_ENTRY).getStringValue())
         }
-        /*
-        if (version) {
-            log.debug("Version $version requested.")
-            def versionedKey = document.entry?.versions?.get(version, null)?.versionedKey
-            log.trace("Version $version has versionedKey $versionedKey")
-            if (versionedKey) {
-                operation = versionsKeyspace.prepareQuery(CF_DOCUMENT).getKey(versionedKey).execute()
-                res = operation.getResult()
-                if (res.size() > 0) {
-                    log.debug("Found document version $version with identifier $uri from ${this.id}.")
-                    document = new Document()
-                        .withIdentifier(res.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
-                        .withData(res.getColumnByName(COL_NAME_DATA).getByteArrayValue())
-                        .withMetaEntry(res.getColumnByName(COL_NAME_ENTRY).getStringValue())
-                }
-            }
-        }
-        */
         return document
     }
 
@@ -265,6 +239,11 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 return new CassandraIterator(query)
             }
         }
+    }
+
+    @Override
+    boolean handlesContent(String ctype) {
+        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
     }
 
     class CassandraIterator implements Iterator<Document> {

@@ -401,8 +401,8 @@ class StandardWhelk implements Whelk {
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
     List<Storage> getStorages() { return plugins.findAll { it instanceof Storage } }
     Storage getStorage() { return plugins.find { it instanceof Storage } }
-    List<Storage> getStorages(String rct) { return plugins.findAll { it instanceof Storage && (!it.requiredContentType || it.requiredContentType == rct)} }
-    Storage getStorage(String rct) { return plugins.find { it instanceof Storage && (rct == "*/*" || it.requiredContentType == rct)} }
+    List<Storage> getStorages(String rct) { return plugins.findAll { it instanceof Storage && it.handlesContent(rct) } }
+    Storage getStorage(String rct) { return plugins.find { it instanceof Storage && it.handlesContent(rct) } }
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     GraphStore getGraphStore() { return plugins.find { it instanceof GraphStore } }

@@ -22,8 +22,7 @@ public interface Storage extends Component {
      */
     public Iterable<Document> getAll(String dataset);
     /**
-     * If this Storage is designated to handle only specific types of content, this method needs to return that content-type.
-     * If the Storage can handle any type. Let it return nulll.
+     * @return true if this storage can handle documents of this kind.
      */
-    public String getRequiredContentType();
+    public boolean handlesContent(String contentType);
 }

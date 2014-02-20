@@ -280,6 +280,11 @@ abstract class ElasticSearch extends BasicPlugin {
                 }
             }
         }
+        if (q.filters) {
+            // TODO: Must explore this further.
+            log.info("Setting filters ${q.filters} (${q.filters.getClass().getName()})")
+            srb.setPostFilter(q.filters)
+        }
         log.trace("SearchRequestBuilder: " + srb)
         def response = performExecute(srb)
         log.trace("SearchResponse: " + response)

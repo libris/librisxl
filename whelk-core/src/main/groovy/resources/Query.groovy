@@ -86,6 +86,16 @@ class Query {
                     }
                 }
             }
+            if (qmap.get("filter")) {
+                for (f in qmap.get("filter").split(",")) {
+                    log.trace("Set filter: $f")
+                    try {
+                        addFilter(f.split(":")[0], f.split(":")[1])
+                    } catch (Exception e) {
+                        log.error("Bad user: " + e.getMessage())
+                    }
+                }
+            }
             if (qmap.get("facets")) {
                 for (def fct : qmap.get("facets").split(",")) {
                     log.trace("Set facet: $fct")
