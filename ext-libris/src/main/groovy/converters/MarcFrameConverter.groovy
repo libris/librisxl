@@ -400,6 +400,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
 class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
     static final String DT_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SZ"
+    static final String URI_SLOT = '{_}'
 
     String property
     String link
@@ -452,7 +453,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
         if (uriTemplate) {
             if (!matchUriToken || matchUriToken.matcher(value).matches()) {
-                ent['@id'] = uriTemplate.replace('{_}', value)
+                ent['@id'] = uriTemplate.replace(URI_SLOT, value)
             } else {
                 ent['@value'] = value
             }
@@ -474,8 +475,25 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 return Date.parse(DT_FORMAT, v).format(dateTimeFormat)
             return v
         } else {
-            /// TODO: check link, reverse uriTemplate, ...
+            def id = entity instanceof Map? entity['@id'] : entity
+            if (uriTemplate) {
+                return extractToken(uriTemplate, id) ?: "N/A"
+            }
             return "???"
+        }
+    }
+
+    static String extractToken(tplt, value) {
+        def i = tplt.indexOf(URI_SLOT)
+        if (i > -1) {
+            def before = tplt.substring(0, i)
+            def after = tplt.substring(i + URI_SLOT.size())
+            if (value.startsWith(before) && value.endsWith(after)) {
+                def part = value.substring(before.size())
+                return part.substring(0, part.size() - after.size())
+            }
+        } else {
+            return null
         }
     }
 
