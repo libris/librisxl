@@ -281,17 +281,31 @@ abstract class ElasticSearch extends BasicPlugin {
                 }
             }
         }
+        def constructedFilters = []
         if (q.filters) {
-            // TODO: Must explore this further.
-            log.info("Setting filters ${q.filters} (${q.filters.getClass().getName()})")
-            srb.setPostFilter(q.filters)
+            q.filters.each { k, v ->
+                if (k.charAt(0) == '!') {
+                    constructedFilters << FilterBuilders.notFilter(FilterBuilders.termFilter(k.substring(1), v))
+                } else {
+                    constructedFilters << FilterBuilders.termFilter(k, v)
+                }
+            }
         }
         if (q.ranges) {
             q.ranges.each {k, v ->
-                srb.setPostFilter(FilterBuilders.rangeFilter(k).from(v[0]).to(v[1]))
+                if (k.charAt(0) == '!') {
+                    constructedFilters << FilterBuilders.notFilter(FilterBuilders.rangeFilter(k.substring(1)).from(v[0]).to(v[1]))
+                } else {
+                    constructedFilters << FilterBuilders.rangeFilter(k).from(v[0]).to(v[1])
+                }
             }
         }
-        log.trace("SearchRequestBuilder: " + srb)
+        if (constructedFilters.size() > 1) {
+            srb.setPostFilter(FilterBuilders.andFilter(*constructedFilters))
+        } else if (constructedFilters.size() == 1) {
+            srb.setPostFilter(constructedFilters[0])
+        }
+        log.debug("SearchRequestBuilder: " + srb)
         def response = performExecute(srb)
         log.trace("SearchResponse: " + response)
 
