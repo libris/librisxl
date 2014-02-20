@@ -290,15 +290,6 @@ class MarcConversion {
         return marc
     }
 
-    static Map getEntity(handler, Map data) {
-        if (handler.domainEntityName == 'Record')
-            return data
-        if (handler.domainEntityName == 'Work')
-            return data.about.instanceOf
-        else
-            return data.about
-    }
-
 }
 
 class MarcFixedFieldHandler {
@@ -364,7 +355,22 @@ class MarcFixedFieldHandler {
 
 }
 
-abstract class BaseMarcFieldHandler {
+class ConversionPart {
+
+    String domainEntityName
+
+    Map getEntity(Map data) {
+        if (domainEntityName == 'Record')
+            return data
+        if (domainEntityName == 'Work')
+            return data.about.instanceOf
+        else
+            return data.about
+    }
+
+}
+
+abstract class BaseMarcFieldHandler extends ConversionPart {
 
     String tag
     BaseMarcFieldHandler(tag) { this.tag = tag }
@@ -396,7 +402,6 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     static final String DT_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SZ"
 
     String property
-    String domainEntityName
     String link
     String rangeEntityName
     String uriTemplate
@@ -460,7 +465,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     }
 
     def revert(Map data) {
-        def entity = MarcConversion.getEntity(this, data)
+        def entity = getEntity(data)
         if (link)
             entity = entity[link]
         if (property) {
@@ -482,7 +487,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     MarcSubFieldHandler ind1
     MarcSubFieldHandler ind2
     List<String> dependsOn
-    String domainEntityName
     String definesDomainEntityType
     UriTemplate uriTemplate
     Map uriTemplateDefaults
@@ -725,8 +729,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
             newEnt = newEntity(rangeEntityName)
 
+            def lRepeatLink = repeatLink
             if (useLinks) {
-                repeatLink = true
+                lRepeatLink = true
             }
             if (spliceEntity) {
                 entity = spliceEntity
@@ -740,10 +745,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 entRef = ['@id': newEnt['@id']]
             }
             if (link) {
-                addValue(entity, link, newEnt, repeatLink)
+                addValue(entity, link, newEnt, lRepeatLink)
             }
             useLinks.each {
-                addValue(entity, it, entRef, repeatLink)
+                addValue(entity, it, entRef, lRepeatLink)
             }
         }
         return [
@@ -766,8 +771,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     def revert(Map data) {
-        // TODO; this need to be able to return a list, depending on groups of properties
-        def entity = MarcConversion.getEntity(this, data)
+        def entity = getEntity(data)
         def linkedEntities = null
         if (link) {
             linkedEntities = entity[link]
@@ -800,11 +804,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 }
 
-class MarcSubFieldHandler {
+class MarcSubFieldHandler extends ConversionPart {
 
     MarcFieldHandler fieldHandler
     String code
-    String domainEntityName
     char[] interpunctionChars
     char[] surroundingChars
     Map valueMap
@@ -929,7 +932,7 @@ class MarcSubFieldHandler {
 
     def revert(Map data, Map currentEntity) {
         def entity = domainEntityName?
-            MarcConversion.getEntity(this, data) : currentEntity
+            getEntity(data) : currentEntity
         // TODO: taking list[0] not enough – need to at least produce result list
         if (entity == null)
             return null
