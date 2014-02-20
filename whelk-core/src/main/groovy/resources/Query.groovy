@@ -10,6 +10,7 @@ class Query {
     def fields
     def sorting
     def highlights
+    def ranges
     def filters
     def facets
     def queryFacets
@@ -87,6 +88,15 @@ class Query {
                 }
             }
             if (qmap.get("range")) {
+                for (r in qmap.get("range").split(",")) {
+                    log.trace("Set range: $r")
+                    try {
+                        def v = r.split(":")[1].split("-")
+                        addRangeFilter(r.split(":")[0], v[0], v[1])
+                    } catch (Exception e) {
+                        log.error("Bad user: " + e.getMessage())
+                    }
+                }
             }
             if (qmap.get("filter")) {
                 for (f in qmap.get("filter").split(",")) {
@@ -161,6 +171,14 @@ class Query {
             this.boost = [:]
         }
         this.boost[field] = boostvalue
+        return this
+    }
+
+    Query addRangeFilter(field, min, max) {
+        if (!ranges) {
+            ranges = [:]
+        }
+        ranges[field] = [min, max]
         return this
     }
 
