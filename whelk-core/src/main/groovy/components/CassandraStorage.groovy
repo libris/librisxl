@@ -173,11 +173,11 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Document get(URI uri, version=null) {
-        return get(uri.toString(), version)
+    Document get(URI uri, String version=null) {
+        return get(uri.toString(), version?.toInteger())
     }
 
-    Document get(String uri, version=null) {
+    Document get(String uri, Integer version=null) {
         Document document = null
         log.trace("Version is $version")
 
@@ -197,6 +197,14 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 .withIdentifier(res.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
                 .withData(res.getColumnByName(COL_NAME_DATA).getByteArrayValue())
                 .withMetaEntry(res.getColumnByName(COL_NAME_ENTRY).getStringValue())
+        }
+        if (!document && version) {
+            log.trace("Did document loading fail because we explicitliy requested the latest version ($version)?")
+            document = get(uri, null)
+            if (document?.entry?.version != version) {
+                log.trace(" -- No. Latest document version is ${document?.entry?.version}")
+                document = null
+            }
         }
         return document
     }
