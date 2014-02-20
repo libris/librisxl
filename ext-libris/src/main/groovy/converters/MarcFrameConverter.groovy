@@ -819,6 +819,7 @@ class MarcSubFieldHandler extends ConversionPart {
     UriTemplate subUriTemplate
     Pattern splitValuePattern
     List<String> splitValueProperties
+    String rejoin
     Map defaults
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
@@ -850,6 +851,7 @@ class MarcSubFieldHandler extends ConversionPart {
             // TODO: support repeatable?
             splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
             splitValueProperties = subDfn.splitValueProperties
+            rejoin = subDfn.rejoin
         }
         defaults = subDfn.defaults
     }
@@ -945,11 +947,12 @@ class MarcSubFieldHandler extends ConversionPart {
         // TODO: match defaults only if not set by other subfield...
         if (defaults && defaults.any { p, o -> entity[p] != o })
             return null
-        if (splitValueProperties) {
+        if (splitValueProperties && rejoin) {
+            // TODO: and properties not all corresponding to codes...
             def vs = splitValueProperties.collect { entity[it] }.findAll()
             // TODO: revert splitValuePattern, check if prop
             if (vs.size() == splitValueProperties.size())
-                return vs.join(" ")
+                return vs.join(rejoin)
         }
         if (property) {
             return entity[property]

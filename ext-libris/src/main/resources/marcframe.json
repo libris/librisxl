@@ -140,6 +140,7 @@
         }
       },
       "$c": {"domainEntity": "Instance", "property": "availability"},
+      "$q": {"property": "identifierNote"},
       "$z": {
         "property": "identifierValue",
         "defaults": {
@@ -266,7 +267,7 @@
       "rangeEntity": "Person",
       "TODO:match-i1": {
         "1": {
-          "$a": {"split": ",", "...": "..."}
+          "$a": {"...": "use $a rule below"}
         },
         "3": {
           "rangeEntity": "Family"
@@ -275,11 +276,11 @@
       "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
-        "splitValueProperties": ["familyName", "givenName"]},
+        "splitValueProperties": ["familyName", "givenName"], "rejoin": ", "},
       "$b": {"property": "numeration"},
       "$c": {"addProperty": "personTitle"},
-      "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:-(\\d+))?",
-        "splitValueProperties": ["birthYear", "deathYear"]},
+      "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
+        "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-"},
       "$j": {"TODO:property": "influencedBy"},
       "construct": {
         "controlledLabel": {", ": [ "familyName",
