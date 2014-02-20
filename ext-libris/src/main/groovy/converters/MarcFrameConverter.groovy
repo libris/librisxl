@@ -797,17 +797,40 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 linkedEntities = [linkedEntities]
         }
         def entities = linkedEntities ?: [entity]
-        return entities.collect {
-            revertOne(data, it)
-        }.findAll()
+        def results = entities.collect { revertOne(data, it) }.findAll()
+        if (splitLinkRules) {
+            // TODO: refine, e.g. handle spliceEntityName..
+            def resultItems = []
+            for (rule in splitLinkRules) {
+                def linked = entity[rule.link]
+                if (!linked)
+                    continue
+                if (!(linked instanceof List)) {
+                    linked = [linked]
+                }
+                resultItems += linked.collect { revertOne(data, it, rule.codes) }
+            }
+            if (resultItems.size() /*&& !repeatLink*/) {
+                def merged = resultItems[0]
+                for (map in resultItems[1..-1]) {
+                    merged.subfields += map.subfields
+                }
+                results << merged
+            } else {
+                results += resultItems
+            }
+        }
+        return results
     }
 
-    def revertOne(Map data, Map currentEntity) {
+    def revertOne(Map data, Map currentEntity, Set onlyCodes=null) {
         def i1 = ind1? ind1.revert(data, currentEntity) : null
         def i2 = ind2? ind2.revert(data, currentEntity) : null
         def subs = []
         subfields.collect { code, subhandler ->
             if (!subhandler)
+                return
+            if (onlyCodes && !onlyCodes.contains(code))
                 return
             def value = subhandler.revert(data, currentEntity)
             if (value instanceof List) {
