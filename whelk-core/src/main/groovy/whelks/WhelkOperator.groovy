@@ -151,12 +151,12 @@ class WhelkOperator {
                 count++
                 if (count % 1000 == 0) {
                     time = (System.currentTimeMillis() - startTime)/1000
-                    log.info("Retrieved "+ docs.size()+ " documents from $whelk ... ($count total). Time elapsed: ${time}. Current velocity: "+ (count/time) + " documents / second.")
+                    println("Retrieved "+ docs.size()+ " documents from $whelk ... ($count total). Time elapsed: ${time}. Current velocity: "+ (count/time) + " documents / second.")
                     docs = []
                 }
             }
             time = (System.currentTimeMillis() - startTime)/1000
-            log.info("$count documents read. Total time elapsed: ${time} seconds.")
+            println("$count documents read. Total time elapsed: ${time} seconds.")
         } else {
             println cli.usage()
         }
