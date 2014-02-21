@@ -812,8 +812,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
             if (resultItems.size() /*&& !repeatLink*/) {
                 def merged = resultItems[0]
-                for (map in resultItems[1..-1]) {
-                    merged.subfields += map.subfields
+                if (resultItems.size() > 1) {
+                    for (map in resultItems[1..-1]) {
+                        merged.subfields += map.subfields
+                    }
                 }
                 results << merged
             } else {
