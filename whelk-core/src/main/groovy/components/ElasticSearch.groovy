@@ -231,7 +231,7 @@ abstract class ElasticSearch extends BasicPlugin {
             log.debug("Setting matchAll")
             srb.setQuery(matchAllQuery())
         } else if (q.phraseQuery) {
-            srb.setQuery(text(q.phraseField, q.phraseValue))
+            srb.setQuery(textPhrase(q.phraseField, q.phraseValue))
         } else {
             def query = queryString(q.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
             if (q.fields) {

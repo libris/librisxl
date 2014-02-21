@@ -23,3 +23,6 @@ http://<host>:<PORT>/whelk-webapi/_expand?name=Jansson,%20Tove,%201914-2001.
 
 REMOTESEARCH
 http://<host>:<PORT>/whelk-webapi/_remotesearch?q=astrid
+
+HOLDINGCOUNT
+http://<host>:<PORT>/whelk-webapi/_libcount?id=/resource/bib/7149593
