@@ -76,6 +76,9 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Document get(URI uri, String version = null) {
+        if (version) {
+            throw new WhelkRuntimeException("Storage does not support versioning.")
+        }
         log.trace("Loading from ${this.getClass()}")
         File metafile = new File(buildPath(uri.toString(), false)+ "/" + getBaseFilename(uri) + METAFILE_EXTENSION)
         File sourcefile
