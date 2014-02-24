@@ -93,11 +93,11 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 }
                 indexId = slugify(authPath, new URI(docId), type)
             }
-            entityJson["extractedFrom"] = ["@id": docId]
+            //entityJson["extractedFrom"] = ["@id": docId]
             entityJson["recordPriority"] = prio
             entityJson.get("unknown", null) ?: entityJson.remove("unknown")
             log.debug("Created indexdoc ${indexId} with prio $prio")
-            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(indexId).withType(type)
+            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(indexId).withType(type).withOrigin(docId)
         } catch (Exception e) {
             log.debug("Could not create entitydoc ${e} from docId: $docId" + " EntityJson " + mapper.writeValueAsString(entityJson))
             return null

@@ -1,29 +1,29 @@
 {
-        "date_detection" : false,
-        "_timestamp" : {
-            "enabled" : true,
-            "store" : true
+    "date_detection" : false,
+    "_timestamp" : {
+        "enabled" : true,
+        "store" : true
+    },
+    "_source" : {
+        "enabled" : true
+    },
+    "store" : true,
+    "properties" : {
+        "prefLabel" : {
+            "type" : "string",
+            "index_analyzer" : "completer"
         },
-        "_source" : {
-            "enabled" : true
+        "label" : {
+            "type" : "string",
+            "index_analyzer" : "completer"
         },
-        "store" : true,
-        "properties" : {
-            "prefLabel" : {
-                "type" : "string",
-                "index_analyzer" : "completer"
-            },
-            "label" : {
-                "type" : "string",
-                "index_analyzer" : "completer"
-            },
-            "closeMatch.inScheme.prefLabel" : {
-                "type" : "string",
-                "index_analyzer" : "completer"
-            },
-            "hiddenLabel" : {
-                "type" : "string",
-                "index_analyzer" : "completer"
-            }
+        "closeMatch.inScheme.prefLabel" : {
+            "type" : "string",
+            "index_analyzer" : "completer"
+        },
+        "hiddenLabel" : {
+            "type" : "string",
+            "index_analyzer" : "completer"
         }
+    }
 }

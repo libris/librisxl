@@ -24,6 +24,7 @@ import org.elasticsearch.index.query.*
 import org.elasticsearch.search.sort.FieldSortBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.elasticsearch.index.query.FilterBuilders.*
+import org.elasticsearch.action.delete.*
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
@@ -181,10 +182,24 @@ abstract class ElasticSearch extends BasicPlugin {
 
     @Override
     void delete(URI uri) {
-        log.debug("Deleting object with identifier $uri")
-        def delQuery = termsQuery("_id", translateIdentifier(uri.toString()))
+        log.debug("Peforming deletebyquery to remove documents extracted from $uri")
+        def delQuery = termQuery("extractedFrom.@id", uri.toString())
         log.debug("DelQuery: $delQuery")
-        performExecute(client.prepareDeleteByQuery(elasticIndex).setQuery(delQuery))
+
+        def response = performExecute(client.prepareDeleteByQuery(currentIndex).setQuery(delQuery))
+        //def response = client.prepareDeleteByQuery(currentIndex).setQuery(delQuery).execute().actionGet()
+
+        log.debug("Delbyquery response: $response")
+        for (r in response.iterator()) {
+            log.debug("r: $r success: ${r.successfulShards} failed: ${r.failedShards}")
+        }
+
+        log.debug("Deleting object with identifier ${translateIdentifier(uri.toString())}.")
+
+        client.delete(new DeleteRequest(currentIndex, determineDocuentTypeBasedOnURI(uri.toString()), translateIdentifier(uri.toString())))
+
+
+        // Kanske en matchall-query filtrerad på _type och _id?
     }
 
     @Override
@@ -330,17 +345,24 @@ abstract class ElasticSearch extends BasicPlugin {
 
     def setTypeMapping(indexName, itype) {
         log.info("Creating mappings for $indexName/$itype ...")
-        XContentBuilder mapping = jsonBuilder().startObject().startObject("_default_")
+        //XContentBuilder mapping = jsonBuilder().startObject().startObject("mappings")
         if (!defaultMapping) {
             defaultMapping = loadJson("default_mapping.json")
         }
         def typeMapping = loadJson("${itype}_mapping.json") ?: defaultMapping
-        typeMapping.each { k, v ->
-           mapping = mapping.field(k, v)
+        // Append special mapping for @id-fields
+        if (!typeMapping.dynamic_templates) {
+            typeMapping['dynamic_templates'] = []
         }
-        mapping = mapping.endObject().endObject()
-        log.debug("mapping for $indexName/$itype: " + mapping.string())
-        performExecute(client.admin().indices().preparePutMapping(indexName).setType(itype).setSource(mapping))
+        if (!typeMapping.dynamic_templates.find { it.containsKey("id_template") }) {
+            log.debug("Found no id_template. Creating.")
+            typeMapping.dynamic_templates << ["id_template":["match":"@id","match_mapping_type":"string","mapping":["type":"string","index":"not_analyzed"]]]
+        }
+
+        String mapping = mapper.writeValueAsString(typeMapping)
+        log.debug("mapping for $indexName/$itype: " + mapping)
+        def response = performExecute(client.admin().indices().preparePutMapping(indexName).setType(itype).setSource(mapping))
+        log.debug("mapping response: ${response.acknowledged}")
     }
 
     def performExecute(def requestBuilder) {
@@ -374,17 +396,25 @@ abstract class ElasticSearch extends BasicPlugin {
     String determineDocumentType(IndexDocument doc) {
         def idxType = doc.type?.toLowerCase()
         if (!idxType) {
-            try {
-                def identParts = doc.identifier.toString().split("/")
-                idxType = (identParts[1] == elasticIndex && identParts.size() > 3 ? identParts[2] : identParts[1])
-            } catch (Exception e) {
-                log.error("Tried to use first part of URI ${doc.identifier} as type. Failed: ${e.message}", e)
-            }
+            idxType = determineDocuentTypeBasedOnURI(doc.identifier)
+        }
+        log.trace("Using type $idxType for document ${doc.identifier}")
+        return idxType
+    }
+
+
+    String determineDocuentTypeBasedOnURI(String identifier) {
+        def idxType
+        try {
+            def identParts = identifier.split("/")
+            idxType = (identParts[1] == elasticIndex && identParts.size() > 3 ? identParts[2] : identParts[1])
+        } catch (Exception e) {
+            log.error("Tried to use first part of URI ${identifier} as type. Failed: ${e.message}", e)
         }
         if (!idxType) {
             idxType = defaultIndexType
         }
-        log.trace("Using type $idxType for document ${doc.identifier}")
+        log.trace("Using type $idxType for ${identifier}")
         return idxType
     }
 

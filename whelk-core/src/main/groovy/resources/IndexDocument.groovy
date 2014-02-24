@@ -10,15 +10,10 @@ import org.codehaus.jackson.annotate.JsonIgnore
 
 @Log
 class IndexDocument extends Document {
-/*
-}
-
-@Log
-class OldIndexDocument extends Resource {
-*/
 
     Map<String, String[]> matches = new TreeMap<String, String[]>()
     String type
+    String origin
 
     ObjectMapper mapper = new ElasticJsonMapper()
 
@@ -41,15 +36,22 @@ class OldIndexDocument extends Resource {
 
     @Override
     String getDataAsString() {
-        def json = mapper.readValue(super.getDataAsString(), Map)
-        json.highlight = matches
+        def json = getDataAsMap()
         return mapper.writeValueAsString(json)
     }
 
     Map getDataAsMap() {
         def json = mapper.readValue(super.getDataAsString(), Map)
         json.highlight = matches
+        if (origin) {
+            json["extractedFrom"] = ["@id":origin]
+        }
         return json
+    }
+
+    @Override
+    byte[] getData() {
+        return getDataAsString().getBytes("UTF-8")
     }
 
     IndexDocument withType(String t) {
@@ -60,6 +62,11 @@ class OldIndexDocument extends Resource {
     @Override
     IndexDocument withData(byte[] d) {
         this.data = d
+        return this
+    }
+
+    IndexDocument withOrigin(String identifier) {
+        this.origin = identifier
         return this
     }
 }
