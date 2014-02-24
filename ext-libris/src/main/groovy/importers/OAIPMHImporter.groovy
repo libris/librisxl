@@ -51,7 +51,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         this.picky = picky
         this.silent = silent
 
-        String urlString =  (serviceUrl ?: SERVICE_BASE_URL + "/"+dataset+"/oaipmh/") + "?verb=ListRecords&metadataPrefix=marcxml"
+        String urlString =  (serviceUrl ?: SERVICE_BASE_URL + dataset+"/oaipmh/") + "?verb=ListRecords&metadataPrefix=marcxml"
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
         }
