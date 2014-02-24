@@ -62,7 +62,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         String resumptionToken = harvest(url)
         log.debug("resumptionToken: $resumptionToken")
         while (resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
-            url = new URL(serviceUrl + "/oaipmh/?verb=ListRecords&resumptionToken=" + resumptionToken)
+            url = new URL(serviceUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
             log.trace("Harvesting $url")
             try {
                 String rtok = harvest(url)
