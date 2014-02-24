@@ -305,6 +305,7 @@ class MarcFixedFieldHandler {
                 columns << new Column(obj, start, end, obj['default'])
             }
         }
+        columns.sort { it.start }
     }
 
     boolean convert(marcSource, value, entityMap) {
@@ -323,7 +324,8 @@ class MarcFixedFieldHandler {
             // TODO: ambiguity trouble if this is a List!
             if (obj instanceof List) obj = obj[0]
             if (obj) {
-                value[col.start..col.end] = obj
+                assert col.width - obj.size() > -1
+                value[col.start..(col.end - col.width - obj.size())] = obj
             }
         }
         return value.toString()
@@ -339,6 +341,7 @@ class MarcFixedFieldHandler {
             this.end = end
             this.defaultValue = defaultValue
         }
+        int getWidth() { return end - start }
         boolean convert(marcSource, value, entityMap) {
             def token = value.substring(start, end)
             if (token == " " || token == defaultValue)
@@ -479,7 +482,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             if (uriTemplate) {
                 return extractToken(uriTemplate, id) ?: "N/A"
             }
-            return "???"
+            return "?"
         }
     }
 
