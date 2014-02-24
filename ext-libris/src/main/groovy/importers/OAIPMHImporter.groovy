@@ -39,7 +39,9 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     File failedLog
     File exceptionLog
 
-    OAIPMHImporter() {}
+    OAIPMHImporter() {
+        this.serviceUrl = null
+    }
 
     OAIPMHImporter(Map settings) {
         this.serviceUrl = settings.get('serviceUrl',null)
@@ -51,7 +53,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         this.picky = picky
         this.silent = silent
 
-        String urlString =  (serviceUrl ?: SERVICE_BASE_URL + dataset+"/oaipmh/") + "?verb=ListRecords&metadataPrefix=marcxml"
+        this.serviceUrl = (serviceUrl ?: SERVICE_BASE_URL + dataset+"/oaipmh/")
+
+        String urlString = serviceUrl + "?verb=ListRecords&metadataPrefix=marcxml"
+
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
         }
