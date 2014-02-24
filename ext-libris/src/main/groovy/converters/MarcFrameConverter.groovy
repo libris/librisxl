@@ -474,7 +474,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             entity = entity[link]
         if (property) {
             def v = entity[property]
-            if (dateTimeFormat)
+            if (v && dateTimeFormat)
                 return Date.parse(DT_FORMAT, v).format(dateTimeFormat)
             return v
         } else {
