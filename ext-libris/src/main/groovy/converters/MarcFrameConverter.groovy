@@ -305,6 +305,7 @@ class MarcFixedFieldHandler {
                 columns << new Column(obj, start, end, obj['default'])
             }
         }
+        columns.sort { it.start }
     }
 
     boolean convert(marcSource, value, entityMap) {
@@ -323,7 +324,8 @@ class MarcFixedFieldHandler {
             // TODO: ambiguity trouble if this is a List!
             if (obj instanceof List) obj = obj[0]
             if (obj) {
-                value[col.start..col.end] = obj
+                assert col.width - obj.size() > -1
+                value[col.start..(col.end - col.width - obj.size())] = obj
             }
         }
         return value.toString()
@@ -339,6 +341,7 @@ class MarcFixedFieldHandler {
             this.end = end
             this.defaultValue = defaultValue
         }
+        int getWidth() { return end - start }
         boolean convert(marcSource, value, entityMap) {
             def token = value.substring(start, end)
             if (token == " " || token == defaultValue)
@@ -471,7 +474,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             entity = entity[link]
         if (property) {
             def v = entity[property]
-            if (dateTimeFormat)
+            if (v && dateTimeFormat)
                 return Date.parse(DT_FORMAT, v).format(dateTimeFormat)
             return v
         } else {
@@ -479,7 +482,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             if (uriTemplate) {
                 return extractToken(uriTemplate, id) ?: "N/A"
             }
-            return "???"
+            return "?"
         }
     }
 
@@ -790,13 +793,21 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     def revert(Map data) {
         def entity = getEntity(data)
-        def linkedEntities = null
+        def entities = [entity]
         if (link) {
-            linkedEntities = entity[link]
-            if (!(linkedEntities instanceof List)) // should be if repeat == true
-                linkedEntities = [linkedEntities]
+            entities = entity[link]
+            if (!(entities instanceof List)) // should be if repeat == true
+                entities = [entities]
+            if (rangeEntityName) {
+                entities = entities.findAll {
+                    if (!it) return false
+                    it['_DEBUG_VIA'] = link
+                    def type = it['@type']
+                    return (type instanceof List)?
+                        rangeEntityName in type : type == rangeEntityName
+                }
+            }
         }
-        def entities = linkedEntities ?: [entity]
         def results = entities.collect { revertOne(data, it) }.findAll()
         if (splitLinkRules) {
             // TODO: refine, e.g. handle spliceEntityName..
@@ -812,8 +823,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
             if (resultItems.size() /*&& !repeatLink*/) {
                 def merged = resultItems[0]
-                for (map in resultItems[1..-1]) {
-                    merged.subfields += map.subfields
+                if (resultItems.size() > 1) {
+                    for (map in resultItems[1..-1]) {
+                        merged.subfields += map.subfields
+                    }
                 }
                 results << merged
             } else {
