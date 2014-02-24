@@ -793,13 +793,21 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     def revert(Map data) {
         def entity = getEntity(data)
-        def linkedEntities = null
+        def entities = [entity]
         if (link) {
-            linkedEntities = entity[link]
-            if (!(linkedEntities instanceof List)) // should be if repeat == true
-                linkedEntities = [linkedEntities]
+            entities = entity[link]
+            if (!(entities instanceof List)) // should be if repeat == true
+                entities = [entities]
+            if (rangeEntityName) {
+                entities = entities.findAll {
+                    if (!it) return false
+                    it['_DEBUG_VIA'] = link
+                    def type = it['@type']
+                    return (type instanceof List)?
+                        rangeEntityName in type : type == rangeEntityName
+                }
+            }
         }
-        def entities = linkedEntities ?: [entity]
         def results = entities.collect { revertOne(data, it) }.findAll()
         if (splitLinkRules) {
             // TODO: refine, e.g. handle spliceEntityName..
