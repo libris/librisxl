@@ -120,9 +120,9 @@ class CassandraStorage extends BasicPlugin implements Storage {
         return store(doc.identifier, doc, keyspace, checkDigest)
     }
 
-    boolean store(String key, Document doc, Keyspace ksp, boolean checkDigest, boolean checkExisting = true) {
+    boolean store(String key, Document doc, Keyspace ksp, boolean checkDigest, boolean checkExisting = true, boolean checkContentType = true) {
         log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}")
-        if (doc && (handlesContent(doc.contentType) || !checkExisting)) {
+        if (doc && (!checkContentType || handlesContent(doc.contentType) )) {
             def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
             if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
                 throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
@@ -131,7 +131,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 log.trace("Found changes in ${existingDocument.entry.checksum} (orig) and ${doc.entry.checksum} (new)")
                 def entry = existingDocument.entry
                 int version = (entry.version ?: 1) as int
-                doc.entry.version = (version+1)
+                doc.entry.version = "" + (version+1)
                 String versionedKey = doc.identifier+"?version="+version
                 // Create versions
                 def versions = entry.versions ?: [:]
@@ -143,7 +143,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 doc = doc.mergeEntry(entry)
                 log.debug("new document entry after merge: ${doc.entry}")
                 log.debug("Saving versioned document with versionedKey $versionedKey")
-                store(versionedKey, existingDocument, versionsKeyspace, false, false)
+                store(versionedKey, existingDocument, versionsKeyspace, false, false, false)
             }
 
             // Commence saving
@@ -151,10 +151,10 @@ class CassandraStorage extends BasicPlugin implements Storage {
             String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
             log.trace("Saving document ${key} with dataset $dataset")
             m.withRow(CF_DOCUMENT, key)
-            .putColumn(COL_NAME_IDENTIFIER , doc.identifier)
-            .putColumn(COL_NAME_DATA, new String(doc.data, "UTF-8"), null)
-            .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
-            .putColumn(COL_NAME_DATASET, dataset, null)
+                .putColumn(COL_NAME_IDENTIFIER , doc.identifier)
+                .putColumn(COL_NAME_DATA, new String(doc.data, "UTF-8"), null)
+                .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
+                .putColumn(COL_NAME_DATASET, dataset, null)
             try {
                 def result = m.execute()
             } catch (ConnectionException ce) {
@@ -174,10 +174,10 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     Document get(URI uri, String version=null) {
-        return get(uri.toString(), version?.toInteger())
+        return get(uri.toString(), version)
     }
 
-    Document get(String uri, Integer version=null) {
+    Document get(String uri, String version=null) {
         Document document = null
         log.trace("Version is $version")
 
@@ -209,11 +209,35 @@ class CassandraStorage extends BasicPlugin implements Storage {
         return document
     }
 
+
     @Override
     void delete(URI uri) {
         log.debug("Deleting document $uri")
-        MutationBatch m = keyspace.prepareMutationBatch()
-        m.withRow(CF_DOCUMENT, uri.toString()).delete()
+        store(uri.toString(), createTombstone(uri), keyspace, true, true, false)
+    }
+
+    Document createTombstone(uri) {
+        def tombstone = new Document().withIdentifier(uri).withContentType("application/json").withData('{"identifier":"${uri.toString()}","status":"deleted"}')
+        tombstone.entry['deleted'] = true
+        return tombstone
+    }
+
+
+    void olddelete(URI uri, version=null) {
+        log.debug("Deleting document $uri")
+        MutationBatch m
+        if (version == null) {
+            // Preserve a version in versionSpace
+            def existingDocument = get(uri)
+            if (existingDocument) {
+                store(uri.toString()+"?version=deleted", existingDocument, versionsKeyspace, false, false)
+            }
+            m = keyspace.prepareMutationBatch()
+            m.withRow(CF_DOCUMENT, uri.toString()).delete()
+        } else {
+            m = versionsKeyspace.prepareMutationBatch()
+            m.withRow(CF_DOCUMENT, uri.toString()+"?version="+version).delete()
+        }
         try {
             def result = m.execute()
         } catch (ConnectionException ce) {

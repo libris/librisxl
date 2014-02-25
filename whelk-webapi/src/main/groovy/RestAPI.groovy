@@ -231,7 +231,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 log.debug("We want version $version")
                 def d = whelk.get(new URI(path), version, accepting)
                 log.debug("Document received from whelk: $d")
-                if (d) {
+                if (d && (mode == DisplayMode.META || !d.entry['deleted'])) {
                     if (mode == DisplayMode.META) {
                         response.setEntity(d.metadataAsJson, MediaType.APPLICATION_JSON)
                     } else {
