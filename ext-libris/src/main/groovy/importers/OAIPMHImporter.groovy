@@ -117,7 +117,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                     if (sizeOfBatch && meanTime) {
                         velocityMsg = "Current velocity: " + (1000*(sizeOfBatch / (System.currentTimeMillis() - meanTime))) + " docs/second."
                     }
-                    if (!silent && log.isInfoEnabled() && !log.isDebugEnabled()) {
+                    if (!silent) {
                         Tools.printSpinner("Running OAIPMH ${this.dataset} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                     }
                 } catch (Exception e) {
