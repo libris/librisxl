@@ -96,79 +96,219 @@
 
 
 ##
-# Works
+# Creative Works
 
-#:UniformWork
+# Specificity Dimensions
+
 :Work a owl:Class;
-    rdfs:label "Uniformt verk"@sv;
+    rdfs:label "Generellt verk"@sv;
     ptg:abstract true;
     owl:equivalentClass bf:Work;
-    rdfs:subClassOf sdo:CreativeWork .
+    rdfs:subClassOf sdo:CreativeWork . # sdo:ProductModel, rdfa:Pattern
 
-#:CreativeWork
 :Instance a owl:Class;
-    rdfs:label "Manifestation"@sv;
+    rdfs:label "Instans"@sv;
     ptg:abstract true;
     owl:equivalentClass bf:Instance;
-    rdfs:subClassOf sdo:CreativeWork .
+    rdfs:subClassOf :Work, sdo:CreativeWork .
 
-:Collection a owl:Class;
-    rdfs:label "Samling"@sv;
-    owl:equivalentClass dctype:Collection, bf:Collection .
-
-:DigitalResource a owl:Class; # :Digital
-    ptg:abstract true;
-    owl:equivalentClass bf:SoftwareOrMultimedia;
-    #rdfs:subClassOf [ owl:unionOf (dctype:InteractiveResource dctype:Software) ]
-    rdfs:subClassOf dctype:InteractiveResource, dctype:Software .
-
-:Dataset a owl:Class;
-    rdfs:label "Dataset"@sv;
-    owl:equivalentClass dctype:Dataset, bf:Dataset .
-
-:Image a owl:Class;
-    rdfs:label "Bild"@sv;
-    owl:equivalentClass dctype:Image .
-
-#Book a owl:Class;
-#    owl:equivalentClass bibo:Book .
-:Text a owl:Class;
-    rdfs:label "Text"@sv;
-    rdfs:subClassOf :UniformWork;
-    owl:equivalentClass dctype:Text, bf:LanguageMaterial, dc:BibliographicResource .
-
-:StillImage a owl:Class;
-    rdfs:label "Stillbild"@sv;
-    rdfs:subClassOf dctype:Image;
-    owl:equivalentClass bf:StillImage, dctype:StillImage .
-
-:MovingImage a owl:Class;
-    rdfs:label "Rörlig bild"@sv;
-    rdfs:subClassOf dctype:Image;
-    owl:equivalentClass bf:MovingImage, dctype:MovingImage .
+# Core Types
 
 :Cartography a owl:Class;
     rdfs:label "Kartmaterial"@sv;
+    rdfs:subClassOf :Work;
     owl:equivalentClass bf:Cartography .
 
-:PhysicalObject a owl:Class;
-    rdfs:label "Föremål"@sv;
-    skos:altLabel "Realia"@sv;
-    owl:equivalentClass dctype:PhysicalObject, bf:ThreeDimensionalObject .
+:Dataset a owl:Class;
+    rdfs:label "Dataset"@sv;
+    rdfs:subClassOf :Work;
+    owl:equivalentClass dctype:Dataset, bf:Dataset, sdo:Dataset .
+
+:Image a owl:Class;
+    rdfs:label "Bild"@sv;
+    rdfs:subClassOf :Work;
+    owl:equivalentClass dctype:Image, foaf:Image .
+
+:MixedMaterial a owl:Class;
+    owl:equivalentClass bf:MixedMaterial .
+
+:MovingImage a owl:Class;
+    rdfs:label "Rörlig bild"@sv;
+    rdfs:subClassOf :Image;
+    owl:equivalentClass bf:MovingImage, dctype:MovingImage .
+
+:Multimedia a owl:Class;
+    rdfs:subClassOf :Work;
+    owl:equivalentClass bf:Multimedia .
+
+:NotatedMovement a owl:Class;
+    rdfs:subClassOf :Work;
+    owl:equivalentClass bf:NotatedMovement .
+
+:NotatedMusic a owl:Class;
+    rdfs:subClassOf :Work;
+    owl:equivalentClass bf:NotatedMusic .
 
 :Sound a owl:Class;
+    rdfs:subClassOf :Work;
     rdfs:label "Ljud"@sv;
     owl:equivalentClass dctype:Sound, bf:Audio .
 
+:StillImage a owl:Class;
+    rdfs:subClassOf :Work;
+    rdfs:label "Stillbild"@sv;
+    rdfs:subClassOf :Image;
+    owl:equivalentClass bf:StillImage, dctype:StillImage .
+
+:Text a owl:Class;
+    rdfs:subClassOf :Work;
+    rdfs:label "Text"@sv;
+    rdfs:subClassOf :UniformWork;
+    owl:equivalentClass dctype:Text, bf:Text, dc:BibliographicResource .
+
+:ThreeDimensionalObject a owl:Class;
+    owl:equivalentClass bf:ThreeDimensionalObject .
+
+#dctype:InteractiveResource .
+
+# Combined Core Types
+
+#:CartographicImage rdfs:subClassOf :Cartography, :Image .
+#:CartographicObject rdfs:subClassOf :Cartography, :ThreeDimensionalObject .
+
+
+# Mereological (Compositional) Dimensions
+
+:Mereological a owl:Class;
+    ptg:abstract true .
+
+:Archival a owl:Class;
+    rdfs:label "Samling"@sv;
+    rdfs:subClassOf :Mereological;
+    owl:equivalentClass bf:Archival .
+
+:Collection a owl:Class;
+    rdfs:label "Samling"@sv;
+    rdfs:subClassOf :Mereological;
+    owl:equivalentClass dctype:Collection, bf:Collection .
+
+:Integrating a owl:Class;
+    rdfs:subClassOf :Mereological;
+    owl:equivalentClass bf:Integrating .
+
+:Monograph a owl:Class;
+    owl:equivalentClass bf:Monograph .
+
+:Multipart a owl:Class;
+    rdfs:subClassOf :Mereological .
+
+:MultipartMonograph a owl:Class;
+    rdfs:subClassOf :Multipart, :Monograph;
+    owl:equivalentClass bf:MultipartMonograph .
+
+:Serial a owl:Class;
+    rdfs:subClassOf :Mereological;
+    owl:equivalentClass bf:Serial .
+
+# Manifestation Dimensions
+
+:Digital a owl:Class;
+    ptg:abstract true;
+    #rdfs:subClassOf [ owl:unionOf (dctype:InteractiveResource dctype:Software) ]
+    owl:equivalentClass bf:Electronic .
+
+:Manuscript a owl:Class;
+    owl:equivalentClass bf:Manuscript .
+
+:Print a owl:Class;
+    owl:equivalentClass bf:Print .
+
+:Tactile a owl:Class;
+    owl:equivalentClass bf:Tactile .
+
+:PhysicalObject a owl:Class;
+    rdfs:subClassOf :Work;
+    rdfs:label "Föremål"@sv;
+    skos:altLabel "Realia"@sv;
+    owl:equivalentClass dctype:PhysicalObject .
+
+:Software a owl:Class;
+    rdfs:subClassOf :Digital;
+    owl:equivalentClass dctype:Software .
+
+
+# Concrete Types (can grow a lot, be combined with e.g. productontology...)
+
+:Book a owl:Class;
+    rdfs:subClassOf :Text, :Monograph;
+    owl:equivalentClass bibo:Book .
+
+:MultiVolumeBook a owl:Class;
+    rdfs:subClassOf :Book, :MultipartMonograph;
+    owl:equivalentClass bibo:MultiVolumeBook .
+
+#:PrintedBook
+#EBook
 #Audiobook
+
 #CDBook
 #CDMap
-#Digital
-#EBook
 #ESerial
 #EditionEntity
 #Music
 #MusicCD
+
+
+# RDAContentType
+@prefix RDAContentType: <http://rdvocab.info/termList/RDAContentType/> .
+# cartographic dataset
+# cartographic image
+# cartographic moving image
+# cartographic tactile image
+# cartographic tactile three-dimensional form
+# cartographic three-dimensional form
+#
+# computer dataset
+# computer program
+#
+# notated movement
+#     tactile notated movement
+# notated music
+#     tactile notated music
+#
+# sounds
+# performed music
+# spoken word
+#
+# text
+#     tactile text
+#
+# still image
+#     tactile image
+#
+# two-dimensional moving image
+# three-dimensional moving image
+#
+# three-dimensional form
+#     tactile three-dimensional form
+
+# RDAMediaType
+@prefix RDAMediaType: <http://rdvocab.info/termList/RDAMediaType/> .
+# audio
+# computer (electronic resource)
+# microform
+# microscopic
+# projected
+#     projected graphic
+#     motion picture
+# stereographic
+# unmediated
+#     text
+#     non-projected graphic
+# video
+
+# RDACarrierType
+@prefix RDACarrierType: <http://rdvocab.info/termList/RDACarrierType/> .
 
 
 ##
