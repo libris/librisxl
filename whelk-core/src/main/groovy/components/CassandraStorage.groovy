@@ -135,7 +135,12 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 String versionedKey = doc.identifier+"?version="+version
                 // Create versions
                 def versions = entry.versions ?: [:]
-                versions[""+version] = ["timestamp" : entry.timestamp, "checksum":entry.checksum]
+                versions[""+version] = ["timestamp" : entry.timestamp]
+                if (existingDocument?.entry?.deleted) {
+                    versions.get(""+version).put("deleted",true)
+                } else {
+                    versions.get(""+version).put("checksum",entry.checksum)
+                }
                 doc.entry.versions = versions
 
                 log.debug("existingDocument entry: $entry")
@@ -217,7 +222,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     Document createTombstone(uri) {
-        def tombstone = new Document().withIdentifier(uri).withContentType("application/json").withData('{"identifier":"${uri.toString()}","status":"deleted"}')
+        def tombstone = new Document().withIdentifier(uri).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
         return tombstone
     }

@@ -185,6 +185,7 @@ class Document {
     Document mergeEntry(Map entryData) {
         entryData.each { k, v ->
             if (!this.entry.containsKey(k)
+                && k != "deleted"
                 && k != "version"
                 && k != "contentType"
                 && k != "checksum"
