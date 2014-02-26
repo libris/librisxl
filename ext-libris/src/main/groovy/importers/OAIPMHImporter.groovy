@@ -186,6 +186,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     }
 
     String normalizeString(String inString) {
+        /*
         // Lägga in filtrering unicode: 0x1d
         StringBuilder inBuffer = new StringBuilder()
         int i =0, len = inString.length()
@@ -197,6 +198,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                 inBuffer.append(cp)
             }
         }
+        */
         if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
             log.trace("Normalizing ...")
             return Normalizer.normalize(inString, Normalizer.Form.NFC)
