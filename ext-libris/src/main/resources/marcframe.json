@@ -84,15 +84,15 @@
     },
 
     "006": {
-      "[0:0]": {},
+      "[0:1]": {},
       "tokenSyncedWith": "typeOfRecord",
       "repeats": "008"
     },
 
     "008": {
       "repeatedBy": "006",
-      "[7:11]": {"propId": "yearTime1"},
-      "[11:15]": {"propId": "yearTime2"},
+      "[7:11]": {"property": "publishedYear"},
+      "[11:15]": {"property": "otherYear"},
       "[35:38]": {
         "domainEntity": "Work",
         "link": "language",
