@@ -85,9 +85,12 @@ for tag, field in sorted(marcmap['bib'].items()):
                     if not comp_name:
                         continue
 
-                    if comp_name == 'MonographItem' or type_name == 'Serial':
+                    is_serial = type_name == 'Serial'
+                    if comp_name == 'MonographItem' or is_serial:
                         content_type = contentTypeMap.setdefault(type_name, OrderedDict())
                         subtypes = content_type.setdefault('subclasses', OrderedDict())
+                        if is_serial:
+                            subtype_name += 'Serial'
                         typedef = subtypes[subtype_name] = OrderedDict()
                         typedef['typeOfRecord'] = rt
                     else:
@@ -144,9 +147,69 @@ class SetEncoder(json.JSONEncoder):
    def default(self, obj):
      return list(obj) if isinstance(obj, set) else super(SetEncoder, self).default(obj)
 
-print json.dumps(out,
-        cls=SetEncoder,
-        indent=2,
-        ensure_ascii=False,
-        separators=(',', ': ')
-        ).encode('utf-8')
+
+import sys
+
+if '-d' in sys.argv[1:]:
+    print json.dumps(out,
+            cls=SetEncoder,
+            indent=2,
+            ensure_ascii=False,
+            separators=(',', ': ')
+            ).encode('utf-8')
+
+else:
+    from rdflib import *
+
+    BASE = Namespace("http://libris.kb.se/def/terms#")
+
+    g = Graph()
+    g.bind('', BASE)
+    g.bind('owl', OWL)
+
+    def newclass(name, *bases):
+        if ' ' in name:
+            rtype = g.resource(BNode())
+            rtype.add(RDFS.label, Literal(name, lang='sv'))
+        else:
+            if name == 'Indexes':
+                name = 'Index'
+            elif name == 'Theses':
+                name = 'Thesis'
+            elif 'And' in name:
+                name = 'Or'.join(s[0:-1] if s.endswith('s') else s
+                        for s in name.split('And'))
+            elif name.endswith(('Atlas', 'Series')):
+                pass
+            elif name.endswith('ies'):
+                name = name[0:-3] + 'y'
+            elif name.endswith('s'):
+                name = name[0:-1]
+            rtype = g.resource(URIRef(BASE[name]))
+        rtype.add(RDF.type, OWL.Class)
+        for base in bases:
+            rtype.add(RDFS.subClassOf, base)
+        return rtype
+
+    SKIP = ('Other', 'Unspecified', 'Unknown')
+
+    for k, v in compositionTypeMap.items():
+        rtype = newclass(k, BASE.Part if k.endswith('Part') else BASE.Composite)
+
+    for k, v in contentTypeMap.items():
+        rtype = newclass(k, BASE.Work)
+        for sk in v['subclasses']:
+            if sk in SKIP: continue
+            if 'Obsolete' in sk: continue
+            stype = newclass(sk, rtype, BASE.Work)
+        for sk in v.get('formClasses', ()):
+            if sk in SKIP: continue
+            stype = newclass(sk, rtype, BASE.Instance)
+
+    for k, v in carrierTypeMap.items():
+        rtype = newclass(k, BASE.Instance)
+        for sk in v:
+            if sk in SKIP: continue
+            stype = newclass(sk, rtype, BASE.Carrier)
+
+    g.serialize(sys.stdout, format='turtle')
