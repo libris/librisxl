@@ -112,7 +112,7 @@
     owl:equivalentClass bf:Instance;
     rdfs:subClassOf :Work, sdo:CreativeWork .
 
-# Core Types
+# Common Content Types
 
 :Cartography a owl:Class;
     rdfs:label "Kartmaterial"@sv;
@@ -124,7 +124,7 @@
     rdfs:subClassOf :Work;
     owl:equivalentClass dctype:Dataset, bf:Dataset, sdo:Dataset .
 
-:Image a owl:Class;
+:Image a owl:Class; # Visual
     rdfs:label "Bild"@sv;
     rdfs:subClassOf :Work;
     owl:equivalentClass dctype:Image, foaf:Image .
@@ -132,7 +132,7 @@
 :MixedMaterial a owl:Class;
     owl:equivalentClass bf:MixedMaterial .
 
-:MovingImage a owl:Class;
+:MovingImage a owl:Class; # Film, Video
     rdfs:label "Rörlig bild"@sv;
     rdfs:subClassOf :Image;
     owl:equivalentClass bf:MovingImage, dctype:MovingImage .
@@ -149,10 +149,13 @@
     rdfs:subClassOf :Work;
     owl:equivalentClass bf:NotatedMusic .
 
-:Sound a owl:Class;
+:Audio a owl:Class;
     rdfs:subClassOf :Work;
     rdfs:label "Ljud"@sv;
     owl:equivalentClass dctype:Sound, bf:Audio .
+
+:Music a owl:Class;
+    rdfs:subClassOf :Audio .
 
 :StillImage a owl:Class;
     rdfs:subClassOf :Work;
@@ -169,97 +172,15 @@
 :ThreeDimensionalObject a owl:Class;
     owl:equivalentClass bf:ThreeDimensionalObject .
 
-#dctype:InteractiveResource .
+:InteractiveResource a owl:Class;
+    rdfs:subClassOf dctype:InteractiveResource .
 
-# Combined Core Types
+# Combined Content Types
 
-#:CartographicImage rdfs:subClassOf :Cartography, :Image .
-#:CartographicObject rdfs:subClassOf :Cartography, :ThreeDimensionalObject .
+:CartographicImage rdfs:subClassOf :Cartography, :Image .
+:CartographicObject rdfs:subClassOf :Cartography, :ThreeDimensionalObject .
 
-
-# Mereological (Compositional) Dimensions
-
-:Mereological a owl:Class;
-    ptg:abstract true .
-
-:Archival a owl:Class;
-    rdfs:label "Samling"@sv;
-    rdfs:subClassOf :Mereological;
-    owl:equivalentClass bf:Archival .
-
-:Collection a owl:Class;
-    rdfs:label "Samling"@sv;
-    rdfs:subClassOf :Mereological;
-    owl:equivalentClass dctype:Collection, bf:Collection .
-
-:Integrating a owl:Class;
-    rdfs:subClassOf :Mereological;
-    owl:equivalentClass bf:Integrating .
-
-:Monograph a owl:Class;
-    owl:equivalentClass bf:Monograph .
-
-:Multipart a owl:Class;
-    rdfs:subClassOf :Mereological .
-
-:MultipartMonograph a owl:Class;
-    rdfs:subClassOf :Multipart, :Monograph;
-    owl:equivalentClass bf:MultipartMonograph .
-
-:Serial a owl:Class;
-    rdfs:subClassOf :Mereological;
-    owl:equivalentClass bf:Serial .
-
-# Manifestation Dimensions
-
-:Digital a owl:Class;
-    ptg:abstract true;
-    #rdfs:subClassOf [ owl:unionOf (dctype:InteractiveResource dctype:Software) ]
-    owl:equivalentClass bf:Electronic .
-
-:Manuscript a owl:Class;
-    owl:equivalentClass bf:Manuscript .
-
-:Print a owl:Class;
-    owl:equivalentClass bf:Print .
-
-:Tactile a owl:Class;
-    owl:equivalentClass bf:Tactile .
-
-:PhysicalObject a owl:Class;
-    rdfs:subClassOf :Work;
-    rdfs:label "Föremål"@sv;
-    skos:altLabel "Realia"@sv;
-    owl:equivalentClass dctype:PhysicalObject .
-
-:Software a owl:Class;
-    rdfs:subClassOf :Digital;
-    owl:equivalentClass dctype:Software .
-
-
-# Concrete Types (can grow a lot, be combined with e.g. productontology...)
-
-:Book a owl:Class;
-    rdfs:subClassOf :Text, :Monograph;
-    owl:equivalentClass bibo:Book .
-
-:MultiVolumeBook a owl:Class;
-    rdfs:subClassOf :Book, :MultipartMonograph;
-    owl:equivalentClass bibo:MultiVolumeBook .
-
-#:PrintedBook
-#EBook
-#Audiobook
-
-#CDBook
-#CDMap
-#ESerial
-#EditionEntity
-#Music
-#MusicCD
-
-
-# RDAContentType
+# TODO: link above to:
 @prefix RDAContentType: <http://rdvocab.info/termList/RDAContentType/> .
 # cartographic dataset
 # cartographic image
@@ -292,7 +213,72 @@
 # three-dimensional form
 #     tactile three-dimensional form
 
-# RDAMediaType
+
+# Mereological (Compositional) Dimensions
+
+:Monograph a owl:Class;
+    owl:equivalentClass bf:Monograph .
+
+:Composite a owl:Class;
+    ptg:abstract true .
+
+:Part a owl:Class .
+
+:Archival a owl:Class;
+    rdfs:label "Samling"@sv;
+    rdfs:subClassOf :Composite;
+    owl:equivalentClass bf:Archival .
+
+:Collection a owl:Class;
+    rdfs:label "Samling"@sv;
+    rdfs:subClassOf :Composite;
+    owl:equivalentClass dctype:Collection, bf:Collection .
+
+:Integrating a owl:Class;
+    rdfs:subClassOf :Composite;
+    owl:equivalentClass bf:Integrating .
+
+:MonographicComponentPart a owl:Class;
+    rdfs:subClassOf :Part .
+
+:Multipart a owl:Class;
+    rdfs:subClassOf :Composite .
+
+:MultipartMonograph a owl:Class;
+    rdfs:subClassOf :Multipart, :Monograph;
+    owl:equivalentClass bf:MultipartMonograph .
+
+:Serial a owl:Class;
+    rdfs:subClassOf :Composite;
+    owl:equivalentClass bf:Serial .
+
+# Manifestation Dimensions
+
+:Digital a owl:Class;
+    ptg:abstract true;
+    #rdfs:subClassOf [ owl:unionOf (dctype:InteractiveResource dctype:Software) ]
+    owl:equivalentClass bf:Electronic .
+
+:Manuscript a owl:Class;
+    owl:equivalentClass bf:Manuscript .
+
+:Print a owl:Class;
+    owl:equivalentClass bf:Print .
+
+:Tactile a owl:Class;
+    owl:equivalentClass bf:Tactile .
+
+:PhysicalObject a owl:Class;
+    rdfs:subClassOf :Work;
+    rdfs:label "Föremål"@sv;
+    skos:altLabel "Realia"@sv;
+    owl:equivalentClass dctype:PhysicalObject .
+
+:Software a owl:Class;
+    rdfs:subClassOf :Digital;
+    owl:equivalentClass dctype:Software, sdo:SoftwareApplication .
+
+# TODO: link above to:
 @prefix RDAMediaType: <http://rdvocab.info/termList/RDAMediaType/> .
 # audio
 # computer (electronic resource)
@@ -307,6 +293,46 @@
 #     non-projected graphic
 # video
 
+
+# Common Carrier Types
+
+#:Disc
+#:CD
+#:DVD
+
+# Concrete Types (can grow a lot, be combined with e.g. productontology...)
+
+:Database a owl:Class;
+    rdfs:subClassOf :Integrating, :Dataset .
+
+:Website a owl:Class;
+    rdfs:subClassOf :Integrating;
+    owl:equivalentClass bibo:Website .
+
+:Book a owl:Class;
+    rdfs:subClassOf :Text, :Monograph;
+    owl:equivalentClass bibo:Book .
+
+:MultiVolumeBook a owl:Class;
+    rdfs:subClassOf :Book, :MultipartMonograph;
+    owl:equivalentClass bibo:MultiVolumeBook .
+
+:PrintedBook a owl:Class;
+    rdfs:subClassOf :Book, :Print .
+
+:EBook a owl:Class;
+    rdfs:subClassOf :Book, :Digital .
+
+:Audiobook a owl:Class;
+    rdfs:subClassOf :Book, :Audio .
+
+#CDBook
+#CDMap
+#ESerial
+#Music
+#MusicCD
+
+# TODO: link above to:
 # RDACarrierType
 @prefix RDACarrierType: <http://rdvocab.info/termList/RDACarrierType/> .
 
