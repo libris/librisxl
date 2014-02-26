@@ -555,7 +555,9 @@ class SearchRestlet extends BasicWhelkAPI {
             }
 
             elasticQuery.highlights = indexConfig?.get("queryFields")
-            elasticQuery.sorting = indexConfig?.get("sortby")
+            if (!queryMap['sort'] && !queryMap['order']) {
+                elasticQuery.sorting = indexConfig?.get("sortby")
+            }
         try {
             def callback = queryMap.get("callback")
             def jsonResult =
