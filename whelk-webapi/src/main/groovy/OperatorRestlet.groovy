@@ -89,7 +89,7 @@ class BenchmarkOperator extends Thread implements Operator {
             if (++count % 1000 == 0) {
                 // Update runningtime every 1000 docs
                 runningTime = System.currentTimeMillis() - startTime
-                velocity = (count/runningTime/1000)
+                velocity = (count/(runningTime/1000))
 
                 log.debug("Retrieved ${docs.size()} documents from $whelk ... ($count total). Time elapsed: ${runningTime/1000}. Current velocity: $velocity documents / second.")
                 docs = []
@@ -101,10 +101,11 @@ class BenchmarkOperator extends Thread implements Operator {
     }
 
     Map getStatus() {
+        long rt = (runningTime > 0 ? runningTime/1000 : 0)
         if (operatorState == "IDLE") {
-            return ["state":operatorState, "lastrun": ["dataset":dataset,"velocity":velocity,"count":count,"runningTime":runningTime]]
+            return ["state":operatorState, "lastrun": ["dataset":dataset,"velocity":velocity,"count":count,"runningTime":rt]]
         } else {
-            return ["state":operatorState,"dataset":dataset,"velocity":velocity,"count":count,"runningTime":runningTime]
+            return ["state":operatorState,"dataset":dataset,"velocity":velocity,"count":count,"runningTime":rt]
         }
     }
 }

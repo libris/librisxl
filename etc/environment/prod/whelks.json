@@ -8,6 +8,7 @@
                     "cassandrastorage",
                     "oaipmhstorage",
                     "fusekigraphstore",
+                    "operator",
                     "search",
                     "oaipmhxmlconverter",
                     "completeexpander",
