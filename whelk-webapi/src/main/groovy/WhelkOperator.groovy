@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 import groovy.util.CliBuilder
 
 import se.kb.libris.whelks.importers.*
+import se.kb.libris.whelks.api.*
 
 @Log
 class WhelkOperator {
@@ -144,19 +145,10 @@ class WhelkOperator {
                 whelk.runFilters(ds)
             }
         } else if (operation == "benchmark") {
-            int count = 0
-            def docs = []
-            for (doc in whelk.loadAll((opt.d ? opt.d : null))) {
-                docs << doc
-                count++
-                if (count % 1000 == 0) {
-                    time = (System.currentTimeMillis() - startTime)/1000
-                    println("Retrieved "+ docs.size()+ " documents from $whelk ... ($count total). Time elapsed: ${time}. Current velocity: "+ (count/time) + " documents / second.")
-                    docs = []
-                }
-            }
-            time = (System.currentTimeMillis() - startTime)/1000
-            println("$count documents read. Total time elapsed: ${time} seconds.")
+            def bm = new BenchmarkOperator(whelk, (opt.d ? opt.d : null))
+            bm.start()
+            bm.join()
+
         } else {
             println cli.usage()
         }

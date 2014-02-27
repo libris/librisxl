@@ -238,5 +238,9 @@
         "_params" : {
             "serviceUrl" : "http://api.libris.kb.se/swepub/oaipmh/SWEPUB"
         }
+    },
+    "operator" : {
+        "_class" : "se.kb.libris.whelks.api.OperatorRestlet"
     }
+
 }

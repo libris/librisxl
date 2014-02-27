@@ -94,10 +94,13 @@
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
       <level value="trace"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.SparqlRestlet">
+  -->
+<logger name="se.kb.libris.whelks.api.OperatorRestlet">
       <level value="trace"/>
   </logger>
-  -->
+<logger name="se.kb.libris.whelks.api.BenchmarkOperator">
+      <level value="trace"/>
+  </logger>
 <logger name="se.kb.libris.whelks.Document">
       <level value="trace"/>
   </logger>
