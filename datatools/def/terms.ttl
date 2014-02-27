@@ -296,6 +296,9 @@
 
 # Common Carrier Types
 
+:Carrier a owl:Class;
+    owl:equivalentClass dc:MediaType .
+
 #:Disc
 #:CD
 #:DVD
@@ -419,8 +422,7 @@
 
 :genre a owl:ObjectProperty;
     rdfs:label "genre"@sv;
-    rdfs:subPropertyOf sdo:genre;
-    owl:equivalentProperty dc:type, bf:class .
+    rdfs:subPropertyOf dc:type, sdo:genre, bf:classification .
 
 :version a owl:ObjectProperty;
     owl:equivalentProperty sdo:version .
