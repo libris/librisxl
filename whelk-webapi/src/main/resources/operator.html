@@ -4,20 +4,66 @@
         <p> <a href="?status">show operator status</a> </p>
         <hr/>
         <p>
-            <b>start import</b>
+            <b>reindex</b>
+            <form method="post">
+                <input type="hidden" name="operation" value="reindex"/>
+                <table border="0">
+                    <tr>
+                        <td><i>dataset</i></td>
+                        <td><i>fromStorage</i></td>
+                        <td><i>selectedComponents (comma-separated)</i></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" name="dataset" value=""/></td>
+                        <td><input type="text" name="fromStorage" value=""/></td>
+                        <td><input type="text" name="selectedComponents" value=""/></td>
+                        <td><input type="submit" value="go"/></td>
+                    </tr>
+                </table>
+            </form>
+        </p>
+        <hr/>
+        <p>
+            <b>import</b>
             <form method="post">
                 <input type="hidden" name="operation" value="import"/>
-                <i>importer</i><br/>
-                <input type="text" name="importer" value="oaipmhimporter"/><br/>
-                <i>service url</i><br/>
-                <input type="text" name="url" size="100" value="http://localhost:8000/bib/oaipmh"/><br/>
-                <i>dataset</i><br/>
-                <input type="text" name="dataset" value="bib"/><br/>
-                <i>max docs to import (-1 = unlimited)</i><br/>
-                <input type="text" name="nums" value="-1" size="5"/><br/>
-                <i>since (yyyy-MM-dd)</i><br/>
-                <input type="text" name="since" value=""/><br/>
-                <input type="submit" value="go"/>
+                <table border="0">
+                    <tr>
+                        <td><i>dataset</i></td>
+                        <td><i>service url</i></td>
+                        <td><i>importer</i></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" name="dataset" value="bib"/></td>
+                        <td><input type="text" name="url" size="100" value="http://localhost:8000/bib/oaipmh"/></td>
+                        <td><input type="text" name="importer" value="oaipmhimporter"/></td>
+                    </tr>
+                    <tr>
+                        <td><i>since (yyyy-MM-dd)</i></td>
+                        <td><i>max docs to import (-1 = unlimited)</i></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" name="since" value=""/></td>
+                        <td><input type="text" name="nums" value="-1" size="5"/></td>
+                        <td><input type="submit" value="go"/></td>
+                    </tr>
+                </table>
+            </form>
+        </p>
+        <hr/>
+        <p>
+            <b>benchmark</b>
+            <form method="post">
+                <input type="hidden" name="operation" value="benchmark"/>
+                <table border="0">
+                    <tr>
+                        <td><i>dataset</i></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" name="dataset" value=""/></td>
+                        <td><input type="submit" value="go"/></td>
+                    </tr>
+                </table>
             </form>
         </p>
     </body>

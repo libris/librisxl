@@ -31,9 +31,9 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
     static ReindexOperator reindexOperator = new ReindexOperator()
     static ImportOperator importOperator = new ImportOperator()
 
-    static Map operators = ["benchmark":benchmarkOperator,
-                            "reindex":reindexOperator,
-                            "import":importOperator]
+    static Map operators = ["reindex":reindexOperator,
+                            "import":importOperator,
+                            "benchmark":benchmarkOperator]
 
     void doHandle(Request request, Response response) {
         def req = [:]
@@ -155,6 +155,14 @@ class ReindexOperator extends OperatorThread {
     String startAt = null
     String fromStorage = null
 
+    @Override
+    void setParameters(Map parameters) {
+        super.setParameters(parameters)
+        if (parameters.selectedComponents) {
+            this.selectedComponents = parameters.get("selectedComponents").split(",") as List<String>
+        }
+        this.fromStorage = parameters.get("fromStorage", null)
+    }
 
     void doRun(long startTime) {
 
@@ -273,6 +281,7 @@ abstract class OperatorThread extends Thread {
         } finally {
             operatorState=OperatorState.IDLE
             hasRun = true
+            interrupt()
         }
     }
 
