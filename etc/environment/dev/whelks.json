@@ -22,6 +22,7 @@
                 "localindex",
                 "flatstorage",
                 "fusekigraphstore",
+                "operator",
                 "search",
                 "oaipmhxmlconverter",
                 "completeexpander",

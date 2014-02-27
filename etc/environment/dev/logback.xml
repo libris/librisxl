@@ -41,6 +41,9 @@
       <level value="debug"/>
   </logger>
   -->
+   <logger name="se.kb.libris.whelks.importers.OAIPMHImporter">
+      <level value="debug"/>
+  </logger>
    <logger name="se.kb.libris.whelks.swepub.importers.ModsImporter">
       <level value="trace"/>
   </logger>

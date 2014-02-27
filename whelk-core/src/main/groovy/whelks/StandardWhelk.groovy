@@ -66,7 +66,11 @@ class StandardWhelk implements Whelk {
         log.debug("Bulk add ${docs.size()} document")
         List<Document> convertedDocs = []
         for (doc in docs) {
-            convertedDocs.add(addToStorage(doc))
+            try {
+                convertedDocs.add(addToStorage(doc))
+            } catch (WhelkAddException wae) {
+                log.warn(wae.message)
+            }
         }
         try {
             log.trace("${convertedDocs.size()} docs left to triplify ...")
@@ -246,67 +250,6 @@ class StandardWhelk implements Whelk {
         }
         log.debug("Loading "+(dataset ? dataset : "all")+" from storage ${st.id}")
         return st.getAll(dataset)
-    }
-
-    @Override
-    void reindex(String dataset = null, List<String> selectedCompontents = null, String fromStorage = null, String startAt = null) {
-        int counter = 0
-        long startTime = System.currentTimeMillis()
-        List<Document> docs = []
-        boolean indexing = !startAt
-        if (!dataset) {
-            for (index in indexes) {
-                if (!selectedCompontents || index in selectedCompontents) {
-                    log.debug("Requesting new index for ${index.id}.")
-                    index.createNewCurrentIndex()
-                }
-            }
-        }
-        for (doc in loadAll(dataset, fromStorage)) {
-            if (startAt && doc.identifier == startAt) {
-                log.info("Found document with identifier ${startAt}. Starting to index ...")
-                indexing = true
-            }
-            if (indexing) {
-                log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
-                if (fromStorage) {
-                    log.trace("Rebuilding storage from $fromStorage")
-                    try {
-                        docs << addToStorage(doc, fromStorage)
-                    } catch (WhelkAddException wae) {
-                        log.trace("Expected exception ${wae.message}")
-                    }
-                } else {
-                    docs << doc
-                }
-                if (++counter % 1000 == 0) { // Bulk index 1000 docs at a time
-                    addToGraphStore(docs, selectedCompontents)
-                    try {
-                        addToIndex(docs, selectedCompontents)
-                    } catch (WhelkAddException wae) {
-                        log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
-                    }
-                    docs = []
-                    if (log.isInfoEnabled()) {
-                        Tools.printSpinner("Reindexing ${this.id}. ${counter} documents sofar.", counter)
-                    }
-                }
-            }
-        }
-        log.debug("Went through all documents. Processing remainder.")
-        if (docs.size() > 0) {
-            log.trace("Reindexing remaining ${docs.size()} documents")
-            addToGraphStore(docs, selectedCompontents)
-            addToIndex(docs, selectedCompontents)
-        }
-        log.info("Reindexed $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-        if (!dataset) {
-            for (index in indexes) {
-                if (!selectedCompontents || index in selectedCompontents) {
-                    index.reMapAliases()
-                }
-            }
-        }
     }
 
     void findLinks(String dataset) {

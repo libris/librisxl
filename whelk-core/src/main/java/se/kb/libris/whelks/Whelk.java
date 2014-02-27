@@ -30,7 +30,6 @@ public interface Whelk {
     public void addPlugin(Plugin plugin);
     public Iterable<? extends Plugin> getPlugins();
 
-    public void reindex();
     public void flush();
 
     // factory methods

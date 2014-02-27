@@ -1,0 +1,24 @@
+<html>
+    <head><title>Whelk Operator</title></head>
+    <body>
+        <p> <a href="?status">show operator status</a> </p>
+        <hr/>
+        <p>
+            <b>start import</b>
+            <form method="post">
+                <input type="hidden" name="operation" value="import"/>
+                <i>importer</i><br/>
+                <input type="text" name="importer" value="oaipmhimporter"/><br/>
+                <i>service url</i><br/>
+                <input type="text" name="url" size="100" value="http://localhost:8000/bib/oaipmh"/><br/>
+                <i>dataset</i><br/>
+                <input type="text" name="dataset" value="bib"/><br/>
+                <i>max docs to import (-1 = unlimited)</i><br/>
+                <input type="text" name="nums" value="-1" size="5"/><br/>
+                <i>since (yyyy-MM-dd)</i><br/>
+                <input type="text" name="since" value=""/><br/>
+                <input type="submit" value="go"/>
+            </form>
+        </p>
+    </body>
+</html>
