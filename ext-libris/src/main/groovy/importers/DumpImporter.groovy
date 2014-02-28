@@ -37,6 +37,8 @@ class DumpImporter extends BasicPlugin implements Importer {
 
     String startTransformingAtElement
 
+    boolean cancelled = false
+
     List<String> errorMessages
 
     File failedLog
@@ -62,6 +64,7 @@ class DumpImporter extends BasicPlugin implements Importer {
         this.picky = picky
         this.silent = silent
         this.maxDocs = nrOfDocs
+        this.cancelled = false
         assert resource
         return doImportFromURL(resource)
     }
@@ -90,7 +93,7 @@ class DumpImporter extends BasicPlugin implements Importer {
 /* Snip */
       int event = xsr.getEventType();
 
-      while (true) {
+      while (!cancelled) {
           Document doc = null
           if (event == XMLStreamConstants.START_ELEMENT && (!startTransformingAtElement || xsr.getLocalName() == startTransformingAtElement)) {
               try {
@@ -184,4 +187,6 @@ class DumpImporter extends BasicPlugin implements Importer {
         }
         return inString
     }
+
+    void cancel() { this.cancelled = true }
 }

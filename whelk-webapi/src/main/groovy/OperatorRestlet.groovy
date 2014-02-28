@@ -42,16 +42,18 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
         } else {
             req = request.getResourceRef().getQueryAsForm().getValuesMap()
         }
-        if (!isBusy()) {
-            if (operators.containsKey(req.operation)) {
-                log.debug("Starting ${req.operation} operation")
-                def op = operators[req.operation]
-                op.whelk = this.whelk
-                op.setParameters(req)
-                new Thread(op).start()
-                response.setStatus(Status.REDIRECTION_SEE_OTHER, "Operation ${req.operation} started.")
-                response.setLocationRef(request.getRootRef().toString()+"/"+pathEnd)
-            }
+        if (!isBusy() && operators.containsKey(req.operation)) {
+            log.debug("Starting ${req.operation} operation")
+            def op = operators[req.operation]
+            op.whelk = this.whelk
+            op.setParameters(req)
+            new Thread(op).start()
+            response.setStatus(Status.REDIRECTION_SEE_OTHER, "Operation ${req.operation} started.")
+            response.setLocationRef(request.getRootRef().toString()+"/"+pathEnd)
+        }
+        if (isBusy() && operators.containsKey(req.cancel)) {
+            log.debug("Cancelling operation ${req.cancel}")
+            operators[req.cancel].cancel()
         }
 
         if (isBusy() || req.status || request.getResourceRef().getQuery() == "status") {
@@ -147,11 +149,19 @@ class ImportOperator extends AbstractOperator {
     Map getStatus() {
         def status = super.getStatus()
         if (importer?.errorMessages) {
-            status['errors'] = errorMessages
+            if (operatorState == OperatorState.IDLE) {
+                status.get("lastrun").put("errors", errorMessages)
+            } else {
+                status['errors'] = errorMessages
+            }
         }
         return status
     }
 
+    @Override
+    void cancel() {
+        this.importer.cancel()
+    }
 }
 
 @Log
@@ -219,6 +229,9 @@ class ReindexOperator extends AbstractOperator {
                     runningTime = System.currentTimeMillis() - startTime
                 }
             }
+            if (cancelled) {
+                break
+            }
         }
         log.debug("Went through all documents. Processing remainder.")
         if (docs.size() > 0) {
@@ -250,7 +263,11 @@ class ReindexOperator extends AbstractOperator {
     Map getStatus() {
         def status = super.getStatus()
         if (errorMessages) {
-            status['errors'] = errorMessages
+            if (operatorState == OperatorState.IDLE) {
+                status.get("lastrun").put("errors", errorMessages)
+            } else {
+                status['errors'] = errorMessages
+            }
         }
         return status
     }
@@ -265,19 +282,22 @@ class BenchmarkOperator extends AbstractOperator {
 
     @Override
     void doRun(long startTime) {
-            def docs = []
-            for (doc in whelk.loadAll(dataset)) {
-                docs << doc
-                if (++count % 1000 == 0) {
-                    // Update runningtime every 1000 docs
-                    runningTime = System.currentTimeMillis() - startTime
+        def docs = []
+        for (doc in whelk.loadAll(dataset)) {
+            docs << doc
+            if (++count % 1000 == 0) {
+                // Update runningtime every 1000 docs
+                runningTime = System.currentTimeMillis() - startTime
 
-                    log.debug("Retrieved ${docs.size()} documents from $whelk ... ($count total). Time elapsed: ${runningTime/1000}. Current velocity: ${count/(runningTime/1000)} documents / second.")
-                    docs = []
-                }
+                log.debug("Retrieved ${docs.size()} documents from $whelk ... ($count total). Time elapsed: ${runningTime/1000}. Current velocity: ${count/(runningTime/1000)} documents / second.")
+                docs = []
             }
-            runningTime = System.currentTimeMillis() - startTime
-            log.debug("$count documents read. Total time elapsed: ${runningTime/1000} seconds.")
+            if (cancelled) {
+                break
+            }
+        }
+        runningTime = System.currentTimeMillis() - startTime
+        log.debug("$count documents read. Total time elapsed: ${runningTime/1000} seconds.")
     }
 
 }
@@ -291,6 +311,7 @@ abstract class AbstractOperator implements Runnable {
     OperatorState operatorState = OperatorState.IDLE
     Whelk whelk
     boolean hasRun = false
+    boolean cancelled = false
 
     void setParameters(Map parameters) {
         this.dataset = parameters.get("dataset", null)
@@ -302,6 +323,7 @@ abstract class AbstractOperator implements Runnable {
         try {
             log.debug("Starting reindex operation")
             operatorState=OperatorState.RUNNING
+            cancelled = false
             count = 0
             runningTime = 0
             doRun(System.currentTimeMillis())
@@ -328,6 +350,10 @@ abstract class AbstractOperator implements Runnable {
         } else {
             return ["state":operatorState,"dataset":dataset,"velocity":velocity,"count":count,"runningTime":rt]
         }
+    }
+
+    void cancel() {
+        this.cancelled = true
     }
 }
 

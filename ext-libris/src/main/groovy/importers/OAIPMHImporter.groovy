@@ -41,6 +41,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
     List<String> errorMessages
 
+    boolean cancelled = false
+
+
+
     OAIPMHImporter() {
         this.serviceUrl = null
     }
@@ -51,6 +55,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
     int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
         getAuthentication()
+        this.cancelled = false
         this.dataset = dataset
         this.picky = picky
         this.silent = silent
@@ -69,7 +74,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         URL url = new URL(urlString)
         String resumptionToken = harvest(url)
         log.debug("resumptionToken: $resumptionToken")
-        while (resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
+        while (!cancelled && resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
             url = new URL(serviceUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
             log.trace("Harvesting $url")
             try {
@@ -221,6 +226,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         return new StreamingMarkupBuilder().bind{
             out << root
         }
+    }
+
+    void cancel() {
+        this.cancelled = true
     }
 }
 
