@@ -163,9 +163,9 @@ class MarcConversion {
             }
             def handler = null
             if (fieldDfn.find { it.key[0] == '[' }) {
-                handler = new MarcFixedFieldHandler(fieldDfn)
+                handler = new MarcFixedFieldHandler(this, tag, fieldDfn)
             } else if (fieldDfn.find { it.key[0] == '$' }) {
-                handler = new MarcFieldHandler(tag, fieldDfn, resourceMaps)
+                handler = new MarcFieldHandler(this, tag, fieldDfn)
                 if (handler.dependsOn) {
                     primaryTags += handler.dependsOn
                 }
@@ -174,7 +174,7 @@ class MarcConversion {
                 }
             }
             else {
-                handler = new MarcSimpleFieldHandler(tag, fieldDfn)
+                handler = new MarcSimpleFieldHandler(this, tag, fieldDfn)
                 assert handler.property || handler.uriTemplate, "Incomplete: $tag: $fieldDfn"
             }
             fieldHandlers[tag] = handler
@@ -201,6 +201,8 @@ class MarcConversion {
         def unknown = []
 
         def record = ["@type": "Record", "@id": recordId]
+
+        record.unmappedFixedFields = [:]
 
         def entityMap = [Record: record]
 
@@ -257,6 +259,9 @@ class MarcConversion {
         if (unknown) {
             record.unknown = unknown
         }
+        if (record.unmappedFixedFields.size() == 0) {
+            record.remove('unmappedFixedFields')
+        }
 
         // TODO: only(?) bib (monographies), and use a config-defined link..
         if (work.find { k, v -> k != "@type" }) {
@@ -294,15 +299,17 @@ class MarcConversion {
 
 class MarcFixedFieldHandler {
 
+    String tag
     def columns = []
 
-    MarcFixedFieldHandler(fieldDfn) {
+    MarcFixedFieldHandler(conversion, tag, fieldDfn) {
+        this.tag = tag
         fieldDfn.each { key, obj ->
             def m = (key =~ /^\[(\d+):(\d+)\]$/)
             if (m) {
                 def start = m[0][1].toInteger()
                 def end = m[0][2].toInteger()
-                columns << new Column(obj, start, end, obj['default'])
+                columns << new Column(conversion, obj, start, end, obj['default'])
             }
         }
         columns.sort { it.start }
@@ -310,9 +317,20 @@ class MarcFixedFieldHandler {
 
     boolean convert(marcSource, value, entityMap) {
         def success = true
+        def unmappedFixedFields = entityMap.Record.unmappedFixedFields
         columns.each {
-            if (!it.convert(marcSource, value, entityMap))
+            if (!it.convert(marcSource, value, entityMap)) {
                 success = false
+                def unmapped = unmappedFixedFields[tag]
+                if (unmapped == null) {
+                    unmapped = unmappedFixedFields[tag] = [:]
+                }
+                def key = "${it.start}"
+                if (it.end && it.end != it.start + 1) {
+                    key += "_${it.end - it.start}"
+                }
+                unmapped[key] = it.getToken(value)
+            }
         }
         return success
     }
@@ -335,15 +353,18 @@ class MarcFixedFieldHandler {
         int start
         int end
         String defaultValue
-        Column(fieldDfn, start, end, defaultValue) {
-            super(null, fieldDfn)
+        Column(conversion, fieldDfn, start, end, defaultValue) {
+            super(conversion, null, fieldDfn)
             this.start = start
             this.end = end
             this.defaultValue = defaultValue
         }
         int getWidth() { return end - start }
+        String getToken(value) {
+            return value.substring(start, end)
+        }
         boolean convert(marcSource, value, entityMap) {
-            def token = value.substring(start, end)
+            def token = getToken(value)
             if (token == " " || token == defaultValue)
                 return true
             return super.convert(marcSource, token, entityMap)
@@ -361,6 +382,13 @@ class MarcFixedFieldHandler {
 class ConversionPart {
 
     String domainEntityName
+    Map valueMap
+
+    void setValueMap(fieldHandler, dfn) {
+        def valueMap = dfn.valueMap
+        this.valueMap = (valueMap instanceof String)?
+                            fieldHandler.resourceMaps[valueMap] : valueMap
+    }
 
     Map getEntity(Map data) {
         if (domainEntityName == 'Record')
@@ -375,8 +403,15 @@ class ConversionPart {
 
 abstract class BaseMarcFieldHandler extends ConversionPart {
 
+    MarcConversion conversion
     String tag
-    BaseMarcFieldHandler(tag) { this.tag = tag }
+    Map resourceMaps
+
+    BaseMarcFieldHandler(conversion, tag) {
+        this.conversion = conversion
+        this.tag = tag
+        this.resourceMaps = conversion.resourceMaps
+    }
 
     abstract boolean convert(marcSource, value, entityMap)
 
@@ -414,8 +449,9 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     String dateTimeFormat
     boolean ignored = false
 
-    MarcSimpleFieldHandler(tag, fieldDfn) {
-        super(tag)
+    MarcSimpleFieldHandler(conversion, tag, fieldDfn) {
+        super(conversion, tag)
+        super.setValueMap(this, fieldDfn)
         if (fieldDfn.addProperty) {
             property = fieldDfn.addProperty
             repeat = true
@@ -444,6 +480,13 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     boolean convert(marcSource, value, entityMap) {
         if (ignored || !(property || link))
             return
+
+        if (valueMap) {
+            value = valueMap[value]
+            if (value == null)
+                return false
+        }
+
         if (dateTimeFormat) {
             value = Date.parse(dateTimeFormat, value).format(DT_FORMAT)
         }
@@ -480,13 +523,15 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         } else {
             def id = entity instanceof Map? entity['@id'] : entity
             if (uriTemplate) {
-                return extractToken(uriTemplate, id) ?: "N/A"
+                return extractToken(uriTemplate, id) ?: "?"
             }
             return "?"
         }
     }
 
     static String extractToken(tplt, value) {
+        if (!value)
+            return null
         def i = tplt.indexOf(URI_SLOT)
         if (i > -1) {
             def before = tplt.substring(0, i)
@@ -518,14 +563,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     List splitLinkRules
     Map construct = [:]
     Map<String, MarcSubFieldHandler> subfields = [:]
-    Map resourceMaps
     List matchRules = []
 
     static GENERIC_REL_URI_TEMPLATE = UriTemplate.fromTemplate("generic:{_}")
 
-    MarcFieldHandler(tag, fieldDfn, resourceMaps) {
-        super(tag)
-        this.resourceMaps = resourceMaps
+    MarcFieldHandler(conversion, tag, fieldDfn) {
+        super(conversion, tag)
         ind1 = fieldDfn.i1? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
         ind2 = fieldDfn.i2? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
 
@@ -573,23 +616,23 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def matchDomain = fieldDfn['match-domain']
         if (matchDomain) {
-            matchRules << new DomainMatchRule(fieldDfn, matchDomain, resourceMaps)
+            matchRules << new DomainMatchRule(this, fieldDfn, matchDomain)
         }
         def matchI1 = fieldDfn['match-i1']
         if (matchI1) {
-            matchRules << new IndMatchRule(fieldDfn, matchI1, 'i1', resourceMaps)
+            matchRules << new IndMatchRule(this, fieldDfn, matchI1, 'i1')
         }
         def matchI2 = fieldDfn['match-i2']
         if (matchI2) {
-            matchRules << new IndMatchRule(fieldDfn, matchI2, 'i2', resourceMaps)
+            matchRules << new IndMatchRule(this, fieldDfn, matchI2, 'i2')
         }
         def matchCode = fieldDfn['match-code']
         if (matchCode) {
-            matchRules << new CodeMatchRule(fieldDfn, matchCode, resourceMaps)
+            matchRules << new CodeMatchRule(this, fieldDfn, matchCode)
         }
         def matchPattern = fieldDfn['match-pattern']
         if (matchPattern) {
-            matchRules << new CodePatternMatchRule(fieldDfn, matchPattern, resourceMaps)
+            matchRules << new CodePatternMatchRule(this, fieldDfn, matchPattern)
         }
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
@@ -864,7 +907,6 @@ class MarcSubFieldHandler extends ConversionPart {
     String code
     char[] interpunctionChars
     char[] surroundingChars
-    Map valueMap
     String link
     boolean repeatLink
     String property
@@ -882,9 +924,7 @@ class MarcSubFieldHandler extends ConversionPart {
         domainEntityName = subDfn.domainEntity
         interpunctionChars = subDfn.interpunctionChars?.toCharArray()
         surroundingChars = subDfn.surroundingChars?.toCharArray()
-        def valueMap = subDfn.valueMap
-        this.valueMap = (valueMap instanceof String)?
-                            fieldHandler.resourceMaps[valueMap] : valueMap
+        super.setValueMap(fieldHandler, subDfn)
         link = subDfn.link
         repeatLink = false
         if (subDfn.addLink) {
@@ -1017,14 +1057,14 @@ class MarcSubFieldHandler extends ConversionPart {
 
 abstract class MatchRule {
     Map ruleMap = [:]
-    MatchRule(fieldDfn, rules, resourceMaps) {
+    MatchRule(handler, fieldDfn, rules) {
         rules.each { key, matchDfn ->
             def comboDfn = fieldDfn + matchDfn
             ['match-domain', 'match-i1', 'match-i2', 'match-code', 'match-pattern'].each {
                 comboDfn.remove(it)
             }
             def tag = null
-            ruleMap[key] = new MarcFieldHandler(tag, comboDfn, resourceMaps)
+            ruleMap[key] = new MarcFieldHandler(handler.conversion, tag, comboDfn)
         }
     }
     MarcFieldHandler getHandler(entity, value) {
@@ -1034,8 +1074,8 @@ abstract class MatchRule {
 }
 
 class DomainMatchRule extends MatchRule {
-    DomainMatchRule(fieldDfn, rules, resourceMaps) {
-        super(fieldDfn, rules, resourceMaps)
+    DomainMatchRule(handler, fieldDfn, rules) {
+        super(handler, fieldDfn, rules)
     }
     String getKey(entity, value) {
         def type = entity['@type']
@@ -1047,8 +1087,8 @@ class DomainMatchRule extends MatchRule {
 
 class IndMatchRule extends MatchRule {
     String indKey
-    IndMatchRule(fieldDfn, rules, indKey, resourceMaps) {
-        super(fieldDfn, rules, resourceMaps)
+    IndMatchRule(handler, fieldDfn, rules, indKey) {
+        super(handler, fieldDfn, rules)
         this.indKey = indKey
     }
     String getKey(entity, value) {
@@ -1057,8 +1097,8 @@ class IndMatchRule extends MatchRule {
 }
 
 class CodeMatchRule extends MatchRule {
-    CodeMatchRule(fieldDfn, rules, resourceMaps) {
-        super(fieldDfn, parseRules(rules), resourceMaps)
+    CodeMatchRule(handler, fieldDfn, rules) {
+        super(handler, fieldDfn, parseRules(rules))
     }
     static Map parseRules(Map rules) {
         def parsed = [:]
@@ -1079,8 +1119,8 @@ class CodeMatchRule extends MatchRule {
 
 class CodePatternMatchRule extends MatchRule {
     Map<String, Map> patterns = [:]
-    CodePatternMatchRule(fieldDfn, rules, resourceMaps) {
-        super(fieldDfn, parseRules(rules), resourceMaps)
+    CodePatternMatchRule(handler, fieldDfn, rules) {
+        super(handler, fieldDfn, parseRules(rules))
         fillPatternCombos(rules)
     }
     static Map parseRules(Map rules) {
