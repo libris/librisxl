@@ -48,7 +48,7 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
                 def op = operators[req.operation]
                 op.whelk = this.whelk
                 op.setParameters(req)
-                op.start()
+                new Thread(op).start()
                 response.setStatus(Status.REDIRECTION_SEE_OTHER, "Operation ${req.operation} started.")
                 response.setLocationRef(request.getRootRef().toString()+"/"+pathEnd)
             }
@@ -69,7 +69,6 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
 
     boolean isBusy() {
         boolean busy = operators.values().any { it.operatorState == OperatorState.RUNNING }
-        log.info("Busy is $busy")
         return busy
     }
 
@@ -83,7 +82,7 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
 }
 
 @Log
-class ImportOperator extends OperatorThread {
+class ImportOperator extends AbstractOperator {
     String oid = "import"
 
     String importerPlugin = null
@@ -144,16 +143,26 @@ class ImportOperator extends OperatorThread {
         */
     }
 
+    @Override
+    Map getStatus() {
+        def status = super.getStatus()
+        if (importer?.errorMessages) {
+            status['errors'] = errorMessages
+        }
+        return status
+    }
+
 }
 
 @Log
-class ReindexOperator extends OperatorThread {
+class ReindexOperator extends AbstractOperator {
     String oid = "reindex"
 
     // Unique for this operator
     List<String> selectedComponents = null
     String startAt = null
     String fromStorage = null
+    List<String> errorMessages
 
     @Override
     void setParameters(Map parameters) {
@@ -165,7 +174,7 @@ class ReindexOperator extends OperatorThread {
     }
 
     void doRun(long startTime) {
-
+        errorMessages = []
         List<Document> docs = []
         boolean indexing = !startAt
         if (!dataset) {
@@ -197,24 +206,35 @@ class ReindexOperator extends OperatorThread {
                     try {
                         whelk.addToGraphStore(docs, selectedComponents)
                     } catch (WhelkAddException wae) {
-                        log.info("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
+                        errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+                        log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
                     }
                     try {
                         whelk.addToIndex(docs, selectedComponents)
                     } catch (WhelkAddException wae) {
-                        log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                        errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+                        log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
                     }
                     docs = []
                     runningTime = System.currentTimeMillis() - startTime
-                    velocity = (count/(runningTime/1000))
                 }
             }
         }
         log.debug("Went through all documents. Processing remainder.")
         if (docs.size() > 0) {
             log.trace("Reindexing remaining ${docs.size()} documents")
-            whelk.addToGraphStore(docs, selectedComponents)
-            whelk.addToIndex(docs, selectedComponents)
+            try {
+                whelk.addToGraphStore(docs, selectedComponents)
+            } catch (WhelkAddException wae) {
+                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
+            }
+            try {
+                whelk.addToIndex(docs, selectedComponents)
+            } catch (WhelkAddException wae) {
+                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
+            }
         }
         log.info("Reindexed $count documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
         if (!dataset) {
@@ -224,13 +244,22 @@ class ReindexOperator extends OperatorThread {
                 }
             }
         }
-
     }
+
+    @Override
+    Map getStatus() {
+        def status = super.getStatus()
+        if (errorMessages) {
+            status['errors'] = errorMessages
+        }
+        return status
+    }
+
 }
 
 
 @Log
-class BenchmarkOperator extends OperatorThread {
+class BenchmarkOperator extends AbstractOperator {
 
     String oid = "benchmark"
 
@@ -242,9 +271,8 @@ class BenchmarkOperator extends OperatorThread {
                 if (++count % 1000 == 0) {
                     // Update runningtime every 1000 docs
                     runningTime = System.currentTimeMillis() - startTime
-                    velocity = (count/(runningTime/1000))
 
-                    log.debug("Retrieved ${docs.size()} documents from $whelk ... ($count total). Time elapsed: ${runningTime/1000}. Current velocity: $velocity documents / second.")
+                    log.debug("Retrieved ${docs.size()} documents from $whelk ... ($count total). Time elapsed: ${runningTime/1000}. Current velocity: ${count/(runningTime/1000)} documents / second.")
                     docs = []
                 }
             }
@@ -254,10 +282,10 @@ class BenchmarkOperator extends OperatorThread {
 
 }
 
-abstract class OperatorThread extends Thread {
+// Remake as Runnable
+abstract class AbstractOperator implements Runnable {
     abstract String getOid()
     String dataset
-    float velocity = 0.0
     int count = 0
     long runningTime = 0
     OperatorState operatorState = OperatorState.IDLE
@@ -274,28 +302,27 @@ abstract class OperatorThread extends Thread {
         try {
             log.debug("Starting reindex operation")
             operatorState=OperatorState.RUNNING
-            velocity = 0.0
             count = 0
             runningTime = 0
             doRun(System.currentTimeMillis())
         } finally {
             operatorState=OperatorState.IDLE
             hasRun = true
-            interrupt()
         }
     }
 
     abstract void doRun(long startTime);
 
     Map getStatus() {
-        long rt = (runningTime > 0 ? runningTime/1000 : 0)
+        double rt = (runningTime > 0 ? runningTime/1000 : 0.0)
+        float velocity = 0.0
         if (rt > 0) {
             velocity = count/rt
         }
         if (operatorState == OperatorState.IDLE) {
             def map = ["state":operatorState]
             if (hasRun) {
-                map.put("lastrun", ["dataset":dataset,"velocity":velocity,"count":count,"runningTime":rt])
+                map.put("lastrun", ["dataset":dataset,"velocity":(velocity > 0 ? velocity : "unlimited"),"count":count,"runningTime":rt])
             }
             return map
         } else {
@@ -307,7 +334,4 @@ abstract class OperatorThread extends Thread {
 
 enum OperatorState {
     IDLE, RUNNING
-}
-
-interface Operator {
 }

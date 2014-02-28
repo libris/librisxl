@@ -37,6 +37,7 @@ class DumpImporter extends BasicPlugin implements Importer {
 
     String startTransformingAtElement
 
+    List<String> errorMessages
 
     File failedLog
     File exceptionLog

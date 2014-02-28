@@ -49,7 +49,7 @@ class StandardWhelk implements Whelk {
     @Override
     @groovy.transform.CompileStatic
     URI add(Document doc) {
-
+        log.trace("Add single document ${doc.identifier}")
         doc = addToStorage(doc)
         addToGraphStore([doc])
         addToIndex([doc])
@@ -189,9 +189,13 @@ class StandardWhelk implements Whelk {
                 }
             }
             if (idxDocs) {
-                for (idx in indexes) {
-                    log.trace("[${this.id}] ${idx.id} qualifies for indexing")
-                    idx.bulkIndex(idxDocs)
+                try {
+                    for (idx in indexes) {
+                        log.trace("[${this.id}] ${idx.id} qualifies for indexing")
+                        idx.bulkIndex(idxDocs)
+                    }
+                } catch (Exception e) {
+                    throw new WhelkAddException("Failed to add documents to index ${indexes}.".toString(), e, idxDocs.collect { ((IndexDocument)it).identifier })
                 }
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
@@ -214,10 +218,14 @@ class StandardWhelk implements Whelk {
                 }
             }
             if (dataDocs) {
-                for (store in activeGraphStores) {
-                    dataDocs.each {
-                        store.update(docBaseUri.resolve(it.identifier), it)
+                try {
+                    for (store in activeGraphStores) {
+                        dataDocs.each {
+                            store.update(docBaseUri.resolve(it.identifier), it)
+                        }
                     }
+                } catch (Exception e) {
+                    throw new WhelkAddException("Failed to add documents to graph stores ${activeGraphStores}.", e, dataDocs.collect { it.identifier })
                 }
             } else if (log.isDebugEnabled()) {
                 log.debug("No graphs to update.")
@@ -226,16 +234,6 @@ class StandardWhelk implements Whelk {
             log.info("Couldn't find any suitable graphstores ... $activeGraphStores")
         }
     }
-
-    /*
-    private List<RDFDescription> convertToRDFDescriptions(List<Document> docs) {
-        def rdocs = []
-        for (doc in docs) {
-            rdocs << new RDFDescription(doc)
-        }
-        return rdocs
-    }
-    */
 
     @Override
     Iterable<Document> loadAll(Date since) { return loadAll(null, null, since)}

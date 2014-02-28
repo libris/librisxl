@@ -39,6 +39,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     File failedLog
     File exceptionLog
 
+    List<String> errorMessages
+
     OAIPMHImporter() {
         this.serviceUrl = null
     }
@@ -52,10 +54,11 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         this.dataset = dataset
         this.picky = picky
         this.silent = silent
-
         this.serviceUrl = (serviceUrl ?: SERVICE_BASE_URL + dataset+"/oaipmh/")
 
         String urlString = serviceUrl + "?verb=ListRecords&metadataPrefix=marcxml"
+
+        this.errorMessages = []
 
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -93,6 +96,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         try {
             OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
         } catch (org.xml.sax.SAXParseException spe) {
+            errorMessages << new String("Failed to parse XML: $xmlString\nReason: ${spe.message}")
             log.error("Failed to parse XML: $xmlString", spe)
             throw new XmlParsingFailedException("Failing XML: ($xmlString)", spe)
         }
@@ -121,6 +125,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                         Tools.printSpinner("Running OAIPMH ${this.dataset} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                     }
                 } catch (Exception e) {
+                    errorMessages << new String("Failed! (${e.message}) for:\n$mdrecord")
+
                     log.error("Failed! (${e.message}) for :\n$mdrecord", e)
                     if (picky) {
                         log.error("Picky mode enabled. Throwing exception", e)
@@ -132,6 +138,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                 try {
                     whelk.remove(new URI(deleteIdentifier))
                 } catch (Exception e2) {
+                    errorMessages << new String("Whelk remove of $deleteIdentifier triggered exception: ${e2.message}")
                     log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
                 }
                 nrDeleted++
@@ -154,6 +161,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             try {
                 this.whelk.bulkAdd(documents)
             } catch (WhelkAddException wae) {
+                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 if (!failedLog) {
                     failedLog = new File("failed_ids.log")
                 }
@@ -161,6 +169,9 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                     failedLog << "$fi\n"
                 }
             } catch (Exception e) {
+                StringWriter sw = new StringWriter()
+                e.printStackTrace(sw)
+                errorMessages << new String("Exception on add: ${sw.toString()}")
                 if (!exceptionLog) {
                     exceptionLog = new File("exceptions.log")
                 }
