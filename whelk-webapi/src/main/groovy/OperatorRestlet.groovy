@@ -172,7 +172,6 @@ class ReindexOperator extends AbstractOperator {
     List<String> selectedComponents = null
     String startAt = null
     String fromStorage = null
-    List<String> errorMessages
 
     @Override
     void setParameters(Map parameters) {
@@ -184,7 +183,6 @@ class ReindexOperator extends AbstractOperator {
     }
 
     void doRun(long startTime) {
-        errorMessages = []
         List<Document> docs = []
         boolean indexing = !startAt
         if (!dataset) {
@@ -261,15 +259,23 @@ class ReindexOperator extends AbstractOperator {
 
     @Override
     Map getStatus() {
-        def status = super.getStatus()
-        if (errorMessages) {
-            if (operatorState == OperatorState.IDLE) {
-                status.get("lastrun").put("errors", errorMessages)
-            } else {
-                status['errors'] = errorMessages
+        def map = super.getStatus()
+        if (hasRun) {
+            if (fromStorage) {
+                map.get("lastrun").put("fromStorage", fromStorage)
+            }
+            if (selectedComponents) {
+                map.get("lastrun").put("selectedComponents", selectedComponents)
+            }
+        } else {
+            if (fromStorage) {
+                map.put("fromStorage", fromStorage)
+            }
+            if (selectedComponents) {
+                map.put("selectedComponents", selectedComponents)
             }
         }
-        return status
+        return map
     }
 }
 
@@ -311,6 +317,7 @@ abstract class AbstractOperator implements Runnable {
     Whelk whelk
     boolean hasRun = false
     boolean cancelled = false
+    List<String> errorMessages
 
     void setParameters(Map parameters) {
         this.dataset = parameters.get("dataset", null)
@@ -325,6 +332,7 @@ abstract class AbstractOperator implements Runnable {
             cancelled = false
             count = 0
             runningTime = 0
+            errorMessages = []
             doRun(System.currentTimeMillis())
         } finally {
             operatorState=OperatorState.IDLE
@@ -344,13 +352,16 @@ abstract class AbstractOperator implements Runnable {
             def map = ["state":operatorState]
             if (hasRun) {
                 map.put("lastrun", ["dataset":dataset,"velocity":(velocity > 0 ? velocity : "unlimited"),"count":count,"runningTime":rt])
+                if (errorMessages) {
+                    map.get("lastrun").put("errors",errorMessages)
+                }
                 if (cancelled) {
                     map.get("lastrun").put("cancelled", true)
                 }
             }
             return map
         } else {
-            return ["state":operatorState,"dataset":dataset,"velocity":velocity,"count":count,"runningTime":rt]
+            return ["state":operatorState,"dataset":dataset,"velocity":velocity,"count":count,"runningTime":rt, "errors":errorMessages]
         }
     }
 

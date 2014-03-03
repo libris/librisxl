@@ -246,8 +246,12 @@ class StandardWhelk implements Whelk {
         } else {
             st = getStorage()
         }
-        log.debug("Loading "+(dataset ? dataset : "all")+" from storage ${st.id}")
-        return st.getAll(dataset)
+        if (st) {
+            log.debug("Loading "+(dataset ? dataset : "all")+" from storage ${st.id}")
+            return st.getAll(dataset)
+        } else {
+            throw new WhelkRuntimeException("Couldn't find storage. (storageId = $storageId)")
+        }
     }
 
     void findLinks(String dataset) {
