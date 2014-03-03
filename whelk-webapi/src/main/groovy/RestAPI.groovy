@@ -1169,7 +1169,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
             def databases = []
             for (k in remoteURLs.keySet()) {
-                databases << [(k): "Lorem ipsum ..."]
+                databases << ["database":k,"description":"Lorem ipsum ..."]
             }
             response.setEntity(mapper.writeValueAsString(databases), MediaType.APPLICATION_JSON)
         } else if (!query) {
