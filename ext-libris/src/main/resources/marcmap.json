@@ -1283,7 +1283,7 @@
               "length": 3, 
               "default": "999", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "ensmallmentExactWithRightJustWithStartingLoser", 
+              "propRef": "reductionRatioExactRightJustifiedWithLeadingZero", 
               "label_en": "Reduction Ratio", 
               "entity": "Manifestation"
             }, 
@@ -3443,9 +3443,14 @@
           "mandatory": true, 
           "entity": "Record"
         }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
+        }, 
         "z": {
           "id": "canceledInvalidNationalBibliographyNumber", 
-          "label_sv": "Makulerat/ogiltigtn nationalbibliografiskt nummer", 
+          "label_sv": "Makulerat/ogiltigt nationalbibliografiskt nummer", 
           "repeatable": true, 
           "label_en": "Canceled/invalid national bibliography number"
         }, 
@@ -3691,6 +3696,11 @@
           "label_en": "Terms of availability", 
           "entity": "Manifestation"
         }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
+        }, 
         "z": {
           "id": "canceledInvalidIsbn", 
           "label_sv": "Makulerat/ogiltigt ISBN", 
@@ -3883,6 +3893,11 @@
           "repeatable": false, 
           "label_en": "Additional codes following the standard number or code"
         }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
+        }, 
         "z": {
           "id": "canceledInvalidStandardNumberOrCode", 
           "label_sv": "Makulerad/ogiltig standardidentifikator", 
@@ -4063,6 +4078,11 @@
           "mandatory": true, 
           "entity": "Manifestation"
         }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
+        }, 
         "z": {
           "id": "canceledInvalidNumber", 
           "label_sv": "Makulerat/ogiltigt nummer", 
@@ -4159,6 +4179,11 @@
           "repeatable": false, 
           "label_en": "Source", 
           "entity": "DataElement"
+        }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
         }, 
         "6": {
           "id": "linkage", 
@@ -5106,7 +5131,7 @@
         }, 
         "d": {
           "id": "languageCodeOfSungOrSpokenText", 
-          "label_sv": "Spr\u00e5k i text i ljudupptagning", 
+          "label_sv": "Spr\u00e5k f\u00f6r tal eller s\u00e5ng (ljudupptagningar)", 
           "repeatable": true, 
           "label_en": "Language code of sung or spoken text", 
           "entity": "Expression"
@@ -5144,6 +5169,21 @@
           "label_sv": "Spr\u00e5k i bild- och filmtexter (ljudupptagningar)", 
           "repeatable": true, 
           "label_en": "Language code of subtitles or captions"
+        }, 
+        "k": {
+          "id": null, 
+          "label_sv": "Intermedi\u00e4rt spr\u00e5k till \u00f6vers\u00e4ttningar", 
+          "repeatable": true
+        }, 
+        "m": {
+          "id": null, 
+          "label_sv": "Originalspr\u00e5k till bilagor (ej libretto)", 
+          "repeatable": true
+        }, 
+        "n": {
+          "id": null, 
+          "label_sv": "Originalspr\u00e5k till libretto", 
+          "repeatable": true
         }, 
         "2": {
           "id": "sourceOfCode", 
@@ -5499,6 +5539,16 @@
           "label_sv": "Giltighetsdatum - slut", 
           "repeatable": false, 
           "label_en": "End of date valid"
+        }, 
+        "o": {
+          "id": null, 
+          "label_sv": "Startdatum (eller enstaka datum) f\u00f6r samling/aggregat", 
+          "repeatable": false
+        }, 
+        "p": {
+          "id": null, 
+          "label_sv": "Slutdatum f\u00f6r samling/aggregat", 
+          "repeatable": false
         }, 
         "2": {
           "id": "sourceOfDate", 
@@ -6410,6 +6460,9 @@
           "label_sv": "F\u00f6rkortad upplaga", 
           "id": "abridgedEdition", 
           "label_en": "Abridged edition"
+        }, 
+        "7": {
+          "label_sv": "Annan upplaga specificerad i #2"
         }
       }, 
       "ind2": {
@@ -6503,6 +6556,9 @@
           "label_sv": "F\u00f6rkortad upplaga", 
           "id": "abridgedEdition", 
           "label_en": "Abridged edition"
+        }, 
+        "7": {
+          "label_sv": "Annan upplaga specificerad i #2"
         }
       }, 
       "ind2": {
@@ -6604,6 +6660,11 @@
           "label_en": "Item number", 
           "entity": "Item"
         }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Instans som tilldelat klassifikationskoden", 
+          "repeatable": false
+        }, 
         "2": {
           "id": "sourceOfNumber", 
           "label_sv": "Kod f\u00f6r klassifikationssystem (SAB, anv\u00e4nd \"kssb/<uppl.nummer>\")", 
@@ -6679,17 +6740,17 @@
           "repeatable": true, 
           "label_en": "Digits added from classfication number in schedule or external table"
         }, 
-        "6": {
-          "id": "linkage", 
-          "label_sv": "L\u00e4nkning", 
-          "repeatable": false, 
-          "label_en": "Linkage"
-        }, 
-        "8": {
-          "id": "fieldLinkAndSequenceNumber", 
-          "label_sv": "L\u00e4nk- och sekvensnummer", 
+        "t": {
+          "id": "digitsAddedFromInternalSubarrangementOrAddTable", 
+          "label_sv": "Siffror tillagda fr\u00e5n intern underordning eller till\u00e4ggstabell", 
           "repeatable": true, 
-          "label_en": "Field link and sequence number"
+          "label_en": "Digits added from internal subarrangement or add table"
+        }, 
+        "u": {
+          "id": "numberBeingAnalyzed", 
+          "label_sv": "Analyserad klassifikationskod", 
+          "repeatable": true, 
+          "label_en": "Number being analyzed"
         }, 
         "v": {
           "id": "numberInInternalSubarrangementOrAddTableWhereInstructionsAreFound", 
@@ -6715,15 +6776,17 @@
           "repeatable": true, 
           "label_en": "Table identification"
         }, 
-        "t": {
-          "id": "digitsAddedFromInternalSubarrangementOrAddTable", 
-          "label_en": "Digits added from internal subarrangement or add table", 
-          "repeatable": true
+        "6": {
+          "id": "linkage", 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false, 
+          "label_en": "Linkage"
         }, 
-        "u": {
-          "id": "numberBeingAnalyzed", 
-          "label_en": "Number being analyzed", 
-          "repeatable": true
+        "8": {
+          "id": "fieldLinkAndSequenceNumber", 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true, 
+          "label_en": "Field link and sequence number"
         }
       }, 
       "label_en": "Synthesized Classification Number Components"
@@ -8695,7 +8758,7 @@
     "250": {
       "id": "editionStatement", 
       "label_sv": "Upplaga", 
-      "repeatable": false, 
+      "repeatable": true, 
       "ind1": {
         "_": {
           "label_sv": "odefinierad", 
@@ -8725,6 +8788,11 @@
           "repeatable": false, 
           "label_en": "Remainder of edition statement", 
           "entity": "Manifestation"
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
         }, 
         "6": {
           "id": "linkage", 
@@ -9287,6 +9355,71 @@
         }
       }, 
       "label_en": "Projected Publication Date"
+    }, 
+    "264": {
+      "id": null, 
+      "label_sv": "Uppgift om produktion, publicering, distribution, tillverkning och/eller copyright", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "Odefinierad / F\u00f6rsta eller enda utgivare / Sammanfattad utgivningstid"
+        }, 
+        "2": {
+          "label_sv": "Mellanliggande utgivare (d\u00e5 upprepade utgivarbyten redovisas)"
+        }, 
+        "3": {
+          "label_sv": "Nuvarande/Senaste utgivare (d\u00e5 utgivarbyten redovisas)"
+        }
+      }, 
+      "ind2": {
+        "0": {
+          "label_sv": "Produktion"
+        }, 
+        "1": {
+          "label_sv": "Publicering"
+        }, 
+        "2": {
+          "label_sv": "Distribution"
+        }, 
+        "3": {
+          "label_sv": "Tillverkning"
+        }, 
+        "4": {
+          "label_sv": "Copyright (\u00e5r/datum)"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Ort/Plats", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Producent, f\u00f6rlag, utgivare, distribut\u00f6r, manufakt\u00f6r/tillverkare", 
+          "repeatable": true
+        }, 
+        "c": {
+          "id": null, 
+          "label_sv": "\u00c5r/datum", 
+          "repeatable": true
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
     }, 
     "270": {
       "id": "address", 
@@ -9984,6 +10117,31 @@
           "repeatable": true, 
           "label_en": "Technical specifications of medium"
         }, 
+        "k": {
+          "id": null, 
+          "label_sv": "Layout", 
+          "repeatable": true
+        }, 
+        "m": {
+          "id": null, 
+          "label_sv": "Bokformat", 
+          "repeatable": true
+        }, 
+        "n": {
+          "id": null, 
+          "label_sv": "Typsnittsstorlek", 
+          "repeatable": true
+        }, 
+        "o": {
+          "id": null, 
+          "label_sv": "Polaritet", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "K\u00e4lla f\u00f6r kontrollerade termer", 
+          "repeatable": false
+        }, 
         "3": {
           "id": "materialsSpecified", 
           "label_sv": "Del av materialet som avses", 
@@ -10355,6 +10513,244 @@
         }
       }, 
       "label_en": "Planar Coordinate Data"
+    }, 
+    "344": {
+      "id": null, 
+      "label_sv": "Egenskaper f\u00f6r resursens ljud", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Typ av inspelning", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Inspelningsmedium", 
+          "repeatable": true
+        }, 
+        "c": {
+          "id": null, 
+          "label_sv": "Uppspelningshastighet", 
+          "repeatable": true
+        }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Sp\u00e5regenskaper (analog skiva eller cyllinder)", 
+          "repeatable": true
+        }, 
+        "e": {
+          "id": null, 
+          "label_sv": "Sp\u00e5rkonfiguration (ljudfilm)", 
+          "repeatable": true
+        }, 
+        "f": {
+          "id": null, 
+          "label_sv": "Bandkonfiguration (ljudband)", 
+          "repeatable": true
+        }, 
+        "g": {
+          "id": null, 
+          "label_sv": "Kanalkonfiguration", 
+          "repeatable": true
+        }, 
+        "h": {
+          "id": null, 
+          "label_sv": "S\u00e4rskilda ljudtekniska egensskaper", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "K\u00e4lla f\u00f6r kontrollerade termer", 
+          "repeatable": false
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
+    "345": {
+      "id": null, 
+      "label_sv": "Egenskaper f\u00f6r resursens projicering (filmer)", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Presentationsformat", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Projiceringshastighet", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "K\u00e4lla f\u00f6r kontrollerade termer", 
+          "repeatable": false
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
+    "346": {
+      "id": null, 
+      "label_sv": "Egenskaper f\u00f6r resursens videokodning", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Videoformat", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Uts\u00e4ndningsstandard", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "K\u00e4lla f\u00f6r kontrollerade termer", 
+          "repeatable": false
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
+    "347": {
+      "id": null, 
+      "label_sv": "Egenskaper f\u00f6r resursens digitala kodning", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Filtyp", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Format f\u00f6r kodning", 
+          "repeatable": true
+        }, 
+        "c": {
+          "id": null, 
+          "label_sv": "Filstorlek", 
+          "repeatable": true
+        }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Uppl\u00f6sning", 
+          "repeatable": true
+        }, 
+        "e": {
+          "id": null, 
+          "label_sv": "Regional kodning", 
+          "repeatable": true
+        }, 
+        "f": {
+          "id": null, 
+          "label_sv": "\u00d6verf\u00f6ringshastighet", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "K\u00e4lla f\u00f6r kontrollerade termer", 
+          "repeatable": false
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
     }, 
     "351": {
       "id": "organizationAndArrangementOfMaterials", 
@@ -11175,6 +11571,46 @@
       }, 
       "label_en": "Trade Availability Information"
     }, 
+    "377": {
+      "id": null, 
+      "label_sv": "Associerat spr\u00e5k", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "Spr\u00e5kkod enligt ISO 639-2B"
+        }, 
+        "7": {
+          "label_sv": "Spr\u00e5kkod enligt standard specificerad i $2"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Spr\u00e5kkod", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "System/standard f\u00f6r angivet spr\u00e5k", 
+          "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
     "380": {
       "id": null, 
       "label_sv": "Verkets genre eller form", 
@@ -11265,18 +11701,60 @@
       "repeatable": true, 
       "ind1": {
         "_": {
-          "label_sv": "odefinierad"
+          "label_sv": "Ej preciserad"
+        }, 
+        "0": {
+          "label_sv": "Bes\u00e4ttning"
+        }, 
+        "1": {
+          "label_sv": "Partiell bes\u00e4ttning"
         }
       }, 
       "ind2": {
         "_": {
-          "label_sv": "odefinierad"
+          "label_sv": "Uppgift saknas"
+        }, 
+        "0": {
+          "label_sv": "Indexeras ej"
+        }, 
+        "1": {
+          "label_sv": "Indexeras"
         }
       }, 
       "subfield": {
         "a": {
           "id": null, 
           "label_sv": "Bes\u00e4ttning", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Soloinstrument eller solost\u00e4mma", 
+          "repeatable": true
+        }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Kompletterande instrument", 
+          "repeatable": true
+        }, 
+        "n": {
+          "id": null, 
+          "label_sv": "Antal instrument/r\u00f6ster i f\u00f6reg\u00e5ende delf\u00e4lt", 
+          "repeatable": true
+        }, 
+        "p": {
+          "id": null, 
+          "label_sv": "Alternativ bes\u00e4ttning", 
+          "repeatable": true
+        }, 
+        "s": {
+          "id": null, 
+          "label_sv": "Totalt antal bes\u00e4ttningsmedlemmar", 
+          "repeatable": true
+        }, 
+        "v": {
+          "id": null, 
+          "label_sv": "Anm\u00e4rkning", 
           "repeatable": true
         }, 
         "2": {
@@ -11326,6 +11804,21 @@
           "label_sv": "Beteckning i tematiskt index", 
           "repeatable": true
         }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r tematiskt index", 
+          "repeatable": false
+        }, 
+        "e": {
+          "id": null, 
+          "label_sv": "Utgivare associerad med opusnummer", 
+          "repeatable": false
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "K\u00e4lla f\u00f6r tematisk indexkod", 
+          "repeatable": false
+        }, 
         "6": {
           "id": null, 
           "label_sv": "L\u00e4nkning", 
@@ -11357,6 +11850,130 @@
           "id": null, 
           "label_sv": "Tonart", 
           "repeatable": true
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
+    "385": {
+      "id": null, 
+      "label_sv": "M\u00e5lgruppskategori", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "M\u00e5lgruppsterm", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "M\u00e5lgruppskod", 
+          "repeatable": true
+        }, 
+        "m": {
+          "id": null, 
+          "label_sv": "Demografisk m\u00e5lgruppsterm", 
+          "repeatable": false
+        }, 
+        "n": {
+          "id": null, 
+          "label_sv": "Demografisk m\u00e5lgruppskod", 
+          "repeatable": false
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "AuktID f\u00f6r sammanh\u00f6rande auktoritetspost", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r kategorischema", 
+          "repeatable": false
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
+    "386": {
+      "id": null, 
+      "label_sv": "Upphovs/-medvekandekategori", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Term f\u00f6r upphovs-/medverkandekategori", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r upphovs-/medverkandekategori", 
+          "repeatable": true
+        }, 
+        "m": {
+          "id": null, 
+          "label_sv": "Term f\u00f6r demografisk upphovs-/medverkandekategori", 
+          "repeatable": false
+        }, 
+        "n": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r demografisk upphovs-/medverkandekategori", 
+          "repeatable": false
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "AuktID f\u00f6r sammanh\u00f6rande auktoritetspost", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r kategorischema", 
+          "repeatable": false
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
         }, 
         "6": {
           "id": null, 
@@ -13114,8 +13731,8 @@
           "id": "summaryEtcNote", 
           "label_sv": "Anm\u00e4rkningstext", 
           "repeatable": false, 
-          "mandatory": true, 
           "label_en": "Summary, etc. note", 
+          "mandatory": true, 
           "entity": "Expression"
         }, 
         "b": {
@@ -13175,32 +13792,32 @@
       "repeatable": true, 
       "ind1": {
         "_": {
-          "label_sv": "M\u00e5lgrupp:", 
+          "label_sv": "M\u00e5lgrupp", 
           "id": "audience", 
           "label_en": "Audience"
         }, 
         "0": {
-          "label_sv": "L\u00e4sniv\u00e5:", 
+          "label_sv": "L\u00e4s-/utbildningsniv\u00e5", 
           "id": "readingGradeLevel", 
           "label_en": "Reading grade level"
         }, 
         "1": {
-          "label_sv": "\u00c5ldersniv\u00e5:", 
+          "label_sv": "\u00c5ldersniv\u00e5", 
           "id": "interestAgeLevel", 
           "label_en": "Interest age level"
         }, 
         "2": {
-          "label_sv": "Intresseniv\u00e5:", 
+          "label_sv": "Intresseniv\u00e5", 
           "id": "interestGradeLevel", 
           "label_en": "Interest grade level"
         }, 
         "3": {
-          "label_sv": "Speciell m\u00e5lgrupp:", 
+          "label_sv": "K\u00e4nnetecken f\u00f6r peciell m\u00e5lgrupp", 
           "id": "specialAudienceCharacteristics", 
           "label_en": "Special audience characteristics"
         }, 
         "4": {
-          "label_sv": "Motivationsniv\u00e5:", 
+          "label_sv": "Motivations-/sv\u00e5righetsniv\u00e5", 
           "id": "motivationInterestLevel", 
           "label_en": "Motivation interest level"
         }, 
@@ -14620,7 +15237,7 @@
       "subfield": {
         "a": {
           "id": "languageNote", 
-          "label_sv": "Anm\u00e4rkningstext", 
+          "label_sv": "Preciserande spr\u00e5kanm\u00e4rkning", 
           "repeatable": false, 
           "label_en": "Language note", 
           "mandatory": true, 
@@ -14628,7 +15245,7 @@
         }, 
         "b": {
           "id": "informationCodeOrAlphabet", 
-          "label_sv": "Uppgift om alfabet, stilsort eller kod", 
+          "label_sv": "Uppgift om alfabet/skriftart, stilsort eller notationssystem", 
           "repeatable": true, 
           "label_en": "Information code or alphabet", 
           "entity": "Manifestation"
@@ -17020,9 +17637,15 @@
       "repeatable": true, 
       "ind1": {
         "_": {
-          "label_sv": "Odefinierad", 
+          "label_sv": "Uppgift saknas", 
           "id": "undefined", 
           "label_en": "Undefined"
+        }, 
+        "0": {
+          "label_sv": "Period som resursen t\u00e4cker eller avbildar"
+        }, 
+        "1": {
+          "label_sv": "Period f\u00f6r resursens skapande eller ursprung"
         }
       }, 
       "ind2": {
@@ -22748,6 +23371,11 @@
           "label_en": "Linkage", 
           "entity": "Field"
         }, 
+        "7": {
+          "id": null, 
+          "label_sv": "Kontrollkoder f\u00f6r l\u00e4nkm\u00e5let", 
+          "repeatable": false
+        }, 
         "8": {
           "id": "fieldLinkAndSequenceNumber", 
           "label_sv": "L\u00e4nk- och sekvensnummer", 
@@ -22963,6 +23591,11 @@
           "label_en": "Linkage", 
           "entity": "Field"
         }, 
+        "7": {
+          "id": null, 
+          "label_sv": "Kontrollkoder f\u00f6r l\u00e4nkm\u00e5let", 
+          "repeatable": false
+        }, 
         "8": {
           "id": "fieldLinkAndSequenceNumber", 
           "label_sv": "L\u00e4nk- och sekvensnummer", 
@@ -23156,6 +23789,18 @@
           "label_en": "Relator code", 
           "entity": "Work"
         }, 
+        "6": {
+          "id": "linkage", 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false, 
+          "label_en": "Linkage", 
+          "entity": "Field"
+        }, 
+        "7": {
+          "id": null, 
+          "label_sv": "Kontrollkoder f\u00f6r l\u00e4nkm\u00e5let", 
+          "repeatable": false
+        }, 
         "8": {
           "id": "fieldLinkAndSequenceNumber", 
           "label_sv": "L\u00e4nk- och sekvensnummer", 
@@ -23172,12 +23817,6 @@
           "id": "authorityRecordControlNumber", 
           "label_en": "Authority record control number", 
           "repeatable": true
-        }, 
-        "6": {
-          "id": "linkage", 
-          "label_en": "Linkage", 
-          "repeatable": false, 
-          "entity": "Field"
         }
       }, 
       "label_en": "Series Added Entry-Meeting Name", 
@@ -23380,6 +24019,11 @@
           "label_en": "Linkage", 
           "entity": "Field"
         }, 
+        "7": {
+          "id": null, 
+          "label_sv": "Kontrollkoder f\u00f6r l\u00e4nkm\u00e5let", 
+          "repeatable": false
+        }, 
         "8": {
           "id": "fieldLinkAndSequenceNumber", 
           "label_sv": "L\u00e4nk- och sekvensnummer", 
@@ -23404,7 +24048,7 @@
     }, 
     "856": {
       "id": "electronicLocationAndAccess", 
-      "label_sv": "Elektronisk adress och \u00e5tkomst", 
+      "label_sv": "Elektronisk adress och \u00e5tkomst (URI)", 
       "repeatable": true, 
       "ind1": {
         "_": {
@@ -23445,17 +24089,17 @@
       }, 
       "ind2": {
         "0": {
-          "label_sv": "Avser beskriven manifestation", 
+          "label_sv": "Beskriven manifestation", 
           "id": "resource", 
           "label_en": "Resource"
         }, 
         "1": {
-          "label_sv": "Avser annan manifestation av den beskrivna resursen", 
+          "label_sv": "Annan manifestation", 
           "id": "versionOfResource", 
           "label_en": "Version of resource"
         }, 
         "2": {
-          "label_sv": "Avser del, sammanfattning eller liknande av den beskrivna resursen", 
+          "label_sv": "Relaterad resurs", 
           "id": "relatedResource", 
           "label_en": "Related resource"
         }, 
@@ -24016,6 +24660,13 @@
           "label_en": "Undefined"
         }
       }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad", 
+          "id": "undefined", 
+          "label_en": "Undefined"
+        }
+      }, 
       "subfield": {
         "a": {
           "id": "replacementTitle", 
@@ -24048,11 +24699,73 @@
           "label_en": "Field link and sequence number"
         }
       }, 
-      "label_en": "Replacement Record Information", 
+      "label_en": "Replacement Record Information"
+    }, 
+    "883": {
+      "id": null, 
+      "label_sv": "Proveniens f\u00f6r maskingenererad metadata [avsett f\u00f6r maskinell uppdatering, anv\u00e4nds ej]", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "Uppgift saknas / Ej till\u00e4mpligt"
+        }, 
+        "0": {
+          "label_sv": "Helt maskingenererad"
+        }, 
+        "1": {
+          "label_sv": "Delvis maskingenererad"
+        }
+      }, 
       "ind2": {
         "_": {
-          "id": "undefined", 
-          "label_en": "Undefined"
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Genereringsprocess", 
+          "repeatable": false
+        }, 
+        "c": {
+          "id": null, 
+          "label_sv": "Tillf\u00f6rlitlighet", 
+          "repeatable": false
+        }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Genereringsdatum", 
+          "repeatable": false
+        }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r genererande instans", 
+          "repeatable": false
+        }, 
+        "x": {
+          "id": null, 
+          "label_sv": "Slutdatum f\u00f6r giltighet", 
+          "repeatable": false
+        }, 
+        "u": {
+          "id": null, 
+          "label_sv": "Uniform Resource Identifier (URI)", 
+          "repeatable": false
+        }, 
+        "w": {
+          "id": null, 
+          "label_sv": "ID bibliografisk k\u00e4llpost", 
+          "repeatable": true
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID auktoritetsk\u00e4llpost", 
+          "repeatable": true
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
         }
       }
     }, 
@@ -24366,8 +25079,7 @@
         "a": {
           "id": null, 
           "label_sv": "SAB-klassifikation", 
-          "repeatable": false, 
-          "mandatory": true
+          "repeatable": false
         }, 
         "6": {
           "id": null, 
@@ -24476,7 +25188,7 @@
           "label_en": "Three-dimensional artifact or naturally occurring object"
         }, 
         "t": {
-          "label_sv": "Text: handskrift", 
+          "label_sv": "Text: handskrift / opublicerad", 
           "id": "manuscriptLanguageMaterial", 
           "label_en": "Manuscript language material"
         }, 
@@ -24762,32 +25474,32 @@
           "label_en": "Unknown or not specified"
         }, 
         "a": {
-          "label_sv": "Sm\u00e5barn (t.o.m. f\u00f6rskole\u00e5ldern)", 
+          "label_sv": "Sm\u00e5barn (ca 0-5 \u00e5r)", 
           "id": "preschool", 
           "label_en": "Preschool"
         }, 
         "b": {
-          "label_sv": "F\u00f6rskola/L\u00e5gstadium", 
+          "label_sv": "Barn(ca 6-9 \u00e5r)", 
           "id": "primary", 
           "label_en": "Primary"
         }, 
         "c": {
-          "label_sv": "Mellan-/H\u00f6gstadium (hit \u00e4ven skolbok, allm\u00e4nt)", 
+          "label_sv": "Barn (ca 10-12 \u00e5r) / L\u00e4romedel", 
           "id": "preAdolescent", 
           "label_en": "Pre-adolescent"
         }, 
         "d": {
-          "label_sv": "Gymnasiestadiet och motsvarande", 
+          "label_sv": "Ton\u00e5r inkl. gymnasial utbildningsniv\u00e5 (ca 13-16 \u00e5r)", 
           "id": "adolescent", 
           "label_en": "Adolescent"
         }, 
         "e": {
-          "label_sv": "Vuxenlitteratur (ol\u00e4mpligt f\u00f6r minder\u00e5riga)", 
+          "label_sv": "Vuxna", 
           "id": "adult", 
           "label_en": "Adult"
         }, 
         "f": {
-          "label_sv": "Specialist", 
+          "label_sv": "Specialiserad", 
           "id": "specialized", 
           "label_en": "Specialized"
         }, 
@@ -24797,7 +25509,7 @@
           "label_en": "General"
         }, 
         "j": {
-          "label_sv": "Barn- och ungdomslitteratur", 
+          "label_sv": "Barn och ungdom (0-16 \u00e5r)", 
           "id": "juvenile", 
           "label_en": "Juvenile"
         }, 
@@ -24977,7 +25689,8 @@
           "label_en": "Law reports and digests"
         }, 
         "y": {
-          "label_sv": "\u00c5rsbok"
+          "label_sv": "\u00c5rsbok", 
+          "id": "Yearbook"
         }, 
         "z": {
           "label_sv": "F\u00f6rdrag", 
@@ -24990,10 +25703,12 @@
           "label_en": "Offprints"
         }, 
         "5": {
-          "label_sv": "Kalender"
+          "label_sv": "Kalender", 
+          "id": "Calendar"
         }, 
         "6": {
-          "label_sv": "Tecknad serie / Serieroman"
+          "label_sv": "Tecknad serie / Serieroman", 
+          "id": "ComicOrGraphicNovel"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda", 
@@ -25579,7 +26294,7 @@
       }, 
       "musicFormat": {
         "a": {
-          "label_sv": "Partitur f\u00f6r konsertframf\u00f6rande", 
+          "label_sv": "Komplett partitur f\u00f6r konsertframf\u00f6rande (full score)", 
           "id": "fullScore", 
           "label_en": "Full score"
         }, 
@@ -25594,7 +26309,7 @@
           "label_en": "Accompaniment reduced for keyboard"
         }, 
         "d": {
-          "label_sv": "S\u00e5ngst\u00e4mma", 
+          "label_sv": "S\u00e5ngpartitur utan ackompanjemang", 
           "id": "voiceScore", 
           "label_en": "Voice score"
         }, 
@@ -25604,18 +26319,24 @@
           "label_en": "Condensed score or piano-conductor score"
         }, 
         "g": {
-          "label_sv": "Kompakt st\u00e4mma(anv\u00e4nds ej)", 
+          "label_sv": "Kompakt partitur(anv\u00e4nds ej)", 
           "id": "closeScore", 
           "label_en": "Close score"
         }, 
         "h": {
-          "label_sv": "K\u00f6rst\u00e4mma"
+          "label_sv": "K\u00f6rpartitur"
         }, 
         "i": {
           "label_sv": "Reducerat partitur (condensed scoore)"
         }, 
         "j": {
           "label_sv": "Direktion f\u00f6r enstaka instrument (performer-conductor part)"
+        }, 
+        "k": {
+          "label_sv": "Vokalpartitur"
+        }, 
+        "l": {
+          "label_sv": "Komplett musikalisk notation f\u00f6r konsertframf\u00f6rande (score)"
         }, 
         "m": {
           "label_sv": "Flera st\u00e4mformat tillsammans", 
@@ -25687,32 +26408,32 @@
           "label_en": "Unknown or not specified"
         }, 
         "a": {
-          "label_sv": "Sm\u00e5barn (t.o.m. f\u00f6rskole\u00e5ldern)", 
+          "label_sv": "Sm\u00e5barn (ca 0-5 \u00e5r)", 
           "id": "preschool", 
           "label_en": "Preschool"
         }, 
         "b": {
-          "label_sv": "F\u00f6rskola/L\u00e5gstadium", 
+          "label_sv": "Barn (ca 6-9 \u00e5r)", 
           "id": "primary", 
           "label_en": "Primary"
         }, 
         "c": {
-          "label_sv": "Mellan-/H\u00f6gstadium (hit \u00e4ven skolbok, allm\u00e4nt)", 
+          "label_sv": "Barn (ca 10-12 \u00e5r) / L\u00e4romedel", 
           "id": "preAdolescent", 
           "label_en": "Pre-adolescent"
         }, 
         "d": {
-          "label_sv": "Gymnasiestadiet och motsvarande", 
+          "label_sv": "Ton\u00e5r inkl. gymnasial utbildningsniv\u00e5 (ca 13-16 \u00e5r)", 
           "id": "adolescent", 
           "label_en": "Adolescent"
         }, 
         "e": {
-          "label_sv": "Vuxenlitteratur (ol\u00e4mpligt f\u00f6r minder\u00e5riga)", 
+          "label_sv": "Vuxna", 
           "id": "adult", 
           "label_en": "Adult"
         }, 
         "f": {
-          "label_sv": "Specialist", 
+          "label_sv": "Specialiserad", 
           "id": "specialized", 
           "label_en": "Specialized"
         }, 
@@ -25722,7 +26443,7 @@
           "label_en": "General"
         }, 
         "j": {
-          "label_sv": "Barn- och ungdomslitteratur", 
+          "label_sv": "Barn och ungdom (0-16 \u00e5r)", 
           "id": "juvenile", 
           "label_en": "Juvenile"
         }, 
@@ -26596,32 +27317,32 @@
           "label_en": "Unknown or not specified"
         }, 
         "a": {
-          "label_sv": "Sm\u00e5barn (t.o.m. f\u00f6rskole\u00e5ldern)", 
+          "label_sv": "Sm\u00e5barn (ca 0-5 \u00e5r)", 
           "id": "preschool", 
           "label_en": "Preschool"
         }, 
         "b": {
-          "label_sv": "F\u00f6rskola/L\u00e5gstadium", 
+          "label_sv": "Barn (ca 6-9 \u00e5r)", 
           "id": "primary", 
           "label_en": "Primary"
         }, 
         "c": {
-          "label_sv": "Mellan-/H\u00f6gstadium (hit \u00e4ven skolbok, allm\u00e4nt)", 
+          "label_sv": "Barn (ca 10-12 \u00e5r) / L\u00e4romedel", 
           "id": "preAdolescent", 
           "label_en": "Pre-adolescent"
         }, 
         "d": {
-          "label_sv": "Gymnasiestadiet och motsvarande", 
+          "label_sv": "Ton\u00e5r inkl. gymnasial utbildningsniv\u00e5 (ca 13-16 \u00e5r)", 
           "id": "adolescent", 
           "label_en": "Adolescent"
         }, 
         "e": {
-          "label_sv": "Vuxenlitteratur (ol\u00e4mpligt f\u00f6r minder\u00e5riga)", 
+          "label_sv": "Vuxna", 
           "id": "adult", 
           "label_en": "Adult"
         }, 
         "f": {
-          "label_sv": "Specialist", 
+          "label_sv": "Specialiserad", 
           "id": "specialized", 
           "label_en": "Specialized"
         }, 
@@ -26631,7 +27352,7 @@
           "label_en": "General"
         }, 
         "j": {
-          "label_sv": "Barn- och ungdomslitteratur", 
+          "label_sv": "Barn och ungdom (0-16 \u00e5r)", 
           "id": "juvenile", 
           "label_en": "Juvenile"
         }, 
@@ -26907,32 +27628,32 @@
           "label_en": "Unknown or not specified"
         }, 
         "a": {
-          "label_sv": "Sm\u00e5barn (t.o.m. f\u00f6rskole\u00e5ldern)", 
+          "label_sv": "Sm\u00e5barn (ca 0-5 \u00e5r)", 
           "id": "preschool", 
           "label_en": "Preschool"
         }, 
         "b": {
-          "label_sv": "F\u00f6rskola/L\u00e5gstadium", 
+          "label_sv": "Barn (ca 6-9 \u00e5r)", 
           "id": "primary", 
           "label_en": "Primary"
         }, 
         "c": {
-          "label_sv": "Mellan-/H\u00f6gstadium (hit \u00e4ven skolbok, allm\u00e4nt)", 
+          "label_sv": "Barn (ca 10-12 \u00e5r) / L\u00e4romedel", 
           "id": "preAdolescent", 
           "label_en": "Pre-adolescent"
         }, 
         "d": {
-          "label_sv": "Gymnasiestadiet och motsvarande", 
+          "label_sv": "Ton\u00e5r inkl. gymnasial utbildningsniv\u00e5 (ca 13-16 \u00e5r)", 
           "id": "adolescent", 
           "label_en": "Adolescent"
         }, 
         "e": {
-          "label_sv": "Vuxenlitteratur (ol\u00e4mpligt f\u00f6r minder\u00e5riga)", 
+          "label_sv": "Vuxna", 
           "id": "adult", 
           "label_en": "Adult"
         }, 
         "f": {
-          "label_sv": "Specialist", 
+          "label_sv": "Specialiserad", 
           "id": "specialized", 
           "label_en": "Specialized"
         }, 
@@ -26942,7 +27663,7 @@
           "label_en": "General"
         }, 
         "j": {
-          "label_sv": "Barn- och ungdomslitteratur", 
+          "label_sv": "Barn och ungdom (0-16 \u00e5r)", 
           "id": "juvenile", 
           "label_en": "Juvenile"
         }, 
@@ -28192,46 +28913,60 @@
       }, 
       "computerMaterial": {
         "a": {
-          "label_sv": "Datorbandmagasin"
+          "label_sv": "Datorbandmagasin", 
+          "id": "TapeCartridge"
         }, 
         "b": {
-          "label_sv": "Datorminnesmodul"
+          "label_sv": "Datorminnesmodul", 
+          "id": "ChipCartridge"
         }, 
         "c": {
-          "label_sv": "Datorskivmagasin"
+          "label_sv": "Datorskivmagasin", 
+          "id": "ComputerOpticalDiscCartridge"
         }, 
         "d": {
-          "label_sv": "Datorskiva (ospecificerad typ)"
+          "label_sv": "Datorskiva (ospecificerad typ)", 
+          "id": "ComputerDisc"
         }, 
         "e": {
-          "label_sv": "Datorskivmagasin (ospecificerad typ)"
+          "label_sv": "Datorskivmagasin (ospecificerad typ)", 
+          "id": "ComputerDiscCartridge"
         }, 
         "f": {
-          "label_sv": "Datorkassett"
+          "label_sv": "Datorkassett", 
+          "id": "TapeCassette"
         }, 
         "h": {
-          "label_sv": "Datorbandspole"
+          "label_sv": "Datorbandspole", 
+          "id": "TapeReel"
         }, 
         "j": {
-          "label_sv": "Skiva f\u00f6r magnetisk lagring (disketter)"
+          "label_sv": "Skiva f\u00f6r magnetisk lagring (disketter)", 
+          "id": "MagneticDisk"
         }, 
         "k": {
-          "label_sv": "Datorkort"
+          "label_sv": "Datorkort", 
+          "id": "ComputerCard"
         }, 
         "m": {
-          "label_sv": "Magnet-optisk skiva"
+          "label_sv": "Magnet-optisk skiva", 
+          "id": "MagnetoOpticalDisc"
         }, 
         "o": {
-          "label_sv": "Optisk skiva (CD-A, CD-R, CD-ROM)"
+          "label_sv": "Optisk skiva (CD-A, CD-R, CD-ROM)", 
+          "id": "OpticalDisc"
         }, 
         "r": {
-          "label_sv": "Onlineresurs"
+          "label_sv": "Onlineresurs", 
+          "id": "OnlineResource"
         }, 
         "u": {
-          "label_sv": "Ospecificerad b\u00e4rare"
+          "label_sv": "Ospecificerad b\u00e4rare", 
+          "id": "Unspecified"
         }, 
         "z": {
-          "label_sv": "Annan b\u00e4rare"
+          "label_sv": "Annan b\u00e4rare", 
+          "id": "Other"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29232,10 +29967,12 @@
           "label_en": "Microopaque"
         }, 
         "h": {
-          "label_sv": "Mikrofilmsremsa"
+          "label_sv": "Mikrofilmsremsa", 
+          "id": "MicrofilmSlip"
         }, 
         "j": {
-          "label_sv": "Mikrofilmsrulle"
+          "label_sv": "Mikrofilmsrulle", 
+          "id": "MicrofilmRoll"
         }, 
         "u": {
           "label_sv": "Ospecificerad b\u00e4rare", 
@@ -29554,7 +30291,8 @@
       }, 
       "nonProjMaterial": {
         "a": {
-          "label_sv": "Aktivitetskort"
+          "label_sv": "Aktivitetskort", 
+          "id": "ActivityCard"
         }, 
         "c": {
           "label_sv": "Kollage", 
@@ -29597,7 +30335,8 @@
           "label_en": "Print"
         }, 
         "k": {
-          "label_sv": "Affisch eller poster"
+          "label_sv": "Affisch eller poster", 
+          "id": "Poster"
         }, 
         "l": {
           "label_sv": "Teknisk ritning", 
@@ -29615,16 +30354,20 @@
           "label_en": "Flash card"
         }, 
         "p": {
-          "label_sv": "Post- eller vykort"
+          "label_sv": "Post- eller vykort", 
+          "id": "Postcard"
         }, 
         "q": {
-          "label_sv": "Ikon"
+          "label_sv": "Ikon", 
+          "id": "Icon"
         }, 
         "r": {
-          "label_sv": "r\u00f6ntgenfoto"
+          "label_sv": "r\u00f6ntgenfoto", 
+          "id": "Radiograph"
         }, 
         "s": {
-          "label_sv": "Provtryck"
+          "label_sv": "Provtryck", 
+          "id": "StudyPrint"
         }, 
         "u": {
           "label_sv": "Ospecificerad b\u00e4rare", 
@@ -29632,7 +30375,8 @@
           "label_en": "Unspecified"
         }, 
         "v": {
-          "label_sv": "Fotografi (ospecificerad typ)"
+          "label_sv": "Fotografi (ospecificerad typ)", 
+          "id": "Photograph"
         }, 
         "z": {
           "label_sv": "Annan eller blandad b\u00e4rare", 
@@ -29918,7 +30662,8 @@
           "label_en": "Film cassette"
         }, 
         "o": {
-          "label_sv": "Filmrulle"
+          "label_sv": "Filmrulle", 
+          "id": "FilmRoll"
         }, 
         "r": {
           "label_sv": "Filmspole", 
@@ -35771,6 +36516,11 @@
           "repeatable": false, 
           "label_en": "Terms of availability"
         }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
+        }, 
         "z": {
           "id": "canceledInvalidIsbn", 
           "label_sv": "Makulerat/ogiltigt ISBN", 
@@ -35897,6 +36647,11 @@
           "label_sv": "Till\u00e4ggskod efter standardnummer eller -kod", 
           "repeatable": false, 
           "label_en": "Additional codes following the standard number or code"
+        }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
         }, 
         "z": {
           "id": "canceledInvalidStandardNumberOrCode", 
@@ -36197,6 +36952,11 @@
           "repeatable": false, 
           "label_en": "Name of extraterrestrial body"
         }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
+          "repeatable": true
+        }, 
         "2": {
           "id": "source", 
           "label_sv": "Kodsystem anv\u00e4nt i f\u00e4ltet", 
@@ -36414,6 +37174,11 @@
           "repeatable": true, 
           "label_en": "ISO code"
         }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
+          "repeatable": true
+        }, 
         "2": {
           "id": "sourceOfLocalCode", 
           "label_sv": "System f\u00f6r lokal utvidgning", 
@@ -36526,6 +37291,16 @@
         "g": {
           "id": null, 
           "label_sv": "D\u00f6ds\u00e5r/-datum", 
+          "repeatable": false
+        }, 
+        "o": {
+          "id": null, 
+          "label_sv": "Startdatum (eller enstaka datum) f\u00f6r samling/aggregat", 
+          "repeatable": false
+        }, 
+        "p": {
+          "id": null, 
+          "label_sv": "Slutdatum f\u00f6r samling/aggregat", 
           "repeatable": false
         }, 
         "s": {
@@ -37234,6 +38009,9 @@
           "label_sv": "F\u00f6rkortad upplaga", 
           "id": "abridged", 
           "label_en": "Abridged"
+        }, 
+        "7": {
+          "label_sv": "Annan upplaga specificerad i #2"
         }
       }, 
       "ind2": {
@@ -37315,6 +38093,9 @@
           "label_sv": "F\u00f6rkortad upplaga", 
           "id": "abridged", 
           "label_en": "Abridged"
+        }, 
+        "7": {
+          "label_sv": "Annan upplaga specificerad i #2"
         }
       }, 
       "ind2": {
@@ -38578,6 +39359,40 @@
       }, 
       "label_en": "Heading-Genre/Form Term"
     }, 
+    "162": {
+      "id": null, 
+      "label_sv": "S\u00f6kelement - Bes\u00e4ttning (musik)", 
+      "repeatable": false, 
+      "mandatory": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Bes\u00e4ttning", 
+          "repeatable": false, 
+          "mandatory": true
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
     "180": {
       "id": "headingGeneralSubdivision", 
       "label_sv": "S\u00f6kelement - Allm\u00e4n underindelning", 
@@ -38972,6 +39787,83 @@
       }, 
       "label_en": "Complex See Also Reference-Subject"
     }, 
+    "368": {
+      "id": null, 
+      "label_sv": "Andra attribut f\u00f6r person- och organisationsnamn", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Typ av organisation etc.", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Typ av jurisdiktion", 
+          "repeatable": true
+        }, 
+        "c": {
+          "id": null, 
+          "label_sv": "Annan beteckning", 
+          "repeatable": true
+        }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Titel/officiell rang f\u00f6r kunglig, adlig eller religi\u00f6s person", 
+          "repeatable": false
+        }, 
+        "s": {
+          "id": null, 
+          "label_sv": "Start\u00e5r/-datum", 
+          "repeatable": false
+        }, 
+        "t": {
+          "id": null, 
+          "label_sv": "Slut\u00e5r/-datum", 
+          "repeatable": false
+        }, 
+        "u": {
+          "id": null, 
+          "label_sv": "Uniform Resource Identifier (URI)", 
+          "repeatable": true
+        }, 
+        "v": {
+          "id": null, 
+          "label_sv": "Uppgiften belagd i (k\u00e4lla)", 
+          "repeatable": true
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r kontrollerad vokabul\u00e4r", 
+          "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
     "370": {
       "id": null, 
       "label_sv": "Associerad plats/ort", 
@@ -39039,7 +39931,7 @@
         }, 
         "0": {
           "id": null, 
-          "label_sv": "Relaterat AuktID", 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
           "repeatable": true
         }, 
         "2": {
@@ -39189,7 +40081,7 @@
         }, 
         "0": {
           "id": null, 
-          "label_sv": "Relaterat AuktID", 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
           "repeatable": true
         }, 
         "2": {
@@ -39211,7 +40103,7 @@
     }, 
     "373": {
       "id": null, 
-      "label_sv": "Affiliering", 
+      "label_sv": "Associerad grupp eller institution", 
       "repeatable": true, 
       "ind1": {
         "_": {
@@ -39226,7 +40118,7 @@
       "subfield": {
         "a": {
           "id": null, 
-          "label_sv": "Affiliering", 
+          "label_sv": "Associerad grupp eller institution", 
           "repeatable": true, 
           "mandatory": true
         }, 
@@ -39252,7 +40144,7 @@
         }, 
         "0": {
           "id": null, 
-          "label_sv": "Relaterat AuktID", 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
           "repeatable": true
         }, 
         "2": {
@@ -39315,7 +40207,7 @@
         }, 
         "0": {
           "id": null, 
-          "label_sv": "Relaterat AuktID", 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
           "repeatable": true
         }, 
         "2": {
@@ -39445,7 +40337,7 @@
         }, 
         "0": {
           "id": null, 
-          "label_sv": "Relaterat AuktID", 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
           "repeatable": true
         }, 
         "2": {
@@ -39486,13 +40378,54 @@
         "a": {
           "id": null, 
           "label_sv": "Spr\u00e5kkod", 
-          "repeatable": true, 
-          "mandatory": true
+          "repeatable": true
         }, 
         "2": {
           "id": null, 
-          "label_sv": "System/praxis f\u00f6r angiven spr\u00e5kkod", 
+          "label_sv": "System/praxis f\u00f6r angivet spr\u00e5k", 
           "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
+    "378": {
+      "id": null, 
+      "label_sv": "Fullst\u00e4ndigare namnform - Personnamn", 
+      "repeatable": false, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "q": {
+          "id": null, 
+          "label_sv": "Fullst\u00e4ndigare namnform", 
+          "repeatable": false
+        }, 
+        "u": {
+          "id": null, 
+          "label_sv": "Uniform Resource Identifier (URI)", 
+          "repeatable": true
+        }, 
+        "v": {
+          "id": null, 
+          "label_sv": "Uppgiften belagd i (k\u00e4lla)", 
+          "repeatable": true
         }, 
         "6": {
           "id": null, 
@@ -39524,6 +40457,11 @@
         "a": {
           "id": null, 
           "label_sv": "Genre/Form", 
+          "repeatable": true
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
           "repeatable": true
         }, 
         "2": {
@@ -39573,6 +40511,11 @@
           "label_sv": "Uppgiften belagd i (k\u00e4lla)", 
           "repeatable": true
         }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
+          "repeatable": true
+        }, 
         "2": {
           "id": null, 
           "label_sv": "Kod f\u00f6r kontrollerad lista", 
@@ -39596,7 +40539,10 @@
       "repeatable": true, 
       "ind1": {
         "_": {
-          "label_sv": "odefinierad"
+          "label_sv": "Ej preciserad"
+        }, 
+        "0": {
+          "label_sv": "Bes\u00e4ttning"
         }
       }, 
       "ind2": {
@@ -39608,6 +40554,41 @@
         "a": {
           "id": null, 
           "label_sv": "Bes\u00e4ttning", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Soloinstrument eller solost\u00e4mma", 
+          "repeatable": true
+        }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Kompletterande instrument", 
+          "repeatable": true
+        }, 
+        "n": {
+          "id": null, 
+          "label_sv": "Antal instrument/r\u00f6ster i f\u00f6reg\u00e5ende delf\u00e4lt", 
+          "repeatable": true
+        }, 
+        "p": {
+          "id": null, 
+          "label_sv": "Alternativ bes\u00e4ttning", 
+          "repeatable": true
+        }, 
+        "s": {
+          "id": null, 
+          "label_sv": "Totalt antal bes\u00e4ttningsmedlemmar", 
+          "repeatable": true
+        }, 
+        "v": {
+          "id": null, 
+          "label_sv": "Anm\u00e4rkning", 
+          "repeatable": true
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
           "repeatable": true
         }, 
         "2": {
@@ -39657,6 +40638,21 @@
           "label_sv": "Beteckning i tematiskt index", 
           "repeatable": true
         }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r tematiskt index", 
+          "repeatable": false
+        }, 
+        "e": {
+          "id": null, 
+          "label_sv": "Utgivare associerad med opusnummer", 
+          "repeatable": false
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "K\u00e4lla f\u00f6r tematisk indexkod", 
+          "repeatable": false
+        }, 
         "6": {
           "id": null, 
           "label_sv": "L\u00e4nkning", 
@@ -39688,6 +40684,130 @@
           "id": null, 
           "label_sv": "Tonart", 
           "repeatable": true
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
+    "385": {
+      "id": null, 
+      "label_sv": "M\u00e5lgruppskategori", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "M\u00e5lgruppsterm", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "M\u00e5lgruppskod", 
+          "repeatable": true
+        }, 
+        "m": {
+          "id": null, 
+          "label_sv": "Demografisk m\u00e5lgruppsterm", 
+          "repeatable": false
+        }, 
+        "n": {
+          "id": null, 
+          "label_sv": "Demografisk m\u00e5lgruppskod", 
+          "repeatable": false
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r kategorischema", 
+          "repeatable": false
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
+    "386": {
+      "id": null, 
+      "label_sv": "Upphovs-/medverkandekategori", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Term f\u00f6r upphovs-/medverkandekategori", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r upphovs-/medverkandekategori", 
+          "repeatable": true
+        }, 
+        "m": {
+          "id": null, 
+          "label_sv": "Term f\u00f6r demografisk upphovs-/medverkandekategori", 
+          "repeatable": false
+        }, 
+        "n": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r demografisk upphovs-/medverkandekategori", 
+          "repeatable": false
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande auktoritetspost", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r kategorischema", 
+          "repeatable": false
+        }, 
+        "3": {
+          "id": null, 
+          "label_sv": "Del av materialet som avses", 
+          "repeatable": false
         }, 
         "6": {
           "id": null, 
@@ -41188,6 +42308,49 @@
         }
       }, 
       "label_en": "See From Tracing-Form Subdivision"
+    }, 
+    "462": {
+      "id": null, 
+      "label_sv": "Se-h\u00e4nvisning - Bes\u00e4ttning (musik)", 
+      "repeatable": true, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Bes\u00e4ttning", 
+          "repeatable": false, 
+          "mandatory": true
+        }, 
+        "i": {
+          "id": null, 
+          "label_sv": "Relationsbeteckning/-fras", 
+          "repeatable": true
+        }, 
+        "w": {
+          "id": null, 
+          "label_sv": "Kontrollkoder f\u00f6r h\u00e4nvisningen", 
+          "repeatable": false
+        }, 
+        "4": {
+          "id": null, 
+          "label_sv": "Relationskod", 
+          "repeatable": true
+        }, 
+        "5": {
+          "id": null, 
+          "label_sv": "Institution f\u00f6r vilken f\u00e4ltet g\u00e4ller", 
+          "repeatable": true
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
     }, 
     "500": {
       "id": "seeAlsoFromTracingPersonalName", 
@@ -42749,6 +43912,64 @@
       }, 
       "label_en": "See Also From Tracing-Form Subdivision"
     }, 
+    "562": {
+      "id": null, 
+      "label_sv": "Se \u00e4ven-h\u00e4nvisning - Bes\u00e4ttning (musik)", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Bes\u00e4ttning", 
+          "repeatable": false, 
+          "mandatory": true
+        }, 
+        "i": {
+          "id": null, 
+          "label_sv": "Relationsbeteckning/-fras", 
+          "repeatable": true
+        }, 
+        "w": {
+          "id": null, 
+          "label_sv": "Kontrollkoder f\u00f6r h\u00e4nvisningen", 
+          "repeatable": false
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "H\u00e4nvisningsm\u00e5lets AuktID", 
+          "repeatable": true
+        }, 
+        "4": {
+          "id": null, 
+          "label_sv": "Relationskod", 
+          "repeatable": true
+        }, 
+        "5": {
+          "id": null, 
+          "label_sv": "Institution f\u00f6r vilken f\u00e4ltet g\u00e4ller", 
+          "repeatable": true
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
     "640": {
       "id": "seriesDatesOfPublicationAndOrSequentialDesignation", 
       "label_sv": "Series alfanumeriska och/eller kronologiska volymbeteckningar", 
@@ -43411,6 +44632,166 @@
         }
       }, 
       "label_en": "Source Data Found"
+    }, 
+    "672": {
+      "id": null, 
+      "label_sv": "Titel associerad med s\u00f6kelementet", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "0": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "1": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "2": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "3": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "4": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "5": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "6": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "7": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "8": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "9": {
+          "label_sv": "icke-filerande tecken"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Titel", 
+          "repeatable": false, 
+          "mandatory": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "\u00d6vrig titelinformation", 
+          "repeatable": false
+        }, 
+        "f": {
+          "id": null, 
+          "label_sv": "Associerat \u00e5r/datum", 
+          "repeatable": false
+        }, 
+        "w": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande bibliografisk post", 
+          "repeatable": true
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r relaterad auktoritetspost", 
+          "repeatable": true
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
+    "673": {
+      "id": null, 
+      "label_sv": "Titel som inte \u00e4r associerad med s\u00f6kelementet", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "0": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "1": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "2": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "3": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "4": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "5": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "6": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "7": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "8": {
+          "label_sv": "icke-filerande tecken"
+        }, 
+        "9": {
+          "label_sv": "icke-filerande tecken"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Titel", 
+          "repeatable": false, 
+          "mandatory": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "\u00d6vrig titelinformation", 
+          "repeatable": false
+        }, 
+        "f": {
+          "id": null, 
+          "label_sv": "Associerat \u00e5r/datum", 
+          "repeatable": false
+        }, 
+        "w": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r sammanh\u00f6rande bibliografisk post", 
+          "repeatable": true
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID-nummer f\u00f6r relaterad auktoritetspost", 
+          "repeatable": true
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
     }, 
     "675": {
       "id": "sourceDataNotFound", 
@@ -45136,6 +46517,85 @@
       }, 
       "label_en": "Established Heading Linking Entry-Genre/Form Term"
     }, 
+    "762": {
+      "id": null, 
+      "label_sv": "L\u00e4nkf\u00e4lt - Bes\u00e4ttning (musik)", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "0": {
+          "label_sv": "LCSH/LC authority files"
+        }, 
+        "1": {
+          "label_sv": "LCSH for children's literature"
+        }, 
+        "2": {
+          "label_sv": "MeSH/NLM authority files"
+        }, 
+        "3": {
+          "label_sv": "NAL subject authority file"
+        }, 
+        "4": {
+          "label_sv": "System ej specificerat"
+        }, 
+        "5": {
+          "label_sv": "Canadian SH/ NLC authority file"
+        }, 
+        "6": {
+          "label_sv": "R\u00e9pertoire des vedettes-mati\u00e8re/NLC"
+        }, 
+        "7": {
+          "label_sv": "Instans specificerad i $2"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Bes\u00e4ttning", 
+          "repeatable": false, 
+          "mandatory": true
+        }, 
+        "w": {
+          "id": null, 
+          "label_sv": "Kontrollkoder f\u00f6r h\u00e4nvisningen", 
+          "repeatable": false
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "L\u00e4nkm\u00e5lets kontrollnummer", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r \u00e4mnesordssystem/thesaurus", 
+          "repeatable": true
+        }, 
+        "5": {
+          "id": null, 
+          "label_sv": "Institution f\u00f6r vilken f\u00e4ltet g\u00e4ller", 
+          "repeatable": true
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }, 
+        "9": {
+          "id": null, 
+          "label_sv": "Relation till den auktoriserade formen (1XX)", 
+          "repeatable": false
+        }
+      }
+    }, 
     "780": {
       "id": "subdivisionHeadingLinkingEntryGeneralSubdivision", 
       "label_sv": "L\u00e4nkf\u00e4lt - Allm\u00e4n underindelning", 
@@ -45723,7 +47183,7 @@
     }, 
     "856": {
       "id": "electronicLocationAndAccess", 
-      "label_sv": "Elektronisk adress och \u00e5tkomst", 
+      "label_sv": "Elektronisk adress och \u00e5tkomst (URI)", 
       "repeatable": true, 
       "ind1": {
         "_": {
@@ -45764,22 +47224,22 @@
       }, 
       "ind2": {
         "0": {
-          "label_sv": "Identitet (avser beskriven version)", 
+          "label_sv": "Beskriven auktoritet", 
           "id": "resource", 
           "label_en": "Resource"
         }, 
         "1": {
-          "label_sv": "Elektronisk version av beskrivet dokument", 
+          "label_sv": "Annan version", 
           "id": "versionOfResource", 
           "label_en": "Version of resource"
         }, 
         "2": {
-          "label_sv": "Annat samband med det beskrivna dokumentet", 
+          "label_sv": "Relaterad resurs", 
           "id": "relatedResource", 
           "label_en": "Related resource"
         }, 
         "8": {
-          "label_sv": "Ej preciserad", 
+          "label_sv": "F\u00f6rh\u00e5llandet ej preciserat", 
           "id": "noDisplayConstantGenerated", 
           "label_en": "No display constant generated"
         }, 
@@ -46298,6 +47758,74 @@
         }
       }, 
       "label_en": "Alternate Graphic Representation"
+    }, 
+    "883": {
+      "id": null, 
+      "label_sv": "Proveniens f\u00f6r maskingenererad metadata", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "Uppgift saknas / Ej till\u00e4mpligt"
+        }, 
+        "0": {
+          "label_sv": "Helt maskingenererad"
+        }, 
+        "1": {
+          "label_sv": "Delvis maskingenererad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Genereringsprocess", 
+          "repeatable": false
+        }, 
+        "c": {
+          "id": null, 
+          "label_sv": "Tillf\u00f6rlitlighet", 
+          "repeatable": false
+        }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Genereringsdatum", 
+          "repeatable": false
+        }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r genererande instans", 
+          "repeatable": false
+        }, 
+        "x": {
+          "id": null, 
+          "label_sv": "Slutdatum f\u00f6r giltighet", 
+          "repeatable": false
+        }, 
+        "u": {
+          "id": null, 
+          "label_sv": "Uniform Resource Identifier (URI)", 
+          "repeatable": false
+        }, 
+        "w": {
+          "id": null, 
+          "label_sv": "ID bibliografisk k\u00e4llpost", 
+          "repeatable": true
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID auktoritetsk\u00e4llpost", 
+          "repeatable": true
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
     }, 
     "886": {
       "id": null, 
@@ -47607,7 +49135,7 @@
               "length": 3, 
               "default": "999", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "ensmallmentExactWithRightJustWithStartingLoser", 
+              "propRef": "reductionRatioExactRightJustifiedWithLeadingZero", 
               "label_en": "Reduction Ratio"
             }, 
             {
@@ -48619,6 +50147,11 @@
           "repeatable": false, 
           "label_en": "Terms of availability"
         }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
+        }, 
         "z": {
           "id": "canceledInvalidIsbn", 
           "label_sv": "Makulerat/ogiltigt  ISBN", 
@@ -48791,6 +50324,11 @@
           "repeatable": false, 
           "label_en": "Additional codes following the standard number or code"
         }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
+        }, 
         "z": {
           "id": "canceledInvalidStandardNumberOrCode", 
           "label_sv": "Makulerat/ogiltigt nummer", 
@@ -48842,6 +50380,11 @@
           "label_sv": "ISRN eller annat standardnummer f\u00f6r tekniska rapporter", 
           "repeatable": false, 
           "label_en": "Standard Technical Report Number"
+        }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Best\u00e4mning", 
+          "repeatable": true
         }, 
         "z": {
           "id": "canceledInvalidStrn", 
@@ -49260,6 +50803,9 @@
         }, 
         "1": {
           "label_sv": "F\u00f6rkortad upplaga"
+        }, 
+        "7": {
+          "label_sv": "Annan upplaga specificerad i #2"
         }
       }, 
       "ind2": {
@@ -49328,14 +50874,14 @@
           "label_sv": "Ordningselement f\u00f6r uppst\u00e4llningen", 
           "repeatable": false
         }, 
-        "2": {
-          "id": null, 
-          "label_sv": "Kod f\u00f6r klassifikationssystem (SAB, anv\u00e4nd \"kssb/<uppl.nummer>\")", 
-          "repeatable": false
-        }, 
         "6": {
           "id": null, 
           "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r klassifikationssystem (SAB, anv\u00e4nd \"kssb/<uppl.nummer>\")", 
           "repeatable": false
         }, 
         "8": {
@@ -50992,6 +52538,78 @@
         }
       }
     }, 
+    "752": {
+      "id": null, 
+      "label_sv": "Exemplarspecifikt biuppslag - Namn p\u00e5 orter och territorier (hierarkisk uppst\u00e4llning)", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Land / \u00d6verordnat territorium", 
+          "repeatable": true
+        }, 
+        "b": {
+          "id": null, 
+          "label_sv": "Delstat, provins, l\u00e4n eller motsvarande", 
+          "repeatable": false
+        }, 
+        "c": {
+          "id": null, 
+          "label_sv": "Landskap, region eller motsvarande", 
+          "repeatable": true
+        }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Stad, kommun", 
+          "repeatable": false
+        }, 
+        "f": {
+          "id": null, 
+          "label_sv": "Stads- eller kommundel (motsvarande)", 
+          "repeatable": true
+        }, 
+        "g": {
+          "id": null, 
+          "label_sv": "Annat geografiskt omr\u00e5de", 
+          "repeatable": true
+        }, 
+        "h": {
+          "id": null, 
+          "label_sv": "Utomjordiskt territorium", 
+          "repeatable": true
+        }, 
+        "2": {
+          "id": null, 
+          "label_sv": "K\u00e4lla (kod) f\u00f6r uppslagsformen", 
+          "repeatable": false
+        }, 
+        "4": {
+          "id": null, 
+          "label_sv": "Funktionskod", 
+          "repeatable": true
+        }, 
+        "6": {
+          "id": null, 
+          "label_sv": "L\u00e4nkning", 
+          "repeatable": false
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
     "787": {
       "id": null, 
       "label_sv": "Lokalt l\u00e4nkf\u00e4lt - Annat samband", 
@@ -52246,7 +53864,7 @@
     }, 
     "856": {
       "id": "electronicLocationAndAccess", 
-      "label_sv": "Elektronisk adress och \u00e5tkomst", 
+      "label_sv": "Elektronisk adress och \u00e5tkomst (URI)", 
       "repeatable": true, 
       "ind1": {
         "_": {
@@ -52287,22 +53905,22 @@
       }, 
       "ind2": {
         "0": {
-          "label_sv": "Identitet (avser beskriven version)", 
+          "label_sv": "Manifestation som beskrivs i sammanh\u00f6rande bibliografisk post", 
           "id": "resource", 
           "label_en": "Resource"
         }, 
         "1": {
-          "label_sv": "Elektronisk version av beskrivet dokument", 
+          "label_sv": "Annan manifestation \u00e4n den som beskrivs i sammanh\u00f6rande bibliografisk post", 
           "id": "versionOfResource", 
           "label_en": "Version of resource"
         }, 
         "2": {
-          "label_sv": "Annat samband med det beskrivna dokumentet", 
+          "label_sv": "Relaterad resurs", 
           "id": "relatedResource", 
           "label_en": "Related resource"
         }, 
         "8": {
-          "label_sv": "Ej preciserad", 
+          "label_sv": "F\u00f6rh\u00e5llandet ej preciserat", 
           "id": "noDisplayConstantGenerated", 
           "label_en": "No display constant generated"
         }, 
@@ -54071,6 +55689,74 @@
       }, 
       "label_en": "Alternate Graphic Representation"
     }, 
+    "883": {
+      "id": null, 
+      "label_sv": "Proveniens f\u00f6r maskingenererad metadata", 
+      "repeatable": true, 
+      "ind1": {
+        "_": {
+          "label_sv": "Uppgift saknas / Ej till\u00e4mpligt"
+        }, 
+        "0": {
+          "label_sv": "Helt maskingenererad"
+        }, 
+        "1": {
+          "label_sv": "Delvis maskingenererad"
+        }
+      }, 
+      "ind2": {
+        "_": {
+          "label_sv": "odefinierad"
+        }
+      }, 
+      "subfield": {
+        "a": {
+          "id": null, 
+          "label_sv": "Genereringsprocess", 
+          "repeatable": false
+        }, 
+        "c": {
+          "id": null, 
+          "label_sv": "Tillf\u00f6rlitlighet", 
+          "repeatable": false
+        }, 
+        "d": {
+          "id": null, 
+          "label_sv": "Genereringsdatum", 
+          "repeatable": false
+        }, 
+        "q": {
+          "id": null, 
+          "label_sv": "Kod f\u00f6r genererande instans", 
+          "repeatable": false
+        }, 
+        "x": {
+          "id": null, 
+          "label_sv": "Slutdatum f\u00f6r giltighet", 
+          "repeatable": false
+        }, 
+        "u": {
+          "id": null, 
+          "label_sv": "Uniform Resource Identifier (URI)", 
+          "repeatable": false
+        }, 
+        "w": {
+          "id": null, 
+          "label_sv": "ID bibliografisk k\u00e4llpost", 
+          "repeatable": true
+        }, 
+        "0": {
+          "id": null, 
+          "label_sv": "ID auktoritetsk\u00e4llpost", 
+          "repeatable": true
+        }, 
+        "8": {
+          "id": null, 
+          "label_sv": "L\u00e4nk- och sekvensnummer", 
+          "repeatable": true
+        }
+      }
+    }, 
     "886": {
       "id": null, 
       "label_sv": "Uppgift i annat MARC-format [maskinellt konv. poster]", 
@@ -55815,46 +57501,60 @@
       }, 
       "computerMaterial": {
         "a": {
-          "label_sv": "Datorbandmagasin"
+          "label_sv": "Datorbandmagasin", 
+          "id": "TapeCartridge"
         }, 
         "b": {
-          "label_sv": "Datorminnesmodul"
+          "label_sv": "Datorminnesmodul", 
+          "id": "ChipCartridge"
         }, 
         "c": {
-          "label_sv": "Datorskivmagasin"
+          "label_sv": "Datorskivmagasin", 
+          "id": "ComputerOpticalDiscCartridge"
         }, 
         "d": {
-          "label_sv": "Datorskiva (ospecificerad typ)"
+          "label_sv": "Datorskiva (ospecificerad typ)", 
+          "id": "ComputerDisc"
         }, 
         "e": {
-          "label_sv": "Datorskivmagasin (ospecificerad typ)"
+          "label_sv": "Datorskivmagasin (ospecificerad typ)", 
+          "id": "ComputerDiscCartridge"
         }, 
         "f": {
-          "label_sv": "Datorkassett"
+          "label_sv": "Datorkassett", 
+          "id": "TapeCassette"
         }, 
         "h": {
-          "label_sv": "Datorbandspole"
+          "label_sv": "Datorbandspole", 
+          "id": "TapeReel"
         }, 
         "j": {
-          "label_sv": "Skiva f\u00f6r magnetisk lagring (disketter)"
+          "label_sv": "Skiva f\u00f6r magnetisk lagring (disketter)", 
+          "id": "MagneticDisk"
         }, 
         "k": {
-          "label_sv": "Datorkort"
+          "label_sv": "Datorkort", 
+          "id": "ComputerCard"
         }, 
         "m": {
-          "label_sv": "Magnet-optisk skiva"
+          "label_sv": "Magnet-optisk skiva", 
+          "id": "MagnetoOpticalDisc"
         }, 
         "o": {
-          "label_sv": "Optisk skiva (CD-A, CD-R, CD-ROM)"
+          "label_sv": "Optisk skiva (CD-A, CD-R, CD-ROM)", 
+          "id": "OpticalDisc"
         }, 
         "r": {
-          "label_sv": "Onlineresurs"
+          "label_sv": "Onlineresurs", 
+          "id": "OnlineResource"
         }, 
         "u": {
-          "label_sv": "Ospecificerad b\u00e4rare"
+          "label_sv": "Ospecificerad b\u00e4rare", 
+          "id": "Unspecified"
         }, 
         "z": {
-          "label_sv": "Annan b\u00e4rare"
+          "label_sv": "Annan b\u00e4rare", 
+          "id": "Other"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -56855,10 +58555,12 @@
           "label_en": "Microopaque"
         }, 
         "h": {
-          "label_sv": "Mikrofilmsremsa"
+          "label_sv": "Mikrofilmsremsa", 
+          "id": "MicrofilmSlip"
         }, 
         "j": {
-          "label_sv": "Mikrofilmsrulle"
+          "label_sv": "Mikrofilmsrulle", 
+          "id": "MicrofilmRoll"
         }, 
         "u": {
           "label_sv": "Ospecificerad b\u00e4rare", 
@@ -57177,7 +58879,8 @@
       }, 
       "nonProjMaterial": {
         "a": {
-          "label_sv": "Aktivitetskort"
+          "label_sv": "Aktivitetskort", 
+          "id": "ActivityCard"
         }, 
         "c": {
           "label_sv": "Kollage", 
@@ -57220,7 +58923,8 @@
           "label_en": "Print"
         }, 
         "k": {
-          "label_sv": "Affisch eller poster"
+          "label_sv": "Affisch eller poster", 
+          "id": "Poster"
         }, 
         "l": {
           "label_sv": "Teknisk ritning", 
@@ -57238,16 +58942,20 @@
           "label_en": "Flash card"
         }, 
         "p": {
-          "label_sv": "Post- eller vykort"
+          "label_sv": "Post- eller vykort", 
+          "id": "Postcard"
         }, 
         "q": {
-          "label_sv": "Ikon"
+          "label_sv": "Ikon", 
+          "id": "Icon"
         }, 
         "r": {
-          "label_sv": "r\u00f6ntgenfoto"
+          "label_sv": "r\u00f6ntgenfoto", 
+          "id": "Radiograph"
         }, 
         "s": {
-          "label_sv": "Provtryck"
+          "label_sv": "Provtryck", 
+          "id": "StudyPrint"
         }, 
         "u": {
           "label_sv": "Ospecificerad b\u00e4rare", 
@@ -57255,7 +58963,8 @@
           "label_en": "Unspecified"
         }, 
         "v": {
-          "label_sv": "Fotografi (ospecificerad typ)"
+          "label_sv": "Fotografi (ospecificerad typ)", 
+          "id": "Photograph"
         }, 
         "z": {
           "label_sv": "Annan eller blandad b\u00e4rare", 
@@ -57541,7 +59250,8 @@
           "label_en": "Film cassette"
         }, 
         "o": {
-          "label_sv": "Filmrulle"
+          "label_sv": "Filmrulle", 
+          "id": "FilmRoll"
         }, 
         "r": {
           "label_sv": "Filmspole", 
