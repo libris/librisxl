@@ -8,7 +8,7 @@ with open(fpath) as f:
 
 show_repeatable = True
 
-entity_map = {
+rename_type_map = {
     'Books': 'Book',
     'Maps': 'Map',
     'Serials': 'Serial',
@@ -72,9 +72,10 @@ def fixprop_to_name(propname, key):
 
 out = OrderedDict()
 
+resourceMaps = out['resourceMaps'] = OrderedDict()
 compositionTypeMap = out['compositionTypeMap'] = OrderedDict()
 contentTypeMap = out['contentTypeMap'] = OrderedDict()
-carrierTypeMap = out['carrierTypeMap'] = OrderedDict()
+#carrierTypeMap = out['carrierTypeMap'] = OrderedDict()
 
 section = out['bib'] = OrderedDict()
 
@@ -84,7 +85,6 @@ for tag, field in sorted(marcmap['bib'].items()):
         continue
     prevf, outf = outf, OrderedDict()
     section[tag] = outf
-    outf['entity'] = ""
     fixmaps = field.get('fixmaps')
     subfields = field.get('subfield')
     subtypes = None
@@ -94,13 +94,18 @@ for tag, field in sorted(marcmap['bib'].items()):
         for fixmap in fixmaps:
             content_type = None
             if len(fixmaps) > 1:
-                outf['tokenTypeMap'] = tokenTypeMap
+                if tag == '008':
+                    rt_bl_map = outf.setdefault('recTypeBibLevelMap', OrderedDict())
+                else:
+                    outf['tokenTypeMap'] = tokenTypeMap
+
                 type_name = fixmap.get('term') or fixmap['name'].split(tag + '_')[1]
-                type_name = entity_map.get(type_name, type_name)
+                type_name = rename_type_map.get(type_name, type_name)
                 fm = outf[type_name] = OrderedDict()
 
                 if tag == '008':
                     for combo in fixmap['matchRecTypeBibLevel']:
+                        rt_bl_map[combo] = type_name
                         rt, bl = combo
                         subtype_name = fixprop_to_name('typeOfRecord', rt)
                         if not subtype_name:
@@ -134,29 +139,52 @@ for tag, field in sorted(marcmap['bib'].items()):
                 off, length = col['offset'], col['length']
                 key = (#str(off) if length == 1 else
                         '[%s:%s]' % (off, off+length))
-                fm[key] = {'key': col.get('propRef', col.get('propId'))}
                 dfn_key = col.get('propRef')
+                if not dfn_key:
+                    continue
+                fm[key] = col_dfn = {'property': dfn_key or col.get('propId')}
+                col_dfn['domainEntity'] = "Record"
 
-                if dfn_key in fixprop_typerefs['007']:
-                    typemap = carrierTypeMap.setdefault(type_name, OrderedDict())
-                elif dfn_key in fixprop_typerefs['008'] and content_type:
-                    typemap = content_type.setdefault('formClasses', OrderedDict())
-                else:
-                    typemap = None
-
-                if typemap is not None:
+                if (fixprop_typerefs['007'] or
+                        (fixprop_typerefs['008'] and content_type)
+                        ) and dfn_key in fixprops:
+                    col_dfn['uriTemplate'] = "%s:{_}" % dfn_key
+                    col_dfn['valueMap'] = dfn_key
                     valuemap = fixprops[dfn_key]
+                    typemap = resourceMaps.setdefault(dfn_key, OrderedDict())
+                    #print dfn_key
                     for key, dfn in valuemap.items():
+                        # TODO: '_' actually means something occasionally..
                         if key in ('_', '|'): continue
                         if 'id' in dfn:
                             v = dfn['id']
                             subname = to_name(v)
                         else:
                             subname = dfn['label_sv']
-                        subdef = typemap[subname] = {dfn_key: key}
+                            #print " ", key, subname.encode('utf-8')
+                        assert typemap.get(key, subname) == subname
+                        typemap[key] = subname
+
+                #if dfn_key in fixprop_typerefs['007']:
+                #    typemap = carrierTypeMap.setdefault(type_name, OrderedDict())
+                #elif dfn_key in fixprop_typerefs['008'] and content_type:
+                #    typemap = content_type.setdefault('formClasses', OrderedDict())
+                #else:
+                #    typemap = None
+
+                #if typemap is not None:
+                #    valuemap = fixprops[dfn_key]
+                #    for key, dfn in valuemap.items():
+                #        if key in ('_', '|'): continue
+                #        if 'id' in dfn:
+                #            v = dfn['id']
+                #            subname = to_name(v)
+                #        else:
+                #            subname = dfn['label_sv']
+                #        subdef = typemap[subname] = {dfn_key: key}
 
     elif not subfields:
-        outf['key'] = field['id']
+        outf['addProperty'] = field['id']
 
     else:
         for ind_key in ('ind1', 'ind2'):
