@@ -1,7 +1,10 @@
 {
     "remotesearch": {
         "_class": "se.kb.libris.whelks.api.RemoteSearchRestlet",
-        "_params": "http://mproxy.libris.kb.se:8000/LC"
+        "_params": {
+            "LC":"http://mproxy.libris.kb.se:8000/LC",
+            "ESTER":"http://mproxy.libris.kb.se:8000/ESTER"
+        }
     },
     "resourcelist": {
         "_class": "se.kb.libris.whelks.api.ResourceListRestlet"

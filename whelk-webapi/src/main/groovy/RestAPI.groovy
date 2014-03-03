@@ -1076,14 +1076,16 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
     String description = "Query API for remote search"
     String id = "RemoteSearchAPI"
 
-    String remoteURL
+    Map remoteURLs
 
     MarcFrameConverter marcFrameConverter
 
+    final String DEFAULT_DATABASE = "LC"
+
     def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
 
-    RemoteSearchRestlet(urlString) {
-        remoteURL = urlString
+    RemoteSearchRestlet(Map settings) {
+        remoteURLs = settings
         mapper = new ObjectMapper()
     }
 
@@ -1098,6 +1100,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         def query = queryMap.get("q", null)
         int start = queryMap.get("start", "0") as int
         int n = queryMap.get("n", "10") as int
+        String database = queryMap.get("database", DEFAULT_DATABASE)
         def xmlRecords, queryStr, url, xmlDoc, id, xMarcJsonDoc, jsonRec, jsonDoc
         def results
         def docStrings = []
@@ -1116,32 +1119,24 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 }
                 queryStr += k + "=" + v
             }
-            url = new URL(remoteURL + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
+            if (remoteURLs.containsKey(database)) {
+                url = new URL(remoteURLs[database] + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
 
-            try {
-                log.debug("requesting data from url: $url")
-                xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
-                int numHits = xmlRecords.'zs:numberOfRecords'.toInteger()
-                docStrings = getXMLRecordStrings(xmlRecords)
-                results = new SearchResult(numHits)
-                for (docString in docStrings) {
-
-                        /*def responseXMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n"
-                        for (doc in docStrings) {
-                           responseXMLString += doc
-                        }
-                        response.setEntity(responseXMLString + "\n</records>", MediaType.APPLICATION_XML) */
-
-                        //Create MarcRecord from xml string and get id
+                try {
+                    log.debug("requesting data from url: $url")
+                    xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
+                    int numHits = xmlRecords.'zs:numberOfRecords'.toInteger()
+                    docStrings = getXMLRecordStrings(xmlRecords)
+                    results = new SearchResult(numHits)
+                    for (docString in docStrings) {
                         record = MarcXmlRecordReader.fromXml(docString)
-                        id = record.getControlfields("001").get(0).getData()
+                        //id = record.getControlfields("001").get(0).getData()
 
                         log.trace("Marcxmlrecordreader for $id done")
 
                         //Create Document with raw xml string as data
-                        xmlDoc = new Document()
-                                .withData(docString.getBytes("UTF-8"))
-                                .withEntry(["identifier": "/external/"+id, "dataset": "external", "contentType": "text/oaipmh+xml"])
+                        xmlDoc = new Document().withData(docString.getBytes("UTF-8")).withContentType("text/oaipmh+xml")
+                            //.withEntry(["identifier": "/external/"+id, "dataset": "external", "contentType": "text/oaipmh+xml"])
 
                         //Convert xmlDoc to x-marc-json (marcxml in json)
                         jsonRec = MarcJSONConverter.toJSONString(record)
@@ -1159,25 +1154,31 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                         //mapper = new ObjectMapper()
 
                         results.addHit(new IndexDocument(jsonDoc))
-                }
+                    }
 
-            } catch (org.xml.sax.SAXParseException spe) {
+                } catch (org.xml.sax.SAXParseException spe) {
                     log.error("Failed to parse XML: ${url.text}")
                     throw spe
-            } catch (Exception e) {
+                } catch (Exception e) {
                     log.error("Could not convert document from $docStrings")
                     throw e
+                }
+            } else {
+                response.setEntity(/{"Error": "Requested database $database is unknown."}/, MediaType.APPLICATION_JSON)
             }
-
-        } else {
+        } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
+            def databases = []
+            for (k in remoteURLs.keySet()) {
+                databases << [(k): "Lorem ipsum ..."]
+            }
+            response.setEntity(mapper.writeValueAsString(databases), MediaType.APPLICATION_JSON)
+        } else if (!query) {
             response.setEntity(/{"Error": "Use parameter \"q\"}/, MediaType.APPLICATION_JSON)
-        }
-
-        if (!results) {
+        } else if (results) {
+            response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
+        } else {
             response.setStatus(Status.SUCCESS_NO_CONTENT)
         }
-
-        response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
 
     }
 
