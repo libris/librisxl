@@ -295,7 +295,6 @@ class StandardWhelk implements Whelk {
             addToIndex(docs)
         }
         log.info("Filtered $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-
     }
 
     @Override

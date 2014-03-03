@@ -202,16 +202,16 @@ class ReindexOperator extends AbstractOperator {
             }
             if (indexing) {
                 log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
-                    if (fromStorage) {
-                        log.trace("Rebuilding storage from $fromStorage")
-                        try {
-                            docs << whelk.addToStorage(doc, fromStorage)
-                        } catch (WhelkAddException wae) {
-                            log.trace("Expected exception ${wae.message}")
-                        }
-                    } else {
-                        docs << doc
+                if (fromStorage) {
+                    log.trace("Rebuilding storage from $fromStorage")
+                    try {
+                        docs << whelk.addToStorage(doc, fromStorage)
+                    } catch (WhelkAddException wae) {
+                        log.trace("Expected exception ${wae.message}")
                     }
+                } else {
+                    docs << doc
+                }
                 if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
                     try {
                         whelk.addToGraphStore(docs, selectedComponents)
@@ -271,7 +271,6 @@ class ReindexOperator extends AbstractOperator {
         }
         return status
     }
-
 }
 
 
