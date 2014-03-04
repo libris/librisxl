@@ -1178,7 +1178,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                         if (!jsonDoc.identifier) {
                             jsonDoc.identifier = this.whelk.mintIdentifier(jsonDoc)
                         }
-                        log.trace("Marcframeconverter for $id done")
+                        log.trace("Marcframeconverter done")
 
                         //mapper = new ObjectMapper()
 

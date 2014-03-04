@@ -201,7 +201,7 @@ class StandardWhelk implements Whelk {
                 log.debug("No documents to index.")
             }
         } else {
-            log.info("Couldn't find any suitable indexes ... $activeIndexes")
+            log.debug("Couldn't find any suitable indexes ... $activeIndexes")
         }
     }
 

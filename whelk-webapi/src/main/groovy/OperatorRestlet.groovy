@@ -8,6 +8,7 @@ import org.restlet.resource.*
 import org.restlet.representation.*
 
 import org.codehaus.jackson.map.*
+import org.codehaus.jackson.map.SerializationConfig.Feature
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
@@ -61,6 +62,8 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
             operators.each { k,v ->
                 opMap[k] = v.status
             }
+            // Make output pretty
+            mapper.enable(Feature.INDENT_OUTPUT)
             def page = mapper.writeValueAsString(["operations":opMap])
 
             response.setEntity(page, MediaType.APPLICATION_JSON)
@@ -304,7 +307,6 @@ class BenchmarkOperator extends AbstractOperator {
         runningTime = System.currentTimeMillis() - startTime
         log.debug("$count documents read. Total time elapsed: ${runningTime/1000} seconds.")
     }
-
 }
 
 // Remake as Runnable
