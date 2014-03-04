@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import re
-from os.path import basename, join as pjoin
+from os import path as Path
 from ConfigParser import RawConfigParser
 from collections import OrderedDict as odict
 import json
 
-from marcmap_bandaid import propRefMapper as bandaid
 
 ENC = "latin-1"
 
-def parse_configs(confdir, lang):
+def parse_configs(confdir, lang, tokenmap):
     # FIXME: Errors in Hmarcfix:
     # - remove initial "e " at top of file
     # - add = after _ in [008GeneralRetention]
@@ -19,19 +18,19 @@ def parse_configs(confdir, lang):
     # - Master.cfg:134 repeats position key 13 twice (change second to e.g. 1301 to make it work)
     # TODO: add ['obsolete'] = True if "OBSOLETE" in label
 
-    master_cfg = read_config(pjoin(confdir, "master.cfg"))
+    master_cfg = read_config(Path.join(confdir, "master.cfg"))
 
-    afix_cfg = read_config(pjoin(confdir, "Amarcfix.cfg"))
+    afix_cfg = read_config(Path.join(confdir, "Amarcfix.cfg"))
     AUTH_CONFS = ["Amarc{0}xx.cfg".format(i) for i in xrange(9)]
-    a_cfg = read_config(pjoin(confdir, f) for f in AUTH_CONFS)
+    a_cfg = read_config(Path.join(confdir, f) for f in AUTH_CONFS)
 
-    bfix_cfg = read_config(pjoin(confdir, "Bmarcfix.cfg"))
+    bfix_cfg = read_config(Path.join(confdir, "Bmarcfix.cfg"))
     BIB_CONFS = ["Bmarc{0}xx.cfg".format(i) for i in xrange(10)]
-    b_cfg = read_config(pjoin(confdir, f) for f in BIB_CONFS)
+    b_cfg = read_config(Path.join(confdir, f) for f in BIB_CONFS)
 
     HOLDINGS_CONFS = ["Hmarc{0}xx.cfg".format(i) for i in (0, 3, 4, 6, 7, 8, 9)]
-    hfix_cfg = read_config(pjoin(confdir, "Hmarcfix.cfg"))
-    h_cfg = read_config(pjoin(confdir, f) for f in HOLDINGS_CONFS)
+    hfix_cfg = read_config(Path.join(confdir, "Hmarcfix.cfg"))
+    h_cfg = read_config(Path.join(confdir, f) for f in HOLDINGS_CONFS)
     #"country.cfg"
     #"lang.cfg"
 
@@ -154,14 +153,19 @@ def parse_configs(confdir, lang):
                         if prop_id not in fixprops:
                             fixprops[prop_id] = fixprop = odict()
                             for k, v in fix_cfg.items(enumkey):
-                                fixprop[k] = labelled(v.decode(ENC), lang)
+                                propdfn = labelled(v.decode(ENC), lang)
+                                fixprop[k] = propdfn
+                                fixpropmap = tokenmap['fixprops'].get(prop_id)
+                                if 'id' not in propdfn and fixpropmap:
+                                    if k in fixpropmap:
+                                        propdfn['id'] = fixpropmap[k]
                     else:
                         # should we really keep placeholder here?
                         col['placeholder'] = prop_id
                         try:
-                            col['propRef'] = bandaid[col['label_' + lang]]
-                        except: 
-                            1
+                            col['propRef'] = tokenmap['propRefs'][col['label_' + lang]]
+                        except KeyError:
+                            pass
                     columns.append(col)
 
             block[tagcode]['fixmaps'] = fixmaps.values()
@@ -228,19 +232,28 @@ def dmerge(a, b):
 
 if __name__ == '__main__':
 
-    from sys import argv, stdout
+    import sys
     from itertools import izip_longest
     def grouped(n, iterable): return izip_longest(*[iter(iterable)] * n)
 
-    cmd, args = basename(argv[0]), argv[1:]
+    args = sys.argv[:]
+    script = args.pop(0)
+    script_dir, cmd = Path.dirname(script), Path.basename(script)
     if len(args) < 2 or len(args) % 2 != 0:
         print "Usage: {0} CONFIG_DIR LANG [[CONFIG_DIR LANG]...]".format(cmd)
         exit()
 
+    with open(Path.join(script_dir, 'marcmap-tokenmaps.json')) as f:
+        tokenmap = json.load(f)
+
     prev = None
     for confdir, lang in grouped(2, args):
-        out = parse_configs(confdir, lang)
+        try:
+            out = parse_configs(confdir, lang, tokenmap)
+        except:
+            print >>sys.stderr, "Error in config dir <%s> for lang '%s'" % (confdir, lang)
+            raise
         prev = dmerge(out, prev) if prev else out
 
-    json.dump(out, stdout, indent=2)
+    json.dump(out, sys.stdout, indent=2)
 

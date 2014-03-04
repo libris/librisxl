@@ -1,0 +1,56 @@
+{
+
+  "propRefs": {
+      "Förminskningsgrad (exakt) - högerjust med inledande nolla": "reductionRatioExactRightJustifiedWithLeadingZero",
+      "Utgivningsland": "country",
+      "Årtal/Tid (1)": "yearTime1", 
+      "Årtal/Tid (2)": "yearTime2", 
+      "Årtal/Tid  (1)": "yearTime1", 
+      "Årtal/Tid  (2)": "yearTime2", 
+      "Datum för posten": "date",
+      "Språk": "language",
+      "Tidpunkt för granskning": "timeOfExamination",
+      "Posttyp": "typeOfRecord"
+  },
+
+  "fixprops": {
+    "booksContents": {
+      "5": "Calendar",
+      "6": "ComicOrGraphicNovel",
+      "y": "Yearbook"
+    },
+    "computerMaterial": {
+      "a": "TapeCartridge",
+      "b": "ChipCartridge",
+      "c": "ComputerOpticalDiscCartridge",
+      "d": "ComputerDisc",
+      "e": "ComputerDiscCartridge",
+      "f": "TapeCassette",
+      "h": "TapeReel",
+      "j": "MagneticDisk",
+      "k": "ComputerCard",
+      "m": "MagnetoOpticalDisc",
+      "o": "OpticalDisc",
+      "r": "OnlineResource",
+      "u": "Unspecified",
+      "z": "Other"
+    },
+    "microformMaterial": {
+      "h": "MicrofilmSlip",
+      "j": "MicrofilmRoll"
+    },
+    "motionPicMaterial": {
+      "o": "FilmRoll"
+    },
+    "nonProjMaterial": {
+      "a": "ActivityCard",
+      "k": "Poster",
+      "p": "Postcard",
+      "q": "Icon",
+      "r": "Radiograph",
+      "s": "StudyPrint",
+      "v": "Photograph"
+    }
+  }
+
+}
