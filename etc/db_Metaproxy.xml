@@ -1,0 +1,420 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<databas>
+<!-- Nationalbibliotek, etc. -->
+    <kod id="AGRALIN">
+        <namn>Wageningen UR</namn>
+        <alternativtnamn>Wageningen UR Library</alternativtnamn>
+        <land>Holland</land>
+        <kommentar>Bibliografiska uppgifter om b�cker och tidskrifter.</kommentar>
+        <adress>http://www.wageningenur.nl/</adress>
+    </kod>
+    <kod id="ARM">
+        <namn>Հայաստանի Ազգային Գրադարան</namn>
+        <alternativtnamn>Armeniens Nationalbibliotek</alternativtnamn>
+        <land>Armenien</land>
+        <kommentar></kommentar>
+        <adress>http://www.nla.am/</adress>
+    </kod>
+    <kod id="BIBSYS">
+        <namn>BIBSYS</namn>
+        <alternativtnamn>BIBSYS</alternativtnamn>
+        <land>Norge</land>
+        <kommentar>T�nk s�rskilt p� att r�tta felaktiga koder f�r medietyp och bibliografisk niv� (postetikett). Komplettera ofullst�ndiga 008-f�lt.</kommentar>
+        <adress>http://www.bibsys.no/</adress>
+    </kod>
+    <kod id="BNB">
+        <namn>British National Bibliography</namn>
+        <alternativtnamn>British National Bibliography</alternativtnamn>
+        <land>Storbritannien</land>
+        <kommentar></kommentar>
+        <adress>http://bnb.bl.uk/</adress>
+    </kod>
+    <kod id="BNE">
+        <namn>Biblioteca Nacional</namn>
+        <alternativtnamn>Spanska nationalbiblioteket</alternativtnamn>
+        <land>Spanien</land>
+        <kommentar></kommentar>
+        <adress>http://www.bne.es/es/Inicio/index.html</adress>
+    </kod>
+    <kod id="BNF">
+        <namn>Bibliothèque nationale de France</namn>
+        <alternativtnamn>Franska nationalbiblioteket</alternativtnamn>
+        <land>Frankrike</land>
+        <kommentar>Ej tillgänglig på måndagar. Unimarc-databas.</kommentar>
+        <adress>http://www.bnf.fr/fr/acc/x.accueil.html</adress>
+    </kod>
+    <kod id="BUL">
+        <namn>Българска академия на науките и изкуствата</namn>
+        <alternativtnamn>Bulgariska konst- och vetenskapsakademien</alternativtnamn>
+        <land>Bulgarien</land>
+        <kommentar></kommentar>
+        <adress>http://www.bas.bg/</adress>
+    </kod>
+    <kod id="CAN">
+        <namn>National Library of Canada</namn>
+        <alternativtnamn>National Library of Canada</alternativtnamn>
+        <land>Kanada</land>
+        <kommentar></kommentar>
+        <adress>https://www.collectionscanada.gc.ca/index-e.html</adress>
+    </kod>
+    <kod id="CASLIN">
+        <namn>Portál Souborného katalogu České republiky</namn>
+        <alternativtnamn>Union Catalogue of the Czech Republic</alternativtnamn>
+        <land>Tjeckien</land>
+        <kommentar></kommentar>
+        <adress>http://www.caslin.cz/</adress>
+    </kod>
+    <kod id="CORNELL">
+        <namn>Cornell University Library</namn>
+        <alternativtnamn>Cornell University Library</alternativtnamn>
+        <land>USA</land>
+        <kommentar></kommentar>
+        <adress>http://www.library.cornell.edu/</adress>
+    </kod>	
+    <kod id="DANBIB">
+        <namn>DANBIB</namn>
+        <alternativtnamn>DANBIB</alternativtnamn>
+        <land>Danmark</land>
+        <kommentar>Tänk särskilt på att poststatus (000/05) kan vara "d" (= borttagen) - ändra till "c". Komplettera ofullständiga 008-fält.</kommentar>
+        <adress>http://www.danbib.dk/</adress>
+    </kod>
+    <kod id="ESTER">
+        <namn>Estlands nationalbibliotek</namn>
+        <alternativtnamn>Eesti Rahvusraamatukogu</alternativtnamn>
+        <land>Estland</land>
+        <kommentar></kommentar>
+        <adress>http://www.nlib.ee/</adress>
+    </kod>
+    <kod id="FENNICA">
+        <namn>Finlands nationalbibliografi</namn>
+        <alternativtnamn>FENNICA</alternativtnamn>
+        <land>Finland</land>
+        <kommentar></kommentar>
+        <adress>https://fennica.linneanet.fi/vwebv/searchBasic?sk=sv_FI</adress>
+    </kod>
+    <kod id="GBV">
+        <namn>GBV - Union Catalog Northern Germany</namn>
+        <alternativtnamn>GBV - Gemeinsamer Bibliotheksverbund</alternativtnamn>
+        <land>Tyskland</land>
+        <kommentar>Web portal of Bremen, Hamburg, Mecklenburg-Vorpommern, Niedersachsen, Sachsen-Anhalt, Schleswig-Holstein, Thüringen and the Foundation of Prussian Cultural Heritage. Innehåller bland annat slaviskt material translittererat enligt regler med praxis nära de svenska forskningsbiblioteken. Tänk särskilt på att rätta diakriter + å, ä, ö.</kommentar>
+        <adress>https://www.gbv.de/?set_language=de</adress>
+    </kod>
+    <kod id="GEGNIR">
+        <namn>Icelandic Union Catalogue</namn>
+        <alternativtnamn>GEGNIR</alternativtnamn>
+        <land>Island</land>
+        <kommentar></kommentar>
+        <adress>http://gegnir.is/F?RN=777959032</adress>
+    </kod>
+    <kod id="GRE">
+        <namn>Συλλογικός Κατάλογος Ελληνικών Ακαδημαϊκών Βιβλιοθηκών</namn>
+        <alternativtnamn>Greek Academic Libraries Union Catalog</alternativtnamn>
+        <land>Grekland</land>
+        <kommentar></kommentar>
+        <adress>http://www.unioncatalog.gr/</adress>
+    </kod>
+    <kod id="HEBIS">
+        <namn>Das Hessische Bibliotheksinformationssystem</namn>
+        <alternativtnamn>Das Hessische Bibliotheksinformationssystem</alternativtnamn>
+        <land>Tyskland</land>
+        <kommentar>Samkatalog i Hessen och Rheinland-Pfalz</kommentar>
+        <adress>http://www.hebis.de/</adress>
+    </kod>
+    <kod id="IDS">
+        <namn>Informationsverbund Deutschschweiz Basel-Bern</namn>
+        <alternativtnamn>Informationsverbund Deutschschweiz Basel-Bern</alternativtnamn>
+        <land>Schweiz</land>
+        <kommentar>Samkatalog i Basel-Bern. Ej fullständiga MARC21-poster</kommentar>
+        <adress>http://aleph.unibas.ch/ALEPH</adress>
+    </kod>	
+    <kod id="IRN">
+        <namn>National Library and Archives Organisation of Iran</namn>
+        <alternativtnamn>National Library and Archives Organisation of Iran</alternativtnamn>
+        <land>Iran</land>
+        <kommentar></kommentar>
+        <adress>http://www.nlai.ir/</adress>
+    </kod>	
+    <kod id="KNYGOS">
+        <namn>Lietuvos nacionalinė Martyno Mažvydo biblioteka</namn>
+        <alternativtnamn>National Library of Lithuania</alternativtnamn>
+        <land>Litauen</land>
+        <kommentar></kommentar>
+        <adress>http://www.lnb.lt/</adress>
+    </kod>	
+    <kod id="LC">
+        <namn>Library of Congress</namn>
+        <alternativtnamn>Library of Congress</alternativtnamn>
+        <land>USA</land>
+        <kommentar></kommentar>
+        <adress>http://catalog.loc.gov/</adress>
+    </kod>	
+    <kod id="LIBISNET">
+        <namn>Libis</namn>
+        <alternativtnamn>Libis</alternativtnamn>
+        <land>Beligien</land>
+        <kommentar>Samkatalog i Belgien</kommentar>
+        <adress>http://opac.libis.be/</adress>
+    </kod>	
+    <kod id="LIBRIS">
+        <namn>LIBRIS</namn>
+        <alternativtnamn>LIBRIS</alternativtnamn>
+        <land>Sverige</land>
+        <kommentar>Samkatalog i Sverige</kommentar>
+        <adress>http://libris.kb.se/</adress>
+    </kod>
+    <kod id="MELINDA ">
+        <namn>Melinda</namn>
+        <alternativtnamn>Melinda</alternativtnamn>
+        <land>Finland</land>
+        <kommentar>Samkatalog i Finland</kommentar>
+        <adress>http://linda.linneanet.fi</adress>
+    </kod>
+    <kod id="NEBIS">
+        <namn>Netzwerk von Bibliotheken und Informationsstellen in der Schweiz</namn>
+        <alternativtnamn>Nätverket av Bibliotek och informationscenter i Schweiz</alternativtnamn>
+        <land>Schweiz</land>
+        <kommentar>Nätverket av Bibliotek och informationscenter i Schweiz. Ej fullständiga MARC21-poster</kommentar>
+        <adress>http://opac.nebis.ch</adress>
+    </kod>
+    <kod id="NLH">
+        <namn>National Széchényi Library</namn>
+        <alternativtnamn>National Library of Hungary</alternativtnamn>
+        <land>Ungern</land>
+        <kommentar></kommentar>
+        <adress>http://regi.oszk.hu/index_en.htm</adress>
+    </kod>
+    <kod id="NLI">
+        <namn>National Library of Ireland</namn>
+        <alternativtnamn>National Library of Ireland</alternativtnamn>
+        <land>Storbritannien</land>
+        <kommentar></kommentar>
+        <adress>http://www.nli.ie/</adress>
+    </kod>
+    <kod id="NLL">
+        <namn>Latvijas Nacionālā bibliotēka</namn>
+        <alternativtnamn>Nationalbiblioteket i Lettland</alternativtnamn>
+        <land>Lettland</land>
+        <kommentar>Unimarc-databas</kommentar>
+        <adress>http://www.lnb.lv/lv/</adress>
+    </kod>
+    <kod id="NLM">
+        <namn>U.S. National Library of Medicine</namn>
+        <alternativtnamn>U.S. National Library of Medicine</alternativtnamn>
+        <land>USA</land>
+        <kommentar></kommentar>
+        <adress>https://www.nlm.nih.gov/</adress>
+    </kod>
+    <kod id="NLS">
+        <namn>National Library of Scotland</namn>
+        <alternativtnamn>National Library of Scotland</alternativtnamn>
+        <land>Storbritannien</land>
+        <kommentar></kommentar>
+        <adress>http://www.nls.uk/</adress>
+    </kod>
+    <kod id="NORBOK">
+        <namn>NORBOK</namn>
+        <alternativtnamn>NORBOK</alternativtnamn>
+        <land>Norge</land>
+        <kommentar>Norges nationalbibliografi. Tänk särskillt på att komplettera ofullständiga 008-fält</kommentar>
+        <adress>http://www.nb.no/baser/norbok/</adress>
+    </kod>
+    <kod id="NOSP">
+        <namn>Nordic/Baltic union catalogue of serials</namn>
+        <alternativtnamn>Nordisk/Baltisk samkatalog för periodika</alternativtnamn>
+        <land>Danmark</land>
+        <land>Finland</land>
+        <land>Lettland</land>
+        <land>Norge</land>
+        <land>Sverige</land>
+        <kommentar>Databasen är inte uppdaterad sedan 2005</kommentar>
+        <adress>http://www.nb.no/baser/nosp/english.html</adress>
+    </kod>
+    <kod id="NSK">
+        <namn>Nacionalna i sveučilišna knjižnica u Zagrebu</namn>
+        <alternativtnamn>The National and University Library in Zagreb</alternativtnamn>
+        <land>Kroatien</land>
+        <kommentar></kommentar>
+        <adress>http://www.nsk.hr/</adress>
+    </kod>
+    <kod id="NYPL">
+        <namn>New York Public Library</namn>
+        <alternativtnamn>New York Public Library</alternativtnamn>
+        <land>USA</land>
+        <kommentar></kommentar>
+        <adress>http://www.nypl.org/</adress>
+    </kod>
+    <kod id="POLEN">
+        <namn>Biblioteca Nacional de Portugal</namn>
+        <alternativtnamn>Portugals Nationalbibliotek</alternativtnamn>
+        <land>Portugal</land>
+        <kommentar>Unimatc-databas</kommentar>
+        <adress>http://www.bnportugal.pt/</adress>
+    </kod>
+    <kod id="POR">
+        <namn>Katalogi Biblioteki Narodowej</namn>
+        <alternativtnamn>Nationalbiblioteket i Polen</alternativtnamn>
+        <land>Polen</land>
+        <kommentar>Unimatc-databas</kommentar>
+        <adress>http://alpha.bn.org.pl/</adress>
+    </kod>
+    <kod id="RERO">
+        <namn>Réro catalogue collectif</namn>
+        <alternativtnamn>Library Network of Western Switzerland</alternativtnamn>
+        <land>Schweiz</land>
+        <kommentar></kommentar>
+        <adress>http://opac.rero.ch/gateway</adress>
+    </kod>
+    <kod id="RSL">
+        <namn>Российская государственная библиотека</namn>
+        <alternativtnamn>Russian State Library</alternativtnamn>
+        <land>Ryssland</land>
+        <kommentar>Kan vara svår att komma att nå på grund av att man har licens för få samtidiga användare.</kommentar>
+        <adress>http://www.danbib.dk/</adress>
+    </kod>
+    <kod id="RUM">
+        <namn>Biblioteca Naţională a României</namn>
+        <alternativtnamn>Rumäniens Nationalbibliotek</alternativtnamn>
+        <land>Rumänien</land>
+        <kommentar></kommentar>
+        <adress>http://www.bibnat.ro/</adress>
+    </kod>
+    <kod id="SBN">
+        <namn>Biblioteca nazionale centrale di Roma</namn>
+        <alternativtnamn>National Central Library of Rome</alternativtnamn>
+        <land>Italien</land>
+        <kommentar>Unimarc-databas</kommentar>
+        <adress>http://www.bncrm.librari.beniculturali.it/</adress>
+    </kod>
+    <kod id="SWB">
+        <namn>SWB Online-Katalog des Südwestdeutschen Bibliotheksverbundes</namn>
+        <alternativtnamn>SWB - Union Catalog Southwest Germany</alternativtnamn>
+        <land>Tyskland</land>
+        <kommentar>Unimarc-databas</kommentar>
+        <adress>http://swb.bsz-bw.de/</adress>
+    </kod>
+    <kod id="SWISSBIB">
+        <namn>Swissbib</namn>
+        <alternativtnamn>Swissbib</alternativtnamn>
+        <land>Schweitz</land>
+        <kommentar>Schweizisk samkatalog, inkluderar Nationalbiblioteket.</kommentar>
+        <adress>http://www.swissbib.ch</adress>
+    </kod>
+    <kod id="UKR">
+        <namn>національної наукової бібліотеки України</namn>
+        <alternativtnamn>National Library of Ukraine</alternativtnamn>
+        <land>Ukraina</land>
+        <kommentar></kommentar>
+        <adress>http://www.lsl.lviv.ua/</adress>
+    </kod>
+    <kod id="ULI">
+        <namn>הספרייה הלאומית של ישראל</namn>
+        <alternativtnamn>Union catalogue of Israel</alternativtnamn>
+        <land>Israel</land>
+        <kommentar></kommentar>
+        <adress>http://web.nli.org.il/</adress>
+    </kod>
+    <kod id="UNICAT">
+        <namn>UniCat</namn>
+        <alternativtnamn>UniCat</alternativtnamn>
+        <land>Belgien</land>
+        <kommentar>Samkatalog i Belgien</kommentar>
+        <adress>http://www.unicat.be/</adress>
+    </kod>
+    <kod id="USP">
+        <namn>Universidade de São Paulo</namn>
+        <alternativtnamn>São Paulo University</alternativtnamn>
+        <land>Brasilien</land>
+        <kommentar></kommentar>
+        <adress>http://www5.usp.br/</adress>
+    </kod>
+    <kod id="WAL">
+        <namn>The National Library of Wales</namn>
+        <alternativtnamn>The National Library of Wales</alternativtnamn>
+        <land>Storbritannien</land>
+        <kommentar></kommentar>
+        <adress>http://www.llgc.org.uk/</adress>
+    </kod>
+    <kod id="WHOLIS">
+        <namn>The World Health Organization Library Database</namn>
+        <alternativtnamn>The World Health Organization Library Database</alternativtnamn>
+        <land>USA</land>
+        <kommentar></kommentar>
+        <adress>http://www.who.int/library/databases/en/</adress>
+    </kod>
+    <kod id="YALE">
+        <namn>Yale University</namn>
+        <alternativtnamn>Yale University</alternativtnamn>
+        <land>USA</land>
+        <kommentar></kommentar>
+        <adress>http://www.yale.edu/</adress>
+    </kod>
+<!-- Grupper -->
+    <kod id="ANGLOSAX1">
+        <namn>Anglosax1</namn>
+        <alternativtnamn>Anglosax1</alternativtnamn>
+        <land>USA</land>
+        <kommentar>Databaser från USA</kommentar>
+        <adress>http://www.kb.se/libris/katalogisering/Metaproxy/delmangder/</adress>
+    </kod>	
+    <kod id="ANGLOSAX2">
+        <namn>Anglosax2</namn>
+        <alternativtnamn>Anglosax2</alternativtnamn>
+        <land>USA</land>
+        <kommentar>Databaser från USA</kommentar>
+        <adress>http://www.kb.se/libris/katalogisering/Metaproxy/delmangder/</adress>
+    </kod>
+    <kod id="ANGLOSAX3">
+        <namn>Anglosax3</namn>
+        <alternativtnamn>Anglosax3</alternativtnamn>
+        <land>Kanada</land>
+        <kommentar>Databaser från Kanada</kommentar>
+        <adress>http://www.kb.se/libris/katalogisering/Metaproxy/delmangder/</adress>
+    </kod>	
+    <kod id="ANGLOSAX4">
+        <namn>Anglosax4</namn>
+        <alternativtnamn>Anglosax4</alternativtnamn>
+        <land>Storbritannien</land>
+        <land>Irland</land>
+        <land>Nya Zeeland</land>
+        <land>Australien</land>
+        <kommentar>Databaser från Storbritannien, Irland, Nya Zeeland och Australien</kommentar>
+        <adress>http://www.kb.se/libris/katalogisering/Metaproxy/delmangder/</adress>
+    </kod>
+    <kod id="ASIEN">
+        <namn>Asien</namn>
+        <alternativtnamn>Asien</alternativtnamn>
+        <land>Japan</land>
+        <land>Taiwan</land>
+        <land>Singapore</land>
+        <land>Hongkong</land>
+        <land>Thailand</land>
+        <land>Indien</land>
+        <land>Ryssland</land>
+        <kommentar>Databaser från Japan, Taiwan, Singapore, Hongkong, Thailand, Indien samt Ryssland</kommentar>
+        <adress>http://www.kb.se/libris/katalogisering/Metaproxy/delmangder/</adress>
+    </kod>
+    <kod id="LATIN">
+        <namn>Latin</namn>
+        <alternativtnamn>Latin</alternativtnamn>
+        <land></land>
+        <kommentar>Databaser från språkområdena franska, grekiska, italienska, spanska och portugisiska (även latinamerika)</kommentar>
+        <adress>http://www.kb.se/libris/katalogisering/Metaproxy/delmangder/</adress>
+    </kod>
+    <kod id="MELLANEUROPA">
+        <namn>Mellaneuropa</namn>
+        <alternativtnamn>Mellaneuropa</alternativtnamn>
+        <land></land>
+        <kommentar>Databaser från Belgien, Nederländerna, Tyskland, Schweiz, Östeuropa (Baltikum, Balkanländerna) samt Turkiet</kommentar>
+        <adress>http://www.kb.se/libris/katalogisering/Metaproxy/delmangder/</adress>
+    </kod>
+    <kod id="NORDEN">
+        <namn>Norden</namn>
+        <alternativtnamn>Norden</alternativtnamn>
+        <land>Danmark</land>
+        <land>Finland</land>
+        <land>Norge</land>
+        <kommentar>Databaser från Norge, Danmark och Finland</kommentar>
+        <adress>http://www.kb.se/libris/katalogisering/Metaproxy/delmangder/</adress>
+    </kod>	
+
+</databas>
