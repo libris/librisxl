@@ -2025,7 +2025,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime1", 
+              "propRef": "publishedYear", 
               "label_en": "Date 1 (yyyy)", 
               "entity": "Manifestation"
             }, 
@@ -2035,7 +2035,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime2", 
+              "propRef": "otherYear", 
               "label_en": "Date 2 (yyyy)", 
               "entity": "Manifestation"
             }, 
@@ -2247,7 +2247,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime1", 
+              "propRef": "publishedYear", 
               "label_en": "Date 1 (yyyy)"
             }, 
             {
@@ -2256,7 +2256,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime2", 
+              "propRef": "otherYear", 
               "label_en": "Date 2 (yyyy)"
             }, 
             {
@@ -2389,7 +2389,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime1", 
+              "propRef": "publishedYear", 
               "label_en": "Date 1 (yyyy)"
             }, 
             {
@@ -2398,7 +2398,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime2", 
+              "propRef": "otherYear", 
               "label_en": "Date 2 (yyyy)"
             }, 
             {
@@ -2580,7 +2580,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime1", 
+              "propRef": "publishedYear", 
               "label_en": "Date 1 (yyyy)"
             }, 
             {
@@ -2589,7 +2589,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime2", 
+              "propRef": "otherYear", 
               "label_en": "Date 2 (yyyy)"
             }, 
             {
@@ -2703,7 +2703,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime1", 
+              "propRef": "publishedYear", 
               "label_en": "Date 1 (yyyy)"
             }, 
             {
@@ -2712,7 +2712,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime2", 
+              "propRef": "otherYear", 
               "label_en": "Date 2 (yyyy)"
             }, 
             {
@@ -2920,7 +2920,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime1", 
+              "propRef": "publishedYear", 
               "label_en": "Date 1 (yyyy)"
             }, 
             {
@@ -2929,7 +2929,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime2", 
+              "propRef": "otherYear", 
               "label_en": "Date 2 (yyyy)"
             }, 
             {
@@ -3157,7 +3157,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime1", 
+              "propRef": "publishedYear", 
               "label_en": "Date 1 (yyyy)"
             }, 
             {
@@ -3166,7 +3166,7 @@
               "length": 4, 
               "default": "aaaa", 
               "placeholder": "<<<TEXT>>>", 
-              "propRef": "yearTime2", 
+              "propRef": "otherYear", 
               "label_en": "Date 2 (yyyy)"
             }, 
             {
