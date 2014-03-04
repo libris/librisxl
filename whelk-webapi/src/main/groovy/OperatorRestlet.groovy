@@ -204,7 +204,7 @@ class ReindexOperator extends AbstractOperator {
         for (doc in whelk.loadAll(dataset, fromStorage)) {
             if (startAt && doc.identifier == startAt) {
                 log.info("Found document with identifier ${startAt}. Starting to index ...")
-                    indexing = true
+                indexing = true
             }
             if (indexing) {
                 log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")

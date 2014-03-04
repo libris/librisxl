@@ -231,7 +231,7 @@ class StandardWhelk implements Whelk {
                 log.debug("No graphs to update.")
             }
         } else {
-            log.info("Couldn't find any suitable graphstores ... $activeGraphStores")
+            log.debug("Couldn't find any suitable graphstores ... $activeGraphStores")
         }
     }
 

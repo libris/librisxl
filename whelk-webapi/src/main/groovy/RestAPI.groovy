@@ -1105,19 +1105,19 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
 
     List loadMetaProxyInfo(URL url) {
         def xml = new XmlSlurper(false,false).parse(url.newInputStream())
-        def databases = []
-        this.remoteURLs = [:]
-        xml.kod.each {
-            String db = createString(it.@id)
-            databases << ["database":db,
-                          "name":it.namn.text(),
-                          "alternateName":it.alternativtnamn.text(),
-                          "country":it.land.text(),
-                          "comment":it.kommentar.text(),
-                          "url":it.adress.text()]
-            remoteURLs[(db)] = metaProxyBaseUrl + "/" + db
+
+        def databases = xml.kod.collect {
+                ["database":createString(it.@id),
+                 "name":it.namn.text(),
+                 "alternateName":it.alternativtnamn.text(),
+                 "country":it.land.text(),
+                 "comment":it.kommentar.text(),
+                 "url":it.adress.text()]
         }
-        log.info("remoteURLS: $remoteURLs")
+        remoteURLs = databases.inject( [:] ) { map, db ->
+            map << [(db.database) : metaProxyBaseUrl + "/" + db.database]
+        }
+
         return databases
     }
 
@@ -1196,13 +1196,8 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 response.setEntity(/{"Error": "Requested database $database is unknown."}/, MediaType.APPLICATION_JSON)
             }
         } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
-            /*
-            def databases = []
-            for (k in remoteURLs.keySet()) {
-                databases << ["database":k,"description":"Lorem ipsum ..."]
-            }
-            */
             def databases = loadMetaProxyInfo(metaProxyInfoUrl)
+            remoteURLs = 
             response.setEntity(mapper.writeValueAsString(databases), MediaType.APPLICATION_JSON)
         } else if (!query) {
             response.setEntity(/{"Error": "Use parameter \"q\"}/, MediaType.APPLICATION_JSON)
