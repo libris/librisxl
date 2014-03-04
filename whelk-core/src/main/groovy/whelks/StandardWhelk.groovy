@@ -328,9 +328,9 @@ class StandardWhelk implements Whelk {
     @Override
     URI mintIdentifier(Document d) {
         URI identifier
-            for (minter in uriMinters) {
-                identifier = minter.mint(d)
-            }
+        for (minter in uriMinters) {
+            identifier = minter.mint(d)
+        }
         if (!identifier) {
             try {
                 identifier = new URI("/"+id.toString() +"/"+ UUID.randomUUID());

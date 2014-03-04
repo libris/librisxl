@@ -2,8 +2,8 @@
     "remotesearch": {
         "_class": "se.kb.libris.whelks.api.RemoteSearchRestlet",
         "_params": {
-            "LC":"http://mproxy.libris.kb.se:8000/LC",
-            "ESTER":"http://mproxy.libris.kb.se:8000/ESTER"
+            "metaproxyInfoUrl":"file:etc/db_Metaproxy.xml",
+            "metaproxyBaseUrl":"http://mproxy.libris.kb.se:8000"
         }
     },
     "resourcelist": {

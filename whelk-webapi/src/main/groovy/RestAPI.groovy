@@ -1080,14 +1080,47 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
 
     MarcFrameConverter marcFrameConverter
 
+    URL metaProxyInfoUrl
+    String metaProxyBaseUrl
+
     final String DEFAULT_DATABASE = "LC"
 
     def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
 
     RemoteSearchRestlet(Map settings) {
-        remoteURLs = settings
+        this.metaProxyBaseUrl = settings.metaproxyBaseUrl
+        // Cut trailing slashes from url
+        while (metaProxyBaseUrl.endsWith("/")) {
+            metaProxyBaseUrl = metaProxyBaseUrl[0..-1]
+        }
+        assert metaProxyBaseUrl
+        metaProxyInfoUrl = new URL(settings.metaproxyInfoUrl)
+
+        // Prepare remoteURLs by loading settings once.
+        loadMetaProxyInfo(metaProxyInfoUrl)
+
         mapper = new ObjectMapper()
     }
+
+
+    List loadMetaProxyInfo(URL url) {
+        def xml = new XmlSlurper(false,false).parse(url.newInputStream())
+        def databases = []
+        this.remoteURLs = [:]
+        xml.kod.each {
+            String db = createString(it.@id)
+            databases << ["database":db,
+                          "name":it.namn.text(),
+                          "alternateName":it.alternativtnamn.text(),
+                          "country":it.land.text(),
+                          "comment":it.kommentar.text(),
+                          "url":it.adress.text()]
+            remoteURLs[(db)] = metaProxyBaseUrl + "/" + db
+        }
+        log.info("remoteURLS: $remoteURLs")
+        return databases
+    }
+
 
     void init(String wn) {
         log.info("plugins: ${whelk.plugins}")
@@ -1130,25 +1163,21 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                     results = new SearchResult(numHits)
                     for (docString in docStrings) {
                         record = MarcXmlRecordReader.fromXml(docString)
+                        // Not always available (and also unreliable)
                         //id = record.getControlfields("001").get(0).getData()
 
                         log.trace("Marcxmlrecordreader for $id done")
 
-                        //Create Document with raw xml string as data
-                        xmlDoc = new Document().withData(docString.getBytes("UTF-8")).withContentType("text/oaipmh+xml")
-                            //.withEntry(["identifier": "/external/"+id, "dataset": "external", "contentType": "text/oaipmh+xml"])
-
-                        //Convert xmlDoc to x-marc-json (marcxml in json)
                         jsonRec = MarcJSONConverter.toJSONString(record)
                         log.trace("Marcjsonconverter for $id done")
                         xMarcJsonDoc = new Document()
                             .withData(jsonRec.getBytes("UTF-8"))
-                            .withIdentifier(xmlDoc.identifier)
-                            .withEntry(xmlDoc.entry)
-                            .withMeta(xmlDoc.meta)
-
+                            .withContentType("application/x-marc-json")
                         //Convert xMarcJsonDoc to ld+json
                         jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
+                        if (!jsonDoc.identifier) {
+                            jsonDoc.identifier = this.whelk.mintIdentifier(jsonDoc)
+                        }
                         log.trace("Marcframeconverter for $id done")
 
                         //mapper = new ObjectMapper()
@@ -1167,10 +1196,13 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 response.setEntity(/{"Error": "Requested database $database is unknown."}/, MediaType.APPLICATION_JSON)
             }
         } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
+            /*
             def databases = []
             for (k in remoteURLs.keySet()) {
                 databases << ["database":k,"description":"Lorem ipsum ..."]
             }
+            */
+            def databases = loadMetaProxyInfo(metaProxyInfoUrl)
             response.setEntity(mapper.writeValueAsString(databases), MediaType.APPLICATION_JSON)
         } else if (!query) {
             response.setEntity(/{"Error": "Use parameter \"q\"}/, MediaType.APPLICATION_JSON)
