@@ -98,6 +98,8 @@ class ImportOperator extends AbstractOperator {
 
     Importer importer = null
 
+    long startTime
+
     @Override
     void setParameters(Map parameters) {
         super.setParameters(parameters)
@@ -110,6 +112,7 @@ class ImportOperator extends AbstractOperator {
     }
 
     void doRun(long startTime) {
+        this.startTime = startTime
         assert dataset
         if (importerPlugin) {
             importer = whelk.getImporter(importerPlugin)
@@ -150,6 +153,8 @@ class ImportOperator extends AbstractOperator {
 
     @Override
     Map getStatus() {
+        runningTime = System.currentTimeMillis() - startTime
+        count = (importer ? importer.nrImported : 0)
         def status = super.getStatus()
         if (importer?.errorMessages) {
             if (operatorState == OperatorState.IDLE) {
