@@ -7,6 +7,8 @@ with open(fpath) as f:
     marcmap = json.load(f)
 
 show_repeatable = True
+skip_unlinked_maps = False
+
 
 rename_type_map = {
     'Books': 'Book',
@@ -17,6 +19,10 @@ rename_type_map = {
 }
 
 fixprop_typerefs = {
+    '000': [
+        'typeOfRecord',
+        'bibLevel',
+    ],
     '007': [
         'mapMaterial',
         'computerMaterial',
@@ -41,7 +47,8 @@ fixprop_typerefs = {
         #'musicItem', #'musicMatter', 'musicTransposition',
         'serialsTypeOfSerial', #'serialsItem',
         'visualMaterial', #'visualItem',
-    ]
+    ],
+    '006': []
 }
 
 def to_name(name):
@@ -142,17 +149,26 @@ for tag, field in sorted(marcmap['bib'].items()):
                 dfn_key = col.get('propRef')
                 if not dfn_key:
                     continue
-                fm[key] = col_dfn = {'property': dfn_key or col.get('propId')}
-                col_dfn['domainEntity'] = "Record"
+                fm[key] = col_dfn = {}
+                propname = dfn_key or col.get('propId')
+                domainname = 'Record'
+                is_link = False
+                valuemap = None
 
-                if (fixprop_typerefs['007'] or
-                        (fixprop_typerefs['008'] and content_type)
-                        ) and dfn_key in fixprops:
-                    col_dfn['uriTemplate'] = "%s:{_}" % dfn_key
-                    col_dfn['valueMap'] = dfn_key
+                if dfn_key in fixprops:
                     valuemap = fixprops[dfn_key]
                     typemap = resourceMaps.setdefault(dfn_key, OrderedDict())
-                    #print dfn_key
+
+                    fixtyperefmap = fixprop_typerefs.get(tag)
+                    if fixtyperefmap:
+                        domainname = 'Instance'
+                        if dfn_key in fixtyperefmap:
+                            propname = 'carrierFormat' # 'carrierType'
+                            is_link = True
+                        elif dfn_key in fixtyperefmap:
+                            propname = 'contentType'
+                            is_link = True
+
                     for key, dfn in valuemap.items():
                         # TODO: '_' actually means something occasionally..
                         if key in ('_', '|'): continue
@@ -161,9 +177,22 @@ for tag, field in sorted(marcmap['bib'].items()):
                             subname = to_name(v)
                         else:
                             subname = dfn['label_sv']
-                            #print " ", key, subname.encode('utf-8')
                         assert typemap.get(key, subname) == subname
                         typemap[key] = subname
+
+                    if skip_unlinked_maps and not is_link:
+                        resourceMaps[dfn_key] = {"TODO": "SKIPPED"}
+
+                if is_link:
+                    col_dfn['link'] = propname
+                    col_dfn['uriTemplate'] = "%s:{_}" % dfn_key
+                else:
+                    col_dfn['property'] = propname
+
+                if valuemap:
+                    col_dfn['valueMap'] = dfn_key
+
+                col_dfn['domainEntity'] = domainname
 
                 #if dfn_key in fixprop_typerefs['007']:
                 #    typemap = carrierTypeMap.setdefault(type_name, OrderedDict())

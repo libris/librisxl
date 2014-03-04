@@ -100,33 +100,37 @@
 
 # Specificity Dimensions
 
-:Work a owl:Class;
-    rdfs:label "Generellt verk"@sv;
+:CreativeWork a owl:Class;
+    rdfs:label "Kreativt verk"@sv;
     ptg:abstract true;
-    owl:equivalentClass bf:Work;
-    rdfs:subClassOf sdo:CreativeWork . # sdo:ProductModel, rdfa:Pattern
+    rdfs:subClassOf sdo:CreativeWork .
 
-:Instance a owl:Class;
+:GeneralizedWork a owl:Class;
+    rdfs:label "Generaliserat verk"@sv;
+    owl:equivalentClass bf:Work;
+    rdfs:subClassOf :CreativeWork, sdo:ProductModel . #, rdfa:Pattern .
+
+:Product a owl:Class;
     rdfs:label "Instans"@sv;
     ptg:abstract true;
     owl:equivalentClass bf:Instance;
-    rdfs:subClassOf :Work, sdo:CreativeWork .
+    rdfs:subClassOf :CreativeWork, sdo:Product .
 
 # Common Content Types
 
 :Cartography a owl:Class;
     rdfs:label "Kartmaterial"@sv;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :CreativeWork;
     owl:equivalentClass bf:Cartography .
 
 :Dataset a owl:Class;
     rdfs:label "Dataset"@sv;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :CreativeWork;
     owl:equivalentClass dctype:Dataset, bf:Dataset, sdo:Dataset .
 
 :Image a owl:Class; # Visual
     rdfs:label "Bild"@sv;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :CreativeWork;
     owl:equivalentClass dctype:Image, foaf:Image .
 
 :MixedMaterial a owl:Class;
@@ -138,19 +142,19 @@
     owl:equivalentClass bf:MovingImage, dctype:MovingImage .
 
 :Multimedia a owl:Class;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :CreativeWork;
     owl:equivalentClass bf:Multimedia .
 
 :NotatedMovement a owl:Class;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :CreativeWork;
     owl:equivalentClass bf:NotatedMovement .
 
 :NotatedMusic a owl:Class;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :CreativeWork;
     owl:equivalentClass bf:NotatedMusic .
 
 :Audio a owl:Class;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :CreativeWork;
     rdfs:label "Ljud"@sv;
     owl:equivalentClass dctype:Sound, bf:Audio .
 
@@ -158,13 +162,13 @@
     rdfs:subClassOf :Audio .
 
 :StillImage a owl:Class;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :CreativeWork;
     rdfs:label "Stillbild"@sv;
     rdfs:subClassOf :Image;
     owl:equivalentClass bf:StillImage, dctype:StillImage .
 
 :Text a owl:Class;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :CreativeWork;
     rdfs:label "Text"@sv;
     rdfs:subClassOf :UniformWork;
     owl:equivalentClass dctype:Text, bf:Text, dc:BibliographicResource .
@@ -257,19 +261,23 @@
 :Digital a owl:Class;
     ptg:abstract true;
     #rdfs:subClassOf [ owl:unionOf (dctype:InteractiveResource dctype:Software) ]
+    rdfs:subClassOf :Product;
     owl:equivalentClass bf:Electronic .
 
 :Manuscript a owl:Class;
+    rdfs:subClassOf :Product;
     owl:equivalentClass bf:Manuscript .
 
 :Print a owl:Class;
+    rdfs:subClassOf :Product;
     owl:equivalentClass bf:Print .
 
 :Tactile a owl:Class;
+    rdfs:subClassOf :Product;
     owl:equivalentClass bf:Tactile .
 
 :PhysicalObject a owl:Class;
-    rdfs:subClassOf :Work;
+    rdfs:subClassOf :Product;
     rdfs:label "Föremål"@sv;
     skos:altLabel "Realia"@sv;
     owl:equivalentClass dctype:PhysicalObject .
