@@ -1132,11 +1132,13 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         int start = queryMap.get("start", "0") as int
         int n = queryMap.get("n", "10") as int
         String database = queryMap.get("database", DEFAULT_DATABASE)
-        def xmlRecords, queryStr, url, xmlDoc, id, xMarcJsonDoc, jsonRec, jsonDoc
+        def xmlRecords, queryStr, url, xMarcJsonDoc, jsonRec, jsonDoc
         def results
         def docStrings = []
         MarcRecord record
         OaiPmhXmlConverter oaiPmhXmlConverter
+        MediaType mediaType = MediaType.APPLICATION_JSON
+        String output = ""
 
         urlParams['maximumRecords'] = n
         urlParams['startRecord'] = (start < 1 ? 1 : start)
@@ -1164,10 +1166,10 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                         // Not always available (and also unreliable)
                         //id = record.getControlfields("001").get(0).getData()
 
-                        log.trace("Marcxmlrecordreader for $id done")
+                        log.trace("Marcxmlrecordreader for done")
 
                         jsonRec = MarcJSONConverter.toJSONString(record)
-                        log.trace("Marcjsonconverter for $id done")
+                        log.trace("Marcjsonconverter for done")
                         xMarcJsonDoc = new Document()
                             .withData(jsonRec.getBytes("UTF-8"))
                             .withContentType("application/x-marc-json")
@@ -1190,21 +1192,21 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                     log.error("Could not convert document from $docStrings")
                     throw e
                 }
+                output = results.toJson()
             } else {
-                response.setEntity(/{"Error": "Requested database $database is unknown."}/, MediaType.APPLICATION_JSON)
+                output = "{\"error\":\"Requested database $database is unknown.\"}"
             }
         } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
             def databases = loadMetaProxyInfo(metaProxyInfoUrl)
-            remoteURLs = 
-            response.setEntity(mapper.writeValueAsString(databases), MediaType.APPLICATION_JSON)
+            output = mapper.writeValueAsString(databases)
         } else if (!query) {
-            response.setEntity(/{"Error": "Use parameter \"q\"}/, MediaType.APPLICATION_JSON)
-        } else if (results) {
-            response.setEntity(results.toJson(), MediaType.APPLICATION_JSON)
-        } else {
-            response.setStatus(Status.SUCCESS_NO_CONTENT)
+            output = "{\"error\":\"Use parameter 'q'\"}"
         }
-
+        if (!output) {
+            response.setStatus(output, Status.SUCCESS_NO_CONTENT)
+        } else {
+            response.setEntity(output, mediaType)
+        }
     }
 
     List<String> getXMLRecordStrings(xmlRecords) {
