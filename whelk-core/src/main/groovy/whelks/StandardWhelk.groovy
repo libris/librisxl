@@ -133,7 +133,7 @@ class StandardWhelk implements Whelk {
 
     Document sanityCheck(Document d) {
         if (!d.identifier) {
-            d.identifier = mintIdentifier(d)
+            d.withIdentifier(mintIdentifier(d))
             log.debug("Document was missing identifier. Setting identifier ${d.identifier}")
         }
         d.timestamp = new Date().getTime()

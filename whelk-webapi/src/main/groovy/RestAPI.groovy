@@ -154,6 +154,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
                     log.trace("Adding link $link to document...")
                     doc = doc.withLink(link)
                 }
+                doc = this.whelk.sanityCheck(doc)
                 identifier = this.whelk.add(doc)
                 response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
                 response.entity.setTag(new Tag(doc.timestamp as String, false))
