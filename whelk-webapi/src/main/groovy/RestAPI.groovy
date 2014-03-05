@@ -1107,11 +1107,12 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
     List loadMetaProxyInfo(URL url) {
         def xml = new XmlSlurper(false,false).parse(url.newInputStream())
 
-        def databases = xml.kod.collect {
+        def databases = xml.libraryCode.collect {
             def map = ["database": createString(it.@id)]
             it.children().each { node ->
                 def n = node.name().toString()
                 def o = node.text().toString()
+                log.info("$n = $o")
                 def v = map[n]
                 if (v) {
                     if (v instanceof String) {
