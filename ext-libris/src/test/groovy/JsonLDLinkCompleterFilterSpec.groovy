@@ -16,7 +16,6 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
     private mapper = new ElasticJsonMapper()
     def bibDoc, doc, whelk, filter, docMap
 
-    @Ignore
     def "convert should insert auth link into bib jsonld"() {
         given:
         whelk = getInitializedWhelk()
