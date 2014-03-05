@@ -1107,9 +1107,21 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         def xml = new XmlSlurper(false,false).parse(url.newInputStream())
 
         def databases = xml.kod.collect {
-            it.children().inject(["database":createString(it.@id)]) { map, node ->
-                map << [(node.name()) : node.text()]
+            def map = ["database": createString(it.@id)]
+            it.children().each { node ->
+                def n = node.name().toString()
+                def o = node.text().toString()
+                def v = map[n]
+                if (v) {
+                    if (v instanceof String) {
+                        v = map[n] = [v]
+                    }
+                    v << o
+                } else {
+                    map[n] = o
+                }
             }
+            return map
         }
 
         remoteURLs = databases.inject( [:] ) { map, db ->
