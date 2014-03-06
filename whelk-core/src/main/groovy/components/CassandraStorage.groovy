@@ -268,7 +268,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     }
                     query = query
                         .setRowLimit(100)
-                        .withColumnRange(new RangeBuilder().setLimit(10).build())
+                        //.withColumnRange(new RangeBuilder().setLimit(100).build())
                 } catch (ConnectionException e) {
                     log.error("Cassandra Query failed.", e)
                     throw e
@@ -299,7 +299,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 try {
                     hn = iter.hasNext()
                     if (!hn && (query instanceof IndexQuery)) {
-                        log.trace("Refilling rows (for indexquery)")
+                        log.debug("Refilling rows (for indexquery)")
                         iter = query.execute().getResult().iterator()
                         hn = iter.hasNext()
                     }
