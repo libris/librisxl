@@ -1200,8 +1200,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                     for (result in resultLists) {
                         results.hits[result.database] = result.numberOfHits
                         try {
-                            log.info("i: $i")
-                            def hit = ['database':result.database] + result.hits[i].dataAsMap
+                            def hit = ['database':result.database, 'data': result.hits[i].dataAsMap]
                             results.list << hit
                         } catch (ArrayIndexOutOfBoundsException aioobe) {
                             log.debug("Overstepped array bounds.")
