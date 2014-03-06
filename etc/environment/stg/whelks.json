@@ -1,0 +1,52 @@
+{
+    "_whelks": [
+        {
+            "libris":{
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+                "_plugins": [
+                    "index",
+                    "cassandrastorage",
+                    "oaipmhstorage",
+                    "operator",
+                    "search",
+                    "marcconverter",
+                    "remotesearch",
+                    "oaipmhxmlconverter",
+                    "completeexpander",
+                    "sparqlapi",
+                    "libcount",
+                    "documentapi",
+                    "turtleconverter",
+                    "entityextractor",
+                    "linkcompleter",
+                    "indexlinkfinder",
+                    "oaipmhimporter",
+                    "marcimporter"
+                ],
+                "contentRoot" : "/",
+                "docBaseUri" : "http://libris.kb.se/"
+            }
+        },
+        {
+            "swepub":{
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+                "_plugins" : [
+                    "cassandrastorage",
+                    "documentapi",
+                    "modsimporter"
+                    ]
+            }
+        },
+        {
+            "resource":{
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+                "_plugins" : [
+                    "definitiondata",
+                    "resourcelist",
+                    "marcmap",
+                    "isxntool"
+                ]
+            }
+        }
+    ]
+}
