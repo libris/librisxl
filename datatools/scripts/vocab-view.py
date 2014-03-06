@@ -38,8 +38,6 @@ def tree_node(rclass, lang):
     node = {'name': name}
     if children:
         node['children'] = children
-    #else:
-    #    node['size'] = 1000 * len(name)
     return node
 
 def make_vocab_graph(g, lang):
@@ -47,10 +45,9 @@ def make_vocab_graph(g, lang):
     namemap = {}
     for rclass in g.resource(OWL.Class).subjects(RDF.type):
         name = get_name(rclass, lang)
-        child_count = len(list(rclass.subjects(RDFS.subClassOf)))
         node = {
             'name': name,
-            'childCount': child_count,
+            'children': [],
             'siblingCount': 0
         }
         nodes.append(node)
@@ -74,7 +71,8 @@ def make_vocab_graph(g, lang):
             is_base = False
             basenode = namemap[get_name(bc, lang)][1]
             links.append({'source': node['i'], 'target': basenode['i']})
-            node['siblingCount'] += basenode['childCount']
+            basenode['children'].append(node['i'])
+            node['siblingCount'] += len(basenode['children'])
             continue
         node['base'] = is_base
     return {

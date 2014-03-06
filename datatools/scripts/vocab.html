@@ -21,7 +21,9 @@ body {
 }
 
 .link {
+  fill: none;
   stroke: #999;
+  stroke-width: 2;
   stroke-opacity: .6;
 }
 
@@ -36,7 +38,17 @@ svg {
 <script src="d3.v3.min.js"></script>
 <script>
 
-var animated = false
+var force = d3.layout.force()
+    .charge(function (d) {
+      if (d.link)
+        return -20
+      return -(200 + 100 * d.children.length + 20 * d.siblingCount)
+    })
+    .linkDistance(20)
+    .linkStrength(0.1)
+    .gravity(0.1)
+
+var animated = true
 
 var color = d3.scale.category20()
 
@@ -46,13 +58,6 @@ var svg = d3.select("body").append("svg")
 var view = svg.append("g")
     .call(d3.behavior.zoom().on("zoom", zoomRedraw))
     .append("g")
-
-var force = d3.layout.force()
-    .charge(function (d) {
-        return -(200 + 100 * d.childCount + 20 * d.siblingCount)
-      })
-    .linkDistance(100)
-    .gravity(0.3)
 
 function zoomRedraw() {
   if (animated)
@@ -69,9 +74,6 @@ resize()
 window.addEventListener("onresize", resize)
 
 
-var width = 1024, height = 768
-
-
 view.append("defs").selectAll("marker")
     .data(["arrow"])
   .enter().append("marker")
@@ -83,16 +85,29 @@ view.append("defs").selectAll("marker")
     .append("path")
     .attr("d", "M0,-5L10,0L0,5");
 
-d3.json("classes.json", function(error, graph) {
+d3.json("classes.json", function (error, graph) {
+
+  var nodes = graph.nodes.slice(),
+      links = [],
+      bilinks = []
+
+  graph.links.forEach(function (link) {
+    var s = nodes[link.source],
+        t = nodes[link.target],
+        im = {link: true}
+    nodes.push(im)
+    links.push({source: s, target: im}, {source: im, target: t})
+    bilinks.push([s, im, t])
+  })
+
   force
-      .nodes(graph.nodes)
-      .links(graph.links)
+      .nodes(nodes)
+      .links(links)
 
   var link = view.selectAll(".link")
-      .data(graph.links)
-    .enter().append("line")
+      .data(bilinks)
+      .enter().append("path")
       .attr("class", "link")
-      .style("stroke-width", 2)
 
   var node = view.selectAll(".node")
       .data(graph.nodes)
@@ -109,6 +124,9 @@ d3.json("classes.json", function(error, graph) {
         }
         animated = !animated
       }, true)
+  if (animated) {
+      node.call(force.drag)
+  }
 
   node.append("title")
       .text(function(d) { return d.base? d.name : d.name +" < "+ d.groupName; })
@@ -122,15 +140,14 @@ d3.json("classes.json", function(error, graph) {
       .text(function(d) { return d.name; })
 
   force.on("tick", function() {
-    link.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; })
+    link.attr("d", function(d) {
+          return "M" + d[0].x + "," + d[0].y
+          + "S" + d[1].x + "," + d[1].y
+          + " " + d[2].x + "," + d[2].y
+        })
         .attr("marker-end", "url(#arrow)")
 
     node.attr('transform', function (d) { return "translate("+ d.x +","+ d.y +")" })
-    //node.attr("cx", function(d) { return d.x; })
-    //    .attr("cy", function(d) { return d.y; })
   })
 
   force.start()
