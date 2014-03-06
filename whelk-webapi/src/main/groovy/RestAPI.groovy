@@ -26,6 +26,8 @@ import org.codehaus.jackson.map.*
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 
+import java.util.concurrent.*
+
 
 interface RestAPI extends API {
     String getPath()
@@ -1100,7 +1102,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         // Prepare remoteURLs by loading settings once.
         loadMetaProxyInfo(metaProxyInfoUrl)
 
-        mapper = new ObjectMapper()
+        mapper = new ElasticJsonMapper()
     }
 
 
@@ -1112,7 +1114,6 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
             it.children().each { node ->
                 def n = node.name().toString()
                 def o = node.text().toString()
-                log.info("$n = $o")
                 def v = map[n]
                 if (v) {
                     if (v instanceof String) {
@@ -1135,7 +1136,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
 
 
     void init(String wn) {
-        log.info("plugins: ${whelk.plugins}")
+        log.debug("plugins: ${whelk.plugins}")
         marcFrameConverter = whelk.plugins.find { it instanceof FormatConverter && it.resultContentType == "application/ld+json" && it.requiredContentType == "application/x-marc-json" }
         assert marcFrameConverter
     }
@@ -1145,10 +1146,8 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         def query = queryMap.get("q", null)
         int start = queryMap.get("start", "0") as int
         int n = queryMap.get("n", "10") as int
-        String database = queryMap.get("database", DEFAULT_DATABASE)
-        def xmlRecords, queryStr, url, xMarcJsonDoc, jsonRec, jsonDoc
-        def results
-        def docStrings = []
+        def databaseList = queryMap.get("database", DEFAULT_DATABASE).split(",") as List
+        def queryStr, url
         MarcRecord record
         OaiPmhXmlConverter oaiPmhXmlConverter
         MediaType mediaType = MediaType.APPLICATION_JSON
@@ -1158,6 +1157,9 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         urlParams['startRecord'] = (start < 1 ? 1 : start)
 
         if (query) {
+            // Weed out the unavailable databases
+            databaseList = databaseList.intersect(remoteURLs.keySet() as List)
+            log.debug("Remaining databases: $databaseList")
             urlParams.each { k, v ->
                 if (!queryStr) {
                     queryStr = "?"
@@ -1166,49 +1168,47 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 }
                 queryStr += k + "=" + v
             }
-            if (remoteURLs.containsKey(database)) {
-                url = new URL(remoteURLs[database] + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
-
+            if (!databaseList) {
+                output = "{\"error\":\"Requested database is unknown or unavailable.\"}"
+            }
+            else {
+                ExecutorService queue = Executors.newCachedThreadPool()
+                def resultLists = []
                 try {
-                    log.debug("requesting data from url: $url")
-                    xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
-                    int numHits = xmlRecords.'zs:numberOfRecords'.toInteger()
-                    docStrings = getXMLRecordStrings(xmlRecords)
-                    results = new SearchResult(numHits)
-                    for (docString in docStrings) {
-                        record = MarcXmlRecordReader.fromXml(docString)
-                        // Not always available (and also unreliable)
-                        //id = record.getControlfields("001").get(0).getData()
-
-                        log.trace("Marcxmlrecordreader for done")
-
-                        jsonRec = MarcJSONConverter.toJSONString(record)
-                        log.trace("Marcjsonconverter for done")
-                        xMarcJsonDoc = new Document()
-                            .withData(jsonRec.getBytes("UTF-8"))
-                            .withContentType("application/x-marc-json")
-                        //Convert xMarcJsonDoc to ld+json
-                        jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
-                        if (!jsonDoc.identifier) {
-                            jsonDoc.identifier = this.whelk.mintIdentifier(jsonDoc)
-                        }
-                        log.trace("Marcframeconverter done")
-
-                        //mapper = new ObjectMapper()
-
-                        results.addHit(new IndexDocument(jsonDoc))
+                    def futures = []
+                    for (database in databaseList) {
+                        url = new URL(remoteURLs[database] + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
+                        log.debug("submitting to futures")
+                        futures << queue.submit(new MetaproxyQuery(whelk, url, database))
                     }
-
-                } catch (org.xml.sax.SAXParseException spe) {
-                    log.error("Failed to parse XML: ${url.text}")
-                    throw spe
-                } catch (Exception e) {
-                    log.error("Could not convert document from $docStrings")
-                    throw e
+                    log.info("Started all threads. Now harvesting the future")
+                    for (f in futures) {
+                        log.debug("Waiting for future ...")
+                        def sr = f.get()
+                        log.debug("Adding ${sr.numberOfHits} to ${resultLists}")
+                        resultLists << sr
+                    }
+                } finally {
+                    queue.shutdown()
                 }
-                output = results.toJson()
-            } else {
-                output = "{\"error\":\"Requested database $database is unknown.\"}"
+                // Merge results
+                def results = ['hits':[:],'list':[]]
+                int biggestList = 0
+                for (result in resultLists) { if (result.hits.size() > biggestList) { biggestList = result.hits.size() } }
+
+                for (int i = 0; i < biggestList; i++) {
+                    for (result in resultLists) {
+                        results.hits[result.database] = result.numberOfHits
+                        try {
+                            log.info("i: $i")
+                            def hit = ['database':result.database] + result.hits[i].dataAsMap
+                            results.list << hit
+                        } catch (ArrayIndexOutOfBoundsException aioobe) {
+                            log.debug("Overstepped array bounds.")
+                        }
+                    }
+                }
+                output = mapper.writeValueAsString(results)
             }
         } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
             def databases = loadMetaProxyInfo(metaProxyInfoUrl)
@@ -1220,6 +1220,72 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
             response.setStatus(output, Status.SUCCESS_NO_CONTENT)
         } else {
             response.setEntity(output, mediaType)
+        }
+    }
+
+    class MetaproxyQuery implements Callable<MetaproxySearchResult> {
+
+        URL url
+        String database
+        Whelk whelk
+
+        MetaproxyQuery(Whelk w, URL queryUrl, String db) {
+            this.url = queryUrl
+            this.database = db
+            this.whelk = w
+            assert whelk
+        }
+
+        @Override
+        MetaproxySearchResult call() {
+            def docStrings, results
+            try {
+                log.debug("requesting data from url: $url")
+                def xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
+                int numHits = xmlRecords.'zs:numberOfRecords'.toInteger()
+                docStrings = getXMLRecordStrings(xmlRecords)
+                results = new MetaproxySearchResult(database, numHits)
+                for (docString in docStrings) {
+                    def record = MarcXmlRecordReader.fromXml(docString)
+                    // Not always available (and also unreliable)
+                    //id = record.getControlfields("001").get(0).getData()
+
+                    log.trace("Marcxmlrecordreader for done")
+
+                    def jsonRec = MarcJSONConverter.toJSONString(record)
+                    log.trace("Marcjsonconverter for done")
+                    def xMarcJsonDoc = new Document()
+                    .withData(jsonRec.getBytes("UTF-8"))
+                    .withContentType("application/x-marc-json")
+                    //Convert xMarcJsonDoc to ld+json
+                    def jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
+                    if (!jsonDoc.identifier) {
+                        jsonDoc.identifier = this.whelk.mintIdentifier(jsonDoc)
+                    }
+                    log.trace("Marcframeconverter done")
+
+                    //mapper = new ObjectMapper()
+
+                    results.addHit(new IndexDocument(jsonDoc))
+                }
+            } catch (org.xml.sax.SAXParseException spe) {
+                log.error("Failed to parse XML: ${url.text}")
+                throw spe
+            } catch (Exception e) {
+                log.error("Could not convert document from $docStrings")
+                throw e
+            }
+            return results
+        }
+    }
+
+    class MetaproxySearchResult extends SearchResult {
+
+        String database
+
+        MetaproxySearchResult(String db, int nrHits) {
+            super(nrHits)
+            this.database = db
         }
     }
 

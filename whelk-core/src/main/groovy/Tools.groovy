@@ -1,6 +1,5 @@
 package se.kb.libris.conch
 
-import groovy.util.logging.Slf4j as Log
 import java.text.*
 import java.util.concurrent.*
 import java.util.concurrent.atomic.*
@@ -8,7 +7,6 @@ import org.codehaus.jackson.map.*
 
 import se.kb.libris.whelks.*
 
-@Log
 class Tools {
 
     static ObjectMapper staticMapper = new ObjectMapper()
@@ -26,7 +24,6 @@ class Tools {
     }
 
     static def getDeepValue(Map map, String key) {
-        //log.trace("getDeepValue: map = $map, key = $key")
         def keylist = key.split(/\./)
         def lastkey = keylist[keylist.length-1]
         def result
@@ -159,7 +156,6 @@ class Tools {
     }
 }
 
-@Log
 class ScalingQueue extends LinkedBlockingQueue {
     private ThreadPoolExecutor executor
 
@@ -177,7 +173,6 @@ class ScalingQueue extends LinkedBlockingQueue {
     }
 }
 
-@Log
 class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
     private final AtomicInteger activeCount = new AtomicInteger()
 
@@ -204,7 +199,6 @@ class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
     }
 }
 
-@Log
 class ForceQueuePolicy implements RejectedExecutionHandler {
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
         try {

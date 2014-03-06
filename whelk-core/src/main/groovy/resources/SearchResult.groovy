@@ -10,7 +10,7 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class SearchResult {
 
-    Iterable hits
+    List hits
     Map facets
     ObjectMapper mapper
 
@@ -36,7 +36,7 @@ class SearchResult {
     }
 
     String toJson() {
-        log.info("Manual toJson()")
+        log.debug("Manual toJson()")
         def jsonString = new StringBuilder()
         jsonString << "{"
         jsonString << "\"hits\": " << numberOfHits << ","
@@ -65,6 +65,9 @@ class SearchResult {
                 log.debug("key: $key")
                 item = extractStructure(key, item, source)
             }
+            if (!item) {
+                item = source
+            }
             result['list'] << ['data':item, 'identifier':it.identifier]
         }
         if (facets) {
@@ -75,7 +78,7 @@ class SearchResult {
 
     String toJson(List keys) {
         def result = toMap(keys)
-        log.info("toJson by $keys")
+        log.debug("toJson by $keys")
         return mapper.writeValueAsString(result)
     }
 
