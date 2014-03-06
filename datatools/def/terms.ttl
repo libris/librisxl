@@ -105,10 +105,10 @@
     ptg:abstract true;
     rdfs:subClassOf sdo:CreativeWork .
 
-:GeneralizedWork a owl:Class;
-    rdfs:label "Generaliserat verk"@sv;
+:ConceptualWork a owl:Class;
+    rdfs:label "Konceptuellt verk"@sv;
     owl:equivalentClass bf:Work;
-    rdfs:subClassOf :CreativeWork, sdo:ProductModel . #, rdfa:Pattern .
+    rdfs:subClassOf :CreativeWork, sdo:ProductModel, :Concept . #, rdfa:Pattern .
 
 :Product a owl:Class;
     rdfs:label "Instans"@sv;
@@ -170,7 +170,6 @@
 :Text a owl:Class;
     rdfs:subClassOf :CreativeWork;
     rdfs:label "Text"@sv;
-    rdfs:subClassOf :UniformWork;
     owl:equivalentClass dctype:Text, bf:Text, dc:BibliographicResource .
 
 :ThreeDimensionalObject a owl:Class;
