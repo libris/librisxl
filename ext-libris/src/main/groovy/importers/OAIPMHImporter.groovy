@@ -164,6 +164,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     void addDocuments(final List documents) {
         queue.execute({
             try {
+                log.debug("Adding ${documents.size()} documents to whelk.")
                 this.whelk.bulkAdd(documents)
             } catch (WhelkAddException wae) {
                 errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")

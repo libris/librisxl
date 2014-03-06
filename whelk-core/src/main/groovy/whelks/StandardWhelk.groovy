@@ -148,9 +148,11 @@ class StandardWhelk implements Whelk {
     Document addToStorage(Document doc, String excemptStorage = null) {
         boolean stored = false
         Map<String,Document> docs = [(doc.contentType): doc]
+        log.trace("Available formatconverters: " + formatConverters.collect { ((Plugin)it).id })
         for (fc in formatConverters) {
             log.trace("Running formatconverter $fc for ${doc.contentType}")
             doc = fc.convert(doc)
+            log.trace("Document has ctype ${doc.contentType} after conversion.")
             docs.put(doc.contentType, doc)
         }
         for (d in docs.values()) {
@@ -173,6 +175,7 @@ class StandardWhelk implements Whelk {
         if (!stored) {
             throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
         }
+        log.trace("Final conversion left document in ctype ${doc.contentType}")
         return doc
     }
 
@@ -184,7 +187,7 @@ class StandardWhelk implements Whelk {
             log.debug("Number of documents to index: ${docs.size()}")
             for (doc in docs) {
                 for (ifc in getIndexFormatConverters()) {
-                    log.trace("Running indexformatconverter $ifc")
+                    log.trace("Running indexformatconverter ${ifc.id} on document with ctype ${doc.contentType}")
                     idxDocs.addAll(ifc.convert(doc))
                 }
             }
