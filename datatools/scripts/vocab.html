@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<title>Vocab Viewer</title>
+<meta charset="utf-8">
+<style>
+
+body {
+  margin: 0; padding: 0;
+}
+
+.node > ellipse {
+  stroke-width: 1.5px;
+  stroke: #fff;
+}
+.base.node > ellipse {
+  stroke: #000;
+}
+
+.node > text {
+  color: #000;
+  text-anchor: middle;
+}
+
+.link {
+  stroke: #999;
+  stroke-opacity: .6;
+}
+
+svg {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+}
+
+</style>
+<body>
+<script src="d3.v3.min.js"></script>
+<script>
+
+var animated = false
+
+var color = d3.scale.category20()
+
+var svg = d3.select("body").append("svg")
+    .attr("pointer-events", "all")
+
+var view = svg.append("g")
+    .call(d3.behavior.zoom().on("zoom", zoomRedraw))
+    .append("g")
+
+var force = d3.layout.force()
+    .charge(function (d) {
+        return -(200 + 100 * d.childCount + 20 * d.siblingCount)
+      })
+    .linkDistance(100)
+    .gravity(0.3)
+
+function zoomRedraw() {
+  if (animated)
+    return
+  view.attr("transform",
+           "translate("+ d3.event.translate +")"+ " scale("+ d3.event.scale +")");
+}
+
+function resize() {
+  var el = svg[0][0], width = el.clientWidth, height = el.clientHeight
+  force.size([width, height])
+}
+resize()
+window.addEventListener("onresize", resize)
+
+
+var width = 1024, height = 768
+
+
+view.append("defs").selectAll("marker")
+    .data(["arrow"])
+  .enter().append("marker")
+    .attr("id", String)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 30).attr("refY", 0)
+    .attr("markerWidth", 10).attr("markerHeight", 5)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5");
+
+d3.json("classes.json", function(error, graph) {
+  force
+      .nodes(graph.nodes)
+      .links(graph.links)
+
+  var link = view.selectAll(".link")
+      .data(graph.links)
+    .enter().append("line")
+      .attr("class", "link")
+      .style("stroke-width", 2)
+
+  var node = view.selectAll(".node")
+      .data(graph.nodes)
+      .enter().append("g")
+      .attr("class", function (d) { return d.base? "base node" : "node" })
+      .on("dblclick", function () {
+        d3.event.stopPropagation()
+        if (!animated) {
+          node.call(force.drag)
+          force.start()
+        } else {
+          force.stop()
+          node.on("mousedown.drag", null)
+        }
+        animated = !animated
+      }, true)
+
+  node.append("title")
+      .text(function(d) { return d.base? d.name : d.name +" < "+ d.groupName; })
+
+  node.append("ellipse")
+      .attr("rx", 32).attr("ry", 16)
+      .style("fill", function(d) { return color(d.group); })
+
+  node.append("text")
+      .attr("dy", ".31em")
+      .text(function(d) { return d.name; })
+
+  force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; })
+        .attr("marker-end", "url(#arrow)")
+
+    node.attr('transform', function (d) { return "translate("+ d.x +","+ d.y +")" })
+    //node.attr("cx", function(d) { return d.x; })
+    //    .attr("cy", function(d) { return d.y; })
+  })
+
+  force.start()
+  if (!animated) {
+    var n = 80; // depends on graph complexity..
+    for (var i = n * n; i > 0; --i) force.tick()
+    force.stop()
+  }
+
+});
+
+</script>
