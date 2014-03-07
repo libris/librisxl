@@ -55,17 +55,6 @@ var color = d3.scale.category20()
 var svg = d3.select("body").append("svg")
     .attr("pointer-events", "all")
 
-var view = svg.append("g")
-    .call(d3.behavior.zoom().on("zoom", zoomRedraw))
-    .append("g")
-
-function zoomRedraw() {
-  if (animated)
-    return
-  var evt = d3.event
-  view.attr("transform", "translate("+ evt.translate +") scale("+ evt.scale +")")
-}
-
 function resize() {
   var el = svg[0][0], width = el.clientWidth, height = el.clientHeight
   force.size([width, height])
@@ -74,7 +63,7 @@ resize()
 window.addEventListener("onresize", resize)
 
 
-view.append("defs").selectAll("marker")
+svg.append("defs").selectAll("marker")
     .data(["arrow"])
   .enter().append("marker")
     .attr("id", String)
@@ -85,7 +74,19 @@ view.append("defs").selectAll("marker")
     .append("path")
     .attr("d", "M0,-5L10,0L0,5");
 
-d3.json("terms.json", function (error, source) {
+
+function viewData(source) {
+
+  var view = svg.append("g")
+      .call(d3.behavior.zoom().on("zoom", zoomRedraw))
+      .append("g")
+
+  function zoomRedraw() {
+    if (animated)
+      return
+    var evt = d3.event
+    view.attr("transform", "translate("+ evt.translate +") scale("+ evt.scale +")")
+  }
 
   var nodeIndex = {}
   source.nodes.forEach(function (node) {
@@ -166,6 +167,19 @@ d3.json("terms.json", function (error, source) {
     force.stop()
   }
 
-});
+}
+
+
+function handleLocation() {
+  var ref = document.location.hash.substring(1)
+  d3.select("svg").select("g").remove()
+  if (ref) {
+    d3.json(ref, function (err, data) { viewData(data) })
+  }
+}
+
+window.addEventListener("hashchange", handleLocation)
+
+handleLocation()
 
 </script>
