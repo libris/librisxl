@@ -37,7 +37,6 @@ class WhelkInitializer {
                 def whelk = Class.forName(meta._class).getConstructor(String.class).newInstance(wname)
                 // Find setters for whelk.
                 meta.each { key, value ->
-                    log.info("Key: $key, value: $value")
                     if (!(key =~ /^_.+$/)) {
                         log.trace("Found a property to set for $wname: $key = $value")
                         whelk."$key" = value

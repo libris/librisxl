@@ -1196,17 +1196,25 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 int biggestList = 0
                 for (result in resultLists) { if (result.hits.size() > biggestList) { biggestList = result.hits.size() } }
 
-                for (int i = 0; i < biggestList; i++) {
+                for (int i = 0; i <= biggestList; i++) {
                     for (result in resultLists) {
                         results.hits[result.database] = result.numberOfHits
                         try {
-                            def hit = ['database':result.database, 'data': result.hits[i].dataAsMap]
+                            def hit = ['database':result.database]
+                            if (result.error) {
+                                hit['error'] = result.error
+                            } else if (i < result.hits.size()) {
+                                hit['data'] = result.hits[i].dataAsMap
+                            }
                             results.list << hit
                         } catch (ArrayIndexOutOfBoundsException aioobe) {
                             log.debug("Overstepped array bounds.")
+                        } catch (NullPointerException npe) {
+                            log.trace("npe.")
                         }
                     }
                 }
+
                 output = mapper.writeValueAsString(results)
             }
         } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
@@ -1269,10 +1277,16 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 }
             } catch (org.xml.sax.SAXParseException spe) {
                 log.error("Failed to parse XML: ${url.text}")
-                throw spe
+                results = new MetaproxySearchResult(database, 0)
+                results.error = "Failed to parse XML (${spe.message}))"
+            } catch (java.net.ConnectException ce) {
+                log.error("Connection failed", ce)
+                results = new MetaproxySearchResult(database, 0)
+                results.error = "Connection with metaproxy failed."
             } catch (Exception e) {
-                log.error("Could not convert document from $docStrings")
-                throw e
+                log.error("Could not convert document from $docStrings", e)
+                results = new MetaproxySearchResult(database, 0)
+                results.error = "Failed to convert results to JSON."
             }
             return results
         }
@@ -1280,7 +1294,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
 
     class MetaproxySearchResult extends SearchResult {
 
-        String database
+        String database, error
 
         MetaproxySearchResult(String db, int nrHits) {
             super(nrHits)
