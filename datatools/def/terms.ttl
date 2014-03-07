@@ -182,8 +182,10 @@
 
 # Combined Content Types
 
-:CartographicImage rdfs:subClassOf :Cartography, :Image .
-:CartographicObject rdfs:subClassOf :Cartography, :ThreeDimensionalObject .
+:CartographicImage a owl:Class;
+    rdfs:subClassOf :Cartography, :Image .
+:CartographicObject a owl:Class;
+    rdfs:subClassOf :Cartography, :ThreeDimensionalObject .
 
 # TODO: link above to:
 @prefix RDAContentType: <http://rdvocab.info/termList/RDAContentType/> .
