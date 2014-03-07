@@ -42,7 +42,7 @@ var force = d3.layout.force()
     .charge(function (d) {
       if (d.link)
         return -20
-      return -(200 + 100 * d.children.length + 20 * d.siblingCount)
+      return -(200 + 100 * d.children.length + 20 * (d.siblingCount || 0))
     })
     .linkDistance(20)
     .linkStrength(0.1)
@@ -62,8 +62,8 @@ var view = svg.append("g")
 function zoomRedraw() {
   if (animated)
     return
-  view.attr("transform",
-           "translate("+ d3.event.translate +")"+ " scale("+ d3.event.scale +")");
+  var evt = d3.event
+  view.attr("transform", "translate("+ evt.translate +") scale("+ evt.scale +")")
 }
 
 function resize() {
@@ -85,19 +85,28 @@ view.append("defs").selectAll("marker")
     .append("path")
     .attr("d", "M0,-5L10,0L0,5");
 
-d3.json("classes.json", function (error, graph) {
+d3.json("terms.json", function (error, source) {
 
-  var nodes = graph.nodes.slice(),
+  var nodeIndex = {}
+  source.nodes.forEach(function (node) {
+    nodeIndex[node.name] = node
+  })
+
+  var nodes = source.nodes.slice(),
       links = [],
       bilinks = []
 
-  graph.links.forEach(function (link) {
-    var s = nodes[link.source],
-        t = nodes[link.target],
-        im = {link: true}
-    nodes.push(im)
-    links.push({source: s, target: im}, {source: im, target: t})
-    bilinks.push([s, im, t])
+  source.nodes.forEach(function (node) {
+    if (!node.children)
+      return
+    node.children.forEach(function (id) {
+      var child = nodeIndex[id]
+      child.siblingCount = (child.siblingCount || 0) + node.children.length
+      var im = {link: true}
+      nodes.push(im)
+      links.push({source: child, target: im}, {source: im, target: node})
+      bilinks.push([child, im, node])
+    })
   })
 
   force
@@ -110,9 +119,9 @@ d3.json("classes.json", function (error, graph) {
       .attr("class", "link")
 
   var node = view.selectAll(".node")
-      .data(graph.nodes)
+      .data(source.nodes)
       .enter().append("g")
-      .attr("class", function (d) { return d.base? "base node" : "node" })
+      .attr("class", function (d) { return d.isBase? "base node" : "node" })
       .on("dblclick", function () {
         d3.event.stopPropagation()
         if (!animated) {
@@ -129,11 +138,11 @@ d3.json("classes.json", function (error, graph) {
   }
 
   node.append("title")
-      .text(function(d) { return d.base? d.name : d.name +" < "+ d.groupName; })
+      .text(function(d) { return d.isBase? d.name : d.name +" < "+ d.groupName; })
 
   node.append("ellipse")
       .attr("rx", 32).attr("ry", 16)
-      .style("fill", function(d) { return color(d.group); })
+      .style("fill", function(d) { return color(d.groupName); })
 
   node.append("text")
       .attr("dy", ".31em")

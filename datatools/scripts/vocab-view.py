@@ -18,13 +18,18 @@ def get_name(r, lang):
         name = r.qname()
     return name
 
-def in_vocab(r):
-    return ':' not in r.qname()
+def in_vocab(r, vocab):
+    if not vocab.endswith(':'):
+        r.graph.bind('', URIRef(vocab))
+    if isinstance(r.identifier, BNode):
+        return False
+    return ':' not in r.qname() or r.qname().startswith(vocab)
 
-def make_vocab_tree(g, lang):
+
+def make_vocab_tree(g, lang, vocab):
     topclasses = []
     for rclass in g.resource(OWL.Class).subjects(RDF.type):
-        if any(pc for pc in rclass.objects(RDFS.subClassOf) if in_vocab(pc)):
+        if any(pc for pc in rclass.objects(RDFS.subClassOf) if in_vocab(pc, vocab)):
             continue
         topclasses.append(tree_node(rclass, lang))
     return {
@@ -40,45 +45,30 @@ def tree_node(rclass, lang):
         node['children'] = children
     return node
 
-def make_vocab_graph(g, lang):
+
+def make_vocab_graph(g, lang, vocab):
     nodes = []
-    namemap = {}
-    for rclass in g.resource(OWL.Class).subjects(RDF.type):
+    classes = set(g.resource(r) for r, o in g.subject_objects(RDF.type)
+            if o in {RDFS.Class, OWL.Class})
+    for rclass in classes:
+        if not in_vocab(rclass, vocab):
+            continue
         name = get_name(rclass, lang)
+        child_names = [get_name(sc, lang) for sc in rclass.subjects(RDFS.subClassOf)]
+        top_base = list(bc for bc in rclass.objects(RDFS.subClassOf*'*')
+                if in_vocab(bc, vocab))[-1]
+        group_name = get_name(top_base, lang)
+        is_base = not any(bc for bc in rclass.objects(RDFS.subClassOf)
+                if in_vocab(bc, vocab))
         node = {
             'name': name,
-            'children': [],
-            'siblingCount': 0
+            'children': child_names,
+            'groupName': group_name,
+            'isBase': is_base
         }
         nodes.append(node)
-        namemap[name] = rclass, node
 
-    nodes.sort(key=lambda node: node['name'])
-    for i, node in enumerate(nodes):
-        node['i'] = i
-    links = []
-    for node in nodes:
-        rclass = namemap[node['name']][0]
-        top_base = list(bc for bc in rclass.objects(RDFS.subClassOf*'*')
-                if in_vocab(bc))[-1]
-        group_name = get_name(top_base, lang)
-        node['groupName'] = group_name
-        node['group'] = namemap[group_name][1]['i']
-        is_base = True
-        for bc in rclass.objects(RDFS.subClassOf):
-            if not in_vocab(bc):
-                continue
-            is_base = False
-            basenode = namemap[get_name(bc, lang)][1]
-            links.append({'source': node['i'], 'target': basenode['i']})
-            basenode['children'].append(node['i'])
-            node['siblingCount'] += len(basenode['children'])
-            continue
-        node['base'] = is_base
-    return {
-        'nodes': nodes,
-        'links': links
-    }
+    return {'nodes': sorted(nodes, key=lambda node: node['name'])}
 
 
 if __name__ == '__main__':
@@ -86,10 +76,11 @@ if __name__ == '__main__':
     args = sys.argv[1:]
     kind = args.pop(0)
     lang = 'sv'
+    vocab = args.pop(0)
     g = to_graph(args)
     if kind == 'tree':
-        data = make_vocab_tree(g, lang)
+        data = make_vocab_tree(g, lang, vocab)
     else:
-        data = make_vocab_graph(g, lang)
+        data = make_vocab_graph(g, lang, vocab)
     print json.dumps(data, sort_keys=True, ensure_ascii=False,
             indent=2, separators=(',', ': ')).encode('utf-8')
