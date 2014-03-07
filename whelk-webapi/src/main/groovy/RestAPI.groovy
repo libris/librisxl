@@ -1214,7 +1214,6 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                         }
                     }
                 }
-
                 output = mapper.writeValueAsString(results)
             }
         } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
