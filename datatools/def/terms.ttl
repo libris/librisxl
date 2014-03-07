@@ -105,10 +105,10 @@
     ptg:abstract true;
     rdfs:subClassOf sdo:CreativeWork .
 
-:GeneralizedWork a owl:Class;
-    rdfs:label "Generaliserat verk"@sv;
+:ConceptualWork a owl:Class;
+    rdfs:label "Konceptuellt verk"@sv;
     owl:equivalentClass bf:Work;
-    rdfs:subClassOf :CreativeWork, sdo:ProductModel . #, rdfa:Pattern .
+    rdfs:subClassOf :CreativeWork, sdo:ProductModel, :Concept . #, rdfa:Pattern .
 
 :Product a owl:Class;
     rdfs:label "Instans"@sv;
@@ -134,6 +134,7 @@
     owl:equivalentClass dctype:Image, foaf:Image .
 
 :MixedMaterial a owl:Class;
+    rdfs:subClassOf :CreativeWork, :Composite;
     owl:equivalentClass bf:MixedMaterial .
 
 :MovingImage a owl:Class; # Film, Video
@@ -170,13 +171,13 @@
 :Text a owl:Class;
     rdfs:subClassOf :CreativeWork;
     rdfs:label "Text"@sv;
-    rdfs:subClassOf :UniformWork;
     owl:equivalentClass dctype:Text, bf:Text, dc:BibliographicResource .
 
 :ThreeDimensionalObject a owl:Class;
     owl:equivalentClass bf:ThreeDimensionalObject .
 
 :InteractiveResource a owl:Class;
+    rdfs:subClassOf :CreativeWork;
     rdfs:subClassOf dctype:InteractiveResource .
 
 # Combined Content Types
@@ -314,10 +315,10 @@
 # Concrete Types (can grow a lot, be combined with e.g. productontology...)
 
 :Database a owl:Class;
-    rdfs:subClassOf :Integrating, :Dataset .
+    rdfs:subClassOf :Integrating, :Digital, :Dataset .
 
 :Website a owl:Class;
-    rdfs:subClassOf :Integrating;
+    rdfs:subClassOf :Integrating, :Digital;
     owl:equivalentClass bibo:Website .
 
 :Book a owl:Class;
@@ -487,7 +488,7 @@
     owl:equivalentProperty sdo:deathDate .
 
 :Persona a owl:Class;
-    rdfs:subClassOf :Person;
+    rdfs:subClassOf :Person, :Concept;
     owl:equivalentClass persona:Persona .
 
 :hasPersona a owl:ObjectProperty;

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<title>Vocab Viewer</title>
+<meta charset="utf-8">
+<style>
+
+body {
+  margin: 0; padding: 0;
+}
+
+.node > ellipse {
+  stroke-width: 1.5px;
+  stroke: #fff;
+}
+.base.node > ellipse {
+  stroke: #000;
+}
+
+.node > text {
+  color: #000;
+  text-anchor: middle;
+}
+
+.link {
+  fill: none;
+  stroke: #999;
+  stroke-width: 2;
+  stroke-opacity: .6;
+}
+
+svg {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+}
+
+</style>
+<body>
+<script src="d3.v3.min.js"></script>
+<script>
+
+var force = d3.layout.force()
+    .charge(function (d) {
+      if (d.link)
+        return -20
+      return -(200 + 100 * d.children.length + 20 * d.siblingCount)
+    })
+    .linkDistance(20)
+    .linkStrength(0.1)
+    .gravity(0.1)
+
+var animated = true
+
+var color = d3.scale.category20()
+
+var svg = d3.select("body").append("svg")
+    .attr("pointer-events", "all")
+
+var view = svg.append("g")
+    .call(d3.behavior.zoom().on("zoom", zoomRedraw))
+    .append("g")
+
+function zoomRedraw() {
+  if (animated)
+    return
+  view.attr("transform",
+           "translate("+ d3.event.translate +")"+ " scale("+ d3.event.scale +")");
+}
+
+function resize() {
+  var el = svg[0][0], width = el.clientWidth, height = el.clientHeight
+  force.size([width, height])
+}
+resize()
+window.addEventListener("onresize", resize)
+
+
+view.append("defs").selectAll("marker")
+    .data(["arrow"])
+  .enter().append("marker")
+    .attr("id", String)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 30).attr("refY", 0)
+    .attr("markerWidth", 10).attr("markerHeight", 5)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5");
+
+d3.json("classes.json", function (error, graph) {
+
+  var nodes = graph.nodes.slice(),
+      links = [],
+      bilinks = []
+
+  graph.links.forEach(function (link) {
+    var s = nodes[link.source],
+        t = nodes[link.target],
+        im = {link: true}
+    nodes.push(im)
+    links.push({source: s, target: im}, {source: im, target: t})
+    bilinks.push([s, im, t])
+  })
+
+  force
+      .nodes(nodes)
+      .links(links)
+
+  var link = view.selectAll(".link")
+      .data(bilinks)
+      .enter().append("path")
+      .attr("class", "link")
+
+  var node = view.selectAll(".node")
+      .data(graph.nodes)
+      .enter().append("g")
+      .attr("class", function (d) { return d.base? "base node" : "node" })
+      .on("dblclick", function () {
+        d3.event.stopPropagation()
+        if (!animated) {
+          node.call(force.drag)
+          force.start()
+        } else {
+          force.stop()
+          node.on("mousedown.drag", null)
+        }
+        animated = !animated
+      }, true)
+  if (animated) {
+      node.call(force.drag)
+  }
+
+  node.append("title")
+      .text(function(d) { return d.base? d.name : d.name +" < "+ d.groupName; })
+
+  node.append("ellipse")
+      .attr("rx", 32).attr("ry", 16)
+      .style("fill", function(d) { return color(d.group); })
+
+  node.append("text")
+      .attr("dy", ".31em")
+      .text(function(d) { return d.name; })
+
+  force.on("tick", function() {
+    link.attr("d", function(d) {
+          return "M" + d[0].x + "," + d[0].y
+          + "S" + d[1].x + "," + d[1].y
+          + " " + d[2].x + "," + d[2].y
+        })
+        .attr("marker-end", "url(#arrow)")
+
+    node.attr('transform', function (d) { return "translate("+ d.x +","+ d.y +")" })
+  })
+
+  force.start()
+  if (!animated) {
+    var n = 80; // depends on graph complexity..
+    for (var i = n * n; i > 0; --i) force.tick()
+    force.stop()
+  }
+
+});
+
+</script>
