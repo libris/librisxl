@@ -37,22 +37,23 @@ class WhelkInitializer {
                 def whelk = Class.forName(meta._class).getConstructor(String.class).newInstance(wname)
                 // Find setters for whelk.
                 meta.each { key, value ->
+                    log.info("Key: $key, value: $value")
                     if (!(key =~ /^_.+$/)) {
                         log.trace("Found a property to set for $wname: $key = $value")
                         whelk."$key" = value
+                    } else if (value instanceof List) {
+                        log.info("Adding plugins from group $key")
+                        for (p in value) {
+                            if (!disabled.contains(p)) {
+                                def plugin = getPlugin(p, wname)
+                                log.info("Adding plugin ${plugin.id} to ${whelk.id}")
+                                whelk.addPlugin(plugin)
+                            } else {
+                                log.info("Plugin \"${p}\" has been disabled because you said so.")
+                            }
+                        }
                     }
                 }
-                for (p in meta._plugins) {
-                    if (!disabled.contains(p)) {
-                        def plugin = getPlugin(p, wname)
-                        log.info("Adding plugin ${plugin.id} to ${whelk.id}")
-                        whelk.addPlugin(plugin)
-                    } else {
-                        log.info("Plugin \"${p}\" has been disabled because you said so.")
-                    }
-                }
-                //log.debug("Initializing the whelk")
-                //whelk.init()
                 whelklist << whelk
             }
         }

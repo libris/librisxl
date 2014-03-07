@@ -18,25 +18,30 @@
     {
         "libris":{
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-            "_plugins": [
-                "localindex",
-                "flatstorage",
-                "fusekigraphstore",
+            "_converters": [
                 "oaipmhxmlconverter",
                 "marcconverter",
-                "operator",
-                "search",
-                "remotesearch",
-                "completeexpander",
-                "sparqlapi",
-                "libcount",
-                "documentapi",
-                "turtleconverter",
-                "entityextractor",
-                "linkcompleter",
-                "indexlinkfinder",
+                "turtleconverter"
+                ],
+            "_importers": [
                 "oaipmhimporter",
                 "marcimporter"
+                ],
+            "_apis": [
+                "remotesearch",
+                "operator",
+                "search",
+                "sparqlapi",
+                "libcount",
+                "completeexpander",
+                "documentapi"
+                ],
+            "_otherplugins": [
+                "localindex",
+                "flatstorage",
+                "entityextractor",
+                "linkcompleter",
+                "indexlinkfinder"
                 ],
             "contentRoot" : "/",
             "docBaseUri" : "http://libris.kb.se/"

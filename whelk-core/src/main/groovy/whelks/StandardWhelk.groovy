@@ -173,7 +173,7 @@ class StandardWhelk implements Whelk {
             }
         }
         if (!stored) {
-            throw new WhelkAddException("No suitable storage found for content-type ${doc.contentType}.", [doc.identifier])
+            throw new PluginConfigurationException("You have storages configured, but none available for these documents.")
         }
         log.trace("Final conversion left document in ctype ${doc.contentType}")
         return doc
@@ -203,8 +203,8 @@ class StandardWhelk implements Whelk {
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
             }
-        } else {
-            log.debug("Couldn't find any suitable indexes ... $activeIndexes")
+        } else if (indexes.size() > 0) {
+            throw new PluginConfigurationException("You have indices configured, but none available for these documents.")
         }
     }
 
@@ -233,8 +233,8 @@ class StandardWhelk implements Whelk {
             } else if (log.isDebugEnabled()) {
                 log.debug("No graphs to update.")
             }
-        } else {
-            log.debug("Couldn't find any suitable graphstores ... $activeGraphStores")
+        } else if (graphStores.size() > 0) {
+            throw new PluginConfigurationException("You have graphstores configured, but none available for these documents.")
         }
     }
 

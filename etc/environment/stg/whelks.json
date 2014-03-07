@@ -3,25 +3,31 @@
         {
             "libris":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins": [
+                "_converters": [
+                    "oaipmhxmlconverter",
+                    "marcconverter",
+                    "turtleconverter"
+                ],
+                "_importers": [
+                    "oaipmhimporter",
+                    "marcimporter"
+                ],
+                "_apis": [
+                    "remotesearch",
+                    "operator",
+                    "search",
+                    "sparqlapi",
+                    "libcount",
+                    "completeexpander",
+                    "documentapi"
+                ],
+                "_otherplugins": [
                     "index",
                     "cassandrastorage",
                     "oaipmhstorage",
-                    "oaipmhxmlconverter",
-                    "marcconverter",
-                    "operator",
-                    "search",
-                    "remotesearch",
-                    "completeexpander",
-                    "sparqlapi",
-                    "libcount",
-                    "documentapi",
-                    "turtleconverter",
                     "entityextractor",
                     "linkcompleter",
-                    "indexlinkfinder",
-                    "oaipmhimporter",
-                    "marcimporter"
+                    "indexlinkfinder"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
