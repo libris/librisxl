@@ -10,6 +10,8 @@ import org.restlet.representation.*
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.map.SerializationConfig.Feature
 
+import java.util.concurrent.*
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.importers.*
@@ -180,6 +182,7 @@ class ReindexOperator extends AbstractOperator {
     List<String> selectedComponents = null
     String startAt = null
     String fromStorage = null
+    ExecutorService queue
 
     @Override
     void setParameters(Map parameters) {
@@ -193,6 +196,7 @@ class ReindexOperator extends AbstractOperator {
     void doRun(long startTime) {
         List<Document> docs = []
         boolean indexing = !startAt
+        queue = Executors.newSingleThreadExecutor()
         if (!dataset) {
             for (index in whelk.indexes) {
                 if (!selectedComponents || index in selectedComponents) {
@@ -219,21 +223,7 @@ class ReindexOperator extends AbstractOperator {
                         docs << doc
                     }
                 if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
-                    try {
-                        whelk.addToGraphStore(docs, selectedComponents)
-                    } catch (WhelkAddException wae) {
-                        errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                        log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
-                    }
-                    try {
-                        whelk.addToIndex(docs, selectedComponents)
-                    } catch (WhelkAddException wae) {
-                        errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                        log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
-                    } catch (PluginConfigurationException pce) {
-                        log.error("System badly configured", pce)
-                        throw pce
-                    }
+                    doTheIndexing(docs)
                     docs = []
                     runningTime = System.currentTimeMillis() - startTime
                 }
@@ -271,6 +261,27 @@ class ReindexOperator extends AbstractOperator {
                 }
             }
         }
+        queue.shutdown()
+    }
+
+    void doTheIndexing(final List docs) {
+        queue.execute({
+            try {
+                whelk.addToGraphStore(docs, selectedComponents)
+            } catch (WhelkAddException wae) {
+                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+            log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
+            }
+            try {
+                whelk.addToIndex(docs, selectedComponents)
+            } catch (WhelkAddException wae) {
+                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+                log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
+            } catch (PluginConfigurationException pce) {
+                log.error("System badly configured", pce)
+                throw pce
+            }
+        } as Runnable)
     }
 
     @Override
