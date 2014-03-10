@@ -176,7 +176,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                 }
             } catch (Exception e) {
                 StringWriter sw = new StringWriter()
-                e.printStackTrace(sw)
+                e.printStackTrace(new PrintWriter(sw))
                 errorMessages << new String("Exception on add: ${sw.toString()}")
                 if (!exceptionLog) {
                     exceptionLog = new File("exceptions.log")

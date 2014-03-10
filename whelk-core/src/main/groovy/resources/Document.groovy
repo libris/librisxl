@@ -143,8 +143,8 @@ class Document {
      */
     Document withMetaEntry(String jsonEntry) {
         Map metaEntry = mapper.readValue(jsonEntry, Map)
-        this.entry = metaEntry.entry
-        this.meta = metaEntry.meta
+        withEntry(metaEntry.entry)
+        withMeta(metaEntry.meta)
         return this
     }
 

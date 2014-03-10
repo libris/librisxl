@@ -14,12 +14,29 @@ import com.netflix.astyanax.connectionpool.impl.*
 import com.netflix.astyanax.serializers.*
 import com.netflix.astyanax.thrift.*
 import com.netflix.astyanax.util.*
+import com.netflix.astyanax.annotations.Component
 
 import com.google.common.collect.ImmutableMap
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.exception.*
+
+class DocumentEntry {
+    @Component(ordinal=0)
+    Long timestamp
+    @Component(ordinal=1)
+    String dataset
+    @Component(ordinal=2)
+    String field
+
+    DocumentEntry() {}
+    DocumentEntry(long ts, String ds, String f) {
+        this.timestamp = ts
+        this.dataset = ds
+        this.field = f
+    }
+}
 
 @Log
 class CassandraStorage extends BasicPlugin implements Storage {
@@ -35,20 +52,28 @@ class CassandraStorage extends BasicPlugin implements Storage {
     final String COL_NAME_DATASET = "dataset"
     final String COL_NAME_TIMESTAMP = "ts"
     final String CREATE_TABLE_STATEMENT =
-    String.format("CREATE TABLE %s (%s varchar, %s blob, %s varchar, %s varchar, PRIMARY KEY (%s)) WITH COMPACT STORAGE",
-    CF_DOCUMENT_NAME, COL_NAME_IDENTIFIER, COL_NAME_DATA, COL_NAME_ENTRY, COL_NAME_DATASET,
-    COL_NAME_IDENTIFIER)
+    String.format("CREATE TABLE %s (%s varchar, %s blob, %s varchar, %s varchar, %s timestamp, PRIMARY KEY (%s, %s, %s))", // WITH COMPACT STORAGE",
+    CF_DOCUMENT_NAME, COL_NAME_IDENTIFIER, COL_NAME_DATA, COL_NAME_ENTRY, COL_NAME_DATASET, COL_NAME_TIMESTAMP,
+    COL_NAME_IDENTIFIER, COL_NAME_TIMESTAMP, COL_NAME_DATASET)
+
+    final String INSERT_STATEMENT = "INSERT INTO $CF_DOCUMENT_NAME ($COL_NAME_IDENTIFIER, $COL_NAME_DATA, $COL_NAME_ENTRY, $COL_NAME_DATASET, $COL_NAME_TIMESTAMP) VALUES (?, ?, ?, ?, ?);";
 
     final String CREATE_INDEX_STATEMENT =
     String.format("CREATE INDEX %s ON %s (%s)",
     COL_NAME_DATASET, CF_DOCUMENT_NAME, COL_NAME_DATASET)
 
+    /*
     ColumnFamily<String,String> CF_DOCUMENT = ColumnFamily.newColumnFamily(
         CF_DOCUMENT_NAME,
         StringSerializer.get(),
         StringSerializer.get())
+        */
+
 
     boolean versioningStorage = true
+
+    AnnotatedCompositeSerializer<DocumentEntry> documentSerializer = new AnnotatedCompositeSerializer<DocumentEntry>(DocumentEntry.class)
+    ColumnFamily<String, DocumentEntry> CF_DOCUMENT = new ColumnFamily<String, DocumentEntry>(CF_DOCUMENT_NAME, StringSerializer.get(), documentSerializer)
 
     CassandraStorage(Map settings) {
         super()
@@ -128,13 +153,14 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     boolean store(String key, Document doc, Keyspace ksp, boolean checkDigest, boolean checkExisting = true, boolean checkContentType = true) {
-        log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}")
+        log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}");
         if (doc && (!checkContentType || handlesContent(doc.contentType) )) {
             if (versioningStorage) {
                 def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
-                    if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
-                        throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
-                    }
+                log.trace("existingDocument: $existingDocument")
+                if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
+                    throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
+                }
                 if (existingDocument) {
                     log.trace("Found changes in ${existingDocument.entry.checksum} (orig) and ${doc.entry.checksum} (new)")
                     def entry = existingDocument.entry
@@ -161,19 +187,60 @@ class CassandraStorage extends BasicPlugin implements Storage {
             }
 
             // Commence saving
-            MutationBatch m = ksp.prepareMutationBatch()
             String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
             log.trace("Saving document ${key} with dataset $dataset")
-            m.withRow(CF_DOCUMENT, key)
+
+            try {
+
+
+                /*
+        AnnotatedCompositeSerializer<FishBlog> entitySerializer = new AnnotatedCompositeSerializer<FishBlog>(FishBlog.class);
+        MutationBatch mutation = keyspace.prepareMutationBatch();
+        ColumnFamily<String, FishBlog> columnFamily = new ColumnFamily<String, FishBlog>(columnFamilyName,
+                StringSerializer.get(), entitySerializer);
+        mutation.withRow(columnFamily, rowKey).putColumn(blog, value, null);
+        mutation.execute();
+
+
+                MutationBatch m = ksp.prepareMutationBatch()
+
+                m.withRow(CF_DOCUMENT, key)
+                    .putColumn(new DocumentEntry(dataset=dataset, timestamp=doc.timestamp, field="data"), doc.data, null)
+                    .execute()
+                    */
+
+
+                writeDocumentRow(ksp, key, new DocumentEntry(doc.timestamp, dataset, COL_NAME_DATA), doc.data)
+                writeDocumentRow(ksp, key, new DocumentEntry(doc.timestamp, dataset, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"))
+
+                    /*
+
+                new DocumentEntry(identifier=key,dataset=dataset,timestamp=doc.timestamp, field=data))
                 .putColumn(COL_NAME_IDENTIFIER , doc.identifier)
                 .putColumn(COL_NAME_DATA, new String(doc.data, "UTF-8"), null)
                 .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
                 .putColumn(COL_NAME_DATASET, dataset, null)
-            try {
+                .putColumn(COL_NAME_TIMESTAMP, doc.timestamp, null)
                 def result = m.execute()
+                */
+            /*
+                def result = ksp
+                    .prepareQuery(CF_DOCUMENT)
+                    .withCql(INSERT_STATEMENT)
+                    .asPreparedStatement()
+                    .withStringValue(doc.identifier)
+                    .withValue(java.nio.ByteBuffer.wrap(doc.data))
+                    .withStringValue(doc.metadataAsJson)
+                    .withStringValue(dataset)
+                    .withLongValue(doc.timestamp)
+                    .execute()
+                log.info("result: $result")
+            */
             } catch (ConnectionException ce) {
                 log.error("Connection failed", ce)
                 return false
+            } catch (Exception e) {
+                log.error("Error", e)
             }
             return true
         } else {
@@ -184,6 +251,14 @@ class CassandraStorage extends BasicPlugin implements Storage {
             }
         }
         return false
+    }
+
+    void writeDocumentRow(Keyspace ksp, String key, DocumentEntry entry, byte[] value) {
+        MutationBatch mutation = ksp.prepareMutationBatch()
+
+        mutation.withRow(CF_DOCUMENT, key).putColumn(entry, value, null)
+        def results = mutation.execute()
+        log.info("results: $results")
     }
 
     @Override
@@ -198,22 +273,30 @@ class CassandraStorage extends BasicPlugin implements Storage {
         }
         log.trace("Version is $version")
 
-        OperationResult<ColumnList<String>> operation
+        OperationResult<ColumnList<DocumentEntry>> operation
         if (version) {
             operation = versionsKeyspace.prepareQuery(CF_DOCUMENT).getKey(uri+"?version=$version").execute()
         } else {
-            operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri).execute()
+            log.debug("Trying to load document with key:$uri")
+            operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri.toString()).execute()
         }
-        ColumnList<String> res = operation.getResult()
+        ColumnList<DocumentEntry> res = operation.getResult()
 
         log.trace("Search operation result size: ${res.size()}")
 
         if (res.size() > 0) {
-            log.debug("Digging up a document with identifier $uri from ${this.id}.")
+            log.trace("Digging up a document with identifier $uri from ${this.id}.")
             document = new Document()
-                .withIdentifier(res.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
-                .withData(res.getColumnByName(COL_NAME_DATA).getByteArrayValue())
-                .withMetaEntry(res.getColumnByName(COL_NAME_ENTRY).getStringValue())
+            for (r in res) {
+                DocumentEntry e = r.name
+                document.withTimestamp(e.timestamp)
+                if (e.field == COL_NAME_ENTRY) {
+                    document.withMetaEntry(r.getStringValue())
+                }
+                if (e.field == COL_NAME_DATA) {
+                    document.withData(r.getByteArrayValue())
+                }
+            }
         }
         if (!document && version) {
             log.trace("Did document loading fail because we explicitliy requested the latest version ($version)?")
@@ -223,6 +306,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 document = null
             }
         }
+        log.trace("Returning document $document")
         return document
     }
 
@@ -250,7 +334,10 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Iterable<Document> getAll(String dataset = null) {
+    Iterable<Document> getAll(String dataset = null, Date since = null) {
+        if (!dataset && since) {
+            throw new QueryException("Parameter 'since' requires a 'dataset'")
+        }
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 def query
@@ -316,13 +403,20 @@ class CassandraStorage extends BasicPlugin implements Storage {
             def doc
             while (!success) {
                 try {
-                    Row<String,String> row = iter.next()
-                    doc = new Document()
-                        .withIdentifier(row.columns.getColumnByName(COL_NAME_IDENTIFIER).getStringValue())
-                        .withData(row.columns.getColumnByName(COL_NAME_DATA).getByteArrayValue())
-                        .withMetaEntry(row.columns.getColumnByName(COL_NAME_ENTRY).getStringValue())
+                    def res = iter.next()
+                    doc = new Document().withIdentifier(res.key)
+                    for (c in res.columns) {
+                        DocumentEntry e = c.name
+                        doc.withTimestamp(e.timestamp)
+                        if (e.field == COL_NAME_ENTRY) {
+                            doc.withMetaEntry(c.getStringValue())
+                        }
+                        if (e.field == COL_NAME_DATA) {
+                            doc.withData(c.getByteArrayValue())
+                        }
+                    }
                     success = true
-                    log.trace("Next yielded ${doc.identifier}")
+                    log.trace("Next yielded ${doc.identifier} (${doc.dataAsString})")
                 } catch (Exception ce) {
                     log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...")
                     Thread.sleep(1000)
