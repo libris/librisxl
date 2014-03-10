@@ -197,6 +197,7 @@ class ReindexOperator extends AbstractOperator {
         List<Document> docs = []
         boolean indexing = !startAt
         queue = Executors.newSingleThreadExecutor()
+        def futures = [].asSynchronized()
         if (!dataset) {
             for (index in whelk.indexes) {
                 if (!selectedComponents || index in selectedComponents) {
@@ -223,7 +224,7 @@ class ReindexOperator extends AbstractOperator {
                         docs << doc
                     }
                 if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
-                    doTheIndexing(docs)
+                    doTheIndexing(futures, docs)
                     docs = []
                     runningTime = System.currentTimeMillis() - startTime
                 }
@@ -239,13 +240,13 @@ class ReindexOperator extends AbstractOperator {
                 whelk.addToGraphStore(docs, selectedComponents)
             } catch (WhelkAddException wae) {
                 errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                    log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
+                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
             try {
                 whelk.addToIndex(docs, selectedComponents)
             } catch (WhelkAddException wae) {
                 errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                    log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
+                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
         }
         log.info("Reindexed $count documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
@@ -261,27 +262,39 @@ class ReindexOperator extends AbstractOperator {
                 }
             }
         }
+        operatorState=OperatorState.FINISHING
+        boolean cleanResult = true
+        log.debug("Number of futures: ${futures.size()}")
+        for (f in futures) {
+            def b = f.get()
+            log.debug("Collecting results from threads ... ($b)")
+            cleanResult = cleanResult && f.get()
+        }
+        log.info("Reindexing completed cleanly: $cleanResult")
         queue.shutdown()
     }
 
-    void doTheIndexing(final List docs) {
-        queue.execute({
+    void doTheIndexing(List futures, final List docs) {
+        futures << queue.submit({
             try {
                 whelk.addToGraphStore(docs, selectedComponents)
             } catch (WhelkAddException wae) {
                 errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-            log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
+                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
+                return false
             }
             try {
                 whelk.addToIndex(docs, selectedComponents)
             } catch (WhelkAddException wae) {
                 errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                return false
             } catch (PluginConfigurationException pce) {
                 log.error("System badly configured", pce)
                 throw pce
             }
-        } as Runnable)
+            return true
+        } as Callable)
     }
 
     @Override
@@ -397,5 +410,5 @@ abstract class AbstractOperator implements Runnable {
 
 
 enum OperatorState {
-    IDLE, RUNNING
+    IDLE, RUNNING, FINISHING
 }
