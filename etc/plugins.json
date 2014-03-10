@@ -37,7 +37,8 @@
     "oaipmhstorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : {
-            "contentTypes" : [ "text/oaipmh+xml" ]
+            "contentTypes" : [ "text/oaipmh+xml" ],
+            "versioning" : false
         }
     },
     "sesamegraphstore" : {

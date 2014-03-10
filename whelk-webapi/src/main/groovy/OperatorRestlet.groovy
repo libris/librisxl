@@ -223,13 +223,16 @@ class ReindexOperator extends AbstractOperator {
                         whelk.addToGraphStore(docs, selectedComponents)
                     } catch (WhelkAddException wae) {
                         errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                            log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
+                        log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
                     }
                     try {
                         whelk.addToIndex(docs, selectedComponents)
                     } catch (WhelkAddException wae) {
                         errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                            log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                        log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                    } catch (PluginConfigurationException pce) {
+                        log.error("System badly configured", pce)
+                        throw pce
                     }
                     docs = []
                     runningTime = System.currentTimeMillis() - startTime

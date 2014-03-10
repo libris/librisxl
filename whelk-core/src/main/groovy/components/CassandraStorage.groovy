@@ -33,6 +33,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     final String COL_NAME_DATA = "data"
     final String COL_NAME_ENTRY = "entry"
     final String COL_NAME_DATASET = "dataset"
+    final String COL_NAME_TIMESTAMP = "ts"
     final String CREATE_TABLE_STATEMENT =
     String.format("CREATE TABLE %s (%s varchar, %s blob, %s varchar, %s varchar, PRIMARY KEY (%s)) WITH COMPACT STORAGE",
     CF_DOCUMENT_NAME, COL_NAME_IDENTIFIER, COL_NAME_DATA, COL_NAME_ENTRY, COL_NAME_DATASET,
@@ -47,9 +48,20 @@ class CassandraStorage extends BasicPlugin implements Storage {
         StringSerializer.get(),
         StringSerializer.get())
 
+    boolean versioningStorage = true
+
+    CassandraStorage(Map settings) {
+        super()
+        this.contentTypes = settings.get("contentTypes", null)
+        this.versioningStorage = settings.get("versioning", true)
+    }
+
+
     void init(String whelkName) {
         keyspace = setupKeyspace(whelkName+"_"+this.id)
-        versionsKeyspace = setupKeyspace(whelkName+"_"+this.id+"_versions")
+        if (versioningStorage) {
+            versionsKeyspace = setupKeyspace(whelkName+"_"+this.id+"_versions")
+        }
     }
 
     Keyspace setupKeyspace(String keyspaceName) {
@@ -84,7 +96,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
             def r = ksp.describeKeyspace()
             log.debug("Keyspace in place: $r")
         } catch (Exception e) {
-            log.debug("Creating keyspace.")
+            log.debug("Creating keyspace ${keyspaceName}.")
             ksp.createKeyspace(
                 ImmutableMap.<String, Object>builder()
                 .put("strategy_options", ImmutableMap.<String, Object>builder()
@@ -110,11 +122,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
         return ksp
     }
 
-    CassandraStorage(Map settings) {
-        super()
-        this.contentTypes = settings.get("contentTypes", null)
-    }
-
     @Override
     boolean store(Document doc, checkDigest = true) {
         return store(doc.identifier, doc, keyspace, checkDigest)
@@ -123,32 +130,34 @@ class CassandraStorage extends BasicPlugin implements Storage {
     boolean store(String key, Document doc, Keyspace ksp, boolean checkDigest, boolean checkExisting = true, boolean checkContentType = true) {
         log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}")
         if (doc && (!checkContentType || handlesContent(doc.contentType) )) {
-            def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
-            if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
-                throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
-            }
-            if (existingDocument) {
-                log.trace("Found changes in ${existingDocument.entry.checksum} (orig) and ${doc.entry.checksum} (new)")
-                def entry = existingDocument.entry
-                int version = (entry.version ?: 1) as int
-                doc.entry.version = "" + (version+1)
-                String versionedKey = doc.identifier+"?version="+version
-                // Create versions
-                def versions = entry.versions ?: [:]
-                versions[""+version] = ["timestamp" : entry.timestamp]
-                if (existingDocument?.entry?.deleted) {
-                    versions.get(""+version).put("deleted",true)
-                } else {
-                    versions.get(""+version).put("checksum",entry.checksum)
-                }
-                doc.entry.versions = versions
+            if (versioningStorage) {
+                def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
+                    if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
+                        throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
+                    }
+                if (existingDocument) {
+                    log.trace("Found changes in ${existingDocument.entry.checksum} (orig) and ${doc.entry.checksum} (new)")
+                    def entry = existingDocument.entry
+                    int version = (entry.version ?: 1) as int
+                    doc.entry.version = "" + (version+1)
+                    String versionedKey = doc.identifier+"?version="+version
+                    // Create versions
+                    def versions = entry.versions ?: [:]
+                    versions[""+version] = ["timestamp" : entry.timestamp]
+                    if (existingDocument?.entry?.deleted) {
+                        versions.get(""+version).put("deleted",true)
+                    } else {
+                        versions.get(""+version).put("checksum",entry.checksum)
+                    }
+                    doc.entry.versions = versions
 
-                log.debug("existingDocument entry: $entry")
-                log.debug("new document entry: ${doc.entry}")
-                doc = doc.mergeEntry(entry)
-                log.debug("new document entry after merge: ${doc.entry}")
-                log.debug("Saving versioned document with versionedKey $versionedKey")
-                store(versionedKey, existingDocument, versionsKeyspace, false, false, false)
+                    log.debug("existingDocument entry: $entry")
+                    log.debug("new document entry: ${doc.entry}")
+                    doc = doc.mergeEntry(entry)
+                    log.debug("new document entry after merge: ${doc.entry}")
+                    log.debug("Saving versioned document with versionedKey $versionedKey")
+                    store(versionedKey, existingDocument, versionsKeyspace, false, false, false)
+                }
             }
 
             // Commence saving
@@ -184,6 +193,9 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     Document get(String uri, String version=null) {
         Document document = null
+        if (version && !versioningStorage) {
+            throw new WhelkStorageException("Requested version from non-versioning storage")
+        }
         log.trace("Version is $version")
 
         OperationResult<ColumnList<String>> operation
@@ -218,36 +230,23 @@ class CassandraStorage extends BasicPlugin implements Storage {
     @Override
     void delete(URI uri) {
         log.debug("Deleting document $uri")
-        store(uri.toString(), createTombstone(uri), keyspace, true, true, false)
+        if (versioningStorage) {
+            store(uri.toString(), createTombstone(uri), keyspace, true, true, false)
+        } else {
+            try {
+                MutationBatch m = keyspace.prepareMutationBatch()
+                m.withRow(CF_DOCUMENT, uri.toString()).delete()
+                def result = m.execute()
+            } catch (ConnectionException ce) {
+                throw new WhelkRuntimeException("Failed to delete document with identifier $uri", ce)
+            }
+        }
     }
 
     Document createTombstone(uri) {
         def tombstone = new Document().withIdentifier(uri).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
         return tombstone
-    }
-
-
-    void olddelete(URI uri, version=null) {
-        log.debug("Deleting document $uri")
-        MutationBatch m
-        if (version == null) {
-            // Preserve a version in versionSpace
-            def existingDocument = get(uri)
-            if (existingDocument) {
-                store(uri.toString()+"?version=deleted", existingDocument, versionsKeyspace, false, false)
-            }
-            m = keyspace.prepareMutationBatch()
-            m.withRow(CF_DOCUMENT, uri.toString()).delete()
-        } else {
-            m = versionsKeyspace.prepareMutationBatch()
-            m.withRow(CF_DOCUMENT, uri.toString()+"?version="+version).delete()
-        }
-        try {
-            def result = m.execute()
-        } catch (ConnectionException ce) {
-            throw new WhelkRuntimeException("Failed to delete document with identifier $uri", ce)
-        }
     }
 
     @Override
