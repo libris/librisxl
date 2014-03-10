@@ -42,7 +42,7 @@ var force = d3.layout.force()
     .charge(function (d) {
       if (d.link)
         return -20
-      return -(200 + 100 * d.children.length + 20 * d.siblingCount)
+      return -(200 + 100 * d.children.length + 20 * (d.siblingCount || 0))
     })
     .linkDistance(20)
     .linkStrength(0.1)
@@ -55,17 +55,6 @@ var color = d3.scale.category20()
 var svg = d3.select("body").append("svg")
     .attr("pointer-events", "all")
 
-var view = svg.append("g")
-    .call(d3.behavior.zoom().on("zoom", zoomRedraw))
-    .append("g")
-
-function zoomRedraw() {
-  if (animated)
-    return
-  view.attr("transform",
-           "translate("+ d3.event.translate +")"+ " scale("+ d3.event.scale +")");
-}
-
 function resize() {
   var el = svg[0][0], width = el.clientWidth, height = el.clientHeight
   force.size([width, height])
@@ -74,7 +63,7 @@ resize()
 window.addEventListener("onresize", resize)
 
 
-view.append("defs").selectAll("marker")
+svg.append("defs").selectAll("marker")
     .data(["arrow"])
   .enter().append("marker")
     .attr("id", String)
@@ -85,19 +74,40 @@ view.append("defs").selectAll("marker")
     .append("path")
     .attr("d", "M0,-5L10,0L0,5");
 
-d3.json("classes.json", function (error, graph) {
 
-  var nodes = graph.nodes.slice(),
+function viewData(source) {
+
+  var view = svg.append("g")
+      .call(d3.behavior.zoom().on("zoom", zoomRedraw))
+      .append("g")
+
+  function zoomRedraw() {
+    if (animated)
+      return
+    var evt = d3.event
+    view.attr("transform", "translate("+ evt.translate +") scale("+ evt.scale +")")
+  }
+
+  var nodeIndex = {}
+  source.nodes.forEach(function (node) {
+    nodeIndex[node.name] = node
+  })
+
+  var nodes = source.nodes.slice(),
       links = [],
       bilinks = []
 
-  graph.links.forEach(function (link) {
-    var s = nodes[link.source],
-        t = nodes[link.target],
-        im = {link: true}
-    nodes.push(im)
-    links.push({source: s, target: im}, {source: im, target: t})
-    bilinks.push([s, im, t])
+  source.nodes.forEach(function (node) {
+    if (!node.children)
+      return
+    node.children.forEach(function (id) {
+      var child = nodeIndex[id]
+      child.siblingCount = (child.siblingCount || 0) + node.children.length
+      var im = {link: true}
+      nodes.push(im)
+      links.push({source: child, target: im}, {source: im, target: node})
+      bilinks.push([child, im, node])
+    })
   })
 
   force
@@ -110,9 +120,9 @@ d3.json("classes.json", function (error, graph) {
       .attr("class", "link")
 
   var node = view.selectAll(".node")
-      .data(graph.nodes)
+      .data(source.nodes)
       .enter().append("g")
-      .attr("class", function (d) { return d.base? "base node" : "node" })
+      .attr("class", function (d) { return d.isBase? "base node" : "node" })
       .on("dblclick", function () {
         d3.event.stopPropagation()
         if (!animated) {
@@ -129,11 +139,11 @@ d3.json("classes.json", function (error, graph) {
   }
 
   node.append("title")
-      .text(function(d) { return d.base? d.name : d.name +" < "+ d.groupName; })
+      .text(function(d) { return d.isBase? d.name : d.name +" < "+ d.groupName; })
 
   node.append("ellipse")
       .attr("rx", 32).attr("ry", 16)
-      .style("fill", function(d) { return color(d.group); })
+      .style("fill", function(d) { return color(d.groupName); })
 
   node.append("text")
       .attr("dy", ".31em")
@@ -157,6 +167,19 @@ d3.json("classes.json", function (error, graph) {
     force.stop()
   }
 
-});
+}
+
+
+function handleLocation() {
+  var ref = document.location.hash.substring(1)
+  d3.select("svg").select("g").remove()
+  if (ref) {
+    d3.json(ref, function (err, data) { viewData(data) })
+  }
+}
+
+window.addEventListener("hashchange", handleLocation)
+
+handleLocation()
 
 </script>
