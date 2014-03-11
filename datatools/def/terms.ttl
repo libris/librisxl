@@ -15,6 +15,7 @@
 @prefix bf: <http://bibframe.org/vocab/> .
 @prefix sdo: <http://schema.org/> .
 @prefix iana: <http://www.iana.org/assignments/relation/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
 @prefix : <http://libris.kb.se/def/terms#> .
 
 
@@ -107,14 +108,12 @@
 
 :ConceptualWork a owl:Class;
     rdfs:label "Konceptuellt verk"@sv;
-    owl:equivalentClass bf:Work;
-    rdfs:subClassOf :CreativeWork, sdo:ProductModel, :Concept . #, rdfa:Pattern .
+    rdfs:subClassOf :CreativeWork, bf:Work, sdo:ProductModel, :Concept . #, rdfa:Pattern .
 
 :Product a owl:Class;
     rdfs:label "Instans"@sv;
     ptg:abstract true;
-    owl:equivalentClass bf:Instance;
-    rdfs:subClassOf :CreativeWork, sdo:Product .
+    rdfs:subClassOf sdo:Product, bf:Instance .
 
 # Common Content Types
 
@@ -134,7 +133,7 @@
     owl:equivalentClass dctype:Image, foaf:Image .
 
 :MixedMaterial a owl:Class;
-    rdfs:subClassOf :CreativeWork, :Composite;
+    rdfs:subClassOf :CreativeWork, :Aggregate;
     owl:equivalentClass bf:MixedMaterial .
 
 :MovingImage a owl:Class; # Film, Video
@@ -163,9 +162,8 @@
     rdfs:subClassOf :Audio .
 
 :StillImage a owl:Class;
-    rdfs:subClassOf :CreativeWork;
-    rdfs:label "Stillbild"@sv;
     rdfs:subClassOf :Image;
+    rdfs:label "Stillbild"@sv;
     owl:equivalentClass bf:StillImage, dctype:StillImage .
 
 :Text a owl:Class;
@@ -226,37 +224,37 @@
 :Monograph a owl:Class;
     owl:equivalentClass bf:Monograph .
 
-:Composite a owl:Class;
+:Aggregate a owl:Class;
     ptg:abstract true .
 
 :Part a owl:Class .
 
 :Archival a owl:Class;
     rdfs:label "Samling"@sv;
-    rdfs:subClassOf :Composite;
+    rdfs:subClassOf :Aggregate;
     owl:equivalentClass bf:Archival .
 
 :Collection a owl:Class;
     rdfs:label "Samling"@sv;
-    rdfs:subClassOf :Composite;
+    rdfs:subClassOf :Aggregate;
     owl:equivalentClass dctype:Collection, bf:Collection .
 
 :Integrating a owl:Class;
-    rdfs:subClassOf :Composite;
+    rdfs:subClassOf :Aggregate;
     owl:equivalentClass bf:Integrating .
 
 :MonographicComponentPart a owl:Class;
     rdfs:subClassOf :Part .
 
 :Multipart a owl:Class;
-    rdfs:subClassOf :Composite .
+    rdfs:subClassOf :Aggregate .
 
 :MultipartMonograph a owl:Class;
     rdfs:subClassOf :Multipart, :Monograph;
     owl:equivalentClass bf:MultipartMonograph .
 
 :Serial a owl:Class;
-    rdfs:subClassOf :Composite;
+    rdfs:subClassOf :Aggregate;
     owl:equivalentClass bf:Serial .
 
 # Manifestation Dimensions
@@ -320,7 +318,7 @@
     rdfs:subClassOf :Integrating, :Digital, :Dataset .
 
 :Website a owl:Class;
-    rdfs:subClassOf :Integrating, :Digital;
+    rdfs:subClassOf :Integrating, :Digital, :Text;
     owl:equivalentClass bibo:Website .
 
 :Book a owl:Class;
@@ -470,8 +468,18 @@
 :role a owl:ObjectProperty;
     owl:equivalentProperty prov:hadRole .
 
+:Agent a owl:Class;
+    rdfs:subClassOf foaf:Agent, bf:Agent, prov:Agent .
+
 :Person a owl:Class;
+    rdfs:subClassOf :Agent;
     owl:equivalentClass foaf:Person, sdo:Person .
+
+:Family a owl:Class;
+    rdfs:subClassOf :Agent .
+
+#[] a owl:Class; rdfs:subClassOf :Person; ptg:abstract true;
+#    owl:hasKey (:name :familyName :givenName :numeration :birthDate :deathDate :personTitle) .
 
 #titlesAndOtherWordsAssociatedWithName / personTitle
 :jobTitle a owl:ObjectProperty;
@@ -498,7 +506,8 @@
     owl:equivalentProperty persona:hasPersona .
 
 :Organization a owl:Class;
-    owl:equivalentClass sdo:Organization .
+    rdfs:subClassOf :Agent;
+    owl:equivalentClass foaf:Organization, sdo:Organization .
 
 :Place a owl:Class;
     owl:equivalentClass sdo:Place .
@@ -515,9 +524,13 @@
 # Topics / Concept Codes / Subject Headings
 
 :Concept a owl:Class;
-    owl:equivalentClass skos:Concept .
+    owl:equivalentClass skos:Concept;
+    owl:hasKey (:notation :prefLabel :inScheme) .
+
 :ConceptScheme a owl:Class;
     owl:equivalentClass skos:ConceptScheme .
+    #owl:hasKey (:notation) .
+
 :altLabel a owl:DatatypeProperty;
     owl:equivalentProperty skos:altLabel .
 :broader a owl:ObjectProperty;
