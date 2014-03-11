@@ -249,8 +249,26 @@ class DocumentRestlet extends BasicWhelkAPI {
                 response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
             }
         } else if (request.method == Method.POST) {
-            if (request.attributes?.get("identifier") != null) {
-                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
+            try {
+                log.trace("headers: $headers")
+                log.debug("request: $request")
+                def link = headers.find { it.name.equals("link") }?.value
+                //def dataset = headers.find { it.name == "dataset" }?.getValue("").split(",")
+                Document doc = new Document().withData(Tools.normalizeString(request.entityAsText)).withEntry(["contentType":request.entity.mediaType.toString()])
+                if (link != null) {
+                    log.trace("Adding link $link to document...")
+                    doc = doc.withLink(link)
+                }
+                doc = this.whelk.sanityCheck(doc)
+                def identifier = this.whelk.add(doc)
+                response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
+                response.entity.setTag(new Tag(doc.timestamp as String, false))
+                log.debug("Saved document $identifier")
+                response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
+                log.debug("Redirecting with location ref " + request.getRootRef().toString() + identifier)
+                response.setLocationRef(request.getRootRef().toString() + "${identifier}")
+            } catch (WhelkRuntimeException wre) {
+                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
             }
         } else if (request.method == Method.PUT) {
             try {

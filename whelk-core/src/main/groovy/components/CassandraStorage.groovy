@@ -26,14 +26,11 @@ class DocumentEntry {
     @Component(ordinal=0)
     Long timestamp
     @Component(ordinal=1)
-    String dataset
-    @Component(ordinal=2)
     String field
 
     DocumentEntry() {}
-    DocumentEntry(long ts, String ds, String f) {
+    DocumentEntry(long ts, String f) {
         this.timestamp = ts
-        this.dataset = ds
         this.field = f
     }
 }
@@ -44,41 +41,50 @@ class CassandraStorage extends BasicPlugin implements Storage {
     Keyspace keyspace
     Keyspace versionsKeyspace
     List contentTypes
+    boolean versioningStorage = true
+
+    String cassandraVersion = "1.2"
+    String CQLVersion = "3.0.0"
 
     final String CF_DOCUMENT_NAME = "document"
+    final String CF_DOCUMENT_META_NAME = "document_meta"
     final String COL_NAME_IDENTIFIER = "identifier"
     final String COL_NAME_DATA = "data"
     final String COL_NAME_ENTRY = "entry"
     final String COL_NAME_DATASET = "dataset"
     final String COL_NAME_TIMESTAMP = "ts"
+
+    AnnotatedCompositeSerializer<DocumentEntry> documentSerializer = new AnnotatedCompositeSerializer<DocumentEntry>(DocumentEntry.class)
+    ColumnFamily<String, DocumentEntry> CF_DOCUMENT = new ColumnFamily<String, DocumentEntry>(CF_DOCUMENT_NAME, StringSerializer.get(), documentSerializer)
+    ColumnFamily<String,String> CF_DOCUMENT_META = ColumnFamily.newColumnFamily(
+        CF_DOCUMENT_META_NAME,
+        StringSerializer.get(),
+        StringSerializer.get())
+
+    /*
     final String CREATE_TABLE_STATEMENT =
-    String.format("CREATE TABLE %s (%s varchar, %s blob, %s varchar, %s varchar, %s timestamp, PRIMARY KEY (%s, %s, %s))", // WITH COMPACT STORAGE",
+    String.format("CREATE TABLE %s (%s varchar, %s blob, %s varchar, %s varchar, %s timestamp, PRIMARY KEY (%s, %s))", // WITH COMPACT STORAGE",
     CF_DOCUMENT_NAME, COL_NAME_IDENTIFIER, COL_NAME_DATA, COL_NAME_ENTRY, COL_NAME_DATASET, COL_NAME_TIMESTAMP,
-    COL_NAME_IDENTIFIER, COL_NAME_TIMESTAMP, COL_NAME_DATASET)
+    COL_NAME_IDENTIFIER, COL_NAME_TIMESTAMP)
 
     final String INSERT_STATEMENT = "INSERT INTO $CF_DOCUMENT_NAME ($COL_NAME_IDENTIFIER, $COL_NAME_DATA, $COL_NAME_ENTRY, $COL_NAME_DATASET, $COL_NAME_TIMESTAMP) VALUES (?, ?, ?, ?, ?);";
 
     final String CREATE_INDEX_STATEMENT =
-    String.format("CREATE INDEX %s ON %s (%s)",
+    String.format("CREATE INDEX %s_idx ON %s (%s)",
     COL_NAME_DATASET, CF_DOCUMENT_NAME, COL_NAME_DATASET)
 
-    /*
     ColumnFamily<String,String> CF_DOCUMENT = ColumnFamily.newColumnFamily(
         CF_DOCUMENT_NAME,
         StringSerializer.get(),
         StringSerializer.get())
-        */
-
-
-    boolean versioningStorage = true
-
-    AnnotatedCompositeSerializer<DocumentEntry> documentSerializer = new AnnotatedCompositeSerializer<DocumentEntry>(DocumentEntry.class)
-    ColumnFamily<String, DocumentEntry> CF_DOCUMENT = new ColumnFamily<String, DocumentEntry>(CF_DOCUMENT_NAME, StringSerializer.get(), documentSerializer)
+    */
 
     CassandraStorage(Map settings) {
         super()
         this.contentTypes = settings.get("contentTypes", null)
         this.versioningStorage = settings.get("versioning", true)
+        this.cassandraVersion = settings.get("cassandraVersion", this.cassandraVersion)
+        this.CQLVersion = settings.get("cqlVersion", this.CQLVersion)
     }
 
 
@@ -92,7 +98,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     Keyspace setupKeyspace(String keyspaceName) {
         String cassandra_host = System.getProperty("cassandra.host")
         String cassandra_cluster = System.getProperty("cassandra.cluster")
-        log.debug("Configuring Cassandra at ${cassandra_host}")
+        log.info("Configuring Cassandra version $cassandraVersion with CQL version $CQLVersion at ${cassandra_host}")
         log.debug("Setting up context.")
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
         .forCluster(cassandra_cluster)
@@ -100,8 +106,8 @@ class CassandraStorage extends BasicPlugin implements Storage {
         .withAstyanaxConfiguration(
             new AstyanaxConfigurationImpl()
             .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
-            .setCqlVersion("3.0.0")
-            .setTargetCassandraVersion("1.2")
+            .setCqlVersion(CQLVersion)
+            .setTargetCassandraVersion(cassandraVersion)
         )
         .withConnectionPoolConfiguration(
             new ConnectionPoolConfigurationImpl("WhelkConnectionPool")
@@ -132,18 +138,77 @@ class CassandraStorage extends BasicPlugin implements Storage {
             )
 
             log.debug("Creating tables and indexes.")
-
-            log.debug("CQL: "+CREATE_TABLE_STATEMENT)
-            def result = ksp
-            .prepareQuery(CF_DOCUMENT)
-            .withCql(CREATE_TABLE_STATEMENT)
-            .execute();
-            log.debug("CQL: "+CREATE_INDEX_STATEMENT)
-            result = ksp
-            .prepareQuery(CF_DOCUMENT)
-            .withCql(CREATE_INDEX_STATEMENT)
-            .execute();
         }
+        log.debug("Check for columnfamily")
+        try {
+            if (!ksp.describeKeyspace().getColumnFamily(CF_DOCUMENT_NAME)) {
+                log.info("Creating columnfamily $CF_DOCUMENT_NAME")
+
+                //ksp.createColumnFamily(CF_DOCUMENT, null)
+                /*
+                ksp.createColumnFamily(CF_DOCUMENT, ImmutableMap.builder()
+                    .put("default_validation_class", "UTF8Type")
+                    .put("key_validation_class", "UTF8Type")
+                    .put("comparator_type", "CompositeType(LongType, UTF8Type)")
+                    .build()
+                )
+                */
+
+                ksp.createColumnFamily(CF_DOCUMENT, ImmutableMap.builder()
+                .put("default_validation_class", "UTF8Type")
+                .put("key_validation_class", "UTF8Type")
+                .put("comparator_type", "CompositeType(LongType, UTF8Type)")
+                .build());
+
+
+
+
+                /*
+                    .put("column_metadata", ImmutableMap.<String, Object>builder()
+                        .put("Index1", ImmutableMap.<String, Object>builder()
+                            .put("validation_class", "UTF8Type")
+                            .put("index_name",       "Index1")
+                            .put("index_type",       "KEYS")
+                            .build())
+                        .build())
+                    .put("default_validation_class", "UTF8Type")
+                    .put("key_validation_class", "UTF8Type")
+                    .build())
+                    */
+                    //.put("comparator_type", "CompositeType(LongType, UTF8Type)")
+            }
+
+
+        } catch (Exception ex) {
+            log.error("Failed to create columnfamily: ${ex.message}", ex)
+        }
+        try {
+            if (!ksp.describeKeyspace().getColumnFamily(CF_DOCUMENT_META_NAME)) {
+                log.info("Creating columnfamily $CF_DOCUMENT_META_NAME")
+                ksp.createColumnFamily(CF_DOCUMENT_META, ImmutableMap.builder()
+                .put("column_metadata", ImmutableMap.builder()
+                    .put(COL_NAME_DATASET, ImmutableMap.builder()
+                        .put("validation_class", "UTF8Type")
+                        .put("index_name",       COL_NAME_DATASET)
+                        .put("index_type",       "KEYS")
+                        .build())
+                    .put(COL_NAME_DATA, ImmutableMap.builder()
+                        .put("validation_class", "BytesType")
+                        .build())
+                    .put(COL_NAME_ENTRY, ImmutableMap.builder()
+                        .put("validation_class", "UTF8Type")
+                        .build())
+                    .put(COL_NAME_TIMESTAMP, ImmutableMap.builder()
+                        .put("validation_class", "LongType")
+                        .build())
+                    .build())
+                .build())
+
+            }
+        } catch (Exception ex) {
+            log.error("Failed to create columnfamily: ${ex.message}", ex)
+        }
+
         return ksp
     }
 
@@ -191,8 +256,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
             log.trace("Saving document ${key} with dataset $dataset")
 
             try {
-                writeDocumentRow(ksp, key, new DocumentEntry(doc.timestamp, dataset, COL_NAME_DATA), doc.data)
-                writeDocumentRow(ksp, key, new DocumentEntry(doc.timestamp, dataset, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"))
+                writeDocument(ksp, key, dataset, doc)
             } catch (ConnectionException ce) {
                 log.error("Connection failed", ce)
                 return false
@@ -210,10 +274,19 @@ class CassandraStorage extends BasicPlugin implements Storage {
         return false
     }
 
-    void writeDocumentRow(Keyspace ksp, String key, DocumentEntry entry, byte[] value) {
+    void writeDocument(Keyspace ksp, String key, String dataset, Document doc) {
         MutationBatch mutation = ksp.prepareMutationBatch()
 
-        mutation.withRow(CF_DOCUMENT, key).putColumn(entry, value, null)
+        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.timestamp, COL_NAME_DATA), doc.data, null)
+        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.timestamp, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"), null)
+        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.timestamp, COL_NAME_DATASET), dataset.getBytes("UTF-8"), null)
+
+        mutation.withRow(CF_DOCUMENT_META, key)
+            .putColumn(COL_NAME_DATA, doc.data, null)
+            .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
+            .putColumn(COL_NAME_DATASET, dataset, null)
+            .putColumn(COL_NAME_TIMESTAMP, doc.timestamp, null)
+
         def results = mutation.execute()
     }
 
@@ -299,18 +372,35 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 def query
                 try {
                     if (dataset) {
+
+
+                        /*
+                        OperationResult<ColumnList<PostInfo>> result = getKeyspace()
+                        .prepareQuery(CF_DOCUMENT)
+                        .getKey("all")
+                        .withColumnRange(new RangeBuilder()
+                        .setLimit(5)
+                        .setReversed(true)
+                        .build())
+                        .execute();
+                        ColumnList<PostInfo> columns = result.getResult();
+                        for (Column<PostInfo> column : columns) {
+                        // do what you need here
+                        }
+                        */
+
                         log.debug("Using query: dataset=$dataset")
-                        query = keyspace.prepareQuery(CF_DOCUMENT).searchWithIndex()
-                        .autoPaginateRows(true)
-                        .addExpression().whereColumn(COL_NAME_DATASET)
-                        .equals().value(dataset)
+                        query = keyspace.prepareQuery(CF_DOCUMENT_META)
+                            .searchWithIndex()
+                            .addExpression()
+                            .whereColumn(COL_NAME_DATASET).equals().value(dataset)
+                            .autoPaginateRows(true)
                     } else {
                         log.debug("Using allrows()")
                         query = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
                     }
                     query = query
                         .setRowLimit(100)
-                        //.withColumnRange(new RangeBuilder().setLimit(100).build())
                 } catch (ConnectionException e) {
                     log.error("Cassandra Query failed.", e)
                     throw e
@@ -362,13 +452,23 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     def res = iter.next()
                     doc = new Document().withIdentifier(res.key)
                     for (c in res.columns) {
-                        DocumentEntry e = c.name
-                        doc.withTimestamp(e.timestamp)
-                        if (e.field == COL_NAME_ENTRY) {
+                        def field
+                        if (c.name instanceof DocumentEntry) {
+                            DocumentEntry e = c.name
+                            doc.withTimestamp(e.timestamp)
+                            field = e.field
+                        } else {
+                            field = c.name
+                        }
+                        log.trace("field is $field")
+                        if (field == COL_NAME_ENTRY) {
                             doc.withMetaEntry(c.getStringValue())
                         }
-                        if (e.field == COL_NAME_DATA) {
+                        if (field == COL_NAME_DATA) {
                             doc.withData(c.getByteArrayValue())
+                        }
+                        if (field == COL_NAME_TIMESTAMP) {
+                            doc.withTimestamp(c.getLongValue())
                         }
                     }
                     success = true
