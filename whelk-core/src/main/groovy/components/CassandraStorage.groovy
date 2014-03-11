@@ -191,51 +191,8 @@ class CassandraStorage extends BasicPlugin implements Storage {
             log.trace("Saving document ${key} with dataset $dataset")
 
             try {
-
-
-                /*
-        AnnotatedCompositeSerializer<FishBlog> entitySerializer = new AnnotatedCompositeSerializer<FishBlog>(FishBlog.class);
-        MutationBatch mutation = keyspace.prepareMutationBatch();
-        ColumnFamily<String, FishBlog> columnFamily = new ColumnFamily<String, FishBlog>(columnFamilyName,
-                StringSerializer.get(), entitySerializer);
-        mutation.withRow(columnFamily, rowKey).putColumn(blog, value, null);
-        mutation.execute();
-
-
-                MutationBatch m = ksp.prepareMutationBatch()
-
-                m.withRow(CF_DOCUMENT, key)
-                    .putColumn(new DocumentEntry(dataset=dataset, timestamp=doc.timestamp, field="data"), doc.data, null)
-                    .execute()
-                    */
-
-
                 writeDocumentRow(ksp, key, new DocumentEntry(doc.timestamp, dataset, COL_NAME_DATA), doc.data)
                 writeDocumentRow(ksp, key, new DocumentEntry(doc.timestamp, dataset, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"))
-
-                    /*
-
-                new DocumentEntry(identifier=key,dataset=dataset,timestamp=doc.timestamp, field=data))
-                .putColumn(COL_NAME_IDENTIFIER , doc.identifier)
-                .putColumn(COL_NAME_DATA, new String(doc.data, "UTF-8"), null)
-                .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
-                .putColumn(COL_NAME_DATASET, dataset, null)
-                .putColumn(COL_NAME_TIMESTAMP, doc.timestamp, null)
-                def result = m.execute()
-                */
-            /*
-                def result = ksp
-                    .prepareQuery(CF_DOCUMENT)
-                    .withCql(INSERT_STATEMENT)
-                    .asPreparedStatement()
-                    .withStringValue(doc.identifier)
-                    .withValue(java.nio.ByteBuffer.wrap(doc.data))
-                    .withStringValue(doc.metadataAsJson)
-                    .withStringValue(dataset)
-                    .withLongValue(doc.timestamp)
-                    .execute()
-                log.info("result: $result")
-            */
             } catch (ConnectionException ce) {
                 log.error("Connection failed", ce)
                 return false
@@ -258,7 +215,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
         mutation.withRow(CF_DOCUMENT, key).putColumn(entry, value, null)
         def results = mutation.execute()
-        log.info("results: $results")
     }
 
     @Override
@@ -346,7 +302,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                         log.debug("Using query: dataset=$dataset")
                         query = keyspace.prepareQuery(CF_DOCUMENT).searchWithIndex()
                         .autoPaginateRows(true)
-                        .addExpression().whereColumn("dataset")
+                        .addExpression().whereColumn(COL_NAME_DATASET)
                         .equals().value(dataset)
                     } else {
                         log.debug("Using allrows()")
