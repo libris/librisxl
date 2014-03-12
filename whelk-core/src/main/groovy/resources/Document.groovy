@@ -102,6 +102,14 @@ class Document {
         this.entry["timestamp"] = ts
     }
 
+    void setVersion(int v) {
+        this.entry["version"] = v
+    }
+
+    int getVersion() {
+        entry.get("version", 0)
+    }
+
 
     List getLinks() {
         return meta.get("links", [])
@@ -109,6 +117,11 @@ class Document {
 
     Document withTimestamp(long ts) {
         setTimestamp(ts)
+        return this
+    }
+
+    Document withVersion(int v) {
+        setVersion(v)
         return this
     }
 

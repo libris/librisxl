@@ -242,7 +242,7 @@ class StandardWhelk implements Whelk {
     Iterable<Document> loadAll(Date since) { return loadAll(null, null, since)}
 
     @Override
-    Iterable<Document> loadAll(String dataset = null, String storageId = null, Date since = null) {
+    Iterable<Document> loadAll(String dataset = null, Date since = null, String storageId = null) {
         def st
         if (storageId) {
             st = getStorages().find { it.id == storageId }
@@ -251,7 +251,7 @@ class StandardWhelk implements Whelk {
         }
         if (st) {
             log.debug("Loading "+(dataset ? dataset : "all")+" from storage ${st.id}")
-            return st.getAll(dataset)
+            return st.getAll(dataset, since)
         } else {
             throw new WhelkRuntimeException("Couldn't find storage. (storageId = $storageId)")
         }

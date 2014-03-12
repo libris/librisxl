@@ -24,12 +24,15 @@ import se.kb.libris.whelks.exception.*
 
 class DocumentEntry {
     @Component(ordinal=0)
-    Long timestamp
+    Integer version
     @Component(ordinal=1)
+    Long timestamp
+    @Component(ordinal=2)
     String field
 
     DocumentEntry() {}
-    DocumentEntry(long ts, String f) {
+    DocumentEntry(int v, long ts, String f) {
+        this.version = v
         this.timestamp = ts
         this.field = f
     }
@@ -39,7 +42,7 @@ class DocumentEntry {
 class CassandraStorage extends BasicPlugin implements Storage {
 
     Keyspace keyspace
-    Keyspace versionsKeyspace
+    //Keyspace versionsKeyspace
     List contentTypes
     boolean versioningStorage = true
 
@@ -90,9 +93,11 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     void init(String whelkName) {
         keyspace = setupKeyspace(whelkName+"_"+this.id)
+        /*
         if (versioningStorage) {
             versionsKeyspace = setupKeyspace(whelkName+"_"+this.id+"_versions")
         }
+        */
     }
 
     Keyspace setupKeyspace(String keyspaceName) {
@@ -157,10 +162,8 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 ksp.createColumnFamily(CF_DOCUMENT, ImmutableMap.builder()
                 .put("default_validation_class", "UTF8Type")
                 .put("key_validation_class", "UTF8Type")
-                .put("comparator_type", "CompositeType(LongType, UTF8Type)")
+                .put("comparator_type", "CompositeType(IntegerType, LongType, UTF8Type)")
                 .build());
-
-
 
 
                 /*
@@ -199,7 +202,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                         .put("validation_class", "UTF8Type")
                         .build())
                     .put(COL_NAME_TIMESTAMP, ImmutableMap.builder()
-                        .put("validation_class", "LongType")
+                        .put("validation_class", "DateType")
                         .build())
                     .build())
                 .build())
@@ -214,10 +217,12 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     boolean store(Document doc, checkDigest = true) {
-        return store(doc.identifier, doc, keyspace, checkDigest)
+        return store(doc.identifier, doc, checkDigest)
     }
 
-    boolean store(String key, Document doc, Keyspace ksp, boolean checkDigest, boolean checkExisting = true, boolean checkContentType = true) {
+    /*
+    boolean oldstore(String key, Document doc, Keyspace ksp, boolean checkDigest, boolean checkExisting = true, boolean checkContentType = true) {
+
         log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}");
         if (doc && (!checkContentType || handlesContent(doc.contentType) )) {
             if (versioningStorage) {
@@ -273,19 +278,71 @@ class CassandraStorage extends BasicPlugin implements Storage {
         }
         return false
     }
+    */
 
-    void writeDocument(Keyspace ksp, String key, String dataset, Document doc) {
-        MutationBatch mutation = ksp.prepareMutationBatch()
+    boolean store(String key, Document doc, boolean checkDigest, boolean checkExisting = true, boolean checkContentType = true) {
+        log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}");
+        if (doc && (!checkContentType || handlesContent(doc.contentType) )) {
+            def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
+            if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
+                throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
+            }
 
-        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.timestamp, COL_NAME_DATA), doc.data, null)
-        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.timestamp, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"), null)
-        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.timestamp, COL_NAME_DATASET), dataset.getBytes("UTF-8"), null)
+            int version = (existingDocument ? existingDocument.version + 1 : 1)
+            log.debug("Setting document version: $version")
+            doc.withVersion(version)
 
+            if (versioningStorage && existingDocument) {
+                def entry = existingDocument.entry
+                doc.version = version
+                // Create versions
+                def versions = entry.versions ?: [:]
+                versions[""+version] = ["timestamp" : entry.timestamp]
+                if (existingDocument?.entry?.deleted) {
+                    versions.get(""+version).put("deleted",true)
+                } else {
+                    versions.get(""+version).put("checksum",entry.checksum)
+                }
+                doc.entry.versions = versions
+            }
+
+            // Commence saving
+            String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
+            log.trace("Saving document ${key} with dataset $dataset")
+
+            try {
+                writeDocument(key, dataset, doc)
+            } catch (ConnectionException ce) {
+                log.error("Connection failed", ce)
+                return false
+            } catch (Exception e) {
+                log.error("Error", e)
+            }
+            return true
+        } else {
+            if (!doc) {
+                log.warn("Received null document. No attempt to store.")
+            } else if (log.isDebugEnabled()) {
+                log.debug("This storage (${this.id}) does not handle document with type ${doc.contentType}. Not saving ${key}")
+            }
+        }
+        return false
+    }
+
+    void writeDocument(String key, String dataset, Document doc) {
+        MutationBatch mutation = keyspace.prepareMutationBatch()
+
+        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATA), doc.data, null)
+        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"), null)
+        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATASET), dataset.getBytes("UTF-8"), null)
+
+        /*
         mutation.withRow(CF_DOCUMENT_META, key)
             .putColumn(COL_NAME_DATA, doc.data, null)
             .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
             .putColumn(COL_NAME_DATASET, dataset, null)
             .putColumn(COL_NAME_TIMESTAMP, doc.timestamp, null)
+            */
 
         def results = mutation.execute()
     }
@@ -302,31 +359,41 @@ class CassandraStorage extends BasicPlugin implements Storage {
         }
         log.trace("Version is $version")
 
-        OperationResult<ColumnList<DocumentEntry>> operation
+        OperationResult<ColumnList<DocumentEntry>> operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri.toString()).execute()
+            /*
         if (version) {
             operation = versionsKeyspace.prepareQuery(CF_DOCUMENT).getKey(uri+"?version=$version").execute()
         } else {
             log.debug("Trying to load document with key:$uri")
             operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri.toString()).execute()
         }
+            */
         ColumnList<DocumentEntry> res = operation.getResult()
 
-        log.trace("Search operation result size: ${res.size()}")
+        log.debug("Get operation result size: ${res.size()}")
 
         if (res.size() > 0) {
             log.trace("Digging up a document with identifier $uri from ${this.id}.")
             document = new Document()
+            boolean foundCorrectVersion = false
             for (r in res) {
                 DocumentEntry e = r.name
-                document.withTimestamp(e.timestamp)
-                if (e.field == COL_NAME_ENTRY) {
-                    document.withMetaEntry(r.getStringValue())
-                }
-                if (e.field == COL_NAME_DATA) {
-                    document.withData(r.getByteArrayValue())
+                if (!version || e.version == version as int) {
+                    foundCorrectVersion = true
+                    document.withTimestamp(e.timestamp)
+                    if (e.field == COL_NAME_ENTRY) {
+                        document.withMetaEntry(r.getStringValue())
+                    }
+                    if (e.field == COL_NAME_DATA) {
+                        document.withData(r.getByteArrayValue())
+                    }
                 }
             }
+            if (!foundCorrectVersion) {
+                document = null
+            }
         }
+        /*
         if (!document && version) {
             log.trace("Did document loading fail because we explicitliy requested the latest version ($version)?")
             document = get(uri, null)
@@ -335,6 +402,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 document = null
             }
         }
+        */
         log.trace("Returning document $document")
         return document
     }
@@ -345,14 +413,16 @@ class CassandraStorage extends BasicPlugin implements Storage {
         log.debug("Deleting document $uri")
         if (versioningStorage) {
             store(uri.toString(), createTombstone(uri), keyspace, true, true, false)
-        } else {
-            try {
-                MutationBatch m = keyspace.prepareMutationBatch()
+        }
+        try {
+            MutationBatch m = keyspace.prepareMutationBatch()
+            if (!versioningStorage) {
                 m.withRow(CF_DOCUMENT, uri.toString()).delete()
-                def result = m.execute()
-            } catch (ConnectionException ce) {
-                throw new WhelkRuntimeException("Failed to delete document with identifier $uri", ce)
             }
+            m.withRow(CF_DOCUMENT_META, uri.toString()).delete()
+            def result = m.execute()
+        } catch (ConnectionException ce) {
+            throw new WhelkRuntimeException("Failed to delete document with identifier $uri", ce)
         }
     }
 
@@ -394,7 +464,13 @@ class CassandraStorage extends BasicPlugin implements Storage {
                             .searchWithIndex()
                             .addExpression()
                             .whereColumn(COL_NAME_DATASET).equals().value(dataset)
-                            .autoPaginateRows(true)
+                        if (since) {
+                            log.debug("Adding ts > $since to query")
+                            query = query
+                                .addExpression()
+                                .whereColumn(COL_NAME_TIMESTAMP).greaterThanEquals().value(since)
+                        }
+                        query = query.autoPaginateRows(true)
                     } else {
                         log.debug("Using allrows()")
                         query = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
@@ -472,7 +548,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                         }
                     }
                     success = true
-                    log.trace("Next yielded ${doc.identifier} (${doc.dataAsString})")
+                    log.trace("Next yielded ${doc.identifier} with version ${doc.version} (${doc.dataAsString})")
                 } catch (Exception ce) {
                     log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...")
                     Thread.sleep(1000)
