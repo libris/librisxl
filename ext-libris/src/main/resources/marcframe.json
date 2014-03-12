@@ -1247,25 +1247,25 @@
           "domainEntity": "Instance",
           "valueMap": "booksContents",
           "link": "contentType",
-          "uriTemplate": "{_}"
+          "uriTemplate": "enum:{_}"
         },
         "[25:26]": {
           "domainEntity": "Instance",
           "valueMap": "booksContents",
           "link": "contentType",
-          "uriTemplate": "{_}"
+          "uriTemplate": "enum:{_}"
         },
         "[26:27]": {
           "domainEntity": "Instance",
           "valueMap": "booksContents",
           "link": "contentType",
-          "uriTemplate": "{_}"
+          "uriTemplate": "enum:{_}"
         },
         "[27:28]": {
           "domainEntity": "Instance",
           "valueMap": "booksContents",
           "link": "contentType",
-          "uriTemplate": "{_}"
+          "uriTemplate": "enum:{_}"
         },
         "[28:29]": {
           "domainEntity": "Instance",
@@ -1334,7 +1334,7 @@
           "domainEntity": "Instance",
           "valueMap": "computerTypeOfFile",
           "link": "contentType",
-          "uriTemplate": "{_}"
+          "uriTemplate": "enum:{_}"
         },
         "[28:29]": {
           "domainEntity": "Instance",
@@ -1597,7 +1597,7 @@
           "domainEntity": "Instance",
           "valueMap": "serialsTypeOfSerial",
           "link": "contentType",
-          "uriTemplate": "{_}"
+          "uriTemplate": "enum:{_}"
         },
         "[22:23]": {
           "domainEntity": "Instance",
@@ -1696,7 +1696,7 @@
           "domainEntity": "Instance",
           "valueMap": "visualMaterial",
           "link": "contentType",
-          "uriTemplate": "{_}"
+          "uriTemplate": "enum:{_}"
         },
         "[34:35]": {
           "domainEntity": "Instance",
