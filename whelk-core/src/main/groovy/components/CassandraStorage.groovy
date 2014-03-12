@@ -42,7 +42,6 @@ class DocumentEntry {
 class CassandraStorage extends BasicPlugin implements Storage {
 
     Keyspace keyspace
-    //Keyspace versionsKeyspace
     List contentTypes
     boolean versioningStorage = true
 
@@ -93,11 +92,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     void init(String whelkName) {
         keyspace = setupKeyspace(whelkName+"_"+this.id)
-        /*
-        if (versioningStorage) {
-            versionsKeyspace = setupKeyspace(whelkName+"_"+this.id+"_versions")
-        }
-        */
     }
 
     Keyspace setupKeyspace(String keyspaceName) {
@@ -220,66 +214,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
         return store(doc.identifier, doc, checkDigest)
     }
 
-    /*
-    boolean oldstore(String key, Document doc, Keyspace ksp, boolean checkDigest, boolean checkExisting = true, boolean checkContentType = true) {
-
-        log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}");
-        if (doc && (!checkContentType || handlesContent(doc.contentType) )) {
-            if (versioningStorage) {
-                def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
-                log.trace("existingDocument: $existingDocument")
-                if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
-                    throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
-                }
-                if (existingDocument) {
-                    log.trace("Found changes in ${existingDocument.entry.checksum} (orig) and ${doc.entry.checksum} (new)")
-                    def entry = existingDocument.entry
-                    int version = (entry.version ?: 1) as int
-                    doc.entry.version = "" + (version+1)
-                    String versionedKey = doc.identifier+"?version="+version
-                    // Create versions
-                    def versions = entry.versions ?: [:]
-                    versions[""+version] = ["timestamp" : entry.timestamp]
-                    if (existingDocument?.entry?.deleted) {
-                        versions.get(""+version).put("deleted",true)
-                    } else {
-                        versions.get(""+version).put("checksum",entry.checksum)
-                    }
-                    doc.entry.versions = versions
-
-                    log.debug("existingDocument entry: $entry")
-                    log.debug("new document entry: ${doc.entry}")
-                    doc = doc.mergeEntry(entry)
-                    log.debug("new document entry after merge: ${doc.entry}")
-                    log.debug("Saving versioned document with versionedKey $versionedKey")
-                    store(versionedKey, existingDocument, versionsKeyspace, false, false, false)
-                }
-            }
-
-            // Commence saving
-            String dataset = (doc.entry?.dataset ? doc.entry.dataset : "default")
-            log.trace("Saving document ${key} with dataset $dataset")
-
-            try {
-                writeDocument(ksp, key, dataset, doc)
-            } catch (ConnectionException ce) {
-                log.error("Connection failed", ce)
-                return false
-            } catch (Exception e) {
-                log.error("Error", e)
-            }
-            return true
-        } else {
-            if (!doc) {
-                log.warn("Received null document. No attempt to store.")
-            } else if (log.isDebugEnabled()) {
-                log.debug("This storage (${this.id}) does not handle document with type ${doc.contentType}. Not saving ${key}")
-            }
-        }
-        return false
-    }
-    */
-
     boolean store(String key, Document doc, boolean checkDigest, boolean checkExisting = true, boolean checkContentType = true) {
         log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}");
         if (doc && (!checkContentType || handlesContent(doc.contentType) )) {
@@ -293,15 +227,16 @@ class CassandraStorage extends BasicPlugin implements Storage {
             doc.withVersion(version)
 
             if (versioningStorage && existingDocument) {
-                def entry = existingDocument.entry
                 doc.version = version
                 // Create versions
-                def versions = entry.versions ?: [:]
-                versions[""+version] = ["timestamp" : entry.timestamp]
+                def versions = existingDocument.entry.versions ?: [:]
+                def lastVersion = existingDocument.version as String
+
+                versions[lastVersion] = ["timestamp" : existingDocument.timestamp]
                 if (existingDocument?.entry?.deleted) {
-                    versions.get(""+version).put("deleted",true)
+                    versions.get(lastVersion).put("deleted",true)
                 } else {
-                    versions.get(""+version).put("checksum",entry.checksum)
+                    versions.get(lastVersion).put("checksum",existingDocument.entry.checksum)
                 }
                 doc.entry.versions = versions
             }
@@ -336,13 +271,11 @@ class CassandraStorage extends BasicPlugin implements Storage {
         mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"), null)
         mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATASET), dataset.getBytes("UTF-8"), null)
 
-        /*
         mutation.withRow(CF_DOCUMENT_META, key)
             .putColumn(COL_NAME_DATA, doc.data, null)
             .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
             .putColumn(COL_NAME_DATASET, dataset, null)
             .putColumn(COL_NAME_TIMESTAMP, doc.timestamp, null)
-            */
 
         def results = mutation.execute()
     }
@@ -357,17 +290,10 @@ class CassandraStorage extends BasicPlugin implements Storage {
         if (version && !versioningStorage) {
             throw new WhelkStorageException("Requested version from non-versioning storage")
         }
-        log.trace("Version is $version")
+        log.trace("Requested version is $version")
 
         OperationResult<ColumnList<DocumentEntry>> operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri.toString()).execute()
-            /*
-        if (version) {
-            operation = versionsKeyspace.prepareQuery(CF_DOCUMENT).getKey(uri+"?version=$version").execute()
-        } else {
-            log.debug("Trying to load document with key:$uri")
-            operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri.toString()).execute()
-        }
-            */
+
         ColumnList<DocumentEntry> res = operation.getResult()
 
         log.debug("Get operation result size: ${res.size()}")
@@ -393,16 +319,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 document = null
             }
         }
-        /*
-        if (!document && version) {
-            log.trace("Did document loading fail because we explicitliy requested the latest version ($version)?")
-            document = get(uri, null)
-            if (document?.entry?.version != version) {
-                log.trace(" -- No. Latest document version is ${document?.entry?.version}")
-                document = null
-            }
-        }
-        */
         log.trace("Returning document $document")
         return document
     }
