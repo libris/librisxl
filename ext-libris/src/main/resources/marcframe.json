@@ -10,7 +10,9 @@
   },
 
   "resourceMaps": {
+
     "relatorCode": "relatorcodes.json",
+
     "thesaurus": {
       "0": "lcsh",
       "1": "lcsh/csh",
@@ -20,22 +22,264 @@
       "5": "csh",
       "6": "rvm",
       "7": null
+    },
+
+    "typeOfRecord": {
+      "a": "LanguageMaterial",
+      "c": "PrintedMusic",
+      "b": "ArchiveOrManuscriptsControl",
+      "e": "PrintedCartographicMaterial",
+      "d": "ManuscriptMusic",
+      "g": "ProjectedMedium",
+      "f": "ManuscriptCartographicMaterial",
+      "i": "NonmusicalSoundRecording",
+      "k": "TwoDimensionalNonprojectableGraphic",
+      "j": "MusicalSoundRecording",
+      "m": "ComputerFile",
+      "o": "Kit",
+      "p": "MixedMaterial",
+      "r": "ThreeDimensionalArtifactOrNaturallyOccurringObject",
+      "t": "ManuscriptLanguageMaterial"
+    },
+    "bibLevel": {
+      "a": "MonographicComponentPart",
+      "c": "Collection",
+      "b": "SerialComponentPart",
+      "d": "Subunit",
+      "i": "IntegratingResource",
+      "m": "MonographItem",
+      "p": "Serial",
+      "s": "Serial",
+      "9": "AdministrativePostForLicenseBoundElectronicResource"
+    },
+
+    "booksContents": {
+      "2": "Offprint",
+      "5": "Calendar",
+      "6": "ComicOrGraphicNovel",
+      "a": "AbstractsSummary",
+      "c": "Catalog",
+      "b": "Bibliography",
+      "e": "Encyclopedia",
+      "d": "Dictionary",
+      "g": "LegalArticle",
+      "f": "Handbook",
+      "i": "Index",
+      "k": "Discography",
+      "j": "PatentDocument",
+      "m": "Thesis",
+      "l": "Legislation",
+      "o": "Review",
+      "n": "SurveysOfLiteratureInASubjectArea",
+      "q": "Filmography",
+      "p": "ProgrammedText",
+      "s": "Statistic",
+      "r": "Directory",
+      "u": "StandardsSpecification",
+      "t": "TechnicalReport",
+      "w": "LawReportOrDigest",
+      "v": "LegalCaseOrCaseNote",
+      "y": "Yearbook",
+      "z": "Treaty"
+    },
+    "visualMaterial": {
+      "a": "ArtOriginal",
+      "c": "ArtReproduction",
+      "b": "Kit",
+      "d": "Diorama",
+      "g": "Game",
+      "f": "Filmstrip",
+      "i": "Picture",
+      "k": "Graphic",
+      "m": "MotionPicture",
+      "l": "TechnicalDrawing",
+      "o": "FlashCard",
+      "n": "Chart",
+      "q": "Model",
+      "p": "MicroscopeSlide",
+      "s": "Slide",
+      "r": "Realia",
+      "t": "Transparency",
+      "w": "Toy",
+      "v": "Videorecording",
+      "z": "Other"
+    },
+    "computerTypeOfFile": {
+      "a": "NumericData",
+      "c": "Representational",
+      "b": "ComputerProgram",
+      "e": "BibliographicData",
+      "d": "Document",
+      "g": "Game",
+      "f": "Font",
+      "i": "InteractiveMultimedia",
+      "h": "Sound",
+      "j": "OnlineSystemOrService",
+      "m": "Combination",
+      "u": "Unknown",
+      "z": "Other"
+    },
+    "serialsTypeOfSerial": {
+      "d": "UpdatingDatabase",
+      "m": "MonographicSeries",
+      "l": "UpdatingLooseLeaf",
+      "n": "Newspaper",
+      "p": "Periodical",
+      "w": "UpdatingWebSite"
+    },
+    "mapMaterial": {
+      "d": "Atlas",
+      "g": "Diagram",
+      "k": "Profile",
+      "j": "MapATwoDimensionalMap",
+      "q": "Model",
+      "s": "Section",
+      "r": "RemoteSensingImage",
+      "u": "Unspecified",
+      "y": "View",
+      "z": "Other"
+    },
+    "computerMaterial": {
+      "a": "TapeCartridge",
+      "c": "ComputerOpticalDiscCartridge",
+      "b": "ChipCartridge",
+      "e": "ComputerDiscCartridge",
+      "d": "ComputerDisc",
+      "f": "TapeCassette",
+      "h": "TapeReel",
+      "k": "ComputerCard",
+      "j": "MagneticDisk",
+      "m": "MagnetoOpticalDisc",
+      "o": "OpticalDisc",
+      "r": "OnlineResource",
+      "u": "Unspecified",
+      "z": "Other"
+    },
+    "globeMaterial": {
+      "a": "CelestialGlobe",
+      "c": "TerrestrialGlobe",
+      "b": "PlanetaryOrLunarGlobe",
+      "e": "EarthMoonGlobe",
+      "u": "Unspecified",
+      "z": "Other"
+    },
+    "tacMaterial": {
+      "a": "Moon",
+      "c": "Combination",
+      "b": "Braille",
+      "d": "TactileWithNoWritingSystem",
+      "u": "Unspecified",
+      "z": "Other"
+    },
+    "projGraphMaterial": {
+      "c": "FilmstripCartridge",
+      "d": "Filmslip",
+      "f": "OtherFilmstripType",
+      "o": "FilmstripRoll",
+      "s": "Slide",
+      "u": "Unspecified",
+      "t": "Transparency",
+      "z": "Other"
+    },
+    "microformMaterial": {
+      "a": "ApertureCard",
+      "c": "MicrofilmCassette",
+      "b": "MicrofilmCartridge",
+      "e": "Microfiche",
+      "d": "MicrofilmReel",
+      "g": "Microopaque",
+      "f": "MicroficheCassette",
+      "h": "MicrofilmSlip",
+      "j": "MicrofilmRoll",
+      "u": "Unspecified",
+      "z": "Other"
+    },
+    "nonProjMaterial": {
+      "a": "ActivityCard",
+      "c": "Collage",
+      "e": "Painting",
+      "d": "Drawing",
+      "g": "Photonegative",
+      "f": "PhotomechanicalPrint",
+      "i": "Picture",
+      "h": "Photoprint",
+      "k": "Poster",
+      "j": "Print",
+      "l": "TechnicalDrawing",
+      "o": "FlashCard",
+      "n": "Chart",
+      "q": "Icon",
+      "p": "Postcard",
+      "s": "StudyPrint",
+      "r": "Radiograph",
+      "u": "Unspecified",
+      "v": "Photograph",
+      "z": "Other"
+    },
+    "motionPicMaterial": {
+      "c": "FilmCartridge",
+      "f": "FilmCassette",
+      "o": "FilmRoll",
+      "r": "FilmReel",
+      "u": "Unspecified",
+      "z": "Other"
+    },
+    "kitMaterial": {"u": "Unspecified"},
+    "notatedMusicMaterial": {"u": "Unspecified"},
+    "remoteSensImageMaterial": {"u": "Unspecified"},
+    "soundMaterial": {
+      "e": "Cylinder",
+      "d": "SoundDisc",
+      "g": "SoundCartridge",
+      "i": "SoundTrackFilm",
+      "q": "Roll",
+      "s": "SoundCassette",
+      "u": "Unspecified",
+      "t": "SoundTapeReel",
+      "w": "WireRecording",
+      "z": "Other"
+    },
+    "textMaterial": {
+      "a": "RegularPrint",
+      "c": "Braille",
+      "b": "LargePrint",
+      "d": "TextInLooseleafBinder",
+      "u": "Unspecified",
+      "z": "Other"
+    },
+    "videoMaterial": {
+      "c": "Videocartridge",
+      "d": "Videodisc",
+      "f": "Videocassette",
+      "r": "Videoreel",
+      "u": "Unspecified",
+      "z": "Other"
     }
+
   },
 
   "entityTypeMap": {
     "Authority": {"typeOfRecord": "z", "abstract": true},
     "Holding": {"typeOfRecord": ["u", "v", "x", "y"]},
+    "Serial": {"typeOfRecord": "a", "bibLevel": "s",
+      "instanceTypes": {
+        "ESerial": {"carrierType": "c", "carrierMaterial": "r"}
+      }
+    },
+    "Collection": {},
+    "Dataset": {},
+    "Image": {},
+    "Movie": {},
+    "NotatedMusic": {},
+    "ThreeDimensionalObject": {},
+    "Kit": {},
+    "Mixed": {},
+    "Multimedia": {},
     "Book": {"typeOfRecord": "a", "bibLevel": "m",
       "instanceTypes": {
         "Audiobook": {"carrierType": "s"},
         "CDBook": {"carrierType": "c", "carrierMaterial": "o"},
         "EBook": {"carrierType": "c", "carrierMaterial": "r"}
-      }
-    },
-    "Serial": {"typeOfRecord": "a", "bibLevel": "s",
-      "instanceTypes": {
-        "ESerial": {"carrierType": "c", "carrierMaterial": "r"}
       }
     },
     "Cartography": {"typeOfRecord": "e", "bibLevel": "m",
@@ -57,31 +301,59 @@
   "bib": {
 
     "000": {
-      "[5:6]": {"domainEntity": "Record", "property": "status"},
-      "[6:7]": {"domainEntity": "Record", "property": "typeOfRecord"},
-      "[7:8]": {"domainEntity": "Record", "property": "bibLevel"},
-      "[8:9]": {"domainEntity": "Record", "property": "typeOfControl"},
-      "[9:10]": {"domainEntity": "Record", "property": "characterCoding", "TODO:assertValue": "a", "note": "characterCoding = utf-8"},
-      "[17:18]": {"domainEntity": "Record", "property": "encLevel"},
-      "[18:19]": {"domainEntity": "Record", "property": "catForm"},
-      "[19:20]": {"domainEntity": "Record", "property": "linked"},
-      "[20:24]": {"domainEntity": "Record", "property": "entryMap", "default": "4500"}
+      "[5:6]": {
+        "domainEntity": "Record",
+        "property": "status",
+        "valueMap": "status"
+      },
+      "[6:7]": {
+        "domainEntity": "Instance",
+        "valueMap": "typeOfRecord",
+        "link": "typeOfRecord",
+        "uriTemplate": "t:{_}"
+      },
+      "[7:8]": {
+        "domainEntity": "Instance",
+        "valueMap": "bibLevel",
+        "link": "bibLevel",
+        "uriTemplate": "t:{_}"
+      },
+      "[8:9]": {
+        "domainEntity": "Record",
+        "property": "typeOfControl",
+        "valueMap": "typeOfControl"
+      },
+      "[9:10]": {
+        "domainEntity": "Record",
+        "property": "characterCoding",
+        "valueMap": "characterCoding"
+      },
+      "[17:18]": {
+        "domainEntity": "Record",
+        "property": "encLevel",
+        "valueMap": "encLevel"
+      },
+      "[18:19]": {
+        "domainEntity": "Record",
+        "property": "catForm",
+        "valueMap": "catForm"
+      },
+      "[19:20]": {
+        "domainEntity": "Record",
+        "property": "linked",
+        "valueMap": "linked"
+      },
+      "[20:24]": {
+        "domainEntity": "Record",
+        "property": "entryMap",
+        "valueMap": "entryMap"
+      },
+      "repeatable": false
     },
 
     "001": {"domainEntity": "Record", "property": "controlNumber"},
     "003": {"domainEntity": "Record", "property": "systemName"},
     "005": {"domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S"},
-
-    "007": {
-      "[0:1]": {"domainEntity": "Record", "property": "carrierType"},
-      "[1:2]": {"domainEntity": "Record", "property": "carrierMaterial"},
-      "_Microform": {
-      "6-8": {"propId": "reductionExactRightJustifiedWithLeadingZero"}
-      },
-      "_MotionPicture": {
-        "17-22": {"propId": "filmInspectionDate"}
-      }
-    },
 
     "006": {
       "[0:1]": {},
@@ -89,10 +361,662 @@
       "repeats": "008"
     },
 
+    "007": {
+      "[0:1]": {
+        "domainEntity": "Instance",
+        "link": "carrierType",
+        "uriTemplate": "/def/carrier/{_}",
+        "valueMap": {
+          "a": "Map",
+          "c": "Electronic",
+          "d": "Globe",
+          "f": "TactileMaterial",
+          "g": "ProjectedGraphic",
+          "h": "Microform",
+          "k": "NonprojectedGraphic",
+          "m": "MotionPicture",
+          "o": "Kit",
+          "q": "NotatedMusic",
+          "r": "RemoteSensingImage",
+          "s": "SoundRecording",
+          "t": "Text",
+          "v": "VideoRecording",
+          "z": "Unspecified"
+        }
+      },
+      "tokenTypeMap": {
+        "a": "Map",
+        "c": "Electronic",
+        "d": "Globe",
+        "f": "TactileMaterial",
+        "g": "ProjectedGraphic",
+        "h": "Microform",
+        "k": "NonprojectedGraphic",
+        "m": "MotionPicture",
+        "o": "Kit",
+        "q": "NotatedMusic",
+        "r": "RemoteSensingImage",
+        "s": "SoundRecording",
+        "t": "Text",
+        "v": "VideoRecording",
+        "z": "Unspecified"
+      },
+      "Map": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "mapMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "mapColor",
+          "valueMap": "mapColor"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "mapMedium",
+          "valueMap": "mapMedium"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "mapReproduction",
+          "valueMap": "mapReproduction"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "mapDetails",
+          "valueMap": "mapDetails"
+        },
+        "[7:8]": {
+          "domainEntity": "Instance",
+          "property": "mapPosNeg",
+          "valueMap": "mapPosNeg"
+        },
+        "[2:3]": {
+          "domainEntity": "Instance",
+          "property": "mapAspect",
+          "valueMap": "mapAspect"
+        }
+      },
+      "Electronic": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "computerMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "computerColor",
+          "valueMap": "computerColor"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "computerDimensions",
+          "valueMap": "computerDimensions"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "computerSound",
+          "valueMap": "computerSound"
+        },
+        "[6:9]": {
+          "domainEntity": "Instance",
+          "property": "computerImageBitDepth",
+          "valueMap": "computerImageBitDepth"
+        },
+        "[9:10]": {
+          "domainEntity": "Instance",
+          "property": "computerFileFormats",
+          "valueMap": "computerFileFormats"
+        },
+        "[10:11]": {
+          "domainEntity": "Instance",
+          "property": "computerQATarget",
+          "valueMap": "computerQATarget"
+        },
+        "[11:12]": {
+          "domainEntity": "Instance",
+          "property": "computerAntecedent",
+          "valueMap": "computerAntecedent"
+        },
+        "[12:13]": {
+          "domainEntity": "Instance",
+          "property": "computerCompression",
+          "valueMap": "computerCompression"
+        },
+        "[13:14]": {
+          "domainEntity": "Instance",
+          "property": "computerReformattingQuality",
+          "valueMap": "computerReformattingQuality"
+        },
+        "[2:3]": {
+          "domainEntity": "Instance",
+          "property": "computerFileAspect",
+          "valueMap": "computerFileAspect"
+        }
+      },
+      "Globe": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "globeMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "globeColor",
+          "valueMap": "globeColor"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "globeMedium",
+          "valueMap": "globeMedium"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "globeReproduction",
+          "valueMap": "globeReproduction"
+        },
+        "[2:3]": {
+          "domainEntity": "Instance",
+          "property": "globeAspect",
+          "valueMap": "globeAspect"
+        }
+      },
+      "TactileMaterial": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "tacMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "tacBrailleWriting",
+          "valueMap": "tacBrailleWriting"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "tacBrailleWriting",
+          "valueMap": "tacBrailleWriting"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "tacContraction",
+          "valueMap": "tacContraction"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "tacBrailleMusic",
+          "valueMap": "tacBrailleMusic"
+        },
+        "[7:8]": {
+          "domainEntity": "Instance",
+          "property": "tacBrailleMusic",
+          "valueMap": "tacBrailleMusic"
+        },
+        "[8:9]": {
+          "domainEntity": "Instance",
+          "property": "tacBrailleMusic",
+          "valueMap": "tacBrailleMusic"
+        },
+        "[9:10]": {
+          "domainEntity": "Instance",
+          "property": "tacSpecPhysicalChar",
+          "valueMap": "tacSpecPhysicalChar"
+        }
+      },
+      "ProjectedGraphic": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "projGraphMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "projGraphColor",
+          "valueMap": "projGraphColor"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "projGraphEmulsion",
+          "valueMap": "projGraphEmulsion"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "projGraphSound",
+          "valueMap": "projGraphSound"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "projGraphMedium",
+          "valueMap": "projGraphMedium"
+        },
+        "[7:8]": {
+          "domainEntity": "Instance",
+          "property": "projGraphDimensions",
+          "valueMap": "projGraphDimensions"
+        },
+        "[8:9]": {
+          "domainEntity": "Instance",
+          "property": "projGraphSupport",
+          "valueMap": "projGraphSupport"
+        },
+        "[2:3]": {
+          "domainEntity": "Instance",
+          "property": "projGraphAspect",
+          "valueMap": "projGraphAspect"
+        }
+      },
+      "Microform": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "microformMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "microformPosNeg",
+          "valueMap": "microformPosNeg"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "microformDimensions",
+          "valueMap": "microformDimensions"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "microformRange",
+          "valueMap": "microformRange"
+        },
+        "[6:9]": {
+          "domainEntity": "Record",
+          "property": "reductionRatioExactRightJustifiedWithLeadingZero"
+        },
+        "[9:10]": {
+          "domainEntity": "Instance",
+          "property": "microformColor",
+          "valueMap": "microformColor"
+        },
+        "[10:11]": {
+          "domainEntity": "Instance",
+          "property": "microformEmulsion",
+          "valueMap": "microformEmulsion"
+        },
+        "[11:12]": {
+          "domainEntity": "Instance",
+          "property": "microformGeneration",
+          "valueMap": "microformGeneration"
+        },
+        "[12:13]": {
+          "domainEntity": "Instance",
+          "property": "microformBase",
+          "valueMap": "microformBase"
+        },
+        "[2:3]": {
+          "domainEntity": "Instance",
+          "property": "microformAspect",
+          "valueMap": "microformAspect"
+        }
+      },
+      "NonprojectedGraphic": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "nonProjMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "nonProjColor",
+          "valueMap": "nonProjColor"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "nonProjPrimary",
+          "valueMap": "nonProjPrimary"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "nonProjSecondary",
+          "valueMap": "nonProjSecondary"
+        },
+        "[2:3]": {
+          "domainEntity": "Instance",
+          "property": "nonProjAspect",
+          "valueMap": "nonProjAspect"
+        }
+      },
+      "MotionPicture": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "motionPicMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "motionPicColor",
+          "valueMap": "motionPicColor"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "motionPicFormat",
+          "valueMap": "motionPicFormat"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "motionPicSound",
+          "valueMap": "motionPicSound"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "motionPicMedium",
+          "valueMap": "motionPicMedium"
+        },
+        "[7:8]": {
+          "domainEntity": "Instance",
+          "property": "motionPicDimensions",
+          "valueMap": "motionPicDimensions"
+        },
+        "[8:9]": {
+          "domainEntity": "Instance",
+          "property": "motionPicConfiguration",
+          "valueMap": "motionPicConfiguration"
+        },
+        "[9:10]": {
+          "domainEntity": "Instance",
+          "property": "motionPicElements",
+          "valueMap": "motionPicElements"
+        },
+        "[10:11]": {
+          "domainEntity": "Instance",
+          "property": "motionPicPosNeg",
+          "valueMap": "motionPicPosNeg"
+        },
+        "[11:12]": {
+          "domainEntity": "Instance",
+          "property": "motionPicGeneration",
+          "valueMap": "motionPicGeneration"
+        },
+        "[12:13]": {
+          "domainEntity": "Instance",
+          "property": "motionPicBase",
+          "valueMap": "motionPicBase"
+        },
+        "[13:14]": {
+          "domainEntity": "Instance",
+          "property": "motionPicCategories",
+          "valueMap": "motionPicCategories"
+        },
+        "[14:15]": {
+          "domainEntity": "Instance",
+          "property": "motionPicColorStock",
+          "valueMap": "motionPicColorStock"
+        },
+        "[15:16]": {
+          "domainEntity": "Instance",
+          "property": "motionPicDeterioration",
+          "valueMap": "motionPicDeterioration"
+        },
+        "[16:17]": {
+          "domainEntity": "Instance",
+          "property": "motionPicCompleteness",
+          "valueMap": "motionPicCompleteness"
+        },
+        "[17:23]": {
+          "domainEntity": "Record",
+          "property": "timeOfExamination"
+        },
+        "[2:3]": {
+          "domainEntity": "Instance",
+          "property": "motionPicAspect",
+          "valueMap": "motionPicAspect"
+        }
+      },
+      "Kit": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "kitMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        }
+      },
+      "NotatedMusic": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "notatedMusicMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        }
+      },
+      "RemoteSensingImage": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "remoteSensImageMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "remoteSensImageAltitude",
+          "valueMap": "remoteSensImageAltitude"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "remoteSensImageAttitude",
+          "valueMap": "remoteSensImageAttitude"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "remoteSensImageCloud",
+          "valueMap": "remoteSensImageCloud"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "remoteSensImageConstruction",
+          "valueMap": "remoteSensImageConstruction"
+        },
+        "[7:8]": {
+          "domainEntity": "Instance",
+          "property": "remoteSensImageUse",
+          "valueMap": "remoteSensImageUse"
+        },
+        "[8:9]": {
+          "domainEntity": "Instance",
+          "property": "remoteSensImageSensor",
+          "valueMap": "remoteSensImageSensor"
+        },
+        "[9:11]": {
+          "domainEntity": "Instance",
+          "property": "remoteSensImageData",
+          "valueMap": "remoteSensImageData"
+        },
+        "[2:3]": {
+          "domainEntity": "Instance",
+          "property": "soundAspect",
+          "valueMap": "soundAspect"
+        },
+        "[9:10]": {
+          "domainEntity": "Instance",
+          "property": "soundKindOfDisc",
+          "valueMap": "soundKindOfDisc"
+        },
+        "[10:11]": {
+          "domainEntity": "Instance",
+          "property": "soundKindOfMaterial",
+          "valueMap": "soundKindOfMaterial"
+        },
+        "[11:12]": {
+          "domainEntity": "Instance",
+          "property": "soundKindOfCutting",
+          "valueMap": "soundKindOfCutting"
+        },
+        "[12:13]": {
+          "domainEntity": "Instance",
+          "property": "soundPlaybackCharacter",
+          "valueMap": "soundPlaybackCharacter"
+        },
+        "[13:14]": {
+          "domainEntity": "Instance",
+          "property": "soundCapture",
+          "valueMap": "soundCapture"
+        }
+      },
+      "SoundRecording": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "soundMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "soundSpeed",
+          "valueMap": "soundSpeed"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "soundPlaybackChannel",
+          "valueMap": "soundPlaybackChannel"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "soundGroove",
+          "valueMap": "soundGroove"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "soundDimensions",
+          "valueMap": "soundDimensions"
+        },
+        "[7:8]": {
+          "domainEntity": "Instance",
+          "property": "soundTapeWidth",
+          "valueMap": "soundTapeWidth"
+        },
+        "[8:9]": {
+          "domainEntity": "Instance",
+          "property": "soundTapeConfiguration",
+          "valueMap": "soundTapeConfiguration"
+        },
+        "[9:10]": {
+          "domainEntity": "Instance",
+          "property": "soundKindOfDisc",
+          "valueMap": "soundKindOfDisc"
+        },
+        "[10:11]": {
+          "domainEntity": "Instance",
+          "property": "soundKindOfMaterial",
+          "valueMap": "soundKindOfMaterial"
+        },
+        "[11:12]": {
+          "domainEntity": "Instance",
+          "property": "soundKindOfCutting",
+          "valueMap": "soundKindOfCutting"
+        },
+        "[12:13]": {
+          "domainEntity": "Instance",
+          "property": "soundPlaybackCharacter",
+          "valueMap": "soundPlaybackCharacter"
+        },
+        "[13:14]": {
+          "domainEntity": "Instance",
+          "property": "soundCapture",
+          "valueMap": "soundCapture"
+        }
+      },
+      "Text": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "textMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "videoColor",
+          "valueMap": "videoColor"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "videoFormat",
+          "valueMap": "videoFormat"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "videoSound",
+          "valueMap": "videoSound"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "videoMedium",
+          "valueMap": "videoMedium"
+        },
+        "[7:8]": {
+          "domainEntity": "Instance",
+          "property": "videoDimensions",
+          "valueMap": "videoDimensions"
+        },
+        "[8:9]": {
+          "domainEntity": "Instance",
+          "property": "videoPlayback",
+          "valueMap": "videoPlayback"
+        }
+      },
+      "VideoRecording": {
+        "[1:2]": {
+          "domainEntity": "Instance",
+          "valueMap": "videoMaterial",
+          "link": "carrierFormat",
+          "uriTemplate": "enum:{_}"
+        },
+        "[3:4]": {
+          "domainEntity": "Instance",
+          "property": "videoColor",
+          "valueMap": "videoColor"
+        },
+        "[4:5]": {
+          "domainEntity": "Instance",
+          "property": "videoFormat",
+          "valueMap": "videoFormat"
+        },
+        "[5:6]": {
+          "domainEntity": "Instance",
+          "property": "videoSound",
+          "valueMap": "videoSound"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "videoMedium",
+          "valueMap": "videoMedium"
+        },
+        "[7:8]": {
+          "domainEntity": "Instance",
+          "property": "videoDimensions",
+          "valueMap": "videoDimensions"
+        },
+        "[8:9]": {
+          "domainEntity": "Instance",
+          "property": "videoPlayback",
+          "valueMap": "videoPlayback"
+        },
+        "[9:11]": {
+          "domainEntity": "Instance",
+          "property": "remoteSensImageData",
+          "valueMap": "remoteSensImageData"
+        }
+      },
+      "Unspecified": {},
+      "repeatable": true
+    },
+
     "008": {
       "repeatedBy": "006",
-      "[7:11]": {"property": "publishedYear"},
-      "[11:15]": {"property": "otherYear"},
       "[35:38]": {
         "domainEntity": "Work",
         "link": "language",
@@ -102,13 +1026,710 @@
           "matches": ["swe", "sv"], "notMatches": ["N/A", " ", "---", "en-US", "en_us"]
         }
       },
-
-      "0+6": {"range": "date"},
-      "publicationStatus": {"dateTypeFor": "008.0+6"},
-      "7+4": {"id": "yearTime1", "range": "date"},
-      "11+4": {"id": "yearTime2", "range": "date"},
-      "catalogingSource": {},
-      "modifiedRecord": {"detail": 0}
+      "[38:39]": {
+        "domainEntity": "Record",
+        "property": "modifiedRecord",
+        "valueMap": "modifiedRecord"
+      },
+      "[39:40]": {
+        "domainEntity": "Record",
+        "property": "catalogingSource",
+        "valueMap": "catalogingSource"
+      },
+      "recTypeBibLevelMap": {
+        "aa": "Book",
+        "ac": "Book",
+        "ad": "Book",
+        "am": "Book",
+        "tm": "Book",
+        "hm": "Book",
+        "hc": "Book",
+        "td": "Book",
+        "ha": "Book",
+        "tc": "Book",
+        "hd": "Book",
+        "ta": "Book",
+        "md": "Digital",
+        "ma": "Digital",
+        "mc": "Digital",
+        "mb": "Digital",
+        "mm": "Digital",
+        "mi": "Digital",
+        "mp": "Digital",
+        "ms": "Digital",
+        "m9": "Digital",
+        "em": "Map",
+        "fp": "Map",
+        "fs": "Map",
+        "ei": "Map",
+        "ed": "Map",
+        "ea": "Map",
+        "f9": "Map",
+        "ec": "Map",
+        "eb": "Map",
+        "fa": "Map",
+        "fb": "Map",
+        "fc": "Map",
+        "e9": "Map",
+        "fi": "Map",
+        "fd": "Map",
+        "fm": "Map",
+        "ep": "Map",
+        "es": "Map",
+        "bd": "Mixed",
+        "ps": "Serial",
+        "pp": "Mixed",
+        "ba": "Mixed",
+        "bb": "Serial",
+        "bc": "Mixed",
+        "bm": "Mixed",
+        "bi": "Mixed",
+        "pb": "Serial",
+        "pc": "Mixed",
+        "pa": "Mixed",
+        "bp": "Mixed",
+        "pd": "Mixed",
+        "bs": "Serial",
+        "pi": "Mixed",
+        "b9": "Mixed",
+        "pm": "Mixed",
+        "ci": "Music",
+        "j9": "Music",
+        "cm": "Music",
+        "cc": "Music",
+        "cb": "Music",
+        "ca": "Music",
+        "cd": "Music",
+        "ii": "Music",
+        "cs": "Music",
+        "im": "Music",
+        "d9": "Music",
+        "ia": "Music",
+        "ic": "Music",
+        "ib": "Music",
+        "id": "Music",
+        "cp": "Music",
+        "ja": "Music",
+        "jb": "Music",
+        "ip": "Music",
+        "is": "Music",
+        "i9": "Music",
+        "dm": "Music",
+        "di": "Music",
+        "jp": "Music",
+        "dd": "Music",
+        "db": "Music",
+        "dc": "Music",
+        "da": "Music",
+        "jm": "Music",
+        "c9": "Music",
+        "ji": "Music",
+        "jd": "Music",
+        "js": "Music",
+        "ds": "Music",
+        "dp": "Music",
+        "jc": "Music",
+        "ab": "Serial",
+        "rs": "Visual",
+        "ai": "Serial",
+        "hs": "Serial",
+        "nb": "Visual",
+        "ob": "Visual",
+        "tb": "Serial",
+        "na": "Visual",
+        "as": "Serial",
+        "ts": "Serial",
+        "rb": "Visual",
+        "hb": "Serial",
+        "ns": "Visual",
+        "os": "Visual",
+        "h9": "Serial",
+        "t9": "Serial",
+        "hp": "Serial",
+        "tp": "Serial",
+        "ap": "Serial",
+        "hi": "Serial",
+        "ti": "Serial",
+        "a9": "Serial",
+        "p9": "Visual",
+        "gs": "Visual",
+        "gp": "Visual",
+        "r9": "Visual",
+        "gd": "Visual",
+        "gc": "Visual",
+        "gb": "Visual",
+        "ga": "Visual",
+        "gm": "Visual",
+        "gi": "Visual",
+        "ni": "Visual",
+        "rp": "Visual",
+        "nm": "Visual",
+        "nc": "Visual",
+        "nd": "Visual",
+        "oa": "Visual",
+        "rd": "Visual",
+        "ra": "Visual",
+        "o9": "Visual",
+        "rc": "Visual",
+        "np": "Visual",
+        "rm": "Visual",
+        "k9": "Visual",
+        "ri": "Visual",
+        "om": "Visual",
+        "g9": "Visual",
+        "kc": "Visual",
+        "kb": "Visual",
+        "ka": "Visual",
+        "oi": "Visual",
+        "kd": "Visual",
+        "ki": "Visual",
+        "od": "Visual",
+        "oc": "Visual",
+        "km": "Visual",
+        "ks": "Visual",
+        "n9": "Visual",
+        "kp": "Visual",
+        "op": "Visual"
+      },
+      "Book": {
+        "[0:6]": {
+          "domainEntity": "Instance",
+          "property": "date"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "publicationStatus",
+          "valueMap": "publicationStatus"
+        },
+        "[7:11]": {
+          "domainEntity": "Instance",
+          "property": "publishedYear"
+        },
+        "[11:15]": {
+          "domainEntity": "Instance",
+          "property": "otherYear"
+        },
+        "[15:18]": {
+          "domainEntity": "Instance",
+          "property": "country"
+        },
+        "[18:19]": {
+          "domainEntity": "Instance",
+          "property": "booksIllustrations",
+          "valueMap": "booksIllustrations"
+        },
+        "[19:20]": {
+          "domainEntity": "Instance",
+          "property": "booksIllustrations",
+          "valueMap": "booksIllustrations"
+        },
+        "[20:21]": {
+          "domainEntity": "Instance",
+          "property": "booksIllustrations",
+          "valueMap": "booksIllustrations"
+        },
+        "[21:22]": {
+          "domainEntity": "Instance",
+          "property": "booksIllustrations",
+          "valueMap": "booksIllustrations"
+        },
+        "[22:23]": {
+          "domainEntity": "Instance",
+          "property": "booksAudience",
+          "valueMap": "booksAudience"
+        },
+        "[23:24]": {
+          "domainEntity": "Instance",
+          "property": "booksItem",
+          "valueMap": "booksItem"
+        },
+        "[24:25]": {
+          "domainEntity": "Instance",
+          "valueMap": "booksContents",
+          "link": "contentType",
+          "uriTemplate": "{_}"
+        },
+        "[25:26]": {
+          "domainEntity": "Instance",
+          "valueMap": "booksContents",
+          "link": "contentType",
+          "uriTemplate": "{_}"
+        },
+        "[26:27]": {
+          "domainEntity": "Instance",
+          "valueMap": "booksContents",
+          "link": "contentType",
+          "uriTemplate": "{_}"
+        },
+        "[27:28]": {
+          "domainEntity": "Instance",
+          "valueMap": "booksContents",
+          "link": "contentType",
+          "uriTemplate": "{_}"
+        },
+        "[28:29]": {
+          "domainEntity": "Instance",
+          "property": "booksGovtPub",
+          "valueMap": "booksGovtPub"
+        },
+        "[29:30]": {
+          "domainEntity": "Instance",
+          "property": "booksConfPub",
+          "valueMap": "booksConfPub"
+        },
+        "[30:31]": {
+          "domainEntity": "Instance",
+          "property": "booksFestschrift",
+          "valueMap": "booksFestschrift"
+        },
+        "[31:32]": {
+          "domainEntity": "Instance",
+          "property": "booksIndex",
+          "valueMap": "booksIndex"
+        },
+        "[33:34]": {
+          "domainEntity": "Instance",
+          "property": "booksLiteraryForm",
+          "valueMap": "booksLiteraryForm"
+        },
+        "[34:35]": {
+          "domainEntity": "Instance",
+          "property": "booksBiography",
+          "valueMap": "booksBiography"
+        }
+      },
+      "Digital": {
+        "[0:6]": {
+          "domainEntity": "Instance",
+          "property": "date"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "publicationStatus",
+          "valueMap": "publicationStatus"
+        },
+        "[7:11]": {
+          "domainEntity": "Instance",
+          "property": "publishedYear"
+        },
+        "[11:15]": {
+          "domainEntity": "Instance",
+          "property": "otherYear"
+        },
+        "[15:18]": {
+          "domainEntity": "Instance",
+          "property": "country"
+        },
+        "[22:23]": {
+          "domainEntity": "Instance",
+          "property": "computerAudience",
+          "valueMap": "computerAudience"
+        },
+        "[23:24]": {
+          "domainEntity": "Instance",
+          "property": "computerItem",
+          "valueMap": "computerItem"
+        },
+        "[26:27]": {
+          "domainEntity": "Instance",
+          "valueMap": "computerTypeOfFile",
+          "link": "contentType",
+          "uriTemplate": "{_}"
+        },
+        "[28:29]": {
+          "domainEntity": "Instance",
+          "property": "computerGovtPub",
+          "valueMap": "computerGovtPub"
+        },
+        "[18:19]": {
+          "domainEntity": "Instance",
+          "property": "computerFrequency",
+          "valueMap": "computerFrequency"
+        },
+        "[19:20]": {
+          "domainEntity": "Instance",
+          "property": "computerRegularity",
+          "valueMap": "computerRegularity"
+        }
+      },
+      "Map": {
+        "[0:6]": {
+          "domainEntity": "Instance",
+          "property": "date"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "publicationStatus",
+          "valueMap": "publicationStatus"
+        },
+        "[7:11]": {
+          "domainEntity": "Instance",
+          "property": "publishedYear"
+        },
+        "[11:15]": {
+          "domainEntity": "Instance",
+          "property": "otherYear"
+        },
+        "[15:18]": {
+          "domainEntity": "Instance",
+          "property": "country"
+        },
+        "[18:19]": {
+          "domainEntity": "Instance",
+          "property": "mapsRelief",
+          "valueMap": "mapsRelief"
+        },
+        "[19:20]": {
+          "domainEntity": "Instance",
+          "property": "mapsRelief",
+          "valueMap": "mapsRelief"
+        },
+        "[20:21]": {
+          "domainEntity": "Instance",
+          "property": "mapsRelief",
+          "valueMap": "mapsRelief"
+        },
+        "[21:22]": {
+          "domainEntity": "Instance",
+          "property": "mapsRelief",
+          "valueMap": "mapsRelief"
+        },
+        "[22:24]": {
+          "domainEntity": "Instance",
+          "property": "mapsProjection",
+          "valueMap": "mapsProjection"
+        },
+        "[25:26]": {
+          "domainEntity": "Instance",
+          "property": "mapsMaterial",
+          "valueMap": "mapsMaterial"
+        },
+        "[28:29]": {
+          "domainEntity": "Instance",
+          "property": "mapsGovtPub",
+          "valueMap": "mapsGovtPub"
+        },
+        "[29:30]": {
+          "domainEntity": "Instance",
+          "property": "mapsItem",
+          "valueMap": "mapsItem"
+        },
+        "[31:32]": {
+          "domainEntity": "Instance",
+          "property": "mapsIndex",
+          "valueMap": "mapsIndex"
+        },
+        "[33:34]": {
+          "domainEntity": "Instance",
+          "property": "mapsFormat",
+          "valueMap": "mapsFormat"
+        },
+        "[34:35]": {
+          "domainEntity": "Instance",
+          "property": "mapsFormat",
+          "valueMap": "mapsFormat"
+        },
+        "[24:25]": {
+          "domainEntity": "Instance",
+          "property": "mapsPrimeMeridian",
+          "valueMap": "mapsPrimeMeridian"
+        }
+      },
+      "Mixed": {
+        "[0:6]": {
+          "domainEntity": "Instance",
+          "property": "date"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "publicationStatus",
+          "valueMap": "publicationStatus"
+        },
+        "[7:11]": {
+          "domainEntity": "Instance",
+          "property": "publishedYear"
+        },
+        "[11:15]": {
+          "domainEntity": "Instance",
+          "property": "otherYear"
+        },
+        "[15:18]": {
+          "domainEntity": "Instance",
+          "property": "country"
+        },
+        "[23:24]": {
+          "domainEntity": "Instance",
+          "property": "mixedItem",
+          "valueMap": "mixedItem"
+        }
+      },
+      "Music": {
+        "[0:6]": {
+          "domainEntity": "Instance",
+          "property": "date"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "publicationStatus",
+          "valueMap": "publicationStatus"
+        },
+        "[7:11]": {
+          "domainEntity": "Instance",
+          "property": "publishedYear"
+        },
+        "[11:15]": {
+          "domainEntity": "Instance",
+          "property": "otherYear"
+        },
+        "[15:18]": {
+          "domainEntity": "Instance",
+          "property": "country"
+        },
+        "[18:20]": {
+          "domainEntity": "Instance",
+          "property": "musicComposition",
+          "valueMap": "musicComposition"
+        },
+        "[20:21]": {
+          "domainEntity": "Instance",
+          "property": "musicFormat",
+          "valueMap": "musicFormat"
+        },
+        "[21:22]": {
+          "domainEntity": "Instance",
+          "property": "musicParts",
+          "valueMap": "musicParts"
+        },
+        "[22:23]": {
+          "domainEntity": "Instance",
+          "property": "musicAudience",
+          "valueMap": "musicAudience"
+        },
+        "[23:24]": {
+          "domainEntity": "Instance",
+          "property": "musicItem",
+          "valueMap": "musicItem"
+        },
+        "[24:25]": {
+          "domainEntity": "Instance",
+          "property": "musicMatter",
+          "valueMap": "musicMatter"
+        },
+        "[25:26]": {
+          "domainEntity": "Instance",
+          "property": "musicMatter",
+          "valueMap": "musicMatter"
+        },
+        "[26:27]": {
+          "domainEntity": "Instance",
+          "property": "musicMatter",
+          "valueMap": "musicMatter"
+        },
+        "[27:28]": {
+          "domainEntity": "Instance",
+          "property": "musicMatter",
+          "valueMap": "musicMatter"
+        },
+        "[28:29]": {
+          "domainEntity": "Instance",
+          "property": "musicMatter",
+          "valueMap": "musicMatter"
+        },
+        "[29:30]": {
+          "domainEntity": "Instance",
+          "property": "musicMatter",
+          "valueMap": "musicMatter"
+        },
+        "[30:31]": {
+          "domainEntity": "Instance",
+          "property": "musicText",
+          "valueMap": "musicText"
+        },
+        "[31:32]": {
+          "domainEntity": "Instance",
+          "property": "musicText",
+          "valueMap": "musicText"
+        },
+        "[33:34]": {
+          "domainEntity": "Instance",
+          "property": "musicTransposition",
+          "valueMap": "musicTransposition"
+        }
+      },
+      "Serial": {
+        "[0:6]": {
+          "domainEntity": "Instance",
+          "property": "date"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "publicationStatus",
+          "valueMap": "publicationStatus"
+        },
+        "[7:11]": {
+          "domainEntity": "Instance",
+          "property": "publishedYear"
+        },
+        "[11:15]": {
+          "domainEntity": "Instance",
+          "property": "otherYear"
+        },
+        "[15:18]": {
+          "domainEntity": "Instance",
+          "property": "country"
+        },
+        "[18:19]": {
+          "domainEntity": "Instance",
+          "property": "serialsFrequency",
+          "valueMap": "serialsFrequency"
+        },
+        "[19:20]": {
+          "domainEntity": "Instance",
+          "property": "serialsRegularity",
+          "valueMap": "serialsRegularity"
+        },
+        "[20:21]": {
+          "domainEntity": "Instance",
+          "property": "serialsISSN",
+          "valueMap": "serialsISSN"
+        },
+        "[21:22]": {
+          "domainEntity": "Instance",
+          "valueMap": "serialsTypeOfSerial",
+          "link": "contentType",
+          "uriTemplate": "{_}"
+        },
+        "[22:23]": {
+          "domainEntity": "Instance",
+          "property": "serialsOriginalItem",
+          "valueMap": "serialsOriginalItem"
+        },
+        "[23:24]": {
+          "domainEntity": "Instance",
+          "property": "serialsItem",
+          "valueMap": "serialsItem"
+        },
+        "[24:25]": {
+          "domainEntity": "Instance",
+          "property": "serialsNature",
+          "valueMap": "serialsNature"
+        },
+        "[25:26]": {
+          "domainEntity": "Instance",
+          "property": "serialsContents",
+          "valueMap": "serialsContents"
+        },
+        "[26:27]": {
+          "domainEntity": "Instance",
+          "property": "serialsContents",
+          "valueMap": "serialsContents"
+        },
+        "[27:28]": {
+          "domainEntity": "Instance",
+          "property": "serialsContents",
+          "valueMap": "serialsContents"
+        },
+        "[28:29]": {
+          "domainEntity": "Instance",
+          "property": "serialsGovtPub",
+          "valueMap": "serialsGovtPub"
+        },
+        "[29:30]": {
+          "domainEntity": "Instance",
+          "property": "serialsConfPub",
+          "valueMap": "serialsConfPub"
+        },
+        "[33:34]": {
+          "domainEntity": "Instance",
+          "property": "serialsAlphabet",
+          "valueMap": "serialsAlphabet"
+        },
+        "[34:35]": {
+          "domainEntity": "Instance",
+          "property": "serialsTypeOfEntry",
+          "valueMap": "serialsTypeOfEntry"
+        }
+      },
+      "Visual": {
+        "[0:6]": {
+          "domainEntity": "Instance",
+          "property": "date"
+        },
+        "[6:7]": {
+          "domainEntity": "Instance",
+          "property": "publicationStatus",
+          "valueMap": "publicationStatus"
+        },
+        "[7:11]": {
+          "domainEntity": "Instance",
+          "property": "publishedYear"
+        },
+        "[11:15]": {
+          "domainEntity": "Instance",
+          "property": "otherYear"
+        },
+        "[15:18]": {
+          "domainEntity": "Instance",
+          "property": "country"
+        },
+        "[18:21]": {
+          "domainEntity": "Instance",
+          "property": "visualRunningTime",
+          "valueMap": "visualRunningTime"
+        },
+        "[22:23]": {
+          "domainEntity": "Instance",
+          "property": "visualAudience",
+          "valueMap": "visualAudience"
+        },
+        "[28:29]": {
+          "domainEntity": "Instance",
+          "property": "visualGovtPub",
+          "valueMap": "visualGovtPub"
+        },
+        "[29:30]": {
+          "domainEntity": "Instance",
+          "property": "visualItem",
+          "valueMap": "visualItem"
+        },
+        "[33:34]": {
+          "domainEntity": "Instance",
+          "valueMap": "visualMaterial",
+          "link": "contentType",
+          "uriTemplate": "{_}"
+        },
+        "[34:35]": {
+          "domainEntity": "Instance",
+          "property": "visualTechnique",
+          "valueMap": "visualTechnique"
+        },
+        "[23:24]": {
+          "domainEntity": "Instance",
+          "property": "visualMatter",
+          "valueMap": "visualMatter"
+        },
+        "[24:25]": {
+          "domainEntity": "Instance",
+          "property": "visualMatter",
+          "valueMap": "visualMatter"
+        },
+        "[25:26]": {
+          "domainEntity": "Instance",
+          "property": "visualMatter",
+          "valueMap": "visualMatter"
+        },
+        "[26:27]": {
+          "domainEntity": "Instance",
+          "property": "visualMatter",
+          "valueMap": "visualMatter"
+        },
+        "[27:28]": {
+          "domainEntity": "Instance",
+          "property": "visualMatter",
+          "valueMap": "visualMatter"
+        }
+      },
+      "repeatable": false
     },
 
     "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
