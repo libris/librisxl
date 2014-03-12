@@ -55,6 +55,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     final String COL_NAME_ENTRY = "entry"
     final String COL_NAME_DATASET = "dataset"
     final String COL_NAME_TIMESTAMP = "ts"
+    final String COL_NAME_YEAR = "year"
 
     AnnotatedCompositeSerializer<DocumentEntry> documentSerializer = new AnnotatedCompositeSerializer<DocumentEntry>(DocumentEntry.class)
     ColumnFamily<String, DocumentEntry> CF_DOCUMENT = new ColumnFamily<String, DocumentEntry>(CF_DOCUMENT_NAME, StringSerializer.get(), documentSerializer)
@@ -158,21 +159,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 .put("key_validation_class", "UTF8Type")
                 .put("comparator_type", "CompositeType(IntegerType, LongType, UTF8Type)")
                 .build());
-
-
-                /*
-                    .put("column_metadata", ImmutableMap.<String, Object>builder()
-                        .put("Index1", ImmutableMap.<String, Object>builder()
-                            .put("validation_class", "UTF8Type")
-                            .put("index_name",       "Index1")
-                            .put("index_type",       "KEYS")
-                            .build())
-                        .build())
-                    .put("default_validation_class", "UTF8Type")
-                    .put("key_validation_class", "UTF8Type")
-                    .build())
-                    */
-                    //.put("comparator_type", "CompositeType(LongType, UTF8Type)")
             }
 
 
@@ -184,6 +170,11 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 log.info("Creating columnfamily $CF_DOCUMENT_META_NAME")
                 ksp.createColumnFamily(CF_DOCUMENT_META, ImmutableMap.builder()
                 .put("column_metadata", ImmutableMap.builder()
+                    .put(COL_NAME_YEAR, ImmutableMap.builder()
+                        .put("validation_class", "IntegerType")
+                        .put("index_name",       COL_NAME_YEAR)
+                        .put("index_type",       "KEYS")
+                        .build())
                     .put(COL_NAME_DATASET, ImmutableMap.builder()
                         .put("validation_class", "UTF8Type")
                         .put("index_name",       COL_NAME_DATASET)
@@ -272,6 +263,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
         mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATASET), dataset.getBytes("UTF-8"), null)
 
         mutation.withRow(CF_DOCUMENT_META, key)
+            .putColumn(COL_NAME_YEAR, new Date(doc.timestamp).getAt(Calendar.YEAR), null)
             .putColumn(COL_NAME_DATA, doc.data, null)
             .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
             .putColumn(COL_NAME_DATASET, dataset, null)
@@ -350,31 +342,16 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null) {
+        /* WE SHOULD BE ABLE TO DO THIS!
         if (!dataset && since) {
             throw new QueryException("Parameter 'since' requires a 'dataset'")
         }
+        */
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 def query
                 try {
                     if (dataset) {
-
-
-                        /*
-                        OperationResult<ColumnList<PostInfo>> result = getKeyspace()
-                        .prepareQuery(CF_DOCUMENT)
-                        .getKey("all")
-                        .withColumnRange(new RangeBuilder()
-                        .setLimit(5)
-                        .setReversed(true)
-                        .build())
-                        .execute();
-                        ColumnList<PostInfo> columns = result.getResult();
-                        for (Column<PostInfo> column : columns) {
-                        // do what you need here
-                        }
-                        */
-
                         log.debug("Using query: dataset=$dataset")
                         query = keyspace.prepareQuery(CF_DOCUMENT_META)
                             .searchWithIndex()
@@ -386,6 +363,15 @@ class CassandraStorage extends BasicPlugin implements Storage {
                                 .addExpression()
                                 .whereColumn(COL_NAME_TIMESTAMP).greaterThanEquals().value(since)
                         }
+                        query = query.autoPaginateRows(true)
+                    } else if (since) {
+                        log.debug("Searching year: ${since.getAt(Calendar.YEAR)}")
+                        query = keyspace.prepareQuery(CF_DOCUMENT_META)
+                            .searchWithIndex()
+                            .addExpression()
+                            .whereColumn(COL_NAME_YEAR).equals().value(since.getAt(Calendar.YEAR))
+                            .addExpression()
+                            .whereColumn(COL_NAME_TIMESTAMP).greaterThanEquals().value(since)
                         query = query.autoPaginateRows(true)
                     } else {
                         log.debug("Using allrows()")
@@ -423,7 +409,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 try {
                     hn = iter.hasNext()
                     if (!hn && (query instanceof IndexQuery)) {
-                        log.debug("Refilling rows (for indexquery)")
+                        log.trace("Refilling rows (for indexquery)")
                         iter = query.execute().getResult().iterator()
                         hn = iter.hasNext()
                     }
@@ -452,7 +438,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
                         } else {
                             field = c.name
                         }
-                        log.trace("field is $field")
                         if (field == COL_NAME_ENTRY) {
                             doc.withMetaEntry(c.getStringValue())
                         }
@@ -464,7 +449,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                         }
                     }
                     success = true
-                    log.trace("Next yielded ${doc.identifier} with version ${doc.version} (${doc.dataAsString})")
+                    log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
                 } catch (Exception ce) {
                     log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...")
                     Thread.sleep(1000)

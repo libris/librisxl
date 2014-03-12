@@ -250,7 +250,7 @@ class StandardWhelk implements Whelk {
             st = getStorage()
         }
         if (st) {
-            log.debug("Loading "+(dataset ? dataset : "all")+" from storage ${st.id}")
+            log.debug("Loading "+(dataset ? dataset : "all")+" "+(since ?: "")+" from storage ${st.id}")
             return st.getAll(dataset, since)
         } else {
             throw new WhelkRuntimeException("Couldn't find storage. (storageId = $storageId)")

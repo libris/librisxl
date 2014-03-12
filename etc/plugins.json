@@ -27,17 +27,22 @@
     "cassandrastorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : {
-            "contentTypes" : [ 
-                "application/ld+json", 
+            "contentTypes" : [
+                "application/ld+json",
                 "application/json",
                 "text/plain"
-            ]
+            ],
+            "cassandraVersion" : "1.2.11",
+            "cqlVersion" : "3.0.0",
+            "versioning" : true
         }
     },
     "oaipmhstorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : {
             "contentTypes" : [ "text/oaipmh+xml" ],
+            "cassandraVersion" : "1.2.11",
+            "cqlVersion" : "3.0.0",
             "versioning" : false
         }
     },

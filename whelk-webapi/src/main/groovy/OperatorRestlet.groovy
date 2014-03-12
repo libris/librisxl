@@ -375,7 +375,7 @@ abstract class AbstractOperator implements Runnable {
     void run() {
         assert whelk
         try {
-            log.debug("Starting reindex operation")
+            log.debug("Starting operation")
             operatorState=OperatorState.RUNNING
             cancelled = false
             count = 0
