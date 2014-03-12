@@ -103,10 +103,7 @@ function viewData(source) {
     view.attr("transform", "translate("+ evt.translate +") scale("+ evt.scale +")")
   }
 
-  var nodeIndex = {}
-  source.nodes.forEach(function (node) {
-    nodeIndex[node.name] = node
-  })
+  var nodeIndex = indexNodes(source.nodes)
 
   var nodes = source.nodes.slice(),
       links = [],
@@ -117,35 +114,12 @@ function viewData(source) {
       return
     node.children.forEach(function (id) {
       var child = nodeIndex[id]
-      child.parent = node
-      child.siblingCount = (child.siblingCount || 0) + node.children.length
       var im = {link: true}
       nodes.push(im)
       links.push({source: child, target: im}, {source: im, target: node})
       bilinks.push([child, im, node])
     })
   })
-
-  var roots = source.nodes.filter(function (node) { return !node.parent })
-  var rootBase = roots.length === 1? roots[0] : null
-
-  function setGroupName(groupName, node) {
-    node = (typeof node === 'object')? node : nodeIndex[node]
-    if (node.termgroups && node.termgroups.length && !node.termgroups.filter(
-      function (v) { return enums.indexOf(v) === -1 }).length) {
-      node.isEnum = true
-    }
-    node.isBase = rootBase? node.parent === rootBase : !node.parent
-    groupName = groupName || (node.isBase? node.name : null)
-    if (!groupName) {
-      return
-    }
-    node.groupName = groupName
-    if (node.children) {
-      node.children.forEach(setGroupName.bind(this, groupName))
-    }
-  }
-  source.nodes.forEach(setGroupName.bind(this, null))
 
   force
       .nodes(nodes)
@@ -218,6 +192,43 @@ function viewData(source) {
     force.stop()
   }
 
+}
+
+
+function indexNodes(nodes) {
+  var nodeIndex = {}
+  nodes.forEach(function (node) {
+    nodeIndex[node.name] = node
+  })
+  nodes.forEach(function (node) {
+    node.children.forEach(function (id) {
+      var child = nodeIndex[id]
+      child.parent = node
+      child.siblingCount = (child.siblingCount || 0) + node.children.length
+    })
+  })
+
+  var roots = nodes.filter(function (node) { return !node.parent })
+  var rootBase = roots.length === 1? roots[0] : null
+
+  function setGroupName(groupName, node) {
+    node = (typeof node === 'object')? node : nodeIndex[node]
+    if (node.termgroups && node.termgroups.length && !node.termgroups.filter(
+      function (v) { return enums.indexOf(v) === -1 }).length) {
+      node.isEnum = true
+    }
+    node.isBase = rootBase? node.parent === rootBase : !node.parent
+    groupName = groupName || (node.isBase? node.name : null)
+    if (!groupName) {
+      return
+    }
+    node.groupName = groupName
+    if (node.children) {
+      node.children.forEach(setGroupName.bind(this, groupName))
+    }
+  }
+  nodes.forEach(setGroupName.bind(this, null))
+  return nodeIndex
 }
 
 
