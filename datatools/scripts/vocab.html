@@ -15,10 +15,16 @@ body {
 .base.node > ellipse {
   stroke: #000;
 }
+.enum.node > ellipse {
+  fill-opacity: .6;
+}
 
 .node > text {
   color: #000;
   text-anchor: middle;
+}
+.enum.node > text {
+  font-size: 0.6em;
 }
 
 .link {
@@ -26,6 +32,10 @@ body {
   stroke: #999;
   stroke-width: 2;
   stroke-opacity: .6;
+}
+.enum.link {
+  stroke-width: 1;
+  stroke-opacity: .3;
 }
 
 svg {
@@ -43,6 +53,8 @@ var force = d3.layout.force()
     .charge(function (d) {
       if (d.link)
         return -20
+      if (d.isEnum)
+        return -100
       return -(200 + 100 * d.children.length + 20 * (d.siblingCount || 0))
     })
     .linkDistance(20)
@@ -75,6 +87,8 @@ svg.append("defs").selectAll("marker")
     .append("path")
     .attr("d", "M0,-5L10,0L0,5");
 
+
+var enums = ['content', 'carrier']
 
 function viewData(source) {
 
@@ -117,6 +131,10 @@ function viewData(source) {
 
   function setGroupName(groupName, node) {
     node = (typeof node === 'object')? node : nodeIndex[node]
+    if (node.termgroups && node.termgroups.length && !node.termgroups.filter(
+      function (v) { return enums.indexOf(v) === -1 }).length) {
+      node.isEnum = true
+    }
     node.isBase = rootBase? node.parent === rootBase : !node.parent
     groupName = groupName || (node.isBase? node.name : null)
     if (!groupName) {
@@ -136,12 +154,17 @@ function viewData(source) {
   var link = view.selectAll(".link")
       .data(bilinks)
       .enter().append("path")
-      .attr("class", "link")
+      .attr("class", function (d) { return d[0].isEnum? "link enum" : "link"})
 
   var node = view.selectAll(".node")
       .data(source.nodes)
       .enter().append("g")
-      .attr("class", function (d) { return d.isBase? "base node" : "node" })
+      .attr("class", function (d) {
+        var cl = ['node']
+        if (d.isBase) cl.push('base')
+        if (d.isEnum) cl.push('enum')
+        return cl.join(' ')
+      })
       .on("dblclick", function () {
         d3.event.stopPropagation()
         if (!animated) {
@@ -158,10 +181,19 @@ function viewData(source) {
   }
 
   node.append("title")
-      .text(function(d) { return d.isBase? d.name : d.name +" < "+ d.groupName; })
+      .text(function(d) {
+        var s = d.name
+        if (!d.isBase) s += " < " + d.groupName
+        if (d.termgroups && d.termgroups.length)
+            s += " ("+ d.termgroups.join(", ") + ")"
+        return s
+      })
 
   node.append("ellipse")
-      .attr("rx", 32).attr("ry", 16)
+      .each(function (d) {
+        var mod = (d.isEnum)? 0.5 : 1
+        d3.select(this).attr("rx", 32 * mod).attr("ry", 16 * mod)
+      })
       .style("fill", function(d) { return color(d.groupName); })
 
   node.append("text")
