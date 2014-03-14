@@ -336,7 +336,8 @@
     rdfs:subClassOf :Book, :Digital .
 
 :Audiobook a owl:Class;
-    rdfs:subClassOf :Book, :Audio .
+    #owl:equivalentClass bibo:AudioDocument;
+    rdfs:subClassOf :Book, :Audio, bibo:AudioDocument .
 
 #CDBook
 #CDMap
