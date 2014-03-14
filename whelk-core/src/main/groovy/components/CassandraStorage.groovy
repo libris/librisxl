@@ -8,7 +8,7 @@ import com.netflix.astyanax.*
 import com.netflix.astyanax.impl.*
 import com.netflix.astyanax.model.*
 import com.netflix.astyanax.query.*
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException
+import com.netflix.astyanax.connectionpool.exceptions.*
 import com.netflix.astyanax.connectionpool.*
 import com.netflix.astyanax.connectionpool.impl.*
 import com.netflix.astyanax.serializers.*
@@ -237,11 +237,15 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
             try {
                 writeDocument(key, dataset, doc)
+            } catch (BadRequestException bre) {
+                log.error("Error when saving: ${bre.message}", bre)
+                throw bre
             } catch (ConnectionException ce) {
                 log.error("Connection failed", ce)
                 return false
             } catch (Exception e) {
                 log.error("Error", e)
+                throw e
             }
             return true
         } else {
