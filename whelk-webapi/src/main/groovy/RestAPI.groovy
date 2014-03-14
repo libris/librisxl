@@ -1213,24 +1213,25 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                 def results = ['hits':[:],'list':[]]
                 int biggestList = 0
                 for (result in resultLists) { if (result.hits.size() > biggestList) { biggestList = result.hits.size() } }
-
+                def errors = [:]
                 for (int i = 0; i <= biggestList; i++) {
                     for (result in resultLists) {
                         results.hits[result.database] = result.numberOfHits
                         try {
-                            def hit = ['database':result.database]
                             if (result.error) {
-                                hit['error'] = result.error
+                                errors.get(result.database, [:]).put(""+i, result.error)
                             } else if (i < result.hits.size()) {
-                                hit['data'] = result.hits[i].dataAsMap
+                                results.list << ['database':result.database,'data':result.hits[i].dataAsMap]
                             }
-                            results.list << hit
                         } catch (ArrayIndexOutOfBoundsException aioobe) {
                             log.debug("Overstepped array bounds.")
                         } catch (NullPointerException npe) {
                             log.trace("npe.")
                         }
                     }
+                }
+                if (errors) {
+                    results['errors'] = errors
                 }
                 output = mapper.writeValueAsString(results)
             }

@@ -336,7 +336,9 @@ class StandardWhelk implements Whelk {
         }
         if (!identifier) {
             try {
-                identifier = new URI("/"+id.toString() +"/"+ UUID.randomUUID());
+                //identifier = new URI("/"+id.toString() +"/"+ UUID.randomUUID());
+                // Temporary to enable kitin progress
+                identifier = new URI("/bib/"+ UUID.randomUUID());
             } catch (URISyntaxException ex) {
                 throw new WhelkRuntimeException("Could not mint URI", ex);
             }

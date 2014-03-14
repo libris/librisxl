@@ -120,13 +120,14 @@ class MarcConversion {
         }
     }
 
-    void computeTypes(Map entityMap) {
+    void computeTypes(Map marcSource, Map entityMap) {
+        // TODO: update to digestTypes (pick out typeOfRecord and bibLevel, various fields)
         // TODO: remove fixed field remnants once they're subsumed into type?
         def record = entityMap.Record
-        def recTypeTree = typeTree[record.typeOfRecord]
+        def recTypeTree = typeTree[getTypeOfRecord(marcSource)]
         if (!recTypeTree)
             return // missing concrete type mapping
-        def workTree = recTypeTree[record.bibLevel] ?: recTypeTree['*']
+        def workTree = recTypeTree[getBibLevel(marcSource)] ?: recTypeTree['*']
         def workType = workTree?.type
         def instanceType = null
         if (workTree?.instanceTree) {
@@ -147,8 +148,16 @@ class MarcConversion {
     }
 
     String getMarcCategory(marcSource) {
-        def typeOfRecord = marcSource.leader.substring(6, 7)
+        def typeOfRecord = getTypeOfRecord(marcSource)
         return marcTypeMap[typeOfRecord] ?: marcTypeMap['*']
+    }
+
+    String getTypeOfRecord(marcSource) {
+        return marcSource.leader.substring(6, 7)
+    }
+
+    String getBibLevel(marcSource) {
+        return marcSource.leader.substring(7, 8)
     }
 
     void buildHandlers(config, marcCategory) {
@@ -162,7 +171,11 @@ class MarcConversion {
                 return
             }
             def handler = null
-            if (fieldDfn.find { it.key[0] == '[' }) {
+            if (fieldDfn.tokenTypeMap) {
+                handler = new TokenSwitchFieldHandler(this, tag, fieldDfn)
+            } else if (fieldDfn.recTypeBibLevelMap) {
+                handler = new TokenSwitchFieldHandler(this, tag, fieldDfn, 'recTypeBibLevelMap')
+            } else if (fieldDfn.find { it.key[0] == '[' }) {
                 handler = new MarcFixedFieldHandler(this, tag, fieldDfn)
             } else if (fieldDfn.find { it.key[0] == '$' }) {
                 handler = new MarcFieldHandler(this, tag, fieldDfn)
@@ -197,7 +210,7 @@ class MarcConversion {
         return merged
     }
 
-    Map createFrame(marcSource, recordId=null) {
+    Map createFrame(Map marcSource, String recordId=null) {
         def unknown = []
 
         def record = ["@type": "Record", "@id": recordId]
@@ -205,12 +218,6 @@ class MarcConversion {
         record.unmappedFixedFields = [:]
 
         def entityMap = [Record: record]
-
-        def marcCat = getMarcCategory(marcSource)
-        def fieldHandlers = marcHandlers[marcCat]
-
-        fieldHandlers["000"].convert(marcSource, marcSource.leader, entityMap)
-
         // TODO:
         // * always one record and a primary "thing"
         // * the type of this thing is determined during processing
@@ -218,8 +225,12 @@ class MarcConversion {
         def instance = [:]
         entityMap['Instance'] = instance
         entityMap['Work'] = work
-
         record.about = instance
+
+        def marcCat = getMarcCategory(marcSource)
+        def fieldHandlers = marcHandlers[marcCat]
+
+        fieldHandlers["000"].convert(marcSource, marcSource.leader, entityMap)
 
         def primaryFields = []
         def otherFields = []
@@ -236,7 +247,7 @@ class MarcConversion {
             }
         }
 
-        computeTypes(entityMap)
+        computeTypes(marcSource, entityMap)
 
         // TODO: make this configurable
         if (record['@id'] == null) {
@@ -297,9 +308,47 @@ class MarcConversion {
 
 }
 
+class TokenSwitchFieldHandler {
+    MarcConversion conversion
+    String tag
+    String tokenMap
+    MarcFixedFieldHandler baseConverter
+    Map<String, MarcFixedFieldHandler> handlerMap = [:]
+    TokenSwitchFieldHandler(conversion, tag, fieldDfn, tokenMap='tokenTypeMap') {
+        this.conversion = conversion
+        this.tag = tag
+        this.tokenMap = tokenMap
+        baseConverter = new MarcFixedFieldHandler(conversion, tag, fieldDfn)
+        fieldDfn[tokenMap].each { token, typeName ->
+            handlerMap[token] = new MarcFixedFieldHandler(conversion, tag, fieldDfn[typeName])
+        }
+    }
+    String getToken(marcSource, value, entityMap) {
+        // TODO: remove reduntant tokenMap by having config either use raw key, or mapped value as key
+        if (tokenMap == 'recTypeBibLevelMap') {
+            def typeOfRecord = conversion.getTypeOfRecord(marcSource)
+            def bibLevel = conversion.getBibLevel(marcSource)
+            return typeOfRecord + bibLevel
+        }
+        return value[0]
+    }
+    boolean convert(marcSource, value, entityMap) {
+        def token = getToken(marcSource, value, entityMap)
+        def converter = handlerMap[token]
+        if (converter == null)
+            return false
+        def baseOk = true
+        if (baseConverter)
+            baseOk = baseConverter.convert(marcSource, value, entityMap)
+        def ok = converter.convert(marcSource, value, entityMap)
+        return baseOk && ok
+    }
+}
+
 class MarcFixedFieldHandler {
 
     String tag
+    static final String FIXED_NONE = "|"
     def columns = []
 
     MarcFixedFieldHandler(conversion, tag, fieldDfn) {
@@ -336,7 +385,7 @@ class MarcFixedFieldHandler {
     }
 
     def revert(Map data) {
-        def value = new StringBuilder(" " * (columns[-1].end + 1))
+        def value = new StringBuilder(FIXED_NONE * (columns[-1].end + 1))
         for (col in columns) {
             def obj = col.revert(data)
             // TODO: ambiguity trouble if this is a List!
@@ -355,17 +404,27 @@ class MarcFixedFieldHandler {
         String defaultValue
         Column(conversion, fieldDfn, start, end, defaultValue) {
             super(conversion, null, fieldDfn)
+            assert start > -1 && end >= start
             this.start = start
             this.end = end
             this.defaultValue = defaultValue
         }
         int getWidth() { return end - start }
         String getToken(value) {
+            if (value.size() < start)
+                return ""
+            if (value.size() < end)
+                return value.substring(start)
             return value.substring(start, end)
         }
         boolean convert(marcSource, value, entityMap) {
             def token = getToken(value)
-            if (token == " " || token == defaultValue)
+            if (token == "")
+                return true
+            if (token == defaultValue)
+                return true
+            boolean isNothing = token.find { it != FIXED_NONE && it != " " } == null
+            if (isNothing)
                 return true
             return super.convert(marcSource, token, entityMap)
         }
@@ -652,7 +711,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     boolean convert(marcSource, value, entityMap) {
 
         def domainEntity = entityMap[domainEntityName]
-        if (!domainEntity) return false
+        if (domainEntity == null) return false
 
         if (definesDomainEntityType) {
             domainEntity['@type'] = definesDomainEntityType
@@ -710,7 +769,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             // TODO: need to run before linking resource above to work properly
-            // for multiply linked entities.
+            // for multiply linked entities. Or, perhaps better, run a final "mapIds" pass
+            // in the main loop..
             def computedUri = uriTemplate.expand(uriTemplateParams)
             def altUriRel = "sameAs"
             if (definesDomainEntityType != null) {

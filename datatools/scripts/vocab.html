@@ -8,16 +8,23 @@ body {
 }
 
 .node > ellipse {
+  fill-opacity: .9;
   stroke-width: 1.5px;
   stroke: #fff;
 }
 .base.node > ellipse {
   stroke: #000;
 }
+.enum.node > ellipse {
+  fill-opacity: .6;
+}
 
 .node > text {
   color: #000;
   text-anchor: middle;
+}
+.enum.node > text {
+  font-size: 0.6em;
 }
 
 .link {
@@ -25,6 +32,10 @@ body {
   stroke: #999;
   stroke-width: 2;
   stroke-opacity: .6;
+}
+.enum.link {
+  stroke-width: 1;
+  stroke-opacity: .3;
 }
 
 svg {
@@ -42,6 +53,8 @@ var force = d3.layout.force()
     .charge(function (d) {
       if (d.link)
         return -20
+      if (d.isEnum)
+        return -100
       return -(200 + 100 * d.children.length + 20 * (d.siblingCount || 0))
     })
     .linkDistance(20)
@@ -75,6 +88,8 @@ svg.append("defs").selectAll("marker")
     .attr("d", "M0,-5L10,0L0,5");
 
 
+var enums = ['content', 'carrier']
+
 function viewData(source) {
 
   var view = svg.append("g")
@@ -88,10 +103,7 @@ function viewData(source) {
     view.attr("transform", "translate("+ evt.translate +") scale("+ evt.scale +")")
   }
 
-  var nodeIndex = {}
-  source.nodes.forEach(function (node) {
-    nodeIndex[node.name] = node
-  })
+  var nodeIndex = indexNodes(source.nodes)
 
   var nodes = source.nodes.slice(),
       links = [],
@@ -102,7 +114,6 @@ function viewData(source) {
       return
     node.children.forEach(function (id) {
       var child = nodeIndex[id]
-      child.siblingCount = (child.siblingCount || 0) + node.children.length
       var im = {link: true}
       nodes.push(im)
       links.push({source: child, target: im}, {source: im, target: node})
@@ -117,12 +128,17 @@ function viewData(source) {
   var link = view.selectAll(".link")
       .data(bilinks)
       .enter().append("path")
-      .attr("class", "link")
+      .attr("class", function (d) { return d[0].isEnum? "link enum" : "link"})
 
   var node = view.selectAll(".node")
       .data(source.nodes)
       .enter().append("g")
-      .attr("class", function (d) { return d.isBase? "base node" : "node" })
+      .attr("class", function (d) {
+        var cl = ['node']
+        if (d.isBase) cl.push('base')
+        if (d.isEnum) cl.push('enum')
+        return cl.join(' ')
+      })
       .on("dblclick", function () {
         d3.event.stopPropagation()
         if (!animated) {
@@ -139,10 +155,19 @@ function viewData(source) {
   }
 
   node.append("title")
-      .text(function(d) { return d.isBase? d.name : d.name +" < "+ d.groupName; })
+      .text(function(d) {
+        var s = d.name
+        if (!d.isBase) s += " < " + d.groupName
+        if (d.termgroups && d.termgroups.length)
+            s += " ("+ d.termgroups.join(", ") + ")"
+        return s
+      })
 
   node.append("ellipse")
-      .attr("rx", 32).attr("ry", 16)
+      .each(function (d) {
+        var mod = (d.isEnum)? 0.5 : 1
+        d3.select(this).attr("rx", 32 * mod).attr("ry", 16 * mod)
+      })
       .style("fill", function(d) { return color(d.groupName); })
 
   node.append("text")
@@ -167,6 +192,43 @@ function viewData(source) {
     force.stop()
   }
 
+}
+
+
+function indexNodes(nodes) {
+  var nodeIndex = {}
+  nodes.forEach(function (node) {
+    nodeIndex[node.name] = node
+  })
+  nodes.forEach(function (node) {
+    node.children.forEach(function (id) {
+      var child = nodeIndex[id]
+      child.parent = node
+      child.siblingCount = (child.siblingCount || 0) + node.children.length
+    })
+  })
+
+  var roots = nodes.filter(function (node) { return !node.parent })
+  var rootBase = roots.length === 1? roots[0] : null
+
+  function setGroupName(groupName, node) {
+    node = (typeof node === 'object')? node : nodeIndex[node]
+    if (node.termgroups && node.termgroups.length && !node.termgroups.filter(
+      function (v) { return enums.indexOf(v) === -1 }).length) {
+      node.isEnum = true
+    }
+    node.isBase = rootBase? node.parent === rootBase : !node.parent
+    groupName = groupName || (node.isBase? node.name : null)
+    if (!groupName) {
+      return
+    }
+    node.groupName = groupName
+    if (node.children) {
+      node.children.forEach(setGroupName.bind(this, groupName))
+    }
+  }
+  nodes.forEach(setGroupName.bind(this, null))
+  return nodeIndex
 }
 
 

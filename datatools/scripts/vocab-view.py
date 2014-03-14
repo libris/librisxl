@@ -3,6 +3,9 @@ from rdflib import *
 from rdflib.util import guess_format
 
 
+VANN = Namespace("http://purl.org/vocab/vann/")
+
+
 def to_graph(paths):
     g = Graph()
     for fpath in paths:
@@ -55,17 +58,8 @@ def make_vocab_graph(g, lang, vocab):
             continue
         name = get_name(rclass, lang)
         child_names = [get_name(sc, lang) for sc in rclass.subjects(RDFS.subClassOf)]
-        top_base = list(bc for bc in rclass.objects(RDFS.subClassOf*'*')
-                if in_vocab(bc, vocab))[-1]
-        group_name = get_name(top_base, lang)
-        is_base = not any(bc for bc in rclass.objects(RDFS.subClassOf)
-                if in_vocab(bc, vocab))
-        node = {
-            'name': name,
-            'children': child_names,
-            'groupName': group_name,
-            'isBase': is_base
-        }
+        node = {'name': name, 'children': child_names}
+        node['termgroups'] = map(unicode, rclass.objects(VANN.termGroup))
         nodes.append(node)
 
     return {'nodes': sorted(nodes, key=lambda node: node['name'])}

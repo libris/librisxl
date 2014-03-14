@@ -7,7 +7,7 @@ with open(fpath) as f:
     marcmap = json.load(f)
 
 show_repeatable = True
-skip_unlinked_maps = False
+skip_unlinked_maps = True
 
 
 rename_type_map = {
@@ -48,7 +48,12 @@ fixprop_typerefs = {
         'serialsTypeOfSerial', #'serialsItem',
         'visualMaterial', #'visualItem',
     ],
-    '006': []
+    '006': [
+        'booksContents',
+        'computerTypeOfFile',
+        'serialsTypeOfSerial',
+        'visualMaterial',
+    ]
 }
 
 def to_name(name):
@@ -83,6 +88,9 @@ resourceMaps = out['resourceMaps'] = OrderedDict()
 compositionTypeMap = out['compositionTypeMap'] = OrderedDict()
 contentTypeMap = out['contentTypeMap'] = OrderedDict()
 #carrierTypeMap = out['carrierTypeMap'] = OrderedDict()
+
+enums = set() # to prevent enum id collisions
+
 
 section = out['bib'] = OrderedDict()
 
@@ -151,23 +159,28 @@ for tag, field in sorted(marcmap['bib'].items()):
                     continue
                 fm[key] = col_dfn = {}
                 propname = dfn_key or col.get('propId')
-                domainname = 'Record'
+                domainname = 'Record' if tag == '000' else 'Instance'
                 is_link = False
                 valuemap = None
 
                 if dfn_key in fixprops:
                     valuemap = fixprops[dfn_key]
-                    typemap = resourceMaps.setdefault(dfn_key, OrderedDict())
 
                     fixtyperefmap = fixprop_typerefs.get(tag)
+                    enum_key = dfn_key
+
                     if fixtyperefmap:
-                        domainname = 'Instance'
                         if dfn_key in fixtyperefmap:
-                            propname = 'carrierFormat' # 'carrierType'
+                            domainname = 'Instance'
                             is_link = True
-                        elif dfn_key in fixtyperefmap:
-                            propname = 'contentType'
-                            is_link = True
+                            if tag == '007':
+                                propname = 'carrierFormat' # 'carrierType'
+                                enum_key = 'carrier'
+                            elif tag in ('006', '008'):
+                                propname = 'contentType'
+                                enum_key = 'content'
+
+                    typemap = resourceMaps.setdefault(dfn_key, OrderedDict())
 
                     for key, dfn in valuemap.items():
                         # TODO: '_' actually means something occasionally..
@@ -177,15 +190,17 @@ for tag, field in sorted(marcmap['bib'].items()):
                             subname = to_name(v)
                         else:
                             subname = dfn['label_sv']
-                        assert typemap.get(key, subname) == subname
-                        typemap[key] = subname
+                        type_id = "%s:%s" % (enum_key, subname)
+                        assert typemap.get(key, type_id) == type_id, "%s in %r" % (type_id, typemap)
+                        assert type_id not in enums
+                        typemap[key] = type_id
 
                     if skip_unlinked_maps and not is_link:
                         resourceMaps[dfn_key] = {"TODO": "SKIPPED"}
 
                 if is_link:
                     col_dfn['link'] = propname
-                    col_dfn['uriTemplate'] = "%s:{_}" % dfn_key
+                    col_dfn['uriTemplate'] = "{+_}"
                 else:
                     col_dfn['property'] = propname
 
