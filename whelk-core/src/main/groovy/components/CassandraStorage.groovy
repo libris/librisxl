@@ -255,25 +255,34 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     void writeDocument(String key, String dataset, Document doc) {
-        MutationBatch mutation = keyspace.prepareMutationBatch()
+        boolean success = false
+        while (!success) {
+            try {
+                MutationBatch mutation = keyspace.prepareMutationBatch()
 
-        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATA), doc.data, null)
-        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"), null)
-        mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATASET), dataset.getBytes("UTF-8"), null)
-        mutation.execute()
+                mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATA), doc.data, null)
+                mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"), null)
+                mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATASET), dataset.getBytes("UTF-8"), null)
+                mutation.execute()
 
-        mutation = keyspace.prepareMutationBatch()
-        mutation.withRow(CF_DOCUMENT, ROW_KEY_TIMESTAMP).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_IDENTIFIER), key.getBytes("UTF-8"), null)
-        mutation.execute()
+                mutation = keyspace.prepareMutationBatch()
+                mutation.withRow(CF_DOCUMENT, ROW_KEY_TIMESTAMP).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_IDENTIFIER), key.getBytes("UTF-8"), null)
+                mutation.execute()
 
-        mutation = keyspace.prepareMutationBatch()
-        mutation.withRow(CF_DOCUMENT_META, key)
-            .putColumn(COL_NAME_DATA, doc.data, null)
-            .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
-            .putColumn(COL_NAME_DATASET, dataset, null)
-            .putColumn(COL_NAME_TIMESTAMP, doc.timestamp, null)
+                mutation = keyspace.prepareMutationBatch()
+                mutation.withRow(CF_DOCUMENT_META, key)
+                .putColumn(COL_NAME_DATA, doc.data, null)
+                .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
+                .putColumn(COL_NAME_DATASET, dataset, null)
+                .putColumn(COL_NAME_TIMESTAMP, doc.timestamp, null)
 
-        mutation.execute()
+                mutation.execute()
+                success = true
+            } catch (com.netflix.astyanax.connectionpool.exceptions.NoAvailableHostsException nhe) {
+                log.warn("No available cassandra host. Holding for a second ...", ce)
+                Thread.sleep(1000)
+            }
+        }
     }
 
     @Override
