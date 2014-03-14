@@ -24,9 +24,9 @@ import se.kb.libris.whelks.exception.*
 
 class DocumentEntry {
     @Component(ordinal=0)
-    Integer version
-    @Component(ordinal=1)
     Long timestamp
+    @Component(ordinal=1)
+    Integer version
     @Component(ordinal=2)
     String field
 
@@ -36,6 +36,13 @@ class DocumentEntry {
         this.timestamp = ts
         this.field = f
     }
+}
+
+class TimestampEntry {
+    @Component(ordinal=0)
+    Long timestamp
+    @Component(ordinal=1)
+    String identifier
 }
 
 @Log
@@ -50,15 +57,20 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     final String CF_DOCUMENT_NAME = "document"
     final String CF_DOCUMENT_META_NAME = "document_meta"
+    final String CF_TIMESTAMP_NAME = "timestamp"
     final String COL_NAME_IDENTIFIER = "identifier"
     final String COL_NAME_DATA = "data"
     final String COL_NAME_ENTRY = "entry"
     final String COL_NAME_DATASET = "dataset"
     final String COL_NAME_TIMESTAMP = "ts"
     final String COL_NAME_YEAR = "year"
+    final String ROW_KEY_TIMESTAMP = "timestamp"
 
     AnnotatedCompositeSerializer<DocumentEntry> documentSerializer = new AnnotatedCompositeSerializer<DocumentEntry>(DocumentEntry.class)
     ColumnFamily<String, DocumentEntry> CF_DOCUMENT = new ColumnFamily<String, DocumentEntry>(CF_DOCUMENT_NAME, StringSerializer.get(), documentSerializer)
+    AnnotatedCompositeSerializer<TimestampEntry> timestampSerializer = new AnnotatedCompositeSerializer<TimestampEntry>(TimestampEntry.class)
+    ColumnFamily<String, TimestampEntry> CF_TIMESTAMP = new ColumnFamily<String, TimestampEntry>(CF_TIMESTAMP_NAME, StringSerializer.get(), timestampSerializer)
+
     ColumnFamily<String,String> CF_DOCUMENT_META = ColumnFamily.newColumnFamily(
         CF_DOCUMENT_META_NAME,
         StringSerializer.get(),
@@ -157,7 +169,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 ksp.createColumnFamily(CF_DOCUMENT, ImmutableMap.builder()
                 .put("default_validation_class", "UTF8Type")
                 .put("key_validation_class", "UTF8Type")
-                .put("comparator_type", "CompositeType(IntegerType, LongType, UTF8Type)")
+                .put("comparator_type", "CompositeType(LongType, IntegerType, UTF8Type)")
                 .build());
             }
 
@@ -170,11 +182,13 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 log.info("Creating columnfamily $CF_DOCUMENT_META_NAME")
                 ksp.createColumnFamily(CF_DOCUMENT_META, ImmutableMap.builder()
                 .put("column_metadata", ImmutableMap.builder()
+                /*
                     .put(COL_NAME_YEAR, ImmutableMap.builder()
                         .put("validation_class", "IntegerType")
                         .put("index_name",       COL_NAME_YEAR)
                         .put("index_type",       "KEYS")
                         .build())
+                        */
                     .put(COL_NAME_DATASET, ImmutableMap.builder()
                         .put("validation_class", "UTF8Type")
                         .put("index_name",       COL_NAME_DATASET)
@@ -261,15 +275,20 @@ class CassandraStorage extends BasicPlugin implements Storage {
         mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATA), doc.data, null)
         mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_ENTRY), doc.metadataAsJson.getBytes("UTF-8"), null)
         mutation.withRow(CF_DOCUMENT, key).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_DATASET), dataset.getBytes("UTF-8"), null)
+        mutation.execute()
 
+        mutation = keyspace.prepareMutationBatch()
+        mutation.withRow(CF_DOCUMENT, ROW_KEY_TIMESTAMP).putColumn(new DocumentEntry(doc.version, doc.timestamp, COL_NAME_IDENTIFIER), key.getBytes("UTF-8"), null)
+        mutation.execute()
+
+        mutation = keyspace.prepareMutationBatch()
         mutation.withRow(CF_DOCUMENT_META, key)
-            .putColumn(COL_NAME_YEAR, new Date(doc.timestamp).getAt(Calendar.YEAR), null)
             .putColumn(COL_NAME_DATA, doc.data, null)
             .putColumn(COL_NAME_ENTRY, doc.metadataAsJson, null)
             .putColumn(COL_NAME_DATASET, dataset, null)
             .putColumn(COL_NAME_TIMESTAMP, doc.timestamp, null)
 
-        def results = mutation.execute()
+        mutation.execute()
     }
 
     @Override
@@ -363,7 +382,22 @@ class CassandraStorage extends BasicPlugin implements Storage {
                                 .addExpression()
                                 .whereColumn(COL_NAME_TIMESTAMP).greaterThanEquals().value(since)
                         }
-                        query = query.autoPaginateRows(true)
+                    } else if (since) {
+                        query = keyspace.prepareQuery(CF_DOCUMENT)
+                            .getKey(ROW_KEY_TIMESTAMP)
+                            .withColumnRange(
+                                documentSerializer.buildRange().greaterThanEquals(since.getTime()).build()
+                            )
+                            //.execute()
+                                //new RangeBuilder().setStart(since.getTime()).setEnd(new Date().getTime()).build()
+                            /*
+                        def columns = query.execute().getResult();
+                        for (column in columns) {
+                            log.info("column: ${column.getName()}")
+                        }
+                        log.info("Done, returning null")
+                        return null
+                        */
                     } else if (since) {
                         log.debug("Searching year: ${since.getAt(Calendar.YEAR)}")
                         query = keyspace.prepareQuery(CF_DOCUMENT_META)
@@ -372,13 +406,15 @@ class CassandraStorage extends BasicPlugin implements Storage {
                             .whereColumn(COL_NAME_YEAR).equals().value(since.getAt(Calendar.YEAR))
                             .addExpression()
                             .whereColumn(COL_NAME_TIMESTAMP).greaterThanEquals().value(since)
-                        query = query.autoPaginateRows(true)
                     } else {
                         log.debug("Using allrows()")
                         query = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
                     }
-                    query = query
-                        .setRowLimit(100)
+                    if (query instanceof IndexQuery) {
+                        query = query
+                            .autoPaginateRows(true)
+                            .setRowLimit(100)
+                    }
                 } catch (ConnectionException e) {
                     log.error("Cassandra Query failed.", e)
                     throw e
@@ -415,7 +451,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     }
                     success = true
                 } catch (Exception ce) {
-                    log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...")
+                    log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...", ce)
                     Thread.sleep(1000)
                 }
             }
@@ -428,30 +464,40 @@ class CassandraStorage extends BasicPlugin implements Storage {
             while (!success) {
                 try {
                     def res = iter.next()
-                    doc = new Document().withIdentifier(res.key)
-                    for (c in res.columns) {
-                        def field
-                        if (c.name instanceof DocumentEntry) {
-                            DocumentEntry e = c.name
-                            doc.withTimestamp(e.timestamp)
-                            field = e.field
-                        } else {
-                            field = c.name
-                        }
-                        if (field == COL_NAME_ENTRY) {
-                            doc.withMetaEntry(c.getStringValue())
-                        }
-                        if (field == COL_NAME_DATA) {
-                            doc.withData(c.getByteArrayValue())
-                        }
-                        if (field == COL_NAME_TIMESTAMP) {
-                            doc.withTimestamp(c.getLongValue())
+                    /*
+                    log.debug("res is: ${res.getClass().getName()}")
+                    log.debug("res.name is ${res.name.getClass().getName()}")
+                    */
+                    if (res instanceof com.netflix.astyanax.thrift.model.ThriftColumnImpl) {
+                        DocumentEntry e = res.name
+                        log.info("e: ${e.field} = ${res.getStringValue()}")
+                    } else {
+                        doc = new Document().withIdentifier(res.key)
+
+                        for (c in res.columns) {
+                            def field
+                            if (c.name instanceof DocumentEntry) {
+                                DocumentEntry e = c.name
+                                doc.withTimestamp(e.timestamp)
+                                field = e.field
+                            } else {
+                                field = c.name
+                            }
+                            if (field == COL_NAME_ENTRY) {
+                                doc.withMetaEntry(c.getStringValue())
+                            }
+                            if (field == COL_NAME_DATA) {
+                                doc.withData(c.getByteArrayValue())
+                            }
+                            if (field == COL_NAME_TIMESTAMP) {
+                                doc.withTimestamp(c.getLongValue())
+                            }
                         }
                     }
                     success = true
-                    log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
+                    //log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
                 } catch (Exception ce) {
-                    log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...")
+                    log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...",ce)
                     Thread.sleep(1000)
                 }
             }

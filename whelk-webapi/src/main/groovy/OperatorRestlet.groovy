@@ -330,7 +330,7 @@ class BenchmarkOperator extends AbstractOperator {
     void setParameters(Map parameters) {
         super.setParameters(parameters)
         if (parameters.get("since", null)) {
-            this.since = Date.parse("yyyy-MM-dd'T'hh:mm", parameters.get("since"))
+            this.since = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", parameters.get("since"))
             log.info("Since: $since")
         }
     }
