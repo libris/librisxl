@@ -54,6 +54,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     String cassandraVersion = "1.2"
     String CQLVersion = "3.0.0"
+    String keyspaceSuffix = ""
 
     final String CF_DOCUMENT_NAME = "document"
     final String CF_DOCUMENT_META_NAME = "document_meta"
@@ -100,11 +101,12 @@ class CassandraStorage extends BasicPlugin implements Storage {
         this.versioningStorage = settings.get("versioning", true)
         this.cassandraVersion = settings.get("cassandraVersion", this.cassandraVersion)
         this.CQLVersion = settings.get("cqlVersion", this.CQLVersion)
+        this.keyspaceSuffix = settings.get("keyspaceSuffix", "")
     }
 
 
     void init(String whelkName) {
-        keyspace = setupKeyspace(whelkName+"_"+this.id)
+        keyspace = setupKeyspace(whelkName+"_"+this.id + this.keyspaceSuffix)
     }
 
     Keyspace setupKeyspace(String keyspaceName) {
