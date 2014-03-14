@@ -404,14 +404,18 @@ class MarcFixedFieldHandler {
         String defaultValue
         Column(conversion, fieldDfn, start, end, defaultValue) {
             super(conversion, null, fieldDfn)
+            assert start > -1 && end >= start
             this.start = start
             this.end = end
             this.defaultValue = defaultValue
         }
         int getWidth() { return end - start }
         String getToken(value) {
-            return (value.size() < end)?
-                value.substring(start) : value.substring(start, end)
+            if (value.size() < start)
+                return ""
+            if (value.size() < end)
+                return value.substring(start)
+            return value.substring(start, end)
         }
         boolean convert(marcSource, value, entityMap) {
             def token = getToken(value)
