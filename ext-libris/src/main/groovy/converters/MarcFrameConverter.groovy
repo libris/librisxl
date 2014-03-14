@@ -410,10 +410,13 @@ class MarcFixedFieldHandler {
         }
         int getWidth() { return end - start }
         String getToken(value) {
-            return value.substring(start, end)
+            return (value.size() < end)?
+                value.substring(start) : value.substring(start, end)
         }
         boolean convert(marcSource, value, entityMap) {
             def token = getToken(value)
+            if (token == "")
+                return true
             if (token == defaultValue)
                 return true
             boolean isNothing = token.find { it != FIXED_NONE && it != " " } == null
