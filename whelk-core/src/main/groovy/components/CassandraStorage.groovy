@@ -213,7 +213,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
             }
 
             int version = (existingDocument ? existingDocument.version + 1 : 1)
-            log.debug("Setting document version: $version")
+            log.trace("Setting document version: $version")
             doc.withVersion(version)
 
             if (versioningStorage && existingDocument) {
@@ -301,7 +301,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
         ColumnList<DocumentEntry> res = operation.getResult()
 
-        log.debug("Get operation result size: ${res.size()}")
+        log.trace("Get operation result size: ${res.size()}")
 
         if (res.size() > 0) {
             log.trace("Digging up a document with identifier $uri from ${this.id}.")
