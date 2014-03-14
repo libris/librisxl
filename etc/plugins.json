@@ -102,7 +102,7 @@
                         "about.title.titleValue" : "asc",
                         "about.identifier.identifierValue" : "asc"
                     },
-                    "queryFacets" : "about.@type",
+                    "queryFacets" : "about.@type,about.instanceOf.language.@id,encLevel",
                     "resultFields" : [
                         "about.@type",
                         "about.title",

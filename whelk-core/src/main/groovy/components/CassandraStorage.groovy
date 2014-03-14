@@ -468,7 +468,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     */
                     if (res instanceof ThriftColumnImpl) {
                         DocumentEntry e = res.name
-                        log.info("e: ${e.field} = ${res.getStringValue()}")
                         if (e.field == COL_NAME_IDENTIFIER) {
                             doc = get(res.getStringValue())
                         }
