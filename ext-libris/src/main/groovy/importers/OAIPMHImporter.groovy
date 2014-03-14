@@ -36,14 +36,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     int sizeOfBatch
 
     ExecutorService queue
-    File failedLog
-    File exceptionLog
 
     List<String> errorMessages
 
     boolean cancelled = false
-
-
 
     OAIPMHImporter() {
         this.serviceUrl = null
