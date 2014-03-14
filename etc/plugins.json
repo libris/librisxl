@@ -42,7 +42,9 @@
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : {
             "contentTypes" : [ "text/oaipmh+xml" ],
+            "keyspaceSuffix" : "_v2",
             "cqlVersion" : "3.0.0",
+            "cassandraVersion" : "1.2.11",
             "versioning" : false
         }
     },
