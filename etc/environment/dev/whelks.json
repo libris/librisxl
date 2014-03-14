@@ -38,7 +38,7 @@
                 ],
             "_otherplugins": [
                 "localindex",
-                "cassandrastorage",
+                "flatstorage",
                 "entityextractor",
                 "linkcompleter",
                 "indexlinkfinder"

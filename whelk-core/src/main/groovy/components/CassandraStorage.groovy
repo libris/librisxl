@@ -13,6 +13,7 @@ import com.netflix.astyanax.connectionpool.*
 import com.netflix.astyanax.connectionpool.impl.*
 import com.netflix.astyanax.serializers.*
 import com.netflix.astyanax.thrift.*
+import com.netflix.astyanax.thrift.model.*
 import com.netflix.astyanax.util.*
 import com.netflix.astyanax.annotations.Component
 
@@ -76,24 +77,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
         CF_DOCUMENT_META_NAME,
         StringSerializer.get(),
         StringSerializer.get())
-
-    /*
-    final String CREATE_TABLE_STATEMENT =
-    String.format("CREATE TABLE %s (%s varchar, %s blob, %s varchar, %s varchar, %s timestamp, PRIMARY KEY (%s, %s))", // WITH COMPACT STORAGE",
-    CF_DOCUMENT_NAME, COL_NAME_IDENTIFIER, COL_NAME_DATA, COL_NAME_ENTRY, COL_NAME_DATASET, COL_NAME_TIMESTAMP,
-    COL_NAME_IDENTIFIER, COL_NAME_TIMESTAMP)
-
-    final String INSERT_STATEMENT = "INSERT INTO $CF_DOCUMENT_NAME ($COL_NAME_IDENTIFIER, $COL_NAME_DATA, $COL_NAME_ENTRY, $COL_NAME_DATASET, $COL_NAME_TIMESTAMP) VALUES (?, ?, ?, ?, ?);";
-
-    final String CREATE_INDEX_STATEMENT =
-    String.format("CREATE INDEX %s_idx ON %s (%s)",
-    COL_NAME_DATASET, CF_DOCUMENT_NAME, COL_NAME_DATASET)
-
-    ColumnFamily<String,String> CF_DOCUMENT = ColumnFamily.newColumnFamily(
-        CF_DOCUMENT_NAME,
-        StringSerializer.get(),
-        StringSerializer.get())
-    */
 
     CassandraStorage(Map settings) {
         super()
@@ -193,7 +176,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                         */
                     .put(COL_NAME_DATASET, ImmutableMap.builder()
                         .put("validation_class", "UTF8Type")
-                        .put("index_name",       COL_NAME_DATASET)
+                        .put("index_name",       COL_NAME_DATASET+"_idx")
                         .put("index_type",       "KEYS")
                         .build())
                     .put(COL_NAME_DATA, ImmutableMap.builder()
@@ -470,9 +453,12 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     log.debug("res is: ${res.getClass().getName()}")
                     log.debug("res.name is ${res.name.getClass().getName()}")
                     */
-                    if (res instanceof com.netflix.astyanax.thrift.model.ThriftColumnImpl) {
+                    if (res instanceof ThriftColumnImpl) {
                         DocumentEntry e = res.name
                         log.info("e: ${e.field} = ${res.getStringValue()}")
+                        if (e.field == COL_NAME_IDENTIFIER) {
+                            doc = get(res.getStringValue())
+                        }
                     } else {
                         doc = new Document().withIdentifier(res.key)
 
@@ -497,7 +483,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                         }
                     }
                     success = true
-                    //log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
+                    log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
                 } catch (Exception ce) {
                     log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...",ce)
                     Thread.sleep(1000)
