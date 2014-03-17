@@ -41,9 +41,6 @@ class DumpImporter extends BasicPlugin implements Importer {
 
     List<String> errorMessages
 
-    File failedLog
-    File exceptionLog
-
     ExecutorService queue
 
     DumpImporter(Map settings) {
@@ -107,9 +104,11 @@ class DumpImporter extends BasicPlugin implements Importer {
               }
               if (doc) {
                   documents << doc
+                  /* Disabled. No need to run when running in operatorrestlet
                   if (log.isInfoEnabled() && !silent) {
                       printSpinner("Running dumpimport. $nrImported documents imported sofar.", nrImported)
                   }
+                  */
                   if (++nrImported % BATCH_SIZE == 0) {
                       addDocuments(documents)
                       documents = []
@@ -146,17 +145,12 @@ class DumpImporter extends BasicPlugin implements Importer {
             try {
                 this.whelk.bulkAdd(documents)
             } catch (WhelkAddException wae) {
-                if (!failedLog) {
-                    failedLog = new File("failed_ids.log")
-                }
-                for (fi in wae.failedIdentifiers) {
-                    failedLog << "$fi\n"
-                }
+                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
             } catch (Exception e) {
-                if (!exceptionLog) {
-                    exceptionLog = new File("exceptions.log")
-                }
-                e.printStackTrace(new FileWriter(exceptionLog, true))
+                log.error("Exception on bulkAdd: ${e.message}", e)
+                StringWriter sw = new StringWriter()
+                e.printStackTrace(new PrintWriter(sw))
+                errorMessages << new String("Exception on add: ${sw.toString()}")
             }
         } as Runnable)
     }
