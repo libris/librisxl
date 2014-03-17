@@ -41,9 +41,6 @@ class DumpImporter extends BasicPlugin implements Importer {
 
     List<String> errorMessages
 
-    File failedLog
-    File exceptionLog
-
     ExecutorService queue
 
     DumpImporter(Map settings) {
@@ -90,51 +87,53 @@ class DumpImporter extends BasicPlugin implements Importer {
         Transformer optimusPrime = TransformerFactory.newInstance().newTransformer()
         long loadStartTime = System.nanoTime()
 
-/* Snip */
-      int event = xsr.getEventType();
+        int event = xsr.getEventType();
 
-      while (!cancelled) {
-          Document doc = null
-          if (event == XMLStreamConstants.START_ELEMENT && (!startTransformingAtElement || xsr.getLocalName() == startTransformingAtElement)) {
-              try {
-                  Writer outWriter = new StringWriter()
-                  optimusPrime.transform(new StAXSource(xsr), new StreamResult(outWriter))
-                  String xmlString = normalizeString(outWriter.toString())
-                  doc = buildDocument(xmlString)
-                  doc = whelk.sanityCheck(doc)
-              } catch (javax.xml.stream.XMLStreamException xse) {
-                  log.error("Skipping document, error in stream: ${xse.message}")
-              }
-              if (doc) {
-                  documents << doc
-                  if (log.isInfoEnabled() && !silent) {
-                      printSpinner("Running dumpimport. $nrImported documents imported sofar.", nrImported)
-                  }
-                  if (++nrImported % BATCH_SIZE == 0) {
-                      addDocuments(documents)
-                      documents = []
-                      float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
-                      log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
-                  }
-                  if (nrImported >= maxDocs) {
-                      log.debug("Max number of docs ($maxDocs) reached. Breaking ...")
-                      break
-                  }
-              }
-          }
+        while (!cancelled) {
+            Document doc = null
+            if (event == XMLStreamConstants.START_ELEMENT && (!startTransformingAtElement || xsr.getLocalName() == startTransformingAtElement)) {
+                try {
+                    Writer outWriter = new StringWriter()
+                    optimusPrime.transform(new StAXSource(xsr), new StreamResult(outWriter))
+                    String xmlString = normalizeString(outWriter.toString())
+                    doc = buildDocument(xmlString)
+                    doc = whelk.sanityCheck(doc)
+                } catch (javax.xml.stream.XMLStreamException xse) {
+                    log.error("Skipping document, error in stream: ${xse.message}")
+                }
+                if (doc) {
+                    documents << doc
+                    /* Disabled. No need to run when running in operatorrestlet
+                    if (log.isInfoEnabled() && !silent) {
+                    printSpinner("Running dumpimport. $nrImported documents imported sofar.", nrImported)
+                    }
+                    */
+                    if (++nrImported % BATCH_SIZE == 0) {
+                        addDocuments(documents)
+                        documents = []
+                        float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
+                        log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
+                    }
+                    if (maxDocs > 0 && nrImported >= maxDocs) {
+                        log.info("Max number of docs ($maxDocs) reached. Breaking ...")
+                        break
+                    }
+                }
+            }
 
-          if (!xsr.hasNext()) {
-              break
-          }
-          event = xsr.next()
-      }
+            if (!xsr.hasNext()) {
+                log.info("No more elements to process. Leaving import loop.")
+                break
+            }
+            event = xsr.next()
+        }
 
-      // Handle remainder
+        // Handle remainder
         if (documents.size() > 0) {
             addDocuments(documents)
         }
 
-        print "Done!\n"
+        log.info("Done!")
 
         queue.shutdown()
 
@@ -146,17 +145,12 @@ class DumpImporter extends BasicPlugin implements Importer {
             try {
                 this.whelk.bulkAdd(documents)
             } catch (WhelkAddException wae) {
-                if (!failedLog) {
-                    failedLog = new File("failed_ids.log")
-                }
-                for (fi in wae.failedIdentifiers) {
-                    failedLog << "$fi\n"
-                }
+                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
             } catch (Exception e) {
-                if (!exceptionLog) {
-                    exceptionLog = new File("exceptions.log")
-                }
-                e.printStackTrace(new FileWriter(exceptionLog, true))
+                log.error("Exception on bulkAdd: ${e.message}", e)
+                StringWriter sw = new StringWriter()
+                e.printStackTrace(new PrintWriter(sw))
+                errorMessages << new String("Exception on add: ${sw.toString()}")
             }
         } as Runnable)
     }

@@ -324,11 +324,21 @@ class ReindexOperator extends AbstractOperator {
 class BenchmarkOperator extends AbstractOperator {
 
     String oid = "benchmark"
+    Date since = null
+
+    @Override
+    void setParameters(Map parameters) {
+        super.setParameters(parameters)
+        if (parameters.get("since", null)) {
+            this.since = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", parameters.get("since"))
+            log.info("Since: $since")
+        }
+    }
 
     @Override
     void doRun(long startTime) {
         def docs = []
-        for (doc in whelk.loadAll(dataset)) {
+        for (doc in whelk.loadAll(dataset, since)) {
             docs << doc
             if (++count % 1000 == 0) {
                 // Update runningtime every 1000 docs
@@ -365,7 +375,7 @@ abstract class AbstractOperator implements Runnable {
     void run() {
         assert whelk
         try {
-            log.debug("Starting reindex operation")
+            log.debug("Starting operation")
             operatorState=OperatorState.RUNNING
             cancelled = false
             count = 0

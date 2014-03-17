@@ -102,6 +102,14 @@ class Document {
         this.entry["timestamp"] = ts
     }
 
+    void setVersion(int v) {
+        this.entry["version"] = v
+    }
+
+    int getVersion() {
+        entry.get("version", 0)
+    }
+
 
     List getLinks() {
         return meta.get("links", [])
@@ -109,6 +117,11 @@ class Document {
 
     Document withTimestamp(long ts) {
         setTimestamp(ts)
+        return this
+    }
+
+    Document withVersion(int v) {
+        setVersion(v)
         return this
     }
 
@@ -143,8 +156,8 @@ class Document {
      */
     Document withMetaEntry(String jsonEntry) {
         Map metaEntry = mapper.readValue(jsonEntry, Map)
-        this.entry = metaEntry.entry
-        this.meta = metaEntry.meta
+        withEntry(metaEntry.entry)
+        withMeta(metaEntry.meta)
         return this
     }
 

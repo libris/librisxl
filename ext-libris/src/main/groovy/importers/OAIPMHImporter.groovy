@@ -36,14 +36,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     int sizeOfBatch
 
     ExecutorService queue
-    File failedLog
-    File exceptionLog
 
     List<String> errorMessages
 
     boolean cancelled = false
-
-
 
     OAIPMHImporter() {
         this.serviceUrl = null
@@ -168,20 +164,11 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                 this.whelk.bulkAdd(documents)
             } catch (WhelkAddException wae) {
                 errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                if (!failedLog) {
-                    failedLog = new File("failed_ids.log")
-                }
-                for (fi in wae.failedIdentifiers) {
-                    failedLog << "$fi\n"
-                }
             } catch (Exception e) {
+                log.error("Exception on bulkAdd: ${e.message}", e)
                 StringWriter sw = new StringWriter()
-                e.printStackTrace(sw)
+                e.printStackTrace(new PrintWriter(sw))
                 errorMessages << new String("Exception on add: ${sw.toString()}")
-                if (!exceptionLog) {
-                    exceptionLog = new File("exceptions.log")
-                }
-                e.printStackTrace(new PrintWriter(exceptionLog))
             }
         } as Runnable)
     }

@@ -29,6 +29,9 @@
   <logger name="se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter">
       <level value="error"/>
   </logger>
+   <logger name="se.kb.libris.whelks.importers.DumpImporter">
+      <level value="debug"/>
+  </logger>
 
   <logger name="se.kb.libris.whelks.api.SearchRestlet" level="INFO">
     <appender-ref ref="FILE-QUERY" />
