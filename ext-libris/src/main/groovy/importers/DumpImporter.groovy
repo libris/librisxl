@@ -114,8 +114,8 @@ class DumpImporter extends BasicPlugin implements Importer {
                         float elapsedTime = ((System.nanoTime()-loadStartTime)/1000000000)
                         log.debug("imported: $nrImported time: $elapsedTime velocity: " + 1/(elapsedTime / BATCH_SIZE))
                     }
-                    if (nrImported >= maxDocs) {
-                        log.debug("Max number of docs ($maxDocs) reached. Breaking ...")
+                    if (maxDocs > 0 && nrImported >= maxDocs) {
+                        log.info("Max number of docs ($maxDocs) reached. Breaking ...")
                         break
                     }
                 }
