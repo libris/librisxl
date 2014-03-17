@@ -7,15 +7,9 @@ import se.kb.libris.whelks.*
 @Log
 class LibrisMinter extends BasicPlugin implements URIMinter {
 
-    static final char[] ALPHANUM
-    static final char[] VOWELS
-    static final char[] DEVOWELLED
-
-    static {
-        ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
-        VOWELS = "auoeiy".chars
-        DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
-    }
+    static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
+    static final char[] VOWELS = "auoeiy".chars
+    static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
     String originDate
     URI baseUri
@@ -24,21 +18,32 @@ class LibrisMinter extends BasicPlugin implements URIMinter {
     String partSep = "-"
     String keySep = ""
     char[] alphabet
-    int minSize = 3
-    int randWidth = 5
+    int minKeySize = 3
+    int randWidth = 0
+    boolean caesarCiphered = false
 
     private long epochOffset
     private int randCeil
 
-    LibrisMinter(baseUri=null, originDate=null, typeRules=null, alphabet=DEVOWELLED) {
+    LibrisMinter(baseUri=null, typeRules=null, originDate=null, caesarCiphered=false, alphabet=DEVOWELLED) {
         this.baseUri = (baseUri instanceof URI)? baseUri : new URI(baseUri.toString())
-        this.originDate = originDate
+        this.caesarCiphered = caesarCiphered
+        this.setOriginDate(originDate)
+        this.typeRules = typeRules
+        this.alphabet = alphabet
+        this.setRandWidth(0)
+    }
+
+    void setOriginDate(String originDate) {
         if (originDate instanceof String) {
             epochOffset = Date.parse("yyyy-MM-dd", originDate).getTime()
         }
-        this.typeRules = typeRules
-        this.alphabet = alphabet
-        this.randCeil = alphabet.length * 5
+        this.originDate = originDate
+    }
+
+    void setRandWidth(int randWidth) {
+        this.randCeil = alphabet.length ** randWidth
+        this.randWidth = randWidth
     }
 
     URI mint(Document doc, boolean remint=true) {
@@ -46,20 +51,23 @@ class LibrisMinter extends BasicPlugin implements URIMinter {
             return new URI(doc.identifier)
         }
 
-        if (typeRules)
+        if (typeRules) {
             return baseUri.resolve(computePath(doc))
-        else
+        } else {
             return baseUri.resolve("/uuid/"+ UUID.randomUUID()) // urn:uuid:...
+        }
     }
 
     String computePath(Document doc) {
-        computePath(doc.getData())
+        computePath(doc.getDataAsMap()) // TODO: needs JSON-aware doc
     }
 
     String computePath(Map data) {
-        // TODO: use rules to get these from data
-        String primaryType = "Thing"
         def keys = []
+        collectKeys(typeRules, data, keys)
+        def type = keys[0]
+        keys = keys[1..-1]
+
         def codes = []
         if (originDate) {
             codes << getTimestamp()
@@ -67,7 +75,21 @@ class LibrisMinter extends BasicPlugin implements URIMinter {
         if (randWidth) {
             codes << new Random().nextInt(randCeil)
         }
+
         return makePath(type, codes, keys)
+    }
+
+
+    void collectKeys(rules, data, keys) {
+        // TODO: order of rules
+        rules.each { key, rule ->
+            def v = data[key]
+            if (rule.is(true)) {
+                keys << v
+            } else if (rule instanceof Map) {
+                collectKeys(rule, v, keys)
+            }
+        }
     }
 
     long getTimestamp() {
@@ -95,19 +117,44 @@ class LibrisMinter extends BasicPlugin implements URIMinter {
     }
 
     String baseEncode(long n) {
+        baseEncode(n, caesarCiphered)
+    }
+
+    String baseEncode(long n, boolean caesarCiphered) {
         int base = alphabet.length
-        int width = Math.floor(Math.log(n) / Math.log(base))
-        def chars = []
-        for (int i=width; i > -1; i--) {
-            chars << alphabet[((n / (base ** i)) as long) % base]
+        int[] positions = basePositions(n, base)
+        if (caesarCiphered) {
+            int rotation = positions[-1]
+            for (int i=0; i < positions.length - 1; i++) {
+                positions[i] = rotate(positions[i], rotation, base)
+            }
         }
+        return baseEncode((int[]) positions)
+    }
+
+    String baseEncode(int[] positions) {
+        def chars = positions.collect { alphabet[it] }
         return chars.join("")
+    }
+
+    int[] basePositions(long n, int base) {
+        int maxExp = Math.floor(Math.log(n) / Math.log(base))
+        int[] positions = new int[maxExp + 1]
+        for (int i=maxExp; i > -1; i--) {
+            positions[maxExp-i] = (int) (((n / (base ** i)) as long) % base)
+        }
+        return positions
+    }
+
+    int rotate(int i, int rotation, int ceil) {
+        int j = i + rotation
+        return (j >= ceil)? j - ceil : j
     }
 
     String scramble(String s) {
         def ls = s.toLowerCase()
         def rs = ls.findAll { alphabet.contains(it) }.join("")
-        return (rs.size() < minSize)? ls : rs
+        return (rs.size() < minKeySize)? ls : rs
     }
 
 }
