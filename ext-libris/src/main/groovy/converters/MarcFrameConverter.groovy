@@ -330,10 +330,12 @@ class TokenSwitchFieldHandler {
     }
 
     private void buildHandlersByRecTypeBibLevel(fieldDfn, recTypeBibLevelMap) {
-        recTypeBibLevelMap.each { recType, nameBibLevelMap ->
+        recTypeBibLevelMap.each { recTypes, nameBibLevelMap ->
             nameBibLevelMap.each { typeName, bibLevels ->
-                bibLevels.each {
-                    addHandler(recType + it, fieldDfn[typeName])
+                recTypes.split(/,/).each { recType ->
+                    bibLevels.each {
+                        addHandler(recType + it, fieldDfn[typeName])
+                    }
                 }
             }
         }
