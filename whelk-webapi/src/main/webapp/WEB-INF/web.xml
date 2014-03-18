@@ -25,6 +25,18 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
+    <!--
+    <servlet>
+        <servlet-name>PrawnServlet</servlet-name>
+        <servlet-class>se.kb.libris.whelks.prawn.MasterPrawn</servlet-class>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>PrawnServlet</servlet-name>
+        <url-pattern>/_prawn</url-pattern>
+    </servlet-mapping>
+    -->
     <servlet-mapping>
         <servlet-name>RestServlet</servlet-name>
         <url-pattern>/*</url-pattern>

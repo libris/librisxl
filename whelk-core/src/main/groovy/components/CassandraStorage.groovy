@@ -208,7 +208,12 @@ class CassandraStorage extends BasicPlugin implements Storage {
         log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}");
         if (doc && (!checkContentType || handlesContent(doc.contentType) )) {
             def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
-            if (checkDigest && existingDocument?.entry?.checksum && doc.entry?.checksum == existingDocument?.entry?.checksum) {
+            if (existingDocument) {
+                log.debug("existing meta: ${existingDocument.meta} / ${doc.meta}")
+            }
+            if (checkDigest &&
+                existingDocument?.meta == doc.meta &&
+                doc.entry?.checksum == existingDocument?.entry?.checksum) {
                 throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
             }
 
@@ -313,6 +318,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
             boolean foundCorrectVersion = false
             for (r in res) {
                 DocumentEntry e = r.name
+                log.trace("Found docentry with version ${e.version}")
                 if (!version || e.version == version as int) {
                     foundCorrectVersion = true
                     document.withTimestamp(e.timestamp)
@@ -328,7 +334,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 document = null
             }
         }
-        log.trace("Returning document $document")
+        log.trace("Returning document ${document.identifier} (${document.version})")
         return document
     }
 
@@ -337,7 +343,15 @@ class CassandraStorage extends BasicPlugin implements Storage {
     void delete(URI uri) {
         log.debug("Deleting document $uri")
         if (versioningStorage) {
-            store(uri.toString(), createTombstone(uri), keyspace, true, true, false)
+            try {
+                store(uri.toString(), createTombstone(uri), true, true, false)
+            } catch (DocumentException de) {
+                if (de.exceptionType == DocumentException.IDENTICAL_DOCUMENT) {
+                    log.info("Document already deleted. Ignoring.")
+                } else {
+                    throw de
+                }
+            }
         }
         try {
             MutationBatch m = keyspace.prepareMutationBatch()
@@ -359,11 +373,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null) {
-        /* WE SHOULD BE ABLE TO DO THIS!
-        if (!dataset && since) {
-            throw new QueryException("Parameter 'since' requires a 'dataset'")
-        }
-        */
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 def query
@@ -386,16 +395,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
                             .withColumnRange(
                                 documentSerializer.buildRange().greaterThanEquals(since.getTime()).build()
                             )
-                            //.execute()
-                                //new RangeBuilder().setStart(since.getTime()).setEnd(new Date().getTime()).build()
-                            /*
-                        def columns = query.execute().getResult();
-                        for (column in columns) {
-                            log.info("column: ${column.getName()}")
-                        }
-                        log.info("Done, returning null")
-                        return null
-                        */
                     } else if (since) {
                         log.debug("Searching year: ${since.getAt(Calendar.YEAR)}")
                         query = keyspace.prepareQuery(CF_DOCUMENT_META)
@@ -429,15 +428,61 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     class CassandraIterator implements Iterator<Document> {
 
+        Set<String> identifiers = new HashSet<String>()
+        Deque documentQueue = [].asSynchronized()
+
         private Iterator iter
         def query
+
+        boolean refilling = false
 
         CassandraIterator(q) {
             this.query = q
             iter = query.execute().getResult().iterator()
         }
 
+
         public boolean hasNext() {
+            if (!documentQueue.size()) {
+                refill()
+            }
+            return documentQueue.size()
+        }
+
+        public Document next() {
+            while (refilling) {
+                log.debug("Hold a moment, refilling queue.")
+                Thread.sleep(1000)
+            }
+            def doc = documentQueue.pop()
+            log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
+            return doc
+        }
+
+        void refill() {
+            log.trace("Refilling")
+            refilling = true
+            def doc
+            while (refilling) {
+                try {
+                    boolean deserizalisatonResult = false
+                    while (!deserizalisatonResult && iter.hasNext()) {
+                        (deserizalisatonResult, doc) = deserializeDocument(iter.next())
+                    }
+                    if (doc) {
+                        documentQueue.push(doc)
+                    }
+                    refilling = false
+                } catch (Exception ce) {
+                    log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...",ce)
+                    Thread.sleep(1000)
+                }
+            }
+
+        }
+
+        /*
+        public boolean oldhasNext() {
             boolean hn,success = false
             while (!success) {
                 try {
@@ -456,44 +501,17 @@ class CassandraStorage extends BasicPlugin implements Storage {
             return hn
         }
 
-        public Document next() {
+
+        public Document oldnext() {
             boolean success = false
             def doc
             while (!success) {
                 try {
-                    def res = iter.next()
-                    /*
-                    log.debug("res is: ${res.getClass().getName()}")
-                    log.debug("res.name is ${res.name.getClass().getName()}")
-                    */
-                    if (res instanceof ThriftColumnImpl) {
-                        DocumentEntry e = res.name
-                        if (e.field == COL_NAME_IDENTIFIER) {
-                            doc = get(res.getStringValue())
-                        }
-                    } else {
-                        doc = new Document().withIdentifier(res.key)
-
-                        for (c in res.columns) {
-                            def field
-                            if (c.name instanceof DocumentEntry) {
-                                DocumentEntry e = c.name
-                                doc.withTimestamp(e.timestamp)
-                                field = e.field
-                            } else {
-                                field = c.name
-                            }
-                            if (field == COL_NAME_ENTRY) {
-                                doc.withMetaEntry(c.getStringValue())
-                            }
-                            if (field == COL_NAME_DATA) {
-                                doc.withData(c.getByteArrayValue())
-                            }
-                            if (field == COL_NAME_TIMESTAMP) {
-                                doc.withTimestamp(c.getLongValue())
-                            }
-                        }
+                    boolean deserizalisatonResult = false
+                    while (!deserizalisatonResult && iter.hasNext()) {
+                        (deserizalisatonResult, doc) = deserializeDocument(iter.next())
                     }
+                    log.trace("doc is $doc")
                     success = true
                     log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
                 } catch (Exception ce) {
@@ -502,6 +520,61 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 }
             }
             return doc
+        }
+        */
+
+        def deserializeDocument(res) {
+            String id = null
+            Document doc
+            if (res instanceof ThriftColumnImpl) {
+                log.trace("Found hit for timestamp search")
+                DocumentEntry e = res.name
+                if (e.field == COL_NAME_IDENTIFIER) {
+                    id = res.getStringValue()
+                    if (identifiers.contains(id)) {
+                        log.trace("We have already loaded $id")
+                        return [false, doc]
+                    }
+                    doc = get(id)
+                }
+            } else {
+                log.trace("Found hit for index/matchall search")
+                id = res.key
+                if (id == ROW_KEY_TIMESTAMP || id == identifiers.contains(id)) {
+                    if (log.isTraceEnabled()) {
+                        if (id == ROW_KEY_TIMESTAMP) {
+                            log.trace("Not looking for timestamp")
+                        } else {
+                            log.trace("We have already loaded $id")
+                        }
+                    }
+                    return [false, doc]
+                }
+                doc = new Document().withIdentifier(id)
+
+                for (c in res.columns) {
+                    def field
+                    if (c.name instanceof DocumentEntry) {
+                        DocumentEntry e = c.name
+                        doc.withTimestamp(e.timestamp)
+                        field = e.field
+                    } else {
+                        field = c.name
+                    }
+                    if (field == COL_NAME_ENTRY) {
+                        doc.withMetaEntry(c.getStringValue())
+                    }
+                    if (field == COL_NAME_DATA) {
+                        doc.withData(c.getByteArrayValue())
+                    }
+                    if (field == COL_NAME_TIMESTAMP) {
+                        doc.withTimestamp(c.getLongValue())
+                    }
+                }
+            }
+            identifiers << id
+            log.trace("Deserialized document has identifier: ${doc.identifier}")
+            return [true, doc]
         }
 
         void remove() {}

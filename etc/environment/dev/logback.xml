@@ -70,18 +70,16 @@
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger> 
-  -->
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.importers">
       <level value="debug"/>
   </logger>
-  -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="debug"/>
   </logger>
+  -->
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
       <level value="trace"/>
   </logger>
@@ -95,7 +93,6 @@
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
       <level value="trace"/>
   </logger>
-  -->
 <logger name="se.kb.libris.whelks.api.ReindexOperator">
       <level value="trace"/>
   </logger>
@@ -108,22 +105,22 @@
 <logger name="se.kb.libris.whelks.Document">
       <level value="info"/>
   </logger>
-    <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">-->
+    <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">
         <level value="trace"/>
     </logger>
-    <!--
      <logger name="se.kb.libris.whelks.plugin.OaiPmhXmlConverter">
       <level value="trace"/>
 </logger>
     <logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
           <level value="debug"/>
         </logger>
-<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter">-->
-      <!--<level value="debug"/>-->
-<!--</logger>-->
-<!--<logger name="se.kb.libris.whelks.api.FieldSearchRestlet">-->
-        <!--<level value="debug"/>-->
-<!--</logger>-->
+<logger name="se.kb.libris.whelks.plugin.JsonLDCleanupFormatConverter">
+      <level value="debug"/>
+</logger>
+<logger name="se.kb.libris.whelks.api.FieldSearchRestlet">
+        <level value="debug"/>
+</logger>
+-->
 <!--
  <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
       <level value="trace"/>

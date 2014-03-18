@@ -138,13 +138,13 @@ class Document {
         if (entrydata?.get("identifier", null)) {
             this.identifier = entrydata["identifier"]
         }
-        if (entrydata) {
-            this.entry.putAll(entrydata)
+        if (entrydata != null) {
+            this.entry = entrydata
         }
         return this
     }
     Document withMeta(Map metadata) {
-        if (metadata) {
+        if (metadata != null) {
             this.meta = metadata
         }
         return this
@@ -219,5 +219,15 @@ class Document {
         String hashtext = bigInt.toString(16)
         log.debug("calculated checksum: $hashtext")
         this.entry['checksum'] = hashtext
+    }
+}
+
+class JsonDocument extends Document {
+    Map dataAsMap
+
+    @Override
+    void setData(byte[] d) {
+        super.setData(d)
+        dataAsMap = mapper.convertValue(d, Map)
     }
 }
