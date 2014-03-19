@@ -19,7 +19,6 @@ import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 
 
-
 @Log
 class Document {
     String identifier
@@ -29,6 +28,10 @@ class Document {
 
     @JsonIgnore
     ObjectMapper mapper = new ObjectMapper()
+
+    // store serialized data
+    @JsonIgnore
+    Map dataAsMap
 
     /*
      * Constructors
@@ -50,7 +53,22 @@ class Document {
      * Get methods
      */
     String getDataAsString() {
-        return new String(this.data)
+        return new String(this.data, "UTF-8")
+    }
+
+    Map getDataAsMap() {
+        if (!isJson) {
+            throw new DocumentException("Cannot serialize data as Map. (Not JSON)")
+        }
+        if (!dataAsMap) {
+            log.trace("Serializing data as map")
+            this.dataAsMap = mapper.readValue(getDataAsString(), Map)
+        }
+        return dataAsMap
+    }
+
+    private void setDataAsMap(Map data) {
+        this.dataAsMap = data
     }
 
     String toJson() {
@@ -71,6 +89,37 @@ class Document {
         return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "entry":entry])
     }
 
+    String getContentType() { entry["contentType"] }
+
+    long getTimestamp() {
+        entry.get("timestamp", 0L)
+    }
+
+
+    int getVersion() {
+        entry.get("version", 0)
+    }
+
+    List getLinks() {
+        return meta.get("links", [])
+    }
+
+    // Setters
+    void setTimestamp(long ts) {
+        this.entry["timestamp"] = ts
+    }
+
+    void setVersion(int v) {
+        this.entry["version"] = v
+    }
+
+    void setData(byte[] data) {
+        log.info("Setting data in Document class (also resetting dataAsMap)")
+        // Whenever data is changed, reset dataAsMap
+        dataAsMap = null
+        this.data = data
+    }
+
     /*
      * Convenience methods
      */
@@ -83,8 +132,6 @@ class Document {
         return withIdentifier(uri.toString())
     }
 
-    String getContentType() { entry["contentType"] }
-
     Document withContentType(String ctype) {
         setContentType(ctype)
         return this
@@ -92,27 +139,6 @@ class Document {
 
     void setContentType(String ctype) {
         this.entry["contentType"] = ctype
-    }
-
-    long getTimestamp() {
-        entry.get("timestamp", 0L)
-    }
-
-    void setTimestamp(long ts) {
-        this.entry["timestamp"] = ts
-    }
-
-    void setVersion(int v) {
-        this.entry["version"] = v
-    }
-
-    int getVersion() {
-        entry.get("version", 0)
-    }
-
-
-    List getLinks() {
-        return meta.get("links", [])
     }
 
     Document withTimestamp(long ts) {
@@ -179,6 +205,10 @@ class Document {
         return this
     }
 
+    boolean isJson() {
+        getContentType() ==~ /application\/(\w+\+)*json/
+    }
+
     /**
      * Takes either a String or a File as argument.
      */
@@ -195,6 +225,7 @@ class Document {
         return this
     }
 
+    /*
     Document mergeEntry(Map entryData) {
         entryData.each { k, v ->
             if (!this.entry.containsKey(k)
@@ -209,6 +240,7 @@ class Document {
         }
         return this
     }
+    */
 
     private void calculateChecksum() {
         MessageDigest m = MessageDigest.getInstance("MD5")
@@ -219,15 +251,5 @@ class Document {
         String hashtext = bigInt.toString(16)
         log.debug("calculated checksum: $hashtext")
         this.entry['checksum'] = hashtext
-    }
-}
-
-class JsonDocument extends Document {
-    Map dataAsMap
-
-    @Override
-    void setData(byte[] d) {
-        super.setData(d)
-        dataAsMap = mapper.convertValue(d, Map)
     }
 }

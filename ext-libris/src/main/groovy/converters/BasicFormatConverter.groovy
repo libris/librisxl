@@ -25,5 +25,6 @@ abstract class BasicFormatConverter extends BasicPlugin implements FormatConvert
         return newdocument
     }
 
+
     abstract Document doConvert(final Document doc)
 }
