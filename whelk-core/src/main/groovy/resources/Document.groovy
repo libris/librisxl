@@ -57,7 +57,7 @@ class Document {
     }
 
     Map getDataAsMap() {
-        if (!isJson) {
+        if (!isJson()) {
             throw new DocumentException("Cannot serialize data as Map. (Not JSON)")
         }
         if (!serializedDataInMap) {
