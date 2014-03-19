@@ -104,7 +104,7 @@
 :CreativeWork a owl:Class;
     rdfs:label "Kreativt verk"@sv;
     ptg:abstract true;
-    rdfs:subClassOf sdo:CreativeWork .
+    rdfs:subClassOf sdo:CreativeWork, dc:BibliographicResource  .
 
 :ConceptualWork a owl:Class;
     rdfs:label "Konceptuellt verk"@sv;
@@ -169,21 +169,24 @@
 :Text a owl:Class;
     rdfs:subClassOf :CreativeWork;
     rdfs:label "Text"@sv;
-    owl:equivalentClass dctype:Text, bf:Text, dc:BibliographicResource .
+    owl:equivalentClass dctype:Text, bf:Text .
 
-:ThreeDimensionalObject a owl:Class;
+:Realia a owl:Class;
     owl:equivalentClass bf:ThreeDimensionalObject .
 
 :InteractiveResource a owl:Class;
     rdfs:subClassOf :CreativeWork;
     rdfs:subClassOf dctype:InteractiveResource .
 
+:Kit a owl:Class; # TODO: equivalentClass ?
+    rdfs:subClassOf :CreativeWork .
+
 # Combined Content Types
 
 :CartographicImage a owl:Class;
     rdfs:subClassOf :Cartography, :Image .
 :CartographicObject a owl:Class;
-    rdfs:subClassOf :Cartography, :ThreeDimensionalObject .
+    rdfs:subClassOf :Cartography, :Realia .
 
 # TODO: link above to:
 @prefix RDAContentType: <http://rdvocab.info/termList/RDAContentType/> .
@@ -224,13 +227,21 @@
 :Monograph a owl:Class;
     owl:equivalentClass bf:Monograph .
 
+:Part a owl:Class;
+    ptg:abstract true .
+
+:ComponentPart a owl:Class;
+    owl:equivalentClass bibo:DocumentPart;
+    rdfs:subClassOf :Part .
+
 :Aggregate a owl:Class;
     ptg:abstract true .
 
-:Part a owl:Class .
+:Continuing a owl:Class;
+    ptg:abstract true;
+    rdfs:subClassOf :Aggregate .
 
 :Archival a owl:Class;
-    rdfs:label "Samling"@sv;
     rdfs:subClassOf :Aggregate;
     owl:equivalentClass bf:Archival .
 
@@ -239,12 +250,18 @@
     rdfs:subClassOf :Aggregate;
     owl:equivalentClass dctype:Collection, bf:Collection .
 
+:SubCollection a owl:Class;
+    rdfs:subClassOf :Collection, :Part .
+
 :Integrating a owl:Class;
-    rdfs:subClassOf :Aggregate;
+    rdfs:subClassOf :Continuing;
     owl:equivalentClass bf:Integrating .
 
 :MonographicComponentPart a owl:Class;
-    rdfs:subClassOf :Part .
+    rdfs:subClassOf :Monograph, :ComponentPart .
+
+:SerialComponentPart a owl:Class;
+    rdfs:subClassOf :Serial, :ComponentPart  .
 
 :Multipart a owl:Class;
     rdfs:subClassOf :Aggregate .
@@ -254,8 +271,10 @@
     owl:equivalentClass bf:MultipartMonograph .
 
 :Serial a owl:Class;
-    rdfs:subClassOf :Aggregate;
+    rdfs:subClassOf :Continuing;
     owl:equivalentClass bf:Serial .
+
+:Periodical owl:equivalentClass bf:Serial .
 
 # Manifestation Dimensions
 
@@ -313,6 +332,15 @@
 #:DVD
 
 # Concrete Types (can grow a lot, be combined with e.g. productontology...)
+
+:ManuscriptCartography a owl:Class;
+    rdfs:subClassOf :Cartography, :Manuscript .
+
+:ManuscriptNotatedMusic a owl:Class;
+    rdfs:subClassOf :NotatedMusic, :Manuscript .
+
+:ManuscriptText a owl:Class;
+    rdfs:subClassOf :Text, :Manuscript .
 
 :Database a owl:Class;
     rdfs:subClassOf :Integrating, :Digital, :Dataset .
