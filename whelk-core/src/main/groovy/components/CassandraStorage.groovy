@@ -334,7 +334,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 document = null
             }
         }
-        log.trace("Returning document ${document.identifier} (${document.version})")
+        log.trace("Returning document ${document?.identifier} (${document?.version})")
         return document
     }
 
@@ -429,7 +429,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     class CassandraIterator implements Iterator<Document> {
 
         Set<String> identifiers = new HashSet<String>()
-        Deque documentQueue = [].asSynchronized()
+        def documentQueue = [].asSynchronized()
 
         private Iterator iter
         def query

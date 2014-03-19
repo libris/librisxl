@@ -219,7 +219,8 @@
             "specUriMapping" : {
                 "authority" : "auth",
                 "bibid" : "bib"
-            }
+            },
+            "preserveTimestamps" : true
         }
     },
     "indexingprawn" : {

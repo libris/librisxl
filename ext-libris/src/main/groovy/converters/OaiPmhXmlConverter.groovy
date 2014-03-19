@@ -16,9 +16,11 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
     String resultContentType = "application/x-marc-json"
 
     def SPEC_URI_MAP
+    boolean preserveTimestamps
 
     OaiPmhXmlConverter(Map settings) {
         this.SPEC_URI_MAP = settings.get("specUriMapping", [:])
+        this.preserveTimestamps = settings.get("preserveTimestamps", false)
     }
 
     Document doConvert(final Document document) {
@@ -36,6 +38,10 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
             .withIdentifier(document.identifier)
             .withEntry(document.entry)
             .withMeta(document.meta)
+
+        if (preserveTimestamps && xml.header.datestamp) {
+            doc.timestamp = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", xml.header.datestamp.toString()).getTime()
+        }
 
         if (xml.header.setSpec) {
             for (spec in xml.header.setSpec) {
