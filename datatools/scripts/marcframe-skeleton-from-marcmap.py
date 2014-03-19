@@ -84,7 +84,7 @@ def fixprop_to_name(propname, key):
 
 out = OrderedDict()
 
-resourceMaps = out['resourceMaps'] = OrderedDict()
+tokenMaps = out['tokenMaps'] = OrderedDict()
 compositionTypeMap = out['compositionTypeMap'] = OrderedDict()
 contentTypeMap = out['contentTypeMap'] = OrderedDict()
 #carrierTypeMap = out['carrierTypeMap'] = OrderedDict()
@@ -180,7 +180,7 @@ for tag, field in sorted(marcmap['bib'].items()):
                                 propname = 'contentType'
                                 enum_key = 'content'
 
-                    typemap = resourceMaps.setdefault(dfn_key, OrderedDict())
+                    typemap = tokenMaps.setdefault(dfn_key, OrderedDict())
 
                     for key, dfn in valuemap.items():
                         # TODO: '_' actually means something occasionally..
@@ -196,7 +196,7 @@ for tag, field in sorted(marcmap['bib'].items()):
                         typemap[key] = type_id
 
                     if skip_unlinked_maps and not is_link:
-                        resourceMaps[dfn_key] = {"TODO": "SKIPPED"}
+                        tokenMaps[dfn_key] = {"TODO": "SKIPPED"}
 
                 if is_link:
                     col_dfn['link'] = propname
@@ -205,7 +205,7 @@ for tag, field in sorted(marcmap['bib'].items()):
                     col_dfn['property'] = propname
 
                 if valuemap:
-                    col_dfn['valueMap'] = dfn_key
+                    col_dfn['tokenMap'] = dfn_key
 
                 col_dfn['domainEntity'] = domainname
 
