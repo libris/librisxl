@@ -9,7 +9,7 @@
     "z": "auth"
   },
 
-  "resourceMaps": {
+  "tokenMaps": {
 
     "relatorCode": "relatorcodes.json",
 
@@ -266,15 +266,6 @@
         "ESerial": {"carrierType": "c", "carrierMaterial": "r"}
       }
     },
-    "Collection": {},
-    "Dataset": {},
-    "Image": {},
-    "Movie": {},
-    "NotatedMusic": {},
-    "ThreeDimensionalObject": {},
-    "Kit": {},
-    "Mixed": {},
-    "Multimedia": {},
     "Book": {"typeOfRecord": "a", "bibLevel": "m",
       "instanceTypes": {
         "Audiobook": {"carrierType": "s"},
@@ -298,55 +289,85 @@
     "Digital": {"carrierType": "c", "mixin": true}
   },
 
+  "comboTypeMap": {
+    "Serial": {"contentType": "LanguageMaterial", "aggregateType": "Serial",
+      "ESerial": {"carrierType": "OnlineResource"}
+    },
+    "Collection": {},
+    "Dataset": {},
+    "Image": {},
+    "Movie": {},
+    "NotatedMusic": {},
+    "ThreeDimensionalObject": {},
+    "Kit": {},
+    "Mixed": {},
+    "Multimedia": {},
+    "Book": {"contentType": "LanguageMaterial",
+      "Audiobook": {"carrierType": "SoundRecording"},
+      "CDBook": {"carrierType": "OpticalDisc"},
+      "EBook": {"carrierType": "OnlineResource"}
+    },
+    "Cartography": {"contentType": "PrintedCartographicMaterial",
+      "CDMap": {"carrierType": "OpticalDisc"}
+    },
+    "Audio": {"contentType": "NonmusicalSoundRecording", "abstract": true,
+      "Audiobook": {"TODO": "not 655a=Talböcker"}
+    },
+    "Music": {"contentType": "MusicalSoundRecording",
+      "MusicCD": {"carrierType": "SoundDisc"}
+    },
+    "Electronic": {"carrierType": "Electronic", "aspect": true}
+  },
+
   "bib": {
 
     "000": {
       "[5:6]": {
         "domainEntity": "Record",
         "property": "status",
-        "valueMap": "status"
+        "tokenMap": "status"
       },
       "[6:7]": {
         "domainEntity": "Instance",
-        "valueMap": "typeOfRecord",
-        "link": "typeOfRecord",
+        "tokenMap": "typeOfRecord",
+        "addLink": "contentType",
         "uriTemplate": "t:{_}"
       },
       "[7:8]": {
         "domainEntity": "Instance",
-        "valueMap": "bibLevel",
-        "link": "bibLevel",
+        "tokenMap": "bibLevel",
+        "link": "aggregateType",
         "uriTemplate": "t:{_}"
       },
       "[8:9]": {
         "domainEntity": "Record",
         "property": "typeOfControl",
-        "valueMap": "typeOfControl"
+        "tokenMap": "typeOfControl"
       },
       "[9:10]": {
         "domainEntity": "Record",
         "property": "characterCoding",
-        "valueMap": "characterCoding"
+        "tokenMap": "characterCoding"
       },
       "[17:18]": {
         "domainEntity": "Record",
         "property": "encLevel",
-        "valueMap": "encLevel"
+        "tokenMap": "encLevel"
       },
       "[18:19]": {
         "domainEntity": "Record",
         "property": "catForm",
-        "valueMap": "catForm"
+        "tokenMap": "catForm"
       },
       "[19:20]": {
         "domainEntity": "Record",
         "property": "linked",
-        "valueMap": "linked"
+        "tokenMap": "linked"
       },
       "[20:24]": {
         "domainEntity": "Record",
         "property": "entryMap",
-        "valueMap": "entryMap"
+        "tokenMap": "entryMap"
       },
       "repeatable": false
     },
@@ -364,9 +385,9 @@
     "007": {
       "[0:1]": {
         "domainEntity": "Instance",
-        "link": "carrierType",
-        "uriTemplate": "/def/carrier/{_}",
-        "valueMap": {
+        "addLink": "carrierType",
+        "uriTemplate": "enum:{_}",
+        "tokenMap": {
           "a": "Map",
           "c": "Electronic",
           "d": "Globe",
@@ -384,254 +405,238 @@
           "z": "Unspecified"
         }
       },
-      "tokenTypeMap": {
-        "a": "Map",
-        "c": "Electronic",
-        "d": "Globe",
-        "f": "TactileMaterial",
-        "g": "ProjectedGraphic",
-        "h": "Microform",
-        "k": "NonprojectedGraphic",
-        "m": "MotionPicture",
-        "o": "Kit",
-        "q": "NotatedMusic",
-        "r": "RemoteSensingImage",
-        "s": "SoundRecording",
-        "t": "Text",
-        "v": "VideoRecording",
-        "z": "Unspecified"
-      },
+      "tokenTypeMap": "[0:1]",
       "Map": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "mapMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "mapMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "mapColor",
-          "valueMap": "mapColor"
+          "tokenMap": "mapColor"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "mapMedium",
-          "valueMap": "mapMedium"
+          "tokenMap": "mapMedium"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "mapReproduction",
-          "valueMap": "mapReproduction"
+          "tokenMap": "mapReproduction"
         },
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "mapDetails",
-          "valueMap": "mapDetails"
+          "tokenMap": "mapDetails"
         },
         "[7:8]": {
           "domainEntity": "Instance",
           "property": "mapPosNeg",
-          "valueMap": "mapPosNeg"
+          "tokenMap": "mapPosNeg"
         },
         "[2:3]": {
           "domainEntity": "Instance",
           "property": "mapAspect",
-          "valueMap": "mapAspect"
+          "tokenMap": "mapAspect"
         }
       },
       "Electronic": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "computerMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "computerMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "computerColor",
-          "valueMap": "computerColor"
+          "tokenMap": "computerColor"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "computerDimensions",
-          "valueMap": "computerDimensions"
+          "tokenMap": "computerDimensions"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "computerSound",
-          "valueMap": "computerSound"
+          "tokenMap": "computerSound"
         },
         "[6:9]": {
           "domainEntity": "Instance",
           "property": "computerImageBitDepth",
-          "valueMap": "computerImageBitDepth"
+          "tokenMap": "computerImageBitDepth"
         },
         "[9:10]": {
           "domainEntity": "Instance",
           "property": "computerFileFormats",
-          "valueMap": "computerFileFormats"
+          "tokenMap": "computerFileFormats"
         },
         "[10:11]": {
           "domainEntity": "Instance",
           "property": "computerQATarget",
-          "valueMap": "computerQATarget"
+          "tokenMap": "computerQATarget"
         },
         "[11:12]": {
           "domainEntity": "Instance",
           "property": "computerAntecedent",
-          "valueMap": "computerAntecedent"
+          "tokenMap": "computerAntecedent"
         },
         "[12:13]": {
           "domainEntity": "Instance",
           "property": "computerCompression",
-          "valueMap": "computerCompression"
+          "tokenMap": "computerCompression"
         },
         "[13:14]": {
           "domainEntity": "Instance",
           "property": "computerReformattingQuality",
-          "valueMap": "computerReformattingQuality"
+          "tokenMap": "computerReformattingQuality"
         },
         "[2:3]": {
           "domainEntity": "Instance",
           "property": "computerFileAspect",
-          "valueMap": "computerFileAspect"
+          "tokenMap": "computerFileAspect"
         }
       },
       "Globe": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "globeMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "globeMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "globeColor",
-          "valueMap": "globeColor"
+          "tokenMap": "globeColor"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "globeMedium",
-          "valueMap": "globeMedium"
+          "tokenMap": "globeMedium"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "globeReproduction",
-          "valueMap": "globeReproduction"
+          "tokenMap": "globeReproduction"
         },
         "[2:3]": {
           "domainEntity": "Instance",
           "property": "globeAspect",
-          "valueMap": "globeAspect"
+          "tokenMap": "globeAspect"
         }
       },
       "TactileMaterial": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "tacMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "tacMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "tacBrailleWriting",
-          "valueMap": "tacBrailleWriting"
+          "tokenMap": "tacBrailleWriting"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "tacBrailleWriting",
-          "valueMap": "tacBrailleWriting"
+          "tokenMap": "tacBrailleWriting"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "tacContraction",
-          "valueMap": "tacContraction"
+          "tokenMap": "tacContraction"
         },
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "tacBrailleMusic",
-          "valueMap": "tacBrailleMusic"
+          "tokenMap": "tacBrailleMusic"
         },
         "[7:8]": {
           "domainEntity": "Instance",
           "property": "tacBrailleMusic",
-          "valueMap": "tacBrailleMusic"
+          "tokenMap": "tacBrailleMusic"
         },
         "[8:9]": {
           "domainEntity": "Instance",
           "property": "tacBrailleMusic",
-          "valueMap": "tacBrailleMusic"
+          "tokenMap": "tacBrailleMusic"
         },
         "[9:10]": {
           "domainEntity": "Instance",
           "property": "tacSpecPhysicalChar",
-          "valueMap": "tacSpecPhysicalChar"
+          "tokenMap": "tacSpecPhysicalChar"
         }
       },
       "ProjectedGraphic": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "projGraphMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "projGraphMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "projGraphColor",
-          "valueMap": "projGraphColor"
+          "tokenMap": "projGraphColor"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "projGraphEmulsion",
-          "valueMap": "projGraphEmulsion"
+          "tokenMap": "projGraphEmulsion"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "projGraphSound",
-          "valueMap": "projGraphSound"
+          "tokenMap": "projGraphSound"
         },
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "projGraphMedium",
-          "valueMap": "projGraphMedium"
+          "tokenMap": "projGraphMedium"
         },
         "[7:8]": {
           "domainEntity": "Instance",
           "property": "projGraphDimensions",
-          "valueMap": "projGraphDimensions"
+          "tokenMap": "projGraphDimensions"
         },
         "[8:9]": {
           "domainEntity": "Instance",
           "property": "projGraphSupport",
-          "valueMap": "projGraphSupport"
+          "tokenMap": "projGraphSupport"
         },
         "[2:3]": {
           "domainEntity": "Instance",
           "property": "projGraphAspect",
-          "valueMap": "projGraphAspect"
+          "tokenMap": "projGraphAspect"
         }
       },
       "Microform": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "microformMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "microformMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "microformPosNeg",
-          "valueMap": "microformPosNeg"
+          "tokenMap": "microformPosNeg"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "microformDimensions",
-          "valueMap": "microformDimensions"
+          "tokenMap": "microformDimensions"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "microformRange",
-          "valueMap": "microformRange"
+          "tokenMap": "microformRange"
         },
         "[6:9]": {
           "domainEntity": "Record",
@@ -640,133 +645,133 @@
         "[9:10]": {
           "domainEntity": "Instance",
           "property": "microformColor",
-          "valueMap": "microformColor"
+          "tokenMap": "microformColor"
         },
         "[10:11]": {
           "domainEntity": "Instance",
           "property": "microformEmulsion",
-          "valueMap": "microformEmulsion"
+          "tokenMap": "microformEmulsion"
         },
         "[11:12]": {
           "domainEntity": "Instance",
           "property": "microformGeneration",
-          "valueMap": "microformGeneration"
+          "tokenMap": "microformGeneration"
         },
         "[12:13]": {
           "domainEntity": "Instance",
           "property": "microformBase",
-          "valueMap": "microformBase"
+          "tokenMap": "microformBase"
         },
         "[2:3]": {
           "domainEntity": "Instance",
           "property": "microformAspect",
-          "valueMap": "microformAspect"
+          "tokenMap": "microformAspect"
         }
       },
       "NonprojectedGraphic": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "nonProjMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "nonProjMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "nonProjColor",
-          "valueMap": "nonProjColor"
+          "tokenMap": "nonProjColor"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "nonProjPrimary",
-          "valueMap": "nonProjPrimary"
+          "tokenMap": "nonProjPrimary"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "nonProjSecondary",
-          "valueMap": "nonProjSecondary"
+          "tokenMap": "nonProjSecondary"
         },
         "[2:3]": {
           "domainEntity": "Instance",
           "property": "nonProjAspect",
-          "valueMap": "nonProjAspect"
+          "tokenMap": "nonProjAspect"
         }
       },
       "MotionPicture": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "motionPicMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "motionPicMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "motionPicColor",
-          "valueMap": "motionPicColor"
+          "tokenMap": "motionPicColor"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "motionPicFormat",
-          "valueMap": "motionPicFormat"
+          "tokenMap": "motionPicFormat"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "motionPicSound",
-          "valueMap": "motionPicSound"
+          "tokenMap": "motionPicSound"
         },
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "motionPicMedium",
-          "valueMap": "motionPicMedium"
+          "tokenMap": "motionPicMedium"
         },
         "[7:8]": {
           "domainEntity": "Instance",
           "property": "motionPicDimensions",
-          "valueMap": "motionPicDimensions"
+          "tokenMap": "motionPicDimensions"
         },
         "[8:9]": {
           "domainEntity": "Instance",
           "property": "motionPicConfiguration",
-          "valueMap": "motionPicConfiguration"
+          "tokenMap": "motionPicConfiguration"
         },
         "[9:10]": {
           "domainEntity": "Instance",
           "property": "motionPicElements",
-          "valueMap": "motionPicElements"
+          "tokenMap": "motionPicElements"
         },
         "[10:11]": {
           "domainEntity": "Instance",
           "property": "motionPicPosNeg",
-          "valueMap": "motionPicPosNeg"
+          "tokenMap": "motionPicPosNeg"
         },
         "[11:12]": {
           "domainEntity": "Instance",
           "property": "motionPicGeneration",
-          "valueMap": "motionPicGeneration"
+          "tokenMap": "motionPicGeneration"
         },
         "[12:13]": {
           "domainEntity": "Instance",
           "property": "motionPicBase",
-          "valueMap": "motionPicBase"
+          "tokenMap": "motionPicBase"
         },
         "[13:14]": {
           "domainEntity": "Instance",
           "property": "motionPicCategories",
-          "valueMap": "motionPicCategories"
+          "tokenMap": "motionPicCategories"
         },
         "[14:15]": {
           "domainEntity": "Instance",
           "property": "motionPicColorStock",
-          "valueMap": "motionPicColorStock"
+          "tokenMap": "motionPicColorStock"
         },
         "[15:16]": {
           "domainEntity": "Instance",
           "property": "motionPicDeterioration",
-          "valueMap": "motionPicDeterioration"
+          "tokenMap": "motionPicDeterioration"
         },
         "[16:17]": {
           "domainEntity": "Instance",
           "property": "motionPicCompleteness",
-          "valueMap": "motionPicCompleteness"
+          "tokenMap": "motionPicCompleteness"
         },
         "[17:23]": {
           "domainEntity": "Record",
@@ -775,240 +780,240 @@
         "[2:3]": {
           "domainEntity": "Instance",
           "property": "motionPicAspect",
-          "valueMap": "motionPicAspect"
+          "tokenMap": "motionPicAspect"
         }
       },
       "Kit": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "kitMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "kitMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         }
       },
       "NotatedMusic": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "notatedMusicMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "notatedMusicMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         }
       },
       "RemoteSensingImage": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "remoteSensImageMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "remoteSensImageMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "remoteSensImageAltitude",
-          "valueMap": "remoteSensImageAltitude"
+          "tokenMap": "remoteSensImageAltitude"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "remoteSensImageAttitude",
-          "valueMap": "remoteSensImageAttitude"
+          "tokenMap": "remoteSensImageAttitude"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "remoteSensImageCloud",
-          "valueMap": "remoteSensImageCloud"
+          "tokenMap": "remoteSensImageCloud"
         },
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "remoteSensImageConstruction",
-          "valueMap": "remoteSensImageConstruction"
+          "tokenMap": "remoteSensImageConstruction"
         },
         "[7:8]": {
           "domainEntity": "Instance",
           "property": "remoteSensImageUse",
-          "valueMap": "remoteSensImageUse"
+          "tokenMap": "remoteSensImageUse"
         },
         "[8:9]": {
           "domainEntity": "Instance",
           "property": "remoteSensImageSensor",
-          "valueMap": "remoteSensImageSensor"
+          "tokenMap": "remoteSensImageSensor"
         },
         "[9:11]": {
           "domainEntity": "Instance",
           "property": "remoteSensImageData",
-          "valueMap": "remoteSensImageData"
+          "tokenMap": "remoteSensImageData"
         },
         "[2:3]": {
           "domainEntity": "Instance",
           "property": "soundAspect",
-          "valueMap": "soundAspect"
+          "tokenMap": "soundAspect"
         },
         "[9:10]": {
           "domainEntity": "Instance",
           "property": "soundKindOfDisc",
-          "valueMap": "soundKindOfDisc"
+          "tokenMap": "soundKindOfDisc"
         },
         "[10:11]": {
           "domainEntity": "Instance",
           "property": "soundKindOfMaterial",
-          "valueMap": "soundKindOfMaterial"
+          "tokenMap": "soundKindOfMaterial"
         },
         "[11:12]": {
           "domainEntity": "Instance",
           "property": "soundKindOfCutting",
-          "valueMap": "soundKindOfCutting"
+          "tokenMap": "soundKindOfCutting"
         },
         "[12:13]": {
           "domainEntity": "Instance",
           "property": "soundPlaybackCharacter",
-          "valueMap": "soundPlaybackCharacter"
+          "tokenMap": "soundPlaybackCharacter"
         },
         "[13:14]": {
           "domainEntity": "Instance",
           "property": "soundCapture",
-          "valueMap": "soundCapture"
+          "tokenMap": "soundCapture"
         }
       },
       "SoundRecording": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "soundMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "soundMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "soundSpeed",
-          "valueMap": "soundSpeed"
+          "tokenMap": "soundSpeed"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "soundPlaybackChannel",
-          "valueMap": "soundPlaybackChannel"
+          "tokenMap": "soundPlaybackChannel"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "soundGroove",
-          "valueMap": "soundGroove"
+          "tokenMap": "soundGroove"
         },
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "soundDimensions",
-          "valueMap": "soundDimensions"
+          "tokenMap": "soundDimensions"
         },
         "[7:8]": {
           "domainEntity": "Instance",
           "property": "soundTapeWidth",
-          "valueMap": "soundTapeWidth"
+          "tokenMap": "soundTapeWidth"
         },
         "[8:9]": {
           "domainEntity": "Instance",
           "property": "soundTapeConfiguration",
-          "valueMap": "soundTapeConfiguration"
+          "tokenMap": "soundTapeConfiguration"
         },
         "[9:10]": {
           "domainEntity": "Instance",
           "property": "soundKindOfDisc",
-          "valueMap": "soundKindOfDisc"
+          "tokenMap": "soundKindOfDisc"
         },
         "[10:11]": {
           "domainEntity": "Instance",
           "property": "soundKindOfMaterial",
-          "valueMap": "soundKindOfMaterial"
+          "tokenMap": "soundKindOfMaterial"
         },
         "[11:12]": {
           "domainEntity": "Instance",
           "property": "soundKindOfCutting",
-          "valueMap": "soundKindOfCutting"
+          "tokenMap": "soundKindOfCutting"
         },
         "[12:13]": {
           "domainEntity": "Instance",
           "property": "soundPlaybackCharacter",
-          "valueMap": "soundPlaybackCharacter"
+          "tokenMap": "soundPlaybackCharacter"
         },
         "[13:14]": {
           "domainEntity": "Instance",
           "property": "soundCapture",
-          "valueMap": "soundCapture"
+          "tokenMap": "soundCapture"
         }
       },
       "Text": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "textMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "textMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "videoColor",
-          "valueMap": "videoColor"
+          "tokenMap": "videoColor"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "videoFormat",
-          "valueMap": "videoFormat"
+          "tokenMap": "videoFormat"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "videoSound",
-          "valueMap": "videoSound"
+          "tokenMap": "videoSound"
         },
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "videoMedium",
-          "valueMap": "videoMedium"
+          "tokenMap": "videoMedium"
         },
         "[7:8]": {
           "domainEntity": "Instance",
           "property": "videoDimensions",
-          "valueMap": "videoDimensions"
+          "tokenMap": "videoDimensions"
         },
         "[8:9]": {
           "domainEntity": "Instance",
           "property": "videoPlayback",
-          "valueMap": "videoPlayback"
+          "tokenMap": "videoPlayback"
         }
       },
       "VideoRecording": {
         "[1:2]": {
           "domainEntity": "Instance",
-          "valueMap": "videoMaterial",
-          "link": "carrierFormat",
+          "tokenMap": "videoMaterial",
+          "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
         },
         "[3:4]": {
           "domainEntity": "Instance",
           "property": "videoColor",
-          "valueMap": "videoColor"
+          "tokenMap": "videoColor"
         },
         "[4:5]": {
           "domainEntity": "Instance",
           "property": "videoFormat",
-          "valueMap": "videoFormat"
+          "tokenMap": "videoFormat"
         },
         "[5:6]": {
           "domainEntity": "Instance",
           "property": "videoSound",
-          "valueMap": "videoSound"
+          "tokenMap": "videoSound"
         },
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "videoMedium",
-          "valueMap": "videoMedium"
+          "tokenMap": "videoMedium"
         },
         "[7:8]": {
           "domainEntity": "Instance",
           "property": "videoDimensions",
-          "valueMap": "videoDimensions"
+          "tokenMap": "videoDimensions"
         },
         "[8:9]": {
           "domainEntity": "Instance",
           "property": "videoPlayback",
-          "valueMap": "videoPlayback"
+          "tokenMap": "videoPlayback"
         },
         "[9:11]": {
           "domainEntity": "Instance",
           "property": "remoteSensImageData",
-          "valueMap": "remoteSensImageData"
+          "tokenMap": "remoteSensImageData"
         }
       },
       "Unspecified": {},
@@ -1029,167 +1034,39 @@
       "[38:39]": {
         "domainEntity": "Record",
         "property": "modifiedRecord",
-        "valueMap": "modifiedRecord"
+        "tokenMap": "modifiedRecord"
       },
       "[39:40]": {
         "domainEntity": "Record",
         "property": "catalogingSource",
-        "valueMap": "catalogingSource"
+        "tokenMap": "catalogingSource"
       },
       "recTypeBibLevelMap": {
-        "aa": "Book",
-        "ac": "Book",
-        "ad": "Book",
-        "am": "Book",
-        "tm": "Book",
-        "hm": "Book",
-        "hc": "Book",
-        "td": "Book",
-        "ha": "Book",
-        "tc": "Book",
-        "hd": "Book",
-        "ta": "Book",
-        "md": "Digital",
-        "ma": "Digital",
-        "mc": "Digital",
-        "mb": "Digital",
-        "mm": "Digital",
-        "mi": "Digital",
-        "mp": "Digital",
-        "ms": "Digital",
-        "m9": "Digital",
-        "em": "Map",
-        "fp": "Map",
-        "fs": "Map",
-        "ei": "Map",
-        "ed": "Map",
-        "ea": "Map",
-        "f9": "Map",
-        "ec": "Map",
-        "eb": "Map",
-        "fa": "Map",
-        "fb": "Map",
-        "fc": "Map",
-        "e9": "Map",
-        "fi": "Map",
-        "fd": "Map",
-        "fm": "Map",
-        "ep": "Map",
-        "es": "Map",
-        "bd": "Mixed",
-        "ps": "Serial",
-        "pp": "Mixed",
-        "ba": "Mixed",
-        "bb": "Serial",
-        "bc": "Mixed",
-        "bm": "Mixed",
-        "bi": "Mixed",
-        "pb": "Serial",
-        "pc": "Mixed",
-        "pa": "Mixed",
-        "bp": "Mixed",
-        "pd": "Mixed",
-        "bs": "Serial",
-        "pi": "Mixed",
-        "b9": "Mixed",
-        "pm": "Mixed",
-        "ci": "Music",
-        "j9": "Music",
-        "cm": "Music",
-        "cc": "Music",
-        "cb": "Music",
-        "ca": "Music",
-        "cd": "Music",
-        "ii": "Music",
-        "cs": "Music",
-        "im": "Music",
-        "d9": "Music",
-        "ia": "Music",
-        "ic": "Music",
-        "ib": "Music",
-        "id": "Music",
-        "cp": "Music",
-        "ja": "Music",
-        "jb": "Music",
-        "ip": "Music",
-        "is": "Music",
-        "i9": "Music",
-        "dm": "Music",
-        "di": "Music",
-        "jp": "Music",
-        "dd": "Music",
-        "db": "Music",
-        "dc": "Music",
-        "da": "Music",
-        "jm": "Music",
-        "c9": "Music",
-        "ji": "Music",
-        "jd": "Music",
-        "js": "Music",
-        "ds": "Music",
-        "dp": "Music",
-        "jc": "Music",
-        "ab": "Serial",
-        "rs": "Visual",
-        "ai": "Serial",
-        "hs": "Serial",
-        "nb": "Visual",
-        "ob": "Visual",
-        "tb": "Serial",
-        "na": "Visual",
-        "as": "Serial",
-        "ts": "Serial",
-        "rb": "Visual",
-        "hb": "Serial",
-        "ns": "Visual",
-        "os": "Visual",
-        "h9": "Serial",
-        "t9": "Serial",
-        "hp": "Serial",
-        "tp": "Serial",
-        "ap": "Serial",
-        "hi": "Serial",
-        "ti": "Serial",
-        "a9": "Serial",
-        "p9": "Visual",
-        "gs": "Visual",
-        "gp": "Visual",
-        "r9": "Visual",
-        "gd": "Visual",
-        "gc": "Visual",
-        "gb": "Visual",
-        "ga": "Visual",
-        "gm": "Visual",
-        "gi": "Visual",
-        "ni": "Visual",
-        "rp": "Visual",
-        "nm": "Visual",
-        "nc": "Visual",
-        "nd": "Visual",
-        "oa": "Visual",
-        "rd": "Visual",
-        "ra": "Visual",
-        "o9": "Visual",
-        "rc": "Visual",
-        "np": "Visual",
-        "rm": "Visual",
-        "k9": "Visual",
-        "ri": "Visual",
-        "om": "Visual",
-        "g9": "Visual",
-        "kc": "Visual",
-        "kb": "Visual",
-        "ka": "Visual",
-        "oi": "Visual",
-        "kd": "Visual",
-        "ki": "Visual",
-        "od": "Visual",
-        "oc": "Visual",
-        "km": "Visual",
-        "ks": "Visual",
-        "n9": "Visual",
-        "kp": "Visual",
-        "op": "Visual"
+        "a,h,t": {
+          "Book": ["a", "c", "d", "m"],
+          "Serial": ["9", "b", "i", "p", "s"]
+        },
+        "b": {
+          "Mixed": ["9", "a", "c", "d", "i", "m", "p"],
+          "Serial": ["b", "s"]
+        },
+        "c,d,i,j": {
+          "Music": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+        },
+        "e,f": {
+          "Map": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+        },
+        "g,k,n,o,r": {
+          "Visual": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+        },
+        "m": {
+          "Digital": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+        },
+        "p": {
+          "Mixed": ["a", "c", "d", "i", "m", "p"],
+          "Serial": ["b", "s"],
+          "Visual": ["9"]
+        }
       },
       "Book": {
         "[0:6]": {
@@ -1199,7 +1076,7 @@
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "publicationStatus",
-          "valueMap": "publicationStatus"
+          "tokenMap": "publicationStatus"
         },
         "[7:11]": {
           "domainEntity": "Instance",
@@ -1216,86 +1093,86 @@
         "[18:19]": {
           "domainEntity": "Instance",
           "property": "booksIllustrations",
-          "valueMap": "booksIllustrations"
+          "tokenMap": "booksIllustrations"
         },
         "[19:20]": {
           "domainEntity": "Instance",
           "property": "booksIllustrations",
-          "valueMap": "booksIllustrations"
+          "tokenMap": "booksIllustrations"
         },
         "[20:21]": {
           "domainEntity": "Instance",
           "property": "booksIllustrations",
-          "valueMap": "booksIllustrations"
+          "tokenMap": "booksIllustrations"
         },
         "[21:22]": {
           "domainEntity": "Instance",
           "property": "booksIllustrations",
-          "valueMap": "booksIllustrations"
+          "tokenMap": "booksIllustrations"
         },
         "[22:23]": {
           "domainEntity": "Instance",
           "property": "booksAudience",
-          "valueMap": "booksAudience"
+          "tokenMap": "booksAudience"
         },
         "[23:24]": {
           "domainEntity": "Instance",
           "property": "booksItem",
-          "valueMap": "booksItem"
+          "tokenMap": "booksItem"
         },
         "[24:25]": {
           "domainEntity": "Instance",
-          "valueMap": "booksContents",
-          "link": "contentType",
+          "tokenMap": "booksContents",
+          "addLink": "contentType",
           "uriTemplate": "enum:{_}"
         },
         "[25:26]": {
           "domainEntity": "Instance",
-          "valueMap": "booksContents",
-          "link": "contentType",
+          "tokenMap": "booksContents",
+          "addLink": "contentType",
           "uriTemplate": "enum:{_}"
         },
         "[26:27]": {
           "domainEntity": "Instance",
-          "valueMap": "booksContents",
-          "link": "contentType",
+          "tokenMap": "booksContents",
+          "addLink": "contentType",
           "uriTemplate": "enum:{_}"
         },
         "[27:28]": {
           "domainEntity": "Instance",
-          "valueMap": "booksContents",
-          "link": "contentType",
+          "tokenMap": "booksContents",
+          "addLink": "contentType",
           "uriTemplate": "enum:{_}"
         },
         "[28:29]": {
           "domainEntity": "Instance",
           "property": "booksGovtPub",
-          "valueMap": "booksGovtPub"
+          "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
           "domainEntity": "Instance",
           "property": "booksConfPub",
-          "valueMap": "booksConfPub"
+          "tokenMap": "booksConfPub"
         },
         "[30:31]": {
           "domainEntity": "Instance",
           "property": "booksFestschrift",
-          "valueMap": "booksFestschrift"
+          "tokenMap": "booksFestschrift"
         },
         "[31:32]": {
           "domainEntity": "Instance",
           "property": "booksIndex",
-          "valueMap": "booksIndex"
+          "tokenMap": "booksIndex"
         },
         "[33:34]": {
           "domainEntity": "Instance",
           "property": "booksLiteraryForm",
-          "valueMap": "booksLiteraryForm"
+          "tokenMap": "booksLiteraryForm"
         },
         "[34:35]": {
           "domainEntity": "Instance",
           "property": "booksBiography",
-          "valueMap": "booksBiography"
+          "tokenMap": "booksBiography"
         }
       },
       "Digital": {
@@ -1306,7 +1183,7 @@
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "publicationStatus",
-          "valueMap": "publicationStatus"
+          "tokenMap": "publicationStatus"
         },
         "[7:11]": {
           "domainEntity": "Instance",
@@ -1323,33 +1200,33 @@
         "[22:23]": {
           "domainEntity": "Instance",
           "property": "computerAudience",
-          "valueMap": "computerAudience"
+          "tokenMap": "computerAudience"
         },
         "[23:24]": {
           "domainEntity": "Instance",
           "property": "computerItem",
-          "valueMap": "computerItem"
+          "tokenMap": "computerItem"
         },
         "[26:27]": {
           "domainEntity": "Instance",
-          "valueMap": "computerTypeOfFile",
-          "link": "contentType",
+          "tokenMap": "computerTypeOfFile",
+          "addLink": "contentType",
           "uriTemplate": "enum:{_}"
         },
         "[28:29]": {
           "domainEntity": "Instance",
           "property": "computerGovtPub",
-          "valueMap": "computerGovtPub"
+          "tokenMap": "computerGovtPub"
         },
         "[18:19]": {
           "domainEntity": "Instance",
           "property": "computerFrequency",
-          "valueMap": "computerFrequency"
+          "tokenMap": "computerFrequency"
         },
         "[19:20]": {
           "domainEntity": "Instance",
           "property": "computerRegularity",
-          "valueMap": "computerRegularity"
+          "tokenMap": "computerRegularity"
         }
       },
       "Map": {
@@ -1360,7 +1237,7 @@
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "publicationStatus",
-          "valueMap": "publicationStatus"
+          "tokenMap": "publicationStatus"
         },
         "[7:11]": {
           "domainEntity": "Instance",
@@ -1377,62 +1254,62 @@
         "[18:19]": {
           "domainEntity": "Instance",
           "property": "mapsRelief",
-          "valueMap": "mapsRelief"
+          "tokenMap": "mapsRelief"
         },
         "[19:20]": {
           "domainEntity": "Instance",
           "property": "mapsRelief",
-          "valueMap": "mapsRelief"
+          "tokenMap": "mapsRelief"
         },
         "[20:21]": {
           "domainEntity": "Instance",
           "property": "mapsRelief",
-          "valueMap": "mapsRelief"
+          "tokenMap": "mapsRelief"
         },
         "[21:22]": {
           "domainEntity": "Instance",
           "property": "mapsRelief",
-          "valueMap": "mapsRelief"
+          "tokenMap": "mapsRelief"
         },
         "[22:24]": {
           "domainEntity": "Instance",
           "property": "mapsProjection",
-          "valueMap": "mapsProjection"
+          "tokenMap": "mapsProjection"
         },
         "[25:26]": {
           "domainEntity": "Instance",
           "property": "mapsMaterial",
-          "valueMap": "mapsMaterial"
+          "tokenMap": "mapsMaterial"
         },
         "[28:29]": {
           "domainEntity": "Instance",
           "property": "mapsGovtPub",
-          "valueMap": "mapsGovtPub"
+          "tokenMap": "mapsGovtPub"
         },
         "[29:30]": {
           "domainEntity": "Instance",
           "property": "mapsItem",
-          "valueMap": "mapsItem"
+          "tokenMap": "mapsItem"
         },
         "[31:32]": {
           "domainEntity": "Instance",
           "property": "mapsIndex",
-          "valueMap": "mapsIndex"
+          "tokenMap": "mapsIndex"
         },
         "[33:34]": {
           "domainEntity": "Instance",
           "property": "mapsFormat",
-          "valueMap": "mapsFormat"
+          "tokenMap": "mapsFormat"
         },
         "[34:35]": {
           "domainEntity": "Instance",
           "property": "mapsFormat",
-          "valueMap": "mapsFormat"
+          "tokenMap": "mapsFormat"
         },
         "[24:25]": {
           "domainEntity": "Instance",
           "property": "mapsPrimeMeridian",
-          "valueMap": "mapsPrimeMeridian"
+          "tokenMap": "mapsPrimeMeridian"
         }
       },
       "Mixed": {
@@ -1443,7 +1320,7 @@
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "publicationStatus",
-          "valueMap": "publicationStatus"
+          "tokenMap": "publicationStatus"
         },
         "[7:11]": {
           "domainEntity": "Instance",
@@ -1460,7 +1337,7 @@
         "[23:24]": {
           "domainEntity": "Instance",
           "property": "mixedItem",
-          "valueMap": "mixedItem"
+          "tokenMap": "mixedItem"
         }
       },
       "Music": {
@@ -1471,7 +1348,7 @@
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "publicationStatus",
-          "valueMap": "publicationStatus"
+          "tokenMap": "publicationStatus"
         },
         "[7:11]": {
           "domainEntity": "Instance",
@@ -1488,72 +1365,72 @@
         "[18:20]": {
           "domainEntity": "Instance",
           "property": "musicComposition",
-          "valueMap": "musicComposition"
+          "tokenMap": "musicComposition"
         },
         "[20:21]": {
           "domainEntity": "Instance",
           "property": "musicFormat",
-          "valueMap": "musicFormat"
+          "tokenMap": "musicFormat"
         },
         "[21:22]": {
           "domainEntity": "Instance",
           "property": "musicParts",
-          "valueMap": "musicParts"
+          "tokenMap": "musicParts"
         },
         "[22:23]": {
           "domainEntity": "Instance",
           "property": "musicAudience",
-          "valueMap": "musicAudience"
+          "tokenMap": "musicAudience"
         },
         "[23:24]": {
           "domainEntity": "Instance",
           "property": "musicItem",
-          "valueMap": "musicItem"
+          "tokenMap": "musicItem"
         },
         "[24:25]": {
           "domainEntity": "Instance",
           "property": "musicMatter",
-          "valueMap": "musicMatter"
+          "tokenMap": "musicMatter"
         },
         "[25:26]": {
           "domainEntity": "Instance",
           "property": "musicMatter",
-          "valueMap": "musicMatter"
+          "tokenMap": "musicMatter"
         },
         "[26:27]": {
           "domainEntity": "Instance",
           "property": "musicMatter",
-          "valueMap": "musicMatter"
+          "tokenMap": "musicMatter"
         },
         "[27:28]": {
           "domainEntity": "Instance",
           "property": "musicMatter",
-          "valueMap": "musicMatter"
+          "tokenMap": "musicMatter"
         },
         "[28:29]": {
           "domainEntity": "Instance",
           "property": "musicMatter",
-          "valueMap": "musicMatter"
+          "tokenMap": "musicMatter"
         },
         "[29:30]": {
           "domainEntity": "Instance",
           "property": "musicMatter",
-          "valueMap": "musicMatter"
+          "tokenMap": "musicMatter"
         },
         "[30:31]": {
           "domainEntity": "Instance",
           "property": "musicText",
-          "valueMap": "musicText"
+          "tokenMap": "musicText"
         },
         "[31:32]": {
           "domainEntity": "Instance",
           "property": "musicText",
-          "valueMap": "musicText"
+          "tokenMap": "musicText"
         },
         "[33:34]": {
           "domainEntity": "Instance",
           "property": "musicTransposition",
-          "valueMap": "musicTransposition"
+          "tokenMap": "musicTransposition"
         }
       },
       "Serial": {
@@ -1564,7 +1441,7 @@
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "publicationStatus",
-          "valueMap": "publicationStatus"
+          "tokenMap": "publicationStatus"
         },
         "[7:11]": {
           "domainEntity": "Instance",
@@ -1581,73 +1458,73 @@
         "[18:19]": {
           "domainEntity": "Instance",
           "property": "serialsFrequency",
-          "valueMap": "serialsFrequency"
+          "tokenMap": "serialsFrequency"
         },
         "[19:20]": {
           "domainEntity": "Instance",
           "property": "serialsRegularity",
-          "valueMap": "serialsRegularity"
+          "tokenMap": "serialsRegularity"
         },
         "[20:21]": {
           "domainEntity": "Instance",
           "property": "serialsISSN",
-          "valueMap": "serialsISSN"
+          "tokenMap": "serialsISSN"
         },
         "[21:22]": {
           "domainEntity": "Instance",
-          "valueMap": "serialsTypeOfSerial",
-          "link": "contentType",
+          "tokenMap": "serialsTypeOfSerial",
+          "addLink": "contentType",
           "uriTemplate": "enum:{_}"
         },
         "[22:23]": {
           "domainEntity": "Instance",
           "property": "serialsOriginalItem",
-          "valueMap": "serialsOriginalItem"
+          "tokenMap": "serialsOriginalItem"
         },
         "[23:24]": {
           "domainEntity": "Instance",
           "property": "serialsItem",
-          "valueMap": "serialsItem"
+          "tokenMap": "serialsItem"
         },
         "[24:25]": {
           "domainEntity": "Instance",
           "property": "serialsNature",
-          "valueMap": "serialsNature"
+          "tokenMap": "serialsNature"
         },
         "[25:26]": {
           "domainEntity": "Instance",
           "property": "serialsContents",
-          "valueMap": "serialsContents"
+          "tokenMap": "serialsContents"
         },
         "[26:27]": {
           "domainEntity": "Instance",
           "property": "serialsContents",
-          "valueMap": "serialsContents"
+          "tokenMap": "serialsContents"
         },
         "[27:28]": {
           "domainEntity": "Instance",
           "property": "serialsContents",
-          "valueMap": "serialsContents"
+          "tokenMap": "serialsContents"
         },
         "[28:29]": {
           "domainEntity": "Instance",
           "property": "serialsGovtPub",
-          "valueMap": "serialsGovtPub"
+          "tokenMap": "serialsGovtPub"
         },
         "[29:30]": {
           "domainEntity": "Instance",
           "property": "serialsConfPub",
-          "valueMap": "serialsConfPub"
+          "tokenMap": "serialsConfPub"
         },
         "[33:34]": {
           "domainEntity": "Instance",
           "property": "serialsAlphabet",
-          "valueMap": "serialsAlphabet"
+          "tokenMap": "serialsAlphabet"
         },
         "[34:35]": {
           "domainEntity": "Instance",
           "property": "serialsTypeOfEntry",
-          "valueMap": "serialsTypeOfEntry"
+          "tokenMap": "serialsTypeOfEntry"
         }
       },
       "Visual": {
@@ -1658,7 +1535,7 @@
         "[6:7]": {
           "domainEntity": "Instance",
           "property": "publicationStatus",
-          "valueMap": "publicationStatus"
+          "tokenMap": "publicationStatus"
         },
         "[7:11]": {
           "domainEntity": "Instance",
@@ -1675,58 +1552,58 @@
         "[18:21]": {
           "domainEntity": "Instance",
           "property": "visualRunningTime",
-          "valueMap": "visualRunningTime"
+          "tokenMap": "visualRunningTime"
         },
         "[22:23]": {
           "domainEntity": "Instance",
           "property": "visualAudience",
-          "valueMap": "visualAudience"
+          "tokenMap": "visualAudience"
         },
         "[28:29]": {
           "domainEntity": "Instance",
           "property": "visualGovtPub",
-          "valueMap": "visualGovtPub"
+          "tokenMap": "visualGovtPub"
         },
         "[29:30]": {
           "domainEntity": "Instance",
           "property": "visualItem",
-          "valueMap": "visualItem"
+          "tokenMap": "visualItem"
         },
         "[33:34]": {
           "domainEntity": "Instance",
-          "valueMap": "visualMaterial",
-          "link": "contentType",
+          "tokenMap": "visualMaterial",
+          "addLink": "contentType",
           "uriTemplate": "enum:{_}"
         },
         "[34:35]": {
           "domainEntity": "Instance",
           "property": "visualTechnique",
-          "valueMap": "visualTechnique"
+          "tokenMap": "visualTechnique"
         },
         "[23:24]": {
           "domainEntity": "Instance",
           "property": "visualMatter",
-          "valueMap": "visualMatter"
+          "tokenMap": "visualMatter"
         },
         "[24:25]": {
           "domainEntity": "Instance",
           "property": "visualMatter",
-          "valueMap": "visualMatter"
+          "tokenMap": "visualMatter"
         },
         "[25:26]": {
           "domainEntity": "Instance",
           "property": "visualMatter",
-          "valueMap": "visualMatter"
+          "tokenMap": "visualMatter"
         },
         "[26:27]": {
           "domainEntity": "Instance",
           "property": "visualMatter",
-          "valueMap": "visualMatter"
+          "tokenMap": "visualMatter"
         },
         "[27:28]": {
           "domainEntity": "Instance",
           "property": "visualMatter",
-          "valueMap": "visualMatter"
+          "tokenMap": "visualMatter"
         }
       },
       "repeatable": false
@@ -1743,7 +1620,7 @@
       "rangeEntity": "Identifier",
       "i1": {
         "TODO:property": "identifierScheme",
-        "TODO:valueMap": {
+        "TODO:tokenMap": {
           "0": "isrc",
           "1": "upc",
           "2": "ismn",
@@ -1997,7 +1874,7 @@
       ],
       "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
       "rangeEntity": "ProviderEvent",
-      "i1": {"TODO:property": "latest", "TODO:valueMap": {"2": false, "3": true}},
+      "i1": {"TODO:property": "latest", "TODO:tokenMap": {"2": false, "3": true}},
       "$a": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ",:"},
       "$b": {"property": "providerName", "interpunctionChars": ",:;"},
       "$c": {"property": "providerDate", "interpunctionChars": ",;"},
@@ -2120,7 +1997,7 @@
         "rangeEntity": "ConceptScheme",
         "uriTemplate": "/topic/{+_}",
         "property": "notation",
-        "valueMap": "thesaurus"
+        "tokenMap": "thesaurus"
       },
       "$2": {"link": "inScheme",
              "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
@@ -2171,7 +2048,7 @@
         "link": "inScheme", "rangeEntity": "ConceptScheme",
         "uriTemplate": "/topic/{+_}",
         "property": "notation",
-        "valueMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
+        "tokenMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
         "TODO": "proper code for sab förkortad"
       },
       "$a": {"property": "notation"},
