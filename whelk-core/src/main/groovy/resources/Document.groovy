@@ -62,7 +62,7 @@ class Document {
         }
         if (!serializedDataInMap) {
             log.trace("Serializing data as map")
-            this.serializedDataInMap = mapper.readValue(getDataAsString(), Map)
+            this.serializedDataInMap = mapper.readValue(new String(this.data, "UTF-8"), Map)
         }
         return serializedDataInMap
     }
@@ -114,7 +114,6 @@ class Document {
     }
 
     void setData(byte[] data) {
-        log.info("Setting data in Document class (also resetting serializedDataInMap)")
         // Whenever data is changed, reset serializedDataInMap
         serializedDataInMap = null
         this.data = data

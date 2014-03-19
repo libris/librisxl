@@ -36,7 +36,7 @@ class IndexDocument extends Document {
 
     @Override
     String getDataAsString() {
-        def json = getDataAsMap()
+        def json = this.getDataAsMap()
         return mapper.writeValueAsString(json)
     }
 
