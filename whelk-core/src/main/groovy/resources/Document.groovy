@@ -31,7 +31,7 @@ class Document {
 
     // store serialized data
     @JsonIgnore
-    Map dataAsMap
+    Map serializedDataInMap
 
     /*
      * Constructors
@@ -60,15 +60,15 @@ class Document {
         if (!isJson) {
             throw new DocumentException("Cannot serialize data as Map. (Not JSON)")
         }
-        if (!dataAsMap) {
+        if (!serializedDataInMap) {
             log.trace("Serializing data as map")
-            this.dataAsMap = mapper.readValue(getDataAsString(), Map)
+            this.serializedDataInMap = mapper.readValue(getDataAsString(), Map)
         }
-        return dataAsMap
+        return serializedDataInMap
     }
 
     private void setDataAsMap(Map data) {
-        this.dataAsMap = data
+        this.serializedDataInMap = data
     }
 
     String toJson() {
@@ -114,9 +114,9 @@ class Document {
     }
 
     void setData(byte[] data) {
-        log.info("Setting data in Document class (also resetting dataAsMap)")
-        // Whenever data is changed, reset dataAsMap
-        dataAsMap = null
+        log.info("Setting data in Document class (also resetting serializedDataInMap)")
+        // Whenever data is changed, reset serializedDataInMap
+        serializedDataInMap = null
         this.data = data
     }
 

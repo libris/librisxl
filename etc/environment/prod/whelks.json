@@ -25,7 +25,6 @@
                     "index",
                     "cassandrastorage",
                     "oaipmhstorage",
-                    "fusekigraphstore",
                     "entityextractor",
                     "linkcompleter",
                     "indexlinkfinder"
