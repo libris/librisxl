@@ -40,21 +40,23 @@ def parse_resourcemap(g, part, marcframe):
                 continue
             rclass = newclass(g, basename, baseclass, groupname)
             for coldfn in coldefs.values():
-                if coldfn.get('link') == link:
-                    map_key = coldfn['valueMap']
+                if coldfn.get('addLink') == link:
+                    map_key = coldfn['tokenMap']
                     basegroup_map[map_key] = rclass, groupname
 
     parse_fixed('008', 'contentType', TERMS.CreativeWork, "content")
-    parse_fixed('007', 'carrierFormat', TERMS.Product, "carrier")
+    parse_fixed('007', 'carrierType', TERMS.Product, "carrier")
 
     carrier_type_base_map = {}
 
-    for mapname, dfn in marcframe['resourceMaps'].items():
+    for mapname, dfn in marcframe['tokenMaps'].items():
         if mapname == 'typeOfRecord':
             for name in dfn.values():
                 rtype = newclass(g, name, None, "typeOfRecord")
         if mapname == 'bibLevel':
             for name in dfn.values():
+                if not name:
+                    continue
                 if name.lower().endswith(('part', 'unit')):
                     base = TERMS.Part
                 elif name in ('MonographItem',
