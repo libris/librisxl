@@ -17,7 +17,9 @@ class IndexDocument extends Document {
 
     ObjectMapper mapper = new ElasticJsonMapper()
 
-    IndexDocument() {}
+    IndexDocument() {
+        this.contentType = "application/json"
+    }
     IndexDocument(Document d) {
         this.identifier = d.identifier
         this.data = d.data
