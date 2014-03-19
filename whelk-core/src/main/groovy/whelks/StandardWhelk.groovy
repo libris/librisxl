@@ -93,7 +93,7 @@ class StandardWhelk implements Whelk {
             log.trace("Looking for $contentType storage.")
             def s = getStorage(contentType)
             if (s) {
-                log.debug("Found $contentType storage.")
+                log.debug("Found $contentType storage ${s.id}.")
                 doc = s.get(uri, version)
             }
         }
@@ -150,13 +150,16 @@ class StandardWhelk implements Whelk {
         Map<String,Document> docs = [(doc.contentType): doc]
         log.trace("Available formatconverters: " + formatConverters.collect { ((Plugin)it).id })
         for (fc in formatConverters) {
-            log.trace("Running formatconverter $fc for ${doc.contentType}")
+            log.trace("Running formatconverter ${fc.id} for ${doc.contentType}")
             doc = fc.convert(doc)
             log.trace("Document has ctype ${doc.contentType} after conversion.")
             docs.put(doc.contentType, doc)
         }
+        log.debug("All converters has run. Docs now: $docs")
         for (d in docs.values()) {
+            log.trace("doc in loop has ct ${d.contentType}")
             for (st in getStorages(d.contentType)) {
+                log.trace("storage: ${st.id}")
                 if (st.id != excemptStorage) {
                     log.trace("[${this.id}] Sending doc ${d.identifier} with ct ${d.contentType} to ${st.id}")
                     try {

@@ -205,7 +205,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     boolean store(String key, Document doc, boolean checkDigest, boolean checkExisting = true, boolean checkContentType = true) {
-        log.trace("Received document ${doc.identifier} with contenttype ${doc.contentType}");
+        log.debug("[${this.id}] Received document ${doc.identifier} with contenttype ${doc.contentType}");
         if (doc && (!checkContentType || handlesContent(doc.contentType) )) {
             def existingDocument = (checkExisting ? get(new URI(doc.identifier)) : null)
             if (existingDocument) {
@@ -334,7 +334,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 document = null
             }
         }
-        log.trace("Returning document ${document?.identifier} (${document?.version})")
+        log.trace("Returning document ${document?.identifier} (${document?.contentType}, version ${document?.version})")
         return document
     }
 
@@ -423,7 +423,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     @Override
     boolean handlesContent(String ctype) {
-        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
+        (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
     }
 
     class CassandraIterator implements Iterator<Document> {

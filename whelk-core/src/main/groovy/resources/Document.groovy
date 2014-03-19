@@ -164,13 +164,15 @@ class Document {
             this.identifier = entrydata["identifier"]
         }
         if (entrydata != null) {
-            this.entry = entrydata
+            this.entry = [:]
+            this.entry.putAll(entrydata)
         }
         return this
     }
     Document withMeta(Map metadata) {
         if (metadata != null) {
-            this.meta = metadata
+            this.meta = [:]
+            this.meta.putAll(metadata)
         }
         return this
     }
