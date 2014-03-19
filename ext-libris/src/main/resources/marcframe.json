@@ -25,32 +25,32 @@
     },
 
     "typeOfRecord": {
-      "a": "LanguageMaterial",
-      "c": "PrintedMusic",
-      "b": "ArchiveOrManuscriptsControl",
-      "e": "PrintedCartographicMaterial",
-      "d": "ManuscriptMusic",
-      "g": "ProjectedMedium",
-      "f": "ManuscriptCartographicMaterial",
-      "i": "NonmusicalSoundRecording",
-      "k": "TwoDimensionalNonprojectableGraphic",
-      "j": "MusicalSoundRecording",
-      "m": "ComputerFile",
+      "a": "Text",
+      "c": "NotatedMusic",
+      "b": "ArchivalUnit",
+      "e": "Cartography",
+      "d": "ManuscriptNotatedMusic",
+      "g": "MovingImage",
+      "f": "ManuscriptCartography",
+      "i": "Audio",
+      "k": "StillImage",
+      "j": "Music",
+      "m": "Multimedia",
       "o": "Kit",
       "p": "MixedMaterial",
-      "r": "ThreeDimensionalArtifactOrNaturallyOccurringObject",
-      "t": "ManuscriptLanguageMaterial"
+      "r": "Realia",
+      "t": "ManuscriptText"
     },
     "bibLevel": {
-      "a": "MonographicComponentPart",
+      "a": "ComponentPart",
       "c": "Collection",
       "b": "SerialComponentPart",
-      "d": "Subunit",
-      "i": "IntegratingResource",
-      "m": "MonographItem",
-      "p": "Serial",
+      "d": "SubCollection",
+      "i": "Integrating",
+      "m": "Monograph",
+      "p": "Periodical",
       "s": "Serial",
-      "9": "AdministrativePostForLicenseBoundElectronicResource"
+      "9": null
     },
 
     "booksContents": {
@@ -290,7 +290,7 @@
   },
 
   "comboTypeMap": {
-    "Serial": {"contentType": "LanguageMaterial", "aggregateType": "Serial",
+    "Serial": {"contentType": "Text", "aggregateType": "Serial",
       "ESerial": {"carrierType": "OnlineResource"}
     },
     "Collection": {},
@@ -302,12 +302,12 @@
     "Kit": {},
     "Mixed": {},
     "Multimedia": {},
-    "Book": {"contentType": "LanguageMaterial",
+    "Book": {"contentType": "Text",
       "Audiobook": {"carrierType": "SoundRecording"},
       "CDBook": {"carrierType": "OpticalDisc"},
       "EBook": {"carrierType": "OnlineResource"}
     },
-    "Cartography": {"contentType": "PrintedCartographicMaterial",
+    "Cartography": {"contentType": "Cartography",
       "CDMap": {"carrierType": "OpticalDisc"}
     },
     "Audio": {"contentType": "NonmusicalSoundRecording", "abstract": true,
