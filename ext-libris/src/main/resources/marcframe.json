@@ -383,6 +383,9 @@
     },
 
     "007": {
+      "onRepeated": {
+        "addLink": "hasCarrier"
+      },
       "[0:1]": {
         "domainEntity": "Instance",
         "addLink": "carrierType",
@@ -1016,8 +1019,7 @@
           "tokenMap": "remoteSensImageData"
         }
       },
-      "Unspecified": {},
-      "repeatable": true
+      "Unspecified": {}
     },
 
     "008": {
