@@ -84,7 +84,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             }
             elapsed = System.currentTimeMillis() - loadUrlTime
             if (elapsed > 3000) {
-                log.warn("Load from url took more than 3 seconds ($elapsed)")
+                log.warn("Harvest took more than 3 seconds ($elapsed)")
             }
             log.debug("resumptionToken: $resumptionToken")
         }
@@ -99,16 +99,25 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
 
     String harvest(URL url) {
+        long elapsed = System.currentTimeMillis()
         def xmlString = normalizeString(url.text)
+        if ((System.currentTimeMillis() - elapsed) > 3000) {
+            log.warn("Load from URL ${url.toString()} took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
+        }
         def OAIPMH
         try {
+            elapsed = System.currentTimeMillis()
             OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
+            if ((System.currentTimeMillis() - elapsed) > 3000) {
+                log.warn("XML slurping took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
+            }
         } catch (org.xml.sax.SAXParseException spe) {
             errorMessages << new String("Failed to parse XML: $xmlString\nReason: ${spe.message}")
             log.error("Failed to parse XML: $xmlString", spe)
             throw new XmlParsingFailedException("Failing XML: ($xmlString)", spe)
         }
         def documents = []
+        elapsed = System.currentTimeMillis()
         OAIPMH.ListRecords.record.each {
             def rawrecord = createString(it)
             def mdrecord = createString(it.metadata.record)
@@ -153,6 +162,9 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             } else {
                 throw new WhelkRuntimeException("Failed to handle record: " + createString(it))
             }
+        }
+        if ((System.currentTimeMillis() - elapsed) > 3000) {
+            log.warn("Deserializing of documents took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
         }
         meanTime = System.currentTimeMillis()
         addDocuments(documents)
