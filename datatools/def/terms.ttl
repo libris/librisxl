@@ -382,7 +382,7 @@
 # Parts, Events, Relations
 
 :ProviderEvent a owl:Class;
-    rdfs:subClassOf prov:Activity, bf:ProviderEntity .
+    rdfs:subClassOf prov:Activity, bf:Provider .
 
 :creator a owl:ObjectProperty;
     owl:equivalentProperty dc:creator .
@@ -403,6 +403,21 @@
 :modified a owl:ObjectProperty;
     owl:equivalentProperty dc:modified;
     rdfs:range xsd:dateTime .
+
+:title a owl:DatatypeProperty;
+    owl:equivalentProperty bf:title, dc:title .
+
+:instanceTitle a owl:ObjectProperty;
+    owl:equivalentProperty bf:instanceTitle .
+
+:Title a owl:Class;
+    owl:equivalentClass bf:Title .
+
+:titleValue a owl:DatatypeProperty;
+    owl:equivalentProperty bf:titleValue .
+
+:responsibilityStatement a owl:DatatypeProperty;
+    owl:equivalentProperty bf:responsibilityStatement .
 
 :language a owl:ObjectProperty;
     rdfs:subPropertyOf dc:language;
