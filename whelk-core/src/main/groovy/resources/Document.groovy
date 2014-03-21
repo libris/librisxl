@@ -67,10 +67,6 @@ class Document {
         return serializedDataInMap
     }
 
-    private void setDataAsMap(Map data) {
-        this.serializedDataInMap = data
-    }
-
     String toJson() {
         return mapper.writeValueAsString(this)
     }
