@@ -383,6 +383,9 @@
     },
 
     "007": {
+      "onRepeated": {
+        "addLink": "hasCarrier"
+      },
       "[0:1]": {
         "domainEntity": "Instance",
         "addLink": "carrierType",
@@ -941,36 +944,6 @@
           "tokenMap": "textMaterial",
           "addLink": "carrierType",
           "uriTemplate": "enum:{_}"
-        },
-        "[3:4]": {
-          "domainEntity": "Instance",
-          "property": "videoColor",
-          "tokenMap": "videoColor"
-        },
-        "[4:5]": {
-          "domainEntity": "Instance",
-          "property": "videoFormat",
-          "tokenMap": "videoFormat"
-        },
-        "[5:6]": {
-          "domainEntity": "Instance",
-          "property": "videoSound",
-          "tokenMap": "videoSound"
-        },
-        "[6:7]": {
-          "domainEntity": "Instance",
-          "property": "videoMedium",
-          "tokenMap": "videoMedium"
-        },
-        "[7:8]": {
-          "domainEntity": "Instance",
-          "property": "videoDimensions",
-          "tokenMap": "videoDimensions"
-        },
-        "[8:9]": {
-          "domainEntity": "Instance",
-          "property": "videoPlayback",
-          "tokenMap": "videoPlayback"
         }
       },
       "VideoRecording": {
@@ -1016,8 +989,7 @@
           "tokenMap": "remoteSensImageData"
         }
       },
-      "Unspecified": {},
-      "repeatable": true
+      "Unspecified": {}
     },
 
     "008": {
