@@ -83,8 +83,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                 log.warn("Harvesting failed. Retrying ...")
             }
             elapsed = System.currentTimeMillis() - loadUrlTime
-            if (elapsed > 2000) {
-                log.warn("Load from url took more than two seconds ($elapsed)")
+            if (elapsed > 3000) {
+                log.warn("Load from url took more than 3 seconds ($elapsed)")
             }
             log.debug("resumptionToken: $resumptionToken")
         }
@@ -170,8 +170,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                 log.debug("Adding ${documents.size()} documents to whelk.")
                 long elapsed = System.currentTimeMillis()
                 this.whelk.bulkAdd(documents)
-                if ((System.currentTimeMillis() - elapsed) > 2000) {
-                    log.warn("Bulk add took more than 2 seconds (${System.currentTimeMillis() - elapsed})")
+                if ((System.currentTimeMillis() - elapsed) > 3000) {
+                    log.warn("Bulk add took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
                 }
             } catch (WhelkAddException wae) {
                 errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
