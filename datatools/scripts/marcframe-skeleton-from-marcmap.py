@@ -7,7 +7,7 @@ with open(fpath) as f:
     marcmap = json.load(f)
 
 show_repeatable = True
-skip_unlinked_maps = True
+skip_unlinked_maps = False
 
 
 rename_type_map = {
@@ -15,7 +15,7 @@ rename_type_map = {
     'Maps': 'Map',
     'Serials': 'Serial',
     'Computer': 'Digital',
-    'ComputerFile': 'Digital'
+    'ComputerFile': 'Electronic'
 }
 
 fixprop_typerefs = {
@@ -56,6 +56,10 @@ fixprop_typerefs = {
     ]
 }
 
+common_columns = {
+    '008': {"[0:6]", "[6:7]", "[7:11]", "[11:15]", "[15:18]", "[35:38]", "[38:39]", "[39:40]"}
+}
+
 def to_name(name):
     name = name[0].upper() + name[1:]
     if name == 'Indexes':
@@ -87,9 +91,18 @@ out = OrderedDict()
 tokenMaps = out['tokenMaps'] = OrderedDict()
 compositionTypeMap = out['compositionTypeMap'] = OrderedDict()
 contentTypeMap = out['contentTypeMap'] = OrderedDict()
-#carrierTypeMap = out['carrierTypeMap'] = OrderedDict()
 
+tmap_hashes = {} # to reuse repeated tokenmap
 enums = set() # to prevent enum id collisions
+
+def get_tokenmap_key(name, items):
+    mhash = hash(tuple(items))
+    ref = tmap_hashes.get(mhash)
+    if ref:
+        return ref
+    else:
+        tmap_hashes[mhash] = name
+        return name
 
 
 section = out['bib'] = OrderedDict()
@@ -150,82 +163,113 @@ for tag, field in sorted(marcmap['bib'].items()):
             else:
                 fm = outf
 
+            #local_enums = set()
             for col in fixmap['columns']:
                 off, length = col['offset'], col['length']
                 key = (#str(off) if length == 1 else
                         '[%s:%s]' % (off, off+length))
+                if key in common_columns.get(tag, ()):
+                    continue # IMP: verify expected props?
+
                 dfn_key = col.get('propRef')
                 if not dfn_key:
                     continue
-                fm[key] = col_dfn = {}
+
+                fm[key] = col_dfn = OrderedDict()
                 propname = dfn_key or col.get('propId')
-                domainname = 'Record' if tag == '000' else 'Instance'
+                domainname = 'Record' if tag == '000' else None
                 is_link = False
+                repeat = False
                 valuemap = None
+                tokenmap = None
 
                 if dfn_key in fixprops:
                     valuemap = fixprops[dfn_key]
 
                     fixtyperefmap = fixprop_typerefs.get(tag)
-                    enum_key = dfn_key
+                    enum_key = {'000': 'trec',
+                                '006': 'tcon',
+                                '007': 'tcar',
+                                '008': 'tcon'}.get(tag, dfn_key)
 
                     if fixtyperefmap:
+                        is_link = length < 3
                         if dfn_key in fixtyperefmap:
-                            domainname = 'Instance'
-                            is_link = True
+                            domainname = None
+                            if tag == '000':
+                                enum_key = None
                             if tag == '007':
-                                propname = 'carrierFormat' # 'carrierType'
-                                enum_key = 'carrier'
+                                propname = 'carrierType'
+                                repeat = True
                             elif tag in ('006', '008'):
                                 propname = 'contentType'
-                                enum_key = 'content'
+                                repeat = True
 
-                    typemap = tokenMaps.setdefault(dfn_key, OrderedDict())
+                    tokenmap = tokenMaps.setdefault(dfn_key, {})
 
                     for key, dfn in valuemap.items():
                         # TODO: '_' actually means something occasionally..
-                        if key in ('_', '|'): continue
                         if 'id' in dfn:
                             v = dfn['id']
                             subname = to_name(v)
                         else:
-                            subname = dfn['label_sv']
-                        type_id = "%s:%s" % (enum_key, subname)
-                        assert typemap.get(key, type_id) == type_id, "%s in %r" % (type_id, typemap)
-                        assert type_id not in enums
-                        typemap[key] = type_id
+                            subname = dfn['label_sv'].replace(' ', '+')
+                        if key in ('_', '|') and any(t in subname for t in ('No', 'Ej', 'Inge')):
+                            continue
+                        elif subname.replace('Obsolete', '') in {
+                                'Unknown', 'Other', 'NotApplicable', 'Unspecified', 'Undefined'}:
+                            type_id = None
+                        elif enum_key:
+                            type_id = "%s:%s" % (enum_key, subname)
+                        else:
+                            type_id = subname
+                        assert tokenmap.get(key, type_id) == type_id, "%s in %r" % (type_id, tokenmap)
+                        #assert type_id is None or type_id not in enums, type_id
+                        tokenmap[key] = type_id
+                        #local_enums.add(type_id)
 
                     if skip_unlinked_maps and not is_link:
                         tokenMaps[dfn_key] = {"TODO": "SKIPPED"}
 
-                if is_link:
-                    col_dfn['link'] = propname
-                    col_dfn['uriTemplate'] = "{+_}"
                 else:
+                    pass
+
+                is_bool = False
+                if tokenmap and len(tokenmap) == 2:
+                    items = [(k, v.split(':', 1)[-1] if v else '_')
+                             for (k, v) in tokenmap.items()]
+                    for off_index, (k, v) in enumerate(items):
+                        if v.startswith('No'):
+                            on_k, on_v = items[not off_index]
+                            if v.endswith(on_v):
+                                assert k == '0' and on_k == '1'
+                                #tokenmap[k] = False
+                                #tokenmap[on_k] = True
+                                is_bool = True
+                            break
+
+                if domainname:
+                    col_dfn['domainEntity'] = domainname
+
+                if is_bool:
                     col_dfn['property'] = propname
+                    col_dfn['boolean'] = True
+                elif is_link:
+                    col_dfn['addLink' if repeat else 'link'] = propname
+                    col_dfn['uriTemplate'] = "{_}"
+                else:
+                    col_dfn['addProperty' if repeat else 'property'] = propname
 
-                if valuemap:
-                    col_dfn['tokenMap'] = dfn_key
+                if tokenmap:
+                    items = sorted((k.lower(), v) for k, v in tokenmap.items())
+                    tkey = get_tokenmap_key(dfn_key, items)
+                    if tkey != dfn_key:
+                        del tokenMaps[dfn_key]
+                    else:
+                        tokenMaps[dfn_key] = OrderedDict(items)
+                    col_dfn['tokenMap' if is_link else 'patternMap'] = tkey
 
-                col_dfn['domainEntity'] = domainname
-
-                #if dfn_key in fixprop_typerefs['007']:
-                #    typemap = carrierTypeMap.setdefault(type_name, OrderedDict())
-                #elif dfn_key in fixprop_typerefs['008'] and content_type:
-                #    typemap = content_type.setdefault('formClasses', OrderedDict())
-                #else:
-                #    typemap = None
-
-                #if typemap is not None:
-                #    valuemap = fixprops[dfn_key]
-                #    for key, dfn in valuemap.items():
-                #        if key in ('_', '|'): continue
-                #        if 'id' in dfn:
-                #            v = dfn['id']
-                #            subname = to_name(v)
-                #        else:
-                #            subname = dfn['label_sv']
-                #        subdef = typemap[subname] = {dfn_key: key}
+            #enums |= local_enums
 
     elif not subfields:
         outf['addProperty'] = field['id']
