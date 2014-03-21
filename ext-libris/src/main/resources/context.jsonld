@@ -14,7 +14,10 @@
     "schema": "http://schema.org/",
     "@vocab": "http://bibframe.org/vocab/",
     "t": "http://libris.kb.se/def/terms#",
-    "enum": "http://libris.kb.se/def/enum/"
+    "enum": "http://libris.kb.se/def/enum/",
+    "trec": "enum:record/",
+    "tcon": "enum:content/",
+    "tcar": "enum:carrier/"
   }, {
     "unknown": null,
     "marc21": null,

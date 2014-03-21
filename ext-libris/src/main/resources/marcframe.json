@@ -24,236 +24,1523 @@
       "7": null
     },
 
+    "status": {
+      "a": "trec:IncreaseInEncodingLevel",
+      "c": "trec:CorrectedOrRevised",
+      "d": "trec:Deleted",
+      "n": "trec:New",
+      "p": "trec:IncreaseInEncodingLevelFromPrepublication"
+    },
     "typeOfRecord": {
-      "a": "Text",
-      "c": "NotatedMusic",
-      "b": "ArchivalUnit",
-      "e": "Cartography",
-      "d": "ManuscriptNotatedMusic",
-      "g": "MovingImage",
-      "f": "ManuscriptCartography",
-      "i": "Audio",
-      "k": "StillImage",
-      "j": "Music",
-      "m": "Multimedia",
-      "o": "Kit",
-      "p": "MixedMaterial",
-      "r": "Realia",
-      "t": "ManuscriptText"
+      "a": "t:Text",
+      "c": "t:NotatedMusic",
+      "b": "t:ArchivalUnit",
+      "e": "t:Cartography",
+      "d": "t:ManuscriptNotatedMusic",
+      "g": "t:MovingImage",
+      "f": "t:ManuscriptCartography",
+      "i": "t:Audio",
+      "k": "t:StillImage",
+      "j": "t:Music",
+      "m": "t:Multimedia",
+      "o": "t:Kit",
+      "p": "t:MixedMaterial",
+      "r": "t:Realia",
+      "t": "t:ManuscriptText"
     },
     "bibLevel": {
-      "a": "ComponentPart",
-      "c": "Collection",
-      "b": "SerialComponentPart",
-      "d": "SubCollection",
-      "i": "Integrating",
-      "m": "Monograph",
-      "p": "Periodical",
-      "s": "Serial",
+      "a": "t:ComponentPart",
+      "c": "t:Collection",
+      "b": "t:SerialComponentPart",
+      "d": "t:SubCollection",
+      "i": "t:Integrating",
+      "m": "t:Monograph",
+      "p": "t:Periodical",
+      "s": "t:Serial",
       "9": null
     },
+    "typeOfControl": {
+      "_": null,
+      "a": "trec:ArchivalControl"
+    },
+    "characterCoding": {
+      "a": "trec:UCS/Unicode"
+    },
+    "encLevel": {
+      "1": "trec:FullLevelMaterialNotExamined",
+      "2": "trec:LessThanFullLevelMaterialNotExamined",
+      "3": "trec:AbbreviatedLevel",
+      "4": "trec:CoreLevel",
+      "5": "trec:PartialPreliminaryLevel",
+      "7": "trec:MinimalLevel",
+      "8": "trec:PrepublicationLevel",
+      "_": "trec:FullLevel",
+      "e": "trec:SystemIdentifiedMarcErrorInABatchloadedRecordLocal",
+      "i": "trec:FullLevelInputByOclcParticipantsLocal",
+      "j": "trec:DeletedRecordLocal",
+      "k": "trec:LessThanFullLevelInputByOclcParticipantsLocal",
+      "l": "trec:FullLevelInputAddedFromABatchProcessLocal",
+      "m": "trec:LessThanFullLevelInputAddedFromABatchProcessLocal",
+      "u": null,
+      "z": null
+    },
+    "catForm": {
+      "_": null,
+      "a": "trec:AACR2",
+      "c": "trec:MissingISBD",
+      "i": "trec:ISBD",
+      "u": null
+    },
+    "linked": {
+      "_": null,
+      "a": "trec:Set",
+      "b": "trec:PartWithIndependentTitle",
+      "c": "trec:PartWithDependentTitle",
+      "r": null
+    },
+    "entryMap": {
+      "4500": "trec:EntryMap"
+    },
 
+    "booksIllustrations": {
+      "a": "tcon:Illustration",
+      "b": "tcon:Map",
+      "c": "tcon:Portrait",
+      "d": "tcon:Chart",
+      "e": "tcon:Plan",
+      "f": "tcon:Plate",
+      "g": "tcon:Music",
+      "h": "tcon:Facsimile",
+      "i": "tcon:CoatsOfArm",
+      "j": "tcon:GenealogicalTable",
+      "k": "tcon:Form",
+      "l": "tcon:Sample",
+      "m": "tcon:PhonodiscPhonowireEtc",
+      "o": "tcon:Photograph",
+      "p": "tcon:Illumination"
+    },
+    "booksAudience": {
+      "a": "tcon:Preschool",
+      "b": "tcon:Primary",
+      "c": "tcon:PreAdolescent",
+      "d": "tcon:Adolescent",
+      "e": "tcon:Adult",
+      "f": "tcon:Specialized",
+      "g": "tcon:General",
+      "j": "tcon:Juvenile"
+    },
+    "booksItem": {
+      "a": "tcon:Microfilm",
+      "b": "tcon:Microfiche",
+      "c": "tcon:Microopaque",
+      "d": "tcon:LargePrint",
+      "f": "tcon:Braille",
+      "o": "tcon:Onlineutgåva",
+      "q": "tcon:Utgåva+i+direkt+elektronisk+form",
+      "r": "tcon:RegularPrintReproduction",
+      "s": "tcon:Electronic"
+    },
     "booksContents": {
-      "2": "Offprint",
-      "5": "Calendar",
-      "6": "ComicOrGraphicNovel",
-      "a": "AbstractsSummary",
-      "c": "Catalog",
-      "b": "Bibliography",
-      "e": "Encyclopedia",
-      "d": "Dictionary",
-      "g": "LegalArticle",
-      "f": "Handbook",
-      "i": "Index",
-      "k": "Discography",
-      "j": "PatentDocument",
-      "m": "Thesis",
-      "l": "Legislation",
-      "o": "Review",
-      "n": "SurveysOfLiteratureInASubjectArea",
-      "q": "Filmography",
-      "p": "ProgrammedText",
-      "s": "Statistic",
-      "r": "Directory",
-      "u": "StandardsSpecification",
-      "t": "TechnicalReport",
-      "w": "LawReportOrDigest",
-      "v": "LegalCaseOrCaseNote",
-      "y": "Yearbook",
-      "z": "Treaty"
+      "2": "tcon:Offprint",
+      "5": "tcon:Calendar",
+      "6": "tcon:ComicOrGraphicNovel",
+      "a": "tcon:AbstractsSummary",
+      "b": "tcon:Bibliography",
+      "c": "tcon:Catalog",
+      "d": "tcon:Dictionary",
+      "e": "tcon:Encyclopedia",
+      "f": "tcon:Handbook",
+      "g": "tcon:LegalArticle",
+      "i": "tcon:Index",
+      "j": "tcon:PatentDocument",
+      "k": "tcon:Discography",
+      "l": "tcon:Legislation",
+      "m": "tcon:Thesis",
+      "n": "tcon:SurveysOfLiteratureInASubjectArea",
+      "o": "tcon:Review",
+      "p": "tcon:ProgrammedText",
+      "q": "tcon:Filmography",
+      "r": "tcon:Directory",
+      "s": "tcon:Statistic",
+      "t": "tcon:TechnicalReport",
+      "u": "tcon:StandardsSpecification",
+      "v": "tcon:LegalCaseOrCaseNote",
+      "w": "tcon:LawReportOrDigest",
+      "y": "tcon:Yearbook",
+      "z": "tcon:Treaty"
+    },
+    "booksGovtPub": {
+      "a": "tcon:AutonomousOrSemiAutonomousComponent",
+      "c": "tcon:Multilocal",
+      "f": "tcon:FederalNational",
+      "i": "tcon:InternationalIntergovernmental",
+      "l": "tcon:Local",
+      "m": "tcon:Multistate",
+      "o": "tcon:GovernmentPublicationLevelUndetermined",
+      "s": "tcon:StateProvincialTerritorialDependentEtc",
+      "u": "tcon:UnknownIfItemIsGovernmentPublication",
+      "z": null
+    },
+    "booksConfPub": {
+      "0": "tcon:NotAConferencePublication",
+      "1": "tcon:ConferencePublication"
+    },
+    "booksFestschrift": {
+      "0": "tcon:NotAFestschrift",
+      "1": "tcon:Festschrift"
+    },
+    "booksIndex": {
+      "0": "tcon:NoIndex",
+      "1": "tcon:IndexPresent"
+    },
+    "booksLiteraryForm": {
+      "0": "tcon:NotFictionNotFurtherSpecified",
+      "1": "tcon:FictionNotFurtherSpecified",
+      "c": "tcon:ComicStrip",
+      "d": "tcon:Drama",
+      "e": "tcon:Essay",
+      "f": "tcon:Novel",
+      "h": "tcon:HumorSatiresEtc",
+      "i": "tcon:Letter",
+      "j": "tcon:ShortStory",
+      "m": "tcon:MixedForm",
+      "p": "tcon:Poetry",
+      "s": "tcon:Speeche",
+      "u": null
+    },
+    "booksBiography": {
+      "a": "tcon:Autobiography",
+      "b": "tcon:IndividualBiography",
+      "c": "tcon:CollectiveBiography",
+      "d": "tcon:ContainsBiographicalInformation"
+    },
+    "musicComposition": {
+      "an": "tcon:Anthem",
+      "bd": "tcon:Ballad",
+      "bg": "tcon:BluegrassMusic",
+      "bl": "tcon:Blue",
+      "bt": "tcon:Ballet",
+      "ca": "tcon:Chaconne",
+      "cb": "tcon:ChantsOtherReligion",
+      "cc": "tcon:ChantChristian",
+      "cg": "tcon:ConcertiGrossi",
+      "ch": "tcon:Chorale",
+      "cl": "tcon:ChoralePrelude",
+      "cn": "tcon:CanonOrRound",
+      "co": "tcon:Concerto",
+      "cp": "tcon:ChansonsPolyphonic",
+      "cr": "tcon:Carol",
+      "cs": "tcon:ChanceComposition",
+      "ct": "tcon:Cantata",
+      "cy": "tcon:CountryMusic",
+      "cz": "tcon:Canzona",
+      "df": "tcon:DanceForm",
+      "dv": "tcon:DivertimentosSerenadesCassationsDivertissementsNotturni",
+      "fg": "tcon:Fugue",
+      "fl": "tcon:Flamenco",
+      "fm": "tcon:FolkMusic",
+      "ft": "tcon:Fantasia",
+      "gm": "tcon:GospelMusic",
+      "hy": "tcon:Hymn",
+      "jz": "tcon:Jazz",
+      "mc": "tcon:MusicalRevueOrComedie",
+      "md": "tcon:Madrigal",
+      "mi": "tcon:Minuet",
+      "mo": "tcon:Motet",
+      "mp": "tcon:MotionPictureMusic",
+      "mr": "tcon:Marche",
+      "ms": "tcon:Masse",
+      "mu": "tcon:MultipleForm",
+      "mz": "tcon:Mazurka",
+      "nc": "tcon:Nocturne",
+      "nn": null,
+      "op": "tcon:Opera",
+      "or": "tcon:Oratorio",
+      "ov": "tcon:Overture",
+      "pg": "tcon:ProgramMusic",
+      "pm": "tcon:PassionMusic",
+      "po": "tcon:Polonaise",
+      "pp": "tcon:PopularMusic",
+      "pr": "tcon:Prelude",
+      "ps": "tcon:Passacaglia",
+      "pt": "tcon:PartSong",
+      "pv": "tcon:Pavan",
+      "rc": "tcon:RockMusic",
+      "rd": "tcon:Rondo",
+      "rg": "tcon:RagtimeMusic",
+      "ri": "tcon:Ricercar",
+      "rp": "tcon:Rhapsody",
+      "rq": "tcon:Requiem",
+      "sd": "tcon:SquareDanceMusic",
+      "sg": "tcon:Song",
+      "sn": "tcon:Sonata",
+      "sp": "tcon:SymphonicPoem",
+      "st": "tcon:StudieOrExercise",
+      "su": "tcon:Suite",
+      "sy": "tcon:Symphony",
+      "tc": "tcon:Toccata",
+      "tl": "tcon:Teatro+lirico",
+      "ts": "tcon:TrioSonata",
+      "uu": null,
+      "vl": "tcon:Villancicos",
+      "vr": "tcon:Variation",
+      "wz": "tcon:Waltze",
+      "za": "tcon:Zarzuelas",
+      "zz": null,
+      "||": "tcon:NoAttemptToCode"
+    },
+    "musicFormat": {
+      "a": "tcon:FullScore",
+      "b": "tcon:FullScoreMiniatureOrStudySize",
+      "c": "tcon:AccompanimentReducedForKeyboard",
+      "d": "tcon:VoiceScore",
+      "e": "tcon:CondensedScoreOrPianoConductorScore",
+      "g": "tcon:CloseScore",
+      "h": "tcon:Körpartitur",
+      "i": "tcon:Reducerat+partitur+(condensed+scoore)",
+      "j": "tcon:Direktion+för+enstaka+instrument+(performer-conductor+part)",
+      "k": "tcon:Vokalpartitur",
+      "l": "tcon:Komplett+musikalisk+notation+för+konsertframförande+(score)",
+      "m": "tcon:MultipleScoreFormat",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "musicParts": {
+      "d": "tcon:InstrumentalOrVocalPart",
+      "e": "tcon:InstrumentalPart",
+      "f": "tcon:VocalPart",
+      "n": null,
+      "u": null
+    },
+    "musicItem": {
+      "a": "tcon:Microfilm",
+      "b": "tcon:Microfiche",
+      "c": "tcon:Microopaque",
+      "d": "tcon:LargePrint",
+      "f": "tcon:Braille",
+      "o": "tcon:Onlineutgåva",
+      "q": "tcon:Utgåva+i+direkt+elektronisk+form",
+      "r": "tcon:RegularPrintReproductionEyeReadablePrint",
+      "s": "tcon:Electronic"
+    },
+    "musicMatter": {
+      "a": "tcon:Discography",
+      "b": "tcon:Bibliography",
+      "c": "tcon:ThematicIndex",
+      "d": "tcon:LibrettoOrText",
+      "e": "tcon:BiographyOfComposerOrAuthor",
+      "f": "tcon:BiographyOfPerformerOrHistoryOfEnsemble",
+      "g": "tcon:TechnicalOrOrHistoricalInformationOnInstrument",
+      "h": "tcon:TechnicalInformationOnMusic",
+      "i": "tcon:HistoricalInformation",
+      "k": "tcon:EthnologicalInformation",
+      "r": "tcon:InstructionalMaterial",
+      "s": "tcon:Music",
+      "z": null
+    },
+    "musicText": {
+      "_": "tcon:ItemIsAMusicalSoundRecording",
+      "a": "tcon:Autobiography",
+      "b": "tcon:Biography",
+      "c": "tcon:ConferenceProceeding",
+      "d": "tcon:Drama",
+      "e": "tcon:Essay",
+      "f": "tcon:Fiction",
+      "g": "tcon:Reporting",
+      "h": "tcon:History",
+      "i": "tcon:Instruction",
+      "j": "tcon:LanguageInstruction",
+      "k": "tcon:Comedy",
+      "l": "tcon:LecturesSpeeche",
+      "m": "tcon:Memoir",
+      "n": null,
+      "o": "tcon:Folktale",
+      "p": "tcon:Poetry",
+      "r": "tcon:Rehearsal",
+      "s": "tcon:Sound",
+      "t": "tcon:Interview",
+      "z": null
+    },
+    "musicTransposition": {
+      "a": "tcon:Transposition",
+      "b": "tcon:Arrangement",
+      "c": "tcon:BothTransposedOrArranged",
+      "n": null,
+      "u": null
+    },
+    "mapsRelief": {
+      "a": "tcon:Contour",
+      "b": "tcon:Shading",
+      "c": "tcon:GradientOrBathymetricTint",
+      "d": "tcon:Hachure",
+      "e": "tcon:BathymetrySounding",
+      "f": "tcon:FormLine",
+      "g": "tcon:SpotHeight",
+      "i": "tcon:Pictorially",
+      "j": "tcon:LandForm",
+      "k": "tcon:BathymetryIsoline",
+      "m": "tcon:RockDrawing",
+      "z": "tcon:OtherReliefType"
+    },
+    "mapsProjection": {
+      "__": "tcon:ProjectionNotSpecified",
+      "aa": "tcon:Aitoff",
+      "ab": "tcon:Gnomic",
+      "ac": "tcon:LambertSAzimuthalEqualArea",
+      "ad": "tcon:Orthographic",
+      "ae": "tcon:AzimuthalEquidistant",
+      "af": "tcon:Stereographic",
+      "ag": "tcon:GeneralVerticalNearSided",
+      "am": "tcon:ModifiedStereographicForAlaska",
+      "an": "tcon:ChamberlinTrimetric",
+      "ap": "tcon:PolarStereographic",
+      "au": "tcon:AzimuthalSpecificTypeUnknown",
+      "az": "tcon:AzimuthalOther",
+      "ba": "tcon:Gall",
+      "bb": "tcon:GoodeSHomolographic",
+      "bc": "tcon:LambertSCylindricalEqualArea",
+      "bd": "tcon:Mercator",
+      "be": "tcon:Miller",
+      "bf": "tcon:Mollweide",
+      "bg": "tcon:Sinusoidal",
+      "bh": "tcon:TransverseMercator",
+      "bi": "tcon:GaussKruger",
+      "bj": "tcon:Equirectangular",
+      "bk": "tcon:Krovak",
+      "bl": "tcon:Cassini-Soldner",
+      "bo": "tcon:ObliqueMercator",
+      "br": "tcon:Robinson",
+      "bs": "tcon:SpaceObliqueMercator",
+      "bu": "tcon:CylindricalSpecificTypeUnknown",
+      "bz": "tcon:CylindricalOther",
+      "ca": "tcon:AlberSEqualArea",
+      "cb": "tcon:Bonne",
+      "cc": "tcon:LambertSConformalConic",
+      "ce": "tcon:EquidistantConic",
+      "cp": "tcon:Polyconic",
+      "cu": "tcon:ConicSpecificTypeUnknown",
+      "cz": "tcon:ConicOther",
+      "da": "tcon:Armadillo",
+      "db": "tcon:Butterfly",
+      "dc": "tcon:Eckert",
+      "dd": "tcon:GoodeSHomolosine",
+      "de": "tcon:MillerSBipolarObliqueConformalConic",
+      "df": "tcon:VanDerGrinten",
+      "dg": "tcon:Dimaxion",
+      "dh": "tcon:Cordiform",
+      "dl": "tcon:LambertConformal",
+      "zz": null,
+      "||": "tcon:NoAttemptToCode"
+    },
+    "mapsMaterial": {
+      "a": "tcon:SingleMap",
+      "b": "tcon:MapSeries",
+      "c": "tcon:MapSerial",
+      "d": "tcon:Globe",
+      "e": "tcon:Atlas",
+      "f": "tcon:SeparateMapSupplementToAnotherWork",
+      "g": "tcon:MapBoundAsPartOfAnotherWork",
+      "u": null,
+      "z": null
+    },
+    "mapsFormat": {
+      "e": "tcon:Manuscript",
+      "j": "tcon:PictureCardPostCard",
+      "k": "tcon:Calendar",
+      "l": "tcon:Puzzle",
+      "n": "tcon:Game",
+      "o": "tcon:WallMap",
+      "p": "tcon:PlayingCard",
+      "r": "tcon:LooseLeaf",
+      "z": null
+    },
+    "mapsPrimeMeridian": {
+      "e": "tcon:GreenwichObsolete",
+      "f": "tcon:FerroObsolete",
+      "g": "tcon:ParisObsolete",
+      "p": "tcon:PhiladelphiaObsolete",
+      "w": "tcon:WashingtonDCObsolete",
+      "z": null
+    },
+    "visualRunningTime": {
+      "---": "tcon:RunningTimeUnknown",
+      "000": "tcon:RunningTimeExceedsThreeCharacter",
+      "001~999": "tcon:RunningTime",
+      "nnn": null,
+      "|||": "tcon:NoAttemptToCode"
     },
     "visualMaterial": {
-      "a": "ArtOriginal",
-      "c": "ArtReproduction",
-      "b": "Kit",
-      "d": "Diorama",
-      "g": "Game",
-      "f": "Filmstrip",
-      "i": "Picture",
-      "k": "Graphic",
-      "m": "MotionPicture",
-      "l": "TechnicalDrawing",
-      "o": "FlashCard",
-      "n": "Chart",
-      "q": "Model",
-      "p": "MicroscopeSlide",
-      "s": "Slide",
-      "r": "Realia",
-      "t": "Transparency",
-      "w": "Toy",
-      "v": "Videorecording",
-      "z": "Other"
+      "a": "tcon:ArtOriginal",
+      "b": "tcon:Kit",
+      "c": "tcon:ArtReproduction",
+      "d": "tcon:Diorama",
+      "f": "tcon:Filmstrip",
+      "g": "tcon:Game",
+      "i": "tcon:Picture",
+      "k": "tcon:Graphic",
+      "l": "tcon:TechnicalDrawing",
+      "m": "tcon:MotionPicture",
+      "n": "tcon:Chart",
+      "o": "tcon:FlashCard",
+      "p": "tcon:MicroscopeSlide",
+      "q": "tcon:Model",
+      "r": "tcon:Realia",
+      "s": "tcon:Slide",
+      "t": "tcon:Transparency",
+      "v": "tcon:Videorecording",
+      "w": "tcon:Toy",
+      "z": null
+    },
+    "visualTechnique": {
+      "a": "tcon:Animation",
+      "c": "tcon:AnimationOrLiveAction",
+      "l": "tcon:LiveAction",
+      "n": null,
+      "u": null,
+      "z": "tcon:OtherTechnique"
+    },
+    "visualMatter": {
+      "l": "tcon:StillsObsolete",
+      "m": "tcon:ScriptsMaterialObsolete",
+      "o": "tcon:PostersObsolete",
+      "p": "tcon:PressbooksObsolete",
+      "q": "tcon:LobbyCardsObsolete",
+      "r": "tcon:InstructionalMaterialsObsolete",
+      "s": "tcon:MusicObsolete",
+      "z": null
+    },
+    "computerItem": {
+      "o": "tcon:Onlineutgåva",
+      "q": "tcon:Utgåva+i+direkt+elektronisk+form",
+      "s": "tcon:Utgåva+i+ospecificerad+elektronisk+form"
     },
     "computerTypeOfFile": {
-      "a": "NumericData",
-      "c": "Representational",
-      "b": "ComputerProgram",
-      "e": "BibliographicData",
-      "d": "Document",
-      "g": "Game",
-      "f": "Font",
-      "i": "InteractiveMultimedia",
-      "h": "Sound",
-      "j": "OnlineSystemOrService",
-      "m": "Combination",
-      "u": "Unknown",
-      "z": "Other"
+      "a": "tcon:NumericData",
+      "b": "tcon:ComputerProgram",
+      "c": "tcon:Representational",
+      "d": "tcon:Document",
+      "e": "tcon:BibliographicData",
+      "f": "tcon:Font",
+      "g": "tcon:Game",
+      "h": "tcon:Sound",
+      "i": "tcon:InteractiveMultimedia",
+      "j": "tcon:OnlineSystemOrService",
+      "m": "tcon:Combination",
+      "u": null,
+      "z": null
+    },
+    "serialsFrequency": {
+      "a": "tcon:Annual",
+      "b": "tcon:BimonthlyIncludes67Or8NumbersAYear",
+      "c": "tcon:Semiweekly",
+      "d": "tcon:Daily",
+      "e": "tcon:Biweekly",
+      "f": "tcon:SemiannualIncludes2NumbersAYear",
+      "g": "tcon:Biennial",
+      "h": "tcon:Triennial",
+      "i": "tcon:ThreeTimesAWeek",
+      "j": "tcon:ThreeTimesAMonth",
+      "k": "tcon:ContinuouslyUpdated",
+      "m": "tcon:MonthlyIncludes91011Or12NumbersAYear",
+      "q": "tcon:QuarterlyIncludes4NumbersAYear",
+      "s": "tcon:Semimonthly",
+      "t": "tcon:ThreeTimesAYear",
+      "u": null,
+      "w": "tcon:Weekly",
+      "z": null
+    },
+    "serialsRegularity": {
+      "n": "tcon:NormalizedIrregular",
+      "r": "tcon:Regular",
+      "u": null,
+      "x": "tcon:CompletelyIrregular"
+    },
+    "serialsISSN": {
+      "0": "tcon:InternationalCenter",
+      "1": "tcon:UnitedState",
+      "2": "tcon:UnitedKingdom",
+      "4": "tcon:Canada",
+      "f": "tcon:Sverige+(obsolet)",
+      "z": null
     },
     "serialsTypeOfSerial": {
-      "d": "UpdatingDatabase",
-      "m": "MonographicSeries",
-      "l": "UpdatingLooseLeaf",
-      "n": "Newspaper",
-      "p": "Periodical",
-      "w": "UpdatingWebSite"
+      "d": "tcon:UpdatingDatabase",
+      "l": "tcon:UpdatingLooseLeaf",
+      "m": "tcon:MonographicSeries",
+      "n": "tcon:Newspaper",
+      "p": "tcon:Periodical",
+      "w": "tcon:UpdatingWebSite"
+    },
+    "serialsOriginalItem": {
+      "a": "tcon:Microfilm",
+      "b": "tcon:Microfiche",
+      "c": "tcon:Microopaque",
+      "d": "tcon:LargePrint",
+      "e": "tcon:NewspaperFormat",
+      "f": "tcon:Braille",
+      "o": "tcon:Onlineutgåva",
+      "q": "tcon:Utgåva+i+direkt+elektronisk+form",
+      "s": "tcon:Electronic"
+    },
+    "serialsNature": {
+      "6": "tcon:Tecknad+serie+/+Serieroman",
+      "a": "tcon:AbstractsSummary",
+      "b": "tcon:Bibliography",
+      "c": "tcon:Catalog",
+      "d": "tcon:Dictionary",
+      "e": "tcon:Encyclopedia",
+      "f": "tcon:Handbook",
+      "g": "tcon:LegalArticle",
+      "h": "tcon:Biography",
+      "i": "tcon:Index",
+      "k": "tcon:Discography",
+      "l": "tcon:Legislation",
+      "m": "tcon:Thesis",
+      "n": "tcon:SurveysOfLiteratureInASubjectArea",
+      "o": "tcon:Review",
+      "p": "tcon:ProgrammedText",
+      "q": "tcon:Filmography",
+      "r": "tcon:Directory",
+      "s": "tcon:Statistic",
+      "t": "tcon:TechnicalReport",
+      "u": "tcon:StandardsSpecification",
+      "v": "tcon:LegalCaseOrCaseNote",
+      "w": "tcon:LawReportOrDigest",
+      "y": "tcon:Årsbok",
+      "z": "tcon:Treaty"
+    },
+    "serialsContents": {
+      "5": "tcon:Kalender",
+      "6": "tcon:Tecknad+serie+/+Serieroman",
+      "a": "tcon:AbstractsSummary",
+      "b": "tcon:Bibliography",
+      "c": "tcon:Catalog",
+      "d": "tcon:Dictionary",
+      "e": "tcon:Encyclopedia",
+      "f": "tcon:Handbook",
+      "g": "tcon:LegalArticle",
+      "h": "tcon:Biography",
+      "i": "tcon:Index",
+      "k": "tcon:Discography",
+      "l": "tcon:Legislation",
+      "m": "tcon:Thesis",
+      "n": "tcon:SurveysOfLiteratureInASubjectArea",
+      "o": "tcon:Review",
+      "p": "tcon:ProgrammedText",
+      "q": "tcon:Filmography",
+      "r": "tcon:Directory",
+      "s": "tcon:Statistic",
+      "t": "tcon:TechnicalReport",
+      "u": "tcon:StandardsSpecification",
+      "v": "tcon:LegalCaseOrCaseNote",
+      "w": "tcon:LawReportOrDigest",
+      "y": "tcon:Årsbok",
+      "z": "tcon:Treaty"
+    },
+    "serialsAlphabet": {
+      "a": "tcon:BasicRoman",
+      "b": "tcon:ExtendedRoman",
+      "c": "tcon:Cyrillic",
+      "d": "tcon:Japanese",
+      "e": "tcon:Chinese",
+      "f": "tcon:Arabic",
+      "g": "tcon:Greek",
+      "h": "tcon:Hebrew",
+      "i": "tcon:Thai",
+      "j": "tcon:Devanagari",
+      "k": "tcon:Korean",
+      "l": "tcon:Tamil",
+      "u": null,
+      "z": null
+    },
+    "serialsTypeOfEntry": {
+      "0": "tcon:SuccessiveEntry",
+      "1": "tcon:LatestEntry",
+      "2": "tcon:IntegratingEntry"
     },
     "mapMaterial": {
-      "d": "Atlas",
-      "g": "Diagram",
-      "k": "Profile",
-      "j": "MapATwoDimensionalMap",
-      "q": "Model",
-      "s": "Section",
-      "r": "RemoteSensingImage",
-      "u": "Unspecified",
-      "y": "View",
-      "z": "Other"
+      "d": "tcar:Atlas",
+      "g": "tcar:Diagram",
+      "j": "tcar:MapATwoDimensionalMap",
+      "k": "tcar:Profile",
+      "q": "tcar:Model",
+      "r": "tcar:RemoteSensingImage",
+      "s": "tcar:Section",
+      "u": null,
+      "y": "tcar:View",
+      "z": null
+    },
+    "mapColor": {
+      "a": "tcar:OneColor",
+      "c": "tcar:Multicolored"
+    },
+    "mapMedium": {
+      "a": "tcar:Paper",
+      "b": "tcar:Wood",
+      "c": "tcar:Stone",
+      "d": "tcar:Metal",
+      "e": "tcar:Synthetic",
+      "f": "tcar:Skin",
+      "g": "tcar:Textile",
+      "i": "tcar:Plast",
+      "j": "tcar:Glas",
+      "l": "tcar:Vinyl",
+      "n": "tcar:Velin",
+      "p": "tcar:Plaster",
+      "q": "tcar:FlexibleBasePhotographicPositive",
+      "r": "tcar:FlexibleBasePhotographicNegative",
+      "s": "tcar:NonFlexibleBasePhotographicPositive",
+      "t": "tcar:NonFlexibleBasePhotographicNegative",
+      "u": null,
+      "v": "tcar:Läder",
+      "w": "tcar:Pergament",
+      "y": null,
+      "z": null
+    },
+    "mapReproduction": {
+      "f": "tcar:Facsimile",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "mapDetails": {
+      "a": "tcar:PhotocopyBluelinePrint",
+      "b": "tcar:Photocopy",
+      "c": "tcar:PreProduction",
+      "d": "tcar:Film",
+      "u": null,
+      "z": null
+    },
+    "mapPosNeg": {
+      "a": "tcar:Positive",
+      "b": "tcar:Negative",
+      "m": "tcar:MixedPolarity",
+      "n": null
+    },
+    "mapAspect": {
+      "_": null,
+      "f": "tcar:FacsimileObsolete",
+      "o": "tcar:OriginalObsolete",
+      "r": "tcar:ReproductionObsolete",
+      "u": null
     },
     "computerMaterial": {
-      "a": "TapeCartridge",
-      "c": "ComputerOpticalDiscCartridge",
-      "b": "ChipCartridge",
-      "e": "ComputerDiscCartridge",
-      "d": "ComputerDisc",
-      "f": "TapeCassette",
-      "h": "TapeReel",
-      "k": "ComputerCard",
-      "j": "MagneticDisk",
-      "m": "MagnetoOpticalDisc",
-      "o": "OpticalDisc",
-      "r": "OnlineResource",
-      "u": "Unspecified",
-      "z": "Other"
+      "a": "tcar:TapeCartridge",
+      "b": "tcar:ChipCartridge",
+      "c": "tcar:ComputerOpticalDiscCartridge",
+      "d": "tcar:ComputerDisc",
+      "e": "tcar:ComputerDiscCartridge",
+      "f": "tcar:TapeCassette",
+      "h": "tcar:TapeReel",
+      "j": "tcar:MagneticDisk",
+      "k": "tcar:ComputerCard",
+      "m": "tcar:MagnetoOpticalDisc",
+      "o": "tcar:OpticalDisc",
+      "r": "tcar:OnlineResource",
+      "u": null,
+      "z": null
+    },
+    "computerColor": {
+      "a": "tcar:En+färg+som+kontrasterar+mot+vitt",
+      "b": "tcar:Svartvit",
+      "c": "tcar:Flera+färger",
+      "g": "tcar:Gråskala",
+      "m": "tcar:Kombination+av+flera+färgtekniker",
+      "n": "tcar:Ej+tillämplig",
+      "u": "tcar:Okända+färgegenskaper",
+      "z": "tcar:Annan+färgegenskap"
+    },
+    "computerDimensions": {
+      "a": "tcar:3,5+tum",
+      "e": "tcar:12+tum",
+      "g": "tcar:4+4,75+tum+/+12+cm+(CD)",
+      "i": "tcar:1+1/8+x+2+3/8+tum",
+      "j": "tcar:3+7/8+x+2+1/2+tum",
+      "n": "tcar:Ej+tillämplig",
+      "o": "tcar:5,25+tum",
+      "u": "tcar:Okänd+storlek",
+      "v": "tcar:8+tum",
+      "z": "tcar:Annan+storlek"
+    },
+    "computerSound": {
+      "a": "tcar:Resursen+innehåller+ljud+eller+avser+att+alstra+ljud",
+      "u": "tcar:Okänd+ljudstatus"
+    },
+    "computerImageBitDepth": {
+      "---": "tcar:Okänt+bit-djup",
+      "001~999": "tcar:Exakt+uppgift+om+bit-djup+(siffror)",
+      "mmm": "tcar:Flera+bit-djup+förekommer",
+      "nnn": "tcar:Ej+tillämplig",
+      "|||": "tcar:Inget+försök+att+koda"
+    },
+    "computerFileFormats": {
+      "a": "tcar:Ett+genomgående+filformat",
+      "m": "tcar:Flera+olika+filformat",
+      "u": "tcar:Okänd+filformatstatus"
+    },
+    "computerQATarget": {
+      "a": "tcar:Testbilder+etc,+saknas",
+      "n": "tcar:Testbild+etc.+krävs+ej",
+      "p": "tcar:Testbilder+etc.+finns",
+      "u": "tcar:Okänt+om+testbilder+etc.+finns+eller+ej"
+    },
+    "computerAntecedent": {
+      "a": "tcar:Filens+källa+är+en+originalresurs",
+      "b": "tcar:Filens+källa+är+ett+mikromedium",
+      "c": "tcar:Filens+källa+är+en+maskinläsbar+fil",
+      "d": "tcar:Filens+källa+är+ett+mellanoriginal+(ej+mikroform)",
+      "m": "tcar:Blandade+källor",
+      "n": "tcar:Ej+tillämplig",
+      "u": "tcar:Okänd+källa"
+    },
+    "computerCompression": {
+      "a": "tcar:Filen+är+ej+komprimerad",
+      "b": "tcar:Filen+är+komprimerad+utan+risk+för+informationsförlust",
+      "d": "tcar:Filen+är+komprimerad+och+dekomprimering+medför+informationsförlust",
+      "m": "tcar:Blandade+tekniker",
+      "n": "tcar:Ej+tillämplig",
+      "u": "tcar:Okänd+komprimeringsstatus"
+    },
+    "computerReformattingQuality": {
+      "a": "tcar:Brukskopia,+ej+originalkvalitet",
+      "n": "tcar:Ej+tillämplig",
+      "p": "tcar:Arkivkvalitet+för+långtidslagring",
+      "r": "tcar:Arkivkvalitet+som+kan+duga+som+ersättningsexemplar",
+      "u": "tcar:Okänd+kvalitet"
     },
     "globeMaterial": {
-      "a": "CelestialGlobe",
-      "c": "TerrestrialGlobe",
-      "b": "PlanetaryOrLunarGlobe",
-      "e": "EarthMoonGlobe",
-      "u": "Unspecified",
-      "z": "Other"
+      "a": "tcar:CelestialGlobe",
+      "b": "tcar:PlanetaryOrLunarGlobe",
+      "c": "tcar:TerrestrialGlobe",
+      "e": "tcar:EarthMoonGlobe",
+      "u": null,
+      "z": null
+    },
+    "globeMedium": {
+      "a": "tcar:Paper",
+      "b": "tcar:Wood",
+      "c": "tcar:Stone",
+      "d": "tcar:Metal",
+      "e": "tcar:Synthetic",
+      "f": "tcar:Skin",
+      "g": "tcar:Textile",
+      "i": "tcar:Plast",
+      "l": "tcar:Vinyl",
+      "n": "tcar:Velin",
+      "p": "tcar:Plaster",
+      "u": null,
+      "v": "tcar:Läder",
+      "w": "tcar:Pergament",
+      "z": null
     },
     "tacMaterial": {
-      "a": "Moon",
-      "c": "Combination",
-      "b": "Braille",
-      "d": "TactileWithNoWritingSystem",
-      "u": "Unspecified",
-      "z": "Other"
+      "a": "tcar:Moon",
+      "b": "tcar:Braille",
+      "c": "tcar:Combination",
+      "d": "tcar:TactileWithNoWritingSystem",
+      "u": null,
+      "z": null
+    },
+    "tacBrailleWriting": {
+      "a": "tcar:LiteraryBraille",
+      "b": "tcar:FormatCodeBraille",
+      "c": "tcar:MathematicOrScientificBraille",
+      "d": "tcar:ComputerBraille",
+      "e": "tcar:MusicBraille",
+      "m": "tcar:MultipleBrailleType",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "tacContraction": {
+      "a": "tcar:Uncontracted",
+      "b": "tcar:Contracted",
+      "m": "tcar:Combination",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "tacBrailleMusic": {
+      "a": "tcar:BarOverBar",
+      "b": "tcar:BarByBar",
+      "c": "tcar:LineOverLine",
+      "d": "tcar:Paragraph",
+      "e": "tcar:SingleLine",
+      "f": "tcar:SectionBySection",
+      "g": "tcar:LineByLine",
+      "h": "tcar:OpenScore",
+      "i": "tcar:SpannerShortFormScoring",
+      "j": "tcar:ShortFormScoring",
+      "k": "tcar:Outline",
+      "l": "tcar:VerticalScore",
+      "n": null,
+      "u": null,
+      "z": "tcar:Annat+punktskriftsformat"
+    },
+    "tacSpecPhysicalChar": {
+      "a": "tcar:PrintBraille",
+      "b": "tcar:JumboOrEnlargedBraille",
+      "n": null,
+      "u": null,
+      "z": null
     },
     "projGraphMaterial": {
-      "c": "FilmstripCartridge",
-      "d": "Filmslip",
-      "f": "OtherFilmstripType",
-      "o": "FilmstripRoll",
-      "s": "Slide",
-      "u": "Unspecified",
-      "t": "Transparency",
-      "z": "Other"
+      "c": "tcar:FilmstripCartridge",
+      "d": "tcar:Filmslip",
+      "f": "tcar:OtherFilmstripType",
+      "o": "tcar:FilmstripRoll",
+      "s": "tcar:Slide",
+      "t": "tcar:Transparency",
+      "u": null,
+      "z": null
+    },
+    "projGraphColor": {
+      "a": "tcar:OneColor",
+      "b": "tcar:BlackOrWhite",
+      "c": "tcar:Multicolored",
+      "h": "tcar:HandColored",
+      "m": "tcar:Mixed",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "projGraphEmulsion": {
+      "d": "tcar:Glas",
+      "e": "tcar:Synthetic",
+      "j": "tcar:SafetyFilm",
+      "k": "tcar:FilmBaseOtherThanSafetyFilm",
+      "m": "tcar:MixedCollection",
+      "o": "tcar:Paper",
+      "u": null,
+      "z": null
+    },
+    "projGraphSound": {
+      "a": "tcar:SoundOnMedium",
+      "b": "tcar:SoundSeparateFromMedium",
+      "u": null
+    },
+    "projGraphMedium": {
+      "a": "tcar:OpticalSoundTrackOnMotionPictureFilm",
+      "b": "tcar:MagneticSoundTrackOnMotionPictureFilm",
+      "c": "tcar:MagneticAudioTapeInCartridge",
+      "d": "tcar:SoundDisc",
+      "e": "tcar:MagneticAudioTapeOnReel",
+      "f": "tcar:MagneticAudioTapeInCassette",
+      "g": "tcar:OpticalOrMagneticSoundTrackOnMotionPictureFilm",
+      "h": "tcar:Videotape",
+      "i": "tcar:Videodisc",
+      "u": null,
+      "z": null
+    },
+    "projGraphDimensions": {
+      "a": "tcar:Standard8Mm",
+      "b": "tcar:Super8MmSingle8Mm",
+      "c": "tcar:95Mm",
+      "d": "tcar:16Mm",
+      "e": "tcar:28Mm",
+      "f": "tcar:35Mm",
+      "g": "tcar:70Mm",
+      "j": "tcar:2X2InOr5X5Cm",
+      "k": "tcar:214X214InOr6X6Cm",
+      "s": "tcar:4X5InOr10X13Cm",
+      "t": "tcar:5X7InOr13X18Cm",
+      "u": null,
+      "v": "tcar:8X10InOr21X26Cm",
+      "w": "tcar:9X9InOr23X23Cm",
+      "x": "tcar:10X10InOr26X26Cm",
+      "y": "tcar:7X7InOr18X18Cm",
+      "z": null
+    },
+    "projGraphSupport": {
+      "_": "tcar:Stödjande+montering+saknas",
+      "c": "tcar:Papp",
+      "d": "tcar:Glas",
+      "e": "tcar:Syntetiskt+material",
+      "h": "tcar:Metall",
+      "j": "tcar:Metall+och+glas",
+      "k": "tcar:Syntetiskt+material+och+glas",
+      "m": "tcar:Blandad+montering",
+      "u": "tcar:Okänd+montering",
+      "z": "tcar:Annan+montering"
     },
     "microformMaterial": {
-      "a": "ApertureCard",
-      "c": "MicrofilmCassette",
-      "b": "MicrofilmCartridge",
-      "e": "Microfiche",
-      "d": "MicrofilmReel",
-      "g": "Microopaque",
-      "f": "MicroficheCassette",
-      "h": "MicrofilmSlip",
-      "j": "MicrofilmRoll",
-      "u": "Unspecified",
-      "z": "Other"
+      "a": "tcar:ApertureCard",
+      "b": "tcar:MicrofilmCartridge",
+      "c": "tcar:MicrofilmCassette",
+      "d": "tcar:MicrofilmReel",
+      "e": "tcar:Microfiche",
+      "f": "tcar:MicroficheCassette",
+      "g": "tcar:Microopaque",
+      "h": "tcar:MicrofilmSlip",
+      "j": "tcar:MicrofilmRoll",
+      "u": null,
+      "z": null
+    },
+    "microformPosNeg": {
+      "a": "tcar:Positive",
+      "b": "tcar:Negative",
+      "m": "tcar:MixedPolarity",
+      "u": null
+    },
+    "microformDimensions": {
+      "a": "tcar:8Mm",
+      "d": "tcar:16Mm",
+      "f": "tcar:35Mm",
+      "g": "tcar:70Mm",
+      "h": "tcar:105Mm",
+      "l": "tcar:3X5InOr8X13Cm",
+      "m": "tcar:4X6InOr11X15Cm",
+      "o": "tcar:6X9InOr16X23Cm",
+      "p": "tcar:314X738InOr9X19Cm",
+      "u": null,
+      "z": null
+    },
+    "microformRange": {
+      "a": "tcar:LowReduction",
+      "b": "tcar:NormalReduction",
+      "c": "tcar:HighReduction",
+      "d": "tcar:VeryHighReduction",
+      "e": "tcar:UltraHighReduction",
+      "u": null,
+      "v": "tcar:ReductionRateVary"
+    },
+    "microformColor": {
+      "b": "tcar:BlackOrWhiteOrMonochrome",
+      "c": "tcar:Multicolored",
+      "m": "tcar:Mixed",
+      "u": null,
+      "z": null
+    },
+    "microformEmulsion": {
+      "a": "tcar:SilverHalide",
+      "b": "tcar:Diazo",
+      "c": "tcar:Vesicular",
+      "m": "tcar:MixedEmulsion",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "microformGeneration": {
+      "a": "tcar:FirstGenerationMaster",
+      "b": "tcar:PrintingMaster",
+      "c": "tcar:ServiceCopy",
+      "m": "tcar:MixedGeneration",
+      "u": null
+    },
+    "microformBase": {
+      "a": "tcar:SafetyBaseUndetermined",
+      "c": "tcar:SafetyBaseAcetateUndetermined",
+      "d": "tcar:SafetyBaseDiacetate",
+      "i": "tcar:NitrateBase",
+      "m": "tcar:MixedBaseNitrateOrSafety",
+      "n": null,
+      "p": "tcar:SafetyBasePolyester",
+      "r": "tcar:SafetyBaseMixed",
+      "t": "tcar:SafetyBaseTriacetate",
+      "u": null,
+      "z": null
     },
     "nonProjMaterial": {
-      "a": "ActivityCard",
-      "c": "Collage",
-      "e": "Painting",
-      "d": "Drawing",
-      "g": "Photonegative",
-      "f": "PhotomechanicalPrint",
-      "i": "Picture",
-      "h": "Photoprint",
-      "k": "Poster",
-      "j": "Print",
-      "l": "TechnicalDrawing",
-      "o": "FlashCard",
-      "n": "Chart",
-      "q": "Icon",
-      "p": "Postcard",
-      "s": "StudyPrint",
-      "r": "Radiograph",
-      "u": "Unspecified",
-      "v": "Photograph",
-      "z": "Other"
+      "a": "tcar:ActivityCard",
+      "c": "tcar:Collage",
+      "d": "tcar:Drawing",
+      "e": "tcar:Painting",
+      "f": "tcar:PhotomechanicalPrint",
+      "g": "tcar:Photonegative",
+      "h": "tcar:Photoprint",
+      "i": "tcar:Picture",
+      "j": "tcar:Print",
+      "k": "tcar:Poster",
+      "l": "tcar:TechnicalDrawing",
+      "n": "tcar:Chart",
+      "o": "tcar:FlashCard",
+      "p": "tcar:Postcard",
+      "q": "tcar:Icon",
+      "r": "tcar:Radiograph",
+      "s": "tcar:StudyPrint",
+      "u": null,
+      "v": "tcar:Photograph",
+      "z": null
+    },
+    "nonProjColor": {
+      "a": "tcar:OneColor",
+      "b": "tcar:BlackOrWhite",
+      "c": "tcar:Multicolored",
+      "h": "tcar:HandColored",
+      "m": "tcar:Mixed",
+      "u": null,
+      "z": null
+    },
+    "nonProjPrimary": {
+      "a": "tcar:Canva",
+      "b": "tcar:BristolBoard",
+      "c": "tcar:CardboardIllustrationBoard",
+      "d": "tcar:Glas",
+      "e": "tcar:Synthetic",
+      "f": "tcar:Skin",
+      "g": "tcar:Textile",
+      "h": "tcar:Metal",
+      "i": "tcar:Plast",
+      "l": "tcar:Vinyl",
+      "m": "tcar:MixedCollection",
+      "n": "tcar:Velin",
+      "o": "tcar:Paper",
+      "p": "tcar:Plaster",
+      "q": "tcar:Hardboard",
+      "r": "tcar:Porcelain",
+      "s": "tcar:Stone",
+      "t": "tcar:Wood",
+      "u": null,
+      "v": "tcar:Läder",
+      "w": "tcar:Pergament",
+      "z": null
     },
     "motionPicMaterial": {
-      "c": "FilmCartridge",
-      "f": "FilmCassette",
-      "o": "FilmRoll",
-      "r": "FilmReel",
-      "u": "Unspecified",
-      "z": "Other"
+      "c": "tcar:FilmCartridge",
+      "f": "tcar:FilmCassette",
+      "o": "tcar:FilmRoll",
+      "r": "tcar:FilmReel",
+      "u": null,
+      "z": null
     },
-    "kitMaterial": {"u": "Unspecified"},
-    "notatedMusicMaterial": {"u": "Unspecified"},
-    "remoteSensImageMaterial": {"u": "Unspecified"},
+    "motionPicColor": {
+      "b": "tcar:BlackOrWhite",
+      "c": "tcar:Multicolored",
+      "h": "tcar:HandColored",
+      "m": "tcar:Mixed",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "motionPicFormat": {
+      "a": "tcar:StandardSoundApertureReducedFrame",
+      "b": "tcar:NonanamorphicWideScreen",
+      "c": "tcar:3D",
+      "d": "tcar:AnamorphicWideScreen",
+      "e": "tcar:OtherWideScreenFormat",
+      "f": "tcar:StandardSilentApertureFullFrame",
+      "u": null,
+      "z": null
+    },
+    "motionPicDimensions": {
+      "a": "tcar:Standard8Mm",
+      "b": "tcar:Super8MmSingle8Mm",
+      "c": "tcar:95Mm",
+      "d": "tcar:16Mm",
+      "e": "tcar:28Mm",
+      "f": "tcar:35Mm",
+      "g": "tcar:70Mm",
+      "u": null,
+      "z": null
+    },
+    "motionPicConfiguration": {
+      "k": "tcar:Mixed",
+      "m": "tcar:Monaural",
+      "n": null,
+      "q": "tcar:QuadraphonicMultichannelOrSurround",
+      "s": "tcar:Stereophonic",
+      "u": null,
+      "z": null
+    },
+    "motionPicElements": {
+      "a": "tcar:Workprint",
+      "b": "tcar:Trim",
+      "c": "tcar:Outtake",
+      "d": "tcar:Rushe",
+      "e": "tcar:MixingTrack",
+      "f": "tcar:TitleBandsIntertitleRoll",
+      "g": "tcar:ProductionRoll",
+      "n": null,
+      "z": null
+    },
+    "motionPicPosNeg": {
+      "a": "tcar:Positive",
+      "b": "tcar:Negative",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "motionPicGeneration": {
+      "d": "tcar:Duplicate",
+      "e": "tcar:Master",
+      "o": "tcar:Original",
+      "r": "tcar:ReferencePrintViewingCopy",
+      "u": null,
+      "z": null
+    },
+    "motionPicCategories": {
+      "a": "tcar:3LayerColor",
+      "b": "tcar:2ColorSingleStrip",
+      "c": "tcar:Undetermined2Color",
+      "d": "tcar:Undetermined3Color",
+      "e": "tcar:3StripColor",
+      "f": "tcar:2StripColor",
+      "g": "tcar:RedStrip",
+      "h": "tcar:BlueOrGreenStrip",
+      "i": "tcar:CyanStrip",
+      "j": "tcar:MagentaStrip",
+      "k": "tcar:YellowStrip",
+      "l": "tcar:SEN2",
+      "m": "tcar:SEN3",
+      "n": null,
+      "p": "tcar:SepiaTone",
+      "q": "tcar:OtherTone",
+      "r": "tcar:Tint",
+      "s": "tcar:TintedOrToned",
+      "t": "tcar:StencilColor",
+      "u": null,
+      "v": "tcar:HandColored",
+      "z": null
+    },
+    "motionPicColorStock": {
+      "a": "tcar:ImbibitionDyeTransferPrint",
+      "b": "tcar:ThreeLayerStock",
+      "c": "tcar:ThreeLayerStockLowFade",
+      "d": "tcar:DuplitizedStock",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "motionPicDeterioration": {
+      "a": "tcar:NoneApparent",
+      "b": "tcar:NitrateSuspiciousOdor",
+      "c": "tcar:NitratePungentOdor",
+      "d": "tcar:NitrateBrownishDiscolorationFadingDusty",
+      "e": "tcar:NitrateSticky",
+      "f": "tcar:NitrateFrothyBubblesBlister",
+      "g": "tcar:NitrateCongealed",
+      "h": "tcar:NitratePowder",
+      "k": "tcar:NonNitrateDetectableDeteriorationDiacetateOdor",
+      "l": "tcar:NonNitrateAdvancedDeterioration",
+      "m": "tcar:NonNitrateDisaster"
+    },
+    "motionPicCompleteness": {
+      "c": "tcar:Complete",
+      "i": "tcar:Incomplete",
+      "n": null,
+      "u": null
+    },
+    "kitMaterial": {
+      "u": null
+    },
+    "remoteSensImageAltitude": {
+      "a": "tcar:Surface",
+      "b": "tcar:Airborne",
+      "c": "tcar:Spaceborne",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "remoteSensImageAttitude": {
+      "a": "tcar:LowOblique",
+      "b": "tcar:HighOblique",
+      "c": "tcar:Vertical",
+      "n": null,
+      "u": null
+    },
+    "remoteSensImageCloud": {
+      "0": "tcar:09",
+      "1": "tcar:1019",
+      "2": "tcar:2029",
+      "3": "tcar:3039",
+      "4": "tcar:4049",
+      "5": "tcar:5059",
+      "6": "tcar:6069",
+      "7": "tcar:7079",
+      "8": "tcar:8089",
+      "9": "tcar:90100",
+      "n": null,
+      "u": null
+    },
+    "remoteSensImageConstruction": {
+      "a": "tcar:Balloon",
+      "b": "tcar:AircraftLowAltitude",
+      "c": "tcar:AircraftMediumAltitude",
+      "d": "tcar:AircraftHighAltitude",
+      "e": "tcar:MannedSpacecraft",
+      "f": "tcar:UnmannedSpacecraft",
+      "g": "tcar:LandBasedRemoteSensingDevice",
+      "h": "tcar:WaterSurfaceBasedRemoteSensingDevice",
+      "i": "tcar:SubmersibleRemoteSensingDevice",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "remoteSensImageUse": {
+      "a": "tcar:Meteorological",
+      "b": "tcar:SurfaceObserving",
+      "c": "tcar:SpaceObserving",
+      "m": "tcar:MixedUse",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "remoteSensImageSensor": {
+      "a": "tcar:Active",
+      "b": "tcar:Passive",
+      "u": null,
+      "z": null
+    },
+    "remoteSensImageData": {
+      "aa": "tcar:VisibleLight",
+      "da": "tcar:NearInfrared",
+      "db": "tcar:MiddleInfrared",
+      "dc": "tcar:FarInfrared",
+      "dd": "tcar:ThermalInfrared",
+      "de": "tcar:ShortwaveInfraredSwir",
+      "df": "tcar:ReflectiveInfrared",
+      "dv": "tcar:Combination",
+      "dz": "tcar:OtherInfraredData",
+      "ga": "tcar:SidelookingAirborneRadarSlar",
+      "gb": "tcar:SyntheticApertureRadarSarSingleFrequency",
+      "gc": "tcar:SarMultiFrequencyMultichannel",
+      "gd": "tcar:SarLikePolarization",
+      "ge": "tcar:SarCrossPolarization",
+      "gf": "tcar:InfometricSar",
+      "gg": "tcar:PolarmetricSar",
+      "gu": "tcar:PassiveMicrowaveMapping",
+      "gz": "tcar:OtherMicrowaveData",
+      "ja": "tcar:FarUltraviolet",
+      "jb": "tcar:MiddleUltraviolet",
+      "jc": "tcar:NearUltraviolet",
+      "jv": "tcar:UltravioletCombination",
+      "jz": "tcar:OtherUltravioletData",
+      "ma": "tcar:MultiSpectralMultidata",
+      "mb": "tcar:MultiTemporal",
+      "mm": "tcar:CombinationOfVariousDataType",
+      "nn": null,
+      "pa": "tcar:SonarWaterDepth",
+      "pb": "tcar:SonarBottomTopographyImagesSidescan",
+      "pc": "tcar:SonarBottomTopographyNearSurface",
+      "pd": "tcar:SonarBottomTopographyNearBottom",
+      "pe": "tcar:SeismicSurvey",
+      "pz": "tcar:OtherAcousticalData",
+      "ra": "tcar:GravityAnomaliesGeneral",
+      "rb": "tcar:FreeAir",
+      "rc": "tcar:Bouger",
+      "rd": "tcar:Isostatic",
+      "sa": "tcar:MagneticField",
+      "ta": "tcar:RadiometricSurvey",
+      "uu": null,
+      "zz": null,
+      "||": "tcar:NoAttemptToCode"
+    },
+    "soundKindOfDisc": {
+      "a": "tcar:MasterTape",
+      "b": "tcar:TapeDuplicationMaster",
+      "d": "tcar:DiscMasterNegative",
+      "i": "tcar:InstantaneousRecordedOnTheSpot",
+      "m": "tcar:MassProduced",
+      "n": null,
+      "r": "tcar:MotherPositive",
+      "s": "tcar:StamperNegative",
+      "t": "tcar:TestPressing",
+      "u": null,
+      "z": null
+    },
+    "soundKindOfMaterial": {
+      "a": "tcar:LacquerCoating",
+      "b": "tcar:CelluloseNitrate",
+      "c": "tcar:AcetateTapeWithFerrousOxide",
+      "g": "tcar:GlassWithLacquer",
+      "i": "tcar:AluminumWithLacquer",
+      "l": "tcar:Metal",
+      "m": "tcar:PlasticWithMetal",
+      "p": "tcar:Plastic",
+      "r": "tcar:PaperWithLacquerOrFerrousOxide",
+      "s": "tcar:Shellac",
+      "u": null,
+      "w": "tcar:Wax",
+      "z": null
+    },
+    "soundKindOfCutting": {
+      "h": "tcar:HillOrDaleCutting",
+      "l": "tcar:LateralOrCombinedCutting",
+      "n": null,
+      "u": null
+    },
+    "soundPlaybackCharacter": {
+      "a": "tcar:NabStandard",
+      "b": "tcar:CcirStandard",
+      "c": "tcar:DolbyBEncoded",
+      "d": "tcar:DbxEncoded",
+      "e": "tcar:DigitalRecording",
+      "f": "tcar:DolbyAEncoded",
+      "g": "tcar:DolbyCEncoded",
+      "h": "tcar:CxEncoded",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "soundCapture": {
+      "a": "tcar:AcousticalCaptureDirectStorage",
+      "b": "tcar:DirectStorageNotAcoustical",
+      "d": "tcar:DigitalStorage",
+      "e": "tcar:AnalogElectricalStorage",
+      "u": null,
+      "z": null
+    },
     "soundMaterial": {
-      "e": "Cylinder",
-      "d": "SoundDisc",
-      "g": "SoundCartridge",
-      "i": "SoundTrackFilm",
-      "q": "Roll",
-      "s": "SoundCassette",
-      "u": "Unspecified",
-      "t": "SoundTapeReel",
-      "w": "WireRecording",
-      "z": "Other"
+      "d": "tcar:SoundDisc",
+      "e": "tcar:Cylinder",
+      "g": "tcar:SoundCartridge",
+      "i": "tcar:SoundTrackFilm",
+      "q": "tcar:Roll",
+      "s": "tcar:SoundCassette",
+      "t": "tcar:SoundTapeReel",
+      "u": null,
+      "w": "tcar:WireRecording",
+      "z": null
+    },
+    "soundSpeed": {
+      "a": "tcar:16Rpm",
+      "b": "tcar:3313Rpm",
+      "c": "tcar:45Rpm",
+      "d": "tcar:78Rpm",
+      "e": "tcar:8Rpm",
+      "f": "tcar:14MPerSec",
+      "h": "tcar:120Rpm",
+      "i": "tcar:160Rpm",
+      "k": "tcar:1516Ip",
+      "l": "tcar:178Ip",
+      "m": "tcar:334Ip",
+      "o": "tcar:712Ip",
+      "p": "tcar:15Ip",
+      "r": "tcar:30Ip",
+      "u": null,
+      "z": null
+    },
+    "soundPlaybackChannel": {
+      "m": "tcar:Monaural",
+      "q": "tcar:Quadraphonic",
+      "s": "tcar:Stereophonic",
+      "u": null,
+      "z": null
+    },
+    "soundGroove": {
+      "m": "tcar:MicrogrooveFine",
+      "n": null,
+      "s": "tcar:CoarseStandard",
+      "u": null,
+      "z": null
+    },
+    "soundDimensions": {
+      "a": "tcar:3In",
+      "b": "tcar:5In",
+      "c": "tcar:7In",
+      "d": "tcar:10In",
+      "e": "tcar:12In",
+      "f": "tcar:16In",
+      "g": "tcar:434InOr12Cm",
+      "j": "tcar:378X212In",
+      "n": null,
+      "o": "tcar:514X378In",
+      "s": "tcar:234X4In",
+      "u": null,
+      "z": null
+    },
+    "soundTapeWidth": {
+      "l": "tcar:18In",
+      "m": "tcar:14In",
+      "n": null,
+      "o": "tcar:12In",
+      "p": "tcar:1In",
+      "u": null,
+      "z": null
+    },
+    "soundTapeConfiguration": {
+      "a": "tcar:Full1Track",
+      "b": "tcar:Half2Track",
+      "c": "tcar:Quarter4Track",
+      "d": "tcar:EightTrack",
+      "e": "tcar:TwelveTrack",
+      "f": "tcar:SixteenTrack",
+      "n": null,
+      "u": null,
+      "z": null
     },
     "textMaterial": {
-      "a": "RegularPrint",
-      "c": "Braille",
-      "b": "LargePrint",
-      "d": "TextInLooseleafBinder",
-      "u": "Unspecified",
-      "z": "Other"
+      "a": "tcar:RegularPrint",
+      "b": "tcar:LargePrint",
+      "c": "tcar:Braille",
+      "d": "tcar:TextInLooseleafBinder",
+      "u": null,
+      "z": null
+    },
+    "videoColor": {
+      "a": "tcar:OneColor",
+      "b": "tcar:BlackOrWhite",
+      "c": "tcar:Multicolored",
+      "m": "tcar:Mixed",
+      "n": null,
+      "u": null,
+      "z": null
+    },
+    "videoFormat": {
+      "a": "tcar:Beta12InVideocassette",
+      "b": "tcar:Vhs12InVideocassette",
+      "c": "tcar:UMatic34InVideocassette",
+      "d": "tcar:Eiaj12InReel",
+      "e": "tcar:TypeC1InReel",
+      "f": "tcar:Quadruplex1InOr2InReel",
+      "g": "tcar:Laserdisc",
+      "h": "tcar:CedCapacitanceElectronicDiscVideodisc",
+      "i": "tcar:Betacam12InVideocassette",
+      "j": "tcar:BetacamSp12InVideocassette",
+      "k": "tcar:SuperVhs12InVideocassette",
+      "m": "tcar:MIi12InVideocassette",
+      "o": "tcar:D234InVideocassette",
+      "p": "tcar:8Mm",
+      "q": "tcar:Hi8Mm",
+      "s": "tcar:Blu-ray+Disc",
+      "u": null,
+      "v": "tcar:Dvd",
+      "z": null
+    },
+    "videoDimensions": {
+      "a": "tcar:8Mm",
+      "m": "tcar:14In",
+      "o": "tcar:12In",
+      "p": "tcar:1In",
+      "q": "tcar:2In",
+      "r": "tcar:34In",
+      "u": null,
+      "z": null
     },
     "videoMaterial": {
-      "c": "Videocartridge",
-      "d": "Videodisc",
-      "f": "Videocassette",
-      "r": "Videoreel",
-      "u": "Unspecified",
-      "z": "Other"
+      "c": "tcar:Videocartridge",
+      "d": "tcar:Videodisc",
+      "f": "tcar:Videocassette",
+      "r": "tcar:Videoreel",
+      "u": null,
+      "z": null
+    },
+    "computerFrequency": {
+      "a": "tcon:AnnualObsolete",
+      "b": "tcon:BimonthlyObsolete",
+      "c": "tcon:SemiweeklyObsolete",
+      "d": "tcon:DailyObsolete",
+      "e": "tcon:BiweeklyObsolete",
+      "f": "tcon:SemiannualObsolete",
+      "g": "tcon:BiennialObsolete",
+      "h": "tcon:TriennialObsolete",
+      "i": "tcon:ThreeTimesAWeekObsolete",
+      "j": "tcon:ThreeTimesAMonthObsolete",
+      "m": "tcon:MonthlyObsolete",
+      "n": null,
+      "q": "tcon:QuarterlyObsolete",
+      "s": "tcon:SemimonthlyObsolete",
+      "t": "tcon:ThreeTimesAYearObsolete",
+      "u": null,
+      "w": "tcon:WeeklyObsolete",
+      "z": "tcon:OtherFrequenciesObsolete"
+    },
+    "computerRegularity": {
+      "n": "tcon:NormalizedIrregularObsolete",
+      "r": "tcon:RegularObsolete",
+      "u": null,
+      "x": "tcon:CompletelyIrregularObsolete"
     }
 
   },
@@ -324,50 +1611,56 @@
     "000": {
       "[5:6]": {
         "domainEntity": "Record",
-        "property": "status",
+        "link": "status",
+        "uriTemplate": "{_}",
         "tokenMap": "status"
       },
       "[6:7]": {
         "domainEntity": "Instance",
         "tokenMap": "typeOfRecord",
         "addLink": "contentType",
-        "uriTemplate": "t:{_}"
+        "uriTemplate": "{_}"
       },
       "[7:8]": {
         "domainEntity": "Instance",
         "tokenMap": "bibLevel",
         "link": "aggregateType",
-        "uriTemplate": "t:{_}"
+        "uriTemplate": "{_}"
       },
       "[8:9]": {
         "domainEntity": "Record",
-        "property": "typeOfControl",
+        "link": "typeOfControl",
+        "uriTemplate": "{_}",
         "tokenMap": "typeOfControl"
       },
       "[9:10]": {
         "domainEntity": "Record",
-        "property": "characterCoding",
+        "link": "characterCoding",
+        "uriTemplate": "{_}",
         "tokenMap": "characterCoding"
       },
       "[17:18]": {
         "domainEntity": "Record",
-        "property": "encLevel",
+        "link": "encLevel",
+        "uriTemplate": "{_}",
         "tokenMap": "encLevel"
       },
       "[18:19]": {
         "domainEntity": "Record",
-        "property": "catForm",
+        "link": "catForm",
+        "uriTemplate": "{_}",
         "tokenMap": "catForm"
       },
       "[19:20]": {
         "domainEntity": "Record",
-        "property": "linked",
+        "link": "linked",
+        "uriTemplate": "{_}",
         "tokenMap": "linked"
       },
       "[20:24]": {
         "domainEntity": "Record",
         "property": "entryMap",
-        "tokenMap": "entryMap"
+        "patternMap": "entryMap"
       },
       "repeatable": false
     },
@@ -388,7 +1681,7 @@
       },
       "[0:1]": {
         "addLink": "carrierType",
-        "uriTemplate": "enum:{_}",
+        "uriTemplate": "t:{_}",
         "tokenMap": {
           "a": "Map",
           "c": "Electronic",
@@ -410,475 +1703,594 @@
       "tokenTypeMap": "[0:1]",
       "Map": {
         "[1:2]": {
-          "tokenMap": "mapMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "mapMaterial"
         },
         "[3:4]": {
-          "property": "mapColor",
+          "link": "mapColor",
+          "uriTemplate": "{_}",
           "tokenMap": "mapColor"
         },
         "[4:5]": {
-          "property": "mapMedium",
+          "link": "mapMedium",
+          "uriTemplate": "{_}",
           "tokenMap": "mapMedium"
         },
         "[5:6]": {
-          "property": "mapReproduction",
+          "link": "mapReproduction",
+          "uriTemplate": "{_}",
           "tokenMap": "mapReproduction"
         },
         "[6:7]": {
-          "property": "mapDetails",
+          "link": "mapDetails",
+          "uriTemplate": "{_}",
           "tokenMap": "mapDetails"
         },
         "[7:8]": {
-          "property": "mapPosNeg",
+          "link": "mapPosNeg",
+          "uriTemplate": "{_}",
           "tokenMap": "mapPosNeg"
         },
         "[2:3]": {
-          "property": "mapAspect",
+          "link": "mapAspect",
+          "uriTemplate": "{_}",
           "tokenMap": "mapAspect"
         }
       },
       "Electronic": {
         "[1:2]": {
-          "tokenMap": "computerMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "computerMaterial"
         },
         "[3:4]": {
-          "property": "computerColor",
+          "link": "computerColor",
+          "uriTemplate": "{_}",
           "tokenMap": "computerColor"
         },
         "[4:5]": {
-          "property": "computerDimensions",
+          "link": "computerDimensions",
+          "uriTemplate": "{_}",
           "tokenMap": "computerDimensions"
         },
         "[5:6]": {
-          "property": "computerSound",
+          "link": "computerSound",
+          "uriTemplate": "{_}",
           "tokenMap": "computerSound"
         },
         "[6:9]": {
           "property": "computerImageBitDepth",
-          "tokenMap": "computerImageBitDepth"
+          "patternMap": "computerImageBitDepth"
         },
         "[9:10]": {
-          "property": "computerFileFormats",
+          "link": "computerFileFormats",
+          "uriTemplate": "{_}",
           "tokenMap": "computerFileFormats"
         },
         "[10:11]": {
-          "property": "computerQATarget",
+          "link": "computerQATarget",
+          "uriTemplate": "{_}",
           "tokenMap": "computerQATarget"
         },
         "[11:12]": {
-          "property": "computerAntecedent",
+          "link": "computerAntecedent",
+          "uriTemplate": "{_}",
           "tokenMap": "computerAntecedent"
         },
         "[12:13]": {
-          "property": "computerCompression",
+          "link": "computerCompression",
+          "uriTemplate": "{_}",
           "tokenMap": "computerCompression"
         },
         "[13:14]": {
-          "property": "computerReformattingQuality",
+          "link": "computerReformattingQuality",
+          "uriTemplate": "{_}",
           "tokenMap": "computerReformattingQuality"
         },
         "[2:3]": {
-          "property": "computerFileAspect",
-          "tokenMap": "computerFileAspect"
+          "link": "computerFileAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
         }
       },
       "Globe": {
         "[1:2]": {
-          "tokenMap": "globeMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "globeMaterial"
         },
         "[3:4]": {
-          "property": "globeColor",
-          "tokenMap": "globeColor"
+          "link": "globeColor",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapColor"
         },
         "[4:5]": {
-          "property": "globeMedium",
+          "link": "globeMedium",
+          "uriTemplate": "{_}",
           "tokenMap": "globeMedium"
         },
         "[5:6]": {
-          "property": "globeReproduction",
-          "tokenMap": "globeReproduction"
+          "link": "globeReproduction",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapReproduction"
         },
         "[2:3]": {
-          "property": "globeAspect",
-          "tokenMap": "globeAspect"
+          "link": "globeAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
         }
       },
       "TactileMaterial": {
         "[1:2]": {
-          "tokenMap": "tacMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "tacMaterial"
         },
         "[3:4]": {
-          "property": "tacBrailleWriting",
+          "link": "tacBrailleWriting",
+          "uriTemplate": "{_}",
           "tokenMap": "tacBrailleWriting"
         },
         "[4:5]": {
-          "property": "tacBrailleWriting",
+          "link": "tacBrailleWriting",
+          "uriTemplate": "{_}",
           "tokenMap": "tacBrailleWriting"
         },
         "[5:6]": {
-          "property": "tacContraction",
+          "link": "tacContraction",
+          "uriTemplate": "{_}",
           "tokenMap": "tacContraction"
         },
         "[6:7]": {
-          "property": "tacBrailleMusic",
+          "link": "tacBrailleMusic",
+          "uriTemplate": "{_}",
           "tokenMap": "tacBrailleMusic"
         },
         "[7:8]": {
-          "property": "tacBrailleMusic",
+          "link": "tacBrailleMusic",
+          "uriTemplate": "{_}",
           "tokenMap": "tacBrailleMusic"
         },
         "[8:9]": {
-          "property": "tacBrailleMusic",
+          "link": "tacBrailleMusic",
+          "uriTemplate": "{_}",
           "tokenMap": "tacBrailleMusic"
         },
         "[9:10]": {
-          "property": "tacSpecPhysicalChar",
+          "link": "tacSpecPhysicalChar",
+          "uriTemplate": "{_}",
           "tokenMap": "tacSpecPhysicalChar"
         }
       },
       "ProjectedGraphic": {
         "[1:2]": {
-          "tokenMap": "projGraphMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphMaterial"
         },
         "[3:4]": {
-          "property": "projGraphColor",
+          "link": "projGraphColor",
+          "uriTemplate": "{_}",
           "tokenMap": "projGraphColor"
         },
         "[4:5]": {
-          "property": "projGraphEmulsion",
+          "link": "projGraphEmulsion",
+          "uriTemplate": "{_}",
           "tokenMap": "projGraphEmulsion"
         },
         "[5:6]": {
-          "property": "projGraphSound",
+          "link": "projGraphSound",
+          "uriTemplate": "{_}",
           "tokenMap": "projGraphSound"
         },
         "[6:7]": {
-          "property": "projGraphMedium",
+          "link": "projGraphMedium",
+          "uriTemplate": "{_}",
           "tokenMap": "projGraphMedium"
         },
         "[7:8]": {
-          "property": "projGraphDimensions",
+          "link": "projGraphDimensions",
+          "uriTemplate": "{_}",
           "tokenMap": "projGraphDimensions"
         },
         "[8:9]": {
-          "property": "projGraphSupport",
+          "link": "projGraphSupport",
+          "uriTemplate": "{_}",
           "tokenMap": "projGraphSupport"
         },
         "[2:3]": {
-          "property": "projGraphAspect",
-          "tokenMap": "projGraphAspect"
+          "link": "projGraphAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
         }
       },
       "Microform": {
         "[1:2]": {
-          "tokenMap": "microformMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "microformMaterial"
         },
         "[3:4]": {
-          "property": "microformPosNeg",
+          "link": "microformPosNeg",
+          "uriTemplate": "{_}",
           "tokenMap": "microformPosNeg"
         },
         "[4:5]": {
-          "property": "microformDimensions",
+          "link": "microformDimensions",
+          "uriTemplate": "{_}",
           "tokenMap": "microformDimensions"
         },
         "[5:6]": {
-          "property": "microformRange",
+          "link": "microformRange",
+          "uriTemplate": "{_}",
           "tokenMap": "microformRange"
         },
         "[6:9]": {
-          "domainEntity": "Record",
           "property": "reductionRatioExactRightJustifiedWithLeadingZero"
         },
         "[9:10]": {
-          "property": "microformColor",
+          "link": "microformColor",
+          "uriTemplate": "{_}",
           "tokenMap": "microformColor"
         },
         "[10:11]": {
-          "property": "microformEmulsion",
+          "link": "microformEmulsion",
+          "uriTemplate": "{_}",
           "tokenMap": "microformEmulsion"
         },
         "[11:12]": {
-          "property": "microformGeneration",
+          "link": "microformGeneration",
+          "uriTemplate": "{_}",
           "tokenMap": "microformGeneration"
         },
         "[12:13]": {
-          "property": "microformBase",
+          "link": "microformBase",
+          "uriTemplate": "{_}",
           "tokenMap": "microformBase"
         },
         "[2:3]": {
-          "property": "microformAspect",
-          "tokenMap": "microformAspect"
+          "link": "microformAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
         }
       },
       "NonprojectedGraphic": {
         "[1:2]": {
-          "tokenMap": "nonProjMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "nonProjMaterial"
         },
         "[3:4]": {
-          "property": "nonProjColor",
+          "link": "nonProjColor",
+          "uriTemplate": "{_}",
           "tokenMap": "nonProjColor"
         },
         "[4:5]": {
-          "property": "nonProjPrimary",
+          "link": "nonProjPrimary",
+          "uriTemplate": "{_}",
           "tokenMap": "nonProjPrimary"
         },
         "[5:6]": {
-          "property": "nonProjSecondary",
-          "tokenMap": "nonProjSecondary"
+          "link": "nonProjSecondary",
+          "uriTemplate": "{_}",
+          "tokenMap": "nonProjPrimary"
         },
         "[2:3]": {
-          "property": "nonProjAspect",
-          "tokenMap": "nonProjAspect"
+          "link": "nonProjAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
         }
       },
       "MotionPicture": {
         "[1:2]": {
-          "tokenMap": "motionPicMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicMaterial"
         },
         "[3:4]": {
-          "property": "motionPicColor",
+          "link": "motionPicColor",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicColor"
         },
         "[4:5]": {
-          "property": "motionPicFormat",
+          "link": "motionPicFormat",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicFormat"
         },
         "[5:6]": {
-          "property": "motionPicSound",
-          "tokenMap": "motionPicSound"
+          "link": "motionPicSound",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphSound"
         },
         "[6:7]": {
-          "property": "motionPicMedium",
-          "tokenMap": "motionPicMedium"
+          "link": "motionPicMedium",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphMedium"
         },
         "[7:8]": {
-          "property": "motionPicDimensions",
+          "link": "motionPicDimensions",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicDimensions"
         },
         "[8:9]": {
-          "property": "motionPicConfiguration",
+          "link": "motionPicConfiguration",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicConfiguration"
         },
         "[9:10]": {
-          "property": "motionPicElements",
+          "link": "motionPicElements",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicElements"
         },
         "[10:11]": {
-          "property": "motionPicPosNeg",
+          "link": "motionPicPosNeg",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicPosNeg"
         },
         "[11:12]": {
-          "property": "motionPicGeneration",
+          "link": "motionPicGeneration",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicGeneration"
         },
         "[12:13]": {
-          "property": "motionPicBase",
-          "tokenMap": "motionPicBase"
+          "link": "motionPicBase",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformBase"
         },
         "[13:14]": {
-          "property": "motionPicCategories",
+          "link": "motionPicCategories",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicCategories"
         },
         "[14:15]": {
-          "property": "motionPicColorStock",
+          "link": "motionPicColorStock",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicColorStock"
         },
         "[15:16]": {
-          "property": "motionPicDeterioration",
+          "link": "motionPicDeterioration",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicDeterioration"
         },
         "[16:17]": {
-          "property": "motionPicCompleteness",
+          "link": "motionPicCompleteness",
+          "uriTemplate": "{_}",
           "tokenMap": "motionPicCompleteness"
         },
         "[17:23]": {
-          "domainEntity": "Record",
           "property": "timeOfExamination"
         },
         "[2:3]": {
-          "property": "motionPicAspect",
-          "tokenMap": "motionPicAspect"
+          "link": "motionPicAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
         }
       },
       "Kit": {
         "[1:2]": {
-          "tokenMap": "kitMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "kitMaterial"
         }
       },
       "NotatedMusic": {
         "[1:2]": {
-          "tokenMap": "notatedMusicMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "kitMaterial"
         }
       },
       "RemoteSensingImage": {
         "[1:2]": {
-          "tokenMap": "remoteSensImageMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "kitMaterial"
         },
         "[3:4]": {
-          "property": "remoteSensImageAltitude",
+          "link": "remoteSensImageAltitude",
+          "uriTemplate": "{_}",
           "tokenMap": "remoteSensImageAltitude"
         },
         "[4:5]": {
-          "property": "remoteSensImageAttitude",
+          "link": "remoteSensImageAttitude",
+          "uriTemplate": "{_}",
           "tokenMap": "remoteSensImageAttitude"
         },
         "[5:6]": {
-          "property": "remoteSensImageCloud",
+          "link": "remoteSensImageCloud",
+          "uriTemplate": "{_}",
           "tokenMap": "remoteSensImageCloud"
         },
         "[6:7]": {
-          "property": "remoteSensImageConstruction",
+          "link": "remoteSensImageConstruction",
+          "uriTemplate": "{_}",
           "tokenMap": "remoteSensImageConstruction"
         },
         "[7:8]": {
-          "property": "remoteSensImageUse",
+          "link": "remoteSensImageUse",
+          "uriTemplate": "{_}",
           "tokenMap": "remoteSensImageUse"
         },
         "[8:9]": {
-          "property": "remoteSensImageSensor",
+          "link": "remoteSensImageSensor",
+          "uriTemplate": "{_}",
           "tokenMap": "remoteSensImageSensor"
         },
         "[9:11]": {
-          "property": "remoteSensImageData",
+          "link": "remoteSensImageData",
+          "uriTemplate": "{_}",
           "tokenMap": "remoteSensImageData"
         },
         "[2:3]": {
-          "property": "soundAspect",
-          "tokenMap": "soundAspect"
+          "link": "soundAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
         },
         "[9:10]": {
-          "property": "soundKindOfDisc",
+          "link": "soundKindOfDisc",
+          "uriTemplate": "{_}",
           "tokenMap": "soundKindOfDisc"
         },
         "[10:11]": {
-          "property": "soundKindOfMaterial",
+          "link": "soundKindOfMaterial",
+          "uriTemplate": "{_}",
           "tokenMap": "soundKindOfMaterial"
         },
         "[11:12]": {
-          "property": "soundKindOfCutting",
+          "link": "soundKindOfCutting",
+          "uriTemplate": "{_}",
           "tokenMap": "soundKindOfCutting"
         },
         "[12:13]": {
-          "property": "soundPlaybackCharacter",
+          "link": "soundPlaybackCharacter",
+          "uriTemplate": "{_}",
           "tokenMap": "soundPlaybackCharacter"
         },
         "[13:14]": {
-          "property": "soundCapture",
+          "link": "soundCapture",
+          "uriTemplate": "{_}",
           "tokenMap": "soundCapture"
         }
       },
       "SoundRecording": {
         "[1:2]": {
-          "tokenMap": "soundMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "soundMaterial"
         },
         "[3:4]": {
-          "property": "soundSpeed",
+          "link": "soundSpeed",
+          "uriTemplate": "{_}",
           "tokenMap": "soundSpeed"
         },
         "[4:5]": {
-          "property": "soundPlaybackChannel",
+          "link": "soundPlaybackChannel",
+          "uriTemplate": "{_}",
           "tokenMap": "soundPlaybackChannel"
         },
         "[5:6]": {
-          "property": "soundGroove",
+          "link": "soundGroove",
+          "uriTemplate": "{_}",
           "tokenMap": "soundGroove"
         },
         "[6:7]": {
-          "property": "soundDimensions",
+          "link": "soundDimensions",
+          "uriTemplate": "{_}",
           "tokenMap": "soundDimensions"
         },
         "[7:8]": {
-          "property": "soundTapeWidth",
+          "link": "soundTapeWidth",
+          "uriTemplate": "{_}",
           "tokenMap": "soundTapeWidth"
         },
         "[8:9]": {
-          "property": "soundTapeConfiguration",
+          "link": "soundTapeConfiguration",
+          "uriTemplate": "{_}",
           "tokenMap": "soundTapeConfiguration"
         },
         "[9:10]": {
-          "property": "soundKindOfDisc",
+          "link": "soundKindOfDisc",
+          "uriTemplate": "{_}",
           "tokenMap": "soundKindOfDisc"
         },
         "[10:11]": {
-          "property": "soundKindOfMaterial",
+          "link": "soundKindOfMaterial",
+          "uriTemplate": "{_}",
           "tokenMap": "soundKindOfMaterial"
         },
         "[11:12]": {
-          "property": "soundKindOfCutting",
+          "link": "soundKindOfCutting",
+          "uriTemplate": "{_}",
           "tokenMap": "soundKindOfCutting"
         },
         "[12:13]": {
-          "property": "soundPlaybackCharacter",
+          "link": "soundPlaybackCharacter",
+          "uriTemplate": "{_}",
           "tokenMap": "soundPlaybackCharacter"
         },
         "[13:14]": {
-          "property": "soundCapture",
+          "link": "soundCapture",
+          "uriTemplate": "{_}",
           "tokenMap": "soundCapture"
         }
       },
       "Text": {
         "[1:2]": {
-          "tokenMap": "textMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "textMaterial"
+        },
+        "[3:4]": {
+          "link": "videoColor",
+          "uriTemplate": "{_}",
+          "tokenMap": "videoColor"
+        },
+        "[4:5]": {
+          "link": "videoFormat",
+          "uriTemplate": "{_}",
+          "tokenMap": "videoFormat"
+        },
+        "[5:6]": {
+          "link": "videoSound",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphSound"
+        },
+        "[6:7]": {
+          "link": "videoMedium",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphMedium"
+        },
+        "[7:8]": {
+          "link": "videoDimensions",
+          "uriTemplate": "{_}",
+          "tokenMap": "videoDimensions"
+        },
+        "[8:9]": {
+          "link": "videoPlayback",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicConfiguration"
         }
       },
       "VideoRecording": {
         "[1:2]": {
-          "tokenMap": "videoMaterial",
           "addLink": "carrierType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "videoMaterial"
         },
         "[3:4]": {
-          "property": "videoColor",
+          "link": "videoColor",
+          "uriTemplate": "{_}",
           "tokenMap": "videoColor"
         },
         "[4:5]": {
-          "property": "videoFormat",
+          "link": "videoFormat",
+          "uriTemplate": "{_}",
           "tokenMap": "videoFormat"
         },
         "[5:6]": {
-          "property": "videoSound",
-          "tokenMap": "videoSound"
+          "link": "videoSound",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphSound"
         },
         "[6:7]": {
-          "property": "videoMedium",
-          "tokenMap": "videoMedium"
+          "link": "videoMedium",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphMedium"
         },
         "[7:8]": {
-          "property": "videoDimensions",
+          "link": "videoDimensions",
+          "uriTemplate": "{_}",
           "tokenMap": "videoDimensions"
         },
         "[8:9]": {
-          "property": "videoPlayback",
-          "tokenMap": "videoPlayback"
+          "link": "videoPlayback",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicConfiguration"
         },
         "[9:11]": {
-          "property": "remoteSensImageData",
+          "link": "remoteSensImageData",
+          "uriTemplate": "{_}",
           "tokenMap": "remoteSensImageData"
         }
       },
@@ -887,6 +2299,24 @@
 
     "008": {
       "repeatedBy": "006",
+      "[0:6]": {
+        "property": "date"
+      },
+      "[6:7]": {
+        "link": "publicationStatus",
+        "uriTemplate": "{_}",
+        "tokenMap": "publicationStatus"
+      },
+      "[7:11]": {
+        "property": "publishedYear"
+      },
+      "[11:15]": {
+        "property": "otherYear"
+      },
+      "[15:18]": {
+        "link": "country",
+        "uriTemplate": "/def/countries/{_}"
+      },
       "[35:38]": {
         "domainEntity": "Work",
         "link": "language",
@@ -906,6 +2336,7 @@
         "property": "catalogingSource",
         "tokenMap": "catalogingSource"
       },
+
       "recTypeBibLevelMap": {
         "a,h,t": {
           "Book": ["a", "c", "d", "m"],
@@ -933,432 +2364,387 @@
           "Visual": ["9"]
         }
       },
+
       "Book": {
-        "[0:6]": {
-          "property": "date"
-        },
-        "[6:7]": {
-          "property": "publicationStatus",
-          "tokenMap": "publicationStatus"
-        },
-        "[7:11]": {
-          "property": "publishedYear"
-        },
-        "[11:15]": {
-          "property": "otherYear"
-        },
-        "[15:18]": {
-          "property": "country"
-        },
         "[18:19]": {
-          "property": "booksIllustrations",
+          "link": "booksIllustrations",
+          "uriTemplate": "{_}",
           "tokenMap": "booksIllustrations"
         },
         "[19:20]": {
-          "property": "booksIllustrations",
+          "link": "booksIllustrations",
+          "uriTemplate": "{_}",
           "tokenMap": "booksIllustrations"
         },
         "[20:21]": {
-          "property": "booksIllustrations",
+          "link": "booksIllustrations",
+          "uriTemplate": "{_}",
           "tokenMap": "booksIllustrations"
         },
         "[21:22]": {
-          "property": "booksIllustrations",
+          "link": "booksIllustrations",
+          "uriTemplate": "{_}",
           "tokenMap": "booksIllustrations"
         },
         "[22:23]": {
-          "property": "booksAudience",
+          "link": "booksAudience",
+          "uriTemplate": "{_}",
           "tokenMap": "booksAudience"
         },
         "[23:24]": {
-          "property": "booksItem",
+          "link": "booksItem",
+          "uriTemplate": "{_}",
           "tokenMap": "booksItem"
         },
         "[24:25]": {
-          "tokenMap": "booksContents",
           "addLink": "contentType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
         },
         "[25:26]": {
-          "tokenMap": "booksContents",
           "addLink": "contentType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
         },
         "[26:27]": {
-          "tokenMap": "booksContents",
           "addLink": "contentType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
         },
         "[27:28]": {
-          "tokenMap": "booksContents",
           "addLink": "contentType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
         },
         "[28:29]": {
-          "property": "booksGovtPub",
+          "link": "booksGovtPub",
+          "uriTemplate": "{_}",
           "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
           "property": "booksConfPub",
+          "boolean": true,
           "tokenMap": "booksConfPub"
         },
         "[30:31]": {
           "property": "booksFestschrift",
+          "boolean": true,
           "tokenMap": "booksFestschrift"
         },
         "[31:32]": {
-          "property": "booksIndex",
+          "link": "booksIndex",
+          "uriTemplate": "{_}",
           "tokenMap": "booksIndex"
         },
         "[33:34]": {
-          "property": "booksLiteraryForm",
+          "link": "booksLiteraryForm",
+          "uriTemplate": "{_}",
           "tokenMap": "booksLiteraryForm"
         },
         "[34:35]": {
-          "property": "booksBiography",
+          "link": "booksBiography",
+          "uriTemplate": "{_}",
           "tokenMap": "booksBiography"
         }
       },
       "Digital": {
-        "[0:6]": {
-          "property": "date"
-        },
-        "[6:7]": {
-          "property": "publicationStatus",
-          "tokenMap": "publicationStatus"
-        },
-        "[7:11]": {
-          "property": "publishedYear"
-        },
-        "[11:15]": {
-          "property": "otherYear"
-        },
-        "[15:18]": {
-          "property": "country"
-        },
         "[22:23]": {
-          "property": "computerAudience",
-          "tokenMap": "computerAudience"
+          "link": "computerAudience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
         },
         "[23:24]": {
-          "property": "computerItem",
+          "link": "computerItem",
+          "uriTemplate": "{_}",
           "tokenMap": "computerItem"
         },
         "[26:27]": {
-          "tokenMap": "computerTypeOfFile",
           "addLink": "contentType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "computerTypeOfFile"
         },
         "[28:29]": {
-          "property": "computerGovtPub",
-          "tokenMap": "computerGovtPub"
+          "link": "computerGovtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
         },
         "[18:19]": {
-          "property": "computerFrequency",
+          "link": "computerFrequency",
+          "uriTemplate": "{_}",
           "tokenMap": "computerFrequency"
         },
         "[19:20]": {
-          "property": "computerRegularity",
+          "link": "computerRegularity",
+          "uriTemplate": "{_}",
           "tokenMap": "computerRegularity"
         }
       },
       "Map": {
-        "[0:6]": {
-          "property": "date"
-        },
-        "[6:7]": {
-          "property": "publicationStatus",
-          "tokenMap": "publicationStatus"
-        },
-        "[7:11]": {
-          "property": "publishedYear"
-        },
-        "[11:15]": {
-          "property": "otherYear"
-        },
-        "[15:18]": {
-          "property": "country"
-        },
         "[18:19]": {
-          "property": "mapsRelief",
+          "link": "mapsRelief",
+          "uriTemplate": "{_}",
           "tokenMap": "mapsRelief"
         },
         "[19:20]": {
-          "property": "mapsRelief",
+          "link": "mapsRelief",
+          "uriTemplate": "{_}",
           "tokenMap": "mapsRelief"
         },
         "[20:21]": {
-          "property": "mapsRelief",
+          "link": "mapsRelief",
+          "uriTemplate": "{_}",
           "tokenMap": "mapsRelief"
         },
         "[21:22]": {
-          "property": "mapsRelief",
+          "link": "mapsRelief",
+          "uriTemplate": "{_}",
           "tokenMap": "mapsRelief"
         },
         "[22:24]": {
-          "property": "mapsProjection",
+          "link": "mapsProjection",
+          "uriTemplate": "{_}",
           "tokenMap": "mapsProjection"
         },
         "[25:26]": {
-          "property": "mapsMaterial",
+          "link": "mapsMaterial",
+          "uriTemplate": "{_}",
           "tokenMap": "mapsMaterial"
         },
         "[28:29]": {
-          "property": "mapsGovtPub",
-          "tokenMap": "mapsGovtPub"
+          "link": "mapsGovtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
-          "property": "mapsItem",
-          "tokenMap": "mapsItem"
+          "link": "mapsItem",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
         },
         "[31:32]": {
-          "property": "mapsIndex",
-          "tokenMap": "mapsIndex"
+          "link": "mapsIndex",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIndex"
         },
         "[33:34]": {
-          "property": "mapsFormat",
+          "link": "mapsFormat",
+          "uriTemplate": "{_}",
           "tokenMap": "mapsFormat"
         },
         "[34:35]": {
-          "property": "mapsFormat",
+          "link": "mapsFormat",
+          "uriTemplate": "{_}",
           "tokenMap": "mapsFormat"
         },
         "[24:25]": {
-          "property": "mapsPrimeMeridian",
+          "link": "mapsPrimeMeridian",
+          "uriTemplate": "{_}",
           "tokenMap": "mapsPrimeMeridian"
         }
       },
       "Mixed": {
-        "[0:6]": {
-          "property": "date"
-        },
-        "[6:7]": {
-          "property": "publicationStatus",
-          "tokenMap": "publicationStatus"
-        },
-        "[7:11]": {
-          "property": "publishedYear"
-        },
-        "[11:15]": {
-          "property": "otherYear"
-        },
-        "[15:18]": {
-          "property": "country"
-        },
         "[23:24]": {
-          "property": "mixedItem",
-          "tokenMap": "mixedItem"
+          "link": "mixedItem",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
         }
       },
       "Music": {
-        "[0:6]": {
-          "property": "date"
-        },
-        "[6:7]": {
-          "property": "publicationStatus",
-          "tokenMap": "publicationStatus"
-        },
-        "[7:11]": {
-          "property": "publishedYear"
-        },
-        "[11:15]": {
-          "property": "otherYear"
-        },
-        "[15:18]": {
-          "property": "country"
-        },
         "[18:20]": {
-          "property": "musicComposition",
+          "link": "musicComposition",
+          "uriTemplate": "{_}",
           "tokenMap": "musicComposition"
         },
         "[20:21]": {
-          "property": "musicFormat",
+          "link": "musicFormat",
+          "uriTemplate": "{_}",
           "tokenMap": "musicFormat"
         },
         "[21:22]": {
-          "property": "musicParts",
+          "link": "musicParts",
+          "uriTemplate": "{_}",
           "tokenMap": "musicParts"
         },
         "[22:23]": {
-          "property": "musicAudience",
-          "tokenMap": "musicAudience"
+          "link": "musicAudience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
         },
         "[23:24]": {
-          "property": "musicItem",
+          "link": "musicItem",
+          "uriTemplate": "{_}",
           "tokenMap": "musicItem"
         },
         "[24:25]": {
-          "property": "musicMatter",
+          "link": "musicMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[25:26]": {
-          "property": "musicMatter",
+          "link": "musicMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[26:27]": {
-          "property": "musicMatter",
+          "link": "musicMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[27:28]": {
-          "property": "musicMatter",
+          "link": "musicMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[28:29]": {
-          "property": "musicMatter",
+          "link": "musicMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[29:30]": {
-          "property": "musicMatter",
+          "link": "musicMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[30:31]": {
-          "property": "musicText",
+          "link": "musicText",
+          "uriTemplate": "{_}",
           "tokenMap": "musicText"
         },
         "[31:32]": {
-          "property": "musicText",
+          "link": "musicText",
+          "uriTemplate": "{_}",
           "tokenMap": "musicText"
         },
         "[33:34]": {
-          "property": "musicTransposition",
+          "link": "musicTransposition",
+          "uriTemplate": "{_}",
           "tokenMap": "musicTransposition"
         }
       },
       "Serial": {
-        "[0:6]": {
-          "property": "date"
-        },
-        "[6:7]": {
-          "property": "publicationStatus",
-          "tokenMap": "publicationStatus"
-        },
-        "[7:11]": {
-          "property": "publishedYear"
-        },
-        "[11:15]": {
-          "property": "otherYear"
-        },
-        "[15:18]": {
-          "property": "country"
-        },
         "[18:19]": {
-          "property": "serialsFrequency",
+          "link": "serialsFrequency",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsFrequency"
         },
         "[19:20]": {
-          "property": "serialsRegularity",
+          "link": "serialsRegularity",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsRegularity"
         },
         "[20:21]": {
-          "property": "serialsISSN",
+          "link": "serialsISSN",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsISSN"
         },
         "[21:22]": {
-          "tokenMap": "serialsTypeOfSerial",
           "addLink": "contentType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsTypeOfSerial"
         },
         "[22:23]": {
-          "property": "serialsOriginalItem",
+          "link": "serialsOriginalItem",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsOriginalItem"
         },
         "[23:24]": {
-          "property": "serialsItem",
-          "tokenMap": "serialsItem"
+          "link": "serialsItem",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
         },
         "[24:25]": {
-          "property": "serialsNature",
+          "link": "serialsNature",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsNature"
         },
         "[25:26]": {
-          "property": "serialsContents",
+          "link": "serialsContents",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsContents"
         },
         "[26:27]": {
-          "property": "serialsContents",
+          "link": "serialsContents",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsContents"
         },
         "[27:28]": {
-          "property": "serialsContents",
+          "link": "serialsContents",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsContents"
         },
         "[28:29]": {
-          "property": "serialsGovtPub",
-          "tokenMap": "serialsGovtPub"
+          "link": "serialsGovtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
           "property": "serialsConfPub",
-          "tokenMap": "serialsConfPub"
+          "boolean": true,
+          "tokenMap": "booksConfPub"
         },
         "[33:34]": {
-          "property": "serialsAlphabet",
+          "link": "serialsAlphabet",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsAlphabet"
         },
         "[34:35]": {
-          "property": "serialsTypeOfEntry",
+          "link": "serialsTypeOfEntry",
+          "uriTemplate": "{_}",
           "tokenMap": "serialsTypeOfEntry"
         }
       },
       "Visual": {
-        "[0:6]": {
-          "property": "date"
-        },
-        "[6:7]": {
-          "property": "publicationStatus",
-          "tokenMap": "publicationStatus"
-        },
-        "[7:11]": {
-          "property": "publishedYear"
-        },
-        "[11:15]": {
-          "property": "otherYear"
-        },
-        "[15:18]": {
-          "property": "country"
-        },
         "[18:21]": {
           "property": "visualRunningTime",
-          "tokenMap": "visualRunningTime"
+          "patternMap": "visualRunningTime"
         },
         "[22:23]": {
-          "property": "visualAudience",
-          "tokenMap": "visualAudience"
+          "link": "visualAudience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
         },
         "[28:29]": {
-          "property": "visualGovtPub",
-          "tokenMap": "visualGovtPub"
+          "link": "visualGovtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
-          "property": "visualItem",
-          "tokenMap": "visualItem"
+          "link": "visualItem",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
         },
         "[33:34]": {
-          "tokenMap": "visualMaterial",
           "addLink": "contentType",
-          "uriTemplate": "enum:{_}"
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMaterial"
         },
         "[34:35]": {
-          "property": "visualTechnique",
+          "link": "visualTechnique",
+          "uriTemplate": "{_}",
           "tokenMap": "visualTechnique"
         },
         "[23:24]": {
-          "property": "visualMatter",
+          "link": "visualMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         },
         "[24:25]": {
-          "property": "visualMatter",
+          "link": "visualMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         },
         "[25:26]": {
-          "property": "visualMatter",
+          "link": "visualMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         },
         "[26:27]": {
-          "property": "visualMatter",
+          "link": "visualMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         },
         "[27:28]": {
-          "property": "visualMatter",
+          "link": "visualMatter",
+          "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         }
       },
