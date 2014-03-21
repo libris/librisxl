@@ -36,6 +36,9 @@
                 "completeexpander",
                 "documentapi"
                 ],
+            "_prawns": [
+                "indexingprawn"
+                ],
             "_otherplugins": [
                 "localindex",
                 "flatstorage",

@@ -24,14 +24,17 @@ class StandardWhelk implements Whelk {
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
 
-    private List<BlockingQueue> queues
+    private Map<String, List<BlockingQueue>> queues
+    private List<Thread> prawnThreads
+    boolean prawnsActive = false
 
     // Set by configuration
     URI docBaseUri
 
     StandardWhelk(String id) {
         this.id = id
-        queues = new ArrayList<BlockingQueue>()
+        queues = [:].withDefault { new ArrayList<BlockingQueue>() }
+        prawnThreads = []
     }
 
     void setDocBaseUri(String uri) {
@@ -101,9 +104,9 @@ class StandardWhelk implements Whelk {
             doc = storage.get(uri, version)
         }
 
-        if (doc?.identifier && queues) {
+        if (prawnsActive && doc?.identifier && queues) {
             log.debug("Adding ${doc.identifier} to prawn queue")
-            for (queue in queues) {
+            for (queue in queues.get(GetPrawn.TRIGGER)) {
                 queue.put(doc)
             }
         }
@@ -155,7 +158,7 @@ class StandardWhelk implements Whelk {
             log.trace("Document has ctype ${doc.contentType} after conversion.")
             docs.put(doc.contentType, doc)
         }
-        log.debug("All converters has run. Docs now: $docs")
+        log.trace("All converters has run. Docs now: $docs")
         for (d in docs.values()) {
             log.trace("doc in loop has ct ${d.contentType}")
             for (st in getStorages(d.contentType)) {
@@ -324,11 +327,37 @@ class StandardWhelk implements Whelk {
         }
         plugin.init(this.id)
         if (plugin instanceof Prawn) {
+            prawnsActive = true
             log.debug("[${this.id}] Starting Prawn: ${plugin.id}")
-            queues.add(plugin.getQueue())
-            (new Thread(plugin)).start()
+            log.debug("Adding to queue ${plugin.trigger}")
+            queues.get(plugin.trigger).add(plugin.getQueue())
+            def t = new Thread(plugin)
+            t.start()
+            prawnThreads << t
         }
         this.plugins.add(plugin)
+    }
+
+
+    void stopPrawns() {
+        prawnsActive = false
+        for (t in prawnThreads) {
+            t.interrupt()
+        }
+    }
+
+    void startPrawns() {
+        prawnThreads = []
+        for (plugin in plugins) {
+            if (plugin instanceof Prawn) {
+                prawnsActive = true
+                log.debug("[${this.id}] Starting Prawn: ${plugin.id}")
+                queues.get(plugin.trigger).add(plugin.getQueue())
+                def t = new Thread(plugin)
+                t.start()
+                prawnThreads << t
+            }
+        }
     }
 
     @Override

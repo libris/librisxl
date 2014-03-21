@@ -21,6 +21,9 @@
                     "libcount",
                     "documentapi"
                 ],
+                "_prawns": [
+                    "indexingprawn"
+                    ],
                 "_otherplugins": [
                     "index",
                     "cassandrastorage",
