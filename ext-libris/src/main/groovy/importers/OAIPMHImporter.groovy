@@ -70,7 +70,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         URL url = new URL(urlString)
         String resumptionToken = harvest(url)
         log.debug("resumptionToken: $resumptionToken")
+        long loadUrlTime = startTime
+        long elapsed = 0
         while (!cancelled && resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
+            loadUrlTime = System.currentTimeMillis()
             url = new URL(serviceUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
             log.trace("Harvesting $url")
             try {
@@ -79,9 +82,13 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             } catch (XmlParsingFailedException xpfe) {
                 log.warn("Harvesting failed. Retrying ...")
             }
+            elapsed = System.currentTimeMillis() - loadUrlTime
+            if (elapsed > 2000) {
+                log.warn("Load from url took more than two seconds ($elapsed)")
+            }
             log.debug("resumptionToken: $resumptionToken")
         }
-        log.debug("Flushing ...")
+        log.info("Flushing data ...")
         queue.execute({
             this.whelk.flush()
         } as Runnable)
@@ -161,7 +168,11 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         queue.execute({
             try {
                 log.debug("Adding ${documents.size()} documents to whelk.")
+                long elapsed = System.currentTimeMillis()
                 this.whelk.bulkAdd(documents)
+                if ((System.currentTimeMillis() - elapsed) > 2000) {
+                    log.warn("Bulk add took more than 2 seconds (${System.currentTimeMillis() - elapsed})")
+                }
             } catch (WhelkAddException wae) {
                 errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
             } catch (Exception e) {
