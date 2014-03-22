@@ -100,7 +100,7 @@ class JsonLdToTurtle {
         }
         def s = obj[keys.id]
         if (s && obj.size() > 1) {
-            pw.println(refRepr(s))
+            pw.print(refRepr(s))
         } else if (level > 0) {
             pw.println("[")
         } else {
@@ -169,10 +169,10 @@ class JsonLdToTurtle {
         } else {
             def coerceTo = coerceFor(viaKey)
             if (coerceTo == "@vocab") {
-                pw.println(refRepr(value, true))
+                pw.print(refRepr(value, true))
                 return
             } else if (coerceTo == "@id") {
-                pw.println(refRepr(value))
+                pw.print(refRepr(value))
                 return
             } else if (coerceTo) {
                 datatype = coerceTo
