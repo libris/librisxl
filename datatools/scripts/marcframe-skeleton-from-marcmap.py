@@ -10,11 +10,17 @@ show_repeatable = True
 skip_unlinked_maps = False
 
 
-rename_type_map = {
-    'Books': 'Book',
-    'Maps': 'Map',
+content_name_map = {
+    'Books': 'Text',
+    'Book': 'Text',
+    'Maps': 'Cartography',
+    'Map': 'Cartography',
+    'Music': 'Audio',
     'Serials': 'Serial',
-    'Computer': 'Digital',
+    'Computer': 'Digital'
+}
+
+carrier_name_map = {
     'ComputerFile': 'Electronic'
 }
 
@@ -89,8 +95,8 @@ def fixprop_to_name(propname, key):
 out = OrderedDict()
 
 tokenMaps = out['tokenMaps'] = OrderedDict()
-compositionTypeMap = out['compositionTypeMap'] = OrderedDict()
-contentTypeMap = out['contentTypeMap'] = OrderedDict()
+#compositionTypeMap = out['compositionTypeMap'] = OrderedDict()
+#contentTypeMap = out['contentTypeMap'] = OrderedDict()
 
 tmap_hashes = {} # to reuse repeated tokenmap
 enums = set() # to prevent enum id collisions
@@ -128,7 +134,11 @@ for tag, field in sorted(marcmap['bib'].items()):
                     outf['tokenTypeMap'] = tokenTypeMap
 
                 type_name = fixmap.get('term') or fixmap['name'].split(tag + '_')[1]
-                type_name = rename_type_map.get(type_name, type_name)
+                if tag in ('006', '008'):
+                    type_name = content_name_map.get(type_name, type_name)
+                elif tag in ('007'):
+                    type_name = carrier_name_map.get(type_name, type_name)
+
                 fm = outf[type_name] = OrderedDict()
 
                 if tag == '008':
@@ -142,20 +152,20 @@ for tag, field in sorted(marcmap['bib'].items()):
                         if not comp_name:
                             continue
 
-                        is_serial = type_name == 'Serial'
-                        if comp_name == 'MonographItem' or is_serial:
-                            content_type = contentTypeMap.setdefault(type_name, OrderedDict())
-                            subtypes = content_type.setdefault('subclasses', OrderedDict())
-                            if is_serial:
-                                subtype_name += 'Serial'
-                            typedef = subtypes[subtype_name] = OrderedDict()
-                            typedef['typeOfRecord'] = rt
-                        else:
-                            comp_type = compositionTypeMap.setdefault(comp_name, OrderedDict())
-                            comp_type['bibLevel'] = bl
-                            parts = comp_type.setdefault('partRange', set())
-                            parts.add(type_name)
-                            parts.add(subtype_name)
+                        #is_serial = type_name == 'Serial'
+                        #if comp_name == 'MonographItem' or is_serial:
+                        #    content_type = contentTypeMap.setdefault(type_name, OrderedDict())
+                        #    subtypes = content_type.setdefault('subclasses', OrderedDict())
+                        #    if is_serial:
+                        #        subtype_name += 'Serial'
+                        #    typedef = subtypes[subtype_name] = OrderedDict()
+                        #    typedef['typeOfRecord'] = rt
+                        #else:
+                        #    comp_type = compositionTypeMap.setdefault(comp_name, OrderedDict())
+                        #    comp_type['bibLevel'] = bl
+                        #    parts = comp_type.setdefault('partRange', set())
+                        #    parts.add(type_name)
+                        #    parts.add(subtype_name)
 
                 else:
                     for k in fixmap['matchKeys']:
@@ -213,7 +223,7 @@ for tag, field in sorted(marcmap['bib'].items()):
                             v = dfn['id']
                             subname = to_name(v)
                         else:
-                            subname = dfn['label_sv'].replace(' ', '+')
+                            subname = dfn['label_sv'].replace(' ', '_').replace('/', '-')
                         if key in ('_', '|') and any(t in subname for t in ('No', 'Ej', 'Inge')):
                             continue
                         elif subname.replace('Obsolete', '') in {
@@ -299,16 +309,16 @@ for tag, field in sorted(marcmap['bib'].items()):
     prevtag = tag
 
 
-# sanity check..
-prevranges = None
-for k, v in compositionTypeMap.items():
-    ranges = v['partRange']
-    if prevranges and ranges - prevranges:
-        print "differs", k
-    else:
-        assert any(r in contentTypeMap for r in ranges)
-        v.pop('partRange')
-    prevranges = ranges
+## sanity check..
+#prevranges = None
+#for k, v in compositionTypeMap.items():
+#    ranges = v['partRange']
+#    if prevranges and ranges - prevranges:
+#        print "differs", k
+#    else:
+#        assert any(r in contentTypeMap for r in ranges)
+#        v.pop('partRange')
+#    prevranges = ranges
 
 
 class SetEncoder(json.JSONEncoder):
