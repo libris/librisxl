@@ -64,7 +64,7 @@
       "a": "trec:ArchivalControl"
     },
     "characterCoding": {
-      "a": "trec:UCS/Unicode"
+      "a": "trec:UCS-Unicode"
     },
     "encLevel": {
       "1": "trec:FullLevelMaterialNotExamined",
@@ -136,7 +136,7 @@
       "d": "tcon:LargePrint",
       "f": "tcon:Braille",
       "o": "tcon:Onlineutgåva",
-      "q": "tcon:Utgåva+i+direkt+elektronisk+form",
+      "q": "tcon:Utgåva_i_direkt_elektronisk_form",
       "r": "tcon:RegularPrintReproduction",
       "s": "tcon:Electronic"
     },
@@ -279,7 +279,7 @@
       "su": "tcon:Suite",
       "sy": "tcon:Symphony",
       "tc": "tcon:Toccata",
-      "tl": "tcon:Teatro+lirico",
+      "tl": "tcon:Teatro_lirico",
       "ts": "tcon:TrioSonata",
       "uu": null,
       "vl": "tcon:Villancicos",
@@ -297,10 +297,10 @@
       "e": "tcon:CondensedScoreOrPianoConductorScore",
       "g": "tcon:CloseScore",
       "h": "tcon:Körpartitur",
-      "i": "tcon:Reducerat+partitur+(condensed+scoore)",
-      "j": "tcon:Direktion+för+enstaka+instrument+(performer-conductor+part)",
+      "i": "tcon:Reducerat_partitur_(condensed_scoore)",
+      "j": "tcon:Direktion_för_enstaka_instrument_(performer-conductor_part)",
       "k": "tcon:Vokalpartitur",
-      "l": "tcon:Komplett+musikalisk+notation+för+konsertframförande+(score)",
+      "l": "tcon:Komplett_musikalisk_notation_för_konsertframförande_(score)",
       "m": "tcon:MultipleScoreFormat",
       "n": null,
       "u": null,
@@ -320,7 +320,7 @@
       "d": "tcon:LargePrint",
       "f": "tcon:Braille",
       "o": "tcon:Onlineutgåva",
-      "q": "tcon:Utgåva+i+direkt+elektronisk+form",
+      "q": "tcon:Utgåva_i_direkt_elektronisk_form",
       "r": "tcon:RegularPrintReproductionEyeReadablePrint",
       "s": "tcon:Electronic"
     },
@@ -512,8 +512,8 @@
     },
     "computerItem": {
       "o": "tcon:Onlineutgåva",
-      "q": "tcon:Utgåva+i+direkt+elektronisk+form",
-      "s": "tcon:Utgåva+i+ospecificerad+elektronisk+form"
+      "q": "tcon:Utgåva_i_direkt_elektronisk_form",
+      "s": "tcon:Utgåva_i_ospecificerad_elektronisk_form"
     },
     "computerTypeOfFile": {
       "a": "tcon:NumericData",
@@ -561,7 +561,7 @@
       "1": "tcon:UnitedState",
       "2": "tcon:UnitedKingdom",
       "4": "tcon:Canada",
-      "f": "tcon:Sverige+(obsolet)",
+      "f": "tcon:Sverige_(obsolet)",
       "z": null
     },
     "serialsTypeOfSerial": {
@@ -580,11 +580,11 @@
       "e": "tcon:NewspaperFormat",
       "f": "tcon:Braille",
       "o": "tcon:Onlineutgåva",
-      "q": "tcon:Utgåva+i+direkt+elektronisk+form",
+      "q": "tcon:Utgåva_i_direkt_elektronisk_form",
       "s": "tcon:Electronic"
     },
     "serialsNature": {
-      "6": "tcon:Tecknad+serie+/+Serieroman",
+      "6": "tcon:Tecknad_serie_-_Serieroman",
       "a": "tcon:AbstractsSummary",
       "b": "tcon:Bibliography",
       "c": "tcon:Catalog",
@@ -612,7 +612,7 @@
     },
     "serialsContents": {
       "5": "tcon:Kalender",
-      "6": "tcon:Tecknad+serie+/+Serieroman",
+      "6": "tcon:Tecknad_serie_-_Serieroman",
       "a": "tcon:AbstractsSummary",
       "b": "tcon:Bibliography",
       "c": "tcon:Catalog",
@@ -742,72 +742,72 @@
       "z": null
     },
     "computerColor": {
-      "a": "tcar:En+färg+som+kontrasterar+mot+vitt",
+      "a": "tcar:En_färg_som_kontrasterar_mot_vitt",
       "b": "tcar:Svartvit",
-      "c": "tcar:Flera+färger",
+      "c": "tcar:Flera_färger",
       "g": "tcar:Gråskala",
-      "m": "tcar:Kombination+av+flera+färgtekniker",
-      "n": "tcar:Ej+tillämplig",
-      "u": "tcar:Okända+färgegenskaper",
-      "z": "tcar:Annan+färgegenskap"
+      "m": "tcar:Kombination_av_flera_färgtekniker",
+      "n": "tcar:Ej_tillämplig",
+      "u": "tcar:Okända_färgegenskaper",
+      "z": "tcar:Annan_färgegenskap"
     },
     "computerDimensions": {
-      "a": "tcar:3,5+tum",
-      "e": "tcar:12+tum",
-      "g": "tcar:4+4,75+tum+/+12+cm+(CD)",
-      "i": "tcar:1+1/8+x+2+3/8+tum",
-      "j": "tcar:3+7/8+x+2+1/2+tum",
-      "n": "tcar:Ej+tillämplig",
-      "o": "tcar:5,25+tum",
-      "u": "tcar:Okänd+storlek",
-      "v": "tcar:8+tum",
-      "z": "tcar:Annan+storlek"
+      "a": "tcar:3,5_tum",
+      "e": "tcar:12_tum",
+      "g": "tcar:4_4,75_tum_-_12_cm_(CD)",
+      "i": "tcar:1_1/8_x_2_3/8_tum",
+      "j": "tcar:3_7/8_x_2_1/2_tum",
+      "n": "tcar:Ej_tillämplig",
+      "o": "tcar:5,25_tum",
+      "u": "tcar:Okänd_storlek",
+      "v": "tcar:8_tum",
+      "z": "tcar:Annan_storlek"
     },
     "computerSound": {
-      "a": "tcar:Resursen+innehåller+ljud+eller+avser+att+alstra+ljud",
-      "u": "tcar:Okänd+ljudstatus"
+      "a": "tcar:Resursen_innehåller_ljud_eller_avser_att_alstra_ljud",
+      "u": "tcar:Okänd_ljudstatus"
     },
     "computerImageBitDepth": {
-      "---": "tcar:Okänt+bit-djup",
-      "001~999": "tcar:Exakt+uppgift+om+bit-djup+(siffror)",
-      "mmm": "tcar:Flera+bit-djup+förekommer",
-      "nnn": "tcar:Ej+tillämplig",
-      "|||": "tcar:Inget+försök+att+koda"
+      "---": "tcar:Okänt_bit-djup",
+      "001~999": "tcar:Exakt_uppgift_om_bit-djup_(siffror)",
+      "mmm": "tcar:Flera_bit-djup_förekommer",
+      "nnn": "tcar:Ej_tillämplig",
+      "|||": "tcar:Inget_försök_att_koda"
     },
     "computerFileFormats": {
-      "a": "tcar:Ett+genomgående+filformat",
-      "m": "tcar:Flera+olika+filformat",
-      "u": "tcar:Okänd+filformatstatus"
+      "a": "tcar:Ett_genomgående_filformat",
+      "m": "tcar:Flera_olika_filformat",
+      "u": "tcar:Okänd_filformatstatus"
     },
     "computerQATarget": {
-      "a": "tcar:Testbilder+etc,+saknas",
-      "n": "tcar:Testbild+etc.+krävs+ej",
-      "p": "tcar:Testbilder+etc.+finns",
-      "u": "tcar:Okänt+om+testbilder+etc.+finns+eller+ej"
+      "a": "tcar:Testbilder_etc,_saknas",
+      "n": "tcar:Testbild_etc._krävs_ej",
+      "p": "tcar:Testbilder_etc._finns",
+      "u": "tcar:Okänt_om_testbilder_etc._finns_eller_ej"
     },
     "computerAntecedent": {
-      "a": "tcar:Filens+källa+är+en+originalresurs",
-      "b": "tcar:Filens+källa+är+ett+mikromedium",
-      "c": "tcar:Filens+källa+är+en+maskinläsbar+fil",
-      "d": "tcar:Filens+källa+är+ett+mellanoriginal+(ej+mikroform)",
-      "m": "tcar:Blandade+källor",
-      "n": "tcar:Ej+tillämplig",
-      "u": "tcar:Okänd+källa"
+      "a": "tcar:Filens_källa_är_en_originalresurs",
+      "b": "tcar:Filens_källa_är_ett_mikromedium",
+      "c": "tcar:Filens_källa_är_en_maskinläsbar_fil",
+      "d": "tcar:Filens_källa_är_ett_mellanoriginal_(ej_mikroform)",
+      "m": "tcar:Blandade_källor",
+      "n": "tcar:Ej_tillämplig",
+      "u": "tcar:Okänd_källa"
     },
     "computerCompression": {
-      "a": "tcar:Filen+är+ej+komprimerad",
-      "b": "tcar:Filen+är+komprimerad+utan+risk+för+informationsförlust",
-      "d": "tcar:Filen+är+komprimerad+och+dekomprimering+medför+informationsförlust",
-      "m": "tcar:Blandade+tekniker",
-      "n": "tcar:Ej+tillämplig",
-      "u": "tcar:Okänd+komprimeringsstatus"
+      "a": "tcar:Filen_är_ej_komprimerad",
+      "b": "tcar:Filen_är_komprimerad_utan_risk_för_informationsförlust",
+      "d": "tcar:Filen_är_komprimerad_och_dekomprimering_medför_informationsförlust",
+      "m": "tcar:Blandade_tekniker",
+      "n": "tcar:Ej_tillämplig",
+      "u": "tcar:Okänd_komprimeringsstatus"
     },
     "computerReformattingQuality": {
-      "a": "tcar:Brukskopia,+ej+originalkvalitet",
-      "n": "tcar:Ej+tillämplig",
-      "p": "tcar:Arkivkvalitet+för+långtidslagring",
-      "r": "tcar:Arkivkvalitet+som+kan+duga+som+ersättningsexemplar",
-      "u": "tcar:Okänd+kvalitet"
+      "a": "tcar:Brukskopia,_ej_originalkvalitet",
+      "n": "tcar:Ej_tillämplig",
+      "p": "tcar:Arkivkvalitet_för_långtidslagring",
+      "r": "tcar:Arkivkvalitet_som_kan_duga_som_ersättningsexemplar",
+      "u": "tcar:Okänd_kvalitet"
     },
     "globeMaterial": {
       "a": "tcar:CelestialGlobe",
@@ -876,7 +876,7 @@
       "l": "tcar:VerticalScore",
       "n": null,
       "u": null,
-      "z": "tcar:Annat+punktskriftsformat"
+      "z": "tcar:Annat_punktskriftsformat"
     },
     "tacSpecPhysicalChar": {
       "a": "tcar:PrintBraille",
@@ -953,16 +953,16 @@
       "z": null
     },
     "projGraphSupport": {
-      "_": "tcar:Stödjande+montering+saknas",
+      "_": "tcar:Stödjande_montering_saknas",
       "c": "tcar:Papp",
       "d": "tcar:Glas",
-      "e": "tcar:Syntetiskt+material",
+      "e": "tcar:Syntetiskt_material",
       "h": "tcar:Metall",
-      "j": "tcar:Metall+och+glas",
-      "k": "tcar:Syntetiskt+material+och+glas",
-      "m": "tcar:Blandad+montering",
-      "u": "tcar:Okänd+montering",
-      "z": "tcar:Annan+montering"
+      "j": "tcar:Metall_och_glas",
+      "k": "tcar:Syntetiskt_material_och_glas",
+      "m": "tcar:Blandad_montering",
+      "u": "tcar:Okänd_montering",
+      "z": "tcar:Annan_montering"
     },
     "microformMaterial": {
       "a": "tcar:ApertureCard",
@@ -1493,7 +1493,7 @@
       "o": "tcar:D234InVideocassette",
       "p": "tcar:8Mm",
       "q": "tcar:Hi8Mm",
-      "s": "tcar:Blu-ray+Disc",
+      "s": "tcar:Blu-ray_Disc",
       "u": null,
       "v": "tcar:Dvd",
       "z": null
