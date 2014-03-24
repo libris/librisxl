@@ -26,9 +26,10 @@
     },
     {
       "Agent": "prov:Agent",
+      "AnyDateTime": "edtf:EDTF-level0",
+      "ApproxDateTime": "edtf:EDTF-level1",
       "Archival": "bf:Archival",
       "Audio": "dctype:Sound",
-      "Audiobook": "bibo:AudioDocument",
       "Book": "bibo:Book",
       "Carrier": "dc:MediaType",
       "Cartography": "bf:Cartography",
@@ -39,6 +40,9 @@
       "ConceptualWork": "sdo:ProductModel",
       "CreativeWork": "sdo:CreativeWork",
       "Dataset": "sdo:Dataset",
+      "Date": "xsd:date",
+      "DateTime": "xsd:dateTime",
+      "Day": "xsd:gDay",
       "Digital": "bf:Electronic",
       "Holding": "bf:Holding",
       "Image": "dctype:Image",
@@ -47,6 +51,8 @@
       "Manuscript": "bf:Manuscript",
       "MixedMaterial": "bf:MixedMaterial",
       "Monograph": "bf:Monograph",
+      "Month": "xsd:gMonth",
+      "MonthDay": "xsd:gMonthDay",
       "MovingImage": "dctype:MovingImage",
       "MultiVolumeBook": "bibo:MultiVolumeBook",
       "Multimedia": "bf:Multimedia",
@@ -54,6 +60,7 @@
       "NotatedMovement": "bf:NotatedMovement",
       "NotatedMusic": "bf:NotatedMusic",
       "Organization": "sdo:Organization",
+      "PartialDateTime": "edtf:EDTF-level2",
       "Person": "sdo:Person",
       "Persona": "persona:Persona",
       "PhysicalObject": "dctype:PhysicalObject",
@@ -68,18 +75,19 @@
       "StillImage": "dctype:StillImage",
       "Tactile": "bf:Tactile",
       "Text": "dctype:Text",
+      "Time": "xsd:time",
       "Title": "bf:Title",
       "Website": "bibo:Website",
+      "Year": "xsd:gYear",
+      "YearMonth": "xsd:gYearMonth",
       "_note": null,
       "about": "sdo:about",
       "accompanyingMaterial": "xf:accompanyingMaterial",
-      "agent": "prov:agent",
-      "aggregateType": {
+      "additionalType": {
         "@type": "@vocab"
       },
+      "agent": "prov:agent",
       "altLabel": "skos:altLabel",
-      "anyDateTime": "edtf:EDTF-level0",
-      "approxDateTime": "edtf:EDTF-level1",
       "attributedTo": "prov:wasAttributedTo",
       "authorList": {
         "@container": "@list",
@@ -93,17 +101,13 @@
         "@type": "gYear"
       },
       "broader": "skos:broader",
-      "carrierType": {
-        "@type": "@vocab"
-      },
+      "carrierType": "dc:format",
       "catForm": "xf:catForm",
       "citation": "sdo:citation",
       "classificationPart": "xf:classificationPart",
       "closeMatch": "skos:closeMatch",
       "comment": "rdfs:comment",
-      "contentType": {
-        "@type": "@vocab"
-      },
+      "contentType": "dc:type",
       "contributorList": {
         "@container": "@list",
         "@id": "bibo:contributorList"
@@ -115,8 +119,6 @@
         "@type": "xsd:dateTime"
       },
       "creator": "dc:creator",
-      "date": "xsd:date",
-      "dateTime": "xsd:dateTime",
       "deathDate": "sdo:deathDate",
       "deathYear": {
         "@id": "deathDate",
@@ -130,15 +132,11 @@
       "familyName": "sdo:familyName",
       "format": "dc:format",
       "formatOf": "dc:isFormatOf",
-      "gDay": "xsd:gDay",
-      "gMonth": "xsd:gMonth",
-      "gMonthDay": "xsd:gMonthDay",
-      "gYear": "xsd:gYear",
-      "gYearMonth": "xsd:gYearMonth",
       "generic": "http://libris.kb.se/def/generic?label=",
-      "genre": "sdo:genre",
+      "genre": "bf:classification",
       "givenName": "sdo:givenName",
       "hasFormat": "dc:hasFormat",
+      "hasPart": "dc:hasPart",
       "hasPersona": "persona:hasPersona",
       "hasVersion": "dc:hasVersion",
       "hiddenLabel": "skos:hiddenLabel",
@@ -158,6 +156,7 @@
         "@container": "@list",
         "@id": "owl:intersectionOf"
       },
+      "isPartOf": "dc:isPartOf",
       "itemPart": "xf:itemPart",
       "jobTitle": "sdo:jobTitle",
       "keyword": {
@@ -179,7 +178,6 @@
       "note": "skos:note",
       "numeration": "xf:numeration",
       "otherPhysicalDetails": "xf:otherPhysicalDetails",
-      "partialDateTime": "edtf:EDTF-level2",
       "prefLabel": "skos:prefLabel",
       "publisher": "dc:publisher",
       "qualifiedAttribution": "prov:qualifiedAttribution",
@@ -204,7 +202,6 @@
       "source": "dc:source",
       "status": "xf:status",
       "subject": "dc:subject",
-      "time": "xsd:time",
       "title": "dc:title",
       "titleValue": "bf:titleValue",
       "typeOfRecord": "xf:typeOfRecord",

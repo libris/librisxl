@@ -32,31 +32,31 @@
       "p": "trec:IncreaseInEncodingLevelFromPrepublication"
     },
     "typeOfRecord": {
-      "a": "t:Text",
-      "c": "t:NotatedMusic",
-      "b": "t:ArchivalUnit",
-      "e": "t:Cartography",
-      "d": "t:ManuscriptNotatedMusic",
-      "g": "t:MovingImage",
-      "f": "t:ManuscriptCartography",
-      "i": "t:Audio",
-      "k": "t:StillImage",
-      "j": "t:Music",
-      "m": "t:Multimedia",
-      "o": "t:Kit",
-      "p": "t:MixedMaterial",
-      "r": "t:Realia",
-      "t": "t:ManuscriptText"
+      "a": "Text",
+      "c": "NotatedMusic",
+      "b": "ArchivalUnit",
+      "e": "Cartography",
+      "d": "ManuscriptNotatedMusic",
+      "g": "ProjectedImage",
+      "f": "ManuscriptCartography",
+      "i": "Audio",
+      "k": "StillImage",
+      "j": "Music",
+      "m": "Multimedia",
+      "o": "Kit",
+      "p": "MixedMaterial",
+      "r": "Realia",
+      "t": "ManuscriptText"
     },
     "bibLevel": {
-      "a": "t:ComponentPart",
-      "c": "t:Collection",
-      "b": "t:SerialComponentPart",
-      "d": "t:SubCollection",
-      "i": "t:Integrating",
-      "m": "t:Monograph",
-      "p": "t:Periodical",
-      "s": "t:Serial",
+      "a": "ComponentPart",
+      "c": "Collection",
+      "b": "SerialComponentPart",
+      "d": "SubCollection",
+      "i": "Integrating",
+      "m": "Monograph",
+      "p": "Periodical",
+      "s": "Serial",
       "9": null
     },
     "typeOfControl": {
@@ -1545,37 +1545,6 @@
 
   },
 
-  "entityTypeMap": {
-    "Authority": {"typeOfRecord": "z", "abstract": true},
-    "Holding": {"typeOfRecord": ["u", "v", "x", "y"]},
-    "Serial": {"typeOfRecord": "a", "bibLevel": "s",
-      "instanceTypes": {
-        "ESerial": {"carrierType": "c", "carrierMaterial": "r"}
-      }
-    },
-    "Book": {"typeOfRecord": "a", "bibLevel": "m",
-      "instanceTypes": {
-        "Audiobook": {"carrierType": "s"},
-        "CDBook": {"carrierType": "c", "carrierMaterial": "o"},
-        "EBook": {"carrierType": "c", "carrierMaterial": "r"}
-      }
-    },
-    "Cartography": {"typeOfRecord": "e", "bibLevel": "m",
-      "instanceTypes": {
-        "CDMap": {"carrierType": "c", "carrierMaterial": "o"}
-      }
-    },
-    "Audio": {"typeOfRecord": "i", "abstract": true,
-      "Audiobook": {"bibLevel": "m", "TODO": "not 655a=Talböcker"}
-    },
-    "Music": {"typeOfRecord": "j", "bibLevel": "m",
-      "instanceTypes": {
-        "MusicCD": {"carrierType": "s", "carrierMaterial": "d"}
-      }
-    },
-    "Digital": {"carrierType": "c", "mixin": true}
-  },
-
   "comboTypeMap": {
     "Serial": {"contentType": "Text", "aggregateType": "Serial",
       "ESerial": {"carrierType": "OnlineResource"}
@@ -1618,14 +1587,12 @@
       "[6:7]": {
         "domainEntity": "Instance",
         "tokenMap": "typeOfRecord",
-        "addLink": "contentType",
-        "uriTemplate": "{_}"
+        "addProperty": "@type"
       },
       "[7:8]": {
         "domainEntity": "Instance",
         "tokenMap": "bibLevel",
-        "link": "aggregateType",
-        "uriTemplate": "{_}"
+        "addProperty": "@type"
       },
       "[8:9]": {
         "domainEntity": "Record",
@@ -1670,34 +1637,34 @@
     "005": {"domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S"},
 
     "006": {
+      "match-repeated": {
+        "addLink": "hasPart"
+      },
       "[0:1]": {},
       "tokenSyncedWith": "typeOfRecord",
       "repeats": "008"
     },
 
     "007": {
-      "onRepeated": {
-        "addLink": "hasCarrier"
-      },
+      "addLink": "hasFormat",
       "[0:1]": {
-        "addLink": "carrierType",
-        "uriTemplate": "t:{_}",
+        "addProperty": "@type",
         "tokenMap": {
           "a": "Map",
           "c": "Electronic",
           "d": "Globe",
-          "f": "TactileMaterial",
-          "g": "ProjectedGraphic",
+          "f": "Tactile",
+          "g": "ProjectedImage",
           "h": "Microform",
-          "k": "NonprojectedGraphic",
-          "m": "MotionPicture",
+          "k": "StillImage",
+          "m": "MovingImage",
           "o": "Kit",
           "q": "NotatedMusic",
           "r": "RemoteSensingImage",
           "s": "SoundRecording",
           "t": "Text",
           "v": "VideoRecording",
-          "z": "Unspecified"
+          "z": null
         }
       },
       "tokenTypeMap": "[0:1]",
@@ -1821,7 +1788,7 @@
           "tokenMap": "mapAspect"
         }
       },
-      "TactileMaterial": {
+      "Tactile": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -1863,7 +1830,7 @@
           "tokenMap": "tacSpecPhysicalChar"
         }
       },
-      "ProjectedGraphic": {
+      "ProjectedImage": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -1955,7 +1922,7 @@
           "tokenMap": "mapAspect"
         }
       },
-      "NonprojectedGraphic": {
+      "StillImage": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -1982,7 +1949,7 @@
           "tokenMap": "mapAspect"
         }
       },
-      "MotionPicture": {
+      "MovingImage": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -2318,7 +2285,7 @@
         "uriTemplate": "/def/countries/{_}"
       },
       "[35:38]": {
-        "domainEntity": "Work",
+        "note:candidate:domainEntity": "Work",
         "link": "language",
         "uriTemplate": "/def/languages/{_}",
         "matchUriToken": "^\\w{2,3}$",
@@ -2339,7 +2306,7 @@
 
       "recTypeBibLevelMap": {
         "a,h,t": {
-          "Book": ["a", "c", "d", "m"],
+          "Text": ["a", "c", "d", "m"],
           "Serial": ["9", "b", "i", "p", "s"]
         },
         "b": {
@@ -2347,10 +2314,10 @@
           "Serial": ["b", "s"]
         },
         "c,d,i,j": {
-          "Music": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+          "Audio": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
         },
         "e,f": {
-          "Map": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+          "Cartography": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
         },
         "g,k,n,o,r": {
           "Visual": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
@@ -2365,7 +2332,7 @@
         }
       },
 
-      "Book": {
+      "Text": {
         "[18:19]": {
           "link": "booksIllustrations",
           "uriTemplate": "{_}",
@@ -2479,7 +2446,7 @@
           "tokenMap": "computerRegularity"
         }
       },
-      "Map": {
+      "Cartography": {
         "[18:19]": {
           "link": "mapsRelief",
           "uriTemplate": "{_}",
@@ -2548,7 +2515,7 @@
           "tokenMap": "musicItem"
         }
       },
-      "Music": {
+      "Audio": {
         "[18:20]": {
           "link": "musicComposition",
           "uriTemplate": "{_}",
@@ -2871,13 +2838,13 @@
     "043": {"ignored": true},
 
     "050": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "$a": {"property": "class-lcc"},
       "$b": {"ignored": true}
     },
 
     "082": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "$a": {"property": "class-ddc"},
       "$2": {"ignored": true}
     },
@@ -2887,7 +2854,7 @@
     },
 
     "084": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "addLink": "class",
       "match-domain": {
         "Work": {"addLink": "class"}, "Holding": {"addLink": "callno"}
@@ -2903,7 +2870,7 @@
     },
 
     "100": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "rangeEntity": "Person",
       "TODO:match-i1": {
         "1": {
@@ -2930,7 +2897,7 @@
       }
     },
     "110": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "rangeEntity": "Organization",
       "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -2943,7 +2910,7 @@
       "$d": {"property": "date"}
     },
     "130": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"}
     },
@@ -2951,7 +2918,7 @@
     "210": {
       "domainEntity": "Instance",
       "link": "abbreviatedTitle",
-      "rangeEntity": "TitleEntity",
+      "rangeEntity": "Title",
       "$a": {"property": "titleValue"},
       "$b": {"property": "titleQualifier"},
       "$2": {"property": "titleSource"}
@@ -2962,7 +2929,7 @@
       "$2": null
     },
     "240": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "$a": {"property": "uniformTitle"}
     },
     "242": {
@@ -2973,8 +2940,8 @@
       "i1": {},
       "i2": {},
       "domainEntity": "Instance",
-      "link": "title",
-      "rangeEntity": "TitleEntity",
+      "link": "instanceTitle",
+      "rangeEntity": "Title",
       "$a": {"property": "titleValue", "interpunctionChars": ":/"},
       "$b": {"property": "subtitle", "interpunctionChars": "/"},
       "$c": {"domainEntity": "Instance", "property": "responsibilityStatement"},
@@ -3027,7 +2994,12 @@
     },
 
     "300": {
-      "entity": "Instance",
+      "TODO:match-repetition?": {
+        "addLink": "hasFormat"
+      },
+      "domainEntity": "Instance",
+      "addLink": "hasFormat",
+      "rangeEntity": "Product",
       "$a": {"property": "extent", "interpunctionChars": "+:;"},
       "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
       "$b": {"property": "otherPhysicalDetails", "interpunctionChars": ";+"},
@@ -3049,7 +3021,7 @@
     "440": {"prefer": "490"},
 
     "440": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "addLink": "series",
       "rangeEntity": "Serial",
       "$a": {"property": "title", "interpunctionChars": ".,=;"},
@@ -3108,7 +3080,7 @@
       }
     },
     "650": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "rangeEntity": "Concept",
@@ -3182,7 +3154,7 @@
     "883": {},
 
     "976": {
-      "domainEntity": "Work",
+      "note:candidate:domainEntity": "Work",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "addLink": "class",
       "rangeEntity": "Concept",

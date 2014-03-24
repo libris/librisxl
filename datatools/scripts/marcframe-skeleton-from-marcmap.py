@@ -21,7 +21,10 @@ content_name_map = {
 }
 
 carrier_name_map = {
-    'ComputerFile': 'Electronic'
+    'ComputerFile': 'Electronic',
+    'ProjectedGraphic': 'ProjectedImage',
+    'NonprojectedGraphic': 'StillImage',
+    'MotionPicture': 'MovingImage',
 }
 
 fixprop_typerefs = {

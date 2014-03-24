@@ -143,7 +143,7 @@ if __name__ == '__main__':
     fpath = args.pop(0)
     overlay_fpath = args.pop(0) if args else None
     dest_vocab = args.pop(0) if args else None
-    ns_pref_order = ['sdo', 'dc', 'dctype', 'prov', 'bf']
+    ns_pref_order = ['dc', 'sdo', 'dctype', 'prov', 'bf']
 
     fmt = 'n3' if fpath.endswith(('.n3', '.ttl')) else 'xml'
     graph = Graph().parse(fpath, format=fmt)
