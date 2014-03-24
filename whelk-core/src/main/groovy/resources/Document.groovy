@@ -25,6 +25,7 @@ class Document {
     byte[] data
     Map entry // For "technical" metadata about the record, such as contentType, timestamp, etc.
     Map meta  // For extra metadata about the object, e.g. links and such.
+    private String checksum = null
 
     @JsonIgnore
     ObjectMapper mapper = new ObjectMapper()
@@ -110,9 +111,10 @@ class Document {
     }
 
     void setData(byte[] data) {
+        this.data = data
         // Whenever data is changed, reset serializedDataInMap
         serializedDataInMap = null
-        this.data = data
+        calculateChecksum()
     }
 
     /*
@@ -151,10 +153,10 @@ class Document {
     }
 
     Document withData(byte[] data) {
-        this.data = data
-        calculateChecksum()
+        setData(data)
         return this
     }
+
     Document withEntry(Map entrydata) {
         if (entrydata?.get("identifier", null)) {
             this.identifier = entrydata["identifier"]
@@ -162,6 +164,7 @@ class Document {
         if (entrydata != null) {
             this.entry = [:]
             this.entry.putAll(entrydata)
+            this.entry['checksum'] = checksum
         }
         return this
     }
@@ -213,9 +216,9 @@ class Document {
         try {
             Document newDoc = mapper.readValue(json, Document)
             this.identifier = newDoc.identifier
-            this.data = newDoc.data
             this.entry = newDoc.entry
             this.meta = newDoc.meta
+            setData(newDoc.data)
         } catch (JsonParseException jpe) {
             throw new DocumentException(jpe)
         }
@@ -247,6 +250,7 @@ class Document {
         BigInteger bigInt = new BigInteger(1,digest)
         String hashtext = bigInt.toString(16)
         log.debug("calculated checksum: $hashtext")
+        this.checksum = hashtext
         this.entry['checksum'] = hashtext
     }
 }

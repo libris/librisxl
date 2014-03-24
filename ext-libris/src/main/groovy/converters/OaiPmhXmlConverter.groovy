@@ -14,6 +14,9 @@ import se.kb.libris.conch.converter.MarcJSONConverter
 class OaiPmhXmlConverter extends BasicFormatConverter {
     String requiredContentType = "text/oaipmh+xml"
     String resultContentType = "application/x-marc-json"
+    XmlSlurper slurper
+
+    StreamingMarkupBuilder markupBuilder = new StreamingMarkupBuilder()
 
     def SPEC_URI_MAP
     boolean preserveTimestamps
@@ -21,10 +24,11 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
     OaiPmhXmlConverter(Map settings) {
         this.SPEC_URI_MAP = settings.get("specUriMapping", [:])
         this.preserveTimestamps = settings.get("preserveTimestamps", false)
+        this.slurper = new XmlSlurper(false,false)
     }
 
     Document doConvert(final Document document) {
-        def xml = new XmlSlurper(false,false).parseText(document.dataAsString)
+        def xml = slurper.parseText(document.dataAsString)
         String rstring = createString(xml.metadata.record)
         MarcRecord record = MarcXmlRecordReader.fromXml(rstring)
 
@@ -60,7 +64,7 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
     }
 
     String createString(GPathResult root) {
-        return new StreamingMarkupBuilder().bind{
+        return markupBuilder.bind {
             out << root
         }
     }
