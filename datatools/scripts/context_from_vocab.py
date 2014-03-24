@@ -4,6 +4,8 @@ from rdflib.resource import Resource
 Resource.id = Resource.identifier
 
 
+DEFAULT_NS_PREF_ORDER = 'dc sdo dctype skos prov bf bibo foaf owl rdfs rdf xsd edtf'.split()
+
 CLASS_TYPES = {RDFS.Class, OWL.Class, RDFS.Datatype}
 PROP_TYPES = {RDF.Property, OWL.ObjectProperty, OWL.DatatypeProperty}
 
@@ -102,17 +104,17 @@ def get_preferred(term, pred, ns_pref_order=None):
     ns_pref_order = ns_pref_order or []
     current, current_index = None, len(ns_pref_order)
     candidate = None
-    candidates = list(term.objects(pred))
+    relateds = list(term.objects(pred))
     term_pfx = _pfx(term)
-    for candidate in candidates:
-        pfx = _pfx(candidate)
-        if pfx == term_pfx:
-            candidate = None
+    for related in relateds:
+        pfx = _pfx(related)
+        if pfx == term_pfx or pfx not in ns_pref_order:
             continue
+        candidate = related
         try:
             index = ns_pref_order.index(pfx)
             if index <= current_index:
-                current, current_index = candidate, index
+                current, current_index = related, index
         except ValueError:
             pass
     return current or candidate
@@ -143,7 +145,7 @@ if __name__ == '__main__':
     fpath = args.pop(0)
     overlay_fpath = args.pop(0) if args else None
     dest_vocab = args.pop(0) if args else None
-    ns_pref_order = ['dc', 'sdo', 'dctype', 'prov', 'bf']
+    ns_pref_order = args if args else DEFAULT_NS_PREF_ORDER
 
     fmt = 'n3' if fpath.endswith(('.n3', '.ttl')) else 'xml'
     graph = Graph().parse(fpath, format=fmt)

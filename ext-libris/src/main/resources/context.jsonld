@@ -9,9 +9,7 @@
       "edtf": "http://id.loc.gov/datatypes/edtf/",
       "enum": "http://libris.kb.se/def/enum/",
       "foaf": "http://xmlns.com/foaf/0.1/",
-      "iana": "http://www.iana.org/assignments/relation/",
       "owl": "http://www.w3.org/2002/07/owl#",
-      "persona": "http://www.pipian.com/schemas/foaf/persona#",
       "prov": "http://www.w3.org/ns/prov#",
       "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
       "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -21,7 +19,6 @@
       "tcar": "http://libris.kb.se/def/enum/carrier/",
       "tcon": "http://libris.kb.se/def/enum/content/",
       "trec": "http://libris.kb.se/def/enum/record/",
-      "xf": "http://libris.kb.se/ns/extframe/",
       "xsd": "http://www.w3.org/2001/XMLSchema#"
     },
     {
@@ -30,6 +27,7 @@
       "ApproxDateTime": "edtf:EDTF-level1",
       "Archival": "bf:Archival",
       "Audio": "dctype:Sound",
+      "Audiobook": "bibo:AudioDocument",
       "Book": "bibo:Book",
       "Carrier": "dc:MediaType",
       "Cartography": "bf:Cartography",
@@ -62,7 +60,6 @@
       "Organization": "sdo:Organization",
       "PartialDateTime": "edtf:EDTF-level2",
       "Person": "sdo:Person",
-      "Persona": "persona:Persona",
       "PhysicalObject": "dctype:PhysicalObject",
       "Place": "sdo:Place",
       "Print": "bf:Print",
@@ -82,7 +79,6 @@
       "YearMonth": "xsd:gYearMonth",
       "_note": null,
       "about": "sdo:about",
-      "accompanyingMaterial": "xf:accompanyingMaterial",
       "additionalType": {
         "@type": "@vocab"
       },
@@ -93,8 +89,6 @@
         "@container": "@list",
         "@id": "bibo:authorList"
       },
-      "availability": "xf:availability",
-      "bibLevel": "xf:bibLevel",
       "birthDate": "sdo:birthDate",
       "birthYear": {
         "@id": "birthDate",
@@ -102,9 +96,7 @@
       },
       "broader": "skos:broader",
       "carrierType": "dc:format",
-      "catForm": "xf:catForm",
       "citation": "sdo:citation",
-      "classificationPart": "xf:classificationPart",
       "closeMatch": "skos:closeMatch",
       "comment": "rdfs:comment",
       "contentType": "dc:type",
@@ -124,10 +116,7 @@
         "@id": "deathDate",
         "@type": "gYear"
       },
-      "describedBy": "iana:describedby",
-      "dimensions": "xf:dimensions",
-      "encLevel": "xf:encLevel",
-      "extent": "xf:extent",
+      "describedBy": "foaf:isPrimaryTopicOf",
       "extractedFrom": "describedBy",
       "familyName": "sdo:familyName",
       "format": "dc:format",
@@ -137,7 +126,7 @@
       "givenName": "sdo:givenName",
       "hasFormat": "dc:hasFormat",
       "hasPart": "dc:hasPart",
-      "hasPersona": "persona:hasPersona",
+      "hasPersona": "rdfs:seeAlso",
       "hasVersion": "dc:hasVersion",
       "hiddenLabel": "skos:hiddenLabel",
       "highlight": null,
@@ -157,7 +146,6 @@
         "@id": "owl:intersectionOf"
       },
       "isPartOf": "dc:isPartOf",
-      "itemPart": "xf:itemPart",
       "jobTitle": "sdo:jobTitle",
       "keyword": {
         "@id": "sdo:keywords",
@@ -166,8 +154,6 @@
       "label": "rdfs:label",
       "language": "dc:language",
       "license": "dc:license",
-      "location": "xf:location",
-      "materialsSpecified": "xf:materialsSpecified",
       "modified": {
         "@id": "dc:modified",
         "@type": "xsd:dateTime"
@@ -176,8 +162,6 @@
       "narrower": "skos:narrower",
       "notation": "skos:notation",
       "note": "skos:note",
-      "numeration": "xf:numeration",
-      "otherPhysicalDetails": "xf:otherPhysicalDetails",
       "prefLabel": "skos:prefLabel",
       "publisher": "dc:publisher",
       "qualifiedAttribution": "prov:qualifiedAttribution",
@@ -196,15 +180,10 @@
       },
       "scopeNote": "skos:scopeNote",
       "seeAlso": "rdfs:seeAlso",
-      "sequenceNumber": "xf:sequenceNumber",
-      "shelvingControlNumber": "xf:shelvingControlNumber",
-      "shelvingLocation": "xf:shelvingLocation",
       "source": "dc:source",
-      "status": "xf:status",
       "subject": "dc:subject",
       "title": "dc:title",
       "titleValue": "bf:titleValue",
-      "typeOfRecord": "xf:typeOfRecord",
       "unionOf": {
         "@container": "@list",
         "@id": "owl:unionOf"
