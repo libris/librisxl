@@ -206,27 +206,28 @@ class ReindexOperator extends AbstractOperator {
                 }
             }
         }
-        for (doc in whelk.loadAll(dataset, fromStorage)) {
+        for (doc in whelk.loadAll(dataset, null, fromStorage)) {
             if (startAt && doc.identifier == startAt) {
                 log.info("Found document with identifier ${startAt}. Starting to index ...")
                     indexing = true
             }
             if (indexing) {
                 log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
-                    if (fromStorage) {
-                        log.trace("Rebuilding storage from $fromStorage")
-                        try {
-                            docs << whelk.addToStorage(doc, fromStorage)
-                        } catch (WhelkAddException wae) {
-                            log.trace("Expected exception ${wae.message}")
-                        }
-                    } else {
-                        docs << doc
+                if (fromStorage) {
+                    log.trace("Rebuilding storage from $fromStorage")
+                    try {
+                        docs << whelk.addToStorage(doc, fromStorage)
+                    } catch (WhelkAddException wae) {
+                        log.trace("Expected exception ${wae.message}")
                     }
-                if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
-                    doTheIndexing(futures, docs)
-                    docs = []
-                    runningTime = System.currentTimeMillis() - startTime
+                } else {
+                    docs << doc
+
+                    if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
+                        doTheIndexing(futures, docs)
+                        docs = []
+                        runningTime = System.currentTimeMillis() - startTime
+                    }
                 }
             }
             if (cancelled) {
@@ -369,6 +370,9 @@ abstract class AbstractOperator implements Runnable {
 
     void setParameters(Map parameters) {
         this.dataset = parameters.get("dataset", null)
+        if (this.dataset?.length() == 0) {
+            this.dataset = null
+        }
     }
 
     @Override
