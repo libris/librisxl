@@ -28,7 +28,7 @@ class Document {
     private String checksum = null
 
     @JsonIgnore
-    ObjectMapper mapper = new ObjectMapper()
+    private static final ObjectMapper mapper = new ObjectMapper()
 
     // store serialized data
     @JsonIgnore
