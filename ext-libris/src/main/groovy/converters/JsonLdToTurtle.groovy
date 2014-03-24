@@ -28,7 +28,12 @@ class JsonLdToTurtle {
             def kdef = context[key]
             if (kdef == null)
                 return null
-            def term = (kdef instanceof Map)? kdef["@id"] : kdef
+            def term = null
+            if (kdef instanceof Map) {
+                term = kdef["@id"] ?: key
+            } else {
+                term = kdef
+            }
             if (term == null)
                 return null
             return (term.indexOf(":") == -1)? ":" + term : term
@@ -44,8 +49,26 @@ class JsonLdToTurtle {
         return kdef["@reverse"]
     }
 
-    String refRepr(String ref) {
-        return ref.startsWith("_:")? toValidTerm(ref) : "<${ref}>"
+    String coerceFor(key) {
+        def kdef = context[key]
+        if (!(kdef instanceof Map))
+            return null
+        return kdef["@type"]
+    }
+
+    String refRepr(String ref, useVocab=false) {
+        def cI = ref.indexOf(":")
+        if (cI > -1) {
+            def pfx = ref.substring(0, cI)
+            if (pfx == "_") {
+                return toValidTerm(ref)
+            } else if (context[pfx]) {
+                return ref
+            }
+        } else if (useVocab && ref.indexOf("/") == -1) {
+            return ":" + ref
+        }
+        return "<${ref}>"
     }
 
     String toValidTerm(String term) {
@@ -69,15 +92,15 @@ class JsonLdToTurtle {
         pw.println()
     }
 
-    def objectToTurtle(obj, level=0) {
+    def objectToTurtle(obj, level=0, viaKey=null) {
         def indent = INDENT * (level + 1)
         if (obj instanceof String || obj[keys.value]) {
-            toLiteral(obj)
+            toLiteral(obj, viaKey)
             return Collections.emptyList()
         }
         def s = obj[keys.id]
         if (s && obj.size() > 1) {
-            pw.println(refRepr(s))
+            pw.print(refRepr(s))
         } else if (level > 0) {
             pw.println("[")
         } else {
@@ -115,7 +138,7 @@ class JsonLdToTurtle {
                         topObjects << v
                         pw.print(refRepr(v[keys.id]))
                     } else {
-                        topObjects.addAll(objectToTurtle(v, level + 1))
+                        topObjects.addAll(objectToTurtle(v, level + 1, key))
                     }
                 }
                 pw.println(" ;")
@@ -134,7 +157,7 @@ class JsonLdToTurtle {
         }
     }
 
-    String toLiteral(obj) {
+    void toLiteral(obj, viaKey=null) {
         // TODO: coerce using term def
         def value = obj
         def lang = context["@language"]
@@ -143,6 +166,17 @@ class JsonLdToTurtle {
         if (obj instanceof Map) {
             value = obj[keys.value]
             datatype = obj[keys.datatype]
+        } else {
+            def coerceTo = coerceFor(viaKey)
+            if (coerceTo == "@vocab") {
+                pw.print(refRepr(value, true))
+                return
+            } else if (coerceTo == "@id") {
+                pw.print(refRepr(value))
+                return
+            } else if (coerceTo) {
+                datatype = coerceTo
+            }
         }
         def escaped = value.replaceAll(/("|\\)/, /\\$1/)
         pw.print("\"${escaped}\"")
@@ -179,10 +213,27 @@ class JsonLdToTurtle {
 
     static void main(args) {
         def mapper = new ObjectMapper()
-        def source = new File(args[1]).withInputStream { mapper.readValue(it, Map) }
         def contextSrc = new File(args[0]).withInputStream { mapper.readValue(it, Map) }
         def context = JsonLdToTurtle.parseContext(contextSrc)
-        println JsonLdToTurtle.toTurtle(context, source).toString("utf-8")
+        def multiple = args.length > 2
+        def base = null
+        for (path in args[1..-1]) {
+            if (path.startsWith("http://")) {
+                base = path
+                continue
+            }
+            if (multiple) {
+                println(); println "GRAPH <$path> {"; println()
+            }
+            if (base) {
+                println "BASE <$base>"
+            }
+            def source = new File(path).withInputStream { mapper.readValue(it, Map) }
+            println JsonLdToTurtle.toTurtle(context, source).toString("utf-8")
+            if (multiple) {
+                println "}"; println()
+            }
+        }
     }
 
 }

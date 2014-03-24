@@ -102,8 +102,13 @@ def get_preferred(term, pred, ns_pref_order=None):
     ns_pref_order = ns_pref_order or []
     current, current_index = None, len(ns_pref_order)
     candidate = None
-    for candidate in term.objects(pred):
-        pfx = candidate.qname().split(':')[0]
+    candidates = list(term.objects(pred))
+    term_pfx = _pfx(term)
+    for candidate in candidates:
+        pfx = _pfx(candidate)
+        if pfx == term_pfx:
+            candidate = None
+            continue
         try:
             index = ns_pref_order.index(pfx)
             if index <= current_index:
@@ -112,11 +117,18 @@ def get_preferred(term, pred, ns_pref_order=None):
             pass
     return current or candidate
 
+def _pfx(term):
+    qname = term.qname()
+    return qname.split(':', 1)[0] if ':' in qname else ""
+
 def extend(context, overlay):
     ns, defs = context['@context']
     overlay = overlay.get('@context') or overlay
     for term, dfn in overlay.items():
-        if term in defs:
+        if isinstance(dfn, basestring) and dfn.endswith(('/', '#', ':', '?')):
+            assert term not in ns
+            ns[term] = dfn
+        elif term in defs:
             v = defs[term]
             if isinstance(v, basestring):
                 v = defs[term] = {'@id': v}
