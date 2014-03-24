@@ -118,6 +118,7 @@ class WhelkOperator {
                 println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
                 */
         } else if (opt.o == "reindex") {
+            /*
             def selectedComponents = null
             if (opt.c) {
                 selectedComponents = opt.c.split(",") as List<String>
@@ -130,6 +131,24 @@ class WhelkOperator {
                 whelk.reindex(null, selectedComponents)
                 println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
             }
+            */
+            def params = [:]
+            if (opt.c) {
+                params['selectedComponents'] = opt.c.split(",") as List<String>
+            }
+            if (opt.d) {
+                params['dataset'] = opt.d
+            }
+            if (opt.fromStorage) {
+                params['fromStorage'] = opt.fromStorage
+            }
+            def reindexer = new ReindexOperator()
+            reindexer.setWhelk(whelk)
+            reindexer.setParameters(params)
+            def th = new Thread(reindexer)
+            th.start()
+            log.info("Reindexing thread is now running.")
+            th.join()
         } else if (operation == "rebuild") {
             if (opt.fromStorage) {
                 String dataset = (opt.dataset ? opt.dataset : null)

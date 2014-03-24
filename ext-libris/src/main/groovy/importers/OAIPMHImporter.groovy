@@ -85,7 +85,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                 log.warn("Harvesting failed. Retrying ...")
             }
             elapsed = System.currentTimeMillis() - loadUrlTime
-            if (elapsed > 3000) {
+            if (elapsed > 6000) {
                 log.warn("Harvest took more than 3 seconds ($elapsed)")
             }
             log.debug("resumptionToken: $resumptionToken")
@@ -103,15 +103,15 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     String harvest(URL url) {
         long elapsed = System.currentTimeMillis()
         def xmlString = normalizeString(url.text)
-        if ((System.currentTimeMillis() - elapsed) > 3000) {
-            log.warn("Load from URL ${url.toString()} took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
+        if ((System.currentTimeMillis() - elapsed) > 5000) {
+            log.warn("Load from URL ${url.toString()} took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
         }
         def OAIPMH
         try {
             elapsed = System.currentTimeMillis()
             OAIPMH = slurper.parseText(xmlString)
-            if ((System.currentTimeMillis() - elapsed) > 3000) {
-                log.warn("XML slurping took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
+            if ((System.currentTimeMillis() - elapsed) > 1000) {
+                log.warn("XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
             }
         } catch (org.xml.sax.SAXParseException spe) {
             //errorMessages << new String("Failed to parse XML: $xmlString\nReason: ${spe.message}")

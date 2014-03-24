@@ -206,6 +206,9 @@ class ReindexOperator extends AbstractOperator {
                 }
             }
         }
+        if (fromStorage) {
+            log.info("Rebuilding storage from $fromStorage")
+        }
         for (doc in whelk.loadAll(dataset, null, fromStorage)) {
             if (startAt && doc.identifier == startAt) {
                 log.info("Found document with identifier ${startAt}. Starting to index ...")
@@ -214,9 +217,12 @@ class ReindexOperator extends AbstractOperator {
             if (indexing) {
                 log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
                 if (fromStorage) {
-                    log.trace("Rebuilding storage from $fromStorage")
                     try {
                         docs << whelk.addToStorage(doc, fromStorage)
+                        if (++count % 1000 == 0) { // Update running time
+                            runningTime = System.currentTimeMillis() - startTime
+                        }
+
                     } catch (WhelkAddException wae) {
                         log.trace("Expected exception ${wae.message}")
                     }
