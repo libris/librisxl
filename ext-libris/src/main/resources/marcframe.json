@@ -297,10 +297,10 @@
       "e": "tcon:CondensedScoreOrPianoConductorScore",
       "g": "tcon:CloseScore",
       "h": "tcon:Körpartitur",
-      "i": "tcon:Reducerat_partitur_(condensed_scoore)",
-      "j": "tcon:Direktion_för_enstaka_instrument_(performer-conductor_part)",
+      "i": "tcon:Reducerat_partitur-condensed_scoore",
+      "j": "tcon:Direktion_för_enstaka_instrument-performer-conductor_part",
       "k": "tcon:Vokalpartitur",
-      "l": "tcon:Komplett_musikalisk_notation_för_konsertframförande_(score)",
+      "l": "tcon:Komplett_musikalisk_notation_för_konsertframförande-score",
       "m": "tcon:MultipleScoreFormat",
       "n": null,
       "u": null,
@@ -561,7 +561,7 @@
       "1": "tcon:UnitedState",
       "2": "tcon:UnitedKingdom",
       "4": "tcon:Canada",
-      "f": "tcon:Sverige_(obsolet)",
+      "f": "tcon:Sverige-obsolet",
       "z": null
     },
     "serialsTypeOfSerial": {
@@ -752,13 +752,13 @@
       "z": "tcar:Annan_färgegenskap"
     },
     "computerDimensions": {
-      "a": "tcar:3,5_tum",
+      "a": "tcar:35_tum",
       "e": "tcar:12_tum",
-      "g": "tcar:4_4,75_tum_-_12_cm_(CD)",
-      "i": "tcar:1_1/8_x_2_3/8_tum",
-      "j": "tcar:3_7/8_x_2_1/2_tum",
+      "g": "tcar:4_475_tum_-_12_cm-CD",
+      "i": "tcar:1_1-8_x_2_3-8_tum",
+      "j": "tcar:3_7-8_x_2_1-2_tum",
       "n": "tcar:Ej_tillämplig",
-      "o": "tcar:5,25_tum",
+      "o": "tcar:525_tum",
       "u": "tcar:Okänd_storlek",
       "v": "tcar:8_tum",
       "z": "tcar:Annan_storlek"
@@ -769,7 +769,7 @@
     },
     "computerImageBitDepth": {
       "---": "tcar:Okänt_bit-djup",
-      "001~999": "tcar:Exakt_uppgift_om_bit-djup_(siffror)",
+      "001~999": "tcar:Exakt_uppgift_om_bit-djup-siffror",
       "mmm": "tcar:Flera_bit-djup_förekommer",
       "nnn": "tcar:Ej_tillämplig",
       "|||": "tcar:Inget_försök_att_koda"
@@ -780,7 +780,7 @@
       "u": "tcar:Okänd_filformatstatus"
     },
     "computerQATarget": {
-      "a": "tcar:Testbilder_etc,_saknas",
+      "a": "tcar:Testbilder_etc_saknas",
       "n": "tcar:Testbild_etc._krävs_ej",
       "p": "tcar:Testbilder_etc._finns",
       "u": "tcar:Okänt_om_testbilder_etc._finns_eller_ej"
@@ -789,7 +789,7 @@
       "a": "tcar:Filens_källa_är_en_originalresurs",
       "b": "tcar:Filens_källa_är_ett_mikromedium",
       "c": "tcar:Filens_källa_är_en_maskinläsbar_fil",
-      "d": "tcar:Filens_källa_är_ett_mellanoriginal_(ej_mikroform)",
+      "d": "tcar:Filens_källa_är_ett_mellanoriginal-ej_mikroform",
       "m": "tcar:Blandade_källor",
       "n": "tcar:Ej_tillämplig",
       "u": "tcar:Okänd_källa"
@@ -803,7 +803,7 @@
       "u": "tcar:Okänd_komprimeringsstatus"
     },
     "computerReformattingQuality": {
-      "a": "tcar:Brukskopia,_ej_originalkvalitet",
+      "a": "tcar:Brukskopia_ej_originalkvalitet",
       "n": "tcar:Ej_tillämplig",
       "p": "tcar:Arkivkvalitet_för_långtidslagring",
       "r": "tcar:Arkivkvalitet_som_kan_duga_som_ersättningsexemplar",

@@ -226,7 +226,11 @@ for tag, field in sorted(marcmap['bib'].items()):
                             v = dfn['id']
                             subname = to_name(v)
                         else:
-                            subname = dfn['label_sv'].replace(' ', '_').replace('/', '-')
+                            subname = dfn['label_sv']
+                            for char, repl in [(' (', '-'), (' ', '_'), ('/', '-')]:
+                                subname = subname.replace(char, repl)
+                            for badchar in ',()':
+                                subname = subname.replace(badchar, '')
                         if key in ('_', '|') and any(t in subname for t in ('No', 'Ej', 'Inge')):
                             continue
                         elif subname.replace('Obsolete', '') in {
