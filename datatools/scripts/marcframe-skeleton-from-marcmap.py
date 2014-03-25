@@ -21,7 +21,15 @@ content_name_map = {
 }
 
 carrier_name_map = {
-    'ComputerFile': 'Electronic'
+    'ComputerFile': 'Electronic',
+    'ProjectedGraphic': 'ProjectedImage',
+    'NonprojectedGraphic': 'StillImage',
+    'MotionPicture': 'MovingImage',
+}
+
+propname_map = {
+    'item': 'additionalCarrierType',
+    'format': 'additionalType'
 }
 
 fixprop_typerefs = {
@@ -110,6 +118,18 @@ def get_tokenmap_key(name, items):
         tmap_hashes[mhash] = name
         return name
 
+def find_boolean_off_key(tokenmap):
+    if tokenmap and len(tokenmap) == 2:
+        items = [(k, v.split(':', 1)[-1] if v else '_')
+                    for (k, v) in tokenmap.items()]
+        for off_index, (k, v) in enumerate(items):
+            if v.startswith('No'):
+                on_k, on_v = items[not off_index]
+                if v.endswith(on_v.replace('Present', '')):
+                    assert k == '0' and on_k == '1'
+                    return k
+                break
+
 
 section = out['bib'] = OrderedDict()
 
@@ -127,13 +147,20 @@ for tag, field in sorted(marcmap['bib'].items()):
         tokenTypeMap = OrderedDict()
         for fixmap in fixmaps:
             content_type = None
+            orig_type_name = None
             if len(fixmaps) > 1:
                 if tag == '008':
                     rt_bl_map = outf.setdefault('recTypeBibLevelMap', OrderedDict())
                 else:
-                    outf['tokenTypeMap'] = tokenTypeMap
+                    outf['addLink'] = 'hasFormat' if tag == '007' else 'hasPart'
+                    outf['[0:1]'] = {
+                        'addProperty': '@type',
+                        'tokenMap': tokenTypeMap,
+                    }
+                    outf['tokenTypeMap'] = '[0:1]'
 
-                type_name = fixmap.get('term') or fixmap['name'].split(tag + '_')[1]
+                orig_type_name =  fixmap['name'].split(tag + '_')[1]
+                type_name = fixmap.get('term') or orig_type_name
                 if tag in ('006', '008'):
                     type_name = content_name_map.get(type_name, type_name)
                 elif tag in ('007'):
@@ -174,19 +201,33 @@ for tag, field in sorted(marcmap['bib'].items()):
                 fm = outf
 
             #local_enums = set()
+            real_fm = fm
             for col in fixmap['columns']:
                 off, length = col['offset'], col['length']
                 key = (#str(off) if length == 1 else
                         '[%s:%s]' % (off, off+length))
                 if key in common_columns.get(tag, ()):
-                    continue # IMP: verify expected props?
+                    # IMP: verify expected props?
+                    fm = outf
+                else:
+                    fm = real_fm
 
                 dfn_key = col.get('propRef')
                 if not dfn_key:
                     continue
+                if orig_type_name == 'ComputerFile':
+                    orig_type_name = 'Computer'
+                if orig_type_name and dfn_key.title().startswith(orig_type_name):
+                    new_propname = dfn_key[len(orig_type_name):]
+                    new_propname = new_propname[0].lower() + new_propname[1:]
+                    #print new_propname, '<-', dfn_key
+                else:
+                    new_propname = None
 
                 fm[key] = col_dfn = OrderedDict()
-                propname = dfn_key or col.get('propId')
+                propname = new_propname or dfn_key or col.get('propId')
+                if propname in propname_map:
+                    propname = propname_map[propname]
                 domainname = 'Record' if tag == '000' else None
                 is_link = False
                 repeat = False
@@ -215,7 +256,9 @@ for tag, field in sorted(marcmap['bib'].items()):
                                 propname = 'contentType'
                                 repeat = True
 
+                    overwriting = dfn_key not in tokenMaps
                     tokenmap = tokenMaps.setdefault(dfn_key, {})
+                    off_key = find_boolean_off_key(tokenmap)
 
                     for key, dfn in valuemap.items():
                         # TODO: '_' actually means something occasionally..
@@ -223,17 +266,25 @@ for tag, field in sorted(marcmap['bib'].items()):
                             v = dfn['id']
                             subname = to_name(v)
                         else:
-                            subname = dfn['label_sv'].replace(' ', '_').replace('/', '-')
+                            subname = dfn['label_sv']
+                            for char, repl in [(' (', '-'), (' ', '_'), ('/', '-')]:
+                                subname = subname.replace(char, repl)
+                            for badchar in ',()':
+                                subname = subname.replace(badchar, '')
                         if key in ('_', '|') and any(t in subname for t in ('No', 'Ej', 'Inge')):
                             continue
                         elif subname.replace('Obsolete', '') in {
                                 'Unknown', 'Other', 'NotApplicable', 'Unspecified', 'Undefined'}:
                             type_id = None
+                        elif key == off_key:
+                            type_id = False
                         elif enum_key:
                             type_id = "%s:%s" % (enum_key, subname)
                         else:
                             type_id = subname
-                        assert tokenmap.get(key, type_id) == type_id, "%s in %r" % (type_id, tokenmap)
+                        if overwriting:
+                            assert tokenmap.get(key, type_id) == type_id, "%s: %s missing in %r" % (
+                                    key, type_id, tokenmap)
                         #assert type_id is None or type_id not in enums, type_id
                         tokenmap[key] = type_id
                         #local_enums.add(type_id)
@@ -244,27 +295,10 @@ for tag, field in sorted(marcmap['bib'].items()):
                 else:
                     pass
 
-                is_bool = False
-                if tokenmap and len(tokenmap) == 2:
-                    items = [(k, v.split(':', 1)[-1] if v else '_')
-                             for (k, v) in tokenmap.items()]
-                    for off_index, (k, v) in enumerate(items):
-                        if v.startswith('No'):
-                            on_k, on_v = items[not off_index]
-                            if v.endswith(on_v):
-                                assert k == '0' and on_k == '1'
-                                #tokenmap[k] = False
-                                #tokenmap[on_k] = True
-                                is_bool = True
-                            break
-
                 if domainname:
                     col_dfn['domainEntity'] = domainname
 
-                if is_bool:
-                    col_dfn['property'] = propname
-                    col_dfn['boolean'] = True
-                elif is_link:
+                if is_link:
                     col_dfn['addLink' if repeat else 'link'] = propname
                     col_dfn['uriTemplate'] = "{_}"
                 else:

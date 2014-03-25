@@ -40,7 +40,7 @@
     owl:equivalentProperty rdf:value .
 
 :seeAlso a owl:ObjectProperty;
-    rdfs:subPropertyOf rdfs:seeAlso .
+    owl:equivalentProperty rdfs:seeAlso .
 
 :sameAs a owl:ObjectProperty;
     rdfs:subPropertyOf owl:sameAs .
@@ -48,30 +48,30 @@
 :identifiedBy a owl:ObjectProperty;
     owl:equivalentProperty sdo:sameAs .
 
-:date a rdfs:Datatype;
+:Date a rdfs:Datatype;
     owl:sameAs xsd:date .
-:time a rdfs:Datatype;
+:Time a rdfs:Datatype;
     owl:sameAs xsd:time .
-:dateTime a rdfs:Datatype;
+:DateTime a rdfs:Datatype;
     owl:sameAs xsd:dateTime .
-:gYear a rdfs:Datatype;
+:Year a rdfs:Datatype;
     owl:sameAs xsd:gYear .
-:gMonth a rdfs:Datatype;
+:Month a rdfs:Datatype;
     owl:sameAs xsd:gMonth .
-:gDay a rdfs:Datatype;
+:Day a rdfs:Datatype;
     owl:sameAs xsd:gDay .
-:gYearMonth a rdfs:Datatype;
+:YearMonth a rdfs:Datatype;
     owl:sameAs xsd:gYearMonth .
-:gMonthDay a rdfs:Datatype;
+:MonthDay a rdfs:Datatype;
     owl:sameAs xsd:gMonthDay .
 
-:anyDateTime a rdfs:Datatype;
+:AnyDateTime a rdfs:Datatype;
     rdfs:comment "Used for dates, dates and times, and intervals."@en;
     owl:equivalentClass edtf:EDTF-level0 .
-:approxDateTime a rdfs:Datatype;
+:ApproxDateTime a rdfs:Datatype;
     rdfs:comment "Used for approximate or unspecified dates, dates and times, and intervals."@en;
     owl:equivalentClass edtf:EDTF-level1 .
-:partialDateTime a rdfs:Datatype;
+:PartialDateTime a rdfs:Datatype;
     rdfs:comment "Used for dates, dates and times, and intervals combining precise elements with uncertain, approximate, or unspecified parts. Also applicable for sets of dates."@en;
     owl:equivalentClass edtf:EDTF-level2 .
 
@@ -104,7 +104,8 @@
 :CreativeWork a owl:Class;
     rdfs:label "Kreativt verk"@sv;
     ptg:abstract true;
-    rdfs:subClassOf sdo:CreativeWork, dc:BibliographicResource  .
+    owl:equivalentClass sdo:CreativeWork;
+    rdfs:subClassOf dc:BibliographicResource  .
 
 :ConceptualWork a owl:Class;
     rdfs:label "Konceptuellt verk"@sv;
@@ -114,6 +115,28 @@
     rdfs:label "Instans"@sv;
     ptg:abstract true;
     rdfs:subClassOf sdo:Product, bf:Instance .
+
+:contentType a owl:ObjectProperty;
+    rdfs:subPropertyOf dc:type, sdo:additionalType .
+
+:carrierType a owl:ObjectProperty;
+    rdfs:range :Carrier;
+    rdfs:subPropertyOf dc:format, sdo:additionalType .
+
+:Carrier a owl:Class;
+    owl:equivalentClass dc:MediaType .
+
+#instanceOf
+#commonEndeavor
+
+:format a owl:ObjectProperty;
+    owl:equivalentProperty dc:format .
+
+:formatOf a owl:ObjectProperty;
+    owl:equivalentProperty dc:isFormatOf .
+
+:hasFormat a owl:ObjectProperty;
+    owl:equivalentProperty dc:hasFormat .
 
 # Common Content Types
 
@@ -324,9 +347,6 @@
 
 # Common Carrier Types
 
-:Carrier a owl:Class;
-    owl:equivalentClass dc:MediaType .
-
 #:Disc
 #:CD
 #:DVD
@@ -390,9 +410,6 @@
 :publisher a owl:ObjectProperty;
     owl:equivalentProperty dc:publisher, bf:publisher .
 
-:hasVersion a owl:ObjectProperty;
-    owl:equivalentProperty dc:hasVersion .
-
 :license a owl:ObjectProperty;
     owl:equivalentProperty dc:license .
 
@@ -420,23 +437,21 @@
     owl:equivalentProperty bf:responsibilityStatement .
 
 :language a owl:ObjectProperty;
+    owl:equivalentProperty bf:language;
     rdfs:subPropertyOf dc:language;
     rdfs:range sdo:Language .
-
-:format a owl:ObjectProperty;
-    owl:equivalentProperty dc:format .
-
-:formatOf a owl:ObjectProperty;
-    owl:equivalentProperty dc:isFormatOf .
-
-:hasFormat a owl:ObjectProperty;
-    owl:equivalentProperty dc:hasFormat .
 
 :versionOf a owl:ObjectProperty;
     owl:equivalentProperty dc:isVersionOf .
 
 :hasVersion a owl:ObjectProperty;
     owl:equivalentProperty dc:hasVersion .
+
+:hasPart a owl:ObjectProperty;
+    owl:equivalentProperty dc:hasPart .
+
+:isPartOf a owl:ObjectProperty;
+    owl:equivalentProperty dc:isPartOf .
 
 :references a owl:ObjectProperty;
     owl:equivalentProperty dc:references .
@@ -475,13 +490,11 @@
 
 :genre a owl:ObjectProperty;
     rdfs:label "genre"@sv;
-    rdfs:subPropertyOf dc:type, sdo:genre, bf:classification .
+    owl:equivalentProperty bf:classification;
+    rdfs:subPropertyOf dc:type, sdo:genre .
 
 :version a owl:ObjectProperty;
     owl:equivalentProperty sdo:version .
-
-#instanceOf
-#commonEndeavor
 
 
 ##

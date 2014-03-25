@@ -83,67 +83,14 @@ class MarcConversion {
 
     Map marcTypeMap = [:]
     def marcHandlers = [:]
-    def typeTree = [:]
     Map tokenMaps
     Set primaryTags = new HashSet()
 
     MarcConversion(Map config, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.tokenMaps = tokenMaps
-        buildTypeTree(config.entityTypeMap)
         ['bib', 'auth', 'hold'].each {
             buildHandlers(config, it)
-        }
-    }
-
-    void buildTypeTree(Map typeMap) {
-        typeMap.each { type, rule ->
-            if (!rule.typeOfRecord) return
-            def recTypeTree = typeTree.get(rule.typeOfRecord, [:])
-            def workTree = null
-            if (rule.bibLevel) {
-                workTree = recTypeTree[rule.bibLevel] = [type: type]
-            } else {
-                workTree = recTypeTree['*'] = [type: type]
-            }
-            if (rule.instanceTypes) {
-                def instanceTree = workTree.instanceTree = [:]
-                rule.instanceTypes.each { itype, irule ->
-                    def carrierTree = instanceTree.get(irule.carrierType, [:])
-                    if (irule.carrierMaterial) {
-                        carrierTree[irule.carrierMaterial] = itype
-                    } else {
-                        carrierTree['*'] = itype
-                    }
-                }
-            }
-        }
-    }
-
-    void computeTypes(String leader, Map entityMap) {
-        // TODO: update to digestTypes (pick out typeOfRecord and bibLevel, various fields)
-        // TODO: remove fixed field remnants once they're subsumed into type?
-        def record = entityMap.Record
-        def recTypeTree = typeTree[getTypeOfRecord(leader)]
-        if (!recTypeTree)
-            return // missing concrete type mapping
-        def workTree = recTypeTree[getBibLevel(leader)] ?: recTypeTree['*']
-        def workType = workTree?.type
-        def instanceType = null
-        if (workTree?.instanceTree) {
-            def carrierTree = workTree.instanceTree[record.carrierType]
-            if (carrierTree)
-                instanceType = carrierTree[record.carrierMaterial] ?: carrierTree['*']
-        }
-        entityMap.Work['@type'] = workType ?: "Work"
-        def instance = entityMap.Instance
-        if (instanceType) {
-            instance['@type'] = instanceType
-        } else if (workType) {
-            // TODO: is this sound, or are work types "non-manifestations"?
-            instance['@type'] = workType
-        } else {
-            instance['@type'] = "Instance"
         }
     }
 
@@ -258,7 +205,6 @@ class MarcConversion {
         fieldHandlers["000"].convert(sourceMap, leader, entityMap)
 
         processFields(fieldHandlers, sourceMap, preprocFields, entityMap, unknown)
-        computeTypes(leader, entityMap)
 
         processFields(fieldHandlers, sourceMap, primaryFields, entityMap, unknown)
         processFields(fieldHandlers, sourceMap, otherFields, entityMap, unknown)
@@ -330,12 +276,15 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     MarcFixedFieldHandler baseConverter
     Map<String, MarcFixedFieldHandler> handlerMap = [:]
     boolean useRecTypeBibLevel = false
+    String addLink = null
     String repeatedAddLink = null
+    Map tokenNames = [:]
 
     TokenSwitchFieldHandler(conversion, tag, Map fieldDfn, tokenMapKey='tokenTypeMap') {
         super(conversion, tag)
-        if (fieldDfn.onRepeated) {
-            repeatedAddLink = fieldDfn.onRepeated.addLink
+        addLink = fieldDfn.addLink
+        if (fieldDfn['match-repeated']) {
+            repeatedAddLink = fieldDfn['match-repeated'].addLink
         }
         this.baseConverter = new MarcFixedFieldHandler(conversion, tag, fieldDfn)
         def tokenMap = fieldDfn[tokenMapKey]
@@ -352,7 +301,9 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
             nameBibLevelMap.each { typeName, bibLevels ->
                 recTypes.split(/,/).each { recType ->
                     bibLevels.each {
-                        addHandler(recType + it, fieldDfn[typeName])
+                        def token = recType + it
+                        addHandler(token, fieldDfn[typeName])
+                        tokenNames[token] = typeName
                     }
                 }
             }
@@ -365,6 +316,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         }
         tokenMap.each { token, typeName ->
             addHandler(token, fieldDfn[typeName])
+            tokenNames[token] = typeName
         }
     }
 
@@ -388,10 +340,14 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         if (converter == null)
             return false
 
+        def addLink = this.addLink
         if (sourceMap[tag].size() > 1 && repeatedAddLink) {
+            addLink = repeatedAddLink
+        }
+        if (addLink) {
             def ent = entityMap.Instance
             def newEnt = newEntity(null)
-            addValue(ent, repeatedAddLink, newEnt, true)
+            addValue(ent, addLink, newEnt, true)
             entityMap = entityMap.clone()
             entityMap.Instance = newEnt
         }
@@ -609,9 +565,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             return
 
         if (tokenMap) {
-            value = tokenMap[value]
-            if (value == null)
-                return false
+            def mapped = tokenMap[value] ?: tokenMap[value.toLowerCase()]
+            if (mapped == null) {
+                return tokenMap.containsKey(value)
+            } else if (mapped == false) {
+                return true
+            } else {
+                value = mapped
+            }
         }
 
         if (dateTimeFormat) {
@@ -628,7 +589,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
         if (uriTemplate) {
             if (!matchUriToken || matchUriToken.matcher(value).matches()) {
-                ent['@id'] = uriTemplate.replace(URI_SLOT, value)
+                ent['@id'] = uriTemplate.replace(URI_SLOT, value.trim())
             } else {
                 ent['@value'] = value
             }
