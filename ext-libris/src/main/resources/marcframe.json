@@ -3602,6 +3602,49 @@
       "$a": {"property": "uniformTitle"}
     },
 
+    "772": {
+      "addLink": "isPartOf",
+      "rangeEntity": "CreativeWork",
+      "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
+      "$b": {"property": "edition", "TODO:targetMatch": "250"},
+      "$c": {"property": "qualifyingNote"},
+      "$d": {"property": "placePublisherAndDateOfPublication", "TODO:targetMatch": "260$c"},
+      "$g": {"addProperty": "scopeNote"},
+      "$h": {"property": "physicalDescription"},
+      "$i": {"addProperty": "linkNote"},
+      "$k": {"addProperty": "seriesLabel", "TODO:targetMatch": "4xx, 8xx"},
+      "$m": {"property": "mediaNote"},
+      "$n": {"addProperty": "note"},
+      "$o": {"addProperty": "identifier"},
+      "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
+      "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
+      "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
+      "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
+      "$w": {"addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber"},
+      "$x": {"property": "issn", "TODO:targetMatch": "022"},
+      "$y": {"property": "coden", "TODO:targetMatch": "030"},
+      "$z": {"addProperty": "isbn", "TODO:targetMatch": "020"},
+      "repeatable": true
+    },
+    "773": {
+      "inherit": "772",
+      "addLink": "isPartOf",
+      "rangeEntity": "Publication",
+      "$c": null,
+      "$p": {"property": "abbreviatedTitle", "TODO:targetMatch": "210"},
+      "$q": {"property": "pagination"}
+    },
+    "774": {
+      "inherit": "772",
+      "addLink": "isPartOf",
+      "rangeEntity": "Collection"
+    },
+    "776": {
+      "inherit": "772",
+      "addLink": "alternateFormat",
+      "rangeEntity": "Product"
+    },
+
     "785": {
       "addLink": "succeeding",
       "rangeEntity": "Instance",
@@ -3610,7 +3653,7 @@
 
     "856": {
       "addLink": "isPrimaryTopicOf", "rangeEntity": "Document",
-      "TODO:match-ind2": {
+      "TODO:match-i2": {
         "0": {"addLink": "encoding", "rangeEntity": "MediaObject"},
         "1": {"addLink": "hasFormat", "rangeEntity": "Electronic"},
         "2": {"addLink": "isPrimaryTopicOf", "rangeEntity": "Document"},
@@ -3889,7 +3932,7 @@
     "755" : {"inherit": "750"},
     "856": {
       "inherit": "bib",
-      "TODO:match-ind2": {
+      "TODO:match-i2": {
         "0": {"addLink": "sameAs"},
         "1": {"addLink": "isPrimaryTopicOf", "rangeEntity": "Electronic"},
         "2": {"addLink": "relation", "rangeEntity": "Document"},
