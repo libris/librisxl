@@ -568,6 +568,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             def mapped = tokenMap[value] ?: tokenMap[value.toLowerCase()]
             if (mapped == null) {
                 return tokenMap.containsKey(value)
+            } else if (mapped == false) {
+                return true
             } else {
                 value = mapped
             }

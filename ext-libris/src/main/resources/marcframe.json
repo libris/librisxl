@@ -188,15 +188,15 @@
       "z": null
     },
     "booksConfPub": {
-      "0": "tcon:NotAConferencePublication",
+      "0": false,
       "1": "tcon:ConferencePublication"
     },
     "booksFestschrift": {
-      "0": "tcon:NotAFestschrift",
+      "0": false,
       "1": "tcon:Festschrift"
     },
     "booksIndex": {
-      "0": "tcon:NoIndex",
+      "0": false,
       "1": "tcon:IndexPresent"
     },
     "booksLiteraryForm": {
@@ -2424,13 +2424,13 @@
           "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
-          "property": "booksConfPub",
-          "boolean": true,
+          "link": "booksConfPub",
+          "uriTemplate": "{_}",
           "tokenMap": "booksConfPub"
         },
         "[30:31]": {
-          "property": "booksFestschrift",
-          "boolean": true,
+          "link": "booksFestschrift",
+          "uriTemplate": "{_}",
           "tokenMap": "booksFestschrift"
         },
         "[31:32]": {
@@ -2679,8 +2679,8 @@
           "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
-          "property": "serialsConfPub",
-          "boolean": true,
+          "link": "serialsConfPub",
+          "uriTemplate": "{_}",
           "tokenMap": "booksConfPub"
         },
         "[33:34]": {

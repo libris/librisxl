@@ -113,6 +113,18 @@ def get_tokenmap_key(name, items):
         tmap_hashes[mhash] = name
         return name
 
+def find_boolean_off_key(tokenmap):
+    if tokenmap and len(tokenmap) == 2:
+        items = [(k, v.split(':', 1)[-1] if v else '_')
+                    for (k, v) in tokenmap.items()]
+        for off_index, (k, v) in enumerate(items):
+            if v.startswith('No'):
+                on_k, on_v = items[not off_index]
+                if v.endswith(on_v.replace('Present', '')):
+                    assert k == '0' and on_k == '1'
+                    return k
+                break
+
 
 section = out['bib'] = OrderedDict()
 
@@ -222,7 +234,9 @@ for tag, field in sorted(marcmap['bib'].items()):
                                 propname = 'contentType'
                                 repeat = True
 
+                    overwriting = dfn_key not in tokenMaps
                     tokenmap = tokenMaps.setdefault(dfn_key, {})
+                    off_key = find_boolean_off_key(tokenmap)
 
                     for key, dfn in valuemap.items():
                         # TODO: '_' actually means something occasionally..
@@ -240,11 +254,15 @@ for tag, field in sorted(marcmap['bib'].items()):
                         elif subname.replace('Obsolete', '') in {
                                 'Unknown', 'Other', 'NotApplicable', 'Unspecified', 'Undefined'}:
                             type_id = None
+                        elif key == off_key:
+                            type_id = False
                         elif enum_key:
                             type_id = "%s:%s" % (enum_key, subname)
                         else:
                             type_id = subname
-                        assert tokenmap.get(key, type_id) == type_id, "%s in %r" % (type_id, tokenmap)
+                        if overwriting:
+                            assert tokenmap.get(key, type_id) == type_id, "%s: %s missing in %r" % (
+                                    key, type_id, tokenmap)
                         #assert type_id is None or type_id not in enums, type_id
                         tokenmap[key] = type_id
                         #local_enums.add(type_id)
@@ -255,27 +273,10 @@ for tag, field in sorted(marcmap['bib'].items()):
                 else:
                     pass
 
-                is_bool = False
-                if tokenmap and len(tokenmap) == 2:
-                    items = [(k, v.split(':', 1)[-1] if v else '_')
-                             for (k, v) in tokenmap.items()]
-                    for off_index, (k, v) in enumerate(items):
-                        if v.startswith('No'):
-                            on_k, on_v = items[not off_index]
-                            if v.endswith(on_v):
-                                assert k == '0' and on_k == '1'
-                                #tokenmap[k] = False
-                                #tokenmap[on_k] = True
-                                is_bool = True
-                            break
-
                 if domainname:
                     col_dfn['domainEntity'] = domainname
 
-                if is_bool:
-                    col_dfn['property'] = propname
-                    col_dfn['boolean'] = True
-                elif is_link:
+                if is_link:
                     col_dfn['addLink' if repeat else 'link'] = propname
                     col_dfn['uriTemplate'] = "{_}"
                 else:
