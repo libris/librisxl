@@ -46,7 +46,12 @@
       "o": "Kit",
       "p": "MixedMaterial",
       "r": "Realia",
-      "t": "ManuscriptText"
+      "t": "ManuscriptText",
+      "u": "Holding",
+      "v": "Holding",
+      "x": "Holding",
+      "y": "Holding",
+      "z": "Authority"
     },
     "bibLevel": {
       "a": "ComponentPart",
@@ -81,6 +86,7 @@
       "k": "trec:LessThanFullLevelInputByOclcParticipantsLocal",
       "l": "trec:FullLevelInputAddedFromABatchProcessLocal",
       "m": "trec:LessThanFullLevelInputAddedFromABatchProcessLocal",
+      "n": null,
       "u": null,
       "z": null
     },
