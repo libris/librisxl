@@ -3158,7 +3158,7 @@
       },
       "rangeEntity": "Identifier",
       "i1": {
-        "TODO:property": "identifierScheme",
+        "TODO:link": "identifierScheme",
         "TODO:tokenMap": {
           "0": "isrc",
           "1": "upc",
@@ -3173,7 +3173,7 @@
         "splitValuePattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?",
         "splitValueProperties": ["identifierValue", "identifierNote"],
         "defaults": {
-          "identifierScheme": "ISBN"
+          "identifierScheme": {"@id": "/def/identifiers/isbn"}
         }
       },
       "$c": {"domainEntity": "Instance", "property": "availability"},
@@ -3181,7 +3181,7 @@
       "$z": {
         "property": "identifierValue",
         "defaults": {
-          "identifierScheme": "ISBN",
+          "identifierScheme": {"@id": "/def/identifiers/isbn"},
           "identifierStatus": "canceledInvalid"
         }
       }
@@ -3193,16 +3193,16 @@
       "rangeEntity": "Identifier",
       "$a": {
         "property": "identifierValue",
-        "defaults": {"identifierScheme": "ISSN"}
+        "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
       },
       "$m": {"TODO:addProperty": "canceledIssnL"},
       "$l": {"TODO:property": "issnL"},
-      "$2": {"TODO:property": "source"},
+      "$2": {"TODO:link": "identifierScheme"},
       "$y": {"TODO": "inherit:$z + specific: incorrectIssn"},
       "$z": {
         "property": "identifierValue",
         "defaults": {
-          "identifierScheme": "ISSN",
+          "identifierScheme": {"@id": "/def/identifiers/issn"},
           "identifierStatus": "canceledInvalid"
         }
       }
@@ -3212,7 +3212,13 @@
       "domainEntity": "Instance",
       "addLink": "identifier",
       "rangeEntity": "Identifier",
-      "$a": {"property": "identifierValue"}
+      "$a": {"property": "identifierValue"},
+      "$2": {
+        "link": "identifierScheme",
+        "uriTemplate": "/def/identifiers/{_}",
+        "matchUriToken": "^\\S+$",
+        "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
+      }
     },
 
     "028": {
@@ -3234,7 +3240,9 @@
       "repeatable": true
     },
 
-    "034": {"entity": "Cartography", "$_": {}},
+    "034": {
+      "NOTE:domain": "Cartography"
+    },
 
     "035": {
       "domainEntity": "Record",
@@ -3293,23 +3301,33 @@
 
     "050": {
       "note:candidate:domainEntity": "Work",
-      "$a": {"property": "class-lcc"},
+      "$a": {"property": "classificationLcc"},
       "$b": {"ignored": true}
+    },
+
+    "080": {
+      "note:candidate:domainEntity": "Work",
+      "$a": {"property": "classificationUdc"}
     },
 
     "082": {
       "note:candidate:domainEntity": "Work",
-      "$a": {"property": "class-ddc"},
+      "$a": {"property": "classificationDdc"},
       "$2": {"ignored": true}
+    },
+    "083": {
+      "inherit": "082"
     },
 
     "072": {
-      "inherit": "084"
+      "inherit": "084",
+      "addLink": "subject",
+      "$b": {"addProperty": "classificationItem"}
     },
 
     "084": {
       "note:candidate:domainEntity": "Work",
-      "addLink": "class",
+      "addLink": "classification",
       "match-domain": {
         "Work": {"addLink": "class"}, "Holding": {"addLink": "callno"}
       },
@@ -3320,7 +3338,7 @@
       "$2": {"link": "inScheme",
              "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
              "property": "notation"},
-      "$b": {"property": "classItem", "ignored": true}
+      "$b": {"property": "classificationItem", "ignored": true}
     },
 
     "100": {
@@ -3470,7 +3488,13 @@
       "$a": {"property": "frequency"}
     },
 
-    "321": {},
+    "321": {
+      "addLink": "replaces",
+      "rangeEntity": "Serial",
+      "$a": {"property": "frequency"},
+      "$b": {"property": "date"}
+    },
+
     "362": {},
 
     "440": {"prefer": "490"},
@@ -3497,6 +3521,13 @@
     "505": {"$a": {"domainEntity": "Instance", "addProperty": "listOfContents", "TODO": "$t, $r"}},
     "508": {"$a": {"domainEntity": "Instance", "addProperty": "creditsNote"}},
 
+    "510": {
+      "addProperty": "citedBy",
+      "rangeEntity": "CreativeWork",
+      "$a": {"property": "title"},
+      "$c": {"property": "pagination"}
+    },
+
     "511": {
       "$a": {
         "match-i1": {"1": {"addProperty": "participantNote"}},
@@ -3507,11 +3538,15 @@
 
     "520": {"domainEntity": "Instance", "$a": {"addProperty": "summary"}},
 
+    "530": {"TODO:addLink": "hasFormat", "$a": {"addProperty": "comment"}},
+
     "546": {"domainEntity": "Instance", "$a": {"addProperty": "languageNote"}},
 
     "538": {"$a": {"domainEntity": "Instance", "addProperty": "systemRequirements"}},
 
-    "599": {"$a": {"domainEntity": "Record", "addProperty": "comment"}},
+    "588": {"$a": {"domainEntity": "Record", "addProperty": "sourceNote"}},
+
+    "599": {"$a": {"domainEntity": "Record", "addProperty": "technicalNote"}},
 
     "600": {
       "inherit": "100",
@@ -3602,8 +3637,13 @@
       "$a": {"property": "uniformTitle"}
     },
 
+    "760": {"inherit": "772", "addLink": "subseriesOf", "rangeEntity": "Serial"},
+    "762": {"inherit": "772", "addLink": "subseries", "rangeEntity": "Serial"},
+    "765": {"inherit": "772", "addLink": "translationOf"},
+    "767": {"inherit": "772", "addLink": "translation"},
+    "770": {"inherit": "772", "addLink": "contains"},
     "772": {
-      "addLink": "isPartOf",
+      "addLink": "containedIn",
       "rangeEntity": "CreativeWork",
       "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
       "$b": {"property": "edition", "TODO:targetMatch": "250"},
@@ -3624,11 +3664,11 @@
       "$x": {"property": "issn", "TODO:targetMatch": "022"},
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {"addProperty": "isbn", "TODO:targetMatch": "020"},
-      "repeatable": true
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"}
     },
     "773": {
       "inherit": "772",
-      "addLink": "isPartOf",
+      "addLink": "containedIn",
       "rangeEntity": "Publication",
       "$c": null,
       "$p": {"property": "abbreviatedTitle", "TODO:targetMatch": "210"},
@@ -3636,7 +3676,7 @@
     },
     "774": {
       "inherit": "772",
-      "addLink": "isPartOf",
+      "addLink": "containedIn",
       "rangeEntity": "Collection"
     },
     "776": {
@@ -3644,11 +3684,29 @@
       "addLink": "alternateFormat",
       "rangeEntity": "Product"
     },
-
+    "777": {
+      "inherit": "772",
+      "TODO:addProperty": "inConjunctionWith"
+    },
+    "780": {
+      "inherit": "772",
+      "addLink": "succeeds",
+      "rangeEntity": "Serial"
+    },
     "785": {
-      "addLink": "succeeding",
-      "rangeEntity": "Instance",
-      "$t": {"property": "title"}
+      "inherit": "772",
+      "addLink": "precedes",
+      "rangeEntity": "Serial"
+    },
+    "786": {
+      "domainEntity": "Record",
+      "inherit": "772",
+      "addLink": "source",
+      "rangeEntity": "Dataset"
+    },
+    "787": {
+      "inherit": "772",
+      "addLink": "relation"
     },
 
     "856": {
@@ -3677,7 +3735,7 @@
     "976": {
       "note:candidate:domainEntity": "Work",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
-      "addLink": "class",
+      "addLink": "classification",
       "rangeEntity": "Concept",
       "i2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
@@ -3903,7 +3961,7 @@
     },
     "670" : {
       "domainEntity": "Record",
-      "addLink": "source", "rangeEntity": "Instance",
+      "addLink": "source", "rangeEntity": "CreativeWork",
       "$a": {"property": "label"},
       "$b": {"property": "citation"},
       "$u": {"property": "url"}
