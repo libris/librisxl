@@ -40,7 +40,7 @@
     owl:equivalentProperty rdf:value .
 
 :seeAlso a owl:ObjectProperty;
-    rdfs:subPropertyOf rdfs:seeAlso .
+    owl:equivalentProperty rdfs:seeAlso .
 
 :sameAs a owl:ObjectProperty;
     rdfs:subPropertyOf owl:sameAs .
@@ -437,6 +437,7 @@
     owl:equivalentProperty bf:responsibilityStatement .
 
 :language a owl:ObjectProperty;
+    owl:equivalentProperty bf:language;
     rdfs:subPropertyOf dc:language;
     rdfs:range sdo:Language .
 
