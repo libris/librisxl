@@ -109,6 +109,7 @@
       "describedBy": {
         "@reverse": "about"
       },
+      "editorialNote": "skos:editorialNote",
       "extractedFrom": "describedBy",
       "familyName": "sdo:familyName",
       "format": "dc:format",
@@ -137,6 +138,7 @@
         "@id": "owl:intersectionOf"
       },
       "isPartOf": "dc:isPartOf",
+      "isPrimaryTopicOf": "foaf:isPrimaryTopicOf",
       "jobTitle": "sdo:jobTitle",
       "keyword": {
         "@id": "sdo:keywords",
@@ -144,6 +146,7 @@
       },
       "label": "rdfs:label",
       "language": "bf:language",
+      "languageNote": "bf:languageNote",
       "license": "dc:license",
       "modified": {
         "@id": "dc:modified",

@@ -441,6 +441,9 @@
     rdfs:subPropertyOf dc:language;
     rdfs:range sdo:Language .
 
+:languageNote a owl:ObjectProperty;
+    owl:equivalentProperty bf:languageNote .
+
 :versionOf a owl:ObjectProperty;
     owl:equivalentProperty dc:isVersionOf .
 
@@ -495,6 +498,9 @@
 
 :version a owl:ObjectProperty;
     owl:equivalentProperty sdo:version .
+
+:isPrimaryTopicOf a owl:ObjectProperty;
+    owl:equivalentProperty foaf:isPrimaryTopicOf .
 
 
 ##
@@ -612,6 +618,8 @@
     owl:equivalentProperty skos:related .
 :scopeNote a owl:DatatypeProperty;
     owl:equivalentProperty skos:scopeNote .
+:editorialNote a owl:DatatypeProperty;
+    owl:equivalentProperty skos:editorialNote .
 
 :inCollection a owl:ObjectProperty;
     owl:inverseOf skos:member;
@@ -686,7 +694,6 @@
 #depiction
 #descriptionRules
 #editionStatement
-#editorialNote
 #entryMap
 #fileType
 #formerShelvingLocation

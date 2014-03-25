@@ -3253,13 +3253,37 @@
     "040": {
       "domainEntity": "Record",
       "$a": {"link": "originalCatalogingAgency", "rangeEntity": "Organization", "property": "name"},
-      "$b": {"property": "language"},
+      "$b": {
+        "link": "language",
+        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$"
+      },
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
       "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
       "$e": {"property": "descriptionRules"},
       "9": {"property": "license"}
     },
-    "TODO:041": {"$a": {"defaultFrom": ["240.a"]}},
+    "041": {
+      "TODO:match-repetition": {
+        "addLink": "hasPart"
+      },
+      "$a": {
+        "TODO:unifyWith": ["008:language", "240.a?", "546"],
+        "TODO": "not repeated if equal with existing",
+        "addLink": "language",
+        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$"
+      },
+      "$b": {
+        "link": "hasSummaryLanguage"
+      },
+      "$h": {
+        "TODO": "sync with some isVersionOf/translationOf built from many fields",
+        "link": "originalLanguage",
+        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$"
+      },
+      "$k": {
+        "link": "translatedFromLanguage"
+      }
+    },
     "042": {
       "entity": "Record",
       "$a": {"property": "authenticationCode"},
@@ -3431,7 +3455,8 @@
       "addLink": "hasFormat",
       "rangeEntity": "Product",
       "$a": {"property": "extent", "interpunctionChars": "+:;"},
-      "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
+      "$c": {"link": "dimensions", "rangeEntity": "Concept", "property": "label",
+        "interpunctionChars": ":;+"},
       "$b": {"property": "otherPhysicalDetails", "interpunctionChars": ";+"},
       "$e": {"property": "accompanyingMaterial"},
       "$3": {
@@ -3481,6 +3506,8 @@
     },
 
     "520": {"domainEntity": "Instance", "$a": {"addProperty": "summary"}},
+
+    "546": {"domainEntity": "Instance", "$a": {"addProperty": "languageNote"}},
 
     "538": {"$a": {"domainEntity": "Instance", "addProperty": "systemRequirements"}},
 
@@ -3579,6 +3606,27 @@
       "addLink": "succeeding",
       "rangeEntity": "Instance",
       "$t": {"property": "title"}
+    },
+
+    "856": {
+      "addLink": "isPrimaryTopicOf", "rangeEntity": "Document",
+      "TODO:match-ind2": {
+        "0": {"addLink": "encoding", "rangeEntity": "MediaObject"},
+        "1": {"addLink": "hasFormat", "rangeEntity": "Electronic"},
+        "2": {"addLink": "isPrimaryTopicOf", "rangeEntity": "Document"},
+        "8": {"addLink": "relation", "rangeEntity": "Document"}
+      },
+      "TODO?": {
+        "if $x=digipic or $y=bild": {"addLink": "depiction"},
+        "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
+      },
+      "$3": {"property": "description"},
+      "$u": {"property": "@id"},
+      "$x": {
+        "addProperty": "editorialNote", "uriTemplate": "{+_}"
+      },
+      "$y": {"property": "altLabel"},
+      "$z": {"property": "comment"}
     },
 
     "883": {},
@@ -3840,8 +3888,13 @@
     },
     "755" : {"inherit": "750"},
     "856": {
-        "TODO": {"if $x=digipic or $y=bild": {"addLink": "depiction"}},
-        "$u": {"addLink": "sameAs", "uriTemplate": "{+_}"}
+      "inherit": "bib",
+      "TODO:match-ind2": {
+        "0": {"addLink": "sameAs"},
+        "1": {"addLink": "isPrimaryTopicOf", "rangeEntity": "Electronic"},
+        "2": {"addLink": "relation", "rangeEntity": "Document"},
+        "8": {"addLink": "seeAlso", "rangeEntity": "Document"}
+      }
     }
   },
 
