@@ -1516,6 +1516,35 @@
       "u": null,
       "z": null
     },
+    "publicationStatus": {
+      "b": "tcon:NoDatesGivenBCDateInvolved",
+      "c": "tcon:ContinuingResourceCurrentlyPublished",
+      "d": "tcon:ContinuingResourceCeasedPublication",
+      "e": "tcon:DetailedDate",
+      "i": "tcon:InclusiveDatesOfCollection",
+      "k": "tcon:RangeOfYearsOfBulkOfCollection",
+      "m": "tcon:MultipleDate",
+      "n": "tcon:DatesUnknown",
+      "p": "tcon:DateOfDistributionReleaseIssueOrProductionRecordingSessionWhenDifferent",
+      "q": "tcon:QuestionableDate",
+      "r": "tcon:ReprintReissueDateOrOriginalDate",
+      "s": "tcon:SingleKnownDateProbableDate",
+      "t": "tcon:PublicationDateOrCopyrightDate",
+      "u": "tcon:ContinuingResourceStatusUnknown"
+    },
+    "modifiedRecord": {
+      "d": "tcon:DashedOnInformationOmitted",
+      "o": "tcon:CompletelyRomanizedPrintedCardsRomanized",
+      "r": "tcon:CompletelyRomanizedPrintedCardsInScript",
+      "s": "tcon:Shortened",
+      "x": "tcon:MissingCharacter"
+    },
+    "catalogingSource": {
+      "_": "tcon:NationalBibliographicAgency",
+      "c": "tcon:CooperativeCatalogingProgram",
+      "d": null,
+      "u": null
+    },
     "computerFrequency": {
       "a": "tcon:AnnualObsolete",
       "b": "tcon:BimonthlyObsolete",
@@ -2294,13 +2323,13 @@
         }
       },
       "[38:39]": {
-        "domainEntity": "Record",
-        "property": "modifiedRecord",
+        "link": "modifiedRecord",
+        "uriTemplate": "{_}",
         "tokenMap": "modifiedRecord"
       },
       "[39:40]": {
-        "domainEntity": "Record",
-        "property": "catalogingSource",
+        "link": "catalogingSource",
+        "uriTemplate": "{_}",
         "tokenMap": "catalogingSource"
       },
 

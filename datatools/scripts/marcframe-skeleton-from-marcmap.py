@@ -177,12 +177,16 @@ for tag, field in sorted(marcmap['bib'].items()):
                 fm = outf
 
             #local_enums = set()
+            real_fm = fm
             for col in fixmap['columns']:
                 off, length = col['offset'], col['length']
                 key = (#str(off) if length == 1 else
                         '[%s:%s]' % (off, off+length))
                 if key in common_columns.get(tag, ()):
-                    continue # IMP: verify expected props?
+                    # IMP: verify expected props?
+                    fm = outf
+                else:
+                    fm = real_fm
 
                 dfn_key = col.get('propRef')
                 if not dfn_key:
