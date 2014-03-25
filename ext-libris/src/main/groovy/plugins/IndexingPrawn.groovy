@@ -37,17 +37,17 @@ class IndexingPrawn extends GetPrawn implements Prawn, WhelkAware {
                 if (docs.size() >= BATCH_SIZE
                         || (!docs.empty &&  diff > TIMEOUT)) {
                     log.debug("$diff time elapsed since last run. We're doing this.")
-                        reindex(docs.values() as List)
-                        docs = [:]
-                        timestamp = System.nanoTime()
-                        }
+                    extractAndReindex(docs.values() as List)
+                    docs = [:]
+                    timestamp = System.nanoTime()
+                }
             }
         } catch (InterruptedException ie) {
             deactivate()
         }
     }
 
-    void reindex(final List<Document> docs) {
+    void extractAndReindex(final List<Document> docs) {
         if (docs.size() > 0) {
             log.debug("Re-adding ${docs.size()} documents to index for whelk ${whelk.id}")
             whelk.addToIndex(docs)
@@ -62,5 +62,4 @@ class IndexingPrawn extends GetPrawn implements Prawn, WhelkAware {
     BlockingQueue getQueue() {
         return queue
     }
-
 }

@@ -32,7 +32,7 @@ class Document {
 
     // store serialized data
     @JsonIgnore
-    Map serializedDataInMap
+    private Map serializedDataInMap
 
     /*
      * Constructors
@@ -148,13 +148,20 @@ class Document {
         return this
     }
 
+    Document withData(byte[] data) {
+        setData(data)
+        return this
+    }
+
     Document withData(String dataString) {
         return withData(dataString.getBytes("UTF-8"))
     }
 
-    Document withData(byte[] data) {
-        setData(data)
-        return this
+    /**
+     * Convenience method to set data from dictionary, assuming data is to be stored as json.
+     */
+    Document withData(Map dataMap) {
+        return withData(mapper.writeValueAsBytes(dataMap))
     }
 
     Document withEntry(Map entrydata) {

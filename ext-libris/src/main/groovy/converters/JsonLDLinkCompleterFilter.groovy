@@ -11,10 +11,10 @@ import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
 
 @Log
+@Deprecated
 class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     String requiredContentType = "application/ld+json"
-    ObjectMapper mapper = new ObjectMapper()
     Whelk whelk
 
     def loadRelatedDocs(Document doc) {
@@ -40,7 +40,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         def relatedDocs = loadRelatedDocs(doc)
 
         if (relatedDocs.size() > 0) {
-            json = mapper.readValue(doc.dataAsString, Map)
+            json = doc.dataAsMap
             work = json.get("about")
             work.each { key, value ->
                 log.trace("trying to find and update entity $key")
@@ -54,7 +54,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
             }
             log.trace("Changed data? $changedData")
             if (changedData) {
-                return doc.withData(mapper.writeValueAsString(json))
+                return doc.withData(json)
             }
         }
         return doc

@@ -158,6 +158,8 @@ class StandardWhelk implements Whelk {
             log.trace("Document has ctype ${doc.contentType} after conversion.")
             docs.put(doc.contentType, doc)
         }
+        for (f in filters) {
+        }
         log.trace("All converters has run. Docs now: $docs")
         for (d in docs.values()) {
             log.trace("doc in loop has ct ${d.contentType}")
@@ -285,8 +287,7 @@ class StandardWhelk implements Whelk {
         for (doc in loadAll(dataset)) {
             for (filter in getFilters()) {
                 log.debug("Running filter ${filter.id}")
-                docs << addToStorage(filter.doFilter(doc))
-                //doc = filter.doFilter(doc)
+                docs << addToStorage(filter.filter(doc))
                 if (++counter % 1000 == 0) {
                     addToGraphStore(docs)
                     try {

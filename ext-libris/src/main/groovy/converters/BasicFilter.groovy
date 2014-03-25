@@ -12,5 +12,5 @@ abstract class BasicFilter extends BasicPlugin implements Filter {
         return newdoc
     }
 
-    abstract Document doFilter(final Document doc)
+    abstract protected Document doFilter(final Document doc)
 }
