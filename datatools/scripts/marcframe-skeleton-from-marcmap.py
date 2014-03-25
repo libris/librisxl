@@ -27,6 +27,11 @@ carrier_name_map = {
     'MotionPicture': 'MovingImage',
 }
 
+propname_map = {
+    'item': 'additionalCarrierType',
+    'format': 'additionalType'
+}
+
 fixprop_typerefs = {
     '000': [
         'typeOfRecord',
@@ -142,13 +147,20 @@ for tag, field in sorted(marcmap['bib'].items()):
         tokenTypeMap = OrderedDict()
         for fixmap in fixmaps:
             content_type = None
+            orig_type_name = None
             if len(fixmaps) > 1:
                 if tag == '008':
                     rt_bl_map = outf.setdefault('recTypeBibLevelMap', OrderedDict())
                 else:
-                    outf['tokenTypeMap'] = tokenTypeMap
+                    outf['addLink'] = 'hasFormat' if tag == '007' else 'hasPart'
+                    outf['[0:1]'] = {
+                        'addProperty': '@type',
+                        'tokenMap': tokenTypeMap,
+                    }
+                    outf['tokenTypeMap'] = '[0:1]'
 
-                type_name = fixmap.get('term') or fixmap['name'].split(tag + '_')[1]
+                orig_type_name =  fixmap['name'].split(tag + '_')[1]
+                type_name = fixmap.get('term') or orig_type_name
                 if tag in ('006', '008'):
                     type_name = content_name_map.get(type_name, type_name)
                 elif tag in ('007'):
@@ -203,9 +215,19 @@ for tag, field in sorted(marcmap['bib'].items()):
                 dfn_key = col.get('propRef')
                 if not dfn_key:
                     continue
+                if orig_type_name == 'ComputerFile':
+                    orig_type_name = 'Computer'
+                if orig_type_name and dfn_key.title().startswith(orig_type_name):
+                    new_propname = dfn_key[len(orig_type_name):]
+                    new_propname = new_propname[0].lower() + new_propname[1:]
+                    #print new_propname, '<-', dfn_key
+                else:
+                    new_propname = None
 
                 fm[key] = col_dfn = OrderedDict()
-                propname = dfn_key or col.get('propId')
+                propname = new_propname or dfn_key or col.get('propId')
+                if propname in propname_map:
+                    propname = propname_map[propname]
                 domainname = 'Record' if tag == '000' else None
                 is_link = False
                 repeat = False

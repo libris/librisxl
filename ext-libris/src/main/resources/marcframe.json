@@ -1672,12 +1672,409 @@
     "005": {"domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S"},
 
     "006": {
-      "match-repeated": {
-        "addLink": "hasPart"
+      "TODO:tokenSyncedWith": "typeOfRecord",
+      "TODO:repeats": "008",
+      "addLink": "hasPart",
+      "[0:1]": {
+        "tokenMap": {
+          "a": "Text",
+          "t": "Text",
+          "c": "Audio",
+          "d": "Audio",
+          "i": "Audio",
+          "j": "Audio",
+          "e": "Cartography",
+          "f": "Cartography",
+          "g": "Visual",
+          "k": "Visual",
+          "o": "Visual",
+          "r": "Visual",
+          "m": "Digital",
+          "p": "Mixed",
+          "s": "Serial"
+        },
+        "addProperty": "@type"
       },
-      "[0:1]": {},
-      "tokenSyncedWith": "typeOfRecord",
-      "repeats": "008"
+      "tokenTypeMap": "[0:1]",
+      "Text": {
+        "[1:2]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[2:3]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[3:4]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[4:5]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[5:6]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksItem"
+        },
+        "[7:8]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[8:9]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[9:10]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[10:11]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[12:13]": {
+          "link": "confPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksConfPub"
+        },
+        "[13:14]": {
+          "link": "festschrift",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksFestschrift"
+        },
+        "[14:15]": {
+          "link": "index",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIndex"
+        },
+        "[16:17]": {
+          "link": "literaryForm",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksLiteraryForm"
+        },
+        "[17:18]": {
+          "link": "biography",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksBiography"
+        }
+      },
+      "Audio": {
+        "[1:3]": {
+          "link": "composition",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicComposition"
+        },
+        "[3:4]": {
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicFormat"
+        },
+        "[4:5]": {
+          "link": "parts",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicParts"
+        },
+        "[5:6]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[7:8]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[8:9]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[9:10]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[10:11]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[11:12]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[12:13]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[13:14]": {
+          "link": "text",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicText"
+        },
+        "[14:15]": {
+          "link": "text",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicText"
+        },
+        "[16:17]": {
+          "link": "transposition",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicTransposition"
+        }
+      },
+      "Cartography": {
+        "[1:2]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[2:3]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[3:4]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[4:5]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[5:7]": {
+          "link": "projection",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsProjection"
+        },
+        "[8:9]": {
+          "link": "material",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsMaterial"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[12:13]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[14:15]": {
+          "link": "index",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIndex"
+        },
+        "[16:17]": {
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsFormat"
+        },
+        "[17:18]": {
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsFormat"
+        },
+        "[7:8]": {
+          "link": "primeMeridian",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsPrimeMeridian"
+        }
+      },
+      "Visual": {
+        "[1:4]": {
+          "property": "runningTime",
+          "patternMap": "visualRunningTime"
+        },
+        "[5:6]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[12:13]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[16:17]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMaterial"
+        },
+        "[17:18]": {
+          "link": "technique",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualTechnique"
+        },
+        "[6:7]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[7:8]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[8:9]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[9:10]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[10:11]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        }
+      },
+      "Digital": {
+        "[5:6]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerItem"
+        },
+        "[9:10]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerTypeOfFile"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        }
+      },
+      "Mixed": {
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[7:8]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        }
+      },
+      "Serial": {
+        "[1:2]": {
+          "link": "frequency",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsFrequency"
+        },
+        "[2:3]": {
+          "link": "regularity",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsRegularity"
+        },
+        "[3:4]": {
+          "link": "iSSN",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsISSN"
+        },
+        "[4:5]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsTypeOfSerial"
+        },
+        "[5:6]": {
+          "link": "originalItem",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsOriginalItem"
+        },
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[7:8]": {
+          "link": "nature",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsNature"
+        },
+        "[8:9]": {
+          "link": "contents",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsContents"
+        },
+        "[9:10]": {
+          "link": "contents",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsContents"
+        },
+        "[10:11]": {
+          "link": "contents",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsContents"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[12:13]": {
+          "link": "confPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksConfPub"
+        },
+        "[16:17]": {
+          "link": "alphabet",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsAlphabet"
+        },
+        "[17:18]": {
+          "link": "typeOfEntry",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsTypeOfEntry"
+        }
+      },
+      "repeatable": true
     },
 
     "007": {
@@ -1710,32 +2107,32 @@
           "tokenMap": "mapMaterial"
         },
         "[3:4]": {
-          "link": "mapColor",
+          "link": "color",
           "uriTemplate": "{_}",
           "tokenMap": "mapColor"
         },
         "[4:5]": {
-          "link": "mapMedium",
+          "link": "medium",
           "uriTemplate": "{_}",
           "tokenMap": "mapMedium"
         },
         "[5:6]": {
-          "link": "mapReproduction",
+          "link": "reproduction",
           "uriTemplate": "{_}",
           "tokenMap": "mapReproduction"
         },
         "[6:7]": {
-          "link": "mapDetails",
+          "link": "details",
           "uriTemplate": "{_}",
           "tokenMap": "mapDetails"
         },
         "[7:8]": {
-          "link": "mapPosNeg",
+          "link": "posNeg",
           "uriTemplate": "{_}",
           "tokenMap": "mapPosNeg"
         },
         "[2:3]": {
-          "link": "mapAspect",
+          "link": "aspect",
           "uriTemplate": "{_}",
           "tokenMap": "mapAspect"
         }
@@ -1747,51 +2144,51 @@
           "tokenMap": "computerMaterial"
         },
         "[3:4]": {
-          "link": "computerColor",
+          "link": "color",
           "uriTemplate": "{_}",
           "tokenMap": "computerColor"
         },
         "[4:5]": {
-          "link": "computerDimensions",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "computerDimensions"
         },
         "[5:6]": {
-          "link": "computerSound",
+          "link": "sound",
           "uriTemplate": "{_}",
           "tokenMap": "computerSound"
         },
         "[6:9]": {
-          "property": "computerImageBitDepth",
+          "property": "imageBitDepth",
           "patternMap": "computerImageBitDepth"
         },
         "[9:10]": {
-          "link": "computerFileFormats",
+          "link": "fileFormats",
           "uriTemplate": "{_}",
           "tokenMap": "computerFileFormats"
         },
         "[10:11]": {
-          "link": "computerQATarget",
+          "link": "qATarget",
           "uriTemplate": "{_}",
           "tokenMap": "computerQATarget"
         },
         "[11:12]": {
-          "link": "computerAntecedent",
+          "link": "antecedent",
           "uriTemplate": "{_}",
           "tokenMap": "computerAntecedent"
         },
         "[12:13]": {
-          "link": "computerCompression",
+          "link": "compression",
           "uriTemplate": "{_}",
           "tokenMap": "computerCompression"
         },
         "[13:14]": {
-          "link": "computerReformattingQuality",
+          "link": "reformattingQuality",
           "uriTemplate": "{_}",
           "tokenMap": "computerReformattingQuality"
         },
         "[2:3]": {
-          "link": "computerFileAspect",
+          "link": "fileAspect",
           "uriTemplate": "{_}",
           "tokenMap": "mapAspect"
         }
@@ -1803,27 +2200,27 @@
           "tokenMap": "globeMaterial"
         },
         "[3:4]": {
-          "link": "globeColor",
+          "link": "color",
           "uriTemplate": "{_}",
           "tokenMap": "mapColor"
         },
         "[4:5]": {
-          "link": "globeMedium",
+          "link": "medium",
           "uriTemplate": "{_}",
           "tokenMap": "globeMedium"
         },
         "[5:6]": {
-          "link": "globeReproduction",
+          "link": "reproduction",
           "uriTemplate": "{_}",
           "tokenMap": "mapReproduction"
         },
         "[2:3]": {
-          "link": "globeAspect",
+          "link": "aspect",
           "uriTemplate": "{_}",
           "tokenMap": "mapAspect"
         }
       },
-      "Tactile": {
+      "TactileMaterial": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -1914,45 +2311,43 @@
           "tokenMap": "microformMaterial"
         },
         "[3:4]": {
-          "link": "microformPosNeg",
+          "link": "posNeg",
           "uriTemplate": "{_}",
           "tokenMap": "microformPosNeg"
         },
         "[4:5]": {
-          "link": "microformDimensions",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "microformDimensions"
         },
         "[5:6]": {
-          "link": "microformRange",
+          "link": "range",
           "uriTemplate": "{_}",
           "tokenMap": "microformRange"
         },
-        "[6:9]": {
-          "property": "reductionRatioExactRightJustifiedWithLeadingZero"
-        },
+        "[6:9]": {"property": "reductionRatioExactRightJustifiedWithLeadingZero"},
         "[9:10]": {
-          "link": "microformColor",
+          "link": "color",
           "uriTemplate": "{_}",
           "tokenMap": "microformColor"
         },
         "[10:11]": {
-          "link": "microformEmulsion",
+          "link": "emulsion",
           "uriTemplate": "{_}",
           "tokenMap": "microformEmulsion"
         },
         "[11:12]": {
-          "link": "microformGeneration",
+          "link": "generation",
           "uriTemplate": "{_}",
           "tokenMap": "microformGeneration"
         },
         "[12:13]": {
-          "link": "microformBase",
+          "link": "base",
           "uriTemplate": "{_}",
           "tokenMap": "microformBase"
         },
         "[2:3]": {
-          "link": "microformAspect",
+          "link": "aspect",
           "uriTemplate": "{_}",
           "tokenMap": "mapAspect"
         }
@@ -2060,9 +2455,7 @@
           "uriTemplate": "{_}",
           "tokenMap": "motionPicCompleteness"
         },
-        "[17:23]": {
-          "property": "timeOfExamination"
-        },
+        "[17:23]": {"property": "timeOfExamination"},
         "[2:3]": {
           "link": "motionPicAspect",
           "uriTemplate": "{_}",
@@ -2296,7 +2689,9 @@
           "tokenMap": "remoteSensImageData"
         }
       },
-      "Unspecified": {}
+      "Unspecified": {},
+      "repeatable": true
+
     },
 
     "008": {
@@ -2369,32 +2764,32 @@
 
       "Text": {
         "[18:19]": {
-          "link": "booksIllustrations",
+          "link": "illustrations",
           "uriTemplate": "{_}",
           "tokenMap": "booksIllustrations"
         },
         "[19:20]": {
-          "link": "booksIllustrations",
+          "link": "illustrations",
           "uriTemplate": "{_}",
           "tokenMap": "booksIllustrations"
         },
         "[20:21]": {
-          "link": "booksIllustrations",
+          "link": "illustrations",
           "uriTemplate": "{_}",
           "tokenMap": "booksIllustrations"
         },
         "[21:22]": {
-          "link": "booksIllustrations",
+          "link": "illustrations",
           "uriTemplate": "{_}",
           "tokenMap": "booksIllustrations"
         },
         "[22:23]": {
-          "link": "booksAudience",
+          "link": "audience",
           "uriTemplate": "{_}",
           "tokenMap": "booksAudience"
         },
         "[23:24]": {
-          "link": "booksItem",
+          "link": "additionalCarrierType",
           "uriTemplate": "{_}",
           "tokenMap": "booksItem"
         },
@@ -2419,44 +2814,44 @@
           "tokenMap": "booksContents"
         },
         "[28:29]": {
-          "link": "booksGovtPub",
+          "link": "govtPub",
           "uriTemplate": "{_}",
           "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
-          "link": "booksConfPub",
+          "link": "confPub",
           "uriTemplate": "{_}",
           "tokenMap": "booksConfPub"
         },
         "[30:31]": {
-          "link": "booksFestschrift",
+          "link": "festschrift",
           "uriTemplate": "{_}",
           "tokenMap": "booksFestschrift"
         },
         "[31:32]": {
-          "link": "booksIndex",
+          "link": "index",
           "uriTemplate": "{_}",
           "tokenMap": "booksIndex"
         },
         "[33:34]": {
-          "link": "booksLiteraryForm",
+          "link": "literaryForm",
           "uriTemplate": "{_}",
           "tokenMap": "booksLiteraryForm"
         },
         "[34:35]": {
-          "link": "booksBiography",
+          "link": "biography",
           "uriTemplate": "{_}",
           "tokenMap": "booksBiography"
         }
       },
       "Digital": {
         "[22:23]": {
-          "link": "computerAudience",
+          "link": "audience",
           "uriTemplate": "{_}",
           "tokenMap": "booksAudience"
         },
         "[23:24]": {
-          "link": "computerItem",
+          "link": "additionalCarrierType",
           "uriTemplate": "{_}",
           "tokenMap": "computerItem"
         },
@@ -2466,175 +2861,175 @@
           "tokenMap": "computerTypeOfFile"
         },
         "[28:29]": {
-          "link": "computerGovtPub",
+          "link": "govtPub",
           "uriTemplate": "{_}",
           "tokenMap": "booksGovtPub"
         },
         "[18:19]": {
-          "link": "computerFrequency",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "computerFrequency"
         },
         "[19:20]": {
-          "link": "computerRegularity",
+          "link": "regularity",
           "uriTemplate": "{_}",
           "tokenMap": "computerRegularity"
         }
       },
       "Cartography": {
         "[18:19]": {
-          "link": "mapsRelief",
+          "link": "relief",
           "uriTemplate": "{_}",
           "tokenMap": "mapsRelief"
         },
         "[19:20]": {
-          "link": "mapsRelief",
+          "link": "relief",
           "uriTemplate": "{_}",
           "tokenMap": "mapsRelief"
         },
         "[20:21]": {
-          "link": "mapsRelief",
+          "link": "relief",
           "uriTemplate": "{_}",
           "tokenMap": "mapsRelief"
         },
         "[21:22]": {
-          "link": "mapsRelief",
+          "link": "relief",
           "uriTemplate": "{_}",
           "tokenMap": "mapsRelief"
         },
         "[22:24]": {
-          "link": "mapsProjection",
+          "link": "projection",
           "uriTemplate": "{_}",
           "tokenMap": "mapsProjection"
         },
         "[25:26]": {
-          "link": "mapsMaterial",
+          "link": "material",
           "uriTemplate": "{_}",
           "tokenMap": "mapsMaterial"
         },
         "[28:29]": {
-          "link": "mapsGovtPub",
+          "link": "govtPub",
           "uriTemplate": "{_}",
           "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
-          "link": "mapsItem",
+          "link": "additionalCarrierType",
           "uriTemplate": "{_}",
           "tokenMap": "musicItem"
         },
         "[31:32]": {
-          "link": "mapsIndex",
+          "link": "index",
           "uriTemplate": "{_}",
           "tokenMap": "booksIndex"
         },
         "[33:34]": {
-          "link": "mapsFormat",
+          "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "mapsFormat"
         },
         "[34:35]": {
-          "link": "mapsFormat",
+          "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "mapsFormat"
         },
         "[24:25]": {
-          "link": "mapsPrimeMeridian",
+          "link": "primeMeridian",
           "uriTemplate": "{_}",
           "tokenMap": "mapsPrimeMeridian"
         }
       },
       "Mixed": {
         "[23:24]": {
-          "link": "mixedItem",
+          "link": "additionalCarrierType",
           "uriTemplate": "{_}",
           "tokenMap": "musicItem"
         }
       },
       "Audio": {
         "[18:20]": {
-          "link": "musicComposition",
+          "link": "composition",
           "uriTemplate": "{_}",
           "tokenMap": "musicComposition"
         },
         "[20:21]": {
-          "link": "musicFormat",
+          "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "musicFormat"
         },
         "[21:22]": {
-          "link": "musicParts",
+          "link": "parts",
           "uriTemplate": "{_}",
           "tokenMap": "musicParts"
         },
         "[22:23]": {
-          "link": "musicAudience",
+          "link": "audience",
           "uriTemplate": "{_}",
           "tokenMap": "booksAudience"
         },
         "[23:24]": {
-          "link": "musicItem",
+          "link": "additionalCarrierType",
           "uriTemplate": "{_}",
           "tokenMap": "musicItem"
         },
         "[24:25]": {
-          "link": "musicMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[25:26]": {
-          "link": "musicMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[26:27]": {
-          "link": "musicMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[27:28]": {
-          "link": "musicMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[28:29]": {
-          "link": "musicMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[29:30]": {
-          "link": "musicMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "musicMatter"
         },
         "[30:31]": {
-          "link": "musicText",
+          "link": "text",
           "uriTemplate": "{_}",
           "tokenMap": "musicText"
         },
         "[31:32]": {
-          "link": "musicText",
+          "link": "text",
           "uriTemplate": "{_}",
           "tokenMap": "musicText"
         },
         "[33:34]": {
-          "link": "musicTransposition",
+          "link": "transposition",
           "uriTemplate": "{_}",
           "tokenMap": "musicTransposition"
         }
       },
       "Serial": {
         "[18:19]": {
-          "link": "serialsFrequency",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "serialsFrequency"
         },
         "[19:20]": {
-          "link": "serialsRegularity",
+          "link": "regularity",
           "uriTemplate": "{_}",
           "tokenMap": "serialsRegularity"
         },
         "[20:21]": {
-          "link": "serialsISSN",
+          "link": "iSSN",
           "uriTemplate": "{_}",
           "tokenMap": "serialsISSN"
         },
@@ -2644,73 +3039,73 @@
           "tokenMap": "serialsTypeOfSerial"
         },
         "[22:23]": {
-          "link": "serialsOriginalItem",
+          "link": "originalItem",
           "uriTemplate": "{_}",
           "tokenMap": "serialsOriginalItem"
         },
         "[23:24]": {
-          "link": "serialsItem",
+          "link": "additionalCarrierType",
           "uriTemplate": "{_}",
           "tokenMap": "musicItem"
         },
         "[24:25]": {
-          "link": "serialsNature",
+          "link": "nature",
           "uriTemplate": "{_}",
           "tokenMap": "serialsNature"
         },
         "[25:26]": {
-          "link": "serialsContents",
+          "link": "contents",
           "uriTemplate": "{_}",
           "tokenMap": "serialsContents"
         },
         "[26:27]": {
-          "link": "serialsContents",
+          "link": "contents",
           "uriTemplate": "{_}",
           "tokenMap": "serialsContents"
         },
         "[27:28]": {
-          "link": "serialsContents",
+          "link": "contents",
           "uriTemplate": "{_}",
           "tokenMap": "serialsContents"
         },
         "[28:29]": {
-          "link": "serialsGovtPub",
+          "link": "govtPub",
           "uriTemplate": "{_}",
           "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
-          "link": "serialsConfPub",
+          "link": "confPub",
           "uriTemplate": "{_}",
           "tokenMap": "booksConfPub"
         },
         "[33:34]": {
-          "link": "serialsAlphabet",
+          "link": "alphabet",
           "uriTemplate": "{_}",
           "tokenMap": "serialsAlphabet"
         },
         "[34:35]": {
-          "link": "serialsTypeOfEntry",
+          "link": "typeOfEntry",
           "uriTemplate": "{_}",
           "tokenMap": "serialsTypeOfEntry"
         }
       },
       "Visual": {
         "[18:21]": {
-          "property": "visualRunningTime",
+          "property": "runningTime",
           "patternMap": "visualRunningTime"
         },
         "[22:23]": {
-          "link": "visualAudience",
+          "link": "audience",
           "uriTemplate": "{_}",
           "tokenMap": "booksAudience"
         },
         "[28:29]": {
-          "link": "visualGovtPub",
+          "link": "govtPub",
           "uriTemplate": "{_}",
           "tokenMap": "booksGovtPub"
         },
         "[29:30]": {
-          "link": "visualItem",
+          "link": "additionalCarrierType",
           "uriTemplate": "{_}",
           "tokenMap": "musicItem"
         },
@@ -2720,32 +3115,32 @@
           "tokenMap": "visualMaterial"
         },
         "[34:35]": {
-          "link": "visualTechnique",
+          "link": "technique",
           "uriTemplate": "{_}",
           "tokenMap": "visualTechnique"
         },
         "[23:24]": {
-          "link": "visualMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         },
         "[24:25]": {
-          "link": "visualMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         },
         "[25:26]": {
-          "link": "visualMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         },
         "[26:27]": {
-          "link": "visualMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         },
         "[27:28]": {
-          "link": "visualMatter",
+          "link": "matter",
           "uriTemplate": "{_}",
           "tokenMap": "visualMatter"
         }
