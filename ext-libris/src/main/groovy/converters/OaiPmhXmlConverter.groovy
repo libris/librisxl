@@ -14,7 +14,6 @@ import se.kb.libris.conch.converter.MarcJSONConverter
 class OaiPmhXmlConverter extends BasicFormatConverter {
     String requiredContentType = "text/oaipmh+xml"
     String resultContentType = "application/x-marc-json"
-    XmlSlurper slurper
 
     StreamingMarkupBuilder markupBuilder = new StreamingMarkupBuilder()
 
@@ -24,17 +23,26 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
     OaiPmhXmlConverter(Map settings) {
         this.SPEC_URI_MAP = settings.get("specUriMapping", [:])
         this.preserveTimestamps = settings.get("preserveTimestamps", false)
-        this.slurper = new XmlSlurper(false,false)
     }
 
     Document doConvert(final Document document) {
-        def xml = slurper.parseText(document.dataAsString)
+        long elapsed = System.currentTimeMillis()
+        def xml = new XmlSlurper(false,false).parseText(document.dataAsString)
+        if ((System.currentTimeMillis() - elapsed) > 1000) {
+            log.warn("XML parsing took more than 1 seconds (${System.currentTimeMillis() - elapsed})")
+        }
+        elapsed = System.currentTimeMillis()
         String rstring = createString(xml.metadata.record)
+        log.info("rstring: $rstring")
+        if ((System.currentTimeMillis() - elapsed) > 1000) {
+            log.warn("CreateString took more than 1 seconds (${System.currentTimeMillis() - elapsed})")
+        }
         MarcRecord record = MarcXmlRecordReader.fromXml(rstring)
 
 
         log.debug("Creating new document ${document.identifier} from doc with entry: ${document.entry} and meta: ${document.meta}")
 
+        elapsed = System.currentTimeMillis()
         String jsonRec = MarcJSONConverter.toJSONString(record)
 
         def doc = new Document()
@@ -57,6 +65,9 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
                     }
                 }
             }
+        }
+        if ((System.currentTimeMillis() - elapsed) > 1000) {
+            log.warn("Document creation took more than 1 seconds (${System.currentTimeMillis() - elapsed})")
         }
         log.debug("Document ${doc.identifier} created successfully with entry: ${doc.entry} and meta: ${doc.meta}")
 
