@@ -114,7 +114,9 @@ class Document {
         this.data = data
         // Whenever data is changed, reset serializedDataInMap
         serializedDataInMap = null
-        calculateChecksum()
+        if (data) {
+            calculateChecksum()
+        }
     }
 
     /*
