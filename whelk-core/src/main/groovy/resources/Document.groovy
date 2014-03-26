@@ -227,7 +227,6 @@ class Document {
             this.identifier = newDoc.identifier
             this.entry = newDoc.entry
             this.meta = newDoc.meta
-            log.info("Data is ${newDoc.data}")
             setData(newDoc.data)
         } catch (JsonParseException jpe) {
             throw new DocumentException(jpe)
