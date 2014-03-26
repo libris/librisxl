@@ -3,6 +3,8 @@ package se.kb.libris.whelks.plugin
 import groovy.util.logging.Slf4j as Log
 
 import java.util.regex.Pattern
+import org.apache.commons.collections.BidiMap
+import org.apache.commons.collections.bidimap.DualHashBidiMap
 import org.codehaus.jackson.map.ObjectMapper
 
 import se.kb.libris.whelks.Document
@@ -410,7 +412,7 @@ class MarcFixedFieldHandler {
             // TODO: ambiguity trouble if this is a List!
             if (obj instanceof List) obj = obj[0]
             if (obj) {
-                assert col.width - obj.size() > -1
+                assert data && obj && col.width - obj.size() > -1
                 value[col.start..(col.end - col.width - obj.size())] = obj
             }
         }
@@ -460,12 +462,14 @@ class MarcFixedFieldHandler {
 class ConversionPart {
 
     String domainEntityName
-    Map tokenMap
+    BidiMap tokenMap
 
-    void setValueMap(fieldHandler, dfn) {
+    void setTokenMap(fieldHandler, dfn) {
         def tokenMap = dfn.tokenMap
-        this.tokenMap = (tokenMap instanceof String)?
-                            fieldHandler.tokenMaps[tokenMap] : tokenMap
+        if (tokenMap) {
+            this.tokenMap = new DualHashBidiMap((tokenMap instanceof String)?
+                                fieldHandler.tokenMaps[tokenMap] : tokenMap)
+        }
     }
 
     Map getEntity(Map data) {
@@ -475,6 +479,19 @@ class ConversionPart {
             return data.about.instanceOf
         else
             return data.about
+    }
+
+    def revertObject(obj) {
+        if (tokenMap) {
+            if (obj instanceof List) {
+                return obj.collect { tokenMap.getKey(it) }
+            } else {
+                println "$obj: ${tokenMap.getKey(obj)}"
+                return tokenMap.getKey(obj)
+            }
+        } else {
+            return obj
+        }
     }
 
 }
@@ -529,7 +546,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
     MarcSimpleFieldHandler(conversion, tag, fieldDfn) {
         super(conversion, tag)
-        super.setValueMap(this, fieldDfn)
+        super.setTokenMap(this, fieldDfn)
         if (fieldDfn.addProperty) {
             property = fieldDfn.addProperty
             repeat = true
@@ -609,11 +626,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             def v = entity[property]
             if (v && dateTimeFormat)
                 return Date.parse(DT_FORMAT, v).format(dateTimeFormat)
-            return v
+            return revertObject(v)
         } else {
             def id = entity instanceof Map? entity['@id'] : entity
             if (uriTemplate) {
-                return extractToken(uriTemplate, id) ?: "?"
+                def token = extractToken(uriTemplate, id)
+                if (token) {
+                    return revertObject(token)
+                }
             }
             return "?"
         }
@@ -1015,7 +1035,7 @@ class MarcSubFieldHandler extends ConversionPart {
         domainEntityName = subDfn.domainEntity
         interpunctionChars = subDfn.interpunctionChars?.toCharArray()
         surroundingChars = subDfn.surroundingChars?.toCharArray()
-        super.setValueMap(fieldHandler, subDfn)
+        super.setTokenMap(fieldHandler, subDfn)
         link = subDfn.link
         repeatLink = false
         if (subDfn.addLink) {
@@ -1140,8 +1160,9 @@ class MarcSubFieldHandler extends ConversionPart {
                 return vs.join(rejoin)
         }
         if (property) {
-            return entity[property]
+            return revertObject(entity[property])
         }
+        return null
     }
 
 }
