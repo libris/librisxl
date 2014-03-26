@@ -110,7 +110,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
             new ConnectionPoolConfigurationImpl("WhelkConnectionPool")
             .setPort(9160)
             .setMaxConnsPerHost(1)
-            .setConnectTimeout(60000)
             .setSeeds(cassandra_host+":9160")
         )
         .withConnectionPoolMonitor(
@@ -306,33 +305,42 @@ class CassandraStorage extends BasicPlugin implements Storage {
             throw new WhelkStorageException("Requested version from non-versioning storage")
         }
         log.trace("Requested version is $version")
+        boolean success = false
+        while (!success) {
+            try {
 
-        OperationResult<ColumnList<DocumentEntry>> operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri.toString()).execute()
+                OperationResult<ColumnList<DocumentEntry>> operation = keyspace.prepareQuery(CF_DOCUMENT).getKey(uri.toString()).execute()
 
-        ColumnList<DocumentEntry> res = operation.getResult()
+                ColumnList<DocumentEntry> res = operation.getResult()
 
-        log.trace("Get operation result size: ${res.size()}")
+                log.trace("Get operation result size: ${res.size()}")
 
-        if (res.size() > 0) {
-            log.trace("Digging up a document with identifier $uri from ${this.id}.")
-            document = new Document()
-            boolean foundCorrectVersion = false
-            for (r in res) {
-                DocumentEntry e = r.name
-                log.trace("Found docentry with version ${e.version}")
-                if (!version || e.version == version as int) {
-                    foundCorrectVersion = true
-                    document.withTimestamp(e.timestamp)
-                    if (e.field == COL_NAME_ENTRY) {
-                        document.withMetaEntry(r.getStringValue())
-                    }
-                    if (e.field == COL_NAME_DATA) {
-                        document.withData(r.getByteArrayValue())
+                if (res.size() > 0) {
+                    log.trace("Digging up a document with identifier $uri from ${this.id}.")
+                        document = new Document()
+                        boolean foundCorrectVersion = false
+                        for (r in res) {
+                            DocumentEntry e = r.name
+                            log.trace("Found docentry with version ${e.version}")
+                            if (!version || e.version == version as int) {
+                                foundCorrectVersion = true
+                                document.withTimestamp(e.timestamp)
+                                if (e.field == COL_NAME_ENTRY) {
+                                    document.withMetaEntry(r.getStringValue())
+                                }
+                                if (e.field == COL_NAME_DATA) {
+                                    document.withData(r.getByteArrayValue())
+                                }
+                            }
+                        }
+                    if (!foundCorrectVersion) {
+                        document = null
                     }
                 }
-            }
-            if (!foundCorrectVersion) {
-                document = null
+                success = true
+            } catch (com.netflix.astyanax.connectionpool.exceptions.OperationTimeoutException ote) {
+                log.warn("Get operation timed out. Holding for a second ...", ce)
+                Thread.sleep(1000)
             }
         }
         log.trace("Returning document ${document?.identifier} (${document?.contentType}, version ${document?.version})")
