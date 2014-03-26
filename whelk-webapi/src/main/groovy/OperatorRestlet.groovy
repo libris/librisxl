@@ -340,6 +340,7 @@ class BenchmarkOperator extends AbstractOperator {
 
     String oid = "benchmark"
     Date since = null
+    String fromStorage = null
 
     @Override
     void setParameters(Map parameters) {
@@ -348,12 +349,13 @@ class BenchmarkOperator extends AbstractOperator {
             this.since = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", parameters.get("since"))
             log.info("Since: $since")
         }
+        this.fromStorage = parameters.get("fromStorage", null)
     }
 
     @Override
     void doRun(long startTime) {
         def docs = []
-        for (doc in whelk.loadAll(dataset, since)) {
+        for (doc in whelk.loadAll(dataset, since, fromStorage)) {
             docs << doc
             if (++count % 1000 == 0) {
                 // Update runningtime every 1000 docs

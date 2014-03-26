@@ -14,4 +14,4 @@ LIBS=$WEBAPPS/WEB-INF/lib
 
 source $SETENV
 
-java $JAVA_OPTS -Ddisable.plugins="indexingprawn" $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o reindex --fromStorage oaipmhstorage -w libris $DATASET
+java $JAVA_OPTS -Ddisable.plugins="indexingprawn,marcconverter" $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o reindex --fromStorage oaipmhstorage -w libris $DATASET

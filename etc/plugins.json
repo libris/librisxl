@@ -234,7 +234,7 @@
         "_class" : "se.kb.libris.whelks.plugin.IndexingPrawn",
         "_params" : {
             "batchSize" : 1000,
-            "timeout" : 60000
+            "timeout" : 1
         }
     },
     "oaipmhimporter" : {

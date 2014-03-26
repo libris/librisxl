@@ -90,7 +90,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Document get(URI uri, version=null, List contentTypes=[]) {
+    Document get(URI uri, version=null, List contentTypes=[], boolean dontAlertThePrawns = false) {
         Document doc
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
@@ -104,7 +104,7 @@ class StandardWhelk implements Whelk {
             doc = storage.get(uri, version)
         }
 
-        if (prawnsActive && doc?.identifier && queues) {
+        if (prawnsActive && !dontAlertThePrawns && doc?.identifier && queues) {
             log.debug("Adding ${doc.identifier} to prawn queue")
             for (queue in queues.get(GetPrawn.TRIGGER)) {
                 queue.put(doc)
