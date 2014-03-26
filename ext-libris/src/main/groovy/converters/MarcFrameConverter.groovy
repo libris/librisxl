@@ -3,6 +3,8 @@ package se.kb.libris.whelks.plugin
 import groovy.util.logging.Slf4j as Log
 
 import java.util.regex.Pattern
+import org.apache.commons.collections.BidiMap
+import org.apache.commons.collections.bidimap.DualHashBidiMap
 import org.codehaus.jackson.map.ObjectMapper
 
 import se.kb.libris.whelks.Document
@@ -360,14 +362,21 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     }
 
     def revert(Map data) {
-        return // TODO
+        def value = null
+        if (baseConverter)
+            value = baseConverter.revert(data)
+        // TODO:
+        //def converter = computeConverter(data)
+        //return value combinedWith converter.convert(data, valueSb)
+        return value
     }
 }
 
 class MarcFixedFieldHandler {
 
     String tag
-    static final String FIXED_NONE = "|"
+    static final String FIXED_NONE = " "
+    static final String FIXED_UNDEF = "|"
     def columns = []
 
     MarcFixedFieldHandler(conversion, tag, fieldDfn) {
@@ -404,14 +413,17 @@ class MarcFixedFieldHandler {
     }
 
     def revert(Map data) {
-        def value = new StringBuilder(FIXED_NONE * (columns[-1].end + 1))
+        def value = new StringBuilder(FIXED_NONE * (columns[-1].end))
         for (col in columns) {
             def obj = col.revert(data)
             // TODO: ambiguity trouble if this is a List!
-            if (obj instanceof List) obj = obj[0]
+            if (obj instanceof List) obj = obj.find { it }
             if (obj) {
                 assert col.width - obj.size() > -1
-                value[col.start..(col.end - col.width - obj.size())] = obj
+                assert value.size() > col.start
+                assert col.width >= obj.size()
+                def end = col.start + obj.size() - 1
+                value[col.start .. end] = obj
             }
         }
         return value.toString()
@@ -442,7 +454,7 @@ class MarcFixedFieldHandler {
                 return true
             if (token == defaultValue)
                 return true
-            boolean isNothing = token.find { it != FIXED_NONE && it != " " } == null
+            boolean isNothing = token.find { it != FIXED_NONE && it != FIXED_UNDEF } == null
             if (isNothing)
                 return true
             return super.convert(sourceMap, token, entityMap)
@@ -460,12 +472,14 @@ class MarcFixedFieldHandler {
 class ConversionPart {
 
     String domainEntityName
-    Map tokenMap
+    BidiMap tokenMap
 
-    void setValueMap(fieldHandler, dfn) {
+    void setTokenMap(fieldHandler, dfn) {
         def tokenMap = dfn.tokenMap
-        this.tokenMap = (tokenMap instanceof String)?
-                            fieldHandler.tokenMaps[tokenMap] : tokenMap
+        if (tokenMap) {
+            this.tokenMap = new DualHashBidiMap((tokenMap instanceof String)?
+                                fieldHandler.tokenMaps[tokenMap] : tokenMap)
+        }
     }
 
     Map getEntity(Map data) {
@@ -475,6 +489,19 @@ class ConversionPart {
             return data.about.instanceOf
         else
             return data.about
+    }
+
+    def revertObject(obj) {
+        if (tokenMap) {
+            if (obj instanceof List) {
+                return obj.collect { tokenMap.getKey(it) }
+            } else {
+                println "$obj: ${tokenMap.getKey(obj)}"
+                return tokenMap.getKey(obj)
+            }
+        } else {
+            return obj
+        }
     }
 
 }
@@ -529,7 +556,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
     MarcSimpleFieldHandler(conversion, tag, fieldDfn) {
         super(conversion, tag)
-        super.setValueMap(this, fieldDfn)
+        super.setTokenMap(this, fieldDfn)
         if (fieldDfn.addProperty) {
             property = fieldDfn.addProperty
             repeat = true
@@ -609,13 +636,16 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             def v = entity[property]
             if (v && dateTimeFormat)
                 return Date.parse(DT_FORMAT, v).format(dateTimeFormat)
-            return v
+            return revertObject(v)
         } else {
             def id = entity instanceof Map? entity['@id'] : entity
             if (uriTemplate) {
-                return extractToken(uriTemplate, id) ?: "?"
+                def token = extractToken(uriTemplate, id)
+                if (token) {
+                    return revertObject(token)
+                }
             }
-            return "?"
+            return null
         }
     }
 
@@ -1015,7 +1045,7 @@ class MarcSubFieldHandler extends ConversionPart {
         domainEntityName = subDfn.domainEntity
         interpunctionChars = subDfn.interpunctionChars?.toCharArray()
         surroundingChars = subDfn.surroundingChars?.toCharArray()
-        super.setValueMap(fieldHandler, subDfn)
+        super.setTokenMap(fieldHandler, subDfn)
         link = subDfn.link
         repeatLink = false
         if (subDfn.addLink) {
@@ -1140,8 +1170,9 @@ class MarcSubFieldHandler extends ConversionPart {
                 return vs.join(rejoin)
         }
         if (property) {
-            return entity[property]
+            return revertObject(entity[property])
         }
+        return null
     }
 
 }
