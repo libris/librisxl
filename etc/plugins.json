@@ -102,23 +102,23 @@
                 "bib" : {
                     "queryFields" : [],
                     "infoFields" : [],
-                    "defaultBoost" : "about.title.titleValue:50,about.identifier.identifierValue:50,about.instanceOf.attributedTo.controlledLabel:50,about.instanceOf.influencedBy.controlledLabel:10,about.instanceOf.subject.prefLabel:10,about.publication.providerName:10",
+                    "defaultBoost" : "about.instanceTitle.titleValue:50,about.identifier.identifierValue:50,about.instanceOf.attributedTo.controlledLabel:50,about.instanceOf.influencedBy.controlledLabel:10,about.instanceOf.subject.prefLabel:10,about.publication.providerName:10",
                     "sortby": {
                         "recordPriority" : "desc",
                         "_score" : "desc",
-                        "about.title.titleValue" : "asc",
+                        "about.instanceTitle.titleValue" : "asc",
                         "about.identifier.identifierValue" : "asc"
                     },
-                    "queryFacets" : "about.@type,about.instanceOf.language.@id,encLevel",
+                    "queryFacets" : "about.@type,about.language.@id,encLevel.@id",
                     "resultFields" : [
                         "about.@type",
-                        "about.title",
+                        "about.instanceTitle",
                         "about.responsibilityStatement",
                         "about.publication",
                         "about.identifier",
                         "about.instanceOf.attributedTo",
                         "about.instanceOf.influencedBy",
-                        "encLevel"
+                        "encLevel.@id"
                     ]
                 },
                 "auth": {
