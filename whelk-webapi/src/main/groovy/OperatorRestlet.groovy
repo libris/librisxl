@@ -17,6 +17,8 @@ import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.importers.*
 import se.kb.libris.whelks.plugin.*
 
+import se.kb.libris.conch.Tools
+
 @Log
 class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
 
@@ -184,6 +186,8 @@ class ReindexOperator extends AbstractOperator {
     String fromStorage = null
     ExecutorService queue
 
+    boolean showSpinner = false
+
     @Override
     void setParameters(Map parameters) {
         super.setParameters(parameters)
@@ -191,6 +195,7 @@ class ReindexOperator extends AbstractOperator {
             this.selectedComponents = parameters.get("selectedComponents").split(",") as List<String>
         }
         this.fromStorage = parameters.get("fromStorage", null)
+        this.showSpinner = parameters.get("showSpinner", false)
     }
 
     void doRun(long startTime) {
@@ -221,6 +226,9 @@ class ReindexOperator extends AbstractOperator {
                         docs << whelk.addToStorage(doc, fromStorage)
                         if (++count % 1000 == 0) { // Update running time
                             runningTime = System.currentTimeMillis() - startTime
+                        }
+                        if (showSpinner) {
+                            Tools.printSpinner("Rebuilding from ${fromStorage}. ${count} documents rebuilt sofar.", count)
                         }
 
                     } catch (WhelkAddException wae) {

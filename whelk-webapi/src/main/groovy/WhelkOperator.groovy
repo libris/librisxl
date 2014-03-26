@@ -142,6 +142,7 @@ class WhelkOperator {
             if (opt.fromStorage) {
                 params['fromStorage'] = opt.fromStorage
             }
+            params['showSpinner'] = true
             def reindexer = new ReindexOperator()
             reindexer.setWhelk(whelk)
             reindexer.setParameters(params)

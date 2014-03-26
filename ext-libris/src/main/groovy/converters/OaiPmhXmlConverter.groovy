@@ -33,7 +33,6 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
         }
         elapsed = System.currentTimeMillis()
         String rstring = createString(xml.metadata.record)
-        log.info("rstring: $rstring")
         if ((System.currentTimeMillis() - elapsed) > 1000) {
             log.warn("CreateString took more than 1 seconds (${System.currentTimeMillis() - elapsed})")
         }
