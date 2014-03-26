@@ -3150,6 +3150,12 @@
 
     "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
 
+    "013": {},
+    "015": {},
+    "016": {},
+    "017": {},
+    "018": {},
+
     "020": {
       "domainEntity": "Instance",
       "addLink": "identifier",
@@ -3158,7 +3164,7 @@
       },
       "rangeEntity": "Identifier",
       "i1": {
-        "TODO:property": "identifierScheme",
+        "TODO:link": "identifierScheme",
         "TODO:tokenMap": {
           "0": "isrc",
           "1": "upc",
@@ -3173,7 +3179,7 @@
         "splitValuePattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?",
         "splitValueProperties": ["identifierValue", "identifierNote"],
         "defaults": {
-          "identifierScheme": "ISBN"
+          "identifierScheme": {"@id": "/def/identifiers/isbn"}
         }
       },
       "$c": {"domainEntity": "Instance", "property": "availability"},
@@ -3181,7 +3187,7 @@
       "$z": {
         "property": "identifierValue",
         "defaults": {
-          "identifierScheme": "ISBN",
+          "identifierScheme": {"@id": "/def/identifiers/isbn"},
           "identifierStatus": "canceledInvalid"
         }
       }
@@ -3193,16 +3199,16 @@
       "rangeEntity": "Identifier",
       "$a": {
         "property": "identifierValue",
-        "defaults": {"identifierScheme": "ISSN"}
+        "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
       },
       "$m": {"TODO:addProperty": "canceledIssnL"},
       "$l": {"TODO:property": "issnL"},
-      "$2": {"TODO:property": "source"},
+      "$2": {"TODO:link": "identifierScheme"},
       "$y": {"TODO": "inherit:$z + specific: incorrectIssn"},
       "$z": {
         "property": "identifierValue",
         "defaults": {
-          "identifierScheme": "ISSN",
+          "identifierScheme": {"@id": "/def/identifiers/issn"},
           "identifierStatus": "canceledInvalid"
         }
       }
@@ -3212,8 +3218,18 @@
       "domainEntity": "Instance",
       "addLink": "identifier",
       "rangeEntity": "Identifier",
-      "$a": {"property": "identifierValue"}
+      "$a": {"property": "identifierValue"},
+      "$2": {
+        "link": "identifierScheme",
+        "uriTemplate": "/def/identifiers/{_}",
+        "matchUriToken": "^\\S+$",
+        "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
+      }
     },
+
+    "025": {},
+    "026": {},
+    "027": {},
 
     "028": {
       "domainEntity": "Instance",
@@ -3234,7 +3250,14 @@
       "repeatable": true
     },
 
-    "034": {"entity": "Cartography", "$_": {}},
+    "034": {
+      "NOTE:domain": "Cartography", "$TODO": {}
+    },
+
+    "030": {},
+    "031": {},
+    "032": {},
+    "033": {},
 
     "035": {
       "domainEntity": "Record",
@@ -3249,6 +3272,10 @@
       "$a": {"addProperty": "systemNumber"},
       "$9": {"addProperty": "librisIIINumber"}
     },
+
+    "036": {},
+    "037": {},
+    "038": {},
 
     "040": {
       "domainEntity": "Record",
@@ -3291,25 +3318,53 @@
     },
     "043": {"ignored": true},
 
+    "044": {},
+    "045": {},
+    "046": {},
+    "047": {},
+    "048": {},
+    "049": {},
+
     "050": {
       "note:candidate:domainEntity": "Work",
-      "$a": {"property": "class-lcc"},
+      "$a": {"property": "classificationLcc"},
       "$b": {"ignored": true}
+    },
+
+    "051": {},
+    "052": {},
+    "055": {},
+    "060": {},
+    "061": {},
+    "066": {},
+    "070": {},
+    "071": {},
+
+    "072": {
+      "inherit": "084",
+      "addLink": "subject",
+      "$b": {"addProperty": "classificationItem"}
+    },
+
+    "074": {},
+
+    "080": {
+      "note:candidate:domainEntity": "Work",
+      "$a": {"property": "classificationUdc"}
     },
 
     "082": {
       "note:candidate:domainEntity": "Work",
-      "$a": {"property": "class-ddc"},
+      "$a": {"property": "classificationDdc"},
       "$2": {"ignored": true}
     },
-
-    "072": {
-      "inherit": "084"
+    "083": {
+      "inherit": "082"
     },
 
     "084": {
       "note:candidate:domainEntity": "Work",
-      "addLink": "class",
+      "addLink": "classification",
       "match-domain": {
         "Work": {"addLink": "class"}, "Holding": {"addLink": "callno"}
       },
@@ -3320,8 +3375,14 @@
       "$2": {"link": "inScheme",
              "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
              "property": "notation"},
-      "$b": {"property": "classItem", "ignored": true}
+      "$b": {"property": "classificationItem", "ignored": true}
     },
+
+    "085": {},
+    "086": {},
+    "088": {},
+    "090": {},
+    "099": {},
 
     "100": {
       "note:candidate:domainEntity": "Work",
@@ -3390,6 +3451,9 @@
       "inherit": "245",
       "TODO": "translatedTitle? merge into 245?"
     },
+
+    "243": {},
+
     "245": {
       "i1": {},
       "i2": {},
@@ -3413,6 +3477,8 @@
       "link": "titleVariation"
     },
 
+    "249": {},
+
     "250": {
       "domainEntity": "Instance",
       "link": "editionStatement",
@@ -3421,12 +3487,17 @@
       "$b": {"property": "editionResponsibility"}
     },
 
+    "254": {},
+
     "255": {"TODO": {"specificDomainEntities": ["Cartography"]}, "$_": {}},
 
     "256": {
       "domainEntity": "Instance",
       "$a": {"property": "fileType"}
     },
+
+    "257": {},
+    "258": {},
 
     "260": {
       "domainEntity": "Instance",
@@ -3447,6 +3518,13 @@
       "$3": {"property": "scopeNote", "position": 0}
     },
 
+    "261": {},
+    "262": {},
+    "263": {},
+    "264": {},
+    "265": {},
+    "270": {},
+
     "300": {
       "TODO:match-repetition?": {
         "addLink": "hasFormat"
@@ -3465,14 +3543,52 @@
       }
     },
 
+    "306": {},
+    "307": {},
+
     "310": {
       "domainEntity": "Instance",
       "$a": {"property": "frequency"}
     },
 
-    "321": {},
-    "362": {},
+    "321": {
+      "addLink": "replaces",
+      "rangeEntity": "Serial",
+      "$a": {"property": "frequency"},
+      "$b": {"property": "date"}
+    },
 
+    "336": {},
+    "337": {},
+    "338": {},
+
+    "340": {},
+    "342": {},
+    "343": {},
+    "344": {},
+    "345": {},
+    "346": {},
+    "347": {},
+    "351": {},
+    "352": {},
+    "355": {},
+    "357": {},
+    "362": {},
+    "363": {},
+    "365": {},
+    "366": {},
+    "377": {},
+    "380": {},
+    "381": {},
+    "382": {},
+    "383": {},
+    "384": {},
+    "385": {},
+    "386": {},
+
+    "400": {},
+    "410": {},
+    "411": {},
     "440": {"prefer": "490"},
 
     "440": {
@@ -3493,9 +3609,20 @@
     },
 
     "500": {"$a": {"domainEntity": "Instance", "addProperty": "comment"}},
+    "501": {},
+    "502": {},
     "504": {"$a": {"domainEntity": "Instance", "addProperty": "supplementaryContentNote"}},
     "505": {"$a": {"domainEntity": "Instance", "addProperty": "listOfContents", "TODO": "$t, $r"}},
+    "506": {},
+    "507": {},
     "508": {"$a": {"domainEntity": "Instance", "addProperty": "creditsNote"}},
+
+    "510": {
+      "addProperty": "citedBy",
+      "rangeEntity": "CreativeWork",
+      "$a": {"property": "title"},
+      "$c": {"property": "pagination"}
+    },
 
     "511": {
       "$a": {
@@ -3505,13 +3632,53 @@
       }
     },
 
+    "513": {},
+    "514": {},
+    "515": {},
+    "516": {},
+    "518": {},
+
     "520": {"domainEntity": "Instance", "$a": {"addProperty": "summary"}},
 
-    "546": {"domainEntity": "Instance", "$a": {"addProperty": "languageNote"}},
+    "521": {},
+    "522": {},
+    "524": {},
+    "525": {},
+    "526": {},
 
+    "530": {"TODO:addLink": "hasFormat", "$a": {"addProperty": "comment"}},
+
+    "533": {},
+    "534": {},
+    "535": {},
+    "536": {},
     "538": {"$a": {"domainEntity": "Instance", "addProperty": "systemRequirements"}},
+    "540": {},
+    "541": {},
+    "542": {},
+    "544": {},
+    "545": {},
+    "546": {"domainEntity": "Instance", "$a": {"addProperty": "languageNote"}},
+    "547": {},
 
-    "599": {"$a": {"domainEntity": "Record", "addProperty": "comment"}},
+    "550": {},
+    "552": {},
+    "555": {},
+    "556": {},
+    "561": {},
+    "562": {},
+    "563": {},
+    "565": {},
+    "567": {},
+    "580": {},
+    "581": {},
+    "583": {},
+    "584": {},
+    "585": {},
+    "586": {},
+    "588": {"$a": {"domainEntity": "Record", "addProperty": "sourceNote"}},
+    "590": {},
+    "599": {"$a": {"domainEntity": "Record", "addProperty": "technicalNote"}},
 
     "600": {
       "inherit": "100",
@@ -3583,18 +3750,29 @@
       "uriTemplate": "/place/{prefLabel}"
     },
     "653": {"$a": {"domainEntity": "Instance", "property": "keyword"}},
+
+    "654": {},
+
     "655" : {
       "inherit": "650",
       "addLink": "genre",
       "uriTemplate": "/topic/saogf/{prefLabel}"
     },
 
+    "658": {},
+
     "656" : {"rangeEntity": "Profession", "ignored": true},
     "657" : {"rangeEntity": "FunctionOrRole", "ignored": true},
+
+    "662": {},
+    "690": {},
 
     "700": {"inherit": "100", "addLink": "influencedBy"},
     "710": {"inherit": "110", "addLink": "influencedBy"},
     "711": {"inherit": "111"},
+
+    "720": {},
+    "730": {},
 
     "740": {
       "addLink": "relation",
@@ -3602,15 +3780,103 @@
       "$a": {"property": "uniformTitle"}
     },
 
-    "785": {
-      "addLink": "succeeding",
-      "rangeEntity": "Instance",
-      "$t": {"property": "title"}
+    "751": {},
+    "752": {},
+    "753": {},
+    "754": {},
+    "755": {},
+
+    "760": {"inherit": "772", "addLink": "subseriesOf", "rangeEntity": "Serial"},
+    "762": {"inherit": "772", "addLink": "subseries", "rangeEntity": "Serial"},
+    "765": {"inherit": "772", "addLink": "translationOf"},
+    "767": {"inherit": "772", "addLink": "translation"},
+    "770": {"inherit": "772", "addLink": "contains"},
+    "772": {
+      "addLink": "containedIn",
+      "rangeEntity": "CreativeWork",
+      "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
+      "$b": {"property": "edition", "TODO:targetMatch": "250"},
+      "$c": {"property": "qualifyingNote"},
+      "$d": {"property": "placePublisherAndDateOfPublication", "TODO:targetMatch": "260$c"},
+      "$g": {"addProperty": "scopeNote"},
+      "$h": {"property": "physicalDescription"},
+      "$i": {"addProperty": "linkNote"},
+      "$k": {"addProperty": "seriesLabel", "TODO:targetMatch": "4xx, 8xx"},
+      "$m": {"property": "mediaNote"},
+      "$n": {"addProperty": "note"},
+      "$o": {"addProperty": "identifier"},
+      "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
+      "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
+      "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
+      "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
+      "$w": {"addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber"},
+      "$x": {"property": "issn", "TODO:targetMatch": "022"},
+      "$y": {"property": "coden", "TODO:targetMatch": "030"},
+      "$z": {"addProperty": "isbn", "TODO:targetMatch": "020"},
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"}
     },
+    "773": {
+      "inherit": "772",
+      "addLink": "containedIn",
+      "rangeEntity": "Publication",
+      "$c": null,
+      "$p": {"property": "abbreviatedTitle", "TODO:targetMatch": "210"},
+      "$q": {"property": "pagination"}
+    },
+    "774": {
+      "inherit": "772",
+      "addLink": "containedIn",
+      "rangeEntity": "Collection"
+    },
+    "775": {},
+    "776": {
+      "inherit": "772",
+      "addLink": "alternateFormat",
+      "rangeEntity": "Product"
+    },
+    "777": {
+      "inherit": "772",
+      "TODO:addProperty": "inConjunctionWith"
+    },
+    "780": {
+      "inherit": "772",
+      "addLink": "succeeds",
+      "rangeEntity": "Serial"
+    },
+    "785": {
+      "inherit": "772",
+      "addLink": "precedes",
+      "rangeEntity": "Serial"
+    },
+    "786": {
+      "domainEntity": "Record",
+      "inherit": "772",
+      "addLink": "source",
+      "rangeEntity": "Dataset"
+    },
+    "787": {
+      "inherit": "772",
+      "addLink": "relation"
+    },
+
+    "800": {},
+    "810": {},
+    "811": {},
+    "830": {},
+    "841": {},
+    "842": {},
+    "843": {},
+    "844": {},
+    "845": {},
+    "850": {},
+    "852": {},
+    "853": {},
+    "854": {},
+    "855": {},
 
     "856": {
       "addLink": "isPrimaryTopicOf", "rangeEntity": "Document",
-      "TODO:match-ind2": {
+      "TODO:match-i2": {
         "0": {"addLink": "encoding", "rangeEntity": "MediaObject"},
         "1": {"addLink": "hasFormat", "rangeEntity": "Electronic"},
         "2": {"addLink": "isPrimaryTopicOf", "rangeEntity": "Document"},
@@ -3629,12 +3895,25 @@
       "$z": {"property": "comment"}
     },
 
+    "863": {},
+    "864": {},
+    "865": {},
+    "866": {},
+    "867": {},
+    "868": {},
+    "876": {},
+    "877": {},
+    "878": {},
+    "880": {},
+    "882": {},
     "883": {},
+    "886": {},
+    "887": {},
 
     "976": {
       "note:candidate:domainEntity": "Work",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
-      "addLink": "class",
+      "addLink": "classification",
       "rangeEntity": "Concept",
       "i2": {
         "link": "inScheme", "rangeEntity": "ConceptScheme",
@@ -3860,7 +4139,7 @@
     },
     "670" : {
       "domainEntity": "Record",
-      "addLink": "source", "rangeEntity": "Instance",
+      "addLink": "source", "rangeEntity": "CreativeWork",
       "$a": {"property": "label"},
       "$b": {"property": "citation"},
       "$u": {"property": "url"}
@@ -3889,7 +4168,7 @@
     "755" : {"inherit": "750"},
     "856": {
       "inherit": "bib",
-      "TODO:match-ind2": {
+      "TODO:match-i2": {
         "0": {"addLink": "sameAs"},
         "1": {"addLink": "isPrimaryTopicOf", "rangeEntity": "Electronic"},
         "2": {"addLink": "relation", "rangeEntity": "Document"},
