@@ -362,14 +362,21 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     }
 
     def revert(Map data) {
-        return // TODO
+        def value = null
+        if (baseConverter)
+            value = baseConverter.revert(data)
+        // TODO:
+        //def converter = computeConverter(data)
+        //return value combinedWith converter.convert(data, valueSb)
+        return value
     }
 }
 
 class MarcFixedFieldHandler {
 
     String tag
-    static final String FIXED_NONE = "|"
+    static final String FIXED_NONE = " "
+    static final String FIXED_UNDEF = "|"
     def columns = []
 
     MarcFixedFieldHandler(conversion, tag, fieldDfn) {
@@ -406,14 +413,17 @@ class MarcFixedFieldHandler {
     }
 
     def revert(Map data) {
-        def value = new StringBuilder(FIXED_NONE * (columns[-1].end + 1))
+        def value = new StringBuilder(FIXED_NONE * (columns[-1].end))
         for (col in columns) {
             def obj = col.revert(data)
             // TODO: ambiguity trouble if this is a List!
-            if (obj instanceof List) obj = obj[0]
+            if (obj instanceof List) obj = obj.find { it }
             if (obj) {
-                assert data && obj && col.width - obj.size() > -1
-                value[col.start..(col.end - col.width - obj.size())] = obj
+                assert col.width - obj.size() > -1
+                assert value.size() > col.start
+                assert col.width >= obj.size()
+                def end = col.start + obj.size() - 1
+                value[col.start .. end] = obj
             }
         }
         return value.toString()
@@ -444,7 +454,7 @@ class MarcFixedFieldHandler {
                 return true
             if (token == defaultValue)
                 return true
-            boolean isNothing = token.find { it != FIXED_NONE && it != " " } == null
+            boolean isNothing = token.find { it != FIXED_NONE && it != FIXED_UNDEF } == null
             if (isNothing)
                 return true
             return super.convert(sourceMap, token, entityMap)
@@ -635,7 +645,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                     return revertObject(token)
                 }
             }
-            return "?"
+            return null
         }
     }
 
