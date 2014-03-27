@@ -2004,7 +2004,7 @@
       },
       "Serial": {
         "[1:2]": {
-          "link": "frequency",
+          "link": "frequencyCategory",
           "uriTemplate": "{_}",
           "tokenMap": "serialsFrequency"
         },
@@ -2149,7 +2149,7 @@
           "tokenMap": "computerColor"
         },
         "[4:5]": {
-          "link": "dimensions",
+          "link": "dimensionsCategory",
           "uriTemplate": "{_}",
           "tokenMap": "computerDimensions"
         },
@@ -2316,7 +2316,7 @@
           "tokenMap": "microformPosNeg"
         },
         "[4:5]": {
-          "link": "dimensions",
+          "link": "dimensionsCategory",
           "uriTemplate": "{_}",
           "tokenMap": "microformDimensions"
         },
@@ -2866,7 +2866,7 @@
           "tokenMap": "booksGovtPub"
         },
         "[18:19]": {
-          "link": "frequency",
+          "link": "frequencyCategory",
           "uriTemplate": "{_}",
           "tokenMap": "computerFrequency"
         },
@@ -3533,8 +3533,7 @@
       "addLink": "hasFormat",
       "rangeEntity": "Product",
       "$a": {"property": "extent", "interpunctionChars": "+:;"},
-      "$c": {"link": "dimensions", "rangeEntity": "Concept", "property": "label",
-        "interpunctionChars": ":;+"},
+      "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
       "$b": {"property": "otherPhysicalDetails", "interpunctionChars": ";+"},
       "$e": {"property": "accompanyingMaterial"},
       "$3": {
@@ -3904,11 +3903,17 @@
     "876": {},
     "877": {},
     "878": {},
+
     "880": {},
     "882": {},
     "883": {},
-    "886": {},
-    "887": {},
+
+    "886": {
+      "TODO:addLink": "quotedMARC", "datatype": "XMLLiteral", "$_": "..."
+    },
+    "887": {
+      "TODO:addLink": "quotedRaw", "$_": "..."
+    },
 
     "976": {
       "note:candidate:domainEntity": "Work",
