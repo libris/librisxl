@@ -309,15 +309,21 @@
 
 :Manuscript a owl:Class;
     rdfs:subClassOf :Product;
-    owl:equivalentClass bf:Manuscript .
+    owl:equivalentClass bf:Manuscript, bibo:Manuscript .
 
 :Print a owl:Class;
     rdfs:subClassOf :Product;
     owl:equivalentClass bf:Print .
 
+:Electronic a owl:Class;
+    rdfs:subClassOf :Digital, :Product .
+
 :Tactile a owl:Class;
     rdfs:subClassOf :Product;
     owl:equivalentClass bf:Tactile .
+
+:ProjectedImage a owl:Class;
+    rdfs:subClassOf :Image .
 
 :PhysicalObject a owl:Class;
     rdfs:subClassOf :Product;
@@ -353,14 +359,24 @@
 
 # Concrete Types (can grow a lot, be combined with e.g. productontology...)
 
-:ManuscriptCartography a owl:Class;
-    rdfs:subClassOf :Cartography, :Manuscript .
+:Globe a owl:Class;
+    rdfs:subClassOf :Cartography, :Realia .
 
-:ManuscriptNotatedMusic a owl:Class;
-    rdfs:subClassOf :NotatedMusic, :Manuscript .
+:Map a owl:Class;
+    rdfs:subClassOf :Cartography;
+    owl:equivalentClass bibo:Map .
 
-:ManuscriptText a owl:Class;
-    rdfs:subClassOf :Text, :Manuscript .
+:Microform a owl:Class;
+    rdfs:subClassOf :Product .
+
+:RemoteSensingImage a owl:Class;
+    rdfs:subClassOf :Product, :Cartography .
+
+:SoundRecording a owl:Class;
+    rdfs:subClassOf :Product, :Audio .
+
+:VideoRecording a owl:Class;
+    rdfs:subClassOf :Product, :MovingImage .
 
 :Database a owl:Class;
     rdfs:subClassOf :Integrating, :Digital, :Dataset .
@@ -373,12 +389,24 @@
     rdfs:subClassOf :Text, :Monograph;
     owl:equivalentClass bibo:Book .
 
+:ManuscriptCartography a owl:Class;
+    rdfs:subClassOf :Cartography, :Manuscript .
+
+:ManuscriptNotatedMusic a owl:Class;
+    rdfs:subClassOf :NotatedMusic, :Manuscript .
+
+:ManuscriptText a owl:Class;
+    rdfs:subClassOf :Text, :Manuscript .
+
 :MultiVolumeBook a owl:Class;
     rdfs:subClassOf :Book, :MultipartMonograph;
     owl:equivalentClass bibo:MultiVolumeBook .
 
+:PrintedText a owl:Class;
+    rdfs:subClassOf :Text, :Print .
+
 :PrintedBook a owl:Class;
-    rdfs:subClassOf :Book, :Print .
+    rdfs:subClassOf :Book, :PrintedText .
 
 :EBook a owl:Class;
     rdfs:subClassOf :Book, :Digital .
@@ -493,7 +521,7 @@
 
 :genre a owl:ObjectProperty;
     rdfs:label "genre"@sv;
-    owl:equivalentProperty bf:classification;
+    owl:equivalentProperty bf:classification; # TODO: vs. bf:category and subprops thereof
     rdfs:subPropertyOf dc:type, sdo:genre .
 
 :version a owl:ObjectProperty;
