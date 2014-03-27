@@ -73,7 +73,7 @@ def parse_resourcemap(g, part, marcframe):
                 continue
 
             for sk in dfn.values():
-                if sk in SKIP or 'Obsolete' in sk:
+                if not sk or sk in SKIP or 'Obsolete' in sk:
                     continue
                 # TODO: use ENUMS for name?
                 stype = newclass(g, sk, *basegroup)
