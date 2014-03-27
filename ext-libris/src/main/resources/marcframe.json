@@ -3909,10 +3909,10 @@
     "883": {},
 
     "886": {
-      "TODO:addLink": "quotedMARC", "datatype": "XMLLiteral", "$_": "..."
+      "TODO:addLink": "quotedMARC", "datatype": "XMLLiteral", "$_": {}
     },
     "887": {
-      "TODO:addLink": "quotedRaw", "$_": "..."
+      "TODO:addLink": "quotedRaw", "$_": {}
     },
 
     "976": {
