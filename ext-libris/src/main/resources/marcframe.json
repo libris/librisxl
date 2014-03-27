@@ -3019,7 +3019,7 @@
       },
       "Serial": {
         "[18:19]": {
-          "link": "frequency",
+          "link": "frequencyCategory",
           "uriTemplate": "{_}",
           "tokenMap": "serialsFrequency"
         },
@@ -3604,7 +3604,7 @@
     },
     "490": {
       "inherit": "440",
-      "$l": {"property": "callno"}
+      "$l": {"link": "callno", "rangeEntity": "Concept", "property": "notation"}
     },
 
     "500": {"$a": {"domainEntity": "Instance", "addProperty": "comment"}},
@@ -3803,7 +3803,7 @@
       "$k": {"addProperty": "seriesLabel", "TODO:targetMatch": "4xx, 8xx"},
       "$m": {"property": "mediaNote"},
       "$n": {"addProperty": "note"},
-      "$o": {"addProperty": "identifier"},
+      "$o": {"addLink": "identifier", "rangeEntity": "Identifier", "addProperty": "identifierValue"},
       "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
       "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
       "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
@@ -3819,7 +3819,7 @@
       "addLink": "containedIn",
       "rangeEntity": "Publication",
       "$c": null,
-      "$p": {"property": "abbreviatedTitle", "TODO:targetMatch": "210"},
+      "$p": {"property": "abbrevTitle", "TODO:targetMatch": "210"},
       "$q": {"property": "pagination"}
     },
     "774": {
