@@ -15,8 +15,6 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
     String requiredContentType = "text/oaipmh+xml"
     String resultContentType = "application/x-marc-json"
 
-    StreamingMarkupBuilder markupBuilder = new StreamingMarkupBuilder()
-
     def SPEC_URI_MAP
     boolean preserveTimestamps
 
@@ -27,7 +25,7 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
 
     Document doConvert(final Document document) {
         long elapsed = System.currentTimeMillis()
-        def xml = new XmlSlurper(false,false).parseText(document.dataAsString)
+        def xml = new XmlParser(false,false).parseText(document.dataAsString)
         if ((System.currentTimeMillis() - elapsed) > 1000) {
             log.warn("XML parsing took more than 1 seconds (${System.currentTimeMillis() - elapsed})")
         }
@@ -51,14 +49,16 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
             .withMeta(document.meta)
 
         if (preserveTimestamps && xml.header.datestamp) {
-            doc.timestamp = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", xml.header.datestamp.toString()).getTime()
+            def date = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", xml.header.datestamp.text())
+            log.trace("Setting date: $date")
+            doc.timestamp = date.getTime()
         }
 
         if (xml.header.setSpec) {
             for (spec in xml.header.setSpec) {
                 for (key in SPEC_URI_MAP.keySet()) {
-                    if (spec.toString().startsWith(key+":")) {
-                        def link = new String("/"+SPEC_URI_MAP[key]+"/" + spec.toString().substring(key.length()+1))
+                    if (spec.text().startsWith(key+":")) {
+                        def link = new String("/"+SPEC_URI_MAP[key]+"/" + spec.text().substring(key.length()+1))
                         log.trace("Adding link $link ($key) to ${doc.identifier}")
                         doc.withLink(link, SPEC_URI_MAP[key])
                     }
@@ -73,9 +73,9 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
         return doc.withContentType(resultContentType)
     }
 
-    String createString(GPathResult root) {
-        return markupBuilder.bind {
-            out << root
-        }
+    String createString(Node root) {
+        def writer = new StringWriter()
+        new XmlNodePrinter(new PrintWriter(writer)).print(root)
+        return writer.toString()
     }
 }
