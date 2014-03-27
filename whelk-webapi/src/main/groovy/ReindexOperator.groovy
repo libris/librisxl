@@ -62,24 +62,21 @@ class ReindexOperator extends AbstractOperator {
                 if (fromStorage) {
                     try {
                         docs << whelk.addToStorage(doc, fromStorage)
-                        runningTime = System.currentTimeMillis() - startTime
-                        count++
-                        if (showSpinner) {
-                            def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
-                            Tools.printSpinner("Rebuilding from ${fromStorage}. ${count} documents rebuilt sofar. $velocityMsg", count)
-                        }
-
                     } catch (WhelkAddException wae) {
                         log.trace("Expected exception ${wae.message}")
                     }
                 } else {
                     docs << doc
 
-                    if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
-                        doTheIndexing(futures, docs)
-                        docs = []
-                        runningTime = System.currentTimeMillis() - startTime
-                    }
+                }
+                if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
+                    doTheIndexing(futures, docs)
+                    docs = []
+                }
+                runningTime = System.currentTimeMillis() - startTime
+                if (showSpinner) {
+                    def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
+                    Tools.printSpinner("Rebuilding from ${fromStorage}. ${count} documents rebuilt sofar. $velocityMsg", count)
                 }
             }
             if (cancelled) {
