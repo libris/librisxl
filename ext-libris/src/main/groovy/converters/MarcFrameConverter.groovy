@@ -331,8 +331,10 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
             def typeOfRecord = conversion.getTypeOfRecord(sourceMap.leader)
             def bibLevel = conversion.getBibLevel(sourceMap.leader)
             return typeOfRecord + bibLevel
-        } else {
+        } else if (value) {
             return value[0]
+        } else {
+            return value
         }
     }
 
