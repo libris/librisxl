@@ -327,6 +327,47 @@ class DocumentRestlet extends BasicWhelkAPI {
         }
     }
 }
+/*
+
+@Log
+class DumpRestlet extends BasicWhelkAPI {
+    def pathEnd = "{dataset}/_dump"
+    def varPath = true
+    String id = "DataDumper"
+
+    String description = "Dump an entire dataset."
+
+    DumpRestlet(Map settings) {
+        super(settings)
+    }
+
+    void doHandle(Request request, Response response) {
+        def dataset = request.attributes["dataset"]
+        log.debug("Dataset: $dataset")
+        dataset = (dataset == "all" : null ? dataset)
+
+        def documents = whelk.loadAll(dataset)
+
+        InputStream is =
+
+        log.debug("Creating outputrepresentation.")
+        Representation ir = new OutputRepresentation(MediaType.APPLICATION_JSON) {
+            @Override
+            public void write(OutputStream realOutput) throws IOException {
+                byte[] b = new byte[8]
+                int read
+                while ((read = is.read(b)) != -1) {
+                    realOutput.write(b, 0, read)
+                    realOutput.flush()
+                }
+            }
+        }
+
+        log.debug("Sending outputrepresentation.")
+        response.setEntity(ir)
+    }
+}
+*/
 
 @Log
 class HttpAPIRestlet extends BasicWhelkAPI {

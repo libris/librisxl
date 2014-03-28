@@ -1128,6 +1128,9 @@ class MarcSubFieldHandler extends ConversionPart {
         if (val.size() > 2) {
             if (interpunctionChars) {
                 for (c in interpunctionChars) {
+                    if (val.size() < 2) {
+                        break
+                    }
                     if (val[-1].equals(c.toString())) {
                         val = val[0..-2].trim()
                     }
@@ -1135,6 +1138,9 @@ class MarcSubFieldHandler extends ConversionPart {
             }
             if (surroundingChars) {
                 for (c in surroundingChars) {
+                    if (val.size() < 2) {
+                        break
+                    }
                     if (val[-1].equals(c.toString())) {
                         val = val[0..-2].trim()
                     } else if (val[0].equals(c.toString())) {
