@@ -159,8 +159,6 @@ class StandardWhelk implements Whelk {
             log.trace("Document has ctype ${doc.contentType} after conversion.")
             docs.put(doc.contentType, doc)
         }
-        for (f in filters) {
-        }
         log.trace("All converters has run. Docs now: $docs")
         for (d in docs.values()) {
             log.trace("doc in loop has ct ${d.contentType}")
@@ -389,7 +387,7 @@ class StandardWhelk implements Whelk {
     List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     GraphStore getGraphStore() { return plugins.find { it instanceof GraphStore } }
-    List<SparqlEndpoint> getSparqlEndpoint() { return plugins.findAll { it instanceof SparqlEndpoint } }
+    List<SparqlEndpoint> getSparqlEndpoints() { return plugins.findAll { it instanceof SparqlEndpoint } }
     SparqlEndpoint getSparqlEndpoint() { return plugins.find { it instanceof SparqlEndpoint } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }
     List<FormatConverter> getFormatConverters() { return plugins.findAll { it instanceof FormatConverter }}

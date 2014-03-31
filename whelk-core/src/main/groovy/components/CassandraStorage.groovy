@@ -245,9 +245,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
             } catch (BadRequestException bre) {
                 log.error("Error when saving: ${bre.message}", bre)
                 throw bre
-            } catch (ConnectionException ce) {
-                log.error("Connection failed", ce)
-                return false
             } catch (Exception e) {
                 log.error("Error", e)
                 throw e

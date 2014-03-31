@@ -24,7 +24,6 @@
                 "_otherplugins": [
                     "index",
                     "cassandrastorage",
-                    "marcjsonstorage",
                     "oaipmhstorage",
                     "entityextractor",
                     "linkcompleter",
