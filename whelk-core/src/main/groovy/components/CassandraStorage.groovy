@@ -109,7 +109,8 @@ class CassandraStorage extends BasicPlugin implements Storage {
         .withConnectionPoolConfiguration(
             new ConnectionPoolConfigurationImpl("WhelkConnectionPool")
             .setPort(9160)
-            .setMaxConnsPerHost(1)
+            .setMaxConns(100)
+            .setMaxConnsPerHost(10)
             .setSeeds(cassandra_host+":9160")
         )
         .withConnectionPoolMonitor(

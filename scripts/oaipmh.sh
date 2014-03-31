@@ -26,4 +26,4 @@ LIBS=$WEBAPPS/WEB-INF/lib
 
 source $SETENV
 
-java $JAVA_OPTS -Ddisable.plugins="indexingprawn" $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o import -w libris -c oaipmhimporter -d $DATASET $SINCE
+java $JAVA_OPTS -Ddisable.plugins="indexingprawn" -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false $EXTRA_OPTS -cp $CLASSES:$LIBS/* se.kb.libris.whelks.WhelkOperator -o import -w libris -c oaipmhimporter -d $DATASET $SINCE
