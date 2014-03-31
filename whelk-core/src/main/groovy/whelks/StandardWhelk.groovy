@@ -46,6 +46,7 @@ class StandardWhelk implements Whelk {
             Map<String, Object> entrydata,
             Map<String, Object> metadata) {
         Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
+        log.debug("Created new document with timestamp ${new Date(doc.timestamp)}")
         return add(doc)
     }
 

@@ -400,11 +400,13 @@ class CassandraStorage extends BasicPlugin implements Storage {
                                 .whereColumn(COL_NAME_TIMESTAMP).greaterThanEquals().value(since)
                         }
                     } else if (since) {
+                        log.trace("Since query for $since")
                         query = keyspace.prepareQuery(CF_DOCUMENT)
                             .getKey(ROW_KEY_TIMESTAMP)
                             .withColumnRange(
                                 documentSerializer.buildRange().greaterThanEquals(since.getTime()).build()
                             )
+                            /*
                     } else if (since) {
                         log.debug("Searching year: ${since.getAt(Calendar.YEAR)}")
                         query = keyspace.prepareQuery(CF_DOCUMENT_META)
@@ -413,6 +415,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                             .whereColumn(COL_NAME_YEAR).equals().value(since.getAt(Calendar.YEAR))
                             .addExpression()
                             .whereColumn(COL_NAME_TIMESTAMP).greaterThanEquals().value(since)
+                            */
                     } else {
                         log.debug("Using allrows()")
                         query = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()

@@ -171,9 +171,13 @@ class Document {
             this.identifier = entrydata["identifier"]
         }
         if (entrydata != null) {
+            long ts = getTimestamp()
             this.entry = [:]
             this.entry.putAll(entrydata)
             this.entry['checksum'] = checksum
+            if (ts > getTimestamp()) {
+                setTimestamp(ts)
+            }
         }
         return this
     }
