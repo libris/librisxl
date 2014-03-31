@@ -260,6 +260,8 @@
     },
     "operator" : {
         "_class" : "se.kb.libris.whelks.api.OperatorRestlet"
+    },
+    "dumper" : {
+        "_class" : "se.kb.libris.whelks.api.DumpRestlet"
     }
-
 }

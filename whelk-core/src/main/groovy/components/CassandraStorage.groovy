@@ -300,6 +300,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     }
 
     Document get(String uri, String version=null) {
+        // TODO: Add handling of server restart. System should wait for storage to become available again.
         Document document = null
         if (version && !versioningStorage) {
             throw new WhelkStorageException("Requested version from non-versioning storage")
@@ -437,7 +438,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     class CassandraIterator implements Iterator<Document> {
 
-        Set<String> identifiers = new HashSet<String>()
         def documentQueue = [].asSynchronized()
 
         private Iterator iter
@@ -540,16 +540,12 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 DocumentEntry e = res.name
                 if (e.field == COL_NAME_IDENTIFIER) {
                     id = res.getStringValue()
-                    if (identifiers.contains(id)) {
-                        log.trace("We have already loaded $id")
-                        return [false, doc]
-                    }
                     doc = get(id)
                 }
             } else {
                 log.trace("Found hit for index/matchall search")
                 id = res.key
-                if (id == ROW_KEY_TIMESTAMP || id == identifiers.contains(id)) {
+                if (id == ROW_KEY_TIMESTAMP) {
                     if (log.isTraceEnabled()) {
                         if (id == ROW_KEY_TIMESTAMP) {
                             log.trace("Not looking for timestamp")
@@ -581,11 +577,9 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     }
                 }
             }
-            identifiers << id
             log.trace("Deserialized document has identifier: ${doc.identifier}")
             return [true, doc]
         }
-
         void remove() {}
     }
 }

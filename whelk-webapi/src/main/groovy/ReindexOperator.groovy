@@ -67,7 +67,6 @@ class ReindexOperator extends AbstractOperator {
                     }
                 } else {
                     docs << doc
-
                 }
                 if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
                     doTheIndexing(futures, docs)
@@ -89,13 +88,13 @@ class ReindexOperator extends AbstractOperator {
             try {
                 whelk.addToGraphStore(docs, selectedComponents)
             } catch (WhelkAddException wae) {
-                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
             try {
                 whelk.addToIndex(docs, selectedComponents)
             } catch (WhelkAddException wae) {
-                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
         }
@@ -129,14 +128,14 @@ class ReindexOperator extends AbstractOperator {
             try {
                 whelk.addToGraphStore(docs, selectedComponents)
             } catch (WhelkAddException wae) {
-                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
                 return false
             }
             try {
                 whelk.addToIndex(docs, selectedComponents)
             } catch (WhelkAddException wae) {
-                errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
+                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
                 return false
             } catch (PluginConfigurationException pce) {

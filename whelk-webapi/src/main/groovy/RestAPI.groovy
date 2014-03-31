@@ -327,7 +327,6 @@ class DocumentRestlet extends BasicWhelkAPI {
         }
     }
 }
-/*
 
 @Log
 class DumpRestlet extends BasicWhelkAPI {
@@ -337,29 +336,33 @@ class DumpRestlet extends BasicWhelkAPI {
 
     String description = "Dump an entire dataset."
 
-    DumpRestlet(Map settings) {
-        super(settings)
-    }
-
     void doHandle(Request request, Response response) {
         def dataset = request.attributes["dataset"]
         log.debug("Dataset: $dataset")
-        dataset = (dataset == "all" : null ? dataset)
+        dataset = (dataset == "all" ? null : dataset)
 
-        def documents = whelk.loadAll(dataset)
-
-        InputStream is =
+        def w = this.whelk
 
         log.debug("Creating outputrepresentation.")
         Representation ir = new OutputRepresentation(MediaType.APPLICATION_JSON) {
             @Override
             public void write(OutputStream realOutput) throws IOException {
-                byte[] b = new byte[8]
-                int read
-                while ((read = is.read(b)) != -1) {
-                    realOutput.write(b, 0, read)
-                    realOutput.flush()
+                realOutput.write("[".bytes)
+                boolean insertComma = false
+                for (document in w.loadAll(dataset)) {
+                    if (document.isJson()) {
+                        if (insertComma) {
+                            realOutput.write(",".bytes)
+                        }
+                        realOutput.write(document.getData())
+                        realOutput.flush()
+                        insertComma = true
+                    } else {
+                        log.warn("Document ${document.identifier} has content-type ${document.contentType}")
+                    }
                 }
+                realOutput.write("]".bytes)
+                realOutput.close()
             }
         }
 
@@ -367,7 +370,6 @@ class DumpRestlet extends BasicWhelkAPI {
         response.setEntity(ir)
     }
 }
-*/
 
 @Log
 class HttpAPIRestlet extends BasicWhelkAPI {

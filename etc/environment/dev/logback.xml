@@ -85,7 +85,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.SesameGraphStore">
@@ -96,6 +96,9 @@
   </logger>
   -->
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
+      <level value="trace"/>
+  </logger>
+<logger name="se.kb.libris.whelks.api.DumpRestlet">
       <level value="trace"/>
   </logger>
   <!--
