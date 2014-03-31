@@ -189,7 +189,7 @@ class StandardWhelk implements Whelk {
     }
 
     @groovy.transform.CompileStatic
-    void addToIndex(List<Document> docs, List<String> sIndeces = null) {
+    void addToIndex(final List<Document> docs, List<String> sIndeces = null) {
         List<IndexDocument> idxDocs = []
         def activeIndexes = (sIndeces ? indexes.findAll { ((Index)it).id in sIndeces } : indexes)
         if (activeIndexes.size() > 0) {
@@ -217,7 +217,7 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    void addToGraphStore(List<Document> docs, List<String> gStores = null) {
+    void addToGraphStore(final List<Document> docs, List<String> gStores = null) {
         def activeGraphStores = (gStores ? graphStores.findAll { it.id in gStores } : graphStores)
         if (activeGraphStores.size() > 0) {
             log.debug("addToGraphStore ${docs.size()}")

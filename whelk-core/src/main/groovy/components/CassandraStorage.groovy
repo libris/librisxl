@@ -287,9 +287,13 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
                 mutation.execute()
                 success = true
-            } catch (com.netflix.astyanax.connectionpool.exceptions.NoAvailableHostsException nhe) {
-                log.warn("No available cassandra host. Holding for a second ...", ce)
-                Thread.sleep(1000)
+            } catch (Exception e) {
+                if (e instanceof IsRetryableException || e instanceof NoAvailableHostsException) {
+                    log.warn("Got retryable exception ${e.getClass().getName()}. Holding for a second ...")
+                    Thread.sleep(1000)
+                } else {
+                    throw e
+                }
             }
         }
     }
@@ -339,9 +343,14 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     }
                 }
                 success = true
-            } catch (com.netflix.astyanax.connectionpool.exceptions.OperationTimeoutException ote) {
-                log.warn("Get operation timed out. Holding for a second ...", ce)
-                Thread.sleep(1000)
+
+            } catch (Exception e) {
+                if (e instanceof IsRetryableException || e instanceof NoAvailableHostsException) {
+                    log.warn("Got retryable exception ${e.getClass().getName()}. Holding for a second ...")
+                    Thread.sleep(1000)
+                } else {
+                    throw e
+                }
             }
         }
         log.trace("Returning document ${document?.identifier} (${document?.contentType}, version ${document?.version})")
