@@ -41,7 +41,7 @@
                 ],
             "_otherplugins": [
                 "localindex",
-                "flatstorage",
+                "ptstorage",
                 "entityextractor",
                 "linkcompleter",
                 "indexlinkfinder"
@@ -66,6 +66,13 @@
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
                 "_params" : "work/data",
                 "_unique" : true
+            },
+            "ptstorage": {
+                "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
+                "_params" : {
+                    "storageDir": "work/storage/pairtree",
+                    "contentTypes": ["application/ld+json"]
+                }
             },
             "flatstorage": {
                 "_class" : "se.kb.libris.whelks.component.FlatDiskStorage",

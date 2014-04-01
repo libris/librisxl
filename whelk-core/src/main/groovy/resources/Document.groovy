@@ -50,6 +50,11 @@ class Document {
         fromJson(jsonFile)
     }
 
+    Document(File datafile, File entryfile) {
+        fromJson(entryfile)
+        setData(datafile.readBytes())
+    }
+
     /*
      * Get methods
      */
@@ -114,9 +119,7 @@ class Document {
         this.data = data
         // Whenever data is changed, reset serializedDataInMap
         serializedDataInMap = null
-        if (data) {
-            calculateChecksum()
-        }
+        calculateChecksum()
     }
 
     /*
@@ -231,7 +234,9 @@ class Document {
             this.identifier = newDoc.identifier
             this.entry = newDoc.entry
             this.meta = newDoc.meta
-            setData(newDoc.data)
+            if (newDoc.data) {
+                setData(newDoc.data)
+            }
         } catch (JsonParseException jpe) {
             throw new DocumentException(jpe)
         }

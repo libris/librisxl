@@ -446,9 +446,13 @@ class CassandraStorage extends BasicPlugin implements Storage {
         (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
     }
 
+    /*
+    class AlternateCassandraIterator implements Iterator<Document> {}
+    */
+
     class CassandraIterator implements Iterator<Document> {
 
-        def documentQueue = [].asSynchronized()
+        Queue<Document> documentQueue = new LinkedList<Document>()
 
         private Iterator iter
         def query
@@ -462,10 +466,10 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
 
         public boolean hasNext() {
-            if (!documentQueue.size()) {
+            if (documentQueue.isEmpty()) {
                 refill()
             }
-            return documentQueue.size()
+            return !documentQueue.isEmpty()
         }
 
         public Document next() {
@@ -473,7 +477,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                 log.debug("Hold a moment, refilling queue.")
                 Thread.sleep(1000)
             }
-            def doc = documentQueue.pop()
+            def doc = documentQueue.poll()
             log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
             return doc
         }
@@ -489,7 +493,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                         (deserizalisatonResult, doc) = deserializeDocument(iter.next())
                     }
                     if (doc) {
-                        documentQueue.push(doc)
+                        documentQueue.add(doc)
                     }
                     refilling = false
                 } catch (Exception ce) {

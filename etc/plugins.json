@@ -24,6 +24,13 @@
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
         "_unique" : true
     },
+    "pairtreediskstorage": {
+        "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
+        "_params" : {
+            "storageDir": "/ssd/storage",
+            "contentTypes": ["application/ld+json"]
+        }
+    },
     "cassandrastorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : {

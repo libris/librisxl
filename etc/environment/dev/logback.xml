@@ -83,6 +83,12 @@
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="debug"/>
   </logger>
+ <logger name="se.kb.libris.whelks.component.DiskStorage">
+      <level value="trace"/>
+  </logger>
+ <logger name="se.kb.libris.whelks.component.PairtreeDiskStorage">
+      <level value="trace"/>
+  </logger>
   -->
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
       <level value="trace"/>
