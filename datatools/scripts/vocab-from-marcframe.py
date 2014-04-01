@@ -1,12 +1,18 @@
 import json
 from rdflib import *
+from rdflib.util import guess_format
 
 SDO = Namespace("http://schema.org/")
 VANN = Namespace("http://purl.org/vocab/vann/")
 
 TERMS = Namespace("http://libris.kb.se/def/terms#")
 
-ENUM = Namespace("http://libris.kb.se/def/enum/")
+ENUM_BASE = "http://libris.kb.se/def/enum/"
+ENUM_MAP = {
+    'tcon': Namespace(ENUM_BASE + 'content/'),
+    'tcar': Namespace(ENUM_BASE + 'carrier/'),
+    'trec': Namespace(ENUM_BASE + 'record/')
+}
 
 SKIP = ('Other', 'Unspecified', 'Unknown')
 
@@ -80,7 +86,7 @@ def parse_resourcemap(g, part, marcframe):
 
 
 
-def add_terms(g, dfn):
+def add_terms(g, dfn, domainname=None):
     for k, v in dfn.items():
         if not v:
             continue
@@ -96,18 +102,21 @@ def add_terms(g, dfn):
             'addLink': {OWL.ObjectProperty},
         }.get(k)
 
+        domainname = dfn.get('domainEntity', domainname)
+        rangename = dfn.get('rangeEntity')
+
+        is_link = ('link' in dfn or 'addLink' in dfn)
+
+        if k == 'property' and is_link:
+            domainname, rangename = rangename, None
+
         if not rtypes:
             if not isinstance(v, list):
                 v = [v]
             for subdfn in v:
                 if isinstance(subdfn, dict):
-                    add_terms(g, subdfn)
+                    add_terms(g, subdfn, rangename if is_link else None)
             continue
-
-        domainname = dfn.get('domainEntity')
-        rangename = dfn.get('rangeEntity')
-        if k == 'property' and 'link' in dfn or 'addLink' in dfn:
-            domainname = rangename = None
 
         newprop(g, v, rtypes, domainname, rangename)
 
@@ -116,6 +125,9 @@ def newclass(g, name, base=None, termgroup=None):
     if ' ' in name:
         rclass = g.resource(BNode())
         rclass.add(RDFS.label, Literal(name, lang='sv'))
+    elif ':' in name:
+        token, name = name.split(':', 1)
+        rclass = g.resource(URIRef(ENUM_MAP[token][name]))
     else:
         rclass = g.resource(URIRef(TERMS[name]))
     rclass.add(RDF.type, OWL.Class)
@@ -126,7 +138,7 @@ def newclass(g, name, base=None, termgroup=None):
     return rclass
 
 def newprop(g, name, rtypes, domainname=None, rangename=None):
-    if not name:
+    if not name or name in ('@id', '@type'):
         return
     rprop = g.resource(URIRef(TERMS[name]))
     for rtype in rtypes:
@@ -142,10 +154,16 @@ if __name__ == '__main__':
     import sys
     args = sys.argv[1:]
     source = args.pop(0)
+    termspath = args.pop(0) if args else None
 
     with open(source) as fp:
         marcframe = json.load(fp)
 
     g = parse_marcframe(marcframe)
+
+    if termspath:
+        tg = Graph().parse(termspath, format=guess_format(termspath))
+        g -= tg
+        g.remove((None, VANN.termGroup, None))
 
     g.serialize(sys.stdout, format='turtle')
