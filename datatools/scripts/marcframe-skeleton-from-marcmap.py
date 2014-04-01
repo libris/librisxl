@@ -1,13 +1,19 @@
 from collections import OrderedDict
 import json
 
+import sys
 
-fpath = "ext-libris/src/main/resources/marcmap.json"
+args = sys.argv[1:]
+fpath = args.pop(0) if args else "ext-libris/src/main/resources/marcmap.json"
 with open(fpath) as f:
     marcmap = json.load(f)
 
-show_repeatable = True
-skip_unlinked_maps = False
+include_lang = '-l' in args
+show_repeatable = '-R' not in args
+skip_unlinked_maps = '-l' in args
+
+JSONLD_CONTEXT = "ext-libris/src/main/resources/context.jsonld"
+TERM_BASE = "t:"
 
 
 content_name_map = {
@@ -69,6 +75,8 @@ fixprop_typerefs = {
         'visualMaterial',
     ]
 }
+# TODO: literaryForm => genre (same as 655)
+
 
 common_columns = {
     '008': {"[0:6]", "[6:7]", "[7:11]", "[11:15]", "[15:18]", "[35:38]", "[38:39]", "[39:40]"}
@@ -102,6 +110,13 @@ def fixprop_to_name(propname, key):
 
 out = OrderedDict()
 
+if include_lang:
+    out["@context"] = [JSONLD_CONTEXT,
+        {"@base": TERM_BASE,
+            "enumDefs": {"@id": "@graph", "@container": "@index"},
+            "label": {"@id": "rdfs:label", "@container": "@language"}}]
+    enum_defs = out['enumDefs'] = OrderedDict()
+
 tokenMaps = out['tokenMaps'] = OrderedDict()
 #compositionTypeMap = out['compositionTypeMap'] = OrderedDict()
 #contentTypeMap = out['contentTypeMap'] = OrderedDict()
@@ -129,6 +144,16 @@ def find_boolean_off_key(tokenmap):
                     assert k == '0' and on_k == '1'
                     return k
                 break
+
+def add_labels(src, dest):
+    sv = src.get('label_sv')
+    en = src.get('label_en')
+    if sv or en:
+        lang = dest['label'] = {}
+        if sv:
+            lang['sv'] = sv
+        if en:
+            lang['en'] = en
 
 
 section = out['bib'] = OrderedDict()
@@ -167,6 +192,8 @@ for tag, field in sorted(marcmap['bib'].items()):
                     type_name = carrier_name_map.get(type_name, type_name)
 
                 fm = outf[type_name] = OrderedDict()
+                if include_lang:
+                    add_labels(fixmap, fm)
 
                 if tag == '008':
                     for combo in fixmap['matchRecTypeBibLevel']:
@@ -233,6 +260,8 @@ for tag, field in sorted(marcmap['bib'].items()):
                 repeat = False
                 valuemap = None
                 tokenmap = None
+                if include_lang:
+                    add_labels(col, col_dfn)
 
                 if dfn_key in fixprops:
                     valuemap = fixprops[dfn_key]
@@ -288,6 +317,9 @@ for tag, field in sorted(marcmap['bib'].items()):
                         #assert type_id is None or type_id not in enums, type_id
                         tokenmap[key] = type_id
                         #local_enums.add(type_id)
+                        if include_lang:
+                            dest = enum_defs[type_id] = {'@id': type_id}
+                            add_labels(dfn, dest)
 
                     if skip_unlinked_maps and not is_link:
                         tokenMaps[dfn_key] = {"TODO": "SKIPPED"}
@@ -336,11 +368,30 @@ for tag, field in sorted(marcmap['bib'].items()):
             subf = outf['$' + code] = OrderedDict()
             p_key = 'addProperty' if subfield.get('repeatable', False) else 'property'
             subf[p_key] = sid
+            if include_lang:
+                add_labels(subfield, subf)
         if len(outf.keys()) > 1 and outf == prevf:
             section[tag] = {'inherit': prevtag}
     if show_repeatable and 'repeatable' in field:
         outf['repeatable'] = field['repeatable']
+    if include_lang:
+        add_labels(field, outf)
     prevtag = tag
+
+
+field_index = {}
+for tag, field in out['bib'].items():
+    if not any(k.startswith('$') for k in field):
+        continue
+    def hash_dict(d):
+        return tuple((k, hash_dict(v) if isinstance(v, dict) else v)
+                for k, v in d.items())
+    fieldhash = hash_dict(field)
+    if fieldhash in field_index:
+        field.clear()
+        field['inherits'] = field_index[fieldhash]
+    else:
+        field_index[fieldhash] = tag
 
 
 ## sanity check..

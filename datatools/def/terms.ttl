@@ -14,6 +14,7 @@
 @prefix edtf: <http://id.loc.gov/datatypes/edtf/> .
 @prefix bf: <http://bibframe.org/vocab/> .
 @prefix sdo: <http://schema.org/> .
+@prefix dbpo: <http://dbpedia.org/ontology/> .
 @prefix iana: <http://www.iana.org/assignments/relation/> .
 @prefix vann: <http://purl.org/vocab/vann/> .
 @prefix : <http://libris.kb.se/def/terms#> .
@@ -33,7 +34,7 @@
 # .. use rdfs:range rdf:langString where applicable?
 
 :label a owl:DatatypeProperty;
-    owl:equivalentProperty rdfs:label .
+    owl:equivalentProperty rdfs:label, sdo:name .
 :comment a owl:DatatypeProperty;
     owl:equivalentProperty rdfs:comment .
 :value a owl:DatatypeProperty;
@@ -530,6 +531,19 @@
 :isPrimaryTopicOf a owl:ObjectProperty;
     owl:equivalentProperty foaf:isPrimaryTopicOf .
 
+:audience a owl:ObjectProperty;
+    rdfs:subPropertyOf sdo:audience;
+    rdfs:range dbpo:Device .
+
+:Audience a owl:Class;
+    owl:equivalentClass sdo:Audience .
+
+:device a owl:ObjectProperty;
+    rdfs:subPropertyOf sdo:device;
+    rdfs:range dbpo:Device .
+
+:Device a owl:Class;
+    owl:equivalentClass dbpo:Device .
 
 ##
 # Agents
@@ -598,7 +612,7 @@
 
 :Organization a owl:Class;
     rdfs:subClassOf :Agent;
-    owl:equivalentClass foaf:Organization, sdo:Organization .
+    owl:equivalentClass bf:Organization, sdo:Organization, foaf:Organization  .
 
 :Place a owl:Class;
     owl:equivalentClass sdo:Place .
