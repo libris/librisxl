@@ -3536,6 +3536,7 @@
       "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
       "$b": {"property": "otherPhysicalDetails", "interpunctionChars": ";+"},
       "$e": {"property": "accompanyingMaterial"},
+      "$f": {"link": "device", "rangeEntity": "Device", "property": "label"},
       "$3": {
         "TODO:previousEndsWith": "+",
         "property": "materialsSpecified"
@@ -3639,7 +3640,11 @@
 
     "520": {"domainEntity": "Instance", "$a": {"addProperty": "summary"}},
 
-    "521": {},
+    "521": {
+      "addLink": "audience",
+      "rangeEntity": "Audience",
+      "$a": {"property": "label"}
+    },
     "522": {},
     "524": {},
     "525": {},
@@ -3955,6 +3960,12 @@
       }
     },
     "042" : {"inherit": "bib", "TODO": "about-inCollection-skönlitteratur?"},
+    "043" : {
+      "$a": {
+        "link": "nationality",
+        "uriTemplate": "/def/nationalities/{_}", "matchUriToken": "^[a-z-]{7}$"
+      }
+    },
     "046" : {
         "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
@@ -4078,7 +4089,7 @@
           "addLink": "sameAs",
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
-          "$d": {"property": null, "TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
         }
       },
       "domainEntity": "Instance", "NOTE": "really Work - see 100",
