@@ -3,7 +3,7 @@ package se.kb.libris.whelks.component
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.exception.WhelkRuntimeException
+import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.BasicPlugin
 import se.kb.libris.whelks.plugin.Plugin
 
@@ -12,16 +12,20 @@ import gov.loc.repository.pairtree.Pairtree
 @Log
 class DiskStorage extends BasicPlugin implements Storage {
     String storageDir = "./storage"
+    String versionsStorageDir = null
     boolean enabled = true
 
     String id = "diskstorage"
     String docFolder = "_"
     List contentTypes
+    boolean isVersioning
 
     int PATH_CHUNKS=4
 
     static final String METAFILE_EXTENSION = ".entry"
     static final String DATAFILE_EXTENSION = ".data"
+    static final String MAIN_STORAGE_DIR = "main"
+    static final String VERSIONS_STORAGE_DIR = "versions"
 
     /*
     static final FILE_EXTENSIONS = [
@@ -40,12 +44,16 @@ class DiskStorage extends BasicPlugin implements Storage {
         }
         this.storageDir = dn.toString()
         this.contentTypes = settings.get('contentTypes', null)
+        this.isVersioning = settings.get('versioning', false)
 
         log.info("Starting DiskStorage with storageDir $storageDir")
     }
 
     void init(String stName) {
-        this.storageDir = this.storageDir + "/" + stName
+        if (isVersioning) {
+            this.versionsStorageDir = this.storageDir + "/" + stName + "/" + VERSIONS_STORAGE_DIR
+        }
+        this.storageDir = this.storageDir + "/" + stName + "/" + MAIN_STORAGE_DIR
     }
 
     def void enable() {this.enabled = true}
@@ -57,12 +65,17 @@ class DiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    boolean store(Document doc) {
-        if (doc && handlesContent(doc.contentType)) {
-            String filePath = buildPath(doc.identifier, true) + "/" + getBaseFilename(doc.identifier)
+    @groovy.transform.CompileStatic
+    boolean store(Document doc, boolean checkExisting = true, int withVersion = 0) {
+        if (doc && (handlesContent(doc.contentType) || doc.entry.deleted)) {
+            if (this.isVersioning && checkExisting) {
+                doc = checkAndUpdateExisting(doc)
+            }
+            String filePath = buildPath(doc.identifier, true, withVersion) + "/" + getBaseFilename(doc.identifier)
             File sourcefile = new File(filePath + DATAFILE_EXTENSION)
             File metafile = new File(filePath + METAFILE_EXTENSION)
             try {
+                log.trace("Saving file with path ${sourcefile.path}")
                 sourcefile.write(doc.dataAsString)
                 metafile.write(doc.metadataAsJson)
             } catch (IOException ioe) {
@@ -74,31 +87,65 @@ class DiskStorage extends BasicPlugin implements Storage {
         return false
     }
 
+    Document checkAndUpdateExisting(Document doc) {
+        log.trace("checking for existingdoc with identifier ${doc.identifier}")
+        Document existingDocument = get(doc.identifier)
+        log.trace("found: $existingDocument")
+        int version = 1
+        if (existingDocument) {
+            if (existingDocument?.entry?.checksum == doc.entry?.checksum) {
+                throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
+            }
+            version = existingDocument.version + 1
+            Map versions = existingDocument.entry.versions ?: [:]
+            String lastVersion = existingDocument.version as String
+            versions[lastVersion] = ["timestamp" : existingDocument.timestamp]
+            if (existingDocument?.entry?.deleted) {
+                versions.get(lastVersion).put("deleted", true)
+            } else {
+                versions.get(lastVersion).put("checksum",existingDocument.entry.checksum)
+            }
+            doc.entry.put("versions", versions)
+            store(existingDocument, false, existingDocument.version)
+        }
+        log.trace("Setting document version: $version")
+        doc.withVersion(version)
+        return doc
+    }
+
+    @groovy.transform.CompileStatic
     String getBaseFilename(String identifier) {
         identifier.substring(identifier.lastIndexOf("/")+1)
     }
 
+    @groovy.transform.CompileStatic
     Document get(String uri, String version=null) {
         return get(new URI(uri), version)
     }
 
     @Override
+    @groovy.transform.CompileStatic
     Document get(URI uri, String version = null) {
-        if (version) {
-            throw new WhelkRuntimeException("Storage does not support versioning.")
-        }
-        log.trace("Loading from ${this.getClass()}")
+        log.trace("Received GET request for ${uri.toString()} with version $version")
+        String filePath = buildPath(uri.toString(), false, (version ? version as int : 0)) + "/" + getBaseFilename(uri.toString())
         try {
-            String filePath = buildPath(uri.toString(), false) + "/" + getBaseFilename(uri.toString())
-            log.debug("buildPath: " + buildPath(uri.toString(), false))
-            log.debug("basename: " + getBaseFilename(uri.toString()))
+            log.trace("filePath: $filePath")
             File metafile = new File(filePath + METAFILE_EXTENSION)
             File sourcefile = new File(filePath + DATAFILE_EXTENSION)
             def document = new Document(sourcefile, metafile)
-            log.debug("Loading document from disk.")
             return document
         } catch (FileNotFoundException fnfe) {
-            log.trace("File $sourcefile or $metafile not found.")
+            log.trace("Files on $filePath not found.")
+            if (version) {
+                log.debug("Trying to see if requested version is actually current version.")
+                def document = get(uri)
+                if (document && document.version == version as int) {
+                    log.debug("Why, yes it was!")
+                    return document
+                } else {
+                    log.debug("Nah, it wasn't")
+                }
+            }
             return null
         }
     }
@@ -112,26 +159,36 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     void store(Iterable<Document> docs) {
-        docs.each {
-            store(it)
+        for (doc in docs) {
+            store(doc)
         }
     }
 
     @Override
     void delete(URI uri) {
-        try {
-            def fn = buildPath(uri.toString(), false)
-            log.debug("Deleting $fn")
-            if (!new File(fn).deleteDir()) {
-                log.error("Failed to delete $uri")
-                throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
+        if (isVersioning) {
+            store(createTombstone(uri))
+        } else {
+            try {
+                def fn = buildPath(uri.toString(), false)
+                log.debug("Deleting $fn")
+                if (!new File(fn).deleteDir()) {
+                    log.error("Failed to delete $uri")
+                    throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
+                }
+            } catch (Exception e) {
+                throw new WhelkRuntimeException(e)
             }
-        } catch (Exception e) {
-            throw new WhelkRuntimeException(e)
         }
     }
 
-    String buildPath(String id, boolean createDirectories) {
+    private Document createTombstone(uri) {
+        def tombstone = new Document().withIdentifier(uri).withData("DELETED ENTRY")
+        tombstone.entry['deleted'] = true
+        return tombstone
+    }
+
+    String buildPath(String id, boolean createDirectories, int version = 0) {
         def path = this.storageDir + "/" + id.substring(0, id.lastIndexOf("/"))
         def basename = id.substring(id.toString().lastIndexOf("/")+1)
 
@@ -168,13 +225,15 @@ class PairtreeDiskStorage extends DiskStorage {
 
     @Override
     @groovy.transform.CompileStatic
-    String buildPath(String id, boolean createDirectories) {
+    String buildPath(String id, boolean createDirectories, int version = 0) {
         int pos = id.lastIndexOf("/")
         String path
+        String baseDir = (version > 0 ? this.versionsStorageDir : this.storageDir)
+        String encasingDir = (version > 0 ? version as String : null)
         if (pos != -1) {
-            path = pairtree.mapToPPath(this.storageDir + id.substring(0, pos), id.substring(pos+1), null)
+            path = pairtree.mapToPPath(baseDir + id.substring(0, pos), id.substring(pos+1), encasingDir)
         } else {
-            path = pairtree.mapToPPath(this.storageDir, id, null)
+            path = pairtree.mapToPPath(baseDir, id, encasingDir)
         }
         if (createDirectories) {
             new File(path).mkdirs()
@@ -194,7 +253,7 @@ class FlatDiskStorage extends DiskStorage {
 
 
     @Override
-    String buildPath(String id, boolean createDirectories) {
+    String buildPath(String id, boolean createDirectories, int version = 0) {
         def path = (this.storageDir + "/" + new URI(id).path).replaceAll(/\/+/, "/")
         if (createDirectories) {
             new File(path).mkdirs()
@@ -257,14 +316,7 @@ class DiskDocumentIterable implements Iterable<Document> {
                 File currentFile = fileStack.pop();
 
                 if (currentFile.isFile() && currentFile.length() > 0 && currentFile.name.endsWith(DiskStorage.METAFILE_EXTENSION)) {
-                    /*
-
-                    def document = new Document(currentFile.text)
-                    def fileBaseName = currentFile.parent + "/" + currentFile.name.lastIndexOf('.').with {it != -1 ? currentFile.name[0..<it] : currentFile.name}
-                    def sourcefile = 
-                    */
                     def document = new Document(new File(currentFile.parent + "/" + fileBaseName(currentFile.name) + DiskStorage.DATAFILE_EXTENSION), currentFile)
-                    //document.data = sourcefile.readBytes()
                     resultQueue.offer(document)
                 }
 

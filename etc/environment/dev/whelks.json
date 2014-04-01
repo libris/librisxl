@@ -36,9 +36,6 @@
                 "completeexpander",
                 "documentapi"
                 ],
-            "_prawns": [
-                "indexingprawn"
-                ],
             "_otherplugins": [
                 "localindex",
                 "ptstorage",
@@ -71,7 +68,8 @@
                 "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
                 "_params" : {
                     "storageDir": "work/storage/pairtree",
-                    "contentTypes": ["application/ld+json"]
+                    "contentTypes": ["application/ld+json"],
+                    "versioning" : true
                 }
             },
             "flatstorage": {

@@ -21,13 +21,9 @@
                     "libcount",
                     "documentapi"
                 ],
-                "_prawns": [
-                    "indexingprawn"
-                    ],
                 "_otherplugins": [
                     "index",
                     "pairtreediskstorage",
-                    "marcjsonstorage",
                     "oaipmhstorage",
                     "entityextractor",
                     "linkcompleter",
