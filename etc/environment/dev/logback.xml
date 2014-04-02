@@ -84,7 +84,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.PairtreeDiskStorage">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
@@ -113,7 +113,7 @@
   </logger>
   -->
 <logger name="se.kb.libris.whelks.Document">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
     <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">

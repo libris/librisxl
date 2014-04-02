@@ -24,7 +24,7 @@
                 "_otherplugins": [
                     "index",
                     "pairtree",
-                    "cassandrastorage",
+                    "hp04cassandrastorage",
                     "oaipmhstorage",
                     "entityextractor",
                     "linkcompleter",
@@ -63,6 +63,20 @@
                 "storageDir": "/data/librisxl/storage",
                 "contentTypes": ["application/ld+json"],
                 "versioning" : true
+            }
+        },
+        "hp04cassandrastorage": {
+            "_class" : "se.kb.libris.whelks.component.CassandraStorage",
+            "_params" : {
+                "cassandraVersion" : "1.2.11",
+                "cqlVersion" : "3.0.0",
+                "versioning" : true,
+                "keyspaceSuffix" : "_v2",
+                "contentTypes" : [
+                    "application/ld+json",
+                    "application/json",
+                    "text/plain"
+                ]
             }
         }
     }
