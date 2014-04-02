@@ -9,6 +9,9 @@ import se.kb.libris.whelks.plugin.Plugin
 
 import gov.loc.repository.pairtree.Pairtree
 
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.filefilter.*
+
 @Log
 class DiskStorage extends BasicPlugin implements Storage {
     String storageDir = "./storage"
@@ -22,7 +25,7 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     int PATH_CHUNKS=4
 
-    static final String METAFILE_EXTENSION = ".entry"
+    static final String ENTRY_FILE_NAME = "entry.json"
     static final String DATAFILE_EXTENSION = ".data"
     static final String MAIN_STORAGE_DIR = "main"
     static final String VERSIONS_STORAGE_DIR = "versions"
@@ -46,14 +49,14 @@ class DiskStorage extends BasicPlugin implements Storage {
         this.contentTypes = settings.get('contentTypes', null)
         this.isVersioning = settings.get('versioning', false)
 
-        log.info("Starting DiskStorage with storageDir $storageDir")
     }
 
     void init(String stName) {
         if (isVersioning) {
-            this.versionsStorageDir = this.storageDir + "/" + stName + "/" + VERSIONS_STORAGE_DIR
+            this.versionsStorageDir = this.storageDir + "/" + stName + "_" + this.id + "/" + VERSIONS_STORAGE_DIR
         }
-        this.storageDir = this.storageDir + "/" + stName + "/" + MAIN_STORAGE_DIR
+        this.storageDir = this.storageDir + "/" + stName + "_" + this.id + "/" + MAIN_STORAGE_DIR
+        log.info("Starting DiskStorage with storageDir $storageDir ${(isVersioning ? "and versions in $versionsStorageDir" : "")}")
     }
 
     def void enable() {this.enabled = true}
@@ -66,23 +69,29 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     @groovy.transform.CompileStatic
-    boolean store(Document doc, boolean checkExisting = true, int withVersion = 0) {
+    boolean store(Document doc) {
         if (doc && (handlesContent(doc.contentType) || doc.entry.deleted)) {
-            if (this.isVersioning && checkExisting) {
+            if (this.isVersioning) {
                 doc = checkAndUpdateExisting(doc)
             }
-            String filePath = buildPath(doc.identifier, true, withVersion) + "/" + getBaseFilename(doc.identifier)
-            File sourcefile = new File(filePath + DATAFILE_EXTENSION)
-            File metafile = new File(filePath + METAFILE_EXTENSION)
-            try {
-                log.trace("Saving file with path ${sourcefile.path}")
-                sourcefile.write(doc.dataAsString)
-                metafile.write(doc.metadataAsJson)
-            } catch (IOException ioe) {
-                log.error("Write failed: ${ioe.message}", ioe)
-                throw ioe
-            }
+            String filePath = buildPath(doc.identifier, true)
+            return writeDocumentToDisk(doc, filePath, getBaseFilename(doc.identifier))
+        }
+        return false
+    }
+
+    private boolean writeDocumentToDisk(Document doc, String filePath, String fileName) {
+        File sourcefile = new File(filePath + "/" + fileName + DATAFILE_EXTENSION)
+        File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
+        try {
+            log.trace("Saving file with path ${sourcefile.path}")
+            sourcefile.write(doc.dataAsString)
+            log.trace("Saving file with path ${metafile.path}")
+            metafile.write(doc.metadataAsJson)
             return true
+        } catch (IOException ioe) {
+            log.error("Write failed: ${ioe.message}", ioe)
+            throw ioe
         }
         return false
     }
@@ -93,7 +102,7 @@ class DiskStorage extends BasicPlugin implements Storage {
         log.trace("found: $existingDocument")
         int version = 1
         if (existingDocument) {
-            if (existingDocument?.entry?.checksum == doc.entry?.checksum) {
+            if (existingDocument.entry?.checksum == doc.entry?.checksum) {
                 throw new DocumentException(DocumentException.IDENTICAL_DOCUMENT, "Identical document already stored.")
             }
             version = existingDocument.version + 1
@@ -106,11 +115,10 @@ class DiskStorage extends BasicPlugin implements Storage {
                 versions.get(lastVersion).put("checksum",existingDocument.entry.checksum)
             }
             doc.entry.put("versions", versions)
-            store(existingDocument, false, existingDocument.version)
+            writeDocumentToDisk(existingDocument, buildPath(existingDocument.identifier, true, existingDocument.version), getBaseFilename(existingDocument.identifier))
         }
         log.trace("Setting document version: $version")
-        doc.withVersion(version)
-        return doc
+        return doc.withVersion(version)
     }
 
     @groovy.transform.CompileStatic
@@ -127,11 +135,12 @@ class DiskStorage extends BasicPlugin implements Storage {
     @groovy.transform.CompileStatic
     Document get(URI uri, String version = null) {
         log.trace("Received GET request for ${uri.toString()} with version $version")
-        String filePath = buildPath(uri.toString(), false, (version ? version as int : 0)) + "/" + getBaseFilename(uri.toString())
+        String filePath = buildPath(uri.toString(), false, (version ? version as int : 0))
+        String fileName =  getBaseFilename(uri.toString())
         try {
             log.trace("filePath: $filePath")
-            File metafile = new File(filePath + METAFILE_EXTENSION)
-            File sourcefile = new File(filePath + DATAFILE_EXTENSION)
+            File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
+            File sourcefile = new File(filePath + "/" + fileName + DATAFILE_EXTENSION)
             def document = new Document(sourcefile, metafile)
             return document
         } catch (FileNotFoundException fnfe) {
@@ -152,6 +161,11 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null) {
+        String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
+        final Iterator<File> entryIterator = FileUtils.iterateFiles(baseDir, new NameFileFilter(), HiddenFileFilter.VISIBLE)
+    }
+
+    Iterable<Document> oldgetAll(String dataset = null, Date since = null) {
         def baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
         log.debug("Basedir: $baseDir")
         return new DiskDocumentIterable<Document>(baseDir)
@@ -315,7 +329,7 @@ class DiskDocumentIterable implements Iterable<Document> {
             while (!fileStack.isEmpty() && resultQueue.isEmpty()) {
                 File currentFile = fileStack.pop();
 
-                if (currentFile.isFile() && currentFile.length() > 0 && currentFile.name.endsWith(DiskStorage.METAFILE_EXTENSION)) {
+                if (currentFile.isFile() && currentFile.length() > 0 && currentFile.name.equals(DiskStorage.ENTRY_FILE_NAME)) {
                     def document = new Document(new File(currentFile.parent + "/" + fileBaseName(currentFile.name) + DiskStorage.DATAFILE_EXTENSION), currentFile)
                     resultQueue.offer(document)
                 }

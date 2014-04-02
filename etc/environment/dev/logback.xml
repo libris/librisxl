@@ -38,14 +38,12 @@
   <logger name="se.kb.libris.whelks.plugin.Marc2JsonLDConverter">
       <level value="debug"/>
   </logger>
-  -->
    <logger name="se.kb.libris.whelks.importers.OAIPMHImporter">
       <level value="debug"/>
   </logger>
    <logger name="se.kb.libris.whelks.swepub.importers.ModsImporter">
       <level value="trace"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.plugin.JsonLD2MarcConverter">
       <level value="trace"/>
   </logger>
@@ -72,18 +70,15 @@
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger> 
-  -->
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="debug"/>
   </logger>
-  <!--
   <logger name="se.kb.libris.whelks.importers">
       <level value="debug"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="debug"/>
   </logger>
-  -->
  <logger name="se.kb.libris.whelks.component.DiskStorage">
       <level value="debug"/>
   </logger>
@@ -93,43 +88,36 @@
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
       <level value="trace"/>
   </logger>
-  <!--
  <logger name="se.kb.libris.whelks.component.SesameGraphStore">
       <level value="trace"/>
   </logger>
  <logger name="se.kb.libris.whelks.api.ISXNTool">
       <level value="debug"/>
   </logger>
-  -->
 <logger name="se.kb.libris.whelks.api.DocumentRestlet">
       <level value="trace"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.DumpRestlet">
       <level value="trace"/>
   </logger>
-  <!--
 <logger name="se.kb.libris.whelks.api.ReindexOperator">
       <level value="trace"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.OperatorRestlet">
       <level value="trace"/>
   </logger>
--->
 <logger name="se.kb.libris.whelks.api.BenchmarkOperator">
       <level value="trace"/>
   </logger>
-  <!--
 <logger name="se.kb.libris.whelks.Document">
       <level value="info"/>
   </logger>
     <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">
         <level value="trace"/>
     </logger>
-    -->
      <logger name="se.kb.libris.whelks.plugin.OaiPmhXmlConverter">
       <level value="trace"/>
 </logger>
-<!--
     <logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
           <level value="debug"/>
         </logger>
@@ -139,13 +127,9 @@
 <logger name="se.kb.libris.whelks.api.FieldSearchRestlet">
         <level value="debug"/>
 </logger>
--->
-<!--
  <logger name="se.kb.libris.whelks.api.SuggestResultsConverter">
       <level value="trace"/>
   </logger>
-  -->
-  <!--
   <logger name="se.kb.libris.whelks.api.KitinSearchRestlet2" level="INFO">
     <appender-ref ref="FILE-QUERY" />
   </logger>
