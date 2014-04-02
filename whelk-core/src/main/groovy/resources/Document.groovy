@@ -23,8 +23,8 @@ import se.kb.libris.whelks.exception.*
 class Document {
     String identifier
     byte[] data
-    Map entry // For "technical" metadata about the record, such as contentType, timestamp, etc.
-    Map meta  // For extra metadata about the object, e.g. links and such.
+    Map entry = [:] // For "technical" metadata about the record, such as contentType, timestamp, etc.
+    Map meta  = [:] // For extra metadata about the object, e.g. links and such.
     private String checksum = null
 
     @JsonIgnore
@@ -33,6 +33,8 @@ class Document {
     // store serialized data
     @JsonIgnore
     private Map serializedDataInMap
+    @JsonIgnore
+    final static ENTRY_PATH_KEY = "pathToData"
 
     /*
      * Constructors
@@ -43,23 +45,37 @@ class Document {
     }
 
     Document(String jsonString) {
-        fromJson(jsonString)
+        withMetaEntry(jsonString)
     }
 
     Document(File jsonFile) {
-        fromJson(jsonFile)
+        withMetaEntry(jsonFile)
     }
 
     Document(File datafile, File entryfile) {
-        fromJson(entryfile)
+        withMetaEntry(entryfile)
         setData(datafile.readBytes())
     }
 
     /*
      * Get methods
      */
+    byte[] getData() {
+        if (!this.data && entry[ENTRY_PATH_KEY]) {
+            try {
+                log.debug("Lazy loading data from ${entry[ENTRY_PATH_KEY]}")
+                setData(new File(entry[ENTRY_PATH_KEY]).readBytes())
+                entry.remove(ENTRY_PATH_KEY)
+            } catch (FileNotFoundException fnfe) {
+                log.error("Failed to lazy load data from ${entry[ENTRY_PATH_KEY]}")
+                throw fnfe
+            }
+        }
+        this.data
+    }
+
     String getDataAsString() {
-        return new String(this.data, "UTF-8")
+        return new String(getData(), "UTF-8")
     }
 
     Map getDataAsMap() {
@@ -97,7 +113,6 @@ class Document {
         entry.get("timestamp", 0L)
     }
 
-
     int getVersion() {
         entry.get("version", 0)
     }
@@ -117,8 +132,9 @@ class Document {
 
     void setData(byte[] data) {
         this.data = data
-        // Whenever data is changed, reset serializedDataInMap
+        // Whenever data is changed, reset serializedDataInMap and checksum
         serializedDataInMap = null
+        checksum = null
         calculateChecksum()
     }
 
@@ -177,8 +193,11 @@ class Document {
             long ts = getTimestamp()
             this.entry = [:]
             this.entry.putAll(entrydata)
-            this.entry['checksum'] = checksum
+            if (checksum) {
+                this.entry['checksum'] = checksum
+            }
             if (ts > getTimestamp()) {
+                log.debug("Overriding timestamp $ts with entry data.")
                 setTimestamp(ts)
             }
         }
@@ -201,6 +220,10 @@ class Document {
         withEntry(metaEntry.entry)
         withMeta(metaEntry.meta)
         return this
+    }
+
+    Document withMetaEntry(File entryFile) {
+        return withMetaEntry(entryFile.getText("utf-8"))
     }
 
     Document withLink(String identifier) {
@@ -228,6 +251,7 @@ class Document {
     /**
      * Takes either a String or a File as argument.
      */
+    @Deprecated
     Document fromJson(json) {
         try {
             Document newDoc = mapper.readValue(json, Document)
@@ -235,6 +259,7 @@ class Document {
             this.entry = newDoc.entry
             this.meta = newDoc.meta
             if (newDoc.data) {
+                log.debug("in fromjson")
                 setData(newDoc.data)
             }
         } catch (JsonParseException jpe) {
@@ -242,23 +267,6 @@ class Document {
         }
         return this
     }
-
-    /*
-    Document mergeEntry(Map entryData) {
-        entryData.each { k, v ->
-            if (!this.entry.containsKey(k)
-                && k != "deleted"
-                && k != "version"
-                && k != "contentType"
-                && k != "checksum"
-                && k != "timestamp") {
-                log.info("Setting $k = $v")
-                this.entry.put(k, v)
-            }
-        }
-        return this
-    }
-    */
 
     private void calculateChecksum() {
         MessageDigest m = MessageDigest.getInstance("MD5")

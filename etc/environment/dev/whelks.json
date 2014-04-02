@@ -30,6 +30,7 @@
             "_apis": [
                 "remotesearch",
                 "operator",
+                "dumper",
                 "search",
                 "sparqlapi",
                 "libcount",
@@ -67,7 +68,7 @@
             "ptstorage": {
                 "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
                 "_params" : {
-                    "storageDir": "work/storage/pairtree",
+                    "storageDir": "work/storage",
                     "contentTypes": ["application/ld+json"],
                     "versioning" : true
                 }

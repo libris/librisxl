@@ -23,6 +23,7 @@
                 ],
                 "_otherplugins": [
                     "index",
+                    "pairtree",
                     "cassandrastorage",
                     "oaipmhstorage",
                     "entityextractor",
@@ -54,5 +55,15 @@
                 ]
             }
         }
-    ]
+    ],
+    "_plugins": {
+        "pairtree": {
+            "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
+            "_params" : {
+                "storageDir": "/data/librisxl/storage",
+                "contentTypes": ["application/ld+json"],
+                "versioning" : true
+            }
+        }
+    }
 }

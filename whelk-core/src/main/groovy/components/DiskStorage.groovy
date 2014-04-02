@@ -1,6 +1,7 @@
 package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
+import groovy.transform.Synchronized
 
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.exception.*
@@ -13,7 +14,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.*
 
 @Log
-class DiskStorage extends BasicPlugin implements Storage {
+class PairtreeDiskStorage extends BasicPlugin implements Storage {
     String storageDir = "./storage"
     String versionsStorageDir = null
     boolean enabled = true
@@ -25,22 +26,25 @@ class DiskStorage extends BasicPlugin implements Storage {
 
     int PATH_CHUNKS=4
 
+    final static Pairtree pairtree = new Pairtree()
+
     static final String ENTRY_FILE_NAME = "entry.json"
+    static final String DATA_FILE_NAME = "content.data"
     static final String DATAFILE_EXTENSION = ".data"
     static final String MAIN_STORAGE_DIR = "main"
     static final String VERSIONS_STORAGE_DIR = "versions"
 
-    /*
-    static final FILE_EXTENSIONS = [
+    static final Map FILE_EXTENSIONS = [
         "application/json" : ".json",
         "application/ld+json" : ".jsonld",
         "application/x-marc-json" : ".json",
         "application/xml" : ".xml",
         "text/xml" : ".xml"
     ]
-    */
 
-    DiskStorage(Map settings) {
+    // TODO: Add document counter
+
+    PairtreeDiskStorage(Map settings) {
         StringBuilder dn = new StringBuilder(settings['storageDir'])
         while (dn[dn.length()-1] == '/') {
             dn.deleteCharAt(dn.length()-1)
@@ -80,12 +84,17 @@ class DiskStorage extends BasicPlugin implements Storage {
         return false
     }
 
+    @groovy.transform.CompileStatic
     private boolean writeDocumentToDisk(Document doc, String filePath, String fileName) {
-        File sourcefile = new File(filePath + "/" + fileName + DATAFILE_EXTENSION)
+        String extension = FILE_EXTENSIONS.get(doc.contentType, DATAFILE_EXTENSION)
+        log.info("Using extension: $extension")
+        File sourcefile = new File(filePath + "/" + fileName + extension)
         File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
         try {
             log.trace("Saving file with path ${sourcefile.path}")
             sourcefile.write(doc.dataAsString)
+            log.trace("Setting entry in document meta")
+            doc.entry[Document.ENTRY_PATH_KEY] = sourcefile.path
             log.trace("Saving file with path ${metafile.path}")
             metafile.write(doc.metadataAsJson)
             return true
@@ -140,8 +149,14 @@ class DiskStorage extends BasicPlugin implements Storage {
         try {
             log.trace("filePath: $filePath")
             File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
-            File sourcefile = new File(filePath + "/" + fileName + DATAFILE_EXTENSION)
-            def document = new Document(sourcefile, metafile)
+            //File sourcefile = new File(filePath + "/" + fileName + DATAFILE_EXTENSION)
+            def document = new Document(metafile)
+            /*
+            if (forceLoadData) {
+                log.debug("Force loading data in document (we will need it).")
+                document.getData()
+            }
+            */
             return document
         } catch (FileNotFoundException fnfe) {
             log.trace("Files on $filePath not found.")
@@ -162,7 +177,26 @@ class DiskStorage extends BasicPlugin implements Storage {
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null) {
         String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
-        final Iterator<File> entryIterator = FileUtils.iterateFiles(baseDir, new NameFileFilter(), HiddenFileFilter.VISIBLE)
+        final Iterator<File> entryIterator = FileUtils.iterateFiles(new File(baseDir), new NameFileFilter(ENTRY_FILE_NAME), HiddenFileFilter.VISIBLE)
+
+        return new Iterable<Document>() {
+            @Override
+            Iterator<Document> iterator() {
+                return new Iterator<Document>() {
+                    public boolean hasNext() { return entryIterator.hasNext(); }
+                    public Document next() {
+                        while (entryIterator.hasNext()) {
+                            File entryFile = entryIterator.next()
+                            //File dataFile = new File(entryFile.getParentFile(), DATA_FILE_NAME)
+                            Document document = new Document(entryFile)
+                            return document;
+                        }
+                        throw new NoSuchElementException();
+                    }
+                    public void remove() { throw new UnsupportedOperationException(); }
+                };
+            }
+        }
     }
 
     Iterable<Document> oldgetAll(String dataset = null, Date since = null) {
@@ -196,12 +230,47 @@ class DiskStorage extends BasicPlugin implements Storage {
         }
     }
 
+    @groovy.transform.CompileStatic
+    String buildPath(String id, boolean createDirectories, int version = 0) {
+        int pos = id.lastIndexOf("/")
+        String path
+        String baseDir = (version > 0 ? this.versionsStorageDir : this.storageDir)
+        String encasingDir = (version > 0 ? version as String : null)
+        if (pos != -1) {
+            path = pairtree.mapToPPath(baseDir + id.substring(0, pos), id.substring(pos+1), encasingDir)
+        } else {
+            path = pairtree.mapToPPath(baseDir, id, encasingDir)
+        }
+        if (createDirectories) {
+            new File(path).mkdirs()
+        }
+        return path
+    }
+
     private Document createTombstone(uri) {
         def tombstone = new Document().withIdentifier(uri).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
         return tombstone
     }
 
+
+    @Override
+    boolean handlesContent(String ctype) {
+        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
+    }
+}
+
+
+@Deprecated
+class DiskStorage extends PairtreeDiskStorage {
+
+
+    DiskStorage(Map settings) {
+       super(settings)
+    }
+
+
+    @Override
     String buildPath(String id, boolean createDirectories, int version = 0) {
         def path = this.storageDir + "/" + id.substring(0, id.lastIndexOf("/"))
         def basename = id.substring(id.toString().lastIndexOf("/")+1)
@@ -220,41 +289,6 @@ class DiskStorage extends BasicPlugin implements Storage {
         */
         return path.replaceAll(/\/+/, "/") //+ "/" + basename
     }
-
-    @Override
-    boolean handlesContent(String ctype) {
-        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
-    }
-}
-
-
-@Log
-class PairtreeDiskStorage extends DiskStorage {
-
-    final static Pairtree pairtree = new Pairtree()
-
-    PairtreeDiskStorage(Map settings) {
-       super(settings)
-    }
-
-    @Override
-    @groovy.transform.CompileStatic
-    String buildPath(String id, boolean createDirectories, int version = 0) {
-        int pos = id.lastIndexOf("/")
-        String path
-        String baseDir = (version > 0 ? this.versionsStorageDir : this.storageDir)
-        String encasingDir = (version > 0 ? version as String : null)
-        if (pos != -1) {
-            path = pairtree.mapToPPath(baseDir + id.substring(0, pos), id.substring(pos+1), encasingDir)
-        } else {
-            path = pairtree.mapToPPath(baseDir, id, encasingDir)
-        }
-        if (createDirectories) {
-            new File(path).mkdirs()
-        }
-        return path
-    }
-
 }
 
 @Log

@@ -24,7 +24,6 @@
                 "_otherplugins": [
                     "index",
                     "pairtreediskstorage",
-                    "pairtreeoaistorage",
                     "oaipmhstorage",
                     "entityextractor",
                     "linkcompleter",
@@ -55,5 +54,5 @@
                 ]
             }
         }
-    ]
+    ],
 }
