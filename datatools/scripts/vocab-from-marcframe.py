@@ -150,6 +150,25 @@ def newprop(g, name, rtypes, domainname=None, rangename=None):
     return rprop
 
 
+def add_equivalent(g, refgraph):
+    for s in refgraph.subjects():
+        try:
+            qname = refgraph.qname(s)
+        except:
+            continue
+        if ':' in qname:
+            qname = qname.split(':')[-1]
+        term = TERMS[qname]
+        if (term, None, s) not in g:
+            if (term, RDF.type, OWL.Class) in g:
+                rel = OWL.equivalentClass
+            elif (term, None, None) in g:
+                rel = OWL.equivalentProperty
+            else:
+                continue
+            g.add((term, rel, s))
+
+
 if __name__ == '__main__':
     import sys
     args = sys.argv[1:]
@@ -161,9 +180,14 @@ if __name__ == '__main__':
 
     g = parse_marcframe(marcframe)
 
+    for refpath in args:
+        refgraph = Graph().parse(refpath, format=guess_format(refpath))
+        add_equivalent(g, refgraph)
+
     if termspath:
         tg = Graph().parse(termspath, format=guess_format(termspath))
         g -= tg
         g.remove((None, VANN.termGroup, None))
+        g.namespace_manager = tg.namespace_manager
 
     g.serialize(sys.stdout, format='turtle')
