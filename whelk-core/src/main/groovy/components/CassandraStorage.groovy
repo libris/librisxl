@@ -436,7 +436,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
                     log.error("Cassandra Query failed.", e)
                     throw e
                 }
-                return new AlternateCassandraIterator(query)
+                return new CassandraIterator(query)
             }
         }
     }
