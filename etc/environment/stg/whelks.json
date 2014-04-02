@@ -24,7 +24,7 @@
                 "_otherplugins": [
                     "index",
                     "pairtree",
-                    "hp04cassandrastorage",
+                    "cassandrastorage",
                     "oaipmhstorage",
                     "entityextractor",
                     "linkcompleter",

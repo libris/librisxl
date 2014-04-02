@@ -180,7 +180,7 @@ class StandardWhelk implements Whelk {
             }
         }
         if (!stored) {
-            throw new PluginConfigurationException("You have storages configured, but none available for these documents.")
+            throw new PluginConfigurationException("You have storages configured (${getStorages()}), but none available for these documents ${doc.contentType}.")
         }
         log.trace("Final conversion left document in ctype ${doc.contentType}")
         return doc

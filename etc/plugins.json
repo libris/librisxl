@@ -46,9 +46,10 @@
                 "application/json",
                 "text/plain"
             ],
-            "cassandraVersion" : "1.2.15",
+            "cassandraVersion" : "1.2.11",
             "cqlVersion" : "3.0.0",
-            "versioning" : true
+            "versioning" : true,
+            "keyspaceSuffix" : "_v2",
         }
     },
     "marcjsonstorage": {
