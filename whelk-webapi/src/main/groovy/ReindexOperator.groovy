@@ -40,7 +40,6 @@ class ReindexOperator extends AbstractOperator {
         List<Document> docs = []
         boolean indexing = !startAt
         queue = Executors.newSingleThreadExecutor()
-        def futures = [].asSynchronized()
         if (!dataset) {
             for (index in whelk.indexes) {
                 if (!selectedComponents || index in selectedComponents) {
@@ -69,7 +68,7 @@ class ReindexOperator extends AbstractOperator {
                     docs << doc
                 }
                 if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
-                    doTheIndexing(futures, docs)
+                    doTheIndexing(docs)
                     docs = []
                 }
                 runningTime = System.currentTimeMillis() - startTime
@@ -112,38 +111,30 @@ class ReindexOperator extends AbstractOperator {
             }
         }
         operatorState=OperatorState.FINISHING
-        boolean cleanResult = true
-        log.debug("Number of futures: ${futures.size()}")
-        for (f in futures) {
-            def b = f.get()
-            log.debug("Collecting results from threads ... ($b)")
-            cleanResult = cleanResult && f.get()
-        }
-        log.info("Reindexing completed cleanly: $cleanResult")
+        queue.execute({
+            this.whelk.flush()
+        } as Runnable)
         queue.shutdown()
     }
 
-    void doTheIndexing(List futures, final List docs) {
-        futures << queue.submit({
+    void doTheIndexing(final List docs) {
+        queue.execute({
             try {
                 whelk.addToGraphStore(docs, selectedComponents)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
-                return false
             }
             try {
                 whelk.addToIndex(docs, selectedComponents)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
-                return false
             } catch (PluginConfigurationException pce) {
                 log.error("System badly configured", pce)
                 throw pce
             }
-            return true
-        } as Callable)
+        } as Runnable)
     }
 
     @Override
