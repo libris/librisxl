@@ -49,7 +49,7 @@
             "cassandraVersion" : "1.2.11",
             "cqlVersion" : "3.0.0",
             "versioning" : true,
-            "keyspaceSuffix" : "_v2",
+            "keyspaceSuffix" : "_v2"
         }
     },
     "marcjsonstorage": {

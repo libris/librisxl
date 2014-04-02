@@ -58,14 +58,18 @@ class ReindexOperator extends AbstractOperator {
             }
             if (indexing) {
                 log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
-                if (fromStorage) {
-                    try {
-                        docs << whelk.addToStorage(doc, fromStorage)
-                    } catch (WhelkAddException wae) {
-                        log.trace("Expected exception ${wae.message}")
+                if (!doc.entry.deleted) {
+                    if (fromStorage) {
+                        try {
+                            docs << whelk.addToStorage(doc, fromStorage)
+                        } catch (WhelkAddException wae) {
+                            log.trace("Expected exception ${wae.message}")
+                        }
+                    } else {
+                        docs << doc
                     }
                 } else {
-                    docs << doc
+                    log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
                 }
                 if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
                     doTheIndexing(docs)
