@@ -90,8 +90,15 @@ subprojects {
     }
 }
 
+project(":locgov-pairtree") {
+    dependencies {
+        testCompile 'junit:junit:4.4'
+    }
+}
+
 project(":whelk-core") {
     dependencies {
+        compile project(":locgov-pairtree")
         compile 'org.elasticsearch:elasticsearch:1.0.0'
         compile 'org.elasticsearch:elasticsearch-lang-groovy:1.5.0'
         compile 'com.spatial4j:spatial4j:0.3'
