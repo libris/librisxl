@@ -251,7 +251,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Iterable<Document> loadAll(Date since) { return loadAll(null, null, since)}
+    Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}
 
     @Override
     Iterable<Document> loadAll(String dataset = null, Date since = null, String storageId = null) {

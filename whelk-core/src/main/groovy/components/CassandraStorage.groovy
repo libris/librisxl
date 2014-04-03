@@ -413,16 +413,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
                             .withColumnRange(
                                 documentSerializer.buildRange().greaterThanEquals(since.getTime()).build()
                             )
-                            /*
-                    } else if (since) {
-                        log.debug("Searching year: ${since.getAt(Calendar.YEAR)}")
-                        query = keyspace.prepareQuery(CF_DOCUMENT_META)
-                            .searchWithIndex()
-                            .addExpression()
-                            .whereColumn(COL_NAME_YEAR).equals().value(since.getAt(Calendar.YEAR))
-                            .addExpression()
-                            .whereColumn(COL_NAME_TIMESTAMP).greaterThanEquals().value(since)
-                            */
                     } else {
                         log.debug("Using allrows()")
                         query = keyspace.prepareQuery(CF_DOCUMENT).getAllRows()
@@ -446,6 +436,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
         (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
     }
 
+    /*
     class AlternateCassandraIterator implements Iterator<Document> {
         private Iterator iter
         def query
@@ -547,6 +538,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
         }
         void remove() {}
     }
+    */
 
     class CassandraIterator implements Iterator<Document> {
 
@@ -573,7 +565,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
         public Document next() {
             while (refilling) {
                 log.debug("Hold a moment, refilling queue.")
-                Thread.sleep(1000)
+                Thread.sleep(5)
             }
             def doc = documentQueue.poll()
             log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
@@ -601,48 +593,6 @@ class CassandraStorage extends BasicPlugin implements Storage {
             }
 
         }
-
-        /*
-        public boolean oldhasNext() {
-            boolean hn,success = false
-            while (!success) {
-                try {
-                    hn = iter.hasNext()
-                    if (!hn && (query instanceof IndexQuery)) {
-                        log.trace("Refilling rows (for indexquery)")
-                        iter = query.execute().getResult().iterator()
-                        hn = iter.hasNext()
-                    }
-                    success = true
-                } catch (Exception ce) {
-                    log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...", ce)
-                    Thread.sleep(1000)
-                }
-            }
-            return hn
-        }
-
-
-        public Document oldnext() {
-            boolean success = false
-            def doc
-            while (!success) {
-                try {
-                    boolean deserizalisatonResult = false
-                    while (!deserizalisatonResult && iter.hasNext()) {
-                        (deserizalisatonResult, doc) = deserializeDocument(iter.next())
-                    }
-                    log.trace("doc is $doc")
-                    success = true
-                    log.trace("Next yielded ${doc.identifier} with version ${doc.version}")
-                } catch (Exception ce) {
-                    log.warn("Cassandra threw exception ${ce.class.name}: ${ce.message}. Holding for a second ...",ce)
-                    Thread.sleep(1000)
-                }
-            }
-            return doc
-        }
-        */
 
         def deserializeDocument(res) {
             String id = null
