@@ -114,7 +114,8 @@ if include_lang:
     out["@context"] = [JSONLD_CONTEXT,
         {"@base": TERM_BASE,
             "enumDefs": {"@id": "@graph", "@container": "@index"},
-            "label": {"@id": "rdfs:label", "@container": "@language"}}]
+            "label": {"@id": "rdfs:label", "@container": "@language"},
+            "tokenMaps": None, "bib": None}]
     enum_defs = out['enumDefs'] = OrderedDict()
 
 tokenMaps = out['tokenMaps'] = OrderedDict()

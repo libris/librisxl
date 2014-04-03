@@ -36,10 +36,12 @@ class TransferOperator extends AbstractOperator {
     }
 
     void doRun(long startTime) {
-        log.info("Transferring data from $fromStorage to $toStorage")
         Storage targetStorage = whelk.getStorages().find { it.id == toStorage }
+        Storage sourceStorage = whelk.getStorages().find { it.id == fromStorage }
+        log.info("Transferring data from $fromStorage to $toStorage")
+        boolean versioningOriginalSetting = targetStorage.versioning
         targetStorage.versioning = false
-        for (doc in whelk.loadAll(dataset, null, fromStorage)) {
+        for (doc in sourceStorage.getAll()) {
             log.trace("Storing doc ${doc.identifier} with type ${doc.contentType}")
             if (!doc.entry.deleted) {
                 if (targetStorage.store(doc)) {
@@ -48,12 +50,6 @@ class TransferOperator extends AbstractOperator {
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
-            /*
-            if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
-                doTheIndexing(docs)
-                docs = []
-            }
-            */
             runningTime = System.currentTimeMillis() - startTime
             if (showSpinner) {
                 def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
@@ -63,64 +59,10 @@ class TransferOperator extends AbstractOperator {
                 break
             }
         }
-        /*
-        log.debug("Went through all documents. Processing remainder.")
-        if (docs.size() > 0) {
-            log.trace("Reindexing remaining ${docs.size()} documents")
-            try {
-                whelk.addToGraphStore(docs, selectedComponents)
-            } catch (WhelkAddException wae) {
-                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
-            }
-            try {
-                whelk.addToIndex(docs, selectedComponents)
-            } catch (WhelkAddException wae) {
-                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
-            }
-        }
-        */
         log.info("Transferred $count documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-        /*
-        if (!dataset) {
-            for (index in whelk.indexes) {
-                if (!selectedComponents || index in selectedComponents) {
-                    if (cancelled) {
-                        log.info("Process cancelled, resetting currentIndex")
-                        index.currentIndex = index.getRealIndexFor(index.elasticIndex)
-                    } else {
-                        index.reMapAliases()
-                    }
-                }
-            }
-        }
-        */
+        targetStorage.versioning = versioningOriginalSetting
         operatorState=OperatorState.FINISHING
-        this.whelk.flush()
     }
-
-    /*
-    void doTheIndexing(final List docs) {
-        queue.execute({
-            try {
-                whelk.addToGraphStore(docs, selectedComponents)
-            } catch (WhelkAddException wae) {
-                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
-            }
-            try {
-                whelk.addToIndex(docs, selectedComponents)
-            } catch (WhelkAddException wae) {
-                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
-            } catch (PluginConfigurationException pce) {
-                log.error("System badly configured", pce)
-                throw pce
-            }
-        } as Runnable)
-    }
-    */
 
     @Override
     Map getStatus() {

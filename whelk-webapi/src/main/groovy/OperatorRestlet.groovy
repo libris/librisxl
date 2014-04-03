@@ -227,7 +227,7 @@ class BenchmarkOperator extends AbstractOperator {
         if (hasRun) {
             map.get("lastrun",[:]).put("fromStorage", fromStorage)
             map.get("lastrun").put("withSerialization", withSerialization)
-        } else {
+        } else if (operatorState == OperatorState.RUNNING) {
             map.put("fromStorage", fromStorage)
             map.put("withSerialization", withSerialization)
         }

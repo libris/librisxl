@@ -18,6 +18,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     String baseStorageDir = "./storage"
     String storageDir = null
     String versionsStorageDir = null
+    String baseStorageSuffix = null
     boolean enabled = true
 
     String id = "diskstorage"
@@ -34,6 +35,9 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     static final String DATAFILE_EXTENSION = ".data"
     static final String MAIN_STORAGE_DIR = "main"
     static final String VERSIONS_STORAGE_DIR = "versions"
+    static final String FILE_NAME_KEY = "dataFileName"
+
+    static final String VERSION_DIR_PREFIX = "version_"
 
     static final Map FILE_EXTENSIONS = [
         "application/json" : ".json",
@@ -53,14 +57,17 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         this.baseStorageDir = dn.toString()
         this.contentTypes = settings.get('contentTypes', null)
         this.versioning = settings.get('versioning', false)
-
+        this.baseStorageSuffix = settings.get('baseStorageSuffix', null)
     }
 
     void init(String stName) {
-        if (versioning) {
-            this.versionsStorageDir = this.baseStorageDir + "/" + stName + "_" + this.id + "/" + VERSIONS_STORAGE_DIR
+        if (!this.baseStorageSuffix) {
+            this.baseStorageSuffix = this.id
         }
-        this.storageDir = this.baseStorageDir + "/" + stName + "_" + this.id + "/" + MAIN_STORAGE_DIR
+        if (versioning) {
+            this.versionsStorageDir = this.baseStorageDir + "/" + stName + "_" + this.baseStorageSuffix + "/" + VERSIONS_STORAGE_DIR
+        }
+        this.storageDir = this.baseStorageDir + "/" + stName + "_" + this.baseStorageSuffix + "/" + MAIN_STORAGE_DIR
         log.info("Starting DiskStorage with storageDir $storageDir ${(versioning ? "and versions in $versionsStorageDir" : "")}")
     }
 
@@ -79,7 +86,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
             if (this.versioning) {
                 doc = checkAndUpdateExisting(doc)
             }
-            String filePath = buildPath(doc.identifier, true)
+            String filePath = buildPath(doc.identifier)
             return writeDocumentToDisk(doc, filePath, getBaseFilename(doc.identifier))
         }
         return false
@@ -88,16 +95,17 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     @groovy.transform.CompileStatic
     private boolean writeDocumentToDisk(Document doc, String filePath, String fileName) {
         String extension = FILE_EXTENSIONS.get(doc.contentType, DATAFILE_EXTENSION)
-        log.info("Using extension: $extension")
-        File sourcefile = new File(filePath + "/" + fileName + extension)
+        log.trace("Using extension: $extension")
+        String sourcefilePath = filePath + "/" + fileName + extension
+        File sourcefile = new File(sourcefilePath)
         File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
         try {
             log.trace("Saving file with path ${sourcefile.path}")
-            sourcefile.write(doc.dataAsString)
+            FileUtils.writeByteArrayToFile(sourcefile, doc.data)
             log.trace("Setting entry in document meta")
-            doc.entry[Document.ENTRY_PATH_KEY] = sourcefile.path
+            doc.getEntry().put(FILE_NAME_KEY, sourcefilePath)
             log.trace("Saving file with path ${metafile.path}")
-            metafile.write(doc.metadataAsJson)
+            FileUtils.write(metafile, doc.metadataAsJson, "utf-8")
             return true
         } catch (IOException ioe) {
             log.error("Write failed: ${ioe.message}", ioe)
@@ -125,7 +133,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                 versions.get(lastVersion).put("checksum",existingDocument.entry.checksum)
             }
             doc.entry.put("versions", versions)
-            writeDocumentToDisk(existingDocument, buildPath(existingDocument.identifier, true, existingDocument.version), getBaseFilename(existingDocument.identifier))
+            writeDocumentToDisk(existingDocument, buildPath(existingDocument.identifier, existingDocument.version), getBaseFilename(existingDocument.identifier))
         }
         log.trace("Setting document version: $version")
         return doc.withVersion(version)
@@ -145,20 +153,14 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     @groovy.transform.CompileStatic
     Document get(URI uri, String version = null) {
         log.trace("Received GET request for ${uri.toString()} with version $version")
-        String filePath = buildPath(uri.toString(), false, (version ? version as int : 0))
+        String filePath = buildPath(uri.toString(), (version ? version as int : 0))
         String fileName =  getBaseFilename(uri.toString())
         try {
             log.trace("filePath: $filePath")
             File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
-            //File sourcefile = new File(filePath + "/" + fileName + DATAFILE_EXTENSION)
-            def document = new Document(metafile)
-            /*
-            if (forceLoadData) {
-                log.debug("Force loading data in document (we will need it).")
-                document.getData()
-            }
-            */
-            return document
+            def document = new Document(FileUtils.readFileToString(metafile, "utf-8"))
+            File sourcefile = new File(filePath + "/" + fileName + FILE_EXTENSIONS.get(document.contentType, DATAFILE_EXTENSION))
+            return document.withData(FileUtils.readFileToByteArray(sourcefile))
         } catch (FileNotFoundException fnfe) {
             log.trace("Files on $filePath not found.")
             if (version) {
@@ -176,6 +178,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
+    @groovy.transform.CompileStatic
     Iterable<Document> getAll(String dataset = null, Date since = null) {
         String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
         final Iterator<File> entryIterator = FileUtils.iterateFiles(new File(baseDir), new NameFileFilter(ENTRY_FILE_NAME), HiddenFileFilter.VISIBLE)
@@ -188,9 +191,8 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                     public Document next() {
                         while (entryIterator.hasNext()) {
                             File entryFile = entryIterator.next()
-                            //File dataFile = new File(entryFile.getParentFile(), DATA_FILE_NAME)
-                            Document document = new Document(entryFile)
-                            return document;
+                            Document document = new Document(FileUtils.readFileToString(entryFile, "utf-8"))
+                            return document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
                         }
                         throw new NoSuchElementException();
                     }
@@ -200,26 +202,13 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         }
     }
 
-    Iterable<Document> oldgetAll(String dataset = null, Date since = null) {
-        def baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
-        log.debug("Basedir: $baseDir")
-        return new DiskDocumentIterable<Document>(baseDir)
-    }
-
-    @Override
-    void store(Iterable<Document> docs) {
-        for (doc in docs) {
-            store(doc)
-        }
-    }
-
     @Override
     void delete(URI uri) {
         if (versioning) {
             store(createTombstone(uri))
         } else {
             try {
-                def fn = buildPath(uri.toString(), false)
+                def fn = buildPath(uri.toString())
                 log.debug("Deleting $fn")
                 if (!new File(fn).deleteDir()) {
                     log.error("Failed to delete $uri")
@@ -232,18 +221,15 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
 
     @groovy.transform.CompileStatic
-    String buildPath(String id, boolean createDirectories, int version = 0) {
+    String buildPath(String id, int version = 0) {
         int pos = id.lastIndexOf("/")
         String path
         String baseDir = (version > 0 ? this.versionsStorageDir : this.storageDir)
-        String encasingDir = (version > 0 ? version as String : null)
+        String encasingDir = (version > 0 ? VERSION_DIR_PREFIX + version : null)
         if (pos != -1) {
             path = pairtree.mapToPPath(baseDir + id.substring(0, pos), id.substring(pos+1), encasingDir)
         } else {
             path = pairtree.mapToPPath(baseDir, id, encasingDir)
-        }
-        if (createDirectories) {
-            new File(path).mkdirs()
         }
         return path
     }
@@ -272,7 +258,7 @@ class DiskStorage extends PairtreeDiskStorage {
 
 
     @Override
-    String buildPath(String id, boolean createDirectories, int version = 0) {
+    String buildPath(String id, int version = 0) {
         def path = this.storageDir + "/" + id.substring(0, id.lastIndexOf("/"))
         def basename = id.substring(id.toString().lastIndexOf("/")+1)
 
@@ -283,11 +269,6 @@ class DiskStorage extends PairtreeDiskStorage {
         if (this.docFolder) {
             path = path + "/" + this.docFolder + "/" + basename
         }
-        /* Disable this
-        if (createDirectories) {
-            new File(path).mkdirs()
-        }
-        */
         return path.replaceAll(/\/+/, "/") //+ "/" + basename
     }
 }
@@ -308,74 +289,5 @@ class FlatDiskStorage extends DiskStorage {
             new File(path).mkdirs()
         }
         return path
-    }
-}
-
-/*
- * Utility classes.
- */
-@Log
-class DiskDocumentIterable implements Iterable<Document> {
-    File baseDirectory
-    DiskDocumentIterable(File bd) {
-        this.baseDirectory = bd
-    }
-
-    Iterator<Document> iterator() {
-        return new DiskDocumentIterator(this.baseDirectory)
-    }
-
-
-    class DiskDocumentIterator implements Iterator<Document> {
-
-        private LinkedList<File> fileStack = new LinkedList<File>()
-        private Queue<Document> resultQueue = new LinkedList<Document>()
-
-        DiskDocumentIterator(File startDirectory) {
-            if (startDirectory && startDirectory.exists()) {
-                fileStack.addAll(startDirectory.listFiles())
-            }
-        }
-
-        public boolean hasNext() {
-            if (resultQueue.isEmpty()) {
-                populateResults();
-            }
-            return !resultQueue.isEmpty();
-        }
-
-        public Document next() {
-            if (resultQueue.isEmpty()) {
-                populateResults();
-            }
-            return resultQueue.poll();
-        }
-
-        private String fileBaseName(String filename) {
-            if (filename.lastIndexOf(".") != -1) {
-                return filename.substring(0, filename.lastIndexOf("."))
-            }
-            return filename
-        }
-
-
-        private void populateResults() {
-
-            while (!fileStack.isEmpty() && resultQueue.isEmpty()) {
-                File currentFile = fileStack.pop();
-
-                if (currentFile.isFile() && currentFile.length() > 0 && currentFile.name.equals(DiskStorage.ENTRY_FILE_NAME)) {
-                    def document = new Document(new File(currentFile.parent + "/" + fileBaseName(currentFile.name) + DiskStorage.DATAFILE_EXTENSION), currentFile)
-                    resultQueue.offer(document)
-                }
-
-                if (currentFile.isDirectory()) {
-                    fileStack.addAll(Arrays.asList(currentFile.listFiles()))
-                }
-            }
-        }
-
-        public void remove() {}
-
     }
 }

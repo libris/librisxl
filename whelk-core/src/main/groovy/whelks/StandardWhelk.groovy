@@ -159,7 +159,12 @@ class StandardWhelk implements Whelk {
         log.trace("Available formatconverters: " + formatConverters.collect { ((Plugin)it).id })
         for (fc in formatConverters) {
             log.trace("Running formatconverter ${fc.id} for ${doc.contentType}")
-            doc = fc.convert(doc)
+            try {
+                doc = fc.convert(doc)
+            } catch (Exception e) {
+                log.error("Conversion failed for ${doc.identifier}.", e)
+                throw e
+            }
             log.trace("Document has ctype ${doc.contentType} after conversion.")
             docs.put(doc.contentType, doc)
         }
@@ -250,7 +255,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Iterable<Document> loadAll(Date since) { return loadAll(null, null, since)}
+    Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}
 
     @Override
     Iterable<Document> loadAll(String dataset = null, Date since = null, String storageId = null) {

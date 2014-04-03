@@ -25254,7 +25254,8 @@
       }, 
       "characterCoding": {
         "a": {
-          "label_sv": "UCS/Unicode"
+          "label_sv": "UCS/Unicode", 
+          "id": "UCS-Unicode"
         }
       }, 
       "encLevel": {
@@ -25345,7 +25346,8 @@
           "label_en": "AACR 2"
         }, 
         "c": {
-          "label_sv": "ISBD-interpunktion saknas"
+          "label_sv": "ISBD-interpunktion saknas", 
+          "id": "ISBDPunctuationOmitted"
         }, 
         "i": {
           "label_sv": "ISBD-interpunktion finns", 
@@ -25363,16 +25365,20 @@
           "label_sv": "Ej specificerat / ej till\u00e4mpligt"
         }, 
         "a": {
-          "label_sv": "Set"
+          "label_sv": "Set", 
+          "id": "Set"
         }, 
         "b": {
-          "label_sv": "Del med oberoende titel"
+          "label_sv": "Del med oberoende titel", 
+          "id": "PartWithIndependentTitle"
         }, 
         "c": {
-          "label_sv": "Del med beroende titel"
+          "label_sv": "Del med beroende titel", 
+          "id": "PartWithDependentTitle"
         }, 
         "r": {
-          "label_sv": "F\u00e4lt 760-787 finns i posten (OBSOLET)"
+          "label_sv": "F\u00e4lt 760-787 finns i posten (OBSOLET)", 
+          "id": "RecordHasLinks-Obsolete"
         }
       }, 
       "entryMap": {
@@ -25551,10 +25557,12 @@
           "label_en": "Braille"
         }, 
         "o": {
-          "label_sv": "Onlineutg\u00e5va"
+          "label_sv": "Onlineutg\u00e5va", 
+          "id": "Online"
         }, 
         "q": {
-          "label_sv": "Utg\u00e5va i direkt elektronisk form"
+          "label_sv": "Utg\u00e5va i direkt elektronisk form", 
+          "id": "DirectElectronic"
         }, 
         "r": {
           "label_sv": "Reproduktion i originalstorlek", 
@@ -25563,7 +25571,7 @@
         }, 
         "s": {
           "label_sv": "Utg\u00e5va i ospecificerad elektronisk form", 
-          "id": "electronic", 
+          "id": "Electronic", 
           "label_en": "Electronic"
         }, 
         "|": {
@@ -26045,7 +26053,8 @@
           "label_en": "Fugues"
         }, 
         "fl": {
-          "label_sv": "Flamenco"
+          "label_sv": "Flamenco", 
+          "id": "Flamenco"
         }, 
         "fm": {
           "label_sv": "Folkmusik", 
@@ -26253,7 +26262,8 @@
           "label_en": "Toccatas"
         }, 
         "tl": {
-          "label_sv": "Teatro lirico"
+          "label_sv": "Teatro lirico", 
+          "id": "TeatroLirico"
         }, 
         "ts": {
           "label_sv": "Trio-sonata", 
@@ -26266,7 +26276,8 @@
           "label_en": "Unknown"
         }, 
         "vl": {
-          "label_sv": "Villancicos"
+          "label_sv": "Villancicos", 
+          "id": "Villancico"
         }, 
         "vr": {
           "label_sv": "Variationer", 
@@ -26279,7 +26290,8 @@
           "label_en": "Waltzes"
         }, 
         "za": {
-          "label_sv": "Zarzuelas"
+          "label_sv": "Zarzuelas", 
+          "id": "Zarzuela"
         }, 
         "zz": {
           "label_sv": "Annan genre", 
@@ -26324,19 +26336,24 @@
           "label_en": "Close score"
         }, 
         "h": {
-          "label_sv": "K\u00f6rpartitur"
+          "label_sv": "K\u00f6rpartitur", 
+          "id": "ChoralScore"
         }, 
         "i": {
-          "label_sv": "Reducerat partitur (condensed scoore)"
+          "label_sv": "Reducerat partitur (condensed scoore)", 
+          "id": "CondensedScore"
         }, 
         "j": {
-          "label_sv": "Direktion f\u00f6r enstaka instrument (performer-conductor part)"
+          "label_sv": "Direktion f\u00f6r enstaka instrument (performer-conductor part)", 
+          "id": "PerformerConductorPart"
         }, 
         "k": {
-          "label_sv": "Vokalpartitur"
+          "label_sv": "Vokalpartitur", 
+          "id": "VocalScore"
         }, 
         "l": {
-          "label_sv": "Komplett musikalisk notation f\u00f6r konsertframf\u00f6rande (score)"
+          "label_sv": "Komplett musikalisk notation f\u00f6r konsertframf\u00f6rande (score)", 
+          "id": "CompleteMusicalNotationForScore"
         }, 
         "m": {
           "label_sv": "Flera st\u00e4mformat tillsammans", 
@@ -26485,10 +26502,12 @@
           "label_en": "Braille"
         }, 
         "o": {
-          "label_sv": "Onlineutg\u00e5va"
+          "label_sv": "Onlineutg\u00e5va", 
+          "id": "Online"
         }, 
         "q": {
-          "label_sv": "Utg\u00e5va i direkt elektronisk form"
+          "label_sv": "Utg\u00e5va i direkt elektronisk form", 
+          "id": "DirectElectronic"
         }, 
         "r": {
           "label_sv": "Reproduktion i originalstorlek", 
@@ -26497,7 +26516,7 @@
         }, 
         "s": {
           "label_sv": "Utg\u00e5va i ospecificerad elektronisk form", 
-          "id": "electronic", 
+          "id": "Electronic", 
           "label_en": "Electronic"
         }, 
         "|": {
@@ -26921,10 +26940,12 @@
           "label_en": "Equirectangular"
         }, 
         "bk": {
-          "label_sv": "Krovak"
+          "label_sv": "Krovak", 
+          "id": "Krovak"
         }, 
         "bl": {
-          "label_sv": "Cassini-Soldner"
+          "label_sv": "Cassini-Soldner", 
+          "id": "CassiniSoldner"
         }, 
         "bo": {
           "label_sv": "Oblik Mercator", 
@@ -27188,10 +27209,12 @@
           "label_en": "Braille"
         }, 
         "o": {
-          "label_sv": "Onlineutg\u00e5va"
+          "label_sv": "Onlineutg\u00e5va", 
+          "id": "Online"
         }, 
         "q": {
-          "label_sv": "Utg\u00e5va i direkt elektronisk form"
+          "label_sv": "Utg\u00e5va i direkt elektronisk form", 
+          "id": "DirectElectronic"
         }, 
         "r": {
           "label_sv": "Reproduktion i originalstorlek", 
@@ -27200,7 +27223,7 @@
         }, 
         "s": {
           "label_sv": "Utg\u00e5va i ospecificerad elektronisk form", 
-          "id": "electronic", 
+          "id": "Electronic", 
           "label_en": "Electronic"
         }, 
         "|": {
@@ -27456,10 +27479,12 @@
           "label_en": "Braille"
         }, 
         "o": {
-          "label_sv": "Onlineutg\u00e5va"
+          "label_sv": "Onlineutg\u00e5va", 
+          "id": "Online"
         }, 
         "q": {
-          "label_sv": "Utg\u00e5va i direkt elektronisk form"
+          "label_sv": "Utg\u00e5va i direkt elektronisk form", 
+          "id": "DirectElectronic"
         }, 
         "r": {
           "label_sv": "Reproduktion i originalstorlek", 
@@ -27468,7 +27493,7 @@
         }, 
         "s": {
           "label_sv": "Utg\u00e5va i ospecificerad elektronisk form", 
-          "id": "electronic", 
+          "id": "Electronic", 
           "label_en": "Electronic"
         }, 
         "|": {
@@ -27678,13 +27703,16 @@
           "label_sv": "Ingen av f\u00f6ljande"
         }, 
         "o": {
-          "label_sv": "Onlineutg\u00e5va"
+          "label_sv": "Onlineutg\u00e5va", 
+          "id": "Online"
         }, 
         "q": {
-          "label_sv": "Utg\u00e5va i direkt elektronisk form"
+          "label_sv": "Utg\u00e5va i direkt elektronisk form", 
+          "id": "DirectElectronic"
         }, 
         "s": {
-          "label_sv": "Utg\u00e5va i ospecificerad elektronisk form"
+          "label_sv": "Utg\u00e5va i ospecificerad elektronisk form", 
+          "id": "Electronic"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -27856,10 +27884,12 @@
           "label_en": "Braille"
         }, 
         "o": {
-          "label_sv": "Onlineutg\u00e5va"
+          "label_sv": "Onlineutg\u00e5va", 
+          "id": "Online"
         }, 
         "q": {
-          "label_sv": "Utg\u00e5va i direkt elektronisk form"
+          "label_sv": "Utg\u00e5va i direkt elektronisk form", 
+          "id": "DirectElectronic"
         }, 
         "r": {
           "label_sv": "Reproduktion i originalstorlek", 
@@ -27868,7 +27898,7 @@
         }, 
         "s": {
           "label_sv": "Utg\u00e5va i ospecificerad elektronisk form", 
-          "id": "electronic", 
+          "id": "Electronic", 
           "label_en": "Electronic"
         }, 
         "|": {
@@ -28033,7 +28063,8 @@
           "label_en": "Canada"
         }, 
         "f": {
-          "label_sv": "Sverige (obsolet)"
+          "label_sv": "Sverige (obsolet)", 
+          "id": "Sweden-Obsolete"
         }, 
         "z": {
           "label_sv": "Annat ISSN-kontor (obsolet)", 
@@ -28125,14 +28156,16 @@
           "label_en": "Braille"
         }, 
         "o": {
-          "label_sv": "Onlineutg\u00e5va"
+          "label_sv": "Onlineutg\u00e5va", 
+          "id": "Online"
         }, 
         "q": {
-          "label_sv": "Utg\u00e5va i direkt elektronisk form"
+          "label_sv": "Utg\u00e5va i direkt elektronisk form", 
+          "id": "DirectElectronic"
         }, 
         "s": {
           "label_sv": "Utg\u00e5va i ospecificerad elektronisk form", 
-          "id": "electronic", 
+          "id": "Electronic", 
           "label_en": "Electronic"
         }, 
         "|": {
@@ -28171,10 +28204,12 @@
           "label_en": "Braille"
         }, 
         "o": {
-          "label_sv": "Onlineutg\u00e5va"
+          "label_sv": "Onlineutg\u00e5va", 
+          "id": "Online"
         }, 
         "q": {
-          "label_sv": "Utg\u00e5va i direkt elektronisk form"
+          "label_sv": "Utg\u00e5va i direkt elektronisk form", 
+          "id": "DirectElectronic"
         }, 
         "r": {
           "label_sv": "Reproduktion i originalstorlek", 
@@ -28183,7 +28218,7 @@
         }, 
         "s": {
           "label_sv": "Utg\u00e5va i ospecificerad elektronisk form", 
-          "id": "electronic", 
+          "id": "Electronic", 
           "label_en": "Electronic"
         }, 
         "|": {
@@ -28309,7 +28344,8 @@
           "label_en": "Law reports and digests"
         }, 
         "y": {
-          "label_sv": "\u00c5rsbok"
+          "label_sv": "\u00c5rsbok", 
+          "id": "Yearbook"
         }, 
         "z": {
           "label_sv": "F\u00f6rdrag", 
@@ -28317,7 +28353,8 @@
           "label_en": "Treaties"
         }, 
         "6": {
-          "label_sv": "Tecknad serie / Serieroman"
+          "label_sv": "Tecknad serie / Serieroman", 
+          "id": "ComicOrGraphicNovel"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda", 
@@ -28442,7 +28479,8 @@
           "label_en": "Law reports and digests"
         }, 
         "y": {
-          "label_sv": "\u00c5rsbok"
+          "label_sv": "\u00c5rsbok", 
+          "id": "Yearbook"
         }, 
         "z": {
           "label_sv": "F\u00f6rdrag", 
@@ -28450,10 +28488,12 @@
           "label_en": "Treaties"
         }, 
         "5": {
-          "label_sv": "Kalender"
+          "label_sv": "Kalender", 
+          "id": "Calendar"
         }, 
         "6": {
-          "label_sv": "Tecknad serie / Serieroman"
+          "label_sv": "Tecknad serie / Serieroman", 
+          "id": "ComicOrGraphicNovel"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda", 
@@ -28755,7 +28795,8 @@
           "label_en": "Textile"
         }, 
         "i": {
-          "label_sv": "Plast"
+          "label_sv": "Plast", 
+          "id": "Plastic"
         }, 
         "j": {
           "label_sv": "Glas", 
@@ -28763,10 +28804,12 @@
           "label_en": "Glass"
         }, 
         "l": {
-          "label_sv": "Vinyl"
+          "label_sv": "Vinyl", 
+          "id": "Vinyl"
         }, 
         "n": {
-          "label_sv": "Velin"
+          "label_sv": "Velin", 
+          "id": "Vellum"
         }, 
         "p": {
           "label_sv": "Gips", 
@@ -28799,10 +28842,12 @@
           "label_en": "Unknown"
         }, 
         "v": {
-          "label_sv": "L\u00e4der"
+          "label_sv": "L\u00e4der", 
+          "id": "Leather"
         }, 
         "w": {
-          "label_sv": "Pergament"
+          "label_sv": "Pergament", 
+          "id": "Parchment"
         }, 
         "y": {
           "label_sv": "Annan bas (ut\u00f6ver q, r, s, t)", 
@@ -28974,28 +29019,36 @@
       }, 
       "computerColor": {
         "a": {
-          "label_sv": "En f\u00e4rg som kontrasterar mot vitt"
+          "label_sv": "En f\u00e4rg som kontrasterar mot vitt", 
+          "id": "OneColor"
         }, 
         "b": {
-          "label_sv": "Svartvit"
+          "label_sv": "Svartvit", 
+          "id": "BlackAndWhite"
         }, 
         "c": {
-          "label_sv": "Flera f\u00e4rger"
+          "label_sv": "Flera f\u00e4rger", 
+          "id": "Multicolored"
         }, 
         "g": {
-          "label_sv": "Gr\u00e5skala"
+          "label_sv": "Gr\u00e5skala", 
+          "id": "GrayScale"
         }, 
         "m": {
-          "label_sv": "Kombination av flera f\u00e4rgtekniker"
+          "label_sv": "Kombination av flera f\u00e4rgtekniker", 
+          "id": "MixedColors"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nda f\u00e4rgegenskaper"
+          "label_sv": "Ok\u00e4nda f\u00e4rgegenskaper", 
+          "id": "Unknown"
         }, 
         "z": {
-          "label_sv": "Annan f\u00e4rgegenskap"
+          "label_sv": "Annan f\u00e4rgegenskap", 
+          "id": "Other"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29003,34 +29056,44 @@
       }, 
       "computerDimensions": {
         "a": {
-          "label_sv": "3,5 tum"
+          "label_sv": "3,5 tum", 
+          "id": "3,5_in"
         }, 
         "e": {
-          "label_sv": "12 tum"
+          "label_sv": "12 tum", 
+          "id": "12_in"
         }, 
         "g": {
-          "label_sv": "4 4,75 tum / 12 cm (CD)"
+          "label_sv": "4 4,75 tum / 12 cm (CD)", 
+          "id": "4,75_in_or_12_cm_(CD)"
         }, 
         "i": {
-          "label_sv": "1 1/8 x 2 3/8 tum"
+          "label_sv": "1 1/8 x 2 3/8 tum", 
+          "id": "1,125_x_2,375_in"
         }, 
         "j": {
-          "label_sv": "3 7/8 x 2 1/2 tum"
+          "label_sv": "3 7/8 x 2 1/2 tum", 
+          "id": "3,875_x_2,5_in"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "o": {
-          "label_sv": "5,25 tum"
+          "label_sv": "5,25 tum", 
+          "id": "5,25_in"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd storlek"
+          "label_sv": "Ok\u00e4nd storlek", 
+          "id": "Unknown"
         }, 
         "v": {
-          "label_sv": "8 tum"
+          "label_sv": "8 tum", 
+          "id": "8_in"
         }, 
         "z": {
-          "label_sv": "Annan storlek"
+          "label_sv": "Annan storlek", 
+          "id": "Other"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29041,10 +29104,12 @@
           "label_sv": "Inget ljud"
         }, 
         "a": {
-          "label_sv": "Resursen inneh\u00e5ller ljud eller avser att alstra ljud"
+          "label_sv": "Resursen inneh\u00e5ller ljud eller avser att alstra ljud", 
+          "id": "Sound"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd ljudstatus"
+          "label_sv": "Ok\u00e4nd ljudstatus", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29052,16 +29117,20 @@
       }, 
       "computerImageBitDepth": {
         "001~999": {
-          "label_sv": "Exakt uppgift om bit-djup (siffror)"
+          "label_sv": "Exakt uppgift om bit-djup (siffror)", 
+          "id": "TODO:value-in-digits"
         }, 
         "mmm": {
-          "label_sv": "Flera bit-djup f\u00f6rekommer"
+          "label_sv": "Flera bit-djup f\u00f6rekommer", 
+          "id": "MultipleImageBitDepths"
         }, 
         "nnn": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "---": {
-          "label_sv": "Ok\u00e4nt bit-djup"
+          "label_sv": "Ok\u00e4nt bit-djup", 
+          "id": "Unknown"
         }, 
         "|||": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29069,13 +29138,16 @@
       }, 
       "computerFileFormats": {
         "a": {
-          "label_sv": "Ett genomg\u00e5ende filformat"
+          "label_sv": "Ett genomg\u00e5ende filformat", 
+          "id": "OneFileFormat"
         }, 
         "m": {
-          "label_sv": "Flera olika filformat"
+          "label_sv": "Flera olika filformat", 
+          "id": "MultipleFileFormats"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd filformatstatus"
+          "label_sv": "Ok\u00e4nd filformatstatus", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29083,16 +29155,20 @@
       }, 
       "computerQATarget": {
         "a": {
-          "label_sv": "Testbilder etc, saknas"
+          "label_sv": "Testbilder etc, saknas", 
+          "id": "TestImagesEtcAbsent"
         }, 
         "n": {
-          "label_sv": "Testbild etc. kr\u00e4vs ej"
+          "label_sv": "Testbild etc. kr\u00e4vs ej", 
+          "id": "NotApplicable"
         }, 
         "p": {
-          "label_sv": "Testbilder etc. finns"
+          "label_sv": "Testbilder etc. finns", 
+          "id": "TestImagesEtcPresent"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nt om testbilder etc. finns eller ej"
+          "label_sv": "Ok\u00e4nt om testbilder etc. finns eller ej", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29100,25 +29176,32 @@
       }, 
       "computerAntecedent": {
         "a": {
-          "label_sv": "Filens k\u00e4lla \u00e4r en originalresurs"
+          "label_sv": "Filens k\u00e4lla \u00e4r en originalresurs", 
+          "id": "FileReproducedFromOriginal"
         }, 
         "b": {
-          "label_sv": "Filens k\u00e4lla \u00e4r ett mikromedium"
+          "label_sv": "Filens k\u00e4lla \u00e4r ett mikromedium", 
+          "id": "FileReproducedFromMicroform"
         }, 
         "c": {
-          "label_sv": "Filens k\u00e4lla \u00e4r en maskinl\u00e4sbar fil"
+          "label_sv": "Filens k\u00e4lla \u00e4r en maskinl\u00e4sbar fil", 
+          "id": "FileReproducedFromElectronicResource"
         }, 
         "d": {
-          "label_sv": "Filens k\u00e4lla \u00e4r ett mellanoriginal (ej mikroform)"
+          "label_sv": "Filens k\u00e4lla \u00e4r ett mellanoriginal (ej mikroform)", 
+          "id": "FileReproducedFromIntermediate"
         }, 
         "m": {
-          "label_sv": "Blandade k\u00e4llor"
+          "label_sv": "Blandade k\u00e4llor", 
+          "id": "MixedSources"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd k\u00e4lla"
+          "label_sv": "Ok\u00e4nd k\u00e4lla", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29126,22 +29209,28 @@
       }, 
       "computerCompression": {
         "a": {
-          "label_sv": "Filen \u00e4r ej komprimerad"
+          "label_sv": "Filen \u00e4r ej komprimerad", 
+          "id": "Uncompressed"
         }, 
         "b": {
-          "label_sv": "Filen \u00e4r komprimerad utan risk f\u00f6r informationsf\u00f6rlust"
+          "label_sv": "Filen \u00e4r komprimerad utan risk f\u00f6r informationsf\u00f6rlust", 
+          "id": "LosslessCompression"
         }, 
         "d": {
-          "label_sv": "Filen \u00e4r komprimerad och dekomprimering medf\u00f6r informationsf\u00f6rlust"
+          "label_sv": "Filen \u00e4r komprimerad och dekomprimering medf\u00f6r informationsf\u00f6rlust", 
+          "id": "LossyCompression"
         }, 
         "m": {
-          "label_sv": "Blandade tekniker"
+          "label_sv": "Blandade tekniker", 
+          "id": "MixedCompression"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd komprimeringsstatus"
+          "label_sv": "Ok\u00e4nd komprimeringsstatus", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29149,19 +29238,24 @@
       }, 
       "computerReformattingQuality": {
         "a": {
-          "label_sv": "Brukskopia, ej originalkvalitet"
+          "label_sv": "Brukskopia, ej originalkvalitet", 
+          "id": "AccessFormatQuality"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "p": {
-          "label_sv": "Arkivkvalitet f\u00f6r l\u00e5ngtidslagring"
+          "label_sv": "Arkivkvalitet f\u00f6r l\u00e5ngtidslagring", 
+          "id": "PreservationFormatQuality"
         }, 
         "r": {
-          "label_sv": "Arkivkvalitet som kan duga som ers\u00e4ttningsexemplar"
+          "label_sv": "Arkivkvalitet som kan duga som ers\u00e4ttningsexemplar", 
+          "id": "ReplacementFormatQuality"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd kvalitet"
+          "label_sv": "Ok\u00e4nd kvalitet", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -29258,13 +29352,16 @@
           "label_en": "Textile"
         }, 
         "i": {
-          "label_sv": "Plast"
+          "label_sv": "Plast", 
+          "id": "Plastic"
         }, 
         "l": {
-          "label_sv": "Vinyl"
+          "label_sv": "Vinyl", 
+          "id": "Vinyl"
         }, 
         "n": {
-          "label_sv": "Velin"
+          "label_sv": "Velin", 
+          "id": "Vellum"
         }, 
         "p": {
           "label_sv": "Gips", 
@@ -29277,10 +29374,12 @@
           "label_en": "Unknown"
         }, 
         "v": {
-          "label_sv": "L\u00e4der"
+          "label_sv": "L\u00e4der", 
+          "id": "Leather"
         }, 
         "w": {
-          "label_sv": "Pergament"
+          "label_sv": "Pergament", 
+          "id": "Parchment"
         }, 
         "z": {
           "label_sv": "Annat fysiskt medium", 
@@ -29528,7 +29627,8 @@
           "label_en": "Unknown"
         }, 
         "z": {
-          "label_sv": "Annat punktskriftsformat"
+          "label_sv": "Annat punktskriftsformat", 
+          "id": "OtherBrailleFormat"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda", 
@@ -29897,34 +29997,44 @@
       }, 
       "projGraphSupport": {
         "_": {
-          "label_sv": "St\u00f6djande montering saknas"
+          "label_sv": "St\u00f6djande montering saknas", 
+          "id": "NoMountSupport"
         }, 
         "c": {
-          "label_sv": "Papp"
+          "label_sv": "Papp", 
+          "id": "Paper"
         }, 
         "d": {
-          "label_sv": "Glas"
+          "label_sv": "Glas", 
+          "id": "Glass"
         }, 
         "e": {
-          "label_sv": "Syntetiskt material"
+          "label_sv": "Syntetiskt material", 
+          "id": "Synthetic"
         }, 
         "h": {
-          "label_sv": "Metall"
+          "label_sv": "Metall", 
+          "id": "Metal"
         }, 
         "j": {
-          "label_sv": "Metall och glas"
+          "label_sv": "Metall och glas", 
+          "id": "MetalAndGlass"
         }, 
         "k": {
-          "label_sv": "Syntetiskt material och glas"
+          "label_sv": "Syntetiskt material och glas", 
+          "id": "SyntheticAndGlass"
         }, 
         "m": {
-          "label_sv": "Blandad montering"
+          "label_sv": "Blandad montering", 
+          "id": "MixedMountSupport"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd montering"
+          "label_sv": "Ok\u00e4nd montering", 
+          "id": "Unknown"
         }, 
         "z": {
-          "label_sv": "Annan montering"
+          "label_sv": "Annan montering", 
+          "id": "Other"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -30473,10 +30583,12 @@
           "label_en": "Metal"
         }, 
         "i": {
-          "label_sv": "Plast"
+          "label_sv": "Plast", 
+          "id": "Plastic"
         }, 
         "l": {
-          "label_sv": "Vinyl"
+          "label_sv": "Vinyl", 
+          "id": "Vinyl"
         }, 
         "m": {
           "label_sv": "Blandade material", 
@@ -30484,7 +30596,8 @@
           "label_en": "Mixed collection"
         }, 
         "n": {
-          "label_sv": "Velin"
+          "label_sv": "Velin", 
+          "id": "Vellum"
         }, 
         "o": {
           "label_sv": "Papper", 
@@ -30522,10 +30635,12 @@
           "label_en": "Unknown"
         }, 
         "v": {
-          "label_sv": "L\u00e4der"
+          "label_sv": "L\u00e4der", 
+          "id": "Leather"
         }, 
         "w": {
-          "label_sv": "Pergament"
+          "label_sv": "Pergament", 
+          "id": "Parchment"
         }, 
         "z": {
           "label_sv": "Annat material", 
@@ -30585,10 +30700,12 @@
           "label_en": "Metal"
         }, 
         "i": {
-          "label_sv": "Plast"
+          "label_sv": "Plast", 
+          "id": "Plastic"
         }, 
         "l": {
-          "label_sv": "Vinyl"
+          "label_sv": "Vinyl", 
+          "id": "Vinyl"
         }, 
         "m": {
           "label_sv": "Blandade material", 
@@ -30596,7 +30713,8 @@
           "label_en": "Mixed collection"
         }, 
         "n": {
-          "label_sv": "Velin"
+          "label_sv": "Velin", 
+          "id": "Vellum"
         }, 
         "o": {
           "label_sv": "Papper", 
@@ -30634,10 +30752,12 @@
           "label_en": "Unknown"
         }, 
         "v": {
-          "label_sv": "L\u00e4der"
+          "label_sv": "L\u00e4der", 
+          "id": "Leather"
         }, 
         "w": {
-          "label_sv": "Pergament"
+          "label_sv": "Pergament", 
+          "id": "Parchment"
         }, 
         "z": {
           "label_sv": "Annat material", 
@@ -32741,7 +32861,8 @@
           "label_en": "Hi-8 mm."
         }, 
         "s": {
-          "label_sv": "Blu-ray Disc"
+          "label_sv": "Blu-ray Disc", 
+          "id": "BluRayDisc"
         }, 
         "u": {
           "label_sv": "Ok\u00e4nt format", 
@@ -48073,7 +48194,8 @@
           "label_sv": "MARC-8/VRLIN"
         }, 
         "a": {
-          "label_sv": "UCS/Unicode"
+          "label_sv": "UCS/Unicode", 
+          "id": "UCS-Unicode"
         }
       }, 
       "encLevel": {
@@ -57177,7 +57299,8 @@
           "label_sv": "MARC-8/VRLIN"
         }, 
         "a": {
-          "label_sv": "UCS/Unicode"
+          "label_sv": "UCS/Unicode", 
+          "id": "UCS-Unicode"
         }
       }, 
       "encLevel": {
@@ -57343,7 +57466,8 @@
           "label_en": "Textile"
         }, 
         "i": {
-          "label_sv": "Plast"
+          "label_sv": "Plast", 
+          "id": "Plastic"
         }, 
         "j": {
           "label_sv": "Glas", 
@@ -57351,10 +57475,12 @@
           "label_en": "Glass"
         }, 
         "l": {
-          "label_sv": "Vinyl"
+          "label_sv": "Vinyl", 
+          "id": "Vinyl"
         }, 
         "n": {
-          "label_sv": "Velin"
+          "label_sv": "Velin", 
+          "id": "Vellum"
         }, 
         "p": {
           "label_sv": "Gips", 
@@ -57387,10 +57513,12 @@
           "label_en": "Unknown"
         }, 
         "v": {
-          "label_sv": "L\u00e4der"
+          "label_sv": "L\u00e4der", 
+          "id": "Leather"
         }, 
         "w": {
-          "label_sv": "Pergament"
+          "label_sv": "Pergament", 
+          "id": "Parchment"
         }, 
         "y": {
           "label_sv": "Annan bas (ut\u00f6ver q, r, s, t)", 
@@ -57562,28 +57690,36 @@
       }, 
       "computerColor": {
         "a": {
-          "label_sv": "En f\u00e4rg som kontrasterar mot vitt"
+          "label_sv": "En f\u00e4rg som kontrasterar mot vitt", 
+          "id": "OneColor"
         }, 
         "b": {
-          "label_sv": "Svartvit"
+          "label_sv": "Svartvit", 
+          "id": "BlackAndWhite"
         }, 
         "c": {
-          "label_sv": "Flera f\u00e4rger"
+          "label_sv": "Flera f\u00e4rger", 
+          "id": "Multicolored"
         }, 
         "g": {
-          "label_sv": "Gr\u00e5skala"
+          "label_sv": "Gr\u00e5skala", 
+          "id": "GrayScale"
         }, 
         "m": {
-          "label_sv": "Kombination av flera f\u00e4rgtekniker"
+          "label_sv": "Kombination av flera f\u00e4rgtekniker", 
+          "id": "MixedColors"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nda f\u00e4rgegenskaper"
+          "label_sv": "Ok\u00e4nda f\u00e4rgegenskaper", 
+          "id": "Unknown"
         }, 
         "z": {
-          "label_sv": "Annan f\u00e4rgegenskap"
+          "label_sv": "Annan f\u00e4rgegenskap", 
+          "id": "Other"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -57591,34 +57727,44 @@
       }, 
       "computerDimensions": {
         "a": {
-          "label_sv": "3,5 tum"
+          "label_sv": "3,5 tum", 
+          "id": "3,5_in"
         }, 
         "e": {
-          "label_sv": "12 tum"
+          "label_sv": "12 tum", 
+          "id": "12_in"
         }, 
         "g": {
-          "label_sv": "4 4,75 tum / 12 cm (CD)"
+          "label_sv": "4 4,75 tum / 12 cm (CD)", 
+          "id": "4,75_in_or_12_cm_(CD)"
         }, 
         "i": {
-          "label_sv": "1 1/8 x 2 3/8 tum"
+          "label_sv": "1 1/8 x 2 3/8 tum", 
+          "id": "1,125_x_2,375_in"
         }, 
         "j": {
-          "label_sv": "3 7/8 x 2 1/2 tum"
+          "label_sv": "3 7/8 x 2 1/2 tum", 
+          "id": "3,875_x_2,5_in"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "o": {
-          "label_sv": "5,25 tum"
+          "label_sv": "5,25 tum", 
+          "id": "5,25_in"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd storlek"
+          "label_sv": "Ok\u00e4nd storlek", 
+          "id": "Unknown"
         }, 
         "v": {
-          "label_sv": "8 tum"
+          "label_sv": "8 tum", 
+          "id": "8_in"
         }, 
         "z": {
-          "label_sv": "Annan storlek"
+          "label_sv": "Annan storlek", 
+          "id": "Other"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -57629,10 +57775,12 @@
           "label_sv": "Inget ljud"
         }, 
         "a": {
-          "label_sv": "Resursen inneh\u00e5ller ljud eller avser att alstra ljud"
+          "label_sv": "Resursen inneh\u00e5ller ljud eller avser att alstra ljud", 
+          "id": "Sound"
         }, 
         "u": {
-          "label_sv": "Ljudstatus ok\u00e4nd"
+          "label_sv": "Ljudstatus ok\u00e4nd", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -57640,16 +57788,20 @@
       }, 
       "computerImageBitDepth": {
         "001~999": {
-          "label_sv": "Exakt uppgift om bit-djup (siffror)"
+          "label_sv": "Exakt uppgift om bit-djup (siffror)", 
+          "id": "TODO:value-in-digits"
         }, 
         "mmm": {
-          "label_sv": "Flera bit-djup f\u00f6rekommer"
+          "label_sv": "Flera bit-djup f\u00f6rekommer", 
+          "id": "MultipleImageBitDepths"
         }, 
         "nnn": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "---": {
-          "label_sv": "Ok\u00e4nt bit-djup"
+          "label_sv": "Ok\u00e4nt bit-djup", 
+          "id": "Unknown"
         }, 
         "|||": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -57657,13 +57809,16 @@
       }, 
       "computerFileFormats": {
         "a": {
-          "label_sv": "Ett genomg\u00e5ende filformat"
+          "label_sv": "Ett genomg\u00e5ende filformat", 
+          "id": "OneFileFormat"
         }, 
         "m": {
-          "label_sv": "Flera olika filformat"
+          "label_sv": "Flera olika filformat", 
+          "id": "MultipleFileFormats"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd filformatstatus"
+          "label_sv": "Ok\u00e4nd filformatstatus", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -57671,16 +57826,20 @@
       }, 
       "computerQATarget": {
         "a": {
-          "label_sv": "Testbilder etc, saknas"
+          "label_sv": "Testbilder etc, saknas", 
+          "id": "TestImagesEtcAbsent"
         }, 
         "n": {
-          "label_sv": "Testbild etc. kr\u00e4vs ej"
+          "label_sv": "Testbild etc. kr\u00e4vs ej", 
+          "id": "NotApplicable"
         }, 
         "p": {
-          "label_sv": "Testbilder etc. finns"
+          "label_sv": "Testbilder etc. finns", 
+          "id": "TestImagesEtcPresent"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nt om testbilder etc. finns eller ej"
+          "label_sv": "Ok\u00e4nt om testbilder etc. finns eller ej", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -57688,25 +57847,32 @@
       }, 
       "computerAntecedent": {
         "a": {
-          "label_sv": "Filens k\u00e4lla \u00e4r en originalresurs"
+          "label_sv": "Filens k\u00e4lla \u00e4r en originalresurs", 
+          "id": "FileReproducedFromOriginal"
         }, 
         "b": {
-          "label_sv": "Filens k\u00e4lla \u00e4r ett mikromedium"
+          "label_sv": "Filens k\u00e4lla \u00e4r ett mikromedium", 
+          "id": "FileReproducedFromMicroform"
         }, 
         "c": {
-          "label_sv": "Filens k\u00e4lla \u00e4r en maskinl\u00e4sbar fil"
+          "label_sv": "Filens k\u00e4lla \u00e4r en maskinl\u00e4sbar fil", 
+          "id": "FileReproducedFromElectronicResource"
         }, 
         "d": {
-          "label_sv": "Filens k\u00e4lla \u00e4r ett mellanoriginal (ej mikroform)"
+          "label_sv": "Filens k\u00e4lla \u00e4r ett mellanoriginal (ej mikroform)", 
+          "id": "FileReproducedFromIntermediate"
         }, 
         "m": {
-          "label_sv": "Blandade k\u00e4llor"
+          "label_sv": "Blandade k\u00e4llor", 
+          "id": "MixedSources"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd k\u00e4lla"
+          "label_sv": "Ok\u00e4nd k\u00e4lla", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -57714,22 +57880,28 @@
       }, 
       "computerCompression": {
         "a": {
-          "label_sv": "Filen \u00e4r ej komprimerad"
+          "label_sv": "Filen \u00e4r ej komprimerad", 
+          "id": "Uncompressed"
         }, 
         "b": {
-          "label_sv": "Filen \u00e4r komprimerad utan risk f\u00f6r informationsf\u00f6rlust"
+          "label_sv": "Filen \u00e4r komprimerad utan risk f\u00f6r informationsf\u00f6rlust", 
+          "id": "LosslessCompression"
         }, 
         "d": {
-          "label_sv": "Filen \u00e4r komprimerad och dekomprimering medf\u00f6r informationsf\u00f6rlust"
+          "label_sv": "Filen \u00e4r komprimerad och dekomprimering medf\u00f6r informationsf\u00f6rlust", 
+          "id": "LossyCompression"
         }, 
         "m": {
-          "label_sv": "Blandade tekniker"
+          "label_sv": "Blandade tekniker", 
+          "id": "MixedCompression"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd komprimeringsstatus"
+          "label_sv": "Ok\u00e4nd komprimeringsstatus", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -57737,19 +57909,24 @@
       }, 
       "computerReformattingQuality": {
         "a": {
-          "label_sv": "Brukskopia, ej originalkvalitet"
+          "label_sv": "Brukskopia, ej originalkvalitet", 
+          "id": "AccessFormatQuality"
         }, 
         "n": {
-          "label_sv": "Ej till\u00e4mplig"
+          "label_sv": "Ej till\u00e4mplig", 
+          "id": "NotApplicable"
         }, 
         "p": {
-          "label_sv": "Arkivkvalitet f\u00f6r l\u00e5ngtidslagring"
+          "label_sv": "Arkivkvalitet f\u00f6r l\u00e5ngtidslagring", 
+          "id": "PreservationFormatQuality"
         }, 
         "r": {
-          "label_sv": "Arkivkvalitet som kan duga som ers\u00e4ttningsexemplar"
+          "label_sv": "Arkivkvalitet som kan duga som ers\u00e4ttningsexemplar", 
+          "id": "ReplacementFormatQuality"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd kvalitet"
+          "label_sv": "Ok\u00e4nd kvalitet", 
+          "id": "Unknown"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -57846,13 +58023,16 @@
           "label_en": "Textile"
         }, 
         "i": {
-          "label_sv": "Plast"
+          "label_sv": "Plast", 
+          "id": "Plastic"
         }, 
         "l": {
-          "label_sv": "Vinyl"
+          "label_sv": "Vinyl", 
+          "id": "Vinyl"
         }, 
         "n": {
-          "label_sv": "Velin"
+          "label_sv": "Velin", 
+          "id": "Vellum"
         }, 
         "p": {
           "label_sv": "Gips", 
@@ -57865,10 +58045,12 @@
           "label_en": "Unknown"
         }, 
         "v": {
-          "label_sv": "L\u00e4der"
+          "label_sv": "L\u00e4der", 
+          "id": "Leather"
         }, 
         "w": {
-          "label_sv": "Pergament"
+          "label_sv": "Pergament", 
+          "id": "Parchment"
         }, 
         "z": {
           "label_sv": "Annat fysiskt medium", 
@@ -58116,7 +58298,8 @@
           "label_en": "Unknown"
         }, 
         "z": {
-          "label_sv": "Annat punktskriftsformat"
+          "label_sv": "Annat punktskriftsformat", 
+          "id": "OtherBrailleFormat"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda", 
@@ -58485,34 +58668,44 @@
       }, 
       "projGraphSupport": {
         "_": {
-          "label_sv": "St\u00f6djande montering saknas"
+          "label_sv": "St\u00f6djande montering saknas", 
+          "id": "NoMountSupport"
         }, 
         "c": {
-          "label_sv": "Papp"
+          "label_sv": "Papp", 
+          "id": "Paper"
         }, 
         "d": {
-          "label_sv": "Glas"
+          "label_sv": "Glas", 
+          "id": "Glass"
         }, 
         "e": {
-          "label_sv": "Syntetiskt material"
+          "label_sv": "Syntetiskt material", 
+          "id": "Synthetic"
         }, 
         "h": {
-          "label_sv": "Metall"
+          "label_sv": "Metall", 
+          "id": "Metal"
         }, 
         "j": {
-          "label_sv": "Metall och glas"
+          "label_sv": "Metall och glas", 
+          "id": "MetalAndGlass"
         }, 
         "k": {
-          "label_sv": "Syntetiskt material och glas"
+          "label_sv": "Syntetiskt material och glas", 
+          "id": "SyntheticAndGlass"
         }, 
         "m": {
-          "label_sv": "Blandad montering"
+          "label_sv": "Blandad montering", 
+          "id": "MixedMountSupport"
         }, 
         "u": {
-          "label_sv": "Ok\u00e4nd montering"
+          "label_sv": "Ok\u00e4nd montering", 
+          "id": "Unknown"
         }, 
         "z": {
-          "label_sv": "Annan montering"
+          "label_sv": "Annan montering", 
+          "id": "Other"
         }, 
         "|": {
           "label_sv": "Inget f\u00f6rs\u00f6k att koda"
@@ -59061,10 +59254,12 @@
           "label_en": "Metal"
         }, 
         "i": {
-          "label_sv": "Plast"
+          "label_sv": "Plast", 
+          "id": "Plastic"
         }, 
         "l": {
-          "label_sv": "Vinyl"
+          "label_sv": "Vinyl", 
+          "id": "Vinyl"
         }, 
         "m": {
           "label_sv": "Blandade material", 
@@ -59072,7 +59267,8 @@
           "label_en": "Mixed collection"
         }, 
         "n": {
-          "label_sv": "Velin"
+          "label_sv": "Velin", 
+          "id": "Vellum"
         }, 
         "o": {
           "label_sv": "Papper", 
@@ -59110,10 +59306,12 @@
           "label_en": "Unknown"
         }, 
         "v": {
-          "label_sv": "L\u00e4der"
+          "label_sv": "L\u00e4der", 
+          "id": "Leather"
         }, 
         "w": {
-          "label_sv": "Pergament"
+          "label_sv": "Pergament", 
+          "id": "Parchment"
         }, 
         "z": {
           "label_sv": "Annat material", 
@@ -59173,10 +59371,12 @@
           "label_en": "Metal"
         }, 
         "i": {
-          "label_sv": "Plast"
+          "label_sv": "Plast", 
+          "id": "Plastic"
         }, 
         "l": {
-          "label_sv": "Vinyl"
+          "label_sv": "Vinyl", 
+          "id": "Vinyl"
         }, 
         "m": {
           "label_sv": "Blandade material", 
@@ -59184,7 +59384,8 @@
           "label_en": "Mixed collection"
         }, 
         "n": {
-          "label_sv": "Velin"
+          "label_sv": "Velin", 
+          "id": "Vellum"
         }, 
         "o": {
           "label_sv": "Papper", 
@@ -59222,10 +59423,12 @@
           "label_en": "Unknown"
         }, 
         "v": {
-          "label_sv": "L\u00e4der"
+          "label_sv": "L\u00e4der", 
+          "id": "Leather"
         }, 
         "w": {
-          "label_sv": "Pergament"
+          "label_sv": "Pergament", 
+          "id": "Parchment"
         }, 
         "z": {
           "label_sv": "Annat material", 
@@ -61316,7 +61519,8 @@
           "label_en": "Hi-8 mm."
         }, 
         "s": {
-          "label_sv": "Blu-ray Disc"
+          "label_sv": "Blu-ray Disc", 
+          "id": "BluRayDisc"
         }, 
         "u": {
           "label_sv": "Ok\u00e4nt format", 
