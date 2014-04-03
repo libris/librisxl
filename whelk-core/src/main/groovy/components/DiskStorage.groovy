@@ -18,6 +18,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     String baseStorageDir = "./storage"
     String storageDir = null
     String versionsStorageDir = null
+    String baseStorageSuffix = null
     boolean enabled = true
 
     String id = "diskstorage"
@@ -53,14 +54,17 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         this.baseStorageDir = dn.toString()
         this.contentTypes = settings.get('contentTypes', null)
         this.versioning = settings.get('versioning', false)
-
+        this.baseStorageSuffix = settings.get('baseStorageSuffix', null)
     }
 
     void init(String stName) {
-        if (versioning) {
-            this.versionsStorageDir = this.baseStorageDir + "/" + stName + "_" + this.id + "/" + VERSIONS_STORAGE_DIR
+        if (!this.baseStorageSuffix) {
+            this.baseStorageSuffix = this.id
         }
-        this.storageDir = this.baseStorageDir + "/" + stName + "_" + this.id + "/" + MAIN_STORAGE_DIR
+        if (versioning) {
+            this.versionsStorageDir = this.baseStorageDir + "/" + stName + "_" + this.baseStorageSuffix + "/" + VERSIONS_STORAGE_DIR
+        }
+        this.storageDir = this.baseStorageDir + "/" + stName + "_" + this.baseStorageSuffix + "/" + MAIN_STORAGE_DIR
         log.info("Starting DiskStorage with storageDir $storageDir ${(versioning ? "and versions in $versionsStorageDir" : "")}")
     }
 
