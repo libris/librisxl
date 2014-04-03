@@ -33,8 +33,6 @@ class Document {
     // store serialized data
     @JsonIgnore
     private Map serializedDataInMap
-    @JsonIgnore
-    final static ENTRY_PATH_KEY = "pathToData"
 
     /*
      * Constructors
@@ -55,23 +53,6 @@ class Document {
     Document(File datafile, File entryfile) {
         withMetaEntry(entryfile)
         setData(datafile.readBytes())
-    }
-
-    /*
-     * Get methods
-     */
-    byte[] getData() {
-        if (!this.data && entry[ENTRY_PATH_KEY]) {
-            try {
-                log.debug("Lazy loading data from ${entry[ENTRY_PATH_KEY]}")
-                setData(new File(entry[ENTRY_PATH_KEY]).readBytes())
-                entry.remove(ENTRY_PATH_KEY)
-            } catch (FileNotFoundException fnfe) {
-                log.error("Failed to lazy load data from ${entry[ENTRY_PATH_KEY]}")
-                throw fnfe
-            }
-        }
-        this.data
     }
 
     String getDataAsString() {
@@ -259,7 +240,6 @@ class Document {
             this.entry = newDoc.entry
             this.meta = newDoc.meta
             if (newDoc.data) {
-                log.debug("in fromjson")
                 setData(newDoc.data)
             }
         } catch (JsonParseException jpe) {

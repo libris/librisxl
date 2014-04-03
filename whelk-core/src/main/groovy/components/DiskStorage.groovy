@@ -35,6 +35,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     static final String DATAFILE_EXTENSION = ".data"
     static final String MAIN_STORAGE_DIR = "main"
     static final String VERSIONS_STORAGE_DIR = "versions"
+    static final String FILE_NAME_KEY = "dataFileName"
 
     static final Map FILE_EXTENSIONS = [
         "application/json" : ".json",
@@ -81,6 +82,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     boolean store(Document doc) {
         if (doc && (handlesContent(doc.contentType) || doc.entry.deleted)) {
             if (this.versioning) {
+                log.debug("Storage is versioning.")
                 doc = checkAndUpdateExisting(doc)
             }
             String filePath = buildPath(doc.identifier, true)
@@ -93,13 +95,14 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     private boolean writeDocumentToDisk(Document doc, String filePath, String fileName) {
         String extension = FILE_EXTENSIONS.get(doc.contentType, DATAFILE_EXTENSION)
         log.trace("Using extension: $extension")
-        File sourcefile = new File(filePath + "/" + fileName + extension)
+        String sourcefilePath = filePath + "/" + fileName + extension
+        File sourcefile = new File(sourcefilePath)
         File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
         try {
             log.trace("Saving file with path ${sourcefile.path}")
             FileUtils.writeByteArrayToFile(sourcefile, doc.data)
             log.trace("Setting entry in document meta")
-            doc.entry[Document.ENTRY_PATH_KEY] = sourcefile.path
+            doc.getEntry().put(FILE_NAME_KEY, sourcefilePath)
             log.trace("Saving file with path ${metafile.path}")
             FileUtils.write(metafile, doc.metadataAsJson, "utf-8")
             return true
@@ -154,15 +157,9 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         try {
             log.trace("filePath: $filePath")
             File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
-            //File sourcefile = new File(filePath + "/" + fileName + DATAFILE_EXTENSION)
-            def document = new Document(metafile)
-            /*
-            if (forceLoadData) {
-                log.debug("Force loading data in document (we will need it).")
-                document.getData()
-            }
-            */
-            return document
+            def document = new Document(FileUtils.readFileToString(metafile, "utf-8"))
+            File sourcefile = new File(filePath + "/" + fileName + FILE_EXTENSIONS.get(document.contentType, DATAFILE_EXTENSION))
+            return document.withData(FileUtils.readFileToByteArray(sourcefile))
         } catch (FileNotFoundException fnfe) {
             log.trace("Files on $filePath not found.")
             if (version) {
@@ -192,9 +189,8 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                     public Document next() {
                         while (entryIterator.hasNext()) {
                             File entryFile = entryIterator.next()
-                            //File dataFile = new File(entryFile.getParentFile(), DATA_FILE_NAME)
-                            Document document = new Document(entryFile)
-                            return document;
+                            Document document = new Document(FileUtils.readFileToString(entryFile, "utf-8"))
+                            return document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
                         }
                         throw new NoSuchElementException();
                     }

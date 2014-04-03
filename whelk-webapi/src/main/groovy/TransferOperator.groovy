@@ -38,6 +38,7 @@ class TransferOperator extends AbstractOperator {
     void doRun(long startTime) {
         log.info("Transferring data from $fromStorage to $toStorage")
         Storage targetStorage = whelk.getStorages().find { it.id == toStorage }
+        boolean versioningOriginalSetting = targetStorage.versioning
         targetStorage.versioning = false
         for (doc in whelk.loadAll(dataset, null, fromStorage)) {
             log.trace("Storing doc ${doc.identifier} with type ${doc.contentType}")
@@ -96,6 +97,7 @@ class TransferOperator extends AbstractOperator {
             }
         }
         */
+        targetStorage.versioning = versioningOriginalSetting
         operatorState=OperatorState.FINISHING
         this.whelk.flush()
     }
