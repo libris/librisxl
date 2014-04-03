@@ -353,9 +353,9 @@ class StandardWhelk implements Whelk {
             this.formatConverters.add(plugin)
         } else if (plugin instanceof IndexFormatConverter) {
             this.indexFormatConverters.add(plugin)
-        } else {
-            this.plugins.add(plugin)
         }
+        // And always add to plugins
+        this.plugins.add(plugin)
     }
 
 

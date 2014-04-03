@@ -41,12 +41,8 @@ class ReindexOperator extends AbstractOperator {
         boolean indexing = !startAt
         queue = Executors.newSingleThreadExecutor()
         if (!dataset) {
-            for (index in whelk.indexes) {
-                if (!selectedComponents || index in selectedComponents) {
-                    log.debug("Requesting new index for ${index.id}.")
-                    index.createNewCurrentIndex()
-                }
-            }
+            log.debug("Requesting new index for ${whelk.index.id}.")
+            whelk.index.createNewCurrentIndex()
         }
         if (fromStorage) {
             log.info("Rebuilding storage from $fromStorage")
@@ -89,13 +85,13 @@ class ReindexOperator extends AbstractOperator {
         if (docs.size() > 0) {
             log.trace("Reindexing remaining ${docs.size()} documents")
             try {
-                whelk.addToGraphStore(docs, selectedComponents)
+                whelk.addToGraphStore(docs)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
             try {
-                whelk.addToIndex(docs, selectedComponents)
+                whelk.addToIndex(docs)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
@@ -103,15 +99,11 @@ class ReindexOperator extends AbstractOperator {
         }
         log.info("Reindexed $count documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
         if (!dataset) {
-            for (index in whelk.indexes) {
-                if (!selectedComponents || index in selectedComponents) {
-                    if (cancelled) {
-                        log.info("Process cancelled, resetting currentIndex")
-                        index.currentIndex = index.getRealIndexFor(index.elasticIndex)
-                    } else {
-                        index.reMapAliases()
-                    }
-                }
+            if (cancelled) {
+                log.info("Process cancelled, resetting currentIndex")
+                whelk.index.currentIndex = whelk.index.getRealIndexFor(whelk.index.elasticIndex)
+            } else {
+                whelk.index.reMapAliases()
             }
         }
         operatorState=OperatorState.FINISHING
@@ -124,13 +116,13 @@ class ReindexOperator extends AbstractOperator {
     void doTheIndexing(final List docs) {
         queue.execute({
             try {
-                whelk.addToGraphStore(docs, selectedComponents)
+                whelk.addToGraphStore(docs)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
             }
             try {
-                whelk.addToIndex(docs, selectedComponents)
+                whelk.addToIndex(docs)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
