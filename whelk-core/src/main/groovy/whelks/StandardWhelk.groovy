@@ -23,6 +23,10 @@ class StandardWhelk implements Whelk {
 
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
+    List<Storage> storages = new ArrayList<Storage>()
+    Index index
+    List<FormatConverter> formatConverters = new ArrayList<FormatConverter>()
+    List<IndexFormatConverter> indexFormatConverters = new ArrayList<IndexFormatConverter>()
 
     private Map<String, List<BlockingQueue>> queues
     private List<Thread> prawnThreads
@@ -127,7 +131,7 @@ class StandardWhelk implements Whelk {
 
     @Override
     SearchResult search(Query query) {
-        return indexes.get(0)?.query(query)
+        return index?.query(query)
     }
 
     @Override
@@ -180,17 +184,20 @@ class StandardWhelk implements Whelk {
             }
         }
         if (!stored) {
-            throw new PluginConfigurationException("You have storages configured (${getStorages()}), but none available for these documents with contentType ${doc.contentType}.")
+            throw new PluginConfigurationException("You have storages configured (${storages}), but none available for these documents with contentType ${doc.contentType}.")
         }
         log.trace("Final conversion left document in ctype ${doc.contentType}")
         return doc
     }
 
+    Document addToStorage(Document doc, int foo) {
+
+    }
+
     @groovy.transform.CompileStatic
-    void addToIndex(final List<Document> docs, List<String> sIndeces = null) {
+    void addToIndex(final List<Document> docs) {
         List<IndexDocument> idxDocs = []
-        def activeIndexes = (sIndeces ? indexes.findAll { ((Index)it).id in sIndeces } : indexes)
-        if (activeIndexes.size() > 0) {
+        if (index) {
             log.debug("Number of documents to index: ${docs.size()}")
             for (doc in docs) {
                 for (ifc in getIndexFormatConverters()) {
@@ -200,18 +207,15 @@ class StandardWhelk implements Whelk {
             }
             if (idxDocs) {
                 try {
-                    for (idx in indexes) {
-                        log.trace("[${this.id}] ${idx.id} qualifies for indexing")
-                        idx.bulkIndex(idxDocs)
-                    }
+                    index.bulkIndex(idxDocs)
                 } catch (Exception e) {
-                    throw new WhelkAddException("Failed to add documents to index ${indexes}.".toString(), e, idxDocs.collect { ((IndexDocument)it).identifier })
+                    throw new WhelkAddException("Failed to add documents to index ${index.id}.".toString(), e, idxDocs.collect { ((IndexDocument)it).identifier })
                 }
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
             }
-        } else if (indexes.size() > 0) {
-            throw new PluginConfigurationException("You have indices configured, but none available for these documents.")
+        } else {
+            log.warn("No index configured for whelk ${this.id}")
         }
     }
 
@@ -314,9 +318,7 @@ class StandardWhelk implements Whelk {
     void flush() {
         log.info("Flushing data.")
         // TODO: Implement storage and graphstore flush if necessary
-        for (i in indexes) {
-            i.flush()
-        }
+        index?.flush()
     }
 
     @Override
@@ -335,7 +337,20 @@ class StandardWhelk implements Whelk {
             t.start()
             prawnThreads << t
         }
-        this.plugins.add(plugin)
+        if (plugin instanceof Storage) {
+            this.storages.add(plugin)
+        } else if (plugin instanceof Index) {
+            if (index) {
+                throw new PluginConfigurationException("Index ${index.id} already configured for whelk ${this.id}.")
+            }
+            this.index = plugin
+        } else if (plugin instanceof FormatConverter) {
+            this.formatConverters.add(plugin)
+        } else if (plugin instanceof IndexFormatConverter) {
+            this.indexFormatConverters.add(plugin)
+        } else {
+            this.plugins.add(plugin)
+        }
     }
 
 
@@ -380,18 +395,17 @@ class StandardWhelk implements Whelk {
 
     // Sugar methods
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
-    List<Storage> getStorages() { return plugins.findAll { it instanceof Storage } }
-    Storage getStorage() { return plugins.find { it instanceof Storage } }
-    List<Storage> getStorages(String rct) { return plugins.findAll { it instanceof Storage && it.handlesContent(rct) } }
-    Storage getStorage(String rct) { return plugins.find { it instanceof Storage && it.handlesContent(rct) } }
-    List<Index> getIndexes() { return plugins.findAll { it instanceof Index } }
+
+    Storage getStorage() { return storages.get(0) }
+    List<Storage> getStorages(String rct) { return storages.findAll { it.handlesContent(rct) } }
+    Storage getStorage(String rct) { return storages.find { it.handlesContent(rct) } }
+
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     GraphStore getGraphStore() { return plugins.find { it instanceof GraphStore } }
     List<SparqlEndpoint> getSparqlEndpoints() { return plugins.findAll { it instanceof SparqlEndpoint } }
     SparqlEndpoint getSparqlEndpoint() { return plugins.find { it instanceof SparqlEndpoint } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }
-    List<FormatConverter> getFormatConverters() { return plugins.findAll { it instanceof FormatConverter }}
-    List<IndexFormatConverter> getIndexFormatConverters() { return plugins.findAll { it instanceof IndexFormatConverter }}
+
     List<RDFFormatConverter> getRDFFormatConverters() { return plugins.findAll { it instanceof RDFFormatConverter }}
     List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}

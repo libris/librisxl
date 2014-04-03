@@ -70,7 +70,8 @@
                 "_params" : {
                     "storageDir": "work/storage",
                     "contentTypes": ["application/ld+json"],
-                    "versioning" : true
+                    "versioning" : true,
+                    "baseStorageSuffix": "pairtree"
                 }
             },
             "flatstorage": {
