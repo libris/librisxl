@@ -156,6 +156,8 @@ def parse_configs(confdir, lang, tokenmap):
                                 propdfn = labelled(v.decode(ENC), lang)
                                 fixprop[k] = propdfn
                                 fixpropmap = tokenmap['fixprops'].get(prop_id)
+                                if isinstance(fixpropmap, basestring):
+                                    fixpropmap = tokenmap['fixprops'][fixpropmap]
                                 if 'id' not in propdfn and fixpropmap:
                                     if k in fixpropmap:
                                         propdfn['id'] = fixpropmap[k]
