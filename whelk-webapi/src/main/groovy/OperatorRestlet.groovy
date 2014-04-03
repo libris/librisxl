@@ -35,9 +35,11 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
     static BenchmarkOperator benchmarkOperator = new BenchmarkOperator()
     static ReindexOperator reindexOperator = new ReindexOperator()
     static ImportOperator importOperator = new ImportOperator()
+    static TransferOperator transferOperator = new TransferOperator()
 
     static Map operators = ["reindex":reindexOperator,
                             "import":importOperator,
+                            "transfer":transferOperator,
                             "benchmark":benchmarkOperator]
 
     void doHandle(Request request, Response response) {
@@ -182,6 +184,7 @@ class BenchmarkOperator extends AbstractOperator {
     String oid = "benchmark"
     Date since = null
     String fromStorage = null
+    boolean withSerialization = false
 
     @Override
     void setParameters(Map parameters) {
@@ -191,6 +194,10 @@ class BenchmarkOperator extends AbstractOperator {
             log.info("Since: $since")
         }
         this.fromStorage = parameters.get("fromStorage", null)
+        if (fromStorage == "") {
+            fromStorage = null
+        }
+        this.withSerialization = parameters.get("withSerialization", "").equals("true")
     }
 
     @Override
@@ -198,19 +205,33 @@ class BenchmarkOperator extends AbstractOperator {
         def docs = []
         for (doc in whelk.loadAll(dataset, since, fromStorage)) {
             docs << doc
-            if (++count % 1000 == 0) {
-                // Update runningtime every 1000 docs
+            if (doc) {
+                count++
                 runningTime = System.currentTimeMillis() - startTime
-
-                log.debug("Retrieved ${docs.size()} documents from $whelk ... ($count total). Time elapsed: ${runningTime/1000}. Current velocity: ${count/(runningTime/1000)} documents / second.")
-                docs = []
+                if (withSerialization) {
+                    doc.getData()
+                }
             }
+            log.debug("Retrieved ${docs.size()} documents from $whelk ... ($count total). Time elapsed: ${runningTime/1000}. Current velocity: ${count/(runningTime/1000)} documents / second.")
             if (cancelled) {
                 break
             }
         }
         runningTime = System.currentTimeMillis() - startTime
         log.debug("$count documents read. Total time elapsed: ${runningTime/1000} seconds.")
+    }
+
+    @Override
+    Map getStatus() {
+        def map = super.getStatus()
+        if (hasRun) {
+            map.get("lastrun",[:]).put("fromStorage", fromStorage)
+            map.get("lastrun").put("withSerialization", withSerialization)
+        } else {
+            map.put("fromStorage", fromStorage)
+            map.put("withSerialization", withSerialization)
+        }
+        return map
     }
 }
 

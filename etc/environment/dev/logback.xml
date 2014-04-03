@@ -111,11 +111,9 @@
 <logger name="se.kb.libris.whelks.api.BenchmarkOperator">
       <level value="trace"/>
   </logger>
-  -->
 <logger name="se.kb.libris.whelks.Document">
       <level value="debug"/>
   </logger>
-  <!--
     <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">
         <level value="trace"/>
     </logger>

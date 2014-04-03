@@ -15,14 +15,15 @@ import org.apache.commons.io.filefilter.*
 
 @Log
 class PairtreeDiskStorage extends BasicPlugin implements Storage {
-    String storageDir = "./storage"
+    String baseStorageDir = "./storage"
+    String storageDir = null
     String versionsStorageDir = null
     boolean enabled = true
 
     String id = "diskstorage"
     String docFolder = "_"
     List contentTypes
-    boolean isVersioning
+    boolean versioning
 
     int PATH_CHUNKS=4
 
@@ -49,18 +50,18 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         while (dn[dn.length()-1] == '/') {
             dn.deleteCharAt(dn.length()-1)
         }
-        this.storageDir = dn.toString()
+        this.baseStorageDir = dn.toString()
         this.contentTypes = settings.get('contentTypes', null)
-        this.isVersioning = settings.get('versioning', false)
+        this.versioning = settings.get('versioning', false)
 
     }
 
     void init(String stName) {
-        if (isVersioning) {
-            this.versionsStorageDir = this.storageDir + "/" + stName + "_" + this.id + "/" + VERSIONS_STORAGE_DIR
+        if (versioning) {
+            this.versionsStorageDir = this.baseStorageDir + "/" + stName + "_" + this.id + "/" + VERSIONS_STORAGE_DIR
         }
-        this.storageDir = this.storageDir + "/" + stName + "_" + this.id + "/" + MAIN_STORAGE_DIR
-        log.info("Starting DiskStorage with storageDir $storageDir ${(isVersioning ? "and versions in $versionsStorageDir" : "")}")
+        this.storageDir = this.baseStorageDir + "/" + stName + "_" + this.id + "/" + MAIN_STORAGE_DIR
+        log.info("Starting DiskStorage with storageDir $storageDir ${(versioning ? "and versions in $versionsStorageDir" : "")}")
     }
 
     def void enable() {this.enabled = true}
@@ -75,7 +76,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     @groovy.transform.CompileStatic
     boolean store(Document doc) {
         if (doc && (handlesContent(doc.contentType) || doc.entry.deleted)) {
-            if (this.isVersioning) {
+            if (this.versioning) {
                 doc = checkAndUpdateExisting(doc)
             }
             String filePath = buildPath(doc.identifier, true)
@@ -214,7 +215,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
 
     @Override
     void delete(URI uri) {
-        if (isVersioning) {
+        if (versioning) {
             store(createTombstone(uri))
         } else {
             try {

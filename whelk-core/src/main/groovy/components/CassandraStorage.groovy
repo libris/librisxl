@@ -51,7 +51,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
     Keyspace keyspace
     List contentTypes
-    boolean versioningStorage = true
+    boolean versioning = true
 
     String cassandraVersion = "1.2"
     String CQLVersion = "3.0.0"
@@ -81,7 +81,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     CassandraStorage(Map settings) {
         super()
         this.contentTypes = settings.get("contentTypes", null)
-        this.versioningStorage = settings.get("versioning", true)
+        this.versioning = settings.get("versioning", true)
         this.cassandraVersion = settings.get("cassandraVersion", this.cassandraVersion)
         this.CQLVersion = settings.get("cqlVersion", this.CQLVersion)
         this.keyspaceSuffix = settings.get("keyspaceSuffix", "")
@@ -222,7 +222,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
             log.trace("Setting document version: $version")
             doc.withVersion(version)
 
-            if (versioningStorage && existingDocument) {
+            if (versioning && existingDocument) {
                 doc.version = version
                 // Create versions
                 def versions = existingDocument.entry.versions ?: [:]
@@ -304,7 +304,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     Document get(String uri, String version=null) {
         // TODO: Add handling of server restart. System should wait for storage to become available again.
         Document document = null
-        if (version && !versioningStorage) {
+        if (version && !versioning) {
             throw new WhelkStorageException("Requested version from non-versioning storage")
         }
         log.trace("Requested version is $version")
@@ -359,7 +359,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     @Override
     void delete(URI uri) {
         log.debug("Deleting document $uri")
-        if (versioningStorage) {
+        if (versioning) {
             try {
                 store(uri.toString(), createTombstone(uri), true, true, false)
             } catch (DocumentException de) {
@@ -372,7 +372,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
         }
         try {
             MutationBatch m = keyspace.prepareMutationBatch()
-            if (!versioningStorage) {
+            if (!versioning) {
                 m.withRow(CF_DOCUMENT, uri.toString()).delete()
             }
             m.withRow(CF_DOCUMENT_META, uri.toString()).delete()

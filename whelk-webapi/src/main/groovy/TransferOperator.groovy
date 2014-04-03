@@ -8,6 +8,7 @@ import org.codehaus.jackson.map.SerializationConfig.Feature
 import java.util.concurrent.*
 
 import se.kb.libris.whelks.*
+import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.importers.*
 import se.kb.libris.whelks.plugin.*
@@ -37,6 +38,7 @@ class TransferOperator extends AbstractOperator {
     void doRun(long startTime) {
         log.info("Transferring data from $fromStorage to $toStorage")
         Storage targetStorage = whelk.getStorages().find { it.id == toStorage }
+        targetStorage.versioning = false
         for (doc in whelk.loadAll(dataset, null, fromStorage)) {
             log.trace("Storing doc ${doc.identifier} with type ${doc.contentType}")
             if (!doc.entry.deleted) {
@@ -98,6 +100,7 @@ class TransferOperator extends AbstractOperator {
         this.whelk.flush()
     }
 
+    /*
     void doTheIndexing(final List docs) {
         queue.execute({
             try {
@@ -117,6 +120,7 @@ class TransferOperator extends AbstractOperator {
             }
         } as Runnable)
     }
+    */
 
     @Override
     Map getStatus() {
@@ -124,16 +128,12 @@ class TransferOperator extends AbstractOperator {
         if (hasRun) {
             if (fromStorage) {
                 map.get("lastrun").put("fromStorage", fromStorage)
-            }
-            if (selectedComponents) {
-                map.get("lastrun").put("selectedComponents", selectedComponents)
+                map.get("lastrun").put("toStorage", toStorage)
             }
         } else {
             if (fromStorage) {
                 map.put("fromStorage", fromStorage)
-            }
-            if (selectedComponents) {
-                map.put("selectedComponents", selectedComponents)
+                map.put("toStorage", toStorage)
             }
         }
         return map

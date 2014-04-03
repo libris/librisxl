@@ -52,16 +52,44 @@
         </p>
         <hr/>
         <p>
+            <b>transfer</b>
+            <form method="post">
+                <input type="hidden" name="operation" value="transfer"/>
+                <table border="0">
+                    <tr>
+                        <td><i>dataset</i></td>
+                        <td><i>fromStorage</i></td>
+                        <td><i>toStorage</i></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" name="dataset" value=""/></td>
+                        <td><input type="text" name="fromStorage" value=""/></td>
+                        <td><input type="text" name="toStorage" value=""/></td>
+                        <td><input type="submit" value="go"/></td>
+                    </tr>
+                </table>
+            </form>
+        </p>
+        <hr/>
+        <p>
             <b>benchmark</b>
             <form method="post">
                 <input type="hidden" name="operation" value="benchmark"/>
                 <table border="0">
                     <tr>
                         <td><i>dataset</i></td>
+                        <td><i>since</i></td>
+                        <td><i>fromStorage</i></td>
+                        <td><i>withSerialization</i></td>
                     </tr>
                     <tr>
                         <td><input type="text" name="dataset" value=""/></td>
                         <td><input type="text" name="since" value=""/></td>
+                        <td><input type="text" name="fromStorage" value=""/></td>
+                        <td>
+                            <input type="radio" name="withSerialization" value="true" selected="false"/> true
+                            <input type="radio" name="withSerialization" value="false" selected="true"/> false
+                        </td>
                         <td><input type="submit" value="go"/></td>
                     </tr>
                 </table>

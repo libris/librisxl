@@ -25,4 +25,7 @@ public interface Storage extends Component {
      * @return true if this storage can handle documents of this kind.
      */
     public boolean handlesContent(String contentType);
+
+    public void setVersioning(boolean v);
+    public boolean isVersioning();
 }
