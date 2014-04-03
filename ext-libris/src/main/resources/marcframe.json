@@ -2704,14 +2704,22 @@
         "tokenMap": "publicationStatus"
       },
       "[7:11]": {
-        "property": "publishedYear"
+        "property": "publicationYear"
       },
       "[11:15]": {
-        "property": "otherYear"
+        "property": "publicationOtherYear"
       },
       "[15:18]": {
-        "link": "country",
-        "uriTemplate": "/def/countries/{_}"
+        "addLink": "publicationCountry",
+        "uriTemplate": "/def/countries/{_}",
+        "TODO:linkedEntity": {
+          "link": "place",
+          "linkedEntity": {
+            "link": "containedIn",
+            "rangeEntity": "Country",
+            "uriTemplate": "/def/countries/{_}"
+          }
+        }
       },
       "[35:38]": {
         "note:candidate:domainEntity": "Work",
@@ -3234,14 +3242,14 @@
     "028": {
       "domainEntity": "Instance",
       "$a": {
-        "property": "publisher-number",
+        "property": "publisherNumber",
         "TODO:match-i1": {
-          "0": {"property": "issue-number"},
-          "1": {"property": "matrix-number"},
-          "2": {"property": "music-plate"},
-          "3": {"property": "music-publisher"},
-          "4": {"property": "videorecording-identifier"},
-          "5": {"property": "publisher-number"}
+          "0": {"property": "issueNumber"},
+          "1": {"property": "matrixNumber"},
+          "2": {"property": "musicPlate"},
+          "3": {"property": "musicPublisher"},
+          "4": {"property": "videorecordingNumber"},
+          "5": {"property": "publisherNumber"}
         }
       },
       "$b": {
@@ -3312,7 +3320,7 @@
       }
     },
     "042": {
-      "entity": "Record",
+      "domainEntity": "Record",
       "$a": {"property": "authenticationCode"},
       "$9": {"addProperty": "bibliographyCode"}
     },
