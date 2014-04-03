@@ -14,11 +14,31 @@
   },
 
   "fixprops": {
+
+    "catForm": {
+      "c": "ISBDPunctuationOmitted"
+    },
+    "characterCoding": {
+      "a": "UCS-Unicode"
+    },
+    "linked": {
+      "a": "Set",
+      "b": "PartWithIndependentTitle",
+      "c": "PartWithDependentTitle",
+      "r": "RecordHasLinks-Obsolete"
+    },
+
     "booksContents": {
       "5": "Calendar",
       "6": "ComicOrGraphicNovel",
       "y": "Yearbook"
     },
+    "booksItem": {
+      "o": "Online",
+      "q": "DirectElectronic",
+      "s": "Electronic"
+    },
+
     "computerMaterial": {
       "a": "TapeCartridge",
       "b": "ChipCartridge",
@@ -35,13 +55,121 @@
       "u": "Unspecified",
       "z": "Other"
     },
+    "computerAntecedent": {
+      "a": "FileReproducedFromOriginal",
+      "b": "FileReproducedFromMicroform",
+      "c": "FileReproducedFromElectronicResource",
+      "d": "FileReproducedFromIntermediate",
+      "m": "MixedSources",
+      "n": "NotApplicable",
+      "u": "Unknown"
+    },
+    "computerColor": {
+      "a": "OneColor",
+      "b": "BlackAndWhite",
+      "c": "Multicolored",
+      "g": "GrayScale",
+      "m": "MixedColors",
+      "n": "NotApplicable",
+      "u": "Unknown",
+      "z": "Other"
+    },
+    "computerCompression": {
+      "a": "Uncompressed",
+      "b": "LosslessCompression",
+      "d": "LossyCompression",
+      "m": "MixedCompression",
+      "n": "NotApplicable",
+      "u": "Unknown"
+    },
+    "computerDimensions": {
+      "a": "3,5_in",
+      "e": "12_in",
+      "g": "4,75_in_or_12_cm_(CD)",
+      "i": "1,125_x_2,375_in",
+      "j": "3,875_x_2,5_in",
+      "o": "5,25_in",
+      "v": "8_in",
+      "n": "NotApplicable",
+      "u": "Unknown",
+      "z": "Other"
+    },
+    "computerFileFormats": {
+      "a": "OneFileFormat",
+      "m": "MultipleFileFormats",
+      "u": "Unknown"
+    },
+    "computerImageBitDepth": {
+      "---": "Unknown",
+      "001~999": "TODO:value-in-digits",
+      "mmm": "MultipleImageBitDepths",
+      "nnn": "NotApplicable"
+    },
+    "computerItem": "booksItem",
+    "computerQATarget": {
+      "a": "TestImagesEtcAbsent",
+      "n": "NotApplicable",
+      "p": "TestImagesEtcPresent",
+      "u": "Unknown"
+    },
+    "computerReformattingQuality": {
+      "a": "AccessFormatQuality",
+      "n": "NotApplicable",
+      "p": "PreservationFormatQuality",
+      "r": "ReplacementFormatQuality",
+      "u": "Unknown"
+    },
+    "computerSound": {
+      "#": "NoSound",
+      "a": "Sound",
+      "u": "Unknown"
+    },
+
+    "globeMedium": {
+      "i": "Plastic",
+      "l": "Vinyl",
+      "n": "Vellum",
+      "v": "Leather",
+      "w": "Parchment"
+    },
+
+    "mapMedium": "globeMedium",
+
+    "mapsItem": "booksItem",
+
+    "mapsProjection": {
+      "bk": "Krovak",
+      "bl": "CassiniSoldner"
+    },
+
     "microformMaterial": {
       "h": "MicrofilmSlip",
       "j": "MicrofilmRoll"
     },
+
+    "mixedItem": "booksItem",
+
     "motionPicMaterial": {
       "o": "FilmRoll"
     },
+
+    "musicComposition": {
+      "fl": "Flamenco",
+      "tl": "TeatroLirico",
+      "vl": "Villancico",
+      "za": "Zarzuela"
+    },
+
+    "musicFormat": {
+      "h": "ChoralScore",
+      "i": "CondensedScore",
+      "j": "PerformerConductorPart",
+      "k": "VocalScore",
+      "l": "CompleteMusicalNotationForScore"
+    },
+
+    "musicItem": "booksItem",
+
     "nonProjMaterial": {
       "a": "ActivityCard",
       "k": "Poster",
@@ -50,7 +178,50 @@
       "r": "Radiograph",
       "s": "StudyPrint",
       "v": "Photograph"
-    }
+    },
+
+    "nonProjPrimary": "globeMedium",
+
+    "nonProjSecondary": "globeMedium",
+
+    "projGraphSupport": {
+      "_": "NoMountSupport",
+      "c": "Paper",
+      "d": "Glass",
+      "e": "Synthetic",
+      "h": "Metal",
+      "j": "MetalAndGlass",
+      "k": "SyntheticAndGlass",
+      "m": "MixedMountSupport",
+      "u": "Unknown",
+      "z": "Other"
+    },
+
+    "serialsContents": "booksContents",
+
+    "serialsISSN": {
+      "f": "Sweden-Obsolete"
+    },
+
+    "serialsItem": "booksItem",
+
+    "serialsNature": {
+      "6": "ComicOrGraphicNovel",
+      "y": "Yearbook"
+    },
+
+    "serialsOriginalItem": "booksItem",
+
+    "tacBrailleMusic": {
+      "z": "OtherBrailleFormat"
+    },
+
+    "videoFormat": {
+      "s": "BluRayDisc"
+    },
+
+    "visualItem": "booksItem"
+
   }
 
 }
