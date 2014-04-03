@@ -118,20 +118,6 @@ class WhelkOperator {
                 println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
                 */
         } else if (opt.o == "reindex") {
-            /*
-            def selectedComponents = null
-            if (opt.c) {
-                selectedComponents = opt.c.split(",") as List<String>
-            }
-            if (opt.d) { // Reindex from a specific dataset
-                println "Reindex all documents in ${opt.d} in ${opt.w} into components: ${(opt.c ? selectedComponents : 'all of them')}"
-                whelk.reindex(opt.dataset)
-            } else {
-                println "Reindex all documents in ${opt.w} into components: ${(opt.c ? selectedComponents : 'all of them')}"
-                whelk.reindex(null, selectedComponents)
-                println "Reindexed documents in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds."
-            }
-            */
             def params = [:]
             if (opt.c) {
                 params['selectedComponents'] = opt.c.split(",") as List<String>
@@ -149,6 +135,25 @@ class WhelkOperator {
             def th = new Thread(reindexer)
             th.start()
             log.info("Reindexing thread is now running.")
+            th.join()
+        } else if (opt.o == "tranfer") {
+            def params = [:]
+            if (opt.d) {
+                params['dataset'] = opt.d
+            }
+            if (opt.fromStorage) {
+                params['fromStorage'] = opt.fromStorage
+            }
+            if (opt.toStorage) {
+                params['toStorage'] = opt.toStorage
+            }
+            params['showSpinner'] = true
+            def tranferrer = new TransferOperator()
+            tranferrer.setWhelk(whelk)
+            tranferrer.setParameters(params)
+            def th = new Thread(tranferrer)
+            th.start()
+            log.info("Tranferrer thread is now running.")
             th.join()
         } else if (operation == "rebuild") {
             if (opt.fromStorage) {
