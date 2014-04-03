@@ -2,6 +2,7 @@
 /whelk-core/build
 /whelk-webapi/build
 /ext-*/build
+/locgov-*/build
 .*.swp
 /work
 /ext-*/**/whelks.json
