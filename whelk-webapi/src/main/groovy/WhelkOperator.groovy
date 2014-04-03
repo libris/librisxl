@@ -36,6 +36,7 @@ class WhelkOperator {
             cli.p(longOpt:'picky', "picky (true|false)", required:false, args:1)
             cli.c(longOpt:'component', "which component to use (defaults to 'all')", required: false, args: 1)
             cli._(longOpt:'fromStorage', 'used for rebuild. from which storage to read source data.', required:false, args:1, argName:'storage id')
+            cli._(longOpt:'toStorage', 'used for rebuild. from which storage to read source data.', required:false, args:1, argName:'storage id')
             cli._(longOpt:'silent', 'used by imports. If silent, the spinner is not shown during imports.', required:false)
 
             def opt = cli.parse(args)
@@ -136,7 +137,7 @@ class WhelkOperator {
             th.start()
             log.info("Reindexing thread is now running.")
             th.join()
-        } else if (opt.o == "tranfer") {
+        } else if (opt.o == "transfer") {
             def params = [:]
             if (opt.d) {
                 params['dataset'] = opt.d

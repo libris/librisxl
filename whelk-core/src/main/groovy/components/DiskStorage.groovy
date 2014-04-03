@@ -88,16 +88,16 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     @groovy.transform.CompileStatic
     private boolean writeDocumentToDisk(Document doc, String filePath, String fileName) {
         String extension = FILE_EXTENSIONS.get(doc.contentType, DATAFILE_EXTENSION)
-        log.info("Using extension: $extension")
+        log.trace("Using extension: $extension")
         File sourcefile = new File(filePath + "/" + fileName + extension)
         File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
         try {
             log.trace("Saving file with path ${sourcefile.path}")
-            sourcefile.write(doc.dataAsString)
+            FileUtils.writeByteArrayToFile(sourcefile, doc.data)
             log.trace("Setting entry in document meta")
             doc.entry[Document.ENTRY_PATH_KEY] = sourcefile.path
             log.trace("Saving file with path ${metafile.path}")
-            metafile.write(doc.metadataAsJson)
+            FileUtils.write(metafile, doc.metadataAsJson, "utf-8")
             return true
         } catch (IOException ioe) {
             log.error("Write failed: ${ioe.message}", ioe)
@@ -242,9 +242,11 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         } else {
             path = pairtree.mapToPPath(baseDir, id, encasingDir)
         }
+        /*
         if (createDirectories) {
             new File(path).mkdirs()
         }
+        */
         return path
     }
 
