@@ -555,6 +555,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     boolean repeat = false
     String dateTimeFormat
     boolean ignored = false
+    // TODO: working, but not so useful until capable of merging entities..
+    //MarcSimpleFieldHandler linkedHandler
 
     MarcSimpleFieldHandler(conversion, tag, fieldDfn) {
         super(conversion, tag)
@@ -587,6 +589,10 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         }
+        //if (fieldDfn.linkedEntity) {
+        //    linkedHandler = new MarcSimpleFieldHandler(conversion,
+        //            tag + ":linked", fieldDfn.linkedEntity)
+        //}
     }
 
     boolean convert(sourceMap, value, entityMap) {
@@ -622,8 +628,9 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             } else {
                 ent['@value'] = value
             }
-        }
-        else {
+        //} else if (linkedHandler) {
+        //    linkedHandler.convert(sourceMap, value,[Instance: ent])
+        } else {
             addValue(ent, property, value, repeat)
         }
 
@@ -772,6 +779,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     boolean convert(sourceMap, value, entityMap) {
+
+        if (!(value instanceof Map)) {
+            return false
+        }
 
         def domainEntity = entityMap[domainEntityName]
         if (domainEntity == null) return false
