@@ -32,16 +32,6 @@
             }
         },
         {
-            "swepub":{
-                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : [
-                    "cassandrastorage",
-                    "documentapi",
-                    "modsimporter"
-                    ]
-            }
-        },
-        {
             "resource":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins" : [
