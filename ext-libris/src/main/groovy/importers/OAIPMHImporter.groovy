@@ -31,11 +31,9 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     boolean silent = false
     boolean preserveTimestamps = true
 
-    def specUriMapping = [:]
+    long runningTime = 0
 
-    // Stat tools
-    long meanTime
-    int sizeOfBatch
+    def specUriMapping = [:]
 
     ExecutorService queue
     StreamingMarkupBuilder markupBuilder = new StreamingMarkupBuilder()
@@ -173,12 +171,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                         log.error("Conversion failed for id ${entry.identifier}", e)
                     }
                     nrImported++
-                    sizeOfBatch++
                     def velocityMsg = ""
-                    if (sizeOfBatch && meanTime) {
-                        velocityMsg = "Current velocity: " + (1000*(sizeOfBatch / (System.currentTimeMillis() - meanTime))) + " docs/second."
-                    }
+                    runningTime = System.currentTimeMillis() - startTime
                     if (!silent) {
+                        velocityMsg = "Current velocity: ${nrImported/(runningTime/1000)}."
                         Tools.printSpinner("Running OAIPMH ${this.dataset} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                     }
                 } catch (Exception e) {
@@ -206,9 +202,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         if ((System.currentTimeMillis() - elapsed) > 3000) {
             log.warn("Conversion of documents took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
         }
-        meanTime = System.currentTimeMillis()
         addDocuments(documents)
-        sizeOfBatch = 0
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
             log.trace("Last page is $xmlString")
