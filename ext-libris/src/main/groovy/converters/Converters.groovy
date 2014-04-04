@@ -9,6 +9,7 @@ import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import org.codehaus.jackson.map.ObjectMapper
+import org.codehaus.jackson.node.ObjectNode
 
 /**
  *
@@ -63,7 +64,7 @@ class MarcJSONConverter {
     }
     */
 
-    static String toJSONString(MarcRecord record) {
+    private static ObjectNode toObjectNode(MarcRecord record) {
         def json = mapper.createObjectNode()
         def fields = mapper.createArrayNode()
         record.fields.each {
@@ -87,7 +88,16 @@ class MarcJSONConverter {
         }
         json.put("leader", record.leader)
         json.put("fields", fields)
-        return json.toString()
+        return json
+    }
+
+    static String toJSONString(MarcRecord record) {
+        return toObjectNode(record).toString()
+    }
+
+    static Map toJSONMap(MarcRecord record) {
+        def node = toObjectNode(record)
+        return mapper.readValue(node, Map)
     }
 
     static InputStream getNormalizedInputStreamFromFile(File f) {

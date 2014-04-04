@@ -10,7 +10,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.basic.BasicFormatConverter
 
-import static se.kb.libris.conch.Tools.*
+import se.kb.libris.conch.converter.MarcJSONConverter
 
 import com.damnhandy.uri.template.UriTemplate
 
@@ -48,6 +48,14 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     @Override
     String getRequiredContentType() { "application/x-marc-json" }
+
+    Document doConvert(final Object record, final Map metaentry) {
+        def source = MarcJSONConverter.toJSONMap(record)
+        def result = createFrame(source)
+        log.trace("Created frame: $result")
+
+        return new Document().withMetaEntry(metaentry).withData(mapper.writeValueAsBytes(result)).withContentType(getResultContentType())
+    }
 
     @Override
     Document doConvert(final Document doc) {

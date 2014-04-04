@@ -4,7 +4,6 @@
             "libris":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_converters": [
-                    "oaipmhxmlconverter",
                     "marcconverter",
                     "turtleconverter"
                 ],
@@ -24,7 +23,6 @@
                 "_otherplugins": [
                     "index",
                     "pairtreediskstorage",
-                    "oaipmhstorage",
                     "entityextractor",
                     "linkcompleter",
                     "indexlinkfinder"

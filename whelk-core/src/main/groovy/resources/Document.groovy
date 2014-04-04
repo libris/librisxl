@@ -192,15 +192,19 @@ class Document {
         return this
     }
 
+    Document withMetaEntry(Map metaEntry) {
+        withEntry(metaEntry.entry)
+        withMeta(metaEntry.meta)
+        return this
+    }
+
     /**
      * Expects a JSON string containing meta and entry as dictionaries.
      * It's the reverse of getMetadataAsJson().
      */
     Document withMetaEntry(String jsonEntry) {
         Map metaEntry = mapper.readValue(jsonEntry, Map)
-        withEntry(metaEntry.entry)
-        withMeta(metaEntry.meta)
-        return this
+        return withMetaEntry(metaEntry)
     }
 
     Document withMetaEntry(File entryFile) {

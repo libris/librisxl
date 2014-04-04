@@ -19,7 +19,6 @@ import se.kb.libris.conch.Tools
 class OAIPMHImporter extends BasicPlugin implements Importer {
 
     static SERVICE_BASE_URL = "http://data.libris.kb.se/"
-    static final String OUT_CONTENT_TYPE = "text/oaipmh+xml"
 
     Whelk whelk
     String dataset
@@ -30,6 +29,9 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     long startTime = 0
     boolean picky = true
     boolean silent = false
+    boolean preserveTimestamps = true
+
+    def specUriMapping = [:]
 
     // Stat tools
     long meanTime
@@ -38,17 +40,21 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     ExecutorService queue
     StreamingMarkupBuilder markupBuilder = new StreamingMarkupBuilder()
     XmlSlurper slurper = new XmlSlurper(false, false)
+    MarcFrameConverter marcFrameConverter
 
     List<String> errorMessages
 
     boolean cancelled = false
 
-    OAIPMHImporter() {
-        this.serviceUrl = null
-    }
-
     OAIPMHImporter(Map settings) {
         this.serviceUrl = settings.get('serviceUrl',null)
+        this.preserveTimestamps = settings.get("preserveTimestamps", true)
+        this.specUriMapping = settings.get("specUriMapping", [:])
+    }
+
+    void init(String whelkId) {
+        marcFrameConverter = this.whelk.plugins.find { it instanceof MarcFrameConverter }
+        assert marcFrameConverter
     }
 
     int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
@@ -62,9 +68,17 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         String urlString = serviceUrl + "?verb=ListRecords&metadataPrefix=marcxml"
 
         this.errorMessages = []
+        def versioningSettings = [:]
 
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        } else {
+            for (st in this.whelk.getStorages()) {
+                log.info("Turning off versioning in ${st.id}")
+                // Preserve original setting
+                versioningSettings.put(st.id, st.versioning)
+                st.versioning = false
+            }
         }
         queue = Executors.newSingleThreadExecutor()
         startTime = System.currentTimeMillis()
@@ -93,6 +107,12 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         log.info("Flushing data ...")
         queue.execute({
             this.whelk.flush()
+            log.info("Resetting versioning setting for storages")
+            if (!from) {
+                for (st in this.whelk.getStorages()) {
+                    st.versioning = versioningSettings.get(st.id)
+                }
+            }
         } as Runnable)
         log.debug("Shutting down queue")
         queue.shutdown()
@@ -121,19 +141,33 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         def documents = []
         elapsed = System.currentTimeMillis()
         OAIPMH.ListRecords.record.each {
-            def rawrecord = createString(it)
             def mdrecord = createString(it.metadata.record)
             if (mdrecord) {
-                MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
-
-                String id = record.getControlfields("001").get(0).getData()
-
-                def doc
                 try {
-                    doc = new Document()
-                        .withData(rawrecord.getBytes("UTF-8"))
-                        .withEntry(["identifier":"/"+this.dataset+"/"+id,"dataset":this.dataset,"contentType":OUT_CONTENT_TYPE])
-                    documents << doc
+                    MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
+
+                    def entry = ["identifier":"/"+this.dataset+"/"+record.getControlfields("001").get(0).getData(),"dataset":this.dataset]
+
+                    if (preserveTimestamps && it.header.datestamp) {
+                        def date = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", it.header.datestamp.toString())
+                        log.trace("Setting date: $date")
+                        entry.put("timestamp", date.getTime())
+                    }
+
+                    def meta = [:]
+
+                    if (it.header.setSpec) {
+                        for (spec in it.header.setSpec) {
+                            for (key in specUriMapping.keySet()) {
+                                if (spec.toString().startsWith(key+":")) {
+                                    String link = new String("/"+specUriMapping[key]+"/" + spec.toString().substring(key.length()+1))
+                                    meta.get("links", []).add(["identifier":link,"type":specUriMapping[key]])
+                                }
+                            }
+                        }
+                    }
+
+                    documents << marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
                     nrImported++
                     sizeOfBatch++
                     def velocityMsg = ""
@@ -154,19 +188,19 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                 }
             } else if (it.header.@deleted == 'true') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
-                try {
-                    whelk.remove(new URI(deleteIdentifier))
-                } catch (Exception e2) {
-                    //errorMessages << new String("Whelk remove of $deleteIdentifier triggered exception: ${e2.message}")
-                    log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
-                }
+                    try {
+                        whelk.remove(new URI(deleteIdentifier))
+                    } catch (Exception e2) {
+                        //errorMessages << new String("Whelk remove of $deleteIdentifier triggered exception: ${e2.message}")
+                        log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
+                    }
                 nrDeleted++
             } else {
                 throw new WhelkRuntimeException("Failed to handle record: " + createString(it))
             }
         }
         if ((System.currentTimeMillis() - elapsed) > 3000) {
-            log.warn("Deserializing of documents took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
+            log.warn("Conversion of documents took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
         }
         meanTime = System.currentTimeMillis()
         addDocuments(documents)
@@ -176,6 +210,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             log.trace("Last page is $xmlString")
         }
         return OAIPMH.ListRecords.resumptionToken
+
     }
 
     void addDocuments(final List documents) {
@@ -188,15 +223,9 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                     log.warn("Bulk add took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
                 }
             } catch (WhelkAddException wae) {
-                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding: ${wae.message} (${wae.failedIdentifiers})")
             } catch (Exception e) {
                 log.error("Exception on bulkAdd: ${e.message}", e)
-                /*
-                StringWriter sw = new StringWriter()
-                e.printStackTrace(new PrintWriter(sw))
-                errorMessages << new String("Exception on add: ${sw.toString()}")
-                */
             }
         } as Runnable)
     }

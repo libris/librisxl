@@ -25,7 +25,7 @@ class StandardWhelk implements Whelk {
     List<Plugin> plugins = new ArrayList<Plugin>()
     List<Storage> storages = new ArrayList<Storage>()
     Index index
-    List<FormatConverter> formatConverters = new ArrayList<FormatConverter>()
+    Map<String,FormatConverter> formatConverters = new HashMap<String,FormatConverter>()
     List<IndexFormatConverter> indexFormatConverters = new ArrayList<IndexFormatConverter>()
 
     private Map<String, List<BlockingQueue>> queues
@@ -153,50 +153,34 @@ class StandardWhelk implements Whelk {
      * @return The final resulting document, after all format conversions
      */
     @groovy.transform.CompileStatic
-    Document addToStorage(Document doc, String excemptStorage = null) {
+    Document addToStorage(Document doc, boolean withConversion = true) {
         boolean stored = false
-        Map<String,Document> docs = [(doc.contentType): doc]
-        log.trace("Available formatconverters: " + formatConverters.collect { ((Plugin)it).id })
-        for (fc in formatConverters) {
-            log.trace("Running formatconverter ${fc.id} for ${doc.contentType}")
-            try {
-                doc = fc.convert(doc)
-            } catch (Exception e) {
-                log.error("Conversion failed for ${doc.identifier}.", e)
-                throw e
-            }
-            log.trace("Document has ctype ${doc.contentType} after conversion.")
-            docs.put(doc.contentType, doc)
-        }
-        log.trace("All converters has run. Docs now: $docs")
-        for (d in docs.values()) {
-            log.trace("doc in loop has ct ${d.contentType}")
-            for (st in getStorages(d.contentType)) {
-                log.trace("storage: ${st.id}")
-                if (st.id != excemptStorage) {
-                    log.trace("[${this.id}] Sending doc ${d.identifier} with ct ${d.contentType} to ${st.id}")
-                    try {
-                        stored = (st.store(d) || stored)
-                    } catch (DocumentException de) {
-                        if (de.exceptionType == DocumentException.IDENTICAL_DOCUMENT) {
-                            log.debug("Identical document already in storage.")
-                            stored = true
-                        } else {
-                            throw de
-                        }
-                    }
+        if (withConversion) {
+            FormatConverter formatconverter = (FormatConverter)formatConverters.get(doc.contentType, null)
+            if (formatconverter) {
+                try {
+                    doc = formatconverter.convert(doc)
+                } catch (Exception e) {
+                    log.error("Conversion failed for ${doc.identifier}.", e)
                 }
             }
         }
-        if (!stored) {
-            throw new PluginConfigurationException("You have storages configured (${storages}), but none available for these documents with contentType ${doc.contentType}.")
+        for (storage in getStorages(doc.contentType)) {
+            try {
+                stored = (storage.store(doc) || stored)
+            } catch (DocumentException de) {
+                if (de.exceptionType == DocumentException.IDENTICAL_DOCUMENT) {
+                    log.debug("Identical document already in storage.")
+                    stored = true
+                } else {
+                    throw de
+                }
+            }
         }
-        log.trace("Final conversion left document in ctype ${doc.contentType}")
+        if (!stored && storages.size() > 0) {
+            throw new PluginConfigurationException("No storages available for documents with contentType ${doc.contentType}.")
+        }
         return doc
-    }
-
-    Document addToStorage(Document doc, int foo) {
-
     }
 
     @groovy.transform.CompileStatic
@@ -219,8 +203,8 @@ class StandardWhelk implements Whelk {
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
             }
-        } else {
-            log.warn("No index configured for whelk ${this.id}")
+        } else if (log.isDebugEnabled()) {
+            log.warn("No index configured for this whelk.")
         }
     }
 
@@ -273,6 +257,7 @@ class StandardWhelk implements Whelk {
         }
     }
 
+    /*
     void findLinks(String dataset) {
         log.info("Trying to findLinks for ${dataset}... ")
         for (doc in loadAll(dataset)) {
@@ -318,6 +303,7 @@ class StandardWhelk implements Whelk {
         }
         log.info("Filtered $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
     }
+    */
 
     @Override
     void flush() {
@@ -350,7 +336,7 @@ class StandardWhelk implements Whelk {
             }
             this.index = plugin
         } else if (plugin instanceof FormatConverter) {
-            this.formatConverters.add(plugin)
+            this.formatConverters.put(plugin.requiredContentType, plugin)
         } else if (plugin instanceof IndexFormatConverter) {
             this.indexFormatConverters.add(plugin)
         }

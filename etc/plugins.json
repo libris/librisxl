@@ -255,7 +255,14 @@
         }
     },
     "oaipmhimporter" : {
-        "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter"
+        "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
+        "_params" : {
+            "specUriMapping" : {
+                "authority" : "auth",
+                "bibid" : "bib"
+            },
+            "preserveTimestamps" : true
+        }
     },
     "marcimporter" : {
         "_class" : "se.kb.libris.whelks.importers.DumpImporter", 
