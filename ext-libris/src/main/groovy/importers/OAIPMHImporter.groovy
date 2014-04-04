@@ -167,7 +167,11 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                         }
                     }
 
-                    documents << marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
+                    try {
+                        documents << marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
+                    } catch (Exception e) {
+                        log.error("Conversion failed for id ${entry.identifier}", e)
+                    }
                     nrImported++
                     sizeOfBatch++
                     def velocityMsg = ""
