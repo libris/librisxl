@@ -159,11 +159,8 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
             log.trace("filePath: $filePath")
             File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
             def document = new Document(FileUtils.readFileToString(metafile, "utf-8"))
-            try {
-                File sourcefile = new File(filePath + "/" + fileName + FILE_EXTENSIONS.get(document.contentType, DATAFILE_EXTENSION))
-                return document.withData(FileUtils.readFileToByteArray(sourcefile))
-            } catch {
-            }
+            File sourcefile = new File(filePath + "/" + fileName + FILE_EXTENSIONS.get(document.contentType, DATAFILE_EXTENSION))
+            return document.withData(FileUtils.readFileToByteArray(sourcefile))
         } catch (FileNotFoundException fnfe) {
             log.trace("Files on $filePath not found.")
             if (version) {
