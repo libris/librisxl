@@ -159,8 +159,11 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
             log.trace("filePath: $filePath")
             File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
             def document = new Document(FileUtils.readFileToString(metafile, "utf-8"))
-            File sourcefile = new File(filePath + "/" + fileName + FILE_EXTENSIONS.get(document.contentType, DATAFILE_EXTENSION))
-            return document.withData(FileUtils.readFileToByteArray(sourcefile))
+            try {
+                File sourcefile = new File(filePath + "/" + fileName + FILE_EXTENSIONS.get(document.contentType, DATAFILE_EXTENSION))
+                return document.withData(FileUtils.readFileToByteArray(sourcefile))
+            } catch {
+            }
         } catch (FileNotFoundException fnfe) {
             log.trace("Files on $filePath not found.")
             if (version) {
@@ -192,7 +195,11 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                         while (entryIterator.hasNext()) {
                             File entryFile = entryIterator.next()
                             Document document = new Document(FileUtils.readFileToString(entryFile, "utf-8"))
-                            return document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                            try {
+                                return document.withData(FileUtils.readFileToByteArray(new File(entryFile.getParentFile(), document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                            } catch (FileNotFoundException fnfe) {
+                                return document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                            }
                         }
                         throw new NoSuchElementException();
                     }

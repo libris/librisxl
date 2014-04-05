@@ -36,11 +36,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     def specUriMapping = [:]
 
     ExecutorService queue
-    StreamingMarkupBuilder markupBuilder = new StreamingMarkupBuilder()
-    XmlSlurper slurper = new XmlSlurper(false, false)
     MarcFrameConverter marcFrameConverter
-
-    List<String> errorMessages
 
     boolean cancelled = false
 
@@ -65,7 +61,6 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
         String urlString = serviceUrl + "?verb=ListRecords&metadataPrefix=marcxml"
 
-        this.errorMessages = []
         def versioningSettings = [:]
 
         if (from) {
@@ -127,12 +122,11 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         def OAIPMH
         try {
             elapsed = System.currentTimeMillis()
-            OAIPMH = slurper.parseText(xmlString)
+            OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
             if ((System.currentTimeMillis() - elapsed) > 1000) {
                 log.warn("XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
             }
         } catch (org.xml.sax.SAXParseException spe) {
-            //errorMessages << new String("Failed to parse XML: $xmlString\nReason: ${spe.message}")
             log.error("Failed to parse XML: $xmlString", spe)
             throw new XmlParsingFailedException("Failing XML: ($xmlString)", spe)
         }
@@ -178,7 +172,6 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                         Tools.printSpinner("Running OAIPMH ${this.dataset} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
                     }
                 } catch (Exception e) {
-                    //errorMessages << new String("Failed! (${e.message}) for:\n$mdrecord")
 
                     log.error("Failed! (${e.message}) for :\n$mdrecord", e)
                     if (picky) {
@@ -191,7 +184,6 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                     try {
                         whelk.remove(new URI(deleteIdentifier))
                     } catch (Exception e2) {
-                        //errorMessages << new String("Whelk remove of $deleteIdentifier triggered exception: ${e2.message}")
                         log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
                     }
                 nrDeleted++
@@ -253,7 +245,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     }
 
     String createString(GPathResult root) {
-        return markupBuilder.bind{
+        return new StreamingMarkupBuilder().bind{
             out << root
         }
     }
