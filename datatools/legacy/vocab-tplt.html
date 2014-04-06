@@ -7,27 +7,41 @@
   </head>
   <body>
     % set rclasses = map(graph.resource, sorted(
-                set(graph.subjects(RDF.type, OWL.Class))))
+                  union(set((graph.subjects(RDF.type, RDFS.Class))),
+                    set((graph.subjects(RDF.type, OWL.Class))))))
     % set rproperties = map(graph.resource, sorted(
-                  union(set(graph.subjects(RDF.type, OWL.ObjectProperty)),
-                  set(graph.subjects(RDF.type, OWL.DatatypeProperty)))
+                  union(set(graph.subjects(RDF.type, RDF.Property)),
+                    set(graph.subjects(RDF.type, OWL.ObjectProperty)),
+                    set(graph.subjects(RDF.type, OWL.DatatypeProperty)))
                 ))
     % set DOMAIN = union(SCHEMA.domainIncludes, RDFS.domain)
     % set RANGE = union(SCHEMA.rangeIncludes, RDFS.range)
     <nav>
-      % for rclass in rclasses:
-      <a href="${link(rclass)}">${rclass.qname()}</a>
-      % endfor
-      <hr />
-      % for rprop in rproperties:
-      <a href="${link(rprop)}">${rprop.qname()}</a>
-      % endfor
+      <section>
+        <b>Classes</b>
+        % for rclass in rclasses:
+        <a href="${link(rclass)}">${rclass.qname()}</a>
+        % endfor
+      </section>
+      <section>
+        <b>Properties</b>
+        % for rprop in rproperties:
+        <a href="${link(rprop)}">${rprop.qname()}</a>
+        % endfor
+      </section>
     </nav>
 
-    <article>
+    <section>
+      <h1>Classes</h1>
       % for rclass in rclasses:
       <div id="${rclass.qname()}" class="class">
-        <h2><code>${rclass.qname()}</code> <i>${(label(rclass))}</i></h2>
+        <h2><code>${rclass.qname()}</code></h2>
+          <p>
+            ${(label(rclass))}
+            % if rclass.value(RDFS.comment):
+              <em>&mdash; ${(rclass.value(RDFS.comment))}</em>
+            % endif
+          </p>
         <dl>
           <dt>base-classes</dt>
           <dd>
@@ -47,25 +61,19 @@
               % endfor
             </ul>
           </dd>
-          <dt>instances</dt>
-          <dd>
-          <ul class="instances">
-              % for i in sorted(rclass.subjects(RDF.type)):
-              <li><a href="${link(i)}">${i.qname()}</a></li>
-              % endfor
-            </ul>
-          </dd>
           <dt>properties</dt>
           <dd>
             <ul class="properties">
               % for prop in sorted(rclass.subjects(DOMAIN)):
               <li>
-                <code>${prop.qname()}</code>
+                <a href="${link(prop)}"><code>${prop.qname()}</code></a>
+                % if prop.value(SKOS.notation)
                 <span>(${prop.value(SKOS.notation)})</span>
+                % endif
                 <i>${(label(prop))}</i>
-                % set rng = prop.value(RANGE)
-                % if rng
-                  <span>: <a href="${link(rng)}">${rng.qname()}</a></span>
+                % set _range = prop.value(RANGE)
+                % if _range
+                <span>&rarr; <a href="${link(_range)}">${_range.qname()}</a></span>
                 % endif
                 <!--!
                 % for g in prop.objects(VANN.termGroup):
@@ -76,21 +84,44 @@
               % endfor
             </ul>
           </dd>
+          <dt>in range of properties</dt>
+          <dd>
+          <dd>
+            <ul class="properties range-of">
+              % for prop in sorted(rclass.subjects(RANGE)):
+              <li>
+                &larr; <a href="${link(prop)}"><code>${prop.qname()}</code></a>
+                % set domain = prop.value(DOMAIN)
+                % if domain
+                <span>&larr; <a href="${link(domain)}">${domain.qname()}</a></span>
+                % endif
+              </li>
+            % endfor
+          </dd>
+          % if any(rclass.subjects(RDF.type)):
+          <dt>instances</dt>
+          <dd>
+          <ul class="instances">
+              % for i in sorted(rclass.subjects(RDF.type)):
+              <li><a href="${link(i)}">${i.qname()}</a></li>
+              % endfor
+            </ul>
+          </dd>
+          % endif
         </dl>
       </div>
       % endfor
-    </article>
+    </section>
 
-    <hr />
-
-    <article>
+    <section>
+      <h1>Properties</h1>
       % for rprop in rproperties:
       <div id="${rprop.qname()}" class="class">
         <h2><code>${rprop.qname()}</code> <i>${(label(rprop))}</i></h2>
         <dl>
           <dt>base-properties</dt>
           <dd>
-            <ul class="baseclasses">
+            <ul class="baseproperties">
               % for p in sorted(rprop.objects(union(RDFS.subPropertyOf, OWL.equivalentProperty))):
               <li>
                 <a href="${link(p)}">${p.qname()}</a>
@@ -100,7 +131,7 @@
           </dd>
           <dt>sub-properties</dt>
           <dd>
-          <ul class="subclasses">
+          <ul class="subproperties">
               % for p in sorted(rprop.subjects(union(RDFS.subPropertyOf, OWL.equivalentProperty))):
               <li>
                 <a href="${link(p)}">${p.qname()}</a>
@@ -113,7 +144,7 @@
             <ul>
               % for c in sorted(rprop.objects(DOMAIN)):
               <li>
-                <code>${c.qname()}</code>
+                <a href="${link(c)}"><code>${c.qname()}</code></a>
                 <i>${(label(c))}</i>
               </li>
               % endfor
@@ -124,7 +155,7 @@
             <ul>
               % for c in sorted(rprop.objects(RANGE)):
               <li>
-                <code>${c.qname()}</code>
+                <a href="${link(c)}"><code>${c.qname()}</code></a>
                 <i>${(label(c))}</i>
               </li>
               % endfor
@@ -133,7 +164,7 @@
         </dl>
       </div>
       % endfor
-    </article>
+    </section>
 
   </body>
 </html>
