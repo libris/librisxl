@@ -1,0 +1,49 @@
+html { font-family: Verdana, sans-serif; }
+
+nav {
+  background-color: #f5f5f5;
+  border: 1px solid #e3e3e3;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 18em;
+  height: 100%;
+  overflow: scroll;
+  padding: 0.2em 0.2em 4em;
+}
+nav a {
+  display: block;
+  font-size: 0.6em;
+  margin: 0 0 0.2em;
+}
+
+a {
+  color: #08c;
+  text-decoration: none;
+}
+
+article {
+  margin-left: 20em;
+}
+
+code {
+  font-size: 1.3em;
+}
+
+h2 > i {
+  font-weight: normal;
+}
+
+.class {
+  margin-bottom: 4em;
+}
+.baseclasses, .subclasses, .instances,
+.baseclasses > li, .subclasses > li, .instances > li {
+  list-style: none;
+  display: inline;
+}
+
+.properties {
+  font-size: 0.8em;
+}

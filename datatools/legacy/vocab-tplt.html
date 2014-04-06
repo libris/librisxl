@@ -3,171 +3,136 @@
   <head>
     <meta charset="utf-8" />
     <title>vocab</title>
-    <style type="text/css">
-      html { font-family: Verdana, sans-serif; }
-
-      nav {
-        background-color: #f5f5f5;
-        border: 1px solid #e3e3e3;
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 18em;
-        height: 100%;
-        overflow: scroll;
-        padding: 0.2em 0.2em 4em;
-      }
-      nav a {
-        display: block;
-        font-size: 0.6em;
-        margin: 0 0 0.2em;
-      }
-
-      a {
-        color: #08c;
-        text-decoration: none;
-      }
-
-      article {
-        margin-left: 20em;
-      }
-
-      code {
-        font-size: 1.3em;
-      }
-
-      h2 > i {
-        font-weight: normal;
-      }
-
-      .class {
-        margin-bottom: 4em;
-      }
-      .baseclasses, .subclasses, .instances,
-      .baseclasses > li, .subclasses > li, .instances > li {
-        list-style: none;
-        display: inline;
-      }
-
-      .properties {
-        font-size: 0.8em;
-      }
-
-    </style>
+    <link rel="stylesheet" href="vocab.css" />
   </head>
-  <body tal:define="
-          rclasses map(graph.resource, sorted(
-                      set(graph.subjects(RDF.type, OWL.Class))));
-          rproperties map(graph.resource, sorted(
-                        set(graph.subjects(RDF.type, OWL.ObjectProperty)) \|
-                        set(graph.subjects(RDF.type, OWL.DatatypeProperty))));
-          DOMAIN SCHEMA.domainIncludes \| RDFS.domain;
-          RANGE SCHEMA.rangeIncludes \| RDFS.range;
-          link lambda obj: obj.identifier if ':' in obj.qname() else '#' + obj.qname()
-          ">
+  <body>
+    % set rclasses = map(graph.resource, sorted(
+                set(graph.subjects(RDF.type, OWL.Class))))
+    % set rproperties = map(graph.resource, sorted(
+                  union(set(graph.subjects(RDF.type, OWL.ObjectProperty)),
+                  set(graph.subjects(RDF.type, OWL.DatatypeProperty)))
+                ))
+    % set DOMAIN = union(SCHEMA.domainIncludes, RDFS.domain)
+    % set RANGE = union(SCHEMA.rangeIncludes, RDFS.range)
     <nav>
-      <a href="${link(rclass)}" tal:repeat="rclass rclasses"
-        >${rclass.qname()}</a>
+      % for rclass in rclasses:
+      <a href="${link(rclass)}">${rclass.qname()}</a>
+      % endfor
       <hr />
-      <a href="${link(rprop)}" tal:repeat="rprop rproperties"
-        >${rprop.qname()}</a>
+      % for rprop in rproperties:
+      <a href="${link(rprop)}">${rprop.qname()}</a>
+      % endfor
     </nav>
 
     <article>
-      <div id="${rclass.qname()}" class="class" tal:repeat="rclass rclasses">
+      % for rclass in rclasses:
+      <div id="${rclass.qname()}" class="class">
         <h2><code>${rclass.qname()}</code> <i>${(label(rclass))}</i></h2>
         <dl>
           <dt>base-classes</dt>
           <dd>
             <ul class="baseclasses">
-              <li tal:repeat="c sorted(c for c in rclass.objects(RDFS.subClassOf \| OWL.equivalentClass))">
+              % for c in sorted(rclass.objects(union(RDFS.subClassOf, OWL.equivalentClass))):
+              <li>
                 <a href="${link(c)}">${c.qname()}</a>
-                <!-- <span tal:condition="not repeat.c.start">,</span> -->
               </li>
+              % endfor
             </ul>
           </dd>
           <dt>sub-classes</dt>
           <dd>
           <ul class="subclasses">
-              <li tal:repeat="c sorted(rclass.subjects(RDFS.subClassOf \| OWL.equivalentClass))">
-                <a href="${link(c)}">${c.qname()}</a>
-              </li>
+              % for c in sorted(rclass.subjects(union(RDFS.subClassOf, OWL.equivalentClass))):
+              <li><a href="${link(c)}">${c.qname()}</a></li>
+              % endfor
             </ul>
           </dd>
           <dt>instances</dt>
           <dd>
           <ul class="instances">
-              <li tal:repeat="i sorted(rclass.subjects(RDF.type))">
-                <a href="${link(i)}">${i.qname()}</a>
-              </li>
+              % for i in sorted(rclass.subjects(RDF.type)):
+              <li><a href="${link(i)}">${i.qname()}</a></li>
+              % endfor
             </ul>
           </dd>
           <dt>properties</dt>
           <dd>
             <ul class="properties">
-              <li tal:repeat="prop sorted(rclass.subjects(DOMAIN))">
+              % for prop in sorted(rclass.subjects(DOMAIN)):
+              <li>
                 <code>${prop.qname()}</code>
                 <span>(${prop.value(SKOS.notation)})</span>
                 <i>${(label(prop))}</i>
-                <span tal:define="rng prop.value(RANGE)" tal:condition="rng">
-                : <a href="${link(rng)}">${rng.qname()}</a>
-                </span>
+                % set rng = prop.value(RANGE)
+                % if rng
+                  <span>: <a href="${link(rng)}">${rng.qname()}</a></span>
+                % endif
                 <!--!
-                <i tal:repeat="g prop.objects(VANN.termGroup)">
-                  <a href="${link(g)}">${g.qname()}</a>
-                </i>
+                % for g in prop.objects(VANN.termGroup):
+                <i><a href="${link(g)}">${g.qname()}</a></i>
+                % endfor
                 -->
               </li>
+              % endfor
             </ul>
           </dd>
         </dl>
       </div>
+      % endfor
     </article>
 
     <hr />
 
     <article>
-      <div id="${rprop.qname()}" class="class" tal:repeat="rprop rproperties">
+      % for rprop in rproperties:
+      <div id="${rprop.qname()}" class="class">
         <h2><code>${rprop.qname()}</code> <i>${(label(rprop))}</i></h2>
         <dl>
           <dt>base-properties</dt>
           <dd>
             <ul class="baseclasses">
-              <li tal:repeat="p sorted(p for p in rprop.objects(RDFS.subPropertyOf \| OWL.equivalentProperty))">
+              % for p in sorted(rprop.objects(union(RDFS.subPropertyOf, OWL.equivalentProperty))):
+              <li>
                 <a href="${link(p)}">${p.qname()}</a>
-                <!-- <span tal:condition="not repeat.p.start">,</span> -->
               </li>
+              % endfor
             </ul>
           </dd>
           <dt>sub-properties</dt>
           <dd>
           <ul class="subclasses">
-              <li tal:repeat="p sorted(rprop.subjects(RDFS.subPropertyOf \| OWL.equivalentProperty))">
+              % for p in sorted(rprop.subjects(union(RDFS.subPropertyOf, OWL.equivalentProperty))):
+              <li>
                 <a href="${link(p)}">${p.qname()}</a>
               </li>
+              % endfor
             </ul>
           </dd>
           <dt>domain(s)</dt>
           <dd>
             <ul>
-              <li tal:repeat="c sorted(rprop.objects(DOMAIN))">
+              % for c in sorted(rprop.objects(DOMAIN)):
+              <li>
                 <code>${c.qname()}</code>
                 <i>${(label(c))}</i>
               </li>
+              % endfor
             </ul>
           </dd>
           <dt>range(s)</dt>
           <dd>
             <ul>
-              <li tal:repeat="c sorted(rprop.objects(RANGE))">
+              % for c in sorted(rprop.objects(RANGE)):
+              <li>
                 <code>${c.qname()}</code>
                 <i>${(label(c))}</i>
               </li>
+              % endfor
             </ul>
           </dd>
         </dl>
       </div>
+      % endfor
     </article>
 
   </body>

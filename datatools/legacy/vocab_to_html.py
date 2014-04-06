@@ -2,7 +2,7 @@ import sys, os
 from rdflib import *
 from rdflib.util import guess_format
 from rdflib.namespace import SKOS
-from chameleon import PageTemplate
+from jinja2 import Environment, PackageLoader
 
 VANN = Namespace("http://purl.org/vocab/vann/")
 SCHEMA = Namespace("http://schema.org/")
@@ -12,8 +12,10 @@ for fpath in args:
     with open(fpath) as fp:
         graph = Graph().parse(fp, format=guess_format(fpath))
 
-with open(os.path.join(os.path.dirname(__file__), 'vocab-tplt.html')) as f:
-    render = PageTemplate(f.read())
+env = Environment(loader=PackageLoader(__name__, '.'),
+        variable_start_string='${', variable_end_string='}',
+        line_statement_prefix='%')
+tplt = env.get_template('vocab-tplt.html')
 
 def label(obj, lang='sv'):
     label = None
@@ -22,5 +24,10 @@ def label(obj, lang='sv'):
             return label
     return label
 
-html = render(**vars()).encode('utf-8')
+def link(obj):
+    return obj.identifier if ':' in obj.qname() else '#' + obj.qname()
+
+union = lambda *args: reduce(lambda a, b: a | b, args)
+
+html = tplt.render(dict(vars(__builtins__), **vars())).encode('utf-8')
 sys.stdout.write(html)
