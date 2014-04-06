@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="vocab.css" />
   </head>
   <body>
+    % set vocabs = union(set(graph.subjects(RDF.type, OWL.Ontology)),
+                    set(graph.objects(RDFS.isDefinedBy)))
     % set rclasses = map(graph.resource, sorted(
                   union(set((graph.subjects(RDF.type, RDFS.Class))),
                     set((graph.subjects(RDF.type, OWL.Class))))))
@@ -30,6 +32,15 @@
         % endfor
       </section>
     </nav>
+
+    <header>
+    % for vocab in vocabs:
+      <h1><a href="${vocab}">
+          ${graph.value(vocab, union(DC.title, RDFS.label)) or "&lt;%s>" % vocab}</a>
+      </h1>
+      <p>${graph.value(vocab, union(DC.description, RDFS.comment))}</p>
+    % endfor
+    </header>
 
     <section>
       <h1>Classes</h1>

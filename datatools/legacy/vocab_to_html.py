@@ -4,6 +4,7 @@ from rdflib.util import guess_format
 from rdflib.namespace import SKOS
 from jinja2 import Environment, PackageLoader
 
+DC = Namespace("http://purl.org/dc/terms/")
 VANN = Namespace("http://purl.org/vocab/vann/")
 SCHEMA = Namespace("http://schema.org/")
 
