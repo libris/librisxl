@@ -21,6 +21,7 @@
 
 
 : a owl:Ontology;
+    rdfs:label "LIBRIS Terms"@en;
     rdfs:comment "This vocabulary serves as a central mapping to public, well-known properties and classes."@en;
     owl:imports dc:, skos:, foaf:, bibo:, rdael:, sdo:, bf: .
 
@@ -533,14 +534,14 @@
 
 :audience a owl:ObjectProperty;
     rdfs:subPropertyOf sdo:audience;
-    rdfs:range dbpo:Device .
+    rdfs:range :Concept .
 
 :Audience a owl:Class;
     owl:equivalentClass sdo:Audience .
 
 :device a owl:ObjectProperty;
     rdfs:subPropertyOf sdo:device;
-    rdfs:range dbpo:Device .
+    rdfs:range :Device .
 
 :Device a owl:Class;
     owl:equivalentClass dbpo:Device .
