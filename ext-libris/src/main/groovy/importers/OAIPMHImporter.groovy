@@ -40,6 +40,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
     boolean cancelled = false
 
+    List errorMessages = []
+
     OAIPMHImporter(Map settings) {
         this.serviceUrl = settings.get('serviceUrl',null)
         this.preserveTimestamps = settings.get("preserveTimestamps", true)

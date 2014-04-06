@@ -1,6 +1,9 @@
 package se.kb.libris.whelks.component
 
-import groovy.util.logging.Slf4j as Log
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+//import groovy.util.logging.Slf4j as Log
 import groovy.transform.Synchronized
 
 import se.kb.libris.whelks.Document
@@ -13,7 +16,7 @@ import gov.loc.repository.pairtree.Pairtree
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.*
 
-@Log
+//@Log
 class PairtreeDiskStorage extends BasicPlugin implements Storage {
     String baseStorageDir = "./storage"
     String storageDir = null
@@ -46,6 +49,8 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         "application/xml" : ".xml",
         "text/xml" : ".xml"
     ]
+
+    static final Logger log = LoggerFactory.getLogger(PairtreeDiskStorage.class)
 
     // TODO: Add document counter
 
@@ -103,7 +108,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
             log.trace("Saving file with path ${sourcefile.path}")
             FileUtils.writeByteArrayToFile(sourcefile, doc.data)
             log.trace("Setting entry in document meta")
-            doc.getEntry().put(FILE_NAME_KEY, sourcefilePath)
+            doc.getEntry().put(FILE_NAME_KEY, fileName + extension)
             log.trace("Saving file with path ${metafile.path}")
             FileUtils.write(metafile, doc.metadataAsJson, "utf-8")
             return true
@@ -184,6 +189,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         final Iterator<File> entryIterator = FileUtils.iterateFiles(new File(baseDir), new NameFileFilter(ENTRY_FILE_NAME), HiddenFileFilter.VISIBLE)
 
         return new Iterable<Document>() {
+            static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeDiskStorage")
             @Override
             Iterator<Document> iterator() {
                 return new Iterator<Document>() {
@@ -195,6 +201,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                             try {
                                 return document.withData(FileUtils.readFileToByteArray(new File(entryFile.getParentFile(), document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
                             } catch (FileNotFoundException fnfe) {
+                                log.trace("File not found using ${document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY)} as filename. Will try to use it as path.")
                                 return document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
                             }
                         }
@@ -277,7 +284,6 @@ class DiskStorage extends PairtreeDiskStorage {
     }
 }
 
-@Log
 class FlatDiskStorage extends DiskStorage {
 
 
