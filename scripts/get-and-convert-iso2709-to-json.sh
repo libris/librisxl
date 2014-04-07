@@ -7,7 +7,6 @@ if [[ "$TYPE" == "" ]] || [[ "$ID" == "" ]]; then
 fi
 set -e -v
 
-WHELKS_BUILD=../whelk-extensions/build
 MARCPATH=/tmp/$TYPE-$ID.iso2709
 JSONPATH=/tmp/$TYPE-$ID.json
 curl -s http://libris.kb.se/data/$TYPE/$ID?format=ISO2709 -o $MARCPATH
