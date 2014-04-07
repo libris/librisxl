@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
+  % set vocabs = union(set(graph.subjects(RDF.type, OWL.Ontology)),
+                  set(graph.objects(RDFS.isDefinedBy)))
   <head>
     <meta charset="utf-8" />
-    <title>vocab</title>
+    <title>${graph.label(list(vocabs)[0])} - Vocab View</title>
     <link rel="stylesheet" href="vocab.css" />
+    <link rel="stylesheet" href="graph.css" />
   </head>
   <body>
-    % set vocabs = union(set(graph.subjects(RDF.type, OWL.Ontology)),
-                    set(graph.objects(RDFS.isDefinedBy)))
     % set rclasses = map(graph.resource, sorted(
                   union(set((graph.subjects(RDF.type, RDFS.Class))),
                     set((graph.subjects(RDF.type, OWL.Class))))))
@@ -127,7 +128,7 @@
     <section>
       <h1>Properties</h1>
       % for rprop in rproperties:
-      <div id="${rprop.qname()}" class="class">
+      <div id="${rprop.qname()}" class="property">
         <h2><code>${rprop.qname()}</code> <i>${(label(rprop))}</i></h2>
         <dl>
           <dt>base-properties</dt>
@@ -177,5 +178,8 @@
       % endfor
     </section>
 
+    <script src="d3.v3.min.js"></script>
+    <script src="graph.js"></script>
+    <script src="vocab.js"></script>
   </body>
 </html>

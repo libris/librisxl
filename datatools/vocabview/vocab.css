@@ -62,6 +62,9 @@ body > section > div:nth-of-type(even) {
 }
 body > section > div:target {
   border-color: #08c;
+  position: relative;
+  z-index: 10;
+  background-color: #fff;
 }
 
 div > h2 {
@@ -86,4 +89,8 @@ div > dl {
 
 .properties {
   font-size: 0.8em;
+}
+
+.hide {
+  visibility: hidden;
 }
