@@ -115,6 +115,18 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     }
 
 
+    String washXmlOfBadCharacters(String xmlString) {
+        log.warn("Trying to recuperate by washing XML ...")
+        StringBuilder sb = new StringBuilder(xmlString)
+        for (int i=0;i<sb.length();i++)
+            if (sb.charAt(i) < 0x09 || (sb.charAt(i) > 0x0D && sb.charAt(i) < 0x1F)) {
+                log.warn("Found illegal character: ${sb.charAt(i)}")
+                sb.setCharAt(i, '?');
+            }
+
+        return sb.toString()
+    }
+
     String harvest(URL url) {
         long elapsed = System.currentTimeMillis()
         def xmlString = normalizeString(url.text)
@@ -122,15 +134,25 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             log.warn("Load from URL ${url.toString()} took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
         }
         def OAIPMH
+        elapsed = System.currentTimeMillis()
         try {
-            elapsed = System.currentTimeMillis()
             OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
-            if ((System.currentTimeMillis() - elapsed) > 1000) {
-                log.warn("XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
-            }
         } catch (org.xml.sax.SAXParseException spe) {
-            log.error("Failed to parse XML: $xmlString", spe)
-            throw new XmlParsingFailedException("Failing XML: ($xmlString)", spe)
+            if (xmlString != null && xmlString.length() > 0) {
+                xmlString = washXmlOfBadCharacters(xmlString)
+                try {
+                    OAIPMH = new XmlSlurper(false,false).parseText(xmlString)
+                } catch (org.xml.sax.SAXParseException sp) {
+                    log.error("Failed to parse XML despite efforts to clean: $xmlString", sp)
+                    throw new XmlParsingFailedException("Failing XML: ($xmlString)", sp)
+                }
+            } else {
+                log.error("Failed to parse XML: $xmlString", spe)
+                throw new XmlParsingFailedException("Failing XML: ($xmlString)", spe)
+            }
+        }
+        if ((System.currentTimeMillis() - elapsed) > 1000) {
+            log.warn("XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
         }
         def documents = []
         elapsed = System.currentTimeMillis()
