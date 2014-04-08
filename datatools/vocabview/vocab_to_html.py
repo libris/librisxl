@@ -8,10 +8,12 @@ DC = Namespace("http://purl.org/dc/terms/")
 VANN = Namespace("http://purl.org/vocab/vann/")
 SCHEMA = Namespace("http://schema.org/")
 
+graph = Graph()
+
 args = sys.argv[1:]
 for fpath in args:
     with open(fpath) as fp:
-        graph = Graph().parse(fp, format=guess_format(fpath))
+        graph.parse(fp, format=guess_format(fpath))
 
 env = Environment(loader=PackageLoader(__name__, '.'),
         variable_start_string='${', variable_end_string='}',
@@ -26,7 +28,9 @@ def label(obj, lang='sv'):
     return label
 
 def link(obj):
-    return obj.identifier if ':' in obj.qname() else '#' + obj.qname()
+    if ':' in obj.qname() and not any(obj.objects(None)):
+        return obj.identifier
+    return '#' + obj.qname()
 
 union = lambda *args: reduce(lambda a, b: a | b, args)
 
