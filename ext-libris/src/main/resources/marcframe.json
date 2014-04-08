@@ -2731,11 +2731,13 @@
         }
       },
       "[38:39]": {
+        "domainEntity": "Record",
         "link": "modifiedRecord",
         "uriTemplate": "{_}",
         "tokenMap": "modifiedRecord"
       },
       "[39:40]": {
+        "domainEntity": "Record",
         "link": "catalogingSource",
         "uriTemplate": "{_}",
         "tokenMap": "catalogingSource"
@@ -3597,10 +3599,10 @@
     "400": {},
     "410": {},
     "411": {},
-    "440": {"prefer": "490"},
 
     "440": {
       "note:candidate:domainEntity": "Work",
+      "TODO:prefer": "490 or 773?",
       "addLink": "series",
       "rangeEntity": "Serial",
       "$a": {"property": "title", "interpunctionChars": ".,=;"},
@@ -3613,6 +3615,7 @@
     },
     "490": {
       "inherit": "440",
+      "TODO:preferLinkedVersion": "773?",
       "$l": {"link": "callno", "rangeEntity": "Concept", "property": "notation"}
     },
 
@@ -3829,16 +3832,17 @@
     },
     "773": {
       "inherit": "772",
-      "addLink": "containedIn",
-      "rangeEntity": "Publication",
+      "addLink": "isPartOf",
+      "rangeEntity": "Aggregate",
       "$c": null,
       "$p": {"property": "abbrevTitle", "TODO:targetMatch": "210"},
       "$q": {"property": "pagination"}
     },
     "774": {
       "inherit": "772",
-      "addLink": "containedIn",
-      "rangeEntity": "Collection"
+      "addLink": "hasPart",
+      "domainIncludes": "Serial",
+      "rangeEntity": "CreativeWork"
     },
     "775": {},
     "776": {
