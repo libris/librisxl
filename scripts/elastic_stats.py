@@ -80,6 +80,10 @@ if __name__ == '__main__':
         fpath = args.pop(0)
         with open(fpath) as fp:
             data = json.load(fp)
+    for k in data:
+        if k.startswith('libris-'):
+            data = data[k]
+        break
 
     if args:
         fpath = args.pop(0)
