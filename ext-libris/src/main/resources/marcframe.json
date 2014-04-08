@@ -3526,7 +3526,6 @@
 
     "254": {},
 
-    "255": {"TODO": {"specificDomainEntities": ["Cartography"]}, "$_": {}},
     "255": {
       "TODO:match-repetition?": {
         "addLink": "hasFormat", "rangeEntity": "Product"
