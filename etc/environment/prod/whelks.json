@@ -23,6 +23,7 @@
                 "_otherplugins": [
                     "index",
                     "pairtreediskstorage",
+                    "fuseki",
                     "entityextractor",
                     "linkcompleter",
                     "indexlinkfinder"
@@ -42,5 +43,14 @@
                 ]
             }
         }
-    ]
+    ],
+    "_plugins": {
+        "fuseki": {
+            "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
+            "_params" : {
+                "graphStoreUri": "http://hp02:3030/libris/data",
+                "queryUri": "http://hp02:3030/libris/query"
+            }
+        }
+    }
 }
