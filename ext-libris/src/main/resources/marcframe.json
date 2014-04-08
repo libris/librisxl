@@ -3261,7 +3261,34 @@
     },
 
     "034": {
-      "NOTE:domain": "Cartography", "$TODO": {}
+      "NOTE:domain": "Cartography",
+      "addLink": "cartographicAscensionAndDeclination",
+      "rangeEntity": "CartographyCoordinates",
+      "TODO": "draft",
+      "TODO:i1": {},
+      "TODO:i2": {"0": "OuterRing", "1": "ExcludingRing"},
+      "$3": {"property": ""},
+      "$2": {"property": "source"},
+      "$a": {"property": "cartographicScale"},
+      "$c": {"addProperty": "constantRatioLinearVerticalScale"},
+      "$b": {"addProperty": "constantRatioLinearHorizontalScale"},
+      "$e": {"property": "easternmostLongitudeCoordinates"},
+      "$d": {"property": "westernmostLongitudeCoordinates"},
+      "$g": {"property": ""},
+      "$f": {"property": "northernmostLatitudeCoordinates"},
+      "$h": {"addProperty": "angularScale"},
+      "$k": {"property": "declinationSouthernLimit"},
+      "$j": {"property": "declinationNorthernLimit"},
+      "$m": {"property": "rightAscensionEasternLimit"},
+      "$n": {"property": "rightAscensionWesternLimit"},
+      "$p": {"property": "cartographicEquinox"},
+      "$s": {"addProperty": "gRingLatitude"},
+      "$r": {"property": "distanceFromEarth"},
+      "$t": {"addProperty": "gRingLongitude"},
+      "$y": {"property": "endDate"},
+      "$x": {"property": "startDate"},
+      "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"},
+      "repeatable": true
     },
 
     "030": {},
@@ -3500,6 +3527,20 @@
     "254": {},
 
     "255": {"TODO": {"specificDomainEntities": ["Cartography"]}, "$_": {}},
+    "255": {
+      "TODO:match-repetition?": {
+        "addLink": "hasFormat", "rangeEntity": "Product"
+      },
+      "NOTE:domain": "Cartography",
+      "$a": {"property": "cartographicScale"},
+      "$c": {"property": "cartographicCoordinates"},
+      "$b": {"property": "cartographicProjection"},
+      "$e": {"property": "cartographicEquinox"},
+      "$d": {"property": "cartographicZone"},
+      "$g": {"property": "cartographicExclusionGRing"},
+      "$f": {"property": "cartographicOuterGRing"},
+      "repeatable": true
+    },
 
     "256": {
       "domainEntity": "Instance",
