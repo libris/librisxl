@@ -121,7 +121,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         for (int i=0;i<sb.length();i++)
             if (sb.charAt(i) < 0x09 || (sb.charAt(i) > 0x0D && sb.charAt(i) < 0x1F)) {
                 log.warn("Found illegal character: ${sb.charAt(i)}")
-                sb.setCharAt(i, '?');
+                sb.setCharAt(i, '?' as char);
             }
 
         return sb.toString()
