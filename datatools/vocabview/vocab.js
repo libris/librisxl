@@ -11,19 +11,28 @@ window.onload = function () {
     }
   })
 
-  viewData({nodes: nodes}, function (d) {
-    console.log(this, d)
-    if (d.name) {
-      document.location = '#' + d.name
-    }
-  })
-
-  var svg = document.getElementsByTagName('svg')[0]
-  svg.classList.add('hide')
+  var graphView = null
+  var loaded = false
 
   var classNav = document.querySelector('body > nav > section > b')
   classNav.addEventListener('click', function () {
-    svg.classList.toggle('hide')
+    document.body.classList.toggle('graph')
+    if (loaded)
+      return
+    graphView = new GraphView(0.8)
+    graphView.viewData({nodes: nodes}, function (d) {
+      if (d.name) {
+        document.location = '#' + d.name
+      }
+    })
+    loaded = true
+  })
+  var toggle = document.createElement("div")
+  toggle.classList.add('toggle')
+  toggle.innerHTML = "&otimes;"
+  document.body.appendChild(toggle)
+  toggle.addEventListener('click', function () {
+    document.body.classList.toggle('graph')
   })
 
 }

@@ -62,8 +62,6 @@ body > section > div:nth-of-type(even) {
 }
 body > section > div:target {
   border-color: #08c;
-  position: relative;
-  z-index: 10;
   background-color: #fff;
 }
 
@@ -91,6 +89,37 @@ div > dl {
   font-size: 0.8em;
 }
 
-.hide {
+body svg {
   visibility: hidden;
+}
+
+.graph svg {
+  visibility: visible;
+  display: inherit;
+  position: fixed;
+  width: 100vw;
+  left: inherit;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.75);
+}
+
+.graph nav {
+  visibility: hidden;
+}
+
+.graph div:target {
+  visibility: visible;
+  z-index: 1;
+}
+
+.graph .toggle {
+  position: fixed;
+  top: 0; right: 0;
+  z-index: 10;
+  display: block;
+  padding: 0.25em 0.3em;
+  font-family: courier;
+  font-size: 4em;
+  line-height: 0.72;
+  cursor: pointer;
 }

@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <title>Vocab Viewer</title>
 <meta charset="utf-8">
-<style>
-</style>
+<link rel="stylesheet" href="graph.css" />
 <body>
 <script src="d3.v3.min.js"></script>
 <script src="graph.js"></script>
 <script>
 
+var graphView = new GraphView()
+
 function handleLocation() {
   var ref = document.location.hash.substring(1)
   d3.select("svg").select("g").remove()
   if (ref) {
-    d3.json(ref, function (err, data) { viewData(data) })
+    d3.json(ref, function (err, data) { graphView.viewData(data) })
   }
 }
 
