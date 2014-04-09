@@ -186,6 +186,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     @groovy.transform.CompileStatic
     Iterable<Document> getAll(String dataset = null, Date since = null) {
         String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
+        log.debug("Starting reading for getAll() at $baseDir")
         final Iterator<File> entryIterator = FileUtils.iterateFiles(new File(baseDir), new NameFileFilter(ENTRY_FILE_NAME), HiddenFileFilter.VISIBLE)
 
         return new Iterable<Document>() {

@@ -29,7 +29,8 @@
         "_params" : {
             "storageDir": "/ssd/storage",
             "contentTypes": ["application/ld+json"],
-            "baseStorageSuffix": "pairtree"
+            "baseStorageSuffix": "pairtree",
+            "versioning" : false
         }
     },
     "pairtreeoaistorage": {
@@ -49,8 +50,7 @@
             ],
             "cassandraVersion" : "1.2.11",
             "cqlVersion" : "3.0.0",
-            "versioning" : true,
-            "keyspaceSuffix" : "_v2"
+            "versioning" : true
         }
     },
     "marcjsonstorage": {

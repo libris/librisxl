@@ -38,7 +38,6 @@ class ReindexOperator extends AbstractOperator {
 
     void doRun(long startTime) {
         List<Document> docs = []
-        boolean indexing = !startAt
         queue = Executors.newSingleThreadExecutor()
         if (!dataset) {
             log.debug("Requesting new index for ${whelk.index.id}.")
@@ -48,34 +47,28 @@ class ReindexOperator extends AbstractOperator {
             log.info("Rebuilding storage from $fromStorage")
         }
         for (doc in whelk.loadAll(dataset, null, fromStorage)) {
-            if (startAt && doc.identifier == startAt) {
-                log.info("Found document with identifier ${startAt}. Starting to index ...")
-                    indexing = true
-            }
-            if (indexing) {
-                log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
-                if (!doc.entry.deleted) {
-                    if (fromStorage) {
-                        try {
-                            docs << whelk.addToStorage(doc, fromStorage)
-                        } catch (WhelkAddException wae) {
-                            log.trace("Expected exception ${wae.message}")
-                        }
-                    } else {
-                        docs << doc
+            log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
+            if (!doc.entry.deleted) {
+                if (fromStorage) {
+                    try {
+                        docs << whelk.addToStorage(doc, fromStorage)
+                    } catch (WhelkAddException wae) {
+                        log.trace("Expected exception ${wae.message}")
                     }
                 } else {
-                    log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
+                    docs << doc
                 }
-                if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
-                    doTheIndexing(docs)
-                    docs = []
-                }
-                runningTime = System.currentTimeMillis() - startTime
-                if (showSpinner) {
-                    def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
-                    Tools.printSpinner("Rebuilding from ${fromStorage}. ${count} documents rebuilt sofar. $velocityMsg", count)
-                }
+            } else {
+                log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
+            }
+            if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
+                doTheIndexing(docs)
+                docs = []
+            }
+            runningTime = System.currentTimeMillis() - startTime
+            if (showSpinner) {
+                def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
+                Tools.printSpinner("Rebuilding from ${fromStorage}. ${count} documents rebuilt sofar. $velocityMsg", count)
             }
             if (cancelled) {
                 break

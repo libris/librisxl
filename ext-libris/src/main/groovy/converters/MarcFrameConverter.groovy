@@ -59,7 +59,7 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     @Override
     Document doConvert(final Document doc) {
-        def source = getDataAsMap(doc)
+        def source = doc.dataAsMap
         def result = createFrame(source)
         log.trace("Created frame: $result")
 
