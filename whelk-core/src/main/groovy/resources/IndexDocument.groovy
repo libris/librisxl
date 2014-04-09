@@ -23,17 +23,22 @@ class IndexDocument extends Document {
     IndexDocument(Document d) {
         this.identifier = d.identifier
         this.data = d.data
-        this.contentType = d.contentType
+        this.entry = d.entry
+        this.meta = d.meta
+
     }
     IndexDocument(IndexDocument d) {
         this.identifier = d.identifier
         this.data = d.data
-        this.contentType = d.contentType
+        this.entry = d.entry
+        this.meta = d.meta
     }
     IndexDocument(IndexDocument d, Map<String, String[]> match) {
         this.data = d.getData()
         withIdentifier(d.identifier).withContentType(d.contentType)
         this.matches = match
+        this.entry = d.entry
+        this.meta = d.meta
     }
 
     @Override

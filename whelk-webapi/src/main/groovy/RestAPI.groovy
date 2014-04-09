@@ -1324,7 +1324,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                     log.trace("Marcjsonconverter for done")
                     def xMarcJsonDoc = new Document()
                     .withData(jsonRec.getBytes("UTF-8"))
-                    .withContentType("application/x-marc-json")
+                    .withContentType("application/marc+json")
                     //Convert xMarcJsonDoc to ld+json
                     def jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
                     if (!jsonDoc.identifier) {
