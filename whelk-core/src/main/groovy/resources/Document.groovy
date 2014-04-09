@@ -230,7 +230,7 @@ class Document {
     }
 
     boolean isJson() {
-        getContentType() ==~ /application\/(\w+\+)*json/
+        getContentType() ==~ /application\/(\w+\+)*json/ || getContentType() == "application/x-marc-json"
     }
 
     /**
