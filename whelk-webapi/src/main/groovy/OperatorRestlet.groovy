@@ -185,6 +185,7 @@ class BenchmarkOperator extends AbstractOperator {
     Date since = null
     String fromStorage = null
     boolean withSerialization = false
+    boolean showSpinner = false
 
     @Override
     void setParameters(Map parameters) {
@@ -197,6 +198,7 @@ class BenchmarkOperator extends AbstractOperator {
         if (fromStorage == "") {
             fromStorage = null
         }
+        this.showSpinner = parameters.get("showSpinner", false)
         this.withSerialization = parameters.get("withSerialization", "").equals("true")
     }
 
@@ -211,6 +213,10 @@ class BenchmarkOperator extends AbstractOperator {
                 if (withSerialization) {
                     doc.getData()
                 }
+            }
+            if (showSpinner) {
+                def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
+                Tools.printSpinner("Benchmarking from ${fromStorage ?: "primary storage"}. ${count} documents read sofar. $velocityMsg", count)
             }
             log.debug("Retrieved ${docs.size()} documents from $whelk ... ($count total). Time elapsed: ${runningTime/1000}. Current velocity: ${count/(runningTime/1000)} documents / second.")
             if (cancelled) {

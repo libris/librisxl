@@ -173,10 +173,21 @@ class WhelkOperator {
                 whelk.runFilters(ds)
             }
         } else if (operation == "benchmark") {
-            def bm = new BenchmarkOperator(whelk, (opt.d ? opt.d : null))
-            bm.start()
-            bm.join()
-
+            def params = [:]
+            if (opt.d) {
+                params['dataset'] = opt.d
+            }
+            if (opt.fromStorage) {
+                params['fromStorage'] = opt.fromStorage
+            }
+            params['showSpinner'] = true
+            def bm = new BenchmarkOperator()
+            bm.setWhelk(whelk)
+            bm.setParameters(params)
+            def th = new Thread(bm)
+            th.start()
+            log.info("Benchmark thread is now running.")
+            th.join()
         } else {
             println cli.usage()
         }
