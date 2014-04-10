@@ -204,10 +204,11 @@ class BenchmarkOperator extends AbstractOperator {
 
     @Override
     void doRun(long startTime) {
-        def docs = []
         for (doc in whelk.loadAll(dataset, since, fromStorage)) {
-            docs << doc
             if (doc) {
+                if (count == 0) {
+                    println "First document received at ${new Date()}"
+                }
                 count++
                 runningTime = System.currentTimeMillis() - startTime
                 if (withSerialization) {
@@ -216,9 +217,8 @@ class BenchmarkOperator extends AbstractOperator {
             }
             if (showSpinner) {
                 def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
-                Tools.printSpinner("Benchmarking from ${fromStorage ?: "primary storage"}. ${count} documents read sofar. $velocityMsg", count)
+                Tools.printSpinner("Benchmarking from ${fromStorage ?: "primary storage"}. ${count} documents read sofar (${new Date()}). $velocityMsg", count)
             }
-            log.debug("Retrieved ${docs.size()} documents from $whelk ... ($count total). Time elapsed: ${runningTime/1000}. Current velocity: ${count/(runningTime/1000)} documents / second.")
             if (cancelled) {
                 break
             }
