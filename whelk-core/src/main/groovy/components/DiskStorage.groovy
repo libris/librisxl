@@ -28,6 +28,9 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     String docFolder = "_"
     List contentTypes
     boolean versioning
+    boolean hybrid = true
+
+    Index index
 
     int PATH_CHUNKS=4
 
@@ -182,9 +185,35 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         }
     }
 
+    /*
+    Iterable<Document> getAll(Date since) {
+        // USE INDEX
+    }
+    */
+
     @Override
-    @groovy.transform.CompileStatic
     Iterable<Document> getAll(String dataset = null, Date since = null) {
+        // USE INDEX
+        if (dataset) {
+            def elasticResultIterator = index.metaEntryQuery(dataset)
+            return new Iterable<Document>() {
+                Iterator<Document> iterator() {
+                    return new Iterator<Document>() {
+                        public boolean hasNext() { elasticResultIterator.hasNext()}
+                        public Document next() {
+                            return super.get(elasticResultIterator.next())
+                        }
+                        public void remove() { throw new UnsupportedOperationException(); }
+                    }
+                }
+            }
+        }
+        return getAllRaw(dataset)
+    }
+
+
+    @groovy.transform.CompileStatic
+    Iterable<Document> getAllRaw(String dataset = null) {
         String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
         log.debug("Starting reading for getAll() at $baseDir")
         final Iterator<File> entryIterator = FileUtils.iterateFiles(new File(baseDir), new NameFileFilter(ENTRY_FILE_NAME), HiddenFileFilter.VISIBLE)

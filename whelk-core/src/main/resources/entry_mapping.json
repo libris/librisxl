@@ -1,0 +1,31 @@
+{
+    "_timestamp" : {
+        "enabled" : false,
+        "store" : false
+    },
+    "_source" : {
+        "enabled" : false
+    },
+    "store" : false,
+    "properties" : {
+        "identifier" : {
+            "type" : "string",
+            "index" : "not_analyzed"
+        },
+        "entry" : {
+            "properties" : {
+                "dataset" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                },
+                "timestamp" : {
+                    "type" : "date"
+                },
+                "contentType" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                }
+            }
+        }
+    }
+}

@@ -115,6 +115,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
     String defaultIndexType = "record"
     String elasticIndex
+    String elasticMetaEntryIndex
     String currentIndex
 
     def defaultMapping, es_settings
@@ -122,6 +123,7 @@ abstract class ElasticSearch extends BasicPlugin {
     @Override
     void init(String indexName) {
         this.elasticIndex = indexName
+        this.elasticMetaEntryIndex = "."+indexName
         if (!performExecute(client.admin().indices().prepareExists(elasticIndex)).exists) {
             createNewCurrentIndex()
             log.debug("Will create alias $elasticIndex -> $currentIndex")
@@ -132,6 +134,12 @@ abstract class ElasticSearch extends BasicPlugin {
             if (this.currentIndex == null) {
                 throw new WhelkRuntimeException("Unable to find a real current index for $elasticIndex")
             }
+        }
+        // Check for metaentryindex
+        if (!performExecute(client.admin().indices().prepareExists(elasticMetaEntryIndex)).exists) {
+            log.debug("Creating metaentry index.")
+            performExecute(client.admin().indices().prepareCreate(elasticMetaEntryIndex).setSettings(es_settings))
+            setTypeMapping(elasticMetaEntryIndex, "entry")
         }
     }
 
@@ -343,6 +351,39 @@ abstract class ElasticSearch extends BasicPlugin {
         return results
     }
 
+    Iterator<String> metaEntryQuery(String dataset) {
+        def srb = client.prepareSearch(elasticMetaEntryIndex)
+            .setSearchType(SearchType.SCAN)
+            .setScroll(new TimeValue(60000))
+            .setTypes(["entry"] as String[])
+            .setQuery(termQuery("entry.dataset", dataset))
+            .setSize(100)
+
+        def list = []
+        def scrollResp = performExecute(srb)
+        return new Iterator<String>() {
+            public boolean hasNext() {
+                if (list.size() == 0) {
+                    scrollResp = performExecute(super.client.prepareSearchScroll(scrollResp.getScrollId()).setScroll(new TimeValue(60000)))
+                    list.addAll(scrollResp.hits.hits.collect { translateIndexIdTo(it.id) })
+                }
+                return list.size()
+            }
+            public String next() { list.pop() }
+            public void remove() { throw new UnsupportedOperationException(); }
+        }
+
+        while (true) {
+            log.debug("start loop")
+            log.debug("Adding to list")
+            if (scrollResp.hits.hits.length == 0) {
+                log.debug("break loop")
+                break
+            }
+        }
+        return list
+    }
+
     def setTypeMapping(indexName, itype) {
         log.info("Creating mappings for $indexName/$itype ...")
         //XContentBuilder mapping = jsonBuilder().startObject().startObject("mappings")
@@ -441,7 +482,11 @@ abstract class ElasticSearch extends BasicPlugin {
                             checkTypeMapping(currentIndex, indexType)
                             checkedTypes << indexType
                         }
-                        breq.add(client.prepareIndex(currentIndex, indexType, translateIdentifier(doc.identifier)).setSource(doc.data))
+                        def elasticIdentifier = translateIdentifier(doc.identifier)
+                        breq.add(client.prepareIndex(currentIndex, indexType, elasticIdentifier).setSource(doc.data))
+                        if (!doc.origin) {
+                            breq.add(client.prepareIndex(elasticMetaEntryIndex, "entry", elasticIdentifier).setSource(doc.metadataAsJson.getBytes("utf-8")))
+                        }
                     }
                 }
                 def response = performExecute(breq)
@@ -476,13 +521,8 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     def translateIdentifier(String uri) {
-        def pathparts = new URI(uri).path.split("/")
-        def idelements = []
-        pathparts.eachWithIndex() { part, i ->
-            if (i > 0) {
-                idelements.add(part)
-            }
-        }
+        def idelements = new URI(uri).path.split("/") as List
+        idelements.remove(0)
         return idelements.join(URI_SEPARATOR)
     }
 

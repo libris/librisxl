@@ -28,6 +28,7 @@ class Query {
     }
 
     Query(Map qmap) {
+        // TODO: Add filtered queries
         def q = null
         if (qmap.get("query")) {
             q = qmap.get("query")

@@ -52,6 +52,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
     Keyspace keyspace
     List contentTypes
     boolean versioning = true
+    boolean hybrid = false
 
     String cassandraVersion = "1.2"
     String CQLVersion = "3.0.0"

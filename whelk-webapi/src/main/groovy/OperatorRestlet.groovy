@@ -224,7 +224,7 @@ class BenchmarkOperator extends AbstractOperator {
             }
         }
         runningTime = System.currentTimeMillis() - startTime
-        log.debug("$count documents read. Total time elapsed: ${runningTime/1000} seconds.")
+        log.info("$count documents read. Total time elapsed: ${runningTime/1000} seconds.")
     }
 
     @Override

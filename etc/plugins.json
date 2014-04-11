@@ -48,7 +48,7 @@
                 "application/json",
                 "text/plain"
             ],
-            "cassandraVersion" : "1.2.11",
+            "cassandraVersion" : "1.2.15",
             "cqlVersion" : "3.0.0",
             "versioning" : true
         }
