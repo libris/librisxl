@@ -193,7 +193,6 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null) {
-        // USE INDEX
         if (dataset) {
             def elasticResultIterator = index.metaEntryQuery(dataset)
             return new Iterable<Document>() {
