@@ -374,8 +374,8 @@ abstract class ElasticSearch extends BasicPlugin {
         }
 
         while (true) {
-            log.debug("start loop")
-            log.debug("Adding to list")
+            log.trace("start loop")
+            log.trace("Adding to list")
             if (scrollResp.hits.hits.length == 0) {
                 log.debug("break loop")
                 break

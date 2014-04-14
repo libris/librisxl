@@ -28,7 +28,6 @@ class Query {
     }
 
     Query(Map qmap) {
-        // TODO: Add filtered queries
         def q = null
         if (qmap.get("query")) {
             q = qmap.get("query")
@@ -92,8 +91,8 @@ class Query {
                 for (r in qmap.get("range").split(",")) {
                     log.trace("Set range: $r")
                     try {
-                        def v = r.split(":")[1].split("-")
-                        addRangeFilter(r.split(":")[0], v[0], v[1])
+                        def v = r.split(":",1)[1].split("-")
+                        addRangeFilter(r.split(":",2)[0], v[0], v[1])
                     } catch (Exception e) {
                         log.error("Bad user: " + e.getMessage())
                     }
@@ -103,7 +102,7 @@ class Query {
                 for (f in qmap.get("filter").split(",")) {
                     log.trace("Set filter: $f")
                     try {
-                        addFilter(f.split(":")[0], f.split(":")[1])
+                        addFilter(f.split(":", 2)[0], f.split(":", 2)[1])
                     } catch (Exception e) {
                         log.error("Bad user: " + e.getMessage())
                     }
