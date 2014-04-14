@@ -4,13 +4,11 @@
             "libris":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_converters": [
-                    "oaipmhxmlconverter",
                     "marcconverter",
                     "turtleconverter"
                 ],
                 "_importers": [
-                    "oaipmhimporter",
-                    "marcimporter"
+                    "oaipmhimporter"
                 ],
                 "_apis": [
                     "remotesearch",
@@ -24,8 +22,6 @@
                 "_otherplugins": [
                     "index",
                     "pairtree",
-                    "cassandrastorage",
-                    "oaipmhstorage",
                     "entityextractor",
                     "linkcompleter",
                     "indexlinkfinder"
@@ -61,8 +57,7 @@
             "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
             "_params" : {
                 "storageDir": "/data/librisxl/storage",
-                "contentTypes": ["application/ld+json"],
-                "versioning" : true
+                "contentTypes": ["application/ld+json"]
             }
         },
         "hp04cassandrastorage": {
