@@ -57,6 +57,17 @@
                 "modsimporter"
                 ]
         }
+    },
+    {
+        "resource":{
+            "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+            "_plugins" : [
+                "localdefinitiondata",
+                "resourcelist",
+                "marcmap",
+                "isxntool"
+              ]
+        }
     }
     ],
         "_plugins": {
