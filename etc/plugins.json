@@ -56,7 +56,7 @@
     "marcjsonstorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : {
-            "contentTypes" : [ "application/marc+json" ],
+            "contentTypes" : [ "application/x-marc-json" ],
             "cqlVersion" : "3.0.0",
             "cassandraVersion" : "1.2.15",
             "versioning" : false

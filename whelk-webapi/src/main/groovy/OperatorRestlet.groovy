@@ -113,7 +113,12 @@ class ImportOperator extends AbstractOperator {
         this.serviceUrl = parameters.get("url", null)
         this.numToImport = parameters.get("nums", -1) as int
         if (parameters.get("since", null)) {
-            this.since = Date.parse('yyyy-MM-dd', parameters.get("since"))
+            def dateString = parameters.get("since")
+            if (dateString.length() == 10) {
+                this.since = Date.parse('yyyy-MM-dd', dateString)
+            } else {
+                this.since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dateString)
+            }
         }
     }
 

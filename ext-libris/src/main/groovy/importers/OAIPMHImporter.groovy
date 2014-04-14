@@ -165,7 +165,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                     def entry = ["identifier":"/"+this.dataset+"/"+record.getControlfields("001").get(0).getData(),"dataset":this.dataset]
 
                     if (preserveTimestamps && it.header.datestamp) {
-                        def date = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", it.header.datestamp.toString())
+                        def date = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
                         log.trace("Setting date: $date")
                         entry.put("timestamp", date.getTime())
                     }

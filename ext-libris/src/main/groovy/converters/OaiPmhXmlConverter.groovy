@@ -49,7 +49,7 @@ class OaiPmhXmlConverter extends BasicFormatConverter {
             .withMeta(document.meta)
 
         if (preserveTimestamps && xml.header.datestamp) {
-            def date = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", xml.header.datestamp.toString())
+            def date = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", xml.header.datestamp.toString())
             log.trace("Setting date: $date")
             doc.timestamp = date.getTime()
         }
