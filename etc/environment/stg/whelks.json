@@ -60,6 +60,13 @@
                 "contentTypes": ["application/ld+json"]
             }
         },
+        "fuseki": {
+            "_class" : "se.kb.libris.whelks.component.HttpGraphStore",
+            "_params" : {
+                "graphStoreUri": "http://localhost:3030/libris/data",
+                "queryUri": "http://localhost:3030/libris/query"
+            }
+        },
         "hp04cassandrastorage": {
             "_class" : "se.kb.libris.whelks.component.CassandraStorage",
             "_params" : {
