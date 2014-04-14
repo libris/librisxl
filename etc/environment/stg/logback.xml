@@ -20,9 +20,6 @@
     </encoder>
   </appender>
 
-  <logger name="se.kb.libris.whelks.StandardWhelk">
-      <level value="debug"/>
-  </logger>
   <logger name="se.kb.libris.whelks.component.CassandraStorage">
       <level value="debug"/>
   </logger>
