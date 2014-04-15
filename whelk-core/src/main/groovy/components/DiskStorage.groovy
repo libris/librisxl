@@ -224,7 +224,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                 return new Iterator<Document>() {
                     public boolean hasNext() { return entryIterator.hasNext(); }
                     public Document next() {
-                        while (entryIterator.hasNext()) {
+                        if (entryIterator.hasNext()) {
                             File entryFile = entryIterator.next()
                             Document document = new Document(FileUtils.readFileToString(entryFile, "utf-8"))
                             try {
