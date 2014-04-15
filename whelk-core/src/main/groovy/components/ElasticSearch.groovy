@@ -136,8 +136,9 @@ abstract class ElasticSearch extends BasicPlugin {
             }
         }
         // Check for metaentryindex
+        log.info("Checking meta entry index")
         if (!performExecute(client.admin().indices().prepareExists(elasticMetaEntryIndex)).exists) {
-            log.debug("Creating metaentry index.")
+            log.info("Not found, creating metaentry index.")
             performExecute(client.admin().indices().prepareCreate(elasticMetaEntryIndex).setSettings(es_settings))
             setTypeMapping(elasticMetaEntryIndex, "entry")
         }

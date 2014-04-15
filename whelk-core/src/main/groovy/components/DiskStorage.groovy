@@ -214,9 +214,9 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     @groovy.transform.CompileStatic
     Iterable<Document> getAllRaw(String dataset = null) {
         String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
-        log.debug("Starting reading for getAll() at $baseDir")
+        log.info("Starting reading for getAllRaw() at $baseDir. (This could take a while ...)")
         final Iterator<File> entryIterator = FileUtils.iterateFiles(new File(baseDir), new NameFileFilter(ENTRY_FILE_NAME), HiddenFileFilter.VISIBLE)
-
+        log.debug("Got iterator ...")
         return new Iterable<Document>() {
             static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeDiskStorage")
             @Override
