@@ -203,7 +203,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
 
     void benchmark() {
         int count = 0
-        def files = Files.fileTreeTraverser().breadthFirstTraversal(new File(this.baseStorageDir))
+        def files = Files.fileTreeTraverser().preOrderTraversal(new File(this.baseStorageDir))
         long startTime = System.currentTimeMillis()
         long runningTime = 0
         for (file in files) {
