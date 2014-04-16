@@ -201,44 +201,23 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
     */
 
-    /*
-    void benchmark2() {
+    void benchmark() {
         int count = 0
         long startTime = System.currentTimeMillis()
         long runningTime = 0
-        Files.walkFileTree(new File(this.baseStorageDir).toPath(), new FileVisitor<Path>() {
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                return FileVisitResult.CONTINUE
-            }
-            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
-                File file = path.toFile()
-                if (file.name != PairtreeDiskStorage.ENTRY_FILE_NAME) {
-                    return FileVisitResult.CONTINUE
-                }
-                Document document = new Document(FileUtils.readFileToString(file, "utf-8"))
-                try {
-                    document.withData(FileUtils.readFileToByteArray(new File(file.getParentFile(), document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
-                } catch (FileNotFoundException fnfe) {
-                    log.trace("File not found using ${document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY)} as filename. Will try to use it as path.")
-                    document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
-                } catch (InterruptedException e) {
-                    e.printStackTrace()
-                }
+
+        File baseDir = new File(this.storageDir)
+        def files = Files.fileTreeTraverser().preOrderTraversal(baseDir)
+
+        for (file in files) {
+            if (file.name == PairtreeDiskStorage.ENTRY_FILE_NAME) {
                 count++
                 runningTime = System.currentTimeMillis() - startTime
                 def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
                 Tools.printSpinner("Benchmarking ${this.id}. ${count} documents read sofar. $velocityMsg", count)
-                return FileVisitResult.CONTINUE
             }
-            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                return FileVisitResult.CONTINUE
-            }
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                return FileVisitResult.CONTINUE
-            }
-        })
+        }
     }
-    */
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null) {
@@ -257,39 +236,6 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
             }
         }
         return getAllRaw(dataset)
-    }
-
-
-    /*
-    Iterable<Document> getAllWalker(String dataset = null) {
-        String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
-        log.info("Starting reading for getAllRaw() at $baseDir. (This could take a while ...)")
-        return new Iterable<Document>() {
-            static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeDiskStorage")
-            @Override
-            Iterator<Document> iterator() {
-                return new FileWalker(new File(baseDir), 242000)
-            }
-        }
-    }
-    */
-
-    void benchmark() {
-        int count = 0
-        long startTime = System.currentTimeMillis()
-        long runningTime = 0
-
-        File baseDir = new File(this.storageDir)
-        def files = Files.fileTreeTraverser().preOrderTraversal(baseDir)
-
-        for (file in files) {
-            if (file.name == PairtreeDiskStorage.ENTRY_FILE_NAME) {
-                count++
-                runningTime = System.currentTimeMillis() - startTime
-                def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
-                Tools.printSpinner("Benchmarking ${this.id}. ${count} documents read sofar. $velocityMsg", count)
-            }
-        }
     }
 
     @groovy.transform.CompileStatic
@@ -331,38 +277,6 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                         throw new NoSuchElementException()
                     }
 
-                    public void remove() { throw new UnsupportedOperationException() }
-                }
-            }
-        }
-    }
-
-    @groovy.transform.CompileStatic
-    Iterable<Document> getAllFileIteator(String dataset = null) {
-        String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
-        log.info("Starting reading for getAllRaw() at $baseDir. (This could take a while ...)")
-        final Iterator<File> entryIterator = FileUtils.iterateFiles(new File(baseDir), new NameFileFilter(ENTRY_FILE_NAME), HiddenFileFilter.VISIBLE)
-        log.debug("Got iterator ...")
-
-        return new Iterable<Document>() {
-            static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeDiskStorage")
-            @Override
-            Iterator<Document> iterator() {
-                return new Iterator<Document>() {
-                    public boolean hasNext() { return entryIterator.hasNext(); }
-                    public Document next() {
-                        if (entryIterator.hasNext()) {
-                            File entryFile = entryIterator.next()
-                            Document document = new Document(FileUtils.readFileToString(entryFile, "utf-8"))
-                            try {
-                                return document.withData(FileUtils.readFileToByteArray(new File(entryFile.getParentFile(), document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
-                            } catch (FileNotFoundException fnfe) {
-                                log.trace("File not found using ${document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY)} as filename. Will try to use it as path.")
-                                return document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
-                            }
-                        }
-                        throw new NoSuchElementException()
-                    }
                     public void remove() { throw new UnsupportedOperationException() }
                 }
             }
