@@ -308,9 +308,10 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                             File f = fileIterator.next()
                             if (f.name == PairtreeDiskStorage.ENTRY_FILE_NAME) {
                                 lastValidEntry = f
+                                return true
                             }
                         }
-                        return (lastValidEntry != null)
+                        return false
                     }
 
                     public Document next() {
