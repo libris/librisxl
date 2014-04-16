@@ -287,5 +287,8 @@
     },
     "dumper" : {
         "_class" : "se.kb.libris.whelks.api.DumpRestlet"
+    },
+    "formatter" : {
+        "_class" : "se.kb.libris.whelks.api.FormatApiRestlet"
     }
 }

@@ -30,6 +30,7 @@
             "_apis": [
                 "remotesearch",
                 "operator",
+                "formatter",
                 "dumper",
                 "search",
                 "sparqlapi",

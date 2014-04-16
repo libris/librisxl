@@ -6,6 +6,10 @@ import org.slf4j.LoggerFactory
 //import groovy.util.logging.Slf4j as Log
 import groovy.transform.Synchronized
 
+import java.nio.file.*
+import java.nio.file.attribute.*
+import java.util.concurrent.*
+
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.BasicPlugin
@@ -207,7 +211,20 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                 }
             }
         }
-        return getAllRaw(dataset)
+        return getAllWalker(dataset)
+    }
+
+
+    Iterable<Document> getAllWalker(String dataset = null) {
+        String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
+        log.info("Starting reading for getAllRaw() at $baseDir. (This could take a while ...)")
+        return new Iterable<Document>() {
+            static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeDiskStorage")
+            @Override
+            Iterator<Document> iterator() {
+                return new FileWalker(new File(baseDir), 242000)
+            }
+        }
     }
 
 
@@ -217,6 +234,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         log.info("Starting reading for getAllRaw() at $baseDir. (This could take a while ...)")
         final Iterator<File> entryIterator = FileUtils.iterateFiles(new File(baseDir), new NameFileFilter(ENTRY_FILE_NAME), HiddenFileFilter.VISIBLE)
         log.debug("Got iterator ...")
+
         return new Iterable<Document>() {
             static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeDiskStorage")
             @Override
@@ -329,4 +347,79 @@ class FlatDiskStorage extends DiskStorage {
         }
         return path
     }
+}
+
+class FileWalker implements Iterator<Document> {
+    final BlockingQueue<Document> bq;
+    FileWalker(final File fileStart, final int size) throws Exception {
+        bq = new ArrayBlockingQueue<Document>(size);
+        Thread thread = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Files.walkFileTree(fileStart.toPath(), new FileVisitor<Path>() {
+                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                            File file = path.toFile()
+                            if (file.name != PairtreeDiskStorage.ENTRY_FILE_NAME) {
+                                return FileVisitResult.CONTINUE;
+                            }
+                            Document document = new Document(FileUtils.readFileToString(file, "utf-8"))
+                            try {
+                                document.withData(FileUtils.readFileToByteArray(new File(file.getParentFile(), document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                            } catch (FileNotFoundException fnfe) {
+                                log.trace("File not found using ${document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY)} as filename. Will try to use it as path.")
+                                document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            super.bq.offer(document, 4242, TimeUnit.HOURS);
+                            return FileVisitResult.CONTINUE;
+                        }
+                        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+        thread.join(200);
+    }
+    public boolean hasNext() {
+        boolean hasNext = false;
+        long dropDeadMS = System.currentTimeMillis() + 2000;
+        while (System.currentTimeMillis() < dropDeadMS) {
+            if (bq.peek() != null) {
+                hasNext = true;
+                break;
+            }
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return hasNext;
+    }
+    public Document next() {
+        Document document = null;
+        try {
+            document = bq.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return document;
+    }
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
 }

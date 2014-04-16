@@ -29,8 +29,8 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'groovy'
 
-    sourceCompatibility = 1.6
-    targetCompatibility = 1.6
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
 
     sourceSets {
         main {

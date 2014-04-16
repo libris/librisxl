@@ -1,182 +1,426 @@
 package se.kb.libris.whelks.api
 
 import groovy.util.logging.Slf4j as Log
+import groovy.xml.StreamingMarkupBuilder
+import groovy.util.slurpersupport.GPathResult
+
+import java.util.concurrent.*
 
 import org.restlet.*
 import org.restlet.data.*
 import org.restlet.resource.*
 import org.restlet.representation.*
 
+import org.codehaus.jackson.map.*
+
 import se.kb.libris.conch.Tools
 import static se.kb.libris.conch.Tools.*
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.http.*
-import se.kb.libris.whelks.plugin.*
-import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.imports.*
-import se.kb.libris.whelks.persistance.*
+import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.result.*
+import se.kb.libris.whelks.exception.*
+import se.kb.libris.whelks.persistance.*
+import se.kb.libris.conch.converter.MarcJSONConverter
+import se.kb.libris.whelks.http.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
-import se.kb.libris.conch.converter.MarcJSONConverter
-import se.kb.libris.utils.isbn.*
 
-import org.codehaus.jackson.map.*
-import groovy.xml.StreamingMarkupBuilder
-import groovy.util.slurpersupport.GPathResult
-
-import java.util.concurrent.*
-
-
-interface RestAPI extends API {
-    String getPath()
-}
 
 @Log
-abstract class BasicWhelkAPI extends Restlet implements RestAPI {
-    Whelk whelk
-
-    def pathEnd = ""
+class SparqlRestlet extends BasicWhelkAPI {
+    def pathEnd = "_sparql"
     def varPath = false
-    boolean enabled = true
+    String id = "SparqlAPI"
 
-    String logMessage = "Handled #REQUESTMETHOD# for #API_ID#"
+    String description = "Provides sparql endpoint to the underlying tripple store."
 
     @Override
-    void setWhelk(Whelk w) {
-        this.whelk = w
-    }
-    @Override
-    void init(String w) {}
+    void doHandle(Request request, Response response) {
+        def form = new Form(request.getEntity())
+        def query = form.getFirstValue("query")
 
-    String getPath() {
-        def elems = [(this.whelk instanceof HttpWhelk ? this.whelk.contentRoot : this.whelk.id), getPathEnd()]
-        return "/" + elems.findAll { it.length() > 0 }.join("/")
-    }
-
-    /**
-     * For discovery API.
-     */
-    abstract String getDescription();
-
-    private String getModifiedPathEnd() {
-        if (getPathEnd() == null || getPathEnd().length() == 0) {
-            return ""
-        } else {
-            return "/" + getPathEnd()
+        InputStream is
+        try {
+            is = whelk.sparql(query)
+        } catch (Exception e) {
+            is = new ByteArrayInputStream(e.message.bytes)
+            log.warn("Query $query resulted in error: ${e.message}", e)
+            query = null
+            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
         }
-    }
 
-    @Override
-    int compareTo(Plugin p) {
-        return (this.getOrder() - p.getOrder());
-    }
+        log.debug("Creating outputrepresentation.")
 
-    abstract void doHandle(Request request, Response response)
-
-    void handle(Request request, Response response) {
-        long startTime = System.currentTimeMillis()
-        doHandle(request, response)
-        def headers = request.attributes.get("org.restlet.http.headers")
-        def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value ?: request.clientInfo.address
-        log.info(logMessage.replaceAll("#REQUESTMETHOD#", request.method.toString()).replaceAll("#API_ID#", this.id) + " from $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
-    }
-}
-
-@Log
-class DiscoveryAPI extends BasicWhelkAPI {
-
-    ObjectMapper mapper = new ObjectMapper()
-
-    String description = "Discovery API"
-    String pathEnd = "discovery"
-    String id = "DiscoveryAPI"
-
-    DiscoveryAPI(Whelk w) {
-        this.whelk = w
-    }
-
-    @Override
-    void doHandle(Request request, Response response) {
-        def info = [:]
-        info["whelk"] = whelk.id
-        info["apis"] = whelk.getAPIs().collect {
-            [ [ "path" : (it.path) ,
-                "description" : (it.description) ]
-            ] }
-        log.debug("info: $info")
-
-        response.setEntity(mapper.writeValueAsString(info), MediaType.APPLICATION_JSON)
-    }
-}
-
-enum DisplayMode {
-    DOCUMENT, META
-}
-
-@Log
-class RootRouteRestlet extends BasicWhelkAPI {
-
-    String description = "Whelk root routing API"
-    String id = "RootRoute"
-    def pathEnd = ""
-
-    RootRouteRestlet(Whelk whelk) {
-        this.whelk = whelk
-    }
-
-    @Override
-    String getPath() {
-        if (this.whelk.contentRoot == "") {
-            return "/"
-        } else return "/" + this.whelk.contentRoot + "/"
-    }
-
-    @Override
-    void doHandle(Request request, Response response) {
-        def discoveryAPI
-        def documentAPI
-        //GET redirects to DiscoveryAPI
-        if (request.method == Method.GET) {
-            discoveryAPI = new DiscoveryAPI(this.whelk)
-            def uri = new URI(discoveryAPI.path)
-            discoveryAPI.handle(request, response)
-          //POST saves new document
-        } else if (request.method == Method.POST) {
-            try {
-                def identifier
-                Document doc = null
-                def headers = request.attributes.get("org.restlet.http.headers")
-                log.trace("headers: $headers")
-                log.debug("request: $request")
-                def link = headers.find { it.name.equals("link") }?.value
-                doc = new Document().withData(Tools.normalizeString(request.entityAsText)).withEntry(["contentType":request.entity.mediaType.toString()])
-                if (link != null) {
-                    log.trace("Adding link $link to document...")
-                    doc = doc.withLink(link)
+        Representation ir = new OutputRepresentation(mediaType(query)) {
+            @Override
+            public void write(OutputStream realOutput) throws IOException {
+                byte[] b = new byte[8]
+                int read
+                while ((read = is.read(b)) != -1) {
+                    realOutput.write(b, 0, read)
+                    realOutput.flush()
                 }
-                doc = this.whelk.sanityCheck(doc)
-                identifier = this.whelk.add(doc)
-                response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
-                response.entity.setTag(new Tag(doc.timestamp as String, false))
-                log.debug("Saved document $identifier")
-                response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                log.debug("Redirecting with location ref " + request.getRootRef().toString() + identifier)
-                response.setLocationRef(request.getRootRef().toString() + "${identifier}")
-            } catch (WhelkRuntimeException wre) {
-                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
-            }
-        } else if (request.method == Method.PUT) {
-            log.debug("Received PUT request for ${this.whelk.id}")
-            documentAPI = new DocumentRestlet(this.whelk)
-            if (request.attributes?.get("identifier") != null) {
-                documentAPI.handle(request, response)
-            } else {
-                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
             }
         }
+
+        log.debug("Sending outputrepresentation.")
+        response.setEntity(ir)
     }
+
+    MediaType mediaType(String query) {
+        if (!query) {
+            return MediaType.TEXT_PLAIN
+        }
+        if (query.toUpperCase().contains("SELECT") || query.toUpperCase().contains("ASK")) {
+            return MediaType.APPLICATION_SPARQL_RESULTS_XML
+        } else {
+            return MediaType.APPLICATION_RDF_XML
+        }
+    }
+}
+
+@Log
+class RemoteSearchRestlet extends BasicWhelkAPI {
+    def pathEnd = "_remotesearch"
+    def mapper
+    
+    String description = "Query API for remote search"
+    String id = "RemoteSearchAPI"
+
+    Map remoteURLs
+
+    MarcFrameConverter marcFrameConverter
+
+    URL metaProxyInfoUrl
+    String metaProxyBaseUrl
+
+    final String DEFAULT_DATABASE = "LC"
+
+    def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
+
+    RemoteSearchRestlet(Map settings) {
+        this.metaProxyBaseUrl = settings.metaproxyBaseUrl
+        // Cut trailing slashes from url
+        while (metaProxyBaseUrl.endsWith("/")) {
+            metaProxyBaseUrl = metaProxyBaseUrl[0..-1]
+        }
+        assert metaProxyBaseUrl
+        metaProxyInfoUrl = new URL(settings.metaproxyInfoUrl)
+
+        // Prepare remoteURLs by loading settings once.
+        loadMetaProxyInfo(metaProxyInfoUrl)
+
+        mapper = new ElasticJsonMapper()
+    }
+
+
+    List loadMetaProxyInfo(URL url) {
+        def xml = new XmlSlurper(false,false).parse(url.newInputStream())
+
+        def databases = xml.libraryCode.collect {
+            def map = ["database": createString(it.@id)]
+            it.children().each { node ->
+                def n = node.name().toString()
+                def o = node.text().toString()
+                def v = map[n]
+                if (v) {
+                    if (v instanceof String) {
+                        v = map[n] = [v]
+                    }
+                    v << o
+                } else {
+                    map[n] = o
+                }
+            }
+            return map
+        }
+
+        remoteURLs = databases.inject( [:] ) { map, db ->
+            map << [(db.database) : metaProxyBaseUrl + "/" + db.database]
+        }
+
+        return databases
+    }
+
+
+    void init(String wn) {
+        log.debug("plugins: ${whelk.plugins}")
+        marcFrameConverter = whelk.plugins.find { it instanceof FormatConverter && it.resultContentType == "application/ld+json" && it.requiredContentType == "application/x-marc-json" }
+        assert marcFrameConverter
+    }
+
+    void doHandle(Request request, Response response) {
+        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def query = queryMap.get("q", null)
+        int start = queryMap.get("start", "0") as int
+        int n = queryMap.get("n", "10") as int
+        def databaseList = queryMap.get("database", DEFAULT_DATABASE).split(",") as List
+        def queryStr, url
+        MarcRecord record
+        OaiPmhXmlConverter oaiPmhXmlConverter
+        MediaType mediaType = MediaType.APPLICATION_JSON
+        String output = ""
+
+        urlParams['maximumRecords'] = n
+        urlParams['startRecord'] = (start < 1 ? 1 : start)
+
+        if (query) {
+            // Weed out the unavailable databases
+            databaseList = databaseList.intersect(remoteURLs.keySet() as List)
+            log.debug("Remaining databases: $databaseList")
+            urlParams.each { k, v ->
+                if (!queryStr) {
+                    queryStr = "?"
+                } else {
+                    queryStr += "&"
+                }
+                queryStr += k + "=" + v
+            }
+            if (!databaseList) {
+                output = "{\"error\":\"Requested database is unknown or unavailable.\"}"
+            }
+            else {
+                ExecutorService queue = Executors.newCachedThreadPool()
+                def resultLists = []
+                try {
+                    def futures = []
+                    for (database in databaseList) {
+                        url = new URL(remoteURLs[database] + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
+                        log.debug("submitting to futures")
+                        futures << queue.submit(new MetaproxyQuery(whelk, url, database))
+                    }
+                    log.info("Started all threads. Now harvesting the future")
+                    for (f in futures) {
+                        log.debug("Waiting for future ...")
+                        def sr = f.get()
+                        log.debug("Adding ${sr.numberOfHits} to ${resultLists}")
+                        resultLists << sr
+                    }
+                } finally {
+                    queue.shutdown()
+                }
+                // Merge results
+                def results = ['hits':[:],'list':[]]
+                int biggestList = 0
+                for (result in resultLists) { if (result.hits.size() > biggestList) { biggestList = result.hits.size() } }
+                def errors = [:]
+                for (int i = 0; i <= biggestList; i++) {
+                    for (result in resultLists) {
+                        results.hits[result.database] = result.numberOfHits
+                        try {
+                            if (result.error) {
+                                errors.get(result.database, [:]).put(""+i, result.error)
+                            } else if (i < result.hits.size()) {
+                                results.list << ['database':result.database,'data':result.hits[i].dataAsMap]
+                            }
+                        } catch (ArrayIndexOutOfBoundsException aioobe) {
+                            log.debug("Overstepped array bounds.")
+                        } catch (NullPointerException npe) {
+                            log.trace("npe.")
+                        }
+                    }
+                }
+                if (errors) {
+                    results['errors'] = errors
+                }
+                output = mapper.writeValueAsString(results)
+            }
+        } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
+            def databases = loadMetaProxyInfo(metaProxyInfoUrl)
+            output = mapper.writeValueAsString(databases)
+        } else if (!query) {
+            output = "{\"error\":\"Use parameter 'q'\"}"
+        }
+        if (!output) {
+            response.setStatus(output, Status.SUCCESS_NO_CONTENT)
+        } else {
+            response.setEntity(output, mediaType)
+        }
+    }
+
+    class MetaproxyQuery implements Callable<MetaproxySearchResult> {
+
+        URL url
+        String database
+        Whelk whelk
+
+        MetaproxyQuery(Whelk w, URL queryUrl, String db) {
+            this.url = queryUrl
+            this.database = db
+            this.whelk = w
+            assert whelk
+        }
+
+        @Override
+        MetaproxySearchResult call() {
+            def docStrings, results
+            try {
+                log.debug("requesting data from url: $url")
+                def xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
+                int numHits = xmlRecords.'zs:numberOfRecords'.toInteger()
+                docStrings = getXMLRecordStrings(xmlRecords)
+                results = new MetaproxySearchResult(database, numHits)
+                for (docString in docStrings) {
+                    def record = MarcXmlRecordReader.fromXml(docString)
+                    // Not always available (and also unreliable)
+                    //id = record.getControlfields("001").get(0).getData()
+
+                    log.trace("Marcxmlrecordreader for done")
+
+                    def jsonRec = MarcJSONConverter.toJSONString(record)
+                    log.trace("Marcjsonconverter for done")
+                    def xMarcJsonDoc = new Document()
+                    .withData(jsonRec.getBytes("UTF-8"))
+                    .withContentType("application/x-marc-json")
+                    //Convert xMarcJsonDoc to ld+json
+                    def jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
+                    if (!jsonDoc.identifier) {
+                        jsonDoc.identifier = this.whelk.mintIdentifier(jsonDoc)
+                    }
+                    log.trace("Marcframeconverter done")
+
+                    results.addHit(new IndexDocument(jsonDoc))
+                }
+            } catch (org.xml.sax.SAXParseException spe) {
+                log.error("Failed to parse XML: ${url.text}")
+                results = new MetaproxySearchResult(database, 0)
+                results.error = "Failed to parse XML (${spe.message}))"
+            } catch (java.net.ConnectException ce) {
+                log.error("Connection failed", ce)
+                results = new MetaproxySearchResult(database, 0)
+                results.error = "Connection with metaproxy failed."
+            } catch (Exception e) {
+                log.error("Could not convert document from $docStrings", e)
+                results = new MetaproxySearchResult(database, 0)
+                results.error = "Failed to convert results to JSON."
+            }
+            return results
+        }
+    }
+
+    class MetaproxySearchResult extends SearchResult {
+
+        String database, error
+
+        MetaproxySearchResult(String db, int nrHits) {
+            super(nrHits)
+            this.database = db
+        }
+    }
+
+    List<String> getXMLRecordStrings(xmlRecords) {
+        def xmlRecs = new ArrayList<String>()
+        def allRecords = xmlRecords?.'zs:records'?.'zs:record'
+        for (record in allRecords) {
+            def recordData = record.'zs:recordData'
+            def marcXmlRecord = createString(recordData.'tag0:record')
+            if (marcXmlRecord) {
+                xmlRecs << removeNamespacePrefixes(marcXmlRecord)
+            }
+        }
+        return xmlRecs
+    }
+
+    String createString(GPathResult root) {
+        return new StreamingMarkupBuilder().bind {
+            out << root
+        }
+    }
+
+    String removeNamespacePrefixes(String xmlStr) {
+        return xmlStr.replaceAll("tag0:", "").replaceAll("zs:", "")
+    }
+}
+@Log
+class SearchRestlet extends BasicWhelkAPI {
+    def pathEnd = "{indexType}/_search"
+    def varPath = true
+    String id = "Search"
+    String description = "Generic search query API. User parameters \"q\" for querystring, and optionally \"facets\" and \"boost\"."
+    def config
+
+
+    SearchRestlet(indexTypeConfig) {
+        this.config = indexTypeConfig
+        if (config.path) {
+            this.pathEnd = config.path
+        }
+    }
+
+    @Override
+    void doHandle(Request request, Response response) {
+        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def indexType = request.attributes?.indexType ?: config.defaultIndexType
+        def indexConfig = config.indexTypes[indexType]
+        def boost = queryMap.boost?.split(",") ?: indexConfig?.defaultBoost?.split(",")
+        def facets = queryMap.facets?.split(",") ?: indexConfig?.queryFacets?.split(",")
+        def elasticQuery = new ElasticQuery(queryMap)
+            if (queryMap.f) {
+                elasticQuery.query += " " + queryMap.f
+            }
+            elasticQuery.indexType = indexType
+            if (facets) {
+                for (f in facets) {
+                    elasticQuery.addFacet(f)
+                }
+            }
+            if (boost) {
+                for (b in boost) {
+                    if (b.size() > 0) {
+                        def (k, v) = b.split(":")
+                        elasticQuery.addBoost(k, Long.parseLong(v))
+                    }
+                }
+            }
+            def fields = indexConfig?.get("queryFields")
+            if (fields && fields.size() > 0) {
+                elasticQuery.fields = fields
+            }
+
+            elasticQuery.highlights = indexConfig?.get("queryFields")
+            if (!queryMap['sort'] && !queryMap['order']) {
+                elasticQuery.sorting = indexConfig?.get("sortby")
+            }
+        try {
+            def callback = queryMap.get("callback")
+            def jsonResult =
+            (callback ? callback + "(" : "") +
+            performQuery(elasticQuery) +
+            (callback ? ");" : "")
+
+            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
+
+        } catch (WhelkRuntimeException wrte) {
+
+            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+        }
+    }
+
+    String performQuery(elasticQuery) {
+        long startTime = System.currentTimeMillis()
+        //def elasticQuery = new ElasticQuery(queryMap)
+        log.debug("elasticQuery: ${elasticQuery.query}")
+        def results
+        try {
+
+            log.debug("Handling search request with indextype $elasticQuery.indexType")
+            def indexConfig = config.indexTypes?.get(elasticQuery.indexType, null)
+
+            log.debug("Query $elasticQuery.query Fields: ${elasticQuery.fields} Facets: ${elasticQuery.facets}")
+            results = this.whelk.search(elasticQuery)
+            def keyList = indexConfig?.get("resultFields")
+            log.info("keyList: $keyList")
+            def extractedResults = keyList != null ? results.toJson(keyList) : results.toJson()
+
+            return extractedResults
+        } finally {
+            this.logMessage = "Query [" + elasticQuery?.query + "] completed resulting in " + results?.numberOfHits + " hits"
+        }
+    }
+
 }
 
 @Log
@@ -371,6 +615,168 @@ class DumpRestlet extends BasicWhelkAPI {
     }
 }
 
+
+
+
+
+
+/*
+ * Superclasses and interfaces.
+ */
+interface RestAPI extends API {
+    String getPath()
+}
+
+@Log
+abstract class BasicWhelkAPI extends Restlet implements RestAPI {
+    Whelk whelk
+
+    def pathEnd = ""
+    def varPath = false
+    boolean enabled = true
+
+    String logMessage = "Handled #REQUESTMETHOD# for #API_ID#"
+
+    @Override
+    void setWhelk(Whelk w) {
+        this.whelk = w
+    }
+    @Override
+    void init(String w) {}
+
+    String getPath() {
+        def elems = [(this.whelk instanceof HttpWhelk ? this.whelk.contentRoot : this.whelk.id), getPathEnd()]
+        return "/" + elems.findAll { it.length() > 0 }.join("/")
+    }
+
+    /**
+     * For discovery API.
+     */
+    abstract String getDescription();
+
+    private String getModifiedPathEnd() {
+        if (getPathEnd() == null || getPathEnd().length() == 0) {
+            return ""
+        } else {
+            return "/" + getPathEnd()
+        }
+    }
+
+    @Override
+    int compareTo(Plugin p) {
+        return (this.getOrder() - p.getOrder());
+    }
+
+    abstract void doHandle(Request request, Response response)
+
+    void handle(Request request, Response response) {
+        long startTime = System.currentTimeMillis()
+        doHandle(request, response)
+        def headers = request.attributes.get("org.restlet.http.headers")
+        def remote_ip = headers.find { it.name.equalsIgnoreCase("X-Forwarded-For") }?.value ?: request.clientInfo.address
+        log.info(logMessage.replaceAll("#REQUESTMETHOD#", request.method.toString()).replaceAll("#API_ID#", this.id) + " from $remote_ip in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
+    }
+}
+
+@Log
+class DiscoveryAPI extends BasicWhelkAPI {
+
+    ObjectMapper mapper = new ObjectMapper()
+
+    String description = "Discovery API"
+    String pathEnd = "discovery"
+    String id = "DiscoveryAPI"
+
+    DiscoveryAPI(Whelk w) {
+        this.whelk = w
+    }
+
+    @Override
+    void doHandle(Request request, Response response) {
+        def info = [:]
+        info["whelk"] = whelk.id
+        info["apis"] = whelk.getAPIs().collect {
+            [ [ "path" : (it.path) ,
+                "description" : (it.description) ]
+            ] }
+        log.debug("info: $info")
+
+        response.setEntity(mapper.writeValueAsString(info), MediaType.APPLICATION_JSON)
+    }
+}
+
+enum DisplayMode {
+    DOCUMENT, META
+}
+
+@Log
+class RootRouteRestlet extends BasicWhelkAPI {
+
+    String description = "Whelk root routing API"
+    String id = "RootRoute"
+    def pathEnd = ""
+
+    RootRouteRestlet(Whelk whelk) {
+        this.whelk = whelk
+    }
+
+    @Override
+    String getPath() {
+        if (this.whelk.contentRoot == "") {
+            return "/"
+        } else return "/" + this.whelk.contentRoot + "/"
+    }
+
+    @Override
+    void doHandle(Request request, Response response) {
+        def discoveryAPI
+        def documentAPI
+        //GET redirects to DiscoveryAPI
+        if (request.method == Method.GET) {
+            discoveryAPI = new DiscoveryAPI(this.whelk)
+            def uri = new URI(discoveryAPI.path)
+            discoveryAPI.handle(request, response)
+          //POST saves new document
+        } else if (request.method == Method.POST) {
+            try {
+                def identifier
+                Document doc = null
+                def headers = request.attributes.get("org.restlet.http.headers")
+                log.trace("headers: $headers")
+                log.debug("request: $request")
+                def link = headers.find { it.name.equals("link") }?.value
+                doc = new Document().withData(Tools.normalizeString(request.entityAsText)).withEntry(["contentType":request.entity.mediaType.toString()])
+                if (link != null) {
+                    log.trace("Adding link $link to document...")
+                    doc = doc.withLink(link)
+                }
+                doc = this.whelk.sanityCheck(doc)
+                identifier = this.whelk.add(doc)
+                response.setEntity(doc.dataAsString, LibrisXLMediaType.getMainMediaType(doc.contentType))
+                response.entity.setTag(new Tag(doc.timestamp as String, false))
+                log.debug("Saved document $identifier")
+                response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
+                log.debug("Redirecting with location ref " + request.getRootRef().toString() + identifier)
+                response.setLocationRef(request.getRootRef().toString() + "${identifier}")
+            } catch (WhelkRuntimeException wre) {
+                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
+            }
+        } else if (request.method == Method.PUT) {
+            log.debug("Received PUT request for ${this.whelk.id}")
+            documentAPI = new DocumentRestlet(this.whelk)
+            if (request.attributes?.get("identifier") != null) {
+                documentAPI.handle(request, response)
+            } else {
+                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
+            }
+        }
+    }
+}
+
+/*
+ * Possibly unused API:s
+ */
+
 @Log
 class HttpAPIRestlet extends BasicWhelkAPI {
     def pathEnd = "_sparql"
@@ -431,318 +837,6 @@ class HttpAPIRestlet extends BasicWhelkAPI {
     }
 }
 
-@Log
-class SparqlRestlet extends BasicWhelkAPI {
-    def pathEnd = "_sparql"
-    def varPath = false
-    String id = "SparqlAPI"
-
-    String description = "Provides sparql endpoint to the underlying tripple store."
-
-    @Override
-    void doHandle(Request request, Response response) {
-        def form = new Form(request.getEntity())
-        def query = form.getFirstValue("query")
-
-        InputStream is
-        try {
-            is = whelk.sparql(query)
-        } catch (Exception e) {
-            is = new ByteArrayInputStream(e.message.bytes)
-            log.warn("Query $query resulted in error: ${e.message}", e)
-            query = null
-            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
-        }
-
-        log.debug("Creating outputrepresentation.")
-
-        Representation ir = new OutputRepresentation(mediaType(query)) {
-            @Override
-            public void write(OutputStream realOutput) throws IOException {
-                byte[] b = new byte[8]
-                int read
-                while ((read = is.read(b)) != -1) {
-                    realOutput.write(b, 0, read)
-                    realOutput.flush()
-                }
-            }
-        }
-
-        log.debug("Sending outputrepresentation.")
-        response.setEntity(ir)
-    }
-
-    MediaType mediaType(String query) {
-        if (!query) {
-            return MediaType.TEXT_PLAIN
-        }
-        if (query.toUpperCase().contains("SELECT") || query.toUpperCase().contains("ASK")) {
-            return MediaType.APPLICATION_SPARQL_RESULTS_XML
-        } else {
-            return MediaType.APPLICATION_RDF_XML
-        }
-    }
-}
-
-/*
-@Deprecated
-@Log
-class HttpSparqlRestlet extends BasicWhelkAPI {
-    def pathEnd = "_httpsparql"
-    def varPath = "false"
-    String id = "HttpSparqlAPI"
-
-    String description = "Provides direct proxy access to the underlying tripple store."
-
-    @Override
-    void doHandle(Request request, Response response) {
-        ClientResource resource = new ClientResource(this.whelk.graphStore.queryURI)
-        response.setEntity(resource.handleOutbound(request))
-    }
-}
-*/
-
-@Deprecated
-@Log
-class FieldSearchRestlet extends BasicWhelkAPI {
-    def pathEnd = "_fieldsearch/{indexType}"
-    String id = "ESFieldSearch"
-    def varPath = false
-    String description = "Query API for field searches. For example q=about.instanceOf.attributedTo.controlledLabel:Strindberg, August"
-
-    void doHandle(Request request, Response response) {
-
-        def reqMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def callback = reqMap.get("callback")
-        def q = reqMap["q"]
-        def indexType = request.attributes.get("indexType")
-
-        if (!indexType) {
-            response.setEntity("Missing \"indexType\" in url", MediaType.TEXT_PLAIN)
-        } else {
-            log.debug("index type $indexType")
-
-            def query = new ElasticQuery(q).withType(indexType)
-            def results = this.whelk.search(query)
-
-            def jsonResult =
-                (callback ? callback + "(" : "") +
-                        results.toJson() +
-                        (callback ? ");" : "")
-            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
-
-        }
-
-    }
-}
-
-@Log
-class HoldCounter extends SearchRestlet {
-    def pathEnd = "_libcount"
-    def varPath = false
-    String id = "HoldingsCounter"
-    String description = "Custom search API for counting holdings."
-
-    HoldCounter(indexTypeConfig) {
-        super(indexTypeConfig)
-    }
-
-    @Override
-    void doHandle(Request request, Response response) {
-        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def idparam = queryMap.get("id")//.replaceAll("/", "\\/")
-        log.info("idparam: $idparam")
-        /*
-        queryMap.put('q', idparam)
-        queryMap.put('fields','about.annotates.@id')
-        log.info("queryMap: $queryMap")
-        queryMap.remove('id')
-        */
-
-        def elasticQuery = new ElasticQuery("about.annotates.@id", idparam)
-        elasticQuery.indexType = config.defaultIndexType
-        elasticQuery.n = 0
-
-        try {
-            response.setEntity(performQuery(elasticQuery), MediaType.APPLICATION_JSON)
-        } catch (WhelkRuntimeException wrte) {
-            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
-
-        }
-    }
-}
-
-@Log
-class SearchRestlet extends BasicWhelkAPI {
-    def pathEnd = "{indexType}/_search"
-    def varPath = true
-    String id = "Search"
-    String description = "Generic search query API. User parameters \"q\" for querystring, and optionally \"facets\" and \"boost\"."
-    def config
-
-
-    SearchRestlet(indexTypeConfig) {
-        this.config = indexTypeConfig
-        if (config.path) {
-            this.pathEnd = config.path
-        }
-    }
-
-    @Override
-    void doHandle(Request request, Response response) {
-        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def indexType = request.attributes?.indexType ?: config.defaultIndexType
-        def indexConfig = config.indexTypes[indexType]
-        def boost = queryMap.boost?.split(",") ?: indexConfig?.defaultBoost?.split(",")
-        def facets = queryMap.facets?.split(",") ?: indexConfig?.queryFacets?.split(",")
-        def elasticQuery = new ElasticQuery(queryMap)
-            if (queryMap.f) {
-                elasticQuery.query += " " + queryMap.f
-            }
-            elasticQuery.indexType = indexType
-            if (facets) {
-                for (f in facets) {
-                    elasticQuery.addFacet(f)
-                }
-            }
-            if (boost) {
-                for (b in boost) {
-                    if (b.size() > 0) {
-                        def (k, v) = b.split(":")
-                        elasticQuery.addBoost(k, Long.parseLong(v))
-                    }
-                }
-            }
-            def fields = indexConfig?.get("queryFields")
-            if (fields && fields.size() > 0) {
-                elasticQuery.fields = fields
-            }
-
-            elasticQuery.highlights = indexConfig?.get("queryFields")
-            if (!queryMap['sort'] && !queryMap['order']) {
-                elasticQuery.sorting = indexConfig?.get("sortby")
-            }
-        try {
-            def callback = queryMap.get("callback")
-            def jsonResult =
-            (callback ? callback + "(" : "") +
-            performQuery(elasticQuery) +
-            (callback ? ");" : "")
-
-            response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
-
-        } catch (WhelkRuntimeException wrte) {
-
-            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
-        }
-    }
-
-    String performQuery(elasticQuery) {
-        long startTime = System.currentTimeMillis()
-        //def elasticQuery = new ElasticQuery(queryMap)
-        log.debug("elasticQuery: ${elasticQuery.query}")
-        def results
-        try {
-
-            log.debug("Handling search request with indextype $elasticQuery.indexType")
-            def indexConfig = config.indexTypes?.get(elasticQuery.indexType, null)
-
-            log.debug("Query $elasticQuery.query Fields: ${elasticQuery.fields} Facets: ${elasticQuery.facets}")
-            results = this.whelk.search(elasticQuery)
-            def keyList = indexConfig?.get("resultFields")
-            log.info("keyList: $keyList")
-            def extractedResults = keyList != null ? results.toJson(keyList) : results.toJson()
-
-            return extractedResults
-        } finally {
-            this.logMessage = "Query [" + elasticQuery?.query + "] completed resulting in " + results?.numberOfHits + " hits"
-        }
-    }
-
-}
-
-@Log
-class ISXNTool extends BasicWhelkAPI {
-    def pathEnd = "_isxntool"
-    String id = "ISXNTool"
-    String description = "Formats data (ISBN-numbers) according to international presention rules."
-    Whelk dataWhelk
-    ObjectMapper mapper = new ObjectMapper()
-
-    ISXNTool(Whelk dw) {
-        this.dataWhelk = dw
-    }
-
-    void doHandle(Request request, Response response) {
-        def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        String isbnString = querymap.get("isbn")
-        if (isbnString) {
-            handleIsbn(isbnString, querymap, request, response)
-        } else {
-            response.setEntity('{"error":"No valid parameter found."}', MediaType.APPLICATION_JSON)
-        }
-    }
-
-    void handleIsbn(String isbnString, Map querymap, Request request, Response response) {
-        String providedIsbn = isbnString
-        isbnString = isbnString.replaceAll(/[^\dxX]/, "")
-        def isbnmap = [:]
-        isbnmap["provided"] = providedIsbn
-        Isbn isbn = null
-        try {
-            isbn = IsbnParser.parse(isbnString)
-        }  catch (se.kb.libris.utils.isbn.IsbnException iobe) {
-            log.debug("Validation of isbn $isbnString failed: wrong length")
-        }
-        if (isbn) {
-            log.debug("isbnString: $isbnString")
-            String formattedIsbn = isbn.toString(true)
-            String properIsbn = isbn.toString()
-            boolean checkExists = (querymap.get("check", "false") == "true")
-            boolean ignoreValid = (querymap.get("ignoreValidation", "false") == "true")
-            boolean isValid = validISBN(isbnString)
-            isbnmap["valid"] = isValid
-            if (ignoreValid || isValid) {
-                isbnmap["formatted"] = formattedIsbn
-                isbnmap["proper"] = properIsbn
-            }
-            if (checkExists) {
-                def results = dataWhelk.search(new Query(isbn.toString()).addField("about.isbn"))
-                isbnmap["exists"] = (results.numberOfHits > 0)
-            }
-        } else {
-            isbnmap["valid"] = false
-            isbnmap["error"] = new String("Failed to parse $providedIsbn as ISBN")
-        }
-        response.setEntity(mapper.writeValueAsString(["isbn":isbnmap]), MediaType.APPLICATION_JSON)
-    }
-
-    boolean validISBN(String isbn) {
-        boolean valid = false
-        int n = 0
-        try {
-            // calculate sum
-            if (isbn.length() == 10) {
-                for (int i=0;i<isbn.length()-1;i++) {
-                    n += Character.getNumericValue(isbn.charAt(i))*Isbn.weights[i];
-                }
-                n %= 11;
-                valid = (isbn.charAt(9) == (n == 10 ? 'X' : (""+n).charAt(0)))
-                log.debug("isbn10 check digit: $n ($valid)")
-            } else if (isbn.length() == 13) {
-                for (int i=0;i<isbn.length()-1;i++)
-                n += Character.getNumericValue(isbn.charAt(i))*Isbn.weights13[i];
-                n = (10 - (n % 10)) % 10;
-                valid = (isbn.charAt(12) == (""+n).charAt(0))
-                log.debug("isbn13 check digit: $n ($valid)")
-            }
-        } catch (Exception e) {
-            return valid
-        }
-        //return (n==10)? 'X' : (char)(n + '0');
-        return valid
-    }
-}
 
 @Log
 class CompleteExpander extends BasicWhelkAPI {
@@ -1132,258 +1226,4 @@ class MetadataSearchRestlet extends BasicWhelkAPI {
 
 }
 
-@Log
-class RemoteSearchRestlet extends BasicWhelkAPI {
-    def pathEnd = "_remotesearch"
-    def mapper
-    
-    String description = "Query API for remote search"
-    String id = "RemoteSearchAPI"
-
-    Map remoteURLs
-
-    MarcFrameConverter marcFrameConverter
-
-    URL metaProxyInfoUrl
-    String metaProxyBaseUrl
-
-    final String DEFAULT_DATABASE = "LC"
-
-    def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
-
-    RemoteSearchRestlet(Map settings) {
-        this.metaProxyBaseUrl = settings.metaproxyBaseUrl
-        // Cut trailing slashes from url
-        while (metaProxyBaseUrl.endsWith("/")) {
-            metaProxyBaseUrl = metaProxyBaseUrl[0..-1]
-        }
-        assert metaProxyBaseUrl
-        metaProxyInfoUrl = new URL(settings.metaproxyInfoUrl)
-
-        // Prepare remoteURLs by loading settings once.
-        loadMetaProxyInfo(metaProxyInfoUrl)
-
-        mapper = new ElasticJsonMapper()
-    }
-
-
-    List loadMetaProxyInfo(URL url) {
-        def xml = new XmlSlurper(false,false).parse(url.newInputStream())
-
-        def databases = xml.libraryCode.collect {
-            def map = ["database": createString(it.@id)]
-            it.children().each { node ->
-                def n = node.name().toString()
-                def o = node.text().toString()
-                def v = map[n]
-                if (v) {
-                    if (v instanceof String) {
-                        v = map[n] = [v]
-                    }
-                    v << o
-                } else {
-                    map[n] = o
-                }
-            }
-            return map
-        }
-
-        remoteURLs = databases.inject( [:] ) { map, db ->
-            map << [(db.database) : metaProxyBaseUrl + "/" + db.database]
-        }
-
-        return databases
-    }
-
-
-    void init(String wn) {
-        log.debug("plugins: ${whelk.plugins}")
-        marcFrameConverter = whelk.plugins.find { it instanceof FormatConverter && it.resultContentType == "application/ld+json" && it.requiredContentType == "application/x-marc-json" }
-        assert marcFrameConverter
-    }
-
-    void doHandle(Request request, Response response) {
-        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        def query = queryMap.get("q", null)
-        int start = queryMap.get("start", "0") as int
-        int n = queryMap.get("n", "10") as int
-        def databaseList = queryMap.get("database", DEFAULT_DATABASE).split(",") as List
-        def queryStr, url
-        MarcRecord record
-        OaiPmhXmlConverter oaiPmhXmlConverter
-        MediaType mediaType = MediaType.APPLICATION_JSON
-        String output = ""
-
-        urlParams['maximumRecords'] = n
-        urlParams['startRecord'] = (start < 1 ? 1 : start)
-
-        if (query) {
-            // Weed out the unavailable databases
-            databaseList = databaseList.intersect(remoteURLs.keySet() as List)
-            log.debug("Remaining databases: $databaseList")
-            urlParams.each { k, v ->
-                if (!queryStr) {
-                    queryStr = "?"
-                } else {
-                    queryStr += "&"
-                }
-                queryStr += k + "=" + v
-            }
-            if (!databaseList) {
-                output = "{\"error\":\"Requested database is unknown or unavailable.\"}"
-            }
-            else {
-                ExecutorService queue = Executors.newCachedThreadPool()
-                def resultLists = []
-                try {
-                    def futures = []
-                    for (database in databaseList) {
-                        url = new URL(remoteURLs[database] + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
-                        log.debug("submitting to futures")
-                        futures << queue.submit(new MetaproxyQuery(whelk, url, database))
-                    }
-                    log.info("Started all threads. Now harvesting the future")
-                    for (f in futures) {
-                        log.debug("Waiting for future ...")
-                        def sr = f.get()
-                        log.debug("Adding ${sr.numberOfHits} to ${resultLists}")
-                        resultLists << sr
-                    }
-                } finally {
-                    queue.shutdown()
-                }
-                // Merge results
-                def results = ['hits':[:],'list':[]]
-                int biggestList = 0
-                for (result in resultLists) { if (result.hits.size() > biggestList) { biggestList = result.hits.size() } }
-                def errors = [:]
-                for (int i = 0; i <= biggestList; i++) {
-                    for (result in resultLists) {
-                        results.hits[result.database] = result.numberOfHits
-                        try {
-                            if (result.error) {
-                                errors.get(result.database, [:]).put(""+i, result.error)
-                            } else if (i < result.hits.size()) {
-                                results.list << ['database':result.database,'data':result.hits[i].dataAsMap]
-                            }
-                        } catch (ArrayIndexOutOfBoundsException aioobe) {
-                            log.debug("Overstepped array bounds.")
-                        } catch (NullPointerException npe) {
-                            log.trace("npe.")
-                        }
-                    }
-                }
-                if (errors) {
-                    results['errors'] = errors
-                }
-                output = mapper.writeValueAsString(results)
-            }
-        } else if (queryMap.containsKey("databases") || request.getResourceRef().getQuery() == "databases") {
-            def databases = loadMetaProxyInfo(metaProxyInfoUrl)
-            output = mapper.writeValueAsString(databases)
-        } else if (!query) {
-            output = "{\"error\":\"Use parameter 'q'\"}"
-        }
-        if (!output) {
-            response.setStatus(output, Status.SUCCESS_NO_CONTENT)
-        } else {
-            response.setEntity(output, mediaType)
-        }
-    }
-
-    class MetaproxyQuery implements Callable<MetaproxySearchResult> {
-
-        URL url
-        String database
-        Whelk whelk
-
-        MetaproxyQuery(Whelk w, URL queryUrl, String db) {
-            this.url = queryUrl
-            this.database = db
-            this.whelk = w
-            assert whelk
-        }
-
-        @Override
-        MetaproxySearchResult call() {
-            def docStrings, results
-            try {
-                log.debug("requesting data from url: $url")
-                def xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
-                int numHits = xmlRecords.'zs:numberOfRecords'.toInteger()
-                docStrings = getXMLRecordStrings(xmlRecords)
-                results = new MetaproxySearchResult(database, numHits)
-                for (docString in docStrings) {
-                    def record = MarcXmlRecordReader.fromXml(docString)
-                    // Not always available (and also unreliable)
-                    //id = record.getControlfields("001").get(0).getData()
-
-                    log.trace("Marcxmlrecordreader for done")
-
-                    def jsonRec = MarcJSONConverter.toJSONString(record)
-                    log.trace("Marcjsonconverter for done")
-                    def xMarcJsonDoc = new Document()
-                    .withData(jsonRec.getBytes("UTF-8"))
-                    .withContentType("application/x-marc-json")
-                    //Convert xMarcJsonDoc to ld+json
-                    def jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
-                    if (!jsonDoc.identifier) {
-                        jsonDoc.identifier = this.whelk.mintIdentifier(jsonDoc)
-                    }
-                    log.trace("Marcframeconverter done")
-
-                    //mapper = new ObjectMapper()
-
-                    results.addHit(new IndexDocument(jsonDoc))
-                }
-            } catch (org.xml.sax.SAXParseException spe) {
-                log.error("Failed to parse XML: ${url.text}")
-                results = new MetaproxySearchResult(database, 0)
-                results.error = "Failed to parse XML (${spe.message}))"
-            } catch (java.net.ConnectException ce) {
-                log.error("Connection failed", ce)
-                results = new MetaproxySearchResult(database, 0)
-                results.error = "Connection with metaproxy failed."
-            } catch (Exception e) {
-                log.error("Could not convert document from $docStrings", e)
-                results = new MetaproxySearchResult(database, 0)
-                results.error = "Failed to convert results to JSON."
-            }
-            return results
-        }
-    }
-
-    class MetaproxySearchResult extends SearchResult {
-
-        String database, error
-
-        MetaproxySearchResult(String db, int nrHits) {
-            super(nrHits)
-            this.database = db
-        }
-    }
-
-    List<String> getXMLRecordStrings(xmlRecords) {
-        def xmlRecs = new ArrayList<String>()
-        def allRecords = xmlRecords?.'zs:records'?.'zs:record'
-        for (record in allRecords) {
-            def recordData = record.'zs:recordData'
-            def marcXmlRecord = createString(recordData.'tag0:record')
-            if (marcXmlRecord) {
-                xmlRecs << removeNamespacePrefixes(marcXmlRecord)
-            }
-        }
-        return xmlRecs
-    }
-
-    String createString(GPathResult root) {
-        return new StreamingMarkupBuilder().bind {
-            out << root
-        }
-    }
-
-    String removeNamespacePrefixes(String xmlStr) {
-        return xmlStr.replaceAll("tag0:", "").replaceAll("zs:", "")
-    }
-}
 
