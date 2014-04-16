@@ -6,8 +6,10 @@ import org.slf4j.LoggerFactory
 //import groovy.util.logging.Slf4j as Log
 import groovy.transform.Synchronized
 
+/*
 import java.nio.file.*
 import java.nio.file.attribute.*
+*/
 import java.util.concurrent.*
 
 import se.kb.libris.whelks.Document
@@ -21,6 +23,8 @@ import gov.loc.repository.pairtree.Pairtree
 
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.*
+
+import com.google.common.io.Files
 
 //@Log
 class PairtreeDiskStorage extends BasicPlugin implements Storage {
@@ -199,6 +203,29 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
 
     void benchmark() {
         int count = 0
+        def files = Files.fileTreeTraverser().breadthFirstTraversal(new File(this.baseStorageDir))
+        long startTime = System.currentTimeMillis()
+        long runningTime = 0
+        for (file in files) {
+            if (file.name == PairtreeDiskStorage.ENTRY_FILE_NAME) {
+                Document document = new Document(FileUtils.readFileToString(file, "utf-8"))
+                try {
+                    document.withData(FileUtils.readFileToByteArray(new File(file.getParentFile(), document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                } catch (FileNotFoundException fnfe) {
+                    log.trace("File not found using ${document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY)} as filename. Will try to use it as path.")
+                    document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                }
+                count++
+                runningTime = System.currentTimeMillis() - startTime
+                def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
+                Tools.printSpinner("Benchmarking ${this.id}. ${count} documents read sofar. $velocityMsg", count)
+            }
+        }
+    }
+
+    /*
+    void benchmark2() {
+        int count = 0
         long startTime = System.currentTimeMillis()
         long runningTime = 0
         Files.walkFileTree(new File(this.baseStorageDir).toPath(), new FileVisitor<Path>() {
@@ -233,6 +260,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
             }
         })
     }
+    */
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null) {
@@ -250,10 +278,11 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                 }
             }
         }
-        return getAllWalker(dataset)
+        return getAllRaw(dataset)
     }
 
 
+    /*
     Iterable<Document> getAllWalker(String dataset = null) {
         String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
         log.info("Starting reading for getAllRaw() at $baseDir. (This could take a while ...)")
@@ -265,6 +294,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
             }
         }
     }
+    */
 
 
     @groovy.transform.CompileStatic
@@ -388,6 +418,7 @@ class FlatDiskStorage extends DiskStorage {
     }
 }
 
+/*
 class FileWalker implements Iterator<Document> {
     final BlockingQueue<Document> bq
     FileWalker(final File fileStart, final int size) throws Exception {
@@ -464,3 +495,4 @@ class FileWalker implements Iterator<Document> {
     }
 
 }
+*/

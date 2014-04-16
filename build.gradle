@@ -126,6 +126,7 @@ project(":whelk-core") {
         //compile "org.openrdf.sesame:sesame-sail-inferencer:${sesameVer}"
         compile 'stax:stax:1.2.0'
         compile 'stax:stax-api:1.0.1'
+        compile 'com.google.guava:guava:16.0.1'
     }
 }
 
