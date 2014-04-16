@@ -354,6 +354,7 @@ class FileWalker implements Iterator<Document> {
     FileWalker(final File fileStart, final int size) throws Exception {
         bq = new ArrayBlockingQueue<Document>(size);
         Thread thread = new Thread(new Runnable() {
+            static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeDiskStorage")
             public void run() {
                 try {
                     Files.walkFileTree(fileStart.toPath(), new FileVisitor<Path>() {
@@ -374,6 +375,7 @@ class FileWalker implements Iterator<Document> {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
+                            log.trace("Offering document ${document.identifier} to queue.")
                             super.bq.offer(document, 4242, TimeUnit.HOURS);
                             return FileVisitResult.CONTINUE;
                         }
