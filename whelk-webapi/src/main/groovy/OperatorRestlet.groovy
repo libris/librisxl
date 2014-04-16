@@ -209,6 +209,12 @@ class BenchmarkOperator extends AbstractOperator {
 
     @Override
     void doRun(long startTime) {
+        def storage = this.whelk.getStorage()
+        log.info("Starting benchmark method on ${storage.id}")
+        storage.benchmark()
+    }
+
+    void doRun2(long startTime) {
         for (doc in whelk.loadAll(dataset, since, fromStorage)) {
             if (doc) {
                 if (count == 0) {
