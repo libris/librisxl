@@ -201,28 +201,6 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
     */
 
-    void benchmark() {
-        int count = 0
-        def files = Files.fileTreeTraverser().preOrderTraversal(new File(this.baseStorageDir))
-        long startTime = System.currentTimeMillis()
-        long runningTime = 0
-        for (file in files) {
-            if (file.name == PairtreeDiskStorage.ENTRY_FILE_NAME) {
-                Document document = new Document(FileUtils.readFileToString(file, "utf-8"))
-                try {
-                    document.withData(FileUtils.readFileToByteArray(new File(file.getParentFile(), document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
-                } catch (FileNotFoundException fnfe) {
-                    log.trace("File not found using ${document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY)} as filename. Will try to use it as path.")
-                    document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
-                }
-                count++
-                runningTime = System.currentTimeMillis() - startTime
-                def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
-                Tools.printSpinner("Benchmarking ${this.id}. ${count} documents read sofar. $velocityMsg", count)
-            }
-        }
-    }
-
     /*
     void benchmark2() {
         int count = 0
@@ -296,9 +274,69 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
     */
 
+    void benchmark() {
+        int count = 0
+        long startTime = System.currentTimeMillis()
+        long runningTime = 0
+
+        File baseDir = new File(this.storageDir)
+        def files = Files.fileTreeTraverser().preOrderTraversal(baseDir)
+
+        for (file in files) {
+            if (file.name == PairtreeDiskStorage.ENTRY_FILE_NAME) {
+                count++
+                runningTime = System.currentTimeMillis() - startTime
+                def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
+                Tools.printSpinner("Benchmarking ${this.id}. ${count} documents read sofar. $velocityMsg", count)
+            }
+        }
+    }
 
     @groovy.transform.CompileStatic
     Iterable<Document> getAllRaw(String dataset = null) {
+        File baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
+        log.info("Starting reading for getAllRaw() at ${baseDir.getPath()}.")
+        final Iterator<File> fileIterator = Files.fileTreeTraverser().preOrderTraversal(baseDir).iterator()
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                return new Iterator<Document>() {
+                    File lastValidEntry = null
+
+                    public boolean hasNext() {
+                        while (fileIterator.hasNext()) {
+                            File f = fileIterator.next()
+                            if (f.name == PairtreeDiskStorage.ENTRY_FILE_NAME) {
+                                lastValidEntry = f
+                            }
+                        }
+                        return (lastValidEntry != null)
+                    }
+
+                    public Document next() {
+                        if (lastValidEntry) {
+                            Document document = new Document(FileUtils.readFileToString(lastValidEntry, "utf-8"))
+                            try {
+                                document.withData(FileUtils.readFileToByteArray(new File(lastValidEntry.getParentFile(), document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                            } catch (FileNotFoundException fnfe) {
+                                log.trace("File not found using ${document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY)} as filename. Will try to use it as path.")
+                                document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                            } catch (InterruptedException e) {
+                                e.printStackTrace()
+                            }
+                            lastValidEntry = null
+                            return document
+                        }
+                        throw new NoSuchElementException()
+                    }
+
+                    public void remove() { throw new UnsupportedOperationException() }
+                }
+            }
+        }
+    }
+
+    @groovy.transform.CompileStatic
+    Iterable<Document> getAllFileIteator(String dataset = null) {
         String baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
         log.info("Starting reading for getAllRaw() at $baseDir. (This could take a while ...)")
         final Iterator<File> entryIterator = FileUtils.iterateFiles(new File(baseDir), new NameFileFilter(ENTRY_FILE_NAME), HiddenFileFilter.VISIBLE)
