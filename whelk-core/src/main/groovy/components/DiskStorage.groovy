@@ -300,6 +300,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 return new Iterator<Document>() {
+                    static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeDiskStorage")
                     File lastValidEntry = null
 
                     public boolean hasNext() {
