@@ -220,7 +220,6 @@ abstract class ElasticSearch extends BasicPlugin {
 
     @Override
     void bulkIndex(Iterable<IndexDocument> doc) {
-        log.info("Elastic received documents to index.")
         addDocuments(doc)
     }
 

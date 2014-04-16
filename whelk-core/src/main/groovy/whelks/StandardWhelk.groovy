@@ -195,7 +195,6 @@ class StandardWhelk implements Whelk {
                 }
             }
             if (idxDocs) {
-                log.info("Sending documents for bulk indexing.")
                 try {
                     index.bulkIndex(idxDocs)
                 } catch (Exception e) {

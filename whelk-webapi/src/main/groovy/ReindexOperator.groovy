@@ -107,7 +107,6 @@ class ReindexOperator extends AbstractOperator {
     }
 
     void doTheIndexing(final List docs) {
-        log.info("Adding to queue.")
         queue.execute({
             try {
                 whelk.addToGraphStore(docs)
@@ -116,7 +115,6 @@ class ReindexOperator extends AbstractOperator {
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
             }
             try {
-                log.info("Calling whelk with documents to index.")
                 whelk.addToIndex(docs)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
