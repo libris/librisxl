@@ -45,7 +45,7 @@
     owl:equivalentProperty rdfs:seeAlso .
 
 :sameAs a owl:ObjectProperty;
-    rdfs:subPropertyOf owl:sameAs .
+    owl:equivalentProperty owl:sameAs .
 
 :identifiedBy a owl:ObjectProperty;
     owl:equivalentProperty sdo:sameAs .
