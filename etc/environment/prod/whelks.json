@@ -1,6 +1,15 @@
 {
     "_whelks": [
         {
+            "def":{
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+                "_plugins" : [
+                    "definitiondata"
+                    ],
+                "docBaseUri" : "http://libris.kb.se/"
+            }
+        },
+        {
             "libris":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_converters": [
@@ -16,6 +25,7 @@
                     "remotesearch",
                     "search",
                     "completeexpander",
+                    "isxntool",
                     "sparqlapi",
                     "libcount",
                     "documentapi"
@@ -30,17 +40,6 @@
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
-            }
-        },
-        {
-            "resource":{
-                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : [
-                    "definitiondata",
-                    "resourcelist",
-                    "marcmap",
-                    "isxntool"
-                ]
             }
         }
     ],

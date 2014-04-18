@@ -4,6 +4,7 @@
         "def":{
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins" : [
+                "localdefinitiondata",
                 "flatstorage",
                 "localindex",
                 "fusekigraphstore",
@@ -36,6 +37,7 @@
                 "sparqlapi",
                 "libcount",
                 "completeexpander",
+                "isxntool",
                 "documentapi"
                 ],
             "_otherplugins": [
@@ -43,7 +45,8 @@
                 "ptstorage",
                 "entityextractor",
                 "linkcompleter",
-                "indexlinkfinder"
+                "indexlinkfinder",
+                "fusekigraphstore"
                 ],
             "contentRoot" : "/",
             "docBaseUri" : "http://libris.kb.se/"
@@ -57,17 +60,6 @@
                 "documentapi",
                 "modsimporter"
                 ]
-        }
-    },
-    {
-        "resource":{
-            "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-            "_plugins" : [
-                "localdefinitiondata",
-                "resourcelist",
-                "marcmap",
-                "isxntool"
-              ]
         }
     }
     ],
