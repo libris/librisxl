@@ -35,6 +35,7 @@ class WhelkInitializer {
             w.each { wname, meta ->
                 meta._class = meta._class ?: "se.kb.libris.whelks.StandardWhelk"
                 def whelk = Class.forName(meta._class).getConstructor(String.class).newInstance(wname)
+                whelklist << whelk
                 // Find setters for whelk.
                 meta.each { key, value ->
                     if (!(key =~ /^_.+$/)) {
@@ -53,7 +54,6 @@ class WhelkInitializer {
                         }
                     }
                 }
-                whelklist << whelk
             }
         }
         return whelklist
