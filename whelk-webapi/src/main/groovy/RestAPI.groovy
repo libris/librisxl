@@ -1048,65 +1048,6 @@ class SuggestResultsConverter {
 }
 
 
-@Deprecated
-@Log
-class ResourceListRestlet extends BasicWhelkAPI {
-    def pathEnd = "_resourcelist"
-
-    String description = "Query API for language and country codes."
-    String id = "ResourceListAPI"
-
-    def codeFiles = [
-        "lang": "langcodes.json",
-        "country": "countrycodes.json",
-        "nationality": "nationalitycodes.json",
-        "relator": "relatorcodes.json",
-        "conceptscheme": "conceptschemes.json",
-        "typedef": "typedefs.json"
-    ]
-    def lang
-    def country
-    def nationality
-    def relator
-    def conceptscheme
-    def typedef
-    def mapper
-
-    ResourceListRestlet() {
-        mapper = new ObjectMapper()
-        codeFiles.each { key, fileName ->
-            log.debug("Load codes $key")
-            this[(key)] = loadCodes(key)
-        }
-    }
-
-    def loadCodes(String typeOfCode) {
-        try {
-            return this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode)).withStream {
-                mapper.readValue(it, Map)
-            }
-        } catch (org.codehaus.jackson.map.JsonMappingException jme) {
-            return this.getClass().getClassLoader().getResourceAsStream(codeFiles.get(typeOfCode)).withStream {
-                mapper.readValue(it, List).collectEntries { [it.code, it] }   
-            }
-        }
-    }
-
-    void doHandle(Request request, Response response) {
-        def foundParam = false
-        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
-        codeFiles.each { key, value ->
-            if (queryMap.get(key) && queryMap.get(key).trim().equals("all")) {
-                response.setEntity(mapper.writeValueAsString(this[(key)]), MediaType.APPLICATION_JSON)
-                foundParam = true
-            }
-        }
-        if (!foundParam) {
-            response.setEntity(/{"Error": "Use parameter \"lang=all\", \"country=all\", \"nationality=all\" or \"relator=all\"."}/, MediaType.APPLICATION_JSON)
-        }
-    }
-}
-
 @Log
 class DefinitionDataRestlet extends Directory implements RestAPI {
     Whelk whelk
@@ -1132,40 +1073,6 @@ class DefinitionDataRestlet extends Directory implements RestAPI {
         return new URI(path)
     }
 
-}
-
-
-@Log
-class MarcMapRestlet extends BasicWhelkAPI {
-    def pathEnd = "_marcmap"
-
-    String description = "API for marcmap."
-    String id = "MarcMapAPI"
-
-    static final String marcmapfile = "marcmap.json"
-    def marcmap
-    def mapper
-
-    MarcMapRestlet() {
-        mapper = new ObjectMapper()
-        marcmap = loadMarcMap()
-    }
-
-    def loadMarcMap() {
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("$marcmapfile")
-        return mapper.readValue(is, Map)
-    }
-
-    void doHandle(Request request, Response response) {
-        def obj = marcmap
-        def partPath = request.resourceRef.queryAsForm.valuesMap["part"]
-        if (partPath) {
-            for (key in partPath.split(/\./)) {
-                obj = obj[key]
-            }
-        }
-        response.setEntity(mapper.writeValueAsString(obj), MediaType.APPLICATION_JSON)
-    }
 }
 
 
