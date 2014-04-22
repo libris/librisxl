@@ -42,9 +42,9 @@ class ReindexOperator extends AbstractOperator {
     void doRun(long startTime) {
         List<Document> docs = []
         gstoreQueue = Executors.newSingleThreadExecutor()
-        indexQueue = Executors.newFixedThreadPool(5)
+        indexQueue = Executors.newFixedThreadPool(3)
         gstoreAvailable = new Semaphore(100)
-        indexAvailable = new Semaphore(100)
+        indexAvailable = new Semaphore(50)
 
         if (!dataset) {
             log.debug("Requesting new index for ${whelk.index.id}.")
