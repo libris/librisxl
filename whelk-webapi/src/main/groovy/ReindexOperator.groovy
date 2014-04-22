@@ -22,7 +22,10 @@ class ReindexOperator extends AbstractOperator {
     List<String> selectedComponents = null
     String startAt = null
     String fromStorage = null
-    ExecutorService queue
+    ExecutorService gstoreQueue
+    ExecutorService indexQueue
+    Semaphore gstoreAvailable
+    Semaphore indexAvailable
 
     boolean showSpinner = false
 
@@ -38,7 +41,11 @@ class ReindexOperator extends AbstractOperator {
 
     void doRun(long startTime) {
         List<Document> docs = []
-        queue = Executors.newSingleThreadExecutor()
+        gstoreQueue = Executors.newSingleThreadExecutor()
+        indexQueue = Executors.newFixedThreadPool(5)
+        gstoreAvailable = new Semaphore(100)
+        indexAvailable = new Semaphore(100)
+
         if (!dataset) {
             log.debug("Requesting new index for ${whelk.index.id}.")
             whelk.index.createNewCurrentIndex()
@@ -100,28 +107,35 @@ class ReindexOperator extends AbstractOperator {
             }
         }
         operatorState=OperatorState.FINISHING
-        queue.execute({
+        indexQueue.execute({
             this.whelk.flush()
         } as Runnable)
-        queue.shutdown()
+        indexQueue.shutdown()
+        gstoreQueue.shutdown()
     }
 
     void doTheIndexing(final List docs) {
-        queue.execute({
-            try {
-                whelk.addToGraphStore(docs)
-            } catch (WhelkAddException wae) {
-                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
-                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
-            }
+        log.info("Trying to acquire semaphore.")
+        indexAvailable.acquire()
+        log.info("Acquired.")
+        indexQueue.execute({
             try {
                 whelk.addToIndex(docs)
             } catch (WhelkAddException wae) {
-                //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
             } catch (PluginConfigurationException pce) {
                 log.error("System badly configured", pce)
                 throw pce
+            } finally {
+                log.info("Releasing semaphore.")
+                indexAvailable.release()
+            }
+        } as Runnable)
+        gstoreQueue.execute({
+            try {
+                whelk.addToGraphStore(docs)
+            } catch (WhelkAddException wae) {
+                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
             }
         } as Runnable)
     }

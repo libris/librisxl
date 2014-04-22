@@ -374,6 +374,7 @@ abstract class ElasticSearch extends BasicPlugin {
             public void remove() { throw new UnsupportedOperationException(); }
         }
 
+        /*
         while (true) {
             log.trace("start loop")
             log.trace("Adding to list")
@@ -383,6 +384,7 @@ abstract class ElasticSearch extends BasicPlugin {
             }
         }
         return list
+        */
     }
 
     def setTypeMapping(indexName, itype) {
