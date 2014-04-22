@@ -115,9 +115,9 @@ class ReindexOperator extends AbstractOperator {
     }
 
     void doTheIndexing(final List docs) {
-        log.info("Trying to acquire semaphore.")
+        log.debug("Trying to acquire semaphore.")
         indexAvailable.acquire()
-        log.info("Acquired.")
+        log.debug("Acquired.")
         indexQueue.execute({
             try {
                 whelk.addToIndex(docs)
@@ -127,7 +127,7 @@ class ReindexOperator extends AbstractOperator {
                 log.error("System badly configured", pce)
                 throw pce
             } finally {
-                log.info("Releasing semaphore.")
+                log.debug("Releasing semaphore.")
                 indexAvailable.release()
             }
         } as Runnable)
