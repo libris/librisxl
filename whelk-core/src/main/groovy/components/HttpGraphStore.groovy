@@ -51,7 +51,7 @@ class HttpEndpoint extends BasicPlugin implements SparqlEndpoint {
 }
 
 @Log
-class HttpGraphStore extends HttpEndpoint implements SparqlEndpoint, GraphStore {
+class HttpGraphStore extends HttpEndpoint implements GraphStore {
 
     String graphStoreURI
     String id = "httpGraphStoreComponent"
@@ -62,8 +62,8 @@ class HttpGraphStore extends HttpEndpoint implements SparqlEndpoint, GraphStore 
         this.queryURI = settings['queryUri']
     }
 
-    void update(URI graph, RDFDescription doc) {
-        def uri = new URIBuilder(graphStoreURI).addParameter("graph", graph.toString()).build()
+    void update(URI graphUri, RDFDescription doc) {
+        def uri = new URIBuilder(graphStoreURI).addParameter("graph", graphUri.toString()).build()
         HttpPut put = new HttpPut(uri)
         def entity = new ByteArrayEntity(doc.data)
         entity.setContentType(doc.contentType)
@@ -73,4 +73,37 @@ class HttpGraphStore extends HttpEndpoint implements SparqlEndpoint, GraphStore 
         log.debug("Server response: ${response.statusLine.statusCode}")
         EntityUtils.consumeQuietly(response.getEntity())
     }
+
+}
+
+@Log
+class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
+
+    String updateURI
+
+    /**
+     * A value larger than zero indicates that load speed can be improved by
+     * using the batchUpdate method, with a batch of documents of the indicated
+     * size.
+     */
+    int optimumBatchSize = 0
+
+    void batchUpdate(Map<URI, RDFDescription> batch) {
+        def prefixes = ""
+        def inserts = []
+        batch.each { graphUri, doc ->
+            def turtle = doc.data
+            inserts << "CLEAR GRAPH <$graphUri> ;"
+            inserts << "INSERT DATA { GRAPH <$graphUri> { $turtle } } ;"
+        }
+        def body = prefixes + inserts.join("\n")
+
+        def uri = new URIBuilder(updateURI).build()
+        def post = new HttpPost(uri)
+        def params = new BasicNameValuePair("update", body)
+        def entity = new UrlEncodedFormEntity(params)
+        post.setEntity(entity)
+        def response = client.execute(post)
+    }
+
 }
