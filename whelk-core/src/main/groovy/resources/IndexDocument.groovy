@@ -9,11 +9,14 @@ import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
 @Log
+@Deprecated
 class IndexDocument extends Document {
 
     Map<String, String[]> matches = new TreeMap<String, String[]>()
+    /*
     String type
     String origin
+    */
 
     ObjectMapper mapper = new ElasticJsonMapper()
 

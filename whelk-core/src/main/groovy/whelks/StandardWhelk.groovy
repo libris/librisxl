@@ -185,20 +185,24 @@ class StandardWhelk implements Whelk {
 
     @groovy.transform.CompileStatic
     void addToIndex(final List<Document> docs) {
-        List<IndexDocument> idxDocs = []
+        List<Document> idxDocs = []
         if (index) {
             log.debug("Number of documents to index: ${docs.size()}")
-            for (doc in docs) {
-                for (ifc in getIndexFormatConverters()) {
-                    log.trace("Running indexformatconverter ${ifc.id} on document with ctype ${doc.contentType}")
-                    idxDocs.addAll(ifc.convert(doc))
+            if (indexFormatConverters.size()) {
+                for (doc in docs) {
+                    for (ifc in getIndexFormatConverters()) {
+                        log.trace("Running indexformatconverter ${ifc.id} on document with ctype ${doc.contentType}")
+                        idxDocs.addAll(ifc.convert(doc))
+                    }
                 }
+            } else if (docs[0].isJson()) {
+                idxDocs = docs
             }
             if (idxDocs) {
                 try {
                     index.bulkIndex(idxDocs)
                 } catch (Exception e) {
-                    throw new WhelkAddException("Failed to add documents to index ${index.id}.".toString(), e, idxDocs.collect { ((IndexDocument)it).identifier })
+                    throw new WhelkAddException("Failed to add documents to index ${index.id}.".toString(), e, idxDocs.collect { ((Document)it).identifier })
                 }
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")

@@ -1,7 +1,6 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.IndexDocument
 import se.kb.libris.whelks.component.ElasticJsonMapper
 import spock.lang.*
 import groovy.util.logging.Slf4j as Log
@@ -106,7 +105,7 @@ class JsonLDEntityExtractorIndexFormatConverterSpec extends Specification {
     }
 
     def makeDoc(data, id) {
-        return new IndexDocument()
+        return new Document()
             .withIdentifier(id)
             .withData(mapper.writeValueAsBytes(data))
     }

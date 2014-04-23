@@ -2,7 +2,7 @@ package se.kb.libris.whelks.result
 
 import groovy.util.logging.Slf4j as Log
 
-import se.kb.libris.whelks.IndexDocument
+import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.component.ElasticJsonMapper
 
 import org.codehaus.jackson.map.ObjectMapper
@@ -18,7 +18,7 @@ class SearchResult {
 
     SearchResult(long nrHits) {
         this.numberOfHits = nrHits
-        this.hits = new ArrayList<IndexDocument>()
+        this.hits = new ArrayList<Document>()
         this.mapper = new ElasticJsonMapper()
     }
 
@@ -26,12 +26,12 @@ class SearchResult {
         this.numberOfHits = nrHits
     }
 
-    void addHit(IndexDocument d) {
+    void addHit(Document d) {
         this.hits.add(d)
     }
 
-    void addHit(IndexDocument d, Map<String, String[]> highlightedFields) {
-        def doc = new IndexDocument(d, highlightedFields)
+    void addHit(Document doc, Map<String, String[]> highlightedFields) {
+        doc.meta['matches'] = highlightedFields
         this.hits.add(doc)
     }
 

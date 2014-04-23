@@ -282,7 +282,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
                     }
                     log.trace("Marcframeconverter done")
 
-                    results.addHit(new IndexDocument(jsonDoc))
+                    results.addHit(jsonDoc)
                 }
             } catch (org.xml.sax.SAXParseException spe) {
                 log.error("Failed to parse XML: ${url.text}")

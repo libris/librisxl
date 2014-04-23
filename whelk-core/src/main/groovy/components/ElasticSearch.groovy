@@ -25,6 +25,7 @@ import org.elasticsearch.search.sort.FieldSortBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.elasticsearch.index.query.FilterBuilders.*
 import org.elasticsearch.action.delete.*
+import org.elasticsearch.action.get.*
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
@@ -212,15 +213,15 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    void index(IndexDocument doc) {
-        if (doc) {
+    void index(Document doc) {
+        if (doc && doc.isJson()) {
             addDocument(doc)
         }
     }
 
     @Override
-    void bulkIndex(Iterable<IndexDocument> doc) {
-        addDocuments(doc)
+    void bulkIndex(Iterable<Document> docs) {
+        addDocuments(docs)
     }
 
     @Override
@@ -452,18 +453,20 @@ abstract class ElasticSearch extends BasicPlugin {
         }
     }
 
-    String determineDocumentType(IndexDocument doc) {
-        def idxType = doc.type?.toLowerCase()
+    String determineDocumentType(Document doc) {
+        def idxType = doc.entry['dataset']?.toLowerCase()
+        log.debug("dataset in entry is ${idxType} for ${doc.identifier}")
         if (!idxType) {
             idxType = determineDocuentTypeBasedOnURI(doc.identifier)
         }
-        log.trace("Using type $idxType for document ${doc.identifier}")
+        log.debug("Using type $idxType for document ${doc.identifier}")
         return idxType
     }
 
 
     String determineDocuentTypeBasedOnURI(String identifier) {
         def idxType
+        log.debug("Using identifier to determine type.")
         try {
             def identParts = identifier.split("/")
             idxType = (identParts[1] == elasticIndex && identParts.size() > 3 ? identParts[2] : identParts[1])
@@ -477,7 +480,7 @@ abstract class ElasticSearch extends BasicPlugin {
         return idxType
     }
 
-    void addDocument(IndexDocument doc) {
+    void addDocument(Document doc) {
         addDocuments([doc])
     }
 
@@ -493,7 +496,8 @@ abstract class ElasticSearch extends BasicPlugin {
                 log.debug("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
-                    if (doc) {
+                    log.debug("Working on ${doc.identifier}")
+                    if (doc && doc.isJson()) {
                         def indexType = determineDocumentType(doc)
                         def checked = indexType in checkedTypes
                         if (!checked) {
@@ -502,9 +506,11 @@ abstract class ElasticSearch extends BasicPlugin {
                         }
                         def elasticIdentifier = translateIdentifier(doc.identifier)
                         breq.add(client.prepareIndex(currentIndex, indexType, elasticIdentifier).setSource(doc.data))
-                        if (!doc.origin) {
+                        if (!doc.entry['origin']) {
                             breq.add(client.prepareIndex(elasticMetaEntryIndex, "entry", elasticIdentifier).setSource(doc.metadataAsJson.getBytes("utf-8")))
                         }
+                    } else {
+                        log.debug("Doc is null or not json (${doc.contentType})")
                     }
                 }
                 def response = performExecute(breq)
@@ -573,8 +579,14 @@ abstract class ElasticSearch extends BasicPlugin {
         return facets
     }
 
-    IndexDocument createResultDocumentFromHit(hit) {
-        return new IndexDocument().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+    Document createResultDocumentFromHit(hit) {
+        def grb = new GetRequestBuilder(client, elasticMetaEntryIndex).setType("entry").setId(hit.id)
+        def result = performExecute(grb)
+        if (result.exists) {
+            return new Document(result.sourceAsMap).withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+        } else {
+            return new Document().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+        }
     }
 
     String translateIndexIdTo(id) {

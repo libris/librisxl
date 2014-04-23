@@ -14,14 +14,14 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
     String requiredContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
     def authPoint = ["Person": "controlledLabel", "Concept": "prefLabel", "ConceptScheme": "notation", "Organization": "name", "Work": "uniformTitle"]
-    def entitiesToExtract = ["about.inScheme", "about.instanceOf.attributedTo", "about.instanceOf.influencedBy"]
+    def entitiesToExtract = ["about.inScheme", "about.instanceOf.attributedTo", "about.instanceOf.influencedBy", "about.attributedTo"]
 
-    List<IndexDocument> doConvert(Document doc) {
+    List<Document> doConvert(Document doc) {
         log.debug("Converting indexdoc $doc.identifier")
 
         def docType = new URI(doc.identifier).path.split("/")[1]
 
-        List<IndexDocument> doclist = [new IndexDocument(doc)]
+        List<Document> doclist = [doc]
 
         def json = getDataAsMap(doc)
 
@@ -55,11 +55,12 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 }
             }
         }
+        log.debug("Doclist contains ${doclist.size()} entries.")
         return doclist
     }
 
-    List<IndexDocument> extractEntities(extractedJson, id, String type, prio) {
-        List<IndexDocument> entityDocList = []
+    List<Document> extractEntities(extractedJson, id, String type, prio) {
+        List<Document> entityDocList = []
         if (extractedJson instanceof List) {
             for (entity in extractedJson) {
                 if (!(type.equals("bib") && entity.get("@id")) && !type.equals("hold")) {  //only extract bib-entity that doesn't link to existing authority and don't extract hold-entities
@@ -80,7 +81,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
         return entityDocList
     }
 
-    IndexDocument createEntityDoc(def entityJson, def docId, def prio, def slugifyId) {
+    Document createEntityDoc(def entityJson, def docId, def prio, def slugifyId) {
         try {
             def indexId = entityJson["@id"]
             def type = entityJson["@type"]
@@ -93,11 +94,12 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 }
                 indexId = slugify(authPath, new URI(docId), type)
             }
-            //entityJson["extractedFrom"] = ["@id": docId]
+            entityJson["extractedFrom"] = ["@id": docId]
             entityJson["recordPriority"] = prio
             entityJson.get("unknown", null) ?: entityJson.remove("unknown")
             log.debug("Created indexdoc ${indexId} with prio $prio")
-            return new IndexDocument().withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(indexId).withType(type).withOrigin(docId)
+            def d = new Document().withEntry(["dataset":type,"origin":docId]).withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(indexId)
+            return d
         } catch (Exception e) {
             log.debug("Could not create entitydoc ${e} from docId: $docId" + " EntityJson " + mapper.writeValueAsString(entityJson))
             return null

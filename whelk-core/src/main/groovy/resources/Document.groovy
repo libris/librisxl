@@ -46,6 +46,10 @@ class Document {
         withMetaEntry(jsonString)
     }
 
+    Document(Map jsonMap) {
+        withMetaEntry(jsonMap)
+    }
+
     Document(File jsonFile) {
         withMetaEntry(jsonFile)
     }

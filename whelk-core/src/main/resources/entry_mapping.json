@@ -4,7 +4,7 @@
         "store" : false
     },
     "_source" : {
-        "enabled" : false
+        "enabled" : true
     },
     "store" : false,
     "properties" : {
