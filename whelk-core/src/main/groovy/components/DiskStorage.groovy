@@ -220,9 +220,10 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Iterable<Document> getAll(String dataset = null, Date since = null) {
+    Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
         if (dataset) {
-            def elasticResultIterator = index.metaEntryQuery(dataset)
+            log.info("Loading documents by index query for dataset $dataset")
+            def elasticResultIterator = index.metaEntryQuery(dataset, since, until)
             return new Iterable<Document>() {
                 Iterator<Document> iterator() {
                     return new Iterator<Document>() {
@@ -234,6 +235,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
                     }
                 }
             }
+        } else if (since) {
         }
         return getAllRaw(dataset)
     }

@@ -352,15 +352,30 @@ abstract class ElasticSearch extends BasicPlugin {
         return results
     }
 
-    Iterator<String> metaEntryQuery(String dataset) {
+    Iterator<String> metaEntryQuery(String dataset, Date since, Date until) {
+        def query = boolQuery()
+        if (dataset) {
+            query = query.must(termQuery("entry.dataset", dataset))
+        }
+        if (since || until) {
+            def timeRangeQuery = rangeQuery("entry.timestamp")
+            if (since) {
+                timeRangeQuery = timeRangeQuery.from(since.getTime())
+            }
+            if (until) {
+                timeRangeQuery = timeRangeQuery.to(since.getTime())
+            }
+            query = query.must(timeRangeQuery)
+        }
         def srb = client.prepareSearch(elasticMetaEntryIndex)
             .setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
             .setTypes(["entry"] as String[])
-            .setQuery(termQuery("entry.dataset", dataset))
+            .setQuery(query)
             .setSize(100)
 
         def list = []
+        log.debug("MetaEntryQuery: $srb")
         def scrollResp = performExecute(srb)
         return new Iterator<String>() {
             public boolean hasNext() {
