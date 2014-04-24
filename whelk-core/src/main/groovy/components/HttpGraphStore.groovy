@@ -10,6 +10,9 @@ import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.util.EntityUtils
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.message.BasicNameValuePair
+import org.apache.http.impl.conn.*
+import org.apache.http.impl.client.*
+import org.apache.http.client.protocol.*
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.plugin.*
@@ -18,13 +21,13 @@ import se.kb.libris.whelks.exception.*
 
 @Log
 class HttpEndpoint extends BasicPlugin implements SparqlEndpoint {
-    HttpClient client
+    PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
+    HttpClient client = HttpClients.custom().setConnectionManager(cm).build()
     String queryURI
     String id = "httpSparqlEndpoint"
 
     HttpEndpoint(Map settings) {
         this.queryURI = settings['queryUri']
-        client = new DefaultHttpClient()
     }
 
     public InputStream sparql(String query) {
@@ -69,7 +72,7 @@ class HttpGraphStore extends HttpEndpoint implements GraphStore {
         entity.setContentType(doc.contentType)
         log.debug("PUT <${uri}> with content type '${doc.contentType}'")
         put.setEntity(entity)
-        def response = client.execute(put)
+        def response = client.execute(put, HttpClientContext.create())
         log.debug("Server response: ${response.statusLine.statusCode}")
         EntityUtils.consumeQuietly(response.getEntity())
     }
