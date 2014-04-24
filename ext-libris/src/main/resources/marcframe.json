@@ -3507,7 +3507,8 @@
     },
     "246": {
       "inherit": "245",
-      "link": "titleVariation"
+      "link": "titleVariation",
+      "$i": {"property": "titleType"}
     },
     "247": {
       "inherit": "245",
@@ -3663,7 +3664,11 @@
     "501": {},
     "502": {},
     "504": {"$a": {"domainEntity": "Instance", "addProperty": "supplementaryContentNote"}},
-    "505": {"$a": {"domainEntity": "Instance", "addProperty": "listOfContents", "TODO": "$t, $r"}},
+
+    "505": {
+      "$a": {"domainEntity": "Instance", "addProperty": "listOfContents", "TODO": "$t, $r"}
+    },
+
     "506": {},
     "507": {},
     "508": {"$a": {"domainEntity": "Instance", "addProperty": "creditsNote"}},
