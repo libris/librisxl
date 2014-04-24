@@ -11,11 +11,9 @@
   <logger name="org.elasticsearch">
       <level value="warn"/>
 </logger>
--->
   <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
       <level value="trace"/>
   </logger>
-      <!--
   <logger name="se.kb.libris.whelks.plugin.JsonLDLinkFinder">
        <level value="trace"/>
   </logger>
@@ -80,7 +78,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.DiskStorage">
@@ -88,7 +86,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.PairtreeDiskStorage">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
