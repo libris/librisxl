@@ -59,6 +59,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         this.dataset = dataset
         this.picky = picky
         this.silent = silent
+        this.nrImported = 0
+        this.nrDeleted = 0
         this.serviceUrl = (serviceUrl ?: SERVICE_BASE_URL + dataset+"/oaipmh/")
 
         String urlString = serviceUrl + "?verb=ListRecords&metadataPrefix=marcxml"
