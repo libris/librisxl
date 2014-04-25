@@ -84,10 +84,10 @@ class JsonLdToTurtle {
 
     void prelude() {
         prefixes.each { k, v ->
-            pw.println("@prefix ${k}: <${v}> .")
+            pw.println("PREFIX ${k}: <${v}>")
         }
         if (base) {
-            pw.println("@base <${base}> .")
+            pw.println("BASE <${base}>")
         }
         pw.println()
     }
