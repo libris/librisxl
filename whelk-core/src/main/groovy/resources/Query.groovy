@@ -30,22 +30,22 @@ class Query {
     Query(Map qmap) {
         def q = null
         if (qmap.get("query")) {
-            q = qmap.get("query")
+            q = qmap.get("query").first()
             log.trace("Set q: $q")
         }
         else if (qmap.get("q")) {
-            q = qmap.get("q")
+            q = qmap.get("q").first()
             log.trace("Set q: $q")
         }
         this.query = q
         if (qmap.get("hl")) {
-            for (def hl : qmap.get("hl").split(",")) {
+            for (def hl : qmap.get("hl")) {
                 log.trace("Set hl: $hl")
                 addHighlight(hl)
             }
         }
         if (qmap.get("order")) {
-            for (def o : qmap.get("order").split(",")) {
+            for (def o : qmap.get("order")) {
                 def direction = "ASC"
                 if (o && o.startsWith("-")) {
                     o = o.substring(1)
@@ -56,7 +56,7 @@ class Query {
             }
         }
         if (qmap.get("sort")) {
-            for (def o : qmap.get("sort").split(",")) {
+            for (def o : qmap.get("sort")) {
                 def direction = "ASC"
                 if (o && o.startsWith("-")) {
                     o = o.substring(1)
@@ -67,7 +67,7 @@ class Query {
             }
         }
         if (qmap.get("fields")) {
-            for (def f : qmap.get("fields").split(",")) {
+            for (def f : qmap.get("fields")) {
                 log.trace("Set field: $f")
                 if (f.contains(":")) {
                     addField(f.split(":")[0], new Float(f.split(":")[1]))
@@ -77,7 +77,7 @@ class Query {
             }
         }
         if (qmap.get("boost")) {
-            for (b in qmap.get("boost").split(",")) {
+            for (b in qmap.get("boost")) {
                 log.trace("Set boost: $b")
                 try {
                     addBoost(b.split(":")[0], new Float(b.split(":")[1]))
@@ -87,7 +87,7 @@ class Query {
             }
         }
         if (qmap.get("range")) {
-            for (r in qmap.get("range").split(",")) {
+            for (r in qmap.get("range")) {
                 log.trace("Set range: $r")
                 try {
                     def v = r.split(":",2)[1].split("-")
@@ -98,7 +98,7 @@ class Query {
             }
         }
         if (qmap.get("filter")) {
-            for (f in qmap.get("filter").split(",")) {
+            for (f in qmap.get("filter")) {
                 log.trace("Set filter: $f")
                 try {
                     addFilter(f.split(":", 2)[0], f.split(":", 2)[1])
@@ -108,7 +108,7 @@ class Query {
             }
         }
         if (qmap.get("facets")) {
-            for (def fct : qmap.get("facets").split(",")) {
+            for (def fct : qmap.get("facets")) {
                 log.trace("Set facet: $fct")
                 def f = fct.split(":")
                 def flabel = null

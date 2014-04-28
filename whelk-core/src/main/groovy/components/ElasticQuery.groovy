@@ -39,8 +39,10 @@ class ElasticQuery extends Query {
         }
         if (qmap.get("terms")) {
             terms = new HashMap<String,List>()
-            def (term, values) = qmap.get("terms").split(":", 2)
-            terms.put(term, values.split(","))
+            for (t in qmap.get("terms")) {
+                def (term, value) = t.split(":", 2)
+                terms.get(term, []) << value
+            }
         } else if (!this.query) {
             throw new WhelkRuntimeException("Trying to create empty query.")
         }
@@ -48,13 +50,13 @@ class ElasticQuery extends Query {
             if (!sourceFilter) {
                 sourceFilter = [:]
             }
-            sourceFilter["include"] = qmap.get("_source.include").split(",")
+            sourceFilter["include"] = qmap.get("_source.include")
         }
         if (qmap.get("_source.exclude")) {
             if (!sourceFilter) {
                 sourceFilter = [:]
             }
-            sourceFilter["exclude"] = qmap.get("_source.exclude").split(",")
+            sourceFilter["exclude"] = qmap.get("_source.exclude")
         }
     }
 

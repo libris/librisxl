@@ -352,38 +352,38 @@ class SearchRestlet extends BasicWhelkAPI {
 
     @Override
     void doHandle(Request request, Response response) {
-        def queryMap = request.getResourceRef().getQueryAsForm().getValuesMap()
+        def queryMap = createProperFormMap(request.getResourceRef().getQueryAsForm()) //.getValuesMap()
         def indexType = request.attributes?.indexType ?: config.defaultIndexType
         def indexConfig = config.indexTypes[indexType]
-        def boost = queryMap.boost?.split(",") ?: indexConfig?.defaultBoost?.split(",")
-        def facets = queryMap.facets?.split(",") ?: indexConfig?.queryFacets?.split(",")
+        def boost = queryMap.boost ?: indexConfig?.defaultBoost?.split(",")
+        def facets = queryMap.facets ?: indexConfig?.queryFacets?.split(",")
         def elasticQuery = new ElasticQuery(queryMap)
-            if (queryMap.f) {
-                elasticQuery.query += " " + queryMap.f
+        if (queryMap.f) {
+            elasticQuery.query += " " + queryMap.f
+        }
+        elasticQuery.indexType = indexType
+        if (facets) {
+            for (f in facets) {
+                elasticQuery.addFacet(f)
             }
-            elasticQuery.indexType = indexType
-            if (facets) {
-                for (f in facets) {
-                    elasticQuery.addFacet(f)
+        }
+        if (boost) {
+            for (b in boost) {
+                if (b.size() > 0) {
+                    def (k, v) = b.split(":")
+                    elasticQuery.addBoost(k, Long.parseLong(v))
                 }
             }
-            if (boost) {
-                for (b in boost) {
-                    if (b.size() > 0) {
-                        def (k, v) = b.split(":")
-                        elasticQuery.addBoost(k, Long.parseLong(v))
-                    }
-                }
-            }
-            def fields = indexConfig?.get("queryFields")
-            if (fields && fields.size() > 0) {
-                elasticQuery.fields = fields
-            }
+        }
+        def fields = indexConfig?.get("queryFields")
+        if (fields && fields.size() > 0) {
+            elasticQuery.fields = fields
+        }
 
-            elasticQuery.highlights = indexConfig?.get("queryFields")
-            if (!queryMap['sort'] && !queryMap['order']) {
-                elasticQuery.sorting = indexConfig?.get("sortby")
-            }
+        elasticQuery.highlights = indexConfig?.get("queryFields")
+        if (!queryMap['sort'] && !queryMap['order']) {
+            elasticQuery.sorting = indexConfig?.get("sortby")
+        }
         try {
             def callback = queryMap.get("callback")
             def jsonResult =
@@ -421,7 +421,19 @@ class SearchRestlet extends BasicWhelkAPI {
         }
     }
 
+    Map createProperFormMap(Form form) {
+        def formMap = [:].withDefault{ [] }
+        for (name in form.names) {
+            def va = form.getValuesArray(name) as List
+            if (va.size() == 1) {
+                va = va.first().split(",")
+            }
+            formMap.get(name).addAll(va)
+        }
+        return formMap
+    }
 }
+
 
 @Log
 class DocumentRestlet extends BasicWhelkAPI {
