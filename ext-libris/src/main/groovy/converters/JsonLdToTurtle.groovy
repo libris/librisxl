@@ -90,6 +90,7 @@ class JsonLdToTurtle {
             pw.println("BASE <${base}>")
         }
         pw.println()
+        pw.flush()
     }
 
     def objectToTurtle(obj, level=0, viaKey=null) {
@@ -150,6 +151,7 @@ class JsonLdToTurtle {
             topObjects.each {
                 objectToTurtle(it)
             }
+            pw.flush()
             return Collections.emptyList()
         } else {
             pw.print(indent + "]")
@@ -215,22 +217,20 @@ class JsonLdToTurtle {
         def mapper = new ObjectMapper()
         def contextSrc = new File(args[0]).withInputStream { mapper.readValue(it, Map) }
         def context = JsonLdToTurtle.parseContext(contextSrc)
-        def multiple = args.length > 2
-        def base = null
-        for (path in args[1..-1]) {
-            if (path.startsWith("http://")) {
-                base = path
-                continue
-            }
-            if (multiple) {
-                println(); println "GRAPH <$path> {"; println()
-            }
-            if (base) {
-                println "BASE <$base>"
-            }
-            def source = new File(path).withInputStream { mapper.readValue(it, Map) }
+        if (args.length == 2) {
+            def source = new File(args[1]).withInputStream { mapper.readValue(it, Map) }
             println JsonLdToTurtle.toTurtle(context, source).toString("utf-8")
-            if (multiple) {
+        } else {
+            def serializer = new JsonLdToTurtle(context, System.out)
+            serializer.prelude()
+            for (path in args[1..-1]) {
+                if (path.startsWith("http://")) {
+                    println "BASE <$path>"
+                    continue
+                }
+                println(); println "GRAPH <$path> {"; println()
+                def source = new File(path).withInputStream { mapper.readValue(it, Map) }
+                serializer.objectToTurtle(source)
                 println "}"; println()
             }
         }

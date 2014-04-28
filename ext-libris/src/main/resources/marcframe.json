@@ -3901,12 +3901,12 @@
     },
     "780": {
       "inherit": "772",
-      "addLink": "succeeds",
+      "addLink": "precededBy",
       "rangeEntity": "Serial"
     },
     "785": {
       "inherit": "772",
-      "addLink": "precedes",
+      "addLink": "succeededBy",
       "rangeEntity": "Serial"
     },
     "786": {
