@@ -86,8 +86,14 @@ class ElasticQuery extends Query {
         if (this.query == "*") {
             dslQuery['query'] = ['match_all': [:]]
         } else if (terms) {
+            def termsList = []
             terms.each { t,v ->
-                dslQuery['query'] = ["terms": [(t) : v]]
+                termsList << ["terms": [(t) : v]]
+            }
+            if (termsList.size() == 1) {
+                dslQuery['query'] = termsList.first()
+            } else {
+                throw new WhelkRuntimeException("Terms query does not support multiple fields. Use a filtered query instead.")
             }
         } else if (phraseQuery) {
             throw new UnsupportedOperationException("Phrasequery not yet implemented in DSL.")
