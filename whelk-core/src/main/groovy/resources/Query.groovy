@@ -37,103 +37,99 @@ class Query {
             q = qmap.get("q")
             log.trace("Set q: $q")
         }
-        if (q) {
-            this.query = q
-            if (qmap.get("hl")) {
-                for (def hl : qmap.get("hl").split(",")) {
-                    log.trace("Set hl: $hl")
-                    addHighlight(hl)
+        this.query = q
+        if (qmap.get("hl")) {
+            for (def hl : qmap.get("hl").split(",")) {
+                log.trace("Set hl: $hl")
+                addHighlight(hl)
+            }
+        }
+        if (qmap.get("order")) {
+            for (def o : qmap.get("order").split(",")) {
+                def direction = "ASC"
+                if (o && o.startsWith("-")) {
+                    o = o.substring(1)
+                    direction = "DESC"
+                }
+                log.trace("Set order $o ($direction)")
+                addSort(o, direction)
+            }
+        }
+        if (qmap.get("sort")) {
+            for (def o : qmap.get("sort").split(",")) {
+                def direction = "ASC"
+                if (o && o.startsWith("-")) {
+                    o = o.substring(1)
+                    direction = "DESC"
+                }
+                log.trace("Set order $o ($direction)")
+                addSort(o, direction)
+            }
+        }
+        if (qmap.get("fields")) {
+            for (def f : qmap.get("fields").split(",")) {
+                log.trace("Set field: $f")
+                if (f.contains(":")) {
+                    addField(f.split(":")[0], new Float(f.split(":")[1]))
+                } else {
+                    addField(f)
                 }
             }
-            if (qmap.get("order")) {
-                for (def o : qmap.get("order").split(",")) {
-                    def direction = "ASC"
-                    if (o && o.startsWith("-")) {
-                        o = o.substring(1)
-                        direction = "DESC"
-                    }
-                    log.trace("Set order $o ($direction)")
-                    addSort(o, direction)
+        }
+        if (qmap.get("boost")) {
+            for (b in qmap.get("boost").split(",")) {
+                log.trace("Set boost: $b")
+                try {
+                    addBoost(b.split(":")[0], new Float(b.split(":")[1]))
+                } catch (Exception e) {
+                    log.error("Bad user: " + e.getMessage())
                 }
             }
-            if (qmap.get("sort")) {
-                for (def o : qmap.get("sort").split(",")) {
-                    def direction = "ASC"
-                    if (o && o.startsWith("-")) {
-                        o = o.substring(1)
-                        direction = "DESC"
-                    }
-                    log.trace("Set order $o ($direction)")
-                    addSort(o, direction)
+        }
+        if (qmap.get("range")) {
+            for (r in qmap.get("range").split(",")) {
+                log.trace("Set range: $r")
+                try {
+                    def v = r.split(":",2)[1].split("-")
+                    addRangeFilter(r.split(":",2)[0], v[0], v[1])
+                } catch (Exception e) {
+                    log.error("Bad user: " + e.getMessage(), e)
                 }
             }
-            if (qmap.get("fields")) {
-                for (def f : qmap.get("fields").split(",")) {
-                    log.trace("Set field: $f")
-                    if (f.contains(":")) {
-                        addField(f.split(":")[0], new Float(f.split(":")[1]))
-                    } else {
-                        addField(f)
-                    }
+        }
+        if (qmap.get("filter")) {
+            for (f in qmap.get("filter").split(",")) {
+                log.trace("Set filter: $f")
+                try {
+                    addFilter(f.split(":", 2)[0], f.split(":", 2)[1])
+                } catch (Exception e) {
+                    log.error("Bad user: " + e.getMessage())
                 }
             }
-            if (qmap.get("boost")) {
-                for (b in qmap.get("boost").split(",")) {
-                    log.trace("Set boost: $b")
-                    try {
-                        addBoost(b.split(":")[0], new Float(b.split(":")[1]))
-                    } catch (Exception e) {
-                        log.error("Bad user: " + e.getMessage())
-                    }
+        }
+        if (qmap.get("facets")) {
+            for (def fct : qmap.get("facets").split(",")) {
+                log.trace("Set facet: $fct")
+                def f = fct.split(":")
+                def flabel = null
+                def fvalue = null
+                if (f.size() > 1) {
+                    flabel = f[0]
+                    fvalue = f[1]
+                } else {
+                    flabel = f[0]
+                    fvalue = f[0]
                 }
+                addFacet(flabel, fvalue)
             }
-            if (qmap.get("range")) {
-                for (r in qmap.get("range").split(",")) {
-                    log.trace("Set range: $r")
-                    try {
-                        def v = r.split(":",1)[1].split("-")
-                        addRangeFilter(r.split(":",2)[0], v[0], v[1])
-                    } catch (Exception e) {
-                        log.error("Bad user: " + e.getMessage())
-                    }
-                }
-            }
-            if (qmap.get("filter")) {
-                for (f in qmap.get("filter").split(",")) {
-                    log.trace("Set filter: $f")
-                    try {
-                        addFilter(f.split(":", 2)[0], f.split(":", 2)[1])
-                    } catch (Exception e) {
-                        log.error("Bad user: " + e.getMessage())
-                    }
-                }
-            }
-            if (qmap.get("facets")) {
-                for (def fct : qmap.get("facets").split(",")) {
-                    log.trace("Set facet: $fct")
-                    def f = fct.split(":")
-                    def flabel = null
-                    def fvalue = null
-                    if (f.size() > 1) {
-                        flabel = f[0]
-                        fvalue = f[1]
-                    } else {
-                        flabel = f[0]
-                        fvalue = f[0]
-                    }
-                    addFacet(flabel, fvalue)
-                }
-            }
-            if (qmap.get("start")) {
-                start = new Integer(qmap.get("start"))
-                log.trace("Set start: $start")
-            }
-            if (qmap.get("n")) {
-                n = new Integer(qmap.get("n"))
-                log.trace("Set n: $n")
-            }
-        } else {
-            throw new WhelkRuntimeException("Trying to create empty query.")
+        }
+        if (qmap.get("start")) {
+            start = new Integer(qmap.get("start"))
+            log.trace("Set start: $start")
+        }
+        if (qmap.get("n")) {
+            n = new Integer(qmap.get("n"))
+            log.trace("Set n: $n")
         }
     }
 

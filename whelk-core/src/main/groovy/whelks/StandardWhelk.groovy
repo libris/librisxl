@@ -217,22 +217,27 @@ class StandardWhelk implements Whelk {
         if (activeGraphStores.size() > 0) {
             log.debug("addToGraphStore ${docs.size()}")
             log.debug("Adding to graph stores")
-            List<Document> dataDocs = []
+            Map<String, RDFDescription> dataDocs = new HashMap<String, RDFDescription>()
             for (doc in docs) {
                 for (rc in getRDFFormatConverters()) {
                     log.trace("Running indexformatconverter $rc")
-                    dataDocs.addAll(rc.convert(doc))
+                    dataDocs.putAll(rc.convert(doc))
                 }
             }
             if (dataDocs) {
                 try {
                     for (store in activeGraphStores) {
-                        dataDocs.each {
-                            store.update(docBaseUri.resolve(it.identifier), it)
+                        if (store instanceof BatchGraphStore) {
+                            log.debug("Batch updating graphstore. $dataDocs")
+                            store.batchUpdate(dataDocs)
+                        } else {
+                            dataDocs.each {
+                                store.update(docBaseUri.resolve(it.key), it.value)
+                            }
                         }
                     }
                 } catch (Exception e) {
-                    throw new WhelkAddException("Failed to add documents to graph stores ${activeGraphStores}.", e, dataDocs.collect { it.identifier })
+                    throw new WhelkAddException("Failed to add documents to graph stores ${activeGraphStores}.", e, dataDocs.collect { it.key } )
                 }
             } else if (log.isDebugEnabled()) {
                 log.debug("No graphs to update.")

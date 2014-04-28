@@ -83,7 +83,6 @@ class HttpGraphStore extends HttpEndpoint implements GraphStore {
 class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
 
     String updateURI
-
     /**
      * A value larger than zero indicates that load speed can be improved by
      * using the batchUpdate method, with a batch of documents of the indicated
@@ -91,11 +90,19 @@ class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
      */
     int optimumBatchSize = 0
 
+    HttpBatchGraphStore(Map settings) {
+        super(settings)
+        this.graphStoreURI = settings['graphStoreUri']
+        this.queryURI = settings['queryUri']
+        this.updateURI = settings['updateUri']
+        this.optimumBatchSize = settings.get('optimumBatchSize', 0)
+    }
+
     void batchUpdate(Map<URI, RDFDescription> batch) {
         def prefixes = ""
         def inserts = []
         batch.each { graphUri, doc ->
-            def turtle = doc.data
+            def turtle = doc.dataAsString
             inserts << "CLEAR GRAPH <$graphUri> ;"
             inserts << "INSERT DATA { GRAPH <$graphUri> { $turtle } } ;"
         }
@@ -104,9 +111,12 @@ class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
         def uri = new URIBuilder(updateURI).build()
         def post = new HttpPost(uri)
         def params = new BasicNameValuePair("update", body)
-        def entity = new UrlEncodedFormEntity(params)
+        def entity = new UrlEncodedFormEntity([params])
         post.setEntity(entity)
-        def response = client.execute(post)
+        log.debug("posting: $body")
+        def response = client.execute(post, HttpClientContext.create())
+        log.debug("Server response: ${response.statusLine.statusCode}")
+        EntityUtils.consumeQuietly(response.getEntity())
     }
 
 }

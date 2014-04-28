@@ -70,9 +70,11 @@
   <logger name="se.kb.libris.whelks.WhelkInitializer">
       <level value="trace"/>
   </logger> 
+  -->
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="debug"/>
   </logger>
+  <!--
   <logger name="se.kb.libris.whelks.importers">
       <level value="debug"/>
   </logger>
@@ -92,9 +94,11 @@
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
       <level value="trace"/>
   </logger>
- <logger name="se.kb.libris.whelks.component.SesameGraphStore">
+  -->
+ <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
       <level value="trace"/>
   </logger>
+  <!--
  <logger name="se.kb.libris.whelks.api.ISXNTool">
       <level value="debug"/>
   </logger>
@@ -114,6 +118,9 @@
       <level value="trace"/>
   </logger>
 -->
+<logger name="se.kb.libris.whelks.component.ElasticQuery">
+      <level value="trace"/>
+  </logger>
 <logger name="se.kb.libris.whelks.Query">
       <level value="trace"/>
   </logger>
