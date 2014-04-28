@@ -25,6 +25,7 @@ import org.elasticsearch.search.sort.FieldSortBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.elasticsearch.index.query.FilterBuilders.*
 import org.elasticsearch.action.delete.*
+import org.elasticsearch.action.search.*
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.node.NodeBuilder.*
@@ -109,7 +110,7 @@ abstract class ElasticSearch extends BasicPlugin {
     int WARN_AFTER_TRIES = 1000
     int RETRY_TIMEOUT = 300
     int MAX_RETRY_TIMEOUT = 60*60*1000
-    int MAX_NUMBER_OF_FACETS = 100
+    static int MAX_NUMBER_OF_FACETS = 100
 
     String URI_SEPARATOR = "::"
 
@@ -245,6 +246,7 @@ abstract class ElasticSearch extends BasicPlugin {
             idxlist = indexName.split(",").collect{it.trim()}
         }
         log.trace("Searching in indexes: $idxlist")
+        /*
         def srb = client.prepareSearch(idxlist as String[])
             .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
             .setFrom(q.start).setSize(q.n)
@@ -289,14 +291,14 @@ abstract class ElasticSearch extends BasicPlugin {
         if (q.facets) {
             q.facets.each {
                 if (it instanceof TermFacet) {
-                    log.trace("Building FIELD facet for ${it.field}")
+                    log.debug("Building FIELD facet for ${it.field}")
                     srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
                 } else if (it instanceof ScriptFieldFacet) {
                     if (it.field.contains("@")) {
                         log.warn("Forcing FIELD facet for ${it.field}")
                         srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
                     } else {
-                        log.trace("Building SCRIPTFIELD facet for ${it.field}")
+                        log.debug("Building SCRIPTFIELD facet for ${it.field}")
                         srb = srb.addFacet(FacetBuilders.termsFacet(it.name).scriptField("_source.?"+it.field.replaceAll(/\./, ".?")).size(MAX_NUMBER_OF_FACETS))
                     }
                 } else if (it instanceof QueryFacet) {
@@ -331,6 +333,9 @@ abstract class ElasticSearch extends BasicPlugin {
         }
         log.debug("SearchRequestBuilder: " + srb)
         def response = performExecute(srb)
+        */
+        def jsonDsl = q.toJsonQuery()
+        def response = client.search(new SearchRequest(idxlist as String[], jsonDsl.getBytes("utf-8")).searchType(SearchType.DFS_QUERY_THEN_FETCH).types(indexType)).actionGet()
         log.trace("SearchResponse: " + response)
 
         def results = new SearchResult(0)

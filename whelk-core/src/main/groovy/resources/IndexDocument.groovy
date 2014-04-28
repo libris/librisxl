@@ -49,9 +49,11 @@ class IndexDocument extends Document {
 
     Map getDataAsMap() {
         def json = super.getDataAsMap() //mapper.readValue(super.getDataAsString(), Map)
-        json.highlight = matches
-        if (origin) {
-            json["extractedFrom"] = ["@id":origin]
+        if (json) {
+            json.highlight = matches
+            if (origin) {
+                json["extractedFrom"] = ["@id":origin]
+            }
         }
         return json
     }

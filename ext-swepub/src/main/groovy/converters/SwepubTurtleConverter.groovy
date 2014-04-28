@@ -12,7 +12,7 @@ class SwepubTurtleConverter extends BasicRDFFormatConverter {
     String requiredContentType = "application/mods+xml"
 
     @Override
-    List<RDFDescription> doConvert(Document doc) {
+    Map<String, RDFDescription> doConvert(Document doc) {
         return null
     }
 }

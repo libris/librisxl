@@ -24,11 +24,11 @@ class JsonLDTurtleConverter extends BasicRDFFormatConverter {
         this.base = base
     }
 
-    List<RDFDescription> doConvert(Document doc) {
-        List<RDFDescription> docs = []
+    Map<String, RDFDescription> doConvert(Document doc) {
+        Map<String, RDFDescription> docs = new HashMap<String, RDFDescription>()
         def source = mapper.readValue(doc.data, Map)
         def bytes = JsonLdToTurtle.toTurtle(context, source, base).toByteArray()
-        docs << new RDFDescription(identifier: doc.identifier, data: bytes, contentType: "text/turtle")
+        docs.put(doc.identifier, new RDFDescription(identifier: doc.identifier, data: bytes, contentType: "text/turtle"))
         return docs
     }
 
