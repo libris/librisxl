@@ -124,11 +124,11 @@ class Query {
             }
         }
         if (qmap.get("start")) {
-            start = new Integer(qmap.get("start"))
+            start = new Integer(qmap.get("start").first())
             log.trace("Set start: $start")
         }
         if (qmap.get("n")) {
-            n = new Integer(qmap.get("n"))
+            n = new Integer(qmap.get("n").first())
             log.trace("Set n: $n")
         }
     }

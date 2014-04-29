@@ -80,7 +80,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.DiskStorage">
@@ -96,7 +96,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.api.ISXNTool">
@@ -119,10 +119,10 @@
   </logger>
 -->
 <logger name="se.kb.libris.whelks.component.ElasticQuery">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
 <logger name="se.kb.libris.whelks.Query">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
 <logger name="se.kb.libris.whelks.Document">
