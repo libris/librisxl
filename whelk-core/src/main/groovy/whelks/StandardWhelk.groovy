@@ -109,6 +109,7 @@ class StandardWhelk implements Whelk {
             doc = storage.get(uri, version)
         }
 
+        /*
         def le = getLinkExpander(doc.contentType)
         String checksum = doc.checksum
         doc = le.expand(doc)
@@ -116,6 +117,7 @@ class StandardWhelk implements Whelk {
             log.debug("Indexing expanded doc (unless not updated.)")
             addToIndex([doc])
         }
+        */
 
         return doc
     }
