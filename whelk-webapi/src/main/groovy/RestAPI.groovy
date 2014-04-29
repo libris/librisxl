@@ -1074,7 +1074,7 @@ class SuggestResultsConverter {
 class DefinitionDataRestlet extends Directory implements RestAPI {
     Whelk whelk
     String id = "DefinitionDataAPI"
-    String path = "/def"
+    String path = "/def/terms"
     boolean enabled = true
     def varPath = false
     void init(String w) {}
