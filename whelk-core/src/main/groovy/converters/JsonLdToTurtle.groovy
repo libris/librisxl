@@ -1,22 +1,42 @@
 package se.kb.libris.whelks.plugin
 
+import org.apache.commons.lang3.StringEscapeUtils
+
 import org.codehaus.jackson.map.ObjectMapper
 
 class JsonLdToTurtle {
 
     def INDENT = "  "
 
-    PrintWriter pw
+    Writer writer
     Map context
     String base
     Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language"]
     Map prefixes = [:]
+    def uniqueBNodeSuffix = ""
 
     JsonLdToTurtle(Map context, OutputStream outStream, String base=null) {
         this.context = context.context
         this.prefixes = context.prefixes
         this.base = base
-        pw = new PrintWriter(outStream)
+        writer = new OutputStreamWriter(outStream, "UTF-8")
+    }
+
+    void write(String s) {
+        writer.write(s)
+    }
+
+    void writeln(String s) {
+        write(s)
+        writeln()
+    }
+
+    void writeln() {
+        writer.write("\n")
+    }
+
+    void flush() {
+        writer.flush()
     }
 
     String termFor(key) {
@@ -61,7 +81,7 @@ class JsonLdToTurtle {
         if (cI > -1) {
             def pfx = ref.substring(0, cI)
             if (pfx == "_") {
-                return toValidTerm(ref)
+                return toValidTerm(ref + uniqueBNodeSuffix)
             } else if (context[pfx]) {
                 return ref
             }
@@ -79,18 +99,18 @@ class JsonLdToTurtle {
     void toTurtle(obj) {
         prelude()
         objectToTurtle(obj)
-        pw.flush()
+        flush()
     }
 
     void prelude() {
         prefixes.each { k, v ->
-            pw.println("PREFIX ${k}: <${v}>")
+            writeln("PREFIX ${k}: <${v}>")
         }
         if (base) {
-            pw.println("BASE <${base}>")
+            writeln("BASE <${base}>")
         }
-        pw.println()
-        pw.flush()
+        writeln()
+        flush()
     }
 
     def objectToTurtle(obj, level=0, viaKey=null) {
@@ -101,9 +121,9 @@ class JsonLdToTurtle {
         }
         def s = obj[keys.id]
         if (s && obj.size() > 1) {
-            pw.print(refRepr(s))
+            write(refRepr(s))
         } else if (level > 0) {
-            pw.println("[")
+            writeln("[")
         } else {
             return Collections.emptyList()
         }
@@ -128,33 +148,33 @@ class JsonLdToTurtle {
             } else {
                 if (term == "@type") {
                     term = "a"
-                    pw.println(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
+                    writeln(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
                     return
                 }
                 term = toValidTerm(term)
-                pw.print(indent + term + " ")
+                write(indent + term + " ")
                 vs.eachWithIndex { v, i ->
-                    if (i > 0) pw.print(" , ")
+                    if (i > 0) write(" , ")
                     if (v instanceof Map && keys.id in v) {
                         topObjects << v
-                        pw.print(refRepr(v[keys.id]))
+                        write(refRepr(v[keys.id]))
                     } else {
                         topObjects.addAll(objectToTurtle(v, level + 1, key))
                     }
                 }
-                pw.println(" ;")
+                writeln(" ;")
             }
         }
         if (level == 0) {
-            pw.println(indent + ".")
-            pw.println()
+            writeln(indent + ".")
+            writeln()
             topObjects.each {
                 objectToTurtle(it)
             }
-            pw.flush()
+            flush()
             return Collections.emptyList()
         } else {
-            pw.print(indent + "]")
+            write(indent + "]")
             return topObjects
         }
     }
@@ -171,21 +191,23 @@ class JsonLdToTurtle {
         } else {
             def coerceTo = coerceFor(viaKey)
             if (coerceTo == "@vocab") {
-                pw.print(refRepr(value, true))
+                write(refRepr(value, true))
                 return
             } else if (coerceTo == "@id") {
-                pw.print(refRepr(value))
+                write(refRepr(value))
                 return
             } else if (coerceTo) {
                 datatype = coerceTo
             }
         }
-        def escaped = value.replaceAll(/("|\\)/, /\\$1/)
-        pw.print("\"${escaped}\"")
+        def escaped = StringEscapeUtils.escapeJava(value)
+        write('"')
+        write(escaped)
+        write('"')
         if (lang)
-            pw.print("@" + lang)
+            write("@" + lang)
         else if (datatype)
-            pw.print("^^" + termFor(datatype))
+            write("^^" + termFor(datatype))
     }
 
     static Map parseContext(Map src) {

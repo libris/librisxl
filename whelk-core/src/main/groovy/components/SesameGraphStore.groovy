@@ -44,7 +44,7 @@ class SesameGraphStore extends BasicPlugin implements GraphStore,SparqlEndpoint 
         conn = repo.getConnection()
     }
 
-    void update(URI graphUri, RDFDescription doc) {
+    void update(URI graphUri, Document doc) {
         if (!conn.open) {
             log.debug("Connection is closed. Reopening.")
             conn = repo.getConnection()
