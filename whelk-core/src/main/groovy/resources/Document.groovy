@@ -74,6 +74,8 @@ class Document {
         return serializedDataInMap
     }
 
+    String getChecksum() { checksum }
+
     String toJson() {
         return mapper.writeValueAsString(this)
     }
@@ -170,13 +172,17 @@ class Document {
         return withData(mapper.writeValueAsBytes(dataMap))
     }
 
+    Document setEntry(Map entryData) {
+        this.entry = [:]
+        return withEntry(entryData)
+    }
+
     Document withEntry(Map entrydata) {
         if (entrydata?.get("identifier", null)) {
             this.identifier = entrydata["identifier"]
         }
         if (entrydata != null) {
             long ts = getTimestamp()
-            this.entry = [:]
             this.entry.putAll(entrydata)
             if (checksum) {
                 this.entry['checksum'] = checksum

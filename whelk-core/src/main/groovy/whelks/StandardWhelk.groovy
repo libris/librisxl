@@ -95,7 +95,7 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Document get(URI uri, version=null, List contentTypes=[], boolean dontAlertThePrawns = false) {
+    Document get(URI uri, version=null, List contentTypes=[]) {
         Document doc
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
@@ -109,12 +109,14 @@ class StandardWhelk implements Whelk {
             doc = storage.get(uri, version)
         }
 
-        if (prawnsActive && !dontAlertThePrawns && doc?.identifier && queues) {
-            log.debug("Adding ${doc.identifier} to prawn queue")
-            for (queue in queues.get(GetPrawn.TRIGGER)) {
-                queue.put(doc)
-            }
+        def le = getLinkExpander(doc.contentType)
+        String checksum = doc.checksum
+        doc = le.expand(doc)
+        if (doc.checksum != chechsum) {
+            log.debug("Indexing expanded doc (unless not updated.)")
+            addToIndex([doc])
         }
+
         return doc
     }
 
