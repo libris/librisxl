@@ -69,13 +69,6 @@ class JsonLdToTurtle {
         return kdef["@reverse"]
     }
 
-    String coerceFor(key) {
-        def kdef = context[key]
-        if (!(kdef instanceof Map))
-            return null
-        return kdef["@type"]
-    }
-
     String refRepr(String ref, useVocab=false) {
         def cI = ref.indexOf(":")
         if (cI > -1) {
@@ -180,16 +173,15 @@ class JsonLdToTurtle {
     }
 
     void toLiteral(obj, viaKey=null) {
-        // TODO: coerce using term def
         def value = obj
         def lang = context["@language"]
         def datatype = null
-        // TODO: context.language
         if (obj instanceof Map) {
             value = obj[keys.value]
             datatype = obj[keys.datatype]
         } else {
-            def coerceTo = coerceFor(viaKey)
+            def kdef = context[viaKey]
+            def coerceTo = (kdef instanceof Map)? kdef["@type"] : null
             if (coerceTo == "@vocab") {
                 write(refRepr(value, true))
                 return
@@ -198,16 +190,21 @@ class JsonLdToTurtle {
                 return
             } else if (coerceTo) {
                 datatype = coerceTo
+            } else {
+                def termLang = (kdef instanceof Map)? kdef["@language"] : null
+                if (kdef instanceof Map) {
+                    lang = termLang
+                }
             }
         }
         def escaped = StringEscapeUtils.escapeJava(value)
         write('"')
         write(escaped)
         write('"')
-        if (lang)
-            write("@" + lang)
-        else if (datatype)
+        if (datatype)
             write("^^" + termFor(datatype))
+        else if (lang)
+            write("@" + lang)
     }
 
     static Map parseContext(Map src) {
