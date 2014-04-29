@@ -4,7 +4,6 @@
         "def":{
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins" : [
-                "localdefinitiondata",
                 "ptstorage",
                 "localindex",
                 "fusekigraphstore",

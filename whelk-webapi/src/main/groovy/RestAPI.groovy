@@ -537,7 +537,7 @@ class DocumentRestlet extends BasicWhelkAPI {
                 def entry = [
                     "identifier":path,
                     "contentType":request.entity.mediaType.toString(),
-                    "dataset":path.split("/")[1]
+                    "dataset":getDatasetBasedOnPath(path)
                     ]
                 def meta = null
                 if (link != null) {
@@ -581,6 +581,16 @@ class DocumentRestlet extends BasicWhelkAPI {
                 response.setStatus(Status.SERVER_ERROR_INTERNAL, wre.message)
             }
         }
+    }
+
+    private String getDatasetBasedOnPath(path) {
+        String ds = ""
+        def elements = path.split("/")
+        int i = 1
+        while (ds.length() == 0 || ds == whelk.id) {
+            ds = elements[i++]
+        }
+        return ds
     }
 }
 

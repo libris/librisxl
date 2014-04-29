@@ -452,6 +452,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
     void checkTypeMapping(indexName, indexType) {
         def mappings = performExecute(client.admin().cluster().prepareState()).state.metaData.index(indexName).getMappings()
+        log.debug("Mappings: $mappings")
         if (!mappings.containsKey(indexType)) {
             log.debug("Mapping for $indexName/$indexType does not exist. Creating ...")
             setTypeMapping(indexName, indexType)

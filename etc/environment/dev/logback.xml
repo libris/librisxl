@@ -80,7 +80,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="info"/>
+      <level value="trace"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.DiskStorage">
@@ -96,7 +96,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.api.ISXNTool">

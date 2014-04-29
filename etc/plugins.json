@@ -203,6 +203,14 @@
                         "closeMatch.inScheme.prefLabel" : "asc",
                         "hiddenLabel" : "asc"
                     }
+                },
+                "languages" : {
+                    "queryFields":[
+                        "prefLabel",
+                        "prefLabel_en",
+                        "langCode",
+                        "langTag"
+                    ]
                 }
             }
         }

@@ -9,9 +9,8 @@ class DefsIndexFormatConverter extends BasicIndexFormatConverter implements Inde
     String requiredContentType = "application/ld+json"
 
     List<Document> doConvert(Document doc) {
-        def docmap = getDataAsMap(doc)
-        def idxDoc = new Document(doc)
+        def docmap = doc.dataAsMap
         docmap.remove("@context")
-        return [idxDoc.withData(getMapAsString(docmap))]
+        return [doc.withData(docmap)]
     }
 }
