@@ -1,6 +1,31 @@
 {
     "_whelks": [
         {
+            "defterms":{
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+                "_plugins" : [
+                    "definitiondata"
+                    ],
+                "contentRoot" : "/def/term",
+                "docBaseUri" : "http://libris.kb.se/"
+            }
+        },
+        {
+            "def":{
+                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
+                "_plugins" : [
+                    "pairtree",
+                    "index",
+                    "fuseki",
+                    "turtleconverter",
+                    "defsindexconverter",
+                    "search",
+                    "documentapi"
+                    ],
+                "docBaseUri" : "http://libris.kb.se/"
+            }
+        },
+        {
             "libris":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_converters": [
@@ -14,31 +39,22 @@
                     "remotesearch",
                     "operator",
                     "search",
+                    "completeexpander",
+                    "isxntool",
                     "sparqlapi",
                     "libcount",
-                    "completeexpander",
                     "documentapi"
                 ],
                 "_otherplugins": [
                     "index",
                     "pairtree",
+                    "fuseki",
                     "entityextractor",
                     "linkcompleter",
                     "indexlinkfinder"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
-            }
-        },
-        {
-            "resource":{
-                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : [
-                    "definitiondata",
-                    "resourcelist",
-                    "marcmap",
-                    "isxntool"
-                ]
             }
         }
     ],
@@ -55,20 +71,6 @@
             "_params" : {
                 "graphStoreUri": "http://localhost:3030/libris/data",
                 "queryUri": "http://localhost:3030/libris/query"
-            }
-        },
-        "hp04cassandrastorage": {
-            "_class" : "se.kb.libris.whelks.component.CassandraStorage",
-            "_params" : {
-                "cassandraVersion" : "1.2.11",
-                "cqlVersion" : "3.0.0",
-                "versioning" : true,
-                "keyspaceSuffix" : "_v2",
-                "contentTypes" : [
-                    "application/ld+json",
-                    "application/json",
-                    "text/plain"
-                ]
             }
         }
     }
