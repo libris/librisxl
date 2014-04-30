@@ -19,6 +19,8 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.result.*
 import se.kb.libris.whelks.exception.*
 
+import org.codehaus.jackson.map.ObjectMapper
+
 @Log
 class HttpEndpoint extends BasicPlugin implements SparqlEndpoint {
     PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
@@ -58,19 +60,61 @@ class HttpGraphStore extends HttpEndpoint implements GraphStore {
 
     String graphStoreURI
     String id = "httpGraphStoreComponent"
+    def context
+    String baseUri
+
+    List<String> acceptableContentTypes = [
+        "text/turtle",
+        "application/rdf+xml",
+        "application/ld+json"
+    ]
+
+    boolean accepts(String contentType) {
+        return acceptableContentTypes.contains(contentType)
+    }
+
+    boolean accepts(Document doc) {
+        if (!accepts(doc.contentType)) {
+            log.debug("Rejected doc: $doc.identifier (unacceptable content type $doc.contentType)")
+            return false
+        }
+        return true
+    }
 
     HttpGraphStore(Map settings) {
         super(settings)
         this.graphStoreURI = settings['graphStoreUri']
         this.queryURI = settings['queryUri']
+        this.context = loadJsonLdContext(settings['contextPath'])
+        this.baseUri = settings['baseUri']
     }
 
-    void update(URI graphUri, RDFDescription doc) {
+    def loadJsonLdContext(contextPath) {
+        def mapper = new ObjectMapper()
+        def loader = getClass().classLoader
+        def contextData = loader.getResourceAsStream(contextPath).withStream {
+            mapper.readValue(it, Map)
+        }
+        return JsonLdToTurtle.parseContext(contextData)
+    }
+
+    void update(URI graphUri, Document doc) {
+        if (!accepts(doc)) {
+            return
+        }
         def uri = new URIBuilder(graphStoreURI).addParameter("graph", graphUri.toString()).build()
         HttpPut put = new HttpPut(uri)
-        def entity = new ByteArrayEntity(doc.data)
-        entity.setContentType(doc.contentType)
-        log.debug("PUT <${uri}> with content type '${doc.contentType}'")
+        def contentType = doc.contentType
+        def data = doc.data
+        if (contentType == "application/ld+json") {
+            def source = mapper.readValue(data, Map)
+            def bytes = JsonLdToTurtle.toTurtle(context, source, baseUri).toByteArray()
+            data = bytes
+            contentType = "text/turtle"
+        }
+        def entity = new ByteArrayEntity(data)
+        entity.setContentType(contentType)
+        log.debug("PUT <${uri}> with content type '${contentType}'")
         put.setEntity(entity)
         def response = client.execute(put, HttpClientContext.create())
         log.debug("Server response: ${response.statusLine.statusCode}")
@@ -98,22 +142,33 @@ class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
         this.optimumBatchSize = settings.get('optimumBatchSize', 0)
     }
 
-    void batchUpdate(Map<URI, RDFDescription> batch) {
-        def prefixes = ""
-        def inserts = []
-        batch.each { graphUri, doc ->
-            def turtle = doc.dataAsString
-            inserts << "CLEAR GRAPH <$graphUri> ;"
-            inserts << "INSERT DATA { GRAPH <$graphUri> { $turtle } } ;"
+    void batchUpdate(List<Document> batch) {
+        def bos = new ByteArrayOutputStream()
+        def serializer = new JsonLdToTurtle(context, bos, baseUri)
+        serializer.prelude() // prefixes and base
+        batch.each {
+            serializer.uniqueBNodeSuffix = "-${System.nanoTime()}"
+            if (!accepts(it)) {
+                return
+            }
+            def graphUri = it.identifier
+            serializer.writeln "CLEAR GRAPH <$graphUri> ;"
+            serializer.writeln "INSERT DATA { GRAPH <$graphUri> {"
+            serializer.flush()
+            serializer.objectToTurtle(it.dataAsMap)
+            serializer.writeln "} } ;"
+            serializer.flush()
         }
-        def body = prefixes + inserts.join("\n")
+        def body = bos.toString("UTF-8")
 
         def uri = new URIBuilder(updateURI).build()
         def post = new HttpPost(uri)
         def params = new BasicNameValuePair("update", body)
         def entity = new UrlEncodedFormEntity([params])
         post.setEntity(entity)
-        log.debug("posting: $body")
+        if (log.isDebugEnabled()) {
+            log.debug("Posting: $body")
+        }
         def response = client.execute(post, HttpClientContext.create())
         log.debug("Server response: ${response.statusLine.statusCode}")
         EntityUtils.consumeQuietly(response.getEntity())

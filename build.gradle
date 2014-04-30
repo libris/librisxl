@@ -127,6 +127,7 @@ project(":whelk-core") {
         compile 'stax:stax:1.2.0'
         compile 'stax:stax-api:1.0.1'
         compile 'com.google.guava:guava:16.0.1'
+        compile 'org.apache.commons:commons-lang3:3.3.2'
     }
 }
 

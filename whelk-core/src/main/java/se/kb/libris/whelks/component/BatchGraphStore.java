@@ -1,11 +1,10 @@
 package se.kb.libris.whelks.component;
 
-import java.util.Map;
+import java.util.List;
 import java.net.URI;
-import se.kb.libris.whelks.RDFDescription;
+import se.kb.libris.whelks.Document;
 
-public interface BatchGraphStore extends Component {
+public interface BatchGraphStore extends GraphStore {
     public int getOptimumBatchSize();
-    public void update(URI uri, RDFDescription d);
-    public void batchUpdate(Map<URI, RDFDescription> batch);
+    void batchUpdate(List<Document> batch);
 }

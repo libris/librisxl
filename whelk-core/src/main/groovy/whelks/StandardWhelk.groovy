@@ -225,32 +225,15 @@ class StandardWhelk implements Whelk {
     void addToGraphStore(final List<Document> docs, List<String> gStores = null) {
         def activeGraphStores = (gStores ? graphStores.findAll { it.id in gStores } : graphStores)
         if (activeGraphStores.size() > 0) {
-            log.debug("addToGraphStore ${docs.size()}")
-            log.debug("Adding to graph stores")
-            Map<String, RDFDescription> dataDocs = new HashMap<String, RDFDescription>()
-            for (doc in docs) {
-                for (rc in getRDFFormatConverters()) {
-                    log.trace("Running indexformatconverter $rc")
-                    dataDocs.putAll(rc.convert(doc))
-                }
-            }
-            if (dataDocs) {
-                try {
-                    for (store in activeGraphStores) {
-                        if (store instanceof BatchGraphStore) {
-                            log.debug("Batch updating graphstore. $dataDocs")
-                            store.batchUpdate(dataDocs)
-                        } else {
-                            dataDocs.each {
-                                store.update(docBaseUri.resolve(it.key), it.value)
-                            }
-                        }
+            for (store in activeGraphStores) {
+                if (store instanceof BatchGraphStore) {
+                    log.debug("Batch updating graphstore. $docs")
+                    store.batchUpdate(docs)
+                } else {
+                    docs.each {
+                        store.update(docBaseUri.resolve(it.identifier), it)
                     }
-                } catch (Exception e) {
-                    throw new WhelkAddException("Failed to add documents to graph stores ${activeGraphStores}.", e, dataDocs.collect { it.key } )
                 }
-            } else if (log.isDebugEnabled()) {
-                log.debug("No graphs to update.")
             }
         } else if (graphStores.size() > 0) {
             throw new PluginConfigurationException("You have graphstores configured, but none available for these documents.")
