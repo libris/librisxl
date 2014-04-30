@@ -33,6 +33,9 @@
                 "marcconverter",
                 "turtleconverter"
                 ],
+            "_expanders": [
+                "linkexpander"
+                ],
             "_importers": [
                 "oaipmhimporter",
                 "marcimporter"

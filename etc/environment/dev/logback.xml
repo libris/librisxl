@@ -131,9 +131,11 @@
     <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">
         <level value="trace"/>
     </logger>
-     <logger name="se.kb.libris.whelks.plugin.OaiPmhXmlConverter">
+    -->
+     <logger name="se.kb.libris.whelks.plugin.JsonLDLinkExpander">
       <level value="trace"/>
 </logger>
+<!--
     <logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
           <level value="debug"/>
         </logger>

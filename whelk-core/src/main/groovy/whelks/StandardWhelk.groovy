@@ -27,6 +27,7 @@ class StandardWhelk implements Whelk {
     Index index
     Map<String,FormatConverter> formatConverters = new HashMap<String,FormatConverter>()
     List<IndexFormatConverter> indexFormatConverters = new ArrayList<IndexFormatConverter>()
+    List<LinkExpander> linkExpanders = new ArrayList<LinkExpander>()
 
     private Map<String, List<BlockingQueue>> queues
     private List<Thread> prawnThreads
@@ -95,29 +96,34 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Document get(URI uri, version=null, List contentTypes=[]) {
-        Document doc
+    Document get(URI uri, version=null, List contentTypes=[], boolean expandLinks = true) {
+        Document doc = null
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
             def s = getStorage(contentType)
             if (s) {
                 log.debug("Found $contentType storage ${s.id}.")
                 doc = s.get(uri, version)
+                break
             }
         }
+        // TODO: Check this
         if (!doc) {
             doc = storage.get(uri, version)
         }
 
-        /*
-        def le = getLinkExpander(doc.contentType)
-        String checksum = doc.checksum
-        doc = le.expand(doc)
-        if (doc.checksum != chechsum) {
-            log.debug("Indexing expanded doc (unless not updated.)")
-            addToIndex([doc])
+
+        if (expandLinks) {
+            LinkExpander le = getLinkExpanderFor(doc)
+            if (le) {
+                String origchecksum = doc.checksum
+                doc = le.expand(doc)
+                if (doc.checksum != origchecksum) {
+                    log.debug("Indexing expanded doc.")
+                    addToIndex([doc])
+                }
+            }
         }
-        */
 
         return doc
     }
@@ -362,6 +368,8 @@ class StandardWhelk implements Whelk {
             this.formatConverters.put(plugin.requiredContentType, plugin)
         } else if (plugin instanceof IndexFormatConverter) {
             this.indexFormatConverters.add(plugin)
+        } else if (plugin instanceof LinkExpander) {
+            this.linkExpanders.add(plugin)
         }
         // And always add to plugins
         this.plugins.add(plugin)
@@ -426,5 +434,6 @@ class StandardWhelk implements Whelk {
     List<Filter> getFilters() { return plugins.findAll { it instanceof Filter }}
     Importer getImporter(String id) { return plugins.find { it instanceof Importer && it.id == id } }
     List<Importer> getImporters() { return plugins.findAll { it instanceof Importer } }
+    LinkExpander getLinkExpanderFor(Document doc) { return linkExpanders.find { it.valid(doc) } }
 
 }

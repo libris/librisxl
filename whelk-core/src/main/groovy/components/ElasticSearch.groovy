@@ -346,9 +346,9 @@ abstract class ElasticSearch extends BasicPlugin {
             results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
                 if (q.highlights) {
-                    results.addHit(createResultDocumentFromHit(it), convertHighlight(it.highlightFields))
+                    results.addHit(createResultDocumentFromHit(it, indexName), convertHighlight(it.highlightFields))
                 } else {
-                    results.addHit(createResultDocumentFromHit(it))
+                    results.addHit(createResultDocumentFromHit(it, indexName))
                 }
             }
             if (q.facets) {
@@ -585,8 +585,12 @@ abstract class ElasticSearch extends BasicPlugin {
         return facets
     }
 
-    Document createResultDocumentFromHit(hit) {
-        def grb = new GetRequestBuilder(client, elasticMetaEntryIndex).setType("entry").setId(hit.id)
+    Document createResultDocumentFromHit(hit, queriedIndex = null) {
+        def emei = elasticMetaEntryIndex
+        if (queriedIndex) {
+            emei = ".$queriedIndex"
+        }
+        def grb = new GetRequestBuilder(client, emei).setType("entry").setId(hit.id)
         def result = performExecute(grb)
         if (result.exists) {
             return new Document(result.sourceAsMap).withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))

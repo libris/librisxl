@@ -5,12 +5,12 @@ import se.kb.libris.whelks.Document
 abstract class BasicLinkExpander extends BasicPlugin implements LinkExpander {
 
     final Document expand(Document document) {
-        if (validDocument(document)) {
+        if (valid(document)) {
             return doExpand(document)
         }
         return document
     }
 
-    abstract boolean validDocument(Document doc)
+    abstract boolean valid(Document doc)
     abstract Document doExpand(Document doc)
 }
