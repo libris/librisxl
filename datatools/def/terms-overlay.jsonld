@@ -1,10 +1,6 @@
 {
   "@context": {
     "t": "http://libris.kb.se/def/terms#",
-    "enum": "http://libris.kb.se/def/enum/",
-    "trec": "http://libris.kb.se/def/enum/record/",
-    "tcon": "http://libris.kb.se/def/enum/content/",
-    "tcar": "http://libris.kb.se/def/enum/carrier/",
     "birthYear": {"@id": "birthDate", "@type": "gYear"},
     "deathYear": {"@id": "deathDate", "@type": "gYear"},
     "influencedBy": {"@container": "@set"},
