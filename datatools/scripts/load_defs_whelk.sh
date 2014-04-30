@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
 WHELK="http://localhost:8180/whelk-webapi"
-INPUTPATH="/tmp"
-RESOURCE=$1
+BUILDBASE="datatools/build"
 
-for f in $INPUTPATH/$RESOURCE/*; do
-    s=`basename -s .jsonld $f`
-    curl -XPUT -H "Content-Type:application/ld+json" ${WHELK}/def/${RESOURCE}/$s --data-binary @$f
+for dataset in languages countries enum/{content,carrier,record}; do
+    for f in $BUILDBASE/$dataset/*.jsonld; do
+        s=$(basename -s .jsonld $f)
+        curl -XPUT -H "Content-Type:application/ld+json" ${WHELK}/def/${dataset}/$s --data-binary @$f
+    done
 done
