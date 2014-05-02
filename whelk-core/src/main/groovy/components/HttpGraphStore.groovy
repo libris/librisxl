@@ -51,7 +51,7 @@ class HttpEndpoint extends BasicPlugin implements SparqlEndpoint {
         return new ByteArrayInputStream(EntityUtils.toByteArray(response.getEntity()))
     }
 
-    public void delete(URI uri) {
+    public void delete(URI uri, String whelkId) {
     }
 }
 

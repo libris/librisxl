@@ -134,7 +134,7 @@ class StandardWhelk implements Whelk {
     void remove(URI uri) {
         components.each {
             try {
-                ((Component)it).delete(uri)
+                ((Component)it).delete(uri, this.id)
             } catch (RuntimeException rte) {
                 log.warn("Component ${((Component)it).id} failed delete: ${rte.message}")
             }
@@ -143,7 +143,7 @@ class StandardWhelk implements Whelk {
 
     @Override
     SearchResult search(Query query) {
-        return index?.query(query)
+        return index?.query(query, this.id)
     }
 
     @Override
@@ -192,7 +192,7 @@ class StandardWhelk implements Whelk {
     }
 
     @groovy.transform.CompileStatic
-    void addToIndex(final List<Document> docs) {
+    void addToIndex(final List<Document> docs, String indexName = null) {
         List<Document> idxDocs = []
         if (index) {
             log.debug("Number of documents to index: ${docs.size()}")
@@ -207,7 +207,7 @@ class StandardWhelk implements Whelk {
                 idxDocs = docs
             }
             if (idxDocs) {
-                index.bulkIndex(idxDocs)
+                index.bulkIndex(idxDocs, (indexName ?: this.id))
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
             }
@@ -261,7 +261,6 @@ class StandardWhelk implements Whelk {
         if (plugin instanceof WhelkAware) {
             plugin.setWhelk(this)
         }
-        plugin.init(this.id)
         if (plugin instanceof Prawn) {
             prawnsActive = true
             log.debug("[${this.id}] Starting Prawn: ${plugin.id}")
@@ -284,9 +283,11 @@ class StandardWhelk implements Whelk {
                 throw new PluginConfigurationException("Index ${index.id} already configured for whelk ${this.id}.")
             }
             for (st in storages) {
-                if (st instanceof HybridStorage) {
+                if (st instanceof HybridStorage && st.index == null) {
                     log.debug("Added index to storage ${st.id}")
                     st.index = index
+                    log.trace("Re-initing storage, now with index attached.")
+                    st.init(this.id)
                 }
             }
             this.index = plugin
@@ -299,6 +300,7 @@ class StandardWhelk implements Whelk {
         }
         // And always add to plugins
         this.plugins.add(plugin)
+        plugin.init(this.id)
     }
 
 

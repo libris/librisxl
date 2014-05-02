@@ -100,9 +100,9 @@ class ElasticSearchNode extends ElasticSearch implements Index {
 }
 
 @Log
-abstract class ElasticSearch extends BasicPlugin {
+abstract class ElasticSearch extends BasicPlugin implements Index {
 
-    def mapper
+    final static ObjectMapper mapper = new ObjectMapper()
 
     Client client
 
@@ -116,35 +116,24 @@ abstract class ElasticSearch extends BasicPlugin {
     String URI_SEPARATOR = "::"
 
     String defaultType = "record"
-    String elasticIndex
-    String elasticMetaEntryIndex
-    String currentIndex
 
     def defaultMapping, es_settings
 
     @Override
     void init(String indexName) {
-        this.elasticIndex = indexName
-        this.elasticMetaEntryIndex = "."+indexName
         if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
-            createNewCurrentIndex()
-            log.debug("Will create alias $indexName -> $currentIndex")
-            performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexName))
-        } else {
-            this.currentIndex = getRealIndexFor(indexName)
-            log.info("Using currentIndex: $currentIndex")
-            if (this.currentIndex == null) {
-                throw new WhelkRuntimeException("Unable to find a real current index for $indexName")
+            if (indexName.startsWith(".")) {
+                // It's a meta index. No need for aliases and such.
+                log.info("Couldn't find index by name $indexName. Creating ...")
+                performExecute(client.admin().indices().prepareCreate(indexName).setSettings(es_settings))
+            } else {
+                String currentIndex = createNewCurrentIndex(indexName)
+                log.debug("Will create alias $indexName -> $currentIndex")
+                performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexName))
             }
+        } else if (getRealIndexFor(indexName) == null) {
+            throw new WhelkRuntimeException("Unable to find a real current index for $indexName")
         }
-        // Check for metaentryindex
-        log.info("Checking meta entry index")
-        if (!performExecute(client.admin().indices().prepareExists(elasticMetaEntryIndex)).exists) {
-            log.info("Not found, creating metaentry index.")
-            performExecute(client.admin().indices().prepareCreate(elasticMetaEntryIndex).setSettings(es_settings))
-            setTypeMapping(elasticMetaEntryIndex, "entry")
-        }
-        log.info("LatestIndex: " + getLatestIndex(indexName))
     }
 
     String getRealIndexFor(String alias) {
@@ -160,29 +149,30 @@ abstract class ElasticSearch extends BasicPlugin {
 
     String getLatestIndex(String prefix) {
         def indices = performExecute(client.admin().cluster().prepareState()).state.metaData.indices
-        log.debug("indexes: $indices")
         def li = new TreeSet<String>()
         for (idx in indices.keys()) {
-            log.debug("idx: $idx.value")
-            if (idx.value.startsWith(prefix)) {
+            if (idx.value.startsWith(prefix+"-")) {
                 li << idx.value
             }
         }
+        log.debug("Latest index is ${li.last()}")
         return li.last()
     }
 
-    void createNewCurrentIndex() {
+    String createNewCurrentIndex(String indexName) {
+        assert (indexName != null)
         log.info("Creating index ...")
         es_settings = loadJson("es_settings.json")
-        this.currentIndex = "${elasticIndex}-" + new Date().format("yyyyMMdd.HHmmss")
+        String currentIndex = "${indexName}-" + new Date().format("yyyyMMdd.HHmmss")
         log.debug("Will create index $currentIndex.")
         performExecute(client.admin().indices().prepareCreate(currentIndex).setSettings(es_settings))
         setTypeMapping(currentIndex, defaultType)
-        log.info("LatestIndex: " + getLatestIndex(elasticIndex))
+        return currentIndex
     }
 
     void reMapAliases(String indexAlias) {
-        def oldIndex = getRealIndexFor(indexAlias)
+        String oldIndex = getRealIndexFor(indexAlias)
+        String currentIndex = getLatestIndex(indexAlias)
         log.debug("Resetting alias \"$indexAlias\" from \"$oldIndex\" to \"$currentIndex\".")
         performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexAlias).removeAlias(oldIndex, indexAlias))
     }
@@ -195,7 +185,6 @@ abstract class ElasticSearch extends BasicPlugin {
 
     def loadJson(String file) {
         def json
-        mapper = mapper ?: new ObjectMapper()
         try {
             json = getClass().classLoader.getResourceAsStream(file).withStream {
                 mapper.readValue(it, Map)
@@ -207,12 +196,12 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    void delete(URI uri) {
+    void delete(URI uri, String indexName) {
         log.debug("Peforming deletebyquery to remove documents extracted from $uri")
         def delQuery = termQuery("extractedFrom.@id", uri.toString())
         log.debug("DelQuery: $delQuery")
 
-        def response = performExecute(client.prepareDeleteByQuery(elasticIndex).setQuery(delQuery))
+        def response = performExecute(client.prepareDeleteByQuery(indexName).setQuery(delQuery))
 
         log.debug("Delbyquery response: $response")
         for (r in response.iterator()) {
@@ -221,22 +210,22 @@ abstract class ElasticSearch extends BasicPlugin {
 
         log.debug("Deleting object with identifier ${translateIdentifier(uri.toString())}.")
 
-        client.delete(new DeleteRequest(elasticIndex, determineDocuentTypeBasedOnURI(uri.toString()), translateIdentifier(uri.toString())))
+        client.delete(new DeleteRequest(indexName, determineDocuentTypeBasedOnURI(uri.toString(), indexName), translateIdentifier(uri.toString())))
 
 
         // Kanske en matchall-query filtrerad på _type och _id?
     }
 
     @Override
-    void index(Document doc) {
+    void index(Document doc, String indexName) {
         if (doc && doc.isJson()) {
-            addDocument(doc)
+            addDocuments([doc], indexName)
         }
     }
 
     @Override
-    void bulkIndex(Iterable<Document> docs) {
-        addDocuments(docs)
+    void bulkIndex(Iterable<Document> docs, String indexName) {
+        addDocuments(docs, indexName)
     }
 
     @Override
@@ -245,12 +234,12 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     @Override
-    SearchResult query(Query q) {
-        def indexType = null
+    SearchResult query(Query q, String indexName) {
+        def indexType = defaultType
         if (q instanceof ElasticQuery) {
             indexType = q.indexType
         }
-        return query(q, elasticIndex, indexType)
+        return query(q, indexName, indexType)
     }
 
     SearchResult query(Query q, String indexName, String indexType) {
@@ -284,7 +273,7 @@ abstract class ElasticSearch extends BasicPlugin {
         return results
     }
 
-    Iterator<String> metaEntryQuery(String dataset, Date since, Date until) {
+    Iterator<String> metaEntryQuery(String indexName, String dataset, Date since, Date until) {
         def query = boolQuery()
         if (dataset) {
             query = query.must(termQuery("entry.dataset", dataset))
@@ -299,7 +288,7 @@ abstract class ElasticSearch extends BasicPlugin {
             }
             query = query.must(timeRangeQuery)
         }
-        def srb = client.prepareSearch(elasticMetaEntryIndex)
+        def srb = client.prepareSearch(indexName)
             .setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
             .setTypes(["entry"] as String[])
@@ -334,7 +323,7 @@ abstract class ElasticSearch extends BasicPlugin {
         */
     }
 
-    def setTypeMapping(indexName, itype) {
+    private void setTypeMapping(indexName, itype) {
         log.info("Creating mappings for $indexName/$itype ...")
         //XContentBuilder mapping = jsonBuilder().startObject().startObject("mappings")
         if (!defaultMapping) {
@@ -377,31 +366,32 @@ abstract class ElasticSearch extends BasicPlugin {
     }
 
     void checkTypeMapping(indexName, indexType) {
+        log.debug("Checking mappings for index $indexName, type $indexType")
         def mappings = performExecute(client.admin().cluster().prepareState()).state.metaData.index(indexName).getMappings()
-        log.debug("Mappings: $mappings")
+        log.trace("Mappings: $mappings")
         if (!mappings.containsKey(indexType)) {
             log.debug("Mapping for $indexName/$indexType does not exist. Creating ...")
             setTypeMapping(indexName, indexType)
         }
     }
 
-    String determineDocumentType(Document doc) {
+    String determineDocumentType(Document doc, String indexName) {
         def idxType = doc.entry['dataset']?.toLowerCase()
         log.debug("dataset in entry is ${idxType} for ${doc.identifier}")
         if (!idxType) {
-            idxType = determineDocuentTypeBasedOnURI(doc.identifier)
+            idxType = determineDocuentTypeBasedOnURI(doc.identifier, indexName)
         }
         log.debug("Using type $idxType for document ${doc.identifier}")
         return idxType
     }
 
 
-    String determineDocuentTypeBasedOnURI(String identifier) {
+    String determineDocuentTypeBasedOnURI(String identifier, String indexName) {
         def idxType
         log.debug("Using identifier to determine type.")
         try {
             def identParts = identifier.split("/")
-            idxType = (identParts[1] == elasticIndex && identParts.size() > 3 ? identParts[2] : identParts[1])
+            idxType = (identParts[1] == indexName && identParts.size() > 3 ? identParts[2] : identParts[1])
         } catch (Exception e) {
             log.error("Tried to use first part of URI ${identifier} as type. Failed: ${e.message}", e)
         }
@@ -412,12 +402,18 @@ abstract class ElasticSearch extends BasicPlugin {
         return idxType
     }
 
-    void addDocument(Document doc) {
-        addDocuments([doc])
+
+    void index(byte[] data, Map params) throws WhelkIndexException  {
+        try {
+            def response = performExecute(client.prepareIndex(params['index'], params['type'], params['id']).setSource(data))
+            log.info("Index response: $response. Indexed version: ${response.version}")
+        } catch (Exception e) {
+            throw new WhelkIndexException("Failed to index ${new String(data)} with params $params", e)
+        }
     }
 
-
-    void addDocuments(documents) {
+    void addDocuments(documents, indexName) {
+        String currentIndex = getRealIndexFor(indexName)
         try {
             if (documents) {
                 def breq = client.prepareBulk()
@@ -429,17 +425,14 @@ abstract class ElasticSearch extends BasicPlugin {
                 for (doc in documents) {
                     log.debug("Working on ${doc.identifier}")
                     if (doc && doc.isJson()) {
-                        def indexType = determineDocumentType(doc)
+                        def indexType = determineDocumentType(doc, indexName)
                         def checked = indexType in checkedTypes
                         if (!checked) {
-                            checkTypeMapping(elasticIndex, indexType)
+                            checkTypeMapping(currentIndex, indexType)
                             checkedTypes << indexType
                         }
                         def elasticIdentifier = translateIdentifier(doc.identifier)
-                        breq.add(client.prepareIndex(elasticIndex, indexType, elasticIdentifier).setSource(doc.data))
-                        if (!doc.entry['origin']) {
-                            breq.add(client.prepareIndex(elasticMetaEntryIndex, "entry", elasticIdentifier).setSource(doc.metadataAsJson.getBytes("utf-8")))
-                        }
+                        breq.add(client.prepareIndex(indexName, indexType, elasticIdentifier).setSource(doc.data))
                     } else {
                         log.debug("Doc is null or not json (${doc.contentType})")
                     }
@@ -475,7 +468,7 @@ abstract class ElasticSearch extends BasicPlugin {
         }
     }
 
-    def translateIdentifier(String uri) {
+    String translateIdentifier(String uri) {
         def idelements = new URI(uri).path.split("/") as List
         idelements.remove(0)
         return idelements.join(URI_SEPARATOR)
@@ -510,11 +503,8 @@ abstract class ElasticSearch extends BasicPlugin {
         return facets
     }
 
-    Document createResultDocumentFromHit(hit, queriedIndex = null) {
-        def emei = elasticMetaEntryIndex
-        if (queriedIndex) {
-            emei = ".$queriedIndex"
-        }
+    Document createResultDocumentFromHit(hit, queriedIndex) {
+        def emei = ".$queriedIndex"
         def grb = new GetRequestBuilder(client, emei).setType("entry").setId(hit.id)
         def result = performExecute(grb)
         if (result.exists) {

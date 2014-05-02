@@ -63,7 +63,7 @@ class SesameGraphStore extends BasicPlugin implements GraphStore,SparqlEndpoint 
         }
     }
 
-    public void delete(URI graphUri) {
+    public void delete(URI graphUri, String whelkId) {
     }
 
     public InputStream sparql(String sparql) {

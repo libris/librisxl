@@ -358,7 +358,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
 
     @Override
-    void delete(URI uri) {
+    void delete(URI uri, String whelkId) {
         log.debug("Deleting document $uri")
         if (versioning) {
             try {

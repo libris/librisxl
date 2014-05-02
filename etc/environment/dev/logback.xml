@@ -69,7 +69,7 @@
   </logger>
   -->
   <logger name="se.kb.libris.whelks.WhelkInitializer">
-      <level value="debug"/>
+      <level value="info"/>
   </logger> 
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="debug"/>
@@ -96,7 +96,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.api.ISXNTool">

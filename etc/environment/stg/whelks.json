@@ -49,8 +49,8 @@
                     "documentapi"
                 ],
                 "_otherplugins": [
-                    "index",
                     "pairtreehybrid",
+                    "index",
                     "fuseki",
                     "entityextractor",
                     "linkcompleter",

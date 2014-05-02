@@ -24,15 +24,48 @@ import com.google.common.io.Files
 class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridStorage {
     Index index
 
+    String indexName
+
     PairtreeHybridDiskStorage(Map settings) {
         super(settings)
+    }
+
+    void init(String stName) {
+        super.init(stName)
+        if (index) {
+            indexName = "."+stName
+            index.init(indexName)
+            index.checkTypeMapping(indexName, "entry")
+        }
+    }
+
+    @Override
+    @groovy.transform.CompileStatic
+    boolean store(Document doc) {
+        boolean result = false
+        try {
+            result = super.store(doc)
+            if (result) {
+                index.index(doc.metadataAsJson.getBytes("utf-8"),
+                    [
+                        "index": ".libris",
+                        "type": "entry",
+                        "id": ((ElasticSearch)index).translateIdentifier(doc.identifier)
+                    ]
+                )
+            }
+        } catch (Exception e) {
+            throw new WhelkAddException("Failed to store ${doc.identifier}", e, [doc.identifier])
+        }
+
+        return result
     }
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
         if (dataset) {
             log.info("Loading documents by index query for dataset $dataset")
-            def elasticResultIterator = index.metaEntryQuery(dataset, since, until)
+            def elasticResultIterator = index.metaEntryQuery(indexName, dataset, since, until)
             return new Iterable<Document>() {
                 Iterator<Document> iterator() {
                     return new Iterator<Document>() {
@@ -48,8 +81,8 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         }
         return getAllRaw(dataset)
     }
-    void delete(URI uri) {
-        super.delete(uri)
+    void delete(URI uri, String whelkId) {
+        super.delete(uri, whelkId)
         // TODO: Delete from entry
     }
 
@@ -287,7 +320,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    void delete(URI uri) {
+    void delete(URI uri, String whelkId) {
         if (versioning) {
             store(createTombstone(uri))
         } else {

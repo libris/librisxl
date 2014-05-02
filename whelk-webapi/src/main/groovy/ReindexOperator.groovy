@@ -45,10 +45,11 @@ class ReindexOperator extends AbstractOperator {
         indexQueue = Executors.newFixedThreadPool(3)
         gstoreAvailable = new Semaphore(100)
         indexAvailable = new Semaphore(50)
+        String newIndex = null
 
         if (!dataset) {
             log.debug("Requesting new index for ${whelk.index.id}.")
-            whelk.index.createNewCurrentIndex()
+            newIndex = whelk.index.createNewCurrentIndex(whelk.id)
         }
         if (fromStorage) {
             log.info("Rebuilding storage from $fromStorage")
@@ -91,7 +92,7 @@ class ReindexOperator extends AbstractOperator {
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
             try {
-                whelk.addToIndex(docs)
+                whelk.addToIndex(docs, newIndex)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
@@ -114,13 +115,13 @@ class ReindexOperator extends AbstractOperator {
         gstoreQueue.shutdown()
     }
 
-    void doTheIndexing(final List docs) {
+    void doTheIndexing(final List docs, String newIndex) {
         log.debug("Trying to acquire semaphore.")
         indexAvailable.acquire()
         log.debug("Acquired.")
         indexQueue.execute({
             try {
-                whelk.addToIndex(docs)
+                whelk.addToIndex(docs, newIndex)
             } catch (WhelkAddException wae) {
                 log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
             } catch (PluginConfigurationException pce) {
