@@ -788,6 +788,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     boolean convert(sourceMap, value, entityMap) {
 
+        // TODO: if this happens, value in unknown will clash with elastic mapping...
         if (!(value instanceof Map)) {
             return false
         }
