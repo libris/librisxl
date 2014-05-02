@@ -240,8 +240,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                 }
             } catch (WhelkAddException wae) {
                 log.warn("Failed adding: ${wae.message} (${wae.failedIdentifiers})")
+                throw wae
             } catch (Exception e) {
                 log.error("Exception on bulkAdd: ${e.message}", e)
+                throw e
             }
         } as Runnable)
     }

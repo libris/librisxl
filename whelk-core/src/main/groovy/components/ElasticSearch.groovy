@@ -115,7 +115,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
     String URI_SEPARATOR = "::"
 
-    String defaultIndexType = "record"
+    String defaultType = "record"
     String elasticIndex
     String elasticMetaEntryIndex
     String currentIndex
@@ -126,15 +126,15 @@ abstract class ElasticSearch extends BasicPlugin {
     void init(String indexName) {
         this.elasticIndex = indexName
         this.elasticMetaEntryIndex = "."+indexName
-        if (!performExecute(client.admin().indices().prepareExists(elasticIndex)).exists) {
+        if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
             createNewCurrentIndex()
-            log.debug("Will create alias $elasticIndex -> $currentIndex")
-            performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, elasticIndex))
+            log.debug("Will create alias $indexName -> $currentIndex")
+            performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexName))
         } else {
-            this.currentIndex = getRealIndexFor(elasticIndex)
+            this.currentIndex = getRealIndexFor(indexName)
             log.info("Using currentIndex: $currentIndex")
             if (this.currentIndex == null) {
-                throw new WhelkRuntimeException("Unable to find a real current index for $elasticIndex")
+                throw new WhelkRuntimeException("Unable to find a real current index for $indexName")
             }
         }
         // Check for metaentryindex
@@ -144,6 +144,7 @@ abstract class ElasticSearch extends BasicPlugin {
             performExecute(client.admin().indices().prepareCreate(elasticMetaEntryIndex).setSettings(es_settings))
             setTypeMapping(elasticMetaEntryIndex, "entry")
         }
+        log.info("LatestIndex: " + getLatestIndex(indexName))
     }
 
     String getRealIndexFor(String alias) {
@@ -157,19 +158,33 @@ abstract class ElasticSearch extends BasicPlugin {
         return (ri ? ri.value : alias)
     }
 
+    String getLatestIndex(String prefix) {
+        def indices = performExecute(client.admin().cluster().prepareState()).state.metaData.indices
+        log.debug("indexes: $indices")
+        def li = new TreeSet<String>()
+        for (idx in indices.keys()) {
+            log.debug("idx: $idx.value")
+            if (idx.value.startsWith(prefix)) {
+                li << idx.value
+            }
+        }
+        return li.last()
+    }
+
     void createNewCurrentIndex() {
         log.info("Creating index ...")
         es_settings = loadJson("es_settings.json")
         this.currentIndex = "${elasticIndex}-" + new Date().format("yyyyMMdd.HHmmss")
         log.debug("Will create index $currentIndex.")
         performExecute(client.admin().indices().prepareCreate(currentIndex).setSettings(es_settings))
-        setTypeMapping(currentIndex, defaultIndexType)
+        setTypeMapping(currentIndex, defaultType)
+        log.info("LatestIndex: " + getLatestIndex(elasticIndex))
     }
 
-    void reMapAliases() {
-        def oldIndex = getRealIndexFor(elasticIndex)
-        log.debug("Resetting alias \"$elasticIndex\" from \"$oldIndex\" to \"$currentIndex\".")
-        performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, elasticIndex).removeAlias(oldIndex, elasticIndex))
+    void reMapAliases(String indexAlias) {
+        def oldIndex = getRealIndexFor(indexAlias)
+        log.debug("Resetting alias \"$indexAlias\" from \"$oldIndex\" to \"$currentIndex\".")
+        performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexAlias).removeAlias(oldIndex, indexAlias))
     }
 
     void flush() {
@@ -197,8 +212,7 @@ abstract class ElasticSearch extends BasicPlugin {
         def delQuery = termQuery("extractedFrom.@id", uri.toString())
         log.debug("DelQuery: $delQuery")
 
-        def response = performExecute(client.prepareDeleteByQuery(currentIndex).setQuery(delQuery))
-        //def response = client.prepareDeleteByQuery(currentIndex).setQuery(delQuery).execute().actionGet()
+        def response = performExecute(client.prepareDeleteByQuery(elasticIndex).setQuery(delQuery))
 
         log.debug("Delbyquery response: $response")
         for (r in response.iterator()) {
@@ -207,7 +221,7 @@ abstract class ElasticSearch extends BasicPlugin {
 
         log.debug("Deleting object with identifier ${translateIdentifier(uri.toString())}.")
 
-        client.delete(new DeleteRequest(currentIndex, determineDocuentTypeBasedOnURI(uri.toString()), translateIdentifier(uri.toString())))
+        client.delete(new DeleteRequest(elasticIndex, determineDocuentTypeBasedOnURI(uri.toString()), translateIdentifier(uri.toString())))
 
 
         // Kanske en matchall-query filtrerad på _type och _id?
@@ -247,94 +261,6 @@ abstract class ElasticSearch extends BasicPlugin {
             idxlist = indexName.split(",").collect{it.trim()}
         }
         log.trace("Searching in indexes: $idxlist")
-        /*
-        def srb = client.prepareSearch(idxlist as String[])
-            .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-            .setFrom(q.start).setSize(q.n)
-        if (indexType) {
-            srb.setTypes(indexType.split(",") as String[])
-        }
-        if (q.query == "*") {
-            log.debug("Setting matchAll")
-            srb.setQuery(matchAllQuery())
-        } else if (q.phraseQuery) {
-            srb.setQuery(textPhrase(q.phraseField, q.phraseValue))
-        } else {
-            def query = queryString(q.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
-            if (q.fields) {
-                q.fields.each {
-                    if (q.boost && q.boost[it]) {
-                        query = query.field(it, q.boost[it])
-                    } else {
-                        query = query.field(it)
-                    }
-                }
-            } else if (q.boost) {
-                query = query.field("_all")
-                q.boost.each { f, b ->
-                    query = query.field(f, b)
-                }
-            }
-            srb.setQuery(query)
-        }
-        if (q.sorting) {
-            q.sorting.each {
-                def sortOrder =  it.value && it.value.equalsIgnoreCase('desc') ? org.elasticsearch.search.sort.SortOrder.DESC : org.elasticsearch.search.sort.SortOrder.ASC
-                srb = srb.addSort(new FieldSortBuilder(it.key).order(sortOrder).missing("_last").ignoreUnmapped(true))
-            }
-        }
-        if (q.highlights) {
-            srb = srb.setHighlighterPreTags("").setHighlighterPostTags("")
-            q.highlights.each {
-                srb = srb.addHighlightedField(it)
-            }
-        }
-        if (q.facets) {
-            q.facets.each {
-                if (it instanceof TermFacet) {
-                    log.debug("Building FIELD facet for ${it.field}")
-                    srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
-                } else if (it instanceof ScriptFieldFacet) {
-                    if (it.field.contains("@")) {
-                        log.warn("Forcing FIELD facet for ${it.field}")
-                        srb = srb.addFacet(FacetBuilders.termsFacet(it.name).field(it.field).size(MAX_NUMBER_OF_FACETS))
-                    } else {
-                        log.debug("Building SCRIPTFIELD facet for ${it.field}")
-                        srb = srb.addFacet(FacetBuilders.termsFacet(it.name).scriptField("_source.?"+it.field.replaceAll(/\./, ".?")).size(MAX_NUMBER_OF_FACETS))
-                    }
-                } else if (it instanceof QueryFacet) {
-                    def qf = new QueryStringQueryBuilder(it.query).defaultOperator(QueryStringQueryBuilder.Operator.AND)
-                    srb = srb.addFacet(FacetBuilders.queryFacet(it.name).query(qf))
-                }
-            }
-        }
-        def constructedFilters = []
-        if (q.filters) {
-            q.filters.each { k, v ->
-                if (k.charAt(0) == '!') {
-                    constructedFilters << FilterBuilders.notFilter(FilterBuilders.termFilter(k.substring(1), v))
-                } else {
-                    constructedFilters << FilterBuilders.termFilter(k, v)
-                }
-            }
-        }
-        if (q.ranges) {
-            q.ranges.each {k, v ->
-                if (k.charAt(0) == '!') {
-                    constructedFilters << FilterBuilders.notFilter(FilterBuilders.rangeFilter(k.substring(1)).from(v[0]).to(v[1]))
-                } else {
-                    constructedFilters << FilterBuilders.rangeFilter(k).from(v[0]).to(v[1])
-                }
-            }
-        }
-        if (constructedFilters.size() > 1) {
-            srb.setPostFilter(FilterBuilders.andFilter(*constructedFilters))
-        } else if (constructedFilters.size() == 1) {
-            srb.setPostFilter(constructedFilters[0])
-        }
-        log.debug("SearchRequestBuilder: " + srb)
-        def response = performExecute(srb)
-        */
         def jsonDsl = q.toJsonQuery()
         def response = client.search(new SearchRequest(idxlist as String[], jsonDsl.getBytes("utf-8")).searchType(SearchType.DFS_QUERY_THEN_FETCH).types(indexType)).actionGet()
         log.trace("SearchResponse: " + response)
@@ -480,7 +406,7 @@ abstract class ElasticSearch extends BasicPlugin {
             log.error("Tried to use first part of URI ${identifier} as type. Failed: ${e.message}", e)
         }
         if (!idxType) {
-            idxType = defaultIndexType
+            idxType = defaultType
         }
         log.trace("Using type $idxType for ${identifier}")
         return idxType
@@ -492,12 +418,11 @@ abstract class ElasticSearch extends BasicPlugin {
 
 
     void addDocuments(documents) {
-        log.trace("Called addDocuments on elastic running currentIndex $currentIndex")
         try {
             if (documents) {
                 def breq = client.prepareBulk()
 
-                def checkedTypes = [defaultIndexType]
+                def checkedTypes = [defaultType]
 
                 log.debug("Bulk request to index " + documents?.size() + " documents.")
 
@@ -507,11 +432,11 @@ abstract class ElasticSearch extends BasicPlugin {
                         def indexType = determineDocumentType(doc)
                         def checked = indexType in checkedTypes
                         if (!checked) {
-                            checkTypeMapping(currentIndex, indexType)
+                            checkTypeMapping(elasticIndex, indexType)
                             checkedTypes << indexType
                         }
                         def elasticIdentifier = translateIdentifier(doc.identifier)
-                        breq.add(client.prepareIndex(currentIndex, indexType, elasticIdentifier).setSource(doc.data))
+                        breq.add(client.prepareIndex(elasticIndex, indexType, elasticIdentifier).setSource(doc.data))
                         if (!doc.entry['origin']) {
                             breq.add(client.prepareIndex(elasticMetaEntryIndex, "entry", elasticIdentifier).setSource(doc.metadataAsJson.getBytes("utf-8")))
                         }

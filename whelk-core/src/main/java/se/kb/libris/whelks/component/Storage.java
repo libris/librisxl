@@ -27,6 +27,4 @@ public interface Storage extends Component {
     public boolean handlesContent(String contentType);
 
     public boolean isVersioning();
-
-    public boolean isHybrid();
 }

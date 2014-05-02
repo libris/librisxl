@@ -3,13 +3,8 @@ package se.kb.libris.whelks.component
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-//import groovy.util.logging.Slf4j as Log
 import groovy.transform.Synchronized
 
-/*
-import java.nio.file.*
-import java.nio.file.attribute.*
-*/
 import java.util.concurrent.*
 
 import se.kb.libris.whelks.Document
@@ -26,7 +21,42 @@ import org.apache.commons.io.filefilter.*
 
 import com.google.common.io.Files
 
-//@Log
+class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridStorage {
+    Index index
+
+    PairtreeHybridDiskStorage(Map settings) {
+        super(settings)
+    }
+
+    @Override
+    Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
+        if (dataset) {
+            log.info("Loading documents by index query for dataset $dataset")
+            def elasticResultIterator = index.metaEntryQuery(dataset, since, until)
+            return new Iterable<Document>() {
+                Iterator<Document> iterator() {
+                    return new Iterator<Document>() {
+                        public boolean hasNext() { elasticResultIterator.hasNext()}
+                        public Document next() {
+                            return super.get(elasticResultIterator.next())
+                        }
+                        public void remove() { throw new UnsupportedOperationException(); }
+                    }
+                }
+            }
+        } else if (since) {
+        }
+        return getAllRaw(dataset)
+    }
+    void delete(URI uri) {
+        super.delete(uri)
+        // TODO: Delete from entry
+    }
+
+    void rebuildIndex() {
+    }
+}
+
 class PairtreeDiskStorage extends BasicPlugin implements Storage {
     String baseStorageDir = "./storage"
     String storageDir = null
@@ -35,19 +65,12 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     boolean enabled = true
 
     String id = "diskstorage"
-    String docFolder = "_"
     List contentTypes
     boolean versioning
-    boolean hybrid = true
-
-    Index index
-
-    int PATH_CHUNKS=4
 
     final static Pairtree pairtree = new Pairtree()
 
     static final String ENTRY_FILE_NAME = "entry.json"
-    static final String DATA_FILE_NAME = "content.data"
     static final String DATAFILE_EXTENSION = ".data"
     static final String MAIN_STORAGE_DIR = "main"
     static final String VERSIONS_STORAGE_DIR = "versions"
@@ -195,12 +218,6 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
         }
     }
 
-    /*
-    Iterable<Document> getAll(Date since) {
-        // USE INDEX
-    }
-    */
-
     void benchmark() {
         int count = 0
         long startTime = System.currentTimeMillis()
@@ -220,23 +237,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
-        if (dataset) {
-            log.info("Loading documents by index query for dataset $dataset")
-            def elasticResultIterator = index.metaEntryQuery(dataset, since, until)
-            return new Iterable<Document>() {
-                Iterator<Document> iterator() {
-                    return new Iterator<Document>() {
-                        public boolean hasNext() { elasticResultIterator.hasNext()}
-                        public Document next() {
-                            return super.get(elasticResultIterator.next())
-                        }
-                        public void remove() { throw new UnsupportedOperationException(); }
-                    }
-                }
-            }
-        } else if (since) {
-        }
+    Iterable<Document> getAll(String dataset = null) {
         return getAllRaw(dataset)
     }
 
@@ -332,8 +333,10 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
 
 
 @Deprecated
-class DiskStorage extends PairtreeDiskStorage {
+class DiskStorage extends PairtreeDiskStorage implements Storage {
 
+    String docFolder = "_"
+    int PATH_CHUNKS=4
 
     DiskStorage(Map settings) {
        super(settings)

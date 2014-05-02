@@ -27,6 +27,15 @@
             "versioning" : false
         }
     },
+    "pairtreehybridstorage": {
+        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+        "_params" : {
+            "storageDir": "/ssd/storage",
+            "contentTypes": ["application/ld+json"],
+            "baseStorageSuffix": "pairtree",
+            "versioning" : false
+        }
+    },
     "pairtreeoaistorage": {
         "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
         "_params" : {
@@ -299,6 +308,9 @@
     },
     "linkexpander" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkExpander",
+        "_plugins" : [
+            "localindex"
+        ],
         "_params" : {
             "requiredDataset" : [ "bib" ],
             "nodesToExpand": {

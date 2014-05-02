@@ -138,11 +138,20 @@ class WhelkInitializer {
                 } else {
                     log.trace("$plugname has parameters.")
                 }
-                if (!meta._unique 
+                if (!meta._unique
                         && !(plugin instanceof WhelkAware)
                         && !meta._params) {
                     log.trace "$plugname not unique. Adding instance to map."
                     plugins[label] = plugin
+                }
+                if (meta._plugins) {
+                    log.trace("Plugin has plugins.")
+                    for (plug in meta._plugins) {
+                        log.debug("Adding plugin $plug -> ${plugin.id}")
+                        plugin.addPlugin(getPlugin(plug, whelkname))
+                    }
+                } else {
+                    log.debug("Plugin ${plugin.id} has no _plugin parameter ($meta)")
                 }
             }
         }

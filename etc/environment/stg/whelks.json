@@ -50,7 +50,7 @@
                 ],
                 "_otherplugins": [
                     "index",
-                    "pairtree",
+                    "pairtreehybrid",
                     "fuseki",
                     "entityextractor",
                     "linkcompleter",
@@ -67,6 +67,15 @@
             "_params" : {
                 "storageDir": "/data/librisxl/storage",
                 "contentTypes": ["application/ld+json"]
+            }
+        },
+        "pairtreehybrid": {
+            "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+            "_params" : {
+                "storageDir": "/data/librisxl/storage",
+                "contentTypes": ["application/ld+json"],
+                "baseStorageSuffix": "pairtree",
+                "versioning" : false
             }
         },
         "fuseki": {

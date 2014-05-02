@@ -103,7 +103,7 @@ class ReindexOperator extends AbstractOperator {
                 log.info("Process cancelled, resetting currentIndex")
                 whelk.index.currentIndex = whelk.index.getRealIndexFor(whelk.index.elasticIndex)
             } else {
-                whelk.index.reMapAliases()
+                whelk.index.reMapAliases(whelk.id)
             }
         }
         operatorState=OperatorState.FINISHING

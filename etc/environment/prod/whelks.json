@@ -51,7 +51,7 @@
                 ],
                 "_otherplugins": [
                     "index",
-                    "pairtreediskstorage",
+                    "pairtreehybridstorage",
                     "fuseki",
                     "entityextractor",
                     "linkcompleter",

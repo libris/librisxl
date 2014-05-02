@@ -54,7 +54,7 @@
                 ],
             "_otherplugins": [
                 "localindex",
-                "ptstorage",
+                "pthybrid",
                 "entityextractor",
                 "linkcompleter",
                 "indexlinkfinder",
@@ -73,6 +73,15 @@
             },
             "ptstorage": {
                 "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
+                "_params" : {
+                    "storageDir": "work/storage",
+                    "contentTypes": ["application/ld+json"],
+                    "versioning" : true,
+                    "baseStorageSuffix": "pairtree"
+                }
+            },
+            "pthybrid": {
+                "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
                 "_params" : {
                     "storageDir": "work/storage",
                     "contentTypes": ["application/ld+json"],

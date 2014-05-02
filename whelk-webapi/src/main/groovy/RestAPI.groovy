@@ -658,6 +658,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     boolean enabled = true
 
     String logMessage = "Handled #REQUESTMETHOD# for #API_ID#"
+    def plugins = []
 
     @Override
     void setWhelk(Whelk w) {
@@ -669,6 +670,11 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     String getPath() {
         def elems = [(this.whelk instanceof HttpWhelk ? this.whelk.contentRoot : this.whelk.id), getPathEnd()]
         return "/" + elems.findAll { it.length() > 0 }.join("/")
+    }
+
+    @Override
+    public void addPlugin(Plugin p) {
+        plugins << p
     }
 
     /**
@@ -1094,6 +1100,9 @@ class DefinitionDataRestlet extends Directory implements RestAPI {
         }
         return new URI(path)
     }
+
+    @Override
+    public void addPlugin(Plugin p) {}
 
 }
 

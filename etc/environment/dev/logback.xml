@@ -67,10 +67,10 @@
   <logger name="se.kb.libris.whelks.basic">
       <level value="trace"/>
   </logger>
-  <logger name="se.kb.libris.whelks.WhelkInitializer">
-      <level value="trace"/>
-  </logger> 
   -->
+  <logger name="se.kb.libris.whelks.WhelkInitializer">
+      <level value="debug"/>
+  </logger> 
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="debug"/>
   </logger>
@@ -80,7 +80,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.DiskStorage">

@@ -59,10 +59,14 @@ class StandardWhelk implements Whelk {
     @groovy.transform.CompileStatic
     URI add(Document doc) {
         log.trace("Add single document ${doc.identifier}")
-        doc = addToStorage(doc)
-        addToGraphStore([doc])
-        addToIndex([doc])
-
+        try {
+            doc = addToStorage(doc)
+            addToGraphStore([doc])
+            addToIndex([doc])
+        } catch (Exception e) {
+            log.error("Failed to add document ${doc?.identifier}", e)
+            throw e
+        }
         return new URI(doc.identifier)
     }
 
@@ -75,23 +79,21 @@ class StandardWhelk implements Whelk {
         log.debug("Bulk add ${docs.size()} document")
         List<Document> convertedDocs = []
         for (doc in docs) {
-            try {
-                convertedDocs.add(addToStorage(doc))
-            } catch (WhelkAddException wae) {
-                log.warn(wae.message)
-            }
+            convertedDocs.add(addToStorage(doc))
         }
         try {
             log.trace("${convertedDocs.size()} docs left to triplify ...")
             addToGraphStore(convertedDocs)
         } catch (Exception e) {
             log.error("Failed adding documents to graphstore: ${e.message}", e)
+            throw e
         }
         try {
             log.trace("${convertedDocs.size()} docs left to index ...")
             addToIndex(convertedDocs)
         } catch (Exception e) {
             log.error("Failed indexing documents: ${e.message}", e)
+            throw e
         }
     }
 
@@ -168,11 +170,7 @@ class StandardWhelk implements Whelk {
         if (withConversion) {
             FormatConverter formatconverter = (FormatConverter)formatConverters.get(doc.contentType, null)
             if (formatconverter) {
-                try {
-                    doc = formatconverter.convert(doc)
-                } catch (Exception e) {
-                    log.error("Conversion failed for ${doc.identifier}.", e)
-                }
+                doc = formatconverter.convert(doc)
             }
         }
         for (storage in getStorages(doc.contentType)) {
@@ -202,41 +200,32 @@ class StandardWhelk implements Whelk {
                 for (doc in docs) {
                     for (ifc in getIndexFormatConverters()) {
                         log.trace("Running indexformatconverter ${ifc.id} on document with ctype ${doc.contentType}")
-                        idxDocs.addAll(ifc.convert(doc))
+                            idxDocs.addAll(ifc.convert(doc))
                     }
                 }
             } else if (docs[0].isJson()) {
                 idxDocs = docs
             }
             if (idxDocs) {
-                try {
-                    index.bulkIndex(idxDocs)
-                } catch (Exception e) {
-                    throw new WhelkAddException("Failed to add documents to index ${index.id}.".toString(), e, idxDocs.collect { ((Document)it).identifier })
-                }
+                index.bulkIndex(idxDocs)
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
             }
-        } else if (log.isDebugEnabled()) {
+        } else {
             log.warn("No index configured for this whelk.")
         }
     }
 
-    void addToGraphStore(final List<Document> docs, List<String> gStores = null) {
-        def activeGraphStores = (gStores ? graphStores.findAll { it.id in gStores } : graphStores)
-        if (activeGraphStores.size() > 0) {
-            for (store in activeGraphStores) {
-                if (store instanceof BatchGraphStore) {
-                    log.debug("Batch updating graphstore. $docs")
-                    store.batchUpdate(docs)
-                } else {
-                    docs.each {
-                        store.update(docBaseUri.resolve(it.identifier), it)
-                    }
+    void addToGraphStore(final List<Document> docs) {
+        for (store in graphStores) {
+            if (store instanceof BatchGraphStore) {
+                log.debug("Batch updating graphstore. $docs")
+                store.batchUpdate(docs)
+            } else {
+                docs.each {
+                    store.update(docBaseUri.resolve(it.identifier), it)
                 }
             }
-        } else if (graphStores.size() > 0) {
-            throw new PluginConfigurationException("You have graphstores configured, but none available for these documents.")
         }
     }
 
@@ -258,54 +247,6 @@ class StandardWhelk implements Whelk {
             throw new WhelkRuntimeException("Couldn't find storage. (storageId = $storageId)")
         }
     }
-
-    /*
-    void findLinks(String dataset) {
-        log.info("Trying to findLinks for ${dataset}... ")
-        for (doc in loadAll(dataset)) {
-            log.debug("Finding links for ${doc.identifier} ...")
-            for (linkFinder in getLinkFinders()) {
-                log.debug("LinkFinder ${linkFinder}")
-                for (link in linkFinder.findLinks(doc)) {
-                    doc.withLink(link.identifier.toString(), link.type)
-                }
-            }
-            add(doc)
-       }
-    }
-
-    void runFilters(String dataset) {
-        log.info("Running filters for ${dataset} ...")
-        long startTime = System.currentTimeMillis()
-        int counter = 0
-        def docs = []
-        for (doc in loadAll(dataset)) {
-            for (filter in getFilters()) {
-                log.debug("Running filter ${filter.id}")
-                docs << addToStorage(filter.filter(doc))
-                if (++counter % 1000 == 0) {
-                    addToGraphStore(docs)
-                    try {
-                        addToIndex(docs)
-                    } catch (WhelkAddException wae) {
-                        log.info("Failed indexing identifiers: ${wae.failedIdentifiers}")
-                    }
-                    docs = []
-                }
-                if (log.isInfoEnabled()) {
-                    Tools.printSpinner("Filtering ${this.id}. ${counter} documents sofar.", counter)
-                }
-            }
-        }
-        log.debug("Went through all documents. Processing remainder.")
-        if (docs.size() > 0) {
-            log.trace("Reindexing remaining ${docs.size()} documents")
-            addToGraphStore(docs)
-            addToIndex(docs)
-        }
-        log.info("Filtered $counter documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-    }
-    */
 
     @Override
     void flush() {
@@ -330,18 +271,20 @@ class StandardWhelk implements Whelk {
             t.start()
             prawnThreads << t
         }
-        if (plugin instanceof Storage) {
-            if (((Storage)plugin).isHybrid() && index) {
+        if (plugin instanceof HybridStorage) {
+            if (index) {
                 log.debug("Added index to storage ${plugin.id}")
                 plugin.index = index
             }
+            this.storages.add(plugin)
+        } else if (plugin instanceof Storage) {
             this.storages.add(plugin)
         } else if (plugin instanceof Index) {
             if (index) {
                 throw new PluginConfigurationException("Index ${index.id} already configured for whelk ${this.id}.")
             }
             for (st in storages) {
-                if (st.isHybrid()) {
+                if (st instanceof HybridStorage) {
                     log.debug("Added index to storage ${st.id}")
                     st.index = index
                 }

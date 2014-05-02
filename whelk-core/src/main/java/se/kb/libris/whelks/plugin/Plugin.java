@@ -7,4 +7,5 @@ public interface Plugin {
     public boolean isEnabled();
     public void setEnabled(boolean e);
     public void init(String whelkId);
+    public void addPlugin(Plugin p);
 }
