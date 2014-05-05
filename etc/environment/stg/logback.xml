@@ -20,6 +20,9 @@
     </encoder>
   </appender>
 
+  <logger name="se.kb.libris.whelks.WhelkInitializer">
+      <level value="debug"/>
+  </logger>
   <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="debug"/>
   </logger>
