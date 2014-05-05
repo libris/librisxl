@@ -248,7 +248,10 @@ def to_dataset(base, data):
                 continue
             if not id_.startswith(base):
                 raise ValueError("Expected <%s> in base <%s>" % (id_, base))
-            resultset[id_[len(base):]] = node
+            #resultset[id_[len(base):]] = node
+            rel_path = id_[len(base):]
+            data_path = "%s;data" % id_
+            resultset[rel_path] = {'@id': data_path, 'about': node}
     return context, resultset
 
 
