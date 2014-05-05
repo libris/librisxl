@@ -122,9 +122,12 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
     @Override
     void init(String indexName) {
         if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
+            log.info("Couldn't find index by name $indexName. Creating ...")
             if (indexName.startsWith(".")) {
                 // It's a meta index. No need for aliases and such.
-                log.info("Couldn't find index by name $indexName. Creating ...")
+                if (!es_settings) {
+                    es_settings = loadJson("es_settings.json")
+                }
                 performExecute(client.admin().indices().prepareCreate(indexName).setSettings(es_settings))
             } else {
                 String currentIndex = createNewCurrentIndex(indexName)

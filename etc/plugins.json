@@ -29,6 +29,9 @@
     },
     "pairtreehybridstorage": {
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+        "_plugins" : [
+            "index"
+            ],
         "_params" : {
             "storageDir": "/ssd/storage",
             "contentTypes": ["application/ld+json"],

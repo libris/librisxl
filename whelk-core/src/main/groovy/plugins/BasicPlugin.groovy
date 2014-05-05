@@ -20,6 +20,7 @@ public class BasicPlugin implements Plugin {
     public void addPlugin(Plugin p) {
         plugins.add(p);
     }
+    public List<Plugin> getPlugins() { plugins }
 
     @Override
     public int hashCode() {

@@ -53,8 +53,8 @@
                 "documentapi"
                 ],
             "_otherplugins": [
-                "localindex",
                 "pthybrid",
+                "localindex",
                 "entityextractor",
                 "linkcompleter",
                 "indexlinkfinder",
@@ -82,6 +82,9 @@
             },
             "pthybrid": {
                 "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+                "_plugins" : [
+                    "localindex"
+                    ],
                 "_params" : {
                     "storageDir": "/Users/markus/dev/librisxl/work/storage",
                     "contentTypes": ["application/ld+json"],

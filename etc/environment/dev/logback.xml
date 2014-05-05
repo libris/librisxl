@@ -69,7 +69,7 @@
   </logger>
   -->
   <logger name="se.kb.libris.whelks.WhelkInitializer">
-      <level value="info"/>
+      <level value="debug"/>
   </logger> 
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="debug"/>

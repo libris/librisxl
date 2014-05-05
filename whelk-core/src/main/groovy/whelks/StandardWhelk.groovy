@@ -270,25 +270,11 @@ class StandardWhelk implements Whelk {
             t.start()
             prawnThreads << t
         }
-        if (plugin instanceof HybridStorage) {
-            if (index) {
-                log.debug("Added index to storage ${plugin.id}")
-                plugin.index = index
-            }
-            this.storages.add(plugin)
-        } else if (plugin instanceof Storage) {
+        if (plugin instanceof Storage) {
             this.storages.add(plugin)
         } else if (plugin instanceof Index) {
             if (index) {
                 throw new PluginConfigurationException("Index ${index.id} already configured for whelk ${this.id}.")
-            }
-            for (st in storages) {
-                if (st instanceof HybridStorage && st.index == null) {
-                    log.debug("Added index to storage ${st.id}")
-                    st.index = index
-                    log.trace("Re-initing storage, now with index attached.")
-                    st.init(this.id)
-                }
             }
             this.index = plugin
         } else if (plugin instanceof FormatConverter) {

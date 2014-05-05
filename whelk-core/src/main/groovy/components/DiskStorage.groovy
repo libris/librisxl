@@ -22,8 +22,8 @@ import org.apache.commons.io.filefilter.*
 import com.google.common.io.Files
 
 class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridStorage {
-    Index index
 
+    Index index
     String indexName
 
     PairtreeHybridDiskStorage(Map settings) {
@@ -32,11 +32,13 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
 
     void init(String stName) {
         super.init(stName)
-        if (index) {
-            indexName = "."+stName
-            index.init(indexName)
-            index.checkTypeMapping(indexName, "entry")
+        index = plugins.find { it instanceof Index }
+        if (!index) {
+            throw new PluginConfigurationException("HybridStorage requires Index component.")
         }
+        indexName = "."+stName
+        index.init(indexName)
+        index.checkTypeMapping(indexName, "entry")
     }
 
     @Override

@@ -71,6 +71,9 @@
         },
         "pairtreehybrid": {
             "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+            "_plugins" : [
+                "index"
+                ],
             "_params" : {
                 "storageDir": "/data/librisxl/storage",
                 "contentTypes": ["application/ld+json"],
