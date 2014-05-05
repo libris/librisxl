@@ -81,12 +81,36 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         }
         return getAllRaw(dataset)
     }
+    @Override
     void delete(URI uri, String whelkId) {
         super.delete(uri, whelkId)
-        // TODO: Delete from entry
+        index.deleteFromEntry(uri, indexName)
     }
 
+    @Override
     void rebuildIndex() {
+        int count = 0
+        List<Map<String,String>> entries = []
+        log.info("Started rebuild of metaindex for $indexName.")
+        for (document in getAllRaw()) {
+            entries << [
+                    "index":indexName,
+                    "type": "entry",
+                    "id": ((ElasticSearch)index).translateIdentifier(document.identifier),
+                    "data":((Document)document).metadataAsJson
+                ]
+            if (count++ % 1000 == 0) {
+                index.index(entries)
+                entries = []
+            }
+            if (log.isInfoEnabled() && count % 10000 == 0) {
+                log.info("[${new Date()}] Rebuilding metaindex for $indexName. $count sofar.")
+            }
+        }
+        if (entries.size() > 0) {
+            index.index(entries)
+        }
+        log.info("Meta index rebuilt.")
     }
 }
 

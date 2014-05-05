@@ -47,8 +47,3 @@ task(groovy, dependsOn: 'classes', type: JavaExec) {
   args(System.getProperty('args', "").split() as String[])
 }
 
-task(console, dependsOn: 'classes', type: JavaExec) {
-  description "Launch a Groovy Console"
-  classpath = sourceSets.main.runtimeClasspath
-  main = 'groovy.ui.Console'
-}

@@ -83,7 +83,7 @@
             "pthybrid": {
                 "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
                 "_params" : {
-                    "storageDir": "work/storage",
+                    "storageDir": "/Users/markus/dev/librisxl/work/storage",
                     "contentTypes": ["application/ld+json"],
                     "versioning" : true,
                     "baseStorageSuffix": "pairtree"

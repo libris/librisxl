@@ -162,3 +162,11 @@ class ReindexOperator extends AbstractOperator {
         return map
     }
 }
+
+@Log
+class RebuildMetaIndexOperator extends AbstractOperator {
+    String oid = "rebuild"
+    void doRun(long startTime) {
+        whelk.storage.rebuildIndex()
+    }
+}

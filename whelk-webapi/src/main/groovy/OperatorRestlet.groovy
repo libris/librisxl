@@ -36,11 +36,13 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
     static ReindexOperator reindexOperator = new ReindexOperator()
     static ImportOperator importOperator = new ImportOperator()
     static TransferOperator transferOperator = new TransferOperator()
+    static RebuildMetaIndexOperator rebuildMetaIndexOperator = new RebuildMetaIndexOperator()
 
     static Map operators = ["reindex":reindexOperator,
                             "import":importOperator,
                             "transfer":transferOperator,
-                            "benchmark":benchmarkOperator]
+                            "benchmark":benchmarkOperator,
+                            "rebuild":rebuildMetaIndexOperator]
 
     void doHandle(Request request, Response response) {
         def req = [:]

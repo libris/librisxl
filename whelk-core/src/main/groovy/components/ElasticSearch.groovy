@@ -195,6 +195,10 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
         return json
     }
 
+    void deleteEntry(URI uri, indexName) {
+        client.delete(new DeleteRequest(indexName, "entry", translateIdentifier(uri.toString())))
+    }
+
     @Override
     void delete(URI uri, String indexName) {
         log.debug("Peforming deletebyquery to remove documents extracted from $uri")
@@ -402,6 +406,32 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
         return idxType
     }
 
+
+    void index(final List<Map<String,String>> data) throws WhelkIndexException  {
+        def breq = client.prepareBulk()
+        for (entry in data) {
+            breq.add(client.prepareIndex(entry['index'], entry['type'], entry['id']).setSource(entry['data'].getBytes("utf-8")))
+        }
+        def response = performExecute(breq)
+        if (response.hasFailures()) {
+            log.error "Bulk entry indexing has failures."
+            def fails = []
+            for (re in response.items) {
+                if (re.failed) {
+                    log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
+                    try {
+                        fails << translateIndexIdTo(re.id)
+                    } catch (Exception e1) {
+                        log.error("TranslateIndexIdTo cast an exception", e1)
+                        fails << "Failed translation for \"$re\""
+                    }
+                }
+            }
+            throw new WhelkIndexException("Failed to index entries. Reason: ${response.buildFailureMessage()}", new WhelkAddException(fails))
+        } else {
+            log.debug("Bulk request completed in ${response.tookInMillis}")
+        }
+    }
 
     void index(byte[] data, Map params) throws WhelkIndexException  {
         try {

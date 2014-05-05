@@ -48,3 +48,9 @@ task whelkOperation(dependsOn: 'classes', type: JavaExec) {
   systemProperty 'picky', System.getProperty('picky', 'false')
   args(System.getProperty('args', "").split() as String[])
 }
+
+task(console, dependsOn: 'classes', type: JavaExec) {
+  description "Launch a Groovy Console"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'groovy.ui.Console'
+}
