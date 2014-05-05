@@ -309,7 +309,7 @@
     "linkexpander" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkExpander",
         "_plugins" : [
-            "localindex"
+            "index"
         ],
         "_params" : {
             "requiredDataset" : [ "bib" ],

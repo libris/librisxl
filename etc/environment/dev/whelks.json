@@ -34,7 +34,7 @@
                 "turtleconverter"
                 ],
             "_expanders": [
-                "linkexpander"
+                "locallinkexpander"
                 ],
             "_importers": [
                 "oaipmhimporter",
@@ -113,6 +113,57 @@
             "localdefinitiondata": {
                 "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
                 "_params": "datatools/build/"
+            },
+            "locallinkexpander" : {
+                "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkExpander",
+                "_plugins" : [
+                    "localindex"
+                    ],
+                "_params" : {
+                    "requiredDataset" : [ "bib" ],
+                    "nodesToExpand": {
+                        "about.attributedTo" : {
+                            "method": "query",
+                            "index" : "libris",
+                            "dataset" : "auth",
+                            "field" : "about.@id",
+                            "queryProperties": {
+                                "_source.include" : ["about.*"]
+                            },
+                            "resultKey" : "about"
+                        },
+                        "about.author" : {
+                            "method": "query",
+                            "index" : "libris",
+                            "dataset" : "auth",
+                            "field" : "about.@id",
+                            "queryProperties": {
+                                "_source.include" : ["about.*"]
+                            },
+                            "resultKey" : "about"
+                        },
+                        "about.language" : {
+                            "method": "query",
+                            "index" : "def",
+                            "dataset" : "languages",
+                            "field" : "@id"
+                        },
+                        "about.country" : {
+                            "method": "query",
+                            "index" : "def",
+                            "dataset" : "countries",
+                            "field" : "@id"
+                        },
+                        "about.not.used.language" : {
+                            "method" : "http",
+                            "url" : "http://localhost:8180/whelk-webapi"
+                        },
+                        "about.nonsense.at.the.same.whelk" : {
+                            "method" : "get"
+                        }
+
+                    }
+                }
             }
         }
 }

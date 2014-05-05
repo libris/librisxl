@@ -89,6 +89,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
 
     @Override
     void rebuildIndex() {
+        assert index
         int count = 0
         List<Map<String,String>> entries = []
         log.info("Started rebuild of metaindex for $indexName.")
