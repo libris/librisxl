@@ -70,7 +70,7 @@ class ElasticSearchClient extends ElasticSearch {
 //TODO: Move all settings (general and index level) to config files and make creation of index and changing of settings to separate operation tasks
 
 @Log
-class ElasticSearchNode extends ElasticSearch implements Index {
+class ElasticSearchNode extends BasicPlugin {
 
     ElasticSearchNode() {
         this(null)
@@ -87,15 +87,18 @@ class ElasticSearchNode extends ElasticSearch implements Index {
             sb = sb.put("cluster.name", "bundled_whelk_index")
         }
         if (dataDir != null) {
-            sb.put("path.data", dataDir)
+            sb.put("path.data", "work/data")
         }
         sb.build()
         Settings settings = sb.build()
         NodeBuilder nBuilder = nodeBuilder().settings(settings)
         // start it!
         def node = nBuilder.build().start()
+        log.info("Elasticsearch node started.")
+        /*
         client = node.client()
         log.info "Client connected to new (local) ES node."
+        */
     }
 }
 
@@ -408,7 +411,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
 
     String determineDocuentTypeBasedOnURI(String identifier, String indexName) {
         def idxType
-        log.debug("Using identifier to determine type.")
+        log.trace("Using identifier to determine type.")
         try {
             def identParts = identifier.split("/")
             idxType = (identParts[1] == indexName && identParts.size() > 3 ? identParts[2] : identParts[1])
@@ -550,15 +553,29 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     }
 
     Document createResultDocumentFromHit(hit, queriedIndex) {
-        def emei = ".$queriedIndex"
-        def grb = new GetRequestBuilder(client, emei).setType("entry").setId(hit.id)
-        def result = performExecute(grb)
-        if (result.exists) {
-            return new Document(result.sourceAsMap).withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+        def metaEntryMap = getMetaEntry(hit.id, queriedIndex)
+        if (metaEntryMap) {
+            return new Document(metaEntryMap).withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
         } else {
             return new Document().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
         }
     }
+
+    private Map getMetaEntry(id, queriedIndex) {
+        def emei = ".$queriedIndex"
+        try {
+            def grb = new GetRequestBuilder(client, emei).setType("entry").setId(id)
+            def result = performExecute(grb)
+            if (result.exists) {
+                return result.sourceAsMap
+            }
+        } catch (org.elasticsearch.indices.IndexMissingException ime) {
+            log.debug("Meta entry index $emei does not exist.")
+        }
+        return null
+    }
+
+
 
     String translateIndexIdTo(id) {
         def pathelements = []

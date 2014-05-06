@@ -26,8 +26,6 @@ class StandardWhelk implements Whelk {
     List<Storage> storages = new ArrayList<Storage>()
     Index index
     GraphStore graphStore
-    Map<String,FormatConverter> formatConverters = new HashMap<String,FormatConverter>()
-    List<IndexFormatConverter> indexFormatConverters = new ArrayList<IndexFormatConverter>()
     List<LinkExpander> linkExpanders = new ArrayList<LinkExpander>()
 
     private Map<String, List<BlockingQueue>> queues
@@ -305,10 +303,6 @@ class StandardWhelk implements Whelk {
                 throw new PluginConfigurationException("GraphStore ${index.id} already configured for whelk ${this.id}.")
             }
             this.graphStore = plugin
-        } else if (plugin instanceof FormatConverter) {
-            this.formatConverters.put(plugin.requiredContentType, plugin)
-        } else if (plugin instanceof IndexFormatConverter) {
-            this.indexFormatConverters.add(plugin)
         } else if (plugin instanceof LinkExpander) {
             this.linkExpanders.add(plugin)
         }

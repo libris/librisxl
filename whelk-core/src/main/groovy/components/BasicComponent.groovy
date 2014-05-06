@@ -71,8 +71,8 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     @Override
     public void add(Document document) {
-        List<Document> docs = prepareDocs([document])
         try {
+            List<Document> docs = prepareDocs([document], document.contentType)
             batchLoad(docs)
             setState(LAST_UPDATED, new Date().getTime())
         } catch (Exception e) {
@@ -86,35 +86,35 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         DocumentSplitter preSplitter = documentSplitters.get(contentType)
 
         DocumentSplitter postSplitter = documentSplitters.get(contentType)
-        log.debug("fc: $fc")
-        log.debug("postSplitter: $postSplitter")
+        log.trace("fc: $fc")
+        log.trace("postSplitter: $postSplitter")
         if (!postSplitter && fc) {
             postSplitter = documentSplitters.get(fc.resultContentType)
         }
         if (fc || preSplitter || postSplitter) {
+            List docs = []
             for (doc in documents) {
-                log.debug("[${this.id}] Calling prepare on doc ${doc.identifier}")
-                List docs = []
+                log.trace("[${this.id}] Calling prepare on doc ${doc.identifier}");
                 if (preSplitter) {
-                    log.debug("[${this.id}] Running preSplitter")
+                    log.trace("[${this.id}] Running preSplitter")
                     for (d in preSplitter.split(doc)) {
                         if (fc) {
-                            log.debug(" ... with conversion")
+                            log.trace(" ... with conversion")
                             docs << fc.convert(d)
                         } else {
-                            log.debug(" ... without conversion")
+                            log.trace(" ... without conversion")
                             docs << d
                         }
                     }
                 } else if (fc) {
-                    log.debug("[${this.id}] Adding document after conversion.")
+                    log.trace("[${this.id}] Adding document after conversion.")
                     docs.add(fc.convert(doc))
                 } else {
-                    log.debug("[${this.id}] Adding document without conversion.")
+                    log.trace("[${this.id}] Adding document without conversion.")
                     docs.add(doc)
                 }
                 if (postSplitter) {
-                    log.debug("[${this.id}] Running postSplitter")
+                    log.trace("[${this.id}] Running postSplitter")
                     if (docs.size() > 0) {
                         List<Document> convertedDocs = []
                         for (d in docs) {
@@ -123,10 +123,9 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                         docs = convertedDocs
                     }
                 }
-                log.debug("docs is $docs")
-                log.debug("[${this.id}] Returning document list of size ${docs.size()}.")
-                return docs
             }
+            log.debug("[${this.id}] Returning document list of size ${docs.size()}.")
+            return docs
         }
         log.debug("[${this.id}] Nothing to do, return the same list of documents.")
         return documents
@@ -143,8 +142,8 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     public void bulkAdd(List<Document> docs, String contentType) {
         log.debug("[${this.id}] bulkAdd called with ${docs.size()} documents.")
-        docs = prepareDocs(docs, contentType)
         try {
+            docs = prepareDocs(docs, contentType)
             log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)
             setState(LAST_UPDATED, new Date().getTime())

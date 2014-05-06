@@ -56,8 +56,6 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicFormatConverter {
                 }
             }
         }
-        log.debug("Doclist contains ${doclist.size()} entries.")
-        log.debug("docList is: $doclist")
         return new Document().withData(["extracted_entities": doclist]).withContentType(resultContentType)
     }
 

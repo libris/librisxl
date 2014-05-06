@@ -11,14 +11,11 @@ class EntityExtractionDocumentSplitter extends BasicPlugin implements DocumentSp
         List<Document> docs = []
         if (handles(doc)) {
             for (docEntity in doc.dataAsMap.get("extracted_entities")) {
-                log.debug("docEntity: $docEntity")
-                def d = new Document()
+                docs << new Document()
                     .withData(docEntity.get('entity'))
                     .withEntry(['dataset':docEntity['dataset']])
                     .withContentType(docEntity['contentType'])
                     .withIdentifier(docEntity['id'])
-                log.info("doc.dataAsString: ${d.dataAsString}")
-                docs << d
             }
             log.debug("Returning list of documents with ${docs.size()} entries.")
             return docs
