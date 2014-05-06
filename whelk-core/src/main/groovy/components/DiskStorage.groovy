@@ -97,6 +97,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
                 }
             }
         } else if (since) {
+            throw new UnsupportedOperationException("Since not yet implemented.")
         }
         return getAllRaw(dataset)
     }
@@ -210,7 +211,16 @@ class PairtreeDiskStorage extends BasicComponent implements Storage {
     boolean store(Document doc) {
         if (doc && (handlesContent(doc.contentType) || doc.entry.deleted)) {
             if (this.versioning) {
-                doc = checkAndUpdateExisting(doc)
+                try {
+                    doc = checkAndUpdateExisting(doc)
+                } catch (DocumentException de) {
+                    if (de.exceptionType == DocumentException.IDENTICAL_DOCUMENT) {
+                        log.debug("Identical document already in storage.")
+                        return true
+                    } else {
+                        throw de
+                    }
+                }
             }
             String filePath = buildPath(doc.identifier)
             return writeDocumentToDisk(doc, filePath, getBaseFilename(doc.identifier))

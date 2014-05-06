@@ -25,7 +25,7 @@
         "def":{
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins" : [
-                "ptstorage",
+                "pthybrid",
                 "defsindex",
                 "fusekigraphstore",
                 "turtleconverter",
@@ -78,15 +78,6 @@
                 "_class" : "se.kb.libris.whelks.component.ElasticSearchNode",
                 "_params" : "work/data",
                 "_unique" : true
-            },
-            "ptstorage": {
-                "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
-                "_params" : {
-                    "storageDir": "work/storage",
-                    "contentTypes": ["application/ld+json"],
-                    "versioning" : true,
-                    "baseStorageSuffix": "pairtree"
-                }
             },
             "pthybrid": {
                 "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",

@@ -96,7 +96,7 @@
       <level value="trace"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.PairtreeDiskStorage">
-      <level value="info"/>
+      <level value="trace"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.CassandraStorage">

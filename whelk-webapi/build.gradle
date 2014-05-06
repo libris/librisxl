@@ -25,7 +25,7 @@ task jettyRun(dependsOn: 'devLogging', type: JettyRun, overwrite: true) {
     System.setProperty('cassandra.host', System.getProperty('cassandra.host', "localhost"))
     System.setProperty('cassandra.cluster', System.getProperty('cassandra.cluster', mock_c_cluster))
     System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-    System.setProperty('elastic.host', System.getProperty("elastic.host", ""))
+    System.setProperty('elastic.host', System.getProperty("elastic.host", "localhost"))
 }
 
 task whelkOperation(dependsOn: 'classes', type: JavaExec) {

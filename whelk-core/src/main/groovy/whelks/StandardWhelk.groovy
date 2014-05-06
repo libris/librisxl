@@ -26,6 +26,7 @@ class StandardWhelk implements Whelk {
     List<Storage> storages = new ArrayList<Storage>()
     Index index
     GraphStore graphStore
+
     List<LinkExpander> linkExpanders = new ArrayList<LinkExpander>()
 
     private Map<String, List<BlockingQueue>> queues
@@ -137,7 +138,7 @@ class StandardWhelk implements Whelk {
                 doc = le.expand(doc)
                 if (doc.checksum != origchecksum) {
                     log.debug("Indexing expanded doc.")
-                    addToIndex([doc])
+                    index.add(doc)
                 }
             }
         }
@@ -149,7 +150,7 @@ class StandardWhelk implements Whelk {
     void remove(URI uri) {
         components.each {
             try {
-                ((Component)it).delete(uri, this.id)
+                ((Component)it).delete(uri)
             } catch (RuntimeException rte) {
                 log.warn("Component ${((Component)it).id} failed delete: ${rte.message}")
             }
@@ -358,10 +359,6 @@ class StandardWhelk implements Whelk {
     List<Storage> getStorages(String rct) { return storages.findAll { it.handlesContent(rct) } }
     Storage getStorage(String rct) { return storages.find { it.handlesContent(rct) } }
 
-    /*
-    List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
-    GraphStore getGraphStore() { return plugins.find { it instanceof GraphStore } }
-    */
     List<SparqlEndpoint> getSparqlEndpoints() { return plugins.findAll { it instanceof SparqlEndpoint } }
     SparqlEndpoint getSparqlEndpoint() { return plugins.find { it instanceof SparqlEndpoint } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }
