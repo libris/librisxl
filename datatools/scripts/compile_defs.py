@@ -57,7 +57,7 @@ def relators():
             addtype='ObjectProperty',
             relation='equivalentProperty')
 
-    return to_dataset("/def/", data)
+    return split_dataset("/def/", data)
 
 
 @dataset
@@ -108,7 +108,7 @@ def languages():
         if item:
             node['prefLabel'] = item['prefLabel_sv']
 
-    return to_dataset("/def/", data)
+    return split_dataset("/def/", data)
 
 
 @dataset
@@ -127,7 +127,7 @@ def countries():
             iri_template="/def/countries/{notation}",
             relation='exactMatch')
 
-    return to_dataset("/def/", data)
+    return split_dataset("/def/", data)
 
 
 @dataset
@@ -138,7 +138,7 @@ def nationalities():
 @dataset
 def enums():
     data = load_data(scriptpath('../source/enums.jsonld'))
-    return to_dataset("/def/", data)
+    return split_dataset("/def/", data)
 
 
 def filter_graph(source, propspaces, oftype=None):
@@ -230,7 +230,7 @@ def to_camel_case(label):
             for (i, s) in enumerate(re.split(r'[\s,.-]', label)) if s)
 
 
-def to_dataset(base, data):
+def split_dataset(base, data):
     context = None
     resultset = OrderedDict()
     for key, obj in data.items():
@@ -250,7 +250,7 @@ def to_dataset(base, data):
                 raise ValueError("Expected <%s> in base <%s>" % (id_, base))
             #resultset[id_[len(base):]] = node
             rel_path = id_[len(base):]
-            data_path = "%s;data" % id_
+            data_path = "%s?data" % id_
             resultset[rel_path] = {'@id': data_path, 'about': node}
     return context, resultset
 
