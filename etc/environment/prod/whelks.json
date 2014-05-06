@@ -1,16 +1,6 @@
 {
     "_whelks": [
         {
-            "defterms":{
-                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : [
-                    "definitiondata"
-                    ],
-                "contentRoot" : "/def/term",
-                "docBaseUri" : "http://libris.kb.se/"
-            }
-        },
-        {
             "def":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins" : [

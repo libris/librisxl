@@ -6,10 +6,6 @@
             "metaproxyBaseUrl":"http://mproxy.libris.kb.se:8000"
         }
     },
-    "definitiondata": {
-        "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
-        "_params": "/data/librisxl/def/"
-    },
     "isxntool": {
         "_class": "se.kb.libris.whelks.api.ISXNTool",
         "_params" : "_whelk:libris"

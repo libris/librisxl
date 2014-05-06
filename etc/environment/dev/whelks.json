@@ -1,15 +1,5 @@
 {
     "_whelks": [
-        {
-            "defterms":{
-                "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-                "_plugins" : [
-                    "localdefinitiondata"
-                    ],
-                "contentRoot" : "/def/term",
-                "docBaseUri" : "http://libris.kb.se/"
-            }
-        },
     {
         "def":{
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
@@ -100,10 +90,6 @@
                     "storageDir": "work/storage/disk/jsonld",
                     "contentTypes": ["application/ld+json"]
                 }
-            },
-            "localdefinitiondata": {
-                "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
-                "_params": "datatools/build/"
             }
         }
 }
