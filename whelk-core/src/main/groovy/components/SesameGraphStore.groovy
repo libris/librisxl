@@ -30,7 +30,7 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.result.*
 
 @Log
-class SesameGraphStore extends BasicPlugin implements GraphStore,SparqlEndpoint {
+class SesameGraphStore extends BasicComponent implements GraphStore,SparqlEndpoint {
 
     String sesameServer
     String repositoryID
@@ -63,7 +63,14 @@ class SesameGraphStore extends BasicPlugin implements GraphStore,SparqlEndpoint 
         }
     }
 
-    public void delete(URI graphUri, String whelkId) {
+    protected void batchLoad(List<Document> batch) {
+        throw new UnsupportedOperationException("Not implemented yet.")
+    }
+    public Document get(URI graphUri) {
+        throw new UnsupportedOperationException("Not implemented yet.")
+    }
+    public void delete(URI graphUri) {
+        throw new UnsupportedOperationException("Not implemented yet.")
     }
 
     public InputStream sparql(String sparql) {

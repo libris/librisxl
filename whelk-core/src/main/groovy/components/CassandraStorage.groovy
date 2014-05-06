@@ -47,7 +47,7 @@ class TimestampEntry {
 }
 
 @Log
-class CassandraStorage extends BasicPlugin implements Storage {
+class CassandraStorage extends BasicComponent implements Storage {
 
     Keyspace keyspace
     List contentTypes
@@ -199,6 +199,13 @@ class CassandraStorage extends BasicPlugin implements Storage {
         }
 
         return ksp
+    }
+
+    @Override
+    void batchLoad(List<Document> docs) {
+        for (doc in docs) {
+            store(doc)
+        }
     }
 
     @Override
@@ -358,7 +365,7 @@ class CassandraStorage extends BasicPlugin implements Storage {
 
 
     @Override
-    void delete(URI uri, String whelkId) {
+    void delete(URI uri) {
         log.debug("Deleting document $uri")
         if (versioning) {
             try {

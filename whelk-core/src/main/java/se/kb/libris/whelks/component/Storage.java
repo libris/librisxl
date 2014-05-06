@@ -10,6 +10,7 @@ public interface Storage extends Component {
      * @return true if the operation was successful.
      * @throws IdentifierException if the Document doesn't have an identifier.
      */
+    @Deprecated
     public boolean store(Document d);
     /**
      * Retrieves an object from this Storage.

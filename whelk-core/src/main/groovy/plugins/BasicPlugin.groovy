@@ -6,6 +6,7 @@ public class BasicPlugin implements Plugin {
     private boolean enabled = true;
     private String id = "basicPlugin";
     private List<Plugin> plugins = new ArrayList<Plugin>();
+    Map global
 
     @Override
     public boolean isEnabled() { return enabled; }
@@ -21,6 +22,7 @@ public class BasicPlugin implements Plugin {
         plugins.add(p);
     }
     public List<Plugin> getPlugins() { plugins }
+    public Map getGlobal() { global }
 
     @Override
     public int hashCode() {

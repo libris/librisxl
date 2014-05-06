@@ -1,4 +1,7 @@
 {
+    "_global_settings": {
+        "WHELK_WORK_DIR": "work"
+    },
     "_whelks": [
         {
             "defterms":{
@@ -15,10 +18,9 @@
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins" : [
                 "ptstorage",
-                "localindex",
+                "defsindex",
                 "fusekigraphstore",
                 "turtleconverter",
-                "defsindexconverter",
                 "search",
                 "documentapi"
                 ],
@@ -29,9 +31,7 @@
         "libris":{
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_converters": [
-                "oaipmhxmlconverter",
-                "marcconverter",
-                "turtleconverter"
+                "marcconverter"
                 ],
             "_expanders": [
                 "locallinkexpander"
@@ -54,7 +54,7 @@
                 ],
             "_otherplugins": [
                 "pthybrid",
-                "localindex",
+                "index",
                 "entityextractor",
                 "linkcompleter",
                 "indexlinkfinder",
@@ -83,7 +83,9 @@
             "pthybrid": {
                 "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
                 "_plugins" : [
-                    "localindex"
+                    "index",
+                    "oaipmhxmlconverter",
+                    "marcconverter"
                     ],
                 "_params" : {
                     "storageDir": "/Users/markus/dev/librisxl/work/storage",
@@ -120,7 +122,7 @@
             "locallinkexpander" : {
                 "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkExpander",
                 "_plugins" : [
-                    "localindex"
+                    "index"
                     ],
                 "_params" : {
                     "requiredDataset" : [ "bib" ],

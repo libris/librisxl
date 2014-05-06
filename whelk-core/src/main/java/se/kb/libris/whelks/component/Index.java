@@ -12,13 +12,14 @@ public interface Index extends Component {
      * Indexes a Document.
      * @throws IdentifierException if the Document doesn't have an identifier.
      */
-    public void index(Document d, String indexName);
+    @Deprecated
+    public void index(Document d);
     /**
      * Indexes data into the Index, using the parameters argument for implementation
      * specific parameters
      */
     public void index(List<Map<String,String>> entries) throws WhelkIndexException;
     public void index(byte[] data, Map parameters) throws WhelkIndexException;
-    public void bulkIndex(Iterable<Document> d, String indexName);
-    public SearchResult query(Query query, String indexName);
+
+    public SearchResult query(Query query);
 }

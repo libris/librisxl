@@ -22,7 +22,7 @@ import se.kb.libris.whelks.exception.*
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class HttpEndpoint extends BasicPlugin implements SparqlEndpoint {
+class HttpEndpoint extends BasicComponent implements SparqlEndpoint {
     PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
     HttpClient client = HttpClients.custom().setConnectionManager(cm).build()
     String queryURI
@@ -30,6 +30,14 @@ class HttpEndpoint extends BasicPlugin implements SparqlEndpoint {
 
     HttpEndpoint(Map settings) {
         this.queryURI = settings['queryUri']
+    }
+
+    protected void batchLoad(List<Document> docs) {
+        throw new UnsupportedOperationException("HttpEndpoint can only query graph store.")
+    }
+
+    public Document get(URI uri) {
+        throw new UnsupportedOperationException("Not implemented yet.")
     }
 
     public InputStream sparql(String query) {
@@ -51,7 +59,8 @@ class HttpEndpoint extends BasicPlugin implements SparqlEndpoint {
         return new ByteArrayInputStream(EntityUtils.toByteArray(response.getEntity()))
     }
 
-    public void delete(URI uri, String whelkId) {
+    public void delete(URI uri) {
+    throw new UnsupportedOperationException("Not implemented yet.")
     }
 }
 
@@ -121,6 +130,12 @@ class HttpGraphStore extends HttpEndpoint implements GraphStore {
         EntityUtils.consumeQuietly(response.getEntity())
     }
 
+    protected void batchLoad(List<Document> docs) {
+        for (doc in docs) {
+            update(new URI(doc.identifier), doc)
+        }
+    }
+
 }
 
 @Log
@@ -140,6 +155,11 @@ class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
         this.queryURI = settings['queryUri']
         this.updateURI = settings['updateUri']
         this.optimumBatchSize = settings.get('optimumBatchSize', 0)
+    }
+
+    @Override
+    void batchLoad(List<Document> docs) {
+        batchUpdate(docs)
     }
 
     void batchUpdate(List<Document> batch) {

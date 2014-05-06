@@ -35,6 +35,7 @@ class WhelkInitializer {
             w.each { wname, meta ->
                 meta._class = meta._class ?: "se.kb.libris.whelks.StandardWhelk"
                 def whelk = Class.forName(meta._class).getConstructor(String.class).newInstance(wname)
+                whelk.global = json["_global_settings"].asImmutable()
                 whelklist << whelk
                 // Find setters for whelk.
                 meta.each { key, value ->
@@ -159,6 +160,7 @@ class WhelkInitializer {
             throw new WhelkRuntimeException("For $whelkname; unable to instantiate plugin with name $plugname.")
         }
         log.trace "Returning new or unique instance of $plugname"
+        plugin.global = json["_global_settings"].asImmutable()
         return plugin
     }
 

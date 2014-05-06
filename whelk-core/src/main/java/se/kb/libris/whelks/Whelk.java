@@ -13,7 +13,7 @@ public interface Whelk {
     public URI add(byte[] data,
             Map<String, Object> entrydata,
             Map<String, Object> metadata);
-    public void bulkAdd(List<Document> d);
+    public void bulkAdd(List<Document> d, String contentType);
     public Document get(URI identifier);
     public void remove(URI identifier);
 
@@ -32,11 +32,8 @@ public interface Whelk {
 
     public void flush();
 
-    // factory methods
-    /*
-    public Document createDocument(byte[] data,
-            Map<String, Object> entrydata,
-            Map<String, Object> metadata);
-            */
     public URI mintIdentifier(Document document);
+
+    // ecosystem
+    public Map getGlobal();
 }

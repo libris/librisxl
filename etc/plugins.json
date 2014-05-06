@@ -16,6 +16,17 @@
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
+        "_plugins" : [
+            "entityextractor",
+            "entitysplitter"
+            ],
+        "_unique" : true
+    },
+    "defsindex": {
+        "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
+        "_plugins" : [
+            "defsindexconverter"
+            ],
         "_unique" : true
     },
     "pairtreediskstorage": {
@@ -89,6 +100,9 @@
     },
     "fusekigraphstore": {
         "_class" : "se.kb.libris.whelks.component.HttpBatchGraphStore",
+        "_plugins" : [
+            "turtleconverter"
+            ],
         "_params" : {
             "graphStoreUri": "http://localhost:3030/libris/data",
             "queryUri": "http://localhost:3030/libris/query",
@@ -110,6 +124,9 @@
     },
     "entityextractor" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
+    },
+    "entitysplitter" : {
+        "_class" : "se.kb.libris.whelks.plugin.EntityExtractionDocumentSplitter"
     },
     "defsindexconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.DefsIndexFormatConverter"

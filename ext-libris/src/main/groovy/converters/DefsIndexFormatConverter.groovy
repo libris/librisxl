@@ -1,16 +1,18 @@
 package se.kb.libris.whelks.plugin
 
+import groovy.util.logging.Slf4j as Log
+
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.basic.BasicIndexFormatConverter
+import se.kb.libris.whelks.basic.BasicFormatConverter
 
-import static se.kb.libris.conch.Tools.*
-
-class DefsIndexFormatConverter extends BasicIndexFormatConverter implements IndexFormatConverter {
+@Log
+class DefsIndexFormatConverter extends BasicFormatConverter {
     String requiredContentType = "application/ld+json"
+    String resultContentType = "application/ld+json"
 
-    List<Document> doConvert(Document doc) {
+    Document doConvert(Document doc) {
         def docmap = doc.dataAsMap
         docmap.remove("@context")
-        return [doc.withData(docmap)]
+        return doc.withData(docmap)
     }
 }

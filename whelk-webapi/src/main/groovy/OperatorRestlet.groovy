@@ -27,6 +27,7 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
 
     String description = "Web based whelk operator"
     String id = "operations"
+
     ObjectMapper mapper = new ObjectMapper()
 
 

@@ -9,19 +9,20 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverter {
+class JsonLDEntityExtractorIndexFormatConverter extends BasicFormatConverter {
 
     String requiredContentType = "application/ld+json"
+    String resultContentType = "application/json"
     ObjectMapper mapper = new ObjectMapper()
     def authPoint = ["Person": "controlledLabel", "Concept": "prefLabel", "ConceptScheme": "notation", "Organization": "name", "Work": "uniformTitle"]
     def entitiesToExtract = ["about.inScheme", "about.instanceOf.attributedTo", "about.instanceOf.influencedBy", "about.attributedTo"]
 
-    List<Document> doConvert(Document doc) {
+    Document doConvert(Document doc) {
         log.debug("Converting indexdoc $doc.identifier")
 
         def docType = new URI(doc.identifier).path.split("/")[1]
 
-        List<Document> doclist = [doc]
+        List<Map> doclist = [["id":doc.identifier, "entity":doc.dataAsMap, "contentType":doc.contentType]]
 
         def json = getDataAsMap(doc)
 
@@ -51,16 +52,17 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
                 }
                 if (jsonMap) {
                     log.debug("Extracting entity $it")
-                    doclist += extractEntities(jsonMap, doc.identifier, docType, 1)
+                    doclist.addAll(extractEntities(jsonMap, doc.identifier, docType, 1))
                 }
             }
         }
         log.debug("Doclist contains ${doclist.size()} entries.")
-        return doclist
+        log.debug("docList is: $doclist")
+        return new Document().withData(["extracted_entities": doclist]).withContentType(resultContentType)
     }
 
-    List<Document> extractEntities(extractedJson, id, String type, prio) {
-        List<Document> entityDocList = []
+    List<Map> extractEntities(extractedJson, id, String type, prio) {
+        List<Map> entityDocList = []
         if (extractedJson instanceof List) {
             for (entity in extractedJson) {
                 if (!(type.equals("bib") && entity.get("@id")) && !type.equals("hold")) {  //only extract bib-entity that doesn't link to existing authority and don't extract hold-entities
@@ -81,7 +83,7 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
         return entityDocList
     }
 
-    Document createEntityDoc(def entityJson, def docId, def prio, def slugifyId) {
+    Map createEntityDoc(def entityJson, def docId, def prio, def slugifyId) {
         try {
             def indexId = entityJson["@id"]
             def type = entityJson["@type"]
@@ -98,8 +100,9 @@ class JsonLDEntityExtractorIndexFormatConverter extends BasicIndexFormatConverte
             entityJson["recordPriority"] = prio
             entityJson.get("unknown", null) ?: entityJson.remove("unknown")
             log.debug("Created indexdoc ${indexId} with prio $prio")
-            def d = new Document().withEntry(["dataset":type,"origin":docId]).withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(indexId)
-            return d
+            return ["id":indexId, "dataset":type, "entity" : entityJson, "contentType":"application/ld+json"]
+            //def d = new Document().withEntry(["dataset":type,"origin":docId]).withData(mapper.writeValueAsBytes(entityJson)).withContentType("application/ld+json").withIdentifier(indexId)
+            //return d
         } catch (Exception e) {
             log.debug("Could not create entitydoc ${e} from docId: $docId" + " EntityJson " + mapper.writeValueAsString(entityJson))
             return null

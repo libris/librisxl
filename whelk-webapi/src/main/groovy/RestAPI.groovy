@@ -656,6 +656,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     def pathEnd = ""
     def varPath = false
     boolean enabled = true
+    Map global
 
     String logMessage = "Handled #REQUESTMETHOD# for #API_ID#"
     def plugins = []
@@ -1079,6 +1080,7 @@ class SuggestResultsConverter {
 @Log
 class DefinitionDataRestlet extends Directory implements RestAPI {
     Whelk whelk
+    Map global
     String id = "DefinitionDataAPI"
     String path = "/def/terms"
     boolean enabled = true

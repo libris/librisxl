@@ -100,7 +100,7 @@ class ElasticSearchNode extends ElasticSearch implements Index {
 }
 
 @Log
-abstract class ElasticSearch extends BasicPlugin implements Index {
+abstract class ElasticSearch extends BasicComponent implements Index {
 
     final static ObjectMapper mapper = new ObjectMapper()
 
@@ -121,6 +121,11 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
 
     @Override
     void init(String indexName) {
+        super.init(indexName)
+        createIndexIfNotExists(indexName)
+    }
+
+    void createIndexIfNotExists(String indexName) {
         if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
             log.info("Couldn't find index by name $indexName. Creating ...")
             if (indexName.startsWith(".")) {
@@ -203,7 +208,8 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
     }
 
     @Override
-    void delete(URI uri, String indexName) {
+    void delete(URI uri) {
+        String indexName = this.whelk.id
         log.debug("Peforming deletebyquery to remove documents extracted from $uri")
         def delQuery = termQuery("extractedFrom.@id", uri.toString())
         log.debug("DelQuery: $delQuery")
@@ -220,18 +226,24 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
         client.delete(new DeleteRequest(indexName, determineDocuentTypeBasedOnURI(uri.toString(), indexName), translateIdentifier(uri.toString())))
 
 
-        // Kanske en matchall-query filtrerad på _type och _id?
+            // Kanske en matchall-query filtrerad på _type och _id?
     }
 
     @Override
-    void index(Document doc, String indexName) {
+    void index(Document doc) {
+        String indexName = this.whelk.id
         if (doc && doc.isJson()) {
             addDocuments([doc], indexName)
         }
     }
 
+    Document get(URI uri) {
+        throw new UnsupportedOperationException("Not implemented yet.")
+    }
+
     @Override
-    void bulkIndex(Iterable<Document> docs, String indexName) {
+    protected void batchLoad(List<Document> docs) {
+        String indexName = this.whelk.id
         addDocuments(docs, indexName)
     }
 
@@ -241,7 +253,8 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
     }
 
     @Override
-    SearchResult query(Query q, String indexName) {
+    SearchResult query(Query q) {
+        String indexName = this.whelk.id
         def indexType = defaultType
         if (q instanceof ElasticQuery) {
             indexType = q.indexType
@@ -384,11 +397,11 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
 
     String determineDocumentType(Document doc, String indexName) {
         def idxType = doc.entry['dataset']?.toLowerCase()
-        log.debug("dataset in entry is ${idxType} for ${doc.identifier}")
+        log.trace("dataset in entry is ${idxType} for ${doc.identifier}")
         if (!idxType) {
             idxType = determineDocuentTypeBasedOnURI(doc.identifier, indexName)
         }
-        log.debug("Using type $idxType for document ${doc.identifier}")
+        log.trace("Using type $idxType for document ${doc.identifier}")
         return idxType
     }
 
@@ -432,14 +445,14 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
             }
             throw new WhelkIndexException("Failed to index entries. Reason: ${response.buildFailureMessage()}", new WhelkAddException(fails))
         } else {
-            log.debug("Bulk request completed in ${response.tookInMillis}")
+            log.debug("Bulk request completed in ${response.tookInMillis} millseconds.")
         }
     }
 
     void index(byte[] data, Map params) throws WhelkIndexException  {
         try {
             def response = performExecute(client.prepareIndex(params['index'], params['type'], params['id']).setSource(data))
-            log.info("Index response: $response. Indexed version: ${response.version}")
+            log.info("Raw byte indexer (${params.index}/${params.type}/${params.id}) indexed version: ${response.version}")
         } catch (Exception e) {
             throw new WhelkIndexException("Failed to index ${new String(data)} with params $params", e)
         }
@@ -456,7 +469,7 @@ abstract class ElasticSearch extends BasicPlugin implements Index {
                 log.debug("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
-                    log.debug("Working on ${doc.identifier}")
+                    log.trace("Working on ${doc.identifier}")
                     if (doc && doc.isJson()) {
                         def indexType = determineDocumentType(doc, indexName)
                         def checked = indexType in checkedTypes

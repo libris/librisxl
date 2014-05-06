@@ -1,4 +1,7 @@
 {
+    "_global_settings": {
+        "WHELK_WORK_DIR": "/var/run/whelk"
+    },
     "_whelks": [
         {
             "defterms":{

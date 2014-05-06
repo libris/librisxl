@@ -26,6 +26,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     Index index
     String indexName
 
+
     PairtreeHybridDiskStorage(Map settings) {
         super(settings)
     }
@@ -37,8 +38,9 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             throw new PluginConfigurationException("HybridStorage requires Index component.")
         }
         indexName = "."+stName
-        index.init(indexName)
+        index.createIndexIfNotExists(indexName)
         index.checkTypeMapping(indexName, "entry")
+
     }
 
     @Override
@@ -64,6 +66,21 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     }
 
     @Override
+    protected void batchLoad(List<Document> docs) {
+        List<Map<String,String>> entries = []
+        for (doc in docs) {
+            super.store(doc)
+            entries << [
+                    "index":indexName,
+                    "type": "entry",
+                    "id": ((ElasticSearch)index).translateIdentifier(doc.identifier),
+                    "data":((Document)doc).metadataAsJson
+                ]
+        }
+        index.index(entries)
+    }
+
+    @Override
     Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
         if (dataset) {
             log.info("Loading documents by index query for dataset $dataset")
@@ -84,8 +101,8 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         return getAllRaw(dataset)
     }
     @Override
-    void delete(URI uri, String whelkId) {
-        super.delete(uri, whelkId)
+    void delete(URI uri) {
+        super.delete(uri)
         index.deleteFromEntry(uri, indexName)
     }
 
@@ -117,7 +134,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     }
 }
 
-class PairtreeDiskStorage extends BasicPlugin implements Storage {
+class PairtreeDiskStorage extends BasicComponent implements Storage {
     String baseStorageDir = "./storage"
     String storageDir = null
     String versionsStorageDir = null
@@ -125,7 +142,6 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     boolean enabled = true
 
     String id = "diskstorage"
-    List contentTypes
     boolean versioning
 
     final static Pairtree pairtree = new Pairtree()
@@ -151,6 +167,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     // TODO: Add document counter
 
     PairtreeDiskStorage(Map settings) {
+        super()
         StringBuilder dn = new StringBuilder(settings['storageDir'])
         while (dn[dn.length()-1] == '/') {
             dn.deleteCharAt(dn.length()-1)
@@ -162,6 +179,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
 
     void init(String stName) {
+        super.init(stName)
         if (!this.baseStorageSuffix) {
             this.baseStorageSuffix = this.id
         }
@@ -178,6 +196,13 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     OutputStream getOutputStreamFor(Document doc) {
         File file = new File(buildPath(doc.identifier))
         return file.newOutputStream()
+    }
+
+    @Override
+    protected void batchLoad(List<Document> docs) {
+        for (doc in docs) {
+            store(doc)
+        }
     }
 
     @Override
@@ -347,7 +372,7 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
 
     @Override
-    void delete(URI uri, String whelkId) {
+    void delete(URI uri) {
         if (versioning) {
             store(createTombstone(uri))
         } else {
@@ -385,10 +410,6 @@ class PairtreeDiskStorage extends BasicPlugin implements Storage {
     }
 
 
-    @Override
-    boolean handlesContent(String ctype) {
-        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
-    }
 }
 
 

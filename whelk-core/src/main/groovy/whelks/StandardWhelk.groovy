@@ -25,6 +25,7 @@ class StandardWhelk implements Whelk {
     List<Plugin> plugins = new ArrayList<Plugin>()
     List<Storage> storages = new ArrayList<Storage>()
     Index index
+    GraphStore graphStore
     Map<String,FormatConverter> formatConverters = new HashMap<String,FormatConverter>()
     List<IndexFormatConverter> indexFormatConverters = new ArrayList<IndexFormatConverter>()
     List<LinkExpander> linkExpanders = new ArrayList<LinkExpander>()
@@ -35,6 +36,8 @@ class StandardWhelk implements Whelk {
 
     // Set by configuration
     URI docBaseUri
+    // Global settings, set by whelk initializer
+    Map global
 
     StandardWhelk(String id) {
         this.id = id
@@ -58,11 +61,18 @@ class StandardWhelk implements Whelk {
     @Override
     @groovy.transform.CompileStatic
     URI add(Document doc) {
-        log.trace("Add single document ${doc.identifier}")
+        log.debug("Add single document ${doc.identifier}")
         try {
+            for (storage in getStorages(doc.contentType)) {
+                storage.add(doc)
+            }
+            index.add(doc)
+            graphStore.add(doc)
+            /*
             doc = addToStorage(doc)
             addToGraphStore([doc])
             addToIndex([doc])
+            */
         } catch (Exception e) {
             log.error("Failed to add document ${doc?.identifier}", e)
             throw e
@@ -75,8 +85,14 @@ class StandardWhelk implements Whelk {
      */
     @Override
     @groovy.transform.CompileStatic
-    void bulkAdd(final List<Document> docs) {
+    void bulkAdd(final List<Document> docs, String contentType) {
         log.debug("Bulk add ${docs.size()} document")
+        for (storage in storages) {
+            storage.bulkAdd(docs, contentType)
+        }
+        index.bulkAdd(docs, contentType)
+        graphStore.bulkAdd(docs, contentType)
+        /*
         List<Document> convertedDocs = []
         for (doc in docs) {
             convertedDocs.add(addToStorage(doc))
@@ -95,6 +111,7 @@ class StandardWhelk implements Whelk {
             log.error("Failed indexing documents: ${e.message}", e)
             throw e
         }
+        */
     }
 
     @Override
@@ -143,7 +160,7 @@ class StandardWhelk implements Whelk {
 
     @Override
     SearchResult search(Query query) {
-        return index?.query(query, this.id)
+        return index?.query(query)
     }
 
     @Override
@@ -164,6 +181,7 @@ class StandardWhelk implements Whelk {
      * Handles conversion for a document and stores each converted version into suitable storage.
      * @return The final resulting document, after all format conversions
      */
+    /*
     @groovy.transform.CompileStatic
     Document addToStorage(Document doc, boolean withConversion = true) {
         boolean stored = false
@@ -192,7 +210,7 @@ class StandardWhelk implements Whelk {
     }
 
     @groovy.transform.CompileStatic
-    void addToIndex(final List<Document> docs, String indexName = null) {
+    void addToIndex(final List<Document> docs) {
         List<Document> idxDocs = []
         if (index) {
             log.debug("Number of documents to index: ${docs.size()}")
@@ -207,13 +225,17 @@ class StandardWhelk implements Whelk {
                 idxDocs = docs
             }
             if (idxDocs) {
-                index.bulkIndex(idxDocs, (indexName ?: this.id))
+                index.bulkAdd(idxDocs)
             } else if (log.isDebugEnabled()) {
                 log.debug("No documents to index.")
             }
         } else {
             log.warn("No index configured for this whelk.")
         }
+    }
+
+    void addToGraphStore(final Document doc) {
+        store.update(docBaseUri.resolve(it.identifier), it)
     }
 
     void addToGraphStore(final List<Document> docs) {
@@ -223,11 +245,12 @@ class StandardWhelk implements Whelk {
                 store.batchUpdate(docs)
             } else {
                 docs.each {
-                    store.update(docBaseUri.resolve(it.identifier), it)
+                    addToGraphStore(doc)
                 }
             }
         }
     }
+    */
 
     @Override
     Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}
@@ -277,6 +300,11 @@ class StandardWhelk implements Whelk {
                 throw new PluginConfigurationException("Index ${index.id} already configured for whelk ${this.id}.")
             }
             this.index = plugin
+        } else if (plugin instanceof GraphStore) {
+            if (graphStore) {
+                throw new PluginConfigurationException("GraphStore ${index.id} already configured for whelk ${this.id}.")
+            }
+            this.graphStore = plugin
         } else if (plugin instanceof FormatConverter) {
             this.formatConverters.put(plugin.requiredContentType, plugin)
         } else if (plugin instanceof IndexFormatConverter) {
@@ -336,8 +364,10 @@ class StandardWhelk implements Whelk {
     List<Storage> getStorages(String rct) { return storages.findAll { it.handlesContent(rct) } }
     Storage getStorage(String rct) { return storages.find { it.handlesContent(rct) } }
 
+    /*
     List<GraphStore> getGraphStores() { return plugins.findAll { it instanceof GraphStore } }
     GraphStore getGraphStore() { return plugins.find { it instanceof GraphStore } }
+    */
     List<SparqlEndpoint> getSparqlEndpoints() { return plugins.findAll { it instanceof SparqlEndpoint } }
     SparqlEndpoint getSparqlEndpoint() { return plugins.find { it instanceof SparqlEndpoint } }
     List<API> getAPIs() { return plugins.findAll { it instanceof API } }
