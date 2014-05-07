@@ -561,7 +561,8 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         if (metaEntryMap) {
             return new Document(metaEntryMap).withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
         } else {
-            return new Document().withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+            log.trace("Meta entry not found for document. Will assume application/json for content-type.")
+            return new Document().withData(hit.source()).withContentType("application/json").withIdentifier(translateIndexIdTo(hit.id))
         }
     }
 
