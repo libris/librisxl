@@ -1,0 +1,60 @@
+{
+    "properties" : {
+        "about" : {
+            "properties" : {
+                "controlledLabel" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "label" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "altLabel" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "name" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "familyName" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "givenName" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "sameAs": {
+                    "properties": {
+                        "controlledLabel" : {
+                            "type" : "string",
+                            "index_analyzer" : "completer"
+                        }
+                    }
+                },
+                "prefLabel" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "closeMatch": {
+                    "properties": {
+                        "inScheme": {
+                            "properties": {
+                                "prefLabel" : {
+                                    "type" : "string",
+                                    "index_analyzer" : "completer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "hiddenLabel" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                }
+            }
+        }
+    }
+}
