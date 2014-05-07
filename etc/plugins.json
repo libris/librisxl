@@ -202,12 +202,24 @@
                         "hiddenLabel" : "asc"
                     }
                 },
+                "enum": {
+                    "queryFields": [],
+                    "infoFields": [],
+                    "defaultBoost": "about.prefLabel:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.prefLabel" : "asc",
+                        "about.notation" : "asc"
+                    },
+                    "queryFacets" : "about.@type"
+                },
                 "languages" : {
                     "queryFields":[
-                        "prefLabel",
-                        "prefLabel_en",
-                        "langCode",
-                        "langTag"
+                        "about.prefLabel",
+                        "about.prefLabel_en",
+                        "about.langCode",
+                        "about.langTag"
                     ]
                 }
             }
