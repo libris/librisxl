@@ -17,11 +17,9 @@
             "def":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins" : [
-                    "pairtree",
-                    "index",
-                    "fuseki",
-                    "turtleconverter",
-                    "defsindexconverter",
+                    "pairtreehybrid",
+                    "defsindex",
+                    "fusekigraphstore",
                     "search",
                     "documentapi"
                     ],
@@ -32,8 +30,7 @@
             "libris":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_converters": [
-                    "marcconverter",
-                    "turtleconverter"
+                    "marcconverter"
                 ],
                 "_expanders": [
                     "linkexpander"
@@ -44,6 +41,7 @@
                 "_apis": [
                     "remotesearch",
                     "operator",
+                    "formatter",
                     "search",
                     "completeexpander",
                     "isxntool",
@@ -54,10 +52,10 @@
                 "_otherplugins": [
                     "pairtreehybrid",
                     "index",
-                    "fuseki",
                     "entityextractor",
                     "linkcompleter",
-                    "indexlinkfinder"
+                    "indexlinkfinder",
+                    "fusekigraphstore"
                 ],
                 "contentRoot" : "/",
                 "docBaseUri" : "http://libris.kb.se/"
@@ -82,16 +80,6 @@
                 "contentTypes": ["application/ld+json"],
                 "baseStorageSuffix": "pairtree",
                 "versioning" : false
-            }
-        },
-        "fuseki": {
-            "_class" : "se.kb.libris.whelks.component.HttpBatchGraphStore",
-            "_params" : {
-                "graphStoreUri": "http://localhost:3030/libris/data",
-                "queryUri": "http://localhost:3030/libris/query",
-                "updateUri": "http://localhost:3030/libris/update",
-                "contextPath": "context.jsonld",
-                "baseUri": "http://libris.kb.se/resource/"
             }
         }
     }
