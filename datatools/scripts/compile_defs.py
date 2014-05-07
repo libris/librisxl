@@ -3,6 +3,7 @@ import sys
 import re
 import json
 import csv
+from collections import namedtuple, OrderedDict
 from rdflib import Graph, URIRef, RDF, RDFS, OWL
 from rdflib.namespace import SKOS, DCTERMS
 from rdflib_jsonld.serializer import from_rdf
@@ -56,11 +57,11 @@ def relators():
             addtype='ObjectProperty',
             relation='equivalentProperty')
 
-    return data
+    return split_dataset("/def/", data)
 
 
 @dataset
-def languages(partition=True):
+def languages():
     source = cached_rdf('http://id.loc.gov/vocabulary/iso639-2')
 
     basecontext = "/def/context/skos.jsonld"
@@ -68,15 +69,14 @@ def languages(partition=True):
         "@base": BASE,
         "@language": "sv"
     }
-    dataset = {
+    data = {
         '@context': [
             basecontext,
             dict(langcontext, byCode={"@id": "@graph", "@container": "@index"})
         ]
     }
 
-    dataset['byCode'] = items = {}
-    subdocs = {}
+    data['byCode'] = items = {}
 
     extras = load_data(scriptpath('../source/spraakkoder.tsv'))
 
@@ -85,37 +85,30 @@ def languages(partition=True):
     for lang_concept in map(source.resource, source.subjects(RDF.type, SKOS.Concept)):
         code = unicode(lang_concept.value(SKOS.notation))
 
-        summary = items[code] = {
+        node = items[code] = {
             '@id': "/def/languages/%s" % code,
             '@type': 'Concept',
+            'notation': code,
             'langCode': code
         }
-        if partition:
-            subdoc = subdocs[code] = {"@context": [basecontext, langcontext]}
-            subdoc.update(summary)
-        else:
-            subdoc = summary
-        subdoc['matches'] = lang_concept.identifier
+        node['matches'] = lang_concept.identifier
 
         langdef = deref(lang_concept.identifier)
         for variant in langdef[SKOS.exactMatch]:
             if variant.graph[variant.identifier : RDF.type : ISO639_1Lang]:
                 iso639_1 = variant.value(SKOS.notation)
-                subdoc['langTag'] = iso639_1
+                node['langTag'] = iso639_1
 
         for label in lang_concept[SKOS.prefLabel]:
             if label.language == 'en':
-                subdoc['prefLabel_en'] = unicode(label)
+                node['prefLabel_en'] = unicode(label)
                 break
 
         item = extras.get((code))
         if item:
-            summary['prefLabel'] = subdoc['prefLabel'] = item['label_sv']
+            node['prefLabel'] = item['prefLabel_sv']
 
-    if partition:
-        return dataset, subdocs
-    else:
-        return dataset
+    return split_dataset("/def/", data)
 
 
 @dataset
@@ -134,12 +127,18 @@ def countries():
             iri_template="/def/countries/{notation}",
             relation='exactMatch')
 
-    return data
+    return split_dataset("/def/", data)
 
 
 @dataset
 def nationalities():
     pass
+
+
+@dataset
+def enums():
+    data = load_data(scriptpath('../source/enums.jsonld'))
+    return split_dataset("/def/", data)
 
 
 def filter_graph(source, propspaces, oftype=None):
@@ -193,8 +192,9 @@ def to_jsonld(source, contextref, contextobj=None, index=None):
     return data
 
 
-def extend(index, extradata, lang, keys=('label', 'comment'),
-        term_source=None, iri_template=None, addtype=None, relation=None):
+def extend(index, extradata, lang, keys=('label', 'prefLabel', 'comment'),
+        term_source=None, iri_template=None, addtype=None, relation=None,
+        key_term='notation'):
     fpath = scriptpath('../source/%s' % extradata)
     extras = load_data(fpath)
     for key, item in extras.items():
@@ -211,6 +211,7 @@ def extend(index, extradata, lang, keys=('label', 'comment'),
                 node = index[key] = {}
                 if addtype:
                     node['@type'] = addtype
+                node[key_term] = key
             else:
                 continue
         for key in keys:
@@ -227,6 +228,31 @@ def extend(index, extradata, lang, keys=('label', 'comment'),
 def to_camel_case(label):
     return "".join((s[0].upper() if i else s[0].lower()) + s[1:]
             for (i, s) in enumerate(re.split(r'[\s,.-]', label)) if s)
+
+
+def split_dataset(base, data):
+    context = None
+    resultset = OrderedDict()
+    for key, obj in data.items():
+        if key == '@context':
+            context = obj
+            continue
+        if not isinstance(obj, list):
+            dfn = context[-1][key]
+            assert dfn['@id'] == '@graph' and dfn['@container'] == '@index'
+            obj = obj.values()
+        for node in obj:
+            id_ = node['@id']
+            if not id_:
+                print "Missing id for:", node
+                continue
+            if not id_.startswith(base):
+                raise ValueError("Expected <%s> in base <%s>" % (id_, base))
+            #resultset[id_[len(base):]] = node
+            rel_path = id_[len(base):]
+            data_path = "%s?data" % id_
+            resultset[rel_path] = {'@id': data_path, 'about': node}
+    return context, resultset
 
 
 def load_data(fpath):
@@ -278,16 +304,11 @@ def run(names, outdir, cache):
     for name in names:
         if len(names) > 1:
             print "Dataset:", name
-        resultset = {}
         data = datasets[name]()
         if isinstance(data, tuple):
-            data, subdocs = data
-            resultset = {}
-            resultset["%s/index" % name] = data
-            for subname, subdoc in subdocs.items():
-                resultset["%s/%s" % (name, subname)] = subdoc
+            context, resultset = data
         else:
-            resultset[name] = data
+            resultset = {name: data}
         for name, data in resultset.items():
             _output(name, data, outdir)
         print

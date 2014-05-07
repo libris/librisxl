@@ -1082,8 +1082,8 @@ class DefinitionDataRestlet extends Directory implements RestAPI {
     Whelk whelk
     Map global
     String id = "DefinitionDataAPI"
-    String path = "/def/terms"
-    boolean enabled = true
+    String path = null
+    boolean enabled = false
     def varPath = false
     void init(String w) {}
 
