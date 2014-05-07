@@ -354,7 +354,15 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         if (!defaultMapping) {
             defaultMapping = loadJson("default_mapping.json")
         }
-        def typeMapping = loadJson("${itype}_mapping.json") ?: defaultMapping
+        def typePropertyMapping = loadJson("${itype}_mapping_properties.json")
+        def typeMapping
+        if (typePropertyMapping) {
+            log.debug("Found properties mapping for $itype. Using them with defaults.")
+            typeMapping = new HashMap(defaultMapping)
+            typeMapping.put("properties", typePropertyMapping.get("properties"))
+        } else {
+            typeMapping = loadJson("${itype}_mapping.json") ?: defaultMapping
+        }
         // Append special mapping for @id-fields
         if (!typeMapping.dynamic_templates) {
             typeMapping['dynamic_templates'] = []

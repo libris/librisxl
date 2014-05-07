@@ -32,7 +32,7 @@
                 "marcconverter"
                 ],
             "_expanders": [
-                "locallinkexpander"
+                "linkexpander"
                 ],
             "_importers": [
                 "oaipmhimporter",
