@@ -37,6 +37,17 @@ This starts a local whelk, using an embedded elasticsearch and storage configure
 
     $ pip install -r scripts/requirements.txt
 
+### Get/create/update and load Definifion Datasets
+
+Get/create/update datasets:
+
+    $ python datatools/scripts/compile_defs.py -c datatools/cache/ -o datatools/build/
+
+Load into the running whelk:
+
+    $ datatools/scripts/load_defs_whelk.sh
+
+
 ### Import/update local storage from test data
 
 Create a local OAI-PMH dump of examples and run a full import:
