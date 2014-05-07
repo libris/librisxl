@@ -154,7 +154,9 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         if (aliases.containsKey(alias)) {
             ri = aliases.get(alias)?.keys().iterator().next()
         }
-        log.trace("ri: ${ri.value} (${ri.value.getClass().getName()})")
+        if (ri) {
+            log.trace("ri: ${ri.value} (${ri.value.getClass().getName()})")
+        }
         return (ri ? ri.value : alias)
     }
 
@@ -554,6 +556,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     }
 
     Document createResultDocumentFromHit(hit, queriedIndex) {
+        log.trace("creating document. ID: ${hit?.id}, index: $queriedIndex")
         def metaEntryMap = getMetaEntry(hit.id, queriedIndex)
         if (metaEntryMap) {
             return new Document(metaEntryMap).withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))

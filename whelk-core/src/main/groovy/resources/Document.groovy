@@ -65,7 +65,7 @@ class Document {
 
     Map getDataAsMap() {
         if (!isJson()) {
-            throw new DocumentException("Cannot serialize data as Map. (Not JSON)")
+            throw new DocumentException("Cannot serialize data as Map. (Content-type is $contentType)")
         }
         if (!serializedDataInMap) {
             log.trace("Serializing data as map")
