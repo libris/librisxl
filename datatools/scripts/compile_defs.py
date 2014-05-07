@@ -132,7 +132,14 @@ def countries():
 
 @dataset
 def nationalities():
-    pass
+    source = scriptpath('../source/nationalitetskoder.tsv')
+    items = load_data(source)
+    for code, item in items.items():
+        item['@id'] = "/def/nationalities/%s" % code
+        item['@type'] = ['Nationality', 'Concept']
+        item['prefLabel'] = item.pop('prefLabel_sv')
+    data = {"@graph": items}
+    return split_dataset("/def/", data)
 
 
 @dataset
@@ -238,8 +245,9 @@ def split_dataset(base, data):
             context = obj
             continue
         if not isinstance(obj, list):
-            dfn = context[-1][key]
-            assert dfn['@id'] == '@graph' and dfn['@container'] == '@index'
+            if context:
+                dfn = context[-1][key]
+                assert dfn['@id'] == '@graph' and dfn['@container'] == '@index'
             obj = obj.values()
         for node in obj:
             id_ = node['@id']

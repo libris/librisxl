@@ -7,6 +7,13 @@ put() {
     curl -XPUT -H "Content-Type:$2" --data-binary @$1 $3?data
 }
 
+for dataset in nationalities ; do
+    for file in $BUILDBASE/$dataset/*.jsonld; do
+        slug=$(basename -s .jsonld $file)
+        put $file application/ld+json ${WHELK}/def/${dataset}/$slug
+    done
+done
+exit
 # Load JSON-LD contexts
 for ctx in owl skos; do
     put datatools/def/context/${ctx}.jsonld application/ld+json ${WHELK}/def/context/${ctx}.jsonld
@@ -18,7 +25,7 @@ for doc in terms schemes; do
 done
 
 # Load datasets
-for dataset in languages countries enum/{content,carrier,record}; do
+for dataset in languages countries nationalities enum/{content,carrier,record}; do
     for file in $BUILDBASE/$dataset/*.jsonld; do
         slug=$(basename -s .jsonld $file)
         put $file application/ld+json ${WHELK}/def/${dataset}/$slug
