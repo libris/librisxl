@@ -1,5 +1,5 @@
-ï»¿code	prefLabel_sv	prefLabel_en	comment	
-a-af--- 	Afghanistan	Afghanistan	
+code	prefLabel_sv	prefLabel_en	comment	
+a-af---	Afghanistan	Afghanistan	
 f------	Afrika	Africa	Kontinent
 e-aa--	Albanien	Albania	
 f-ae---	Algeriet	Algeria	
@@ -42,7 +42,7 @@ s-ec---	Ecuador	Ecuador
 f-ua---	Egypten	Egypt	
 f-eg---	Ekvatorialgunea	Equatorial Guinea	
 nces---	El Salvador	El Salvador	
-f-iv---	Elfenbenskusten	CÃ´te d'Ivoire	
+f-iv---	Elfenbenskusten	Côte d'Ivoire	
 f-ea---	Eritrea	Eritrea	
 e-et---	Etopien	Ethiopia	
 e------	Europa	Europe	Kontinent
@@ -51,15 +51,15 @@ e-fi---	Finland	Finland
 e-fr---	Frankrike	France	
 s-fg---	Franska Guyana	French Guiana	
 pofp---	Franska Polynesien	French Polynesia	
-lnfa---	FÃ¤rÃ¶arna	Faroe Islands	
-a-ts---	FÃ¶renade Arabemiraten	United Arab Emirates	
-n-us---	FÃ¶renta staterna	United States	
+lnfa---	Färöarna	Faroe Islands	
+a-ts---	Förenade Arabemiraten	United Arab Emirates	
+n-us---	Förenta staterna	United States	
 f-go---	Gabon	Gabon	
 f-gm---	Gambia	Gambia	
 a-gs---	Georgien	Georgia (Republic)	
 f-gh---	Ghana	Ghana	
 e-gr---	Grekland	Greece	
-n-gl---	GrÃ¶nland	Greenland	
+n-gl---	Grönland	Greenland	
 ncgt---	Guatemala	Guatemala	
 f-gv---	Guinea	Guinea	
 f-pg---	Guinea-Bissau	Guinea-Bissau	
@@ -114,7 +114,7 @@ nwmq---	Martinique	Martinique
 f-mu---	Mauretanien	Mauritania	
 i-mf---	Mauritus	Mauritius	
 n-mx---	Mexiko	Mexico	
-f-mz---	MoÃ§ambique	Mozambique	
+f-mz---	Moçambique	Mozambique	
 e-mv---	Moldavien	Moldova	
 e-mc---	Monaco	Monaco	
 a-mp---	Mongoliet	Mongolia	
@@ -125,12 +125,12 @@ ncnq---	Nicaragua	Nicaragua
 f-ng---	Niger	Niger	
 f-nr---	Nigeria	Nigeria	
 n------	Nordamerika	North America	Kontinent
-a-kn---	Nordkorea	Korea (North)	se Ã¤ven a-kr-- (Korea)
-a-vn---	Norra Vietnam	Vietnam, North	se Ã¤ven a-vt--- (Vietnam)
+a-kn---	Nordkorea	Korea (North)	se även a-kr-- (Korea)
+a-vn---	Norra Vietnam	Vietnam, North	se även a-vt--- (Vietnam)
 e-no---	Norge	Norway	
 a-nw---	Nya Guinea	New Guinea	
 u-nz---	Nya Zeeland	New Zealand	
-xx	OkÃ¤nd nationalitet / OkÃ¤nt verksamhetsland	Unknown	Librisdefinierad kod. AnvÃ¤nds endast i Auktoritetsformatet
+xx	Okänd nationalitet / Okänt verksamhetsland	Unknown	Librisdefinierad kod. Används endast i Auktoritetsformatet
 a-mk---	Oman	Oman	
 a-pk---	Pakistan	Pakistan	
 ncpn---	Panama	Panama	
@@ -141,8 +141,8 @@ e-pl---	Polen	Poland
 e-po---	Portugal	Portugal	
 nwpr---	Puerto Rico	Puerto Rico	
 a-qa---	Qatar	Qatar	
-i-re---	RÃ©union	RÃ©union	
-e-rm---	RumÃ¤nien	Romania	
+i-re---	Réunion	Réunion	
+e-rm---	Rumänien	Romania	
 f-rw---	Rwanda	Rwanda	
 e-ru---	Ryssland	Russia (Federation)	
 f-sf---	Sao Tome och Principe	Sao Tome and Principe	
@@ -165,11 +165,11 @@ s-sq---	Swaziland	Swaziland
 e-sw---	Sverige	Sweden	
 f-sa---	Sydafrika	South Africa	
 s------	Sydamerika	South America	Kontinent
-a-ko---	Sydkorea	Korea (South)	se Ã¤ven a-kr--- (Korea)
+a-ko---	Sydkorea	Korea (South)	se även a-kr--- (Korea)
 f-sd---	Sydsudan	South Sudan	
 a-ys---	Sydjemen	Yemen (People's Democratic Repuclic)	
 a-sy---	Syrien	Syria	
-a-vs---	SÃ¶dra Vietnam	Vietnam, South	se Ã¤ven a-vt--- (Vietnam) 
+a-vs---	Södra Vietnam	Vietnam, South	se även a-vt--- (Vietnam) 
 a-ta---	Tadzjikistan	Tajikistan	
 a-ch---	Taiwan	Taiwan	
 f-tz---	Tanzania	Tanzania	
@@ -191,9 +191,9 @@ u-uz---	Uzbekistan	Uzbekistan
 s-ve---	Venezuela	Venezuela	
 a-vt---	Vietnam	Vietnam	
 e-bw---	Vitryssland	Belarus	
-e-gw---	VÃ¤stra Tyskland	Germany (West)	se Ã¤ven a-gx--- (Tyskland)
+e-gw---	Västra Tyskland	Germany (West)	se även a-gx--- (Tyskland)
 a-ye---	Yemen	Yemen (Republic)	
 f-za---	Zambia	Zambia	
 f-rh---	Zimbabwe	Zimbabwe	
-e-au---	Ã–sterrike	Austria	
-e-ge---	Ã–stra Tyskland	Germany (East)	se Ã¤ven a-gx--- (Tyskland)
+e-au---	Österrike	Austria	
+e-ge---	Östra Tyskland	Germany (East)	se även a-gx--- (Tyskland)
