@@ -77,7 +77,7 @@
                     "marcconverter"
                     ],
                 "_params" : {
-                    "storageDir": "/Users/markus/dev/librisxl/work/storage",
+                    "storageDir": "work/storage",
                     "contentTypes": ["application/ld+json"],
                     "versioning" : true,
                     "baseStorageSuffix": "pairtree"
