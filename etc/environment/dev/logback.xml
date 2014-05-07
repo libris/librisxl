@@ -116,9 +116,11 @@
 <logger name="se.kb.libris.whelks.api.DumpRestlet">
       <level value="trace"/>
   </logger>
+  -->
 <logger name="se.kb.libris.whelks.api.ReindexOperator">
       <level value="trace"/>
   </logger>
+  <!--
 <logger name="se.kb.libris.whelks.api.OperatorRestlet">
       <level value="trace"/>
   </logger>

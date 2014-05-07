@@ -463,6 +463,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
 
     void addDocuments(documents, indexName) {
         String currentIndex = getRealIndexFor(indexName)
+        log.debug("Using $currentIndex for indexing.")
         try {
             if (documents) {
                 def breq = client.prepareBulk()

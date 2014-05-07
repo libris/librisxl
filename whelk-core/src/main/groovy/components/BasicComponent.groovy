@@ -81,7 +81,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
     }
 
-    private List<Document> prepareDocs(final List<Document> documents, String contentType) {
+    List<Document> prepareDocs(final List<Document> documents, String contentType) {
         FormatConverter fc = formatConverters.get(contentType)
         DocumentSplitter preSplitter = documentSplitters.get(contentType)
 

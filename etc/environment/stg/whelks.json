@@ -17,6 +17,7 @@
             "def":{
                 "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
                 "_plugins" : [
+                    "operator",
                     "pairtreehybrid",
                     "defsindex",
                     "fusekigraphstore",

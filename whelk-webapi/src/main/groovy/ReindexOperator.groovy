@@ -55,17 +55,20 @@ class ReindexOperator extends AbstractOperator {
             log.info("Rebuilding storage from $fromStorage")
         }
         for (doc in whelk.loadAll(dataset, null, fromStorage)) {
-            log.trace("Adding doc ${doc.identifier} with type ${doc.contentType}")
+            log.trace("Loaded doc ${doc.identifier} with type ${doc.contentType}")
             if (!doc.entry.deleted) {
                 if (fromStorage) {
                     try {
-                        docs << whelk.addToStorage(doc, fromStorage)
+                        for (strg in whelk.storages) {
+                            if (strg.id != fromStorage) {
+                                strg.add(doc)
+                            }
+                        }
                     } catch (WhelkAddException wae) {
                         log.trace("Expected exception ${wae.message}")
                     }
-                } else {
-                    docs << doc
                 }
+                docs << doc
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
@@ -86,13 +89,14 @@ class ReindexOperator extends AbstractOperator {
         if (docs.size() > 0) {
             log.trace("Reindexing remaining ${docs.size()} documents")
             try {
-                whelk.addToGraphStore(docs)
+                whelk.graphStore.bulkAdd(docs, docs.first().contentType)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
             try {
-                whelk.addToIndex(docs, newIndex)
+                def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
+                whelk.index.addDocuments(preparedDocs, newIndex)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
@@ -121,7 +125,8 @@ class ReindexOperator extends AbstractOperator {
         log.debug("Acquired.")
         indexQueue.execute({
             try {
-                whelk.addToIndex(docs, newIndex)
+                def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
+                whelk.index.addDocuments(preparedDocs, newIndex)
             } catch (WhelkAddException wae) {
                 log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
             } catch (PluginConfigurationException pce) {
@@ -134,7 +139,7 @@ class ReindexOperator extends AbstractOperator {
         } as Runnable)
         gstoreQueue.execute({
             try {
-                whelk.addToGraphStore(docs)
+                whelk.graphStore.bulkAdd(docs, docs.first().contentType)
             } catch (WhelkAddException wae) {
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
             }

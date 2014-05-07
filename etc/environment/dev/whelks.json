@@ -25,6 +25,7 @@
         "def":{
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins" : [
+                "operator",
                 "pthybrid",
                 "defsindex",
                 "fusekigraphstore",
