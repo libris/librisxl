@@ -187,15 +187,16 @@
                     "queryFacets" : "about.annotates.@id"
                 },
                 "person" : {
+                    "types" : [ "auth" ],
                     "queryFields":[
-                        "controlledLabel",
-                        "label",
-                        "altLabel",
-                        "name",
-                        "familyName",
-                        "givenName",
-                        "sameAs.controlledLabel",
-                        "@id"
+                        "about.controlledLabel",
+                        "about.label",
+                        "about.altLabel",
+                        "about.name",
+                        "about.familyName",
+                        "about.givenName",
+                        "about.sameAs.controlledLabel",
+                        "about.@id"
                     ],
                     "infoFields":[
                         "birthYear",
@@ -211,14 +212,18 @@
                         "label" : "asc",
                         "altLabel" : "asc",
                         "@id" : "desc"
-                    }
+                    },
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
                 },
                 "concept" : {
                     "queryFields":[
-                        "prefLabel",
-                        "label",
-                        "closeMatch.inScheme.prefLabel",
-                        "hiddenLabel"
+                        "about.prefLabel",
+                        "about.label",
+                        "about.closeMatch.inScheme.prefLabel",
+                        "about.hiddenLabel"
                     ],
                     "infoFields": [],
                     "defaultBoost": "prefLabel:50,label:50,closeMatch.inScheme.prefLabel:30,hiddenLabel:20",
@@ -229,7 +234,11 @@
                         "label" : "asc",
                         "closeMatch.inScheme.prefLabel" : "asc",
                         "hiddenLabel" : "asc"
-                    }
+                    },
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
                 },
                 "enum": {
                     "queryFields": [],
