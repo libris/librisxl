@@ -12,9 +12,6 @@ include_lang = '-l' in args
 show_repeatable = '-R' not in args
 skip_unlinked_maps = '-l' in args
 
-JSONLD_CONTEXT = "ext-libris/src/main/resources/context.jsonld"
-TERM_BASE = "t:"
-
 
 content_name_map = {
     'Books': 'Text',
@@ -111,11 +108,10 @@ def fixprop_to_name(propname, key):
 out = OrderedDict()
 
 if include_lang:
-    out["@context"] = [JSONLD_CONTEXT,
-        {"@base": TERM_BASE,
-            "enumDefs": {"@id": "@graph", "@container": "@index"},
-            "label": {"@id": "rdfs:label", "@container": "@language"},
-            "tokenMaps": None, "bib": None}]
+    out["@context"] = ["/def/context/skos.jsonld",
+        {"enumDefs": {"@id": "@graph", "@container": "@index"},
+          "@language": "sv",
+          "tokenMaps": None, "bib": None}]
     enum_defs = out['enumDefs'] = OrderedDict()
 
 tokenMaps = out['tokenMaps'] = OrderedDict()
@@ -149,12 +145,14 @@ def find_boolean_off_key(tokenmap):
 def add_labels(src, dest):
     sv = src.get('label_sv')
     en = src.get('label_en')
-    if sv or en:
-        lang = dest['label'] = {}
-        if sv:
-            lang['sv'] = sv
-        if en:
-            lang['en'] = en
+    #if sv or en:
+    #    lang = dest['label'] = {}
+    #    if sv: lang['sv'] = sv
+    #    if en: lang['en'] = en
+    if sv:
+        dest['prefLabel'] = sv
+    if en:
+        dest['prefLabel_en'] = en
 
 
 section = out['bib'] = OrderedDict()
@@ -268,17 +266,17 @@ for tag, field in sorted(marcmap['bib'].items()):
                     valuemap = fixprops[dfn_key]
 
                     fixtyperefmap = fixprop_typerefs.get(tag)
-                    enum_key = {'000': 'trec',
-                                '006': 'tcon',
-                                '007': 'tcar',
-                                '008': 'tcon'}.get(tag, dfn_key)
+                    enum_base = {'000': '/def/enum/record/',
+                                '006': '/def/enum/content/',
+                                '007': '/def/enum/carrier/',
+                                '008': '/def/enum/content/'}.get(tag, dfn_key)
 
                     if fixtyperefmap:
                         is_link = length < 3
                         if dfn_key in fixtyperefmap:
                             domainname = None
                             if tag == '000':
-                                enum_key = None
+                                enum_base = "/def/terms/"
                             if tag == '007':
                                 propname = 'carrierType'
                                 repeat = True
@@ -308,8 +306,8 @@ for tag, field in sorted(marcmap['bib'].items()):
                             type_id = None
                         elif key == off_key:
                             type_id = False
-                        elif enum_key:
-                            type_id = "%s:%s" % (enum_key, subname)
+                        elif enum_base:
+                            type_id = enum_base + subname
                         else:
                             type_id = subname
                         if overwriting:
@@ -319,7 +317,7 @@ for tag, field in sorted(marcmap['bib'].items()):
                         tokenmap[key] = type_id
                         #local_enums.add(type_id)
                         if include_lang:
-                            dest = enum_defs[type_id] = {'@id': type_id}
+                            dest = enum_defs[type_id] = {'@id': type_id, "@type": "Concept"}
                             add_labels(dfn, dest)
 
                     if skip_unlinked_maps and not is_link:
