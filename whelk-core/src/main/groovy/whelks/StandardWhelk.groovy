@@ -150,7 +150,7 @@ class StandardWhelk implements Whelk {
     void remove(URI uri) {
         components.each {
             try {
-                ((Component)it).delete(uri)
+                ((Component)it).remove(uri)
             } catch (RuntimeException rte) {
                 log.warn("Component ${((Component)it).id} failed delete: ${rte.message}")
             }

@@ -213,7 +213,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     }
 
     @Override
-    void delete(URI uri) {
+    void remove(URI uri) {
         String indexName = this.whelk.id
         log.debug("Peforming deletebyquery to remove documents extracted from $uri")
         def delQuery = termQuery("extractedFrom.@id", uri.toString())
