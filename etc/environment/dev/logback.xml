@@ -118,7 +118,7 @@
   </logger>
   -->
 <logger name="se.kb.libris.whelks.api.ReindexOperator">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
   <!--
 <logger name="se.kb.libris.whelks.api.OperatorRestlet">

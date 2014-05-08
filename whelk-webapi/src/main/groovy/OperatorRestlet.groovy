@@ -45,6 +45,12 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
                             "benchmark":benchmarkOperator,
                             "rebuild":rebuildMetaIndexOperator]
 
+    Map configurationSettings
+
+    OperatorRestlet(Map settings) {
+        this.configurationSettings = settings
+    }
+
     void doHandle(Request request, Response response) {
         def req = [:]
         if (request.method == Method.POST) {
@@ -52,6 +58,7 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
         } else {
             req = request.getResourceRef().getQueryAsForm().getValuesMap()
         }
+        req.putAll(configurationSettings)
         if (!isBusy() && operators.containsKey(req.operation)) {
             log.debug("Starting ${req.operation} operation")
             def op = operators[req.operation]

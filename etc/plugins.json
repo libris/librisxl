@@ -337,7 +337,13 @@
         }
     },
     "operator" : {
-        "_class" : "se.kb.libris.whelks.api.OperatorRestlet"
+        "_class" : "se.kb.libris.whelks.api.OperatorRestlet",
+        "_params" : {
+            "indexingQueueSize" : 50,
+            "graphstoreQueueSize" : 1000,
+            "indexBatchSize" : 10000,
+            "graphBatchSize" : 1000
+        }
     },
     "dumper" : {
         "_class" : "se.kb.libris.whelks.api.DumpRestlet"
