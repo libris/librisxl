@@ -11,11 +11,17 @@
         "_params" : "_whelk:libris"
     },
     "index": {
-        "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
+        "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
+        "_params": {
+            "typeConfiguration": {
+                "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
+                "bib" : [ "text", "book", "serial" ]
+            }
+        },
         "_unique" : true
     },
     "defsindex": {
-        "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
+        "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
         "_plugins" : [
             "defsindexconverter"
             ],
