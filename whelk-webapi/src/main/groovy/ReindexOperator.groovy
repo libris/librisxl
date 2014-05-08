@@ -44,7 +44,7 @@ class ReindexOperator extends AbstractOperator {
         gstoreQueue = Executors.newSingleThreadExecutor()
         indexQueue = Executors.newFixedThreadPool(3)
         gstoreAvailable = new Semaphore(100)
-        indexAvailable = new Semaphore(50)
+        indexAvailable = new Semaphore(30)
         String newIndex = null
 
         if (!dataset) {
@@ -97,6 +97,7 @@ class ReindexOperator extends AbstractOperator {
             try {
                 def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
                 whelk.index.addDocuments(preparedDocs, newIndex)
+                whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
@@ -106,7 +107,7 @@ class ReindexOperator extends AbstractOperator {
         if (!dataset) {
             if (cancelled) {
                 log.info("Process cancelled, resetting currentIndex")
-                whelk.index.currentIndex = whelk.index.getRealIndexFor(whelk.index.elasticIndex)
+                whelk.index.currentIndex = whelk.index.getRealIndexFor(whelk.id)
             } else {
                 whelk.index.reMapAliases(whelk.id)
             }
@@ -127,6 +128,7 @@ class ReindexOperator extends AbstractOperator {
             try {
                 def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
                 whelk.index.addDocuments(preparedDocs, newIndex)
+                whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
             } catch (WhelkAddException wae) {
                 log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
             } catch (PluginConfigurationException pce) {
@@ -137,11 +139,14 @@ class ReindexOperator extends AbstractOperator {
                 indexAvailable.release()
             }
         } as Runnable)
+        gstoreAvailable.acquire()
         gstoreQueue.execute({
             try {
                 whelk.graphStore.bulkAdd(docs, docs.first().contentType)
             } catch (WhelkAddException wae) {
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
+            } finally {
+                gstoreAvailable.release()
             }
         } as Runnable)
     }
