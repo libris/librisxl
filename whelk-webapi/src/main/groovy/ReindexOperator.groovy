@@ -29,6 +29,9 @@ class ReindexOperator extends AbstractOperator {
 
     boolean showSpinner = false
 
+    final int AVAILABLE_INDEXING_SEMAPHORES = 50
+    final int AVAILABLE_GRAPHSTORE_SEMAPHORES = 500
+
     @Override
     void setParameters(Map parameters) {
         super.setParameters(parameters)
@@ -43,8 +46,8 @@ class ReindexOperator extends AbstractOperator {
         List<Document> docs = []
         gstoreQueue = Executors.newSingleThreadExecutor()
         indexQueue = Executors.newFixedThreadPool(3)
-        gstoreAvailable = new Semaphore(100)
-        indexAvailable = new Semaphore(30)
+        gstoreAvailable = new Semaphore(AVAILABLE_GRAPHSTORE_SEMAPHORES)
+        indexAvailable = new Semaphore(AVAILABLE_INDEXING_SEMAPHORES)
         String newIndex = null
 
         if (!dataset) {
@@ -72,7 +75,7 @@ class ReindexOperator extends AbstractOperator {
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
-            if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
+            if (++count % 2000 == 0) { // Bulk index 1000 docs at a time
                 doTheIndexing(docs, newIndex)
                 docs = []
             }
@@ -104,13 +107,8 @@ class ReindexOperator extends AbstractOperator {
             }
         }
         log.info("Reindexed $count documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-        if (!dataset) {
-            if (cancelled) {
-                log.info("Process cancelled, resetting currentIndex")
-                whelk.index.currentIndex = whelk.index.getRealIndexFor(whelk.id)
-            } else {
-                whelk.index.reMapAliases(whelk.id)
-            }
+        if (!dataset && !cancelled) {
+            whelk.index.reMapAliases(whelk.id)
         }
         operatorState=OperatorState.FINISHING
         indexQueue.execute({
@@ -121,7 +119,9 @@ class ReindexOperator extends AbstractOperator {
     }
 
     void doTheIndexing(final List docs, String newIndex) {
-        log.debug("Trying to acquire semaphore.")
+        if (indexAvailable.availablePermits() < 10) {
+            log.info("Trying to acquire semaphore for indexing. ${indexAvailable.availablePermits()} available.")
+        }
         indexAvailable.acquire()
         log.debug("Acquired.")
         indexQueue.execute({
@@ -135,10 +135,11 @@ class ReindexOperator extends AbstractOperator {
                 log.error("System badly configured", pce)
                 throw pce
             } finally {
-                log.debug("Releasing semaphore.")
                 indexAvailable.release()
+                log.debug("Released indexing semaphore. ${indexAvailable.availablePermits()} available.")
             }
         } as Runnable)
+        log.info("Trying to acquire semaphore for graphstore. ${gstoreAvailable.availablePermits()} available.")
         gstoreAvailable.acquire()
         gstoreQueue.execute({
             try {
@@ -147,6 +148,7 @@ class ReindexOperator extends AbstractOperator {
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
             } finally {
                 gstoreAvailable.release()
+                log.info("Released graphstore semaphore. ${gstoreAvailable.availablePermits()} available.")
             }
         } as Runnable)
     }
