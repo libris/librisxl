@@ -107,7 +107,7 @@ class ReindexOperator extends AbstractOperator {
             }
         }
         log.debug("Went through all documents. Processing remainder.")
-        if (graphdocs.size() > 0) {
+        if (graphdocs.size() > 0 && whelk.graphStore) {
             log.trace("Reindexing remaining ${graphdocs.size()} documents")
             try {
                 whelk.graphStore.bulkAdd(graphdocs, graphdocs.first().contentType)
@@ -116,7 +116,7 @@ class ReindexOperator extends AbstractOperator {
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
         }
-        if (indexdocs.size() > 0) {
+        if (indexdocs.size() > 0 && whelk.index) {
             try {
                 def preparedDocs = whelk.index.prepareDocs(indexdocs, indexdocs.first().contentType)
                 whelk.index.addDocuments(preparedDocs, newIndex)
@@ -139,41 +139,45 @@ class ReindexOperator extends AbstractOperator {
     }
 
     void doTheIndexing(final List docs, String newIndex) {
-        if (indexAvailable.availablePermits() < 10) {
-            log.info("Trying to acquire semaphore for indexing. ${indexAvailable.availablePermits()} available.")
-        }
-        indexAvailable.acquire()
-        log.debug("Acquired.")
-        indexQueue.execute({
-            try {
-                def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
+        if (whelk.index) {
+            if (indexAvailable.availablePermits() < 10) {
+                log.info("Trying to acquire semaphore for indexing. ${indexAvailable.availablePermits()} available.")
+            }
+            indexAvailable.acquire()
+            log.debug("Acquired.")
+            indexQueue.execute({
+                try {
+                    def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
                 whelk.index.addDocuments(preparedDocs, newIndex)
                 whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
-            } catch (WhelkAddException wae) {
-                log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
-            } catch (PluginConfigurationException pce) {
-                log.error("System badly configured", pce)
+                } catch (WhelkAddException wae) {
+                    log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                } catch (PluginConfigurationException pce) {
+                    log.error("System badly configured", pce)
                 throw pce
-            } finally {
-                indexAvailable.release()
+                } finally {
+                    indexAvailable.release()
                 log.debug("Released indexing semaphore. ${indexAvailable.availablePermits()} available.")
-            }
-        } as Runnable)
+                }
+            } as Runnable)
+        }
     }
 
     void doGraphIndexing(final List docs) {
-        log.info("Trying to acquire semaphore for graphstore. ${gstoreAvailable.availablePermits()} available.")
-        gstoreAvailable.acquire()
-        gstoreQueue.execute({
-            try {
-                whelk.graphStore.bulkAdd(docs, docs.first().contentType)
-            } catch (WhelkAddException wae) {
-                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
-            } finally {
-                gstoreAvailable.release()
+        if (whelk.graphStore) {
+            log.info("Trying to acquire semaphore for graphstore. ${gstoreAvailable.availablePermits()} available.")
+            gstoreAvailable.acquire()
+            gstoreQueue.execute({
+                try {
+                    whelk.graphStore.bulkAdd(docs, docs.first().contentType)
+                } catch (WhelkAddException wae) {
+                    log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
+                } finally {
+                    gstoreAvailable.release()
                 log.info("Released graphstore semaphore. ${gstoreAvailable.availablePermits()} available.")
-            }
-        } as Runnable)
+                }
+            } as Runnable)
+        }
     }
 
     @Override
