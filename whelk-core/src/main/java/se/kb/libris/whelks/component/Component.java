@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface Component extends WhelkAware {
 
-    public void add(Document document);
+    public URI add(Document document);
     public void bulkAdd(List<Document> document, String contentType);
     public Document get(URI uri);
     public boolean handlesContent(String ctype);
@@ -19,5 +19,5 @@ public interface Component extends WhelkAware {
      * @param uri the URI of the entry to be deleted.
      * @param whelkId ID of the whelk calling the method. (May be null)
      */
-    public void delete(URI uri);
+    public void remove(URI uri);
 }

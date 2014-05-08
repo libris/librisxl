@@ -36,7 +36,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             }
         } else {
             componentState = [:].asSynchronized()
-            componentState['lastUpdated'] = 0L
+            componentState[LAST_UPDATED] = 0L
         }
         log.info("[${this.id}] Starting thread to periodically save state.")
         Thread.start {
@@ -70,11 +70,12 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     }
 
     @Override
-    public void add(Document document) {
+    public URI add(Document document) {
         try {
             List<Document> docs = prepareDocs([document], document.contentType)
             batchLoad(docs)
             setState(LAST_UPDATED, new Date().getTime())
+            return new URI(document.identifier)
         } catch (Exception e) {
             log.error("[${this.id}] failed to add documents. (${e.message})", e)
             throw e

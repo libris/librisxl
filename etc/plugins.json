@@ -6,20 +6,12 @@
             "metaproxyBaseUrl":"http://mproxy.libris.kb.se:8000"
         }
     },
-    "definitiondata": {
-        "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
-        "_params": "/data/librisxl/def/"
-    },
     "isxntool": {
         "_class": "se.kb.libris.whelks.api.ISXNTool",
         "_params" : "_whelk:libris"
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
-        "_plugins" : [
-            "entityextractor",
-            "entitysplitter"
-            ],
         "_unique" : true
     },
     "defsindex": {
@@ -191,15 +183,16 @@
                     "queryFacets" : "about.annotates.@id"
                 },
                 "person" : {
+                    "types" : [ "auth" ],
                     "queryFields":[
-                        "controlledLabel",
-                        "label",
-                        "altLabel",
-                        "name",
-                        "familyName",
-                        "givenName",
-                        "sameAs.controlledLabel",
-                        "@id"
+                        "about.controlledLabel",
+                        "about.label",
+                        "about.altLabel",
+                        "about.name",
+                        "about.familyName",
+                        "about.givenName",
+                        "about.sameAs.controlledLabel",
+                        "about.@id"
                     ],
                     "infoFields":[
                         "birthYear",
@@ -215,14 +208,18 @@
                         "label" : "asc",
                         "altLabel" : "asc",
                         "@id" : "desc"
-                    }
+                    },
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
                 },
                 "concept" : {
                     "queryFields":[
-                        "prefLabel",
-                        "label",
-                        "closeMatch.inScheme.prefLabel",
-                        "hiddenLabel"
+                        "about.prefLabel",
+                        "about.label",
+                        "about.closeMatch.inScheme.prefLabel",
+                        "about.hiddenLabel"
                     ],
                     "infoFields": [],
                     "defaultBoost": "prefLabel:50,label:50,closeMatch.inScheme.prefLabel:30,hiddenLabel:20",
@@ -233,14 +230,30 @@
                         "label" : "asc",
                         "closeMatch.inScheme.prefLabel" : "asc",
                         "hiddenLabel" : "asc"
-                    }
+                    },
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "enum": {
+                    "queryFields": [],
+                    "infoFields": [],
+                    "defaultBoost": "about.prefLabel:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.prefLabel" : "asc",
+                        "about.notation" : "asc"
+                    },
+                    "queryFacets" : "about.@type"
                 },
                 "languages" : {
                     "queryFields":[
-                        "prefLabel",
-                        "prefLabel_en",
-                        "langCode",
-                        "langTag"
+                        "about.prefLabel",
+                        "about.prefLabel_en",
+                        "about.langCode",
+                        "about.langTag"
                     ]
                 }
             }

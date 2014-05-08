@@ -213,7 +213,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     }
 
     @Override
-    void delete(URI uri) {
+    void remove(URI uri) {
         String indexName = this.whelk.id
         log.debug("Peforming deletebyquery to remove documents extracted from $uri")
         def delQuery = termQuery("extractedFrom.@id", uri.toString())
@@ -260,15 +260,15 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     @Override
     SearchResult query(Query q) {
         String indexName = this.whelk.id
-        def indexType = defaultType
+        def indexTypes = [defaultType] as String[]
         if (q instanceof ElasticQuery) {
-            indexType = q.indexType
+            indexTypes = q.indexTypes
         }
-        return query(q, indexName, indexType)
+        return query(q, indexName, indexTypes)
     }
 
-    SearchResult query(Query q, String indexName, String indexType) {
-        log.trace "Querying index $indexName and indextype $indexType"
+    SearchResult query(Query q, String indexName, String[] indexTypes) {
+        log.trace "Querying index $indexName and indextype $indexTypes"
         log.trace "Doing query on $q"
         def idxlist = [indexName]
         if (indexName.contains(",")) {
@@ -276,7 +276,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         }
         log.trace("Searching in indexes: $idxlist")
         def jsonDsl = q.toJsonQuery()
-        def response = client.search(new SearchRequest(idxlist as String[], jsonDsl.getBytes("utf-8")).searchType(SearchType.DFS_QUERY_THEN_FETCH).types(indexType)).actionGet()
+        def response = client.search(new SearchRequest(idxlist as String[], jsonDsl.getBytes("utf-8")).searchType(SearchType.DFS_QUERY_THEN_FETCH).types(indexTypes)).actionGet()
         log.trace("SearchResponse: " + response)
 
         def results = new SearchResult(0)
@@ -354,7 +354,15 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         if (!defaultMapping) {
             defaultMapping = loadJson("default_mapping.json")
         }
-        def typeMapping = loadJson("${itype}_mapping.json") ?: defaultMapping
+        def typePropertyMapping = loadJson("${itype}_mapping_properties.json")
+        def typeMapping
+        if (typePropertyMapping) {
+            log.debug("Found properties mapping for $itype. Using them with defaults.")
+            typeMapping = new HashMap(defaultMapping)
+            typeMapping.put("properties", typePropertyMapping.get("properties"))
+        } else {
+            typeMapping = loadJson("${itype}_mapping.json") ?: defaultMapping
+        }
         // Append special mapping for @id-fields
         if (!typeMapping.dynamic_templates) {
             typeMapping['dynamic_templates'] = []

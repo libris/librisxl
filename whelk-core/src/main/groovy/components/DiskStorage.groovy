@@ -102,8 +102,8 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         return getAllRaw(dataset)
     }
     @Override
-    void delete(URI uri) {
-        super.delete(uri)
+    void remove(URI uri) {
+        super.remove(uri)
         index.deleteFromEntry(uri, indexName)
     }
 
@@ -382,7 +382,7 @@ class PairtreeDiskStorage extends BasicComponent implements Storage {
     }
 
     @Override
-    void delete(URI uri) {
+    void remove(URI uri) {
         if (versioning) {
             store(createTombstone(uri))
         } else {

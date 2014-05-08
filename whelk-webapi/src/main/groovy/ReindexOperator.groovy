@@ -73,7 +73,7 @@ class ReindexOperator extends AbstractOperator {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
             if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
-                doTheIndexing(docs)
+                doTheIndexing(docs, newIndex)
                 docs = []
             }
             runningTime = System.currentTimeMillis() - startTime

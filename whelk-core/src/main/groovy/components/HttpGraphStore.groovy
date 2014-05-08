@@ -59,8 +59,8 @@ class HttpEndpoint extends BasicComponent implements SparqlEndpoint {
         return new ByteArrayInputStream(EntityUtils.toByteArray(response.getEntity()))
     }
 
-    public void delete(URI uri) {
-    throw new UnsupportedOperationException("Not implemented yet.")
+    public void remove(URI uri) {
+        throw new UnsupportedOperationException("Not implemented yet.")
     }
 }
 

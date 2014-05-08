@@ -12,16 +12,6 @@
         }
     },
     {
-        "defterms":{
-            "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
-            "_plugins" : [
-                "localdefinitiondata"
-                ],
-            "contentRoot" : "/def/term",
-            "docBaseUri" : "http://libris.kb.se/"
-        }
-    },
-    {
         "def":{
             "_class" : "se.kb.libris.whelks.http.HttpStandardWhelk",
             "_plugins" : [
@@ -42,7 +32,7 @@
                 "marcconverter"
                 ],
             "_expanders": [
-                "locallinkexpander"
+                "linkexpander"
                 ],
             "_importers": [
                 "oaipmhimporter",
@@ -87,7 +77,7 @@
                     "marcconverter"
                     ],
                 "_params" : {
-                    "storageDir": "/Users/markus/dev/librisxl/work/storage",
+                    "storageDir": "work/storage",
                     "contentTypes": ["application/ld+json"],
                     "versioning" : true,
                     "baseStorageSuffix": "pairtree"
@@ -113,10 +103,6 @@
                     "storageDir": "work/storage/disk/jsonld",
                     "contentTypes": ["application/ld+json"]
                 }
-            },
-            "localdefinitiondata": {
-                "_class": "se.kb.libris.whelks.api.DefinitionDataRestlet",
-                "_params": "datatools/build/"
             },
             "locallinkexpander" : {
                 "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkExpander",
