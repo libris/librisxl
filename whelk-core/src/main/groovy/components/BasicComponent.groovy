@@ -36,7 +36,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             }
         } else {
             componentState = [:].asSynchronized()
-            componentState['lastUpdated'] = 0L
+            componentState[LAST_UPDATED] = 0L
         }
         log.info("[${this.id}] Starting thread to periodically save state.")
         Thread.start {
