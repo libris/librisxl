@@ -12,10 +12,6 @@
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClientIndex",
-        "_plugins" : [
-            "entityextractor",
-            "entitysplitter"
-            ],
         "_unique" : true
     },
     "defsindex": {
