@@ -65,11 +65,15 @@ class StandardWhelk implements Whelk {
             for (storage in getStorages(doc.contentType)) {
                 storage.add(doc)
             }
-            index.add(doc)
-            graphStore.add(doc)
+            if (index) {
+                index.add(doc)
+            }
+            if (graphStore) {
+                graphStore.add(doc)
+            }
         } catch (Exception e) {
             log.error("Failed to add document ${doc?.identifier}", e)
-            throw e
+                throw e
         }
         return new URI(doc.identifier)
     }
@@ -84,8 +88,12 @@ class StandardWhelk implements Whelk {
         for (storage in storages) {
             storage.bulkAdd(docs, contentType)
         }
-        index.bulkAdd(docs, contentType)
-        graphStore.bulkAdd(docs, contentType)
+        if (index) {
+            index.bulkAdd(docs, contentType)
+        }
+        if (graphStore) {
+            graphStore.bulkAdd(docs, contentType)
+        }
     }
 
     @Override
