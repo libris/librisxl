@@ -4,6 +4,7 @@ WHELK="http://localhost:8180/whelk-webapi"
 BUILDBASE="datatools/build"
 
 put() {
+    echo "PUT '$1' to <$3> as $2"
     curl -XPUT -H "Content-Type:$2" --data-binary @$1 $3?data
 }
 
@@ -13,10 +14,10 @@ for dataset in nationalities ; do
         put $file application/ld+json ${WHELK}/def/${dataset}/$slug
     done
 done
-exit
+
 # Load JSON-LD contexts
 for ctx in owl skos; do
-    put datatools/def/context/${ctx}.jsonld application/ld+json ${WHELK}/def/context/${ctx}.jsonld
+    put datatools/sys/context/${ctx}.jsonld application/ld+json ${WHELK}/sys/context/${ctx}.jsonld
 done
 
 # Load standalone documents

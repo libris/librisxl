@@ -45,7 +45,7 @@ Get/create/update datasets:
 
 Load into the running whelk:
 
-    $ datatools/scripts/load_defs_whelk.sh
+    $ scripts/load_defs_whelk.sh
 
 
 ### Import/update local storage from test data
