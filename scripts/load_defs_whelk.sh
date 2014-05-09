@@ -13,7 +13,7 @@ for dataset in nationalities ; do
         put $file application/ld+json ${WHELK}/def/${dataset}/$slug
     done
 done
-exit
+
 # Load JSON-LD contexts
 for ctx in owl skos; do
     put datatools/def/context/${ctx}.jsonld application/ld+json ${WHELK}/def/context/${ctx}.jsonld
