@@ -251,11 +251,13 @@ def split_dataset(base, data):
             obj = obj.values()
         for node in obj:
             id_ = node['@id']
+            # TODO: Absence caused by mismatch between external id and local mapping
             if not id_:
                 print "Missing id for:", node
                 continue
             if not id_.startswith(base):
-                raise ValueError("Expected <%s> in base <%s>" % (id_, base))
+                print "Missing mapping of <%s> under base <%s>" % (id_, base)
+                continue
             #resultset[id_[len(base):]] = node
             rel_path = id_[len(base):]
             data_path = "%s?data" % id_
