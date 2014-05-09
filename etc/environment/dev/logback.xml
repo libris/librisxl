@@ -65,7 +65,7 @@
       <level value="trace"/>
   </logger>
   -->
-  <logger name="se.kb.libris.whelks.plugin.IndexingPrawn">
+  <logger name="se.kb.libris.whelks.AbstractWhelkServlet">
       <level value="trace"/>
   </logger>
   <!--

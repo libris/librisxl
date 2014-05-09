@@ -12,6 +12,7 @@ import org.codehaus.jackson.map.*
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
+import se.kb.libris.whelks.plugin.*
 import se.kb.libris.utils.isbn.*
 import se.kb.libris.conch.Tools
 import se.kb.libris.whelks.http.*
@@ -81,16 +82,18 @@ class HoldCounter extends SearchRestlet {
 }
 
 @Log
-class ISXNTool extends BasicWhelkAPI {
+class ISXNTool extends BasicWhelkAPI implements WhelkAware {
     def pathEnd = "_isxntool"
     String id = "ISXNTool"
     String description = "Formats data (ISBN-numbers) according to international presention rules."
     Whelk dataWhelk
     ObjectMapper mapper = new ObjectMapper()
 
+    /*
     ISXNTool(Whelk dw) {
         this.dataWhelk = dw
     }
+    */
 
     void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()

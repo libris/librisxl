@@ -1,0 +1,39 @@
+{
+    "_properties": {
+        "WHELK_WORK_DIR": "work",
+        "STORAGE_PATH": "work/storage"
+    },
+    "_id": "libris",
+    "_docBaseUri" : "http://libris.kb.se/",
+    "_plugins": {
+        "_converters": [
+            "marcconverter",
+            "linkcompleter",
+            "indexlinkfinder"
+            ],
+        "_expanders": [
+            "linkexpander"
+            ],
+        "_importers": [
+            "oaipmhimporter",
+        "marcimporter"
+            ],
+        "_components": [
+            "pairtreehybridstorage",
+            "index",
+            "fusekigraphstore"
+        ]
+    },
+    "_apis": [
+        { "url": "/_remote", "plugin": "remotesearch" },
+        { "url": "/_operations", "plugin": "operator" },
+        { "url": "/_format", "plugin": "formatter" },
+        { "url": "/_dump", "plugin": "dumper" },
+        { "url": "/_sparql", "plugin": "sparqlapi" },
+        { "url": "/_libcount", "plugin": "libcount" },
+        { "url": "/_isxntool", "plugin":  "isxntool" },
+        { "url": "/_complete/([\\w/]+)$", "plugin":  "completeexpander" },
+        { "url": "/(\\w+)/_search", "plugin":  "search" },
+        { "url": "^([\\w/]+)$", "plugin":  "documentapi" }
+    ]
+}

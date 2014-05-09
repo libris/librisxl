@@ -6,6 +6,7 @@
 .*.swp
 /work
 /ext-*/**/whelks.json
+/ext-*/**/whelk.json
 /ext-*/**/logback.xml
 whelkoperator.lck
 /mystuff

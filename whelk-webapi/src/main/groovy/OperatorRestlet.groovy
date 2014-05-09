@@ -20,7 +20,7 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.conch.Tools
 
 @Log
-class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
+class OperatorRestlet extends BasicAPI {
 
     def pathEnd = "_operations"
     def varPath = false
@@ -51,13 +51,8 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
         this.configurationSettings = settings
     }
 
-    void doHandle(Request request, Response response) {
-        def req = [:]
-        if (request.method == Method.POST) {
-            req = new Form(request.getEntity()).getValuesMap()
-        } else {
-            req = request.getResourceRef().getQueryAsForm().getValuesMap()
-        }
+    protected ApiResult doHandle(Map reqParams, List pathVars) {
+        def req = new HashMap(reqParams)
         req.putAll(configurationSettings)
         if (!isBusy() && operators.containsKey(req.operation)) {
             log.debug("Starting ${req.operation} operation")
@@ -65,15 +60,14 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
             op.whelk = this.whelk
             op.setParameters(req)
             new Thread(op).start()
-            response.setStatus(Status.REDIRECTION_SEE_OTHER, "Operation ${req.operation} started.")
-            response.setLocationRef(request.getRootRef().toString()+"/"+pathEnd)
+            return new ApiResult(302, null)
         }
         if (isBusy() && operators.containsKey(req.cancel)) {
             log.debug("Cancelling operation ${req.cancel}")
             operators[req.cancel].cancel()
         }
 
-        if (isBusy() || req.status || request.getResourceRef().getQuery() == "status") {
+        if (isBusy() || req.status) {
             def opMap = [:]
             operators.each { k,v ->
                 opMap[k] = v.status
@@ -82,9 +76,9 @@ class OperatorRestlet extends BasicWhelkAPI implements RestAPI {
             mapper.enable(Feature.INDENT_OUTPUT)
             def page = mapper.writeValueAsString(["operations":opMap])
 
-            response.setEntity(page, MediaType.APPLICATION_JSON)
+            return new ApiResult(page, "application/json")
         } else {
-            response.setEntity(loadPage(), MediaType.TEXT_HTML)
+            return new ApiResult(loadPage(), "text/html")
         }
     }
 

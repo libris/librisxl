@@ -19,7 +19,7 @@ import se.kb.libris.conch.Tools
 import org.codehaus.jackson.map.*
 
 @Log
-class StandardWhelk implements Whelk {
+class StandardWhelk extends AbstractWhelkServlet implements Whelk {
 
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
@@ -35,14 +35,17 @@ class StandardWhelk implements Whelk {
 
     // Set by configuration
     URI docBaseUri
-    // Global settings, set by whelk initializer
-    Map global
+
+    /*
+    StandardWhelk() {
+        this.id = "libris"
+    }
 
     StandardWhelk(String id) {
         this.id = id
         queues = [:].withDefault { new ArrayList<BlockingQueue>() }
         prawnThreads = []
-    }
+    }*/
 
     void setDocBaseUri(String uri) {
         this.docBaseUri = new URI(uri)
@@ -279,4 +282,9 @@ class StandardWhelk implements Whelk {
     List<Importer> getImporters() { return plugins.findAll { it instanceof Importer } }
     LinkExpander getLinkExpanderFor(Document doc) { return linkExpanders.find { it.valid(doc) } }
 
+
+    // Maintenance whelk methods
+    protected void setId(String id) {
+        this.id = id
+    }
 }

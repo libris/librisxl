@@ -7,8 +7,7 @@
         }
     },
     "isxntool": {
-        "_class": "se.kb.libris.whelks.api.ISXNTool",
-        "_params" : "_whelk:libris"
+        "_class": "se.kb.libris.whelks.api.ISXNTool"
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
@@ -39,10 +38,12 @@
     "pairtreehybridstorage": {
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
         "_plugins" : [
-            "index"
+            "index",
+            "oaipmhxmlconverter",
+            "marcconverter"
             ],
         "_params" : {
-            "storageDir": "/ssd/storage",
+            "storageDir": "_property:STORAGE_PATH",
             "contentTypes": ["application/ld+json"],
             "baseStorageSuffix": "pairtree",
             "versioning" : false
@@ -137,7 +138,7 @@
         }
     },
     "search" : {
-        "_class" : "se.kb.libris.whelks.api.SearchRestlet",
+        "_class" : "se.kb.libris.whelks.api.SearchAPI",
         "_params" : {
             "indexTypes" : {
                 "bib" : {

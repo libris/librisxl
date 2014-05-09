@@ -44,14 +44,14 @@ class RestManager extends Application {
 
         log.debug("Looking for suitable APIs to attach")
 
-        def sortedwhelks = whelks.findAll{ it instanceof HttpStandardWhelk }.sort( {a, b -> b.contentRoot.length() <=> a.contentRoot.length() } )
+        def sortedwhelks = whelks.findAll{ it instanceof StandardWhelk }.sort( {a, b -> b.contentRoot.length() <=> a.contentRoot.length() } )
 
         sortedwhelks.each {  whelk ->
             log.debug("Getting APIs for whelk ${whelk.id}")
 
             allAPIs = whelk.getAPIs()
 
-            if (whelk instanceof HttpWhelk) {
+            if (whelk instanceof Whelk) {
                 allAPIs << new RootRouteRestlet(whelk)
                 allAPIs << new DiscoveryAPI(whelk)
             }

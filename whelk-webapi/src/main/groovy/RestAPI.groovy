@@ -334,6 +334,7 @@ class RemoteSearchRestlet extends BasicWhelkAPI {
         return xmlStr.replaceAll("tag0:", "").replaceAll("zs:", "")
     }
 }
+
 @Log
 class SearchRestlet extends BasicWhelkAPI {
     def pathEnd = "{indexType}/_search"
@@ -676,7 +677,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     void init(String w) {}
 
     String getPath() {
-        def elems = [(this.whelk instanceof HttpWhelk ? this.whelk.contentRoot : this.whelk.id), getPathEnd()]
+        def elems = [(this.whelk instanceof Whelk ? this.whelk.contentRoot : this.whelk.id), getPathEnd()]
         return "/" + elems.findAll { it.length() > 0 }.join("/")
     }
 
@@ -704,6 +705,9 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     }
 
     abstract void doHandle(Request request, Response response)
+
+    // Remove this when all have been rewritten
+    ApiResult handle(Map m, List l, String i, String method) { return null }
 
     void handle(Request request, Response response) {
         long startTime = System.currentTimeMillis()
@@ -1084,6 +1088,7 @@ class SuggestResultsConverter {
 }
 
 
+/*
 @Log
 class DefinitionDataRestlet extends Directory implements RestAPI {
     Whelk whelk
@@ -1114,6 +1119,7 @@ class DefinitionDataRestlet extends Directory implements RestAPI {
     public void addPlugin(Plugin p) {}
 
 }
+*/
 
 
 @Deprecated
