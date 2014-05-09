@@ -2,10 +2,7 @@ package se.kb.libris.whelks.api
 
 import groovy.util.logging.Slf4j as Log
 
-import org.restlet.*
-import org.restlet.data.*
-import org.restlet.resource.*
-import org.restlet.representation.*
+import javax.servlet.http.*
 
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.map.SerializationConfig.Feature
@@ -51,8 +48,8 @@ class OperatorRestlet extends BasicAPI {
         this.configurationSettings = settings
     }
 
-    protected ApiResult doHandle(Map reqParams, List pathVars) {
-        def req = new HashMap(reqParams)
+    void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+        def req = new HashMap(request.parameterMap)
         req.putAll(configurationSettings)
         if (!isBusy() && operators.containsKey(req.operation)) {
             log.debug("Starting ${req.operation} operation")
@@ -60,7 +57,7 @@ class OperatorRestlet extends BasicAPI {
             op.whelk = this.whelk
             op.setParameters(req)
             new Thread(op).start()
-            return new ApiResult(302, null)
+            sendRedirect(request.getPathInfo())
         }
         if (isBusy() && operators.containsKey(req.cancel)) {
             log.debug("Cancelling operation ${req.cancel}")
@@ -76,9 +73,9 @@ class OperatorRestlet extends BasicAPI {
             mapper.enable(Feature.INDENT_OUTPUT)
             def page = mapper.writeValueAsString(["operations":opMap])
 
-            return new ApiResult(page, "application/json")
+            sendResponse(response, page, "application/json")
         } else {
-            return new ApiResult(loadPage(), "text/html")
+            sendResponse(response, loadPage(), "text/html")
         }
     }
 

@@ -5,6 +5,7 @@ import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 
 import java.util.concurrent.*
+import javax.servlet.http.*
 
 import org.restlet.*
 import org.restlet.data.*
@@ -707,7 +708,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
     abstract void doHandle(Request request, Response response)
 
     // Remove this when all have been rewritten
-    ApiResult handle(Map m, List l, String i, String method) { return null }
+    void handle(HttpServletRequest req, HttpServletResponse resp, List pv) {}
 
     void handle(Request request, Response response) {
         long startTime = System.currentTimeMillis()

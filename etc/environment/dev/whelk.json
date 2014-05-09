@@ -34,6 +34,6 @@
         { "url": "/_isxntool", "plugin":  "isxntool" },
         { "url": "/_complete/([\\w/]+)$", "plugin":  "completeexpander" },
         { "url": "/(\\w+)/_search", "plugin":  "search" },
-        { "url": "^([\\w/]+)$", "plugin":  "documentapi" }
+        { "url": "^([\\w/\\-]+)$", "plugin":  "documentapi" }
     ]
 }

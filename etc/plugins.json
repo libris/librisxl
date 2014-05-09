@@ -278,7 +278,7 @@
 
     },
     "documentapi" : {
-        "_class" : "se.kb.libris.whelks.api.DocumentRestlet"
+        "_class" : "se.kb.libris.whelks.api.DocumentAPI"
     },
     "completeexpander" : {
         "_class" : "se.kb.libris.whelks.api.CompleteExpander"

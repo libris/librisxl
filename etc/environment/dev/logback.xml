@@ -110,9 +110,11 @@
  <logger name="se.kb.libris.whelks.api.ISXNTool">
       <level value="debug"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.DocumentRestlet">
+  -->
+<logger name="se.kb.libris.whelks.api.DocumentAPI">
       <level value="trace"/>
   </logger>
+  <!--
 <logger name="se.kb.libris.whelks.api.DumpRestlet">
       <level value="trace"/>
   </logger>

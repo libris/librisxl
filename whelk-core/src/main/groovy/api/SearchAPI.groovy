@@ -2,6 +2,8 @@ package se.kb.libris.whelks.api
 
 import groovy.util.logging.Slf4j as Log
 
+import javax.servlet.http.*
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
@@ -21,7 +23,8 @@ class SearchAPI extends BasicAPI implements API {
     }
 
     @Override
-    protected ApiResult doHandle(Map queryMap, List pathVars) {
+    protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+        def queryMap = new HashMap(request.parameterMap)
         Map result = [:]
         def indexType = pathVars.first()
         def indexConfig = config.indexTypes[indexType]
@@ -64,12 +67,10 @@ class SearchAPI extends BasicAPI implements API {
             performQuery(elasticQuery, indexConfig) +
             (callback ? ");" : "")
 
-            return new ApiResult(jsonResult, "application/json")
+            sendResponse(response, jsonResult, "application/json")
 
         } catch (WhelkRuntimeException wrte) {
-            log.error("error", wrte)
-
-            //response.setStatus(Status.CLIENT_ERROR_NOT_FOUND, wrte.message)
+            response.sendError(response.SC_NOT_FOUND)
         }
     }
 

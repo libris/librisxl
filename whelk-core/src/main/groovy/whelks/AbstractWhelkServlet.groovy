@@ -25,13 +25,14 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         String path = request.pathInfo
         API api = null
         List pathVars = []
-        String apiRelPath
 
         log.debug("Path is $path")
         response.setCharacterEncoding("UTF-8")
 
-        (api, pathVars, apiRelPath) = getAPIForPath(path)
+        (api, pathVars) = getAPIForPath(path)
         if (api) {
+            api.handle(request, response, pathVars)
+            /*
             ApiResult result = api.handle(request.parameterMap, pathVars, request.getRemoteAddr(), request.getMethod())
             if (result.statusCode == 200) {
                 response.setContentType(result.contentType)
@@ -40,8 +41,9 @@ abstract class AbstractWhelkServlet extends HttpServlet {
             } else if (result.statusCode == 302) {
                 response.sendRedirect(apiRelPath)
             }
+            */
         } else {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Inget här, hörru")
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "No API found for $path")
         }
     }
 
@@ -55,10 +57,10 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                 for (int i = 1; i <= groupCount; i++) {
                     pathVars.add(matcher.group(i))
                 }
-                return [entry.value, pathVars, path]
+                return [entry.value, pathVars]
             }
         }
-        return [null, [], path]
+        return [null, []]
     }
 
     /**
@@ -74,6 +76,10 @@ abstract class AbstractWhelkServlet extends HttpServlet {
     }
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
+        handleRequest(request, response)
+    }
+    @Override
+    void doDelete(HttpServletRequest request, HttpServletResponse response) {
         handleRequest(request, response)
     }
 

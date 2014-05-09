@@ -2,9 +2,11 @@ package se.kb.libris.whelks.api;
 
 import java.util.List;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import se.kb.libris.whelks.plugin.WhelkAware;
 
 public interface API extends WhelkAware {
-    public ApiResult handle(Map requestMap, List pathVars, String remoteIp, String method);
+    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars);
 }
