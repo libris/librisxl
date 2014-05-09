@@ -4,6 +4,7 @@ WHELK="http://localhost:8180/whelk-webapi"
 BUILDBASE="datatools/build"
 
 put() {
+    echo "PUT '$1' to <$3> as $2"
     curl -XPUT -H "Content-Type:$2" --data-binary @$1 $3?data
 }
 
