@@ -17,7 +17,7 @@ done
 
 # Load JSON-LD contexts
 for ctx in owl skos; do
-    put datatools/def/context/${ctx}.jsonld application/ld+json ${WHELK}/def/context/${ctx}.jsonld
+    put datatools/sys/context/${ctx}.jsonld application/ld+json ${WHELK}/sys/context/${ctx}.jsonld
 done
 
 # Load standalone documents
