@@ -29,6 +29,9 @@ class ReindexOperator extends AbstractOperator {
 
     boolean showSpinner = false
 
+    boolean doIndexing = true
+    boolean doGraphing = true
+
     int indexingSemaphores = 50
     int graphstoreSemaphores = 1000
     int indexBatchSize = 1000
@@ -47,6 +50,8 @@ class ReindexOperator extends AbstractOperator {
         this.graphstoreSemaphores = parameters.get("graphstoreQueueSize", 1000)
         this.indexBatchSize = parameters.get("indexBatchSize", 1000)
         this.graphBatchSize = parameters.get("graphBatchSize", 1000)
+        this.doIndexing = (whelk.index != null && whelk.index.id != parameters.get("disableComponent"))
+        this.doGraphing = (whelk.graphStore != null && whelk.graphStore.id != parameters.get("disableComponent"))
     }
 
     void doRun(long startTime) {
@@ -58,12 +63,16 @@ class ReindexOperator extends AbstractOperator {
         indexAvailable = new Semaphore(indexingSemaphores)
         String newIndex = null
         log.info("Starting reindexing.")
-        log.info("Index batch size: $indexBatchSize")
-        log.info("Graph batch size: $indexBatchSize")
-        log.info("Index queue size: $indexingSemaphores")
-        log.info("Graph queue size: $graphstoreSemaphores")
+        if (doIndexing) {
+            log.info("Index batch size: $indexBatchSize")
+            log.info("Index queue size: $indexingSemaphores")
+        }
+        if (doGraphing) {
+            log.info("Graph batch size: $indexBatchSize")
+            log.info("Graph queue size: $graphstoreSemaphores")
+        }
 
-        if (!dataset) {
+        if (!dataset && doIndexing) {
             log.debug("Requesting new index for ${whelk.index.id}.")
             newIndex = whelk.index.createNewCurrentIndex(whelk.id)
         }
@@ -107,7 +116,7 @@ class ReindexOperator extends AbstractOperator {
             }
         }
         log.debug("Went through all documents. Processing remainder.")
-        if (graphdocs.size() > 0 && whelk.graphStore) {
+        if (graphdocs.size() > 0 && whelk.graphStore && doGraphing) {
             log.trace("Reindexing remaining ${graphdocs.size()} documents")
             try {
                 whelk.graphStore.bulkAdd(graphdocs, graphdocs.first().contentType)
@@ -116,7 +125,7 @@ class ReindexOperator extends AbstractOperator {
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
         }
-        if (indexdocs.size() > 0 && whelk.index) {
+        if (indexdocs.size() > 0 && whelk.index && doIndexing) {
             try {
                 def preparedDocs = whelk.index.prepareDocs(indexdocs, indexdocs.first().contentType)
                 whelk.index.addDocuments(preparedDocs, newIndex)
@@ -127,7 +136,7 @@ class ReindexOperator extends AbstractOperator {
             }
         }
         log.info("Reindexed $count documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-        if (!dataset && !cancelled) {
+        if (doIndexing && !dataset && !cancelled) {
             whelk.index.reMapAliases(whelk.id)
         }
         operatorState=OperatorState.FINISHING
@@ -139,7 +148,7 @@ class ReindexOperator extends AbstractOperator {
     }
 
     void doTheIndexing(final List docs, String newIndex) {
-        if (whelk.index) {
+        if (doIndexing && whelk.index) {
             if (indexAvailable.availablePermits() < 10) {
                 log.info("Trying to acquire semaphore for indexing. ${indexAvailable.availablePermits()} available.")
             }
@@ -164,7 +173,7 @@ class ReindexOperator extends AbstractOperator {
     }
 
     void doGraphIndexing(final List docs) {
-        if (whelk.graphStore) {
+        if (doGraphing && whelk.graphStore) {
             log.info("Trying to acquire semaphore for graphstore. ${gstoreAvailable.availablePermits()} available.")
             gstoreAvailable.acquire()
             gstoreQueue.execute({
