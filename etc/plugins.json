@@ -342,8 +342,7 @@
             "indexingQueueSize" : 50,
             "graphstoreQueueSize" : 1000,
             "indexBatchSize" : 10000,
-            "graphBatchSize" : 1500,
-            "disableComponent" : "index"
+            "graphBatchSize" : 1500
         }
     },
     "dumper" : {
