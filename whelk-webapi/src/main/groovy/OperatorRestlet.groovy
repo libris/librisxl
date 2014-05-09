@@ -51,17 +51,19 @@ class OperatorRestlet extends BasicAPI {
     void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         def req = new HashMap(request.parameterMap)
         req.putAll(configurationSettings)
-        if (!isBusy() && operators.containsKey(req.operation)) {
-            log.debug("Starting ${req.operation} operation")
-            def op = operators[req.operation]
+        log.debug("req: $req")
+        if (!isBusy() && operators.containsKey(req.operation?.first())) {
+            log.debug("Starting ${req.operation.first()} operation")
+            def op = operators[req.operation.first()]
             op.whelk = this.whelk
             op.setParameters(req)
             new Thread(op).start()
-            sendRedirect(request.getPathInfo())
+            response.setStatus(HttpServletResponse.SC_SEE_OTHER)
+            response.setHeader("Location", request.getRequestURL().toString())
         }
-        if (isBusy() && operators.containsKey(req.cancel)) {
-            log.debug("Cancelling operation ${req.cancel}")
-            operators[req.cancel].cancel()
+        if (isBusy() && operators.containsKey(req.cancel?.first())) {
+            log.debug("Cancelling operation ${req.cancel.first()}")
+            operators[req.cancel.first()].cancel()
         }
 
         if (isBusy() || req.status) {
@@ -110,11 +112,12 @@ class ImportOperator extends AbstractOperator {
     @Override
     void setParameters(Map parameters) {
         super.setParameters(parameters)
-        this.importerPlugin = parameters.get("importer", null)
-        this.serviceUrl = parameters.get("url", null)
-        this.numToImport = parameters.get("nums", -1) as int
-        if (parameters.get("since", null)) {
-            def dateString = parameters.get("since")
+        this.importerPlugin = parameters.get("importer", null)?.first()
+        this.serviceUrl = parameters.get("url", null)?.first()
+        this.numToImport = parameters.get("nums", [-1]).first() as int
+        if (parameters.get("since", []).size() > 1) {
+            log.debug("since param is ${parameters.since} size: ${parameters.since.size()}")
+            def dateString = parameters.get("since")?.first()
             if (dateString.length() == 10) {
                 this.since = Date.parse('yyyy-MM-dd', dateString)
             } else {
@@ -197,15 +200,14 @@ class BenchmarkOperator extends AbstractOperator {
     void setParameters(Map parameters) {
         super.setParameters(parameters)
         if (parameters.get("since", null)) {
-            this.since = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", parameters.get("since"))
+            this.since = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", parameters.get("since").first())
             log.info("Since: $since")
         }
-        this.fromStorage = parameters.get("fromStorage", null)
+        this.fromStorage = parameters.get("fromStorage", null)?.first()
         if (fromStorage == "") {
             fromStorage = null
         }
         this.showSpinner = parameters.get("showSpinner", false)
-        this.withSerialization = parameters.get("withSerialization", "").equals("true")
     }
 
     @Override
@@ -265,7 +267,7 @@ abstract class AbstractOperator implements Runnable {
     List<String> errorMessages
 
     void setParameters(Map parameters) {
-        this.dataset = parameters.get("dataset", null)
+        this.dataset = parameters.get("dataset", null)?.first()
         if (this.dataset?.length() == 0) {
             this.dataset = null
         }

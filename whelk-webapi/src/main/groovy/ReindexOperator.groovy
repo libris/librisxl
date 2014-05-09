@@ -42,16 +42,16 @@ class ReindexOperator extends AbstractOperator {
         super.setParameters(parameters)
         log.info("parameters: $parameters")
         if (parameters.selectedComponents) {
-            this.selectedComponents = parameters.get("selectedComponents").split(",") as List<String>
+            this.selectedComponents = parameters.get("selectedComponents").first().split(",") as List<String>
         }
-        this.fromStorage = parameters.get("fromStorage", null)
+        this.fromStorage = parameters.get("fromStorage", null)?.first()
         this.showSpinner = parameters.get("showSpinner", false)
         this.indexingSemaphores = parameters.get("indexingQueueSize", 50)
         this.graphstoreSemaphores = parameters.get("graphstoreQueueSize", 1000)
         this.indexBatchSize = parameters.get("indexBatchSize", 1000)
         this.graphBatchSize = parameters.get("graphBatchSize", 1000)
-        this.doIndexing = (whelk.index != null && whelk.index.id != parameters.get("disableComponent"))
-        this.doGraphing = (whelk.graphStore != null && whelk.graphStore.id != parameters.get("disableComponent"))
+        this.doIndexing = (whelk.index != null && whelk.index.id != parameters.get("disableComponent")?.first())
+        this.doGraphing = (whelk.graphStore != null && whelk.graphStore.id != parameters.get("disableComponent")?.first())
     }
 
     void doRun(long startTime) {
