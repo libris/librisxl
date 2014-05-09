@@ -10,7 +10,8 @@ import se.kb.libris.whelks.exception.WhelkRuntimeException
 
 @Log
 class ElasticQuery extends Query {
-    String indexType, phraseField, phraseValue
+    String phraseField, phraseValue
+    List indexTypes
     boolean phraseQuery = false
 
     Map<String,List> terms = null
@@ -32,10 +33,10 @@ class ElasticQuery extends Query {
     ElasticQuery(Map qmap) {
         super(qmap)
         if (qmap.get("type")) {
-            this.indexType = qmap.get("type")
+            setIndexTypes(qmap.get("type"))
         }
         if (qmap.get("indexType")) {
-            this.indexType = qmap.get("indexType")
+            setIndexTypes(qmap.get("indexType"))
         }
         if (qmap.get("terms")) {
             terms = new HashMap<String,List>()
@@ -60,6 +61,21 @@ class ElasticQuery extends Query {
         }
     }
 
+    String[] getIndexTypes() {
+        indexTypes as String[]
+    }
+
+    void setIndexTypes(String type) {
+        setIndexTypes([type])
+    }
+    void setIndexTypes(String[] types) {
+        this.indexTypes = types as List
+    }
+
+    void setIndexTypes(List<String> types) {
+        this.indexTypes = new ArrayList(types)
+    }
+
     ElasticQuery(Query q) {
         q.properties.each { name, value ->
             log.trace("[ElasticQuery] setting $name : $value")
@@ -72,7 +88,7 @@ class ElasticQuery extends Query {
     }
 
     ElasticQuery withType(String type) {
-        this.indexType = type
+        setIndexTypes(type)
         return this
     }
 

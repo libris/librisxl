@@ -29,25 +29,50 @@ class ReindexOperator extends AbstractOperator {
 
     boolean showSpinner = false
 
+    boolean doIndexing = true
+    boolean doGraphing = true
+
+    int indexingSemaphores = 50
+    int graphstoreSemaphores = 1000
+    int indexBatchSize = 1000
+    int graphBatchSize = 1000
+
     @Override
     void setParameters(Map parameters) {
         super.setParameters(parameters)
+        log.info("parameters: $parameters")
         if (parameters.selectedComponents) {
             this.selectedComponents = parameters.get("selectedComponents").split(",") as List<String>
         }
         this.fromStorage = parameters.get("fromStorage", null)
         this.showSpinner = parameters.get("showSpinner", false)
+        this.indexingSemaphores = parameters.get("indexingQueueSize", 50)
+        this.graphstoreSemaphores = parameters.get("graphstoreQueueSize", 1000)
+        this.indexBatchSize = parameters.get("indexBatchSize", 1000)
+        this.graphBatchSize = parameters.get("graphBatchSize", 1000)
+        this.doIndexing = (whelk.index != null && whelk.index.id != parameters.get("disableComponent"))
+        this.doGraphing = (whelk.graphStore != null && whelk.graphStore.id != parameters.get("disableComponent"))
     }
 
     void doRun(long startTime) {
-        List<Document> docs = []
+        List<Document> indexdocs = []
+        List<Document> graphdocs = []
         gstoreQueue = Executors.newSingleThreadExecutor()
         indexQueue = Executors.newFixedThreadPool(3)
-        gstoreAvailable = new Semaphore(100)
-        indexAvailable = new Semaphore(50)
+        gstoreAvailable = new Semaphore(graphstoreSemaphores)
+        indexAvailable = new Semaphore(indexingSemaphores)
         String newIndex = null
+        log.info("Starting reindexing.")
+        if (doIndexing) {
+            log.info("Index batch size: $indexBatchSize")
+            log.info("Index queue size: $indexingSemaphores")
+        }
+        if (doGraphing) {
+            log.info("Graph batch size: $indexBatchSize")
+            log.info("Graph queue size: $graphstoreSemaphores")
+        }
 
-        if (!dataset) {
+        if (!dataset && doIndexing) {
             log.debug("Requesting new index for ${whelk.index.id}.")
             newIndex = whelk.index.createNewCurrentIndex(whelk.id)
         }
@@ -68,13 +93,18 @@ class ReindexOperator extends AbstractOperator {
                         log.trace("Expected exception ${wae.message}")
                     }
                 }
-                docs << doc
+                indexdocs << doc
+                graphdocs << doc
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
-            if (++count % 1000 == 0) { // Bulk index 1000 docs at a time
-                doTheIndexing(docs)
-                docs = []
+            if (++count % indexBatchSize == 0) { // Bulk index 1000 docs at a time
+                doTheIndexing(indexdocs, newIndex)
+                indexdocs = []
+            }
+            if (count % graphBatchSize == 0) {
+                doGraphIndexing(graphdocs)
+                graphdocs = []
             }
             runningTime = System.currentTimeMillis() - startTime
             if (showSpinner) {
@@ -86,30 +116,28 @@ class ReindexOperator extends AbstractOperator {
             }
         }
         log.debug("Went through all documents. Processing remainder.")
-        if (docs.size() > 0) {
-            log.trace("Reindexing remaining ${docs.size()} documents")
+        if (graphdocs.size() > 0 && whelk.graphStore && doGraphing) {
+            log.trace("Reindexing remaining ${graphdocs.size()} documents")
             try {
-                whelk.graphStore.bulkAdd(docs, docs.first().contentType)
+                whelk.graphStore.bulkAdd(graphdocs, graphdocs.first().contentType)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
+        }
+        if (indexdocs.size() > 0 && whelk.index && doIndexing) {
             try {
-                def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
+                def preparedDocs = whelk.index.prepareDocs(indexdocs, indexdocs.first().contentType)
                 whelk.index.addDocuments(preparedDocs, newIndex)
+                whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
         }
         log.info("Reindexed $count documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
-        if (!dataset) {
-            if (cancelled) {
-                log.info("Process cancelled, resetting currentIndex")
-                whelk.index.currentIndex = whelk.index.getRealIndexFor(whelk.index.elasticIndex)
-            } else {
-                whelk.index.reMapAliases(whelk.id)
-            }
+        if (doIndexing && !dataset && !cancelled) {
+            whelk.index.reMapAliases(whelk.id)
         }
         operatorState=OperatorState.FINISHING
         indexQueue.execute({
@@ -120,30 +148,45 @@ class ReindexOperator extends AbstractOperator {
     }
 
     void doTheIndexing(final List docs, String newIndex) {
-        log.debug("Trying to acquire semaphore.")
-        indexAvailable.acquire()
-        log.debug("Acquired.")
-        indexQueue.execute({
-            try {
-                def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
+        if (doIndexing && whelk.index) {
+            if (indexAvailable.availablePermits() < 10) {
+                log.info("Trying to acquire semaphore for indexing. ${indexAvailable.availablePermits()} available.")
+            }
+            indexAvailable.acquire()
+            log.debug("Acquired.")
+            indexQueue.execute({
+                try {
+                    def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
                 whelk.index.addDocuments(preparedDocs, newIndex)
-            } catch (WhelkAddException wae) {
-                log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
-            } catch (PluginConfigurationException pce) {
-                log.error("System badly configured", pce)
+                whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
+                } catch (WhelkAddException wae) {
+                    log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
+                } catch (PluginConfigurationException pce) {
+                    log.error("System badly configured", pce)
                 throw pce
-            } finally {
-                log.debug("Releasing semaphore.")
-                indexAvailable.release()
-            }
-        } as Runnable)
-        gstoreQueue.execute({
-            try {
-                whelk.graphStore.bulkAdd(docs, docs.first().contentType)
-            } catch (WhelkAddException wae) {
-                log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
-            }
-        } as Runnable)
+                } finally {
+                    indexAvailable.release()
+                log.debug("Released indexing semaphore. ${indexAvailable.availablePermits()} available.")
+                }
+            } as Runnable)
+        }
+    }
+
+    void doGraphIndexing(final List docs) {
+        if (doGraphing && whelk.graphStore) {
+            log.info("Trying to acquire semaphore for graphstore. ${gstoreAvailable.availablePermits()} available.")
+            gstoreAvailable.acquire()
+            gstoreQueue.execute({
+                try {
+                    whelk.graphStore.bulkAdd(docs, docs.first().contentType)
+                } catch (WhelkAddException wae) {
+                    log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
+                } finally {
+                    gstoreAvailable.release()
+                log.info("Released graphstore semaphore. ${gstoreAvailable.availablePermits()} available.")
+                }
+            } as Runnable)
+        }
     }
 
     @Override

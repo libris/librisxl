@@ -65,16 +65,15 @@ class StandardWhelk implements Whelk {
             for (storage in getStorages(doc.contentType)) {
                 storage.add(doc)
             }
-            index.add(doc)
-            graphStore.add(doc)
-            /*
-            doc = addToStorage(doc)
-            addToGraphStore([doc])
-            addToIndex([doc])
-            */
+            if (index) {
+                index.add(doc)
+            }
+            if (graphStore) {
+                graphStore.add(doc)
+            }
         } catch (Exception e) {
             log.error("Failed to add document ${doc?.identifier}", e)
-            throw e
+                throw e
         }
         return new URI(doc.identifier)
     }
@@ -89,28 +88,12 @@ class StandardWhelk implements Whelk {
         for (storage in storages) {
             storage.bulkAdd(docs, contentType)
         }
-        index.bulkAdd(docs, contentType)
-        graphStore.bulkAdd(docs, contentType)
-        /*
-        List<Document> convertedDocs = []
-        for (doc in docs) {
-            convertedDocs.add(addToStorage(doc))
+        if (index) {
+            index.bulkAdd(docs, contentType)
         }
-        try {
-            log.trace("${convertedDocs.size()} docs left to triplify ...")
-            addToGraphStore(convertedDocs)
-        } catch (Exception e) {
-            log.error("Failed adding documents to graphstore: ${e.message}", e)
-            throw e
+        if (graphStore) {
+            graphStore.bulkAdd(docs, contentType)
         }
-        try {
-            log.trace("${convertedDocs.size()} docs left to index ...")
-            addToIndex(convertedDocs)
-        } catch (Exception e) {
-            log.error("Failed indexing documents: ${e.message}", e)
-            throw e
-        }
-        */
     }
 
     @Override
@@ -150,7 +133,7 @@ class StandardWhelk implements Whelk {
     void remove(URI uri) {
         components.each {
             try {
-                ((Component)it).delete(uri)
+                ((Component)it).remove(uri)
             } catch (RuntimeException rte) {
                 log.warn("Component ${((Component)it).id} failed delete: ${rte.message}")
             }
@@ -175,81 +158,6 @@ class StandardWhelk implements Whelk {
         d.timestamp = new Date().getTime()
         return d
     }
-
-    /**
-     * Handles conversion for a document and stores each converted version into suitable storage.
-     * @return The final resulting document, after all format conversions
-     */
-    /*
-    @groovy.transform.CompileStatic
-    Document addToStorage(Document doc, boolean withConversion = true) {
-        boolean stored = false
-        if (withConversion) {
-            FormatConverter formatconverter = (FormatConverter)formatConverters.get(doc.contentType, null)
-            if (formatconverter) {
-                doc = formatconverter.convert(doc)
-            }
-        }
-        for (storage in getStorages(doc.contentType)) {
-            try {
-                stored = (storage.store(doc) || stored)
-            } catch (DocumentException de) {
-                if (de.exceptionType == DocumentException.IDENTICAL_DOCUMENT) {
-                    log.debug("Identical document already in storage.")
-                    stored = true
-                } else {
-                    throw de
-                }
-            }
-        }
-        if (!stored && storages.size() > 0) {
-            throw new PluginConfigurationException("No storages available for documents with contentType ${doc.contentType}.")
-        }
-        return doc
-    }
-
-    @groovy.transform.CompileStatic
-    void addToIndex(final List<Document> docs) {
-        List<Document> idxDocs = []
-        if (index) {
-            log.debug("Number of documents to index: ${docs.size()}")
-            if (indexFormatConverters.size()) {
-                for (doc in docs) {
-                    for (ifc in getIndexFormatConverters()) {
-                        log.trace("Running indexformatconverter ${ifc.id} on document with ctype ${doc.contentType}")
-                            idxDocs.addAll(ifc.convert(doc))
-                    }
-                }
-            } else if (docs[0].isJson()) {
-                idxDocs = docs
-            }
-            if (idxDocs) {
-                index.bulkAdd(idxDocs)
-            } else if (log.isDebugEnabled()) {
-                log.debug("No documents to index.")
-            }
-        } else {
-            log.warn("No index configured for this whelk.")
-        }
-    }
-
-    void addToGraphStore(final Document doc) {
-        store.update(docBaseUri.resolve(it.identifier), it)
-    }
-
-    void addToGraphStore(final List<Document> docs) {
-        for (store in graphStores) {
-            if (store instanceof BatchGraphStore) {
-                log.debug("Batch updating graphstore. $docs")
-                store.batchUpdate(docs)
-            } else {
-                docs.each {
-                    addToGraphStore(doc)
-                }
-            }
-        }
-    }
-    */
 
     @Override
     Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}

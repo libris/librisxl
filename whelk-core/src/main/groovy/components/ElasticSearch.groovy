@@ -40,13 +40,12 @@ import se.kb.libris.whelks.exception.*
 
 import static se.kb.libris.conch.Tools.*
 
-class ElasticSearchClientIndex extends ElasticSearchClient implements Index { }
-
 @Log
-class ElasticSearchClient extends ElasticSearch {
+class ElasticSearchClient extends ElasticSearch implements Index {
 
     // Force one-client-per-whelk
-    ElasticSearchClient() {
+    ElasticSearchClient(Map params) {
+        super(params)
         String elastichost, elasticcluster
         if (System.getProperty("elastic.host")) {
             elastichost = System.getProperty("elastic.host")
@@ -119,8 +118,13 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     String URI_SEPARATOR = "::"
 
     String defaultType = "record"
+    Map<String,String> configuredTypes
 
     def defaultMapping, es_settings
+
+    ElasticSearch(Map settings) {
+        configuredTypes = (settings ? settings.get("typeConfiguration", [:]) : [:])
+    }
 
     @Override
     void init(String indexName) {
@@ -213,7 +217,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     }
 
     @Override
-    void delete(URI uri) {
+    void remove(URI uri) {
         String indexName = this.whelk.id
         log.debug("Peforming deletebyquery to remove documents extracted from $uri")
         def delQuery = termQuery("extractedFrom.@id", uri.toString())
@@ -260,15 +264,26 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     @Override
     SearchResult query(Query q) {
         String indexName = this.whelk.id
-        def indexType = defaultType
+        def indexTypes = []
         if (q instanceof ElasticQuery) {
-            indexType = q.indexType
+            for (t in q.indexTypes) {
+                if (configuredTypes[t]) {
+                    log.debug("Adding configuredTypes for ${t}: ${configuredTypes[t]}")
+                    indexTypes.add(t)
+                    indexTypes.addAll(configuredTypes[t])
+                } else {
+                    indexTypes.add(t)
+                }
+            }
+        } else {
+            indexTypes = [defaultType]
         }
-        return query(q, indexName, indexType)
+        log.debug("Assembled indexTypes: $indexTypes")
+        return query(q, indexName, indexTypes as String[])
     }
 
-    SearchResult query(Query q, String indexName, String indexType) {
-        log.trace "Querying index $indexName and indextype $indexType"
+    SearchResult query(Query q, String indexName, String[] indexTypes) {
+        log.trace "Querying index $indexName and indextype $indexTypes"
         log.trace "Doing query on $q"
         def idxlist = [indexName]
         if (indexName.contains(",")) {
@@ -276,7 +291,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         }
         log.trace("Searching in indexes: $idxlist")
         def jsonDsl = q.toJsonQuery()
-        def response = client.search(new SearchRequest(idxlist as String[], jsonDsl.getBytes("utf-8")).searchType(SearchType.DFS_QUERY_THEN_FETCH).types(indexType)).actionGet()
+        def response = client.search(new SearchRequest(idxlist as String[], jsonDsl.getBytes("utf-8")).searchType(SearchType.DFS_QUERY_THEN_FETCH).types(indexTypes)).actionGet()
         log.trace("SearchResponse: " + response)
 
         def results = new SearchResult(0)
@@ -424,7 +439,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         log.trace("Using identifier to determine type.")
         try {
             def identParts = identifier.split("/")
-            idxType = (identParts[1] == indexName && identParts.size() > 3 ? identParts[2] : identParts[1])
+            idxType = (identParts[1] == whelk.id && identParts.size() > 3 ? identParts[2] : identParts[1])
         } catch (Exception e) {
             log.error("Tried to use first part of URI ${identifier} as type. Failed: ${e.message}", e)
         }

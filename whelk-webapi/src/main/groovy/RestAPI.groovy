@@ -357,11 +357,14 @@ class SearchRestlet extends BasicWhelkAPI {
         def indexConfig = config.indexTypes[indexType]
         def boost = queryMap.boost ?: indexConfig?.defaultBoost?.split(",")
         def facets = queryMap.facets ?: indexConfig?.queryFacets?.split(",")
+        if (indexConfig['queryProperties']) {
+            queryMap.putAll(indexConfig['queryProperties'])
+        }
         def elasticQuery = new ElasticQuery(queryMap)
         if (queryMap.f) {
             elasticQuery.query += " " + queryMap.f
         }
-        elasticQuery.indexType = indexType
+        elasticQuery.indexTypes = indexConfig.types ?: [indexType]
         if (facets) {
             for (f in facets) {
                 elasticQuery.addFacet(f)
@@ -388,7 +391,7 @@ class SearchRestlet extends BasicWhelkAPI {
             def callback = queryMap.get("callback")
             def jsonResult =
             (callback ? callback + "(" : "") +
-            performQuery(elasticQuery) +
+            performQuery(elasticQuery, indexConfig) +
             (callback ? ");" : "")
 
             response.setEntity(jsonResult, MediaType.APPLICATION_JSON)
@@ -399,7 +402,7 @@ class SearchRestlet extends BasicWhelkAPI {
         }
     }
 
-    String performQuery(elasticQuery) {
+    String performQuery(elasticQuery, indexConfig) {
         long startTime = System.currentTimeMillis()
         //def elasticQuery = new ElasticQuery(queryMap)
         log.debug("elasticQuery: ${elasticQuery.query}")
@@ -407,13 +410,17 @@ class SearchRestlet extends BasicWhelkAPI {
         try {
 
             log.debug("Handling search request with indextype $elasticQuery.indexType")
-            def indexConfig = config.indexTypes?.get(elasticQuery.indexType, null)
 
             log.debug("Query $elasticQuery.query Fields: ${elasticQuery.fields} Facets: ${elasticQuery.facets}")
             results = this.whelk.search(elasticQuery)
+            /*
+             // Unused, now with _source
             def keyList = indexConfig?.get("resultFields")
             log.info("keyList: $keyList")
-            def extractedResults = keyList != null ? results.toJson(keyList) : results.toJson()
+            */
+            def resultKey = indexConfig?.get("resultKey")
+            log.debug("resultKey: $resultKey")
+            def extractedResults = results.toJson(resultKey)
 
             return extractedResults
         } finally {

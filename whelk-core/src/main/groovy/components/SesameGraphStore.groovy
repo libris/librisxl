@@ -69,7 +69,7 @@ class SesameGraphStore extends BasicComponent implements GraphStore,SparqlEndpoi
     public Document get(URI graphUri) {
         throw new UnsupportedOperationException("Not implemented yet.")
     }
-    public void delete(URI graphUri) {
+    public void remove(URI graphUri) {
         throw new UnsupportedOperationException("Not implemented yet.")
     }
 

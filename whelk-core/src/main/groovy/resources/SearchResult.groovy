@@ -12,14 +12,13 @@ class SearchResult {
 
     List hits
     Map facets
-    ObjectMapper mapper
+    final static ObjectMapper mapper = new ElasticJsonMapper()
 
     long numberOfHits = 0
 
     SearchResult(long nrHits) {
         this.numberOfHits = nrHits
         this.hits = new ArrayList<Document>()
-        this.mapper = new ElasticJsonMapper()
     }
 
     void setNumberOfHits(int nrHits) {
@@ -35,6 +34,7 @@ class SearchResult {
         this.hits.add(doc)
     }
 
+    /*
     String toJson() {
         log.debug("Manual toJson()")
         def jsonString = new StringBuilder()
@@ -53,8 +53,9 @@ class SearchResult {
         jsonString << "}"
         return jsonString.toString()
     }
+    */
 
-    Map toMap(List keys) {
+    Map toMap(String resultKey, List keys) {
         def result = [:]
         result['hits'] = numberOfHits
         result['list'] = []
@@ -68,6 +69,13 @@ class SearchResult {
             if (!item) {
                 item = source
             }
+            if (resultKey) {
+                log.info("extracting resultKey $resultKey")
+                for (keyPart in resultKey.split(/\./)) {
+                    log.info("Digging into $keyPart")
+                    item = item?.get(keyPart)
+                }
+            }
             result['list'] << ['data':item, 'identifier':it.identifier]
         }
         if (facets) {
@@ -76,8 +84,8 @@ class SearchResult {
         return result
     }
 
-    String toJson(List keys) {
-        def result = toMap(keys)
+    String toJson(String resultKey = null, List keys = []) {
+        def result = toMap(resultKey, keys)
         log.debug("toJson by $keys")
         return mapper.writeValueAsString(result)
     }
