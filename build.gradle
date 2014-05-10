@@ -138,6 +138,7 @@ project(":ext-libris") {
         compile 'se.kb.libris:marc:1.2.7'
         compile 'commons-collections:commons-collections:3.2.1'
         compile 'com.damnhandy:handy-uri-templates:1.1.7'
+        compile 'se.kb.libris.commons:isbntools:1.0'
     }
 }
 

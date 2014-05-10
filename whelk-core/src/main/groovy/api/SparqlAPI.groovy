@@ -15,7 +15,7 @@ class SparqlAPI extends BasicAPI {
     String description = "Provides sparql endpoint to the underlying triple store."
 
     @Override
-    void doHandle(HttpServletRequest request, HttpServletResponse response) {
+    void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         def query = request.getParameter("query")
 
         InputStream is

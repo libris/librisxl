@@ -50,7 +50,7 @@ class FormatApiRestlet extends BasicWhelkAPI {
     }
 }
 
-
+/*
 @Log
 class HoldCounter extends SearchRestlet {
     def pathEnd = "_libcount"
@@ -88,12 +88,6 @@ class ISXNTool extends BasicWhelkAPI implements WhelkAware {
     String description = "Formats data (ISBN-numbers) according to international presention rules."
     Whelk dataWhelk
     ObjectMapper mapper = new ObjectMapper()
-
-    /*
-    ISXNTool(Whelk dw) {
-        this.dataWhelk = dw
-    }
-    */
 
     void doHandle(Request request, Response response) {
         def querymap = request.getResourceRef().getQueryAsForm().getValuesMap()
@@ -165,3 +159,4 @@ class ISXNTool extends BasicWhelkAPI implements WhelkAware {
         return valid
     }
 }
+*/
