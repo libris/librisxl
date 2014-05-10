@@ -24,15 +24,15 @@
         ]
     },
     "_apis": [
-        { "url": "/_remote", "plugin": "remotesearch" },
-        { "url": "/_operations", "plugin": "operator" },
-        { "url": "/_format", "plugin": "formatter" },
-        { "url": "/_dump", "plugin": "dumper" },
-        { "url": "/_sparql", "plugin": "sparqlapi" },
-        { "url": "/_libcount", "plugin": "libcount" },
-        { "url": "/_isxntool", "plugin":  "isxntool" },
-        { "url": "/_complete/([\\w/]+)$", "plugin":  "completeexpander" },
-        { "url": "/(\\w+)/_search", "plugin":  "search" },
-        { "url": "^([\\w/\\-]+)$", "plugin":  "documentapi" }
+        { "/_remote": "remotesearch" },
+        { "/_operations": "operator" },
+        { "/_format": "formatter" },
+        { "/_dump": "dumper" },
+        { "/_sparql": "sparqlapi" },
+        { "/_libcount": "libcount" },
+        { "/_isxntool":  "isxntool" },
+        { "/_complete/([\\w/]+)$":  "completeexpander" },
+        { "/(\\w+)/_search":  "search" },
+        { "^([\\w/\\-]+)$":  "documentapi" }
     ]
 }

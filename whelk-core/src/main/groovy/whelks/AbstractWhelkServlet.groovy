@@ -27,21 +27,10 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         List pathVars = []
 
         log.debug("Path is $path")
-        response.setCharacterEncoding("UTF-8")
 
         (api, pathVars) = getAPIForPath(path)
         if (api) {
             api.handle(request, response, pathVars)
-            /*
-            ApiResult result = api.handle(request.parameterMap, pathVars, request.getRemoteAddr(), request.getMethod())
-            if (result.statusCode == 200) {
-                response.setContentType(result.contentType)
-                response.writer.write(result.result)
-                response.writer.flush()
-            } else if (result.statusCode == 302) {
-                response.sendRedirect(apiRelPath)
-            }
-            */
         } else {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "No API found for $path")
         }
@@ -49,7 +38,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
 
     def getAPIForPath(String path) {
         for (entry in apis.entrySet()) {
-            log.info("${entry.key} (${entry.key.getClass().getName()}) = ${entry.value}")
+            log.trace("${entry.key} (${entry.key.getClass().getName()}) = ${entry.value}")
             Matcher matcher = entry.key.matcher(path)
             if (matcher.matches()) {
                 int groupCount = matcher.groupCount()
@@ -139,11 +128,13 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                 }
             }
         }
-        whelkConfig["_apis"].each {
-            log.debug("Found api: ${it.plugin}, should attach at ${it.url}")
-            API api = getPlugin(pluginConfig, it.plugin, this.id)
-            api.setWhelk(this)
-            apis.put(Pattern.compile(it.url), api)
+        whelkConfig["_apis"].each { apiEntry ->
+            apiEntry.each {
+                log.debug("Found api: ${it.value}, should attach at ${it.key}")
+                API api = getPlugin(pluginConfig, it.value, this.id)
+                api.setWhelk(this)
+                apis.put(Pattern.compile(it.key), api)
+            }
         }
     }
 
