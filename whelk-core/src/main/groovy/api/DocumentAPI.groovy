@@ -69,7 +69,7 @@ class DocumentAPI extends BasicAPI {
                 sendResponse(doc.dataAsString, doc.contentType)
                 */
                 log.debug("Saved document $identifier")
-                response.setStatus(HttpServletResponse.SC_SEE_OTHER)
+                response.sendError(HttpServletResponse.SC_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                 def locationRef = request.getRequestURL()
                 while (locationRef[-1] == '/') {
                     locationRef.deleteCharAt(locationRef.length()-1)

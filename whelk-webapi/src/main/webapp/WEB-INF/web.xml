@@ -5,37 +5,13 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
                 http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
 
-    <display-name>Whelk API</display-name>
-
-    <!--
-    <context-param>
-        <param-name>org.restlet.clients</param-name>
-        <param-value>HTTP HTTPS CLAP FILE</param-value>
-    </context-param>
-
-    <servlet>
-        <servlet-name>RestServlet</servlet-name> 
-        <servlet-class>se.kb.libris.whelks.servlet.WhelkWarmer</servlet-class>
-        <init-param>
-            <param-name>org.restlet.application</param-name>
-            <param-value>se.kb.libris.whelks.api.RestManager</param-value>
-        </init-param>
-        <load-on-startup>2</load-on-startup>
-    </servlet>
-    -->
+    <display-name>Whelk</display-name>
 
     <servlet>
         <servlet-name>WhelkServlet</servlet-name>
         <servlet-class>se.kb.libris.whelks.StandardWhelk</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
-    <!--
-    <servlet-mapping>
-        <servlet-name>RestServlet</servlet-name>
-        <url-pattern>/oldwhelk/*</url-pattern>
-    </servlet-mapping>
-    -->
 
     <servlet-mapping>
         <servlet-name>WhelkServlet</servlet-name>
