@@ -16,6 +16,7 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.conch.Tools
 
 @Log
+@Deprecated
 class TransferOperator extends AbstractOperator {
     String oid = "transfer"
 

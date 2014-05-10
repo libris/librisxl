@@ -115,12 +115,11 @@ class ImportOperator extends AbstractOperator {
         this.importerPlugin = parameters.get("importer", null)?.first()
         this.serviceUrl = parameters.get("url", null)?.first()
         this.numToImport = parameters.get("nums", [-1]).first() as int
-        if (parameters.get("since", []).size() > 1) {
-            log.debug("since param is ${parameters.since} size: ${parameters.since.size()}")
+        if (parameters.get("since", []).size() > 0) {
             def dateString = parameters.get("since")?.first()
             if (dateString.length() == 10) {
                 this.since = Date.parse('yyyy-MM-dd', dateString)
-            } else {
+            } else if (dateString.length() > 10) {
                 this.since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dateString)
             }
         }
@@ -199,7 +198,7 @@ class BenchmarkOperator extends AbstractOperator {
     @Override
     void setParameters(Map parameters) {
         super.setParameters(parameters)
-        if (parameters.get("since", null)) {
+        if (parameters.get("since", []) && parameters.get("since", []).first().length() > 0) {
             this.since = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", parameters.get("since").first())
             log.info("Since: $since")
         }
