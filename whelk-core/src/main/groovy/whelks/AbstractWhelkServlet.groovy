@@ -85,8 +85,14 @@ abstract class AbstractWhelkServlet extends HttpServlet {
 
     @Override
     void init() {
-        def (whelkConfig, pluginConfig) = loadConfig()
-        setConfig(whelkConfig, pluginConfig)
+        try {
+            def (whelkConfig, pluginConfig) = loadConfig()
+            setConfig(whelkConfig, pluginConfig)
+            log.info("[${this.id}] Whelk operational.")
+        } catch (Exception e) {
+            log.warn("Problems starting whelk ${this.id}.", e)
+            throw e
+        }
     }
 
     private def loadConfig() {
@@ -116,7 +122,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         setDocBaseUri(whelkConfig["_docBaseUri"])
         this.global = whelkConfig["_properties"].asImmutable()
         whelkConfig["_plugins"].each { key, value ->
-            log.debug("key: $key, value: $value")
+            log.trace("key: $key, value: $value")
             if (!(key =~ /^_.+$/)) {
                 log.trace("Found a property to set for ${this.id}: $key = $value")
                 this."$key" = value
@@ -174,15 +180,15 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                 if (meta._params) {
                     log.trace("Plugin $label has parameters.")
                     def params = translateParams(meta._params, whelkname)
-                    log.debug("Plugin parameter: ${params}")
+                    log.trace("Plugin parameter: ${params}")
                     def pclasses = params.collect { it.class }
                     try {
                         def c = Class.forName(meta._class).getConstructor(pclasses as Class[])
-                        log.debug("c: $c")
+                        log.trace("c: $c")
                         plugin = c.newInstance(params as Object[])
-                        log.debug("plugin: $plugin")
+                        log.trace("plugin: $plugin")
                     } catch (NoSuchMethodException nsme) {
-                        log.debug("Constructor not found the easy way. Trying to find assignable class.")
+                        log.trace("Constructor not found the easy way. Trying to find assignable class.")
                         for (cnstr in Class.forName(meta._class).getConstructors()) {
                             log.trace("Found constructor for ${meta._class}: $cnstr")
                             log.trace("Parameter types: " + cnstr.getParameterTypes())
@@ -223,7 +229,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                         plugin.addPlugin(getPlugin(pluginConfig, plug, whelkname))
                     }
                 } else {
-                    log.debug("Plugin ${plugin.id} has no _plugin parameter ($meta)")
+                    log.trace("Plugin ${plugin.id} has no _plugin parameter ($meta)")
                 }
             }
         }

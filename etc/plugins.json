@@ -1,6 +1,9 @@
 {
     "remotesearch": {
-        "_class": "se.kb.libris.whelks.api.RemoteSearchRestlet",
+        "_class": "se.kb.libris.whelks.api.RemoteSearchAPI",
+        "_plugins" : [
+            "marcconverter"
+        ],
         "_params": {
             "metaproxyInfoUrl":"http://mproxy.libris.kb.se/db_Metaproxy.xml",
             "metaproxyBaseUrl":"http://mproxy.libris.kb.se:8000"
@@ -311,6 +314,9 @@
     },
     "oaipmhimporter" : {
         "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
+        "_plugins" : [
+            "marcconverter"
+        ],
         "_params" : {
             "specUriMapping" : {
                 "authority" : "auth",
@@ -350,7 +356,10 @@
         "_class" : "se.kb.libris.whelks.api.DumpRestlet"
     },
     "formatter" : {
-        "_class" : "se.kb.libris.whelks.api.FormatApiRestlet"
+        "_class" : "se.kb.libris.whelks.api.FormatterAPI",
+        "_plugins" : [
+            "marcconverter"
+        ]
     },
     "linkexpander" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkExpander",

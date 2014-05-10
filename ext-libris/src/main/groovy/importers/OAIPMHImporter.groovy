@@ -49,7 +49,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     }
 
     void init(String whelkId) {
-        marcFrameConverter = this.whelk.plugins.find { it instanceof MarcFrameConverter }
+        marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
         assert marcFrameConverter
     }
 

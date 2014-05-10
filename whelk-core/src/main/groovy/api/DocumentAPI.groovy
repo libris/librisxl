@@ -66,7 +66,7 @@ class DocumentAPI extends BasicAPI {
                 def identifier = this.whelk.add(doc)
                 /*
                 response.setHeader("ETag", doc.timestamp as String)
-                sendResponse(doc.dataAsString, doc.contentType)
+                sendResponse(response, doc.dataAsString, doc.contentType)
                 */
                 log.debug("Saved document $identifier")
                 response.sendError(HttpServletResponse.SC_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")

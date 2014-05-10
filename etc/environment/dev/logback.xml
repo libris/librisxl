@@ -66,7 +66,7 @@
   </logger>
   -->
   <logger name="se.kb.libris.whelks.AbstractWhelkServlet">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
   <logger name="se.kb.libris.whelks.basic">
