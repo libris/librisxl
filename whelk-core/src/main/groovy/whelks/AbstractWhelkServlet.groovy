@@ -27,13 +27,30 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         List pathVars = []
 
         log.debug("Path is $path")
-
-        (api, pathVars) = getAPIForPath(path)
-        if (api) {
-            api.handle(request, response, pathVars)
+        if (request.method == "GET" && path == "/") {
+            printAvailableAPIs(response)
         } else {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "No API found for $path")
+            (api, pathVars) = getAPIForPath(path)
+            if (api) {
+                api.handle(request, response, pathVars)
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "No API found for $path")
+            }
         }
+    }
+
+    void printAvailableAPIs(HttpServletResponse response) {
+        def info = [:]
+        info["whelk"] = this.id
+        info["apis"] = apis.collect {
+             [ "path" : it.key ,
+                "id": it.value.id,
+                "description" : it.value.description ]
+        }
+        response.setCharacterEncoding("UTF-8")
+        response.setContentType("application/json")
+        response.writer.write(mapper.writeValueAsString(info))
+        response.writer.flush()
     }
 
     def getAPIForPath(String path) {
@@ -41,6 +58,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
             log.trace("${entry.key} (${entry.key.getClass().getName()}) = ${entry.value}")
             Matcher matcher = entry.key.matcher(path)
             if (matcher.matches()) {
+                log.trace("$path matches ${entry.key}")
                 int groupCount = matcher.groupCount()
                 List pathVars = new ArrayList(groupCount)
                 for (int i = 1; i <= groupCount; i++) {
@@ -251,6 +269,8 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         }
         return constructor 
     }
+
+    List<API> getAPIs() { return apis.values() as List}
 
     // Methods declared in subclass
     abstract protected void setId(String id)

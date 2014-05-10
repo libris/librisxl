@@ -53,7 +53,7 @@ class RestManager extends Application {
 
             if (whelk instanceof Whelk) {
                 allAPIs << new RootRouteRestlet(whelk)
-                allAPIs << new DiscoveryAPI(whelk)
+                allAPIs << new OldDiscoveryAPI(whelk)
             }
 
             router = attachApis(router, allAPIs)

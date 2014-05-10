@@ -36,7 +36,7 @@ class SparqlRestlet extends BasicWhelkAPI {
     def varPath = false
     String id = "SparqlAPI"
 
-    String description = "Provides sparql endpoint to the underlying tripple store."
+    String description = "Provides sparql endpoint to the underlying triple store."
 
     @Override
     void doHandle(Request request, Response response) {
@@ -720,7 +720,7 @@ abstract class BasicWhelkAPI extends Restlet implements RestAPI {
 }
 
 @Log
-class DiscoveryAPI extends BasicWhelkAPI {
+class OldDiscoveryAPI extends BasicWhelkAPI {
 
     ObjectMapper mapper = new ObjectMapper()
 
@@ -728,7 +728,7 @@ class DiscoveryAPI extends BasicWhelkAPI {
     String pathEnd = "discovery"
     String id = "DiscoveryAPI"
 
-    DiscoveryAPI(Whelk w) {
+    OldDiscoveryAPI(Whelk w) {
         this.whelk = w
     }
 
@@ -774,7 +774,7 @@ class RootRouteRestlet extends BasicWhelkAPI {
         def documentAPI
         //GET redirects to DiscoveryAPI
         if (request.method == Method.GET) {
-            discoveryAPI = new DiscoveryAPI(this.whelk)
+            discoveryAPI = new OldDiscoveryAPI(this.whelk)
             def uri = new URI(discoveryAPI.path)
             discoveryAPI.handle(request, response)
           //POST saves new document
@@ -824,7 +824,7 @@ class HttpAPIRestlet extends BasicWhelkAPI {
     def varPath = false
     String id = "SparqlAPI"
 
-    String description = "Provides sparql endpoint to the underlying tripple store."
+    String description = "Provides sparql endpoint to the underlying triple store."
 
     HttpAPIRestlet(Map settings) {
         super(settings)

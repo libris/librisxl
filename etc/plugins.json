@@ -270,7 +270,7 @@
         }
     },
     "sparqlapi" : {
-        "_class" : "se.kb.libris.whelks.api.SparqlRestlet"
+        "_class" : "se.kb.libris.whelks.api.SparqlAPI"
     },
     "elasticapi" : {
         "_class" : "se.kb.libris.whelks.api.HttpAPIRestlet",
