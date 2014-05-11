@@ -1,8 +1,10 @@
-
-repositories {
-    mavenCentral()
-    maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localWhelk-extensionsDir', dirs: '../lib'
+dependencies {
+    compile project(":whelk-core")
+    compile 'org.mozilla:rhino:1.7R4'
+    compile 'se.kb.libris:marc:1.2.7'
+    compile 'commons-collections:commons-collections:3.2.1'
+    compile 'com.damnhandy:handy-uri-templates:1.1.7'
+    compile 'se.kb.libris.commons:isbntools:1.0'
 }
 
 task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {

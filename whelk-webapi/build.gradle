@@ -1,9 +1,15 @@
 import org.gradle.api.plugins.jetty.JettyRun
 
-repositories {
-    mavenCentral()
-    maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localWhelk-webapiDir', dirs: '../lib'
+apply plugin: 'jetty'
+apply plugin: 'war'
+dependencies {
+    compile project(":whelk-core")
+    compile project(":ext-libris")
+    compile project(":ext-swepub")
+    compile 'org.restlet.jse:org.restlet:2.0.15'
+    compile 'org.restlet.jee:org.restlet.ext.servlet:2.0.15'
+    compile 'se.kb.libris.commons:isbntools:1.0'
+    providedCompile 'javax.servlet:servlet-api:2.5'
 }
 
 task devLogging(dependsOn: 'classes', type: Copy) {
