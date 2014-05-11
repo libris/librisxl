@@ -68,7 +68,7 @@ class HoldCounter extends SearchAPI {
         elasticQuery.n = 0
 
         try {
-            sendResponse(response, performQuery(elasticQuery), "application/json")
+            sendResponse(response, performQuery(elasticQuery, null), "application/json")
         } catch (WhelkRuntimeException wrte) {
             response.sendError(Status.SC_BAD_REQUEST, wrte.message)
 

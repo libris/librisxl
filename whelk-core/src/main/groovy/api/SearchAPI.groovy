@@ -85,11 +85,6 @@ class SearchAPI extends BasicAPI implements API {
 
             log.debug("Query $elasticQuery.query Fields: ${elasticQuery.fields} Facets: ${elasticQuery.facets}")
             results = this.whelk.search(elasticQuery)
-            /*
-             // Unused, now with _source
-            def keyList = indexConfig?.get("resultFields")
-            log.info("keyList: $keyList")
-            */
             def resultKey = indexConfig?.get("resultKey")
             log.debug("resultKey: $resultKey")
             def extractedResults = results.toJson(resultKey)
