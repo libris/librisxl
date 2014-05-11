@@ -59,11 +59,11 @@ class HoldCounter extends SearchAPI {
 
     @Override
     void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
-        def queryMap = request.getParameterMap()
-        def idparam = queryMap.get("id").first()
+        def idparam = request.getParameter("id")
         log.info("idparam: $idparam")
 
-        def elasticQuery = new ElasticQuery("about.annotates.@id", idparam)
+        //def elasticQuery = new ElasticQuery("about.annotates.@id", idparam)
+        def elasticQuery = new ElasticQuery(["terms":["about.annotates.@id:${idparam}"]])
         elasticQuery.indexTypes = [config.defaultIndexType]
         elasticQuery.n = 0
 
