@@ -36,33 +36,6 @@ task depjar(type: Jar, dependsOn: jar) {
     }
 }
 
-
-/*
-
-tasks.withType(GroovyCompile) {
-groovyOptions.encoding = 'utf-8'
-}
-run { systemProperty "file.encoding", "UTF-8" }
-
-mainClassName = 'se.kb.libris.whelks.WhelkOperator'
-
-jar {
-dependsOn configurations.runtime
-from {
-configurations.runtime.collect {
-it.isDirectory() ? it : zipTree(it).matching {
-exclude "META-INF/OSGI*"
-}
-}
-}
-
-manifest {
-attributes 'Main-Class': mainClassName
-}
-}
-*/
-
-
 task(groovy, dependsOn: 'classes', type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs='<script> [...]')"
     classpath = sourceSets.main.runtimeClasspath
