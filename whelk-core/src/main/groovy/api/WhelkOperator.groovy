@@ -15,6 +15,7 @@ class WhelkOperator {
     static main(args) {
         File lockFile = lockFile()
         try {
+            /*
             InputStream whelkConfigInputStream = null
             InputStream pluginConfigInputStream = null
             try {
@@ -25,6 +26,7 @@ class WhelkOperator {
                 System.exit(1)
             }
             WhelkInitializer wi = new WhelkInitializer(whelkConfigInputStream, pluginConfigInputStream)
+            */
 
             def cli = new CliBuilder(usage: 'whelkoperation', posix:true)
             cli.o(longOpt:'operation', "which operation to perform (import|reindex|rebuild|etc)", required:true, args: 1)
@@ -45,7 +47,8 @@ class WhelkOperator {
                 lockFile.delete()
                 return
             }
-            def whelk = wi.getWhelks().find { it.id == opt.w }
+            def whelk = new StandardWhelk() //wi.getWhelks().find { it.id == opt.w }
+            whelk.init()
             log.info("Disabling prawns for whelk ${whelk.id}")
             def operation = opt.o
             boolean picky = (System.getProperty("picky") == "true")
