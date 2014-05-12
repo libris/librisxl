@@ -17,6 +17,7 @@
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
+        "_listen" : "pairtreehybridstorage",
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
@@ -227,6 +228,7 @@
                     },
                     "resultKey" : "about"
                 },
+
                 "concept" : {
                     "queryFields":[
                         "about.prefLabel",
@@ -266,6 +268,12 @@
                         "about.notation" : "asc"
                     },
                     "queryFacets" : "about.@type"
+                },
+                "facet_expansion": {
+                    "types": ["def"],
+                    "queryProperties": {
+                        "_source.include" : ["about.prefLabel"]
+                    }
                 }
             }
         }
