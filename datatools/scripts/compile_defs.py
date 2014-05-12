@@ -4,13 +4,16 @@ import re
 import json
 import csv
 from collections import namedtuple, OrderedDict
-from rdflib import Graph, URIRef, RDF, RDFS, OWL
+from rdflib import Graph, URIRef, Namespace, RDF, RDFS, OWL
 from rdflib.namespace import SKOS, DCTERMS
 from rdflib_jsonld.serializer import from_rdf
 
 
 scriptpath = lambda pth: os.path.join(os.path.dirname(__file__), pth)
 
+
+SDO = Namespace("http://schema.org/")
+LIBRIS = Namespace("http://libris.kb.se/def/terms#")
 
 BASE = "http://libris.kb.se/"
 
@@ -87,7 +90,7 @@ def languages():
 
         node = items[code] = {
             '@id': "/def/languages/%s" % code,
-            '@type': 'Concept',
+            '@type': ['Language', 'Concept'],
             'notation': code,
             'langCode': code
         }
@@ -116,6 +119,9 @@ def countries():
     source = cached_rdf('http://id.loc.gov/vocabulary/countries')
     source = filter_graph(source, (RDF, RDFS, OWL, SKOS, DCTERMS),
             oftype=SKOS.Concept)
+
+    for concept in source.resource(SKOS.Concept).subjects(RDF.type):
+        concept.add(RDF.type, SDO.Country)
 
     data = to_jsonld(source, "skos", {
             "byNotation": {"@id": "@graph", "@container": "@index"},
