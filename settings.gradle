@@ -1,1 +1,1 @@
-include "whelk-core","ext-libris","ext-swepub","whelk-webapi", "locgov-pairtree"
+include "whelk-core","locgov-pairtree","ext-libris"

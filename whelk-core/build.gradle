@@ -23,23 +23,9 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.3.2'
 }
 
-task depjar(type: Jar, dependsOn: jar) {
-    archiveName = "dependencies.jar"
-    dependsOn configurations.runtime
-    from {
-        configurations.runtime.collect {
-            it.isDirectory() ? it : zipTree(it).matching {
-                exclude "se/kb/libris/**"
-                exclude "META-INF/**"
-            }
-        }
-    }
-}
-
 task(groovy, dependsOn: 'classes', type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs='<script> [...]')"
     classpath = sourceSets.main.runtimeClasspath
     main = 'groovy.ui.GroovyMain'
     args(System.getProperty('args', "").split() as String[])
 }
-

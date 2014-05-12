@@ -11,8 +11,6 @@ import org.elasticsearch.client.transport.*
 import org.elasticsearch.common.transport.*
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.common.xcontent.ToXContent
-import org.elasticsearch.node.NodeBuilder
-import org.elasticsearch.common.settings.*
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.search.highlight.*
 import org.elasticsearch.action.admin.indices.flush.*
@@ -29,7 +27,6 @@ import org.elasticsearch.action.get.*
 import org.elasticsearch.action.search.*
 
 import static org.elasticsearch.index.query.QueryBuilders.*
-import static org.elasticsearch.node.NodeBuilder.*
 import static org.elasticsearch.common.xcontent.XContentFactory.*
 
 import se.kb.libris.whelks.*
@@ -67,39 +64,6 @@ class ElasticSearchClient extends ElasticSearch implements Index {
 }
 
 //TODO: Move all settings (general and index level) to config files and make creation of index and changing of settings to separate operation tasks
-
-@Log
-class ElasticSearchNode extends BasicPlugin {
-
-    ElasticSearchNode() {
-        this(null)
-    }
-
-    ElasticSearchNode(String dataDir) {
-        log.info "Starting elastic node"
-        def elasticcluster = System.getProperty("elastic.cluster")
-        ImmutableSettings.Builder sb = ImmutableSettings.settingsBuilder()
-        sb.put("node.name", "Parasite")
-        if (elasticcluster) {
-            sb = sb.put("cluster.name", elasticcluster)
-        } else {
-            sb = sb.put("cluster.name", "bundled_whelk_index")
-        }
-        if (dataDir != null) {
-            sb.put("path.data", "work/data")
-        }
-        sb.build()
-        Settings settings = sb.build()
-        NodeBuilder nBuilder = nodeBuilder().settings(settings)
-        // start it!
-        def node = nBuilder.build().start()
-        log.info("Elasticsearch node started.")
-        /*
-        client = node.client()
-        log.info "Client connected to new (local) ES node."
-        */
-    }
-}
 
 @Log
 abstract class ElasticSearch extends BasicComponent implements Index {

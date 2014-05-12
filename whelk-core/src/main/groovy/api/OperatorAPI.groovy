@@ -17,7 +17,7 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.conch.Tools
 
 @Log
-class OperatorRestlet extends BasicAPI {
+class OperatorAPI extends BasicAPI {
 
     def pathEnd = "_operations"
     def varPath = false
@@ -44,7 +44,7 @@ class OperatorRestlet extends BasicAPI {
 
     Map configurationSettings
 
-    OperatorRestlet(Map settings) {
+    OperatorAPI(Map settings) {
         this.configurationSettings = settings
     }
 

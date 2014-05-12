@@ -149,3 +149,57 @@ class ISXNTool extends BasicAPI {
         return valid
     }
 }
+
+@Log
+class CompleteExpander extends BasicAPI {
+    String id = "CompleteExpander"
+    String description = "Provides useful information about authorities."
+
+    void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+        def identifier, result, relator, authDoc, resultMap, authDataMap, idQuery
+
+        if (pathVars.size() == 0) {
+            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
+        } else {
+            identifier = pathVars.first()
+            authDoc = whelk.get(new URI(identifier))
+            if (!authDoc) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND)
+            } else {
+                authDataMap = authDoc.dataAsMap
+                idQuery = "\\/resource\\/" + identifier.replace("/", "\\/")
+
+                if (authDataMap.about."@type" == "Person") {
+                    result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.attributedTo.@id").addFacet("about.@type"))
+                    relator = "attributedTo"
+                    if (result.numberOfHits == 0) {
+                        result = whelk.search(new ElasticQuery(idQuery).addField("about.instanceOf.influencedBy.@id").addFacet("about.@type"))
+                        relator = "influencedBy"
+                    }
+                    if (result.numberOfHits > 0) {
+                        resultMap = result.toMap(["about.@type", "about.title.titleValue", "originalCatalogingAgency.name", "function", "exampleTitle"])
+                        resultMap.list.eachWithIndex() { r, i ->
+                            if (resultMap.list[i].get("data", null)) {
+                                resultMap.list[i].data["function"] = relator
+                                //TODO: number of holds
+                                if (relator.equals("attributedTo")) {
+                                    resultMap["extraKnowledge"] = ["exampleTitle" : resultMap.list[i].data.about.title.titleValue]
+                                }
+                            }
+                        }
+                    }
+
+                }  else if (authDataMap.about."type" == "Concept") {
+                    //TODO
+                }
+
+                if (!resultMap) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND)
+                } else {
+                    sendResponse(response, mapper.writeValueAsString(resultMap), "application/json")
+                }
+
+            }
+        }
+    }
+}

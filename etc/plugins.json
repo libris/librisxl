@@ -1,4 +1,7 @@
 {
+    "elasticnode": {
+        "_class": "se.kb.libris.whelks.component.ElasticSearchNode"
+    },
     "remotesearch": {
         "_class": "se.kb.libris.whelks.api.RemoteSearchAPI",
         "_plugins" : [
@@ -344,7 +347,7 @@
         }
     },
     "operator" : {
-        "_class" : "se.kb.libris.whelks.api.OperatorRestlet",
+        "_class" : "se.kb.libris.whelks.api.OperatorAPI",
         "_params" : {
             "indexingQueueSize" : 50,
             "graphstoreQueueSize" : 1000,
@@ -353,7 +356,7 @@
         }
     },
     "dumper" : {
-        "_class" : "se.kb.libris.whelks.api.DumpRestlet"
+        "_class" : "se.kb.libris.whelks.api.DumpAPI"
     },
     "formatter" : {
         "_class" : "se.kb.libris.whelks.api.FormatterAPI",
