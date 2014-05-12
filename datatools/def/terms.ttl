@@ -618,6 +618,9 @@
 :Place a owl:Class;
     owl:equivalentClass sdo:Place .
 
+:Country a owl:Class;
+    owl:equivalentClass sdo:Country .
+
 #generalSubdivision
 #geographicSubdivision
 

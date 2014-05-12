@@ -7,7 +7,6 @@
       "dc": "http://purl.org/dc/terms/",
       "dctype": "http://purl.org/dc/dcmitype/",
       "edtf": "http://id.loc.gov/datatypes/edtf/",
-      "enum": "http://libris.kb.se/def/enum/",
       "foaf": "http://xmlns.com/foaf/0.1/",
       "owl": "http://www.w3.org/2002/07/owl#",
       "prov": "http://www.w3.org/ns/prov#",
@@ -16,9 +15,6 @@
       "sdo": "http://schema.org/",
       "skos": "http://www.w3.org/2004/02/skos/core#",
       "t": "http://libris.kb.se/def/terms#",
-      "tcar": "http://libris.kb.se/def/enum/carrier/",
-      "tcon": "http://libris.kb.se/def/enum/content/",
-      "trec": "http://libris.kb.se/def/enum/record/",
       "xsd": "http://www.w3.org/2001/XMLSchema#"
     },
     {
@@ -34,6 +30,7 @@
       "ComponentPart": "bibo:DocumentPart",
       "Concept": "skos:Concept",
       "ConceptScheme": "skos:ConceptScheme",
+      "Country": "sdo:Country",
       "CreativeWork": "sdo:CreativeWork",
       "Dataset": "sdo:Dataset",
       "Date": "xsd:date",
