@@ -249,8 +249,14 @@
                     },
                     "resultKey" : "about"
                 },
-                "enum": {
-                    "queryFields": [],
+                "def": {
+                    "queryFields":[
+                        "about.prefLabel",
+                        "about.prefLabel_en",
+                        "about.notation",
+                        "about.langCode",
+                        "about.langTag"
+                    ],
                     "infoFields": [],
                     "defaultBoost": "about.prefLabel:50",
                     "sortby": {
@@ -260,14 +266,6 @@
                         "about.notation" : "asc"
                     },
                     "queryFacets" : "about.@type"
-                },
-                "languages" : {
-                    "queryFields":[
-                        "about.prefLabel",
-                        "about.prefLabel_en",
-                        "about.langCode",
-                        "about.langTag"
-                    ]
                 }
             }
         }
