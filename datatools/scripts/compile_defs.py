@@ -64,7 +64,7 @@ def relators():
 def languages():
     source = cached_rdf('http://id.loc.gov/vocabulary/iso639-2')
 
-    basecontext = "/def/context/skos.jsonld"
+    basecontext = "/sys/context/skos.jsonld"
     langcontext = {
         "@base": BASE,
         "@language": "sv"
@@ -165,8 +165,8 @@ def filter_graph(source, propspaces, oftype=None):
 
 
 def to_jsonld(source, contextref, contextobj=None, index=None):
-    contextpath = scriptpath("../def/context/%s.jsonld" % contextref)
-    contexturi = "/def/context/%s.jsonld" % contextref
+    contextpath = scriptpath("../sys/context/%s.jsonld" % contextref)
+    contexturi = "/sys/context/%s.jsonld" % contextref
     context = [contextpath, contextobj] if contextobj else contextpath
     data = from_rdf(source, context_data=context)
     data['@context'] = [contexturi, contextobj] if contextobj else contexturi
