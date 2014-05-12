@@ -394,15 +394,15 @@
                 },
                 "about.language" : {
                     "method": "query",
-                    "index" : "def",
-                    "dataset" : "languages",
-                    "field" : "@id"
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id"
                 },
                 "about.country" : {
                     "method": "query",
-                    "index" : "def",
-                    "dataset" : "countries",
-                    "field" : "@id"
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id"
                 },
                 "about.not.used.language" : {
                     "method" : "http",

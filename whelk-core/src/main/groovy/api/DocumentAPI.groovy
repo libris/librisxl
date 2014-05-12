@@ -112,15 +112,21 @@ class DocumentAPI extends BasicAPI {
                             entry,
                             meta
                             )
-                        response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                        response.setLocationRef(request.getOriginalRef().toString())
+                        response.sendError(HttpServletResponse.SC_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
+                        def locationRef = request.getRequestURL()
+                        while (locationRef[-1] == '/') {
+                            locationRef.deleteCharAt(locationRef.length()-1)
+                        }
+                        locationRef.append(identifier)
+                        log.debug("Setting location for redirect: $locationRef")
+                        response.setHeader("Location", locationRef.toString())
                     } catch (WhelkAddException wae) {
                         log.warn("Whelk failed to store document: ${wae.message}")
-                        response.setStatus(Status.CLIENT_ERROR_UNSUPPORTED_MEDIA_TYPE, wae.message)
+                        response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
                     }
                 }
             } catch (WhelkRuntimeException wre) {
-                response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST, wre.message)
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST, wre.message)
             }
         }
         else if (request.method == "DELETE") {
