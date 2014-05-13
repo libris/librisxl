@@ -1,0 +1,73 @@
+{
+  "*": {
+    "httpRange14":{"document": "{+thing}?data"},
+    "generateVariables": {
+      "timeId": "custom-encoded",
+      "random": "custom-encoded",
+      "uuid": false
+    },
+    "numericAlphabet": "0123456789abcdefghijklmnopqrstuvwxyz",
+    "caesarKey": -1
+  },
+  "auth": {
+    "compoundSlugTransform": {"strip": "[auoeiy]", "case": "lower", "separator": ""},
+    "uriTemplate": "/{+typeSlug}/{timeId}-{random}-{compoundSlug}",
+    "ruleByBaseType": {
+      "Person": {
+        "subclasses": ["Persona"],
+        "typeSlug": "person",
+        "compoundSlug": [
+          [["familyName", "givenName"], "name"], "numeration", "birthYear", "deathYear", "personTitle"
+        ]
+      },
+      "Family": {
+        "typeSlug": "family",
+        "compoundSlug": ["name"]
+      },
+      "Organization": {
+        "typeSlug": "org",
+        "compoundSlug": ["name"]
+      },
+      "Meeting": {
+        "typeSlug": "event",
+        "compoundSlug": ["name", "date"]
+      },
+      "Jurisdiction": {
+        "typeSlug": "gov",
+        "compoundSlug": ["name", "isPartOf"]
+      },
+      "Place": {
+        "typeSlug": "place",
+        "compoundSlug": [["prefLabel", "label"]]
+      },
+      "CreativeWork": {
+        "typeSlug": "work",
+        "compoundSlug": [["title", "uniformTitle"], "attributedTo"]
+      },
+      "Concept": {
+        "typeSlug": "term",
+        "compoundSlug": ["prefLabel", "inScheme"]
+      },
+      "ConceptScheme": {
+        "typeSlug": "def/scheme",
+        "compoundSlug": ["notation"]
+      },
+      "*": {
+        "uriTemplate": "/obj/{identifier}",
+        "compoundSlug": [["identifier", "name", "prefLabel", "label"]]
+      }
+    }
+  },
+  "bib": {
+    "*": {
+      "uriTemplate": "/bib/{timeId}{random}",
+      "compoundSlug": [["name", "prefLabel", "label"]]
+    }
+  },
+  "hold": {
+    "*": {
+      "uriTemplate": "/bib/{timeId}{random}",
+      "compoundSlug": [["name", "prefLabel", "label"]]
+    }
+  }
+}
