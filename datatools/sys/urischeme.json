@@ -6,7 +6,7 @@
       "random": "custom-encoded",
       "uuid": false
     },
-    "numericAlphabet": "0123456789abcdefghijklmnopqrstuvwxyz",
+    "numericalAlphabet": "0123456789bcdfghjklmnpqrstvwxz",
     "caesarKey": -1
   },
   "auth": {
@@ -61,7 +61,7 @@
   "bib": {
     "*": {
       "uriTemplate": "/bib/{timeId}{random}",
-      "compoundSlug": [["name", "prefLabel", "label"]]
+      "compoundSlug": [["title", "uniformTitle"], "attributedTo"]
     }
   },
   "hold": {
