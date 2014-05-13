@@ -114,10 +114,6 @@ class DocumentAPI extends BasicAPI {
                             )
                         response.sendError(HttpServletResponse.SC_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                         def locationRef = request.getRequestURL()
-                        while (locationRef[-1] == '/') {
-                            locationRef.deleteCharAt(locationRef.length()-1)
-                        }
-                        locationRef.append(identifier)
                         log.debug("Setting location for redirect: $locationRef")
                         response.setHeader("Location", locationRef.toString())
                     } catch (WhelkAddException wae) {

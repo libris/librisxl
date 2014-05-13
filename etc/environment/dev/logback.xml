@@ -13,12 +13,12 @@
 </logger>
 -->
   <logger name="se.kb.libris.whelks.plugin.EntityExtractionDocumentSplitter">
+      <level value="info"/>
+  </logger>
+  <logger name="se.kb.libris.whelks.plugin.BasicListener">
       <level value="trace"/>
   </logger>
   <!--
-  <logger name="se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter">
-      <level value="trace"/>
-  </logger>
   <logger name="se.kb.libris.whelks.plugin.JsonLDLinkFinder">
        <level value="trace"/>
   </logger>
@@ -66,7 +66,7 @@
   </logger>
   -->
   <logger name="se.kb.libris.whelks.AbstractWhelkServlet">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
   <logger name="se.kb.libris.whelks.basic">
@@ -77,7 +77,7 @@
       <level value="info"/>
   </logger> 
   <logger name="se.kb.libris.whelks.StandardWhelk">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <!--
   <logger name="se.kb.libris.whelks.importers">
@@ -85,7 +85,7 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="debug"/>
+      <level value="warn"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.DiskStorage">
@@ -93,10 +93,10 @@
   </logger>
   -->
  <logger name="se.kb.libris.whelks.component.BasicComponent">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
- <logger name="se.kb.libris.whelks.component.PairtreeDiskStorage">
-      <level value="trace"/>
+ <logger name="se.kb.libris.whelks.component.PairtreeHybridDiskStorage">
+      <level value="warn"/>
   </logger>
   <!--
  <logger name="se.kb.libris.whelks.component.CassandraStorage">
@@ -112,7 +112,7 @@
   </logger>
   -->
 <logger name="se.kb.libris.whelks.api.DocumentAPI">
-      <level value="trace"/>
+      <level value="debug"/>
   </logger>
   <!--
 <logger name="se.kb.libris.whelks.api.DumpRestlet">
@@ -123,7 +123,7 @@
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.OperatorRestlet">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
   <!--
 <logger name="se.kb.libris.whelks.api.BenchmarkOperator">

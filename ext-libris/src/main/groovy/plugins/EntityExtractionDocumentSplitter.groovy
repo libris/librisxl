@@ -9,6 +9,7 @@ class EntityExtractionDocumentSplitter extends BasicPlugin implements DocumentSp
 
     List<Document> split(Document doc) {
         List<Document> docs = []
+        long originalDocumentTimestamp = doc.timestamp
         if (handles(doc)) {
             for (docEntity in doc.dataAsMap.get("extracted_entities")) {
                 docs << new Document()
@@ -16,6 +17,7 @@ class EntityExtractionDocumentSplitter extends BasicPlugin implements DocumentSp
                     .withEntry(['dataset':docEntity['dataset']])
                     .withContentType(docEntity['contentType'])
                     .withIdentifier(docEntity['id'])
+                    .withTimestamp(originalDocumentTimestamp)
             }
             log.debug("Returning list of documents with ${docs.size()} entries.")
             return docs

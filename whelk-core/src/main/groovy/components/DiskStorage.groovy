@@ -57,6 +57,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
                         "id": ((ElasticSearch)index).translateIdentifier(doc.identifier)
                     ]
                 )
+                index.flush()
             }
         } catch (Exception e) {
             throw new WhelkAddException("Failed to store ${doc.identifier}", e, [doc.identifier])
@@ -69,7 +70,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     protected void batchLoad(List<Document> docs) {
         List<Map<String,String>> entries = []
         for (doc in docs) {
-            super.store(doc)
+            boolean result = super.store(doc)
             entries << [
                     "index":indexName,
                     "type": "entry",
@@ -78,12 +79,13 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
                 ]
         }
         index.index(entries)
+        index.flush()
     }
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
-        if (dataset) {
-            log.info("Loading documents by index query for dataset $dataset")
+        if (dataset || since) {
+            log.info("Loading documents by index query for dataset $dataset ${(since ? "since $since": "")}")
             def elasticResultIterator = index.metaEntryQuery(indexName, dataset, since, until)
             return new Iterable<Document>() {
                 Iterator<Document> iterator() {
@@ -96,8 +98,6 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
                     }
                 }
             }
-        } else if (since) {
-            throw new UnsupportedOperationException("Since not yet implemented.")
         }
         return getAllRaw(dataset)
     }

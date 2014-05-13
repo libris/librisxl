@@ -68,12 +68,15 @@ class StandardWhelk extends AbstractWhelkServlet implements Whelk {
             for (storage in getStorages(doc.contentType)) {
                 storage.add(doc)
             }
+            // Now handled by listeners
+            /*
             if (index) {
                 index.add(doc)
             }
             if (graphStore) {
                 graphStore.add(doc)
             }
+            */
         } catch (Exception e) {
             log.error("Failed to add document ${doc?.identifier}", e)
                 throw e
@@ -91,12 +94,14 @@ class StandardWhelk extends AbstractWhelkServlet implements Whelk {
         for (storage in storages) {
             storage.bulkAdd(docs, contentType)
         }
+        /*
         if (index) {
             index.bulkAdd(docs, contentType)
         }
         if (graphStore) {
             graphStore.bulkAdd(docs, contentType)
         }
+        */
     }
 
     @Override

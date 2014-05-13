@@ -1,18 +1,69 @@
 package se.kb.libris.whelks.plugin
 
-class BasicListener extends BasicPlugin {
+import groovy.util.logging.Slf4j as Log
+
+import java.util.concurrent.*
+
+import se.kb.libris.whelks.*
+
+@Log
+class BasicListener extends BasicPlugin implements Listener {
 
     private static BasicListener instance = null
 
     Map registry
+    Whelk whelk
 
-    private BasicListener() {
-    }
+    private BasicListener() {}
+    private Map queues = [:]
 
     public static BasicListener getInstance() {
         if (instance == null) {
             instance = new BasicListener()
         }
         return instance
+    }
+
+    @Override
+    void init(String id) {
+        // Setup listener queues for all listening components.
+        registry.each { sender, receiverlist ->
+            for (receiver in receiverlist) {
+                log.debug("Creating queue for $receiver")
+                queues.put(receiver, new LinkedBlockingQueue<ListenerEvent>())
+            }
+        }
+    }
+
+    void registerUpdate(String componentId, Object value) {
+        log.debug("Listeners for $componentId: " + registry.get(componentId, []))
+        for (listener in registry.get(componentId, [])) {
+            log.debug("Listener registering update $value from $componentId")
+            queues.get(listener).offer(new ListenerEvent(componentId, value))
+        }
+    }
+
+    /**
+     * Called by listening component.
+     * @param componentId the id of the calling component.
+     * @return ListenerEvent the next in queue for componentId.
+     */
+    ListenerEvent nextUpdate(String componentId) {
+        return queues.get(componentId)?.take()
+    }
+
+
+    boolean hasQueue(String componentId) {
+        return queues.containsKey(componentId)
+    }
+}
+
+class ListenerEvent {
+    String senderId
+    Object payload
+
+    ListenerEvent(String s, Object p) {
+        this.senderId = s
+        this.payload = p
     }
 }

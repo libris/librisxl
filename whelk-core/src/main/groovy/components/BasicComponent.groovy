@@ -21,15 +21,17 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     private Map componentState
     boolean stateUpdated
 
-    private List<LinkedBlockingQueue<Long>> listeners = new ArrayList<LinkedBlockingQueue<Long>>()
-    protected LinkedBlockingQueue<Long> notifications = new LinkedBlockingQueue<Long>()
-
     Whelk whelk
     List contentTypes
+
+    int batchUpdateSize = 1000 // Default. May be overriden by whelk.json
 
     // Plugins
     Map<String,FormatConverter> formatConverters = new HashMap<String,FormatConverter>()
     Map<String,DocumentSplitter> documentSplitters = new HashMap<String,DocumentSplitter>()
+    Map<String,Component> components = new HashMap<String,Component>()
+
+    Listener listener
 
     void init(String whelkId) {
         File stateFile= new File("${global.WHELK_WORK_DIR}/${whelkId}_${this.id}${STATE_FILE_SUFFIX}")
@@ -74,31 +76,64 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         for (d in plugins.findAll { it instanceof DocumentSplitter }) {
             documentSplitters.put(d.requiredContentType, d)
         }
-
-        /*
-        Thread.start {
-            boolean ok = true
-            try {
-                while (ok) {
-                    log.debug("[${this.id}] Waiting for update ...")
-                    long ts = notifications.take()
-                    log.debug("[${this.id}] Received update form queue: $ts")
-                }
-            } catch (Exception e) {
-                ok = false
-                log.error("[${this.id}] Failed to read from notification queue: ${e.message}", e)
-                throw e
-            }
+        for (c in plugins.findAll { it instanceof Component}) {
+            components.put(c.id, c)
         }
-        */
+
+        listener = plugins.find { it instanceof Listener }
+
+        if (listener && listener.hasQueue(this.id)) {
+
+            Thread.start {
+                log.debug("[${this.id}] Delaying start of notification listener ...")
+                Thread.sleep(10000)
+                log.debug("[${this.id}] Starting notification listener.")
+                boolean ok = true
+                try {
+                    while (ok) {
+                        log.debug("[${this.id}] Waiting for update ...")
+                        ListenerEvent e = listener.nextUpdate(this.id)
+                        log.debug("[${this.id}] Received update from component ${e.senderId} = ${e.payload}")
+                        long lastUpdate = componentState.get(LAST_UPDATED, 0L)
+                        if (lastUpdate < e.payload) {
+                            log.debug("[${this.id}] Component is behind. Must catch up.")
+                            def docs = []
+                            int count = 0
+                            for (doc in components.get(e.senderId).getAll(null, new Date(lastUpdate), null)) {
+                                docs << doc
+                                if ((++count % batchUpdateSize) == 0) {
+                                    bulkAdd(docs, docs.first().contentType)
+                                    docs = []
+                                }
+                            }
+                            // Remainder
+                            if (docs.size() > 0) {
+                                log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
+                                bulkAdd(docs, docs.first().contentType)
+                            }
+                            log.debug("[${this.id}] Loaded $count document to get up to date with ${e.senderId}")
+                        } else if (log.isDebugEnabled()) {
+                            log.debug("[${this.id}] Already up to date.")
+                        }
+                    }
+                } catch (Exception e) {
+                    ok = false
+                    log.error("[${this.id}] Failed to read from notification queue: ${e.message}", e)
+                    throw e
+                }
+            }
+        } else {
+            log.debug("[${this.id}] No listener queue registered for me.")
+        }
     }
 
     @Override
     public URI add(Document document) {
         try {
+            long updatetime = document.timestamp
             List<Document> docs = prepareDocs([document], document.contentType)
             batchLoad(docs)
-            setState(LAST_UPDATED, new Date().getTime())
+            setState(LAST_UPDATED, updatetime)
             return new URI(document.identifier)
         } catch (Exception e) {
             log.error("[${this.id}] failed to add documents. (${e.message})", e)
@@ -109,10 +144,10 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     public void bulkAdd(List<Document> docs, String contentType) {
         log.debug("[${this.id}] bulkAdd called with ${docs.size()} documents.")
         try {
+            long updatetime = new Date().getTime()
             docs = prepareDocs(docs, contentType)
             log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)
-            long updatetime = new Date().getTime()
             setState(LAST_UPDATED, updatetime)
         } catch (Exception e) {
             log.error("[${this.id}] failed to add documents. (${e.message})", e)
@@ -184,12 +219,9 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             componentState.put(key, value)
             stateUpdated = true
         }
-        if (key == LAST_UPDATED) {
-            log.debug("[${this.id}] Notifying all ($listeners) listeners ..")
-            for (listener in listeners) {
-                log.debug("[${this.id}] Adding timestamp $updatetime to $changeQueue")
-                listener.notify
-            }
+        if (key == LAST_UPDATED && listener) {
+            log.debug("[${this.id}] Notifying listeners ..")
+            listener.registerUpdate(this.id, value)
         }
     }
 

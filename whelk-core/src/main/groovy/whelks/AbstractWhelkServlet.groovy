@@ -139,7 +139,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                 for (p in value) {
                     if (!disabled.contains(p)) {
                         def plugin = getPlugin(pluginConfig, p, this.id)
-                        log.info("Adding plugin ${plugin.id} to ${this.id}")
+                        //log.info("Adding plugin ${plugin.id} to ${this.id}")
                         addPlugin(plugin)
                     } else {
                         log.info("Plugin \"${p}\" has been disabled because you said so.")
@@ -184,7 +184,13 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         return plist
     }
 
-    def getPlugin(pluginConfig, plugname, whelkname, boolean acceptMorePlugins = true) {
+    protected Map<String,Plugin> availablePlugins = new HashMap<String,Plugin>()
+
+    def getPlugin(pluginConfig, plugname, whelkname, pluginChain=[:]) {
+        if (availablePlugins.containsKey(plugname)) {
+            log.debug("Recycling plugin $plugname")
+            return availablePlugins.get(plugname)
+        }
         def plugin
         pluginConfig.each { label, meta ->
             if (label == plugname) {
@@ -235,26 +241,8 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                 } else {
                     plugin.setId(label)
                 }
-                if (acceptMorePlugins && meta._plugins) {
-                    log.trace("Plugin has plugins.")
-                    for (plug in meta._plugins) {
-                        log.debug("Adding plugin $plug -> ${plugin.id}")
-                        plugin.addPlugin(getPlugin(pluginConfig, plug, whelkname, false))
-                    }
-                } else {
-                    log.trace("Plugin ${plugin.id} has no _plugin parameter ($meta)")
-                }
-                /*
-                if (acceptMorePlugins && meta._listen && plugin instanceof Component) {
-                    def component = getPlugin(pluginConfig, meta._listen, whelkname, false)
-                    if (component instanceof Component) {
-                        component.addListener(plugin.getNotificationQueue())
-                    } else {
-                        throw new PluginConfigurationException("Tried to make plugin ${plugin.id} listen to ${meta._listen}, which is not a component.")
-                    }
-                }
-                */
-                log.debug("Looking for other properties to set on plugin \"${plugin.id}\".")
+                plugin.global = global
+                log.trace("Looking for other properties to set on plugin \"${plugin.id}\".")
                 meta.each { key, value ->
                     if (!(key =~ /^_.+$/)) {
                         log.trace("Found a property to set for ${plugin.id}: $key = $value")
@@ -265,13 +253,36 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                         }
                     }
                 }
+                pluginChain.put(plugname, plugin)
+                if (meta._plugins) {
+                    log.trace("Plugin \"${plugin.id}\" has plugins.")
+                    for (plug in meta._plugins) {
+                        if (availablePlugins.containsKey(plug)) {
+                            log.debug("Using previously initiated plugin $plug for $plugname")
+                            plugin.addPlugin(availablePlugins.get(plug))
+                        } else if (pluginChain.containsKey(plug)) {
+                            log.debug("Using plugin $plug from pluginChain for $plugname")
+                            plugin.addPlugin(pluginChain.get(plug))
+                        } else {
+                            log.debug("Loading plugin $plug for ${plugin.id}")
+                            def subplugin = getPlugin(pluginConfig, plug, whelkname, pluginChain)
+                            if (subplugin instanceof WhelkAware) {
+                                subplugin.setWhelk(this)
+                            }
+                            subplugin.init(this.id)
+                            plugin.addPlugin(subplugin)
+                        }
+                    }
+                } else {
+                    log.trace("Plugin ${plugin.id} has no _plugin parameter ($meta)")
+                }
             }
         }
         if (!plugin) {
             throw new WhelkRuntimeException("For $whelkname; unable to instantiate plugin with name $plugname.")
         }
-        log.trace "Returning new or unique instance of $plugname"
-        plugin.global = global
+        log.debug("Stashing \"${plugin.id}\".")
+        availablePlugins.put(plugname, plugin)
         return plugin
     }
 

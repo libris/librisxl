@@ -20,6 +20,7 @@ public interface Index extends Component {
      */
     public void index(List<Map<String,String>> entries) throws WhelkIndexException;
     public void index(byte[] data, Map parameters) throws WhelkIndexException;
+    public void flush();
 
     public SearchResult query(Query query);
 }

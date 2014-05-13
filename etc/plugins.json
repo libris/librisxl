@@ -5,7 +5,7 @@
     "listener": {
         "_class": "se.kb.libris.whelks.plugin.BasicListener",
         "registry": {
-            "pairtreehybridstorage":"index"
+            "pairtreehybridstorage":["index", "fusekigraphstore"]
         }
     },
     "remotesearch": {
@@ -23,12 +23,13 @@
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
-        "_plugins" : ["listener"],
+        "_plugins" : ["listener","pairtreehybridstorage"],
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
                  "bib" : [ "text", "book", "serial" ]
-            }
+            },
+            "batchUpdateSize" : 2000
         },
         "_unique" : true
     },
@@ -114,7 +115,8 @@
     "fusekigraphstore": {
         "_class" : "se.kb.libris.whelks.component.HttpBatchGraphStore",
         "_plugins" : [
-            "turtleconverter"
+            "turtleconverter",
+            "listener"
             ],
         "_params" : {
             "graphStoreUri": "http://localhost:3030/libris/data",
@@ -122,8 +124,9 @@
             "updateUri": "http://localhost:3030/libris/update",
             "contextPath": "context.jsonld",
             "baseUri": "http://libris.kb.se/resource/"
+        },
+        "batchUpdateSize": 1500
 
-        }
     },
     "marcconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"

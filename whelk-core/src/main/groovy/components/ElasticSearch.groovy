@@ -88,6 +88,9 @@ abstract class ElasticSearch extends BasicComponent implements Index {
 
     ElasticSearch(Map settings) {
         configuredTypes = (settings ? settings.get("typeConfiguration", [:]) : [:])
+        if (settings.batchUpdateSize) {
+            this.batchUpdateSize = settings.batchUpdateSize
+        }
     }
 
     @Override
@@ -437,7 +440,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             }
             throw new WhelkIndexException("Failed to index entries. Reason: ${response.buildFailureMessage()}", new WhelkAddException(fails))
         } else {
-            log.debug("Bulk request completed in ${response.tookInMillis} millseconds.")
+            log.debug("Direct bulk request completed in ${response.tookInMillis} millseconds.")
         }
     }
 
