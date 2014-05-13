@@ -394,13 +394,21 @@
                     "method": "query",
                     "index" : "libris",
                     "dataset" : "def",
-                    "field" : "about.@id"
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
                 },
-                "about.country" : {
+                "about.publicationCountry" : {
                     "method": "query",
                     "index" : "libris",
                     "dataset" : "def",
-                    "field" : "about.@id"
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
                 },
                 "about.not.used.language" : {
                     "method" : "http",
