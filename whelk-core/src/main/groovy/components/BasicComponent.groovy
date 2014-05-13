@@ -91,7 +91,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
             listenerThread = Thread.start {
                 log.debug("[${this.id}] Delaying start of notification listener ...")
-                Thread.sleep(10000)
+                Thread.sleep(5000)
                 log.debug("[${this.id}] Starting notification listener.")
                 boolean ok = true
                 try {
@@ -101,24 +101,24 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                         log.debug("[${this.id}] Received update from component ${e.senderId} = ${e.payload}")
                         long lastUpdate = componentState.get(LAST_UPDATED, 0L)
                         if (lastUpdate < e.payload) {
-                            log.debug("[${this.id}] Component is behind. Must catch up.")
+                            log.debug("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.")
                             def docs = []
                             int count = 0
-                            long oldestTimestamp = Long.MAX_VALUE
+                            long latestTimestamp = 0L
                             for (doc in components.get(e.senderId).getAll(null, new Date(lastUpdate), null)) {
-                                if (doc && doc.timestamp < oldestTimestamp) {
-                                    oldestTimestamp = doc.timestamp
+                                if (doc.timestamp > latestTimestamp) {
+                                    latestTimestamp = doc.timestamp
                                 }
                                 docs << doc
                                 if ((++count % batchUpdateSize) == 0) {
-                                    bulkAdd(docs, docs.first().contentType, oldestTimestamp)
+                                    bulkAdd(docs, docs.first().contentType, latestTimestamp)
                                     docs = []
                                 }
                             }
                             // Remainder
                             if (docs.size() > 0) {
                                 log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
-                                bulkAdd(docs, docs.first().contentType)
+                                bulkAdd(docs, docs.first().contentType, latestTimestamp)
                             }
                             log.debug("[${this.id}] Loaded $count document to get up to date with ${e.senderId}")
                         } else if (log.isDebugEnabled()) {
@@ -156,7 +156,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             if (updatetime < 0) {
                 updatetime = new Date().getTime()
             }
-            log.trace("Now is ${new Date().getTime()}, updatetime is $updatetime")
+            log.debug("Now is ${new Date().getTime()}, updatetime is $updatetime")
             docs = prepareDocs(docs, contentType)
             log.trace("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)

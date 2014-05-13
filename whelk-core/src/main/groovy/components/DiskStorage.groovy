@@ -46,6 +46,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     @Override
     @groovy.transform.CompileStatic
     boolean store(Document doc) {
+        // TODO: check what should happen with versions and entry
         boolean result = false
         try {
             result = super.store(doc)

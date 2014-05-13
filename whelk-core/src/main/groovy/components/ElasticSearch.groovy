@@ -316,18 +316,6 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             public String next() { list.pop() }
             public void remove() { throw new UnsupportedOperationException(); }
         }
-
-        /*
-        while (true) {
-            log.trace("start loop")
-            log.trace("Adding to list")
-            if (scrollResp.hits.hits.length == 0) {
-                log.debug("break loop")
-                break
-            }
-        }
-        return list
-        */
     }
 
     private void setTypeMapping(indexName, itype) {

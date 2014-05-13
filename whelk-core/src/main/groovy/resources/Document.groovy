@@ -202,6 +202,11 @@ class Document {
         return this
     }
 
+    Document setMetaEntry(Map metaEntry) {
+        setEntry(metaEntry.entry)
+        withMeta(metaEntry.meta)
+        return this
+    }
     Document withMetaEntry(Map metaEntry) {
         withEntry(metaEntry.entry)
         withMeta(metaEntry.meta)
