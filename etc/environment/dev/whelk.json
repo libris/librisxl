@@ -27,7 +27,7 @@
         ]
     },
     "_apis": [
-        { "/_remote": "remotesearch" },
+        { "/_remotesearch": "remotesearch" },
         { "/_operations": "operator" },
         { "/_format": "formatter" },
         { "/_sparql": "sparqlapi" },
