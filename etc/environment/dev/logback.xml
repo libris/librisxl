@@ -140,12 +140,12 @@
 <logger name="se.kb.libris.whelks.Document">
       <level value="debug"/>
   </logger>
-    <logger name="se.kb.libris.whelks.api.RemoteSearchRestlet">
-        <level value="trace"/>
+  -->
+    <logger name="se.kb.libris.whelks.api.RemoteSearchAPI">
+        <level value="info"/>
     </logger>
-    -->
      <logger name="se.kb.libris.whelks.plugin.JsonLDLinkExpander">
-      <level value="trace"/>
+      <level value="info"/>
 </logger>
 <!--
     <logger name="se.kb.libris.whelks.plugin.JsonLDCleanupIndexFormatConverter">
