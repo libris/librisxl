@@ -1,4 +1,5 @@
 {
+  "base": "http://id.kb.se/",
   "httpRange14": {"document": "{+thing}?data"},
   "generateVariables": {
     "timeId": "custom-encoded",
