@@ -36,9 +36,9 @@ class BasicListener extends BasicPlugin implements Listener {
     }
 
     void registerUpdate(String componentId, Object value) {
-        log.debug("Listeners for $componentId: " + registry.get(componentId, []))
+        log.trace("Listeners for $componentId: " + registry.get(componentId, []))
         for (listener in registry.get(componentId, [])) {
-            log.debug("Listener registering update $value from $componentId")
+            log.debug("Listener \"$listener\" registering update $value from $componentId")
             queues.get(listener).offer(new ListenerEvent(componentId, value))
         }
     }

@@ -32,6 +32,8 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     Map<String,Component> components = new HashMap<String,Component>()
 
     Listener listener
+    Thread listenerThread = null
+    Thread stateThread = null
 
     void init(String whelkId) {
         File stateFile= new File("${global.WHELK_WORK_DIR}/${whelkId}_${this.id}${STATE_FILE_SUFFIX}")
@@ -48,20 +50,22 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             componentState[LAST_UPDATED] = 0L
         }
         log.info("[${this.id}] Starting thread to periodically save state.")
-        Thread.start {
-            boolean ok = true
-            while(ok) {
-                try {
-                    if (componentState && stateUpdated) {
-                        log.trace("[${whelkId}-${this.id}] Saving state ...")
-                        mapper.writeValue(stateFile, componentState)
-                        stateUpdated = false
+        if (!stateThread) {
+            stateThread = Thread.start {
+                boolean ok = true
+                while(ok) {
+                    try {
+                        if (componentState && stateUpdated) {
+                            log.trace("[${whelkId}-${this.id}] Saving state ...")
+                            mapper.writeValue(stateFile, componentState)
+                            stateUpdated = false
+                        }
+                        Thread.sleep(20000)
+                    } catch (Exception e) {
+                        ok = false
+                        log.error("[${this.id}] Failed to write statefile: ${e.message}", e)
+                        throw new WhelkRuntimeException("Couldn't write statefile for ${whelkId}/${this.id}", e)
                     }
-                    Thread.sleep(20000)
-                } catch (Exception e) {
-                    ok = false
-                    log.error("[${this.id}] Failed to write statefile: ${e.message}", e)
-                    throw new WhelkRuntimeException("Couldn't write statefile for ${whelkId}/${this.id}", e)
                 }
             }
         }
@@ -76,15 +80,16 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         for (d in plugins.findAll { it instanceof DocumentSplitter }) {
             documentSplitters.put(d.requiredContentType, d)
         }
-        for (c in plugins.findAll { it instanceof Component}) {
+        // Look for components configured for whelk. Saves having to add component to all components in plugins.
+        for (c in whelk.getComponents()) {
             components.put(c.id, c)
         }
 
         listener = plugins.find { it instanceof Listener }
 
-        if (listener && listener.hasQueue(this.id)) {
+        if (listener && listener.hasQueue(this.id) && !listenerThread) {
 
-            Thread.start {
+            listenerThread = Thread.start {
                 log.debug("[${this.id}] Delaying start of notification listener ...")
                 Thread.sleep(10000)
                 log.debug("[${this.id}] Starting notification listener.")
@@ -122,7 +127,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                     throw e
                 }
             }
-        } else {
+        } else if (!listenerThread) {
             log.debug("[${this.id}] No listener queue registered for me.")
         }
     }
@@ -146,7 +151,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         try {
             long updatetime = new Date().getTime()
             docs = prepareDocs(docs, contentType)
-            log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
+            log.trace("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)
             setState(LAST_UPDATED, updatetime)
         } catch (Exception e) {
@@ -208,7 +213,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             log.debug("[${this.id}] Returning document list of size ${docs.size()}.")
             return docs
         }
-        log.debug("[${this.id}] Nothing to do, return the same list of documents.")
+        log.trace("[${this.id}] Nothing to do, return the same list of documents.")
         return documents
     }
 

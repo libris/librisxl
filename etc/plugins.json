@@ -23,7 +23,7 @@
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
-        "_plugins" : ["listener","pairtreehybridstorage"],
+        "_plugins" : ["listener"],
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
