@@ -152,6 +152,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                 log.debug("Found api: ${it.value}, should attach at ${it.key}")
                 API api = getPlugin(pluginConfig, it.value, this.id)
                 api.setWhelk(this)
+                api.init(this.id)
                 apis.put(Pattern.compile(it.key), api)
             }
         }

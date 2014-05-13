@@ -14,6 +14,7 @@ import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.result.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
+import se.kb.libris.conch.converter.*
 
 @Log
 class RemoteSearchAPI extends BasicAPI {
@@ -86,7 +87,7 @@ class RemoteSearchAPI extends BasicAPI {
         def query = request.getParameter("q")
         int start = (request.getParameter("start") ?: "0") as int
         int n = (request.getParameter("n") ?: "10") as int
-        def databaseList = (request.getParameter("database") ?: DEFAULT_DATABASE).split(",") as List
+        def databaseList = (request.getParameter("databases") ?: DEFAULT_DATABASE).split(",") as List
         def queryStr, url
         MarcRecord record
         OaiPmhXmlConverter oaiPmhXmlConverter
