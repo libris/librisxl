@@ -61,7 +61,7 @@
             "storageDir": "_property:STORAGE_PATH",
             "contentTypes": ["application/ld+json"],
             "baseStorageSuffix": "pairtree",
-            "versioning" : false
+            "versioning" : true
         }
     },
     "pairtreeoaistorage": {

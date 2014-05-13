@@ -104,10 +104,14 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                             log.debug("[${this.id}] Component is behind. Must catch up.")
                             def docs = []
                             int count = 0
+                            long oldestTimestamp = Long.MAX_VALUE
                             for (doc in components.get(e.senderId).getAll(null, new Date(lastUpdate), null)) {
+                                if (doc && doc.timestamp < oldestTimestamp) {
+                                    oldestTimestamp = doc.timestamp
+                                }
                                 docs << doc
                                 if ((++count % batchUpdateSize) == 0) {
-                                    bulkAdd(docs, docs.first().contentType)
+                                    bulkAdd(docs, docs.first().contentType, oldestTimestamp)
                                     docs = []
                                 }
                             }
@@ -146,10 +150,13 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
     }
 
-    public void bulkAdd(List<Document> docs, String contentType) {
+    public void bulkAdd(List<Document> docs, String contentType, long updatetime = -1)  {
         log.debug("[${this.id}] bulkAdd called with ${docs.size()} documents.")
         try {
-            long updatetime = new Date().getTime()
+            if (updatetime < 0) {
+                updatetime = new Date().getTime()
+            }
+            log.trace("Now is ${new Date().getTime()}, updatetime is $updatetime")
             docs = prepareDocs(docs, contentType)
             log.trace("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)
