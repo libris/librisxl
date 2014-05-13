@@ -1,73 +1,75 @@
 {
-  "*": {
-    "httpRange14":{"document": "{+thing}?data"},
-    "generateVariables": {
-      "timeId": "custom-encoded",
-      "random": "custom-encoded",
-      "uuid": false
-    },
-    "numericalAlphabet": "0123456789bcdfghjklmnpqrstvwxz",
-    "caesarKey": -1
+  "httpRange14": {"document": "{+thing}?data"},
+  "generateVariables": {
+    "timeId": "custom-encoded",
+    "random": "custom-encoded",
+    "uuid": false
   },
-  "auth": {
-    "compoundSlugTransform": {"strip": "[auoeiy]", "case": "lower", "separator": ""},
-    "uriTemplate": "/{+typeSlug}/{timeId}-{random}-{compoundSlug}",
-    "ruleByBaseType": {
-      "Person": {
-        "subclasses": ["Persona"],
-        "typeSlug": "person",
-        "compoundSlug": [
-          [["familyName", "givenName"], "name"], "numeration", "birthYear", "deathYear", "personTitle"
-        ]
-      },
-      "Family": {
-        "typeSlug": "family",
-        "compoundSlug": ["name"]
-      },
-      "Organization": {
-        "typeSlug": "org",
-        "compoundSlug": ["name"]
-      },
-      "Meeting": {
-        "typeSlug": "event",
-        "compoundSlug": ["name", "date"]
-      },
-      "Jurisdiction": {
-        "typeSlug": "gov",
-        "compoundSlug": ["name", "isPartOf"]
-      },
-      "Place": {
-        "typeSlug": "place",
-        "compoundSlug": [["prefLabel", "label"]]
-      },
-      "CreativeWork": {
-        "typeSlug": "work",
-        "compoundSlug": [["title", "uniformTitle"], "attributedTo"]
-      },
-      "Concept": {
-        "typeSlug": "term",
-        "compoundSlug": ["prefLabel", "inScheme"]
-      },
-      "ConceptScheme": {
-        "typeSlug": "def/scheme",
-        "compoundSlug": ["notation"]
-      },
-      "*": {
-        "uriTemplate": "/obj/{identifier}",
-        "compoundSlug": [["identifier", "name", "prefLabel", "label"]]
+  "numericalAlphabet": "0123456789bcdfghjklmnpqrstvwxz",
+  "lastDigitBasedCaesarCipher": true,
+  "rulesByDataset": {
+    "auth": {
+      "compoundSlugTransform": {"strip": "[auoeiy]", "case": "lower", "separator": ""},
+      "uriTemplate": "/{+typeSlug}/{timeId}-{random}-{compoundSlug}",
+      "ruleByBaseType": {
+        "Person": {
+          "subclasses": ["Persona"],
+          "typeSlug": "person",
+          "compoundSlug": [
+            [["familyName", "givenName"], "name"], "numeration", "birthYear", "deathYear", "personTitle"
+          ]
+        },
+        "Family": {
+          "typeSlug": "family",
+          "compoundSlug": ["name"]
+        },
+        "Organization": {
+          "typeSlug": "org",
+          "compoundSlug": ["name"]
+        },
+        "Meeting": {
+          "typeSlug": "event",
+          "compoundSlug": ["name", "date"]
+        },
+        "Jurisdiction": {
+          "typeSlug": "gov",
+          "compoundSlug": ["name", "isPartOf"]
+        },
+        "Place": {
+          "typeSlug": "place",
+          "compoundSlug": [["prefLabel", "label"]]
+        },
+        "CreativeWork": {
+          "typeSlug": "work",
+          "compoundSlug": [["title", "uniformTitle"], "attributedTo"]
+        },
+        "Concept": {
+          "typeSlug": "term",
+          "compoundSlug": ["prefLabel", "inScheme"]
+        },
+        "ConceptScheme": {
+          "typeSlug": "def/scheme",
+          "compoundSlug": ["notation"]
+        },
+        "*": {
+          "uriTemplate": "/auth/{identifier}",
+          "httpRange14":{"thing": "/resource/{+document}"}
+        }
       }
-    }
-  },
-  "bib": {
-    "*": {
-      "uriTemplate": "/bib/{timeId}{random}",
-      "compoundSlug": [["title", "uniformTitle"], "attributedTo"]
-    }
-  },
-  "hold": {
-    "*": {
-      "uriTemplate": "/bib/{timeId}{random}",
-      "compoundSlug": [["name", "prefLabel", "label"]]
+    },
+    "bib": {
+      "uriTemplate": "/resource/bib/{timeId}-{random}",
+      "ruleByBaseType": {
+        "CreativeWork": {
+          "compoundSlug": [["title", "uniformTitle"], "attributedTo"]
+        },
+        "*": {
+          "httpRange14":{"thing": "/resource/{+document}"}
+        }
+      }
+    },
+    "hold": {
+      "uriTemplate": "/hold/{owner}/{timeId}-{random}"
     }
   }
 }
