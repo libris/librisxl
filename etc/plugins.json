@@ -2,6 +2,12 @@
     "elasticnode": {
         "_class": "se.kb.libris.whelks.component.ElasticSearchNode"
     },
+    "listener": {
+        "_class": "se.kb.libris.whelks.plugin.BasicListener",
+        "registry": {
+            "pairtreehybridstorage":"index"
+        }
+    },
     "remotesearch": {
         "_class": "se.kb.libris.whelks.api.RemoteSearchAPI",
         "_plugins" : [
@@ -17,11 +23,11 @@
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
-        "_listen" : "pairtreehybridstorage",
+        "_plugins" : ["listener"],
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
-                "bib" : [ "text", "book", "serial" ]
+                 "bib" : [ "text", "book", "serial" ]
             }
         },
         "_unique" : true
@@ -47,7 +53,8 @@
         "_plugins" : [
             "index",
             "oaipmhxmlconverter",
-            "marcconverter"
+            "marcconverter",
+            "listener"
             ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",

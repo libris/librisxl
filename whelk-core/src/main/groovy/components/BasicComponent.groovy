@@ -2,6 +2,8 @@ package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
 
+import java.util.concurrent.*
+
 import org.codehaus.jackson.map.ObjectMapper
 
 import se.kb.libris.whelks.exception.*
@@ -19,8 +21,13 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     private Map componentState
     boolean stateUpdated
 
+    private List<LinkedBlockingQueue<Long>> listeners = new ArrayList<LinkedBlockingQueue<Long>>()
+    protected LinkedBlockingQueue<Long> notifications = new LinkedBlockingQueue<Long>()
+
     Whelk whelk
     List contentTypes
+
+    // Plugins
     Map<String,FormatConverter> formatConverters = new HashMap<String,FormatConverter>()
     Map<String,DocumentSplitter> documentSplitters = new HashMap<String,DocumentSplitter>()
 
@@ -67,6 +74,23 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         for (d in plugins.findAll { it instanceof DocumentSplitter }) {
             documentSplitters.put(d.requiredContentType, d)
         }
+
+        /*
+        Thread.start {
+            boolean ok = true
+            try {
+                while (ok) {
+                    log.debug("[${this.id}] Waiting for update ...")
+                    long ts = notifications.take()
+                    log.debug("[${this.id}] Received update form queue: $ts")
+                }
+            } catch (Exception e) {
+                ok = false
+                log.error("[${this.id}] Failed to read from notification queue: ${e.message}", e)
+                throw e
+            }
+        }
+        */
     }
 
     @Override
@@ -81,6 +105,27 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             throw e
         }
     }
+
+    public void bulkAdd(List<Document> docs, String contentType) {
+        log.debug("[${this.id}] bulkAdd called with ${docs.size()} documents.")
+        try {
+            docs = prepareDocs(docs, contentType)
+            log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
+            batchLoad(docs)
+            long updatetime = new Date().getTime()
+            setState(LAST_UPDATED, updatetime)
+        } catch (Exception e) {
+            log.error("[${this.id}] failed to add documents. (${e.message})", e)
+            throw e
+        }
+    }
+
+    @Override
+    boolean handlesContent(String ctype) {
+        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
+    }
+
+    protected abstract void batchLoad(List<Document> docs);
 
     List<Document> prepareDocs(final List<Document> documents, String contentType) {
         FormatConverter fc = formatConverters.get(contentType)
@@ -139,26 +184,14 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             componentState.put(key, value)
             stateUpdated = true
         }
-    }
-
-    public void bulkAdd(List<Document> docs, String contentType) {
-        log.debug("[${this.id}] bulkAdd called with ${docs.size()} documents.")
-        try {
-            docs = prepareDocs(docs, contentType)
-            log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
-            batchLoad(docs)
-            setState(LAST_UPDATED, new Date().getTime())
-        } catch (Exception e) {
-            log.error("[${this.id}] failed to add documents. (${e.message})", e)
-            throw e
+        if (key == LAST_UPDATED) {
+            log.debug("[${this.id}] Notifying all ($listeners) listeners ..")
+            for (listener in listeners) {
+                log.debug("[${this.id}] Adding timestamp $updatetime to $changeQueue")
+                listener.notify
+            }
         }
     }
 
-    @Override
-    boolean handlesContent(String ctype) {
-        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
-    }
-
-    protected abstract void batchLoad(List<Document> docs);
 }
 

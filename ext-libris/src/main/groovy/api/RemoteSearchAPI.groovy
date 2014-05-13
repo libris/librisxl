@@ -165,7 +165,7 @@ class RemoteSearchAPI extends BasicAPI {
         if (!output) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT)
         } else {
-            sendResponse(output, "application/json")
+            sendResponse(response, output, "application/json")
         }
     }
 

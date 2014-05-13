@@ -120,7 +120,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
                     "id": ((ElasticSearch)index).translateIdentifier(document.identifier),
                     "data":((Document)document).metadataAsJson
                 ]
-            if (count++ % 100000 == 0) {
+            if (count++ % 20000 == 0) {
                 index.index(entries)
                 entries = []
             }
@@ -397,6 +397,7 @@ class PairtreeDiskStorage extends BasicComponent implements Storage {
                 throw new WhelkRuntimeException(e)
             }
         }
+        setState(LAST_UPDATED, new Date().getTime())
     }
 
     @groovy.transform.CompileStatic

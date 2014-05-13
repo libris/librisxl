@@ -1,11 +1,11 @@
 package se.kb.libris.whelks.component;
 
-import se.kb.libris.whelks.Whelk;
-import se.kb.libris.whelks.plugin.*;
 import se.kb.libris.whelks.*;
+import se.kb.libris.whelks.plugin.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Queue;
 
 public interface Component extends WhelkAware {
 

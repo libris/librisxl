@@ -9,6 +9,7 @@ import org.codehaus.jackson.map.ObjectMapper
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.api.*
+import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*
 
@@ -182,7 +183,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         return plist
     }
 
-    def getPlugin(pluginConfig, plugname, whelkname) {
+    def getPlugin(pluginConfig, plugname, whelkname, boolean acceptMorePlugins = true) {
         def plugin
         pluginConfig.each { label, meta ->
             if (label == plugname) {
@@ -218,7 +219,14 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                     }
                 } else {
                     log.trace("Plugin $label has no parameters.")
-                    plugin = Class.forName(meta._class).newInstance()
+                    //try singleton plugin
+                    try {
+                        log.trace("Trying getInstance()-method.")
+                        plugin = Class.forName(meta._class).getDeclaredMethod("getInstance").invoke(null,null)
+                    } catch (NoSuchMethodException nsme) {
+                        log.trace("No getInstance()-method. Trying constructor.")
+                        plugin = Class.forName(meta._class).newInstance()
+                    }
                 }
                 assert plugin, "Failed to instantiate plugin: ${plugname} from class ${meta._class} with params ${meta._params}"
                 if (meta._id) {
@@ -226,19 +234,35 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                 } else {
                     plugin.setId(label)
                 }
-                if (!meta._params) {
-                    log.trace("$plugname has NO parameters.")
-                } else {
-                    log.trace("$plugname has parameters.")
-                }
-                if (meta._plugins) {
+                if (acceptMorePlugins && meta._plugins) {
                     log.trace("Plugin has plugins.")
                     for (plug in meta._plugins) {
                         log.debug("Adding plugin $plug -> ${plugin.id}")
-                        plugin.addPlugin(getPlugin(pluginConfig, plug, whelkname))
+                        plugin.addPlugin(getPlugin(pluginConfig, plug, whelkname, false))
                     }
                 } else {
                     log.trace("Plugin ${plugin.id} has no _plugin parameter ($meta)")
+                }
+                /*
+                if (acceptMorePlugins && meta._listen && plugin instanceof Component) {
+                    def component = getPlugin(pluginConfig, meta._listen, whelkname, false)
+                    if (component instanceof Component) {
+                        component.addListener(plugin.getNotificationQueue())
+                    } else {
+                        throw new PluginConfigurationException("Tried to make plugin ${plugin.id} listen to ${meta._listen}, which is not a component.")
+                    }
+                }
+                */
+                log.debug("Looking for other properties to set on plugin \"${plugin.id}\".")
+                meta.each { key, value ->
+                    if (!(key =~ /^_.+$/)) {
+                        log.trace("Found a property to set for ${plugin.id}: $key = $value")
+                        try {
+                            plugin."$key" = value
+                        } catch (MissingPropertyException mpe) {
+                            throw new PluginConfigurationException("Tried to set property $key in ${plugin.id} with value $value")
+                        }
+                    }
                 }
             }
         }

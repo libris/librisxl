@@ -198,7 +198,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
 
         client.delete(new DeleteRequest(indexName, determineDocuentTypeBasedOnURI(uri.toString(), indexName), translateIdentifier(uri.toString())))
 
-
+        setState(LAST_UPDATED, new Date().getTime())
             // Kanske en matchall-query filtrerad på _type och _id?
     }
 

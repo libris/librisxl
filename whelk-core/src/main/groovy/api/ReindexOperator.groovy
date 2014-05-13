@@ -194,10 +194,10 @@ class ReindexOperator extends AbstractOperator {
         def map = super.getStatus()
         if (hasRun) {
             if (fromStorage) {
-                map.get("lastrun").put("fromStorage", fromStorage)
+                map.get("lastrun")?.put("fromStorage", fromStorage)
             }
             if (selectedComponents) {
-                map.get("lastrun").put("selectedComponents", selectedComponents)
+                map.get("lastrun")?.put("selectedComponents", selectedComponents)
             }
         } else {
             if (fromStorage) {
