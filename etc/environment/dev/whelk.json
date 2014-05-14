@@ -22,10 +22,10 @@
             ],
         "_components": [
             "pairtreehybridstorage",
-            "index",
-            "fusekigraphstore"
+            "index"
         ]
     },
+    "_masterComponent": "pairtreehybridstorage",
     "_apis": [
         { "/_remotesearch": "remotesearch" },
         { "/_operations": "operator" },

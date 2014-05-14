@@ -83,6 +83,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
 
     String defaultType = "record"
     Map<String,String> configuredTypes
+    ElasticShapeComputer shapeComputer
 
     def defaultMapping, es_settings
 
@@ -97,6 +98,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     void init(String indexName) {
         super.init(indexName)
         createIndexIfNotExists(indexName)
+        shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
     }
 
     void createIndexIfNotExists(String indexName) {
@@ -435,7 +437,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     void index(byte[] data, Map params) throws WhelkIndexException  {
         try {
             def response = performExecute(client.prepareIndex(params['index'], params['type'], params['id']).setSource(data))
-            log.info("Raw byte indexer (${params.index}/${params.type}/${params.id}) indexed version: ${response.version}")
+            log.trace("Raw byte indexer (${params.index}/${params.type}/${params.id}) indexed version: ${response.version}")
         } catch (Exception e) {
             throw new WhelkIndexException("Failed to index ${new String(data)} with params $params", e)
         }
@@ -455,7 +457,8 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                 for (doc in documents) {
                     log.trace("Working on ${doc.identifier}")
                     if (doc && doc.isJson()) {
-                        def indexType = determineDocumentType(doc, indexName)
+                        //def indexType = determineDocumentType(doc, indexName)
+                        def indexType = shapeComputer.calculateShape(doc.identifier)
                         def checked = indexType in checkedTypes
                         if (!checked) {
                             checkTypeMapping(currentIndex, indexType)

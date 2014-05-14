@@ -91,7 +91,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
         if (dataset || since) {
-            log.info("Loading documents by index query for dataset $dataset ${(since ? "since $since": "")}")
+            log.debug("Loading documents by index query for dataset $dataset ${(since ? "since $since": "")}")
             def elasticResultIterator = index.metaEntryQuery(indexName, dataset, since, until)
             return new Iterable<Document>() {
                 Iterator<Document> iterator() {

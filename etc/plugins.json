@@ -21,9 +21,15 @@
     "isxntool": {
         "_class": "se.kb.libris.whelks.api.ISXNTool"
     },
+    "shapecomputer": {
+        "_class" : "se.kb.libris.whelks.plugin.UriToElasticType",
+        "_params": {
+            "defaultType": "record"
+        }
+    },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
-        "_plugins" : ["listener"],
+        "_plugins" : ["listener", "linkexpander", "shapecomputer", "defsindexconverter" ],
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
@@ -54,7 +60,7 @@
             "storageDir": "_property:STORAGE_PATH",
             "contentTypes": ["application/ld+json"],
             "baseStorageSuffix": "pairtree",
-            "versioning" : true
+            "versioning" : false
         }
     },
     "pairtreeoaistorage": {

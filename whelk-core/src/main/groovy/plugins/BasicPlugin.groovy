@@ -25,7 +25,6 @@ public abstract class BasicPlugin implements Plugin {
     public void init(String initString) { }
     @Override
     public void addPlugin(Plugin p) {
-        log.info("Plugin: ${this.getClass().getName()}")
         plugins.add(p);
     }
     public List<Plugin> getPlugins() { plugins }

@@ -191,7 +191,11 @@ class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
         }
         def response = client.execute(post, HttpClientContext.create())
         log.debug("Server response: ${response.statusLine.statusCode}")
-        EntityUtils.consumeQuietly(response.getEntity())
+        if (response.statusLine.statusCode == 200) {
+            EntityUtils.consumeQuietly(response.getEntity())
+        } else {
+            throw new WhelkAddException("Batch update failed: ${EntityUtils.toString(response.getEntity(), "utf-8")}", [])
+        }
     }
 
 }

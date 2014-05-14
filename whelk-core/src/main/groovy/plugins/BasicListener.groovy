@@ -41,6 +41,9 @@ class BasicListener extends BasicPlugin implements Listener {
         for (listener in registry.get(componentId, [])) {
             log.debug("Listener \"$listener\" registering update $value from $componentId")
             queues.get(listener).offer(new ListenerEvent(componentId, value))
+            if (queues.get(listener).size() > 0) {
+                log.debug("Queue size for ${listener}: ${queues.get(listener).size()}")
+            }
         }
     }
 

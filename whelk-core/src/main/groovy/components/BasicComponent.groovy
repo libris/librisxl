@@ -18,11 +18,13 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     static final String STATE_FILE_SUFFIX = ".state"
 
-    private Map componentState
+    protected Map componentState
     boolean stateUpdated
 
     Whelk whelk
     List contentTypes
+
+    boolean master = false
 
     int batchUpdateSize = 1000 // Default. May be overriden by whelk.json
 
@@ -41,13 +43,13 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         if (stateFile.exists()) {
             log.info("Loading persisted state for [${this.id}].")
             try {
-                componentState = mapper.readValue(stateFile, Map).asSynchronized()
+                componentState = mapper.readValue(stateFile, Map)
             } catch (Exception e) {
                 log.error("[${this.id}] Failed to read statefile: ${e.message}", e)
                 throw new WhelkRuntimeException("Couldn't read statefile for ${whelkId}/${this.id}", e)
             }
         } else {
-            componentState = [:].asSynchronized()
+            componentState = [:]
             componentState[LAST_UPDATED] = 0L
         }
         componentState['componentId'] = this.id
@@ -129,18 +131,18 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                     for (d in preSplitter.split(doc)) {
                         if (fc) {
                             log.trace(" ... with conversion")
-                            docs << fc.convert(d)
+                            docs << linkExpand(fc.convert(d))
                         } else {
                             log.trace(" ... without conversion")
-                            docs << d
+                            docs << linkExpand(d)
                         }
                     }
                 } else if (fc) {
                     log.trace("[${this.id}] Adding document after conversion.")
-                    docs.add(fc.convert(doc))
+                    docs.add(linkExpand(fc.convert(doc)))
                 } else {
                     log.trace("[${this.id}] Adding document without conversion.")
-                    docs.add(doc)
+                    docs.add(linkExpand(doc))
                 }
                 if (postSplitter) {
                     log.trace("[${this.id}] Running postSplitter")
@@ -154,39 +156,50 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                 }
             }
             log.debug("[${this.id}] Returning document list of size ${docs.size()}.")
-        }
-        if (linkExpanders.size() > 0) {
-            log.trace("Link expanders configured. Must loop through documents.")
-            if (docs.size() == 0) {
-                docs = documents
-            }
-            for (doc in docs) {
-                LinkExpander expander = getLinkExpanderFor(doc)
-                if (expander) {
-                    log.debug("Expanding ${doc.identifier}")
-                    doc = expander.expand(doc)
-                }
-            }
-        }
-        if (docs.size() > 0) {
             return docs
+        } else if (linkExpanders.size() > 0) {
+            log.trace("Must loop over documents for link expansion.")
+            for (doc in documents) {
+                doc = linkExpand(doc)
+            }
         }
         return documents
     }
 
+    void runLinkExpanders(List docs) {
+        for (doc in docs) {
+            LinkExpander expander = getLinkExpanderFor(doc)
+            if (expander) {
+                log.debug("Expanding ${doc.identifier}")
+                doc = expander.expand(doc)
+            }
+        }
+    }
+
+    Document linkExpand(Document doc) {
+        LinkExpander le = getLinkExpanderFor(doc)
+        if (le) {
+            log.debug("Linkexpanding ${doc.identifier}")
+            return le.expand(doc)
+        }
+        return doc
+    }
+
     LinkExpander getLinkExpanderFor(Document doc) { return linkExpanders.find { it.valid(doc) } }
 
-    public Map getComponentState() { return componentState.asImmutable() }
+    public Map getState() { return componentState.asImmutable() }
 
     void setState(key, value) {
-        synchronized(componentState) {
-            componentState.put(key, value)
-            stateUpdated = true
-        }
+        this.componentState.put(key, value)
+        stateUpdated = true
         if (key == LAST_UPDATED && listener) {
             log.debug("[${this.id}] Notifying listeners ..")
             listener.registerUpdate(this.id, value)
         }
+    }
+
+    long getLastUpdatedState() {
+        return componentState.get(LAST_UPDATED, 0L)
     }
 
     void startStateThread(File stateFile, String whelkId) {
@@ -196,9 +209,9 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                 boolean ok = true
                 while(ok) {
                     try {
-                        if (componentState && stateUpdated) {
+                        if (getState() && stateUpdated) {
                             log.trace("[${whelkId}-${this.id}] Saving state ...")
-                            mapper.writeValue(stateFile, componentState)
+                            mapper.writeValue(stateFile, getState())
                             stateUpdated = false
                         }
                         Thread.sleep(20000)
@@ -216,16 +229,18 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         if (listener && listener.hasQueue(this.id) && !listenerThread) {
 
             listenerThread = Thread.start {
-                log.debug("[${this.id}] Starting notification listener.")
+                log.debug("[${this.id}] Starting notification listener.");
                 boolean ok = true
-                try {
-                    while (ok) {
-                        log.debug("[${this.id}] Waiting for update ...")
+                while (ok) {
+                    try {
+                        log.debug("[${this.id}] Waiting for update ...");
                         ListenerEvent e = listener.nextUpdate(this.id)
-                        log.debug("[${this.id}] Received update from component ${e.senderId} = ${e.payload}")
-                        long lastUpdate = componentState.get(LAST_UPDATED, 0L)
+                        log.debug("[${this.id}] Received update from component ${e.senderId} = ${e.payload}");
+                        long lastUpdate = getLastUpdatedState()
+                        log.trace("Lastupdate: $lastUpdate") 
+                        log.trace("   Payload: ${e.payload}")
                         if (lastUpdate < e.payload) {
-                            log.debug("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.")
+                            log.debug("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.");
                             def docs = []
                             int count = 0
                             long latestTimestamp = 0L
@@ -245,14 +260,17 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                                 bulkAdd(docs, docs.first().contentType, latestTimestamp)
                             }
                             log.debug("[${this.id}] Loaded $count document to get up to date with ${e.senderId}")
-                        } else if (log.isDebugEnabled()) {
-                            log.debug("[${this.id}] Already up to date.")
+                        } else {
+                            log.debug("[${this.id}] Already up to date.");
                         }
+                    } catch (WhelkAddException wae) {
+                        log.error("[${this.id}] Failed to add documents: ${wae.message}")
+                    } catch (Exception e) {
+                        log.error("[${this.id}] DISABLING LISTENER because of unexpected exception. Possible restart required.")
+                        ok = false
+                        log.error("[${this.id}] Failed to read from notification queue: ${e.message}")
+                        throw e
                     }
-                } catch (Exception e) {
-                    ok = false
-                    log.error("[${this.id}] Failed to read from notification queue: ${e.message}", e)
-                    throw e
                 }
             }
         } else if (!listenerThread) {
