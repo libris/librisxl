@@ -30,27 +30,31 @@ class LibrisURIMinterSpec extends Specification {
         139409779957    | "flg72dq7"    | true
     }
 
-    @spock.lang.Ignore
-    def "should construct path from component parts"() {
+    def "should scramble slug"() {
         given:
-        def minter = new LibrisURIMinter(base: "//base/", timestampCaesarCipher: true)
+        def minter = new LibrisURIMinter(alphabet: "0123456789bcdfghjklmnpqrstvwxz")
         expect:
-        minter.makePath("work", codes, keys) == uri
+        minter.scramble(value) == slug
         where:
-        codes               | keys                          | uri
-        [31]                | ["Märk världen"]              | "work/21-mrkvrldn"
-        []                  | ["Det"]                       | "work/det"
-        [139409779957, 29]  | ["2012", "Där ute i mörkret"] | "work/flg72dq7-z-2012drtmrkrt"
+        value                   | slug
+        "Märk världen"          | "mrkvrldn"
+        "Det"                   | "det"
+        "Där ute i mörkret"     | "drtmrkrt"
     }
 
-    def "should produce title based uri"() {
+    def "should compute path from data using variables and compound keys"() {
         given:
         def minter = new LibrisURIMinter(config)
+        minter.metaClass.createRandom = { 898 }
+        minter.metaClass.createTimestamp = { 139409779957 }
         expect:
-        minter.computePath(data, "auth") =~ uri
+        minter.computePath(data, "auth") == uri
         where:
         data                                        | uri
-        makeExample("Book", "Där ute i mörkret")    | '/work/[0-9b-z]+-\\w{2}-drtmrkrt'
+        doc("@type": "Book",
+            title: [
+                titleValue: "Där ute i mörkret"],
+            publicationYear: "2012")                | '/work/flg72dq7-zx-drtmrkrt2012'
     }
 
     def config = [
@@ -70,20 +74,15 @@ class LibrisURIMinterSpec extends Specification {
                     "CreativeWork": [
                         subclasses: ["Book"],
                         basePath: "work",
-                        compoundSlugFrom: [[title: ["titleValue"]], "attributedTo"]
+                        compoundSlugFrom: [[title: ["titleValue"]], "publicationYear", "attributedTo"]
                     ]
                 ]
             ]
         ]
     ]
 
-    private def makeExample(type, title) {
-        return [
-            "about": [
-                "@type": type,
-                "title": ["titleValue": title]
-            ]
-        ]
+    private def doc(thing) {
+        return ["about": thing]
     }
 
     /*

@@ -15,6 +15,7 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
     static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
     URI base
+    String typeKey = '@type'
     String documentUriTemplate
     String documentThingLink
     String thingUriTemplate
@@ -64,7 +65,7 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
         }
     }
 
-    def createRandom() {
+    int createRandom() {
         return new Random().nextInt(maxRandom)
     }
 
@@ -108,7 +109,7 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
             vars[uuidVariable] = createUUID()
         }
 
-        def type = thing['@type']
+        def type = thing[typeKey]
         if (type instanceof List) {
             type = type[0]
         }
