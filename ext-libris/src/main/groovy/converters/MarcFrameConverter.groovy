@@ -533,8 +533,9 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     abstract def revert(Map data)
 
     void addValue(obj, key, value, repeatable) {
-        if (repeatable) {
-            def l = obj[key] ?: []
+        def current = obj[key]
+        if (current || repeatable) {
+            def l = current ?: []
             l << value
             value = l
         }
