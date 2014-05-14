@@ -182,14 +182,9 @@ class Document {
             this.identifier = entrydata["identifier"]
         }
         if (entrydata != null) {
-            long ts = getTimestamp()
             this.entry.putAll(entrydata)
             if (checksum) {
                 this.entry['checksum'] = checksum
-            }
-            if (ts > getTimestamp()) {
-                log.debug("Overriding timestamp $ts with entry data.")
-                setTimestamp(ts)
             }
         }
         return this
