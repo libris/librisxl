@@ -67,7 +67,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
 
         listener = plugins.find { it instanceof Listener }
-        startStateThread(whelkId)
+        startStateThread(stateFile, whelkId)
         startListenerThread()
     }
 
@@ -189,7 +189,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
     }
 
-    void startStateThread(String whelkId) {
+    void startStateThread(File stateFile, String whelkId) {
         log.info("[${this.id}] Starting thread to periodically save state.")
         if (!stateThread) {
             stateThread = Thread.start {
