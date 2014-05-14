@@ -1,7 +1,6 @@
 package se.kb.libris.whelks.plugin
 
 import spock.lang.Specification
-import spock.lang.Shared
 import groovy.util.logging.Slf4j as Log
 
 //import org.codehaus.jackson.map.ObjectMapper
@@ -14,7 +13,7 @@ class LibrisURIMinterSpec extends Specification {
 
     def "should base encode numbers"() {
         given:
-        def minter = new LibrisURIMinter()
+        def minter = new LibrisURIMinter(alphabet: LibrisURIMinter.DEVOWELLED)
         expect:
         minter.baseEncode(n, caesared) == expected
 
@@ -31,30 +30,51 @@ class LibrisURIMinterSpec extends Specification {
         139409779957    | "flg72dq7"    | true
     }
 
+    @spock.lang.Ignore
     def "should construct path from component parts"() {
         given:
-        def minter = new LibrisURIMinter("//base/", null, null, true)
+        def minter = new LibrisURIMinter(base: "//base/", timestampCaesarCipher: true)
         expect:
-        minter.makePath("Book", codes, keys) == uri
+        minter.makePath("work", codes, keys) == uri
         where:
         codes               | keys                          | uri
-        [31]                | ["Märk världen"]              | "book/21-mrkvrldn"
-        []                  | ["Det"]                       | "book/det"
-        [139409779957, 29]  | ["2012", "Där ute i mörkret"] | "book/flg72dq7-z-2012drtmrkrt"
+        [31]                | ["Märk världen"]              | "work/21-mrkvrldn"
+        []                  | ["Det"]                       | "work/det"
+        [139409779957, 29]  | ["2012", "Där ute i mörkret"] | "work/flg72dq7-z-2012drtmrkrt"
     }
 
     def "should produce title based uri"() {
         given:
-        def minter = new LibrisURIMinter("//base/", typeRules, "2014-01-01", true)
+        def minter = new LibrisURIMinter(config)
         expect:
-        minter.computePath(data) =~ uri
+        minter.computePath(data, "auth") =~ uri
         where:
         data                                        | uri
-        makeExample("Book", "Där ute i mörkret")    | 'book/[0-9b-z]+-drtmrkrt'
+        makeExample("Book", "Där ute i mörkret")    | '/work/[0-9b-z]+-\\w{2}-drtmrkrt'
     }
 
-    def typeRules = [
-        about: ['@type': true, title: [titleValue: true]]
+    def config = [
+        base: "//base/",
+        documentUriTemplate: "{+thing}?data",
+        documentThingLink: "about",
+        alphabet: "0123456789bcdfghjklmnpqrstvwxz",
+        randomVariable: "randomKey",
+        maxRandom: 899,
+        timestampVariable: "timeKey",
+        epochDate: "2014-01-01",
+        timestampCaesarCipher: true,
+        rulesByDataset: [
+            "auth": [
+                uriTemplate: "/{+basePath}/{timeKey}-{randomKey}-{compoundSlug}",
+                ruleByBaseType: [
+                    "CreativeWork": [
+                        subclasses: ["Book"],
+                        basePath: "work",
+                        compoundSlugFrom: [[title: ["titleValue"]], "attributedTo"]
+                    ]
+                ]
+            ]
+        ]
     ]
 
     private def makeExample(type, title) {

@@ -18,11 +18,14 @@ import com.damnhandy.uri.template.UriTemplate
 @Log
 class MarcFrameConverter extends BasicFormatConverter {
 
-    MarcConversion conversion
-    def mapper = new ObjectMapper()
+    URIMinter uriMinter
+    ObjectMapper mapper = new ObjectMapper()
+
+    protected MarcConversion conversion
 
     MarcFrameConverter() {
         def loader = getClass().classLoader
+
         def config = loader.getResourceAsStream("marcframe.json").withStream {
             mapper.readValue(it, Map)
         }
@@ -37,6 +40,10 @@ class MarcFrameConverter extends BasicFormatConverter {
             }
         }
         conversion = new MarcConversion(config, tokenMaps)
+
+        //loader.getResourceAsStream("marcframe.json").withStream {
+        //    uriMinter = new LibrisURIMinter(mapper.readValue(it, Map))
+        //}
     }
 
     Map createFrame(Map marcSource) {

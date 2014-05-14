@@ -2,7 +2,10 @@ package se.kb.libris.whelks.plugin
 
 import groovy.util.logging.Slf4j as Log
 
-import se.kb.libris.whelks.*
+import com.damnhandy.uri.template.UriTemplate
+
+import se.kb.libris.whelks.Document
+
 
 @Log
 class LibrisURIMinter extends BasicPlugin implements URIMinter {
@@ -11,125 +14,161 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
     static final char[] VOWELS = "auoeiy".chars
     static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
-    String originDate
     URI base
-    Map typeRules
+    String documentUriTemplate
+    String documentThingLink
+    String thingUriTemplate
+    String thingDocumentLink
+    String epochDate
+    char[] alphabet = ALPHANUM
+    String randomVariable = null
+    int maxRandom = 0
+    String timestampVariable = null
+    boolean timestampCaesarCipher = false
+    String uuidVariable = null
+    String compoundSlugSeparator = ""
+    Map<String, MintRuleSet> rulesByDataset
+    int minKeySize = 3
+
+    private long epochOffset
+
     String pathSep = "/"
     String partSep = "-"
     String keySep = ""
-    char[] alphabet
-    int minKeySize = 3
-    int randWidth = 0
-    boolean caesarCiphered = false
 
-    private long epochOffset
-    private int randCeil
-
-    LibrisURIMinter(base=null, typeRules=null, originDate=null, caesarCiphered=false, alphabet=DEVOWELLED) {
+    LibrisURIMinter() {
         if (base != null) {
             this.setBase(base)
         }
-        this.caesarCiphered = caesarCiphered
-        this.setOriginDate(originDate)
-        this.typeRules = typeRules
+        this.timestampCaesarCipher = timestampCaesarCipher
+        this.setEpochDate(epochDate)
         this.alphabet = alphabet
-        this.setRandWidth(0)
     }
 
     void setBase(String uri) {
         this.base = new URI(uri)
     }
 
-    void setOriginDate(String originDate) {
-        if (originDate instanceof String) {
-            epochOffset = Date.parse("yyyy-MM-dd", originDate).getTime()
+    void setEpochDate(String epochDate) {
+        if (epochDate instanceof String) {
+            epochOffset = Date.parse("yyyy-MM-dd", epochDate).getTime()
         }
-        this.originDate = originDate
+        this.epochDate = epochDate
     }
 
-    void setRandWidth(int randWidth) {
-        this.randCeil = alphabet.length ** randWidth
-        this.randWidth = randWidth
+    void setRulesByDataset(Map rules) {
+        def map = [:]
+        this.rulesByDataset = map
+        rules.each { k, v ->
+            map[k] = new MintRuleSet(v)
+        }
     }
 
-    URI mint(Document doc, boolean remint=true) {
-        if (!remint && doc.identifier) {
-            return new URI(doc.identifier)
-        }
+    def createRandom() {
+        return new Random().nextInt(maxRandom)
+    }
 
-        if (typeRules) {
-            return base.resolve(computePath(doc))
-        } else {
-            return base.resolve("/uuid/"+ UUID.randomUUID()) // urn:uuid:...
-        }
+    long createTimestamp() {
+        return System.currentTimeMillis() - epochOffset
+    }
+
+    String createUUID() {
+        return UUID.randomUUID()
+    }
+
+    URI mint(Document doc) {
+        return base.resolve(computePath(doc))
     }
 
     String computePath(Document doc) {
         computePath(doc.getDataAsMap()) // TODO: needs JSON-aware doc
     }
 
-    String computePath(Map data) {
-        def keys = []
-        collectKeys(typeRules, data, keys)
-        def type = keys[0]
-        keys = keys[1..-1]
-
-        def codes = []
-        if (originDate) {
-            codes << getTimestamp()
+    String computePath(Map data, String dataset) {
+        def document = null
+        def thing = null
+        if (documentThingLink) {
+            document = data
+            thing = data[documentThingLink]
+        } else if (thingDocumentLink) {
+            thing = data
+            document = data[thingDocumentLink]
+        } else {
+            document = data
         }
-        if (randWidth) {
-            codes << new Random().nextInt(randCeil)
+
+        def vars = [:]
+        if (timestampVariable) {
+            vars[timestampVariable] = baseEncode(createTimestamp(), timestampCaesarCipher)
+        }
+        if (randomVariable) {
+            vars[randomVariable] = baseEncode(createRandom())
+        }
+        if (uuidVariable) {
+            vars[uuidVariable] = createUUID()
         }
 
-        return makePath(type, codes, keys)
+        def type = thing['@type']
+        if (type instanceof List) {
+            type = type[0]
+        }
+        def ruleset = rulesByDataset[dataset]
+        def rule = ruleset.ruleByType[type] ?: ruleset.ruleByType['*']
+
+        vars['basePath'] = rule.basePath
+
+        def compundKey = collectCompundKey(rule.compoundSlugFrom, thing)
+        if (compundKey.size()) {
+            def slug = compundKey.collect { scramble(it) }.join(compoundSlugSeparator)
+            vars['compoundSlug'] = slug
+        }
+
+        def uriTemplate = rule.uriTemplate ?: ruleset.uriTemplate
+        return UriTemplate.expand(uriTemplate, vars)
     }
 
-
-    void collectKeys(rules, data, keys) {
-        // TODO: order of rules
-        rules.each { key, rule ->
-            def v = data[key]
-            if (rule.is(true)) {
-                keys << v
-            } else if (rule instanceof Map) {
-                collectKeys(rule, v, keys)
+    List collectCompundKey(keys, data, compound=[], pickFirst=false) {
+        for (key in keys) {
+            if (key instanceof List) {
+                def subCompound = collectCompundKey(key, data, [], !pickFirst)
+                if (subCompound.size()) {
+                    compound.addAll(subCompound)
+                    if (pickFirst) {
+                        return compound
+                    }
+                }
+            } else if (key instanceof Map) {
+                key.each { subKey, valueKeys ->
+                    def subData = data[subKey]
+                    if (subData) {
+                        collectCompundKey(valueKeys, subData, compound)
+                    }
+                }
+            } else {
+                def value = data[key]
+                if (value) {
+                    compound << value
+                    if (pickFirst) {
+                        return compound
+                    }
+                }
             }
         }
+        return compound
     }
 
-    long getTimestamp() {
-        return System.currentTimeMillis() - epochOffset
+    String scramble(String s) {
+        //if (slugCase == "lower")
+        def ls = s.toLowerCase()
+        //if (slugCharInAlphabet)
+        def rs = ls.findAll { alphabet.contains(it) }.join("")
+        return (rs.size() < minKeySize)? ls : rs
     }
 
-    String makePath(String type, List<Long> codes, List<String> keys) {
-        def typeSegment = segmentFor(type)
-        def parts = codes.collect { baseEncode(it) }
-        def keyRepr = keys.collect { scramble(it) }.join(keySep)
-        if (keyRepr) {
-            parts << keyRepr
-        }
-        def reprs = []
-        if (typeSegment) {
-            reprs << typeSegment
-        }
-        def partRepr = parts.join(partSep)
-        reprs << partRepr
-        return reprs.join(pathSep)
-    }
-
-    String segmentFor(String name) {
-        return name.toLowerCase()
-    }
-
-    String baseEncode(long n) {
-        baseEncode(n, caesarCiphered)
-    }
-
-    String baseEncode(long n, boolean caesarCiphered) {
+    String baseEncode(long n, boolean lastDigitBasedCaesarCipher=false) {
         int base = alphabet.length
         int[] positions = basePositions(n, base)
-        if (caesarCiphered) {
+        if (lastDigitBasedCaesarCipher) {
             int rotation = positions[-1]
             for (int i=0; i < positions.length - 1; i++) {
                 positions[i] = rotate(positions[i], rotation, base)
@@ -157,10 +196,30 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
         return (j >= ceil)? j - ceil : j
     }
 
-    String scramble(String s) {
-        def ls = s.toLowerCase()
-        def rs = ls.findAll { alphabet.contains(it) }.join("")
-        return (rs.size() < minKeySize)? ls : rs
+    class MintRuleSet {
+        Map<String, MintRule> ruleByType = [:]
+        String uriTemplate
+        MintRuleSet(Map rules) {
+            this.uriTemplate = rules.uriTemplate
+            rules.ruleByBaseType.each { String type, Map ruleCfg ->
+                def rule = new MintRule(ruleCfg)
+                if (!rule.uriTemplate) {
+                    rule.uriTemplate = this.uriTemplate
+                }
+                ruleByType[type] = rule
+                ruleCfg.subclasses.each {
+                    ruleByType[it] = rule
+                }
+            }
+        }
+    }
+
+    class MintRule {
+        Map<String, String> variables
+        List subclasses
+        List compoundSlugFrom
+        String uriTemplate
+        String basePath
     }
 
 }
