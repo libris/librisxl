@@ -8,13 +8,13 @@ import groovy.util.logging.Slf4j as Log
 //import se.kb.libris.whelks.Document
 
 @Log
-class LibrisMinterSpec extends Specification {
+class LibrisURIMinterSpec extends Specification {
 
     long PREDICTABLE_TIMESTAMP = Date.parse("yyyy-MM-dd", "2014-03-05").getTime()
 
     def "should base encode numbers"() {
         given:
-        def minter = new LibrisMinter()
+        def minter = new LibrisURIMinter()
         expect:
         minter.baseEncode(n, caesared) == expected
 
@@ -33,7 +33,7 @@ class LibrisMinterSpec extends Specification {
 
     def "should construct path from component parts"() {
         given:
-        def minter = new LibrisMinter("//base/", null, null, true)
+        def minter = new LibrisURIMinter("//base/", null, null, true)
         expect:
         minter.makePath("Book", codes, keys) == uri
         where:
@@ -45,16 +45,19 @@ class LibrisMinterSpec extends Specification {
 
     def "should produce title based uri"() {
         given:
-        def typeRules = [about: ['@type': true, title: [titleValue: true]]]
-        def minter = new LibrisMinter("//base/", typeRules, "2014-01-01", true)
+        def minter = new LibrisURIMinter("//base/", typeRules, "2014-01-01", true)
         expect:
         minter.computePath(data) =~ uri
         where:
-        data                                    | uri
-        newData("Book", "Där ute i mörkret")    | 'book/[0-9b-z]+-drtmrkrt'
+        data                                        | uri
+        makeExample("Book", "Där ute i mörkret")    | 'book/[0-9b-z]+-drtmrkrt'
     }
 
-    private def newData(type, title) {
+    def typeRules = [
+        about: ['@type': true, title: [titleValue: true]]
+    ]
+
+    private def makeExample(type, title) {
         return [
             "about": [
                 "@type": type,
