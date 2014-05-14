@@ -5,14 +5,14 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.*
 
 @Log
-class LibrisMinter extends BasicPlugin implements URIMinter {
+class LibrisURIMinter extends BasicPlugin implements URIMinter {
 
     static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
     static final char[] VOWELS = "auoeiy".chars
     static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
     String originDate
-    URI baseUri
+    URI base
     Map typeRules
     String pathSep = "/"
     String partSep = "-"
@@ -25,13 +25,19 @@ class LibrisMinter extends BasicPlugin implements URIMinter {
     private long epochOffset
     private int randCeil
 
-    LibrisMinter(baseUri=null, typeRules=null, originDate=null, caesarCiphered=false, alphabet=DEVOWELLED) {
-        this.baseUri = (baseUri instanceof URI)? baseUri : new URI(baseUri.toString())
+    LibrisURIMinter(base=null, typeRules=null, originDate=null, caesarCiphered=false, alphabet=DEVOWELLED) {
+        if (base != null) {
+            this.setBase(base)
+        }
         this.caesarCiphered = caesarCiphered
         this.setOriginDate(originDate)
         this.typeRules = typeRules
         this.alphabet = alphabet
         this.setRandWidth(0)
+    }
+
+    void setBase(String uri) {
+        this.base = new URI(uri)
     }
 
     void setOriginDate(String originDate) {
@@ -52,9 +58,9 @@ class LibrisMinter extends BasicPlugin implements URIMinter {
         }
 
         if (typeRules) {
-            return baseUri.resolve(computePath(doc))
+            return base.resolve(computePath(doc))
         } else {
-            return baseUri.resolve("/uuid/"+ UUID.randomUUID()) // urn:uuid:...
+            return base.resolve("/uuid/"+ UUID.randomUUID()) // urn:uuid:...
         }
     }
 
