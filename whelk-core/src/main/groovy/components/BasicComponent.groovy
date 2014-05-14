@@ -49,26 +49,6 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             componentState = [:].asSynchronized()
             componentState[LAST_UPDATED] = 0L
         }
-        log.info("[${this.id}] Starting thread to periodically save state.")
-        if (!stateThread) {
-            stateThread = Thread.start {
-                boolean ok = true
-                while(ok) {
-                    try {
-                        if (componentState && stateUpdated) {
-                            log.trace("[${whelkId}-${this.id}] Saving state ...")
-                            mapper.writeValue(stateFile, componentState)
-                            stateUpdated = false
-                        }
-                        Thread.sleep(20000)
-                    } catch (Exception e) {
-                        ok = false
-                        log.error("[${this.id}] Failed to write statefile: ${e.message}", e)
-                        throw new WhelkRuntimeException("Couldn't write statefile for ${whelkId}/${this.id}", e)
-                    }
-                }
-            }
-        }
         componentState['componentId'] = this.id
         componentState['status'] = "started"
 
@@ -86,55 +66,10 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
 
         listener = plugins.find { it instanceof Listener }
-
-        if (listener && listener.hasQueue(this.id) && !listenerThread) {
-
-            listenerThread = Thread.start {
-                log.debug("[${this.id}] Delaying start of notification listener ...")
-                Thread.sleep(5000)
-                log.debug("[${this.id}] Starting notification listener.")
-                boolean ok = true
-                try {
-                    while (ok) {
-                        log.debug("[${this.id}] Waiting for update ...")
-                        ListenerEvent e = listener.nextUpdate(this.id)
-                        log.debug("[${this.id}] Received update from component ${e.senderId} = ${e.payload}")
-                        long lastUpdate = componentState.get(LAST_UPDATED, 0L)
-                        if (lastUpdate < e.payload) {
-                            log.debug("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.")
-                            def docs = []
-                            int count = 0
-                            long latestTimestamp = 0L
-                            for (doc in components.get(e.senderId).getAll(null, new Date(lastUpdate), null)) {
-                                if (doc.timestamp > latestTimestamp) {
-                                    latestTimestamp = doc.timestamp
-                                }
-                                docs << doc
-                                if ((++count % batchUpdateSize) == 0) {
-                                    bulkAdd(docs, docs.first().contentType, latestTimestamp)
-                                    docs = []
-                                }
-                            }
-                            // Remainder
-                            if (docs.size() > 0) {
-                                log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
-                                bulkAdd(docs, docs.first().contentType, latestTimestamp)
-                            }
-                            log.debug("[${this.id}] Loaded $count document to get up to date with ${e.senderId}")
-                        } else if (log.isDebugEnabled()) {
-                            log.debug("[${this.id}] Already up to date.")
-                        }
-                    }
-                } catch (Exception e) {
-                    ok = false
-                    log.error("[${this.id}] Failed to read from notification queue: ${e.message}", e)
-                    throw e
-                }
-            }
-        } else if (!listenerThread) {
-            log.debug("[${this.id}] No listener queue registered for me.")
-        }
+        startStateThread()
+        startListenerThread()
     }
+
 
     @Override
     public URI add(Document document) {
@@ -234,6 +169,77 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         if (key == LAST_UPDATED && listener) {
             log.debug("[${this.id}] Notifying listeners ..")
             listener.registerUpdate(this.id, value)
+        }
+    }
+
+    void startStateThread() {
+        log.info("[${this.id}] Starting thread to periodically save state.")
+        if (!stateThread) {
+            stateThread = Thread.start {
+                boolean ok = true
+                while(ok) {
+                    try {
+                        if (componentState && stateUpdated) {
+                            log.trace("[${whelkId}-${this.id}] Saving state ...")
+                            mapper.writeValue(stateFile, componentState)
+                            stateUpdated = false
+                        }
+                        Thread.sleep(20000)
+                    } catch (Exception e) {
+                        ok = false
+                        log.error("[${this.id}] Failed to write statefile: ${e.message}", e)
+                        throw new WhelkRuntimeException("Couldn't write statefile for ${whelkId}/${this.id}", e)
+                    }
+                }
+            }
+        }
+    }
+
+    void startListenerThread() {
+        if (listener && listener.hasQueue(this.id) && !listenerThread) {
+
+            listenerThread = Thread.start {
+                log.debug("[${this.id}] Starting notification listener.")
+                boolean ok = true
+                try {
+                    while (ok) {
+                        log.debug("[${this.id}] Waiting for update ...")
+                        ListenerEvent e = listener.nextUpdate(this.id)
+                        log.debug("[${this.id}] Received update from component ${e.senderId} = ${e.payload}")
+                        long lastUpdate = componentState.get(LAST_UPDATED, 0L)
+                        if (lastUpdate < e.payload) {
+                            log.debug("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.")
+                            def docs = []
+                            int count = 0
+                            long latestTimestamp = 0L
+                            for (doc in components.get(e.senderId).getAll(null, new Date(lastUpdate), null)) {
+                                if (doc.timestamp > latestTimestamp) {
+                                    latestTimestamp = doc.timestamp
+                                }
+                                docs << doc
+                                if ((++count % batchUpdateSize) == 0) {
+                                    bulkAdd(docs, docs.first().contentType, latestTimestamp)
+                                    docs = []
+                                }
+                            }
+                            // Remainder
+                            if (docs.size() > 0) {
+                                log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
+                                bulkAdd(docs, docs.first().contentType, latestTimestamp)
+                            }
+                            log.debug("[${this.id}] Loaded $count document to get up to date with ${e.senderId}")
+                        } else if (log.isDebugEnabled()) {
+                            log.debug("[${this.id}] Already up to date.")
+                        }
+                    }
+                } catch (Exception e) {
+                    ok = false
+                    log.error("[${this.id}] Failed to read from notification queue: ${e.message}", e)
+                    throw e
+                }
+            }
+        } else if (!listenerThread) {
+            log.debug("[${this.id}] No listener queue registered for me.")
         }
     }
 

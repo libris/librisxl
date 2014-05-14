@@ -3,11 +3,14 @@ package se.kb.libris.whelks.plugin;
 import java.util.*;
 import org.codehaus.jackson.map.*
 
-public class BasicPlugin implements Plugin {
+public abstract class BasicPlugin implements Plugin {
     private boolean enabled = true;
     private String id = "basicPlugin";
     private List<Plugin> plugins = new ArrayList<Plugin>();
     Map global
+
+    private String initString = null
+    private boolean initialized = false
 
     public final static mapper = new ObjectMapper()
 
@@ -19,9 +22,12 @@ public class BasicPlugin implements Plugin {
     public String getId() { return this.id; }
     public void setId(String i) { this.id = i; }
     @Override
-    public void init(String whelkName) {}
+    public void init(String initString) {
+        this.initString = initString
+    }
     @Override
     public void addPlugin(Plugin p) {
+        p.init(this.initString)
         plugins.add(p);
     }
     public List<Plugin> getPlugins() { plugins }

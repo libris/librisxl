@@ -269,7 +269,6 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                             if (subplugin instanceof WhelkAware) {
                                 subplugin.setWhelk(this)
                             }
-                            subplugin.init(this.id)
                             plugin.addPlugin(subplugin)
                         }
                     }
@@ -303,7 +302,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                 }
             }
         }
-        return constructor 
+        return constructor
     }
 
     List<API> getAPIs() { return apis.values() as List}
