@@ -33,13 +33,6 @@
         },
         "_unique" : true
     },
-    "defsindex": {
-        "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
-        "_plugins" : [
-            "defsindexconverter"
-            ],
-        "_unique" : true
-    },
     "pairtreediskstorage": {
         "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
         "_params" : {

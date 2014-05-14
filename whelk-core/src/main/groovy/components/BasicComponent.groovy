@@ -29,6 +29,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     // Plugins
     Map<String,FormatConverter> formatConverters = new HashMap<String,FormatConverter>()
     Map<String,DocumentSplitter> documentSplitters = new HashMap<String,DocumentSplitter>()
+    List<LinkExpander> linkExpanders = new ArrayList<LinkExpander>()
     Map<String,Component> components = new HashMap<String,Component>()
 
     Listener listener
@@ -66,7 +67,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
 
         listener = plugins.find { it instanceof Listener }
-        startStateThread()
+        startStateThread(whelkId)
         startListenerThread()
     }
 
@@ -119,8 +120,8 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         if (!postSplitter && fc) {
             postSplitter = documentSplitters.get(fc.resultContentType)
         }
+        List docs = []
         if (fc || preSplitter || postSplitter) {
-            List docs = []
             for (doc in documents) {
                 log.trace("[${this.id}] Calling prepare on doc ${doc.identifier}");
                 if (preSplitter) {
@@ -153,11 +154,27 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                 }
             }
             log.debug("[${this.id}] Returning document list of size ${docs.size()}.")
+        }
+        if (linkExpanders.size() > 0) {
+            log.trace("Link expanders configured. Must loop through documents.")
+            if (docs.size() == 0) {
+                docs = documents
+            }
+            for (doc in docs) {
+                LinkExpander expander = getLinkExpanderFor(doc)
+                if (expander) {
+                    log.debug("Expanding ${doc.identifier}")
+                    doc = expander.expand(doc)
+                }
+            }
+        }
+        if (docs.size() > 0) {
             return docs
         }
-        log.trace("[${this.id}] Nothing to do, return the same list of documents.")
         return documents
     }
+
+    LinkExpander getLinkExpanderFor(Document doc) { return linkExpanders.find { it.valid(doc) } }
 
     public Map getComponentState() { return componentState.asImmutable() }
 
@@ -172,7 +189,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
     }
 
-    void startStateThread() {
+    void startStateThread(String whelkId) {
         log.info("[${this.id}] Starting thread to periodically save state.")
         if (!stateThread) {
             stateThread = Thread.start {

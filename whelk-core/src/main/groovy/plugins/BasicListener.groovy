@@ -26,6 +26,7 @@ class BasicListener extends BasicPlugin implements Listener {
 
     @Override
     void init(String id) {
+        super.init(id)
         // Setup listener queues for all listening components.
         registry.each { sender, receiverlist ->
             for (receiver in receiverlist) {

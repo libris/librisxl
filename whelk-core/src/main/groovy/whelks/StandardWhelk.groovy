@@ -127,10 +127,12 @@ class StandardWhelk extends AbstractWhelkServlet implements Whelk {
             if (le) {
                 String origchecksum = doc.checksum
                 doc = le.expand(doc)
+                /*
                 if (doc.checksum != origchecksum) {
                     log.debug("Indexing expanded doc.")
                     index.add(doc)
                 }
+                */
             }
         }
 

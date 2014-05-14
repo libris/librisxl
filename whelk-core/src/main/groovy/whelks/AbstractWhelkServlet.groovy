@@ -253,9 +253,11 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                         }
                     }
                 }
+                if (plugin instanceof WhelkAware) {
+                    plugin.setWhelk(this)
+                }
                 pluginChain.put(plugname, plugin)
                 if (meta._plugins) {
-                    log.trace("Plugin \"${plugin.id}\" has plugins.")
                     for (plug in meta._plugins) {
                         if (availablePlugins.containsKey(plug)) {
                             log.debug("Using previously initiated plugin $plug for $plugname")
@@ -266,9 +268,6 @@ abstract class AbstractWhelkServlet extends HttpServlet {
                         } else {
                             log.debug("Loading plugin $plug for ${plugin.id}")
                             def subplugin = getPlugin(pluginConfig, plug, whelkname, pluginChain)
-                            if (subplugin instanceof WhelkAware) {
-                                subplugin.setWhelk(this)
-                            }
                             plugin.addPlugin(subplugin)
                         }
                     }
@@ -280,6 +279,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         if (!plugin) {
             throw new WhelkRuntimeException("For $whelkname; unable to instantiate plugin with name $plugname.")
         }
+        plugin.init(this.id)
         log.debug("Stashing \"${plugin.id}\".")
         availablePlugins.put(plugname, plugin)
         return plugin

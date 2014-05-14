@@ -22,12 +22,10 @@ public abstract class BasicPlugin implements Plugin {
     public String getId() { return this.id; }
     public void setId(String i) { this.id = i; }
     @Override
-    public void init(String initString) {
-        this.initString = initString
-    }
+    public void init(String initString) { }
     @Override
     public void addPlugin(Plugin p) {
-        p.init(this.initString)
+        log.info("Plugin: ${this.getClass().getName()}")
         plugins.add(p);
     }
     public List<Plugin> getPlugins() { plugins }

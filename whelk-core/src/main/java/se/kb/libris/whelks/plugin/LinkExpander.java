@@ -4,5 +4,4 @@ import se.kb.libris.whelks.Document;
 
 public interface LinkExpander extends Plugin {
     Document expand(Document document);
-    boolean valid(Document document);
 }
