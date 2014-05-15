@@ -96,7 +96,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             }
             log.debug("Now is ${new Date().getTime()}, updatetime is $updatetime")
             def docs = prepareDocs(documents, contentType)
-            log.trace("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
+            log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)
             setState(LAST_UPDATED, updatetime)
         } catch (Exception e) {
@@ -158,10 +158,13 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             log.debug("[${this.id}] Returning document list of size ${docs.size()}.")
             return docs
         } else if (linkExpanders.size() > 0) {
-            log.trace("Must loop over documents for link expansion.")
+            log.debug("Must loop over documents for link expansion.")
             for (doc in documents) {
                 doc = linkExpand(doc)
             }
+            log.debug("Links expanded.")
+        } else {
+            log.debug("No measures required. Returning document list.")
         }
         return documents
     }
@@ -193,7 +196,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         this.componentState.put(key, value)
         stateUpdated = true
         if (key == LAST_UPDATED && listener) {
-            log.debug("[${this.id}] Notifying listeners ..")
+            log.trace("[${this.id}] Notifying listeners ..")
             listener.registerUpdate(this.id, value)
         }
     }
