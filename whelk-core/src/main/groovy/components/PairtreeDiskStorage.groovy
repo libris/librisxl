@@ -49,7 +49,7 @@ class PairtreeDiskStorage extends BasicComponent implements Storage {
         "text/xml" : ".xml"
     ]
 
-    static final Logger log = LoggerFactory.getLogger(PairtreeDiskStorage.class)
+    static Logger log = LoggerFactory.getLogger(PairtreeDiskStorage.class)
 
     // TODO: Add document counter
 

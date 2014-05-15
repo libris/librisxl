@@ -26,6 +26,8 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     Index index
     String indexName
 
+    static Logger log = LoggerFactory.getLogger(PairtreeHybridDiskStorage.class)
+
     PairtreeHybridDiskStorage(Map settings) {
         super(settings)
     }
@@ -137,6 +139,6 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         if (entries.size() > 0) {
             index.index(entries)
         }
-        log.info("Meta index rebuilt.")
+        log.info("Meta index rebuilt. Contains $count entries.")
     }
 }

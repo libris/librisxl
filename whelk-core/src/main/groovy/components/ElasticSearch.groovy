@@ -201,7 +201,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
 
         log.debug("Deleting object with identifier ${translateIdentifier(uri.toString())}.")
 
-        client.delete(new DeleteRequest(indexName, determineDocuentTypeBasedOnURI(uri.toString(), indexName), translateIdentifier(uri.toString())))
+        client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(uri), translateIdentifier(uri.toString())))
 
         setState(LAST_UPDATED, new Date().getTime())
             // Kanske en matchall-query filtrerad på _type och _id?
@@ -384,29 +384,11 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         def idxType = doc.entry['dataset']?.toLowerCase()
         log.trace("dataset in entry is ${idxType} for ${doc.identifier}")
         if (!idxType) {
-            idxType = determineDocuentTypeBasedOnURI(doc.identifier, indexName)
+            idxType = shapeComputer.calculateShape(doc.identifier)
         }
         log.trace("Using type $idxType for document ${doc.identifier}")
         return idxType
     }
-
-
-    String determineDocuentTypeBasedOnURI(String identifier, String indexName) {
-        def idxType
-        log.trace("Using identifier to determine type.")
-        try {
-            def identParts = identifier.split("/")
-            idxType = (identParts[1] == whelk.id && identParts.size() > 3 ? identParts[2] : identParts[1])
-        } catch (Exception e) {
-            log.error("Tried to use first part of URI ${identifier} as type. Failed: ${e.message}", e)
-        }
-        if (!idxType) {
-            idxType = defaultType
-        }
-        log.trace("Using type $idxType for ${identifier}")
-        return idxType
-    }
-
 
     void index(final List<Map<String,String>> data) throws WhelkIndexException  {
         def breq = client.prepareBulk()

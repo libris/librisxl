@@ -75,7 +75,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
 
     @Override
-    public URI add(Document document) {
+    public URI add(final Document document) {
         try {
             long updatetime = document.timestamp
             List<Document> docs = prepareDocs([document], document.contentType)
@@ -88,14 +88,14 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
     }
 
-    public void bulkAdd(List<Document> docs, String contentType, long updatetime = -1)  {
-        log.debug("[${this.id}] bulkAdd called with ${docs.size()} documents.")
+    public void bulkAdd(final List<Document> documents, String contentType, long updatetime = -1)  {
+        log.debug("[${this.id}] bulkAdd called with ${documents.size()} documents.")
         try {
             if (updatetime < 0) {
                 updatetime = new Date().getTime()
             }
             log.debug("Now is ${new Date().getTime()}, updatetime is $updatetime")
-            docs = prepareDocs(docs, contentType)
+            def docs = prepareDocs(documents, contentType)
             log.trace("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)
             setState(LAST_UPDATED, updatetime)
@@ -268,6 +268,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                     } catch (Exception e) {
                         log.error("[${this.id}] DISABLING LISTENER because of unexpected exception. Possible restart required.")
                         ok = false
+                        listener.disable(this.id)
                         log.error("[${this.id}] Failed to read from notification queue: ${e.message}")
                         throw e
                     }

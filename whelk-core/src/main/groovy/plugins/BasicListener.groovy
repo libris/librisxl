@@ -60,6 +60,9 @@ class BasicListener extends BasicPlugin implements Listener {
     boolean hasQueue(String componentId) {
         return queues.containsKey(componentId)
     }
+
+    void disable(String componentId) {
+    }
 }
 
 class ListenerEvent {

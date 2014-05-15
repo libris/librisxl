@@ -96,7 +96,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         try {
             def (whelkConfig, pluginConfig) = loadConfig()
             setConfig(whelkConfig, pluginConfig)
-            log.info("[${this.id}] Whelk operational.")
+            log.info("Whelk ${this.id} is now operational.")
         } catch (Exception e) {
             log.warn("Problems starting whelk ${this.id}.", e)
             throw e

@@ -193,6 +193,8 @@ class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
         log.debug("Server response: ${response.statusLine.statusCode}")
         if (response.statusLine.statusCode == 200) {
             EntityUtils.consumeQuietly(response.getEntity())
+        } else if (response.statusLine.statusCode == 400) {
+            log.warn("Error reponse 400: ${response.statusLine.reasonPhrase}")
         } else {
             throw new WhelkAddException("Batch update failed: ${EntityUtils.toString(response.getEntity(), "utf-8")}", [])
         }
