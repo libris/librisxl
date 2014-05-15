@@ -12,7 +12,11 @@ class DefsIndexFormatConverter extends BasicFormatConverter {
 
     Document doConvert(Document doc) {
         def docmap = doc.dataAsMap
-        docmap.remove("@context")
-        return doc.withData(docmap)
+        def ct = docmap.remove("@context")
+        if (ct) {
+            // Only update document if there actually was a context there to begin with
+            doc.withData(docmap)
+        }
+        return doc
     }
 }
