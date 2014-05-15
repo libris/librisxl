@@ -9,8 +9,6 @@ import groovy.util.logging.Slf4j as Log
 @Log
 class LibrisURIMinterSpec extends Specification {
 
-    long PREDICTABLE_TIMESTAMP = Date.parse("yyyy-MM-dd", "2014-03-05").getTime()
-
     def "should base encode numbers"() {
         given:
         def minter = new LibrisURIMinter(alphabet: LibrisURIMinter.DEVOWELLED)
@@ -32,7 +30,10 @@ class LibrisURIMinterSpec extends Specification {
 
     def "should scramble slug"() {
         given:
-        def minter = new LibrisURIMinter(alphabet: "0123456789bcdfghjklmnpqrstvwxz")
+        def minter = new LibrisURIMinter(
+                alphabet: "0123456789bcdfghjklmnpqrstvwxz",
+                slugCharInAlphabet: true,
+                minSlugSize: 3)
         expect:
         minter.scramble(value) == slug
         where:
@@ -51,10 +52,10 @@ class LibrisURIMinterSpec extends Specification {
         minter.computePath(data, "auth") == uri
         where:
         data                                        | uri
-        doc("@type": "Book",
-            title: [
+        ["@type": "Book",
+            instanceTitle: [
                 titleValue: "Där ute i mörkret"],
-            publicationYear: "2012")                | '/work/flg72dq7-zx-drtmrkrt2012'
+            publicationYear: "2012"]                | '/work/flg72dq7-zx-drtmrkrt2012'
     }
 
     def config = [
@@ -67,6 +68,7 @@ class LibrisURIMinterSpec extends Specification {
         timestampVariable: "timeKey",
         epochDate: "2014-01-01",
         timestampCaesarCipher: true,
+        slugCharInAlphabet: true,
         rulesByDataset: [
             "auth": [
                 uriTemplate: "/{+basePath}/{timeKey}-{randomKey}-{compoundSlug}",
@@ -74,25 +76,11 @@ class LibrisURIMinterSpec extends Specification {
                     "CreativeWork": [
                         subclasses: ["Book"],
                         basePath: "work",
-                        compoundSlugFrom: [[title: ["titleValue"]], "publicationYear", "attributedTo"]
+                        compoundSlugFrom: [[instanceTitle: ["titleValue"]], "publicationYear", "attributedTo"]
                     ]
                 ]
             ]
         ]
     ]
-
-    private def doc(thing) {
-        return ["about": thing]
-    }
-
-    /*
-    private def newDoc(data) {
-        ObjectMapper mapper = new ObjectMapper()
-        return new Document()
-                    .withData(mapper.writeValueAsString(data))
-                    .withContentType("application/ld+json")
-                    .withTimestamp(PREDICTABLE_TIMESTAMP)
-    }
-    */
 
 }

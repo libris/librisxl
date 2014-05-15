@@ -44,12 +44,13 @@
           "compoundSlugFrom": [["prefLabel", "label"]]
         },
         "CreativeWork": {
+          "subclasses": ["ConceptualWork"],
           "basePath": "work",
-          "compoundSlugFrom": [["title", "uniformTitle"], "attributedTo"]
+          "compoundSlugFrom": [["title", "uniformTitle"], {"attributedTo": ["name"]}]
         },
         "Concept": {
           "basePath": "term",
-          "compoundSlugFrom": ["prefLabel", "inScheme"]
+          "compoundSlugFrom": ["prefLabel", {"inScheme": ["notation"]}]
         },
         "ConceptScheme": {
           "uriTemplate": "/def/scheme/{notation}",
@@ -65,7 +66,7 @@
       "uriTemplate": "/resource/bib/{timeKey}-{randomKey}",
       "ruleByBaseType": {
         "CreativeWork": {
-          "compoundSlugFrom": [["title", "uniformTitle"], "attributedTo"]
+          "compoundSlugFrom": [["title", "uniformTitle"], {"attributedTo": ["name"]}, "publicationYear"]
         },
         "*": {
           "thingUriTemplate": "/resource/{+document}"

@@ -27,9 +27,11 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
     String timestampVariable = null
     boolean timestampCaesarCipher = false
     String uuidVariable = null
+    boolean slugCharInAlphabet = true
+    String slugCase = "lower"
     String compoundSlugSeparator = ""
     Map<String, MintRuleSet> rulesByDataset
-    int minKeySize = 3
+    int minSlugSize = 2
 
     private long epochOffset
 
@@ -82,10 +84,11 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
     }
 
     String computePath(Document doc) {
-        computePath(doc.getDataAsMap()) // TODO: needs JSON-aware doc
+        computePath(doc.getDataAsMap())
     }
 
-    String computePath(Map data, String dataset) {
+    Map computePaths(Map data, String dataset) {
+        def results = [:]
         def document = null
         def thing = null
         if (documentThingLink) {
@@ -97,7 +100,23 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
         } else {
             document = data
         }
+        if (documentUriTemplate) {
+            def thingUri = computePath(thing, dataset)
+            results['thing'] = thingUri
+            results['document'] = UriTemplate.expand(documentUriTemplate,
+                    [thing: thingUri])
+        } else {
+            def documentUri = computePath(document, dataset)
+            results['document'] = documentUri
+            if (thingUriTemplate) {
+                results['thing'] = UriTemplate.expand(thingUriTemplate,
+                        [document: documentUri])
+            }
+        }
+        return results
+    }
 
+    String computePath(Map data, String dataset) {
         def vars = [:]
         if (timestampVariable) {
             vars[timestampVariable] = baseEncode(createTimestamp(), timestampCaesarCipher)
@@ -109,7 +128,7 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
             vars[uuidVariable] = createUUID()
         }
 
-        def type = thing[typeKey]
+        def type = data[typeKey]
         if (type instanceof List) {
             type = type[0]
         }
@@ -118,10 +137,12 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
 
         vars['basePath'] = rule.basePath
 
-        def compundKey = collectCompundKey(rule.compoundSlugFrom, thing)
-        if (compundKey.size()) {
-            def slug = compundKey.collect { scramble(it) }.join(compoundSlugSeparator)
-            vars['compoundSlug'] = slug
+        if (rule.compoundSlugFrom) {
+            def compundKey = collectCompundKey(rule.compoundSlugFrom, data)
+            if (compundKey.size()) {
+                def slug = compundKey.collect { scramble(it) }.join(compoundSlugSeparator)
+                vars['compoundSlug'] = slug
+            }
         }
 
         def uriTemplate = rule.uriTemplate ?: ruleset.uriTemplate
@@ -159,11 +180,16 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
     }
 
     String scramble(String s) {
-        //if (slugCase == "lower")
-        def ls = s.toLowerCase()
-        //if (slugCharInAlphabet)
-        def rs = ls.findAll { alphabet.contains(it) }.join("")
-        return (rs.size() < minKeySize)? ls : rs
+        if (slugCase == "lower") {
+            s = s.toLowerCase()
+        }
+        if (slugCharInAlphabet) {
+            def reduced = s.findAll { alphabet.contains(it) }.join("")
+            if (reduced.size() >= minSlugSize) {
+                return reduced
+            }
+        }
+        return s
     }
 
     String baseEncode(long n, boolean lastDigitBasedCaesarCipher=false) {
@@ -216,7 +242,8 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
     }
 
     class MintRule {
-        Map<String, String> variables
+        Map<String, String> bound
+        List<String> variables
         List subclasses
         List compoundSlugFrom
         String uriTemplate
