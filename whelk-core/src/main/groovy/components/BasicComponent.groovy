@@ -97,7 +97,9 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             log.debug("Now is ${new Date().getTime()}, updatetime is $updatetime")
             def docs = prepareDocs(documents, contentType)
             log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
+            long startBatchAt = System.nanoTime()
             batchLoad(docs)
+            log.debug("[${this.id}] Batch loaded in ${(System.nanoTime()-startBatchAt)/1000} milliseconds")
             setState(LAST_UPDATED, updatetime)
         } catch (Exception e) {
             log.error("[${this.id}] failed to add documents. (${e.message})", e)
