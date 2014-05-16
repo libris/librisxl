@@ -1,6 +1,6 @@
 {
   "base": "http://id.kb.se/",
-  "thingUriTemplate": "resource{+document}",
+  "thingUriTemplate": "/resource{+document}",
   "rulesByDataset": {
     "auth": {
       "uriTemplate": "/auth/{controlNumber}",

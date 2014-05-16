@@ -17,9 +17,8 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
     URI base
     String typeKey = '@type'
     String documentUriTemplate
-    String documentThingLink
     String thingUriTemplate
-    String thingDocumentLink
+    String objectLink
     String epochDate
     char[] alphabet = ALPHANUM
     String randomVariable = null
@@ -89,30 +88,24 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
 
     Map computePaths(Map data, String dataset) {
         def results = [:]
-        def document = null
-        def thing = null
-        if (documentThingLink) {
-            document = data
-            thing = data[documentThingLink]
-        } else if (thingDocumentLink) {
-            thing = data
-            document = data[thingDocumentLink]
-        } else {
-            document = data
+        def object = data
+        if (objectLink) {
+            object = data[objectLink]
         }
         if (documentUriTemplate) {
-            def thingUri = computePath(thing, dataset)
+            def thingUri = computePath(object, dataset)
             results['thing'] = thingUri
             results['document'] = UriTemplate.expand(documentUriTemplate,
                     [thing: thingUri])
         } else {
-            def documentUri = computePath(document, dataset)
+            def documentUri = computePath(object, dataset)
             results['document'] = documentUri
             if (thingUriTemplate) {
                 results['thing'] = UriTemplate.expand(thingUriTemplate,
                         [document: documentUri])
             }
         }
+        log.info "Computed ${results} for object in ${dataset}"
         return results
     }
 

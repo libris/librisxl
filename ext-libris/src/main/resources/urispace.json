@@ -1,7 +1,7 @@
 {
   "base": "http://id.kb.se/",
-  "documentUriTemplate": "{+thing}?data",
-  "documentThingLink": "about",
+  "thingUriTemplate": "{+document}#it",
+  "objectLink": "about",
   "alphabet": "0123456789bcdfghjklmnpqrstvwxz",
   "randomVariable": "randomKey",
   "maxRandom": 899,
@@ -50,7 +50,7 @@
         },
         "Concept": {
           "basePath": "term",
-          "compoundSlugFrom": ["prefLabel", {"inScheme": ["notation"]}]
+          "compoundSlugFrom": [{"inScheme": ["notation"]}, "prefLabel"]
         },
         "ConceptScheme": {
           "uriTemplate": "/def/scheme/{notation}",
@@ -58,18 +58,18 @@
         },
         "*": {
           "uriTemplate": "/auth/{identifier}",
-          "thingUriTemplate": "/resource/{+document}"
+          "thingUriTemplate": "/resource{+document}"
         }
       }
     },
     "bib": {
-      "uriTemplate": "/resource/bib/{timeKey}-{randomKey}",
+      "uriTemplate": "/bib/{timeKey}-{randomKey}",
       "ruleByBaseType": {
         "CreativeWork": {
           "compoundSlugFrom": [["title", "uniformTitle"], {"attributedTo": ["name"]}, "publicationYear"]
         },
         "*": {
-          "thingUriTemplate": "/resource/{+document}"
+          "thingUriTemplate": "{+document}#it"
         }
       }
     },

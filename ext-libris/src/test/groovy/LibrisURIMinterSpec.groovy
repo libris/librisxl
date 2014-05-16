@@ -58,7 +58,7 @@ class LibrisURIMinterSpec extends Specification {
     def config = [
         base: "//base/",
         documentUriTemplate: "{+thing}?data",
-        documentThingLink: "about",
+        objectLink: "about",
         alphabet: "0123456789bcdfghjklmnpqrstvwxz",
         randomVariable: "randomKey",
         maxRandom: 899,
