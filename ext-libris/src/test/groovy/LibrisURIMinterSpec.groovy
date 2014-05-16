@@ -39,6 +39,19 @@ class LibrisURIMinterSpec extends Specification {
         "Där ute i mörkret"     | "drtmrkrt"
     }
 
+    def "should shorten words in strings with many words"() {
+        given:
+        def minter = new LibrisURIMinter(maxWordsInSlug: 4, shortWordSize: 2)
+        expect:
+        minter.shorten(text) == shortened ?: text
+        where:
+        text                    | shortened
+        "All work no play"      | null
+        "All work and no play"  | "Al wo an no pl"
+        "A we I m pas"          | null
+        "A woe in the past"     | "A wo in th pa"
+    }
+
     def "should compute path from data using variables and compound keys"() {
         given:
         def minter = new LibrisURIMinter(config)

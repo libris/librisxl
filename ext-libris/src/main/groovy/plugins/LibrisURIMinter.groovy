@@ -31,12 +31,11 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
     String compoundSlugSeparator = ""
     Map<String, MintRuleSet> rulesByDataset
     int minSlugSize = 2
+    int maxWordsInSlug = 6
+    int shortWordSize = 3
 
     private long epochOffset
-
-    String pathSep = "/"
-    String partSep = "-"
-    String keySep = ""
+    private int checkForWordsMinSize = maxWordsInSlug * (shortWordSize + 1)
 
     LibrisURIMinter() {
         if (base != null) {
@@ -179,7 +178,7 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
             } else {
                 def value = data[key]
                 if (value) {
-                    compound << value
+                    compound << shorten(value)
                     if (pickFirst) {
                         return compound
                     }
@@ -197,6 +196,18 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
             def reduced = s.findAll { alphabet.contains(it) }.join("")
             if (reduced.size() >= minSlugSize) {
                 return reduced
+            }
+        }
+        return s
+    }
+
+    String shorten(String s) {
+        if (maxWordsInSlug && s.size() > checkForWordsMinSize) {
+            def words = s.split(/\s+|-/)
+            if (words.size() > maxWordsInSlug) {
+                return words.collect {
+                    it.size() > shortWordSize? it.substring(0, shortWordSize) : it
+                }.join(" ")
             }
         }
         return s
