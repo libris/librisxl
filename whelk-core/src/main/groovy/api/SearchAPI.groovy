@@ -35,7 +35,7 @@ class SearchAPI extends BasicAPI implements API {
         }
         def elasticQuery = new ElasticQuery(queryMap)
         if (queryMap.f) {
-            elasticQuery.query += " " + queryMap.f
+            elasticQuery.query += " " + queryMap.f.first()
         }
         elasticQuery.indexTypes = indexConfig.types ?: [indexType]
         if (facets) {
