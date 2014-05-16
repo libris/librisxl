@@ -137,6 +137,23 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
 
         vars['basePath'] = rule.basePath
 
+        if (rule.variables) {
+            rule.variables.each {
+                def obj = data
+                def prop = it
+                def dotIndex = it.indexOf('.')
+                if (dotIndex != -1) {
+                    obj = data[it.substring(0, dotIndex)]
+                    prop = it.substring(dotIndex)
+                }
+                def slug = obj[prop]
+                if (!slug) {
+                    throw new URIMinterException("Missing value for variable ${it}")
+                }
+                vars[it] = slug
+            }
+        }
+
         if (rule.compoundSlugFrom) {
             def compundKey = collectCompundKey(rule.compoundSlugFrom, data)
             if (compundKey.size()) {
@@ -250,4 +267,10 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
         String basePath
     }
 
+}
+
+class URIMinterException extends RuntimeException {
+    URIMinterException(String msg) {
+        super(msg)
+    }
 }

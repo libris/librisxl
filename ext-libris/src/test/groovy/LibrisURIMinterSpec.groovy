@@ -1,12 +1,8 @@
 package se.kb.libris.whelks.plugin
 
 import spock.lang.Specification
-import groovy.util.logging.Slf4j as Log
 
-//import org.codehaus.jackson.map.ObjectMapper
-//import se.kb.libris.whelks.Document
 
-@Log
 class LibrisURIMinterSpec extends Specification {
 
     def "should base encode numbers"() {
@@ -56,6 +52,7 @@ class LibrisURIMinterSpec extends Specification {
             instanceTitle: [
                 titleValue: "Där ute i mörkret"],
             publicationYear: "2012"]                | '/work/flg72dq7-zx-drtmrkrt2012'
+        ["@type": "Record", identifier: "123"]      | '/record/123'
     }
 
     def config = [
@@ -77,6 +74,10 @@ class LibrisURIMinterSpec extends Specification {
                         subclasses: ["Book"],
                         basePath: "work",
                         compoundSlugFrom: [[instanceTitle: ["titleValue"]], "publicationYear", "attributedTo"]
+                    ],
+                    "Record": [
+                        "uriTemplate": "/record/{identifier}",
+                        "variables": ["identifier"]
                     ]
                 ]
             ]

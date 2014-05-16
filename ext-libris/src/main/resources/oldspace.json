@@ -3,21 +3,21 @@
   "thingUriTemplate": "resource{+document}",
   "rulesByDataset": {
     "auth": {
-      "uriTemplate": "/auth/{compoundSlug}",
+      "uriTemplate": "/auth/{controlNumber}",
       "ruleByBaseType": {
-        "*": {"compoundSlugFrom": ["controlNumber"]}
+        "*": {"variables": ["controlNumber"]}
       }
     },
     "bib": {
-      "uriTemplate": "/bib/{compoundSlug}",
+      "uriTemplate": "/bib/{controlNumber}",
       "ruleByBaseType": {
-        "*": {"compoundSlugFrom": ["controlNumber"]}
+        "*": {"variables": ["controlNumber"]}
       }
     },
     "hold": {
-      "uriTemplate": "/hold/{compoundSlug}",
+      "uriTemplate": "/hold/{controlNumber}",
       "ruleByBaseType": {
-        "*": {"compoundSlugFrom": ["controlNumber"]}
+        "*": {"variables": ["controlNumber"]}
       }
     }
   }
