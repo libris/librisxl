@@ -195,6 +195,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     public Map getState() { return componentState.asImmutable() }
 
     void setState(key, value) {
+        log.debug("[${this.id}] Setting $key = $value")
         this.componentState.put(key, value)
         stateUpdated = true
         if (key == LAST_UPDATED && listener) {

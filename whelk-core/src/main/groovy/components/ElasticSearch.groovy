@@ -378,7 +378,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             .addSort(new FieldSortBuilder("entry.timestamp").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
             .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.DESC))
 
-        log.debug("MetaEntryQuery: $srb")
+        log.trace("MetaEntryQuery: $srb")
 
         return srb
     }
@@ -419,6 +419,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                     while (jp.nextToken()) {
                         if (JsonToken.VALUE_STRING == jp.currentToken && "identifier" == jp.currentName) {
                             ident = jp.text
+                            log.debug("Added $ident")
                             list.add(ident)
                         }
                         if (JsonToken.VALUE_NUMBER_INT == jp.currentToken && "timestamp" == jp.currentName) {
@@ -541,7 +542,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     void index(byte[] data, Map params) throws WhelkIndexException  {
         try {
             def response = performExecute(client.prepareIndex(params['index'], params['type'], params['id']).setSource(data))
-            log.trace("Raw byte indexer (${params.index}/${params.type}/${params.id}) indexed version: ${response.version}")
+            log.debug("Raw byte indexer (${params.index}/${params.type}/${params.id}) indexed version: ${response.version}")
         } catch (Exception e) {
             throw new WhelkIndexException("Failed to index ${new String(data)} with params $params", e)
         }
