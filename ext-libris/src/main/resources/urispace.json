@@ -1,76 +1,80 @@
 {
   "base": "http://id.kb.se/",
-  "httpRange14": {"document": "{+thing}?data"},
-  "generateVariables": {
-    "timeId": "custom-encoded",
-    "random": "custom-encoded",
-    "uuid": false
-  },
-  "numericalAlphabet": "0123456789bcdfghjklmnpqrstvwxz",
-  "lastDigitBasedCaesarCipher": true,
+  "thingUriTemplate": "{+document}#it",
+  "objectLink": "about",
+  "alphabet": "0123456789bcdfghjklmnpqrstvwxz",
+  "randomVariable": "randomKey",
+  "maxRandom": 899,
+  "timestampVariable": "timeKey",
+  "epochDate": "2014-01-01",
+  "timestampCaesarCipher": true,
+  "uuidVariable": null,
+  "slugCharInAlphabet": true,
+  "slugCase": "lower",
+  "compoundSlugSeparator": "",
   "rulesByDataset": {
     "auth": {
-      "compoundSlugTransform": {"strip": "[auoeiy]", "case": "lower", "separator": ""},
-      "uriTemplate": "/{+typeSlug}/{timeId}-{random}-{compoundSlug}",
+      "uriTemplate": "/{+basePath}/{timeKey}-{randomKey}-{compoundSlug}",
       "ruleByBaseType": {
         "Person": {
           "subclasses": ["Persona"],
-          "typeSlug": "person",
-          "compoundSlug": [
+          "basePath": "person",
+          "compoundSlugFrom": [
             [["familyName", "givenName"], "name"], "numeration", "birthYear", "deathYear", "personTitle"
           ]
         },
         "Family": {
-          "typeSlug": "family",
-          "compoundSlug": ["name"]
+          "basePath": "family",
+          "compoundSlugFrom": ["name"]
         },
         "Organization": {
-          "typeSlug": "org",
-          "compoundSlug": ["name"]
+          "basePath": "org",
+          "compoundSlugFrom": ["name"]
         },
         "Meeting": {
-          "typeSlug": "event",
-          "compoundSlug": ["name", "date"]
+          "basePath": "event",
+          "compoundSlugFrom": ["name", "date"]
         },
         "Jurisdiction": {
-          "typeSlug": "gov",
-          "compoundSlug": ["name", "isPartOf"]
+          "basePath": "gov",
+          "compoundSlugFrom": ["name", "isPartOf"]
         },
         "Place": {
-          "typeSlug": "place",
-          "compoundSlug": [["prefLabel", "label"]]
+          "basePath": "place",
+          "compoundSlugFrom": [["prefLabel", "label"]]
         },
         "CreativeWork": {
-          "typeSlug": "work",
-          "compoundSlug": [["title", "uniformTitle"], "attributedTo"]
+          "subclasses": ["ConceptualWork"],
+          "basePath": "work",
+          "compoundSlugFrom": [["title", "uniformTitle"], {"attributedTo": ["name"]}]
         },
         "Concept": {
-          "typeSlug": "term",
-          "compoundSlug": ["prefLabel", "inScheme"]
+          "basePath": "term",
+          "compoundSlugFrom": [{"inScheme": ["notation"]}, "prefLabel"]
         },
         "ConceptScheme": {
-          "typeSlug": "def/scheme",
-          "compoundSlug": ["notation"]
+          "uriTemplate": "/def/scheme/{notation}",
+          "variables": ["notation"]
         },
         "*": {
           "uriTemplate": "/auth/{identifier}",
-          "httpRange14":{"thing": "/resource/{+document}"}
+          "thingUriTemplate": "/resource{+document}"
         }
       }
     },
     "bib": {
-      "uriTemplate": "/resource/bib/{timeId}-{random}",
+      "uriTemplate": "/bib/{timeKey}-{randomKey}",
       "ruleByBaseType": {
         "CreativeWork": {
-          "compoundSlug": [["title", "uniformTitle"], "attributedTo"]
+          "compoundSlugFrom": [["title", "uniformTitle"], {"attributedTo": ["name"]}, "publicationYear"]
         },
         "*": {
-          "httpRange14":{"thing": "/resource/{+document}"}
+          "thingUriTemplate": "{+document}#it"
         }
       }
     },
     "hold": {
-      "uriTemplate": "/hold/{owner}/{timeId}-{random}"
+      "uriTemplate": "/hold/{owner}/{timeKey}-{randomKey}"
     }
   }
 }

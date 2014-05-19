@@ -1,20 +1,13 @@
 package se.kb.libris.whelks.plugin
 
 import spock.lang.Specification
-import spock.lang.Shared
-import groovy.util.logging.Slf4j as Log
 
-//import org.codehaus.jackson.map.ObjectMapper
-//import se.kb.libris.whelks.Document
 
-@Log
 class LibrisURIMinterSpec extends Specification {
-
-    long PREDICTABLE_TIMESTAMP = Date.parse("yyyy-MM-dd", "2014-03-05").getTime()
 
     def "should base encode numbers"() {
         given:
-        def minter = new LibrisURIMinter()
+        def minter = new LibrisURIMinter(alphabet: LibrisURIMinter.DEVOWELLED)
         expect:
         minter.baseEncode(n, caesared) == expected
 
@@ -31,49 +24,77 @@ class LibrisURIMinterSpec extends Specification {
         139409779957    | "flg72dq7"    | true
     }
 
-    def "should construct path from component parts"() {
+    def "should scramble slug"() {
         given:
-        def minter = new LibrisURIMinter("//base/", null, null, true)
+        def minter = new LibrisURIMinter(
+                alphabet: "0123456789bcdfghjklmnpqrstvwxz",
+                slugCharInAlphabet: true,
+                minSlugSize: 3)
         expect:
-        minter.makePath("Book", codes, keys) == uri
+        minter.scramble(value) == slug
         where:
-        codes               | keys                          | uri
-        [31]                | ["Märk världen"]              | "book/21-mrkvrldn"
-        []                  | ["Det"]                       | "book/det"
-        [139409779957, 29]  | ["2012", "Där ute i mörkret"] | "book/flg72dq7-z-2012drtmrkrt"
+        value                   | slug
+        "Märk världen"          | "mrkvrldn"
+        "Det"                   | "det"
+        "Där ute i mörkret"     | "drtmrkrt"
     }
 
-    def "should produce title based uri"() {
+    def "should shorten words in strings with many words"() {
         given:
-        def minter = new LibrisURIMinter("//base/", typeRules, "2014-01-01", true)
+        def minter = new LibrisURIMinter(maxWordsInSlug: 4, shortWordSize: 2)
         expect:
-        minter.computePath(data) =~ uri
+        minter.shorten(text) == shortened ?: text
+        where:
+        text                    | shortened
+        "All work no play"      | null
+        "All work and no play"  | "Al wo an no pl"
+        "A we I m pas"          | null
+        "A woe in the past"     | "A wo in th pa"
+    }
+
+    def "should compute path from data using variables and compound keys"() {
+        given:
+        def minter = new LibrisURIMinter(config)
+        minter.metaClass.createRandom = { 898 }
+        minter.metaClass.createTimestamp = { 139409779957 }
+        expect:
+        minter.computePath(data, "auth") == uri
         where:
         data                                        | uri
-        makeExample("Book", "Där ute i mörkret")    | 'book/[0-9b-z]+-drtmrkrt'
+        ["@type": "Book",
+            instanceTitle: [
+                titleValue: "Där ute i mörkret"],
+            publicationYear: "2012"]                | '/work/flg72dq7-zx-drtmrkrt2012'
+        ["@type": "Record", identifier: "123"]      | '/record/123'
     }
 
-    def typeRules = [
-        about: ['@type': true, title: [titleValue: true]]
-    ]
-
-    private def makeExample(type, title) {
-        return [
-            "about": [
-                "@type": type,
-                "title": ["titleValue": title]
+    def config = [
+        base: "//base/",
+        documentUriTemplate: "{+thing}?data",
+        objectLink: "about",
+        alphabet: "0123456789bcdfghjklmnpqrstvwxz",
+        randomVariable: "randomKey",
+        maxRandom: 899,
+        timestampVariable: "timeKey",
+        epochDate: "2014-01-01",
+        timestampCaesarCipher: true,
+        slugCharInAlphabet: true,
+        rulesByDataset: [
+            "auth": [
+                uriTemplate: "/{+basePath}/{timeKey}-{randomKey}-{compoundSlug}",
+                ruleByBaseType: [
+                    "CreativeWork": [
+                        subclasses: ["Book"],
+                        basePath: "work",
+                        compoundSlugFrom: [[instanceTitle: ["titleValue"]], "publicationYear", "attributedTo"]
+                    ],
+                    "Record": [
+                        "uriTemplate": "/record/{identifier}",
+                        "variables": ["identifier"]
+                    ]
+                ]
             ]
         ]
-    }
-
-    /*
-    private def newDoc(data) {
-        ObjectMapper mapper = new ObjectMapper()
-        return new Document()
-                    .withData(mapper.writeValueAsString(data))
-                    .withContentType("application/ld+json")
-                    .withTimestamp(PREDICTABLE_TIMESTAMP)
-    }
-    */
+    ]
 
 }

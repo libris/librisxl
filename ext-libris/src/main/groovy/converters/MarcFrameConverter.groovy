@@ -18,11 +18,18 @@ import com.damnhandy.uri.template.UriTemplate
 @Log
 class MarcFrameConverter extends BasicFormatConverter {
 
-    MarcConversion conversion
-    def mapper = new ObjectMapper()
+    URIMinter uriMinter
+    ObjectMapper mapper = new ObjectMapper()
+
+    protected MarcConversion conversion
 
     MarcFrameConverter() {
         def loader = getClass().classLoader
+
+        loader.getResourceAsStream("oldspace.json").withStream {
+            uriMinter = new LibrisURIMinter(mapper.readValue(it, Map))
+        }
+
         def config = loader.getResourceAsStream("marcframe.json").withStream {
             mapper.readValue(it, Map)
         }
@@ -36,7 +43,7 @@ class MarcFrameConverter extends BasicFormatConverter {
                 tokenMaps[key] = sourceRef
             }
         }
-        conversion = new MarcConversion(config, tokenMaps)
+        conversion = new MarcConversion(config, uriMinter, tokenMaps)
     }
 
     Map createFrame(Map marcSource) {
@@ -96,8 +103,11 @@ class MarcConversion {
     Map tokenMaps
     Set primaryTags = new HashSet()
 
-    MarcConversion(Map config, Map tokenMaps) {
+    URIMinter uriMinter
+
+    MarcConversion(Map config, URIMinter uriMinter, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
+        this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps
         ['bib', 'auth', 'hold'].each {
             buildHandlers(config, it)
@@ -228,8 +238,9 @@ class MarcConversion {
 
         // TODO: make this configurable
         if (record['@id'] == null) {
-            record['@id'] = "/${marcCat}/${record.controlNumber}" as String
-            instance['@id'] = "/resource/${marcCat}/${record.controlNumber}" as String
+            def uriMap = uriMinter.computePaths(record, marcCat)
+            record['@id'] = uriMap['document']
+            instance['@id'] = uriMap['thing']
         }
 
         // TODO: only(?) bib (monographies), and use a config-defined link..
