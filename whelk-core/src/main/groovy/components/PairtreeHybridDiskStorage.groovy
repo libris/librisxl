@@ -26,6 +26,8 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     Index index
     String indexName
 
+    private long currentSequenceNumber = 0L
+
     static Logger log = LoggerFactory.getLogger(PairtreeHybridDiskStorage.class)
 
     PairtreeHybridDiskStorage(Map settings) {
@@ -43,6 +45,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         index.createIndexIfNotExists(indexName)
         index.checkTypeMapping(indexName, "entry")
 
+        currentSequenceNumber = index.loadHighestSequenceNumber(indexName)
     }
 
     @Override
@@ -52,6 +55,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         try {
             result = super.store(doc)
             if (result) {
+                doc = setNewSequenceNumber(doc)
                 index.index(doc.metadataAsJson.getBytes("utf-8"),
                     [
                         "index": ".libris",
@@ -75,6 +79,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         } else {
             List<Map<String,String>> entries = []
             for (doc in docs) {
+                doc = setNewSequenceNumber(doc)
                 boolean result = super.store(doc)
                 if (result) {
                     entries << [
@@ -89,6 +94,15 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             index.flush()
         }
     }
+
+    private Document setNewSequenceNumber(Document doc) {
+        synchronized (currentSequenceNumber) {
+            currentSequenceNumber++
+            doc.entry['sequenceNumber'] = currentSequenceNumber
+        }
+        return doc
+    }
+
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {

@@ -31,7 +31,7 @@
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.BasicComponent">
       <level value="debug"/>

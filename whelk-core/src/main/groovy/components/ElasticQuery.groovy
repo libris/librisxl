@@ -15,7 +15,7 @@ class ElasticQuery extends Query {
     boolean phraseQuery = false
 
     Map<String,List> terms = null
-    Map sourceFilter = null
+    def sourceFilter = null
 
     final static ObjectMapper mapper = new ObjectMapper()
 
@@ -47,17 +47,21 @@ class ElasticQuery extends Query {
         } else if (!this.query) {
             throw new WhelkRuntimeException("Trying to create empty query.")
         }
-        if (qmap.get("_source.include")) {
-            if (!sourceFilter) {
-                sourceFilter = [:]
+        if (qmap.containsKey("_source")) {
+            sourceFilter = qmap.get("_source")
+        } else {
+            if (qmap.get("_source.include")) {
+                if (!sourceFilter) {
+                    sourceFilter = [:]
+                }
+                sourceFilter["include"] = qmap.get("_source.include")
             }
-            sourceFilter["include"] = qmap.get("_source.include")
-        }
-        if (qmap.get("_source.exclude")) {
-            if (!sourceFilter) {
-                sourceFilter = [:]
+            if (qmap.get("_source.exclude")) {
+                if (!sourceFilter) {
+                    sourceFilter = [:]
+                }
+                sourceFilter["exclude"] = qmap.get("_source.exclude")
             }
-            sourceFilter["exclude"] = qmap.get("_source.exclude")
         }
     }
 
@@ -96,7 +100,7 @@ class ElasticQuery extends Query {
         def dslQuery = [:]
         dslQuery['from'] = this.start
         dslQuery['size'] = this.n
-        if (sourceFilter) {
+        if (sourceFilter != null) {
             dslQuery['_source'] = sourceFilter
         }
         if (this.query == "*") {

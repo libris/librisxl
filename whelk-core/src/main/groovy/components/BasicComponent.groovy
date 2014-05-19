@@ -91,16 +91,16 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     public void bulkAdd(final List<Document> documents, String contentType, long updatetime = -1)  {
         log.debug("[${this.id}] bulkAdd called with ${documents.size()} documents.")
         try {
+            long startBatchAt = System.currentTimeMillis()
             if (updatetime < 0) {
                 updatetime = new Date().getTime()
             }
             log.debug("Now is ${new Date().getTime()}, updatetime is $updatetime")
             def docs = prepareDocs(documents, contentType)
             log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
-            long startBatchAt = System.nanoTime()
             batchLoad(docs)
-            log.debug("[${this.id}] Batch loaded in ${(System.nanoTime()-startBatchAt)/1000} milliseconds")
             setState(LAST_UPDATED, updatetime)
+            log.debug("[${this.id}] Bulk Add completed in ${(System.currentTimeMillis()-startBatchAt)/1000} seconds.")
         } catch (Exception e) {
             log.error("[${this.id}] failed to add documents. (${e.message})", e)
             throw e

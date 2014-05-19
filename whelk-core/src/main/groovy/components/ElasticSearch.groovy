@@ -1,7 +1,10 @@
 package se.kb.libris.whelks.component
 
 import groovy.util.logging.Slf4j as Log
-import org.codehaus.jackson.map.ObjectMapper
+
+import org.codehaus.jackson.map.*
+import org.codehaus.jackson.*
+
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.SearchResponse
@@ -25,6 +28,9 @@ import org.elasticsearch.index.query.FilterBuilders.*
 import org.elasticsearch.action.delete.*
 import org.elasticsearch.action.get.*
 import org.elasticsearch.action.search.*
+
+import org.elasticsearch.common.io.stream.*
+import org.elasticsearch.common.xcontent.*
 
 import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.common.xcontent.XContentFactory.*
@@ -282,7 +288,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         return results
     }
 
-    Iterator<String> metaEntryQuery(String indexName, String dataset, Date since, Date until) {
+    Iterator<String> oldmetaEntryQuery(String indexName, String dataset, Date since, Date until) {
         def query = boolQuery()
         if (dataset) {
             query = query.must(termQuery("entry.dataset", dataset))
@@ -298,10 +304,11 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             query = query.must(timeRangeQuery)
         }
         def srb = client.prepareSearch(indexName)
-            .setSearchType(SearchType.SCAN)
+            .setSearchType(SearchType.QUERY_THEN_FETCH)
             .setScroll(new TimeValue(60000))
             .setTypes(["entry"] as String[])
             .setQuery(query)
+            .addSort("entry.timestamp", SortOrder.ASC)
             .setSize(100)
 
         def list = []
@@ -311,7 +318,124 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             public boolean hasNext() {
                 if (list.size() == 0) {
                     scrollResp = performExecute(super.client.prepareSearchScroll(scrollResp.getScrollId()).setScroll(new TimeValue(60000)))
-                    list.addAll(scrollResp.hits.hits.collect { translateIndexIdTo(it.id) })
+                    //list.addAll(scrollResp.hits.hits.collect { translateIndexIdTo(it.id) })
+                    for (hit in scrollResp.hits.hits) {
+                        list.add(hit.id)
+                        log.info("doc timestamp: " + mapper.readValue(hit.source(), Map).entry.timestamp)
+                    }
+                }
+                return list.size()
+            }
+            public String next() { list.pop() }
+            public void remove() { throw new UnsupportedOperationException(); }
+        }
+    }
+
+    long loadHighestSequenceNumber(String indexName) {
+        long sequenceNumber = 0L
+        def srb = client.prepareSearch(indexName).setTypes(["entry"] as String[]).setFrom(0).setSize(1).setQuery(matchAllQuery())
+            .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.DESC))
+        def response = performExecute(srb)
+        log.debug("Total number of sequence number hits: ${response.hits.totalHits}")
+        if (response.hits.totalHits > 0) {
+            log.debug("Found matches for documentSequenceNumber")
+            sequenceNumber = mapper.readValue(response.hits.getAt(0).source(), Map).entry.get("sequenceNumber", 0L)
+        }
+        log.debug("Highest documentNumber: $sequenceNumber")
+        return sequenceNumber
+    }
+
+    private SearchRequestBuilder buildMetaEntryQuery(String indexName, String dataset, Date since, Date until, long lastTimestamp = -1, long lastSequence = -1) {
+        def query = boolQuery()
+        if (dataset) {
+            query = query.must(termQuery("entry.dataset", dataset))
+        }
+        if (since || until) {
+            def timeRangeQuery = rangeQuery("entry.timestamp")
+            if (since) {
+                timeRangeQuery = timeRangeQuery.from(since.getTime())
+            }
+            if (until) {
+                timeRangeQuery = timeRangeQuery.to(since.getTime())
+            }
+            query = query.must(timeRangeQuery)
+        }
+        if (lastTimestamp >= 0 && lastSequence >= 0) {
+            def tsQuery = rangeQuery("entry.timestamp").gte(lastTimestamp)
+            query = query.must(tsQuery)
+            if (lastSequence > 0) {
+                def snQuery = rangeQuery("entry.sequenceNumber").gt(lastSequence)
+                query = query.must(snQuery)
+            }
+        }
+
+        def srb = client.prepareSearch(indexName)
+            .setSearchType(SearchType.QUERY_THEN_FETCH)
+            .setTypes(["entry"] as String[])
+            .setFetchSource(["identifier", "entry.timestamp", "entry.sequenceNumber"] as String[], null)
+            .setQuery(query)
+            .setFrom(0).setSize(10)
+            .addSort(new FieldSortBuilder("entry.timestamp").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
+            .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.DESC))
+
+        log.debug("MetaEntryQuery: $srb")
+
+        return srb
+    }
+
+    Iterator<String> metaEntryQuery(String indexName, String dataset, Date since, Date until) {
+        def list = []
+        long ts = -1L
+        long sn = 0L
+
+        return new Iterator<String>() {
+            long lastTimeStamp = 0L
+
+            public boolean hasNext() {
+                if (list.size() == 0 && lastTimestamp != ts) {
+                    def srb = buildMetaEntryQuery(indexName, dataset, since, until, ts, sn)
+
+                    InputStream inputStream = new PipedInputStream()
+                    OutputStream outputStream = new PipedOutputStream(inputStream)
+
+                    def response = performExecute(srb)
+
+                    Thread.start {
+                        try {
+                            XContentBuilder builder = XContentFactory.jsonBuilder(outputStream);
+                            builder.startObject();
+                            response.toXContent(builder, ToXContent.EMPTY_PARAMS);
+                            builder.endObject();
+                            builder.close()
+                        } finally {
+                            outputStream.close()
+                        }
+                    }
+
+                    JsonParser jp = new MappingJsonFactory(mapper).createJsonParser(inputStream)
+                    jp.setFeature(JsonParser.Feature.AUTO_CLOSE_SOURCE, true)
+
+                    String ident = null
+                    while (jp.nextToken()) {
+                        if (JsonToken.VALUE_STRING == jp.currentToken && "identifier" == jp.currentName) {
+                            ident = jp.text
+                        }
+                        if (JsonToken.VALUE_NUMBER_INT == jp.currentToken && "timestamp" == jp.currentName) {
+                            ts = jp.longValue
+                        }
+                        if (JsonToken.VALUE_NUMBER_INT == jp.currentToken && "sequenceNumber" == jp.currentName) {
+                            sn = jp.longValue
+                        }
+                        if (ident && ts > 0) {
+                            list.add(ident)
+                            log.info("Timestamp: $ts, ID: ${ident}")
+                            ident = null
+                        }
+                    }
+                    lastTimestamp = ts
+                    log.info("Last ts: $ts, last sn: $sn")
+                } else {
+                    log.info("Timestamps are alike. Guess it's done?")
                 }
                 return list.size()
             }

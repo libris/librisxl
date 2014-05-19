@@ -48,6 +48,7 @@ allprojects {
         mavenCentral()
         maven { url "http://maven.restlet.org/" }
         maven { url "http://repository.codehaus.org/" }
+        maven { url "http://repository.apache.org/snapshots" }
         flatDir name: 'localDir', dirs: '../lib'
     }
 
@@ -72,7 +73,7 @@ subprojects {
         groovy 'commons-cli:commons-cli:1.2'
         compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
         compile 'ch.qos.logback:logback-classic:1.0.0'
-        compile 'commons-io:commons-io:2.3'
+        compile 'commons-io:commons-io:2.5-SNAPSHOT'
         compile 'commons-codec:commons-codec:1.7'
         testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
         testCompile 'cglib:cglib-nodep:2.2'
