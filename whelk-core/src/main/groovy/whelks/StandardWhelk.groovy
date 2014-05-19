@@ -158,6 +158,14 @@ class StandardWhelk extends AbstractWhelkServlet implements Whelk {
             d.withIdentifier(mintIdentifier(d))
             log.debug("Document was missing identifier. Setting identifier ${d.identifier}")
         }
+        // TODO: Self describing
+        if (d.contentType == "application/ld+json") {
+            Map dataMap = d.dataAsMap
+            if (dataMap.get("@id") != d.identifier) {
+                dataMap.put("@id", d.identifier)
+                d.withData(dataMap)
+            }
+        }
         d.timestamp = new Date().getTime()
         return d
     }
