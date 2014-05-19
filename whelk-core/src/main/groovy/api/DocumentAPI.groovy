@@ -69,7 +69,6 @@ class DocumentAPI extends BasicAPI {
                 sendResponse(response, doc.dataAsString, doc.contentType)
                 */
                 log.debug("Saved document $identifier")
-                response.sendError(HttpServletResponse.SC_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                 def locationRef = request.getRequestURL()
                 while (locationRef[-1] == '/') {
                     locationRef.deleteCharAt(locationRef.length()-1)
@@ -77,7 +76,7 @@ class DocumentAPI extends BasicAPI {
                 locationRef.append(identifier)
                 log.debug("Setting location for redirect: $locationRef")
                 response.setHeader("Location", locationRef.toString())
-
+                response.sendError(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
                 /*
                 response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                 log.debug("Redirecting with location ref " + request.getRootRef().toString() + identifier)
@@ -112,14 +111,10 @@ class DocumentAPI extends BasicAPI {
                             entry,
                             meta
                             )
-                        response.sendError(HttpServletResponse.SC_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
                         def locationRef = request.getRequestURL()
-                        while (locationRef[-1] == '/') {
-                            locationRef.deleteCharAt(locationRef.length()-1)
-                        }
-                        locationRef.append(identifier)
                         log.debug("Setting location for redirect: $locationRef")
                         response.setHeader("Location", locationRef.toString())
+                        response.sendError(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
                     } catch (WhelkAddException wae) {
                         log.warn("Whelk failed to store document: ${wae.message}")
                         response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
