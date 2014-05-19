@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-WHELK="http://localhost:8180/whelk-webapi"
+WHELK=$1
 BUILDBASE="datatools/build"
 
 put() {

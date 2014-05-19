@@ -46,6 +46,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         index.checkTypeMapping(indexName, "entry")
 
         currentSequenceNumber = index.loadHighestSequenceNumber(indexName)
+        log.info("Hybrid storage current sequence number: $currentSequenceNumber")
     }
 
     @Override
@@ -53,9 +54,9 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     boolean store(Document doc) {
         boolean result = false
         try {
+            doc = setNewSequenceNumber(doc)
             result = super.store(doc)
             if (result) {
-                doc = setNewSequenceNumber(doc)
                 index.index(doc.metadataAsJson.getBytes("utf-8"),
                     [
                         "index": ".libris",

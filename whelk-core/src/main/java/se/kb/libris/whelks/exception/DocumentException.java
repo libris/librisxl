@@ -3,6 +3,7 @@ package se.kb.libris.whelks.exception;
 public class DocumentException extends WhelkRuntimeException {
 
     public static final int IDENTICAL_DOCUMENT = 1;
+    public static final int EMPTY_DOCUMENT = 2;
 
     private int exceptionType;
 

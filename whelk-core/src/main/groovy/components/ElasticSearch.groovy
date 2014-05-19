@@ -374,7 +374,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             .setTypes(["entry"] as String[])
             .setFetchSource(["identifier", "entry.timestamp", "entry.sequenceNumber"] as String[], null)
             .setQuery(query)
-            .setFrom(0).setSize(10)
+            .setFrom(0).setSize(100)
             .addSort(new FieldSortBuilder("entry.timestamp").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
             .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.DESC))
 
@@ -389,10 +389,10 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         long sn = 0L
 
         return new Iterator<String>() {
-            long lastTimeStamp = 0L
+            String lastLoadedIdentifier = null
 
             public boolean hasNext() {
-                if (list.size() == 0 && lastTimestamp != ts) {
+                if (list.size() == 0) {
                     def srb = buildMetaEntryQuery(indexName, dataset, since, until, ts, sn)
 
                     InputStream inputStream = new PipedInputStream()
@@ -419,6 +419,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                     while (jp.nextToken()) {
                         if (JsonToken.VALUE_STRING == jp.currentToken && "identifier" == jp.currentName) {
                             ident = jp.text
+                            list.add(ident)
                         }
                         if (JsonToken.VALUE_NUMBER_INT == jp.currentToken && "timestamp" == jp.currentName) {
                             ts = jp.longValue
@@ -426,16 +427,13 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                         if (JsonToken.VALUE_NUMBER_INT == jp.currentToken && "sequenceNumber" == jp.currentName) {
                             sn = jp.longValue
                         }
-                        if (ident && ts > 0) {
-                            list.add(ident)
-                            log.info("Timestamp: $ts, ID: ${ident}")
-                            ident = null
-                        }
                     }
-                    lastTimestamp = ts
-                    log.info("Last ts: $ts, last sn: $sn")
-                } else {
-                    log.info("Timestamps are alike. Guess it's done?")
+                    log.debug("Last ts: $ts, last sn: $sn")
+                    if (lastLoadedIdentifier && ident == lastLoadedIdentifier) {
+                        log.warn("Got the identifier (${lastLoadedIdentifier}) again. Pulling the plug!!")
+                        return false
+                    }
+                    lastLoadedIdentifier = ident
                 }
                 return list.size()
             }

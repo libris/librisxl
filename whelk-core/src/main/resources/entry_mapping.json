@@ -24,6 +24,9 @@
                 "contentType" : {
                     "type" : "string",
                     "index" : "not_analyzed"
+                },
+                "sequenceNumber": {
+                    "type": "long"
                 }
             }
         }
