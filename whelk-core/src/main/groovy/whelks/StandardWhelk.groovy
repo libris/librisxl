@@ -55,6 +55,9 @@ class StandardWhelk extends AbstractWhelkServlet implements Whelk {
     URI add(byte[] data,
             Map<String, Object> entrydata,
             Map<String, Object> metadata) {
+        if (!data || data.length < 1) {
+            throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
+        }
         Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
         log.debug("Created new document with timestamp ${new Date(doc.timestamp)}")
         return add(doc)

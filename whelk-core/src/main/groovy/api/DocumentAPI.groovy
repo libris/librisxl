@@ -115,6 +115,9 @@ class DocumentAPI extends BasicAPI {
                         log.debug("Setting location for redirect: $locationRef")
                         response.setHeader("Location", locationRef.toString())
                         response.sendError(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
+                    } catch (DocumentException de) {
+                        log.warn("Document exception: ${de.message}")
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST, de.message)
                     } catch (WhelkAddException wae) {
                         log.warn("Whelk failed to store document: ${wae.message}")
                         response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
