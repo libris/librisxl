@@ -288,6 +288,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         return results
     }
 
+    /*
     Iterator<String> oldmetaEntryQuery(String indexName, String dataset, Date since, Date until) {
         def query = boolQuery()
         if (dataset) {
@@ -330,6 +331,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             public void remove() { throw new UnsupportedOperationException(); }
         }
     }
+*/
 
     long loadHighestSequenceNumber(String indexName) {
         long sequenceNumber = 0L
@@ -350,8 +352,8 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         if (dataset) {
             query = query.must(termQuery("entry.dataset", dataset))
         }
-        if (since || until) {
-            def timeRangeQuery = rangeQuery("entry.timestamp")
+        if (lastTimestamp < 0 && (since || until)) {
+            def timeRangeQuery = rangeQuery("_timestamp")
             if (since) {
                 timeRangeQuery = timeRangeQuery.from(since.getTime())
             }
@@ -361,7 +363,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             query = query.must(timeRangeQuery)
         }
         if (lastTimestamp >= 0 && lastSequence >= 0) {
-            def tsQuery = rangeQuery("entry.timestamp").gte(lastTimestamp)
+            def tsQuery = rangeQuery("_timestamp").gte(lastTimestamp)
             query = query.must(tsQuery)
             if (lastSequence > 0) {
                 def snQuery = rangeQuery("entry.sequenceNumber").gt(lastSequence)
@@ -372,65 +374,43 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         def srb = client.prepareSearch(indexName)
             .setSearchType(SearchType.QUERY_THEN_FETCH)
             .setTypes(["entry"] as String[])
-            .setFetchSource(["identifier", "entry.timestamp", "entry.sequenceNumber"] as String[], null)
+            .setFetchSource(["identifier", "entry.sequenceNumber"] as String[], null)
+            .addField("_timestamp")
             .setQuery(query)
             .setFrom(0).setSize(100)
-            .addSort(new FieldSortBuilder("entry.timestamp").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
-            .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.DESC))
+            .addSort("_timestamp", SortOrder.ASC)
+            .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
 
-        log.trace("MetaEntryQuery: $srb")
+        log.debug("MetaEntryQuery: $srb")
 
         return srb
     }
 
     Iterator<String> metaEntryQuery(String indexName, String dataset, Date since, Date until) {
-        def list = []
-        long ts = -1L
-        long sn = 0L
+        LinkedList<String> list = new LinkedList<String>()
+        long lastDocumentTimestamp = -1L
+        long documentSequenceNumber = 0L
 
         return new Iterator<String>() {
             String lastLoadedIdentifier = null
 
             public boolean hasNext() {
                 if (list.size() == 0) {
-                    def srb = buildMetaEntryQuery(indexName, dataset, since, until, ts, sn)
-
+                    def srb = buildMetaEntryQuery(indexName, dataset, since, until, lastDocumentTimestamp, documentSequenceNumber)
                     InputStream inputStream = new PipedInputStream()
                     OutputStream outputStream = new PipedOutputStream(inputStream)
 
                     def response = performExecute(srb)
 
-                    Thread.start {
-                        try {
-                            XContentBuilder builder = XContentFactory.jsonBuilder(outputStream);
-                            builder.startObject();
-                            response.toXContent(builder, ToXContent.EMPTY_PARAMS);
-                            builder.endObject();
-                            builder.close()
-                        } finally {
-                            outputStream.close()
-                        }
-                    }
-
-                    JsonParser jp = new MappingJsonFactory(mapper).createJsonParser(inputStream)
-                    jp.setFeature(JsonParser.Feature.AUTO_CLOSE_SOURCE, true)
-
                     String ident = null
-                    while (jp.nextToken()) {
-                        if (JsonToken.VALUE_STRING == jp.currentToken && "identifier" == jp.currentName) {
-                            ident = jp.text
-                            log.debug("Added $ident")
-                            list.add(ident)
-                        }
-                        if (JsonToken.VALUE_NUMBER_INT == jp.currentToken && "timestamp" == jp.currentName) {
-                            ts = jp.longValue
-                        }
-                        if (JsonToken.VALUE_NUMBER_INT == jp.currentToken && "sequenceNumber" == jp.currentName) {
-                            sn = jp.longValue
-                        }
+
+                    for (hit in response.hits.hits) {
+                        lastDocumentTimestamp = hit.field("_timestamp").value
+                        documentSequenceNumber = mapper.readValue(hit.source(), Map).entry.get("sequenceNumber", 0L)
+                        ident = translateIndexIdTo(hit.id)
+                        list.add(ident)
                     }
-                    log.debug("Last ts: $ts, last sn: $sn")
-                    if (lastLoadedIdentifier && ident == lastLoadedIdentifier) {
+                    if (lastLoadedIdentifier && lastLoadedIdentifier == ident) {
                         log.warn("Got the identifier (${lastLoadedIdentifier}) again. Pulling the plug!!")
                         return false
                     }

@@ -29,6 +29,8 @@ class Document {
 
     @JsonIgnore
     private static final ObjectMapper mapper = new ObjectMapper()
+    @JsonIgnore
+    static final TIMESTAMP_KEY = "modified"
 
     // store serialized data
     @JsonIgnore
@@ -38,7 +40,7 @@ class Document {
      * Constructors
      */
     Document() {
-        entry = ["timestamp":new Date().getTime()]
+        entry = [(TIMESTAMP_KEY):new Date().getTime()]
         meta = [:]
     }
 
@@ -97,7 +99,7 @@ class Document {
     String getContentType() { entry["contentType"] }
 
     long getTimestamp() {
-        entry.get("timestamp", 0L)
+        entry.get(TIMESTAMP_KEY, 0L)
     }
 
     int getVersion() {
@@ -110,7 +112,7 @@ class Document {
 
     // Setters
     void setTimestamp(long ts) {
-        this.entry["timestamp"] = ts
+        this.entry[TIMESTAMP_KEY] = ts
     }
 
     void setVersion(int v) {

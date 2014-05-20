@@ -88,13 +88,12 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
     }
 
-    public void bulkAdd(final List<Document> documents, String contentType, long updatetime = -1)  {
+    public void bulkAdd(final List<Document> documents, String contentType)  {
         log.debug("[${this.id}] bulkAdd called with ${documents.size()} documents.")
         try {
             long startBatchAt = System.currentTimeMillis()
-            if (updatetime < 0) {
-                updatetime = new Date().getTime()
-            }
+            long updatetime = documents.last().timestamp
+            log.debug("First document timestamp: ${documents.first().timestamp}")
             log.debug("Now is ${new Date().getTime()}, updatetime is $updatetime")
             def docs = prepareDocs(documents, contentType)
             log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
@@ -245,25 +244,26 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                         long lastUpdate = getLastUpdatedState()
                         log.trace("Lastupdate: $lastUpdate") 
                         log.trace("   Payload: ${e.payload}")
-                        if (lastUpdate < e.payload) {
-                            log.debug("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.");
+                        if (lastUpdate < e.payload || e.force) {
+                            if (e.force) {
+                                log.debug("[${this.id}] Forced update. Component was last updated ${new Date(lastUpdate)} ($lastUpdate), but update is forced (${e.payload}).");
+                                lastUpdate = e.payload
+                            } else {
+                                log.debug("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.");
+                            }
                             def docs = []
                             int count = 0
-                            long latestTimestamp = 0L
                             for (doc in components.get(e.senderId).getAll(null, new Date(lastUpdate), null)) {
-                                if (doc.timestamp > latestTimestamp) {
-                                    latestTimestamp = doc.timestamp
-                                }
                                 docs << doc
                                 if ((++count % batchUpdateSize) == 0) {
-                                    bulkAdd(docs, docs.first().contentType, latestTimestamp)
+                                    bulkAdd(docs, docs.first().contentType)
                                     docs = []
                                 }
                             }
                             // Remainder
                             if (docs.size() > 0) {
                                 log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
-                                bulkAdd(docs, docs.first().contentType, latestTimestamp)
+                                bulkAdd(docs, docs.first().contentType)
                             }
                             log.debug("[${this.id}] Loaded $count document to get up to date with ${e.senderId}")
                         } else {

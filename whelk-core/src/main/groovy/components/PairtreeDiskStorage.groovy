@@ -145,7 +145,7 @@ class PairtreeDiskStorage extends BasicComponent implements Storage {
             version = existingDocument.version + 1
             Map versions = existingDocument.entry.versions ?: [:]
             String lastVersion = existingDocument.version as String
-            versions[lastVersion] = ["timestamp" : existingDocument.timestamp]
+            versions[lastVersion] = [(Document.TIMESTAMP_KEY) : existingDocument.timestamp]
             if (existingDocument?.entry?.deleted) {
                 versions.get(lastVersion).put("deleted", true)
             } else {

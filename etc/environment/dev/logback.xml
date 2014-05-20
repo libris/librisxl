@@ -37,7 +37,7 @@
       <level value="debug"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.PairtreeHybridDiskStorage">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
       <level value="info"/>
@@ -52,7 +52,7 @@
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.component.UriToElasticType">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.component.ElasticQuery">
       <level value="info"/>
@@ -60,11 +60,11 @@
 <logger name="se.kb.libris.whelks.Query">
       <level value="info"/>
   </logger>
-    <logger name="se.kb.libris.whelks.api.RemoteSearchAPI">
-        <level value="info"/>
-    </logger>
-     <logger name="se.kb.libris.whelks.plugin.JsonLDLinkExpander">
-      <level value="info"/>
+<logger name="se.kb.libris.whelks.api.RemoteSearchAPI">
+    <level value="info"/>
+</logger>
+<logger name="se.kb.libris.whelks.plugin.LibrisURIMinter">
+  <level value="warn"/>
 </logger>
 
   <root level="info">

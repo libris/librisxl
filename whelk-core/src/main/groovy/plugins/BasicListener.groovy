@@ -36,11 +36,11 @@ class BasicListener extends BasicPlugin implements Listener {
         }
     }
 
-    void registerUpdate(String componentId, Object value) {
+    void registerUpdate(String componentId, Object value, boolean force = false) {
         log.trace("Listeners for $componentId: " + registry.get(componentId, []))
         for (listener in registry.get(componentId, [])) {
             log.debug("Listener \"$listener\" registering update $value from $componentId")
-            queues.get(listener).offer(new ListenerEvent(componentId, value))
+            queues.get(listener).offer(new ListenerEvent(componentId, value, force))
             if (queues.get(listener).size() > 0) {
                 log.debug("Queue size for ${listener}: ${queues.get(listener).size()}")
             }
@@ -68,9 +68,11 @@ class BasicListener extends BasicPlugin implements Listener {
 class ListenerEvent {
     String senderId
     Object payload
+    boolean force = false
 
-    ListenerEvent(String s, Object p) {
+    ListenerEvent(String s, Object p, boolean f=false) {
         this.senderId = s
         this.payload = p
+        this.force = f
     }
 }

@@ -135,7 +135,7 @@ class ReindexOperator extends AbstractOperator {
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
         }
-        log.info("Reindexed $count documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
+        log.info("Reindexed $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds.")
         if (doIndexing && !dataset && !cancelled) {
             whelk.index.reMapAliases(whelk.id)
         }
@@ -216,5 +216,14 @@ class RebuildMetaIndexOperator extends AbstractOperator {
     String oid = "rebuild"
     void doRun(long startTime) {
         whelk.storage.rebuildIndex()
+    }
+}
+
+@Log
+class PingCatchupOperator extends AbstractOperator {
+    String oid = "ping"
+    void doRun(long startTime) {
+        def listener = whelk.storage.listener
+        listener.registerUpdate(whelk.storage.id, 0L, true)
     }
 }

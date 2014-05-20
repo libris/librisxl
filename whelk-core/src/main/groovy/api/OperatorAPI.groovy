@@ -35,12 +35,14 @@ class OperatorAPI extends BasicAPI {
     static ImportOperator importOperator = new ImportOperator()
     static TransferOperator transferOperator = new TransferOperator()
     static RebuildMetaIndexOperator rebuildMetaIndexOperator = new RebuildMetaIndexOperator()
+    static PingCatchupOperator pingOperator = new PingCatchupOperator()
 
     static Map operators = ["reindex":reindexOperator,
                             "import":importOperator,
                             "transfer":transferOperator,
                             "benchmark":benchmarkOperator,
-                            "rebuild":rebuildMetaIndexOperator]
+                            "rebuild":rebuildMetaIndexOperator,
+                            "ping":pingOperator]
 
     Map configurationSettings
 
