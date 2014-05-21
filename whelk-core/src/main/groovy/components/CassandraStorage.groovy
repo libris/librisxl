@@ -236,7 +236,7 @@ class CassandraStorage extends BasicComponent implements Storage {
                 def versions = existingDocument.entry.versions ?: [:]
                 def lastVersion = existingDocument.version as String
 
-                versions[lastVersion] = ["timestamp" : existingDocument.timestamp]
+                versions[lastVersion] = [(Document.TIMESTAMP_KEY) : existingDocument.timestamp]
                 if (existingDocument?.entry?.deleted) {
                     versions.get(lastVersion).put("deleted",true)
                 } else {

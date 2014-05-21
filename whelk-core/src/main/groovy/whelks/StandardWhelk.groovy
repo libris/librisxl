@@ -64,25 +64,17 @@ class StandardWhelk extends AbstractWhelkServlet implements Whelk {
     @groovy.transform.CompileStatic
     URI add(Document doc) {
         log.debug("Add single document ${doc.identifier}")
-            try {
-                if (!doc.data || doc.data.length < 1) {
-                    throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
-                }
-                for (storage in getStorages(doc.contentType)) {
-                    storage.add(doc)
-                }
-                // Now handled by listeners
-                /*
-                if (index) {
-                index.add(doc)
-                }
-                if (graphStore) {
-                graphStore.add(doc)
-                }
-                */
-            } catch (Exception e) {
+        try {
+            if (!doc.data || doc.data.length < 1) {
+                throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
+            }
+            doc.updateTimestamp()
+            for (storage in getStorages(doc.contentType)) {
+                storage.add(doc)
+            }
+        } catch (Exception e) {
             log.error("Failed to add document ${doc?.identifier}", e)
-                throw e
+            throw e
         }
         return new URI(doc.identifier)
     }
@@ -94,17 +86,12 @@ class StandardWhelk extends AbstractWhelkServlet implements Whelk {
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String contentType) {
         log.debug("Bulk add ${docs.size()} document")
+        for (doc in docs) {
+            doc.updateTimestamp()
+        }
         for (storage in storages) {
             storage.bulkAdd(docs, contentType)
         }
-        /*
-        if (index) {
-            index.bulkAdd(docs, contentType)
-        }
-        if (graphStore) {
-            graphStore.bulkAdd(docs, contentType)
-        }
-        */
     }
 
     @Override

@@ -222,8 +222,19 @@ class RebuildMetaIndexOperator extends AbstractOperator {
 @Log
 class PingCatchupOperator extends AbstractOperator {
     String oid = "ping"
+
+    long pingSince = 0L
+
+    @Override
+    void setParameters(Map parameters) {
+        super.setParameters(parameters)
+        log.info("parameters: $parameters")
+        pingSince = new Long(parameters.get("since", ["0"]).first()).longValue()
+    }
+
     void doRun(long startTime) {
+        log.info("Pinging with lastupdated = $pingSince")
         def listener = whelk.storage.listener
-        listener.registerUpdate(whelk.storage.id, 0L, true)
+        listener.registerUpdate(whelk.storage.id, pingSince, true)
     }
 }

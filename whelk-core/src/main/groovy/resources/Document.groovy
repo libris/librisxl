@@ -30,7 +30,11 @@ class Document {
     @JsonIgnore
     private static final ObjectMapper mapper = new ObjectMapper()
     @JsonIgnore
-    static final TIMESTAMP_KEY = "modified"
+    static final TIMESTAMP_KEY = "timestamp"
+    static final MODIFIED_KEY = "modified"
+
+    private long timestamp
+    private long modified
 
     // store serialized data
     @JsonIgnore
@@ -40,8 +44,9 @@ class Document {
      * Constructors
      */
     Document() {
-        entry = [(TIMESTAMP_KEY):new Date().getTime()]
+        entry = [:]
         meta = [:]
+        updateTimestamp()
     }
 
     Document(String jsonString) {
@@ -102,6 +107,10 @@ class Document {
         entry.get(TIMESTAMP_KEY, 0L)
     }
 
+    long getModified() {
+        entry.get(MODIFIED_KEY, 0L)
+    }
+
     int getVersion() {
         entry.get("version", 0)
     }
@@ -111,8 +120,20 @@ class Document {
     }
 
     // Setters
+    long updateTimestamp() {
+        setTimestamp(new Date().getTime())
+        log.trace("Updating timestamp for ${this.identifier} to ${timestamp}")
+        return this.timestamp
+    }
+
     void setTimestamp(long ts) {
+        this.timestamp = ts
         this.entry[TIMESTAMP_KEY] = ts
+    }
+
+    void setModified(long mt) {
+        this.modified = mt
+        this.entry[MODIFIED_KEY] = mt
     }
 
     void setVersion(int v) {
@@ -153,6 +174,11 @@ class Document {
         return this
     }
 
+    Document withModified(long mt) {
+        setModified(mt)
+        return this
+    }
+
     Document withVersion(int v) {
         setVersion(v)
         return this
@@ -182,6 +208,12 @@ class Document {
     Document withEntry(Map entrydata) {
         if (entrydata?.get("identifier", null)) {
             this.identifier = entrydata["identifier"]
+        }
+        if (entrydata?.get(TIMESTAMP_KEY, null)) {
+            setTimestamp(entrydata.get(TIMESTAMP_KEY))
+        }
+        if (entrydata?.get(MODIFIED_KEY, null)) {
+            setModified(entrydata.get(MODIFIED_KEY))
         }
         if (entrydata != null) {
             this.entry.putAll(entrydata)

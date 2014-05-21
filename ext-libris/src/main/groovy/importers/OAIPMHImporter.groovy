@@ -169,7 +169,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                     if (preserveTimestamps && it.header.datestamp) {
                         def date = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
                         log.trace("Setting date: $date")
-                        entry.put("modified", date.getTime())
+                        entry.put(Document.MODIFIED_KEY, date.getTime())
                     }
 
                     def meta = [:]

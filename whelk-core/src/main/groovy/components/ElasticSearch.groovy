@@ -381,7 +381,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             .addSort("_timestamp", SortOrder.ASC)
             .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
 
-        log.debug("MetaEntryQuery: $srb")
+        log.trace("MetaEntryQuery: $srb")
 
         return srb
     }

@@ -15,6 +15,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     static final ObjectMapper mapper = new ObjectMapper()
     static final String LAST_UPDATED = "last_updated"
+    static final String LISTENER_FAILED_AT = "listener_crashed"
 
     static final String STATE_FILE_SUFFIX = ".state"
 
@@ -75,7 +76,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
 
     @Override
-    public URI add(final Document document) {
+    public final URI add(final Document document) {
         try {
             long updatetime = document.timestamp
             List<Document> docs = prepareDocs([document], document.contentType)
@@ -88,13 +89,15 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
     }
 
-    public void bulkAdd(final List<Document> documents, String contentType)  {
+    @Override
+    public final void bulkAdd(final List<Document> documents, String contentType)  {
         log.debug("[${this.id}] bulkAdd called with ${documents.size()} documents.")
         try {
             long startBatchAt = System.currentTimeMillis()
             long updatetime = documents.last().timestamp
             log.debug("First document timestamp: ${documents.first().timestamp}")
-            log.debug("Now is ${new Date().getTime()}, updatetime is $updatetime")
+            log.debug(" Last document timestamp: ${documents.last().timestamp}")
+            log.debug("Updatetime is $updatetime")
             def docs = prepareDocs(documents, contentType)
             log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)
@@ -170,6 +173,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         return documents
     }
 
+    /*
     void runLinkExpanders(List docs) {
         for (doc in docs) {
             LinkExpander expander = getLinkExpanderFor(doc)
@@ -179,6 +183,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             }
         }
     }
+    */
 
     Document linkExpand(Document doc) {
         LinkExpander le = getLinkExpanderFor(doc)
@@ -275,6 +280,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                         log.error("[${this.id}] DISABLING LISTENER because of unexpected exception. Possible restart required.")
                         ok = false
                         listener.disable(this.id)
+                        setState(LISTENER_FAILED_AT, new Date().getTime())
                         log.error("[${this.id}] Failed to read from notification queue: ${e.message}")
                         throw e
                     }
