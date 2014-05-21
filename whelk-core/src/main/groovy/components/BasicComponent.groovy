@@ -238,7 +238,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                             mapper.writeValue(stateFile, getState())
                             stateUpdated = false
                         }
-                        Thread.sleep(20000)
+                        Thread.sleep(3000)
                     } catch (Exception e) {
                         ok = false
                         log.error("[${this.id}] Failed to write statefile: ${e.message}", e)
@@ -275,16 +275,11 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                         } else {
                             log.debug("[${this.id}] Already up to date.");
                         }
-                    } catch (WhelkAddException wae) {
-                        log.error("[${this.id}] Failed to add documents: ${wae.message}")
-                    } catch (Exception e) {
+                    } catch (Exception ex) {
                         log.error("[${this.id}] DISABLING LISTENER because of unexpected exception. Possible restart required.")
                         ok = false
                         listener.disable(this.id)
-                        setState(LISTENER_FAILED_AT, new Date().getTime())
-                        setState(LISTENER_FAILED_REASON, e?.message)
-                        log.error("[${this.id}] Failed to read from notification queue: ${e.message}")
-                        throw e
+                        throw ex
                     }
                 }
             }
@@ -297,32 +292,49 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         if (!componentId) {
             throw new WhelkRuntimeException("[${this.id}] Can not load documents from $componentId")
         }
-        log.info("componentId: $componentId")
-        log.info("components: $components")
-        def docs = []
-        int count = 0
-        for (doc in components.get(componentId).getAll(null, new Date(lastUpdate), null)) {
-            docs << doc
-            if ((++count % batchUpdateSize) == 0) {
-                bulkAdd(docs, docs.first().contentType)
-                docs = []
+        long lastSuccessfulTimestamp = lastUpdate
+        try {
+            log.debug("Load from $componentId since $lastUpdate")
+            def docs = []
+            int count = 0
+            for (doc in components.get(componentId).getAll(null, new Date(lastUpdate), null)) {
+                docs << doc
+                if ((++count % batchUpdateSize) == 0) {
+                    lastSuccessfulTimestamp = docs.first().timestamp
+                    bulkAdd(docs, docs.first().contentType)
+                    docs = []
+                }
             }
+            // Remainder
+            if (docs.size() > 0) {
+                lastSuccessfulTimestamp = docs.first().timestamp
+                log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
+                bulkAdd(docs, docs.first().contentType)
+            }
+            log.debug("[${this.id}] Loaded $count document to get up to date with ${componentId}")
+        } catch (Exception e) {
+            setState(LISTENER_FAILED_AT, lastSuccessfulTimestamp)
+            setState(LISTENER_FAILED_REASON, e?.message)
+            log.error("[${this.id}] Failed to read from notification queue: ${e.message}")
+            throw e
         }
-        // Remainder
-        if (docs.size() > 0) {
-            log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
-            bulkAdd(docs, docs.first().contentType)
-        }
-        log.debug("[${this.id}] Loaded $count document to get up to date with ${componentId}")
     }
 
     void catchUp() {
-        log.info("Doing catchup.")
         if (componentState.containsKey(LISTENER_FAILED_AT)) {
-            log.info("Hmm, seems like it crashed last time ...")
+            log.info("Hmm, seems like \"${this.id}\" crashed last time ... trying to catch up.")
             for (component in listener.getMyNotifiers(this.id)) {
                 loadDocumentsFromComponentSince(component, componentState.get(LISTENER_FAILED_AT))
+                this.componentState.remove(LISTENER_FAILED_AT)
+                this.componentState.remove(LISTENER_FAILED_REASON)
             }
+        } else if (componentState.get(LAST_UPDATED, 0) > 0) {
+            log.info("[${this.id}] Doing normal component catchup ...")
+            for (component in listener.getMyNotifiers(this.id)) {
+                loadDocumentsFromComponentSince(component, componentState.get(LAST_UPDATED))
+            }
+        } else {
+            log.info("[${this.id}] component state has epoch as last update. Will not update automatically. YOU must do it manually.")
         }
     }
 }

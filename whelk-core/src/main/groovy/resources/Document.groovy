@@ -62,8 +62,8 @@ class Document {
     }
 
     Document(File datafile, File entryfile) {
-        withMetaEntry(entryfile)
         setData(datafile.readBytes())
+        withMetaEntry(entryfile)
     }
 
     String getDataAsString() {
@@ -126,6 +126,12 @@ class Document {
         return this.timestamp
     }
 
+    long updateModified() {
+        setModified(new Date().getTime())
+        log.trace("Updating modified for ${this.identifier} to ${modified}")
+        return this.modified
+    }
+
     void setTimestamp(long ts) {
         this.timestamp = ts
         this.entry[TIMESTAMP_KEY] = ts
@@ -146,6 +152,7 @@ class Document {
         serializedDataInMap = null
         checksum = null
         calculateChecksum()
+        updateModified()
     }
 
     /*
@@ -284,12 +291,12 @@ class Document {
     Document fromJson(json) {
         try {
             Document newDoc = mapper.readValue(json, Document)
-            this.identifier = newDoc.identifier
-            this.entry = newDoc.entry
-            this.meta = newDoc.meta
             if (newDoc.data) {
                 setData(newDoc.data)
             }
+            this.identifier = newDoc.identifier
+            this.entry = newDoc.entry
+            this.meta = newDoc.meta
         } catch (JsonParseException jpe) {
             throw new DocumentException(jpe)
         }

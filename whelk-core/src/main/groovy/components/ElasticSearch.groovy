@@ -353,7 +353,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             query = query.must(termQuery("entry.dataset", dataset))
         }
         if (lastTimestamp < 0 && (since || until)) {
-            def timeRangeQuery = rangeQuery("_timestamp")
+            def timeRangeQuery = rangeQuery("entry.timestamp")
             if (since) {
                 timeRangeQuery = timeRangeQuery.from(since.getTime())
             }
@@ -363,22 +363,22 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             query = query.must(timeRangeQuery)
         }
         if (lastTimestamp >= 0 && lastSequence >= 0) {
-            def tsQuery = rangeQuery("_timestamp").gte(lastTimestamp)
+            def tsQuery = rangeQuery("entry.timestamp").gte(lastTimestamp)
             query = query.must(tsQuery)
             if (lastSequence > 0) {
                 def snQuery = rangeQuery("entry.sequenceNumber").gt(lastSequence)
                 query = query.must(snQuery)
             }
-        }
 
+            log.info("lastTS: $lastTimestamp, lastSN: $lastSequence")
+        }
         def srb = client.prepareSearch(indexName)
             .setSearchType(SearchType.QUERY_THEN_FETCH)
             .setTypes(["entry"] as String[])
-            .setFetchSource(["identifier", "entry.sequenceNumber"] as String[], null)
-            .addField("_timestamp")
+            .setFetchSource(["identifier", "entry.timestamp", "entry.sequenceNumber"] as String[], null)
             .setQuery(query)
             .setFrom(0).setSize(100)
-            .addSort("_timestamp", SortOrder.ASC)
+            .addSort("entry.timestamp", SortOrder.ASC)
             .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
 
         log.trace("MetaEntryQuery: $srb")
@@ -405,9 +405,10 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                     String ident = null
 
                     for (hit in response.hits.hits) {
-                        lastDocumentTimestamp = hit.field("_timestamp").value
-                        documentSequenceNumber = mapper.readValue(hit.source(), Map).entry.get("sequenceNumber", 0L)
-                        ident = translateIndexIdTo(hit.id)
+                        Map sourceMap = mapper.readValue(hit.source(), Map)
+                        lastDocumentTimestamp = sourceMap.entry.get("timestamp", 0L)
+                        documentSequenceNumber = sourceMap.entry.get("sequenceNumber", 0L)
+                        ident = sourceMap.get("identifier")
                         list.add(ident)
                     }
                     if (lastLoadedIdentifier && lastLoadedIdentifier == ident) {

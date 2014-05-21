@@ -124,7 +124,12 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
                     return new Iterator<Document>() {
                         public boolean hasNext() { elasticResultIterator.hasNext()}
                         public Document next() {
-                            return super.get(elasticResultIterator.next())
+                            String nextIdentifier = elasticResultIterator.next()
+                            Document nextDocument = super.get(nextIdentifier)
+                            if (!nextDocument) {
+                                throw new WhelkRuntimeException("Document ${nextIdentifier} not found in storage.")
+                            }
+                            return nextDocument
                         }
                         public void remove() { throw new UnsupportedOperationException(); }
                     }

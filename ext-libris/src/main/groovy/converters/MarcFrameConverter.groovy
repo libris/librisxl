@@ -61,7 +61,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         def result = createFrame(source)
         log.trace("Created frame: $result")
 
-        return new Document().setMetaEntry(metaentry).withData(mapper.writeValueAsBytes(result)).withContentType(getResultContentType())
+        return new Document().withData(mapper.writeValueAsBytes(result)).setMetaEntry(metaentry).withContentType(getResultContentType())
     }
 
     @Override

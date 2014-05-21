@@ -171,8 +171,8 @@ class PairtreeDiskStorage extends BasicComponent implements Storage {
     @Override
     @groovy.transform.CompileStatic
     Document get(URI uri, String version = null) {
-        log.trace("Received GET request for ${uri.toString()} with version $version")
-        String filePath = buildPath(uri.toString(), (version ? version as int : 0))
+        log.debug("Received GET request for ${uri.toString()} with version $version")
+        String filePath = buildPath(uri, (version ? version as int : 0))
         String fileName =  getBaseFilename(uri.toString())
         try {
             log.trace("filePath: $filePath")
@@ -270,7 +270,7 @@ class PairtreeDiskStorage extends BasicComponent implements Storage {
             store(createTombstone(uri))
         } else {
             try {
-                def fn = buildPath(uri.toString())
+                def fn = buildPath(uri)
                 log.debug("Deleting $fn")
                 if (!new File(fn).deleteDir()) {
                     log.error("Failed to delete $uri")
@@ -285,6 +285,12 @@ class PairtreeDiskStorage extends BasicComponent implements Storage {
 
     @groovy.transform.CompileStatic
     String buildPath(String id, int version = 0) {
+        return buildPath(new URI(id), version)
+    }
+
+    @groovy.transform.CompileStatic
+    String buildPath(URI uri, int version = 0) {
+        String id = uri.toString()
         int pos = id.lastIndexOf("/")
         String path
         String baseDir = (version > 0 ? this.versionsStorageDir : this.storageDir)
