@@ -16,9 +16,7 @@ import se.kb.libris.utils.isbn.*
 @Log
 class FormatterAPI extends BasicAPI {
 
-    String id = "formatterapi"
     String description = "API to transform between formats the whelk is capable of handling."
-
     void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         if (request.method == "POST") {
             String requestedContentType = request.getParameter("to")
@@ -50,7 +48,6 @@ class FormatterAPI extends BasicAPI {
 
 @Log
 class HoldCounter extends SearchAPI {
-    String id = "HoldingsCounter"
     String description = "Custom search API for counting holdings."
 
     HoldCounter(indexTypeConfig) {
@@ -78,7 +75,6 @@ class HoldCounter extends SearchAPI {
 
 @Log
 class ISXNTool extends BasicAPI {
-    String id = "ISXNTool"
     String description = "Formats data (ISBN-numbers) according to international presention rules."
 
     void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
@@ -152,7 +148,6 @@ class ISXNTool extends BasicAPI {
 
 @Log
 class CompleteExpander extends BasicAPI {
-    String id = "CompleteExpander"
     String description = "Provides useful information about authorities."
 
     void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {

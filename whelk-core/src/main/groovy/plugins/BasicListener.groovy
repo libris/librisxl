@@ -47,6 +47,16 @@ class BasicListener extends BasicPlugin implements Listener {
         }
     }
 
+    List<String> getMyNotifiers(String askerId) {
+        def notifiers = []
+        registry.each { sender, receiverlist ->
+            if (askerId in receiverlist) {
+                notifiers << sender
+            }
+        }
+        return notifiers
+    }
+
     /**
      * Called by listening component.
      * @param componentId the id of the calling component.

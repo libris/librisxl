@@ -96,6 +96,11 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         try {
             def (whelkConfig, pluginConfig) = loadConfig()
             setConfig(whelkConfig, pluginConfig)
+            // Start all plugins
+            for (plugin in this.plugins) {
+                log.info("Starting plugin ${plugin.id}")
+                plugin.start()
+            }
             log.info("Whelk ${this.id} is now operational.")
         } catch (Exception e) {
             log.warn("Problems starting whelk ${this.id}.", e)
@@ -279,6 +284,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         if (!plugin) {
             throw new WhelkRuntimeException("For $whelkname; unable to instantiate plugin with name $plugname.")
         }
+        plugin.setId(plugname)
         plugin.init(this.id)
         log.debug("Stashing \"${plugin.id}\".")
         availablePlugins.put(plugname, plugin)

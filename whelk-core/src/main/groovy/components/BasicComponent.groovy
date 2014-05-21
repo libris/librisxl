@@ -16,6 +16,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     static final ObjectMapper mapper = new ObjectMapper()
     static final String LAST_UPDATED = "last_updated"
     static final String LISTENER_FAILED_AT = "listener_crashed"
+    static final String LISTENER_FAILED_REASON = "listener_crashed_because"
 
     static final String STATE_FILE_SUFFIX = ".state"
 
@@ -39,8 +40,12 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     Thread listenerThread = null
     Thread stateThread = null
 
+    private File stateFile
+
+    @Override
     void init(String whelkId) {
-        File stateFile= new File("${global.WHELK_WORK_DIR}/${whelkId}_${this.id}${STATE_FILE_SUFFIX}")
+        assert whelk
+        stateFile= new File("${global.WHELK_WORK_DIR}/${whelkId}_${this.id}${STATE_FILE_SUFFIX}")
         if (stateFile.exists()) {
             log.info("Loading persisted state for [${this.id}].")
             try {
@@ -55,7 +60,12 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
         componentState['componentId'] = this.id
         componentState['status'] = "started"
+    }
 
+    @Override
+    public void start() {
+        log.info("Start() called on ${this.id}")
+        assert whelk
         log.debug("[${this.id}] Loading format converters")
         for (f in plugins.findAll { it instanceof FormatConverter }) {
             formatConverters.put(f.requiredContentType, f)
@@ -66,11 +76,15 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
         // Look for components configured for whelk. Saves having to add component to all components in plugins.
         for (c in whelk.getComponents()) {
+            log.info("Adding ${c.id} ($c)")
             components.put(c.id, c)
         }
 
         listener = plugins.find { it instanceof Listener }
-        startStateThread(stateFile, whelkId)
+
+        catchUp()
+
+        startStateThread(stateFile, this.whelk.id)
         startListenerThread()
     }
 
@@ -239,6 +253,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         if (listener && listener.hasQueue(this.id) && !listenerThread) {
 
             listenerThread = Thread.start {
+
                 log.debug("[${this.id}] Starting notification listener.");
                 boolean ok = true
                 while (ok) {
@@ -256,21 +271,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                             } else {
                                 log.debug("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.");
                             }
-                            def docs = []
-                            int count = 0
-                            for (doc in components.get(e.senderId).getAll(null, new Date(lastUpdate), null)) {
-                                docs << doc
-                                if ((++count % batchUpdateSize) == 0) {
-                                    bulkAdd(docs, docs.first().contentType)
-                                    docs = []
-                                }
-                            }
-                            // Remainder
-                            if (docs.size() > 0) {
-                                log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
-                                bulkAdd(docs, docs.first().contentType)
-                            }
-                            log.debug("[${this.id}] Loaded $count document to get up to date with ${e.senderId}")
+                            loadDocumentsFromComponentSince(e.senderId, lastUpdate)
                         } else {
                             log.debug("[${this.id}] Already up to date.");
                         }
@@ -281,6 +282,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                         ok = false
                         listener.disable(this.id)
                         setState(LISTENER_FAILED_AT, new Date().getTime())
+                        setState(LISTENER_FAILED_REASON, e?.message)
                         log.error("[${this.id}] Failed to read from notification queue: ${e.message}")
                         throw e
                     }
@@ -291,5 +293,36 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
     }
 
-}
+    void loadDocumentsFromComponentSince(String componentId, long lastUpdate) {
+        if (!componentId) {
+            throw new WhelkRuntimeException("[${this.id}] Can not load documents from $componentId")
+        }
+        log.info("componentId: $componentId")
+        log.info("components: $components")
+        def docs = []
+        int count = 0
+        for (doc in components.get(componentId).getAll(null, new Date(lastUpdate), null)) {
+            docs << doc
+            if ((++count % batchUpdateSize) == 0) {
+                bulkAdd(docs, docs.first().contentType)
+                docs = []
+            }
+        }
+        // Remainder
+        if (docs.size() > 0) {
+            log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
+            bulkAdd(docs, docs.first().contentType)
+        }
+        log.debug("[${this.id}] Loaded $count document to get up to date with ${componentId}")
+    }
 
+    void catchUp() {
+        log.info("Doing catchup.")
+        if (componentState.containsKey(LISTENER_FAILED_AT)) {
+            log.info("Hmm, seems like it crashed last time ...")
+            for (component in listener.getMyNotifiers(this.id)) {
+                loadDocumentsFromComponentSince(component, componentState.get(LISTENER_FAILED_AT))
+            }
+        }
+    }
+}

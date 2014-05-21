@@ -33,6 +33,9 @@
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="info"/>
   </logger>
+ <logger name="se.kb.libris.whelks.plugin.BasicPlugin">
+      <level value="debug"/>
+  </logger>
  <logger name="se.kb.libris.whelks.component.BasicComponent">
       <level value="debug"/>
   </logger>

@@ -23,7 +23,6 @@ class OperatorAPI extends BasicAPI {
     def varPath = false
 
     String description = "Web based whelk operator"
-    String id = "operations"
 
     ObjectMapper mapper = new ObjectMapper()
 

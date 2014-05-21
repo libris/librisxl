@@ -11,7 +11,7 @@ import se.kb.libris.whelks.exception.*
 
 @Log
 class SparqlAPI extends BasicAPI {
-    String id = "SparqlAPI"
+
     String description = "Provides sparql endpoint to the underlying triple store."
 
     @Override

@@ -42,6 +42,10 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             throw new PluginConfigurationException("HybridStorage requires Index component.")
         }
         indexName = "."+stName
+    }
+
+    void start() {
+        super.start()
         index.createIndexIfNotExists(indexName)
         index.checkTypeMapping(indexName, "entry")
 

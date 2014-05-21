@@ -11,7 +11,6 @@ import se.kb.libris.whelks.exception.*
 
 @Log
 class SearchAPI extends BasicAPI implements API {
-    String id = "Search"
     String description = "Generic search query API. User parameters \"q\" for querystring, and optionally \"facets\" and \"boost\"."
 
     def config
