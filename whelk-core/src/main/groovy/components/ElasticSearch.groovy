@@ -84,6 +84,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     int RETRY_TIMEOUT = 300
     int MAX_RETRY_TIMEOUT = 60*60*1000
     static int MAX_NUMBER_OF_FACETS = 100
+    public static final int METAENTRY_SEARCH_PAGINATION_SIZE = 100
 
     String URI_SEPARATOR = "::"
 
@@ -370,14 +371,14 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                 query = query.must(snQuery)
             }
 
-            log.info("lastTS: $lastTimestamp, lastSN: $lastSequence")
+            log.trace("lastTS: $lastTimestamp, lastSN: $lastSequence")
         }
         def srb = client.prepareSearch(indexName)
             .setSearchType(SearchType.QUERY_THEN_FETCH)
             .setTypes(["entry"] as String[])
             .setFetchSource(["identifier", "entry.timestamp", "entry.sequenceNumber"] as String[], null)
             .setQuery(query)
-            .setFrom(0).setSize(100)
+            .setFrom(0).setSize(METAENTRY_SEARCH_PAGINATION_SIZE)
             .addSort("entry.timestamp", SortOrder.ASC)
             .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
 
@@ -393,9 +394,10 @@ abstract class ElasticSearch extends BasicComponent implements Index {
 
         return new Iterator<String>() {
             String lastLoadedIdentifier = null
+            boolean listWasFull = true
 
             public boolean hasNext() {
-                if (list.size() == 0) {
+                if (listWasFull && list.size() == 0) {
                     def srb = buildMetaEntryQuery(indexName, dataset, since, until, lastDocumentTimestamp, documentSequenceNumber)
                     InputStream inputStream = new PipedInputStream()
                     OutputStream outputStream = new PipedOutputStream(inputStream)
@@ -416,10 +418,12 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                         return false
                     }
                     lastLoadedIdentifier = ident
+                    listWasFull = (list.size() >= ElasticSearch.METAENTRY_SEARCH_PAGINATION_SIZE)
+                    log.debug("listWasFull: $listWasFull")
                 }
                 return list.size()
             }
-            public String next() { list.pop() }
+            public String next() { return list.removeFirst() }
             public void remove() { throw new UnsupportedOperationException(); }
         }
     }

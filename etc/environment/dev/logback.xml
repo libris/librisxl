@@ -37,10 +37,10 @@
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.BasicComponent">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.PairtreeDiskStorage">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.PairtreeHybridDiskStorage">
       <level value="info"/>
