@@ -183,27 +183,35 @@ This is now available as:
 
 ### Upgrading to listening components
 
-1. Remove the old ".libris" meta index. With the whelk running:
+1. Remove old state files:
+
+    $ rm work/*.state
+
+2. Start up the whelk
+
+    $ gradle jettyRun
+
+2. Remove the old ".libris" meta index. With the whelk running:
 
     $ curl -XDELETE http://localhost:9200/.libris/
 
-2. Shutdown the whelk
+3. Shutdown the whelk
 
-3. The /def/ entries had misaligned storage paths in the last version. Therefor you must remove them from storage:
+4. The /def/ entries had misaligned storage paths in the last version. Therefor you must remove them from storage:
 
     $ rm -fr work/storage/libris_pairtree/main/def/
     $ rm -fr work/storage/libris_pairtree/main/sys/
 
-4. Start the whelk
+5. Start the whelk
 
     $ gradle jettyRun
 
-5. Reload the definitions:
+6. Reload the definitions:
 
     $ scripts/load_defs_whelk.sh http://localhost:8180/whelk-webapi
 
-6. Rebuild all meta entries.
+7. Rebuild all meta entries.
 
     $ curl http://localhost:8180/whelk-webapi/_operations?operation=rebuild
 
-7. Done! Be happy.
+8. Done! Be happy.
