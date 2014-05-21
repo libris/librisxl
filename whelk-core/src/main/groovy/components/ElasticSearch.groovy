@@ -382,7 +382,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             .addSort("entry.timestamp", SortOrder.ASC)
             .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
 
-        log.trace("MetaEntryQuery: $srb")
+        log.debug("MetaEntryQuery: $srb")
 
         return srb
     }
@@ -420,12 +420,34 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                     lastLoadedIdentifier = ident
                     listWasFull = (list.size() >= ElasticSearch.METAENTRY_SEARCH_PAGINATION_SIZE)
                     log.debug("listWasFull: $listWasFull")
+                    log.debug("list.size(): ${list.size()}")
                 }
                 return list.size()
             }
             public String next() { return list.removeFirst() }
             public void remove() { throw new UnsupportedOperationException(); }
         }
+    }
+
+    List<Map> loadEntriesInOrder(String indexName, String indexType, int pageNumber) {
+        def query = matchAllQuery()
+        def srb = client.prepareSearch(indexName)
+            .setSearchType(SearchType.QUERY_THEN_FETCH)
+            .setTypes([indexType] as String[])
+            .setQuery(query)
+            .setFrom(pageNumber*METAENTRY_SEARCH_PAGINATION_SIZE).setSize(METAENTRY_SEARCH_PAGINATION_SIZE)
+            .addSort("entry.timestamp", SortOrder.ASC)
+            .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
+
+
+        def response = performExecute(srb)
+
+        def list = []
+        for (hit in response.hits.hits) {
+            Map sourceMap = mapper.readValue(hit.source(), Map)
+            list << ["index":indexName,"type":indexType,"id":hit.id,"data":sourceMap]
+        }
+        return list
     }
 
     private void setTypeMapping(indexName, itype) {

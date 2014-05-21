@@ -252,11 +252,11 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
             listenerThread = Thread.start {
 
-                log.debug("[${this.id}] Starting notification listener.");
+                log.info("[${this.id}] Starting notification listener.");
                 boolean ok = true
                 while (ok) {
                     try {
-                        log.debug("[${this.id}] Waiting for update ...");
+                        log.info("[${this.id}] Waiting for update ...");
                         ListenerEvent e = listener.nextUpdate(this.id)
                         log.debug("[${this.id}] Received update from component ${e.senderId} = ${e.payload}");
                         long lastUpdate = getLastUpdatedState()
@@ -264,10 +264,10 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                         log.trace("   Payload: ${e.payload}")
                         if (lastUpdate < e.payload || e.force) {
                             if (e.force) {
-                                log.debug("[${this.id}] Forced update. Component was last updated ${new Date(lastUpdate)} ($lastUpdate), but update is forced (${e.payload}).");
+                                log.info("[${this.id}] Forced update. Component was last updated ${new Date(lastUpdate)} ($lastUpdate), but update is forced (${e.payload}).");
                                 lastUpdate = e.payload
                             } else {
-                                log.debug("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.");
+                                log.info("[${this.id}] Component was last updated ${new Date(lastUpdate)} ($lastUpdate). Must catch up.");
                             }
                             loadDocumentsFromComponentSince(e.senderId, lastUpdate)
                         } else {
@@ -282,7 +282,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                 }
             }
         } else if (!listenerThread) {
-            log.debug("[${this.id}] No listener queue registered for me.")
+            log.info("[${this.id}] No listener queue registered for me.")
         }
     }
 
@@ -309,7 +309,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                 log.debug("[${this.id}] Still ${docs.size()} documents left to process.")
                 bulkAdd(docs, docs.first().contentType)
             }
-            log.debug("[${this.id}] Loaded $count document to get up to date with ${componentId}")
+            log.info("[${this.id}] Loaded $count document to get up to date with ${componentId}")
         } catch (Exception e) {
             setState(LISTENER_FAILED_AT, lastSuccessfulTimestamp)
             setState(LISTENER_FAILED_REASON, e?.message)

@@ -22,7 +22,8 @@
             ],
         "_components": [
             "pairtreehybridstorage",
-            "index"
+            "index",
+            "fusekigraphstore"
         ]
     },
     "_masterComponent": "pairtreehybridstorage",

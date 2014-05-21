@@ -148,7 +148,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     void rebuildIndex() {
         assert index
         int count = 0
-        List<Map<String,String>> entries = []
+        List<Map<String,String>> entryList = []
         log.info("Started rebuild of metaindex for $indexName.")
         index.createIndexIfNotExists(indexName)
         index.checkTypeMapping(indexName, "entry")
@@ -156,22 +156,36 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         currentSequenceNumber = index.loadHighestSequenceNumber(indexName)+1
         for (document in getAllRaw()) {
             document = setNewSequenceNumber(document)
-            entries << [
+            entryList << [
             "index":indexName,
             "type": "entry",
             "id": ((ElasticSearch)index).translateIdentifier(document.identifier),
             "data":((Document)document).metadataAsJson
             ]
             if (count++ % 20000 == 0) {
-                index.index(entries)
-                entries = []
+                index.index(entryList)
+                entryList = []
             }
             if (log.isInfoEnabled() && count % 10000 == 0) {
                 log.info("[${new Date()}] Rebuilding metaindex for $indexName. $count sofar.")
             }
         }
-        if (entries.size() > 0) {
+        if (entryList.size() > 0) {
+            index.index(entryList)
+        }
+        index.flush()
+        log.info("Created entries. Now sorting them for sequenceNumbers.")
+        int page = 0
+        currentSequenceNumber = 0
+        List entries = index.loadEntriesInOrder(indexName, "entry", page)
+        while (entries.size() > 0) {
+            for (entry in entries) {
+                def sourceMap = entry.remove("data")
+                sourceMap.get("entry").put("sequenceNumber", ++currentSequenceNumber)
+                entry.put("data", mapper.writeValueAsString(sourceMap))
+            }
             index.index(entries)
+            entries = index.loadEntriesInOrder(indexName, "entry", ++page)
         }
         log.info("Meta index rebuilt. Contains $count entries.")
     }
