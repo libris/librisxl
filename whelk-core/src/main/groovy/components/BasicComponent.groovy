@@ -64,7 +64,6 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     @Override
     public void start() {
-        log.info("Start() called on ${this.id}")
         assert whelk
         log.debug("[${this.id}] Loading format converters")
         for (f in plugins.findAll { it instanceof FormatConverter }) {
@@ -76,7 +75,6 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
         // Look for components configured for whelk. Saves having to add component to all components in plugins.
         for (c in whelk.getComponents()) {
-            log.info("Adding ${c.id} ($c)")
             components.put(c.id, c)
         }
 

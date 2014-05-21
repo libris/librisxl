@@ -180,3 +180,30 @@ This is now available as:
     $ GRAPH_STORE=http://localhost:3030/libris/data
     $ ENDPOINT=http://localhost:3030/libris/query
 
+
+### Upgrading to listening components
+
+1. Remove the old ".libris" meta index. With the whelk running:
+
+    $ curl -XDELETE http://localhost:9200/.libris/
+
+2. Shutdown the whelk
+
+3. The /def/ entries had misaligned storage paths in the last version. Therefor you must remove them from storage:
+
+    $ rm -fr work/storage/libris_pairtree/main/def/
+    $ rm -fr work/storage/libris_pairtree/main/sys/
+
+4. Start the whelk
+
+    $ gradle jettyRun
+
+5. Reload the definitions:
+
+    $ scripts/load_defs_whelk.sh http://localhost:8180/whelk-webapi
+
+6. Rebuild all meta entries.
+
+    $ curl http://localhost:8180/whelk-webapi/_operations?operation=rebuild
+
+7. Done! Be happy.
