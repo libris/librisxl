@@ -2,13 +2,32 @@ package se.kb.libris.whelks.plugin
 
 import groovy.util.logging.Slf4j as Log
 
+import org.codehaus.jackson.map.ObjectMapper
+
 import com.damnhandy.uri.template.UriTemplate
 
 import se.kb.libris.whelks.Document
 
 
 @Log
-class LibrisURIMinter extends BasicPlugin implements URIMinter {
+class LibrisURIMinterPlugin extends BasicPlugin implements URIMinter {
+    LibrisURIMinter uriMinter
+    LibrisURIMinterPlugin(String configPath) {
+        def mapper = new ObjectMapper()
+        def loader = getClass().classLoader
+        def config = loader.getResourceAsStream(configPath).withStream {
+            mapper.readValue(it, Map)
+        }
+        uriMinter = new LibrisURIMinter(config)
+    }
+    URI mint(Document doc) {
+        return uriMinter.computeUri(doc.getDataAsMap())
+    }
+}
+
+
+@Log
+class LibrisURIMinter {
 
     static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
     static final char[] VOWELS = "auoeiy".chars
@@ -77,12 +96,9 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
         return UUID.randomUUID()
     }
 
-    URI mint(Document doc) {
-        return base.resolve(computePath(doc))
-    }
-
-    String computePath(Document doc) {
-        computePath(doc.getDataAsMap())
+    URI computeUri(Map data) {
+        // FIXME: needs dataset
+        return base.resolve(computePaths(data)['document'])
     }
 
     Map computePaths(Map data, String dataset) {

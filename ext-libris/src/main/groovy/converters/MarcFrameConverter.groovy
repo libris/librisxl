@@ -18,22 +18,22 @@ import com.damnhandy.uri.template.UriTemplate
 @Log
 class MarcFrameConverter extends BasicFormatConverter {
 
-    URIMinter uriMinter
+    LibrisURIMinter uriMinter
     ObjectMapper mapper = new ObjectMapper()
 
+    def config
     protected MarcConversion conversion
 
-    MarcFrameConverter() {
+    MarcFrameConverter(String configPath="marcframe.json") {
         def loader = getClass().classLoader
-
-        loader.getResourceAsStream("oldspace.json").withStream {
-            uriMinter = new LibrisURIMinter(mapper.readValue(it, Map))
-        }
-
-        def config = loader.getResourceAsStream("marcframe.json").withStream {
+        config = loader.getResourceAsStream(configPath).withStream {
             mapper.readValue(it, Map)
         }
+    }
+
+    def loadTokenMaps(Map config) {
         def tokenMaps = [:]
+        def loader = getClass().classLoader
         config.tokenMaps.each { key, sourceRef ->
             if (sourceRef instanceof String) {
                 tokenMaps[key] = loader.getResourceAsStream(sourceRef).withStream {
@@ -43,10 +43,25 @@ class MarcFrameConverter extends BasicFormatConverter {
                 tokenMaps[key] = sourceRef
             }
         }
+        return tokenMaps
+    }
+
+    @Override
+    void addPlugin(Plugin plugin) {
+        if (plugin instanceof URIMinter) {
+            uriMinter = plugin.uriMinter
+        }
+        super.addPlugin(plugin)
+    }
+
+    @Override
+    void start() {
+        def tokenMaps = loadTokenMaps(config)
         conversion = new MarcConversion(config, uriMinter, tokenMaps)
     }
 
     Map createFrame(Map marcSource) {
+        if (!conversion) { start() }
         return conversion.createFrame(marcSource)
     }
 
@@ -75,6 +90,11 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     public static void main(String[] args) {
         def converter = new MarcFrameConverter()
+        getClassLoader().getResourceAsStream("urispace.json").withStream {
+            converter.uriMinter = new LibrisURIMinter(mapper.readValue(it, Map))
+        }
+        converter.start()
+
         def fpath = args[0]
         def cmd = null
         if (args.length > 1) {
@@ -103,9 +123,9 @@ class MarcConversion {
     Map tokenMaps
     Set primaryTags = new HashSet()
 
-    URIMinter uriMinter
+    LibrisURIMinter uriMinter
 
-    MarcConversion(Map config, URIMinter uriMinter, Map tokenMaps) {
+    MarcConversion(Map config, LibrisURIMinter uriMinter, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps

@@ -117,8 +117,16 @@
 
         }
     },
-    "marcconverter" : {
-        "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"
+    "marcconverter": {
+        "_class": "se.kb.libris.whelks.plugin.MarcFrameConverter",
+        "_plugins": [
+          "uriminter"
+        ],
+        "_params": "marcframe.json"
+    },
+    "uriminter": {
+        "_class": "se.kb.libris.whelks.plugin.LibrisURIMinterPlugin",
+        "_params": "urispace.json"
     },
     "turtleconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter",
