@@ -27,6 +27,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     String indexName
 
     private long currentSequenceNumber = 0L
+    boolean rebuilding = false
 
     static Logger log = LoggerFactory.getLogger(PairtreeHybridDiskStorage.class)
 
@@ -56,6 +57,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     @Override
     @groovy.transform.CompileStatic
     boolean store(Document doc) {
+        if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         boolean result = false
         try {
             result = super.store(doc)
@@ -79,6 +81,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
 
     @Override
     protected void batchLoad(List<Document> docs) {
+        if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         if (docs.size() == 1) {
             log.debug("Only one document to store. Using standard store()-method.")
             store(docs.first())
@@ -116,6 +119,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
+        if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         if (dataset || since) {
             log.debug("Loading documents by index query for dataset $dataset ${(since ? "since $since": "")}")
             def elasticResultIterator = index.metaEntryQuery(indexName, dataset, since, until)
@@ -140,6 +144,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     }
     @Override
     void remove(URI uri) {
+        if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         super.remove(uri)
         index.deleteFromEntry(uri, indexName)
     }
@@ -147,6 +152,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     @Override
     void rebuildIndex() {
         assert index
+        rebuilding = true
         int count = 0
         List<Map<String,String>> entryList = []
         log.info("Started rebuild of metaindex for $indexName.")
@@ -188,5 +194,6 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             entries = index.loadEntriesInOrder(indexName, "entry", ++page)
         }
         log.info("Meta index rebuilt. Contains $count entries.")
+        rebuilding = false
     }
 }

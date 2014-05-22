@@ -95,6 +95,8 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             batchLoad(docs)
             setState(LAST_UPDATED, updatetime)
             return new URI(document.identifier)
+        } catch (DownForMaintenanceException dfme) {
+            throw dfme
         } catch (Exception e) {
             log.error("[${this.id}] failed to add documents. (${e.message})", e)
             throw e
@@ -115,6 +117,8 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             batchLoad(docs)
             setState(LAST_UPDATED, updatetime)
             log.debug("[${this.id}] Bulk Add completed in ${(System.currentTimeMillis()-startBatchAt)/1000} seconds.")
+        } catch (DownForMaintenanceException dfme) {
+            throw dfme
         } catch (Exception e) {
             log.error("[${this.id}] failed to add documents. (${e.message})", e)
             throw e

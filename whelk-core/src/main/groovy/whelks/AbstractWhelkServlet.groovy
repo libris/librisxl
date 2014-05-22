@@ -26,31 +26,42 @@ abstract class AbstractWhelkServlet extends HttpServlet {
         String path = request.pathInfo
         API api = null
         List pathVars = []
+        def whelkinfo = [:]
+        whelkinfo["whelk"] = this.id
+        whelkinfo["status"] = "Hardcoded at 'fine'. Should be more dynamic ..."
 
         log.debug("Path is $path")
-        if (request.method == "GET" && path == "/") {
-            printAvailableAPIs(response)
-        } else {
-            (api, pathVars) = getAPIForPath(path)
-            if (api) {
-                api.handle(request, response, pathVars)
+        try {
+            if (request.method == "GET" && path == "/") {
+                printAvailableAPIs(response, whelkinfo)
             } else {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "No API found for $path")
+                (api, pathVars) = getAPIForPath(path)
+                if (api) {
+                    api.handle(request, response, pathVars)
+                } else {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "No API found for $path")
+                }
             }
+        } catch (DownForMaintenanceException dfme) {
+            whelkinfo["status"] = "UNAVAILABLE"
+            whelkinfo["message"] = dfme.message
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE)
+            response.setCharacterEncoding("UTF-8")
+            response.setContentType("application/json")
+            response.writer.write(mapper.writeValueAsString(whelkinfo))
+            response.writer.flush()
         }
     }
 
-    void printAvailableAPIs(HttpServletResponse response) {
-        def info = [:]
-        info["whelk"] = this.id
-        info["apis"] = apis.collect {
+    void printAvailableAPIs(HttpServletResponse response, Map whelkinfo) {
+        whelkinfo["apis"] = apis.collect {
              [ "path" : it.key ,
                 "id": it.value.id,
                 "description" : it.value.description ]
         }
         response.setCharacterEncoding("UTF-8")
         response.setContentType("application/json")
-        response.writer.write(mapper.writeValueAsString(info))
+        response.writer.write(mapper.writeValueAsString(whelkinfo))
         response.writer.flush()
     }
 
