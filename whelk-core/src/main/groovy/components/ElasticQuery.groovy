@@ -147,7 +147,10 @@ class ElasticQuery extends Query {
                     dslQuery['query'] = termsList.first()
                 }
             } else {
-                throw new WhelkRuntimeException("Terms query does not support multiple fields. Use a filtered query instead.")
+                dslQuery['query'] = ['bool': ['must': [ termsList ] ] ]
+                if (this.query) {
+                    dslQuery.query.bool.must << buildQueryStringQuery()
+                }
             }
         } else if (phraseQuery) {
             throw new UnsupportedOperationException("Phrasequery not yet implemented in DSL.")
