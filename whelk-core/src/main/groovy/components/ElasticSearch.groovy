@@ -84,7 +84,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     int RETRY_TIMEOUT = 300
     int MAX_RETRY_TIMEOUT = 60*60*1000
     static int MAX_NUMBER_OF_FACETS = 100
-    public static final int METAENTRY_SEARCH_PAGINATION_SIZE = 100
+    public static final int METAENTRY_SEARCH_PAGINATION_SIZE = 1000
 
     String URI_SEPARATOR = "::"
 
@@ -229,6 +229,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     @Override
     protected void batchLoad(List<Document> docs) {
         String indexName = this.whelk.id
+        createIndexIfNotExists(indexName)
         addDocuments(docs, indexName)
     }
 

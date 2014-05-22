@@ -32,6 +32,9 @@ class SearchAPI extends BasicAPI implements API {
         if (indexConfig['queryProperties']) {
             queryMap.putAll(indexConfig['queryProperties'])
         }
+        if (indexConfig['terms']) {
+            queryMap.put("terms", indexConfig['terms'])
+        }
         def elasticQuery = new ElasticQuery(queryMap)
         if (queryMap.f) {
             elasticQuery.query += " " + queryMap.f.first()

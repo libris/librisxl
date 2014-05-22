@@ -96,6 +96,29 @@ class ElasticQuery extends Query {
         return this
     }
 
+    Map buildQueryStringQuery() {
+        Map qsMap = ['query_string': ['query': this.query, "default_operator": "and"]]
+
+        if (this.fields) {
+            def fieldsList = []
+            this.fields.each {
+                if (this.boost && this.boost[it]) {
+                    fieldsList << it + "^" + this.boost[it]
+                } else {
+                    fieldsList << it
+                }
+            }
+            qsMap.query_string.put('fields', fieldsList)
+        } else if (this.boost) {
+            def fieldsList = ["_all"]
+            this.boost.each { f, b ->
+                fieldsList << f + "^" + b
+            }
+            qsMap.query_string.put('fields', fieldsList)
+        }
+        return qsMap
+    }
+
     String toJsonQuery() {
         def dslQuery = [:]
         dslQuery['from'] = this.start
@@ -111,7 +134,18 @@ class ElasticQuery extends Query {
                 termsList << ["terms": [(t) : v]]
             }
             if (termsList.size() == 1) {
-                dslQuery['query'] = termsList.first()
+                if (this.query) {
+                    dslQuery['query'] = [
+                        'bool': [
+                            'must': [
+                                buildQueryStringQuery(),
+                                termsList.first()
+                            ]
+                        ]
+                    ]
+                } else {
+                    dslQuery['query'] = termsList.first()
+                }
             } else {
                 throw new WhelkRuntimeException("Terms query does not support multiple fields. Use a filtered query instead.")
             }
@@ -119,25 +153,7 @@ class ElasticQuery extends Query {
             throw new UnsupportedOperationException("Phrasequery not yet implemented in DSL.")
             //srb.setQuery(textPhrase(q.phraseField, q.phraseValue))
         } else {
-            dslQuery['query'] = ['query_string': ['query': this.query, "default_operator": "and"]]
-
-            if (this.fields) {
-                def fieldsList = []
-                this.fields.each {
-                    if (this.boost && this.boost[it]) {
-                        fieldsList << it + "^" + this.boost[it]
-                    } else {
-                        fieldsList << it
-                    }
-                }
-                dslQuery.query.query_string.put('fields', fieldsList)
-            } else if (this.boost) {
-                def fieldsList = ["_all"]
-                this.boost.each { f, b ->
-                    fieldsList << f + "^" + b
-                }
-                dslQuery.query.query_string.put('fields', fieldsList)
-            }
+            dslQuery['query'] = buildQueryStringQuery()
         }
         if (this.sorting) {
             def sortList = []

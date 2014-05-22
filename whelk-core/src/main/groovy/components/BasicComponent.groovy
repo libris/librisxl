@@ -104,7 +104,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     }
 
     @Override
-    public final void bulkAdd(final List<Document> documents, String contentType)  {
+    public final void bulkAdd(final List<Document> documents, String contentType) {
         log.debug("[${this.id}] bulkAdd called with ${documents.size()} documents.")
         try {
             long startBatchAt = System.currentTimeMillis()

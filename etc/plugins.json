@@ -278,6 +278,23 @@
                     },
                     "queryFacets" : "about.@type"
                 },
+                "relator": {
+                    "types" : [ "def" ],
+                    "queryFields":[
+                        "about.label",
+                        "about.label_en",
+                        "about.prefLabel_en",
+                        "about.notation"
+                    ],
+                    "defaultBoost": "about.label:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.label" : "asc",
+                        "about.notation" : "asc"
+                    },
+                    "terms" : [ "about.@type:ObjectProperty" ]
+                },
                 "facet_expansion": {
                     "types": ["def"],
                     "queryProperties": {
