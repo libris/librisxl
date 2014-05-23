@@ -62,6 +62,9 @@ class ReindexOperator extends AbstractOperator {
         gstoreAvailable = new Semaphore(graphstoreSemaphores)
         indexAvailable = new Semaphore(indexingSemaphores)
         String newIndex = null
+
+        long newestDocumentTimestamp = 0L
+
         log.info("Starting reindexing.")
         if (doIndexing) {
             log.info("Index batch size: $indexBatchSize")
@@ -82,6 +85,9 @@ class ReindexOperator extends AbstractOperator {
         for (doc in whelk.loadAll(dataset, null, fromStorage)) {
             log.trace("Loaded doc ${doc.identifier} with type ${doc.contentType}")
             if (!doc.entry.deleted) {
+                if (doc.timestamp > newestDocumentTimestamp) {
+                    newestDocumentTimestamp = doc.timestamp
+                }
                 if (fromStorage) {
                     try {
                         for (strg in whelk.storages) {
@@ -129,7 +135,6 @@ class ReindexOperator extends AbstractOperator {
             try {
                 def preparedDocs = whelk.index.prepareDocs(indexdocs, indexdocs.first().contentType)
                 whelk.index.addDocuments(preparedDocs, newIndex)
-                whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
@@ -137,11 +142,14 @@ class ReindexOperator extends AbstractOperator {
         }
         log.info("Reindexed $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds.")
         if (doIndexing && !dataset && !cancelled) {
-            whelk.index.reMapAliases(whelk.id)
+            indexQueue.execute({
+                whelk.index.reMapAliases(whelk.id)
+            })
         }
         operatorState=OperatorState.FINISHING
         indexQueue.execute({
             this.whelk.flush()
+            this.whelk.index.setState(whelk.index.LAST_UPDATED, newestDocumentTimestamp)
         } as Runnable)
         indexQueue.shutdown()
         gstoreQueue.shutdown()
@@ -156,9 +164,10 @@ class ReindexOperator extends AbstractOperator {
             log.debug("Acquired.")
             indexQueue.execute({
                 try {
+                    // Bypass component.bulkAdd() to be able to index into newIndex
                     def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
-                whelk.index.addDocuments(preparedDocs, newIndex)
-                whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
+                    whelk.index.addDocuments(preparedDocs, newIndex)
+                    whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
                 } catch (WhelkAddException wae) {
                     log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
                 } catch (PluginConfigurationException pce) {

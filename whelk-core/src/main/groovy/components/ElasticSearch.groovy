@@ -84,7 +84,6 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     int RETRY_TIMEOUT = 300
     int MAX_RETRY_TIMEOUT = 60*60*1000
     static int MAX_NUMBER_OF_FACETS = 100
-    public static final int METAENTRY_SEARCH_PAGINATION_SIZE = 1000
 
     String URI_SEPARATOR = "::"
 
@@ -379,7 +378,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             .setTypes(["entry"] as String[])
             .setFetchSource(["identifier", "entry.timestamp", "entry.sequenceNumber"] as String[], null)
             .setQuery(query)
-            .setFrom(0).setSize(METAENTRY_SEARCH_PAGINATION_SIZE)
+            .setFrom(0).setSize(batchUpdateSize)
             .addSort("entry.timestamp", SortOrder.ASC)
             .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
 
@@ -419,7 +418,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                         return false
                     }
                     lastLoadedIdentifier = ident
-                    listWasFull = (list.size() >= ElasticSearch.METAENTRY_SEARCH_PAGINATION_SIZE)
+                    listWasFull = (list.size() >= super.batchUpdateSize)
                     log.debug("listWasFull: $listWasFull")
                     log.debug("list.size(): ${list.size()}")
                 }
@@ -436,7 +435,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             .setSearchType(SearchType.QUERY_THEN_FETCH)
             .setTypes([indexType] as String[])
             .setQuery(query)
-            .setFrom(pageNumber*METAENTRY_SEARCH_PAGINATION_SIZE).setSize(METAENTRY_SEARCH_PAGINATION_SIZE)
+            .setFrom(pageNumber*batchUpdateSize).setSize(batchUpdateSize)
             .addSort("entry.timestamp", SortOrder.ASC)
             .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
 
@@ -568,6 +567,9 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                 log.debug("Bulk request to index " + documents?.size() + " documents.")
 
                 for (doc in documents) {
+                    if (doc.timestamp < 1) {
+                        throw new DocumentException("Document with 0 timestamp? Not buying it.")
+                    }
                     log.trace("Working on ${doc.identifier}")
                     if (doc && doc.isJson()) {
                         //def indexType = determineDocumentType(doc, indexName)

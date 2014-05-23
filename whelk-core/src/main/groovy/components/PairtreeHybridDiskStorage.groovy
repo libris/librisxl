@@ -59,22 +59,18 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     boolean store(Document doc) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         boolean result = false
-        try {
-            result = super.store(doc)
-            log.debug("Result from store()-operation: $result")
-            if (result) {
-                doc = setNewSequenceNumber(doc)
-                index.index(doc.metadataAsJson.getBytes("utf-8"),
-                    [
-                        "index": ".libris",
-                        "type": "entry",
-                        "id": ((ElasticSearch)index).translateIdentifier(doc.identifier)
-                    ]
-                )
-                index.flush()
-            }
-        } catch (Exception e) {
-            throw new WhelkAddException("Failed to store ${doc.identifier}", e, [doc.identifier])
+        result = super.store(doc)
+        log.debug("Result from store()-operation: $result")
+        if (result) {
+            doc = setNewSequenceNumber(doc)
+            index.index(doc.metadataAsJson.getBytes("utf-8"),
+                [
+                    "index": ".libris",
+                    "type": "entry",
+                    "id": ((ElasticSearch)index).translateIdentifier(doc.identifier)
+                ]
+            )
+            index.flush()
         }
         return result
     }
@@ -153,7 +149,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     void rebuildIndex() {
         assert index
         rebuilding = true
-        int count = 0
+        int diskCount = 0
         List<Map<String,String>> entryList = []
         log.info("Started rebuild of metaindex for $indexName.")
         index.createIndexIfNotExists(indexName)
@@ -168,12 +164,12 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             "id": ((ElasticSearch)index).translateIdentifier(document.identifier),
             "data":((Document)document).metadataAsJson
             ]
-            if (count++ % 20000 == 0) {
+            if (diskCount++ % 2000 == 0) {
                 index.index(entryList)
                 entryList = []
             }
-            if (log.isInfoEnabled() && count % 10000 == 0) {
-                log.info("[${new Date()}] Rebuilding metaindex for $indexName. $count sofar.")
+            if (log.isInfoEnabled() && diskCount % 50000 == 0) {
+                log.info("[${new Date()}] Rebuilding metaindex for $indexName. $diskCount sofar.")
             }
         }
         if (entryList.size() > 0) {
@@ -182,6 +178,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         index.flush()
         log.info("Created entries. Now sorting them for sequenceNumbers.")
         int page = 0
+        int indexCount = 0
         currentSequenceNumber = 0
         List entries = index.loadEntriesInOrder(indexName, "entry", page)
         while (entries.size() > 0) {
@@ -189,11 +186,15 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
                 def sourceMap = entry.remove("data")
                 sourceMap.get("entry").put("sequenceNumber", ++currentSequenceNumber)
                 entry.put("data", mapper.writeValueAsString(sourceMap))
+                indexCount++
+            }
+            if (log.isInfoEnabled() && indexCount % 50000 == 0) {
+                log.info("[${new Date()}] Setting documentSequence for $indexName. $indexCount sofar.")
             }
             index.index(entries)
             entries = index.loadEntriesInOrder(indexName, "entry", ++page)
         }
-        log.info("Meta index rebuilt. Contains $count entries.")
+        log.info("Meta index rebuilt. Contains $diskCount entries.")
         rebuilding = false
     }
 }

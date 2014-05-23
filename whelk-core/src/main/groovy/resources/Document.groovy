@@ -33,7 +33,7 @@ class Document {
     static final TIMESTAMP_KEY = "timestamp"
     static final MODIFIED_KEY = "modified"
 
-    private long timestamp
+    private long timestamp = 0L
     private long modified
 
     // store serialized data
@@ -46,7 +46,6 @@ class Document {
     Document() {
         entry = [:]
         meta = [:]
-        updateTimestamp()
     }
 
     Document(String jsonString) {

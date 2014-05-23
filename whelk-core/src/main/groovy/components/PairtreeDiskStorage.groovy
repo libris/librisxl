@@ -93,6 +93,9 @@ class PairtreeDiskStorage extends BasicComponent implements Storage {
     @groovy.transform.CompileStatic
     boolean store(Document doc) {
         if (doc && (handlesContent(doc.contentType) || doc.entry.deleted)) {
+            if (doc.timestamp < 1) {
+                throw new DocumentException("Document with 0 timestamp? Not buying it.")
+            }
             if (this.versioning) {
                 try {
                     doc = checkAndUpdateExisting(doc)
