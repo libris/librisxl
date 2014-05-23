@@ -155,9 +155,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         index.createIndexIfNotExists(indexName)
         index.checkTypeMapping(indexName, "entry")
 
-        currentSequenceNumber = index.loadHighestSequenceNumber(indexName)+1
         for (document in getAllRaw()) {
-            document = setNewSequenceNumber(document)
             entryList << [
             "index":indexName,
             "type": "entry",
@@ -176,7 +174,14 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             index.index(entryList)
         }
         index.flush()
-        log.info("Created entries. Now sorting them for sequenceNumbers.")
+        log.info("Created $diskCount entries.")
+        updateSequenceNumbers()
+        rebuilding = false
+    }
+
+    void updateSequenceNumbers() {
+        log.info("Sorting entries for sequenceNumbers.")
+        rebuilding = true
         int page = 0
         int indexCount = 0
         currentSequenceNumber = 0
@@ -194,7 +199,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             index.index(entries)
             entries = index.loadEntriesInOrder(indexName, "entry", ++page)
         }
-        log.info("Meta index rebuilt. Contains $diskCount entries.")
+        log.info("Meta index sequence ordered. Contains $indexCount entries.")
         rebuilding = false
     }
 }

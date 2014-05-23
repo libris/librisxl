@@ -223,8 +223,20 @@ class ReindexOperator extends AbstractOperator {
 @Log
 class RebuildMetaIndexOperator extends AbstractOperator {
     String oid = "rebuild"
+    boolean sequenceOnly = false
+
+    @Override
+    void setParameters(Map parameters) {
+        super.setParameters(parameters)
+        log.info("parameters: $parameters")
+        sequenceOnly = (parameters.get("sequenceOnly", ["false"]).first() == "true")
+    }
     void doRun(long startTime) {
-        whelk.storage.rebuildIndex()
+        if (sequenceOnly) {
+            whelk.storage.updateSequenceNumbers()
+        } else {
+            whelk.storage.rebuildIndex()
+        }
     }
 }
 
