@@ -24,7 +24,7 @@ class FormatterAPI extends BasicAPI {
                 log.warn("[${this.id}] Received no content to reformat.")
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No content received.")
             } else {
-                Document doc = new Document().withData(Tools.normalizeString(request.getInputStream().getText("UTF-8"))).withEntry(["contentType":request.contentType])
+                Document doc = new Document().withData(Tools.normalizeString(request.getInputStream().getText("UTF-8"))).withEntry(["contentType":request.contentType, "timestamp": new Date().getTime()])
                 if (requestedContentType) {
                     log.info("Constructed document. Asking for converter for $requestedContentType")
                     def fc = plugins.find { it.requiredContentType == doc.contentType && it.resultContentType == requestedContentType }
