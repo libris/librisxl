@@ -58,7 +58,6 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         result = super.store(doc)
         log.debug("Result from store()-operation: $result")
         if (result) {
-            //doc = setNewSequenceNumber(doc)
             index.index(doc.metadataAsJson.getBytes("utf-8"),
                 [
                     "index": ".libris",
@@ -82,7 +81,6 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             for (doc in docs) {
                 boolean result = super.store(doc)
                 if (result) {
-                    //doc = setNewSequenceNumber(doc)
                     entries << [
                         "index":indexName,
                         "type": "entry",
@@ -95,21 +93,6 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             index.flush()
         }
     }
-
-    /*
-    private Document setNewSequenceNumber(Document doc) {
-        doc.entry['sequenceNumber'] = currentSequenceNumber
-        increaseSequenceNumber()
-        return doc
-    }
-
-    private void increaseSequenceNumber() {
-        synchronized (currentSequenceNumber) {
-            currentSequenceNumber++
-        }
-    }
-    */
-
 
     @Override
     Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
@@ -173,33 +156,6 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         }
         index.flush()
         log.info("Created $diskCount entries.")
-        //updateSequenceNumbers()
         rebuilding = false
     }
-
-    /*
-    void updateSequenceNumbers() {
-        log.info("Sorting entries for sequenceNumbers.")
-        rebuilding = true
-        int page = 0
-        int indexCount = 0
-        currentSequenceNumber = 0
-        List entries = index.loadEntriesInOrder(indexName, "entry", page)
-        while (entries.size() > 0) {
-            for (entry in entries) {
-                def sourceMap = entry.remove("data")
-                sourceMap.get("entry").put("sequenceNumber", ++currentSequenceNumber)
-                entry.put("data", mapper.writeValueAsString(sourceMap))
-                indexCount++
-            }
-            if (log.isInfoEnabled() && indexCount % 50000 == 0) {
-                log.info("[${new Date()}] Setting documentSequence for $indexName. $indexCount sofar.")
-            }
-            index.index(entries)
-            entries = index.loadEntriesInOrder(indexName, "entry", ++page)
-        }
-        log.info("Meta index sequence ordered. Contains $indexCount entries.")
-        rebuilding = false
-    }
-    */
 }
