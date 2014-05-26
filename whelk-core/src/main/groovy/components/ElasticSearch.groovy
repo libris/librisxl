@@ -289,67 +289,6 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         return results
     }
 
-    /*
-    Iterator<String> oldmetaEntryQuery(String indexName, String dataset, Date since, Date until) {
-        def query = boolQuery()
-        if (dataset) {
-            query = query.must(termQuery("entry.dataset", dataset))
-        }
-        if (since || until) {
-            def timeRangeQuery = rangeQuery("entry.timestamp")
-            if (since) {
-                timeRangeQuery = timeRangeQuery.from(since.getTime())
-            }
-            if (until) {
-                timeRangeQuery = timeRangeQuery.to(since.getTime())
-            }
-            query = query.must(timeRangeQuery)
-        }
-        def srb = client.prepareSearch(indexName)
-            .setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setScroll(new TimeValue(60000))
-            .setTypes(["entry"] as String[])
-            .setQuery(query)
-            .addSort("entry.timestamp", SortOrder.ASC)
-            .setSize(100)
-
-        def list = []
-        log.debug("MetaEntryQuery: $srb")
-        def scrollResp = performExecute(srb)
-        return new Iterator<String>() {
-            public boolean hasNext() {
-                if (list.size() == 0) {
-                    scrollResp = performExecute(super.client.prepareSearchScroll(scrollResp.getScrollId()).setScroll(new TimeValue(60000)))
-                    //list.addAll(scrollResp.hits.hits.collect { translateIndexIdTo(it.id) })
-                    for (hit in scrollResp.hits.hits) {
-                        list.add(hit.id)
-                        log.info("doc timestamp: " + mapper.readValue(hit.source(), Map).entry.timestamp)
-                    }
-                }
-                return list.size()
-            }
-            public String next() { list.pop() }
-            public void remove() { throw new UnsupportedOperationException(); }
-        }
-    }
-*/
-
-    /*
-    long loadHighestSequenceNumber(String indexName) {
-        long sequenceNumber = 0L
-        def srb = client.prepareSearch(indexName).setTypes(["entry"] as String[]).setFrom(0).setSize(1).setQuery(matchAllQuery())
-            .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.DESC))
-        def response = performExecute(srb)
-        log.debug("Total number of sequence number hits: ${response.hits.totalHits}")
-        if (response.hits.totalHits > 0) {
-            log.debug("Found matches for documentSequenceNumber")
-            sequenceNumber = mapper.readValue(response.hits.getAt(0).source(), Map).entry.get("sequenceNumber", 0L)
-        }
-        log.debug("Highest documentNumber: $sequenceNumber")
-        return sequenceNumber
-    }
-    */
-
     private SearchRequestBuilder buildMetaEntryQuery(String indexName, String dataset, Date since, Date until, long lastTimestamp = -1) {
         def query = boolQuery()
         if (dataset) {
@@ -431,29 +370,6 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             public void remove() { throw new UnsupportedOperationException(); }
         }
     }
-
-    /*
-    List<Map> loadEntriesInOrder(String indexName, String indexType, int pageNumber) {
-        def query = matchAllQuery()
-        def srb = client.prepareSearch(indexName)
-            .setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setTypes([indexType] as String[])
-            .setQuery(query)
-            .setFrom(pageNumber*batchUpdateSize).setSize(batchUpdateSize)
-            .addSort("entry.timestamp", SortOrder.ASC)
-            .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
-
-
-        def response = performExecute(srb)
-
-        def list = []
-        for (hit in response.hits.hits) {
-            Map sourceMap = mapper.readValue(hit.source(), Map)
-            list << ["index":indexName,"type":indexType,"id":hit.id,"data":sourceMap]
-        }
-        return list
-    }
-    */
 
     private void setTypeMapping(indexName, itype) {
         log.info("Creating mappings for $indexName/$itype ...")
