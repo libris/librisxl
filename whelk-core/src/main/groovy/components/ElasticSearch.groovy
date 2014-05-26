@@ -334,6 +334,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     }
 */
 
+    /*
     long loadHighestSequenceNumber(String indexName) {
         long sequenceNumber = 0L
         def srb = client.prepareSearch(indexName).setTypes(["entry"] as String[]).setFrom(0).setSize(1).setQuery(matchAllQuery())
@@ -347,8 +348,9 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         log.debug("Highest documentNumber: $sequenceNumber")
         return sequenceNumber
     }
+    */
 
-    private SearchRequestBuilder buildMetaEntryQuery(String indexName, String dataset, Date since, Date until, long lastTimestamp = -1, long lastSequence = -1) {
+    private SearchRequestBuilder buildMetaEntryQuery(String indexName, String dataset, Date since, Date until, long lastTimestamp = -1) {
         def query = boolQuery()
         if (dataset) {
             query = query.must(termQuery("entry.dataset", dataset))
@@ -363,24 +365,17 @@ abstract class ElasticSearch extends BasicComponent implements Index {
             }
             query = query.must(timeRangeQuery)
         }
-        if (lastTimestamp >= 0 && lastSequence >= 0) {
+        if (lastTimestamp >= 0) {
             def tsQuery = rangeQuery("entry.timestamp").gte(lastTimestamp)
             query = query.must(tsQuery)
-            if (lastSequence > 0) {
-                def snQuery = rangeQuery("entry.sequenceNumber").gt(lastSequence)
-                query = query.must(snQuery)
-            }
-
-            log.trace("lastTS: $lastTimestamp, lastSN: $lastSequence")
         }
         def srb = client.prepareSearch(indexName)
             .setSearchType(SearchType.QUERY_THEN_FETCH)
             .setTypes(["entry"] as String[])
-            .setFetchSource(["identifier", "entry.timestamp", "entry.sequenceNumber"] as String[], null)
+            .setFetchSource(["identifier", "entry.timestamp"] as String[], null)
             .setQuery(query)
             .setFrom(0).setSize(batchUpdateSize)
             .addSort("entry.timestamp", SortOrder.ASC)
-            .addSort(new FieldSortBuilder("entry.sequenceNumber").ignoreUnmapped(true).missing(0L).order(SortOrder.ASC))
 
         log.debug("MetaEntryQuery: $srb")
 
@@ -388,19 +383,18 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     }
 
     Iterator<String> metaEntryQuery(String indexName, String dataset, Date since, Date until) {
-        LinkedList<String> list = new LinkedList<String>()
+        LinkedHashSet<String> list = new LinkedHashSet<String>()
         long lastDocumentTimestamp = -1L
-        long documentSequenceNumber = 0L
 
         return new Iterator<String>() {
             String lastLoadedIdentifier = null
             boolean listWasFull = true
+            Iterator listIterator = null
 
             public boolean hasNext() {
-                if (listWasFull && list.size() == 0) {
-                    def srb = buildMetaEntryQuery(indexName, dataset, since, until, lastDocumentTimestamp, documentSequenceNumber)
-                    InputStream inputStream = new PipedInputStream()
-                    OutputStream outputStream = new PipedOutputStream(inputStream)
+                if (listWasFull && list.isEmpty()) {
+                    listIterator = null
+                    def srb = buildMetaEntryQuery(indexName, dataset, since, until, lastDocumentTimestamp)
 
                     def response = performExecute(srb)
 
@@ -409,26 +403,36 @@ abstract class ElasticSearch extends BasicComponent implements Index {
                     for (hit in response.hits.hits) {
                         Map sourceMap = mapper.readValue(hit.source(), Map)
                         lastDocumentTimestamp = sourceMap.entry.get("timestamp", 0L)
-                        documentSequenceNumber = sourceMap.entry.get("sequenceNumber", 0L)
                         ident = sourceMap.get("identifier")
                         list.add(ident)
                     }
                     if (lastLoadedIdentifier && lastLoadedIdentifier == ident) {
-                        log.warn("Got the identifier (${lastLoadedIdentifier}) again. Pulling the plug!!")
-                        return false
+                        throw new WhelkRuntimeException("Got the identifier (${lastLoadedIdentifier}) again. Pulling the plug!! Maybe, you should try increasing the batchUpdateSize?")
                     }
                     lastLoadedIdentifier = ident
                     listWasFull = (list.size() >= super.batchUpdateSize)
                     log.debug("listWasFull: $listWasFull")
                     log.debug("list.size(): ${list.size()}")
+                    listIterator = list.iterator()
                 }
-                return list.size()
+                return !list.isEmpty()
             }
-            public String next() { return list.removeFirst() }
+            public String next() {
+                if (listIterator == null) {
+                    listIterator = list.iterator()
+                }
+                String n = listIterator.next()
+                if (!listIterator.hasNext()) {
+                    listIterator = null
+                    list = new LinkedHashSet<String>()
+                }
+                return n
+            }
             public void remove() { throw new UnsupportedOperationException(); }
         }
     }
 
+    /*
     List<Map> loadEntriesInOrder(String indexName, String indexType, int pageNumber) {
         def query = matchAllQuery()
         def srb = client.prepareSearch(indexName)
@@ -449,6 +453,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         }
         return list
     }
+    */
 
     private void setTypeMapping(indexName, itype) {
         log.info("Creating mappings for $indexName/$itype ...")

@@ -26,7 +26,6 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
     Index index
     String indexName
 
-    private long currentSequenceNumber = 0L
     boolean rebuilding = false
 
     static Logger log = LoggerFactory.getLogger(PairtreeHybridDiskStorage.class)
@@ -49,9 +48,6 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         super.start()
         index.createIndexIfNotExists(indexName)
         index.checkTypeMapping(indexName, "entry")
-
-        currentSequenceNumber = index.loadHighestSequenceNumber(indexName)+1
-        log.debug("Hybrid storage current sequence number: $currentSequenceNumber")
     }
 
     @Override
@@ -62,7 +58,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         result = super.store(doc)
         log.debug("Result from store()-operation: $result")
         if (result) {
-            doc = setNewSequenceNumber(doc)
+            //doc = setNewSequenceNumber(doc)
             index.index(doc.metadataAsJson.getBytes("utf-8"),
                 [
                     "index": ".libris",
@@ -86,7 +82,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             for (doc in docs) {
                 boolean result = super.store(doc)
                 if (result) {
-                    doc = setNewSequenceNumber(doc)
+                    //doc = setNewSequenceNumber(doc)
                     entries << [
                         "index":indexName,
                         "type": "entry",
@@ -100,6 +96,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         }
     }
 
+    /*
     private Document setNewSequenceNumber(Document doc) {
         doc.entry['sequenceNumber'] = currentSequenceNumber
         increaseSequenceNumber()
@@ -111,6 +108,7 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
             currentSequenceNumber++
         }
     }
+    */
 
 
     @Override
@@ -175,10 +173,11 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         }
         index.flush()
         log.info("Created $diskCount entries.")
-        updateSequenceNumbers()
+        //updateSequenceNumbers()
         rebuilding = false
     }
 
+    /*
     void updateSequenceNumbers() {
         log.info("Sorting entries for sequenceNumbers.")
         rebuilding = true
@@ -202,4 +201,5 @@ class PairtreeHybridDiskStorage extends PairtreeDiskStorage implements HybridSto
         log.info("Meta index sequence ordered. Contains $indexCount entries.")
         rebuilding = false
     }
+    */
 }

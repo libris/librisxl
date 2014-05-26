@@ -315,7 +315,12 @@
 
     },
     "documentapi" : {
-        "_class" : "se.kb.libris.whelks.api.DocumentAPI"
+        "_class" : "se.kb.libris.whelks.api.DocumentAPI",
+        "_params": {
+            "header": {
+
+            }
+        }
     },
     "completeexpander" : {
         "_class" : "se.kb.libris.whelks.api.CompleteExpander"

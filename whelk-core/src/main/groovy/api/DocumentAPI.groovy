@@ -15,6 +15,10 @@ import se.kb.libris.whelks.exception.*
 class DocumentAPI extends BasicAPI {
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
 
+
+    DocumentAPI(Map settings) {
+    }
+
     def determineDisplayMode(path) {
         if (path.endsWith("/meta")) {
             return [path[0 .. -6], DisplayMode.META]
