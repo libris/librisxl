@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
 WHELK=$1
+FILTER="$2"
 BUILDBASE="datatools/build"
 
 put() {
-    echo "PUT '$1' to <$3> as $2"
-    curl -XPUT -H "Content-Type:$2" --data-binary @$1 $3?data
+    if [[ $3 == *"$FILTER"* ]]; then
+        echo "PUT '$1' to <$3> as $2"
+        curl -XPUT -H "Content-Type:$2" --data-binary @$1 $3?data
+    fi
 }
 
 # Load JSON-LD contexts
