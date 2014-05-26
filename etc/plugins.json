@@ -130,6 +130,9 @@
     "marcconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"
     },
+    "jsonld2marcconverter" : {
+        "_class" : "se.kb.libris.whelks.plugin.JsonLD2MarcConverter"
+    },
     "turtleconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter",
         "_params": "context.jsonld, http://libris.kb.se/resource/"
@@ -397,7 +400,8 @@
     "formatter" : {
         "_class" : "se.kb.libris.whelks.api.FormatterAPI",
         "_plugins" : [
-            "marcconverter"
+            "marcconverter",
+            "jsonld2marcconverter"
         ]
     },
     "linkexpander" : {
