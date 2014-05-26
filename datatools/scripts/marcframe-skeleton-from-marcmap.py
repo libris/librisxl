@@ -299,6 +299,7 @@ for tag, field in sorted(marcmap['bib'].items()):
                                 subname = subname.replace(char, repl)
                             for badchar in ',()':
                                 subname = subname.replace(badchar, '')
+
                         if key in ('_', '|') and any(t in subname for t in ('No', 'Ej', 'Inge')):
                             continue
                         elif subname.replace('Obsolete', '') in {
@@ -310,14 +311,29 @@ for tag, field in sorted(marcmap['bib'].items()):
                             type_id = enum_base + subname
                         else:
                             type_id = subname
+
                         if overwriting:
                             assert tokenmap.get(key, type_id) == type_id, "%s: %s missing in %r" % (
                                     key, type_id, tokenmap)
+
                         #assert type_id is None or type_id not in enums, type_id
                         tokenmap[key] = type_id
                         #local_enums.add(type_id)
-                        if include_lang:
-                            dest = enum_defs[type_id] = {'@id': type_id, "@type": "Concept"}
+                        # TODO: factor out this as build_enum_defs
+                        if include_lang and type_id:
+                            #coll_id = enum_base + dfn_key + '-' + propname + '-collection'
+                            coll_id = enum_base + propname + '-collection'
+                            enum_defs[coll_id] = {"@id": coll_id, "@type": "Collection"}
+                            if type_id in enum_defs:
+                                in_coll = enum_defs[type_id]['inCollection']
+                            else:
+                                in_coll = []
+                            if not any(r['@id'] == coll_id for r in in_coll):
+                                in_coll.append({"@id": coll_id})
+                            dest = enum_defs[type_id] = {
+                                "@id": type_id, "@type": "Concept",
+                                "inCollection": in_coll
+                            }
                             add_labels(dfn, dest)
 
                     if skip_unlinked_maps and not is_link:
