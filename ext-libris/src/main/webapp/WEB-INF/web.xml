@@ -7,6 +7,11 @@
 
     <display-name>Whelk</display-name>
 
+    <filter>
+        <filter-name>CORS</filter-name>
+        <filter-class>com.thetransactioncompany.cors.CORSFilter</filter-class>
+    </filter>
+
     <servlet>
         <servlet-name>WhelkServlet</servlet-name>
         <servlet-class>se.kb.libris.whelks.StandardWhelk</servlet-class>
@@ -17,6 +22,11 @@
         <servlet-name>WhelkServlet</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
+
+    <filter-mapping>
+        <filter-name>CORS</filter-name>
+        <servlet-name>WhelkServlet</servlet-name>
+    </filter-mapping>
 
     <welcome-file-list>
         <welcome-file>index.xhtml</welcome-file>
