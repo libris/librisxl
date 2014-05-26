@@ -312,6 +312,9 @@ for tag, field in sorted(marcmap['bib'].items()):
                         else:
                             type_id = subname
 
+                        if type_id and type_id.endswith('Obsolete') and type_id[-9] != '-':
+                            type_id = type_id[:-8] + '-Obsolete'
+
                         if overwriting:
                             assert tokenmap.get(key, type_id) == type_id, "%s: %s missing in %r" % (
                                     key, type_id, tokenmap)
