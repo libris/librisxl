@@ -43,38 +43,13 @@ import se.kb.libris.whelks.exception.*
 
 import static se.kb.libris.conch.Tools.*
 
-
 @Log
 class ElasticSearchClient extends ElasticSearch implements Index {
 
-    // Force one-client-per-whelk
     ElasticSearchClient(Map params) {
         super(params)
-        /*
-        String elastichost, elasticcluster
-        if (System.getProperty("elastic.host")) {
-            elastichost = System.getProperty("elastic.host")
-            elasticcluster = System.getProperty("elastic.cluster")
-            elasticport = System.getProperty("elastic.port", 9300)
-            log.info("Connecting to $elastichost:$elasticport using cluster $elasticcluster")
-            def sb = ImmutableSettings.settingsBuilder()
-                .put("client.transport.ping_timeout", 30000)
-                .put("client.transport.sniff", true)
-            if (elasticcluster) {
-                sb = sb.put("cluster.name", elasticcluster)
-            }
-            Settings settings = sb.build();
-            client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, elasticport))
-            log.debug("... connected")
-        } else {
-            throw new WhelkRuntimeException("Unable to initialize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
-        }
-        */
     }
 }
-
-//TODO: Move all settings (general and index level) to config files and make creation of index and changing of settings to separate operation tasks
-
 
 @Log
 abstract class ElasticSearch extends BasicElasticComponent implements Index {
