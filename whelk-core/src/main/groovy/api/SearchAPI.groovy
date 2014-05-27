@@ -26,7 +26,7 @@ class SearchAPI extends BasicAPI implements API {
         def queryMap = new HashMap(request.parameterMap)
         Map result = [:]
         def indexType = pathVars.first()
-        def indexConfig = config.indexTypes[indexType]
+        def indexConfig = config.indexTypes.get(indexType, [:])
         def boost = queryMap.boost ?: indexConfig?.defaultBoost?.split(",")
         def facets = queryMap.facets ?: indexConfig?.queryFacets?.split(",")
         if (indexConfig['queryProperties']) {

@@ -39,19 +39,9 @@
         },
         "_unique" : true
     },
-    "pairtreediskstorage": {
-        "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
-        "_params" : {
-            "storageDir": "/ssd/storage",
-            "contentTypes": ["application/ld+json"],
-            "baseStorageSuffix": "pairtree",
-            "versioning" : false
-        }
-    },
     "pairtreehybridstorage": {
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
         "_plugins" : [
-            "index",
             "oaipmhxmlconverter",
             "marcconverter",
             "listener"
@@ -61,13 +51,6 @@
             "contentTypes": ["application/ld+json"],
             "baseStorageSuffix": "pairtree",
             "versioning" : false
-        }
-    },
-    "pairtreeoaistorage": {
-        "_class" : "se.kb.libris.whelks.component.PairtreeDiskStorage",
-        "_params" : {
-            "storageDir": "/ssd/storage",
-            "contentTypes" : [ "text/oaipmh+xml" ]
         }
     },
     "cassandrastorage": {

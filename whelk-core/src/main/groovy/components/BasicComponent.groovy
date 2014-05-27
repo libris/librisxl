@@ -13,7 +13,7 @@ import se.kb.libris.whelks.*
 @Log
 abstract class BasicComponent extends BasicPlugin implements Component {
 
-    static final ObjectMapper mapper = new ObjectMapper()
+    public static final ObjectMapper mapper = new ObjectMapper()
     static final String LAST_UPDATED = "last_updated"
     static final String LISTENER_FAILED_AT = "listener_crashed"
     static final String LISTENER_FAILED_REASON = "listener_crashed_because"
@@ -78,7 +78,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             components.put(c.id, c)
         }
 
-        listener = plugins.find { it instanceof Listener }
+        this.listener = plugins.find { it instanceof Listener }
 
         catchUp()
 
@@ -208,6 +208,13 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             return le.expand(doc)
         }
         return doc
+    }
+
+    final Listener getListener() {
+        if (!this.listener) {
+            throw new WhelkRuntimeException("Listener is null, but clearly required. Has start() been called?")
+        }
+        return this.listener
     }
 
     LinkExpander getLinkExpanderFor(Document doc) { return linkExpanders.find { it.valid(doc) } }

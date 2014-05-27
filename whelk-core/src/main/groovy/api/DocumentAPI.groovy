@@ -89,6 +89,7 @@ class DocumentAPI extends BasicAPI {
                 response.sendError(response.SC_INTERNAL_SERVER_ERROR, wre.message)
             }
         } else if (request.getMethod() == "PUT") {
+            log.info("PATH: $path")
             try {
                 if (path == "/") {
                     throw new WhelkRuntimeException("PUT requires a proper URI.")

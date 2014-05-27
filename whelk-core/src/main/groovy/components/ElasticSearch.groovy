@@ -43,43 +43,41 @@ import se.kb.libris.whelks.exception.*
 
 import static se.kb.libris.conch.Tools.*
 
+
 @Log
 class ElasticSearchClient extends ElasticSearch implements Index {
 
     // Force one-client-per-whelk
     ElasticSearchClient(Map params) {
         super(params)
+        /*
         String elastichost, elasticcluster
         if (System.getProperty("elastic.host")) {
             elastichost = System.getProperty("elastic.host")
             elasticcluster = System.getProperty("elastic.cluster")
-            log.info "Connecting to $elastichost:9300 using cluster $elasticcluster"
+            elasticport = System.getProperty("elastic.port", 9300)
+            log.info("Connecting to $elastichost:$elasticport using cluster $elasticcluster")
             def sb = ImmutableSettings.settingsBuilder()
-            .put("client.transport.ping_timeout", 30000)
-            .put("client.transport.sniff", true)
+                .put("client.transport.ping_timeout", 30000)
+                .put("client.transport.sniff", true)
             if (elasticcluster) {
                 sb = sb.put("cluster.name", elasticcluster)
             }
             Settings settings = sb.build();
-            client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, 9300))
+            client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(elastichost, elasticport))
             log.debug("... connected")
         } else {
             throw new WhelkRuntimeException("Unable to initialize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
         }
+        */
     }
 }
 
 //TODO: Move all settings (general and index level) to config files and make creation of index and changing of settings to separate operation tasks
 
+
 @Log
-abstract class ElasticSearch extends BasicComponent implements Index {
-
-    final static ObjectMapper mapper = new ObjectMapper()
-
-    Client client
-
-    boolean enabled = true
-    String id = "elasticsearch"
+abstract class ElasticSearch extends BasicElasticComponent implements Index {
     int WARN_AFTER_TRIES = 1000
     int RETRY_TIMEOUT = 300
     int MAX_RETRY_TIMEOUT = 60*60*1000
@@ -94,6 +92,7 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     def defaultMapping, es_settings
 
     ElasticSearch(Map settings) {
+        super(settings)
         configuredTypes = (settings ? settings.get("typeConfiguration", [:]) : [:])
         if (settings.batchUpdateSize) {
             this.batchUpdateSize = settings.batchUpdateSize
@@ -105,38 +104,6 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         super.init(indexName)
         createIndexIfNotExists(indexName)
         shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
-    }
-
-    void createIndexIfNotExists(String indexName) {
-        if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
-            log.info("Couldn't find index by name $indexName. Creating ...")
-            if (indexName.startsWith(".")) {
-                // It's a meta index. No need for aliases and such.
-                if (!es_settings) {
-                    es_settings = loadJson("es_settings.json")
-                }
-                performExecute(client.admin().indices().prepareCreate(indexName).setSettings(es_settings))
-            } else {
-                String currentIndex = createNewCurrentIndex(indexName)
-                log.debug("Will create alias $indexName -> $currentIndex")
-                performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexName))
-            }
-        } else if (getRealIndexFor(indexName) == null) {
-            throw new WhelkRuntimeException("Unable to find a real current index for $indexName")
-        }
-    }
-
-    String getRealIndexFor(String alias) {
-        def aliases = performExecute(client.admin().cluster().prepareState()).state.metaData.aliases()
-        log.debug("aliases: $aliases")
-        def ri = null
-        if (aliases.containsKey(alias)) {
-            ri = aliases.get(alias)?.keys().iterator().next()
-        }
-        if (ri) {
-            log.trace("ri: ${ri.value} (${ri.value.getClass().getName()})")
-        }
-        return (ri ? ri.value : alias)
     }
 
     String getLatestIndex(String prefix) {
@@ -163,17 +130,12 @@ abstract class ElasticSearch extends BasicComponent implements Index {
     }
 
     void reMapAliases(String indexAlias) {
-        String oldIndex = getRealIndexFor(indexAlias)
+        String oldIndex = getRealIndexFor(client, indexAlias)
         String currentIndex = getLatestIndex(indexAlias)
         log.debug("Resetting alias \"$indexAlias\" from \"$oldIndex\" to \"$currentIndex\".")
         performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexAlias).removeAlias(oldIndex, indexAlias))
     }
 
-    void flush() {
-        log.debug("Flushing indices.")
-        def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
-        log.debug("Flush response: $flushresponse")
-    }
 
     def loadJson(String file) {
         def json
@@ -289,88 +251,6 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         return results
     }
 
-    private SearchRequestBuilder buildMetaEntryQuery(String indexName, String dataset, Date since, Date until, long lastTimestamp = -1) {
-        def query = boolQuery()
-        if (dataset) {
-            query = query.must(termQuery("entry.dataset", dataset))
-        }
-        if (lastTimestamp < 0 && (since || until)) {
-            def timeRangeQuery = rangeQuery("entry.timestamp")
-            if (since) {
-                timeRangeQuery = timeRangeQuery.from(since.getTime())
-            }
-            if (until) {
-                timeRangeQuery = timeRangeQuery.to(since.getTime())
-            }
-            query = query.must(timeRangeQuery)
-        }
-        if (lastTimestamp >= 0) {
-            def tsQuery = rangeQuery("entry.timestamp").gte(lastTimestamp)
-            query = query.must(tsQuery)
-        }
-        def srb = client.prepareSearch(indexName)
-            .setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setTypes(["entry"] as String[])
-            .setFetchSource(["identifier", "entry.timestamp"] as String[], null)
-            .setQuery(query)
-            .setFrom(0).setSize(batchUpdateSize)
-            .addSort("entry.timestamp", SortOrder.ASC)
-
-        log.debug("MetaEntryQuery: $srb")
-
-        return srb
-    }
-
-    Iterator<String> metaEntryQuery(String indexName, String dataset, Date since, Date until) {
-        LinkedHashSet<String> list = new LinkedHashSet<String>()
-        long lastDocumentTimestamp = -1L
-
-        return new Iterator<String>() {
-            String lastLoadedIdentifier = null
-            boolean listWasFull = true
-            Iterator listIterator = null
-
-            public boolean hasNext() {
-                if (listWasFull && list.isEmpty()) {
-                    listIterator = null
-                    def srb = buildMetaEntryQuery(indexName, dataset, since, until, lastDocumentTimestamp)
-
-                    def response = performExecute(srb)
-
-                    String ident = null
-
-                    for (hit in response.hits.hits) {
-                        Map sourceMap = mapper.readValue(hit.source(), Map)
-                        lastDocumentTimestamp = sourceMap.entry.get("timestamp", 0L)
-                        ident = sourceMap.get("identifier")
-                        list.add(ident)
-                    }
-                    if (lastLoadedIdentifier && lastLoadedIdentifier == ident) {
-                        throw new WhelkRuntimeException("Got the identifier (${lastLoadedIdentifier}) again. Pulling the plug!! Maybe, you should try increasing the batchUpdateSize?")
-                    }
-                    lastLoadedIdentifier = ident
-                    listWasFull = (list.size() >= super.batchUpdateSize)
-                    log.debug("listWasFull: $listWasFull")
-                    log.debug("list.size(): ${list.size()}")
-                    listIterator = list.iterator()
-                }
-                return !list.isEmpty()
-            }
-            public String next() {
-                if (listIterator == null) {
-                    listIterator = list.iterator()
-                }
-                String n = listIterator.next()
-                if (!listIterator.hasNext()) {
-                    listIterator = null
-                    list = new LinkedHashSet<String>()
-                }
-                return n
-            }
-            public void remove() { throw new UnsupportedOperationException(); }
-        }
-    }
-
     private void setTypeMapping(indexName, itype) {
         log.info("Creating mappings for $indexName/$itype ...")
         //XContentBuilder mapping = jsonBuilder().startObject().startObject("mappings")
@@ -401,36 +281,6 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         log.debug("mapping response: ${response.acknowledged}")
     }
 
-    def performExecute(def requestBuilder) {
-        int failcount = 0
-        def response = null
-        while (response == null) {
-            try {
-                response = requestBuilder.execute().actionGet()
-            } catch (NoNodeAvailableException n) {
-                log.trace("Retrying server connection ...")
-                if (failcount++ > WARN_AFTER_TRIES) {
-                    log.warn("Failed to connect to elasticsearch after $failcount attempts.")
-                }
-                if (failcount % 100 == 0) {
-                    log.info("Server is not responsive. Still trying ...")
-                }
-                Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
-            }
-        }
-        return response
-    }
-
-    void checkTypeMapping(indexName, indexType) {
-        log.debug("Checking mappings for index $indexName, type $indexType")
-        def mappings = performExecute(client.admin().cluster().prepareState()).state.metaData.index(indexName).getMappings()
-        log.trace("Mappings: $mappings")
-        if (!mappings.containsKey(indexType)) {
-            log.debug("Mapping for $indexName/$indexType does not exist. Creating ...")
-            setTypeMapping(indexName, indexType)
-        }
-    }
-
     String determineDocumentType(Document doc, String indexName) {
         def idxType = doc.entry['dataset']?.toLowerCase()
         log.trace("dataset in entry is ${idxType} for ${doc.identifier}")
@@ -439,41 +289,6 @@ abstract class ElasticSearch extends BasicComponent implements Index {
         }
         log.trace("Using type $idxType for document ${doc.identifier}")
         return idxType
-    }
-
-    void index(final List<Map<String,String>> data) throws WhelkIndexException  {
-        def breq = client.prepareBulk()
-        for (entry in data) {
-            breq.add(client.prepareIndex(entry['index'], entry['type'], entry['id']).setSource(entry['data'].getBytes("utf-8")))
-        }
-        def response = performExecute(breq)
-        if (response.hasFailures()) {
-            log.error "Bulk entry indexing has failures."
-            def fails = []
-            for (re in response.items) {
-                if (re.failed) {
-                    log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
-                    try {
-                        fails << translateIndexIdTo(re.id)
-                    } catch (Exception e1) {
-                        log.error("TranslateIndexIdTo cast an exception", e1)
-                        fails << "Failed translation for \"$re\""
-                    }
-                }
-            }
-            throw new WhelkIndexException("Failed to index entries. Reason: ${response.buildFailureMessage()}", new WhelkAddException(fails))
-        } else {
-            log.debug("Direct bulk request completed in ${response.tookInMillis} millseconds.")
-        }
-    }
-
-    void index(byte[] data, Map params) throws WhelkIndexException  {
-        try {
-            def response = performExecute(client.prepareIndex(params['index'], params['type'], params['id']).setSource(data))
-            log.debug("Raw byte indexer (${params.index}/${params.type}/${params.id}) indexed version: ${response.version}")
-        } catch (Exception e) {
-            throw new WhelkIndexException("Failed to index ${new String(data)} with params $params", e)
-        }
     }
 
     void addDocuments(documents, indexName) {

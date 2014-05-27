@@ -255,6 +255,7 @@ class PingCatchupOperator extends AbstractOperator {
 
     void doRun(long startTime) {
         log.info("Pinging with lastupdated = $pingSince")
+        log.info("Whelk is $whelk, Storage is ${whelk.storage}, Listener is: ${whelk.storage.listener}")
         def listener = whelk.storage.listener
         listener.registerUpdate(whelk.storage.id, pingSince, true)
     }

@@ -1,7 +1,9 @@
 {
     "_properties": {
         "WHELK_WORK_DIR": "work",
-        "STORAGE_PATH": "work/storage"
+        "STORAGE_PATH": "work/storage",
+        "ELASTIC_HOST": "localhost",
+        "ELASTIC_PORT": 9300
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
@@ -34,7 +36,7 @@
         { "/_libcount": "libcount" },
         { "/_isxntool":  "isxntool" },
         { "/_complete/([\\w/]+)$":  "completeexpander" },
-        { "/(\\w+)/_search":  "search" },
-        { "^(.+)$":  "documentapi" }
+        { "/([\\w/]+)/_search":  "search" },
+        { "^[^_](.+)$":  "documentapi" }
     ]
 }
