@@ -108,9 +108,9 @@ abstract class AbstractWhelkServlet extends HttpServlet {
             def (whelkConfig, pluginConfig) = loadConfig()
             setConfig(whelkConfig, pluginConfig)
             // Start all plugins
-            for (plugin in this.plugins) {
-                log.info("Starting plugin ${plugin.id}")
-                plugin.start()
+            for (component in this.components) {
+                log.info("Starting component ${component.id}")
+                component.start()
             }
             log.info("Whelk ${this.id} is now operational.")
         } catch (Exception e) {
@@ -167,6 +167,7 @@ abstract class AbstractWhelkServlet extends HttpServlet {
             apiEntry.each {
                 log.debug("Found api: ${it.value}, should attach at ${it.key}")
                 API api = getPlugin(pluginConfig, it.value, this.id)
+                api.id = it.value
                 api.setWhelk(this)
                 api.init(this.id)
                 apis.put(Pattern.compile(it.key), api)

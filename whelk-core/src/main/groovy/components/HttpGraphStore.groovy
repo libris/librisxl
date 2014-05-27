@@ -62,6 +62,8 @@ class HttpEndpoint extends BasicComponent implements SparqlEndpoint {
     public void remove(URI uri) {
         throw new UnsupportedOperationException("Not implemented yet.")
     }
+
+    void componentBootstrap(String str) {}
 }
 
 @Log

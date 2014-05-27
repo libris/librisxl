@@ -71,8 +71,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    void init(String stName) {
-        super.init(stName)
+    void componentBootstrap(String stName) {
         if (!this.baseStorageSuffix) {
             this.baseStorageSuffix = this.id
         }
@@ -83,13 +82,10 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         indexName = "."+stName
 
         log.info("Starting ${this.id} with storageDir $storageDir ${(versioning ? "and versions in $versionsStorageDir" : "")}")
-
-        log.info("I have plugins: $plugins")
-
     }
 
-    void start() {
-        super.start()
+    @Override
+    void onStart() {
         createIndexIfNotExists(indexName)
         checkTypeMapping(indexName, "entry")
     }

@@ -14,7 +14,7 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
         this.defaultType = settings.get("defaultType", "record")
     }
 
-    void init(String id) {
+    void bootstrap(String id) {
         this.whelkName = id
     }
 

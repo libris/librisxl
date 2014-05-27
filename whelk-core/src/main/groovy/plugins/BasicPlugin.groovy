@@ -3,6 +3,8 @@ package se.kb.libris.whelks.plugin;
 import groovy.util.logging.Slf4j as Log
 
 import java.util.*;
+import java.lang.reflect.Method
+
 import org.codehaus.jackson.map.*
 
 import se.kb.libris.whelks.exception.*
@@ -21,15 +23,26 @@ public abstract class BasicPlugin implements Plugin {
     @Override
     public void setEnabled(boolean e) { this.enabled = e; }
     @Override
-    public void init(String initString) {
-        if (id == null) {
+    public final void init(String initString) {
+        if (this.id == null) {
             throw new PluginConfigurationException("Plugin ${this.getClass().getName()} must have ID set before init()")
         }
-        log.debug("[${id}] ATTENTION! Plugin does not have it's own init()-method.")
+        bootstrap(initString)
+        /*
+        Class c = this.getClass().getSuperclass()
+        while (c && c.getName() != BasicPlugin.class.getName()) {
+            try {
+                Method m = c.getMethod("bootstrap", String.class)
+                m.invoke(this, initString)
+            } catch (NoSuchMethodException nsme) {
+                log.debug("Bootstrapmethod not found on $c")
+            }
+            c = c.getSuperclass()
+        }
+        */
     }
-    @Override
-    public void start() {
-        log.debug("[${this.id}] ATTENTION! Plugin does not have it's own start()-method.")
+    void bootstrap(String str) {
+        log.debug("Bootstrapmethod not found on ${this.getClass().getName()}")
     }
     @Override
     public void addPlugin(Plugin p) {

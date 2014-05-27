@@ -89,7 +89,7 @@ class CassandraStorage extends BasicComponent implements Storage {
     }
 
 
-    void init(String whelkName) {
+    void componentBootstrap(String whelkName) {
         keyspace = setupKeyspace(whelkName+"_"+this.id + this.keyspaceSuffix)
     }
 

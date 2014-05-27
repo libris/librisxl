@@ -42,8 +42,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     private File stateFile
 
-    @Override
-    void init(String whelkId) {
+    final void bootstrap(String whelkId) {
         assert whelk
         stateFile= new File("${global.WHELK_WORK_DIR}/${whelkId}_${this.id}${STATE_FILE_SUFFIX}")
         if (stateFile.exists()) {
@@ -60,10 +59,14 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
         componentState['componentId'] = this.id
         componentState['status'] = "started"
+
+        componentBootstrap(whelkId)
     }
 
+    abstract void componentBootstrap(String str)
+
     @Override
-    public void start() {
+    public final void start() {
         assert whelk
         log.debug("[${this.id}] Loading format converters")
         for (f in plugins.findAll { it instanceof FormatConverter }) {
@@ -80,12 +83,19 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
         this.listener = plugins.find { it instanceof Listener }
 
+        log.debug("Calling onStart() on sub classes")
+        onStart()
+
         catchUp()
 
         startStateThread(stateFile, this.whelk.id)
         startListenerThread()
+
     }
 
+    void onStart() {
+        log.info("onStart() not overridden in ${this.id}")
+    }
 
     @Override
     public final URI add(final Document document) {

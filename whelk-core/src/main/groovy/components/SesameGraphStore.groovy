@@ -149,4 +149,6 @@ class SesameGraphStore extends BasicComponent implements GraphStore,SparqlEndpoi
         log.debug("Sending crap")
         return new ByteArrayInputStream("This is crap".getBytes())
     }
+
+    void componentBootstrap(String str) {}
 }

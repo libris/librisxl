@@ -75,8 +75,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     @Override
-    void init(String indexName) {
-        super.init(indexName)
+    void componentBootstrap(String indexName) {
         createIndexIfNotExists(indexName)
         shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
     }

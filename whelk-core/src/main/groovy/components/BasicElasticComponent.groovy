@@ -37,14 +37,6 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
     }
 
-    void init(String initString) {
-        super.init(initString)
-    }
-
-    void start() {
-        super.start()
-    }
-
     def performExecute(def requestBuilder) {
         int failcount = 0
         def response = null

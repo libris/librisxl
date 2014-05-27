@@ -48,7 +48,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         this.specUriMapping = settings.get("specUriMapping", [:])
     }
 
-    void init(String whelkId) {
+    void bootstrap(String whelkId) {
         marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
         assert marcFrameConverter
     }

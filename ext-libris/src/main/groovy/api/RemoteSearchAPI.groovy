@@ -21,7 +21,6 @@ class RemoteSearchAPI extends BasicAPI {
     final static mapper = new ElasticJsonMapper()
 
     String description = "Query API for remote search"
-    String id = "RemoteSearchAPI"
 
     Map remoteURLs
 
@@ -77,7 +76,7 @@ class RemoteSearchAPI extends BasicAPI {
     }
 
 
-    void init(String wn) {
+    void bootstrap(String wn) {
         log.debug("plugins: ${plugins}")
         marcFrameConverter = plugins.find { it instanceof FormatConverter && it.resultContentType == "application/ld+json" && it.requiredContentType == "application/x-marc-json" }
         assert marcFrameConverter
