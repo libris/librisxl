@@ -26,9 +26,12 @@ class DocumentAPI extends BasicAPI {
         return [path, DisplayMode.DOCUMENT]
     }
 
+    String getCleanPath(List pathVars) {
+        return pathVars.first().replaceAll('\\/\\/', '/')
+    }
+
     protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
-        log.debug("Identifier: " + pathVars.first())
-        String path = pathVars.first()
+        String path = getCleanPath(pathVars)
         log.debug "Path: $path"
         def mode = DisplayMode.DOCUMENT
 
