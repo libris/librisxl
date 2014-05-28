@@ -30,9 +30,10 @@ abstract class BasicAPI extends BasicPlugin implements API {
         log.info(logMessage.replaceAll("#REQUESTMETHOD#", request.getMethod()).replaceAll("#API_ID#", this.id) + " from ${request.getRemoteAddr()} in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
     }
 
-    void sendResponse(HttpServletResponse response, String text, String contentType) {
+    void sendResponse(HttpServletResponse response, String text, String contentType, int statusCode = 200) {
         response.setCharacterEncoding("UTF-8")
         response.setContentType(getMajorContentType(contentType))
+        response.setStatus(statusCode)
         response.writer.write(text)
         response.writer.flush()
     }

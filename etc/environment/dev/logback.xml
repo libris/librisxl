@@ -28,7 +28,7 @@
       <level value="info"/>
   </logger> 
   <logger name="se.kb.libris.whelks.StandardWhelk">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="info"/>
@@ -52,7 +52,7 @@
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.DocumentAPI">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.ReindexOperator">
       <level value="info"/>

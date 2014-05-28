@@ -10,6 +10,7 @@ import se.kb.libris.whelks.exception.*
 
 abstract class BasicElasticComponent extends BasicComponent {
     Client client
+    def defaultMapping, es_settings
 
     BasicElasticComponent() {
         super()
@@ -179,5 +180,17 @@ abstract class BasicElasticComponent extends BasicComponent {
         def idelements = new URI(uri).path.split("/") as List
         idelements.remove(0)
         return idelements.join(URI_SEPARATOR)
+    }
+
+    def loadJson(String file) {
+        def json
+        try {
+            json = getClass().classLoader.getResourceAsStream(file).withStream {
+                mapper.readValue(it, Map)
+            }
+        } catch (NullPointerException npe) {
+            log.trace("File $file not found.")
+        }
+        return json
     }
 }

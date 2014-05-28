@@ -64,8 +64,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     Map<String,String> configuredTypes
     ElasticShapeComputer shapeComputer
 
-    def defaultMapping, es_settings
-
     ElasticSearch(Map settings) {
         super(settings)
         configuredTypes = (settings ? settings.get("typeConfiguration", [:]) : [:])

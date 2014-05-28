@@ -23,7 +23,7 @@
         ]
     },
     "_apis": [
-        { "/_remote": "remotesearch" },
+        { "/_remotesearch": "remotesearch" },
         { "/_operations": "operator" },
         { "/_format": "formatter" },
         { "/_sparql": "sparqlapi" },
@@ -31,6 +31,6 @@
         { "/_isxntool":  "isxntool" },
         { "/_complete/([\\w/]+)$":  "completeexpander" },
         { "/(\\w+)/_search":  "search" },
-        { "^([\\w/\\-]+)$":  "documentapi" }
+        { "^/([^_].+)$":  "documentapi" }
     ]
 }

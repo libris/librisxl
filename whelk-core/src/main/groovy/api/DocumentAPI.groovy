@@ -27,7 +27,7 @@ class DocumentAPI extends BasicAPI {
     }
 
     String getCleanPath(List pathVars) {
-        return pathVars.first().replaceAll('\\/\\/', '/')
+        return "/"+pathVars.first().replaceAll('\\/\\/', '/')
     }
 
     protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
@@ -70,8 +70,8 @@ class DocumentAPI extends BasicAPI {
                 Document doc = new Document().withData(Tools.normalizeString(request.getInputStream().getText("UTF-8"))).withEntry(["contentType":request.getContentType()])
                 doc = this.whelk.sanityCheck(doc)
                 def identifier = this.whelk.add(doc)
-                /*
                 response.setHeader("ETag", doc.timestamp as String)
+                /*
                 sendResponse(response, doc.dataAsString, doc.contentType)
                 */
                 log.debug("Saved document $identifier")
@@ -121,6 +121,7 @@ class DocumentAPI extends BasicAPI {
                         def locationRef = request.getRequestURL()
                         log.debug("Setting location for redirect: $locationRef")
                         response.setHeader("Location", locationRef.toString())
+                        response.setHeader("ETag", doc.timestamp as String)
                         response.sendError(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
                     } catch (DocumentException de) {
                         log.warn("Document exception: ${de.message}")

@@ -230,6 +230,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 for (int i = 1; i <= groupCount; i++) {
                     pathVars.add(matcher.group(i))
                 }
+                log.debug("Matched API ${entry.value} with pathVars $pathVars")
                 return [entry.value, pathVars]
             }
         }
