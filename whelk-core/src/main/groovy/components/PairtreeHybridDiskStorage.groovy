@@ -195,12 +195,12 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         } else {
             List<Map<String,String>> entries = []
             for (doc in docs) {
-                boolean result = super.store(doc)
+                boolean result = store(doc)
                 if (result) {
                     entries << [
                         "index":indexName,
                         "type": "entry",
-                        "id": ((ElasticSearch)index).translateIdentifier(doc.identifier),
+                        "id": translateIdentifier(doc.identifier),
                         "data":((Document)doc).metadataAsJson
                     ]
                 }
@@ -276,15 +276,11 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         if (versioning) {
             store(createTombstone(uri))
         } else {
-            try {
-                def fn = buildPath(uri)
-                log.debug("Deleting $fn")
-                if (!new File(fn).deleteDir()) {
-                    log.error("Failed to delete $uri")
-                    throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
-                }
-            } catch (Exception e) {
-                throw new WhelkRuntimeException(e)
+            def fn = buildPath(uri)
+            log.debug("Deleting $fn")
+            if (!new File(fn).deleteDir()) {
+                log.error("Failed to delete $uri")
+                throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
             }
         }
         setState(LAST_UPDATED, new Date().getTime())
@@ -325,13 +321,13 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 return new Iterator<Document>() {
-                    static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeDiskStorage")
+                    static final Logger log = LoggerFactory.getLogger("se.kb.libris.whelks.component.PairtreeHybridDiskStorage")
                     File lastValidEntry = null
 
                     public boolean hasNext() {
                         while (fileIterator.hasNext()) {
                             File f = fileIterator.next()
-                            if (f.name == PairtreeDiskStorage.ENTRY_FILE_NAME) {
+                            if (f.name == PairtreeHybridDiskStorage.ENTRY_FILE_NAME) {
                                 lastValidEntry = f
                                 return true
                             }
@@ -343,10 +339,10 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                         if (lastValidEntry) {
                             Document document = new Document(FileUtils.readFileToString(lastValidEntry, "utf-8"))
                             try {
-                                document.withData(FileUtils.readFileToByteArray(new File(lastValidEntry.getParentFile(), document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                                document.withData(FileUtils.readFileToByteArray(new File(lastValidEntry.getParentFile(), document.getEntry().get(PairtreeHybridDiskStorage.FILE_NAME_KEY))))
                             } catch (FileNotFoundException fnfe) {
-                                log.trace("File not found using ${document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY)} as filename. Will try to use it as path.")
-                                document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeDiskStorage.FILE_NAME_KEY))))
+                                log.trace("File not found using ${document.getEntry().get(PairtreeHybridDiskStorage.FILE_NAME_KEY)} as filename. Will try to use it as path.")
+                                document.withData(FileUtils.readFileToByteArray(new File(document.getEntry().get(PairtreeHybridDiskStorage.FILE_NAME_KEY))))
                             } catch (InterruptedException e) {
                                 e.printStackTrace()
                             }
@@ -376,7 +372,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             entryList << [
             "index":indexName,
             "type": "entry",
-            "id": UUID.randomUUID().toString(),
+            "id": translateIdentifier(doc.identifier),
             "data":((Document)document).metadataAsJson
             ]
             if (diskCount++ % 2000 == 0) {

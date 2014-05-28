@@ -1,7 +1,6 @@
 package se.kb.libris.whelks.plugin;
 
 import java.util.Map;
-import se.kb.libris.whelks.Whelk;
 
 public interface Plugin {
     public String getId();

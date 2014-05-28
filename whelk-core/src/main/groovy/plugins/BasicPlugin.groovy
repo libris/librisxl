@@ -28,18 +28,6 @@ public abstract class BasicPlugin implements Plugin {
             throw new PluginConfigurationException("Plugin ${this.getClass().getName()} must have ID set before init()")
         }
         bootstrap(initString)
-        /*
-        Class c = this.getClass().getSuperclass()
-        while (c && c.getName() != BasicPlugin.class.getName()) {
-            try {
-                Method m = c.getMethod("bootstrap", String.class)
-                m.invoke(this, initString)
-            } catch (NoSuchMethodException nsme) {
-                log.debug("Bootstrapmethod not found on $c")
-            }
-            c = c.getSuperclass()
-        }
-        */
     }
     void bootstrap(String str) {
         log.debug("Bootstrapmethod not found on ${this.getClass().getName()}")

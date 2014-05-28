@@ -5,7 +5,6 @@ import se.kb.libris.whelks.plugin.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Queue;
 
 public interface Component extends WhelkAware {
 

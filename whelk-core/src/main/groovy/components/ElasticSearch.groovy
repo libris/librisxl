@@ -104,7 +104,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     void reMapAliases(String indexAlias) {
-        String oldIndex = getRealIndexFor(client, indexAlias)
+        String oldIndex = getRealIndexFor(indexAlias)
         String currentIndex = getLatestIndex(indexAlias)
         log.debug("Resetting alias \"$indexAlias\" from \"$oldIndex\" to \"$currentIndex\".")
         performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexAlias).removeAlias(oldIndex, indexAlias))
@@ -153,6 +153,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     void index(Document doc) {
         String indexName = this.whelk.id
         if (doc && doc.isJson()) {
+            createIndexIfNotExists(indexName)
             addDocuments([doc], indexName)
         }
     }
@@ -225,36 +226,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         return results
     }
 
-    private void setTypeMapping(indexName, itype) {
-        log.info("Creating mappings for $indexName/$itype ...")
-        //XContentBuilder mapping = jsonBuilder().startObject().startObject("mappings")
-        if (!defaultMapping) {
-            defaultMapping = loadJson("default_mapping.json")
-        }
-        def typePropertyMapping = loadJson("${itype}_mapping_properties.json")
-        def typeMapping
-        if (typePropertyMapping) {
-            log.debug("Found properties mapping for $itype. Using them with defaults.")
-            typeMapping = new HashMap(defaultMapping)
-            typeMapping.put("properties", typePropertyMapping.get("properties"))
-        } else {
-            typeMapping = loadJson("${itype}_mapping.json") ?: defaultMapping
-        }
-        // Append special mapping for @id-fields
-        if (!typeMapping.dynamic_templates) {
-            typeMapping['dynamic_templates'] = []
-        }
-        if (!typeMapping.dynamic_templates.find { it.containsKey("id_template") }) {
-            log.debug("Found no id_template. Creating.")
-            typeMapping.dynamic_templates << ["id_template":["match":"@id","match_mapping_type":"string","mapping":["type":"string","index":"not_analyzed"]]]
-        }
-
-        String mapping = mapper.writeValueAsString(typeMapping)
-        log.debug("mapping for $indexName/$itype: " + mapping)
-        def response = performExecute(client.admin().indices().preparePutMapping(indexName).setType(itype).setSource(mapping))
-        log.debug("mapping response: ${response.acknowledged}")
-    }
-
     String determineDocumentType(Document doc, String indexName) {
         def idxType = doc.entry['dataset']?.toLowerCase()
         log.trace("dataset in entry is ${idxType} for ${doc.identifier}")
@@ -268,68 +239,57 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     void addDocuments(documents, indexName) {
         String currentIndex = getRealIndexFor(indexName)
         log.debug("Using $currentIndex for indexing.")
-        try {
-            if (documents) {
-                def breq = client.prepareBulk()
+        if (documents) {
+            def breq = client.prepareBulk()
 
-                def checkedTypes = [defaultType]
+            def checkedTypes = [defaultType]
 
-                log.debug("Bulk request to index " + documents?.size() + " documents.")
+            log.debug("Bulk request to index " + documents?.size() + " documents.")
 
-                for (doc in documents) {
-                    if (doc.timestamp < 1) {
-                        throw new DocumentException("Document with 0 timestamp? Not buying it.")
-                    }
-                    log.trace("Working on ${doc.identifier}")
+            for (doc in documents) {
+                if (doc.timestamp < 1) {
+                    throw new DocumentException("Document with 0 timestamp? Not buying it.")
+                }
+                log.trace("Working on ${doc.identifier}")
                     if (doc && doc.isJson()) {
                         //def indexType = determineDocumentType(doc, indexName)
                         def indexType = shapeComputer.calculateShape(doc.identifier)
-                        def checked = indexType in checkedTypes
-                        if (!checked) {
-                            checkTypeMapping(currentIndex, indexType)
-                            checkedTypes << indexType
-                        }
+                            def checked = indexType in checkedTypes
+                            if (!checked) {
+                                checkTypeMapping(currentIndex, indexType)
+                                checkedTypes << indexType
+                            }
                         def elasticIdentifier = translateIdentifier(doc.identifier)
-                        breq.add(client.prepareIndex(indexName, indexType, elasticIdentifier).setSource(doc.data))
+                            breq.add(client.prepareIndex(indexName, indexType, elasticIdentifier).setSource(doc.data))
                     } else {
                         log.debug("Doc is null or not json (${doc.contentType})")
                     }
-                }
-                def response = performExecute(breq)
-                if (response.hasFailures()) {
-                    log.error "Bulk import has failures."
-                    def fails = []
-                    for (re in response.items) {
-                        if (re.failed) {
-                            log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
-                            if (log.isTraceEnabled()) {
-                                for (doc in documents) {
-                                    if (doc.identifier.toString() == "/"+re.index+"/"+re.id) {
-                                        log.trace("Failed document: ${doc.dataAsString}")
-                                    }
+            }
+            def response = performExecute(breq)
+            if (response.hasFailures()) {
+                log.error "Bulk import has failures."
+                def fails = []
+                for (re in response.items) {
+                    if (re.failed) {
+                        log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
+                        if (log.isTraceEnabled()) {
+                            for (doc in documents) {
+                                if (doc.identifier.toString() == "/"+re.index+"/"+re.id) {
+                                    log.trace("Failed document: ${doc.dataAsString}")
                                 }
                             }
-                            try {
-                                fails << translateIndexIdTo(re.id)
-                            } catch (Exception e1) {
-                                log.error("TranslateIndexIdTo cast an exception", e1)
-                                fails << "Failed translation for \"$re\""
-                            }
+                        }
+                        try {
+                            fails << translateIndexIdTo(re.id)
+                        } catch (Exception e1) {
+                            log.error("TranslateIndexIdTo cast an exception", e1)
+                            fails << "Failed translation for \"$re\""
                         }
                     }
-                    throw new WhelkAddException(fails)
                 }
+                throw new WhelkAddException(fails)
             }
-        } catch (Exception e) {
-            log.error("Exception thrown while adding documents", e)
-            throw e
         }
-    }
-
-    String translateIdentifier(String uri) {
-        def idelements = new URI(uri).path.split("/") as List
-        idelements.remove(0)
-        return idelements.join(URI_SEPARATOR)
     }
 
     def Map<String, String[]> convertHighlight(Map<String, HighlightField> hfields) {

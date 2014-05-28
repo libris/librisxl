@@ -277,7 +277,6 @@ abstract class AbstractOperator implements Runnable {
     void run() {
         assert whelk
         try {
-            whelk.stopPrawns()
             log.debug("Starting operation")
             operatorState=OperatorState.RUNNING
             cancelled = false
@@ -286,7 +285,6 @@ abstract class AbstractOperator implements Runnable {
             errorMessages = []
             doRun(System.currentTimeMillis())
         } finally {
-            whelk.startPrawns()
             operatorState=OperatorState.IDLE
             hasRun = true
         }

@@ -139,63 +139,55 @@ class CassandraStorage extends BasicComponent implements Storage {
             log.debug("Creating tables and indexes.")
         }
         log.debug("Check for columnfamily")
-        try {
-            if (!ksp.describeKeyspace().getColumnFamily(CF_DOCUMENT_NAME)) {
-                log.info("Creating columnfamily $CF_DOCUMENT_NAME")
+        if (!ksp.describeKeyspace().getColumnFamily(CF_DOCUMENT_NAME)) {
+            log.info("Creating columnfamily $CF_DOCUMENT_NAME")
 
-                //ksp.createColumnFamily(CF_DOCUMENT, null)
-                /*
-                ksp.createColumnFamily(CF_DOCUMENT, ImmutableMap.builder()
-                    .put("default_validation_class", "UTF8Type")
-                    .put("key_validation_class", "UTF8Type")
-                    .put("comparator_type", "CompositeType(LongType, UTF8Type)")
-                    .build()
-                )
-                */
+            //ksp.createColumnFamily(CF_DOCUMENT, null)
+            /*
+            ksp.createColumnFamily(CF_DOCUMENT, ImmutableMap.builder()
+            .put("default_validation_class", "UTF8Type")
+            .put("key_validation_class", "UTF8Type")
+            .put("comparator_type", "CompositeType(LongType, UTF8Type)")
+            .build()
+            )
+            */
 
-                ksp.createColumnFamily(CF_DOCUMENT, ImmutableMap.builder()
-                .put("default_validation_class", "UTF8Type")
-                .put("key_validation_class", "UTF8Type")
-                .put("comparator_type", "CompositeType(LongType, IntegerType, UTF8Type)")
-                .build());
-            }
-
-
-        } catch (Exception ex) {
-            log.error("Failed to create columnfamily: ${ex.message}", ex)
+            ksp.createColumnFamily(CF_DOCUMENT, ImmutableMap.builder()
+            .put("default_validation_class", "UTF8Type")
+            .put("key_validation_class", "UTF8Type")
+            .put("comparator_type", "CompositeType(LongType, IntegerType, UTF8Type)")
+            .build());
         }
-        try {
-            if (!ksp.describeKeyspace().getColumnFamily(CF_DOCUMENT_META_NAME)) {
-                log.info("Creating columnfamily $CF_DOCUMENT_META_NAME")
-                ksp.createColumnFamily(CF_DOCUMENT_META, ImmutableMap.builder()
-                .put("column_metadata", ImmutableMap.builder()
-                /*
-                    .put(COL_NAME_YEAR, ImmutableMap.builder()
-                        .put("validation_class", "IntegerType")
-                        .put("index_name",       COL_NAME_YEAR)
-                        .put("index_type",       "KEYS")
-                        .build())
-                        */
-                    .put(COL_NAME_DATASET, ImmutableMap.builder()
-                        .put("validation_class", "UTF8Type")
-                        .put("index_name",       COL_NAME_DATASET+"_idx")
-                        .put("index_type",       "KEYS")
-                        .build())
-                    .put(COL_NAME_DATA, ImmutableMap.builder()
-                        .put("validation_class", "BytesType")
-                        .build())
-                    .put(COL_NAME_ENTRY, ImmutableMap.builder()
-                        .put("validation_class", "UTF8Type")
-                        .build())
-                    .put(COL_NAME_TIMESTAMP, ImmutableMap.builder()
-                        .put("validation_class", "DateType")
-                        .build())
-                    .build())
-                .build())
 
-            }
-        } catch (Exception ex) {
-            log.error("Failed to create columnfamily: ${ex.message}", ex)
+
+        if (!ksp.describeKeyspace().getColumnFamily(CF_DOCUMENT_META_NAME)) {
+            log.info("Creating columnfamily $CF_DOCUMENT_META_NAME")
+            ksp.createColumnFamily(CF_DOCUMENT_META, ImmutableMap.builder()
+            .put("column_metadata", ImmutableMap.builder()
+            /*
+            .put(COL_NAME_YEAR, ImmutableMap.builder()
+            .put("validation_class", "IntegerType")
+            .put("index_name",       COL_NAME_YEAR)
+            .put("index_type",       "KEYS")
+            .build())
+            */
+            .put(COL_NAME_DATASET, ImmutableMap.builder()
+            .put("validation_class", "UTF8Type")
+            .put("index_name",       COL_NAME_DATASET+"_idx")
+            .put("index_type",       "KEYS")
+            .build())
+            .put(COL_NAME_DATA, ImmutableMap.builder()
+            .put("validation_class", "BytesType")
+            .build())
+            .put(COL_NAME_ENTRY, ImmutableMap.builder()
+            .put("validation_class", "UTF8Type")
+            .build())
+            .put(COL_NAME_TIMESTAMP, ImmutableMap.builder()
+            .put("validation_class", "DateType")
+            .build())
+            .build())
+            .build())
+
         }
 
         return ksp
@@ -254,9 +246,6 @@ class CassandraStorage extends BasicComponent implements Storage {
             } catch (BadRequestException bre) {
                 log.error("Error when saving: ${bre.message}", bre)
                 throw bre
-            } catch (Exception e) {
-                log.error("Error", e)
-                throw e
             }
             return true
         } else {

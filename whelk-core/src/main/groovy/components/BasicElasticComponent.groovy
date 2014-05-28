@@ -145,5 +145,39 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
     }
 
+    protected void setTypeMapping(indexName, itype) {
+        log.info("Creating mappings for $indexName/$itype ...")
+        //XContentBuilder mapping = jsonBuilder().startObject().startObject("mappings")
+        if (!defaultMapping) {
+            defaultMapping = loadJson("default_mapping.json")
+        }
+        def typePropertyMapping = loadJson("${itype}_mapping_properties.json")
+        def typeMapping
+        if (typePropertyMapping) {
+            log.debug("Found properties mapping for $itype. Using them with defaults.")
+            typeMapping = new HashMap(defaultMapping)
+            typeMapping.put("properties", typePropertyMapping.get("properties"))
+        } else {
+            typeMapping = loadJson("${itype}_mapping.json") ?: defaultMapping
+        }
+        // Append special mapping for @id-fields
+        if (!typeMapping.dynamic_templates) {
+            typeMapping['dynamic_templates'] = []
+        }
+        if (!typeMapping.dynamic_templates.find { it.containsKey("id_template") }) {
+            log.debug("Found no id_template. Creating.")
+            typeMapping.dynamic_templates << ["id_template":["match":"@id","match_mapping_type":"string","mapping":["type":"string","index":"not_analyzed"]]]
+        }
 
+        String mapping = mapper.writeValueAsString(typeMapping)
+        log.debug("mapping for $indexName/$itype: " + mapping)
+        def response = performExecute(client.admin().indices().preparePutMapping(indexName).setType(itype).setSource(mapping))
+        log.debug("mapping response: ${response.acknowledged}")
+    }
+
+    String translateIdentifier(String uri) {
+        def idelements = new URI(uri).path.split("/") as List
+        idelements.remove(0)
+        return idelements.join(URI_SEPARATOR)
+    }
 }

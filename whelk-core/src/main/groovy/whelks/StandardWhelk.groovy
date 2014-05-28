@@ -116,11 +116,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     @Override
     void remove(URI uri) {
         components.each {
-            try {
-                ((Component)it).remove(uri)
-            } catch (RuntimeException rte) {
-                log.warn("Component ${((Component)it).id} failed delete: ${rte.message}")
-            }
+            ((Component)it).remove(uri)
         }
     }
 

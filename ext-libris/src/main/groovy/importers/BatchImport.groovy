@@ -114,19 +114,15 @@ class Harvester implements Runnable {
     }
 
     private void getAuthentication() {
-        try {
-            Properties properties = new Properties()
-            properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"))
-            final String username = properties.getProperty("username")
-            final String password = properties.getProperty("password")
-            Authenticator.setDefault(new Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password.toCharArray())
-                    }
-                });
-        } catch (Exception ex) {
-            log.error("Exception: $ex")
-        }
+        Properties properties = new Properties()
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("whelks-core.properties"))
+        final String username = properties.getProperty("username")
+        final String password = properties.getProperty("password")
+        Authenticator.setDefault(new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(username, password.toCharArray())
+            }
+        });
     }
 
     public ThreadPoolExecutor newScalingThreadPoolExecutor(int min, int max, long keepAliveTime) {

@@ -61,7 +61,7 @@ class ReindexOperator extends AbstractOperator {
         indexQueue = Executors.newFixedThreadPool(3)
         gstoreAvailable = new Semaphore(graphstoreSemaphores)
         indexAvailable = new Semaphore(indexingSemaphores)
-        String newIndex = null
+        String indexName = whelk.id
 
         long newestDocumentTimestamp = 0L
 
@@ -77,7 +77,7 @@ class ReindexOperator extends AbstractOperator {
 
         if (!dataset && doIndexing) {
             log.debug("Requesting new index for ${whelk.index.id}.")
-            newIndex = whelk.index.createNewCurrentIndex(whelk.id)
+            indexName = whelk.index.createNewCurrentIndex(whelk.id)
         }
         if (fromStorage) {
             log.info("Rebuilding storage from $fromStorage")
@@ -105,7 +105,7 @@ class ReindexOperator extends AbstractOperator {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
             if (++count % indexBatchSize == 0) { // Bulk index 1000 docs at a time
-                doTheIndexing(indexdocs, newIndex)
+                doTheIndexing(indexdocs, indexName)
                 indexdocs = []
             }
             if (count % graphBatchSize == 0) {
@@ -134,7 +134,7 @@ class ReindexOperator extends AbstractOperator {
         if (indexdocs.size() > 0 && whelk.index && doIndexing) {
             try {
                 def preparedDocs = whelk.index.prepareDocs(indexdocs, indexdocs.first().contentType)
-                whelk.index.addDocuments(preparedDocs, newIndex)
+                whelk.index.addDocuments(preparedDocs, indexName)
             } catch (WhelkAddException wae) {
                 //errorMessages << new String(wae.message + " (" + wae.failedIdentifiers + ")")
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
@@ -155,7 +155,7 @@ class ReindexOperator extends AbstractOperator {
         gstoreQueue.shutdown()
     }
 
-    void doTheIndexing(final List docs, String newIndex) {
+    void doTheIndexing(final List docs, String indexName) {
         if (doIndexing && whelk.index) {
             if (indexAvailable.availablePermits() < 10) {
                 log.info("Trying to acquire semaphore for indexing. ${indexAvailable.availablePermits()} available.")
@@ -164,9 +164,9 @@ class ReindexOperator extends AbstractOperator {
             log.debug("Acquired.")
             indexQueue.execute({
                 try {
-                    // Bypass component.bulkAdd() to be able to index into newIndex
+                    // Bypass component.bulkAdd() to be able to index into indexName
                     def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
-                    whelk.index.addDocuments(preparedDocs, newIndex)
+                    whelk.index.addDocuments(preparedDocs, indexName)
                     whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
                 } catch (WhelkAddException wae) {
                     log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
