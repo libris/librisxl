@@ -425,6 +425,26 @@
                     },
                     "resultKey" : "about"
                 },
+                "about.literaryForm" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.biography" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
                 "about.originalLanguage" : {
                     "method": "query",
                     "index" : "libris",

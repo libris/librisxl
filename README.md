@@ -45,7 +45,7 @@ Get/create/update datasets:
 
 Load into the running whelk:
 
-    $ scripts/load_defs_whelk.sh
+    $ scripts/load_defs_whelk.sh http://localhost:8180/whelk-webapi
 
 
 ### Import/update local storage from test data
