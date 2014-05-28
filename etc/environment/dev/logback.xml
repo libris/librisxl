@@ -13,7 +13,7 @@
 </logger>
 -->
   <logger name="se.kb.libris.whelks.api.BasicAPI">
-      <level value="warn"/>
+      <level value="info"/>
   </logger>
   <logger name="se.kb.libris.whelks.plugin.EntityExtractionDocumentSplitter">
       <level value="info"/>
