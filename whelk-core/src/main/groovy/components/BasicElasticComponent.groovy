@@ -13,9 +13,14 @@ abstract class BasicElasticComponent extends BasicComponent {
 
     BasicElasticComponent() {
         super()
+        connectClient()
     }
     BasicElasticComponent(Map settings) {
         super()
+        connectClient()
+    }
+
+    void connectClient() {
         String elastichost, elasticcluster
         int elasticport
         if (System.getProperty("elastic.host")) {

@@ -96,7 +96,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         boolean result = false
         result = storeAsFile(doc)
-        log.debug("Result from store()-operation: $result")
+        log.debug("Result from store-operation: $result")
         if (result) {
             index(doc.metadataAsJson.getBytes("utf-8"),
                 [

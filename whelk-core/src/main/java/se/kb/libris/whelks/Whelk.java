@@ -21,17 +21,15 @@ public interface Whelk {
     public SearchResult search(Query query);
     public Iterable<Document> loadAll();
     public Iterable<Document> loadAll(Date since);
+    public Iterable<Document> loadAll(String dataset);
+    public Iterable<Document> loadAll(String dataset, Date since);
 
     public InputStream sparql(String query);
 
     // maintenance
     public String getId(); // Whelk ID
-
     public void addPlugin(Plugin plugin);
-    public Iterable<? extends Plugin> getPlugins();
-
     public void flush();
-
     public URI mintIdentifier(Document document);
 
     // ecosystem
