@@ -1,6 +1,7 @@
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix owl: <http://www.w3.org/2002/07/owl#>
+prefix : <http://libris.kb.se/def/terms#>
 
 construct {
 
@@ -9,22 +10,25 @@ construct {
 
 } where {
 
-    bind("http://libris.kb.se/def/terms#" as ?strvocab)
+    bind(str(:) as ?strvocab)
 
     ?property
-        rdfs:subPropertyOf|owl:equivalentProperty ?baseproperty ;
-        #rdfs:isDefinedBy ?vocab .
-        filter(strstarts(str(?property), ?strvocab))
+        rdfs:subPropertyOf|owl:equivalentProperty ?baseproperty .
     {
         ?baseproperty rdfs:domain ?basedomain .
-        ?domain rdfs:subClassOf|owl:equivalentClass ?basedomain .
-        #?domain rdfs:isDefinedBy ?vocab .
-        #filter(strstarts(str(?domain), ?strvocab))
+        ?domain (rdfs:subClassOf|owl:equivalentClass)* ?basedomain .
     } union {
         ?baseproperty rdfs:range ?baserange .
-        ?range rdfs:subClassOf|owl:equivalentClass ?baserange .
-        #?range rdfs:isDefinedBy ?vocab .
-        #filter(strstarts(str(?range), ?strvocab))
+        ?range (rdfs:subClassOf|owl:equivalentClass)* ?baserange .
     }
+
+    # ... rdfs:isDefinedBy ?vocab .
+    filter(strstarts(str(?property), ?strvocab))
+
+    filter(!bound(?domain) ||
+        strstarts(str(?domain), ?strvocab))
+
+    filter(!bound(?range) ||
+        strstarts(str(?range), ?strvocab))
 
 }
