@@ -22,12 +22,10 @@ abstract class BasicElasticComponent extends BasicComponent {
     }
 
     void connectClient() {
-        String elastichost, elasticcluster
-        int elasticport
         if (System.getProperty("elastic.host")) {
-            elastichost = System.getProperty("elastic.host")
-            elasticcluster = System.getProperty("elastic.cluster")
-            elasticport = System.getProperty("elastic.port", "9300") as int
+            String elastichost = System.getProperty("elastic.host")
+            String elasticcluster = System.getProperty("elastic.cluster")
+            int elasticport = System.getProperty("elastic.port", "9300") as int
             log.info("Connecting to $elastichost:$elasticport using cluster $elasticcluster")
             def sb = ImmutableSettings.settingsBuilder()
                 .put("client.transport.ping_timeout", 30000)
