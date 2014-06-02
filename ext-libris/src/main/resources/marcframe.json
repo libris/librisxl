@@ -2696,6 +2696,7 @@
     "008": {
       "repeatedBy": "006",
       "[0:6]": {
+        "domainEntity": "Record",
         "property": "date"
       },
       "[6:7]": {

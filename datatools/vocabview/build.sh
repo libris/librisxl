@@ -2,7 +2,7 @@
 USAGE="Usage: $(basename $0) VOCAB BUILD_DIR"
 [[ $# < 2 ]] && echo $USAGE && exit 1
 
-VOCAB=$1
+VOCAB=$(pwd)/$1
 BUILD_DIR=$2
 mkdir -p $BUILD_DIR
 

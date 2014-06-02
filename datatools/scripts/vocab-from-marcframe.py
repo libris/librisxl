@@ -1,18 +1,14 @@
 import json
+from urlparse import urljoin
 from rdflib import *
 from rdflib.util import guess_format
 
 SDO = Namespace("http://schema.org/")
 VANN = Namespace("http://purl.org/vocab/vann/")
 
-TERMS = Namespace("http://libris.kb.se/def/terms#")
-
-ENUM_BASE = "http://libris.kb.se/def/enum/"
-ENUM_MAP = {
-    'tcon': Namespace(ENUM_BASE + 'content/'),
-    'tcar': Namespace(ENUM_BASE + 'carrier/'),
-    'trec': Namespace(ENUM_BASE + 'record/')
-}
+BASE = "http://libris.kb.se/"
+TERMS = Namespace(BASE + "def/terms#")
+ENUM_BASEPATH = "/def/enum/"
 
 SKIP = ('Other', 'Unspecified', 'Unknown')
 
@@ -86,7 +82,8 @@ def parse_resourcemap(g, part, marcframe):
 
 
 
-def add_terms(g, dfn, domainname=None):
+def add_terms(g, dfn, parentdomain=None):
+
     for k, v in dfn.items():
         if not v:
             continue
@@ -102,20 +99,25 @@ def add_terms(g, dfn, domainname=None):
             'addLink': {OWL.ObjectProperty},
         }.get(k)
 
-        domainname = dfn.get('domainEntity', domainname)
-        rangename = dfn.get('rangeEntity')
-
         is_link = ('link' in dfn or 'addLink' in dfn)
 
-        if k == 'property' and is_link:
-            domainname, rangename = rangename, None
+        key_is_property = k in ('property', 'addProperty')
+
+        if key_is_property and is_link:
+            domainname = dfn.get('rangeEntity')
+            rangename = None
+        else:
+            domainname = dfn.get('domainEntity', parentdomain)
+            rangename = dfn.get('rangeEntity')
 
         if not rtypes:
             if not isinstance(v, list):
                 v = [v]
             for subdfn in v:
                 if isinstance(subdfn, dict):
-                    add_terms(g, subdfn, rangename if is_link else None)
+                    subdomainname = (rangename if
+                            is_link and not key_is_property else None)
+                    add_terms(g, subdfn, subdomainname)
             continue
 
         newprop(g, v, rtypes, domainname, rangename)
@@ -125,9 +127,8 @@ def newclass(g, name, base=None, termgroup=None):
     if ' ' in name:
         rclass = g.resource(BNode())
         rclass.add(RDFS.label, Literal(name, lang='sv'))
-    elif ':' in name:
-        token, name = name.split(':', 1)
-        rclass = g.resource(URIRef(ENUM_MAP[token][name]))
+    elif name.startswith(ENUM_BASEPATH):
+        rclass = g.resource(URIRef(urljoin(BASE, name)))
     else:
         rclass = g.resource(URIRef(TERMS[name]))
     rclass.add(RDF.type, OWL.Class)
