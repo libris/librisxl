@@ -188,7 +188,9 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
                     try {
                         documents << marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
-                        marcdocuments << new Document(["entry":entry, "meta":meta]).withData(mdrecord).withContentType("application/marcxml+xml")
+                        def marcmeta = meta
+                        marcmeta.put("oaipmh_header", createString(it.header))
+                        marcdocuments << new Document(["entry":entry, "meta":marcmeta]).withData(mdrecord).withContentType("application/marcxml+xml")
                     } catch (Exception e) {
                         log.error("Conversion failed for id ${entry.identifier}", e)
                     }
