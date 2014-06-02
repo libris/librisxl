@@ -24,6 +24,7 @@
             ],
         "_components": [
             "pairtreehybridstorage",
+            "pairtreeoaistorage",
             "index"
         ]
     },

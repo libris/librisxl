@@ -53,6 +53,15 @@
             "versioning" : false
         }
     },
+    "pairtreeoaistorage": {
+        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+        "_params" : {
+            "storageDir": "_property:STORAGE_PATH",
+            "contentTypes" : [ "application/marcxml+xml" ],
+            "baseStorageSuffix": "marcxml",
+            "versioning" : false
+        }
+    },
     "cassandrastorage": {
         "_class" : "se.kb.libris.whelks.component.CassandraStorage",
         "_params" : {

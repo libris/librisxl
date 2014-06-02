@@ -1,6 +1,6 @@
 {
     "_properties": {
-        "WHELK_WORK_DIR": "/var/run/work",
+        "WHELK_WORK_DIR": "/var/run/whelk",
         "STORAGE_PATH": "/ssd/storage"
     },
     "_id": "libris",

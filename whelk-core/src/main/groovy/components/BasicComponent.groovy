@@ -86,7 +86,9 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         log.debug("Calling onStart() on sub classes")
         onStart()
 
-        catchUp()
+        if (listener) {
+            catchUp()
+        }
 
         startStateThread(stateFile, this.whelk.id)
         startListenerThread()

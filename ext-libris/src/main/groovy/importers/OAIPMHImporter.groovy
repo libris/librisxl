@@ -157,9 +157,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             log.warn("XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
         }
         def documents = []
+        def marcdocuments = []
         elapsed = System.currentTimeMillis()
         OAIPMH.ListRecords.record.each {
-            def mdrecord = createString(it.metadata.record)
+            String mdrecord = createString(it.metadata.record)
             if (mdrecord) {
                 try {
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
@@ -187,6 +188,9 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
                     try {
                         documents << marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
+                        def marcmeta = meta
+                        marcmeta.put("oaipmh_header", createString(it.header))
+                        marcdocuments << new Document(["entry":entry, "meta":marcmeta]).withData(mdrecord).withContentType("application/marcxml+xml")
                     } catch (Exception e) {
                         log.error("Conversion failed for id ${entry.identifier}", e)
                     }
@@ -221,6 +225,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             log.warn("Conversion of documents took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
         }
         addDocuments(documents)
+        addDocuments(marcdocuments)
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
             log.trace("Last page is $xmlString")
