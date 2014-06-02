@@ -83,7 +83,7 @@ class StandardWhelk extends AbstractWhelkServlet implements Whelk {
         for (doc in docs) {
             doc.updateTimestamp()
         }
-        for (storage in storages) {
+        for (storage in getStorages(contentType)) {
             storage.bulkAdd(docs, contentType)
         }
     }

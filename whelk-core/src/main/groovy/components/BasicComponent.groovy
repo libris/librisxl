@@ -80,7 +80,9 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
         listener = plugins.find { it instanceof Listener }
 
-        catchUp()
+        if (listener) {
+            catchUp()
+        }
 
         startStateThread(stateFile, this.whelk.id)
         startListenerThread()

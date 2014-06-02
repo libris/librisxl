@@ -49,7 +49,7 @@
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.Document">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.DocumentAPI">
       <level value="info"/>
