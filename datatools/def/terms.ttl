@@ -584,6 +584,13 @@
 :Family a owl:Class;
     rdfs:subClassOf :Agent .
 
+:Event a owl:Class;
+    owl:equivalentClass sdo:Event .
+
+:Meeting a owl:Class;
+    rdfs:subClassOf :Event;
+    owl:equivalentClass bf:Meeting, bibo:Conference .
+
 #[] a owl:Class; rdfs:subClassOf :Person; ptg:abstract true;
 #    owl:hasKey (:name :familyName :givenName :numeration :birthDate :deathDate :personTitle) .
 
