@@ -3377,7 +3377,11 @@
     "051": {},
     "052": {},
     "055": {},
-    "060": {},
+    "060": {
+      "addLink": "classification",
+      "$a": {"property": "classificationNlm"},
+      "$b": {"property": "classificationItem", "ignored": true}
+    },
     "061": {},
     "066": {},
     "070": {},
