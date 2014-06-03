@@ -3161,7 +3161,12 @@
     "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
 
     "013": {},
-    "015": {},
+    "015": {
+      "inherit": "024",
+      "TODO:$z": "canceledInvalid",
+      "TODO:$2": "restrictedTo: http://www.loc.gov/standards/sourcelist/national-bibliography.html"
+    },
+    
     "016": {},
     "017": {},
     "018": {},
