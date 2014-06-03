@@ -224,8 +224,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         if ((System.currentTimeMillis() - elapsed) > 3000) {
             log.warn("Conversion of documents took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
         }
-        addDocuments(documents)
-        addDocuments(marcdocuments)
+        if (documents?.size() > 0) {
+            addDocuments(documents)
+            addDocuments(marcdocuments)
+        }
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
             log.trace("Last page is $xmlString")

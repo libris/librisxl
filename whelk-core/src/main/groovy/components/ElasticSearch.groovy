@@ -58,8 +58,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     int MAX_RETRY_TIMEOUT = 60*60*1000
     static int MAX_NUMBER_OF_FACETS = 100
 
-    String URI_SEPARATOR = "::"
-
     String defaultType = "record"
     Map<String,String> configuredTypes
     ElasticShapeComputer shapeComputer
@@ -119,10 +117,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             log.trace("File $file not found.")
         }
         return json
-    }
-
-    void deleteEntry(URI uri, indexName) {
-        client.delete(new DeleteRequest(indexName, "entry", translateIdentifier(uri.toString())))
     }
 
     @Override

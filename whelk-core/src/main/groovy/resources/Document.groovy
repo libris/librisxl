@@ -103,6 +103,7 @@ class Document {
     String getContentType() { entry["contentType"] }
 
     long getTimestamp() {
+        log.debug("Retrieving document timestamp: ${new Date(entry.get(TIMESTAMP_KEY, 0L))}")
         entry.get(TIMESTAMP_KEY, 0L)
     }
 

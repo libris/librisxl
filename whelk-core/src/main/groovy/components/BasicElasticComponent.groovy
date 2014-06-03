@@ -4,6 +4,7 @@ import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.*
 import org.elasticsearch.common.transport.*
 import org.elasticsearch.common.settings.*
+import org.elasticsearch.action.delete.*
 import org.elasticsearch.action.admin.indices.flush.*
 
 import se.kb.libris.whelks.exception.*
@@ -11,6 +12,7 @@ import se.kb.libris.whelks.exception.*
 abstract class BasicElasticComponent extends BasicComponent {
     Client client
     def defaultMapping, es_settings
+    String URI_SEPARATOR = "::"
 
     BasicElasticComponent() {
         super()
@@ -132,6 +134,10 @@ abstract class BasicElasticComponent extends BasicComponent {
         } catch (Exception e) {
             throw new WhelkIndexException("Failed to index ${new String(data)} with params $params", e)
         }
+    }
+
+    void deleteEntry(URI uri, indexName) {
+        client.delete(new DeleteRequest(indexName, "entry", translateIdentifier(uri.toString())))
     }
 
     void checkTypeMapping(indexName, indexType) {

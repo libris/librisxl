@@ -79,7 +79,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             this.versionsStorageDir = this.baseStorageDir + "/" + stName + "_" + this.baseStorageSuffix + "/" + VERSIONS_STORAGE_DIR
         }
         this.storageDir = this.baseStorageDir + "/" + stName + "_" + this.baseStorageSuffix + "/" + MAIN_STORAGE_DIR
-        indexName = "."+stName
+        this.indexName = "."+stName + "_" + this.baseStorageSuffix
 
         log.info("Starting ${this.id} with storageDir $storageDir ${(versioning ? "and versions in $versionsStorageDir" : "")}")
     }
@@ -102,7 +102,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 [
                     "index": ".libris",
                     "type": "entry",
-                    "id": UUID.randomUUID().toString()
+                    "id": translateIdentifier(doc.identifier)
                 ]
             )
             flush()
@@ -284,7 +284,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             }
         }
         setState(LAST_UPDATED, new Date().getTime())
-        index.deleteFromEntry(uri, indexName)
+        deleteEntry(uri, indexName)
     }
 
     @groovy.transform.CompileStatic
@@ -360,7 +360,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
     @Override
     void rebuildIndex() {
-        assert index
         rebuilding = true
         int diskCount = 0
         List<Map<String,String>> entryList = []
@@ -369,14 +368,15 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         checkTypeMapping(indexName, "entry")
 
         for (document in getAllRaw()) {
+            log.info("Identifier: ${document.identifier}")
             entryList << [
             "index":indexName,
             "type": "entry",
-            "id": translateIdentifier(doc.identifier),
+            "id": translateIdentifier(document.identifier),
             "data":((Document)document).metadataAsJson
             ]
             if (diskCount++ % 2000 == 0) {
-                index.index(entryList)
+                index(entryList)
                 entryList = []
             }
             if (log.isInfoEnabled() && diskCount % 50000 == 0) {
@@ -384,9 +384,9 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             }
         }
         if (entryList.size() > 0) {
-            index.index(entryList)
+            index(entryList)
         }
-        index.flush()
+        flush()
         log.info("Created $diskCount entries.")
         rebuilding = false
     }

@@ -105,6 +105,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             long updatetime = document.timestamp
             List<Document> docs = prepareDocs([document], document.contentType)
             batchLoad(docs)
+            log.debug("Calling setState")
             setState(LAST_UPDATED, updatetime)
             return new URI(document.identifier)
         } catch (DownForMaintenanceException dfme) {
@@ -121,12 +122,13 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         try {
             long startBatchAt = System.currentTimeMillis()
             long updatetime = documents.last().timestamp
-            log.debug("First document timestamp: ${documents.first().timestamp}")
-            log.debug(" Last document timestamp: ${documents.last().timestamp}")
+            log.trace("First document timestamp: ${documents.first().timestamp}")
+            log.trace(" Last document timestamp: ${documents.last().timestamp}")
             log.debug("Updatetime is $updatetime")
             def docs = prepareDocs(documents, contentType)
             log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)
+            log.debug("Bulk calling setState")
             setState(LAST_UPDATED, updatetime)
             log.debug("[${this.id}] Bulk Add completed in ${(System.currentTimeMillis()-startBatchAt)/1000} seconds.")
         } catch (DownForMaintenanceException dfme) {
@@ -238,6 +240,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         this.componentState.put(key, value)
         stateUpdated = true
         if (key == LAST_UPDATED && listener) {
+            log.debug("Setting $LAST_UPDATED to ${new Date(value)}")
             log.trace("[${this.id}] Notifying listeners ..")
             listener.registerUpdate(this.id, value)
         }

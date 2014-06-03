@@ -113,11 +113,15 @@ class DocumentAPI extends BasicAPI {
                     response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 } else {
                     try {
+                        Document doc = new Document(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
+                        this.whelk.add(doc)
+                        /*
                         identifier = this.whelk.add(
                             request.getInputStream().getBytes(),
                             entry,
                             meta
                             )
+                        */
                         def locationRef = request.getRequestURL()
                         log.debug("Setting location for redirect: $locationRef")
                         response.setHeader("Location", locationRef.toString())
