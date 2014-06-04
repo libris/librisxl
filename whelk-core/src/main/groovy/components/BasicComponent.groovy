@@ -203,18 +203,6 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         return documents
     }
 
-    /*
-    void runLinkExpanders(List docs) {
-        for (doc in docs) {
-            LinkExpander expander = getLinkExpanderFor(doc)
-            if (expander) {
-                log.debug("Expanding ${doc.identifier}")
-                doc = expander.expand(doc)
-            }
-        }
-    }
-    */
-
     Document linkExpand(Document doc) {
         LinkExpander le = getLinkExpanderFor(doc)
         if (le) {

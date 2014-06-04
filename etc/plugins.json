@@ -349,7 +349,8 @@
     "oaipmhimporter" : {
         "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
         "_plugins" : [
-            "marcconverter"
+            "marcconverter",
+            "linkcompleter"
         ],
         "_params" : {
             "specUriMapping" : {

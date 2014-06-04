@@ -37,6 +37,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
     ExecutorService queue
     MarcFrameConverter marcFrameConverter
+    JsonLDLinkCompleterFilter enhancer
 
     boolean cancelled = false
 
@@ -50,7 +51,9 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
     void bootstrap(String whelkId) {
         marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
-        assert marcFrameConverter
+        enhancer = plugins.find { it instanceof JsonLDLinkCompleterFilter }
+
+        assert marcFrameConverter, enhancer
     }
 
     int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
@@ -187,7 +190,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                     }
 
                     try {
-                        documents << marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
+                        documents << enhancer.filter(marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta]))
                         def marcmeta = meta
                         marcmeta.put("oaipmh_header", createString(it.header))
                         marcdocuments << new Document(["entry":entry, "meta":marcmeta]).withData(mdrecord).withContentType("application/marcxml+xml")

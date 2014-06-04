@@ -72,6 +72,9 @@
 <logger name="se.kb.libris.whelks.api.RemoteSearchAPI">
     <level value="info"/>
 </logger>
+<logger name="se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter">
+  <level value="trace"/>
+</logger>
 <logger name="se.kb.libris.whelks.plugin.LibrisURIMinter">
   <level value="warn"/>
 </logger>

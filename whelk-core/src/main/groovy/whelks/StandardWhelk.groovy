@@ -99,14 +99,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (expandLinks) {
             LinkExpander le = getLinkExpanderFor(doc)
             if (le) {
-                String origchecksum = doc.checksum
                 doc = le.expand(doc)
-                /*
-                if (doc.checksum != origchecksum) {
-                    log.debug("Indexing expanded doc.")
-                    index.add(doc)
-                }
-                */
             }
         }
 

@@ -11,11 +11,13 @@ import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
 
 @Log
-@Deprecated
 class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     String requiredContentType = "application/ld+json"
+    String ANONYMOUS_ID_PREFIX = "_:t-"
     Whelk whelk
+
+    def anonymousIds
 
     def loadRelatedDocs(Document doc) {
         def relatedDocs = [:]
@@ -35,6 +37,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     Document doFilter(Document doc) {
         log.trace("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
+        anonymousIds = [:]
         def changedData = false
         def json, work
         def relatedDocs = loadRelatedDocs(doc)
@@ -53,6 +56,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                 }
             }
             log.trace("Changed data? $changedData")
+            // TODO: find unmatched nodes with anonymous identifiers and complete them
             if (changedData) {
                 return doc.withData(json)
             }
@@ -92,15 +96,28 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         boolean updated = false
         def relatedDocMap, relatedItem, updateAction
         relatedDocs.each { docId, doc ->
-            relatedDocMap = getDataAsMap(doc)
+            relatedDocMap = doc.dataAsMap
             relatedItem = relatedDocMap.about ?: relatedDocMap
             if (relatedItem.get("@type") == obj.get("@type")) {
                 try {
                     updateAction = "update" + obj["@type"] + "Id"
+                    def oldEntityId = obj["@id"]
                     updated = "$updateAction"(obj, relatedItem, docId)
+                    if (updated && oldEntityId) {
+                        log.trace("saving $oldEntityId == ${obj["@id"]}")
+                        anonymousIds[oldEntityId] = obj["@id"]
+                    }
                 } catch (Exception e) {
                     log.trace("Could not update object of type ${obj["@type"]}")
                     updated = false
+                }
+            } else if (!obj.containsKey("@type") && obj.get("@id", "").startsWith(ANONYMOUS_ID_PREFIX)) {
+                if (anonymousIds.containsKey(obj["@id"])) {
+                    obj["@id"] = anonymousIds[obj["@id"]]
+                    updated = true
+                    log.trace("Replaced old @id with ${obj["@id"]}")
+                } else {
+                    log.warn("Could not find deanonymized @id for ${obj["@id"]}")
                 }
             }
         }
@@ -108,6 +125,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
     }
 
     boolean updatePersonId(item, relatedItem, relatedDocId) {
+        log.trace("Updating person $item")
         if (item["controlledLabel"] == relatedItem["controlledLabel"]) {  //ignore case in comparison?
             item["@id"] = relatedItem["@id"]
             return true

@@ -84,15 +84,6 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
     }
 
-    void createAliasForIndexIfNotExists(String indexName, String aliasName) {
-        def aliases = performExecute(client.admin().cluster().prepareState()).state.metaData.aliases()
-        log.info("(Create) Aliases: $aliases. Looking for ($aliasName)")
-        if (!aliases.containsKey(aliasName)) {
-            log.info("No alias found. Creating $aliasName -> $indexName")
-            performExecute(client.admin().indices().prepareAliases().addAlias(indexName, indexAlias))
-        }
-    }
-
     String getRealIndexFor(String alias) {
         def aliases = performExecute(client.admin().cluster().prepareState()).state.metaData.aliases()
         log.debug("aliases: $aliases")
