@@ -6,6 +6,7 @@ import org.elasticsearch.common.transport.*
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.action.delete.*
 import org.elasticsearch.action.admin.indices.flush.*
+import org.elasticsearch.action.admin.indices.alias.get.*
 
 import se.kb.libris.whelks.exception.*
 
@@ -13,6 +14,7 @@ abstract class BasicElasticComponent extends BasicComponent {
     Client client
     def defaultMapping, es_settings
     String URI_SEPARATOR = "::"
+    static final String METAENTRY_INDEX_TYPE = "entry"
 
     BasicElasticComponent() {
         super()
@@ -82,6 +84,15 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
     }
 
+    void createAliasForIndexIfNotExists(String indexName, String aliasName) {
+        def aliases = performExecute(client.admin().cluster().prepareState()).state.metaData.aliases()
+        log.info("(Create) Aliases: $aliases. Looking for ($aliasName)")
+        if (!aliases.containsKey(aliasName)) {
+            log.info("No alias found. Creating $aliasName -> $indexName")
+            performExecute(client.admin().indices().prepareAliases().addAlias(indexName, indexAlias))
+        }
+    }
+
     String getRealIndexFor(String alias) {
         def aliases = performExecute(client.admin().cluster().prepareState()).state.metaData.aliases()
         log.debug("aliases: $aliases")
@@ -136,8 +147,8 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
     }
 
-    void deleteEntry(URI uri, indexName) {
-        client.delete(new DeleteRequest(indexName, "entry", translateIdentifier(uri.toString())))
+    void deleteEntry(URI uri, indexName, indexType) {
+        client.delete(new DeleteRequest(indexName, indexType, translateIdentifier(uri.toString())))
     }
 
     void checkTypeMapping(indexName, indexType) {

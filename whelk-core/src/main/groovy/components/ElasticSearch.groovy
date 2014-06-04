@@ -317,7 +317,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         log.trace("creating document. ID: ${hit?.id}, index: $queriedIndex")
         def metaEntryMap = getMetaEntry(hit.id, queriedIndex)
         if (metaEntryMap) {
-            return new Document(metaEntryMap).withData(hit.source()).withIdentifier(translateIndexIdTo(hit.id))
+            return new Document(metaEntryMap).withData(hit.source())
         } else {
             log.trace("Meta entry not found for document. Will assume application/json for content-type.")
             return new Document().withData(hit.source()).withContentType("application/json").withIdentifier(translateIndexIdTo(hit.id))
@@ -325,9 +325,10 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     private Map getMetaEntry(id, queriedIndex) {
-        def emei = ".$queriedIndex"
+        //def emei = ".$queriedIndex"
+        def emei = this.whelk.primaryStorage.indexName
         try {
-            def grb = new GetRequestBuilder(client, emei).setType("entry").setId(id)
+            def grb = new GetRequestBuilder(client, emei).setType(METAENTRY_INDEX_TYPE).setId(id)
             def result = performExecute(grb)
             if (result.exists) {
                 return result.sourceAsMap

@@ -80,14 +80,13 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
         this.storageDir = this.baseStorageDir + "/" + stName + "_" + this.baseStorageSuffix + "/" + MAIN_STORAGE_DIR
         this.indexName = "."+stName + "_" + this.baseStorageSuffix
-
-        log.info("Starting ${this.id} with storageDir $storageDir ${(versioning ? "and versions in $versionsStorageDir" : "")}")
     }
 
     @Override
     void onStart() {
+        log.info("Starting ${this.id} with storageDir $storageDir ${(versioning ? "and versions in $versionsStorageDir" : "")}")
         createIndexIfNotExists(indexName)
-        checkTypeMapping(indexName, "entry")
+        checkTypeMapping(indexName, METAENTRY_INDEX_TYPE)
     }
 
     @Override
@@ -100,8 +99,8 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         if (result) {
             index(doc.metadataAsJson.getBytes("utf-8"),
                 [
-                    "index": ".libris",
-                    "type": "entry",
+                    "index": indexName,
+                    "type": METAENTRY_INDEX_TYPE,
                     "id": translateIdentifier(doc.identifier)
                 ]
             )
@@ -199,7 +198,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 if (result) {
                     entries << [
                         "index":indexName,
-                        "type": "entry",
+                        "type": METAENTRY_INDEX_TYPE,
                         "id": translateIdentifier(doc.identifier),
                         "data":((Document)doc).metadataAsJson
                     ]
@@ -284,7 +283,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             }
         }
         setState(LAST_UPDATED, new Date().getTime())
-        deleteEntry(uri, indexName)
+        deleteEntry(uri, indexName, METAENTRY_INDEX_TYPE)
     }
 
     @groovy.transform.CompileStatic
@@ -365,13 +364,12 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         List<Map<String,String>> entryList = []
         log.info("Started rebuild of metaindex for $indexName.")
         createIndexIfNotExists(indexName)
-        checkTypeMapping(indexName, "entry")
+        checkTypeMapping(indexName, METAENTRY_INDEX_TYPE)
 
         for (document in getAllRaw()) {
-            log.info("Identifier: ${document.identifier}")
             entryList << [
             "index":indexName,
-            "type": "entry",
+            "type": METAENTRY_INDEX_TYPE,
             "id": translateIdentifier(document.identifier),
             "data":((Document)document).metadataAsJson
             ]
@@ -414,7 +412,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
         def srb = client.prepareSearch(indexName)
             .setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setTypes(["entry"] as String[])
+            .setTypes([METAENTRY_INDEX_TYPE] as String[])
             .setFetchSource(["identifier", "entry.timestamp"] as String[], null)
             .setQuery(query)
             .setFrom(0).setSize(batchUpdateSize)

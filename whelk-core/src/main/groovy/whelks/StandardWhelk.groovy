@@ -537,6 +537,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
 
     Storage getStorage() { return storages.get(0) }
+    Storage getPrimaryStorage() { return storages.get(0) }
     List<Storage> getStorages(String rct) { return storages.findAll { it.handlesContent(rct) } }
     Storage getStorage(String rct) { return storages.find { it.handlesContent(rct) } }
 

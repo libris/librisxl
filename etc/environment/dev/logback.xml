@@ -28,31 +28,31 @@
       <level value="info"/>
   </logger> 
   <logger name="se.kb.libris.whelks.StandardWhelk">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.BasicElasticComponent">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.plugin.BasicPlugin">
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.BasicComponent">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.PairtreeHybridDiskStorage">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.Document">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.DocumentAPI">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.ReindexOperator">
       <level value="info"/>
@@ -64,7 +64,7 @@
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.component.ElasticQuery">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.Query">
       <level value="info"/>

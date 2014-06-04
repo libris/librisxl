@@ -122,7 +122,7 @@ class Document {
     // Setters
     long updateTimestamp() {
         setTimestamp(new Date().getTime())
-        log.trace("Updating timestamp for ${this.identifier} to ${timestamp}")
+        log.debug("Updating timestamp for ${this.identifier} to ${timestamp} (${new Date(timestamp)})")
         return this.timestamp
     }
 
