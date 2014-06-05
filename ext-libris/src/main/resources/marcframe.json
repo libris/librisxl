@@ -2724,7 +2724,7 @@
       },
       "[35:38]": {
         "note:candidate:domainEntity": "Work",
-        "link": "language",
+        "addLink": "language",
         "uriTemplate": "/def/languages/{_}",
         "matchUriToken": "^\\w{2,3}$",
         "spec": {
@@ -3324,7 +3324,7 @@
       "domainEntity": "Record",
       "$a": {"link": "originalCatalogingAgency", "rangeEntity": "Organization", "property": "name"},
       "$b": {
-        "link": "language",
+        "addLink": "language",
         "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$"
       },
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
@@ -3347,7 +3347,7 @@
       },
       "$h": {
         "TODO": "sync with some isVersionOf/translationOf built from many fields",
-        "link": "originalLanguage",
+        "addLink": "originalLanguage",
         "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$"
       },
       "$k": {
