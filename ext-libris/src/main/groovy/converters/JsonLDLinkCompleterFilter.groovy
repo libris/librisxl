@@ -27,7 +27,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
             def linkedDoc = whelk.get(new URI(idStr))
             if (linkedDoc) { //&& link.type == "auth" ??
                 //type=authority from importer, type=<relation> from linkfinders
-                relatedDocs[link.identifier] = linkedDoc
+                relatedDocs[link.identifier] = linkedDoc.dataAsMap
             } else {
                 log.trace("Missing document for ${link.identifier}")
             }
@@ -56,8 +56,20 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                 }
             }
             log.trace("Changed data? $changedData")
-            // TODO: find unmatched nodes with anonymous identifiers and complete them
             if (changedData) {
+                if (!anonymousIds.isEmpty()) {
+                    log.trace("second pass to try to match unmatched anonymous @id:s")
+                    work.each { key, value ->
+                        log.trace("trying to match anonymous @id:s for $key")
+                        findAndUpdateEntityIds(value, ["fakedoc":["@type":"dummy"]])
+                    }
+                    if (work.get("instanceOf")) {
+                        work."instanceOf".each {  k, v ->
+                            log.trace("trying to match anonymous instanceof @id:s for $key")
+                            findAndUpdateEntityIds(v, ["fakedoc":["@type":"dummy"]])
+                        }
+                    }
+                }
                 return doc.withData(json)
             }
         }
@@ -94,16 +106,15 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     boolean updateEntityId(obj, relatedDocs) {
         boolean updated = false
-        def relatedDocMap, relatedItem, updateAction
-        relatedDocs.each { docId, doc ->
-            relatedDocMap = doc.dataAsMap
+        def relatedItem, updateAction
+        relatedDocs.each { docId, relatedDocMap ->
             relatedItem = relatedDocMap.about ?: relatedDocMap
             if (relatedItem.get("@type") == obj.get("@type")) {
                 try {
                     updateAction = "update" + obj["@type"] + "Id"
                     def oldEntityId = obj["@id"]
                     updated = "$updateAction"(obj, relatedItem, docId)
-                    if (updated && oldEntityId) {
+                    if (updated && oldEntityId && oldEntityId.startsWith(ANONYMOUS_ID_PREFIX)) {
                         log.trace("saving $oldEntityId == ${obj["@id"]}")
                         anonymousIds[oldEntityId] = obj["@id"]
                     }
@@ -115,9 +126,9 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                 if (anonymousIds.containsKey(obj["@id"])) {
                     obj["@id"] = anonymousIds[obj["@id"]]
                     updated = true
-                    log.trace("Replaced old @id with ${obj["@id"]}")
+                    log.trace("replaced old @id with ${obj["@id"]}")
                 } else {
-                    log.warn("Could not find deanonymized @id for ${obj["@id"]}")
+                    log.trace("unmatched anonymous id: ${obj["@id"]}")
                 }
             }
         }
