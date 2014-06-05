@@ -667,11 +667,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 return Date.parse(DT_FORMAT, v).format(dateTimeFormat)
             return revertObject(v)
         } else {
-            def id = entity instanceof Map? entity['@id'] : entity
-            if (uriTemplate) {
-                def token = extractToken(uriTemplate, id)
-                if (token) {
-                    return revertObject(token)
+            def entities = entity instanceof List? entity : [entity]
+            return entities.collect {
+                def id = it instanceof Map? it['@id'] : it
+                if (uriTemplate) {
+                    def token = extractToken(uriTemplate, id)
+                    if (token) {
+                        return revertObject(token)
+                    }
                 }
             }
             return null
