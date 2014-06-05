@@ -312,8 +312,10 @@
     "documentapi" : {
         "_class" : "se.kb.libris.whelks.api.DocumentAPI",
         "_params": {
-            "header": {
-
+            "contextHeaders": {
+                "bib": "/sys/context/lib.jsonld",
+                "auth": "/sys/context/lib.jsonld",
+                "hold": "/sys/context/lib.jsonld"
             }
         }
     },

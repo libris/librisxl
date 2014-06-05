@@ -38,6 +38,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     final static ObjectMapper mapper = new ObjectMapper()
 
+    final static String DEFAULT_WHELK_CONFIG_FILENAME = "whelk.json"
+    final static String DEFAULT_PLUGIN_CONFIG_FILENAME = "plugins.json"
+
     /*
      * Whelk methods
      *******************************/
@@ -339,6 +342,14 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 throw new PluginConfigurationException("Failed to read configuration: ${e.message}", e)
             }
         } else {
+            try {
+                whelkConfig = mapper.readValue(this.getClass().getResourceAsStream(DEFAULT_WHELK_CONFIG_FILENAME), Map)
+                pluginConfig = mapper.readValue(this.getClass().getResourceAsStream(DEFAULT_PLUGIN_CONFIG_FILENAME), Map)
+            } catch (Exception e) {
+                throw new PluginConfigurationException("Failed to read configuration: ${e.message}", e)
+            }
+        }
+        if (!whelkConfig || !pluginConfig) {
             throw new PluginConfigurationException("Could not find suitable config. Please set the 'whelk.config.uri' system property")
         }
         return [whelkConfig, pluginConfig]

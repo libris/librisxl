@@ -15,8 +15,10 @@ import se.kb.libris.whelks.exception.*
 class DocumentAPI extends BasicAPI {
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
 
+    Map contextHeaders = [:]
 
     DocumentAPI(Map settings) {
+        this.contextHeaders = settings.get("contextHeaders", [:])
     }
 
     def determineDisplayMode(path) {
@@ -57,6 +59,10 @@ class DocumentAPI extends BasicAPI {
                     if (mode == DisplayMode.META) {
                         sendResponse(response, d.metadataAsJson, "application/json")
                     } else {
+                        def ctheader = contextHeaders.get(path.split("/")[1])
+                        if (ctheader) {
+                            response.setHeader("Link", "<$ctheader>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"")
+                        }
                         response.setHeader("ETag", d.timestamp as String)
                         sendResponse(response, d.dataAsString, d.contentType)
                     }
