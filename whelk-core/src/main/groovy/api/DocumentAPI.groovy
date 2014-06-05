@@ -27,7 +27,10 @@ class DocumentAPI extends BasicAPI {
     }
 
     String getCleanPath(List pathVars) {
-        return "/"+pathVars.first().replaceAll('\\/\\/', '/')
+        if (pathVars) {
+            return "/"+pathVars.first().replaceAll('\\/\\/', '/')
+        }
+        return "/"
     }
 
     protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {

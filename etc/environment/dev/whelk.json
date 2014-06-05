@@ -38,6 +38,7 @@
         { "/_isxntool":  "isxntool" },
         { "/_complete/([\\w/]+)$":  "completeexpander" },
         { "/([\\w/]+)/_search":  "search" },
-        { "^/([^_].+)$":  "documentapi" }
+        { "^/([^_].*)$":  "documentapi" },
+        { "^/$":  "documentapi" }
     ]
 }
