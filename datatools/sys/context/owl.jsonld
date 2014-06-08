@@ -2,6 +2,7 @@
   "@context": {
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "sdo": "http://schema.org/",
     "@vocab": "http://www.w3.org/2002/07/owl#",
     "equivalentClass": { "@type": "@id"},
     "equivalentProperty": { "@type": "@id"},
@@ -23,6 +24,8 @@
     "unionOf": {"@id": "owl:unionOf", "@container": "@list", "@type": "@id"},
     "domain": {"@id": "rdfs:domain", "@type": "@id"},
     "range": {"@id": "rdfs:range", "@type": "@id"},
+    "domainIncludes": {"@id": "sdo:domainIncludes", "@type": "@id"},
+    "rangeIncludes": {"@id": "sdo:rangeIncludes", "@type": "@id"},
     "isDefinedBy": {"@id": "rdfs:isDefinedBy", "@type": "@id"},
     "seeAlso": {"@id": "rdfs:seeAlso", "@type": "@id"}
   }
