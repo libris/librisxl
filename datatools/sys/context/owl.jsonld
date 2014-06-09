@@ -4,6 +4,10 @@
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "sdo": "http://schema.org/",
     "@vocab": "http://www.w3.org/2002/07/owl#",
+    "equivalentClass": { "@container": "@set"},
+    "equivalentProperty": { "@container": "@set"},
+    "sameAs": { "@container": "@set"},
+    "imports": { "@container": "@set"},
     "Property": "rdf:Property",
     "label": "rdfs:label",
     "comment": "rdfs:comment",
@@ -15,14 +19,14 @@
     "prefLabel_en": {"@id": "prefLabel", "@language": "en"},
     "altLabel_en": {"@id": "altLabel", "@language": "en"},
     "abstract": "http://protege.stanford.edu/plugins/owl/protege#abstract",
-    "subClassOf": {"@id": "rdfs:subClassOf"},
-    "subPropertyOf": {"@id": "rdfs:subPropertyOf"},
+    "subClassOf": {"@id": "rdfs:subClassOf", "@container": "@set"},
+    "subPropertyOf": {"@id": "rdfs:subPropertyOf", "@container": "@set"},
     "unionOf": {"@id": "owl:unionOf", "@container": "@list"},
-    "domain": {"@id": "rdfs:domain"},
-    "range": {"@id": "rdfs:range"},
-    "domainIncludes": {"@id": "sdo:domainIncludes"},
-    "rangeIncludes": {"@id": "sdo:rangeIncludes"},
+    "domain": {"@id": "rdfs:domain", "@container": "@set"},
+    "range": {"@id": "rdfs:range", "@container": "@set"},
+    "domainIncludes": {"@id": "sdo:domainIncludes", "@container": "@set"},
+    "rangeIncludes": {"@id": "sdo:rangeIncludes", "@container": "@set"},
     "isDefinedBy": {"@id": "rdfs:isDefinedBy"},
-    "seeAlso": {"@id": "rdfs:seeAlso"}
+    "seeAlso": {"@id": "rdfs:seeAlso", "@container": "@set"}
   }
 }
