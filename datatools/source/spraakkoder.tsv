@@ -1,8 +1,8 @@
 code	prefLabel_sv	comment_sv
-   	Uppgift saknas	
 9fd	Forndanska 	-1500 (Librisdefinierad kod)
 9fs	Fornsvenska 	-1500 (Librisdefinierad kod)
 9ft	Fornlågtyska 	Ca 850-1050 (Librisdefinierad kod)
+9mk	Meänkieli	Librisdefinierad kod
 9sl	Lulesamiska 	"Obsolet Librisdefinierad kod: använd ""smj"""
 9so	Östsamiska 	"Obsolet Librisdefinierad kod: använd ""smn"" (enaresamiska), ""sms"" (skoltsamiska) eller ""smi"" (samiska)"
 9ss	Sydsamiska 	"Obsolet Librisdefinierad kod: använd ""sma"""
@@ -492,4 +492,3 @@ zul	Zulu
 zun	Zuni	
 zxx	Icke-språkligt medium	
 zza	Zaza	
-|||	Inget försök att koda	
