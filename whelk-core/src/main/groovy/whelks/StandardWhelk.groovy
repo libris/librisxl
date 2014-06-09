@@ -38,8 +38,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     final static ObjectMapper mapper = new ObjectMapper()
 
-    final static String DEFAULT_WHELK_CONFIG_FILENAME = "whelk.json"
-    final static String DEFAULT_PLUGIN_CONFIG_FILENAME = "plugins.json"
+    final static String DEFAULT_WHELK_CONFIG_FILENAME = "/whelk.json"
+    final static String DEFAULT_PLUGIN_CONFIG_FILENAME = "/plugins.json"
 
     /*
      * Whelk methods
