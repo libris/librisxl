@@ -17,6 +17,8 @@ LIBRIS = Namespace("http://libris.kb.se/def/terms#")
 
 BASE = "http://libris.kb.se/"
 
+ISO639_1Lang = URIRef("http://id.loc.gov/vocabulary/iso639-1/iso639-1_Language")
+
 
 datasets = {}
 def dataset(func):
@@ -67,6 +69,45 @@ def relators():
 def languages():
     source = cached_rdf('http://id.loc.gov/vocabulary/iso639-2')
 
+    items = {}
+
+    code_pairs = {
+        unicode(lang_concept.value(SKOS.notation)): (lang_concept, None)
+        for lang_concept in source.resource(SKOS.Concept).subjects(RDF.type)
+    }
+
+    extras = load_data(scriptpath('../source/spraakkoder.tsv'))
+
+    for code, extra in extras.items():
+        pair = code_pairs.get(code)
+        lang_concept = pair[0] if pair else None
+        code_pairs[code] = (lang_concept, extra)
+
+    for code, (lang_concept, extra) in code_pairs.items():
+        node = items[code] = {
+            '@id': "/def/languages/%s" % code,
+            '@type': ['Language', 'Concept'],
+            'notation': code,
+            'langCode': code
+        }
+
+        if lang_concept:
+            node['matches'] = lang_concept.identifier
+
+            langdef = deref(lang_concept.identifier)
+            for variant in langdef[SKOS.exactMatch]:
+                if variant.graph[variant.identifier : RDF.type : ISO639_1Lang]:
+                    iso639_1 = variant.value(SKOS.notation)
+                    node['langTag'] = iso639_1
+
+            for label in lang_concept[SKOS.prefLabel]:
+                if label.language == 'en':
+                    node['prefLabel_en'] = unicode(label)
+                    break
+
+        if extra:
+            node['prefLabel'] = extra['prefLabel_sv']
+
     basecontext = "/sys/context/skos.jsonld"
     langcontext = {
         "@base": BASE,
@@ -76,40 +117,9 @@ def languages():
         '@context': [
             basecontext,
             dict(langcontext, byCode={"@id": "@graph", "@container": "@index"})
-        ]
+        ],
+        'byCode': items
     }
-
-    data['byCode'] = items = {}
-
-    extras = load_data(scriptpath('../source/spraakkoder.tsv'))
-
-    ISO639_1Lang = URIRef("http://id.loc.gov/vocabulary/iso639-1/iso639-1_Language")
-
-    for lang_concept in map(source.resource, source.subjects(RDF.type, SKOS.Concept)):
-        code = unicode(lang_concept.value(SKOS.notation))
-
-        node = items[code] = {
-            '@id': "/def/languages/%s" % code,
-            '@type': ['Language', 'Concept'],
-            'notation': code,
-            'langCode': code
-        }
-        node['matches'] = lang_concept.identifier
-
-        langdef = deref(lang_concept.identifier)
-        for variant in langdef[SKOS.exactMatch]:
-            if variant.graph[variant.identifier : RDF.type : ISO639_1Lang]:
-                iso639_1 = variant.value(SKOS.notation)
-                node['langTag'] = iso639_1
-
-        for label in lang_concept[SKOS.prefLabel]:
-            if label.language == 'en':
-                node['prefLabel_en'] = unicode(label)
-                break
-
-        item = extras.get((code))
-        if item:
-            node['prefLabel'] = item['prefLabel_sv']
 
     return split_dataset("/def/", data)
 
