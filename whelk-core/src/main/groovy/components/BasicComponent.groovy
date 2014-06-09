@@ -86,10 +86,6 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         log.debug("Calling onStart() on sub classes")
         onStart()
 
-        if (listener) {
-            catchUp()
-        }
-
         startStateThread(stateFile, this.whelk.id)
         startListenerThread()
 
@@ -265,6 +261,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         if (listener && listener.hasQueue(this.id) && !listenerThread) {
 
             listenerThread = Thread.start {
+                catchUp()
 
                 log.info("[${this.id}] Starting notification listener.");
                 boolean ok = true
