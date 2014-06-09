@@ -1,0 +1,32 @@
+{
+    "properties" : {
+        "about" : {
+            "properties" : {
+                "attributedTo": {
+                    "properties": {
+                        "controlledLabel" : {
+                            "type" : "multi_field",
+                            "fields": {
+                                "controlledLabel": { "type": "string", "index_analyzer": "completer" },
+                                "untouched": { "type" : "string", "index": "not_analyzed" }
+
+                            }
+                        }
+                    }
+                },
+                "influencedBy": {
+                    "properties": {
+                        "controlledLabel" : {
+                            "type" : "multi_field",
+                            "fields": {
+                                "controlledLabel": { "type": "string", "index_analyzer": "completer" },
+                                "untouched": { "type" : "string", "index": "not_analyzed" }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
