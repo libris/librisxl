@@ -104,7 +104,7 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
                         [document: documentUri])
             }
         }
-        log.info "Computed ${results} for object in ${dataset}"
+        log.debug "Computed ${results} for object in ${dataset}"
         return results
     }
 
