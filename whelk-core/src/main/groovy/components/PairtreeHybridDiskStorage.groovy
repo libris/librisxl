@@ -188,13 +188,18 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     @Override
     protected void batchLoad(List<Document> docs) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
+        long startTime
+        if (log.debugEnabled) {
+            startTime = System.currentTimeMillis()
+        }
         if (docs.size() == 1) {
             log.debug("Only one document to store. Using standard store()-method.")
             store(docs.first())
         } else {
             List<Map<String,String>> entries = []
+            log.trace("batchLoad() meantime before index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
             for (doc in docs) {
-                boolean result = store(doc)
+                boolean result = storeAsFile(doc)
                 if (result) {
                     entries << [
                         "index":indexName,
@@ -204,9 +209,12 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                     ]
                 }
             }
+            log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
             index(entries)
+            log.trace("batchLoad() meantime after indexing ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
             flush()
         }
+        log.debug("batchLoad() completed in ${System.currentTimeMillis() - startTime} milliseconds.")
     }
 
     @groovy.transform.CompileStatic

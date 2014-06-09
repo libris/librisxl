@@ -86,7 +86,7 @@ abstract class BasicElasticComponent extends BasicComponent {
 
     String getRealIndexFor(String alias) {
         def aliases = performExecute(client.admin().cluster().prepareState()).state.metaData.aliases()
-        log.debug("aliases: $aliases")
+        log.trace("aliases: $aliases")
         def ri = null
         if (aliases.containsKey(alias)) {
             ri = aliases.get(alias)?.keys().iterator().next()
@@ -98,9 +98,7 @@ abstract class BasicElasticComponent extends BasicComponent {
     }
 
     void flush() {
-        log.debug("Flushing indices.")
         def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
-        log.debug("Flush response: $flushresponse")
     }
 
     void index(final List<Map<String,String>> data) throws WhelkIndexException  {

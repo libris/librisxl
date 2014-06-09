@@ -6,10 +6,6 @@
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
     "_plugins": {
-        "_converters": [
-            "linkcompleter",
-            "indexlinkfinder"
-            ],
         "_expanders": [
             "linkexpander"
             ],
@@ -19,6 +15,7 @@
             ],
         "_components": [
             "pairtreehybridstorage",
+            "pairtreeoaistorage",
             "index"
         ]
     },

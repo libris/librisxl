@@ -43,7 +43,7 @@
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.PairtreeHybridDiskStorage">
-      <level value="info"/>
+      <level value="trace"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
       <level value="info"/>
@@ -73,7 +73,7 @@
     <level value="info"/>
 </logger>
 <logger name="se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter">
-  <level value="trace"/>
+  <level value="info"/>
 </logger>
 <logger name="se.kb.libris.whelks.plugin.LibrisURIMinter">
   <level value="warn"/>
