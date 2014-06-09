@@ -60,7 +60,12 @@ class StandardWhelk extends HttpServlet implements Whelk {
             throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
         }
         doc.updateTimestamp()
-        for (storage in getStorages(doc.contentType)) {
+        // TODO: return error if no storage is found
+        def availableStorages = getStorages(doc.contentType)
+        if (availableStorages.isEmpty()) {
+            throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
+        }
+        for (storage in availableStorages) {
             storage.add(doc)
         }
         return new URI(doc.identifier)

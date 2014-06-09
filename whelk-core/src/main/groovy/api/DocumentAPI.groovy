@@ -123,25 +123,18 @@ class DocumentAPI extends BasicAPI {
                 } else {
                     try {
                         Document doc = new Document(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
-                        this.whelk.add(doc)
-                        /*
-                        identifier = this.whelk.add(
-                            request.getInputStream().getBytes(),
-                            entry,
-                            meta
-                            )
-                        */
+                        identifier = this.whelk.add(doc)
                         def locationRef = request.getRequestURL()
                         log.debug("Setting location for redirect: $locationRef")
                         response.setHeader("Location", locationRef.toString())
                         response.setHeader("ETag", doc.timestamp as String)
-                        response.sendError(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
+                        response.setStatus(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
                     } catch (DocumentException de) {
                         log.warn("Document exception: ${de.message}")
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST, de.message)
+                        response.sendError(HttpServletResponse.SC_BAD_REQUEST, de.message)
                     } catch (WhelkAddException wae) {
                         log.warn("Whelk failed to store document: ${wae.message}")
-                        response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
+                        response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
                     }
                 }
             } catch (WhelkRuntimeException wre) {
