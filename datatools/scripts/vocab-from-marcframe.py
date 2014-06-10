@@ -8,39 +8,37 @@ VANN = Namespace("http://purl.org/vocab/vann/")
 
 BASE = "http://libris.kb.se/"
 TERMS = Namespace(BASE + "def/terms#")
+DATASET_BASE = Namespace("http://w3id.org/libris/sys/dataset/")
 ENUM_BASEPATH = "/def/enum/"
 
 SKIP = ('Other', 'Unspecified', 'Unknown')
 
 
-def parse_marcframe(marcframe):
-    g = Graph()
-    g.bind('', TERMS)
-    g.bind('owl', OWL)
-    g.bind('sdo', SDO)
-
-    # IMP: dataset = ConjunctiveGraph() with subgraph per enumeration?
+def parse_marcframe(dataset, marcframe):
 
     for part in ['bib', 'auth', 'hold']:
-        parse_resourcemap(g, part, marcframe)
+        parse_resourcemap(dataset, part, marcframe)
 
+        g = dataset.get_context(DATASET_BASE["marcframe/fields"])
         for field in marcframe[part].values():
             add_terms(g, field)
 
     return g
 
 
-def parse_resourcemap(g, part, marcframe):
+def parse_resourcemap(dataset, part, marcframe):
     if part != 'bib':
         return # TODO
 
     basegroup_map = {}
 
+    enumgraph = dataset.get_context(DATASET_BASE["marcframe/enums"])
+
     def parse_fixed(tag, link, baseclass, groupname):
         for basename, coldefs in marcframe[part][tag].items():
             if not basename[0].isupper():
                 continue
-            rclass = newclass(g, basename, baseclass, groupname)
+            rclass = newclass(enumgraph, basename, baseclass, groupname)
             for coldfn in coldefs.values():
                 if coldfn.get('addLink') == link:
                     map_key = coldfn['tokenMap']
@@ -49,7 +47,8 @@ def parse_resourcemap(g, part, marcframe):
     parse_fixed('008', 'contentType', TERMS.CreativeWork, "content")
     parse_fixed('007', 'carrierType', TERMS.Product, "carrier")
 
-    carrier_type_base_map = {}
+
+    g = dataset.get_context(DATASET_BASE["marcframe/fixfields"])
 
     for mapname, dfn in marcframe['tokenMaps'].items():
         if mapname == 'typeOfRecord':
@@ -74,11 +73,10 @@ def parse_resourcemap(g, part, marcframe):
             if not basegroup:
                 continue
 
-            for sk in dfn.values():
-                if not sk or sk in SKIP or 'Obsolete' in sk:
+            for enumref in dfn.values():
+                if not enumref or enumref in SKIP or 'Obsolete' in enumref:
                     continue
-                # TODO: use ENUMS for name?
-                stype = newclass(g, sk, *basegroup)
+                stype = newclass(enumgraph, enumref, *basegroup)
 
 
 
@@ -151,7 +149,7 @@ def newprop(g, name, rtypes, domainname=None, rangename=None):
     return rprop
 
 
-def add_equivalent(g, refgraph):
+def add_equivalent(dataset, g, refgraph):
     for s in refgraph.subjects():
         try:
             qname = refgraph.qname(s)
@@ -160,10 +158,10 @@ def add_equivalent(g, refgraph):
         if ':' in qname:
             qname = qname.split(':')[-1]
         term = TERMS[qname]
-        if (term, None, s) not in g:
-            if (term, RDF.type, OWL.Class) in g:
+        if (term, None, s) not in dataset:
+            if (term, RDF.type, OWL.Class) in dataset:
                 rel = OWL.equivalentClass
-            elif (term, None, None) in g:
+            elif (term, None, None) in dataset:
                 rel = OWL.equivalentProperty
             else:
                 continue
@@ -176,19 +174,25 @@ if __name__ == '__main__':
     source = args.pop(0)
     termspath = args.pop(0) if args else None
 
+    dataset = ConjunctiveGraph()
+    dataset.bind('', TERMS)
+    dataset.bind('owl', OWL)
+    dataset.bind('sdo', SDO)
+
     with open(source) as fp:
         marcframe = json.load(fp)
 
-    g = parse_marcframe(marcframe)
+    parse_marcframe(dataset, marcframe)
 
     for refpath in args:
         refgraph = Graph().parse(refpath, format=guess_format(refpath))
-        add_equivalent(g, refgraph)
+        destgraph = dataset.get_context(DATASET_BASE["ext?source=%s" % refpath])
+        add_equivalent(dataset, destgraph, refgraph)
 
     if termspath:
         tg = Graph().parse(termspath, format=guess_format(termspath))
-        g -= tg
-        g.remove((None, VANN.termGroup, None))
-        g.namespace_manager = tg.namespace_manager
+        dataset -= tg
+        dataset.remove((None, VANN.termGroup, None))
+        dataset.namespace_manager = tg.namespace_manager
 
-    g.serialize(sys.stdout, format='turtle')
+    dataset.serialize(sys.stdout, format='trig')
