@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 WHELK=$1
-FILTER="$2"
+FILTER=$2
+DOBUILD=$3
 BUILDBASE="datatools/build"
 
 put() {
@@ -10,6 +11,23 @@ put() {
         curl -XPUT -H "Content-Type:$2" --data-binary @$1 $3?data
     fi
 }
+
+# Generate and load library terms context
+libcontext=datatools/build/lib-context.jsonld
+if [[ $DOBUILD != "--nobuild" && ($FILTER == "" || $FILTER == "context/lib") ]]; then
+    echo "Generate ${libcontext}..."
+    python datatools/scripts/context_from_vocab.py datatools/def/terms.ttl datatools/def/terms-overlay.jsonld > $libcontext
+    echo "Done."
+fi
+put $libcontext application/ld+json ${WHELK}/sys/context/lib.jsonld
+
+
+# Generate datasets
+if [[ $DOBUILD != "--nobuild" && $FILTER == "" ]]; then
+    echo "Compile definitions..."
+    python datatools/scripts/compile_defs.py -c datatools/cache/ -o datatools/build/
+    echo "Done."
+fi
 
 # Load JSON-LD contexts
 for ctx in owl skos; do
