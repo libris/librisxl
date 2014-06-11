@@ -1,7 +1,9 @@
 {
     "_properties": {
         "WHELK_WORK_DIR": "/var/run/whelk",
-        "STORAGE_PATH": "/ssd/storage"
+        "STORAGE_PATH": "/ssd/storage",
+        "ELASTIC_HOST": "localhost",
+        "ELASTIC_PORT": 9300
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",

@@ -38,8 +38,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     final static ObjectMapper mapper = new ObjectMapper()
 
-    final static String DEFAULT_WHELK_CONFIG_FILENAME = "whelk.json"
-    final static String DEFAULT_PLUGIN_CONFIG_FILENAME = "plugins.json"
+    final static String DEFAULT_WHELK_CONFIG_FILENAME = "/whelk.json"
+    final static String DEFAULT_PLUGIN_CONFIG_FILENAME = "/plugins.json"
 
     /*
      * Whelk methods
@@ -60,7 +60,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
             throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
         }
         doc.updateTimestamp()
-        // TODO: return error if no storage is found
         def availableStorages = getStorages(doc.contentType)
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")

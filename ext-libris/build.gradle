@@ -6,7 +6,7 @@ apply plugin: 'war'
 
 dependencies {
     compile project(":whelk-core")
-    compile 'org.mozilla:rhino:1.7R4'
+    //compile 'org.mozilla:rhino:1.7R4'
     compile 'se.kb.libris:marc:1.2.7'
     compile 'commons-collections:commons-collections:3.2.1'
     compile 'com.damnhandy:handy-uri-templates:1.1.7'
@@ -41,10 +41,10 @@ task jettyRun(type: JettyRun, overwrite: true) {
 
     def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
     def mock_c_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-c-cluster"
-    System.setProperty('cassandra.host', System.getProperty('cassandra.host', "localhost"))
-    System.setProperty('cassandra.cluster', System.getProperty('cassandra.cluster', mock_c_cluster))
+    //System.setProperty('cassandra.host', System.getProperty('cassandra.host', "localhost"))
+    //System.setProperty('cassandra.cluster', System.getProperty('cassandra.cluster', mock_c_cluster))
     System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-    System.setProperty('elastic.host', System.getProperty("elastic.host", "localhost"))
+    //System.setProperty('elastic.host', System.getProperty("elastic.host", "localhost"))
 }
 
 task whelkOperation(dependsOn: 'classes', type: JavaExec) {

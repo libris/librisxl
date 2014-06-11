@@ -7,6 +7,8 @@
 /work
 /ext-*/**/whelks.json
 /ext-*/**/whelk.json
+/ext-*/**/plugins.json
 /ext-*/**/logback.xml
+/locgov-pairtree/**/plugins.json
 whelkoperator.lck
 /mystuff

@@ -35,6 +35,7 @@
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
                  "bib" : [ "text", "book", "serial" ]
             },
+            "elasticHost": "_property:ELASTIC_HOST",
             "batchUpdateSize" : 2000
         },
         "_unique" : true
@@ -48,6 +49,7 @@
             ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
+            "elasticHost": "_property:ELASTIC_HOST",
             "contentTypes": ["application/ld+json"],
             "baseStorageSuffix": "pairtree",
             "versioning" : false
@@ -57,6 +59,7 @@
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
+            "elasticHost": "_property:ELASTIC_HOST",
             "contentTypes" : [ "application/marcxml+xml" ],
             "baseStorageSuffix": "marcxml",
             "versioning" : false

@@ -15,6 +15,9 @@ abstract class BasicElasticComponent extends BasicComponent {
     def defaultMapping, es_settings
     String URI_SEPARATOR = "::"
     static final String METAENTRY_INDEX_TYPE = "entry"
+    static final String DEFAULT_CLUSTER = "whelks"
+    String elastichost, elasticcluster
+    int elasticport = 9300
 
     BasicElasticComponent() {
         super()
@@ -22,14 +25,17 @@ abstract class BasicElasticComponent extends BasicComponent {
     }
     BasicElasticComponent(Map settings) {
         super()
+        this.elastichost = settings.get('elasticHost')
+        this.elasticcluster = settings.get('elasticCluster', DEFAULT_CLUSTER)
+        this.elasticport = settings.get('elasticPort', elasticport)
         connectClient()
     }
 
     void connectClient() {
-        if (System.getProperty("elastic.host")) {
-            String elastichost = System.getProperty("elastic.host")
-            String elasticcluster = System.getProperty("elastic.cluster")
-            int elasticport = System.getProperty("elastic.port", "9300") as int
+        elastichost = System.getProperty("elastic.host", elastichost)
+        elasticcluster = System.getProperty("elastic.cluster", elasticcluster)
+        elasticport = System.getProperty("elastic.port", ""+elasticport) as int
+        if (elastichost) {
             log.info("Connecting to $elastichost:$elasticport using cluster $elasticcluster")
             def sb = ImmutableSettings.settingsBuilder()
                 .put("client.transport.ping_timeout", 30000)
@@ -41,7 +47,7 @@ abstract class BasicElasticComponent extends BasicComponent {
             client = new TransportClient(elasticSettings).addTransportAddress(new InetSocketTransportAddress(elastichost, elasticport))
             log.debug("... connected")
         } else {
-            throw new WhelkRuntimeException("Unable to initialize elasticsearch. Need at least system property \"elastic.host\" and possibly \"elastic.cluster\".")
+            throw new WhelkRuntimeException("Unable to initialize ${this.id}. Need to configure plugins.json or set system property \"elastic.host\" and possibly \"elastic.cluster\".")
         }
     }
 
