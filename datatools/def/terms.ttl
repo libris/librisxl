@@ -713,17 +713,12 @@
 
 :Integrating rdfs:subClassOf :Aggregate .
 
-:Kit rdfs:subClassOf :Product .
-
 :LicenseAgreementBoundDescription a owl:Class ;
     rdfs:subClassOf :Aggregate .
 
-:Mixed a owl:Class ;
-    rdfs:subClassOf :CreativeWork .
+:Map owl:equivalentClass sdo:Map .
 
 :Monograph rdfs:subClassOf :Aggregate .
-
-:NotatedMusic rdfs:subClassOf :Product .
 
 :Periodical a owl:Class ;
     rdfs:subClassOf :Aggregate ;
@@ -733,8 +728,7 @@
 
 :SubCollection rdfs:subClassOf :Aggregate .
 
-:Unspecified a owl:Class ;
-    rdfs:subClassOf :Product .
+:Text owl:equivalentClass sdo:Text .
 
 :abbrevTitle a owl:DatatypeProperty,
         owl:FunctionalProperty ;
@@ -903,6 +897,10 @@
         owl:FunctionalProperty ;
     owl:equivalentProperty bf:classificationLcc .
 
+:classificationNlm a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    owl:equivalentProperty bf:classificationNlm .
+
 :classificationPart a owl:DatatypeProperty,
         owl:FunctionalProperty .
 
@@ -949,11 +947,9 @@
         owl:ObjectProperty ;
     sdo:rangeIncludes :Country,
         :CreativeWork ;
-    owl:equivalentProperty bf:containedIn,
-        sdo:containedIn .
+    owl:equivalentProperty sdo:containedIn .
 
-:contains a owl:ObjectProperty ;
-    owl:equivalentProperty bf:contains .
+:contains a owl:ObjectProperty .
 
 :contents a owl:FunctionalProperty,
         owl:ObjectProperty .
@@ -1120,7 +1116,8 @@
 :generation a owl:FunctionalProperty,
         owl:ObjectProperty .
 
-:genre owl:equivalentProperty dbpo:genre,
+:genre owl:equivalentProperty bf:genre,
+        dbpo:genre,
         sdo:genre .
 
 :govtPub a owl:FunctionalProperty,
@@ -1200,8 +1197,7 @@
     sdo:rangeIncludes :Title .
 
 :isPartOf sdo:rangeIncludes :Aggregate ;
-    owl:equivalentProperty bf:isPartOf,
-        dbpo:isPartOf,
+    owl:equivalentProperty dbpo:isPartOf,
         sdo:isPartOf .
 
 :isPrimaryTopicOf sdo:rangeIncludes :Document,
@@ -1245,8 +1241,7 @@
         :Place ;
     owl:equivalentProperty bf:label .
 
-:language a owl:FunctionalProperty ;
-    owl:equivalentProperty dbpo:language,
+:language owl:equivalentProperty dbpo:language,
         dc:language,
         sdo:language .
 
@@ -1443,8 +1438,7 @@
 :originalItem a owl:FunctionalProperty,
         owl:ObjectProperty .
 
-:originalLanguage a owl:FunctionalProperty,
-        owl:ObjectProperty ;
+:originalLanguage a owl:ObjectProperty ;
     owl:equivalentProperty dbpo:originalLanguage .
 
 :otherPhysicalDetails a owl:DatatypeProperty,
@@ -1501,7 +1495,8 @@
         owl:ObjectProperty .
 
 :precededBy a owl:ObjectProperty ;
-    sdo:rangeIncludes :Serial .
+    sdo:rangeIncludes :Serial ;
+    owl:equivalentProperty bf:precededBy .
 
 :prefLabel a owl:FunctionalProperty ;
     sdo:domainIncludes :Concept,
@@ -1768,7 +1763,8 @@
         dbpo:subtitle .
 
 :succeededBy a owl:ObjectProperty ;
-    sdo:rangeIncludes :Serial .
+    sdo:rangeIncludes :Serial ;
+    owl:equivalentProperty bf:succeededBy .
 
 :summary a owl:DatatypeProperty ;
     owl:equivalentProperty bf:summary .
@@ -1916,30 +1912,7 @@
         owl:FunctionalProperty ;
     sdo:domainIncludes :CartographyCoordinates .
 
-:Globe rdfs:subClassOf :Product .
-
-:MovingImage rdfs:subClassOf :Product .
-
-:TactileMaterial a owl:Class ;
-    rdfs:subClassOf :Product .
-
-:ProjectedImage rdfs:subClassOf :Product .
-
-:Map rdfs:subClassOf :Product ;
-    owl:equivalentClass sdo:Map .
-
-:Digital rdfs:subClassOf :CreativeWork .
-
 :Electronic owl:equivalentClass bf:Electronic .
 
-:StillImage rdfs:subClassOf :Product .
-
-:Visual a owl:Class ;
-    rdfs:subClassOf :CreativeWork .
-
-:Serial rdfs:subClassOf :Aggregate,
-        :CreativeWork .
-
-:Text rdfs:subClassOf :Product ;
-    owl:equivalentClass sdo:Text .
+:Serial rdfs:subClassOf :Aggregate .
 
