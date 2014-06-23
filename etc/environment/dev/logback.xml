@@ -64,7 +64,7 @@
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.component.ElasticQuery">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
 <logger name="se.kb.libris.whelks.Query">
       <level value="info"/>

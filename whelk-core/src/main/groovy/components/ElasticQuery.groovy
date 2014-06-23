@@ -191,12 +191,19 @@ class ElasticQuery extends Query {
             dslQuery['facets'] = facetMap
         }
         def constructedFilters = []
+        def filterOperator = "and"
         if (this.filters) {
-            this.filters.each { k, v ->
-                if (k.charAt(0) == '!') {
-                    constructedFilters = ["not": ["filter": ["term" : [(k): v]]]]
-                } else {
-                    constructedFilters << ["term": [(k): v]]
+            def previousKeys = []
+            this.filters.each {
+                it.each { k, v ->
+                    log.debug("Build filter: $k = $v")
+                    if (k in previousKeys) { filterOperator = "or" }
+                    previousKeys << k
+                    if (k.charAt(0) == '!') {
+                        constructedFilters << ["not": ["filter": ["term" : [(k): v]]]]
+                    } else {
+                        constructedFilters << ["term": [(k): v]]
+                    }
                 }
             }
         }
@@ -210,7 +217,7 @@ class ElasticQuery extends Query {
             }
         }
         if (constructedFilters.size() > 1) {
-            dslQuery['post_filter'] = ["and" : ["filters": constructedFilters]]
+            dslQuery['post_filter'] = [(filterOperator) : ["filters": constructedFilters]]
         } else if (constructedFilters.size() == 1) {
             dslQuery['post_filter'] = constructedFilters[0]
         }

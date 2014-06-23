@@ -180,9 +180,9 @@ class Query {
 
     Query addFilter(field, value) {
         if (!filters) {
-            filters = [:]
+            filters = []
         }
-        filters[field] = value
+        filters << [(field): value]
         return this
     }
 
