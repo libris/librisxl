@@ -3,12 +3,22 @@ package se.kb.libris.whelks.plugin
 import spock.lang.*
 
 
+@Unroll
 class MarcFrameConverterSpec extends Specification {
 
     def converter = new MarcFrameConverter()
 
-    @Unroll
-    def "should detect marc type"() {
+    def "should extract #token from #uri"() {
+        expect:
+        MarcSimpleFieldHandler.extractToken(tplt, uri) == token
+        where:
+        tplt            | uri               | token
+        "/item/{_}"     | "/item/thing"     | "thing"
+        "/item/{_}/eng" | "/item/thing/eng" | "thing"
+        "/item/{_}/swe" | "/item/thing/eng" | null
+    }
+
+    def "should detect marc #type type in leader value #marc.leader"() {
         expect:
         converter.conversion.getMarcCategory(marc.leader) == type
         where:
@@ -90,7 +100,26 @@ class MarcFrameConverterSpec extends Specification {
                         birthYear: "1917",
                         controlledLabel: "Pietilä, Tuulikki, 1917-"]],
                 "@id": "/resource/bib/7149593"]]
- 
+    }
+
+    def "should handle indicator as token map"() {
+        given:
+        def marc = [
+            leader: "00887cam a2200277 a 4500",
+            fields: [
+                ["001": "0000000"],
+                ["024": ["ind1": "3", "ind2": " ",
+                        "subfields": [["a": "1234567890"]]]]
+            ]
+        ]
+        when:
+        def frame = converter.createFrame(marc)
+        then:
+        frame.about.identifier[0] == [
+            "@type": "Identifier",
+            identifierValue: "1234567890",
+            identifierScheme:["@id": "/def/identifiers/ean"]
+        ]
     }
 
     def "should convert a concept auth post"() {
@@ -135,7 +164,6 @@ class MarcFrameConverterSpec extends Specification {
         given:
         def marc = [
             "leader": "01341cz  a2200397n  4500",
-            "leader": "01784cz  a2200397n  4500",
             "fields": [
                 ["001": "94541"],
                 ["100": ["subfields": [["a": "Strindberg"]]]],
@@ -219,16 +247,6 @@ class MarcFrameConverterSpec extends Specification {
     260	3	_	#a Stockholm : #b Clarté, #c 1953-1991, 1995-
 
     */
-    }
-
-    def "should extract token"() {
-        expect:
-        MarcSimpleFieldHandler.extractToken(tplt, uri) == token
-        where:
-        tplt            | uri               | token
-        "/item/{_}"     | "/item/thing"     | "thing"
-        "/item/{_}/eng" | "/item/thing/eng" | "thing"
-        "/item/{_}/swe" | "/item/thing/eng" | null
     }
 
 }

@@ -3178,17 +3178,6 @@
         "EBook": {"addLink": "commonEndeavor"}
       },
       "rangeEntity": "Identifier",
-      "i1": {
-        "TODO:link": "identifierScheme",
-        "TODO:tokenMap": {
-          "0": "isrc",
-          "1": "upc",
-          "2": "ismn",
-          "3": "ean",
-          "4": "sici",
-          "7": {"valueFrom": "$2"}
-        }
-      },
       "$a": {
         "property": "identifierValue",
         "splitValuePattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?",
@@ -3230,10 +3219,22 @@
     },
 
     "024": {
-      "TODO:inherits": "020-i1",
       "domainEntity": "Instance",
       "addLink": "identifier",
       "rangeEntity": "Identifier",
+      "i1": {
+        "link": "identifierScheme",
+        "tokenMap": {
+          "0": "isrc",
+          "1": "upc",
+          "2": "ismn",
+          "3": "ean",
+          "4": "sici",
+          "7": {"valueFrom": "$2"}
+        },
+        "uriTemplate": "/def/identifiers/{_}",
+        "matchUriToken": "^\\S+$"
+      },
       "$a": {"property": "identifierValue"},
       "$2": {
         "link": "identifierScheme",
