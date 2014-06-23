@@ -10,7 +10,7 @@ class MarcFrameConverterSpec extends Specification {
     @Unroll
     def "should detect marc type"() {
         expect:
-        converter.conversion.getMarcCategory(marc) == type
+        converter.conversion.getMarcCategory(marc.leader) == type
         where:
         marc                                    | type
         [leader: "01113cz  a2200421n  4500"]    | "auth"
@@ -51,68 +51,46 @@ class MarcFrameConverterSpec extends Specification {
         when:
         def frame = converter.createFrame(marc)
         then:
-        frame == [
+        frame == ["@type": "Record",
             "@id": "/bib/7149593",
-            "@type": "Record",
-            "controlNumber": "7149593",
-            "status": "c",
-            "typeOfRecord": "a",
-            "bibLevel": "m",
-            "characterCoding": "a",
-            "catForm": "a",
-            "about": [
-                "@id": "/resource/bib/7149593",
-                "@type": "Book",
-                "title": [
-                    "@type": "TitleEntity",
-                    "titleValue": "Anteckningar från en ö"
-                ],
-                "responsibilityStatement": "Tove Jansson, Tuulikki Pietilä",
-                "publication": [
-                    [
-                        "@type": "ProviderEvent",
-                        "place": ["@type": "Place", "label": "Stockholm"],
-                        "providerName": "Bonnier",
-                        "providerDate": "1996"
-                    ],
-                ],
-                "manufacture": [
-                    [
-                        "@type": "ProviderEvent",
-                        "place": ["@type": "Place", "label": "Finland"],
-                    ],
-                ],
-                "identifier": [
-                    [
-                        "@type": "Identifier",
-                        "identifierValue": "91-0-056322-6",
-                        "identifierScheme": "ISBN",
-                        "identifierNote": "inb."
-                    ],
-                ],
-                "instanceOf": [
-                    "@type": "Book",
-                    "attributedTo": [
-                        "@type": "Person",
-                        "controlledLabel": "Jansson, Tove, 1914-2001",
-                        "birthYear": "1914",
-                        "deathYear": "2001",
-                        "familyName": "Jansson",
-                        "givenName": "Tove"
-                    ],
-                    "influencedBy": [
-                        [
-                            "@type": "Person",
-                            "controlledLabel": "Pietil\u00e4, Tuulikki, 1917-",
-                            "birthYear": "1917",
-                            "familyName": "Pietil\u00e4",
-                            "givenName": "Tuulikki"
-                        ],
-                    ]
-                ],
-                "availability": "310:00",
-            ]
-        ]
+            status:["@id": "/def/enum/record/CorrectedOrRevised"],
+            characterCoding:["@id": "/def/enum/record/UCS-Unicode"],
+            catForm:["@id": "/def/enum/record/AACR2"],
+            entryMap: "4500",
+            controlNumber: "7149593",
+            about:["@type": ["Text", "Monograph"],
+                attributedTo:["@type": "Person",
+                    familyName: "Jansson",
+                    givenName: "Tove",
+                    birthYear: "1914",
+                    deathYear: "2001",
+                    controlledLabel: "Jansson, Tove, 1914-2001"],
+                identifier:[["@type": "Identifier",
+                    identifierValue: "91-0-056322-6",
+                    identifierNote: "inb.",
+                    identifierScheme:["@id": "/def/identifiers/isbn"]]],
+                availability: "310:00",
+                instanceTitle:["@type": "Title",
+                    titleValue: "Anteckningar från en ö"],
+                responsibilityStatement: "Tove Jansson, Tuulikki Pietilä",
+                publication:[
+                    ["@type": "ProviderEvent",
+                        place:["@type": "Place",
+                            label: "Stockholm"],
+                        providerName: "Bonnier",
+                        providerDate: "1996"]],
+                manufacture:[
+                    ["@type": "ProviderEvent",
+                        place:["@type": "Place",
+                            label: "Finland"]]],
+                influencedBy:[
+                    ["@type": "Person",
+                        familyName: "Pietilä",
+                        givenName: "Tuulikki",
+                        birthYear: "1917",
+                        controlledLabel: "Pietilä, Tuulikki, 1917-"]],
+                "@id": "/resource/bib/7149593"]]
+ 
     }
 
     def "should convert a concept auth post"() {
@@ -131,14 +109,10 @@ class MarcFrameConverterSpec extends Specification {
         def frame = converter.createFrame(marc)
         then:
         frame == [
-            "@type":"Record",
+            "@type": "Record",
             "@id": "/auth/140482",
             controlNumber: "140482",
             modified: "2013-08-14T17:06:12.0+0200",
-            status: "c",
-            typeOfRecord: "z",
-            characterCoding: "a",
-            encLevel: "n",
             about: [
                 "@type": "Concept",
                 "@id": "/resource/auth/140482",
@@ -146,10 +120,14 @@ class MarcFrameConverterSpec extends Specification {
                 prefLabel: "Barnpsykologi",
                 broader: [
                     ["@type": "Concept",
-                    "@id": "/topic/sao/Psykologi",
-                     prefLabel: "Psykologi"]
+                        "@id": "/topic/sao/Psykologi",
+                        prefLabel: "Psykologi"]
                 ]
-            ]
+            ],
+            entryMap: "4500",
+            status: ["@id": "/def/enum/record/CorrectedOrRevised"],
+            characterCoding: ["@id": "/def/enum/record/UCS-Unicode"],
+            unmappedFixedFields:["000":["17": "n"]]
         ]
     }
 
@@ -171,16 +149,16 @@ class MarcFrameConverterSpec extends Specification {
             "@type":"Record",
             "@id": "/auth/94541",
             controlNumber: "94541",
-            status: "c",
-            typeOfRecord: "z",
-            characterCoding: "a",
-            encLevel: "n",
             about: [
                 "@type": "Person",
                 "@id": "/resource/auth/94541",
                 "name": "Strindberg",
                 sameAs: [["@id": "http://dbpedia.org/resource/August_Strindberg"]]
-            ]
+            ],
+            entryMap: "4500",
+            status: ["@id": "/def/enum/record/CorrectedOrRevised"],
+            characterCoding: ["@id": "/def/enum/record/UCS-Unicode"],
+            unmappedFixedFields:["000":["17": "n"]]
         ]
     }
 
@@ -205,10 +183,6 @@ class MarcFrameConverterSpec extends Specification {
             "@id": "/auth/247755",
             controlNumber: "247755",
             modified: "2013-08-14T17:06:12.0+0200",
-            status: "c",
-            typeOfRecord: "z",
-            characterCoding: "a",
-            encLevel: "n",
             about: [
                 "@type": "Concept",
                 "@id": "/resource/auth/247755",
@@ -220,7 +194,11 @@ class MarcFrameConverterSpec extends Specification {
                     "@id": "/topic/barn/Handel",
                      prefLabel: "Handel"]
                 ]
-            ]
+            ],
+            entryMap: "4500",
+            status: ["@id": "/def/enum/record/CorrectedOrRevised"],
+            characterCoding: ["@id": "/def/enum/record/UCS-Unicode"],
+            unmappedFixedFields:["000":["17": "n"]]
         ]
     }
 
