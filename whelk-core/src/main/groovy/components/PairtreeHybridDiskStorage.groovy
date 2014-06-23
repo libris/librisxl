@@ -93,8 +93,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     @groovy.transform.CompileStatic
     boolean store(Document doc) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
-        boolean result = false
-        result = storeAsFile(doc)
+        boolean result = storeAsFile(doc)
         log.debug("Result from store-operation: $result")
         if (result) {
             index(doc.metadataAsJson.getBytes("utf-8"),
@@ -263,8 +262,14 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                         public Document next() {
                             String nextIdentifier = elasticResultIterator.next()
                             Document nextDocument = super.get(nextIdentifier)
-                            if (!nextDocument) {
-                                throw new WhelkRuntimeException("Document ${nextIdentifier} not found in storage.")
+                            while (!nextDocument) {
+                                super.log.warn("Document ${nextIdentifier} not found in storage. Skipping.")
+                                try {
+                                    nextIdentifier = elasticResultIterator.next()
+                                    nextDocument = super.get(nextIdentifier)
+                                } catch (NoSuchElementException nse) {
+                                    break
+                                }
                             }
                             return nextDocument
                         }
@@ -290,7 +295,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
             }
         }
-        setState(LAST_UPDATED, new Date().getTime())
+        //setState(LAST_UPDATED, new Date().getTime())
         deleteEntry(uri, indexName, METAENTRY_INDEX_TYPE)
     }
 

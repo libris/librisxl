@@ -143,7 +143,8 @@ abstract class BasicElasticComponent extends BasicComponent {
     }
 
     void deleteEntry(URI uri, indexName, indexType) {
-        client.delete(new DeleteRequest(indexName, indexType, translateIdentifier(uri.toString())))
+        def response = performExecute(client.prepareDelete(indexName, indexType, translateIdentifier(uri)))
+        log.debug("Deleted ${response.id} with type ${response.type} from ${response.index}. Document found: ${response.found}")
     }
 
     void checkTypeMapping(indexName, indexType) {
@@ -187,7 +188,11 @@ abstract class BasicElasticComponent extends BasicComponent {
     }
 
     String translateIdentifier(String uri) {
-        def idelements = new URI(uri).path.split("/") as List
+        return translateIdentifier(new URI(uri))
+    }
+
+    String translateIdentifier(URI uri) {
+        def idelements = uri.path.split("/") as List
         idelements.remove(0)
         return idelements.join(URI_SEPARATOR)
     }

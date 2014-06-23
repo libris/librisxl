@@ -133,9 +133,9 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             log.debug("r: $r success: ${r.successfulShards} failed: ${r.failedShards}")
         }
 
-        log.debug("Deleting object with identifier ${translateIdentifier(uri.toString())}.")
+        log.debug("Deleting object with identifier ${translateIdentifier(uri)}.")
 
-        client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(uri), translateIdentifier(uri.toString())))
+        client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(uri), translateIdentifier(uri)))
 
         setState(LAST_UPDATED, new Date().getTime())
             // Kanske en matchall-query filtrerad på _type och _id?
