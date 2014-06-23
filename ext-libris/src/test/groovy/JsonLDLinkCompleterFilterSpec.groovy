@@ -6,21 +6,18 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.Link
 import se.kb.libris.whelks.component.ElasticJsonMapper
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.Whelk
-import se.kb.libris.whelks.StandardWhelk
-import se.kb.libris.whelks.component.FlatDiskStorage
+import se.kb.libris.whelks.component.Storage
 
 @Log
 class JsonLDLinkCompleterFilterSpec extends Specification {
 
     private mapper = new ElasticJsonMapper()
-    def bibDoc, doc, whelk, filter, docMap
 
     def "convert should insert auth link into bib jsonld"() {
         given:
-        whelk = getInitializedWhelk()
-        filter = new JsonLDLinkCompleterFilter()
-        filter.setWhelk(whelk)
+        def storage = Mock(Storage) // TODO: let mock fetch up example documents
+        def filter = new JsonLDLinkCompleterFilter()
+        filter.setStorage(storage)
         def doclinks = [
             "/auth/94541",
             "/auth/139860",
@@ -31,7 +28,7 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
         ].collect {
             new Link(new URI(it), "auth")
         }
-        bibDoc = makeDoc ([
+        def bibDoc = makeDoc ([
             "@id": "/bib/12661",
             "@type": "Record",
             "about": [
@@ -99,8 +96,8 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
         ], doclinks)
 
         when:
-        doc = filter.doFilter(bibDoc)
-        docMap = mapper.readValue(doc.dataAsString, Map)
+        def doc = filter.doFilter(bibDoc)
+        def docMap = mapper.readValue(doc.dataAsString, Map)
         then:
         println "work: $work"
         def work = docMap.about.instanceOf
@@ -125,13 +122,6 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
             doc.withLink(it.identifier.toString(), it.type)
         }
         return doc
-    }
-
-    Whelk getInitializedWhelk() {
-          Map settings = ["storageDir": "../work/storage/flat/main", "contentType": "application/ld+json"]
-          Whelk whelk = new StandardWhelk("libris")
-          whelk.addPlugin(new FlatDiskStorage(settings))
-          return whelk
     }
 
 }
