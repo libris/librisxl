@@ -13,9 +13,9 @@ class CleanupIndexFormatConverter extends BasicFormatConverter {
     Document doConvert(Document doc) {
         def docmap = doc.dataAsMap
         def ct = docmap.remove("@context")
-        def unknw = docmap.remove("unknown")
-        if (ct || unknw) {
-            // Only update document if there actually was a context there to begin with
+        def broken = docmap.remove("broken")
+        if (ct || broken) {
+            // Only update document if there actually was a change
             doc.withData(docmap)
         }
         return doc

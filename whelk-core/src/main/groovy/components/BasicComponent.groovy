@@ -17,6 +17,8 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     static final String LAST_UPDATED = "last_updated"
     static final String LISTENER_FAILED_AT = "listener_crashed"
     static final String LISTENER_FAILED_REASON = "listener_crashed_because"
+    static final String STATUS_OK = "ok"
+    static final String STATUS_TERMINATED = "terminated"
 
     static final String STATE_FILE_SUFFIX = ".state"
 
@@ -38,7 +40,10 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     Listener listener
     Thread listenerThread = null
+    String listenerStatus = STATUS_OK
     Thread stateThread = null
+    String stateStatus = STATUS_OK
+
 
     private File stateFile
 
@@ -249,6 +254,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                         Thread.sleep(3000)
                     } catch (Exception e) {
                         ok = false
+                        stateStatus = "${e.message} [terminated]"
                         log.error("[${this.id}] Failed to write statefile: ${e.message}", e)
                         throw new WhelkRuntimeException("Couldn't write statefile for ${whelkId}/${this.id}", e)
                     }
@@ -287,6 +293,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                     } catch (Exception ex) {
                         log.error("[${this.id}] DISABLING LISTENER because of unexpected exception. Possible restart required.")
                         ok = false
+                        listenerStatus = "${e.message} [terminated]"
                         listener.disable(this.id)
                         throw ex
                     }
@@ -294,6 +301,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             }
         } else if (!listenerThread) {
             log.info("[${this.id}] No listener queue registered for me.")
+            listenerStatus = "not active"
         }
     }
 
