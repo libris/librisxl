@@ -29,7 +29,7 @@
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
-        "_plugins" : ["listener", "linkexpander", "shapecomputer", "defsindexconverter" ],
+        "_plugins" : ["listener", "linkexpander", "shapecomputer", "cleanupindexconverter" ],
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
@@ -141,8 +141,8 @@
     "entitysplitter" : {
         "_class" : "se.kb.libris.whelks.plugin.EntityExtractionDocumentSplitter"
     },
-    "defsindexconverter" : {
-        "_class" : "se.kb.libris.whelks.plugin.DefsIndexFormatConverter"
+    "cleanupindexconverter" : {
+        "_class" : "se.kb.libris.whelks.plugin.CleanupIndexFormatConverter"
     },
     "libcount" : {
         "_class" : "se.kb.libris.whelks.api.HoldCounter",

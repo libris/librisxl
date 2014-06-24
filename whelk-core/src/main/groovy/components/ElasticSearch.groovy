@@ -261,8 +261,13 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             if (response.hasFailures()) {
                 log.error "Bulk import has failures."
                 def fails = []
+                boolean throwException = true
                 for (re in response.items) {
                     if (re.failed) {
+                        if (re.failureMessage.startsWith("MapperParsingException")) {
+                            // TODO: figure out a way to reindex using alternate type or something ...
+                            throwException = false
+                        }
                         log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
                         if (log.isTraceEnabled()) {
                             for (doc in documents) {
@@ -279,7 +284,9 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
                         }
                     }
                 }
-                throw new WhelkAddException(fails)
+                if (throwException) {
+                    throw new WhelkAddException(fails)
+                }
             }
         }
     }
