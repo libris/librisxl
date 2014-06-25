@@ -129,7 +129,6 @@ class MarcFrameConverterSpec extends Specification {
             "fields": [
                 ["001": "140482"],
                 ["005": "20130814170612.0"],
-                ["008": "020409 | anznnbabn          |n ana      "],
                 ["150": ["subfields": [["a": "Barnpsykologi"]]]],
                 ["550": ["subfields": [["a": "Psykologi"], ["w": "g"]]]],
             ]
@@ -155,8 +154,7 @@ class MarcFrameConverterSpec extends Specification {
             ],
             entryMap: "4500",
             status: ["@id": "/def/enum/record/CorrectedOrRevised"],
-            characterCoding: ["@id": "/def/enum/record/UCS-Unicode"],
-            unmappedFixedFields:["000":["17": "n"]]
+            characterCoding: ["@id": "/def/enum/record/UCS-Unicode"]
         ]
     }
 
@@ -185,8 +183,7 @@ class MarcFrameConverterSpec extends Specification {
             ],
             entryMap: "4500",
             status: ["@id": "/def/enum/record/CorrectedOrRevised"],
-            characterCoding: ["@id": "/def/enum/record/UCS-Unicode"],
-            unmappedFixedFields:["000":["17": "n"]]
+            characterCoding: ["@id": "/def/enum/record/UCS-Unicode"]
         ]
     }
 
@@ -225,8 +222,7 @@ class MarcFrameConverterSpec extends Specification {
             ],
             entryMap: "4500",
             status: ["@id": "/def/enum/record/CorrectedOrRevised"],
-            characterCoding: ["@id": "/def/enum/record/UCS-Unicode"],
-            unmappedFixedFields:["000":["17": "n"]]
+            characterCoding: ["@id": "/def/enum/record/UCS-Unicode"]
         ]
     }
 
@@ -247,6 +243,31 @@ class MarcFrameConverterSpec extends Specification {
     260	3	_	#a Stockholm : #b Clarté, #c 1953-1991, 1995-
 
     */
+    }
+
+    def "should store failed marc data"() {
+        given:
+                //["007": ["subfields": [["?": "?"]]]],
+        def marc = [
+            leader: "00887cam a2200277 a 4500",
+            "fields": [
+                ["001": "0000000"],
+                ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
+                ["100": "..."],
+                ["100": ["subfields": [["?": "?"]]]]
+            ]
+        ]
+        when:
+        def frame = converter.createFrame(marc)
+        then:
+        frame._marcUncompleted == [
+            ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
+            ["100": ["subfields": [["?": "?"]]]]
+        ]
+        frame._marcBroken == [["100": "..."]]
+        frame._marcFailedFixedFields == [
+            "008": ["38": "E", "39": "E", "29": "E", "30": "E", "31": "E", "34": "E"]
+        ]
     }
 
 }

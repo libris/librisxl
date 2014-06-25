@@ -3,8 +3,6 @@ package se.kb.libris.whelks.plugin
 import groovy.util.logging.Slf4j as Log
 
 import java.util.regex.Pattern
-import org.apache.commons.collections.BidiMap
-import org.apache.commons.collections.bidimap.DualHashBidiMap
 import org.codehaus.jackson.map.ObjectMapper
 
 import se.kb.libris.whelks.Document
@@ -181,9 +179,9 @@ class MarcConversion {
 
         def record = ["@type": "Record", "@id": recordId]
 
-        record.unmappedFixedFields = [:]
+        def marcRemains = [failedFixedFields: [:], uncompleted: [], broken: []]
 
-        def entityMap = [Record: record]
+        def entityMap = [Record: record, marcRemains: marcRemains]
         // TODO:
         // * always one record and a primary "thing"
         // * the type of this thing is determined during processing
@@ -220,20 +218,21 @@ class MarcConversion {
             }
         }
 
-        def unknown = []
-
         fieldHandlers["000"].convert(sourceMap, leader, entityMap)
 
-        processFields(fieldHandlers, sourceMap, preprocFields, entityMap, unknown)
+        processFields(fieldHandlers, sourceMap, preprocFields, entityMap)
 
-        processFields(fieldHandlers, sourceMap, primaryFields, entityMap, unknown)
-        processFields(fieldHandlers, sourceMap, otherFields, entityMap, unknown)
+        processFields(fieldHandlers, sourceMap, primaryFields, entityMap)
+        processFields(fieldHandlers, sourceMap, otherFields, entityMap)
 
-        if (unknown) {
-            record.unknown = unknown
+        if (marcRemains.uncompleted.size() > 0) {
+            record._marcUncompleted = marcRemains.uncompleted
         }
-        if (record.unmappedFixedFields.size() == 0) {
-            record.remove('unmappedFixedFields')
+        if (marcRemains.broken.size() > 0) {
+            record._marcBroken = marcRemains.broken
+        }
+        if (marcRemains.failedFixedFields.size() > 0) {
+            record._marcFailedFixedFields = marcRemains.failedFixedFields
         }
 
         // TODO: make this configurable
@@ -250,17 +249,21 @@ class MarcConversion {
         return record
     }
 
-    void processFields(fieldHandlers, sourceMap, fields, entityMap, unknown) {
+    void processFields(fieldHandlers, sourceMap, fields, entityMap) {
         fields.each { field ->
-            def ok = false
-            field.each { tag, value ->
-                def handler = fieldHandlers[tag]
-                if (handler) {
-                    ok = handler.convert(sourceMap, value, entityMap)
+            try {
+                def ok = false
+                field.each { tag, value ->
+                    def handler = fieldHandlers[tag]
+                    if (handler) {
+                        ok = handler.convert(sourceMap, value, entityMap)
+                    }
                 }
-            }
-            if (!ok) {
-                unknown << field
+                if (!ok) {
+                    entityMap.marcRemains.uncompleted << field
+                }
+            } catch (MalformedFieldValueException e) {
+                entityMap.marcRemains.broken << field
             }
         }
     }
@@ -415,19 +418,19 @@ class MarcFixedFieldHandler {
 
     boolean convert(sourceMap, value, entityMap) {
         def success = true
-        def unmappedFixedFields = entityMap.Record.unmappedFixedFields
-        columns.each {
-            if (!it.convert(sourceMap, value, entityMap)) {
+        def failedFixedFields = entityMap.marcRemains.failedFixedFields
+        for (col in columns) {
+            if (!col.convert(sourceMap, value, entityMap)) {
                 success = false
-                def unmapped = unmappedFixedFields[tag]
+                def unmapped = failedFixedFields[tag]
                 if (unmapped == null) {
-                    unmapped = unmappedFixedFields[tag] = [:]
+                    unmapped = failedFixedFields[tag] = [:]
                 }
-                def key = "${it.start}"
-                if (it.end && it.end != it.start + 1) {
-                    key += "_${it.end - it.start}"
+                def key = "${col.start}"
+                if (col.end && col.end != col.start + 1) {
+                    key += "_${col.end - col.start}"
                 }
-                unmapped[key] = it.getToken(value)
+                unmapped[key] = col.getToken(value)
             }
         }
         return success
@@ -493,13 +496,20 @@ class MarcFixedFieldHandler {
 class ConversionPart {
 
     String domainEntityName
-    BidiMap tokenMap
+    Map tokenMap
+    Map reverseTokenMap
 
     void setTokenMap(fieldHandler, dfn) {
         def tokenMap = dfn.tokenMap
         if (tokenMap) {
-            this.tokenMap = new DualHashBidiMap((tokenMap instanceof String)?
-                                fieldHandler.tokenMaps[tokenMap] : tokenMap)
+            reverseTokenMap = [:]
+            this.tokenMap = (tokenMap instanceof String)?
+                fieldHandler.tokenMaps[tokenMap] : tokenMap
+            this.tokenMap.each { k, v ->
+                if (v != null) {
+                    reverseTokenMap[v] = k
+                }
+            }
         }
     }
 
@@ -513,12 +523,11 @@ class ConversionPart {
     }
 
     def revertObject(obj) {
-        if (tokenMap) {
+        if (reverseTokenMap) {
             if (obj instanceof List) {
-                return obj.collect { tokenMap.getKey(it) }
+                return obj.collect { reverseTokenMap[it] }
             } else {
-                println "$obj: ${tokenMap.getKey(obj)}"
-                return tokenMap.getKey(obj)
+                return reverseTokenMap[obj]
             }
         } else {
             return obj
@@ -803,9 +812,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     boolean convert(sourceMap, value, entityMap) {
 
-        // TODO: if this happens, value in unknown will clash with elastic mapping...
         if (!(value instanceof Map)) {
-            return false
+            throw new MalformedFieldValueException()
         }
 
         def domainEntity = entityMap[domainEntityName]
@@ -1319,3 +1327,5 @@ class CodePatternMatchRule extends MatchRule {
         return key
     }
 }
+
+class MalformedFieldValueException extends RuntimeException {}
