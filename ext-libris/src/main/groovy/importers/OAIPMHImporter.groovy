@@ -36,6 +36,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     def specUriMapping = [:]
 
     ExecutorService queue
+    Semaphore tickets
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
@@ -69,6 +70,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         String urlString = serviceUrl + "?verb=ListRecords&metadataPrefix=marcxml"
 
         def versioningSettings = [:]
+
+        tickets = new Semaphore(2)
 
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -244,6 +247,10 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     }
 
     void addDocuments(final List documents) {
+        if (tickets.availablePermits() < 10) {
+            log.info("Trying to acquire semaphore for adding to queue. ${tickets.availablePermits()} available.")
+        }
+        tickets.acquire()
         queue.execute({
             try {
                 log.debug("Adding ${documents.size()} documents to whelk.")
@@ -258,6 +265,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             } catch (Exception e) {
                 log.error("Exception on bulkAdd: ${e.message}", e)
                 throw e
+            } finally {
+                tickets.release()
             }
         } as Runnable)
     }
