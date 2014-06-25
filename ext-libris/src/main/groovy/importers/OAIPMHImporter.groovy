@@ -71,7 +71,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
         def versioningSettings = [:]
 
-        tickets = new Semaphore(2)
+        tickets = new Semaphore(1000)
 
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
