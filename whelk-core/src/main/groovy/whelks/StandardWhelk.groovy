@@ -352,8 +352,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
             }
         } else {
             try {
-                whelkConfig = mapper.readValue(this.getClass().getResourceAsStream(DEFAULT_WHELK_CONFIG_FILENAME), Map)
-                pluginConfig = mapper.readValue(this.getClass().getResourceAsStream(DEFAULT_PLUGIN_CONFIG_FILENAME), Map)
+                whelkConfig = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_WHELK_CONFIG_FILENAME), Map)
+                pluginConfig = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_PLUGIN_CONFIG_FILENAME), Map)
             } catch (Exception e) {
                 throw new PluginConfigurationException("Failed to read configuration: ${e.message}", e)
             }
