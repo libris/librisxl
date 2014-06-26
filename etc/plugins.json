@@ -361,7 +361,8 @@
                 "authority" : "auth",
                 "bibid" : "bib"
             },
-            "preserveTimestamps" : true
+            "preserveTimestamps" : true,
+            "numberOfThreads": 4000
         }
     },
     "marcimporter" : {

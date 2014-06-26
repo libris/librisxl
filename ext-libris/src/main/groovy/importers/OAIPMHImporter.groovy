@@ -37,6 +37,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
     ExecutorService queue
     Semaphore tickets
+    int numberOfThreads = 2000
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
@@ -48,6 +49,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         this.serviceUrl = settings.get('serviceUrl',null)
         this.preserveTimestamps = settings.get("preserveTimestamps", true)
         this.specUriMapping = settings.get("specUriMapping", [:])
+        this.numberOfThreads = settings.get("numberOfThreads", 2000)
     }
 
     void bootstrap(String whelkId) {
@@ -71,7 +73,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
         def versioningSettings = [:]
 
-        tickets = new Semaphore(1000)
+        tickets = new Semaphore(numberOfThreads)
 
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
