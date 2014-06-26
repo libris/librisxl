@@ -211,7 +211,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
             index(entries)
             log.trace("batchLoad() meantime after indexing ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
-            flush()
         }
         log.debug("batchLoad() completed in ${System.currentTimeMillis() - startTime} milliseconds.")
     }
