@@ -7,11 +7,12 @@ import spock.lang.*
 
 class PairtreeHybridDiskStorageSpec extends Specification {
 
+    def settings = [
+        storageDir: "/tmp/"
+    ]
+
     def "should batch load"() {
         given:
-        def settings = [
-            storageDir: "/tmp/"
-        ]
         def storage = new DummyPairtreeHybridDiskStorage(settings)
         def doc1 = makeDoc("/path/1")
         def recently = System.currentTimeMillis()
@@ -22,6 +23,17 @@ class PairtreeHybridDiskStorageSpec extends Specification {
         storage.indexCounter == 1
         and: "document timestamp has been updated"
         doc1.timestamp >= recently
+    }
+
+    def "should batch load a lot"() {
+        given:
+        def aLot = 10000
+        def storage = new DummyPairtreeHybridDiskStorage(settings)
+        when:
+        storage.batchLoad((0..<aLot).collect { makeDoc("/path/$it") })
+        then: "lots of documents have been written, then indexed once"
+        storage.writeCounter == aLot
+        storage.indexCounter == 1
     }
 
     def makeDoc(id) {
