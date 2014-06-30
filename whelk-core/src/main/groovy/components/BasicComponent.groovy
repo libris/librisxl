@@ -149,59 +149,17 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     List<Document> prepareDocs(final List<Document> documents, String contentType) {
         FormatConverter fc = formatConverters.get(contentType)
-        DocumentSplitter preSplitter = documentSplitters.get(contentType)
-
-        DocumentSplitter postSplitter = documentSplitters.get(contentType)
-        log.trace("fc: $fc")
-        log.trace("postSplitter: $postSplitter")
-        if (!postSplitter && fc) {
-            postSplitter = documentSplitters.get(fc.resultContentType)
-        }
+        boolean shouldConvert = (fc != null || !linkExpanders.isEmpty())
+        if (!shouldConvert)
+            return documents
         List docs = []
-        if (fc || preSplitter || postSplitter) {
-            for (doc in documents) {
-                log.trace("[${this.id}] Calling prepare on doc ${doc.identifier}");
-                if (preSplitter) {
-                    log.trace("[${this.id}] Running preSplitter")
-                    for (d in preSplitter.split(doc)) {
-                        if (fc) {
-                            log.trace(" ... with conversion")
-                            docs << linkExpand(fc.convert(d))
-                        } else {
-                            log.trace(" ... without conversion")
-                            docs << linkExpand(d)
-                        }
-                    }
-                } else if (fc) {
-                    log.trace("[${this.id}] Adding document after conversion.")
-                    docs.add(linkExpand(fc.convert(doc)))
-                } else {
-                    log.trace("[${this.id}] Adding document without conversion.")
-                    docs.add(linkExpand(doc))
-                }
-                if (postSplitter) {
-                    log.trace("[${this.id}] Running postSplitter")
-                    if (docs.size() > 0) {
-                        List<Document> convertedDocs = []
-                        for (d in docs) {
-                            convertedDocs.addAll(postSplitter.split(d))
-                        }
-                        docs = convertedDocs
-                    }
-                }
+        for (doc in documents) {
+            if (fc) {
+                doc = fc.convert(doc)
             }
-            log.debug("[${this.id}] Returning document list of size ${docs.size()}.")
-            return docs
-        } else if (!linkExpanders.isEmpty()) {
-            log.debug("Must loop over documents for link expansion.")
-            for (doc in documents) {
-                doc = linkExpand(doc)
-            }
-            log.debug("Links expanded.")
-        } else {
-            log.debug("No measures required. Returning document list.")
+            docs.add(linkExpand(doc))
         }
-        return documents
+        return docs
     }
 
     Document linkExpand(Document doc) {
@@ -221,9 +179,6 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     }
 
     LinkExpander getLinkExpanderFor(Document doc) {
-        if (linkExpanders.isEmpty()) {
-            return null
-        }
         return linkExpanders.find { it.valid(doc) }
     }
 
