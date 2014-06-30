@@ -280,7 +280,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
 
         if (versioning) {
-            store(createTombstone(uri))
+            storeAsFile(createTombstone(uri))
         } else {
             def fn = buildPath(uri)
             log.debug("Deleting $fn")
