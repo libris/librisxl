@@ -131,7 +131,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @groovy.transform.CompileStatic
-    private boolean writeDocumentToDisk(Document doc, String filePath, String fileName) {
+    protected boolean writeDocumentToDisk(Document doc, String filePath, String fileName) {
         String extension = FILE_EXTENSIONS.get(doc.contentType, DATAFILE_EXTENSION)
         log.trace("Using extension: $extension")
         String sourcefilePath = filePath + "/" + fileName + extension
