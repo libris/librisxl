@@ -361,7 +361,7 @@
                 "bibid" : "bib"
             },
             "preserveTimestamps" : true,
-            "numberOfThreads": 4000
+            "numberOfThreads": 50000
         }
     },
     "marcimporter" : {
