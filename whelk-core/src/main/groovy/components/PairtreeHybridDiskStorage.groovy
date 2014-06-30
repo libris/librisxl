@@ -254,13 +254,13 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                         public boolean hasNext() { elasticResultIterator.hasNext()}
                         public Document next() {
                             String nextIdentifier = elasticResultIterator.next()
-                            Document nextDocument = super.get(nextIdentifier)
+                            Document nextDocument = get(nextIdentifier)
                             while (!nextDocument) {
                                 super.log.warn("Document ${nextIdentifier} not found in storage. Removing it from index $indexName.")
                                 deleteEntry(new URI(nextIdentifier), indexName, BasicElasticComponent.METAENTRY_INDEX_TYPE)
                                 try {
                                     nextIdentifier = elasticResultIterator.next()
-                                    nextDocument = super.get(nextIdentifier)
+                                    nextDocument = get(nextIdentifier)
                                 } catch (NoSuchElementException nse) {
                                     break
                                 }
