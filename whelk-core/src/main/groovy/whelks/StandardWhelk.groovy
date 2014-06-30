@@ -10,7 +10,6 @@ import java.util.concurrent.BlockingQueue
 import javax.servlet.http.*
 
 import se.kb.libris.whelks.api.*
-import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*

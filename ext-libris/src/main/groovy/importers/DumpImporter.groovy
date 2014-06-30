@@ -15,7 +15,6 @@ import javax.xml.transform.stax.StAXSource
 import javax.xml.transform.stream.StreamResult
 
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.util.marc.*

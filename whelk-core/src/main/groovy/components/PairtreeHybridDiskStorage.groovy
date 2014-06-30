@@ -154,7 +154,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
     Document checkAndUpdateExisting(Document doc) {
         log.trace("checking for existingdoc with identifier ${doc.identifier}")
-        Document existingDocument = get(doc.identifier)
+        Document existingDocument = loadDocument(doc.identifier)
         log.trace("found: $existingDocument")
         int version = 1
         if (existingDocument) {
@@ -208,14 +208,19 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         log.debug("batchLoad() completed in ${System.currentTimeMillis() - startTime} milliseconds.")
     }
 
-    @groovy.transform.CompileStatic
-    Document get(String uri, String version=null) {
-        return get(new URI(uri), version)
-    }
 
     @Override
-    @groovy.transform.CompileStatic
     Document get(URI uri, String version = null) {
+        loadDocument(uri, version)
+    }
+
+    @groovy.transform.CompileStatic
+    Document loadDocument(String uri, String version=null) {
+        return loadDocument(new URI(uri), version)
+    }
+
+    @groovy.transform.CompileStatic
+    Document loadDocument(URI uri, String version = null) {
         log.debug("Received GET request for ${uri.toString()} with version $version")
         String filePath = buildPath(uri, (version ? version as int : 0))
         String fileName =  getBaseFilename(uri.toString())
@@ -229,7 +234,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             log.trace("Files on $filePath not found.")
             if (version) {
                 log.debug("Trying to see if requested version is actually current version.")
-                def document = get(uri)
+                def document = loadDocument(uri)
                 if (document && document.version == version as int) {
                     log.debug("Why, yes it was!")
                     return document
@@ -254,13 +259,13 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                         public boolean hasNext() { elasticResultIterator.hasNext()}
                         public Document next() {
                             String nextIdentifier = elasticResultIterator.next()
-                            Document nextDocument = super.get(nextIdentifier)
+                            Document nextDocument = loadDocument(nextIdentifier)
                             while (!nextDocument) {
                                 super.log.warn("Document ${nextIdentifier} not found in storage. Removing it from index $indexName.")
                                 deleteEntry(new URI(nextIdentifier), indexName, BasicElasticComponent.METAENTRY_INDEX_TYPE)
                                 try {
                                     nextIdentifier = elasticResultIterator.next()
-                                    nextDocument = super.get(nextIdentifier)
+                                    nextDocument = loadDocument(nextIdentifier)
                                 } catch (NoSuchElementException nse) {
                                     break
                                 }

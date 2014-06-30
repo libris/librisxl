@@ -1,7 +1,6 @@
 package se.kb.libris.whelks.plugin
 
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.basic.*
 
 import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log

@@ -5,7 +5,6 @@ import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.basic.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import se.kb.libris.conch.converter.MarcJSONConverter

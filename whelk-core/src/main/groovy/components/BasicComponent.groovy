@@ -122,13 +122,13 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         log.debug("[${this.id}] bulkAdd called with ${documents.size()} documents.")
         try {
             long startBatchAt = System.currentTimeMillis()
-            long updatetime = documents.last().timestamp
-            log.trace("First document timestamp: ${documents.first().timestamp}")
-            log.trace(" Last document timestamp: ${documents.last().timestamp}")
-            log.debug("Updatetime is $updatetime")
             def docs = prepareDocs(documents, contentType)
             log.debug("[${this.id}] Calling batchload on ${this.id} with batch of ${docs.size()}")
             batchLoad(docs)
+            long updatetime = docs.last().timestamp
+            log.trace("First document timestamp: ${documents.first().timestamp}")
+            log.trace(" Last document timestamp: ${documents.last().timestamp}")
+            log.debug("Updatetime is $updatetime")
             log.debug("Bulk calling setState")
             setState(LAST_UPDATED, updatetime)
             log.debug("[${this.id}] Bulk Add completed in ${(System.currentTimeMillis()-startBatchAt)/1000} seconds.")
