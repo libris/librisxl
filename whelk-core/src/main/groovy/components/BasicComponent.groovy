@@ -142,7 +142,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     @Override
     boolean handlesContent(String ctype) {
-        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
+        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype) || this.contentTypes.contains(formatConverters.get(ctype)?.resultContentType))
     }
 
     protected abstract void batchLoad(List<Document> docs);
@@ -192,7 +192,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
             }
             log.debug("[${this.id}] Returning document list of size ${docs.size()}.")
             return docs
-        } else if (linkExpanders.size() > 0) {
+        } else if (!linkExpanders.isEmpty()) {
             log.debug("Must loop over documents for link expansion.")
             for (doc in documents) {
                 doc = linkExpand(doc)
@@ -220,7 +220,12 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         return this.listener
     }
 
-    LinkExpander getLinkExpanderFor(Document doc) { return linkExpanders.find { it.valid(doc) } }
+    LinkExpander getLinkExpanderFor(Document doc) {
+        if (linkExpanders.isEmpty()) {
+            return null
+        }
+        return linkExpanders.find { it.valid(doc) }
+    }
 
     public Map getState() { return componentState.asImmutable() }
 

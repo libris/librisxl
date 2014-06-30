@@ -59,7 +59,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (!doc.data || doc.data.length < 1) {
             throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
         }
-        doc.updateTimestamp()
         def availableStorages = getStorages(doc.contentType)
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
@@ -77,9 +76,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String contentType) {
         log.debug("Bulk add ${docs.size()} document")
-        for (doc in docs) {
-            doc.updateTimestamp()
-        }
         for (storage in getStorages(contentType)) {
             storage.bulkAdd(docs, contentType)
         }

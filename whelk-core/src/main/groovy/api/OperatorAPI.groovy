@@ -301,7 +301,7 @@ abstract class AbstractOperator implements Runnable {
         if (operatorState == OperatorState.IDLE) {
             def map = ["state":operatorState]
             if (hasRun) {
-                map.put("lastrun", ["dataset":dataset,"velocity":(velocity > 0 ? velocity : "unlimited"),"count":count,"runningTime":rt])
+                map.put("lastrun", ["dataset":dataset,"average_velocity":(velocity > 0 ? velocity : "unlimited"),"count":count,"runningTime":rt])
                 if (errorMessages) {
                     map.get("lastrun").put("errors",errorMessages)
                 }

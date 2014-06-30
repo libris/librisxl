@@ -91,6 +91,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
     @Override
     @groovy.transform.CompileStatic
+    @Deprecated
     boolean store(Document doc) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         boolean result = storeAsFile(doc)
@@ -110,9 +111,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     @groovy.transform.CompileStatic
     boolean storeAsFile(Document doc) {
         if (doc && (handlesContent(doc.contentType) || doc.entry.deleted)) {
-            if (doc.timestamp < 1) {
-                throw new DocumentException("Document with 0 timestamp? Not buying it.")
-            }
+            doc.updateTimestamp()
             if (this.versioning) {
                 try {
                     doc = checkAndUpdateExisting(doc)
@@ -190,27 +189,22 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         if (log.debugEnabled) {
             startTime = System.currentTimeMillis()
         }
-        if (docs.size() == 1) {
-            log.debug("Only one document to store. Using standard store()-method.")
-            store(docs.first())
-        } else {
-            List<Map<String,String>> entries = []
-            log.trace("batchLoad() meantime before index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
-            for (doc in docs) {
-                boolean result = storeAsFile(doc)
-                if (result) {
-                    entries << [
-                        "index":indexName,
-                        "type": METAENTRY_INDEX_TYPE,
-                        "id": translateIdentifier(doc.identifier),
-                        "data":((Document)doc).metadataAsJson
-                    ]
-                }
+        List<Map<String,String>> entries = []
+        log.trace("batchLoad() meantime before index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
+        for (doc in docs) {
+            boolean result = storeAsFile(doc)
+            if (result) {
+                entries << [
+                "index":indexName,
+                "type": METAENTRY_INDEX_TYPE,
+                "id": translateIdentifier(doc.identifier),
+                "data":((Document)doc).metadataAsJson
+                ]
             }
-            log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
-            index(entries)
-            log.trace("batchLoad() meantime after indexing ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
         }
+        log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
+        index(entries)
+        log.trace("batchLoad() meantime after indexing ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
         log.debug("batchLoad() completed in ${System.currentTimeMillis() - startTime} milliseconds.")
     }
 
