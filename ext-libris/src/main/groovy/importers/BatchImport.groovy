@@ -19,7 +19,6 @@ import se.kb.libris.util.marc.io.*
 import se.kb.libris.conch.converter.MarcJSONConverter
 import se.kb.libris.conch.*
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*
 

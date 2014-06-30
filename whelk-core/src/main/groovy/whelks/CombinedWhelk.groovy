@@ -2,7 +2,6 @@ package se.kb.libris.whelks
 
 import groovy.util.logging.Slf4j as Log
 
-import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.result.*

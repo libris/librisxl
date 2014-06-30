@@ -43,7 +43,6 @@
     "pairtreehybridstorage": {
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
         "_plugins" : [
-            "oaipmhxmlconverter",
             "marcconverter",
             "listener"
             ],

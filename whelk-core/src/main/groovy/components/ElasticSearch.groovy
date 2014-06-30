@@ -36,7 +36,6 @@ import static org.elasticsearch.index.query.QueryBuilders.*
 import static org.elasticsearch.common.xcontent.XContentFactory.*
 
 import se.kb.libris.whelks.*
-import se.kb.libris.whelks.basic.*
 import se.kb.libris.whelks.plugin.*
 import se.kb.libris.whelks.result.*
 import se.kb.libris.whelks.exception.*

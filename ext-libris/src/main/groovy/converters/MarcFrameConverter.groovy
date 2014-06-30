@@ -6,7 +6,6 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.basic.BasicFormatConverter
 
 import se.kb.libris.conch.converter.MarcJSONConverter
 
