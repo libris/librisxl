@@ -190,7 +190,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             startTime = System.currentTimeMillis()
         }
         List<Map<String,String>> entries = []
-        log.trace("batchLoad() meantime before index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
         for (doc in docs) {
             boolean result = storeAsFile(doc)
             if (result) {

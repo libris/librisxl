@@ -225,3 +225,59 @@ This is now available as:
     $ curl http://localhost:8180/whelk-webapi/_operations?operation=rebuild
 
 8. Done! Be happy.
+
+## Whelk maintenance (rebuilding and reloading)
+
+All whelk maintenance is controlled from the operations interface (<whelkhost>/\_operations).
+
+### New format
+
+If the JSONLD format has been updated, in such a way that the marcframeconverter need to be run, the only options are either to reload the data from a marcxml storage (currently untested and probably not working) or reloading the data from OAIPMH.
+
+#### From OAIPMH
+
+1.  If the changes are such that a new mapping is required for elasticsearch, it's best to remove the old elastic type before starting up the whelk, i.e:
+
+    $ curl -XDELETE http://elastichost:9200/libris/[type] 
+
+    where type is bib, auth or hold. 
+    When the whelk starts up, it will detect that the type is missing and create proper mappings for the given type.
+
+2.  In the operations gui, under "import", select which dataset to import (auth/bib/hold). If loading data from data.libris.kb.se, just erase everything from the "service url" field. Finally, hit "go".
+
+3.  The import will now start. The current velocity and import count can be viewed from the operations-page.
+
+### Reindexing
+
+If no significant changes are made to the format, but the elasticsearch index (the search index) is somehow out of alignment with the storage, a reindexing might be appropriate.
+
+The reindex section of the operations gui has only one meaningful field, namely the "dataset" field. It is possible to reindex just one dataset, such as auth, bib or hold.
+If this option is used, the whelk will reindex by loading data from storage according to dataset in the metaindex (.libris\_pairtree for example), and loading the data into the current search index.
+
+If a full reindex is requested (by leaving the dataset field empty), the whelk will first create a brand new index. Once reindexing is completed, the current alias (libris) will be removed from the old index and set to the new index instead. This operation is required if new global settings, filters or mappings must be added to the index.
+
+
+## Rebuilding meta
+
+If you suspect that the metaentry index is unaligned with storage, you can rebuild it by letting the whelk load all documents from disk and creating new meta entries.
+
+1. It is recommended to remove the old metaindex before rebuilding (but not always necessary).
+
+    $ curl -XDELETE http://elastichost:9200/<metaindex>
+
+    <metaindex> is typically .libris_pairtree for the primary storage metaindex. Check http://elastichost:9200/_plugin/head/ for available indices.
+
+2. Call the rebuild operation
+
+    $ curl http://<whelkhost>/_operations?operation=rebuild
+
+## Component synchronization
+
+When starting up the whelk, each component checks if it needs to update it's data. This happens automatically by each component loading it's state, stored in WHELK\_WORK\_DIR/componentname.state. WHELK\_WORK\_DIR is configured in whelk.json.
+If no state file can be found for a component, it is automatically created and the "last\_updated" parameter is set to epoch. Since this would be a big operation to catch up at startup, it needs to be forcibly requested by a human to start. 
+
+    $ curl http://<whelkhost>/_operations?operation=ping
+
+This is analogous to a full reindex, except that no new index will be created. 
+
+If the statefiles are missing, but you know that the index is in a reasonable state, you could just create a statefile by hand with a more recent "last\_updated".
