@@ -44,6 +44,7 @@
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
         "_plugins" : [
             "marcconverter",
+            "marcxml2jsonldconverter",
             "listener"
             ],
         "_params" : {
@@ -120,6 +121,12 @@
         },
         "batchUpdateSize": 1500
 
+    },
+    "marcxml2jsonldconverter": {
+        "_class": "se.kb.libris.whelks.plugin.MarcXml2JsonLDConverter",
+        "_plugins": [
+            "marcconverter"
+        ]
     },
     "marcconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"

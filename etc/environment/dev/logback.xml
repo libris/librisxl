@@ -54,7 +54,7 @@
 <logger name="se.kb.libris.whelks.api.DocumentAPI">
       <level value="info"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.ReindexOperator">
+<logger name="se.kb.libris.whelks.api.TransferOperator">
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.OperatorRestlet">

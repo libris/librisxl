@@ -49,18 +49,26 @@ class Document {
     }
 
     Document(String jsonString) {
+        entry = [:]
+        meta = [:]
         withMetaEntry(jsonString)
     }
 
     Document(Map jsonMap) {
+        entry = [:]
+        meta = [:]
         withMetaEntry(jsonMap)
     }
 
     Document(File jsonFile) {
+        entry = [:]
+        meta = [:]
         withMetaEntry(jsonFile)
     }
 
     Document(File datafile, File entryfile) {
+        entry = [:]
+        meta = [:]
         setData(datafile.readBytes())
         withMetaEntry(entryfile)
     }
@@ -103,16 +111,15 @@ class Document {
     String getContentType() { entry["contentType"] }
 
     long getTimestamp() {
-        log.debug("Retrieving document timestamp: ${new Date(entry.get(TIMESTAMP_KEY, 0L))}")
-        entry.get(TIMESTAMP_KEY, 0L)
+        return (entry.get(TIMESTAMP_KEY) ?: 0L)
     }
 
     long getModified() {
-        entry.get(MODIFIED_KEY, 0L)
+        return (entry.get(MODIFIED_KEY) ?: 0L)
     }
 
     int getVersion() {
-        entry.get("version", 0)
+        return (entry.get("version") ?: 0)
     }
 
     List getLinks() {

@@ -110,7 +110,10 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
     @groovy.transform.CompileStatic
     boolean storeAsFile(Document doc) {
-        if (doc && (handlesContent(doc.contentType) || doc.entry.deleted)) {
+        if (doc) {
+            if (this.contentTypes && !this.contentTypes.contains(doc.contentType)) {
+                throw new WhelkAddException("[${this.id}] Not configured to handle documents of type ${doc.contentType}")
+            }
             doc.updateTimestamp()
             if (this.versioning) {
                 try {
@@ -191,7 +194,9 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
         List<Map<String,String>> entries = []
         for (doc in docs) {
+            log.info("Storing ${doc.identifier} with type ${doc.contentType}")
             boolean result = storeAsFile(doc)
+            log.info("went well? $result")
             if (result) {
                 entries << [
                 "index":indexName,
@@ -202,9 +207,11 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
-        index(entries)
-        log.trace("batchLoad() meantime after indexing ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
-        log.debug("batchLoad() completed in ${System.currentTimeMillis() - startTime} milliseconds.")
+        if (!entries.isEmpty()) {
+            index(entries)
+            log.trace("batchLoad() meantime after indexing ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
+            log.debug("batchLoad() completed in ${System.currentTimeMillis() - startTime} milliseconds.")
+        }
     }
 
 

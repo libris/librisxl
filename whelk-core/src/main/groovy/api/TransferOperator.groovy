@@ -29,8 +29,8 @@ class TransferOperator extends AbstractOperator {
     @Override
     void setParameters(Map parameters) {
         super.setParameters(parameters)
-        this.fromStorage = parameters.get("fromStorage", null)
-        this.toStorage = parameters.get("toStorage", null)
+        this.fromStorage = parameters.get("fromStorage", null)?.first()
+        this.toStorage = parameters.get("toStorage", null)?.first()
         this.showSpinner = parameters.get("showSpinner", false)
         assert fromStorage
         assert toStorage
@@ -39,19 +39,23 @@ class TransferOperator extends AbstractOperator {
     void doRun(long startTime) {
         Storage targetStorage = whelk.getStorages().find { it.id == toStorage }
         Storage sourceStorage = whelk.getStorages().find { it.id == fromStorage }
+        assert targetStorage, sourceStorage
+        List docs = []
         log.info("Transferring data from $fromStorage to $toStorage")
         boolean versioningOriginalSetting = targetStorage.versioning
         targetStorage.versioning = false
-        for (doc in sourceStorage.getAll()) {
+        for (doc in sourceStorage.getAll(dataset)) {
             log.trace("Storing doc ${doc.identifier} with type ${doc.contentType}")
             if (!doc.entry.deleted) {
-                if (targetStorage.store(doc)) {
-                    count++
-                }
+                docs << doc
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
             runningTime = System.currentTimeMillis() - startTime
+            if (count++ % 10000 == 0) {
+                targetStorage.bulkAdd(docs, docs.first().contentType)
+                docs = []
+            }
             if (showSpinner) {
                 def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
                 Tools.printSpinner("Transferring from ${fromStorage} to ${toStorage}. ${count} documents transferred sofar. $velocityMsg", count)
@@ -60,7 +64,11 @@ class TransferOperator extends AbstractOperator {
                 break
             }
         }
-        log.info("Transferred $count documents in " + ((System.currentTimeMillis() - startTime)/1000) + " seconds." as String)
+
+        if (docs.size() > 0) {
+            targetStorage.bulkAdd(docs, docs.first().contentType)
+        }
+        log.info("Transferred $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds." as String)
         targetStorage.versioning = versioningOriginalSetting
         operatorState=OperatorState.FINISHING
     }
