@@ -281,3 +281,13 @@ If no state file can be found for a component, it is automatically created and t
 This is analogous to a full reindex, except that no new index will be created. 
 
 If the statefiles are missing, but you know that the index is in a reasonable state, you could just create a statefile by hand with a more recent "last\_updated".
+
+## Disaster recovery
+
+Say that the server has melted into a tiny puddle of silicon and plastic. After reinstalling server software, such as elasticsearch, tomcat etc, do this:
+
+1. Don't worry.
+
+2. Deploy the whelk normally.
+
+3. Reload all data from OAIPMH (se above, starting at step 2 (No need to delete anything. There isn't anything to delete.)), starting with auth. Thereafter bib, and finally hold.
