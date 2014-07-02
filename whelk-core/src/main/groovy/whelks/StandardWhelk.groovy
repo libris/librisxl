@@ -80,7 +80,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
     }
 
-    @Override
     Document get(URI uri, version=null, List contentTypes=[], boolean expandLinks = true) {
         Document doc = null
         for (contentType in contentTypes) {
@@ -142,10 +141,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return d
     }
 
-    @Override
     Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}
 
-    @Override
     Iterable<Document> loadAll(String dataset = null, Date since = null, String storageId = null) {
         def st
         if (storageId) {

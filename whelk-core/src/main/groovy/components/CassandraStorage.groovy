@@ -200,7 +200,6 @@ class CassandraStorage extends BasicComponent implements Storage {
         }
     }
 
-    @Override
     boolean store(Document doc, checkDigest = true) {
         return store(doc.identifier, doc, checkDigest)
     }
@@ -293,7 +292,6 @@ class CassandraStorage extends BasicComponent implements Storage {
         }
     }
 
-    @Override
     Document get(URI uri, String version=null) {
         return get(uri.toString(), version)
     }
@@ -385,7 +383,6 @@ class CassandraStorage extends BasicComponent implements Storage {
         return tombstone
     }
 
-    @Override
     Iterable<Document> getAll(String dataset = null, Date since = null) {
         return new Iterable<Document>() {
             Iterator<Document> iterator() {

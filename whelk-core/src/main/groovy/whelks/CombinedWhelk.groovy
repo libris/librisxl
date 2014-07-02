@@ -41,7 +41,6 @@ class CombinedWhelk extends StandardWhelk {
         }
     }
 
-    @Override
     URI store(Document doc) {
         if (!rules.storeByFormat) {
             log.trace("No direction rules for storing. Using superclass store().")
@@ -62,7 +61,6 @@ class CombinedWhelk extends StandardWhelk {
         return createDocument(new String(data), metadata)
     }
 
-    @Override
     Document createDocument(data, metadata) {
         log.debug("Creating document")
         def doc = new Document().withData(data)
@@ -109,7 +107,6 @@ class CombinedWhelk extends StandardWhelk {
     }
 
 
-    @Override
     void bulkStore(Iterable<Document> docs) {
         def idocs = []
         long startTime = System.nanoTime()

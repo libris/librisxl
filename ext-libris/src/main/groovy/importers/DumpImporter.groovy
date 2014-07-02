@@ -54,8 +54,7 @@ class DumpImporter extends BasicPlugin implements Importer {
     }
     */
 
-    @Override
-    int doImport(String dataset, int nrOfDocs, boolean silent, boolean picky, URL resource = null) {
+    int doImport(String dataset, String token = null, int nrOfDocs, boolean silent, boolean picky, URL resource = null) {
         this.dataset = dataset
         this.picky = picky
         this.silent = silent

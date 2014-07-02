@@ -70,7 +70,6 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     abstract void componentBootstrap(String str)
 
-    @Override
     public final void start() {
         assert whelk
         log.debug("[${this.id}] Loading format converters")

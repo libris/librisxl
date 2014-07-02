@@ -213,7 +213,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
 
-    @Override
     Document get(URI uri, String version = null) {
         loadDocument(uri, version)
     }
@@ -250,7 +249,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
     }
 
-    @Override
     Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         if (dataset || since) {

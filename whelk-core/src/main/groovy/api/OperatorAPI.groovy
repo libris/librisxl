@@ -212,7 +212,6 @@ class BenchmarkOperator extends AbstractOperator {
         this.showSpinner = parameters.get("showSpinner", false)
     }
 
-    @Override
     void doRunBenchmark(long startTime) {
         def storage = this.whelk.getStorage()
         log.info("Starting benchmark method on ${storage.id}")

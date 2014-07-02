@@ -161,11 +161,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     @Override
-    InputStream rawQuery(String query) {
-
-    }
-
-    @Override
     SearchResult query(Query q) {
         String indexName = this.whelk.id
         def indexTypes = []
