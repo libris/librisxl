@@ -103,6 +103,7 @@ class ImportOperator extends AbstractOperator {
     String importerPlugin = null
     String serviceUrl = null
     int numToImport = -1
+    String resumptionToken = null
     Date since = null
     boolean picky = true
 
@@ -116,6 +117,7 @@ class ImportOperator extends AbstractOperator {
         this.importerPlugin = parameters.get("importer", null)?.first()
         this.serviceUrl = parameters.get("url", null)?.first()
         this.numToImport = parameters.get("nums", [-1]).first() as int
+        this.resumptionToken = parameters.get("resumptionToken", null)?.first()
         if (parameters.get("since", []).size() > 0) {
             def dateString = parameters.get("since")?.first()
             if (dateString.length() == 10) {
@@ -148,7 +150,7 @@ class ImportOperator extends AbstractOperator {
         if (importer.getClass().getName() == "se.kb.libris.whelks.importers.OAIPMHImporter") {
             importer.serviceUrl = serviceUrl
             log.info("Import from OAIPMH")
-            count = importer.doImport(dataset, numToImport, true, picky, since)
+            count = importer.doImport(dataset, resumptionToken, numToImport, true, picky, since)
         } else {
             if (!serviceUrl) {
                 throw new WhelkRuntimeException("URL is required for import.")

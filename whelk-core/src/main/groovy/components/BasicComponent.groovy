@@ -250,6 +250,8 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                         } else {
                             log.debug("[${this.id}] Already up to date.");
                         }
+                        log.debug("[${this.id}] Waiting for cooldown.")
+                        Thread.sleep(5000)
                     } catch (Exception ex) {
                         log.error("[${this.id}] DISABLING LISTENER because of unexpected exception. Possible restart required.")
                         ok = false

@@ -27,6 +27,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     int nrImported = 0
     int nrDeleted = 0
     long startTime = 0
+
     boolean picky = true
     boolean silent = false
     boolean preserveTimestamps = true
@@ -59,7 +60,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         assert marcFrameConverter
     }
 
-    int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
+    int doImport(String dataset, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
         getAuthentication()
         this.cancelled = false
         this.dataset = dataset
@@ -87,8 +88,14 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         }
         queue = Executors.newSingleThreadExecutor()
         startTime = System.currentTimeMillis()
-        log.info("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
-        URL url = new URL(urlString)
+        URL url
+        if (startResumptionToken) {
+            url = new URL(serviceUrl + "?verb=ListRecords&resumptionToken=" + startResumptionToken)
+            log.info("Harvesting OAIPMH data from ${url.toString()}. Pickymode: $picky")
+        } else {
+            url = new URL(urlString)
+            log.info("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
+        }
         String resumptionToken = harvest(url)
         log.debug("resumptionToken: $resumptionToken")
         long loadUrlTime = startTime

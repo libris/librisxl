@@ -194,9 +194,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
         List<Map<String,String>> entries = []
         for (doc in docs) {
-            log.info("Storing ${doc.identifier} with type ${doc.contentType}")
             boolean result = storeAsFile(doc)
-            log.info("went well? $result")
             if (result) {
                 entries << [
                 "index":indexName,
