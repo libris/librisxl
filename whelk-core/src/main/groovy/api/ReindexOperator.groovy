@@ -152,6 +152,9 @@ class ReindexOperator extends AbstractOperator {
             this.whelk.index.setState(whelk.index.LAST_UPDATED, newestDocumentTimestamp)
         } as Runnable)
         indexQueue.shutdown()
+        gstoreQueue.execute({
+            this.whelk.graphstore.setState(whelk.graphstore.LAST_UPDATED, newestDocumentTimestamp)
+        } as Runnable)
         gstoreQueue.shutdown()
     }
 
@@ -192,7 +195,7 @@ class ReindexOperator extends AbstractOperator {
                     log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers}")
                 } finally {
                     gstoreAvailable.release()
-                log.info("Released graphstore semaphore. ${gstoreAvailable.availablePermits()} available.")
+                    log.info("Released graphstore semaphore. ${gstoreAvailable.availablePermits()} available.")
                 }
             } as Runnable)
         }

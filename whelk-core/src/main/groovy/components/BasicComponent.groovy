@@ -64,6 +64,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         }
         componentState['componentId'] = this.id
         componentState['status'] = "started"
+        stateUpdated = true
 
         componentBootstrap(whelkId)
     }
