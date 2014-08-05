@@ -23,7 +23,7 @@
             ],
         "_importers": [
             "oaipmhimporter",
-        "marcimporter"
+            "marcimporter"
             ],
         "_components": [
             "pairtreehybridstorage",

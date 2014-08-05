@@ -490,12 +490,13 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 }
                 pluginChain.put(plugname, plugin)
                 if (meta._plugins) {
+                    log.debug("Setting plugins for ${plugin.id}.")
                     for (plug in meta._plugins) {
                         if (availablePlugins.containsKey(plug)) {
-                            log.debug("Using previously initiated plugin $plug for $plugname")
+                            log.debug("Using previously initiated plugin \"$plug\" for $plugname")
                             plugin.addPlugin(availablePlugins.get(plug))
                         } else if (pluginChain.containsKey(plug)) {
-                            log.debug("Using plugin $plug from pluginChain for $plugname")
+                            log.debug("Using plugin \"$plug\" from pluginChain for $plugname")
                             plugin.addPlugin(pluginChain.get(plug))
                         } else {
                             log.debug("Loading plugin $plug for ${plugin.id}")
@@ -512,6 +513,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             throw new WhelkRuntimeException("For $whelkname; unable to instantiate plugin with name $plugname.")
         }
         plugin.setId(plugname)
+        log.trace("Calling init on ${plugin} (${plugin.id})")
         plugin.init(this.id)
         log.debug("Stashing \"${plugin.id}\".")
         availablePlugins.put(plugname, plugin)

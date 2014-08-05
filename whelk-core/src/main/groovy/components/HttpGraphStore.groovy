@@ -26,7 +26,6 @@ class HttpEndpoint extends BasicComponent implements SparqlEndpoint {
     PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
     HttpClient client = HttpClients.custom().setConnectionManager(cm).build()
     String queryURI
-    String id = "httpSparqlEndpoint"
 
     HttpEndpoint(Map settings) {
         this.queryURI = settings['queryUri']
@@ -70,7 +69,6 @@ class HttpEndpoint extends BasicComponent implements SparqlEndpoint {
 class HttpGraphStore extends HttpEndpoint implements GraphStore {
 
     String graphStoreURI
-    String id = "httpGraphStoreComponent"
     def context
     String baseUri
 
