@@ -44,7 +44,6 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     Thread stateThread = null
     String stateStatus = STATUS_OK
 
-
     private File stateFile
 
     final void bootstrap(String whelkId) {

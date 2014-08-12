@@ -83,7 +83,7 @@ class HttpGraphStore extends HttpEndpoint implements GraphStore {
     }
 
     boolean accepts(Document doc) {
-        if (!accepts(doc.contentType)) {
+        if (!accepts(doc.contentType) || (!handlesDatasets.isEmpty() && !handlesDatasets.contains(doc.entry.dataset))) {
             log.debug("Rejected doc: $doc.identifier (unacceptable content type $doc.contentType)")
             return false
         }
@@ -148,6 +148,7 @@ class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
      * size.
      */
     int optimumBatchSize = 0
+    List handlesDatasets = []
 
     HttpBatchGraphStore(Map settings) {
         super(settings)
@@ -155,6 +156,7 @@ class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
         this.queryURI = settings['queryUri']
         this.updateURI = settings['updateUri']
         this.optimumBatchSize = settings.get('optimumBatchSize', 0)
+        this.handlesDatasets = settings.get('handlesDatasets', [])
     }
 
     @Override

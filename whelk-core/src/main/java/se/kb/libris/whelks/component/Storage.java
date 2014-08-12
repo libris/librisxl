@@ -21,7 +21,7 @@ public interface Storage extends Component {
     /**
      * Retrieves all objects from Storage.
      */
-    public Iterable<Document> getAll(String dataset);
+    public Iterable<Document> getAll();
     /**
      * @return true if this storage can handle documents of this kind.
      */

@@ -113,6 +113,7 @@
             "listener"
             ],
         "_params" : {
+            "handlesDatasets": ["auth","bib"],
             "graphStoreUri": "_property:GRAPHSTORE_DATA_URI",
             "queryUri": "_property:GRAPHSTORE_QUERY_URI",
             "updateUri": "_property:GRAPHSTORE_DATA_URI",
