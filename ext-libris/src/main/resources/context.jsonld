@@ -264,7 +264,8 @@
         "@container": "@list",
         "@id": "owl:unionOf"
       },
-      "unknown": null,
+    "_marcUncompleted": null,
+    "_marcBroken": null,
       "url": "sdo:url",
       "value": "rdf:value",
       "version": "sdo:version",
