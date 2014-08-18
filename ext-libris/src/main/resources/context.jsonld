@@ -187,7 +187,7 @@
       "isPrimaryTopicOf": "foaf:isPrimaryTopicOf",
       "isbn": "sdo:isbn",
       "issn": "bf:issn",
-      "issueNumber": "bf:issueNumber",
+      "issueNumber": "sdo:issueNumber",
       "jobTitle": "sdo:jobTitle",
       "keyTitle": "bf:keyTitle",
       "keyword": {
