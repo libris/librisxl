@@ -3850,8 +3850,8 @@
 
     "740": {
       "addLink": "relation",
-      "rangeEntity": "Work",
-      "$a": {"property": "uniformTitle"}
+      "rangeEntity": "CreativeWork",
+      "$a": {"property": "title"}
     },
 
     "751": {},
