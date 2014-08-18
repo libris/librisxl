@@ -98,7 +98,7 @@ Convert it to "marc-as-json" (see script source for details):
 
 Run the marcframe converter to print out the resulting JSON-LD:
 
-    $ gradle -q runMarcFrame -Dargs=/tmp/bib-7149593.json
+    $ gradle -q runMarcFrame -Dargs=/tmp/bibtest.json
 
 ## Setting up a proper instance
 
