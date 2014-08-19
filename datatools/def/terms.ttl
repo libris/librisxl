@@ -496,6 +496,12 @@
 :relation a owl:ObjectProperty;
     owl:equivalentProperty dc:relation .
 
+:influentialRelation a owl:ObjectProperty;
+    rdfs:subPropertyOf :influencedBy, dc:relation .
+
+:influentialPart a owl:ObjectProperty;
+    rdfs:subPropertyOf :influencedBy, dc:hasPart .
+
 :replaces a owl:ObjectProperty;
     owl:equivalentProperty dc:replaces .
 
