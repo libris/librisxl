@@ -1222,7 +1222,7 @@
 
 :issueNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:issueNumber .
+    owl:equivalentProperty sdo:issueNumber .
 
 :itemPart a owl:DatatypeProperty .
 

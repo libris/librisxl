@@ -3577,7 +3577,7 @@
       "$e": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
       "$f": {"property": "providerName", "interpunctionChars": ",:;"},
       "$g": {"property": "providerDate", "interpunctionChars": ",;"},
-      "$3": {"property": "scopeNote", "position": 0}
+      "$3": {"property": "scopeNote", "position": 0, "TODO": "put in following out-split entity"}
     },
 
     "261": {},
@@ -3635,7 +3635,10 @@
     "352": {},
     "355": {},
     "357": {},
-    "362": {},
+    "362": {
+      "domainEntity": "Instance",
+      "$a": {"addProperty": "issueNumber"}
+    },
     "363": {},
     "365": {},
     "366": {},
@@ -3847,8 +3850,8 @@
 
     "740": {
       "addLink": "relation",
-      "rangeEntity": "Work",
-      "$a": {"property": "uniformTitle"}
+      "rangeEntity": "CreativeWork",
+      "$a": {"property": "title"}
     },
 
     "751": {},

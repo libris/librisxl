@@ -252,7 +252,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
                     } catch (Exception ex) {
                         log.error("[${this.id}] DISABLING LISTENER because of unexpected exception. Possible restart required.")
                         ok = false
-                        listenerStatus = "${e.message} [terminated]"
+                        listenerStatus = "${ex.message} [terminated]"
                         listener.disable(this.id)
                         throw ex
                     }
