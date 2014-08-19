@@ -12,6 +12,9 @@
       <level value="warn"/>
 </logger>
 -->
+  <logger name="org.apache.camel">
+      <level value="debug"/>
+  </logger>
   <logger name="se.kb.libris.whelks.api.BasicAPI">
       <level value="info"/>
   </logger>

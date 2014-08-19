@@ -202,6 +202,11 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 "id": translateIdentifier(doc.identifier),
                 "data":((Document)doc).metadataAsJson
                 ]
+
+                //Send to camel route
+                log.info("Calling sendBody()")
+                def template = getWhelk().getCamelContext().createProducerTemplate();
+                template.sendBody("direct:storage", doc.identifier);
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")

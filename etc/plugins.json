@@ -5,7 +5,7 @@
     "listener": {
         "_class": "se.kb.libris.whelks.plugin.BasicListener",
         "registry": {
-            "pairtreehybridstorage":["index", "graphstore"]
+            "pairtreehybridstorage":["index"]
         }
     },
     "remotesearch": {

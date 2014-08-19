@@ -10,6 +10,7 @@ import java.util.concurrent.BlockingQueue
 import javax.servlet.http.*
 
 import se.kb.libris.whelks.api.*
+import se.kb.libris.whelks.camel.*
 import se.kb.libris.whelks.component.*
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.*
@@ -18,6 +19,11 @@ import se.kb.libris.whelks.result.*
 import se.kb.libris.conch.Tools
 
 import org.codehaus.jackson.map.ObjectMapper
+
+import org.apache.camel.*
+import org.apache.camel.impl.*
+
+import org.apache.activemq.camel.component.ActiveMQComponent
 
 @Log
 class StandardWhelk extends HttpServlet implements Whelk {
@@ -39,6 +45,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     final static String DEFAULT_WHELK_CONFIG_FILENAME = "/whelk.json"
     final static String DEFAULT_PLUGIN_CONFIG_FILENAME = "/plugins.json"
+
+    // Set by init()-method
+    CamelContext camelContext = null
 
     /*
      * Whelk methods
@@ -274,6 +283,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     @Override
     void init() {
+        def ctxThread
         try {
             def (whelkConfig, pluginConfig) = loadConfig()
             setConfig(whelkConfig, pluginConfig)
@@ -282,9 +292,21 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 log.info("Starting component ${component.id}")
                 component.start()
             }
+            log.debug("Setting up and configuring Apache Camel")
+            def wcm = new WhelkCamelMain()
+            wcm.addRoutes(new WhelkRouteBuilder())
+            wcm.addComponent("activemq", ActiveMQComponent.activeMQComponent("tcp://localhost:61616"))
+            wcm.addComponent("diskstore", new DiskStorageComponent())
+            camelContext = wcm.camelContext
+            log.debug("Retrieving the Camel Context: $camelContext")
+            ctxThread = Thread.start {
+                log.debug("Starting Apache Camel")
+                wcm.run()
+            }
             log.info("Whelk ${this.id} is now operational.")
         } catch (Exception e) {
             log.warn("Problems starting whelk ${this.id}.", e)
+            ctxThread.interrupt()
             throw e
         }
     }
