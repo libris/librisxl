@@ -3565,7 +3565,7 @@
       "domainEntity": "Instance",
       "addLink": "provider",
       "splitLink": [
-        {"codes": ["a", "b", "c"], "addLink": "publication"},
+        {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
         {"codes": ["e", "f", "g"], "addLink": "manufacture"}
       ],
       "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
@@ -3577,7 +3577,7 @@
       "$e": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
       "$f": {"property": "providerName", "interpunctionChars": ",:;"},
       "$g": {"property": "providerDate", "interpunctionChars": ",;"},
-      "$3": {"property": "scopeNote", "position": 0, "TODO": "put in following out-split entity"}
+      "$3": {"property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"}
     },
 
     "261": {},
