@@ -3846,11 +3846,19 @@
     "711": {"inherit": "111"},
 
     "720": {},
-    "730": {},
+
+    "730": {
+      "TODO:match-i2": {
+        "2": {"addLink": "influentialPart"}
+      },
+      "addLink": "influentialRelation",
+      "rangeEntity": "CreativeWork",
+      "$a": {"property": "uniformTitle"}
+    },
+
 
     "740": {
-      "addLink": "relation",
-      "rangeEntity": "CreativeWork",
+      "inherit": "730",
       "$a": {"property": "title"}
     },
 
