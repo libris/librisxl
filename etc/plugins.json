@@ -437,6 +437,36 @@
                     },
                     "resultKey" : "about"
                 },
+                "about.biography" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.contentType" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.frequencyCategory" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
                 "about.language" : {
                     "method": "query",
                     "index" : "libris",
@@ -457,16 +487,6 @@
                     },
                     "resultKey" : "about"
                 },
-                "about.biography" : {
-                    "method": "query",
-                    "index" : "libris",
-                    "dataset" : "def",
-                    "field" : "about.@id",
-                    "queryProperties": {
-                        "_source.include" : ["@id", "about.*"]
-                    },
-                    "resultKey" : "about"
-                },
                 "about.originalLanguage" : {
                     "method": "query",
                     "index" : "libris",
@@ -478,6 +498,26 @@
                     "resultKey" : "about"
                 },
                 "about.publicationCountry" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.publicationStatus" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.regularity" : {
                     "method": "query",
                     "index" : "libris",
                     "dataset" : "def",
