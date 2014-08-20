@@ -116,7 +116,7 @@
             "handlesDatasets": ["auth","bib"],
             "graphStoreUri": "_property:GRAPHSTORE_DATA_URI",
             "queryUri": "_property:GRAPHSTORE_QUERY_URI",
-            "updateUri": "_property:GRAPHSTORE_DATA_URI",
+            "updateUri": "_property:GRAPHSTORE_UPDATE_URI",
             "contextPath": "context.jsonld",
             "baseUri": "http://libris.kb.se/resource/"
         },
