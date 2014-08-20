@@ -1,6 +1,7 @@
 package se.kb.libris.whelks.component;
 
 import java.net.URI;
+import java.util.List;
 import java.io.OutputStream;
 import se.kb.libris.whelks.Document;
 
@@ -10,8 +11,8 @@ public interface Storage extends Component {
      * @return true if the operation was successful.
      * @throws IdentifierException if the Document doesn't have an identifier.
      */
-    @Deprecated
     public boolean store(Document d);
+    public void bulkStore(List<Document> documents);
     /**
      * Retrieves an object from this Storage.
      * @param uri the identifier of the object to be retrieved.
@@ -28,4 +29,9 @@ public interface Storage extends Component {
     public boolean handlesContent(String contentType);
 
     public boolean isVersioning();
+
+    /**
+     * List of content-types this storage handles.
+     */
+    public List<String> getContentTypes();
 }

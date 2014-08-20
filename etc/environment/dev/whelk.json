@@ -16,7 +16,8 @@
             ],
         "_converters": [
             "linkcompleter",
-            "indexlinkfinder"
+            "indexlinkfinder",
+            "cleanupindexconverter"
             ],
         "_expanders": [
             "linkexpander"

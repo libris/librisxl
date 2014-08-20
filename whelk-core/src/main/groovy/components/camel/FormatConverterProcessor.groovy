@@ -3,8 +3,8 @@ package se.kb.libris.whelks.camel
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.Whelk
 import se.kb.libris.whelks.plugin.FormatConverter
+import se.kb.libris.whelks.plugin.LinkExpander
 
 import org.apache.camel.processor.UnmarshalProcessor
 import org.apache.camel.spi.DataFormat
@@ -19,31 +19,39 @@ import org.codehaus.jackson.map.ObjectMapper
 class FormatConverterProcessor implements Processor {
 
     FormatConverter converter
+    LinkExpander expander
+
     public static final ObjectMapper mapper = new ObjectMapper()
 
-    Whelk whelk
-
-    FormatConverterProcessor(Whelk w) {
-        this.whelk = w
+    FormatConverterProcessor(FormatConverter c, LinkExpander e) {
+        this.converter = c
+        this.expander = e
     }
 
     @Override
     public void process(Exchange exchange) throws Exception {
         try {
-            log.info("Start process method")
             Message message = exchange.getIn()
-            String identifier = message.getBody()
-            Document document = whelk.get(new URI(identifier))
-            log.info("Received document with identifier: ${document.identifier}")
-            if (converter != null) {
-                document = converter.convert(document)
+            def data = message.getBody()
+            if (converter || expander) {
+                def entry = [:]
+                message.headers.each { key, value ->
+                    entry[(key)] = value
+                }
+                Document doc = new Document().withData(data).withEntry(entry)
+                if (converter) {
+                    doc = converter.convert(doc)
+                }
+                if (expander) {
+                    doc = expander.expand(doc)
+                }
+                data = doc.dataAsMap
             }
-            def docMap = document.dataAsMap
+            String identifier = message.getHeader("identifier")
             def idelements = new URI(identifier).path.split("/") as List
             idelements.remove(0)
-            docMap["elastic_id"] = idelements.join("::")
-            message.setBody(mapper.writeValueAsString(docMap))
-            log.info("Setting message: $message")
+            data["elastic_id"] = idelements.join("::")
+            message.setBody(mapper.writeValueAsString(data))
             exchange.setIn(message)
         } catch (Exception e) {
             log.error("Exception", e)

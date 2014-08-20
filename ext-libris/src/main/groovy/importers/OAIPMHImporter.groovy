@@ -264,6 +264,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
             try {
                 log.debug("Adding ${documents.size()} documents to whelk.")
                 long elapsed = System.currentTimeMillis()
+                //def storage = whelk.getStorage(document.get(0).contentType)
+                //storage.bulkStore(documents)
                 this.whelk.bulkAdd(documents, documents.get(0).contentType)
                 if ((System.currentTimeMillis() - elapsed) > 3000) {
                     log.warn("Bulk add took more than 3 seconds (${System.currentTimeMillis() - elapsed})")

@@ -15,9 +15,11 @@ class WhelkRouteBuilder extends RouteBuilder {
     }
 
     void configure() {
-        Processor formatConverterProcessor = new FormatConverterProcessor(this.whelk)
+        def le = whelk.plugins.find { it.id == "linkexpander" }
+        def cu = whelk.plugins.find { it.id == "cleanupindexconverter" }
+        Processor formatConverterProcessor = new FormatConverterProcessor(cu, le)
 
-        from("direct:storage")
+        from("direct:pairtreehybridstorage")
             .multicast()
                 .to("activemq:libris.index", "activemq:libris.graphstore")
 

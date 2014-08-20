@@ -194,7 +194,7 @@ class CassandraStorage extends BasicComponent implements Storage {
     }
 
     @Override
-    void batchLoad(List<Document> docs) {
+    void bulkStore(List<Document> docs) {
         for (doc in docs) {
             store(doc)
         }

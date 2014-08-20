@@ -123,6 +123,7 @@ class DocumentAPI extends BasicAPI {
                 } else {
                     try {
                         Document doc = new Document(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
+                        // TODO: Insert format converters
                         identifier = this.whelk.add(doc)
                         def locationRef = request.getRequestURL()
                         log.debug("Setting location for redirect: $locationRef")

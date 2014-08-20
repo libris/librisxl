@@ -18,6 +18,8 @@ import gov.loc.repository.pairtree.Pairtree
 
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.*
+import org.apache.camel.*
+import org.apache.camel.impl.*
 
 import com.google.common.io.Files
 
@@ -91,9 +93,9 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
     @Override
     @groovy.transform.CompileStatic
-    @Deprecated
-    boolean store(Document doc) {
+    public boolean store(Document doc) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
+        def producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
         boolean result = storeAsFile(doc)
         log.debug("Result from store-operation: $result")
         if (result) {
@@ -104,8 +106,55 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                     "id": translateIdentifier(doc.identifier)
                 ]
             )
+            notifyCamel(producerTemplate, doc)
         }
         return result
+    }
+
+    @Override
+    public void bulkStore(List<Document> docs) {
+        if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
+        long startTime
+        def producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
+        if (log.debugEnabled) {
+            startTime = System.currentTimeMillis()
+        }
+        List<Map<String,String>> entries = []
+        for (doc in docs) {
+            boolean result = storeAsFile(doc)
+            if (result) {
+                entries << [
+                "index":indexName,
+                "type": METAENTRY_INDEX_TYPE,
+                "id": translateIdentifier(doc.identifier),
+                "data":((Document)doc).metadataAsJson
+                ]
+
+                //Send to camel route
+                notifyCamel(producerTemplate, doc)
+            }
+        }
+        log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
+        if (!entries.isEmpty()) {
+            index(entries)
+            log.trace("batchLoad() meantime after indexing ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
+            log.debug("batchLoad() completed in ${System.currentTimeMillis() - startTime} milliseconds.")
+        }
+    }
+
+    private void notifyCamel(producerTemplate, document) {
+        Exchange exchange = new DefaultExchange(getWhelk().getCamelContext())
+        Message message = new DefaultMessage()
+        if (document.isJson()) {
+            message.setBody(document.dataAsMap, Map)
+        } else {
+            message.setBody(document.data)
+        }
+        document.entry.each { key, value ->
+            message.setHeader(key, value)
+        }
+        exchange.setIn(message)
+        producerTemplate.asyncSend("direct:${this.id}", exchange)
     }
 
     @groovy.transform.CompileStatic
@@ -185,50 +234,19 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         identifier.substring(identifier.lastIndexOf("/")+1)
     }
 
-    @Override
-    protected void batchLoad(List<Document> docs) {
-        if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
-        long startTime
-        def template = getWhelk().getCamelContext().createProducerTemplate();
-        if (log.debugEnabled) {
-            startTime = System.currentTimeMillis()
-        }
-        List<Map<String,String>> entries = []
-        for (doc in docs) {
-            boolean result = storeAsFile(doc)
-            if (result) {
-                entries << [
-                "index":indexName,
-                "type": METAENTRY_INDEX_TYPE,
-                "id": translateIdentifier(doc.identifier),
-                "data":((Document)doc).metadataAsJson
-                ]
-
-                //Send to camel route
-                template.sendBodyAndHeader("direct:storage", doc.identifier, "dataset", doc.entry.dataset);
-            }
-        }
-        log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
-        if (!entries.isEmpty()) {
-            index(entries)
-            log.trace("batchLoad() meantime after indexing ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
-            log.debug("batchLoad() completed in ${System.currentTimeMillis() - startTime} milliseconds.")
-        }
-    }
-
 
     Document get(URI uri, String version = null) {
         loadDocument(uri, version)
     }
 
     @groovy.transform.CompileStatic
-    Document loadDocument(String uri, String version=null) {
+    private Document loadDocument(String uri, String version=null) {
         return loadDocument(new URI(uri), version)
     }
 
     @groovy.transform.CompileStatic
-    Document loadDocument(URI uri, String version = null) {
-        log.debug("Received GET request for ${uri.toString()} with version $version")
+    private Document loadDocument(URI uri, String version = null) {
+        log.debug("Received request for ${uri.toString()} with version $version")
         String filePath = buildPath(uri, (version ? version as int : 0))
         String fileName =  getBaseFilename(uri.toString())
         try {
@@ -323,6 +341,12 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
         return path
     }
+
+    @Override
+    public boolean handlesContent(String ctype) {
+        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
+    }
+
 
     private Document createTombstone(uri) {
         def tombstone = new Document().withIdentifier(uri).withData("DELETED ENTRY")

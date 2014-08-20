@@ -170,7 +170,9 @@ class ImportOperator extends AbstractOperator {
 
     @Override
     Map getStatus() {
-        runningTime = System.currentTimeMillis() - startTime
+        if (runningTime == 0) {
+            runningTime = System.currentTimeMillis() - startTime
+}
         count = (importer ? importer.nrImported : 0)
         def status = super.getStatus()
         if (importer?.errorMessages) {

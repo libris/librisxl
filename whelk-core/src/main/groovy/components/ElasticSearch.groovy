@@ -158,12 +158,14 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         throw new UnsupportedOperationException("Not implemented yet.")
     }
 
+    /*
     @Override
     protected void batchLoad(List<Document> docs) {
         String indexName = this.whelk.id
         createIndexIfNotExists(indexName)
         addDocuments(docs, indexName)
     }
+    */
 
     @Override
     SearchResult query(Query q) {

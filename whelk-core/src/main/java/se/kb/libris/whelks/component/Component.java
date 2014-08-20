@@ -8,10 +8,7 @@ import java.util.List;
 
 public interface Component extends WhelkAware {
 
-    public URI add(Document document);
-    public void bulkAdd(List<Document> document, String contentType);
     public Document get(URI uri);
-    public boolean handlesContent(String ctype);
 
     /**
      * Deletes an entry.

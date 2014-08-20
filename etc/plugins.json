@@ -2,12 +2,6 @@
     "elasticnode": {
         "_class": "se.kb.libris.whelks.component.ElasticSearchNode"
     },
-    "listener": {
-        "_class": "se.kb.libris.whelks.plugin.BasicListener",
-        "registry": {
-            "pairtreehybridstorage":["index"]
-        }
-    },
     "remotesearch": {
         "_class": "se.kb.libris.whelks.api.RemoteSearchAPI",
         "_plugins" : [
@@ -29,7 +23,7 @@
     },
     "index": {
         "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
-        "_plugins" : ["listener", "linkexpander", "shapecomputer", "cleanupindexconverter" ],
+        "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ],
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
@@ -38,8 +32,7 @@
                  "def" : [],
                  "sys" : []
             },
-            "elasticHost": "_property:ELASTIC_HOST",
-            "batchUpdateSize" : 2000
+            "elasticHost": "_property:ELASTIC_HOST"
         },
         "_unique" : true
     },
@@ -47,8 +40,7 @@
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
         "_plugins" : [
             "marcconverter",
-            "marcxml2jsonldconverter",
-            "listener"
+            "marcxml2jsonldconverter"
             ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
@@ -112,8 +104,7 @@
     "graphstore": {
         "_class" : "se.kb.libris.whelks.component.HttpBatchGraphStore",
         "_plugins" : [
-            "turtleconverter",
-            "listener"
+            "turtleconverter"
             ],
         "_params" : {
             "handlesDatasets": ["auth","bib"],
@@ -122,9 +113,7 @@
             "updateUri": "_property:GRAPHSTORE_UPDATE_URI",
             "contextPath": "context.jsonld",
             "baseUri": "http://libris.kb.se/resource/"
-        },
-        "batchUpdateSize": 1500
-
+        }
     },
     "marcxml2jsonldconverter": {
         "_class": "se.kb.libris.whelks.plugin.MarcXml2JsonLDConverter",

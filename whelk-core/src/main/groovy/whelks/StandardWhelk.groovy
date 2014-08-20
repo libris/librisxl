@@ -72,7 +72,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
         for (storage in availableStorages) {
-            storage.add(doc)
+            storage.store(doc)
         }
         return new URI(doc.identifier)
     }
@@ -85,7 +85,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     void bulkAdd(final List<Document> docs, String contentType) {
         log.debug("Bulk add ${docs.size()} document")
         for (storage in getStorages(contentType)) {
-            storage.bulkAdd(docs, contentType)
+            storage.bulkStore(docs)
         }
     }
 
@@ -298,7 +298,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
             ActiveMQComponent amq = ActiveMQComponent.activeMQComponent()
             amq.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory("tcp://localhost:61616"))
             wcm.addComponent("activemq", amq)
-            wcm.addComponent("diskstore", new DiskStorageComponent())
             camelContext = wcm.camelContext
             log.debug("Retrieving the Camel Context: $camelContext")
             ctxThread = Thread.start {

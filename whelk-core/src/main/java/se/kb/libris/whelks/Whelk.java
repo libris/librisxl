@@ -6,6 +6,7 @@ import java.util.*;
 import se.kb.libris.whelks.plugin.Plugin;
 import se.kb.libris.whelks.result.SearchResult;
 import se.kb.libris.whelks.result.SparqlResult;
+import org.apache.camel.CamelContext;
 
 public interface Whelk {
     // storage
@@ -34,4 +35,5 @@ public interface Whelk {
 
     // ecosystem
     public Map getGlobal();
+    public CamelContext getCamelContext();
 }
