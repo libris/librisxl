@@ -271,6 +271,12 @@ If you suspect that the metaentry index is unaligned with storage, you can rebui
 
     $ curl http://<whelkhost>/_operations?operation=rebuild
 
+## Re-convert data
+
+To run the conversion from MARC to JSON-LD again for all records, call transfer:
+
+    $ curl http://<whelkhost>/_operations?operation=transfer&fromStorage=pairtreeoaistorage&toStorage=pairtreehybridstorage
+
 ## Component synchronization
 
 When starting up the whelk, each component checks if it needs to update it's data. This happens automatically by each component loading it's state, stored in WHELK\_WORK\_DIR/componentname.state. WHELK\_WORK\_DIR is configured in whelk.json.
