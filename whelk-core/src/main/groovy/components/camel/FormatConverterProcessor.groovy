@@ -31,11 +31,13 @@ class FormatConverterProcessor implements Processor {
     public void process(Exchange exchange) throws Exception {
         try {
             log.info("Start process method")
-            //if (converter == null) {
             Message message = exchange.getIn()
             String identifier = message.getBody()
             Document document = whelk.get(new URI(identifier))
             log.info("Received document with identifier: ${document.identifier}")
+            if (converter != null) {
+                document = converter.convert(document)
+            }
             def docMap = document.dataAsMap
             def idelements = new URI(identifier).path.split("/") as List
             idelements.remove(0)
@@ -43,12 +45,6 @@ class FormatConverterProcessor implements Processor {
             message.setBody(mapper.writeValueAsString(docMap))
             log.info("Setting message: $message")
             exchange.setIn(message)
-            /*
-            }
-            else {
-            throw new RuntimeException("Dear lord I dont know what to do!!")
-            }
-            */
         } catch (Exception e) {
             log.error("Exception", e)
             throw e
