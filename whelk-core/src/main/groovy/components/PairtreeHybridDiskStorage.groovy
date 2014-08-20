@@ -189,6 +189,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     protected void batchLoad(List<Document> docs) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         long startTime
+        def template = getWhelk().getCamelContext().createProducerTemplate();
         if (log.debugEnabled) {
             startTime = System.currentTimeMillis()
         }
@@ -204,9 +205,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 ]
 
                 //Send to camel route
-                log.info("Calling sendBody()")
-                def template = getWhelk().getCamelContext().createProducerTemplate();
-                template.sendBody("direct:storage", doc.identifier);
+                template.sendBodyAndHeader("direct:storage", doc.identifier, "dataset", doc.entry.dataset);
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")

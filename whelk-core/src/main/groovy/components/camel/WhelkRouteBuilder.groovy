@@ -1,16 +1,34 @@
 package se.kb.libris.whelks.camel
 
+import se.kb.libris.whelks.Whelk
+
+import org.apache.camel.Processor
 import org.apache.camel.builder.RouteBuilder
+import org.apache.camel.model.dataformat.JsonLibrary
 
 class WhelkRouteBuilder extends RouteBuilder {
 
-    void configure() {
-        from("direct:storage")
-        .to("activemq:libris")
+    Whelk whelk
 
-        /*
-        from("activemq:libris")
-        .to("elasticsearch://local?operation=INDEX&indexName=test&indexType=message")
-        */
+    WhelkRouteBuilder(Whelk w) {
+        this.whelk = w
+    }
+
+    void configure() {
+        Processor formatConverterProcessor = new FormatConverterProcessor(this.whelk)
+
+        from("direct:storage")
+            .multicast()
+                .to("activemq:libris.index", "activemq:libris.graphstore")
+
+        from("activemq:libris.index")
+            .process(formatConverterProcessor)
+                .choice()
+                    .when(header("dataset").isEqualTo("bib"))
+                        .to("elasticsearch://2012M-162.local-es-cluster?ip=localhost&operation=INDEX&indexName=${whelk.id}&indexType=bib")
+                    .when(header("dataset").isEqualTo("auth"))
+                        .to("elasticsearch://2012M-162.local-es-cluster?ip=localhost&operation=INDEX&indexName=${whelk.id}&indexType=auth")
+                    .when(header("dataset").isEqualTo("hold"))
+                        .to("elasticsearch://2012M-162.local-es-cluster?ip=localhost&operation=INDEX&indexName=${whelk.id}&indexType=hold")
     }
 }

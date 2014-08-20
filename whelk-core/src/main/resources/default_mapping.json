@@ -1,5 +1,9 @@
 {
     "date_detection" : false,
+    "_id" : {
+        "type": "string",
+        "path": "elastic_id"
+    },
     "_timestamp" : {
         "enabled" : true,
         "store" : true

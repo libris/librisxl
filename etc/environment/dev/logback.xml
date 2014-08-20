@@ -15,6 +15,9 @@
   <logger name="org.apache.camel">
       <level value="debug"/>
   </logger>
+  <logger name="org.apache.activemq">
+      <level value="info"/>
+  </logger>
   <logger name="se.kb.libris.whelks.api.BasicAPI">
       <level value="info"/>
   </logger>
@@ -34,22 +37,22 @@
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.BasicElasticComponent">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
  <logger name="se.kb.libris.whelks.plugin.BasicPlugin">
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.BasicComponent">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.PairtreeHybridDiskStorage">
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.Document">
       <level value="info"/>

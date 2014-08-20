@@ -105,7 +105,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
             doc = storage.get(uri, version)
         }
 
-
         if (expandLinks) {
             LinkExpander le = getLinkExpanderFor(doc)
             if (le) {
@@ -294,8 +293,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
             }
             log.debug("Setting up and configuring Apache Camel")
             def wcm = new WhelkCamelMain()
-            wcm.addRoutes(new WhelkRouteBuilder())
-            wcm.addComponent("activemq", ActiveMQComponent.activeMQComponent("tcp://localhost:61616"))
+            wcm.addRoutes(new WhelkRouteBuilder(this))
+
+            ActiveMQComponent amq = ActiveMQComponent.activeMQComponent()
+            amq.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory("tcp://localhost:61616"))
+            wcm.addComponent("activemq", amq)
             wcm.addComponent("diskstore", new DiskStorageComponent())
             camelContext = wcm.camelContext
             log.debug("Retrieving the Camel Context: $camelContext")

@@ -31,6 +31,7 @@ class Document {
     private static final ObjectMapper mapper = new ObjectMapper()
     @JsonIgnore
     static final TIMESTAMP_KEY = "timestamp"
+    @JsonIgnore
     static final MODIFIED_KEY = "modified"
 
     private long timestamp = 0L
@@ -73,10 +74,12 @@ class Document {
         withMetaEntry(entryfile)
     }
 
+    @JsonIgnore
     String getDataAsString() {
         return new String(getData(), "UTF-8")
     }
 
+    @JsonIgnore
     Map getDataAsMap() {
         if (!isJson()) {
             throw new DocumentException("Cannot serialize data as Map. (Content-type is $contentType)")
@@ -97,6 +100,7 @@ class Document {
     Map toMap() {
         return mapper.convertValue(this, Map)
     }
+
     byte[] getData(long offset, long length) {
         byte[] ret = new byte[(int)length]
         System.arraycopy(getData(), (int)offset, ret, 0, (int)length)

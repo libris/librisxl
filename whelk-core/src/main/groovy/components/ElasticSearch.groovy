@@ -72,6 +72,11 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     @Override
     void componentBootstrap(String indexName) {
         createIndexIfNotExists(indexName)
+        flush()
+        def realIndex = getRealIndexFor(indexName)
+        configuredTypes.each { key, value ->
+            checkTypeMapping(realIndex, key)
+        }
         shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
     }
 

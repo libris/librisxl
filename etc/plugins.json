@@ -33,7 +33,10 @@
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
-                 "bib" : [ "text", "book", "serial" ]
+                 "bib" : [ "text", "book", "serial" ],
+                 "hold": [],
+                 "def" : [],
+                 "sys" : []
             },
             "elasticHost": "_property:ELASTIC_HOST",
             "batchUpdateSize" : 2000
