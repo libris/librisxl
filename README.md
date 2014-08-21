@@ -50,14 +50,13 @@ Load into the running whelk:
 
 ### Import/update local storage from test data
 
-Create a local OAI-PMH dump of examples and run a full import:
+Create a local OAI-PMH dump of examples and run a full import, load into running whelk:
 
     $ python scripts/assemble_oaipmh_records.py *******:**** scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
-    $ for d in auth bib; do gradle whelkOperation -Dargs="-o import -w libris -c oaipmhimporter -d $d -u http://localhost:8000/$d/oaipmh"; done
-    $ gradle whelkOperation -Dargs='-o linkfindandcomplete -w libris -d bib'
-    $ fg
-    <CTRL-C>
+
+    Make sure whelk is running ($gradle jettyrun) and go to http://localhost:8180/whelk-webapi/_operations using a browser
+
 
 (Using the OAI-PMH dump makes out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
 
