@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.plugin.FormatConverter
 import se.kb.libris.whelks.plugin.LinkExpander
+import se.kb.libris.whelks.component.ElasticShapeComputer
 
 import org.apache.camel.processor.UnmarshalProcessor
 import org.apache.camel.spi.DataFormat
@@ -20,6 +21,7 @@ class FormatConverterProcessor implements Processor {
 
     FormatConverter converter
     LinkExpander expander
+    ElasticShapeComputer shapeComputer
 
     public static final ObjectMapper mapper = new ObjectMapper()
 
@@ -48,6 +50,9 @@ class FormatConverterProcessor implements Processor {
                 data = doc.dataAsMap
             }
             String identifier = message.getHeader("identifier")
+            String indexType = shapeComputer.calculateShape(identifier)
+            log.info("Setting indexType: $indexType")
+            message.setHeader("elasticDestination", "elasticsearch://2012M-162.local-es-cluster?ip=localhost&operation=INDEX&indexName=${shapeComputer.whelkName}&indexType=${indexType}")
             def idelements = new URI(identifier).path.split("/") as List
             idelements.remove(0)
             data["elastic_id"] = idelements.join("::")

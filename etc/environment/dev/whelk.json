@@ -12,7 +12,8 @@
     "_docBaseUri" : "http://libris.kb.se/",
     "_plugins": {
         "_support": [
-            "elasticnode"
+            "elasticnode",
+            "shapecomputer"
             ],
         "_converters": [
             "linkcompleter",
