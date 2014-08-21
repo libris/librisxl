@@ -1,5 +1,7 @@
 package se.kb.libris.whelks.camel
 
+import groovy.util.logging.Slf4j as Log
+
 import se.kb.libris.whelks.Whelk
 import se.kb.libris.whelks.plugin.Plugin
 import se.kb.libris.whelks.plugin.WhelkAware
@@ -19,6 +21,14 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
     Whelk whelk
 
+    int elasticBatchSize = 2000
+    long elasticBatchTimeout = 5000
+
+    WhelkRouteBuilder(Map settings) {
+        elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
+        elasticBatchTimeout = settings.get("elasticBatchTimeout", elasticBatchTimeout)
+    }
+
     void configure() {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
         assert formatConverterProcessor
@@ -29,7 +39,9 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         from("activemq:libris.index")
             .process(formatConverterProcessor)
+                //.aggregate(header("dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
                 .routingSlip("elasticDestination")
+                //.to("mock:result")
     }
 
     // Plugin methods
@@ -46,9 +58,11 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     }
 }
 
+@Log
 class ArrayListAggregationStrategy implements AggregationStrategy {
 
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
+        log.info("Called aggregator for message in dataset: ${newExchange.in.getHeader("dataset")}")
         Object newBody = newExchange.getIn().getBody()
         ArrayList<Object> list = null
         if (oldExchange == null) {

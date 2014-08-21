@@ -40,6 +40,8 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
     boolean versioning
 
+    private ProducerTemplate producerTemplate
+
     final static Pairtree pairtree = new Pairtree()
 
     static final String ENTRY_FILE_NAME = "entry.json"
@@ -95,7 +97,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     @groovy.transform.CompileStatic
     public boolean store(Document doc) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
-        def producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
         boolean result = storeAsFile(doc)
         log.debug("Result from store-operation: $result")
         if (result) {
@@ -106,7 +107,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                     "id": translateIdentifier(doc.identifier)
                 ]
             )
-            notifyCamel(producerTemplate, doc)
+            notifyCamel(doc)
         }
         return result
     }
@@ -115,7 +116,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     public void bulkStore(List<Document> docs) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         long startTime
-        def producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
         if (log.debugEnabled) {
             startTime = System.currentTimeMillis()
         }
@@ -131,7 +131,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 ]
 
                 //Send to camel route
-                notifyCamel(producerTemplate, doc)
+                notifyCamel(doc)
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
@@ -142,7 +142,10 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
     }
 
-    private void notifyCamel(producerTemplate, document) {
+    void notifyCamel(Document document) {
+        if (!producerTemplate) {
+            producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
+        }
         Exchange exchange = new DefaultExchange(getWhelk().getCamelContext())
         Message message = new DefaultMessage()
         if (document.isJson()) {

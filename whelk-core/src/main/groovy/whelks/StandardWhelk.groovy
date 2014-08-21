@@ -189,9 +189,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         try {
             if (request.method == "GET" && path == "/") {
                 whelkinfo["components"] = components.collect {
-                    [ "id": it.id,
-                      "listener": it.listenerStatus,
-                      "state": it.stateStatus ]
+                    [ "id": it.id ]
                 }
                 printAvailableAPIs(response, whelkinfo)
             } else {

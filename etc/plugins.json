@@ -538,6 +538,10 @@
         "_class" : "se.kb.libris.whelks.camel.WhelkRouteBuilder",
         "_plugins" : [
             "elastic_camel_processor"
-        ]
+        ],
+        "_params": {
+            "elasticBatchSize": 2000,
+            "elasticBatchTimeout": 5000
+        }
     }
 }

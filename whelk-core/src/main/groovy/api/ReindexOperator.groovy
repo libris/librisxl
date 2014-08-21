@@ -57,7 +57,9 @@ class ReindexOperator extends AbstractOperator {
     void doRun(long startTime) {
         List<Document> indexdocs = []
         List<Document> graphdocs = []
+        /*
         gstoreQueue = Executors.newSingleThreadExecutor()
+        */
         indexQueue = Executors.newFixedThreadPool(3)
         gstoreAvailable = new Semaphore(graphstoreSemaphores)
         indexAvailable = new Semaphore(indexingSemaphores)
@@ -99,11 +101,15 @@ class ReindexOperator extends AbstractOperator {
                         log.trace("Expected exception ${wae.message}")
                     }
                 }
+                /*
                 indexdocs << doc
                 graphdocs << doc
+                */
+                whelk.storage.notifyCamel(doc)
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
+            /*
             if (++count % indexBatchSize == 0) { // Bulk index 1000 docs at a time
                 doTheIndexing(indexdocs, indexName)
                 indexdocs = []
@@ -112,6 +118,7 @@ class ReindexOperator extends AbstractOperator {
                 doGraphIndexing(graphdocs)
                 graphdocs = []
             }
+            */
             runningTime = System.currentTimeMillis() - startTime
             if (showSpinner) {
                 def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
@@ -121,6 +128,7 @@ class ReindexOperator extends AbstractOperator {
                 break
             }
         }
+        /*
         log.debug("Went through all documents. Processing remainder.")
         if (graphdocs.size() > 0 && whelk.graphStore && doGraphing) {
             log.trace("Reindexing remaining ${graphdocs.size()} documents")
@@ -140,6 +148,7 @@ class ReindexOperator extends AbstractOperator {
                 log.warn("Failed adding identifiers to graphstore: ${wae.failedIdentifiers as String}")
             }
         }
+        */
         log.info("Reindexed $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds.")
         if (doIndexing && !dataset && !cancelled) {
             indexQueue.execute({
@@ -147,15 +156,19 @@ class ReindexOperator extends AbstractOperator {
             })
         }
         operatorState=OperatorState.FINISHING
+        /*
         indexQueue.execute({
             this.whelk.flush()
-            this.whelk.index.setState(whelk.index.LAST_UPDATED, newestDocumentTimestamp)
+            //this.whelk.index.setState(whelk.index.LAST_UPDATED, newestDocumentTimestamp)
         } as Runnable)
+        */
         indexQueue.shutdown()
+        /*
         gstoreQueue.execute({
             this.whelk.graphstore.setState(whelk.graphstore.LAST_UPDATED, newestDocumentTimestamp)
         } as Runnable)
         gstoreQueue.shutdown()
+        */
     }
 
     void doTheIndexing(final List docs, String indexName) {
