@@ -3911,7 +3911,13 @@
       "domainIncludes": "Serial",
       "rangeEntity": "CreativeWork"
     },
-    "775": {},
+    "775": {
+      "inherit": "772",
+      "TODO:note": "uncommon",
+      "addLink": "alternateEdition",
+      "$e": {"property": "language", "TODO:inherit": "008:[35:38]"},
+      "$f": {"property": "publicationCountry", "TODO:inherit": "008:[15:18]"}
+    },
     "776": {
       "inherit": "772",
       "addLink": "alternateFormat",
