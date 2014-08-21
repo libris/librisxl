@@ -106,6 +106,7 @@ class ReindexOperator extends AbstractOperator {
                 graphdocs << doc
                 */
                 whelk.storage.notifyCamel(doc)
+                count++
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
@@ -183,7 +184,7 @@ class ReindexOperator extends AbstractOperator {
                     // Bypass component.bulkAdd() to be able to index into indexName
                     def preparedDocs = whelk.index.prepareDocs(docs, docs.first().contentType)
                     whelk.index.addDocuments(preparedDocs, indexName)
-                    whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
+                    //whelk.index.setState(whelk.index.LAST_UPDATED, new Date().getTime())
                 } catch (WhelkAddException wae) {
                     log.warn("Failed indexing identifiers: ${wae.failedIdentifiers}")
                 } catch (PluginConfigurationException pce) {

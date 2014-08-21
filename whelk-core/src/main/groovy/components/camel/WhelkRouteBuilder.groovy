@@ -23,15 +23,20 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
     int elasticBatchSize = 2000
     long elasticBatchTimeout = 5000
+    List<String> elasticTypes
 
     WhelkRouteBuilder(Map settings) {
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
         elasticBatchTimeout = settings.get("elasticBatchTimeout", elasticBatchTimeout)
+        elasticTypes = settings.get("elasticTypes")
     }
 
     void configure() {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
         assert formatConverterProcessor
+
+        def etypeRouter = new ElasticTypeRouter()
+        etypeRouter.elasticTypes = elasticTypes
 
         from("direct:pairtreehybridstorage")
             .multicast()
@@ -39,9 +44,16 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         from("activemq:libris.index")
             .process(formatConverterProcessor)
+                .dynamicRouter(bean(etypeRouter, "decide"))
+
+
+        for (type in elasticTypes) {
+            from("direct-vm:$type")
                 //.aggregate(header("dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
                 .routingSlip("elasticDestination")
-                //.to("mock:result")
+                //.to("mock:$type")
+        }
+        from("direct-vm:other").to("mock:error")
     }
 
     // Plugin methods
@@ -55,6 +67,22 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
     public Plugin getPlugin(String pluginId) {
         return plugins.find { it.id == pluginId }
+    }
+}
+
+@Log
+class ElasticTypeRouter {
+    List<String> elasticTypes
+
+    String decide(@Header("dataset") String dataset, @Header(Exchange.SLIP_ENDPOINT) String prev) {
+        if (prev == null) {
+            if (elasticTypes.contains(dataset)) {
+                return "direct-vm:$dataset"
+            } else {
+                return "direct-vm:other"
+            }
+        }
+        return null
     }
 }
 

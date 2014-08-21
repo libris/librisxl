@@ -59,11 +59,14 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
     String defaultType = "record"
     Map<String,String> configuredTypes
+    List<String> availableTypes
     ElasticShapeComputer shapeComputer
+
 
     ElasticSearch(Map settings) {
         super(settings)
         configuredTypes = (settings ? settings.get("typeConfiguration", [:]) : [:])
+        availableTypes = (settings ? settings.get("availableTypes", []) : [])
         if (settings.batchUpdateSize) {
             this.batchUpdateSize = settings.batchUpdateSize
         }
@@ -74,8 +77,8 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         createIndexIfNotExists(indexName)
         flush()
         def realIndex = getRealIndexFor(indexName)
-        configuredTypes.each { key, value ->
-            checkTypeMapping(realIndex, key)
+        availableTypes.each {
+            checkTypeMapping(realIndex, it)
         }
         shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
     }
@@ -141,7 +144,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
         client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(uri), translateIdentifier(uri)))
 
-        setState(LAST_UPDATED, new Date().getTime())
             // Kanske en matchall-query filtrerad på _type och _id?
     }
 

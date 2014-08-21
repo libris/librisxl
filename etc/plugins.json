@@ -27,12 +27,10 @@
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
-                 "bib" : [ "text", "book", "serial" ],
-                 "hold": [],
-                 "def" : [],
-                 "sys" : []
+                 "bib" : [ "text", "book", "serial" ]
             },
-            "elasticHost": "_property:ELASTIC_HOST"
+            "elasticHost": "_property:ELASTIC_HOST",
+            "availableTypes": "_property:ELASTIC_TYPES"
         },
         "_unique" : true
     },
@@ -541,7 +539,8 @@
         ],
         "_params": {
             "elasticBatchSize": 2000,
-            "elasticBatchTimeout": 5000
+            "elasticBatchTimeout": 5000,
+            "elasticTypes": "_property:ELASTIC_TYPES"
         }
     }
 }

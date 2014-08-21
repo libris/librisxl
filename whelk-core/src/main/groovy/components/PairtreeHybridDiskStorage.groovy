@@ -321,7 +321,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
             }
         }
-        //setState(LAST_UPDATED, new Date().getTime())
         deleteEntry(uri, indexName, METAENTRY_INDEX_TYPE)
     }
 
