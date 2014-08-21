@@ -22,6 +22,7 @@ import org.codehaus.jackson.map.ObjectMapper
 
 import org.apache.camel.*
 import org.apache.camel.impl.*
+import org.apache.camel.builder.RouteBuilder
 
 import org.apache.activemq.camel.component.ActiveMQComponent
 
@@ -292,17 +293,19 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 component.start()
             }
             log.debug("Setting up and configuring Apache Camel")
-            def wcm = new WhelkCamelMain()
-            wcm.addRoutes(new WhelkRouteBuilder(this))
+            def whelkCamelMain = new WhelkCamelMain()
+            for (route in plugins.findAll { it instanceof RouteBuilder }) {
+                whelkCamelMain.addRoutes(route)
+            }
 
             ActiveMQComponent amq = ActiveMQComponent.activeMQComponent()
-            amq.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory("tcp://localhost:61616"))
-            wcm.addComponent("activemq", amq)
-            camelContext = wcm.camelContext
-            log.debug("Retrieving the Camel Context: $camelContext")
+            amq.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL']))
+            whelkCamelMain.addComponent("activemq", amq)
+            camelContext = whelkCamelMain.camelContext
+
             ctxThread = Thread.start {
                 log.debug("Starting Apache Camel")
-                wcm.run()
+                whelkCamelMain.run()
             }
             log.info("Whelk ${this.id} is now operational.")
         } catch (Exception e) {

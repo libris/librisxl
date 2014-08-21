@@ -529,5 +529,15 @@
 
             }
         }
+    },
+    "elastic_camel_processor": {
+        "_class" : "se.kb.libris.whelks.camel.FormatConverterProcessor",
+        "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ]
+    },
+    "routebuilder": {
+        "_class" : "se.kb.libris.whelks.camel.WhelkRouteBuilder",
+        "_plugins" : [
+            "elastic_camel_processor"
+        ]
     }
 }

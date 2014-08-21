@@ -11,18 +11,12 @@ import se.kb.libris.whelks.exception.*
 
 @Log
 public abstract class BasicPlugin implements Plugin {
-    private boolean enabled = true;
     String id = null
     private List<Plugin> plugins = new ArrayList<Plugin>();
     Map global
 
     public final static mapper = new ObjectMapper()
 
-    @Override
-    public boolean isEnabled() { return enabled; }
-    @Override
-    public void setEnabled(boolean e) { this.enabled = e; }
-    @Override
     public final void init(String initString) {
         if (this.id == null) {
             throw new PluginConfigurationException("Plugin ${this.getClass().getName()} must have ID set before init()")
@@ -43,7 +37,6 @@ public abstract class BasicPlugin implements Plugin {
     public int hashCode() {
         int hash = 1;
         hash = hash * 31 + (id?.hashCode() ?: 0)
-        hash = hash * 15 + (enabled ? 0 : 1);
         return hash;
     }
 }

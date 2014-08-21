@@ -3,9 +3,8 @@ package se.kb.libris.whelks.camel
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.plugin.FormatConverter
-import se.kb.libris.whelks.plugin.LinkExpander
-import se.kb.libris.whelks.component.ElasticShapeComputer
+import se.kb.libris.whelks.plugin.*
+import se.kb.libris.whelks.component.*
 
 import org.apache.camel.processor.UnmarshalProcessor
 import org.apache.camel.spi.DataFormat
@@ -17,50 +16,52 @@ import org.apache.camel.component.jackson.JacksonDataFormat
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class FormatConverterProcessor implements Processor {
+class FormatConverterProcessor extends BasicPlugin implements Processor {
 
     FormatConverter converter
     LinkExpander expander
     ElasticShapeComputer shapeComputer
 
-    public static final ObjectMapper mapper = new ObjectMapper()
+    static final ObjectMapper mapper = new ObjectMapper()
+    String whelkName
 
-    FormatConverterProcessor(FormatConverter c, LinkExpander e) {
-        this.converter = c
-        this.expander = e
+    void bootstrap(String whelkName) {
+        this.whelkName = whelkName
+        this.converter = plugins.find { it instanceof FormatConverter }
+        this.expander = plugins.find { it instanceof LinkExpander }
+        this.shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
     }
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        try {
-            Message message = exchange.getIn()
-            def data = message.getBody()
-            if (converter || expander) {
-                def entry = [:]
-                message.headers.each { key, value ->
-                    entry[(key)] = value
-                }
-                Document doc = new Document().withData(data).withEntry(entry)
-                if (converter) {
-                    doc = converter.convert(doc)
-                }
-                if (expander) {
-                    doc = expander.expand(doc)
-                }
-                data = doc.dataAsMap
+        Message message = exchange.getIn()
+        def data = message.getBody()
+
+        if (converter || expander) {
+            def entry = [:]
+            message.headers.each { key, value ->
+                entry[(key)] = value
             }
-            String identifier = message.getHeader("identifier")
-            String indexType = shapeComputer.calculateShape(identifier)
-            log.info("Setting indexType: $indexType")
-            message.setHeader("elasticDestination", "elasticsearch://2012M-162.local-es-cluster?ip=localhost&operation=INDEX&indexName=${shapeComputer.whelkName}&indexType=${indexType}")
-            def idelements = new URI(identifier).path.split("/") as List
-            idelements.remove(0)
-            data["elastic_id"] = idelements.join("::")
-            message.setBody(mapper.writeValueAsString(data))
-            exchange.setIn(message)
-        } catch (Exception e) {
-            log.error("Exception", e)
-            throw e
+            Document doc = new Document().withData(data).withEntry(entry)
+            if (converter) {
+                doc = converter.convert(doc)
+            }
+            if (expander) {
+                doc = expander.expand(doc)
+            }
+            data = doc.dataAsMap
         }
+
+        String identifier = message.getHeader("identifier")
+        String indexType = shapeComputer.calculateShape(identifier)
+        String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
+
+        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${global.ELASTIC_HOST}&port=${global.ELASTIC_PORT}&operation=INDEX&indexName=${whelkName}&indexType=${indexType}")
+
+        def idelements = new URI(identifier).path.split("/") as List
+        idelements.remove(0)
+        data["elastic_id"] = idelements.join("::")
+        message.setBody(mapper.writeValueAsString(data))
+        exchange.setIn(message)
     }
 }
