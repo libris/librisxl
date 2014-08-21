@@ -1579,36 +1579,6 @@
 
   },
 
-  "comboTypeMap": {
-    "Serial": {"contentType": "Text", "aggregateType": "Serial",
-      "ESerial": {"carrierType": "OnlineResource"}
-    },
-    "Collection": {},
-    "Dataset": {},
-    "Image": {},
-    "Movie": {},
-    "NotatedMusic": {},
-    "ThreeDimensionalObject": {},
-    "Kit": {},
-    "Mixed": {},
-    "Multimedia": {},
-    "Book": {"contentType": "Text",
-      "Audiobook": {"carrierType": "SoundRecording"},
-      "CDBook": {"carrierType": "OpticalDisc"},
-      "EBook": {"carrierType": "OnlineResource"}
-    },
-    "Cartography": {"contentType": "Cartography",
-      "CDMap": {"carrierType": "OpticalDisc"}
-    },
-    "Audio": {"contentType": "NonmusicalSoundRecording", "abstract": true,
-      "Audiobook": {"TODO": "not 655a=Talböcker"}
-    },
-    "Music": {"contentType": "MusicalSoundRecording",
-      "MusicCD": {"carrierType": "SoundDisc"}
-    },
-    "Electronic": {"carrierType": "Electronic", "aspect": true}
-  },
-
   "bib": {
 
     "000": {
