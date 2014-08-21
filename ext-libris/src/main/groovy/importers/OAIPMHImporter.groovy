@@ -56,8 +56,6 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
     void bootstrap(String whelkId) {
         marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
         enhancer = plugins.find { it instanceof JsonLDLinkCompleterFilter }
-
-        assert marcFrameConverter
     }
 
     int doImport(String dataset, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
@@ -202,10 +200,12 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                     }
 
                     try {
-                        if (enhancer) {
-                            documents << enhancer.filter(marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta]))
-                        } else {
-                            documents << marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
+                        if (marcFrameConverter) {
+                            if (enhancer) {
+                                documents << enhancer.filter(marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta]))
+                            } else {
+                                documents << marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
+                            }
                         }
                         def marcmeta = meta
                         marcmeta.put("oaipmh_header", createString(it.header))
@@ -245,6 +245,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
         }
         if (documents?.size() > 0) {
             addDocuments(documents)
+        }
+        if (marcdocuments?.size() > 0) {
             addDocuments(marcdocuments)
         }
 
