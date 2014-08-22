@@ -56,11 +56,17 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
         String indexType = shapeComputer.calculateShape(identifier)
         String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
 
+
         message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${global.ELASTIC_HOST}&port=${global.ELASTIC_PORT}&operation=INDEX&indexName=${whelkName}&indexType=${indexType}")
+
 
         def idelements = new URI(identifier).path.split("/") as List
         idelements.remove(0)
         data["elastic_id"] = idelements.join("::")
+        if (identifier == "/hold/718803") {
+            log.info("destination for ${identifier}: ${message.getHeader("elasticDestination")}")
+            log.info("Data is: $data")
+        }
         message.setBody(mapper.writeValueAsString(data))
         exchange.setIn(message)
     }

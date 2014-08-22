@@ -42,8 +42,7 @@ class DocumentAPI extends BasicAPI {
 
         (path, mode) = determineDisplayMode(path)
         if (request.method == "GET") {
-            log.debug "Request path: ${path}"
-            log.debug " DisplayMode: $mode"
+
             def version = request.getParameter("version")
             def accepting = request.getHeader("accept")?.split(",").collect {
                     int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
@@ -52,9 +51,8 @@ class DocumentAPI extends BasicAPI {
 
             log.debug("Accepting $accepting")
             try {
-                log.debug("We want version $version")
                 def d = whelk.get(new URI(path), version, accepting)
-                log.debug("Document received from whelk: $d")
+
                 if (d && (mode == DisplayMode.META || !d.entry['deleted'])) {
                     if (mode == DisplayMode.META) {
                         sendResponse(response, d.metadataAsJson, "application/json")
@@ -73,30 +71,25 @@ class DocumentAPI extends BasicAPI {
             } catch (WhelkRuntimeException wrte) {
                 response.sendError(response.SC_INTERNAL_SERVER_ERROR, wrte.message)
             }
+
         } else if (request.method == "POST") {
             try {
-                log.debug("request: $request")
-                Document doc = new Document().withData(Tools.normalizeString(request.getInputStream().getText("UTF-8"))).withEntry(["contentType":request.getContentType()])
-                doc = this.whelk.sanityCheck(doc)
-                def identifier = this.whelk.add(doc)
-                response.setHeader("ETag", doc.timestamp as String)
-                /*
-                sendResponse(response, doc.dataAsString, doc.contentType)
-                */
+                def entry = [
+                    "contentType":request.getContentType()
+                    ]
+                Document doc = new Document().withData(request.getInputStream().getBytes()).withEntry(entry)
+                def identifier = convertAndSaveDocument(doc)
+
                 log.debug("Saved document $identifier")
+
                 def locationRef = request.getRequestURL()
                 while (locationRef[-1] == '/') {
                     locationRef.deleteCharAt(locationRef.length()-1)
                 }
                 locationRef.append(identifier)
-                log.debug("Setting location for redirect: $locationRef")
-                response.setHeader("Location", locationRef.toString())
-                response.sendError(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
-                /*
-                response.setStatus(Status.REDIRECTION_SEE_OTHER, "Thank you! Document ingested with id ${identifier}")
-                log.debug("Redirecting with location ref " + request.getRootRef().toString() + identifier)
-                response.setLocationRef(request.getRootRef().toString() + "${identifier}")
-                */
+
+                sendDocumentSavedResponse(response, locationRef, doc.timestamp as String)
+
             } catch (WhelkRuntimeException wre) {
                 response.sendError(response.SC_INTERNAL_SERVER_ERROR, wre.message)
             }
@@ -123,13 +116,10 @@ class DocumentAPI extends BasicAPI {
                 } else {
                     try {
                         Document doc = new Document(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
-                        // TODO: Insert format converters
-                        identifier = this.whelk.add(doc)
-                        def locationRef = request.getRequestURL()
-                        log.debug("Setting location for redirect: $locationRef")
-                        response.setHeader("Location", locationRef.toString())
-                        response.setHeader("ETag", doc.timestamp as String)
-                        response.setStatus(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
+
+                        identifier = convertAndSaveDocument(doc)
+                        sendDocumentSavedResponse(response, request.getRequestURL(), doc.timestamp as String)
+
                     } catch (DocumentException de) {
                         log.warn("Document exception: ${de.message}")
                         response.sendError(HttpServletResponse.SC_BAD_REQUEST, de.message)
@@ -151,6 +141,28 @@ class DocumentAPI extends BasicAPI {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
             }
         }
+    }
+
+    URI convertAndSaveDocument(Document doc) {
+        doc = this.whelk.sanityCheck(doc)
+        log.debug("Saving document first pass.")
+        def identifier = this.whelk.add(doc)
+        for (fc in plugins.findAll { it instanceof FormatConverter && it.requiredContentType == doc.contentType }) {
+            try {
+                doc = fc.convert(doc)
+                doc = this.whelk.sanityCheck(doc)
+                identifier = this.whelk.add(doc)
+            } catch (WhelkAddException wae) {
+                log.warn("Conversion to ${doc.contentType} resulted in no available storages.")
+            }
+        }
+    }
+
+
+    void sendDocumentSavedResponse(Response response, URL locationRef, String timestamp) {
+        response.setHeader("Location", locationRef.toString())
+        response.setHeader("ETag", timestamp as String)
+        response.setStatus(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
     }
 
     private String getDatasetBasedOnPath(path) {

@@ -35,25 +35,17 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
         assert formatConverterProcessor
 
-        def etypeRouter = new ElasticTypeRouter()
-        etypeRouter.elasticTypes = elasticTypes
+        from("direct:pairtreehybridstorage").multicast().to("activemq:libris.index", "activemq:libris.graphstore")
 
-        from("direct:pairtreehybridstorage")
-            .multicast()
-                .to("activemq:libris.index", "activemq:libris.graphstore")
-
-        from("activemq:libris.index")
-            .process(formatConverterProcessor)
-                .dynamicRouter(bean(etypeRouter, "decide"))
-
+        def mqToDirectByType = from("activemq:libris.index").process(formatConverterProcessor)
 
         for (type in elasticTypes) {
+            mqToDirectByType.to("direct-vm:$type")
+
             from("direct-vm:$type")
                 //.aggregate(header("dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
                 .routingSlip("elasticDestination")
-                //.to("mock:$type")
         }
-        from("direct-vm:other").to("mock:error")
     }
 
     // Plugin methods
@@ -67,22 +59,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
     public Plugin getPlugin(String pluginId) {
         return plugins.find { it.id == pluginId }
-    }
-}
-
-@Log
-class ElasticTypeRouter {
-    List<String> elasticTypes
-
-    String decide(@Header("dataset") String dataset, @Header(Exchange.SLIP_ENDPOINT) String prev) {
-        if (prev == null) {
-            if (elasticTypes.contains(dataset)) {
-                return "direct-vm:$dataset"
-            } else {
-                return "direct-vm:other"
-            }
-        }
-        return null
     }
 }
 
