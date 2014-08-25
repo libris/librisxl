@@ -3844,7 +3844,7 @@
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "contains"},
     "772": {
-      "addLink": "containedIn",
+      "addLink": "isPartOf",
       "rangeEntity": "CreativeWork",
       "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
       "$b": {"property": "edition", "TODO:targetMatch": "250"},
