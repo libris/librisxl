@@ -20,7 +20,6 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
 
     FormatConverter converter
     LinkExpander expander
-    ElasticShapeComputer shapeComputer
 
     static final ObjectMapper mapper = new ObjectMapper()
     String whelkName
@@ -29,44 +28,63 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
         this.whelkName = whelkName
         this.converter = plugins.find { it instanceof FormatConverter }
         this.expander = plugins.find { it instanceof LinkExpander }
-        this.shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
     }
 
     @Override
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
-        def data = message.getBody()
-        def entry = [:]
-        message.headers.each { key, value ->
-            if (key.startsWith("entry:")) {
-                entry.put(key.substring(6), value)
-            }
-        }
-        Document doc = new Document().withData(data).withEntry(entry)
-
         if (converter || expander) {
+            def data = message.getBody()
+            def entry = [:]
+            message.headers.each { key, value ->
+                if (key.startsWith("entry:")) {
+                    entry.put(key.substring(6), value)
+                }
+            }
+            Document doc = new Document().withData(data).withEntry(entry)
             if (converter) {
                 doc = converter.convert(doc)
             }
             if (expander) {
                 doc = expander.expand(doc)
             }
-            data = doc.dataAsMap
+            message.setBody(doc.dataAsMap)
         }
-        if (data instanceof Map) {
-            String indexType = shapeComputer.calculateShape(doc.identifier)
-            String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
+        exchange.setOut(message)
+    }
+}
 
-            message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${global.ELASTIC_HOST}&port=${global.ELASTIC_PORT}&operation=INDEX&indexName=${whelkName}&indexType=${indexType}")
+@Log
+class ElasticTypeRouteProcessor implements Processor {
 
-            data["elastic_id"] = shapeComputer.translateIdentifier(new URI(doc.identifier))
-            message.setBody(mapper.writeValueAsString(data))
-            if (message.getHeader("elasticDestination") == null) {
-                log.warn("${doc.identifier} has no destionation.")
-            }
-            exchange.setOut(message)
+    List types
+    ElasticShapeComputer shapeComputer
+    String elasticHost
+    int elasticPort
+
+    ElasticTypeRouteProcessor(String elasticHost, int elasticPort, List<String> availableTypes, ElasticShapeComputer esc) {
+        this.types = availableTypes
+        this.shapeComputer = esc
+        this.elasticHost = elasticHost
+        this.elasticPort = elasticPort
+    }
+
+    @Override
+    public void process(Exchange exchange) throws Exception {
+        Message message = exchange.getIn()
+        def dataset = message.getHeader("entry:dataset")
+        if (dataset && types.contains(dataset)) {
+            message.setHeader("typeQDestination", "direct:$dataset")
         } else {
-            log.warn("Message body for ${doc.identifier} not json. Will not be able to index.")
+            message.setHeader("typeQDestination", "direct:unknown")
         }
+        String identifier = message.getHeader("entry:identifier")
+        String indexType = shapeComputer.calculateShape(identifier)
+        String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
+
+        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=INDEX&indexName=${shapeComputer.whelkName}&indexType=${indexType}")
+
+        message.getBody(Map.class).put("elastic_id", shapeComputer.translateIdentifier(new URI(identifier)))
+        exchange.setOut(message)
     }
 }

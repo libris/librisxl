@@ -15,6 +15,9 @@
   <logger name="org.apache.camel">
       <level value="info"/>
   </logger>
+  <logger name="org.apache.camel.mock">
+      <level value="debug"/>
+  </logger>
   <logger name="org.apache.activemq">
       <level value="info"/>
   </logger>

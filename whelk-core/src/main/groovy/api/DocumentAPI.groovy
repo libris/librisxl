@@ -88,7 +88,7 @@ class DocumentAPI extends BasicAPI {
                 }
                 locationRef.append(identifier)
 
-                sendDocumentSavedResponse(response, locationRef, doc.timestamp as String)
+                sendDocumentSavedResponse(response, locationRef.toString(), doc.timestamp as String)
 
             } catch (WhelkRuntimeException wre) {
                 response.sendError(response.SC_INTERNAL_SERVER_ERROR, wre.message)
@@ -118,7 +118,7 @@ class DocumentAPI extends BasicAPI {
                         Document doc = new Document(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
 
                         identifier = convertAndSaveDocument(doc)
-                        sendDocumentSavedResponse(response, request.getRequestURL(), doc.timestamp as String)
+                        sendDocumentSavedResponse(response, request.getRequestURL().toString(), doc.timestamp as String)
 
                     } catch (DocumentException de) {
                         log.warn("Document exception: ${de.message}")
@@ -160,10 +160,10 @@ class DocumentAPI extends BasicAPI {
     }
 
 
-    void sendDocumentSavedResponse(HttpServletResponse response, URL locationRef, String timestamp) {
-        response.setHeader("Location", locationRef.toString())
+    void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String timestamp) {
+        response.setHeader("Location", locationRef)
         response.setHeader("ETag", timestamp as String)
-        response.setStatus(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")
+        response.setStatus(HttpServletResponse.SC_CREATED, "Thank you! Document ingested.")
     }
 
     private String getDatasetBasedOnPath(path) {

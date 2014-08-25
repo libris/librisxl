@@ -15,6 +15,18 @@ class JsonLdToTurtle {
     Map prefixes = [:]
     def uniqueBNodeSuffix = ""
 
+    JsonLdToTurtle(String contextPath, OutputStream outStream, String base=null) {
+        def mapper = new ObjectMapper()
+        def loader = getClass().classLoader
+        def contextData = loader.getResourceAsStream(contextPath).withStream {
+            mapper.readValue(it, Map)
+        }
+        this.context = JsonLdToTurtle.parseContext(contextData).context
+        this.prefixes = context.prefixes
+        this.base = base
+        writer = new OutputStreamWriter(outStream, "UTF-8")
+    }
+
     JsonLdToTurtle(Map context, OutputStream outStream, String base=null) {
         this.context = context.context
         this.prefixes = context.prefixes
