@@ -38,7 +38,8 @@
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
         "_plugins" : [
             "marcconverter",
-            "marcxml2jsonldconverter"
+            "marcxml2jsonldconverter",
+            "shapecomputer"
             ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
@@ -50,6 +51,9 @@
     },
     "pairtreeoaistorage": {
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+        "_plugins" : [
+            "shapecomputer"
+            ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
             "elasticHost": "_property:ELASTIC_HOST",
@@ -311,6 +315,10 @@
     },
     "documentapi" : {
         "_class" : "se.kb.libris.whelks.api.DocumentAPI",
+        "_plugins" : [
+            "marcconverter",
+            "marcxml2jsonldconverter"
+            ],
         "_params": {
             "contextHeaders": {
                 "bib": "/sys/context/lib.jsonld",

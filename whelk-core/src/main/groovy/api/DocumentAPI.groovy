@@ -149,17 +149,18 @@ class DocumentAPI extends BasicAPI {
         def identifier = this.whelk.add(doc)
         for (fc in plugins.findAll { it instanceof FormatConverter && it.requiredContentType == doc.contentType }) {
             try {
+                log.debug("Running formatconverter ${fc.id} on ${doc.identifier}")
                 doc = fc.convert(doc)
                 doc = this.whelk.sanityCheck(doc)
                 identifier = this.whelk.add(doc)
             } catch (WhelkAddException wae) {
-                log.warn("Conversion to ${doc.contentType} resulted in no available storages.")
+                log.warn("Converted to ${doc.contentType} but there are no storages for that.")
             }
         }
     }
 
 
-    void sendDocumentSavedResponse(Response response, URL locationRef, String timestamp) {
+    void sendDocumentSavedResponse(HttpServletResponse response, URL locationRef, String timestamp) {
         response.setHeader("Location", locationRef.toString())
         response.setHeader("ETag", timestamp as String)
         response.setStatus(HttpServletResponse.SC_CREATED, "Thank you! Document ingested with id ${identifier}")

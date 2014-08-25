@@ -154,7 +154,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             message.setBody(document.data)
         }
         document.entry.each { key, value ->
-            message.setHeader(key, value)
+            message.setHeader("entry:$key", value)
         }
         exchange.setIn(message)
         producerTemplate.asyncSend("direct:${this.id}", exchange)

@@ -37,8 +37,9 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         from("direct:pairtreehybridstorage").multicast().to("activemq:libris.index", "activemq:libris.graphstore")
 
-        def mqToDirectByType = from("activemq:libris.index").process(formatConverterProcessor)
+        def mqToDirectByType = from("activemq:libris.index").process(formatConverterProcessor).routingSlip("elasticDestination")
 
+        /*
         for (type in elasticTypes) {
             mqToDirectByType.to("direct-vm:$type")
 
@@ -46,6 +47,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 //.aggregate(header("dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
                 .routingSlip("elasticDestination")
         }
+        */
     }
 
     // Plugin methods

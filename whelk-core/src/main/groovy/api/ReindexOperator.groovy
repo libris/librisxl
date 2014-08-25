@@ -22,10 +22,6 @@ class ReindexOperator extends AbstractOperator {
     List<String> selectedComponents = null
     String startAt = null
     String fromStorage = null
-    ExecutorService gstoreQueue
-    ExecutorService indexQueue
-    Semaphore gstoreAvailable
-    Semaphore indexAvailable
 
     boolean showSpinner = false
 
@@ -45,10 +41,12 @@ class ReindexOperator extends AbstractOperator {
 
         log.info("Starting reindexing.")
 
-        if (!dataset && doIndexing) {
+        /*
+        if (!dataset) {
             log.debug("Requesting new index for ${whelk.index.id}.")
             indexName = whelk.index.createNewCurrentIndex(whelk.id)
         }
+        */
         if (fromStorage) {
             log.info("Rebuilding storage from $fromStorage")
         }
@@ -82,7 +80,7 @@ class ReindexOperator extends AbstractOperator {
         }
         log.info("Reindexed $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds.")
         // TODO: This will happen before indexing has taken place. Find a way to do this at the end of the queue
-        whelk.index.reMapAliases(whelk.id)
+        //whelk.index.reMapAliases(whelk.id)
     }
 
     @Override
@@ -120,5 +118,4 @@ class RebuildMetaIndexOperator extends AbstractOperator {
     void doRun(long startTime) {
         whelk.storage.rebuildIndex()
     }
-}
 }

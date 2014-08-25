@@ -29,19 +29,15 @@ class OperatorAPI extends BasicAPI {
 
     static final OPERATIONS_HTML_FILE = "operator.html"
 
-    static BenchmarkOperator benchmarkOperator = new BenchmarkOperator()
     static ReindexOperator reindexOperator = new ReindexOperator()
     static ImportOperator importOperator = new ImportOperator()
     static TransferOperator transferOperator = new TransferOperator()
     static RebuildMetaIndexOperator rebuildMetaIndexOperator = new RebuildMetaIndexOperator()
-    static PingCatchupOperator pingOperator = new PingCatchupOperator()
 
     static Map operators = ["reindex":reindexOperator,
                             "import":importOperator,
                             "transfer":transferOperator,
-                            "benchmark":benchmarkOperator,
-                            "rebuild":rebuildMetaIndexOperator,
-                            "ping":pingOperator]
+                            "rebuild":rebuildMetaIndexOperator]
 
     Map configurationSettings
 
@@ -191,7 +187,9 @@ class ImportOperator extends AbstractOperator {
     }
 }
 
+/*
 @Log
+@Deprecated
 class BenchmarkOperator extends AbstractOperator {
 
     String oid = "benchmark"
@@ -257,6 +255,7 @@ class BenchmarkOperator extends AbstractOperator {
         return map
     }
 }
+*/
 
 abstract class AbstractOperator implements Runnable {
     abstract String getOid()

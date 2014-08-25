@@ -36,13 +36,15 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
         def data = message.getBody()
+        def entry = [:]
+        message.headers.each { key, value ->
+            if (key.startsWith("entry:")) {
+                entry.put(key.substring(6), value)
+            }
+        }
+        Document doc = new Document().withData(data).withEntry(entry)
 
         if (converter || expander) {
-            def entry = [:]
-            message.headers.each { key, value ->
-                entry[(key)] = value
-            }
-            Document doc = new Document().withData(data).withEntry(entry)
             if (converter) {
                 doc = converter.convert(doc)
             }
@@ -51,23 +53,20 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
             }
             data = doc.dataAsMap
         }
+        if (data instanceof Map) {
+            String indexType = shapeComputer.calculateShape(doc.identifier)
+            String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
 
-        String identifier = message.getHeader("identifier")
-        String indexType = shapeComputer.calculateShape(identifier)
-        String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
+            message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${global.ELASTIC_HOST}&port=${global.ELASTIC_PORT}&operation=INDEX&indexName=${whelkName}&indexType=${indexType}")
 
-
-        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${global.ELASTIC_HOST}&port=${global.ELASTIC_PORT}&operation=INDEX&indexName=${whelkName}&indexType=${indexType}")
-
-
-        def idelements = new URI(identifier).path.split("/") as List
-        idelements.remove(0)
-        data["elastic_id"] = idelements.join("::")
-        if (identifier == "/hold/718803") {
-            log.info("destination for ${identifier}: ${message.getHeader("elasticDestination")}")
-            log.info("Data is: $data")
+            data["elastic_id"] = shapeComputer.translateIdentifier(new URI(doc.identifier))
+            message.setBody(mapper.writeValueAsString(data))
+            if (message.getHeader("elasticDestination") == null) {
+                log.warn("${doc.identifier} has no destionation.")
+            }
+            exchange.setOut(message)
+        } else {
+            log.warn("Message body for ${doc.identifier} not json. Will not be able to index.")
         }
-        message.setBody(mapper.writeValueAsString(data))
-        exchange.setIn(message)
     }
 }

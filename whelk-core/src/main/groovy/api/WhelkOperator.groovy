@@ -175,6 +175,7 @@ class WhelkOperator {
                 //whelk.findLinks(ds)
                 whelk.runFilters(ds)
             }
+            /*
         } else if (operation == "benchmark") {
             def params = [:]
             if (opt.d) {
@@ -191,6 +192,7 @@ class WhelkOperator {
             th.start()
             log.info("Benchmark thread is now running.")
             th.join()
+            */
         } else {
             println cli.usage()
         }
