@@ -158,6 +158,7 @@
     owl:equivalentClass dctype:Image, foaf:Image .
 
 :MixedMaterial a owl:Class;
+    rdfs:label "Blandat material"@sv;
     rdfs:subClassOf :CreativeWork, :Aggregate;
     owl:equivalentClass bf:MixedMaterial .
 
@@ -167,50 +168,59 @@
     owl:equivalentClass bf:MovingImage, dctype:MovingImage .
 
 :Multimedia a owl:Class;
+    rdfs:label "Multimedia"@sv;
     rdfs:subClassOf :CreativeWork;
     owl:equivalentClass bf:Multimedia .
 
 :NotatedMovement a owl:Class;
+    rdfs:label "Dansnoter"@sv;
     rdfs:subClassOf :CreativeWork;
     owl:equivalentClass bf:NotatedMovement .
 
 :NotatedMusic a owl:Class;
+    rdfs:label "Musiknoter"@sv;
     rdfs:subClassOf :CreativeWork;
     owl:equivalentClass bf:NotatedMusic .
 
 :Audio a owl:Class;
     rdfs:subClassOf :CreativeWork;
-    rdfs:label "Ljud"@sv;
+    rdfs:label "Ljudmaterial"@sv;
     owl:equivalentClass dctype:Sound, bf:Audio .
 
 :Music a owl:Class;
+    rdfs:label "Musik"@sv;
     rdfs:subClassOf :Audio .
 
 :StillImage a owl:Class;
-    rdfs:subClassOf :Image;
     rdfs:label "Stillbild"@sv;
+    rdfs:subClassOf :Image;
     owl:equivalentClass bf:StillImage, dctype:StillImage .
 
 :Text a owl:Class;
-    rdfs:subClassOf :CreativeWork;
     rdfs:label "Text"@sv;
+    rdfs:subClassOf :CreativeWork;
     owl:equivalentClass dctype:Text, bf:Text .
 
 :Realia a owl:Class;
+    rdfs:label "Realia"@sv;
     owl:equivalentClass bf:ThreeDimensionalObject .
 
 :InteractiveResource a owl:Class;
+    rdfs:label "Interaktiv resurs"@sv;
     rdfs:subClassOf :CreativeWork;
     rdfs:subClassOf dctype:InteractiveResource .
 
 :Kit a owl:Class; # TODO: equivalentClass ?
+    rdfs:label "Kit"@sv;
     rdfs:subClassOf :CreativeWork .
 
 # Combined Content Types
 
 :CartographicImage a owl:Class;
+    rdfs:label "Kartografisk bild"@sv;
     rdfs:subClassOf :Cartography, :Image .
 :CartographicObject a owl:Class;
+    rdfs:label "Kartografiskt objekt"@sv;
     rdfs:subClassOf :Cartography, :Realia .
 
 # TODO: link above to:
@@ -250,23 +260,29 @@
 # Mereological (Compositional) Dimensions
 
 :Monograph a owl:Class;
+    rdfs:label "Monografisk resurs"@sv;
     owl:equivalentClass bf:Monograph .
 
 :Part a owl:Class;
+    rdfs:label "Del av resurs"@sv;
     ptg:abstract true .
 
 :ComponentPart a owl:Class;
+    rdfs:label "Del av sammansatt resurs"@sv;
     owl:equivalentClass bibo:DocumentPart;
     rdfs:subClassOf :Part .
 
 :Aggregate a owl:Class;
+    rdfs:label "Aggregat"@sv;
     ptg:abstract true .
 
 :Continuing a owl:Class;
+    rdfs:label "Fortlöpande resurs"@sv;
     ptg:abstract true;
     rdfs:subClassOf :Aggregate .
 
 :Archival a owl:Class;
+    rdfs:label "Arkiv"@sv;
     rdfs:subClassOf :Aggregate;
     owl:equivalentClass bf:Archival .
 
@@ -276,64 +292,81 @@
     owl:equivalentClass dctype:Collection, bf:Collection .
 
 :SubCollection a owl:Class;
+    rdfs:label "Delsamling"@sv;
     rdfs:subClassOf :Collection, :Part .
 
 :Integrating a owl:Class;
+    rdfs:label "Integrerande resurs"@sv;
     rdfs:subClassOf :Continuing;
     owl:equivalentClass bf:Integrating .
 
 :MonographicComponentPart a owl:Class;
+    rdfs:label "Del av sammansatt monografisk resurs"@sv;
     rdfs:subClassOf :Monograph, :ComponentPart .
 
 :SerialComponentPart a owl:Class;
+    rdfs:label "Del av sammansatt seriell resurs"@sv;
     rdfs:subClassOf :Serial, :ComponentPart  .
 
 :Multipart a owl:Class;
+    rdfs:label "Multipel del"@sv;
     rdfs:subClassOf :Aggregate .
 
 :MultipartMonograph a owl:Class;
+    rdfs:label "Multipel del av monograf"@sv;
     rdfs:subClassOf :Multipart, :Monograph;
     owl:equivalentClass bf:MultipartMonograph .
 
 :Serial a owl:Class;
+    rdfs:label "Seriell resurs"@sv;
     rdfs:subClassOf :Continuing;
     owl:equivalentClass bf:Serial .
 
-:Periodical owl:equivalentClass bf:Serial .
+:Periodical a owl:Class;
+    rdfs:label "Periodisk resurs"@sv;
+    rdfs:comment "Samma sak som seriell resurs."@sv;
+    owl:equivalentClass bf:Serial .
 
 # Manifestation Dimensions
 
 :Digital a owl:Class;
     ptg:abstract true;
+    rdfs:label "Digital resurs"@sv;
     #rdfs:subClassOf [ owl:unionOf (dctype:InteractiveResource dctype:Software) ]
     rdfs:subClassOf :Product;
     owl:equivalentClass bf:Electronic .
 
 :Manuscript a owl:Class;
+    rdfs:label "Manuscript"@sv;
     rdfs:subClassOf :Product;
     owl:equivalentClass bf:Manuscript, bibo:Manuscript .
 
 :Print a owl:Class;
+    rdfs:label "Tryck"@sv;
     rdfs:subClassOf :Product;
     owl:equivalentClass bf:Print .
 
 :Electronic a owl:Class;
+    rdfs:label "Elektronisk resurs"@sv;
     rdfs:subClassOf :Digital, :Product .
 
 :Tactile a owl:Class;
+    rdfs:label "Taktil resurs"@sv;
     rdfs:subClassOf :Product;
     owl:equivalentClass bf:Tactile .
 
 :ProjectedImage a owl:Class;
+    rdfs:label "Projicerad bild"@sv;
     rdfs:subClassOf :Image .
 
 :PhysicalObject a owl:Class;
-    rdfs:subClassOf :Product;
     rdfs:label "Föremål"@sv;
     skos:altLabel "Realia"@sv;
+    rdfs:subClassOf :Product;
     owl:equivalentClass dctype:PhysicalObject .
 
 :Software a owl:Class;
+    rdfs:label "Mjukvara"@sv;
     rdfs:subClassOf :Digital;
     owl:equivalentClass dctype:Software, sdo:SoftwareApplication .
 
@@ -362,58 +395,75 @@
 # Concrete Types (can grow a lot, be combined with e.g. productontology...)
 
 :Globe a owl:Class;
+    rdfs:label "Kartglob"@sv;
     rdfs:subClassOf :Cartography, :Realia .
 
 :Map a owl:Class;
+    rdfs:label "Karta"@sv;
     rdfs:subClassOf :Cartography;
     owl:equivalentClass bibo:Map .
 
 :Microform a owl:Class;
+    rdfs:label "Mikroform"@sv;
     rdfs:subClassOf :Product .
 
 :RemoteSensingImage a owl:Class;
+    rdfs:label "Satellitbild"@sv; # Fjärranalysbild?
     rdfs:subClassOf :Product, :Cartography .
 
 :SoundRecording a owl:Class;
+    rdfs:label "Ljudinspelning"@sv;
     rdfs:subClassOf :Product, :Audio .
 
 :VideoRecording a owl:Class;
+    rdfs:label "Videoinspelning"@sv;
     rdfs:subClassOf :Product, :MovingImage .
 
 :Database a owl:Class;
+    rdfs:label "Databas"@sv;
     rdfs:subClassOf :Integrating, :Digital, :Dataset .
 
 :Website a owl:Class;
+    rdfs:label "Webbplats"@sv;
     rdfs:subClassOf :Integrating, :Digital, :Text;
     owl:equivalentClass bibo:Website .
 
 :Book a owl:Class;
+    rdfs:label "Bok"@sv;
     rdfs:subClassOf :Text, :Monograph;
     owl:equivalentClass bibo:Book .
 
 :ManuscriptCartography a owl:Class;
+    rdfs:label "Kartmanuscript"@sv;
     rdfs:subClassOf :Cartography, :Manuscript .
 
 :ManuscriptNotatedMusic a owl:Class;
+    rdfs:label "Musiknotmanuscript"@sv;
     rdfs:subClassOf :NotatedMusic, :Manuscript .
 
 :ManuscriptText a owl:Class;
+    rdfs:label "Textmanuscript"@sv;
     rdfs:subClassOf :Text, :Manuscript .
 
 :MultiVolumeBook a owl:Class;
+    rdfs:label "Flervolymsbok"@sv;
     rdfs:subClassOf :Book, :MultipartMonograph;
     owl:equivalentClass bibo:MultiVolumeBook .
 
 :PrintedText a owl:Class;
+    rdfs:label "Tryckt text"@sv;
     rdfs:subClassOf :Text, :Print .
 
 :PrintedBook a owl:Class;
+    rdfs:label "Tryckt bok"@sv;
     rdfs:subClassOf :Book, :PrintedText .
 
 :EBook a owl:Class;
+    rdfs:label "E-bok"@sv;
     rdfs:subClassOf :Book, :Digital .
 
 :Audiobook a owl:Class;
+    rdfs:label "Ljudbok"@sv;
     #owl:equivalentClass bibo:AudioDocument;
     rdfs:subClassOf :Book, :Audio, bibo:AudioDocument .
 

@@ -1579,36 +1579,6 @@
 
   },
 
-  "comboTypeMap": {
-    "Serial": {"contentType": "Text", "aggregateType": "Serial",
-      "ESerial": {"carrierType": "OnlineResource"}
-    },
-    "Collection": {},
-    "Dataset": {},
-    "Image": {},
-    "Movie": {},
-    "NotatedMusic": {},
-    "ThreeDimensionalObject": {},
-    "Kit": {},
-    "Mixed": {},
-    "Multimedia": {},
-    "Book": {"contentType": "Text",
-      "Audiobook": {"carrierType": "SoundRecording"},
-      "CDBook": {"carrierType": "OpticalDisc"},
-      "EBook": {"carrierType": "OnlineResource"}
-    },
-    "Cartography": {"contentType": "Cartography",
-      "CDMap": {"carrierType": "OpticalDisc"}
-    },
-    "Audio": {"contentType": "NonmusicalSoundRecording", "abstract": true,
-      "Audiobook": {"TODO": "not 655a=Talböcker"}
-    },
-    "Music": {"contentType": "MusicalSoundRecording",
-      "MusicCD": {"carrierType": "SoundDisc"}
-    },
-    "Electronic": {"carrierType": "Electronic", "aspect": true}
-  },
-
   "bib": {
 
     "000": {
@@ -3911,7 +3881,13 @@
       "domainIncludes": "Serial",
       "rangeEntity": "CreativeWork"
     },
-    "775": {},
+    "775": {
+      "inherit": "772",
+      "TODO:note": "uncommon",
+      "addLink": "alternateEdition",
+      "$e": {"property": "language", "TODO:inherit": "008:[35:38]"},
+      "$f": {"property": "publicationCountry", "TODO:inherit": "008:[15:18]"}
+    },
     "776": {
       "inherit": "772",
       "addLink": "alternateFormat",
