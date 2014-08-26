@@ -27,6 +27,7 @@ dependencies {
     compile "org.apache.camel:camel-core:${camelVersion}"
     compile "org.apache.camel:camel-elasticsearch:${camelVersion}"
     compile "org.apache.camel:camel-jackson:${camelVersion}"
+    compile "org.apache.camel:camel-http4:${camelVersion}"
     compile "org.apache.activemq:activemq-camel:5.10.0"
 }
 

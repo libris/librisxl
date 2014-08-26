@@ -49,10 +49,12 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 .routingSlip("elasticDestination")
         }
 
+       def graphstoreUpdate = global.GRAPHSTORE_UPDATE_URI
+
         // Routes for graphstore
         from("activemq:libris.graphstore").process(turtleProcessor)
             .aggregate(header("entry:dataset"), new GraphstoreBatchUpdateAggregationStrategy()).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
-            .to("mock:graph")
+            .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
 
         from("direct:unknown").to("mock:unknown")
     }
@@ -85,6 +87,9 @@ class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
             // First message in aggregate
 
             serializer.prelude() // prefixes and base
+
+            // Set contenttype header
+            newExchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/sparql-update")
 
             serializer.writeln "CLEAR GRAPH <$identifier> ;"
             serializer.writeln "INSERT DATA { GRAPH <$identifier> {"

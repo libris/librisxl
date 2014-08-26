@@ -79,10 +79,11 @@ class ElasticTypeRouteProcessor implements Processor {
             message.setHeader("typeQDestination", "direct:unknown")
         }
         String identifier = message.getHeader("entry:identifier")
+        String indexName = message.getHeader("extra:index", shapeComputer.whelkName)
         String indexType = shapeComputer.calculateShape(identifier)
         String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
 
-        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=INDEX&indexName=${shapeComputer.whelkName}&indexType=${indexType}")
+        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=INDEX&indexName=${indexName}&indexType=${indexType}")
 
         message.getBody(Map.class).put("elastic_id", shapeComputer.translateIdentifier(new URI(identifier)))
         exchange.setOut(message)

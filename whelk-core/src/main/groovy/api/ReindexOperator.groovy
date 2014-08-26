@@ -41,12 +41,10 @@ class ReindexOperator extends AbstractOperator {
 
         log.info("Starting reindexing.")
 
-        /*
         if (!dataset) {
             log.debug("Requesting new index for ${whelk.index.id}.")
             indexName = whelk.index.createNewCurrentIndex(whelk.id)
         }
-        */
         if (fromStorage) {
             log.info("Rebuilding storage from $fromStorage")
         }
@@ -64,7 +62,7 @@ class ReindexOperator extends AbstractOperator {
                         log.trace("Expected exception ${wae.message}")
                     }
                 }
-                whelk.storage.notifyCamel(doc)
+                whelk.storage.notifyCamel(doc, ["index":indexName])
                 count++
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
@@ -79,8 +77,8 @@ class ReindexOperator extends AbstractOperator {
             }
         }
         log.info("Reindexed $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds.")
-        // TODO: This will happen before indexing has taken place. Find a way to do this at the end of the queue
-        //whelk.index.reMapAliases(whelk.id)
+        // TODO: Find a way to do this AFTER the indexing queue is empty.
+        whelk.index.reMapAliases(whelk.id)
     }
 
     @Override

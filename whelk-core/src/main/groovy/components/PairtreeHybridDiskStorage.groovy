@@ -107,7 +107,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                     "id": translateIdentifier(doc.identifier)
                 ]
             )
-            notifyCamel(doc)
+            notifyCamel(doc, [:])
         }
         return result
     }
@@ -131,7 +131,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 ]
 
                 //Send to camel route
-                notifyCamel(doc)
+                notifyCamel(doc, [:])
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
@@ -142,7 +142,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
     }
 
-    void notifyCamel(Document document) {
+    void notifyCamel(Document document, Map extraInfo) {
         if (!producerTemplate) {
             producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
         }
@@ -155,6 +155,11 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
         document.entry.each { key, value ->
             message.setHeader("entry:$key", value)
+        }
+        if (extraInfo) {
+            extraInfo.each { key, value ->
+                message.setHeader("extra:$key", value)
+            }
         }
         exchange.setIn(message)
         producerTemplate.asyncSend("direct:${this.id}", exchange)
