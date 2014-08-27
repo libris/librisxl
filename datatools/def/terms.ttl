@@ -770,6 +770,7 @@
 :Integrating rdfs:subClassOf :Aggregate .
 
 :LicenseAgreementBoundDescription a owl:Class ;
+    rdfs:label "Licensavtalsbunden beskrivning"@sv;
     rdfs:subClassOf :Aggregate .
 
 :Map owl:equivalentClass sdo:Map .
