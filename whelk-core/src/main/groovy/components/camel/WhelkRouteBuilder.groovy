@@ -23,13 +23,14 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     Whelk whelk
 
     int elasticBatchSize = 2000
-    int graphstoreBatchSize = 3
+    int graphstoreBatchSize = 1000
     long batchTimeout = 5000
     int parallelProcesses = 20
     List<String> elasticTypes
 
     WhelkRouteBuilder(Map settings) {
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
+        graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
         batchTimeout = settings.get("batchTimeout", batchTimeout)
         elasticTypes = settings.get("elasticTypes")
     }
@@ -49,6 +50,9 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 .routingSlip("elasticDestination")
         }
 
+        // For deletes in elastic
+        from("direct:indexDelete").routingSlip("elasticDestination")
+
        def graphstoreUpdate = global.GRAPHSTORE_UPDATE_URI
 
         // Routes for graphstore
@@ -57,6 +61,10 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
 
         from("direct:unknown").to("mock:unknown")
+
+
+        // Maintenance routes
+        //from("timer").to("dostuff")
     }
 
     // Plugin methods
@@ -85,7 +93,6 @@ class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
         serializer.writer = new OutputStreamWriter(bos, "UTF-8")
         if (oldExchange == null) {
             // First message in aggregate
-
             serializer.prelude() // prefixes and base
 
             // Set contenttype header

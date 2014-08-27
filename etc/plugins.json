@@ -551,7 +551,8 @@
         ],
         "_params": {
             "elasticBatchSize": 2000,
-            "elasticBatchTimeout": 5000,
+            "graphstoreBatchSize": 1000,
+            "batchTimeout": 5000,
             "elasticTypes": "_property:ELASTIC_TYPES"
         }
     }
