@@ -18,6 +18,8 @@
 @prefix iana: <http://www.iana.org/assignments/relation/> .
 @prefix vann: <http://purl.org/vocab/vann/> .
 @prefix : <http://libris.kb.se/def/terms#> .
+@prefix marcenum: <http://libris.kb.se/def/marc/enum/> .
+
 
 
 : a owl:Ontology;
@@ -27,6 +29,16 @@
 
 # Various sources beyond the linked defintions themselves:
 # - <http://bibframe.org/documentation/resource-types/#proposal>
+
+
+##
+# Enumeration Groups
+
+marcenum:typeOfRecord a skos:Collection;
+    rdfs:label "Typ"@sv .
+
+marcenum:bibLevel a skos:Collection;
+    rdfs:label "Bibliografisk nivå"@sv .
 
 
 ##
@@ -145,6 +157,7 @@
 :Cartography a owl:Class;
     rdfs:label "Kartmaterial"@sv;
     rdfs:subClassOf :CreativeWork;
+    vann:termGroup marcenum:typeOfRecord;
     owl:equivalentClass bf:Cartography .
 
 :Dataset a owl:Class;
@@ -160,6 +173,7 @@
 :MixedMaterial a owl:Class;
     rdfs:label "Blandat material"@sv;
     rdfs:subClassOf :CreativeWork, :Aggregate;
+    vann:termGroup marcenum:typeOfRecord;
     owl:equivalentClass bf:MixedMaterial .
 
 :MovingImage a owl:Class; # Film, Video
@@ -170,6 +184,7 @@
 :Multimedia a owl:Class;
     rdfs:label "Multimedia"@sv;
     rdfs:subClassOf :CreativeWork;
+    vann:termGroup marcenum:typeOfRecord;
     owl:equivalentClass bf:Multimedia .
 
 :NotatedMovement a owl:Class;
@@ -180,11 +195,14 @@
 :NotatedMusic a owl:Class;
     rdfs:label "Musiknoter"@sv;
     rdfs:subClassOf :CreativeWork;
+    vann:termGroup marcenum:typeOfRecord;
+    vann:termGroup marcenum:typeOfRecord;
     owl:equivalentClass bf:NotatedMusic .
 
 :Audio a owl:Class;
     rdfs:subClassOf :CreativeWork;
     rdfs:label "Ljudmaterial"@sv;
+    vann:termGroup marcenum:typeOfRecord;
     owl:equivalentClass dctype:Sound, bf:Audio .
 
 :Music a owl:Class;
@@ -194,15 +212,18 @@
 :StillImage a owl:Class;
     rdfs:label "Stillbild"@sv;
     rdfs:subClassOf :Image;
+    vann:termGroup marcenum:typeOfRecord;
     owl:equivalentClass bf:StillImage, dctype:StillImage .
 
 :Text a owl:Class;
     rdfs:label "Text"@sv;
     rdfs:subClassOf :CreativeWork;
+    vann:termGroup marcenum:typeOfRecord;
     owl:equivalentClass dctype:Text, bf:Text .
 
 :Realia a owl:Class;
     rdfs:label "Realia"@sv;
+    vann:termGroup marcenum:typeOfRecord;
     owl:equivalentClass bf:ThreeDimensionalObject .
 
 :InteractiveResource a owl:Class;
@@ -212,7 +233,12 @@
 
 :Kit a owl:Class; # TODO: equivalentClass ?
     rdfs:label "Kit"@sv;
+    vann:termGroup marcenum:typeOfRecord;
     rdfs:subClassOf :CreativeWork .
+
+:ArchivalUnit a owl:Class;
+    rdfs:label "Arkivenhet"@sv;
+    vann:termGroup marcenum:typeOfRecord .
 
 # Combined Content Types
 
@@ -261,6 +287,7 @@
 
 :Monograph a owl:Class;
     rdfs:label "Monografisk resurs"@sv;
+    vann:termGroup marcenum:bibLevel;
     owl:equivalentClass bf:Monograph .
 
 :Part a owl:Class;
@@ -270,6 +297,7 @@
 :ComponentPart a owl:Class;
     rdfs:label "Del av sammansatt resurs"@sv;
     owl:equivalentClass bibo:DocumentPart;
+    vann:termGroup marcenum:bibLevel;
     rdfs:subClassOf :Part .
 
 :Aggregate a owl:Class;
@@ -289,15 +317,18 @@
 :Collection a owl:Class;
     rdfs:label "Samling"@sv;
     rdfs:subClassOf :Aggregate;
+    vann:termGroup marcenum:bibLevel;
     owl:equivalentClass dctype:Collection, bf:Collection .
 
 :SubCollection a owl:Class;
     rdfs:label "Delsamling"@sv;
+    vann:termGroup marcenum:bibLevel;
     rdfs:subClassOf :Collection, :Part .
 
 :Integrating a owl:Class;
     rdfs:label "Integrerande resurs"@sv;
     rdfs:subClassOf :Continuing;
+    vann:termGroup marcenum:bibLevel;
     owl:equivalentClass bf:Integrating .
 
 :MonographicComponentPart a owl:Class;
@@ -306,6 +337,7 @@
 
 :SerialComponentPart a owl:Class;
     rdfs:label "Del av sammansatt seriell resurs"@sv;
+    vann:termGroup marcenum:bibLevel;
     rdfs:subClassOf :Serial, :ComponentPart  .
 
 :Multipart a owl:Class;
@@ -320,11 +352,13 @@
 :Serial a owl:Class;
     rdfs:label "Seriell resurs"@sv;
     rdfs:subClassOf :Continuing;
+    vann:termGroup marcenum:bibLevel;
     owl:equivalentClass bf:Serial .
 
 :Periodical a owl:Class;
     rdfs:label "Periodisk resurs"@sv;
     rdfs:comment "Samma sak som seriell resurs."@sv;
+    vann:termGroup marcenum:bibLevel;
     owl:equivalentClass bf:Serial .
 
 # Manifestation Dimensions
@@ -357,6 +391,7 @@
 
 :ProjectedImage a owl:Class;
     rdfs:label "Projicerad bild"@sv;
+    vann:termGroup marcenum:typeOfRecord;
     rdfs:subClassOf :Image .
 
 :PhysicalObject a owl:Class;
@@ -435,14 +470,17 @@
 
 :ManuscriptCartography a owl:Class;
     rdfs:label "Kartmanuscript"@sv;
+    vann:termGroup marcenum:typeOfRecord;
     rdfs:subClassOf :Cartography, :Manuscript .
 
 :ManuscriptNotatedMusic a owl:Class;
     rdfs:label "Musiknotmanuscript"@sv;
+    vann:termGroup marcenum:typeOfRecord;
     rdfs:subClassOf :NotatedMusic, :Manuscript .
 
 :ManuscriptText a owl:Class;
     rdfs:label "Textmanuscript"@sv;
+    vann:termGroup marcenum:typeOfRecord;
     rdfs:subClassOf :Text, :Manuscript .
 
 :MultiVolumeBook a owl:Class;
@@ -760,8 +798,6 @@
 
 # Data below is generated by script from marcframe and base vocabularies:
 
-:ArchivalUnit a owl:Class .
-
 :Authority a owl:Class ;
     owl:equivalentClass bf:Authority .
 
@@ -771,6 +807,7 @@
 
 :LicenseAgreementBoundDescription a owl:Class ;
     rdfs:label "Licensavtalsbunden beskrivning"@sv;
+    vann:termGroup marcenum:bibLevel;
     rdfs:subClassOf :Aggregate .
 
 :Map owl:equivalentClass sdo:Map .
