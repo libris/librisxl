@@ -28,8 +28,7 @@ class PrawnRunner extends BasicPlugin implements Processor, WhelkAware {
             log.info("Prawnrunner got ${doc.identifier} from queue.")
                 String checksum = doc.checksum
                 for (t in transmogrifiers) {
-                        doc = t.transmogrify(doc)
-                    }
+                    doc = t.transmogrify(doc)
                 }
             if (doc.checksum != checksum) {
                 log.info("Checksum updated. Now saving it again.")
