@@ -27,6 +27,7 @@
     "domainIncludes": {"@id": "sdo:domainIncludes", "@container": "@set"},
     "rangeIncludes": {"@id": "sdo:rangeIncludes", "@container": "@set"},
     "isDefinedBy": {"@id": "rdfs:isDefinedBy"},
-    "seeAlso": {"@id": "rdfs:seeAlso", "@container": "@set"}
+    "seeAlso": {"@id": "rdfs:seeAlso", "@container": "@set"},
+    "termGroup": "http://purl.org/vocab/vann/termGroup"
   }
 }
