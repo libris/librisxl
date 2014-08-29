@@ -73,13 +73,11 @@ class ElasticTypeRouteProcessor implements Processor {
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
         def dataset = message.getHeader("entry:dataset")
-        def operation = message.getHeader("operation", "ADD")
         String identifier = message.getHeader("entry:identifier")
         String indexName = message.getHeader("extra:index", shapeComputer.whelkName)
         String indexType = shapeComputer.calculateShape(identifier)
         String indexId = shapeComputer.translateIdentifier(new URI(identifier))
         String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
-        //if (operation == "ADD") {
         if (dataset && types.contains(dataset)) {
             message.setHeader("typeQDestination", "direct:$dataset")
         } else {
@@ -88,14 +86,6 @@ class ElasticTypeRouteProcessor implements Processor {
 
         message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=INDEX&indexName=${indexName}&indexType=${indexType}")
         message.getBody(Map.class).put("elastic_id", indexId)
-            /*
-        } else if (operation == "DELETE") {
-            message.setHeader("typeQDestination", "direct:indexDelete")
-            message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=DELETE&indexName=${indexName}&indexType=${indexType}")
-        } else {
-            log.warn("Unknown operation: $operation")
-        }
-        */
         exchange.setOut(message)
     }
 }

@@ -10,7 +10,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
 
 @Log
-class JsonLDSerialNextPreviousFilter extends BasicFilter implements WhelkAware {
+class JsonLDSerialsLinkFinderFilter extends BasicFilter implements WhelkAware {
     Whelk whelk
     String requiredContentType = "application/ld+json"
 

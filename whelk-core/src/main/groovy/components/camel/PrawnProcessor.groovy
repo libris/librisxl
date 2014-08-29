@@ -25,7 +25,7 @@ class PrawnRunner extends BasicPlugin implements Processor, WhelkAware {
     public void process(Exchange exchange) throws Exception {
         Document doc = whelk.get(new URI(exchange.getIn().getHeader("entry:identifier")))
         if (doc) {
-            log.info("Prawnrunner got ${doc.identifier} from queue.")
+            log.trace("Prawnrunner got ${doc.identifier} from queue.")
                 String checksum = doc.checksum
                 for (t in transmogrifiers) {
                     doc = t.transmogrify(doc)
