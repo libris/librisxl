@@ -34,8 +34,7 @@
         "_components": [
             "pairtreehybridstorage",
             "pairtreeoaistorage",
-            "index",
-            "graphstore"
+            "index"
         ]
     },
     "_masterComponent": "pairtreehybridstorage",

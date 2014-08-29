@@ -77,7 +77,7 @@ class DocumentAPI extends BasicAPI {
                 def entry = [
                     "contentType":request.getContentType()
                     ]
-                Document doc = new Document().withData(request.getInputStream().getBytes()).withEntry(entry)
+                Document doc = new Document().withData(request.getInputStream().getBytes()).withEntry(entry).withMeta(request.getParameterMap())
                 def identifier = convertAndSaveDocument(doc)
 
                 log.debug("Saved document $identifier")
@@ -105,7 +105,7 @@ class DocumentAPI extends BasicAPI {
                     "contentType":request.getContentType(),
                     "dataset":getDatasetBasedOnPath(path)
                     ]
-                def meta = null
+                def meta = request.getParameterMap()
 
                 // Check If-Match
                 String ifMatch = request.getHeader("If-Match")

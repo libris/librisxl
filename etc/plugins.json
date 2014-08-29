@@ -544,10 +544,13 @@
         "_class" : "se.kb.libris.whelks.camel.FormatConverterProcessor",
         "_plugins" : ["turtleconverter"]
     },
+    "prawnrunner_processor": {
+        "_class" : "se.kb.libris.whelks.camel.PrawnRunner"
+    },
     "routebuilder": {
         "_class" : "se.kb.libris.whelks.camel.WhelkRouteBuilder",
         "_plugins" : [
-            "elastic_camel_processor", "turtleconverter_processor", "shapecomputer"
+            "elastic_camel_processor", "turtleconverter_processor", "shapecomputer", "prawnrunner_processor"
         ],
         "_params": {
             "elasticBatchSize": 2000,

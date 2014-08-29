@@ -38,11 +38,12 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     void configure() {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
         Processor turtleProcessor = getPlugin("turtleconverter_processor")
+        Processor prawnRunner = getPlugin("prawnrunner_processor")
         assert formatConverterProcessor, turtleProcessor
 
-        from("direct:pairtreehybridstorage").multicast().to("activemq:libris.index", "activemq:libris.graphstore")
+        from("direct:pairtreehybridstorage").multicast().parallelProcessing().to("activemq:libris.index", "activemq:libris.graphstore")
 
-        from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer"))).routingSlip("typeQDestination")
+        from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer"))).routingSlip("typeQDestination").to("activemq:libris.prawn")
 
         for (type in elasticTypes) {
             from("direct:$type").threads(1,parallelProcesses).process(formatConverterProcessor)
@@ -50,16 +51,18 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 .routingSlip("elasticDestination")
         }
 
-        // For deletes in elastic
-        from("direct:indexDelete").routingSlip("elasticDestination")
+        from("activemq:libris.prawn")
+            .process(prawnRunner).end()
 
-       def graphstoreUpdate = global.GRAPHSTORE_UPDATE_URI
+        // For deletes in elastic
+        //from("direct:indexDelete").routingSlip("elasticDestination")
 
         // Routes for graphstore
-        from("activemq:libris.graphstore").process(turtleProcessor)
-            .aggregate(header("entry:dataset"), new GraphstoreBatchUpdateAggregationStrategy()).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
-            .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
-
+        if (whelk.graphStore) {
+            from("activemq:libris.graphstore").process(turtleProcessor)
+                .aggregate(header("entry:dataset"), new GraphstoreBatchUpdateAggregationStrategy()).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
+                .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
+        }
         from("direct:unknown").to("mock:unknown")
 
 

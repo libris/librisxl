@@ -79,22 +79,23 @@ class ElasticTypeRouteProcessor implements Processor {
         String indexType = shapeComputer.calculateShape(identifier)
         String indexId = shapeComputer.translateIdentifier(new URI(identifier))
         String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
-        if (operation == "ADD") {
-            if (dataset && types.contains(dataset)) {
-                message.setHeader("typeQDestination", "direct:$dataset")
-            } else {
-                message.setHeader("typeQDestination", "direct:unknown")
-            }
+        //if (operation == "ADD") {
+        if (dataset && types.contains(dataset)) {
+            message.setHeader("typeQDestination", "direct:$dataset")
+        } else {
+            message.setHeader("typeQDestination", "direct:unknown")
+        }
 
-            message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=INDEX&indexName=${indexName}&indexType=${indexType}")
-
-            message.getBody(Map.class).put("elastic_id", indexId)
+        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=INDEX&indexName=${indexName}&indexType=${indexType}")
+        message.getBody(Map.class).put("elastic_id", indexId)
+            /*
         } else if (operation == "DELETE") {
             message.setHeader("typeQDestination", "direct:indexDelete")
             message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=DELETE&indexName=${indexName}&indexType=${indexType}")
         } else {
             log.warn("Unknown operation: $operation")
         }
+        */
         exchange.setOut(message)
     }
 }

@@ -127,7 +127,7 @@ class Document {
     }
 
     List getLinks() {
-        return meta.get("links", [])
+        return meta.get("link", [])
     }
 
     // Setters
@@ -274,20 +274,20 @@ class Document {
     }
 
     Document withLink(String identifier) {
-        if (!meta["links"]) {
-            meta["links"] = []
+        if (!meta["link"]) {
+            meta["link"] = []
         }
-        def link = ["identifier":identifier,"type":""]
-        meta["links"] << link
+        meta["link"] << identifier
         return this
     }
 
+    @Deprecated
     Document withLink(String identifier, String type) {
-        if (!meta["links"]) {
-            meta["links"] = []
+        if (!meta["link"]) {
+            meta["link"] = []
         }
-        def link = ["identifier":identifier,"type":type]
-        meta["links"] << link
+        log.warn("Using deprecated method withLinks(String, String)")
+        meta["link"] << identifier
         return this
     }
 

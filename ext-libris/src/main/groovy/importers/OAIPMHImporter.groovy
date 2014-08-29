@@ -193,7 +193,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                             for (key in specUriMapping.keySet()) {
                                 if (spec.toString().startsWith(key+":")) {
                                     String link = new String("/"+specUriMapping[key]+"/" + spec.toString().substring(key.length()+1))
-                                    meta.get("links", []).add(["identifier":link,"type":specUriMapping[key]])
+                                    //meta.get("links", []).add(["identifier":link,"type":specUriMapping[key]])
+                                    meta.get("link", []).add(link)
                                 }
                             }
                         }

@@ -327,10 +327,12 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             }
         }
         deleteEntry(uri, indexName, METAENTRY_INDEX_TYPE)
+        /*
         if (!producerTemplate) {
             producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
         }
         producerTemplate.sendBodyAndHeaders("direct:${this.id}", translateIdentifier(uri), ["operation":"DELETE","entry:identifier":uri.toString()])
+        */
     }
 
     @groovy.transform.CompileStatic
