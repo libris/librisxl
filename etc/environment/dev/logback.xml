@@ -46,7 +46,7 @@
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.Document">
       <level value="info"/>
