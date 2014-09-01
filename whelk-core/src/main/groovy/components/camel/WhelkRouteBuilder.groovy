@@ -54,9 +54,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         from("activemq:libris.prawn")
             .process(prawnRunner).end()
 
-        // For deletes in elastic
-        //from("direct:indexDelete").routingSlip("elasticDestination")
-
         // Routes for graphstore
         if (whelk.graphStore) {
             from("activemq:libris.graphstore").process(turtleProcessor)
@@ -64,10 +61,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
         }
         from("direct:unknown").to("mock:unknown")
-
-
-        // Maintenance routes
-        //from("timer").to("dostuff")
     }
 
     // Plugin methods
