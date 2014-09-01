@@ -238,6 +238,7 @@ marcenum:bibLevel a skos:Collection;
 
 :ArchivalUnit a owl:Class;
     rdfs:label "Arkivenhet"@sv;
+    owl:deprecated true;
     vann:termGroup marcenum:typeOfRecord .
 
 # Combined Content Types
@@ -807,6 +808,7 @@ marcenum:bibLevel a skos:Collection;
 
 :LicenseAgreementBoundDescription a owl:Class ;
     rdfs:label "Licensavtalsbunden beskrivning"@sv;
+    owl:deprecated true;
     vann:termGroup marcenum:bibLevel;
     rdfs:subClassOf :Aggregate .
 
