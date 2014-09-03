@@ -73,13 +73,31 @@ auth/350793	Deckare, saogf
 auth/143787	Deckare, sao
 auth/158278	Romaner
 
+bib/11279947	[Akademisk avhandling = Text,Monograph,Thesis] Neural correlates of individual differences in personality and intelligence
+bib/16309110	[Bilder = ?,?,?]	Julkalendern 2013
+bib/14747945	[Datorspel (TV-spel) = Multimedia,Monograph,Game] Bioshock
+bib/11773502	[Elektroniska resurser,Direktåtkomst = ?,?,?] Ritningsläsning
+bib/11454989	[Elektroniska resurser,Fjärråtkomst,Fortlöpande resurser,Tidskrift - elektronisk och tryckt manifestation = ?,?,?] Tjugofyra7
+bib/12723726	[Elektroniska resurser,Fjärråtkomst,Fortlöpande resurser,Databas = ?,?,?] Den store danske
+bib/4420358	[Elektroniska resurser,Fjärråtkomst,Fortlöpande resurser,Databaslistor = ?,?,?] Artbibliographies modern
+bib/8595277	[Elektroniska resurser,Fjärråtkomst,Fortlöpande resurser,Webbplats= ?,?,?] ABBA
+bib/13689215	[Elektroniska resurser,Fjärråtkomst,Monografiska resurser,Maskinellt skapade DiVA-poster= ?,?,?] The sociality of gaming
+bib/11807128	[Elektroniska resurser,Digitaliseringar= ?,?,?] Bacchanaliska qwäden
+bib/9102438	[Fortlöpande resurser,Tidskrift/årsbok = ?,?,?] Arena
+bib/9773188	[Fortlöpande resurser,Integrerande resurs = ?,?,?] Socialavgifter
+bib/8351919	[Fortlöpande resurser,Integrerande resurs = ?,?,?] Socialavgifter supplement
+bib/10393902	[Kartor = Cartography,ComponentPart] Karta över Skandinavien
+bib/11850823	[Ljud- och talböcker = Audio,Monograph] Onskan
+bib/1997018	[Musiktryck = NotatedMusic,Monograph] Solo piano [Musiktryck] / Philip Glass
+bib/13538239	[Samlingsposter = ?,?,?] Kungliga biblioteket i Stockholm - samling av vykort
+bib/11714976	[Samlingsverk = ?,?,?] Det var en gång
+bib/11418710	[Skolböcker = ?,?,?] Dags!
+bib/16092548	[Spelfilmer = ProjectedImage,Monograph,Videorecording] Återträffen
 bib/10796401	subject.broader:historia
-bib/11279947
 bib/11311266
 bib/11357644
 bib/11601582
 bib/11691597
-bib/11850823
 bib/12035894
 bib/12289439
 bib/1234	Water and water pollution handbook. Vol. 2
@@ -115,7 +133,6 @@ bib/2579165	Dissertatio historica de banno majori et minori (Gammal svensk avhan
 bib/3297563	Öfwer-Ståthållare-Embetets Kungörelse (Gammal svensk kungörelse)
 bib/11807650	Upptäck Dalarnas bergslag [Kartografiskt material]
 bib/11808539	Discover the mining district of Dalarna [Kartografiskt material]
-bib/14747945	Bioshock [Tv-spel]
 bib/7400378	Androidens drömmar (Verk med originaltitel)
 bib/10299827	Bladerunner [Videoupptagning]
 bib/11925719	Do Androids Dream of Electric Sheep? : filmed as Blade Runner
@@ -123,7 +140,6 @@ bib/10600578	The Codex Gigas : a revised version of the Georg Svensson lecture d
 bib/8594660	Wagonmaster; directed by John Ford (multiple 007:s)
 bib/10630108	Grünsee. Brachland : zwei Romane /Christoph Geiser (multiple 006:s)
 bib/12629738	MTM-post med rå annan MARC i 886
-bib/16092548	Återträffen [Videoupptagning]
 bib/15211258	Después de Lucía [Videoupptagning] = Smärtgränsen
 bib/16254390	Runner runner [Videoupptagning]
 bib/15203202	WWE 2k14 [Elektronisk resurs]
@@ -132,7 +148,6 @@ bib/16234138	Plants vs. zombies garden warfare [Elektronisk resurs]
 bib/11521151	a Elder scrolls.n 4, ,p Oblivion h [Xbox360]
 bib/11518540	a Castlevania b curse of darkness h [Playstation 2]
 bib/13602899	a Borderlands 2 h [Elektronisk resurs] b TV-spel (Playstation 3)
-bib/1997018	Solo piano [Musiktryck] / Philip Glass
 bib/11553680	Viola da gamba sonatas [Ljudupptagning] / Johann Sebastian Bach
 bib/8260527	Illustrerad Vetenskap (Tidskrift)
 bib/8264634	Populär Historia (Tidskrift)
@@ -145,7 +160,6 @@ bib/10233308	Arvo Pärt [Videoupptagning]
 bib/5485896	The piano [Musiktryck]
 bib/12536611	Trasig 010
 bib/9201665	Ica förlagets världsatlas [Kartografiskt material]
-bib/10393902	Karta över Skandinavien] [Kartografiskt material] kartbidrag
 bib/8932622	Cosmographia [Kartografiskt material]
 bib/14288109	Jordglogb wonder celestial 42008 stjärnhimlen, utan belysning [Kartografiskt material]
 bib/2937744	Karta öfver norra stjärnhimmeln [Kartografiskt material]
@@ -166,8 +180,6 @@ bib/9033354	International journal of gynaecology and obstetrics (online) [seriel
 bib/3708524	Acta linguistica Hafniensia (utländsk tidskrift) [seriell]
 bib/14608651	International Journal of Engineering Innovations and Research (utländsk tidskrift, maskinellt genererad rudimentär post för e-tidskrift, länkmål till tryckt version saknas i Libris) [seriell]
 bib/3673618	Beiträge zum ausländischen und internationalen Privatrecht (En seriehuvudpost, där delarna är särkatalogiserade och behandlas som vanliga monografier (mindre vanligt att man gör sammanhållande huvudposter idag)) [seriell]
-bib/12723726	Den store danske (uppdaterande databas) [seriell]
-bib/8595277	ABBA (uppdaterande webbplats) [seriell]
 bib/13906314	Jag vet vem du är [Kombinerat material] / av Kerstin Erlandsson-Svevar (textbok, mp3-CD ; barn/ungdom)
 bib/14218500	Mindfulness i svåra situationer [Kombinerat material] : träningsprogram / Igor Ardoris
 bib/14786209	Guldfisken [Kombinerat material] / Susanna Alakoski
