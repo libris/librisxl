@@ -93,6 +93,26 @@ bib/13538239	[Samlingsposter = ?,?,?] Kungliga biblioteket i Stockholm - samling
 bib/11714976	[Samlingsverk = ?,?,?] Det var en gång
 bib/11418710	[Skolböcker = ?,?,?] Dags!
 bib/16092548	[Spelfilmer = ProjectedImage,Monograph,Videorecording] Återträffen
+bib/8549011	[Bidrag i tidskrift = ?,?,?]
+bib/8550505	[Bidrag i årsbok = ?,?,?]
+bib/9062707	[Bidrag i monografi (samlingsverk) med titel (=245) som huvuduppslag = ?,?,?]
+bib/8816214	[Bidrag i monografi med person (=100) som huvuduppslag = ?,?,?]
+bib/9186194	[Bidrag i monografi med institution (=110) som huvuduppslag = ?,?,?]
+bib/8425289	[Bidrag i monografi med konferens (=111) som huvuduppslag = ?,?,?]
+bib/10131357	[Bidrag i monografi i serie, där man i artikelposten vill uttrycka monografins serietillhörighet = ?,?,?]
+bib/10150410	[Bidrag i en monografisk årgång av en årsbok = ?,?,?]
+bib/2317684	[Bidrag i ett monografiskt häfte av en tidskrift = ?,?,?]
+bib/2267872	[Bidrag i dagstidning = ?,?,?]
+bib/8434927	[Recension med egen titel = ?,?,?]
+bib/9461508	[Recension utan egen titel = ?,?,?]
+bib/8463462	[Samlingsrecension med egen titel = ?,?,?]
+bib/8836613	[Samlingsrecension utan egen titel = ?,?,?]
+bib/8435255	[Bidrag med efterföljande repliker där varje inlägg får en egen post = ?,?,?]
+bib/8435491	[-||- = ?,?,?]
+bib/8435505	[-||- = ?,?,?]
+bib/8435499	[-||- = ?,?,?]
+bib/8435506	[-||- = ?,?,?]
+bib/8595377	[–||– förenklat sätt att notera repliker som följer på artikel/recension = ?,?,?]
 bib/10796401	subject.broader:historia
 bib/11311266
 bib/11357644
