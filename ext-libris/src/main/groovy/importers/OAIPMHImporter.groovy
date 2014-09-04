@@ -333,4 +333,5 @@ class XmlParsingFailedException extends Exception {
     XmlParsingFailedException(String msg, Throwable t) {
         super(msg, t)
     }
+
 }

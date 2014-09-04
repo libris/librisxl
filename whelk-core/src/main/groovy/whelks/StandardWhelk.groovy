@@ -44,8 +44,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     final static ObjectMapper mapper = new ObjectMapper()
 
-    final static String DEFAULT_WHELK_CONFIG_FILENAME = "/whelk.json"
-    final static String DEFAULT_PLUGIN_CONFIG_FILENAME = "/plugins.json"
+    final static String DEFAULT_WHELK_CONFIG_FILENAME = "whelk.json"
+    final static String DEFAULT_PLUGIN_CONFIG_FILENAME = "plugins.json"
 
     // Set by init()-method
     CamelContext camelContext = null
@@ -308,7 +308,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
             log.info("Whelk ${this.id} is now operational.")
         } catch (Exception e) {
             log.warn("Problems starting whelk ${this.id}.", e)
-            ctxThread.interrupt()
+            if (ctxThread) {
+                ctxThread.interrupt()
+            }
             throw e
         }
     }
@@ -355,6 +357,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         Map whelkConfig
         Map pluginConfig
         if (System.getProperty("whelk.config.uri") && System.getProperty("plugin.config.uri")) {
+            log.info("Loading config specified by system properties.")
             def wcu = System.getProperty("whelk.config.uri")
             def pcu = System.getProperty("plugin.config.uri")
             URI whelkconfig = new URI(wcu)
@@ -367,6 +370,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 throw new PluginConfigurationException("Failed to read configuration: ${e.message}", e)
             }
         } else {
+            log.info("Loading config from classpath")
             try {
                 whelkConfig = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_WHELK_CONFIG_FILENAME), Map)
                 pluginConfig = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_PLUGIN_CONFIG_FILENAME), Map)

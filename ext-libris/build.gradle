@@ -61,8 +61,8 @@ task whelkOperation(dependsOn: 'classes', type: JavaExec) {
   systemProperty 'cassandra.host', System.getProperty('cassandra.host', "localhost")
   systemProperty 'cassandra.cluster', System.getProperty('cassandra.cluster', mock_c_cluster)
   systemProperty 'file.encoding', "UTF-8"
-  systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', null)
-  systemProperty 'plugin.config.uri', System.getProperty('plugin.config.uri', null)
+  //systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', null)
+  //systemProperty 'plugin.config.uri', System.getProperty('plugin.config.uri', null)
   systemProperty 'disable.plugins', System.getProperty('disable.plugins', 'indexingprawn')
   systemProperty 'picky', System.getProperty('picky', 'false')
   args(System.getProperty('args', "").split() as String[])
