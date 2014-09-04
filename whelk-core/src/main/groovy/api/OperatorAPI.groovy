@@ -154,14 +154,12 @@ class ImportOperator extends AbstractOperator {
             count = importer.doImport(dataset, numToImport, true, picky, new URL(serviceUrl))
         }
         runningTime = System.currentTimeMillis() - startTime
-        /*
         long elapsed = ((System.currentTimeMillis() - startTime) / 1000)
         if (nrimports > 0 && elapsed > 0) {
             println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
         } else {
             println "Nothing imported ..."
         }
-        */
     }
 
     @Override
