@@ -3695,7 +3695,18 @@
     "516": {},
     "518": {},
 
-    "520": {"domainEntity": "Instance", "$a": {"addProperty": "summary"}},
+    "520": {
+      "domainEntity": "Instance",
+      "$a": {"addProperty": "summary"},
+      "match-code": {
+        "u": {
+          "addLink": "describedBy",
+          "rangeEntity": "WebPage",
+          "$a": {"property": "label"},
+          "$u": {"property": "@id"}
+        }
+      }
+    },
 
     "521": {
       "addLink": "audience",
