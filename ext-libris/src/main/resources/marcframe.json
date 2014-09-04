@@ -3373,8 +3373,23 @@
 
     "082": {
       "note:candidate:domainEntity": "Work",
-      "$a": {"property": "classificationDdc"},
-      "$2": {"ignored": true}
+      "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
+      "addLink": "classification",
+      "rangeEntity": "Concept",
+      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
+      "$a": {"property": "notation"},
+      "$2": {
+        "note": "ignorable?",
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
+        "defaults": {
+          "notation": "DDC",
+          "isVersionOf": {"@id": "http://dewey.info/scheme/ddc/"}
+        },
+        "property": "version",
+        "splitValuePattern": "(\\d+)(?:/(swe))?",
+        "splitValueProperties": ["version", "language"]
+      }
     },
     "083": {
       "inherit": "082"
@@ -4073,22 +4088,12 @@
     },
     "082" : {"inherit": "bib"},
     "083" : {
+      "inherit": "bib:082",
       "addLink": "subject",
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
         "Place": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
-      },
-      "rangeEntity": "Concept",
-      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.edition}/",
-      "$a": {"property": "notation"},
-      "$2": {
-        "link": "inScheme", "rangeEntity": "ConceptScheme",
-        "uriTemplate": "http://dewey.info/scheme/ddc/{nil}",
-        "defaults": {"notation": "DDC"},
-        "property": "version",
-        "splitValuePattern": "(\\d+)/swe",
-        "splitValueProperties": ["edition"]
       }
     },
 
