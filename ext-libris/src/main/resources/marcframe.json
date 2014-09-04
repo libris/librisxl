@@ -3450,7 +3450,7 @@
 
     "210": {
       "domainEntity": "Instance",
-      "link": "abbreviatedTitle",
+      "addLink": "abbreviatedTitle",
       "rangeEntity": "Title",
       "$a": {"property": "titleValue"},
       "$b": {"property": "titleQualifier"},
@@ -3458,7 +3458,7 @@
     },
     "222": {
       "inherit": "210",
-      "link": "keyTitle",
+      "addLink": "keyTitle",
       "$2": null
     },
     "240": {
@@ -3467,7 +3467,8 @@
     },
     "242": {
       "inherit": "245",
-      "TODO": "translatedTitle? merge into 245?"
+      "addLink": "translatedTitle",
+      "TODO": "Correct property? merge into 245?"
     },
 
     "243": {},
@@ -3488,12 +3489,13 @@
     },
     "246": {
       "inherit": "245",
-      "link": "titleVariation",
+      "addLink": "titleVariation",
       "$i": {"property": "titleType"}
     },
     "247": {
       "inherit": "245",
-      "link": "titleVariation"
+      "addLink": "previousTitle",
+      "TODO": "Or merge into 246? Sometimes?"
     },
 
     "249": {},
@@ -3737,7 +3739,28 @@
       },
       "addLink": "subject", "rangeEntity": "Person"
     },
-    "610": {"inherit": "110", "addLink": "subject", "rangeEntity": "Organization"},
+    "610": {
+      "inherit": "110",
+      "TODO:i1": {},
+      "TODO:i2": {},
+      "match-code": {
+        "2 TODO:needs multiple match-code support": {
+          "TODO:implies": {"i2": "7"},
+          "$2": {
+            "link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"
+          },
+          "splitLink": [
+            {"codes": ["2"], "addLink": "focus", "spliceEntity": "Concept"}
+          ]
+        },
+        "x": {
+          "$a": {"link": "isPartOf", "rangeEntity": "Organization", "property": "name"}
+        }
+      },
+      "addLink": "subject",
+      "rangeEntity": "Organization",
+      "$x": {"property": "name"}
+    },
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
     "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "Work"},
     "648": {

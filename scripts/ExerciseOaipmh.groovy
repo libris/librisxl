@@ -11,16 +11,22 @@ class ExerciseOaipmh {
         while (true) {
             def batchTime = System.currentTimeMillis()
             def url = makeNextUrl(startUrl, resumptionToken)
+
+            def netTimeStart = System.currentTimeMillis()
             def xmlString = new URL(url).text // NOTE: might be bad UTF-8
+            def netTime = System.currentTimeMillis() - netTimeStart
+
+            def parseTimeStart = System.currentTimeMillis()
             def doc = new XmlSlurper(false,false).parseText(xmlString)
-            parseResult(doc)
+            def parseTime = System.currentTimeMillis() - parseTimeStart
+
             resumptionToken = doc.ListRecords.resumptionToken?.text()
 
             def elapsed = (System.currentTimeMillis() - startTime) / 1000
             def batchCount = doc.ListRecords.record.size()
             recordCount += batchCount
             int docsPerSecond = batchCount/((System.currentTimeMillis() - batchTime) / 1000)
-            println("Record count: ${recordCount}. Got resumption token: ${resumptionToken}. Elapsed time: ${elapsed}. Records/second: $docsPerSecond")
+            println "Record count: $recordCount. Got resumption token: $resumptionToken. Elapsed time: $elapsed. Records/second: ${recordCount / elapsed}. Net/net+parse time ratio: ${netTime/(netTime + parseTime)}, docspersecond: $docsPerSecond"
             if (!resumptionToken) {
                 println "Done, after $elapsed seconds."
                 break
