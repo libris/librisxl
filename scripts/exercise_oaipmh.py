@@ -11,7 +11,7 @@ def parse_oaipmh(start_url, name, passwd):
     record_count = 0
     while True:
         url = make_next_url(start_url, resumption_token)
-        res = requests.get(url, auth=(name, passwd), stream=True)
+        res = requests.get(url, auth=(name, passwd), stream=True, timeout=3600)
         record_root = etree.parse(res.raw)
         record_count += len(record_root.findall("{0}ListRecords/{0}record".format(PMH)))
         resumption_token = record_root.findtext("{0}ListRecords/{0}resumptionToken".format(PMH))
