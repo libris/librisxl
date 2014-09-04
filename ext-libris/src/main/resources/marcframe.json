@@ -3834,7 +3834,20 @@
     "662": {},
     "690": {},
 
-    "700": {"inherit": "100", "addLink": "influencedBy"},
+    "700": {
+      "inherit": "100",
+      "match-code": {
+        "t": {
+          "$t": {"property": "uniformTitle"},
+          "splitLink": [
+            {"codes": ["t"], "addLink": "influencedBy", "spliceEntity": "Work"}
+          ],
+          "addLink": "attributedTo"
+        }
+      },
+      "addLink": "influencedBy", "rangeEntity": "Person"
+    },
+
     "710": {"inherit": "110", "addLink": "influencedBy"},
     "711": {"inherit": "111"},
 
