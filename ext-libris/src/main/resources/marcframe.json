@@ -3450,7 +3450,7 @@
 
     "210": {
       "domainEntity": "Instance",
-      "link": "abbreviatedTitle",
+      "addLink": "abbreviatedTitle",
       "rangeEntity": "Title",
       "$a": {"property": "titleValue"},
       "$b": {"property": "titleQualifier"},
@@ -3458,7 +3458,7 @@
     },
     "222": {
       "inherit": "210",
-      "link": "keyTitle",
+      "addLink": "keyTitle",
       "$2": null
     },
     "240": {
@@ -3467,7 +3467,8 @@
     },
     "242": {
       "inherit": "245",
-      "TODO": "translatedTitle? merge into 245?"
+      "addLink": "translatedTitle",
+      "TODO": "Correct property? merge into 245?"
     },
 
     "243": {},
@@ -3488,12 +3489,13 @@
     },
     "246": {
       "inherit": "245",
-      "link": "titleVariation",
+      "addLink": "titleVariation",
       "$i": {"property": "titleType"}
     },
     "247": {
       "inherit": "245",
-      "link": "titleVariation"
+      "addLink": "previousTitle",
+      "TODO": "Or merge into 246? Sometimes?"
     },
 
     "249": {},
