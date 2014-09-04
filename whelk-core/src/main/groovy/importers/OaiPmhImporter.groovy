@@ -1,7 +1,9 @@
+package se.kb.libris.whelks.importers
+
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 
-class ExerciseOaipmh {
+abstract class OaiPmhImporter {
 
     void parseOaipmh(startUrl, name, passwd) {
         getAuthentication(name, passwd)
@@ -28,13 +30,6 @@ class ExerciseOaipmh {
         }
     }
 
-    String createString(GPathResult root) {
-        return new StreamingMarkupBuilder().bind{
-            out << root
-        }
-    }
-
-
     def makeNextUrl(startUrl, resumptionToken) {
         def params = resumptionToken?
             "?verb=ListRecords&resumptionToken=" + resumptionToken :
@@ -50,10 +45,11 @@ class ExerciseOaipmh {
             });
     }
 
-    static void main(args) {
-        def startUrl = "http://data.libris.kb.se/hold/oaipmh"
-        def name = args[0]
-        def passwd = args[1]
-        new ExerciseOaipmh().parseOaipmh(startUrl, name, passwd)
+    abstract void parseResult(final slurpedXml)
+
+    String createString(GPathResult root) {
+        return new StreamingMarkupBuilder().bind{
+            out << root
+        }
     }
 }
