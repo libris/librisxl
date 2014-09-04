@@ -3700,6 +3700,7 @@
       "$a": {"addProperty": "summary"},
       "match-code": {
         "u": {
+          "TODO": "unify with summary or the generic annotation model?",
           "addLink": "describedBy",
           "rangeEntity": "WebPage",
           "$a": {"property": "label"},
