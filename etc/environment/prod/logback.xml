@@ -20,6 +20,9 @@
     </encoder>
   </appender>
 
+  <logger name="org.apache.camel">
+      <level value="info"/>
+  </logger>
   <logger name="se.kb.libris.whelks.plugin.MarcCrackerAndLabelerIndexFormatConverter">
       <level value="error"/>
   </logger>

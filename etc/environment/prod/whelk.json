@@ -18,6 +18,9 @@
         "_importers": [
             "oaipmhimporter"
             ],
+        "_camel": [
+            "routebuilder"
+            ],
         "_components": [
             "pairtreehybridstorage",
             "pairtreeoaistorage",
