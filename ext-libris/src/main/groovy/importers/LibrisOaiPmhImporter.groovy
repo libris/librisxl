@@ -5,6 +5,11 @@ import se.kb.libris.whelks.plugin.*
 
 class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
     Whelk whelk
+    String id
+    List<Plugin> plugins = new ArrayList<Plugin>()
+    Map global
+
+    String serviceUrl
 
     def specUriMapping = [:]
     def datasetMapping = [:]
@@ -45,7 +50,28 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
             }
         }
         if (!docs.isEmpty()) {
-            whelk.bulkAdd(docs)
+            whelk.bulkAdd(docs, docs.first().contentType)
         }
     }
+
+
+    int doImport(String ds, String token, int maxNrOfDocsToImport, boolean silent, boolean picky, Date since = null) {
+        String startUrl = serviceUrl ?: "http://data.libris.kb.se/" + ds + "/oaipmh"
+        Properties properties = new Properties()
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("oaipmh.properties"))
+        String username = properties.getProperty("username")
+        String password = properties.getProperty("password")
+        parseOaipmh(startUrl, username, password)
+        return recordCount
+    }
+
+    void init(String str) {}
+    void cancel() { ok = false }
+
+    @Override
+    public void addPlugin(Plugin p) {
+        plugins.add(p);
+    }
+    public List<Plugin> getPlugins() { plugins }
+    public Map getGlobal() { global }
 }
