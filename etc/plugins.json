@@ -637,7 +637,7 @@
             "elasticBatchSize": 2000,
             "graphstoreBatchSize": 1000,
             "batchTimeout": 5000,
-            "elasticTypes": "ELASTIC_TYPES": ["auth","bib","hold","def","sys"]
+            "elasticTypes": "_property:ELASTIC_TYPES"
         }
     }
 }
