@@ -3454,7 +3454,7 @@
     "111": {
       "inherit": "110",
       "rangeEntity": "Meeting",
-      "$c": {"link": "place", "rangeEntity": "Place", "property": "label"},
+      "$c": {"link": "location", "rangeEntity": "Place", "property": "label"},
       "$d": {"property": "date"}
     },
     "130": {
@@ -3663,7 +3663,14 @@
 
     "500": {"$a": {"domainEntity": "Instance", "addProperty": "comment"}},
     "501": {},
-    "502": {},
+    "502": {
+      "addLink": "hasAnnotation", "rangeEntity": "DissertationAnnotation",
+      "$a": {"property": "note"},
+      "$b": {"property": "degree"},
+      "$c": {"property": "location"},
+      "$d": {"property": "date"},
+      "$g": {"property": "comment"}
+    },
     "504": {"$a": {"domainEntity": "Instance", "addProperty": "supplementaryContentNote"}},
 
     "505": {
@@ -3992,7 +3999,13 @@
     "800": {},
     "810": {},
     "811": {},
-    "830": {},
+    "830": {
+      "addLink": "isPartOf", "rangeEntity": "PublicationVolume",
+      "$a": {"property": "uniformTitle"},
+      "$d": {"addProperty": "date"},
+      "$v": {"property": "volumeNumber"},
+      "$x": {"property": "issn", "interpunctionChars": ".,=;"}
+    },
     "841": {},
     "842": {},
     "843": {},
