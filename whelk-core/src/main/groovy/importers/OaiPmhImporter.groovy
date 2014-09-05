@@ -1,7 +1,9 @@
+package se.kb.libris.whelks.importers
+
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 
-class ExerciseOaipmh {
+abstract class OaiPmhImporter {
 
     void parseOaipmh(startUrl, name, passwd) {
         getAuthentication(name, passwd)
@@ -11,35 +13,22 @@ class ExerciseOaipmh {
         while (true) {
             def batchTime = System.currentTimeMillis()
             def url = makeNextUrl(startUrl, resumptionToken)
-
-            def netTimeStart = System.currentTimeMillis()
             def xmlString = new URL(url).text // NOTE: might be bad UTF-8
-            def netTime = System.currentTimeMillis() - netTimeStart
-
-            def parseTimeStart = System.currentTimeMillis()
             def doc = new XmlSlurper(false,false).parseText(xmlString)
-            def parseTime = System.currentTimeMillis() - parseTimeStart
-
+            parseResult(doc)
             resumptionToken = doc.ListRecords.resumptionToken?.text()
 
             def elapsed = (System.currentTimeMillis() - startTime) / 1000
             def batchCount = doc.ListRecords.record.size()
             recordCount += batchCount
             int docsPerSecond = batchCount/((System.currentTimeMillis() - batchTime) / 1000)
-            println "Record count: $recordCount. Got resumption token: $resumptionToken. Elapsed time: $elapsed. Records/second: ${recordCount / elapsed}. Net/net+parse time ratio: ${netTime/(netTime + parseTime)}, docspersecond: $docsPerSecond"
+            println("Record count: ${recordCount}. Got resumption token: ${resumptionToken}. Elapsed time: ${elapsed}. Records/second: $docsPerSecond")
             if (!resumptionToken) {
                 println "Done, after $elapsed seconds."
                 break
             }
         }
     }
-
-    String createString(GPathResult root) {
-        return new StreamingMarkupBuilder().bind{
-            out << root
-        }
-    }
-
 
     def makeNextUrl(startUrl, resumptionToken) {
         def params = resumptionToken?
@@ -56,10 +45,11 @@ class ExerciseOaipmh {
             });
     }
 
-    static void main(args) {
-        def startUrl = "http://data.libris.kb.se/hold/oaipmh"
-        def name = args[0]
-        def passwd = args[1]
-        new ExerciseOaipmh().parseOaipmh(startUrl, name, passwd)
+    abstract void parseResult(final slurpedXml)
+
+    String createString(GPathResult root) {
+        return new StreamingMarkupBuilder().bind{
+            out << root
+        }
     }
 }

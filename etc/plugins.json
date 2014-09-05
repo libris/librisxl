@@ -359,6 +359,24 @@
         }
     },
     "oaipmhimporter" : {
+        "_class" : "se.kb.libris.whelks.importers.LibrisOaiPmhImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "specUriMapping" : {
+                "authority" : "auth",
+                "bibid" : "bib"
+            },
+            "datasetMapping" : {
+                "Holdings" : "hold",
+                "Bibliographic" : "bib",
+                "Authority" : "auth"
+            },
+            "preserveTimestamps" : true
+        }
+    },
+    "oldoaipmhimporter" : {
         "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
