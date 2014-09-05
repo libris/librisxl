@@ -140,8 +140,16 @@ marcenum:bibLevel a skos:Collection;
 :Carrier a owl:Class;
     owl:equivalentClass dc:MediaType .
 
-#instanceOf
-#commonEndeavor
+#commonEndeavor?
+
+:exampleOfWork a owl:ObjectProperty ;
+    owl:equivalentProperty sdo:exampleOfWork;
+    rdfs:subPropertyOf bf:instanceOf;
+    sdo:rangeIncludes :ConceptualWork .
+
+:workExample a owl:ObjectProperty ;
+    owl:equivalentProperty sdo:workExample;
+    sdo:rangeIncludes :CreativeWork, :Product .
 
 :format a owl:ObjectProperty;
     owl:equivalentProperty dc:format .
@@ -361,6 +369,12 @@ marcenum:bibLevel a skos:Collection;
     rdfs:comment "Samma sak som seriell resurs."@sv;
     vann:termGroup marcenum:bibLevel;
     owl:equivalentClass bf:Serial .
+
+:LicenseAgreementBoundDescription a owl:Class ;
+    rdfs:label "Licensavtalsbunden beskrivning"@sv;
+    owl:deprecated true;
+    vann:termGroup marcenum:bibLevel;
+    rdfs:subClassOf :Aggregate .
 
 # Manifestation Dimensions
 
@@ -806,19 +820,13 @@ marcenum:bibLevel a skos:Collection;
 
 :Integrating rdfs:subClassOf :Aggregate .
 
-:LicenseAgreementBoundDescription a owl:Class ;
-    rdfs:label "Licensavtalsbunden beskrivning"@sv;
-    owl:deprecated true;
-    vann:termGroup marcenum:bibLevel;
-    rdfs:subClassOf :Aggregate .
-
 :Map owl:equivalentClass sdo:Map .
 
 :Monograph rdfs:subClassOf :Aggregate .
 
-:Periodical a owl:Class ;
-    rdfs:subClassOf :Aggregate ;
-    owl:equivalentClass bibo:Periodical .
+:Periodical rdfs:subClassOf :Aggregate ;
+    owl:equivalentClass bibo:Periodical,
+        sdo:Periodical .
 
 :SerialComponentPart rdfs:subClassOf :Part .
 
@@ -830,8 +838,7 @@ marcenum:bibLevel a skos:Collection;
         owl:FunctionalProperty ;
     sdo:domainIncludes :Aggregate .
 
-:abbreviatedTitle a owl:FunctionalProperty,
-        owl:ObjectProperty ;
+:abbreviatedTitle a owl:ObjectProperty ;
     sdo:domainIncludes :Instance ;
     sdo:rangeIncludes :Title ;
     owl:equivalentProperty bf:abbreviatedTitle .
@@ -856,6 +863,8 @@ marcenum:bibLevel a skos:Collection;
 
 :altLabel a owl:FunctionalProperty ;
     sdo:domainIncludes :Document .
+
+:alternateEdition a owl:ObjectProperty .
 
 :alternateFormat a owl:ObjectProperty ;
     sdo:rangeIncludes :Product .
@@ -982,6 +991,7 @@ marcenum:bibLevel a skos:Collection;
 
 :classificationDdc a owl:DatatypeProperty,
         owl:FunctionalProperty ;
+    sdo:domainIncludes :Concept ;
     owl:equivalentProperty bf:classificationDdc .
 
 :classificationItem a owl:DatatypeProperty,
@@ -1018,7 +1028,9 @@ marcenum:bibLevel a skos:Collection;
     owl:equivalentProperty sdo:color .
 
 :comment a owl:FunctionalProperty ;
-    sdo:domainIncludes :Document,
+    sdo:domainIncludes :ConceptualWork,
+        :DissertationAnnotation,
+        :Document,
         :Instance ;
     owl:equivalentProperty sdo:comment .
 
@@ -1041,11 +1053,12 @@ marcenum:bibLevel a skos:Collection;
 
 :containedIn a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:rangeIncludes :Country,
-        :CreativeWork ;
+    sdo:rangeIncludes :Country ;
     owl:equivalentProperty sdo:containedIn .
 
 :contains a owl:ObjectProperty .
+
+:contentType owl:equivalentProperty sdo:contentType .
 
 :contents a owl:FunctionalProperty,
         owl:ObjectProperty .
@@ -1055,6 +1068,9 @@ marcenum:bibLevel a skos:Collection;
 
 :controlledLabel a owl:FunctionalProperty ;
     sdo:domainIncludes :CreativeWork .
+
+:copyIdentification a owl:DatatypeProperty ;
+    sdo:domainIncludes :Product .
 
 :copyNumber a owl:DatatypeProperty,
         owl:FunctionalProperty .
@@ -1070,7 +1086,10 @@ marcenum:bibLevel a skos:Collection;
 
 :date a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Record,
+    sdo:domainIncludes :ConceptualWork,
+        :DissertationAnnotation,
+        :PublicationVolume,
+        :Record,
         :Serial ;
     owl:equivalentProperty dbpo:date,
         dc:date .
@@ -1087,11 +1106,18 @@ marcenum:bibLevel a skos:Collection;
         owl:FunctionalProperty ;
     sdo:domainIncludes :CartographyCoordinates .
 
+:degree a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :DissertationAnnotation ;
+    owl:equivalentProperty bibo:degree .
+
 :depiction a owl:ObjectProperty ;
     owl:equivalentProperty foaf:depiction .
 
-:describedBy sdo:domainIncludes :CreativeWork ;
-    sdo:rangeIncludes :Record .
+:describedBy sdo:domainIncludes :ConceptualWork,
+        :CreativeWork ;
+    sdo:rangeIncludes :Record,
+        :WebPage .
 
 :description a owl:DatatypeProperty,
         owl:FunctionalProperty ;
@@ -1168,6 +1194,8 @@ marcenum:bibLevel a skos:Collection;
         owl:FunctionalProperty ;
     sdo:domainIncludes :Record .
 
+:exampleOfWork a owl:FunctionalProperty .
+
 :extent a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Product ;
@@ -1190,6 +1218,8 @@ marcenum:bibLevel a skos:Collection;
 
 :fileType a owl:DatatypeProperty,
         owl:FunctionalProperty .
+
+:focus a owl:ObjectProperty .
 
 :formerShelvingLocation a owl:DatatypeProperty .
 
@@ -1219,13 +1249,18 @@ marcenum:bibLevel a skos:Collection;
 :govtPub a owl:FunctionalProperty,
         owl:ObjectProperty .
 
+:hasAnnotation a owl:ObjectProperty ;
+    sdo:rangeIncludes :DissertationAnnotation ;
+    owl:equivalentProperty bf:hasAnnotation .
+
 :hasFormat sdo:domainIncludes :Instance,
         :Product ;
     sdo:rangeIncludes :Electronic,
         :Product .
 
 :hasPart sdo:rangeIncludes :CreativeWork ;
-    owl:equivalentProperty bf:hasPart .
+    owl:equivalentProperty bf:hasPart,
+        sdo:hasPart .
 
 :hasPersona sdo:rangeIncludes :Person .
 
@@ -1286,18 +1321,32 @@ marcenum:bibLevel a skos:Collection;
         owl:ObjectProperty ;
     owl:equivalentProperty bf:index .
 
-:influencedBy owl:equivalentProperty dbpo:influencedBy .
+:influencedBy sdo:rangeIncludes :Person ;
+    owl:equivalentProperty dbpo:influencedBy .
+
+:influentialRelation sdo:rangeIncludes :CreativeWork .
 
 :instanceTitle a owl:FunctionalProperty ;
     sdo:domainIncludes :Instance ;
     sdo:rangeIncludes :Title .
 
-:isPartOf sdo:rangeIncludes :Aggregate ;
+:inventoryLevel a owl:DatatypeProperty ;
+    sdo:domainIncludes :Product ;
+    owl:equivalentProperty sdo:inventoryLevel .
+
+:isPartOf a owl:FunctionalProperty ;
+    sdo:rangeIncludes :Aggregate,
+        :CreativeWork,
+        :Organization,
+        :PublicationVolume ;
     owl:equivalentProperty dbpo:isPartOf,
         sdo:isPartOf .
 
 :isPrimaryTopicOf sdo:rangeIncludes :Document,
         :Electronic .
+
+:isVersionOf a rdf:Property ;
+    owl:equivalentProperty dc:isVersionOf .
 
 :isbn a owl:DatatypeProperty ;
     sdo:domainIncludes :CreativeWork ;
@@ -1310,20 +1359,26 @@ marcenum:bibLevel a skos:Collection;
 :issn a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :CreativeWork,
+        :PublicationVolume,
         :Serial ;
     owl:equivalentProperty bf:issn,
         dbpo:issn,
         <http://prismstandard.org/namespaces/1.2/basic/issn>,
-        bibo:issn .
+        bibo:issn,
+        sdo:issn .
 
 :issueNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty sdo:issueNumber .
+    owl:equivalentProperty bf:issueNumber,
+        sdo:issueNumber .
+
+:itemCondition a owl:DatatypeProperty ;
+    sdo:domainIncludes :Product ;
+    owl:equivalentProperty sdo:itemCondition .
 
 :itemPart a owl:DatatypeProperty .
 
-:keyTitle a owl:FunctionalProperty,
-        owl:ObjectProperty ;
+:keyTitle a owl:ObjectProperty ;
     owl:equivalentProperty bf:keyTitle .
 
 :keyword a owl:DatatypeProperty,
@@ -1334,10 +1389,14 @@ marcenum:bibLevel a skos:Collection;
     sdo:domainIncludes :Audience,
         :CreativeWork,
         :Device,
-        :Place ;
+        :Place,
+        :WebPage ;
     owl:equivalentProperty bf:label .
 
-:language owl:equivalentProperty dbpo:language,
+:language a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :ConceptualWork ;
+    owl:equivalentProperty dbpo:language,
         dc:language,
         sdo:language .
 
@@ -1353,7 +1412,8 @@ marcenum:bibLevel a skos:Collection;
 
 :license a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty dbpo:license .
+    owl:equivalentProperty dbpo:license,
+        sdo:license .
 
 :lifeSpan a owl:DatatypeProperty,
         owl:FunctionalProperty ;
@@ -1373,7 +1433,10 @@ marcenum:bibLevel a skos:Collection;
         owl:ObjectProperty .
 
 :location a owl:DatatypeProperty,
-        owl:FunctionalProperty ;
+        owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    sdo:domainIncludes :DissertationAnnotation ;
+    sdo:rangeIncludes :Place ;
     owl:equivalentProperty dbpo:location,
         sdo:location .
 
@@ -1404,8 +1467,10 @@ marcenum:bibLevel a skos:Collection;
         owl:FunctionalProperty ;
     sdo:domainIncludes :Instance .
 
-:medium a owl:FunctionalProperty,
+:medium a owl:DatatypeProperty,
+        owl:FunctionalProperty,
         owl:ObjectProperty ;
+    sdo:domainIncludes :ConceptualWork ;
     owl:equivalentProperty dc:medium .
 
 :modified a owl:DatatypeProperty,
@@ -1465,6 +1530,18 @@ marcenum:bibLevel a skos:Collection;
 :motionPicSound a owl:FunctionalProperty,
         owl:ObjectProperty .
 
+:musicArrangement a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :ConceptualWork .
+
+:musicKey a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :ConceptualWork ;
+    owl:equivalentProperty bf:musicKey .
+
+:musicPerformanceMedium a owl:DatatypeProperty ;
+    sdo:domainIncludes :ConceptualWork .
+
 :musicPlate a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     owl:equivalentProperty bf:musicPlate .
@@ -1516,7 +1593,9 @@ marcenum:bibLevel a skos:Collection;
         :ConceptScheme ;
     owl:equivalentProperty bf:notation .
 
-:note sdo:domainIncludes :CreativeWork ;
+:note a owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork,
+        :DissertationAnnotation ;
     owl:equivalentProperty bf:note,
         dbpo:note .
 
@@ -1543,15 +1622,19 @@ marcenum:bibLevel a skos:Collection;
 
 :pagination a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Aggregate .
+    sdo:domainIncludes :Aggregate ;
+    owl:equivalentProperty sdo:pagination .
 
-:partEnumeration a owl:DatatypeProperty,
+:partNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Title .
+    sdo:domainIncludes :ConceptualWork,
+        :Title ;
+    owl:equivalentProperty bf:partNumber .
 
 :partTitle a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Title ;
+    sdo:domainIncludes :ConceptualWork,
+        :Title ;
     owl:equivalentProperty bf:partTitle .
 
 :participantNote a owl:DatatypeProperty .
@@ -1597,6 +1680,11 @@ marcenum:bibLevel a skos:Collection;
 :prefLabel a owl:FunctionalProperty ;
     sdo:domainIncludes :Concept,
         :Place .
+
+:presentationFormat a owl:DatatypeProperty ;
+    sdo:domainIncludes :Product .
+
+:previousTitle a owl:ObjectProperty .
 
 :primeMeridian a owl:FunctionalProperty,
         owl:ObjectProperty .
@@ -1648,7 +1736,9 @@ marcenum:bibLevel a skos:Collection;
     owl:equivalentProperty bf:publication,
         sdo:publication .
 
-:publicationCountry a owl:ObjectProperty .
+:publicationCountry a owl:DatatypeProperty,
+        owl:FunctionalProperty,
+        owl:ObjectProperty .
 
 :publicationOtherYear a owl:DatatypeProperty,
         owl:FunctionalProperty .
@@ -1683,8 +1773,7 @@ marcenum:bibLevel a skos:Collection;
 :regularity a owl:FunctionalProperty,
         owl:ObjectProperty .
 
-:relation sdo:rangeIncludes :Document,
-        :Work ;
+:relation sdo:rangeIncludes :Document ;
     owl:equivalentProperty dbpo:relation .
 
 :relief a owl:FunctionalProperty,
@@ -1740,7 +1829,8 @@ marcenum:bibLevel a skos:Collection;
     owl:equivalentProperty sdo:sameAs .
 
 :scopeNote a owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork,
+    sdo:domainIncludes :CartographyCoordinates,
+        :CreativeWork,
         :ProviderEvent .
 
 :seeAlso sdo:rangeIncludes :Document .
@@ -1818,6 +1908,10 @@ marcenum:bibLevel a skos:Collection;
 :sourceOfClassificationOrShelvingScheme a owl:DatatypeProperty,
         owl:FunctionalProperty .
 
+:southernmostLatitudeCoordinates a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CartographyCoordinates .
+
 :standardTechnicalReportNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :CreativeWork .
@@ -1854,7 +1948,8 @@ marcenum:bibLevel a skos:Collection;
 
 :subtitle a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Title ;
+    sdo:domainIncludes :ConceptualWork,
+        :Title ;
     owl:equivalentProperty bf:subtitle,
         dbpo:subtitle .
 
@@ -1906,7 +2001,8 @@ marcenum:bibLevel a skos:Collection;
         owl:FunctionalProperty .
 
 :title a owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork,
+    sdo:domainIncludes :ConceptualWork,
+        :CreativeWork,
         :Serial ;
     owl:equivalentProperty dbpo:title,
         sdo:title .
@@ -1933,8 +2029,7 @@ marcenum:bibLevel a skos:Collection;
 :titleValue a owl:FunctionalProperty ;
     sdo:domainIncludes :Title .
 
-:titleVariation a owl:FunctionalProperty,
-        owl:ObjectProperty ;
+:titleVariation a owl:ObjectProperty ;
     owl:equivalentProperty bf:titleVariation .
 
 :transcribingAgency a owl:FunctionalProperty,
@@ -1943,6 +2038,8 @@ marcenum:bibLevel a skos:Collection;
 
 :translatedFromLanguage a owl:FunctionalProperty,
         owl:ObjectProperty .
+
+:translatedTitle a owl:ObjectProperty .
 
 :translation a owl:ObjectProperty ;
     owl:equivalentProperty bf:translation .
@@ -1953,6 +2050,9 @@ marcenum:bibLevel a skos:Collection;
 
 :transposition a owl:FunctionalProperty,
         owl:ObjectProperty .
+
+:treatySigningDate a owl:DatatypeProperty ;
+    sdo:domainIncludes :ConceptualWork .
 
 :typeOfControl a owl:FunctionalProperty,
         owl:ObjectProperty ;
@@ -1967,7 +2067,7 @@ marcenum:bibLevel a skos:Collection;
         owl:FunctionalProperty ;
     sdo:domainIncludes :CreativeWork,
         :Instance,
-        :Work .
+        :PublicationVolume .
 
 :url a owl:DatatypeProperty,
         owl:FunctionalProperty ;
@@ -1976,7 +2076,11 @@ marcenum:bibLevel a skos:Collection;
 
 :version a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptScheme .
+    sdo:domainIncludes :ConceptScheme,
+        :ConceptualWork .
+
+:versionIdentification a owl:DatatypeProperty ;
+    sdo:domainIncludes :Product .
 
 :videoColor a owl:FunctionalProperty,
         owl:ObjectProperty .
@@ -1999,6 +2103,11 @@ marcenum:bibLevel a skos:Collection;
 :videorecordingNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     owl:equivalentProperty bf:videorecordingNumber .
+
+:volumeNumber a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :PublicationVolume ;
+    owl:equivalentProperty sdo:volumeNumber .
 
 :volumeNumberSequentialDesignation a owl:DatatypeProperty,
         owl:FunctionalProperty ;
