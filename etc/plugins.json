@@ -433,6 +433,26 @@
         "_params" : {
             "requiredDataset" : [ "bib" ],
             "nodesToExpand": {
+                 "about.additionalCarrierType" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.alphabet" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
                 "about.attributedTo" : {
                     "method": "query",
                     "index" : "libris",
@@ -483,6 +503,16 @@
                     },
                     "resultKey" : "about"
                 },
+                "about.illustrations" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
                 "about.language" : {
                     "method": "query",
                     "index" : "libris",
@@ -494,6 +524,26 @@
                     "resultKey" : "about"
                 },
                 "about.literaryForm" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.nature" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.originalItem" : {
                     "method": "query",
                     "index" : "libris",
                     "dataset" : "def",
@@ -534,6 +584,16 @@
                     "resultKey" : "about"
                 },
                 "about.regularity" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.typeOfEntry" : {
                     "method": "query",
                     "index" : "libris",
                     "dataset" : "def",

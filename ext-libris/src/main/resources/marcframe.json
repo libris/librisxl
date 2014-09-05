@@ -3373,8 +3373,23 @@
 
     "082": {
       "note:candidate:domainEntity": "Work",
-      "$a": {"property": "classificationDdc"},
-      "$2": {"ignored": true}
+      "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
+      "addLink": "classification",
+      "rangeEntity": "Concept",
+      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
+      "$a": {"property": "notation"},
+      "$2": {
+        "note": "ignorable?",
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
+        "defaults": {
+          "notation": "DDC",
+          "isVersionOf": {"@id": "http://dewey.info/scheme/ddc/"}
+        },
+        "property": "version",
+        "splitValuePattern": "(\\d+)(?:/(swe))?",
+        "splitValueProperties": ["version", "language"]
+      }
     },
     "083": {
       "inherit": "082"
@@ -3680,7 +3695,19 @@
     "516": {},
     "518": {},
 
-    "520": {"domainEntity": "Instance", "$a": {"addProperty": "summary"}},
+    "520": {
+      "domainEntity": "Instance",
+      "$a": {"addProperty": "summary"},
+      "match-code": {
+        "u": {
+          "TODO": "unify with summary or the generic annotation model?",
+          "addLink": "describedBy",
+          "rangeEntity": "WebPage",
+          "$a": {"property": "label"},
+          "$u": {"property": "@id"}
+        }
+      }
+    },
 
     "521": {
       "addLink": "audience",
@@ -3834,7 +3861,20 @@
     "662": {},
     "690": {},
 
-    "700": {"inherit": "100", "addLink": "influencedBy"},
+    "700": {
+      "inherit": "100",
+      "match-code": {
+        "t": {
+          "$t": {"property": "uniformTitle"},
+          "splitLink": [
+            {"codes": ["t"], "addLink": "influencedBy", "spliceEntity": "Work"}
+          ],
+          "addLink": "attributedTo"
+        }
+      },
+      "addLink": "influencedBy", "rangeEntity": "Person"
+    },
+
     "710": {"inherit": "110", "addLink": "influencedBy"},
     "711": {"inherit": "111"},
 
@@ -4060,22 +4100,12 @@
     },
     "082" : {"inherit": "bib"},
     "083" : {
+      "inherit": "bib:082",
       "addLink": "subject",
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
         "Place": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
-      },
-      "rangeEntity": "Concept",
-      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.edition}/",
-      "$a": {"property": "notation"},
-      "$2": {
-        "link": "inScheme", "rangeEntity": "ConceptScheme",
-        "uriTemplate": "http://dewey.info/scheme/ddc/{nil}",
-        "defaults": {"notation": "DDC"},
-        "property": "version",
-        "splitValuePattern": "(\\d+)/swe",
-        "splitValueProperties": ["edition"]
       }
     },
 
