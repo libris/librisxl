@@ -161,7 +161,7 @@ class ImportOperator extends AbstractOperator {
     Map getStatus() {
         if (runningTime == 0) {
             runningTime = System.currentTimeMillis() - startTime
-}
+        }
         count = (importer ? importer.recordCount : 0)
         def status = super.getStatus()
         return status

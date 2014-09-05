@@ -3739,7 +3739,15 @@
     "555": {},
     "556": {},
     "561": {},
-    "562": {},
+    "562": {
+      "addLink": "exampleOfWork", "rangeEntity": "Product",
+      "$a": {"addProperty": "itemCondition"},
+      "$b": {"addProperty": "copyIdentification"},
+      "$c": {"addProperty": "versionIdentification"},
+      "$d": {"addProperty": "presentationFormat"},
+      "$e": {"addProperty": "inventoryLevel"},
+      "$3": {"property": "materialsSpecified"}
+    },
     "563": {},
     "565": {},
     "567": {},
