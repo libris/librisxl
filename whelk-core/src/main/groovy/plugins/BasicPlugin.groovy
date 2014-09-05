@@ -18,11 +18,6 @@ public abstract class BasicPlugin implements Plugin {
 
     public final static mapper = new ObjectMapper()
 
-    @Override
-    public boolean isEnabled() { return enabled; }
-    @Override
-    public void setEnabled(boolean e) { this.enabled = e; }
-    @Override
     public final void init(String initString) {
         if (this.id == null) {
             throw new PluginConfigurationException("Plugin ${this.getClass().getName()} must have ID set before init()")

@@ -377,7 +377,7 @@
         }
     },
     "oldoaipmhimporter" : {
-        "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
+        "_class" : "se.kb.libris.whelks.importers.OldOAIPMHImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],
