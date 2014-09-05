@@ -2,6 +2,9 @@
     "elasticnode": {
         "_class": "se.kb.libris.whelks.component.ElasticSearchNode"
     },
+    "activemqbroker": {
+        "_class": "se.kb.libris.whelks.component.ActiveMQBroker"
+    },
     "remotesearch": {
         "_class": "se.kb.libris.whelks.api.RemoteSearchAPI",
         "_plugins" : [

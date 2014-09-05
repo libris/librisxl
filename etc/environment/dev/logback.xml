@@ -16,7 +16,7 @@
       <level value="info"/>
   </logger>
   <logger name="org.apache.camel.mock">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="org.apache.activemq">
       <level value="info"/>
@@ -40,10 +40,10 @@
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.BasicElasticComponent">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.plugin.BasicPlugin">
       <level value="info"/>
