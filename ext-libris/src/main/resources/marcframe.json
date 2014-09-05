@@ -3252,7 +3252,7 @@
       "$d": {"property": "westernmostLongitudeCoordinates"},
       "$e": {"property": "easternmostLongitudeCoordinates"},
       "$f": {"property": "northernmostLatitudeCoordinates"},
-      "$g": {"property": "coordinatesSouthernmostLatitude"},
+      "$g": {"property": "southernmostLatitudeCoordinates"},
       "$h": {"addProperty": "angularScale"},
       "$j": {"property": "declinationNorthernLimit"},
       "$k": {"property": "declinationSouthernLimit"},
