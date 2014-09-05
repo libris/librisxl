@@ -24,7 +24,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
     String dataset
 
     String serviceUrl
-    int nrImported = 0
+    int recordCount = 0
     int nrDeleted = 0
     long startTime = 0
 
@@ -64,7 +64,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         this.dataset = dataset
         this.picky = picky
         this.silent = silent
-        this.nrImported = 0
+        this.recordCount = 0
         this.nrDeleted = 0
         this.serviceUrl = (serviceUrl ?: SERVICE_BASE_URL + dataset+"/oaipmh/")
 
@@ -98,7 +98,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         log.debug("resumptionToken: $resumptionToken")
         long loadUrlTime = startTime
         long elapsed = 0
-        while (!cancelled && resumptionToken && (nrOfDocs == -1 || nrImported <  nrOfDocs)) {
+        while (!cancelled && resumptionToken && (nrOfDocs == -1 || recordCount <  nrOfDocs)) {
             loadUrlTime = System.currentTimeMillis()
             url = new URL(serviceUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
             log.trace("Harvesting $url")
@@ -126,7 +126,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         } as Runnable)
         log.debug("Shutting down queue")
         queue.shutdown()
-        return nrImported
+        return recordCount
     }
 
 
@@ -214,12 +214,12 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                     } catch (Exception e) {
                         log.error("Conversion failed for id ${entry.identifier}", e)
                     }
-                    nrImported++
+                    recordCount++
                     def velocityMsg = ""
                     runningTime = System.currentTimeMillis() - startTime
                     if (!silent) {
-                        velocityMsg = "Current velocity: ${nrImported/(runningTime/1000)}."
-                        Tools.printSpinner("Running OAIPMH ${this.dataset} import. ${nrImported} documents imported sofar. $velocityMsg", nrImported)
+                        velocityMsg = "Current velocity: ${recordCount/(runningTime/1000)}."
+                        Tools.printSpinner("Running OAIPMH ${this.dataset} import. ${recordCount} documents imported sofar. $velocityMsg", recordCount)
                     }
                 } catch (Exception e) {
 
