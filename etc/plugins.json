@@ -356,7 +356,7 @@
             "timeout" : 1
         }
     },
-    "oaipmhimporter" : {
+    "oaipmhimporter2" : {
         "_class" : "se.kb.libris.whelks.importers.LibrisOaiPmhImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
@@ -374,8 +374,8 @@
             "preserveTimestamps" : true
         }
     },
-    "oldoaipmhimporter" : {
-        "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
+    "oaipmhimporter" : {
+        "_class" : "se.kb.libris.whelks.importers.OldOAIPMHImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],

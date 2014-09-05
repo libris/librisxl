@@ -16,8 +16,7 @@
             "linkexpander"
             ],
         "_importers": [
-            "oaipmhimporter",
-            "marcimporter"
+            "oaipmhimporter"
             ],
         "_components": [
             "pairtreehybridstorage",

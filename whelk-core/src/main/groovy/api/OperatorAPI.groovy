@@ -143,7 +143,7 @@ class ImportOperator extends AbstractOperator {
             throw new WhelkRuntimeException("Couldn't find any importers working for ${whelk.id}.")
         }
         log.debug("Importer name: ${importer.getClass().getName()}")
-        if (importer.getClass().getName() == "se.kb.libris.whelks.importers.LibrisOaiPmhImporter") {
+        if (importer instanceof OaiPmhImporter || importer.getClass().getName() == "se.kb.libris.whelks.importers.OldOAIPMHImporter") {
             importer.serviceUrl = serviceUrl
             log.info("Import from OAIPMH")
             count = importer.doImport(dataset, resumptionToken, numToImport, true, picky, since)
