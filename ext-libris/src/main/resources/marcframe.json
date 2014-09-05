@@ -3999,7 +3999,13 @@
     "800": {},
     "810": {},
     "811": {},
-    "830": {},
+    "830": {
+      "addLink": "isPartOf", "rangeEntity": "Serial",
+      "$a": {"property": "uniformTitle"},
+      "$d": {"addProperty": "date"},
+      "$v": {"property": "pagination"},
+      "$x": {"property": "issn", "interpunctionChars": ".,=;"}
+    },
     "841": {},
     "842": {},
     "843": {},
