@@ -45,4 +45,12 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
         idelements.remove(0)
         return idelements.join(URI_SEPARATOR)
     }
+
+    String translateIndexIdTo(id) {
+        def pathelements = []
+        id.split(URI_SEPARATOR).each {
+            pathelements << java.net.URLEncoder.encode(it, "UTF-8")
+        }
+        return  new String("/"+pathelements.join("/"))
+    }
 }

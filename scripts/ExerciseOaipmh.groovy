@@ -3,11 +3,13 @@ import groovy.util.slurpersupport.GPathResult
 
 class ExerciseOaipmh {
 
+    int recordCount
+
     void parseOaipmh(startUrl, name, passwd) {
         getAuthentication(name, passwd)
         String resumptionToken = null
         def startTime = System.currentTimeMillis()
-        def recordCount = 0
+        recordCount = 0
         while (true) {
             def batchTime = System.currentTimeMillis()
             def url = makeNextUrl(startUrl, resumptionToken)

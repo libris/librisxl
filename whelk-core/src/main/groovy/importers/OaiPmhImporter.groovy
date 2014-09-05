@@ -1,18 +1,23 @@
 package se.kb.libris.whelks.importers
 
+import groovy.util.logging.Slf4j as Log
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 
+@Log
 abstract class OaiPmhImporter {
+
+    int recordCount
 
     void parseOaipmh(startUrl, name, passwd) {
         getAuthentication(name, passwd)
         String resumptionToken = null
         def startTime = System.currentTimeMillis()
-        def recordCount = 0
+        recordCount = 0
         while (true) {
             def batchTime = System.currentTimeMillis()
             def url = makeNextUrl(startUrl, resumptionToken)
+            log.debug("Harvesting from $url")
             def xmlString = new URL(url).text // NOTE: might be bad UTF-8
             def doc = new XmlSlurper(false,false).parseText(xmlString)
             parseResult(doc)
