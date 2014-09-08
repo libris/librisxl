@@ -125,7 +125,9 @@ First set up configuration of it:
 
 ### Perform whelk operations
 
-Run whelkOperation gradle task to import, reindex or rebuild:
+Run whelkOperation gradle task to import, reindex or rebuild: 
+
+    THIS OPERATION IS DEPRECATED.
 
     $ gradle whelkOperation -Dargs='ARGS' -Dwhelk.config.uri=<uri-to-config-json> (-Delastic.host='<host>') (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>')
    
@@ -243,6 +245,18 @@ If the JSONLD format has been updated, in such a way that the marcframeconverter
 2.  In the operations gui, under "import", select which dataset to import (auth/bib/hold). If loading data from data.libris.kb.se, just erase everything from the "service url" field. Finally, hit "go".
 
 3.  The import will now start. The current velocity and import count can be viewed from the operations-page.
+
+##### Alternatively
+
+1.  If the changes are such that a new mapping is required for elasticsearch, it's best to remove the old elastic type before starting up the whelk, i.e:
+
+    $ curl -XDELETE http://elastichost:9200/libris/[type] 
+
+    where type is bib, auth or hold. 
+    When the whelk starts up, it will detect that the type is missing and create proper mappings for the given type.
+
+2.  $ curl -XPOST http://localhost:8180/whelk-webapi/\_operations -d 'operation=import&dataset=auth,bib,hold&url=http://localhost:8000/{dataset}/oaipmh&importer=oaipmhimporter'
+
 
 ### Reindexing
 
