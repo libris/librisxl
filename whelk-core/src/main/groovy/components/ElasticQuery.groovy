@@ -19,13 +19,12 @@ class ElasticQuery extends Query {
 
     final static ObjectMapper mapper = new ObjectMapper()
 
-    ElasticQuery() {super()}
+    ElasticQuery() {}
 
     ElasticQuery(String qs) {
         super(qs)
     }
     ElasticQuery(String field, String value) {
-        super()
         this.phraseQuery = true
         this.phraseField = field
         this.phraseValue = value
