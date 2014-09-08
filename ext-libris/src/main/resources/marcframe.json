@@ -3477,8 +3477,24 @@
       "$2": null
     },
     "240": {
-      "note:candidate:domainEntity": "Work",
-      "$a": {"property": "uniformTitle"}
+      "i1": {},
+      "i2": {},
+      "link": "exampleOfWork",
+      "rangeEntity": "ConceptualWork",
+      "$0": {"addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber"},
+      "$a": {"property": "title"},
+      "$k": {"addProperty": "subtitle"},
+      "$p": {"addProperty": "partTitle"},
+      "$n": {"addProperty": "partNumber"},
+      "$l": {"property": "language"},
+      "$f": {"property": "date"},
+      "$d": {"addProperty": "treatySigningDate"},
+      "$s": {"property": "version"},
+      "$g": {"property": "comment"},
+      "$h": {"property": "medium"},
+      "$m": {"addProperty": "musicPerformanceMedium"},
+      "$o": {"property": "musicArrangement"},
+      "$r": {"property": "musicKey"}
     },
     "242": {
       "inherit": "245",
@@ -3499,7 +3515,7 @@
       "$c": {"domainEntity": "Instance", "property": "responsibilityStatement"},
       "$f": {"property": "titleDate"},
       "$h": {"domainEntity": "Instance", "property": "mediaTerm", "surroundingChars": "[]"},
-      "$n": {"property": "partEnumeration"},
+      "$n": {"property": "partNumber"},
       "$p": {"property": "partTitle"}
     },
     "246": {
@@ -3644,7 +3660,7 @@
 
     "440": {
       "note:candidate:domainEntity": "Work",
-      "TODO:prefer": "490 or 773?",
+      "TODO:prefer": "490 or 773? See also mapping for 240",
       "addLink": "series",
       "rangeEntity": "Serial",
       "$a": {"property": "title", "interpunctionChars": ".,=;"},
@@ -3747,7 +3763,7 @@
     "556": {},
     "561": {},
     "562": {
-      "addLink": "exampleOfWork", "rangeEntity": "Product",
+      "addLink": "workExample", "rangeEntity": "Product",
       "$a": {"addProperty": "itemCondition"},
       "$b": {"addProperty": "copyIdentification"},
       "$c": {"addProperty": "versionIdentification"},

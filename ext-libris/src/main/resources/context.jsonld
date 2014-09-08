@@ -57,7 +57,7 @@
       "NotatedMusic": "bf:NotatedMusic",
       "Organization": "sdo:Organization",
       "PartialDateTime": "edtf:EDTF-level2",
-      "Periodical": "bf:Serial",
+      "Periodical": "sdo:Periodical",
       "Person": "sdo:Person",
       "PhysicalObject": "dctype:PhysicalObject",
       "Place": "sdo:Place",
@@ -73,6 +73,8 @@
       "Website": "bibo:Website",
       "Year": "xsd:gYear",
       "YearMonth": "xsd:gYearMonth",
+      "_marcBroken": null,
+      "_marcUncompleted": null,
       "_note": null,
       "abbreviatedTitle": "bf:abbreviatedTitle",
       "about": "sdo:about",
@@ -111,13 +113,14 @@
       "classificationDdc": "bf:classificationDdc",
       "classificationItem": "bf:classificationItem",
       "classificationLcc": "bf:classificationLcc",
+      "classificationNlm": "bf:classificationNlm",
       "classificationUdc": "bf:classificationUdc",
       "closeMatch": "skos:closeMatch",
       "coden": "bf:coden",
       "color": "sdo:color",
       "comment": "sdo:comment",
       "containedIn": "sdo:containedIn",
-      "contains": "bf:contains",
+      "contentType": "sdo:contentType",
       "contributorList": {
         "@container": "@list",
         "@id": "bibo:contributorList"
@@ -136,6 +139,7 @@
         "@id": "deathDate",
         "@type": "gYear"
       },
+      "degree": "bibo:degree",
       "depiction": "foaf:depiction",
       "describedBy": {
         "@reverse": "about"
@@ -148,6 +152,7 @@
       "editorialNote": "skos:editorialNote",
       "encoding": "sdo:encoding",
       "endDate": "sdo:endDate",
+      "exampleOfWork": "sdo:exampleOfWork",
       "extent": "dc:extent",
       "extractedFrom": "describedBy",
       "familyName": "sdo:familyName",
@@ -157,6 +162,7 @@
       "generic": "http://libris.kb.se/def/generic?label=",
       "genre": "sdo:genre",
       "givenName": "sdo:givenName",
+      "hasAnnotation": "bf:hasAnnotation",
       "hasFormat": "dc:hasFormat",
       "hasPart": "dc:hasPart",
       "hasVersion": "dc:hasVersion",
@@ -183,11 +189,14 @@
         "@container": "@list",
         "@id": "owl:intersectionOf"
       },
+      "inventoryLevel": "sdo:inventoryLevel",
       "isPartOf": "dc:isPartOf",
       "isPrimaryTopicOf": "foaf:isPrimaryTopicOf",
+      "isVersionOf": "dc:isVersionOf",
       "isbn": "sdo:isbn",
-      "issn": "bf:issn",
+      "issn": "sdo:issn",
       "issueNumber": "sdo:issueNumber",
+      "itemCondition": "sdo:itemCondition",
       "jobTitle": "sdo:jobTitle",
       "keyTitle": "bf:keyTitle",
       "keyword": {
@@ -207,14 +216,18 @@
         "@id": "dc:modified",
         "@type": "xsd:dateTime"
       },
+      "musicKey": "bf:musicKey",
       "musicPlate": "bf:musicPlate",
       "name": "sdo:name",
       "narrower": "skos:narrower",
       "nationality": "sdo:nationality",
       "notation": "skos:notation",
       "note": "skos:note",
+      "pagination": "sdo:pagination",
+      "partNumber": "bf:partNumber",
       "partTitle": "bf:partTitle",
       "performerNote": "bf:performerNote",
+      "precededBy": "bf:precededBy",
       "prefLabel": "skos:prefLabel",
       "provider": "sdo:provider",
       "providerDate": "bf:providerDate",
@@ -248,6 +261,7 @@
       "subseries": "bf:subseries",
       "subseriesOf": "bf:subseriesOf",
       "subtitle": "bf:subtitle",
+      "succeededBy": "bf:succeededBy",
       "summary": "bf:summary",
       "supplementaryContentNote": "bf:supplementaryContentNote",
       "systemNumber": "bf:systemNumber",
@@ -264,13 +278,13 @@
         "@container": "@list",
         "@id": "owl:unionOf"
       },
-    "_marcUncompleted": null,
-    "_marcBroken": null,
       "url": "sdo:url",
       "value": "rdf:value",
       "version": "sdo:version",
       "versionOf": "dc:isVersionOf",
-      "videorecordingNumber": "bf:videorecordingNumber"
+      "videorecordingNumber": "bf:videorecordingNumber",
+      "volumeNumber": "sdo:volumeNumber",
+      "workExample": "sdo:workExample"
     }
   ]
 }
