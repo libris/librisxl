@@ -466,6 +466,16 @@
                     },
                     "resultKey" : "about"
                 },
+                "about.audience" : {
+                    "method": "query",
+                    "index" : "libris",
+                    "dataset" : "auth",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["about.*"]
+                    },
+                    "resultKey" : "about"
+                },
                 "about.author" : {
                     "method": "query",
                     "index" : "libris",
