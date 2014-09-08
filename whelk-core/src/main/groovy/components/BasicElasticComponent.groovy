@@ -18,6 +18,8 @@ abstract class BasicElasticComponent extends BasicComponent {
     String elastichost, elasticcluster
     int elasticport = 9300
 
+    int batchUpdateSize = 2000
+
     ElasticShapeComputer shapeComputer = null
 
     BasicElasticComponent() {
@@ -29,6 +31,7 @@ abstract class BasicElasticComponent extends BasicComponent {
         this.elastichost = settings.get('elasticHost')
         this.elasticcluster = settings.get('elasticCluster', DEFAULT_CLUSTER)
         this.elasticport = settings.get('elasticPort', elasticport)
+        this.batchUpdateSize = settings.get('batchUpdateSize', batchUpdateSize)
         connectClient()
     }
 
