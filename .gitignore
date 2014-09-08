@@ -25,3 +25,5 @@ gradle/wrapper/gradle-wrapper.properties
 gradlew
 
 gradlew.bat
+
+target/camel-elasticsearch-test.log
