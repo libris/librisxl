@@ -9,7 +9,7 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
     List<Plugin> plugins = new ArrayList<Plugin>()
     Map global
 
-    String serviceUrl
+    String serviceUrl = "http://data.libris.kb.se/{dataset}/oaipmh"
 
     def specUriMapping = [:]
     def datasetMapping = [:]
@@ -56,7 +56,7 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
 
 
     int doImport(String ds, String token, int maxNrOfDocsToImport, boolean silent, boolean picky, Date since = null) {
-        String startUrl = serviceUrl ?: "http://data.libris.kb.se/" + ds + "/oaipmh"
+        String startUrl = serviceUrl.replace("{dataset}", ds)
         Properties properties = new Properties()
         properties.load(this.getClass().getClassLoader().getResourceAsStream("oaipmh.properties"))
         String username = properties.getProperty("username")

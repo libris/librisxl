@@ -18,7 +18,7 @@ import se.kb.libris.conch.Tools
 @Log
 class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
-    static SERVICE_BASE_URL = "http://data.libris.kb.se/"
+    static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
     Whelk whelk
     String dataset
@@ -66,9 +66,9 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         this.silent = silent
         this.recordCount = 0
         this.nrDeleted = 0
-        this.serviceUrl = (serviceUrl ?: SERVICE_BASE_URL + dataset+"/oaipmh/")
+        String baseUrl = serviceUrl.replace("{dataset}", dataset)
 
-        String urlString = serviceUrl + "?verb=ListRecords&metadataPrefix=marcxml"
+        String urlString = baseUrl + "?verb=ListRecords&metadataPrefix=marcxml"
 
         def versioningSettings = [:]
 
@@ -88,7 +88,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         startTime = System.currentTimeMillis()
         URL url
         if (startResumptionToken) {
-            url = new URL(serviceUrl + "?verb=ListRecords&resumptionToken=" + startResumptionToken)
+            url = new URL(baseUrl + "?verb=ListRecords&resumptionToken=" + startResumptionToken)
             log.info("Harvesting OAIPMH data from ${url.toString()}. Pickymode: $picky")
         } else {
             url = new URL(urlString)
@@ -100,7 +100,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         long elapsed = 0
         while (!cancelled && resumptionToken && (nrOfDocs == -1 || recordCount <  nrOfDocs)) {
             loadUrlTime = System.currentTimeMillis()
-            url = new URL(serviceUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
+            url = new URL(baseUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
             log.trace("Harvesting $url")
             try {
                 String rtok = harvest(url)

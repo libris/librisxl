@@ -106,6 +106,7 @@ class ImportOperator extends AbstractOperator {
     Importer importer = null
 
     long startTime
+    int totalCount = 0
 
     @Override
     void setParameters(Map parameters) {
@@ -145,14 +146,19 @@ class ImportOperator extends AbstractOperator {
         log.debug("Importer name: ${importer.getClass().getName()}")
         if (importer instanceof OaiPmhImporter || importer.getClass().getName() == "se.kb.libris.whelks.importers.OldOAIPMHImporter") {
             importer.serviceUrl = serviceUrl
-            log.info("Import from OAIPMH")
-            count = importer.doImport(dataset, resumptionToken, numToImport, true, picky, since)
+            this.totalCount = 0
+            for (ds in dataset.split(",")) {
+                log.info("Import from OAIPMH ${ds}")
+                totalCount = totalCount + importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
+                log.info("Count is now: $count")
+            }
         } else {
             if (!serviceUrl) {
                 throw new WhelkRuntimeException("URL is required for import.")
             }
             count = importer.doImport(dataset, numToImport, true, picky, new URL(serviceUrl))
         }
+        count = totalCount
         runningTime = System.currentTimeMillis() - startTime
         long elapsed = ((System.currentTimeMillis() - startTime) / 1000)
     }
@@ -162,7 +168,9 @@ class ImportOperator extends AbstractOperator {
         if (runningTime == 0) {
             runningTime = System.currentTimeMillis() - startTime
         }
-        count = (importer ? importer.recordCount : 0)
+        if (operatorState == OperatorState.RUNNING) {
+            count = (importer ? importer.recordCount : 0)
+        }
         def status = super.getStatus()
         return status
     }
