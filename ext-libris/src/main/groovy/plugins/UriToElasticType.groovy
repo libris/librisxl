@@ -9,6 +9,7 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
 
     String defaultType
     String whelkName
+    final static String URI_SEPARATOR = "::"
 
     UriToElasticType(Map settings) {
         this.defaultType = settings.get("defaultType", "record")
@@ -37,5 +38,19 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
         }
         log.debug("Using type $idxType for ${identifier}")
         return idxType
+    }
+
+    String translateIdentifier(URI uri) {
+        def idelements = uri.path.split("/") as List
+        idelements.remove(0)
+        return idelements.join(URI_SEPARATOR)
+    }
+
+    String translateIndexIdTo(id) {
+        def pathelements = []
+        id.split(URI_SEPARATOR).each {
+            pathelements << java.net.URLEncoder.encode(it, "UTF-8")
+        }
+        return  new String("/"+pathelements.join("/"))
     }
 }

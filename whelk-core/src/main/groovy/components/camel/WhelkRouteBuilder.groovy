@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.Whelk
 import se.kb.libris.whelks.plugin.Plugin
 import se.kb.libris.whelks.plugin.WhelkAware
+import se.kb.libris.whelks.plugin.JsonLdToTurtle
 
 import org.apache.camel.*
 import org.apache.camel.impl.*
@@ -22,26 +23,44 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     Whelk whelk
 
     int elasticBatchSize = 2000
-    long elasticBatchTimeout = 5000
+    int graphstoreBatchSize = 1000
+    long batchTimeout = 5000
+    int parallelProcesses = 20
+    List<String> elasticTypes
 
     WhelkRouteBuilder(Map settings) {
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
-        elasticBatchTimeout = settings.get("elasticBatchTimeout", elasticBatchTimeout)
+        graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
+        batchTimeout = settings.get("batchTimeout", batchTimeout)
+        elasticTypes = settings.get("elasticTypes")
     }
 
     void configure() {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
-        assert formatConverterProcessor
+        Processor turtleProcessor = getPlugin("turtleconverter_processor")
+        Processor prawnRunner = getPlugin("prawnrunner_processor")
+        assert formatConverterProcessor, turtleProcessor
 
-        from("direct:pairtreehybridstorage")
-            .multicast()
-                .to("activemq:libris.index", "activemq:libris.graphstore")
+        from("direct:pairtreehybridstorage").multicast().parallelProcessing().to("activemq:libris.index", "activemq:libris.graphstore")
 
-        from("activemq:libris.index")
-            .process(formatConverterProcessor)
+        from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer"))).routingSlip("typeQDestination").to("activemq:libris.prawn")
+
+        for (type in elasticTypes) {
+            from("direct:$type").threads(1,parallelProcesses).process(formatConverterProcessor)
                 //.aggregate(header("dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
                 .routingSlip("elasticDestination")
-                //.to("mock:result")
+        }
+
+        from("activemq:libris.prawn")
+            .process(prawnRunner).end()
+
+        // Routes for graphstore
+        if (whelk.graphStore) {
+            from("activemq:libris.graphstore").process(turtleProcessor)
+                .aggregate(header("entry:dataset"), new GraphstoreBatchUpdateAggregationStrategy()).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
+                .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
+        }
+        from("direct:unknown").to("mock:unknown")
     }
 
     // Plugin methods
@@ -59,10 +78,59 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 }
 
 @Log
-class ArrayListAggregationStrategy implements AggregationStrategy {
+class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
+
+    def serializer = new JsonLdToTurtle("context.jsonld", new ByteArrayOutputStream(), "http://libris.kb.se/resource/")
 
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-        log.info("Called aggregator for message in dataset: ${newExchange.in.getHeader("dataset")}")
+        Object newBody = newExchange.getIn().getBody()
+        String identifier = newExchange.getIn().getHeader("entry:identifier")
+        def bos = new ByteArrayOutputStream()
+        serializer.writer = new OutputStreamWriter(bos, "UTF-8")
+        if (oldExchange == null) {
+            // First message in aggregate
+            serializer.prelude() // prefixes and base
+
+            // Set contenttype header
+            newExchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/sparql-update")
+
+            serializer.writeln "CLEAR GRAPH <$identifier> ;"
+            serializer.writeln "INSERT DATA { GRAPH <$identifier> {"
+            serializer.flush()
+            serializer.objectToTurtle(newExchange.getIn().getBody(Map.class))
+            serializer.writeln "} } ;"
+            serializer.flush()
+
+            newExchange.getIn().setBody(bos.toString("UTF-8"))
+
+            return newExchange
+        } else {
+            // Append to existing message
+            //
+            StringBuilder update = new StringBuilder(oldExchange.getIn().getBody(String.class))
+
+            serializer.writeln "CLEAR GRAPH <$identifier> ;"
+            serializer.writeln "INSERT DATA { GRAPH <$identifier> {"
+            serializer.flush()
+            serializer.objectToTurtle(newExchange.getIn().getBody(Map.class))
+            serializer.writeln "} } ;"
+            serializer.flush()
+
+            update.append(bos.toString("UTF-8"))
+
+            log.info("Appended data:\n${update.toString()}")
+
+            oldExchange.getIn().setBody(update.toString())
+
+            return oldExchange
+        }
+    }
+}
+
+@Log
+class ArrayListAggregationStrategy implements AggregationStrategy {
+    public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
+        log.info("Called aggregator for message in dataset: ${newExchange.in.getHeader("entry:dataset")}")
         Object newBody = newExchange.getIn().getBody()
         ArrayList<Object> list = null
         if (oldExchange == null) {
@@ -75,5 +143,13 @@ class ArrayListAggregationStrategy implements AggregationStrategy {
             list.add(newBody)
             return oldExchange
         }
+    }
+}
+
+@Log
+class ComputeDestinationSlip {
+    public String compute(String body) {
+        log.info("body is $body")
+        return "mock:result"
     }
 }

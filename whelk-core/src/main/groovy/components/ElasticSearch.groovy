@@ -59,11 +59,14 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
     String defaultType = "record"
     Map<String,String> configuredTypes
+    List<String> availableTypes
     ElasticShapeComputer shapeComputer
+
 
     ElasticSearch(Map settings) {
         super(settings)
         configuredTypes = (settings ? settings.get("typeConfiguration", [:]) : [:])
+        availableTypes = (settings ? settings.get("availableTypes", []) : [])
         if (settings.batchUpdateSize) {
             this.batchUpdateSize = settings.batchUpdateSize
         }
@@ -74,8 +77,8 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         createIndexIfNotExists(indexName)
         flush()
         def realIndex = getRealIndexFor(indexName)
-        configuredTypes.each { key, value ->
-            checkTypeMapping(realIndex, key)
+        availableTypes.each {
+            checkTypeMapping(realIndex, it)
         }
         shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
     }
@@ -137,11 +140,10 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             log.debug("r: $r success: ${r.successfulShards} failed: ${r.failedShards}")
         }
 
-        log.debug("Deleting object with identifier ${translateIdentifier(uri)}.")
+        log.debug("Deleting object with identifier ${shapeComputer.translateIdentifier(uri)}.")
 
-        client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(uri), translateIdentifier(uri)))
+        client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(uri), shapeComputer.translateIdentifier(uri)))
 
-        setState(LAST_UPDATED, new Date().getTime())
             // Kanske en matchall-query filtrerad på _type och _id?
     }
 
@@ -278,7 +280,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
                             }
                         }
                         try {
-                            fails << translateIndexIdTo(re.id)
+                            fails << shapeComputer.translateIndexIdTo(re.id)
                         } catch (Exception e1) {
                             log.error("TranslateIndexIdTo cast an exception", e1)
                             fails << "Failed translation for \"$re\""
@@ -328,7 +330,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             return new Document(metaEntryMap).withData(hit.source())
         } else {
             log.trace("Meta entry not found for document. Will assume application/json for content-type.")
-            return new Document().withData(hit.source()).withContentType("application/json").withIdentifier(translateIndexIdTo(hit.id))
+            return new Document().withData(hit.source()).withContentType("application/json").withIdentifier(shapeComputer.translateIndexIdTo(hit.id))
         }
     }
 
@@ -349,11 +351,4 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
 
 
-    String translateIndexIdTo(id) {
-        def pathelements = []
-        id.split(URI_SEPARATOR).each {
-            pathelements << java.net.URLEncoder.encode(it, "UTF-8")
-        }
-        return  new String("/"+pathelements.join("/"))
-    }
 }

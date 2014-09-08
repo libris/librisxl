@@ -107,7 +107,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                     "id": translateIdentifier(doc.identifier)
                 ]
             )
-            notifyCamel(doc)
+            notifyCamel(doc, [:])
         }
         return result
     }
@@ -131,7 +131,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 ]
 
                 //Send to camel route
-                notifyCamel(doc)
+                notifyCamel(doc, [:])
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
@@ -142,7 +142,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
     }
 
-    void notifyCamel(Document document) {
+    void notifyCamel(Document document, Map extraInfo) {
         if (!producerTemplate) {
             producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
         }
@@ -154,7 +154,12 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             message.setBody(document.data)
         }
         document.entry.each { key, value ->
-            message.setHeader(key, value)
+            message.setHeader("entry:$key", value)
+        }
+        if (extraInfo) {
+            extraInfo.each { key, value ->
+                message.setHeader("extra:$key", value)
+            }
         }
         exchange.setIn(message)
         producerTemplate.asyncSend("direct:${this.id}", exchange)
@@ -321,8 +326,13 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
             }
         }
-        //setState(LAST_UPDATED, new Date().getTime())
         deleteEntry(uri, indexName, METAENTRY_INDEX_TYPE)
+        /*
+        if (!producerTemplate) {
+            producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
+        }
+        producerTemplate.sendBodyAndHeaders("direct:${this.id}", translateIdentifier(uri), ["operation":"DELETE","entry:identifier":uri.toString()])
+        */
     }
 
     @groovy.transform.CompileStatic

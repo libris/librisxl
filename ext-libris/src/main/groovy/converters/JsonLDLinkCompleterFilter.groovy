@@ -20,15 +20,15 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     def loadRelatedDocs(Document doc) {
         def relatedDocs = [:]
+        log.trace("Doc has these links: ${doc.links}")
         for (link in doc.getLinks()) {
-            log.trace("Doc has ${link.type}-link to ${link.identifier}")
-            def idStr = link.identifier.replace("/resource", "")
+            log.trace("Doc has link to ${link}")
+            def idStr = link.replace("/resource", "")
             def linkedDoc = whelk.get(new URI(idStr))
-            if (linkedDoc) { //&& link.type == "auth" ??
-                //type=authority from importer, type=<relation> from linkfinders
-                relatedDocs[link.identifier] = linkedDoc.dataAsMap
+            if (linkedDoc) {
+                relatedDocs[link] = linkedDoc.dataAsMap
             } else {
-                log.trace("Missing document for ${link.identifier}")
+                log.trace("Missing document for ${link}")
             }
         }
         return relatedDocs
@@ -38,12 +38,12 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         log.trace("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
         anonymousIds = [:]
         def changedData = false
-        def json, work
         def relatedDocs = loadRelatedDocs(doc)
 
+        def json = doc.dataAsMap
+        def work = json.get("about")
+
         if (relatedDocs.size() > 0) {
-            json = doc.dataAsMap
-            work = json.get("about")
             work.each { key, value ->
                 log.trace("trying to find and update entity $key")
                 changedData = findAndUpdateEntityIds(value, relatedDocs) || changedData
@@ -72,6 +72,28 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                 return doc.withData(json)
             }
         }
+        log.debug("Checking for controlNumbers")
+
+        boolean altered = false
+        for (key in ["precededBy", "succeededBy"]) {
+            for (item in work.get(key)) {
+                def describedBy = item.get("describedBy")
+                if (describedBy) {
+                    for (cn in describedBy) {
+                        if (cn.get("@type") == "Record") {
+                            item.put("@id", new String("/resource/bib/${cn.controlNumber}"))
+                        }
+                    }
+                    item.remove("describedBy")
+                    altered = true
+                }
+            }
+        }
+
+        if (altered) {
+            return doc.withData(json)
+        }
+
         return doc
     }
 

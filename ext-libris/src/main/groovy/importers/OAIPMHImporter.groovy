@@ -16,7 +16,7 @@ import se.kb.libris.conch.converter.MarcJSONConverter
 import se.kb.libris.conch.Tools
 
 @Log
-class OAIPMHImporter extends BasicPlugin implements Importer {
+class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
     static SERVICE_BASE_URL = "http://data.libris.kb.se/"
 
@@ -46,7 +46,7 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
 
     List errorMessages = []
 
-    OAIPMHImporter(Map settings) {
+    OldOAIPMHImporter(Map settings) {
         this.serviceUrl = settings.get('serviceUrl',null)
         this.preserveTimestamps = settings.get("preserveTimestamps", true)
         this.specUriMapping = settings.get("specUriMapping", [:])
@@ -193,7 +193,8 @@ class OAIPMHImporter extends BasicPlugin implements Importer {
                             for (key in specUriMapping.keySet()) {
                                 if (spec.toString().startsWith(key+":")) {
                                     String link = new String("/"+specUriMapping[key]+"/" + spec.toString().substring(key.length()+1))
-                                    meta.get("links", []).add(["identifier":link,"type":specUriMapping[key]])
+                                    //meta.get("links", []).add(["identifier":link,"type":specUriMapping[key]])
+                                    meta.get("link", []).add(link)
                                 }
                             }
                         }
@@ -332,4 +333,5 @@ class XmlParsingFailedException extends Exception {
     XmlParsingFailedException(String msg, Throwable t) {
         super(msg, t)
     }
+
 }

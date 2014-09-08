@@ -29,19 +29,15 @@ class OperatorAPI extends BasicAPI {
 
     static final OPERATIONS_HTML_FILE = "operator.html"
 
-    static BenchmarkOperator benchmarkOperator = new BenchmarkOperator()
     static ReindexOperator reindexOperator = new ReindexOperator()
     static ImportOperator importOperator = new ImportOperator()
     static TransferOperator transferOperator = new TransferOperator()
     static RebuildMetaIndexOperator rebuildMetaIndexOperator = new RebuildMetaIndexOperator()
-    static PingCatchupOperator pingOperator = new PingCatchupOperator()
 
     static Map operators = ["reindex":reindexOperator,
                             "import":importOperator,
                             "transfer":transferOperator,
-                            "benchmark":benchmarkOperator,
-                            "rebuild":rebuildMetaIndexOperator,
-                            "ping":pingOperator]
+                            "rebuild":rebuildMetaIndexOperator]
 
     Map configurationSettings
 
@@ -147,7 +143,7 @@ class ImportOperator extends AbstractOperator {
             throw new WhelkRuntimeException("Couldn't find any importers working for ${whelk.id}.")
         }
         log.debug("Importer name: ${importer.getClass().getName()}")
-        if (importer.getClass().getName() == "se.kb.libris.whelks.importers.OAIPMHImporter") {
+        if (importer instanceof OaiPmhImporter || importer.getClass().getName() == "se.kb.libris.whelks.importers.OldOAIPMHImporter") {
             importer.serviceUrl = serviceUrl
             log.info("Import from OAIPMH")
             count = importer.doImport(dataset, resumptionToken, numToImport, true, picky, since)
@@ -158,30 +154,16 @@ class ImportOperator extends AbstractOperator {
             count = importer.doImport(dataset, numToImport, true, picky, new URL(serviceUrl))
         }
         runningTime = System.currentTimeMillis() - startTime
-        /*
         long elapsed = ((System.currentTimeMillis() - startTime) / 1000)
-        if (nrimports > 0 && elapsed > 0) {
-            println "Imported $nrimports documents in $elapsed seconds. That's " + (nrimports / elapsed) + " documents per second."
-        } else {
-            println "Nothing imported ..."
-        }
-        */
     }
 
     @Override
     Map getStatus() {
         if (runningTime == 0) {
             runningTime = System.currentTimeMillis() - startTime
-}
-        count = (importer ? importer.nrImported : 0)
-        def status = super.getStatus()
-        if (importer?.errorMessages) {
-            if (operatorState == OperatorState.IDLE) {
-                status.get("lastrun").put("errors", errorMessages)
-            } else {
-                status['errors'] = errorMessages
-            }
         }
+        count = (importer ? importer.recordCount : 0)
+        def status = super.getStatus()
         return status
     }
 
@@ -191,7 +173,9 @@ class ImportOperator extends AbstractOperator {
     }
 }
 
+/*
 @Log
+@Deprecated
 class BenchmarkOperator extends AbstractOperator {
 
     String oid = "benchmark"
@@ -257,6 +241,7 @@ class BenchmarkOperator extends AbstractOperator {
         return map
     }
 }
+*/
 
 abstract class AbstractOperator implements Runnable {
     abstract String getOid()

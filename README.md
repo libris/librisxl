@@ -91,15 +91,13 @@ There is also a script, `scripts/update_mock_storage.sh`, for uploading test doc
 
 ### Run standalone data conversion on a single document
 
-Get a source record:
+In order to 1) Get a source record and 2) convert it to "marc-as-json", use this snippet:
 
-    $ curl -s http://libris.kb.se/data/bib/7149593?format=ISO2709 -o /tmp/bibtest.iso2709
+    BIB_ID=7149593
+    curl -s http://libris.kb.se/data/bib/$BIB_ID?format=ISO2709 -o /tmp/bibtest.iso2709
+    gradle -q convertIso2709ToJson -Dargs=/tmp/bibtest.iso2709 | grep '^{' > /tmp/bibtest.json
 
-Convert it to "marc-as-json" (see script source for details):
-
-    $ gradle -q convertIso2709ToJson -Dargs=/tmp/bibtest.iso2709 | grep '^{' > /tmp/bibtest.json
-
-Run the marcframe converter to print out the resulting JSON-LD:
+Run the marcframe converter on that to print out the resulting JSON-LD:
 
     $ gradle -q runMarcFrame -Dargs=/tmp/bibtest.json
 

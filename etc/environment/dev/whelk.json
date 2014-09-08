@@ -4,6 +4,7 @@
         "STORAGE_PATH": "work/storage",
         "ELASTIC_HOST": "localhost",
         "ELASTIC_PORT": 9300,
+        "ELASTIC_TYPES": ["auth","bib","hold","def","sys"],
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
@@ -13,7 +14,8 @@
     "_docBaseUri" : "http://libris.kb.se/",
     "_plugins": {
         "_support": [
-            "elasticnode"
+            "elasticnode",
+            "activemqbroker"
             ],
         "_converters": [
             "linkcompleter",
@@ -24,8 +26,7 @@
             "linkexpander"
             ],
         "_importers": [
-            "oaipmhimporter",
-            "marcimporter"
+            "oaipmhimporter"
             ],
         "_camel": [
             "routebuilder"
@@ -33,8 +34,7 @@
         "_components": [
             "pairtreehybridstorage",
             "pairtreeoaistorage",
-            "index",
-            "graphstore"
+            "index"
         ]
     },
     "_masterComponent": "pairtreehybridstorage",

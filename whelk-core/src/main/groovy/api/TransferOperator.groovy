@@ -44,16 +44,26 @@ class TransferOperator extends AbstractOperator {
         log.info("Transferring data from $fromStorage to $toStorage")
         boolean versioningOriginalSetting = targetStorage.versioning
         targetStorage.versioning = false
+
+        FormatConverter fc = targetStorage.plugins.find { it instanceof FormatConverter && it.requiredContentType == sourceStorage.contentTypes.first() }
+        if (fc) {
+            log.info("Using formatconverter ${fc.id}")
+        }
+
         for (doc in sourceStorage.getAll(dataset)) {
             log.trace("Storing doc ${doc.identifier} with type ${doc.contentType}")
             if (!doc.entry.deleted) {
-                docs << doc
+                if (fc) {
+                    docs << fc.convert(doc)
+                } else {
+                    docs << doc
+                }
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
             }
             runningTime = System.currentTimeMillis() - startTime
             if (count++ % 10000 == 0) {
-                targetStorage.bulkAdd(docs, docs.first().contentType)
+                targetStorage.bulkStore(docs)
                 docs = []
             }
             if (showSpinner) {
@@ -66,7 +76,7 @@ class TransferOperator extends AbstractOperator {
         }
 
         if (docs.size() > 0) {
-            targetStorage.bulkAdd(docs, docs.first().contentType)
+            targetStorage.bulkStore(docs)
         }
         log.info("Transferred $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds." as String)
         targetStorage.versioning = versioningOriginalSetting

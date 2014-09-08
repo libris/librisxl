@@ -16,6 +16,10 @@ abstract class BasicFormatConverter extends BasicPlugin implements FormatConvert
         return outdocs
     }
 
+    Document transmogrify(Document doc) {
+        return convert(doc)
+    }
+
     final Document convert(final Document doc) {
         assert doc
         log.debug("Document is ${doc?.contentType} - required is $requiredContentType")

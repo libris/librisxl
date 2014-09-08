@@ -1579,36 +1579,6 @@
 
   },
 
-  "comboTypeMap": {
-    "Serial": {"contentType": "Text", "aggregateType": "Serial",
-      "ESerial": {"carrierType": "OnlineResource"}
-    },
-    "Collection": {},
-    "Dataset": {},
-    "Image": {},
-    "Movie": {},
-    "NotatedMusic": {},
-    "ThreeDimensionalObject": {},
-    "Kit": {},
-    "Mixed": {},
-    "Multimedia": {},
-    "Book": {"contentType": "Text",
-      "Audiobook": {"carrierType": "SoundRecording"},
-      "CDBook": {"carrierType": "OpticalDisc"},
-      "EBook": {"carrierType": "OnlineResource"}
-    },
-    "Cartography": {"contentType": "Cartography",
-      "CDMap": {"carrierType": "OpticalDisc"}
-    },
-    "Audio": {"contentType": "NonmusicalSoundRecording", "abstract": true,
-      "Audiobook": {"TODO": "not 655a=Talböcker"}
-    },
-    "Music": {"contentType": "MusicalSoundRecording",
-      "MusicCD": {"carrierType": "SoundDisc"}
-    },
-    "Electronic": {"carrierType": "Electronic", "aspect": true}
-  },
-
   "bib": {
 
     "000": {
@@ -3274,26 +3244,26 @@
       "TODO": "draft",
       "TODO:i1": {},
       "TODO:i2": {"0": "OuterRing", "1": "ExcludingRing"},
-      "$3": {"property": ""},
       "$2": {"property": "source"},
+      "$3": {"property": "scopeNote"},
       "$a": {"property": "cartographicScale"},
-      "$c": {"addProperty": "constantRatioLinearVerticalScale"},
       "$b": {"addProperty": "constantRatioLinearHorizontalScale"},
-      "$e": {"property": "easternmostLongitudeCoordinates"},
+      "$c": {"addProperty": "constantRatioLinearVerticalScale"},
       "$d": {"property": "westernmostLongitudeCoordinates"},
-      "$g": {"property": ""},
+      "$e": {"property": "easternmostLongitudeCoordinates"},
       "$f": {"property": "northernmostLatitudeCoordinates"},
+      "$g": {"property": "coordinatesSouthernmostLatitude"},
       "$h": {"addProperty": "angularScale"},
-      "$k": {"property": "declinationSouthernLimit"},
       "$j": {"property": "declinationNorthernLimit"},
+      "$k": {"property": "declinationSouthernLimit"},
       "$m": {"property": "rightAscensionEasternLimit"},
       "$n": {"property": "rightAscensionWesternLimit"},
       "$p": {"property": "cartographicEquinox"},
-      "$s": {"addProperty": "gRingLatitude"},
       "$r": {"property": "distanceFromEarth"},
+      "$s": {"addProperty": "gRingLatitude"},
       "$t": {"addProperty": "gRingLongitude"},
-      "$y": {"property": "endDate"},
       "$x": {"property": "startDate"},
+      "$y": {"property": "endDate"},
       "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"},
       "repeatable": true
     },
@@ -3403,8 +3373,23 @@
 
     "082": {
       "note:candidate:domainEntity": "Work",
-      "$a": {"property": "classificationDdc"},
-      "$2": {"ignored": true}
+      "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
+      "addLink": "classification",
+      "rangeEntity": "Concept",
+      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
+      "$a": {"property": "notation"},
+      "$2": {
+        "note": "ignorable?",
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
+        "defaults": {
+          "notation": "DDC",
+          "isVersionOf": {"@id": "http://dewey.info/scheme/ddc/"}
+        },
+        "property": "version",
+        "splitValuePattern": "(\\d+)(?:/(swe))?",
+        "splitValueProperties": ["version", "language"]
+      }
     },
     "083": {
       "inherit": "082"
@@ -3469,7 +3454,7 @@
     "111": {
       "inherit": "110",
       "rangeEntity": "Meeting",
-      "$c": {"link": "place", "rangeEntity": "Place", "property": "label"},
+      "$c": {"link": "location", "rangeEntity": "Place", "property": "label"},
       "$d": {"property": "date"}
     },
     "130": {
@@ -3480,7 +3465,7 @@
 
     "210": {
       "domainEntity": "Instance",
-      "link": "abbreviatedTitle",
+      "addLink": "abbreviatedTitle",
       "rangeEntity": "Title",
       "$a": {"property": "titleValue"},
       "$b": {"property": "titleQualifier"},
@@ -3488,7 +3473,7 @@
     },
     "222": {
       "inherit": "210",
-      "link": "keyTitle",
+      "addLink": "keyTitle",
       "$2": null
     },
     "240": {
@@ -3497,7 +3482,8 @@
     },
     "242": {
       "inherit": "245",
-      "TODO": "translatedTitle? merge into 245?"
+      "addLink": "translatedTitle",
+      "TODO": "Correct property? merge into 245?"
     },
 
     "243": {},
@@ -3518,12 +3504,13 @@
     },
     "246": {
       "inherit": "245",
-      "link": "titleVariation",
+      "addLink": "titleVariation",
       "$i": {"property": "titleType"}
     },
     "247": {
       "inherit": "245",
-      "link": "titleVariation"
+      "addLink": "previousTitle",
+      "TODO": "Or merge into 246? Sometimes?"
     },
 
     "249": {},
@@ -3676,7 +3663,14 @@
 
     "500": {"$a": {"domainEntity": "Instance", "addProperty": "comment"}},
     "501": {},
-    "502": {},
+    "502": {
+      "addLink": "hasAnnotation", "rangeEntity": "DissertationAnnotation",
+      "$a": {"property": "note"},
+      "$b": {"property": "degree"},
+      "$c": {"property": "location"},
+      "$d": {"property": "date"},
+      "$g": {"property": "comment"}
+    },
     "504": {"$a": {"domainEntity": "Instance", "addProperty": "supplementaryContentNote"}},
 
     "505": {
@@ -3708,7 +3702,19 @@
     "516": {},
     "518": {},
 
-    "520": {"domainEntity": "Instance", "$a": {"addProperty": "summary"}},
+    "520": {
+      "domainEntity": "Instance",
+      "$a": {"addProperty": "summary"},
+      "match-code": {
+        "u": {
+          "TODO": "unify with summary or the generic annotation model?",
+          "addLink": "describedBy",
+          "rangeEntity": "WebPage",
+          "$a": {"property": "label"},
+          "$u": {"property": "@id"}
+        }
+      }
+    },
 
     "521": {
       "addLink": "audience",
@@ -3740,7 +3746,15 @@
     "555": {},
     "556": {},
     "561": {},
-    "562": {},
+    "562": {
+      "addLink": "exampleOfWork", "rangeEntity": "Product",
+      "$a": {"addProperty": "itemCondition"},
+      "$b": {"addProperty": "copyIdentification"},
+      "$c": {"addProperty": "versionIdentification"},
+      "$d": {"addProperty": "presentationFormat"},
+      "$e": {"addProperty": "inventoryLevel"},
+      "$3": {"property": "materialsSpecified"}
+    },
     "563": {},
     "565": {},
     "567": {},
@@ -3767,7 +3781,28 @@
       },
       "addLink": "subject", "rangeEntity": "Person"
     },
-    "610": {"inherit": "110", "addLink": "subject", "rangeEntity": "Organization"},
+    "610": {
+      "inherit": "110",
+      "TODO:i1": {},
+      "TODO:i2": {},
+      "match-code": {
+        "2 TODO:needs multiple match-code support": {
+          "TODO:implies": {"i2": "7"},
+          "$2": {
+            "link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"
+          },
+          "splitLink": [
+            {"codes": ["2"], "addLink": "focus", "spliceEntity": "Concept"}
+          ]
+        },
+        "x": {
+          "$a": {"link": "isPartOf", "rangeEntity": "Organization", "property": "name"}
+        }
+      },
+      "addLink": "subject",
+      "rangeEntity": "Organization",
+      "$x": {"property": "name"}
+    },
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
     "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "Work"},
     "648": {
@@ -3841,7 +3876,20 @@
     "662": {},
     "690": {},
 
-    "700": {"inherit": "100", "addLink": "influencedBy"},
+    "700": {
+      "inherit": "100",
+      "match-code": {
+        "t": {
+          "$t": {"property": "uniformTitle"},
+          "splitLink": [
+            {"codes": ["t"], "addLink": "influencedBy", "spliceEntity": "Work"}
+          ],
+          "addLink": "attributedTo"
+        }
+      },
+      "addLink": "influencedBy", "rangeEntity": "Person"
+    },
+
     "710": {"inherit": "110", "addLink": "influencedBy"},
     "711": {"inherit": "111"},
 
@@ -3874,7 +3922,7 @@
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "contains"},
     "772": {
-      "addLink": "containedIn",
+      "addLink": "isPartOf",
       "rangeEntity": "CreativeWork",
       "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
       "$b": {"property": "edition", "TODO:targetMatch": "250"},
@@ -3911,7 +3959,13 @@
       "domainIncludes": "Serial",
       "rangeEntity": "CreativeWork"
     },
-    "775": {},
+    "775": {
+      "inherit": "772",
+      "TODO:note": "uncommon",
+      "addLink": "alternateEdition",
+      "$e": {"property": "language", "TODO:inherit": "008:[35:38]"},
+      "$f": {"property": "publicationCountry", "TODO:inherit": "008:[15:18]"}
+    },
     "776": {
       "inherit": "772",
       "addLink": "alternateFormat",
@@ -3945,7 +3999,13 @@
     "800": {},
     "810": {},
     "811": {},
-    "830": {},
+    "830": {
+      "addLink": "isPartOf", "rangeEntity": "PublicationVolume",
+      "$a": {"property": "uniformTitle"},
+      "$d": {"addProperty": "date"},
+      "$v": {"property": "volumeNumber"},
+      "$x": {"property": "issn", "interpunctionChars": ".,=;"}
+    },
     "841": {},
     "842": {},
     "843": {},
@@ -4061,22 +4121,12 @@
     },
     "082" : {"inherit": "bib"},
     "083" : {
+      "inherit": "bib:082",
       "addLink": "subject",
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
         "Place": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
-      },
-      "rangeEntity": "Concept",
-      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.edition}/",
-      "$a": {"property": "notation"},
-      "$2": {
-        "link": "inScheme", "rangeEntity": "ConceptScheme",
-        "uriTemplate": "http://dewey.info/scheme/ddc/{nil}",
-        "defaults": {"notation": "DDC"},
-        "property": "version",
-        "splitValuePattern": "(\\d+)/swe",
-        "splitValueProperties": ["edition"]
       }
     },
 

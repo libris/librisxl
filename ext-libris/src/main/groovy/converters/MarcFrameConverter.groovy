@@ -20,10 +20,10 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     protected MarcConversion conversion
 
-    MarcFrameConverter() {
+    MarcFrameConverter(uriSpacePath="oldspace.json") {
         def loader = getClass().classLoader
 
-        loader.getResourceAsStream("oldspace.json").withStream {
+        loader.getResourceAsStream(uriSpacePath).withStream {
             uriMinter = new LibrisURIMinter(mapper.readValue(it, Map))
         }
 
@@ -71,13 +71,18 @@ class MarcFrameConverter extends BasicFormatConverter {
     }
 
     public static void main(String[] args) {
-        def converter = new MarcFrameConverter()
         def fpath = args[0]
         def cmd = null
-        if (args.length > 1) {
+        def uriSpace = null
+        if (args.length > 2) {
+            cmd = args[0]
+            uriSpace = args[1]
+            fpath = args[2]
+        } else if (args.length > 1) {
             cmd = args[0]
             fpath = args[1]
         }
+        def converter = uriSpace? new MarcFrameConverter(uriSpace) : new MarcFrameConverter()
         def source = converter.mapper.readValue(new File(fpath), Map)
         def result = null
         if (cmd == "revert") {

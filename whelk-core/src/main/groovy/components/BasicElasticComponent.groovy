@@ -13,11 +13,12 @@ import se.kb.libris.whelks.exception.*
 abstract class BasicElasticComponent extends BasicComponent {
     Client client
     def defaultMapping, es_settings
-    String URI_SEPARATOR = "::"
     static final String METAENTRY_INDEX_TYPE = "entry"
     static final String DEFAULT_CLUSTER = "whelks"
     String elastichost, elasticcluster
     int elasticport = 9300
+
+    ElasticShapeComputer shapeComputer = null
 
     BasicElasticComponent() {
         super()
@@ -133,6 +134,17 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
     }
 
+    String translateIdentifier(String uri) {
+        return translateIdentifier(new URI(uri))
+    }
+
+    String translateIdentifier(URI uri) {
+        if (shapeComputer == null) {
+            shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
+        }
+        return shapeComputer.translateIdentifier(uri)
+    }
+
     void index(byte[] data, Map params) throws WhelkIndexException  {
         try {
             def response = performExecute(client.prepareIndex(params['index'], params['type'], params['id']).setSource(data))
@@ -185,16 +197,6 @@ abstract class BasicElasticComponent extends BasicComponent {
         log.debug("mapping for $indexName/$itype: " + mapping)
         def response = performExecute(client.admin().indices().preparePutMapping(indexName).setType(itype).setSource(mapping))
         log.debug("mapping response: ${response.acknowledged}")
-    }
-
-    String translateIdentifier(String uri) {
-        return translateIdentifier(new URI(uri))
-    }
-
-    String translateIdentifier(URI uri) {
-        def idelements = uri.path.split("/") as List
-        idelements.remove(0)
-        return idelements.join(URI_SEPARATOR)
     }
 
     def loadJson(String file) {

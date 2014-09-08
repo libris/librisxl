@@ -3,6 +3,7 @@ apply plugin: "application"
 
 dependencies {
     def camelVersion = "2.13.2"
+    def activeMQVersion = "5.10.0"
 
     compile project(":locgov-pairtree")
     compile "org.elasticsearch:elasticsearch:1.0.0"
@@ -27,7 +28,9 @@ dependencies {
     compile "org.apache.camel:camel-core:${camelVersion}"
     compile "org.apache.camel:camel-elasticsearch:${camelVersion}"
     compile "org.apache.camel:camel-jackson:${camelVersion}"
-    compile "org.apache.activemq:activemq-camel:5.10.0"
+    compile "org.apache.camel:camel-http4:${camelVersion}"
+    compile "org.apache.activemq:activemq-camel:${activeMQVersion}"
+    compile "org.apache.activemq:activemq-broker:${activeMQVersion}"
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {

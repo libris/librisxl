@@ -82,7 +82,7 @@ subprojects {
         compile 'ch.qos.logback:logback-classic:1.0.0'
         compile 'commons-io:commons-io:2.4'
         compile 'commons-codec:commons-codec:1.7'
-        compile 'com.thetransactioncompany:cors-filter:1.9.3'
+        compile 'com.thetransactioncompany:cors-filter:2.1.2'
         testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
         //testCompile 'cglib:cglib-nodep:2.2'
     }

@@ -4,7 +4,6 @@ import java.util.List;
 
 public interface Importer extends WhelkAware {
     int doImport(String dataset, String token, int maxNrOfDocsToImport, boolean silent, boolean picky);
-    public List<String> getErrorMessages();
     public void cancel();
 }
 

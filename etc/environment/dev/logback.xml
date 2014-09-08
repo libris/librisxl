@@ -15,6 +15,9 @@
   <logger name="org.apache.camel">
       <level value="info"/>
   </logger>
+  <logger name="org.apache.camel.mock">
+      <level value="info"/>
+  </logger>
   <logger name="org.apache.activemq">
       <level value="info"/>
   </logger>
@@ -37,10 +40,10 @@
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.BasicElasticComponent">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.plugin.BasicPlugin">
       <level value="info"/>
@@ -80,6 +83,9 @@
 </logger>
 <logger name="se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter">
   <level value="info"/>
+</logger>
+<logger name="se.kb.libris.whelks.importers.OaiPmhImporter">
+  <level value="debug"/>
 </logger>
 <logger name="se.kb.libris.whelks.plugin.LibrisURIMinter">
   <level value="warn"/>
