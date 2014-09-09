@@ -9,14 +9,14 @@ abstract class OaiPmhImporter {
 
     int recordCount
 
-    void parseOaipmh(startUrl, name, passwd) {
+    void parseOaipmh(startUrl, name, passwd, since) {
         getAuthentication(name, passwd)
         String resumptionToken = null
         def startTime = System.currentTimeMillis()
         recordCount = 0
         while (true) {
             def batchTime = System.currentTimeMillis()
-            def url = makeNextUrl(startUrl, resumptionToken)
+            def url = makeNextUrl(startUrl, resumptionToken, since)
             log.debug("Harvesting from $url")
             def xmlString = new URL(url).text // NOTE: might be bad UTF-8
             def doc = new XmlSlurper(false,false).parseText(xmlString)
@@ -35,10 +35,16 @@ abstract class OaiPmhImporter {
         }
     }
 
-    def makeNextUrl(startUrl, resumptionToken) {
-        def params = resumptionToken?
-            "?verb=ListRecords&resumptionToken=" + resumptionToken :
-            "?verb=ListRecords&metadataPrefix=marcxml"
+    def makeNextUrl(startUrl, resumptionToken, since) {
+        def params
+        if (resumptionToken) {
+            params = "?verb=ListRecords&resumptionToken=" + resumptionToken
+        } else {
+            params = "?verb=ListRecords&metadataPrefix=marcxml"
+            if (since) {
+                params += "&from=" + since.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            }
+        }
         return startUrl + params
     }
 

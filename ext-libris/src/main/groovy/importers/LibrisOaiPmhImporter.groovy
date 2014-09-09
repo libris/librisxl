@@ -61,7 +61,7 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
         properties.load(this.getClass().getClassLoader().getResourceAsStream("oaipmh.properties"))
         String username = properties.getProperty("username")
         String password = properties.getProperty("password")
-        parseOaipmh(startUrl, username, password)
+        parseOaipmh(startUrl, username, password, since)
         return recordCount
     }
 

@@ -26,7 +26,8 @@
             "linkexpander"
             ],
         "_importers": [
-            "oaipmhimporter"
+            "oaipmhimporter",
+            "oaipmhimporter2"
             ],
         "_camel": [
             "routebuilder"
