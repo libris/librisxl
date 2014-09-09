@@ -729,6 +729,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map construct = [:]
     Map<String, MarcSubFieldHandler> subfields = [:]
     List matchRules = []
+    Map pendingResources
 
     static GENERIC_REL_URI_TEMPLATE = UriTemplate.fromTemplate("generic:{_}")
 
@@ -736,6 +737,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         super(conversion, tag)
         ind1 = fieldDfn.i1? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
         ind2 = fieldDfn.i2? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
+        pendingResources = fieldDfn.pendingResources
 
         dependsOn = fieldDfn.dependsOn
 
@@ -848,11 +850,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def unhandled = new HashSet()
 
+        def localEntites = [:]
+
         // TODO: track unhandled indicators
         if (ind1)
-            ind1.convertSubValue(value.ind1, entity, uriTemplateParams)
+            ind1.convertSubValue(value.ind1, entity, uriTemplateParams, localEntites)
         if (ind2)
-            ind2.convertSubValue(value.ind2, entity, uriTemplateParams)
+            ind2.convertSubValue(value.ind2, entity, uriTemplateParams, localEntites)
 
         value.subfields.each {
             it.each { code, subVal ->
@@ -862,7 +866,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def ent = (subDfn.domainEntityName)?
                         entityMap[subDfn.domainEntityName] :
                         (linkage.codeLinkSplits[code] ?: entity)
-                    ok = subDfn.convertSubValue(subVal, ent, uriTemplateParams)
+                    ok = subDfn.convertSubValue(subVal, ent, uriTemplateParams, localEntites)
                 }
                 if (!ok && !handled.contains(code)) {
                     unhandled << code
@@ -1004,6 +1008,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return (entity instanceof String)? entity : null
     }
 
+    Map getLocalEntity(Map owner, String id, Map localEntites) {
+        def entity = localEntites[id]
+        if (entity == null) {
+            def pending = pendingResources[id]
+            entity = localEntites[id] = newEntity(pending.rangeEntity)
+            def link = pending.link ?: pending.addLink
+            addValue(owner, link, entity, pending.containsKey('addLink'))
+        }
+        return entity
+    }
+
     def revert(Map data) {
         def entity = getEntity(data)
         def entities = [entity]
@@ -1078,6 +1093,7 @@ class MarcSubFieldHandler extends ConversionPart {
     char[] interpunctionChars
     char[] surroundingChars
     String link
+    String about
     boolean repeatLink
     String property
     boolean repeatProperty
@@ -1096,6 +1112,7 @@ class MarcSubFieldHandler extends ConversionPart {
         surroundingChars = subDfn.surroundingChars?.toCharArray()
         super.setTokenMap(fieldHandler, subDfn)
         link = subDfn.link
+        about = subDfn.about
         repeatLink = false
         if (subDfn.addLink) {
             repeatLink = true
@@ -1120,7 +1137,7 @@ class MarcSubFieldHandler extends ConversionPart {
         defaults = subDfn.defaults
     }
 
-    boolean convertSubValue(subVal, ent, uriTemplateParams) {
+    boolean convertSubValue(subVal, ent, uriTemplateParams, localEntites) {
         def ok = false
         def uriTemplateKeyBase = ""
 
@@ -1131,6 +1148,10 @@ class MarcSubFieldHandler extends ConversionPart {
             subVal = tokenMap[subVal]
             if (subVal == null)
                 return false
+        }
+
+        if (about) {
+            ent = fieldHandler.getLocalEntity(ent, about, localEntites)
         }
 
         if (link) {

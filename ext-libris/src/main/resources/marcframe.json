@@ -3744,7 +3744,24 @@
 
     "530": {"TODO:addLink": "hasFormat", "$a": {"addProperty": "comment"}},
 
-    "533": {},
+    "533": {
+      "addLink": "reproduction", "rangeEntity": "CreativeWork",
+      "pendingResources": {
+        "_:event": {"addLink": "provider", "rangeEntity": "ProviderEvent"}
+      },
+      "$a": {"property": "description", "interpunctionChars": ":"},
+      "$b": {"about": "_:event", "addLink": "providerPlace", "rangeEntity": "Place", "property": "label", "interpunctionChars": ":"},
+      "$c": {"about": "_:event", "addProperty": "providerName", "interpunctionChars": ","},
+      "$d": {"about": "_:event", "property": "providerDate"},
+      "$e": {"property": "physicalDescription"},
+      "$f": {"addProperty": "seriesStatement"},
+      "$m": {"addProperty": "datesAndOrSequentialDesignationOfIssuesReproduced"},
+      "$n": {"addProperty": "note"},
+      "$3": {"property": "materialsSpecified"},
+      "$5": {"property": "institutionToWhichFieldApplies"},
+      "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"}
+    },
+
     "534": {},
     "535": {},
     "536": {},
