@@ -3,6 +3,7 @@ import sys
 import re
 import json
 import csv
+from glob import glob
 from collections import namedtuple, OrderedDict
 from rdflib import Graph, URIRef, Namespace, RDF, RDFS, OWL
 from rdflib.namespace import SKOS, DCTERMS
@@ -28,7 +29,20 @@ def dataset(func):
 
 @dataset
 def terms():
-    source = Graph().parse(scriptpath('../def/terms.ttl'), format='turtle')
+    source = Graph()
+    ignore = Graph()
+
+    #./datatools/scripts/vocab-from-marcframe.py
+    #           ext-libris/src/main/resources/marcframe.json
+    #           datatools/def/terms.ttl
+    #           bibframe.ttl schema_org_rdfa.ttl dcterms.rdfs bibo.owl dbpedia_ontology.ttl
+    for part in [scriptpath('../def/terms.ttl')] \
+            + glob(scriptpath('../source/terms/*.ttl')):
+        if '-ignore' in part:
+            ignore.parse(part, format='turtle')
+        else:
+            source.parse(part, format='turtle')
+    source -= ignore
     return to_jsonld(source, "owl", {
             "index": {"@id": "@graph", "@container": "@index"},
             "@language": "sv"
