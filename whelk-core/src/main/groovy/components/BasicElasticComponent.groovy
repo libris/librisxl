@@ -15,6 +15,10 @@ abstract class BasicElasticComponent extends BasicComponent {
     def defaultMapping, es_settings
     static final String METAENTRY_INDEX_TYPE = "entry"
     static final String DEFAULT_CLUSTER = "whelks"
+    int WARN_AFTER_TRIES = 1000
+    int RETRY_TIMEOUT = 300
+    int MAX_RETRY_TIMEOUT = 60*60*1000
+    static int MAX_NUMBER_OF_FACETS = 100
     String elastichost, elasticcluster
     int elasticport = 9300
 

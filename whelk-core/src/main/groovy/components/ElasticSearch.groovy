@@ -52,15 +52,10 @@ class ElasticSearchClient extends ElasticSearch implements Index {
 
 @Log
 abstract class ElasticSearch extends BasicElasticComponent implements Index {
-    int WARN_AFTER_TRIES = 1000
-    int RETRY_TIMEOUT = 300
-    int MAX_RETRY_TIMEOUT = 60*60*1000
-    static int MAX_NUMBER_OF_FACETS = 100
 
     String defaultType = "record"
     Map<String,String> configuredTypes
     List<String> availableTypes
-    ElasticShapeComputer shapeComputer
 
 
     ElasticSearch(Map settings) {

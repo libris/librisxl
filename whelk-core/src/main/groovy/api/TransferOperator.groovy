@@ -50,6 +50,9 @@ class TransferOperator extends AbstractOperator {
             log.info("Using formatconverter ${fc.id}")
         }
 
+        // TODO: Make sure linkcompleter filter can run here.
+        //
+        //
         for (doc in sourceStorage.getAll(dataset)) {
             log.trace("Storing doc ${doc.identifier} with type ${doc.contentType}")
             if (!doc.entry.deleted) {
