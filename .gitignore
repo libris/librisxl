@@ -5,6 +5,8 @@
 /locgov-*/build
 .*.swp
 /work
+/ext-*/**/target
+/ext-*/**/work
 /ext-*/**/whelks.json
 /ext-*/**/whelk.json
 /ext-*/**/plugins.json
