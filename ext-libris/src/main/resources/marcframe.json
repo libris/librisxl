@@ -3460,7 +3460,8 @@
     "130": {
       "note:candidate:domainEntity": "Work",
       "$a": {"property": "uniformTitle"},
-      "$d": {"property": "date"}
+      "$d": {"property": "date"},
+      "$l": {"property": "language"}
     },
 
     "210": {
@@ -3914,6 +3915,7 @@
       "match-code": {
         "t": {
           "$t": {"property": "uniformTitle"},
+          "$l": {"property": "language"},
           "splitLink": [
             {"codes": ["t"], "addLink": "influencedBy", "spliceEntity": "Work"}
           ],
