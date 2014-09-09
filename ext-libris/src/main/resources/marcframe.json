@@ -3871,7 +3871,6 @@
                 "property": "prefLabel"}
         }
       },
-      "$a": {"property": "prefLabel"},
       "i2": {
         "link": "inScheme",
         "rangeEntity": "ConceptScheme",
@@ -3883,7 +3882,8 @@
              "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
              "property": "notation"},
       "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
-             "ignored": true}
+             "ignored": true},
+      "$a": {"property": "prefLabel"}
     },
     "651": {
       "inherit": "650",
@@ -3976,6 +3976,7 @@
       "$x": {"property": "issn", "TODO:targetMatch": "022"},
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {"addProperty": "isbn", "TODO:targetMatch": "020"},
+      "$9": {"addProperty": "partNumber"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"}
     },
     "773": {
