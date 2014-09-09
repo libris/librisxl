@@ -122,6 +122,36 @@ class MarcFrameConverterSpec extends Specification {
         ]
     }
 
+    def "should group properties into nested entities"() {
+        given:
+        def marc = [
+            leader: "00887cam a2200277 a 4500",
+            fields: [
+                ["001": "0000000"],
+                ["533": ["ind1": " ", "ind2": " ",
+                        "subfields": [
+                            ["a": "Digitalt faksimil och elektronisk text"],
+                            ["c": "Litteraturbanken"],
+                            ["d": "2010"] ]]]
+            ]
+        ]
+        when:
+        def frame = converter.createFrame(marc)
+        then:
+        frame.about.reproduction[0] == [
+            "@type": "CreativeWork",
+            description: "Digitalt faksimil och elektronisk text",
+            provider: [
+                ["@type": "ProviderEvent",
+                    providerDate: "2010",
+                    providerName: ["Litteraturbanken"]]]
+        ]
+    }
+
+    def "should match indicator as property switch"() {
+        // TODO
+    }
+
     def "should convert a concept auth post"() {
         given:
         def marc = [
