@@ -46,20 +46,26 @@ class TransferOperator extends AbstractOperator {
         targetStorage.versioning = false
 
         FormatConverter fc = targetStorage.plugins.find { it instanceof FormatConverter && it.requiredContentType == sourceStorage.contentTypes.first() }
+        Filter filter = targetStorage.plugins.find { it instanceof Filter }
         if (fc) {
             log.info("Using formatconverter ${fc.id}")
         }
 
-        // TODO: Make sure linkcompleter filter can run here.
-        //
-        //
         for (doc in sourceStorage.getAll(dataset)) {
             log.trace("Storing doc ${doc.identifier} with type ${doc.contentType}")
             if (!doc.entry.deleted) {
                 if (fc) {
-                    docs << fc.convert(doc)
+                    if (filter) {
+                        docs << filter.filter(fc.convert(doc))
+                    } else {
+                        docs << fc.convert(doc)
+                    }
                 } else {
-                    docs << doc
+                    if (filter) {
+                        docs << filter.filter(doc)
+                    } else {
+                        docs << doc
+                    }
                 }
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")

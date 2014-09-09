@@ -1,0 +1,105 @@
+{
+    "cassandrastorage": {
+        "_class" : "se.kb.libris.whelks.component.CassandraStorage",
+        "_params" : {
+            "contentTypes" : [
+                "application/ld+json",
+                "application/json",
+                "text/plain"
+            ],
+            "cassandraVersion" : "1.2.15",
+            "cqlVersion" : "3.0.0",
+            "versioning" : true
+        }
+    },
+    "marcjsonstorage": {
+        "_class" : "se.kb.libris.whelks.component.CassandraStorage",
+        "_params" : {
+            "contentTypes" : [ "application/x-marc-json" ],
+            "cqlVersion" : "3.0.0",
+            "cassandraVersion" : "1.2.15",
+            "versioning" : false
+        }
+    },
+    "oaipmhstorage": {
+        "_class" : "se.kb.libris.whelks.component.CassandraStorage",
+        "_params" : {
+            "contentTypes" : [ "text/oaipmh+xml" ],
+            "cqlVersion" : "3.0.0",
+            "cassandraVersion" : "1.2.15",
+            "versioning" : false
+        }
+    },
+    "sesamegraphstore" : {
+        "_class" : "se.kb.libris.whelks.component.SesameGraphStore",
+        "_params" : "http://localhost:8080/openrdf-sesame,dev-libris"
+    },
+    "sesamehttpendpoint": {
+        "_class" : "se.kb.libris.whelks.component.HttpEndpoint",
+        "_params" : {
+            "queryUri": "http://localhost:8080/openrdf-sesame/repositories/dev-libris"
+        }
+    },
+    "dumper" : {
+        "_class" : "se.kb.libris.whelks.api.DumpAPI"
+    },
+    "marcimporter" : {
+        "_class" : "se.kb.libris.whelks.importers.DumpImporter", 
+        "_params" : {
+            "startTransformingAtElement" : "record"
+        }
+    },
+    "modsimporter" : {
+        "_class" : "se.kb.libris.whelks.swepub.importers.ModsImporter",
+        "_params" : {
+            "startTransformingAtElement" : "record"
+        }
+    },
+    "swepuboaipmhimporter" : {
+        "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
+        "_params" : {
+            "serviceUrl" : "http://api.libris.kb.se/swepub/oaipmh/SWEPUB"
+        }
+    },
+    "oaipmhxmlconverter" : {
+        "_class" : "se.kb.libris.whelks.plugin.OaiPmhXmlConverter",
+        "_params" : {
+            "specUriMapping" : {
+                "authority" : "auth",
+                "bibid" : "bib"
+            },
+            "preserveTimestamps" : true
+        }
+    },
+    "indexingprawn" : {
+        "_class" : "se.kb.libris.whelks.plugin.IndexingPrawn",
+        "_params" : {
+            "batchSize" : 1000,
+            "timeout" : 1
+        }
+    },
+    "indexlinkfinder" : {
+        "_class" : "se.kb.libris.whelks.plugin.IndexLinkFinder"
+    },
+    "jsonldlinkfinder" : {
+        "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkFinder"
+    },
+    "elasticapi" : {
+        "_class" : "se.kb.libris.whelks.api.HttpAPIRestlet",
+        "_params" : {
+            "pathEnd" : "_elastic",
+            "varPath" : true
+        }
+
+    },
+    "entityextractor" : {
+        "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
+    },
+    "entitysplitter" : {
+        "_class" : "se.kb.libris.whelks.plugin.EntityExtractionDocumentSplitter"
+    },
+
+    "swepubturtleconverter" : {
+        "_class" : "se.kb.libris.whelks.swepub.plugin.SwepubTurtleConverter"
+    }
+}

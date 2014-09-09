@@ -42,7 +42,8 @@
         "_plugins" : [
             "marcconverter",
             "marcxml2jsonldconverter",
-            "shapecomputer"
+            "shapecomputer",
+            "linkcompleter"
             ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
@@ -63,47 +64,6 @@
             "contentTypes" : [ "application/marcxml+xml" ],
             "baseStorageSuffix": "marcxml",
             "versioning" : false
-        }
-    },
-    "cassandrastorage": {
-        "_class" : "se.kb.libris.whelks.component.CassandraStorage",
-        "_params" : {
-            "contentTypes" : [
-                "application/ld+json",
-                "application/json",
-                "text/plain"
-            ],
-            "cassandraVersion" : "1.2.15",
-            "cqlVersion" : "3.0.0",
-            "versioning" : true
-        }
-    },
-    "marcjsonstorage": {
-        "_class" : "se.kb.libris.whelks.component.CassandraStorage",
-        "_params" : {
-            "contentTypes" : [ "application/x-marc-json" ],
-            "cqlVersion" : "3.0.0",
-            "cassandraVersion" : "1.2.15",
-            "versioning" : false
-        }
-    },
-    "oaipmhstorage": {
-        "_class" : "se.kb.libris.whelks.component.CassandraStorage",
-        "_params" : {
-            "contentTypes" : [ "text/oaipmh+xml" ],
-            "cqlVersion" : "3.0.0",
-            "cassandraVersion" : "1.2.15",
-            "versioning" : false
-        }
-    },
-    "sesamegraphstore" : {
-        "_class" : "se.kb.libris.whelks.component.SesameGraphStore",
-        "_params" : "http://localhost:8080/openrdf-sesame,dev-libris"
-    },
-    "sesamehttpendpoint": {
-        "_class" : "se.kb.libris.whelks.component.HttpEndpoint",
-        "_params" : {
-            "queryUri": "http://localhost:8080/openrdf-sesame/repositories/dev-libris"
         }
     },
     "graphstore": {
@@ -135,15 +95,6 @@
     "turtleconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter",
         "_params": "context.jsonld, http://libris.kb.se/resource/"
-    },
-    "swepubturtleconverter" : {
-        "_class" : "se.kb.libris.whelks.swepub.plugin.SwepubTurtleConverter"
-    },
-    "entityextractor" : {
-        "_class" : "se.kb.libris.whelks.plugin.JsonLDEntityExtractorIndexFormatConverter"
-    },
-    "entitysplitter" : {
-        "_class" : "se.kb.libris.whelks.plugin.EntityExtractionDocumentSplitter"
     },
     "cleanupindexconverter" : {
         "_class" : "se.kb.libris.whelks.plugin.CleanupIndexFormatConverter"
@@ -308,14 +259,6 @@
     "sparqlapi" : {
         "_class" : "se.kb.libris.whelks.api.SparqlAPI"
     },
-    "elasticapi" : {
-        "_class" : "se.kb.libris.whelks.api.HttpAPIRestlet",
-        "_params" : {
-            "pathEnd" : "_elastic",
-            "varPath" : true
-        }
-
-    },
     "documentapi" : {
         "_class" : "se.kb.libris.whelks.api.DocumentAPI",
         "_plugins" : [
@@ -333,31 +276,8 @@
     "completeexpander" : {
         "_class" : "se.kb.libris.whelks.api.CompleteExpander"
     },
-    "jsonldlinkfinder" : {
-        "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkFinder"
-    },
-    "indexlinkfinder" : {
-        "_class" : "se.kb.libris.whelks.plugin.IndexLinkFinder"
-    },
     "linkcompleter" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter"
-    },
-    "oaipmhxmlconverter" : {
-        "_class" : "se.kb.libris.whelks.plugin.OaiPmhXmlConverter",
-        "_params" : {
-            "specUriMapping" : {
-                "authority" : "auth",
-                "bibid" : "bib"
-            },
-            "preserveTimestamps" : true
-        }
-    },
-    "indexingprawn" : {
-        "_class" : "se.kb.libris.whelks.plugin.IndexingPrawn",
-        "_params" : {
-            "batchSize" : 1000,
-            "timeout" : 1
-        }
     },
     "oaipmhimporter2" : {
         "_class" : "se.kb.libris.whelks.importers.LibrisOaiPmhImporter",
@@ -391,24 +311,6 @@
             "numberOfThreads": 50000
         }
     },
-    "marcimporter" : {
-        "_class" : "se.kb.libris.whelks.importers.DumpImporter", 
-        "_params" : {
-            "startTransformingAtElement" : "record"
-        }
-    },
-    "modsimporter" : {
-        "_class" : "se.kb.libris.whelks.swepub.importers.ModsImporter",
-        "_params" : {
-            "startTransformingAtElement" : "record"
-        }
-    },
-    "swepuboaipmhimporter" : {
-        "_class" : "se.kb.libris.whelks.importers.OAIPMHImporter",
-        "_params" : {
-            "serviceUrl" : "http://api.libris.kb.se/swepub/oaipmh/SWEPUB"
-        }
-    },
     "operator" : {
         "_class" : "se.kb.libris.whelks.api.OperatorAPI",
         "_params" : {
@@ -417,9 +319,6 @@
             "indexBatchSize" : 10000,
             "graphBatchSize" : 1500
         }
-    },
-    "dumper" : {
-        "_class" : "se.kb.libris.whelks.api.DumpAPI"
     },
     "formatter" : {
         "_class" : "se.kb.libris.whelks.api.FormatterAPI",

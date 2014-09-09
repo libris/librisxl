@@ -1,8 +1,11 @@
 package se.kb.libris.whelks.importers
 
+import groovy.util.logging.Slf4j as Log
+
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.plugin.*
 
+@Log
 class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
     Whelk whelk
     String id
@@ -39,7 +42,8 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
                 }
 
                 for (spec in it.header.setSpec) {
-                    String link = new String("/"+specUriMapping[spec.toString()] ?: spec.toString()+"/" + spec.toString().split(":")[1])
+                    String link = new String("/"+(specUriMapping[spec.toString().split(":")[0]] ?: spec.toString().split(":")[0])+"/" + spec.toString().split(":")[1])
+                    log.trace("Built link $link")
                     meta.get("link", []).add(link)
                 }
 
