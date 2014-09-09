@@ -55,7 +55,11 @@ Create a local OAI-PMH dump of examples and run a full import, load into running
     $ python scripts/assemble_oaipmh_records.py *******:**** scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
 
-    Make sure whelk is running ($gradle jettyrun) and go to http://localhost:8180/whelk-webapi/_operations using a browser
+    Make sure whelk is running
+    
+    $ gradle jettyrun
+    
+    and go to http://localhost:8180/whelk-webapi/_operations using a browser
 
 
 (Using the OAI-PMH dump makes out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
