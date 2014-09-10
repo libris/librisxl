@@ -17,8 +17,8 @@
             "routebuilder"
             ],
         "_components": [
-            "pairtreehybridstorage",
-            "pairtreeoaistorage",
+            "jsonldstorage",
+            "marcxmlstorage",
             "index"
         ]
     },

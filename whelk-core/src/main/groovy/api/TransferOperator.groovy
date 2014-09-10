@@ -45,8 +45,8 @@ class TransferOperator extends AbstractOperator implements Plugin {
         boolean versioningOriginalSetting = targetStorage.versioning
         targetStorage.versioning = false
 
-        FormatConverter fc = targetStorage.plugins.find { it instanceof FormatConverter && it.requiredContentType == sourceStorage.contentTypes.first() }
-        Filter filter = targetStorage.plugins.find { it instanceof Filter }
+        FormatConverter fc = plugins.find { it instanceof FormatConverter && it.requiredContentType == sourceStorage.contentTypes.first() }
+        Filter filter = plugins.find { it instanceof Filter && (!fc || fc.resultContentType == it.requiredContentType) }
         if (fc) {
             log.info("Using formatconverter ${fc.id}")
         }

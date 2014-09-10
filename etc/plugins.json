@@ -5,6 +5,12 @@
     "activemqbroker": {
         "_class": "se.kb.libris.whelks.component.ActiveMQBroker"
     },
+    "shapecomputer": {
+        "_class" : "se.kb.libris.whelks.plugin.UriToElasticType",
+        "_params": {
+            "defaultType": "record"
+        }
+    },
     "remotesearch": {
         "_class": "se.kb.libris.whelks.api.RemoteSearchAPI",
         "_plugins" : [
@@ -17,68 +23,6 @@
     },
     "isxntool": {
         "_class": "se.kb.libris.whelks.api.ISXNTool"
-    },
-    "shapecomputer": {
-        "_class" : "se.kb.libris.whelks.plugin.UriToElasticType",
-        "_params": {
-            "defaultType": "record"
-        }
-    },
-    "index": {
-        "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
-        "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ],
-        "_params": {
-            "typeConfiguration": {
-                "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
-                 "bib" : [ "text", "book", "serial" ]
-            },
-            "elasticHost": "_property:ELASTIC_HOST",
-            "availableTypes": "_property:ELASTIC_TYPES"
-        },
-        "_unique" : true
-    },
-    "pairtreehybridstorage": {
-        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
-        "_plugins" : [
-            "marcconverter",
-            "marcxml2jsonldconverter",
-            "shapecomputer",
-            "linkcompleter"
-            ],
-        "_params" : {
-            "storageDir": "_property:STORAGE_PATH",
-            "elasticHost": "_property:ELASTIC_HOST",
-            "contentTypes": ["application/ld+json"],
-            "baseStorageSuffix": "pairtree",
-            "versioning" : false
-        }
-    },
-    "pairtreeoaistorage": {
-        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
-        "_plugins" : [
-            "shapecomputer"
-            ],
-        "_params" : {
-            "storageDir": "_property:STORAGE_PATH",
-            "elasticHost": "_property:ELASTIC_HOST",
-            "contentTypes" : [ "application/marcxml+xml" ],
-            "baseStorageSuffix": "marcxml",
-            "versioning" : false
-        }
-    },
-    "graphstore": {
-        "_class" : "se.kb.libris.whelks.component.HttpBatchGraphStore",
-        "_plugins" : [
-            "turtleconverter"
-            ],
-        "_params" : {
-            "handlesDatasets": ["auth","bib"],
-            "graphStoreUri": "_property:GRAPHSTORE_DATA_URI",
-            "queryUri": "_property:GRAPHSTORE_QUERY_URI",
-            "updateUri": "_property:GRAPHSTORE_UPDATE_URI",
-            "contextPath": "context.jsonld",
-            "baseUri": "http://libris.kb.se/resource/"
-        }
     },
     "marcxml2jsonldconverter": {
         "_class": "se.kb.libris.whelks.plugin.MarcXml2JsonLDConverter",
@@ -338,7 +282,12 @@
         ]
     },
     "transferoperator": {
-        "_class" : "se.kb.libris.whelks.api.TransferOperator"
+        "_class" : "se.kb.libris.whelks.api.TransferOperator",
+        "_plugins" : [
+            "marcconverter",
+            "marcxml2jsonldconverter",
+            "linkcompleter"
+            ]
     },
     "rebuildoperator": {
         "_class" : "se.kb.libris.whelks.api.RebuildMetaIndexOperator"
@@ -570,6 +519,59 @@
             "graphstoreBatchSize": 1000,
             "batchTimeout": 5000,
             "elasticTypes": "_property:ELASTIC_TYPES"
+        }
+    },
+    "index": {
+        "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
+        "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ],
+        "_params": {
+            "typeConfiguration": {
+                "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
+                 "bib" : [ "text", "book", "serial" ]
+            },
+            "elasticHost": "_property:ELASTIC_HOST",
+            "availableTypes": "_property:ELASTIC_TYPES"
+        },
+        "_unique" : true
+    },
+    "jsonldstorage": {
+        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+        "_plugins" : [
+            "shapecomputer"
+            ],
+        "_params" : {
+            "storageDir": "_property:STORAGE_PATH",
+            "elasticHost": "_property:ELASTIC_HOST",
+            "contentTypes": ["application/ld+json"],
+            "baseStorageSuffix": "pairtree",
+            "versioning" : false
+        }
+    },
+    "marcxmlstorage": {
+        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+        "_plugins" : [
+            "shapecomputer"
+            ],
+        "_params" : {
+            "storageDir": "_property:STORAGE_PATH",
+            "elasticHost": "_property:ELASTIC_HOST",
+            "contentTypes" : [ "application/marcxml+xml" ],
+            "baseStorageSuffix": "marcxml",
+            "versioning" : false
+        }
+    },
+    "graphstore": {
+        "_class" : "se.kb.libris.whelks.component.HttpBatchGraphStore",
+        "_plugins" : [
+            "turtleconverter"
+            ],
+        "_params" : {
+            "handlesDatasets": ["auth","bib"],
+            "graphStoreUri": "_property:GRAPHSTORE_DATA_URI",
+            "queryUri": "_property:GRAPHSTORE_QUERY_URI",
+            "updateUri": "_property:GRAPHSTORE_UPDATE_URI",
+            "contextPath": "context.jsonld",
+            "baseUri": "http://libris.kb.se/resource/"
         }
     }
 }

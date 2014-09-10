@@ -21,6 +21,9 @@
   <logger name="org.apache.activemq">
       <level value="info"/>
   </logger>
+  <logger name="se.kb.libris.whelks.camel.FormatConverterProcessor">
+      <level value="info"/>
+  </logger>
   <logger name="se.kb.libris.whelks.api.BasicAPI">
       <level value="info"/>
   </logger>

@@ -33,7 +33,9 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
     @Override
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
+        log.debug("Received message to ${this.id}.")
         if (converter || expander) {
+            log.debug("Running converter/expander.")
             def data = message.getBody()
             def entry = [:]
             message.headers.each { key, value ->

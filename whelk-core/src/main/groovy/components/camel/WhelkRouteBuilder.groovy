@@ -13,6 +13,8 @@ import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.model.dataformat.JsonLibrary
 import org.apache.camel.processor.aggregate.*
 
+import org.codehaus.jackson.map.ObjectMapper
+
 class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
     // Properties copied from BasicPlugin
@@ -39,9 +41,10 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
         Processor turtleProcessor = getPlugin("turtleconverter_processor")
         Processor prawnRunner = getPlugin("prawnrunner_processor")
+        String primaryStorageId = whelk.storage.id
         assert formatConverterProcessor, turtleProcessor
 
-        from("direct:pairtreehybridstorage").multicast().parallelProcessing().to("activemq:libris.index", "activemq:libris.graphstore")
+        from("direct:"+primaryStorageId).multicast().parallelProcessing().to("activemq:libris.index", "activemq:libris.graphstore")
 
         from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer"))).routingSlip("typeQDestination").to("activemq:libris.prawn")
 
@@ -80,7 +83,13 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 @Log
 class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
 
-    def serializer = new JsonLdToTurtle("context.jsonld", new ByteArrayOutputStream(), "http://libris.kb.se/resource/")
+    def serializer
+
+    GraphstoreBatchUpdateAggregationStrategy() {
+        ObjectMapper mapper = new ObjectMapper()
+        def context = JsonLdToTurtle.parseContext(mapper.readValue(this.getClass().getClassLoader().getResourceAsStream("context.jsonld"), Map))
+        serializer = new JsonLdToTurtle(context, new ByteArrayOutputStream(), "http://libris.kb.se/resource/")
+    }
 
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
         Object newBody = newExchange.getIn().getBody()
