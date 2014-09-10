@@ -6,17 +6,14 @@
         "ELASTIC_PORT": 9300,
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
-        "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update"
+        "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
+        "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616"
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
     "_plugins": {
-        "_expanders": [
-            "linkexpander"
-            ],
-        "_importers": [
-            "oaipmhimporter",
-        "marcimporter"
+        "_camel": [
+            "routebuilder"
             ],
         "_components": [
             "pairtreehybridstorage",

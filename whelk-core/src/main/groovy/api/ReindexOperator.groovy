@@ -109,13 +109,26 @@ class ReindexOperator extends AbstractOperator {
 class RebuildMetaIndexOperator extends AbstractOperator {
     String oid = "rebuild"
     boolean sequenceOnly = false
+    String storageId = null
 
     @Override
     void setParameters(Map parameters) {
         super.setParameters(parameters)
+        this.storageId = parameters.get("storage", null)?.first()
         log.debug("parameters: $parameters")
     }
     void doRun(long startTime) {
-        whelk.storage.rebuildIndex()
+        if (storageId) {
+            def store = whelk.storages.find { it.id == storageId }
+            if (store) {
+                log.info("Rebuilding meta index for storage ${storageId}.")
+                store.rebuildIndex()
+            } else {
+                log.warn("No storage found with id $storageId")
+            }
+        } else {
+            log.info("Rebuilding meta index for default storage.")
+            whelk.storage.rebuildIndex()
+        }
     }
 }

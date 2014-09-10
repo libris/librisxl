@@ -13,13 +13,6 @@
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
     "_plugins": {
-        "_expanders": [
-            "linkexpander"
-            ],
-        "_importers": [
-            "oaipmhimporter",
-            "oaipmhimporter2"
-            ],
         "_camel": [
             "routebuilder"
             ],
