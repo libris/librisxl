@@ -40,6 +40,11 @@
              try {
                  def d = whelk.get(new URI(path), version, accepting)
                  if (d && (mode== DisplayMode.META || !d.entry['deleted'])) {
+
+                     LinkExpander le = getLinkExpanderFor(d)
+                     if (le) {
+                         d = le.expand(d)
+                     }
                      if (mode == DisplayMode.META) {
                          sendResponse(response, d.metadataAsJson, "application/json")
                      } else {
@@ -161,6 +166,8 @@
          }
          return ds
      }
+
+     LinkExpander getLinkExpanderFor(Document doc) { return plugins.find { it instanceof LinkExpander && it.valid(doc) } }
  }
 
 enum DisplayMode {

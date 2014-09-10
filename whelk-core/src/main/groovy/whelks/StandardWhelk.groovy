@@ -107,10 +107,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
 
         if (expandLinks) {
-            LinkExpander le = getLinkExpanderFor(doc)
-            if (le) {
-                doc = le.expand(doc)
-            }
         }
 
         return doc
@@ -584,7 +580,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
     List<Filter> getFilters() { return plugins.findAll { it instanceof Filter }}
     Importer getImporter(String id) { return plugins.find { it instanceof Importer && it.id == id } }
     List<Importer> getImporters() { return plugins.findAll { it instanceof Importer } }
-    LinkExpander getLinkExpanderFor(Document doc) { return linkExpanders.find { it.valid(doc) } }
     List<API> getAPIs() { return apis.values() as List}
 
 

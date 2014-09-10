@@ -263,7 +263,8 @@
         "_class" : "se.kb.libris.whelks.api.DocumentAPI",
         "_plugins" : [
             "marcconverter",
-            "marcxml2jsonldconverter"
+            "marcxml2jsonldconverter",
+            "linkexpander"
             ],
         "_params": {
             "contextHeaders": {
@@ -313,12 +314,34 @@
     },
     "operator" : {
         "_class" : "se.kb.libris.whelks.api.OperatorAPI",
+        "_plugins": [
+            "reindexoperator",
+            "importoperator",
+            "transferoperator",
+            "rebuildoperator"
+            ],
         "_params" : {
             "indexingQueueSize" : 50,
             "graphstoreQueueSize" : 1000,
             "indexBatchSize" : 10000,
             "graphBatchSize" : 1500
         }
+    },
+    "reindexoperator": {
+        "_class" : "se.kb.libris.whelks.api.ReindexOperator"
+    },
+    "importoperator": {
+        "_class" : "se.kb.libris.whelks.api.ImportOperator",
+        "_plugins": [
+            "oaipmhimporter",
+            "oaipmhimporter2"
+        ]
+    },
+    "transferoperator": {
+        "_class" : "se.kb.libris.whelks.api.TransferOperator"
+    },
+    "rebuildoperator": {
+        "_class" : "se.kb.libris.whelks.api.RebuildMetaIndexOperator"
     },
     "formatter" : {
         "_class" : "se.kb.libris.whelks.api.FormatterAPI",

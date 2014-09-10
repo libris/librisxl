@@ -17,7 +17,7 @@ import se.kb.libris.conch.Tools
 
 @Log
 @Deprecated
-class TransferOperator extends AbstractOperator {
+class TransferOperator extends AbstractOperator implements Plugin {
     String oid = "transfer"
 
     // Unique for this operator

@@ -17,17 +17,6 @@
             "elasticnode",
             "activemqbroker"
             ],
-        "_converters": [
-            "linkcompleter",
-            "cleanupindexconverter"
-            ],
-        "_expanders": [
-            "linkexpander"
-            ],
-        "_importers": [
-            "oaipmhimporter",
-            "oaipmhimporter2"
-            ],
         "_camel": [
             "routebuilder"
             ],
