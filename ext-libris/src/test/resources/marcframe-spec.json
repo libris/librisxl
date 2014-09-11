@@ -1,0 +1,188 @@
+{
+
+  "marcTypeFromTypeOfRecord": {
+    "*": "bib",
+    "z": "auth"
+  },
+
+  "tokenMaps": {
+    "relatorCode": "relatorcodes.json",
+    "enumeration": {
+      "a": "/def/enum/content/Irregular",
+      "b": "/def/enum/content/Regular",
+      "c": null
+    },
+    "computerImageBitDepth": {
+      "---": null,
+      "001~999": "/def/enum/carrier/TODO:value-in-digit",
+      "mmm": "/def/enum/carrier/MultipleImageBitDepth"
+    }
+  },
+
+  "bib": {
+
+    "000": {
+      "[5:6]": {
+        "domainEntity": "Record",
+        "link": "status",
+        "uriTemplate": "{_}",
+        "tokenMap": "status"
+      },
+      "[6:7]": {
+        "domainEntity": "Instance",
+        "tokenMap": "typeOfRecord",
+        "addProperty": "@type"
+      },
+      "[7:8]": {
+        "domainEntity": "Instance",
+        "tokenMap": "bibLevel",
+        "addProperty": "@type"
+      }
+    },
+
+    "001": {"domainEntity": "Record", "property": "controlNumber"},
+    "005": {"domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S"},
+
+    "007": {
+      "addLink": "hasFormat",
+      "[0:1]": {
+        "addProperty": "@type",
+        "tokenMap": {
+          "a": "Map",
+          "c": "Electronic",
+          "z": null
+        }
+      },
+      "tokenTypeMap": "[0:1]",
+      "Map": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapMaterial"
+        },
+        "[3:4]": {
+          "link": "color",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapColor"
+        },
+        "[4:5]": {
+          "link": "medium",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapMedium"
+        }
+      },
+      "Electronic": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerMaterial"
+        },
+        "[3:4]": {
+          "link": "color",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerColor"
+        },
+        "[4:5]": {
+          "link": "dimensionsCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerDimensions"
+        }
+      },
+      "repeatable": true
+    },
+
+    "008": {
+      "[0:6]": {
+        "domainEntity": "Record",
+        "property": "date"
+      },
+      "recTypeBibLevelMap": {
+        "a,h,t": {
+          "Text": ["a", "c", "d", "m"],
+          "Serial": ["9", "b", "i", "p", "s"]
+        }
+      },
+      "Text": {
+        "[18:19]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[24:25]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        }
+      },
+      "Serial": {
+        "[18:19]": {
+          "link": "frequencyCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsFrequency"
+        }
+      },
+      "repeatable": false
+    },
+
+    "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
+
+    "020": {
+      "domainEntity": "Instance",
+      "addLink": "identifier",
+      "match-domain": {
+        "EBook": {"addLink": "commonEndeavor"}
+      },
+      "rangeEntity": "Identifier",
+      "$a": {
+        "property": "identifierValue",
+        "splitValuePattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?",
+        "splitValueProperties": ["identifierValue", "identifierNote"],
+        "defaults": {
+          "identifierScheme": {"@id": "/def/identifiers/isbn"}
+        }
+      },
+      "$c": {"domainEntity": "Instance", "property": "availability"},
+      "$q": {"property": "identifierNote"},
+      "$z": {
+        "property": "identifierValue",
+        "defaults": {
+          "identifierScheme": {"@id": "/def/identifiers/isbn"},
+          "identifierStatus": "canceledInvalid"
+        }
+      }
+    },
+
+    "024": {
+      "domainEntity": "Instance",
+      "addLink": "identifier",
+      "rangeEntity": "Identifier",
+      "i1": {
+        "link": "identifierScheme",
+        "tokenMap": {
+          "0": "isrc",
+          "1": "upc",
+          "2": "ismn",
+          "3": "ean",
+          "4": "sici",
+          "7": {"valueFrom": "$2"}
+        },
+        "uriTemplate": "/def/identifiers/{_}",
+        "matchUriToken": "^\\S+$"
+      },
+      "$a": {"property": "identifierValue"},
+      "$2": {
+        "link": "identifierScheme",
+        "uriTemplate": "/def/identifiers/{_}",
+        "matchUriToken": "^\\S+$",
+        "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
+      }
+    },
+
+    "": null
+
+  },
+
+  "auth": {
+  }
+
+}
