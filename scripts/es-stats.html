@@ -59,7 +59,7 @@ text { font: 10px sans-serif; }
     var map = {}
     var top = []
     for (var key in facets) {
-      var name = key.replace(/unknown\./, "")
+      var name = key.replace(/_marcUncompleted\./, "")
       var split = name.split("."), tag = split[0], code = split[1]
       var item = facets[key]
       var owner = map[tag]
