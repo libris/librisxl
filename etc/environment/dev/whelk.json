@@ -23,7 +23,8 @@
         "_components": [
             "jsonldstorage",
             "marcxmlstorage",
-            "index"
+            "index",
+            "graphstore"
         ]
     },
     "_masterComponent": "pairtreehybridstorage",

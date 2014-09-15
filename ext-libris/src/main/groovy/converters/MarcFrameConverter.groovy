@@ -67,7 +67,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         def result = createFrame(source)
         log.trace("Created frame: $result")
 
-        return new Document().withIdentifier(doc.identifier).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta).withContentType("application/ld+json")
+        return new Document().withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta).withContentType("application/ld+json")
     }
 
     public static void main(String[] args) {

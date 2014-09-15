@@ -18,6 +18,8 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class FormatConverterProcessor extends BasicPlugin implements Processor {
 
+    // Maybe rename to DocumentConverterProcessor
+
     FormatConverter converter
     LinkExpander expander
 
@@ -26,14 +28,17 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
 
     void bootstrap(String whelkName) {
         this.whelkName = whelkName
-        this.converter = plugins.find { it instanceof FormatConverter }
+        this.converter = plugins.find { it instanceof FormatConverter  }
         this.expander = plugins.find { it instanceof LinkExpander }
+        log.info("Calling bootstrap for ${this.id}. converter: $converter expander: $expander plugins: $plugins")
     }
 
     @Override
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
         log.debug("Received message to ${this.id}.")
+        log.debug("converter: $converter expander: $expander")
+        log.debug("all plugins: $plugins")
         if (converter || expander) {
             log.debug("Running converter/expander.")
             def data = message.getBody()
@@ -50,7 +55,13 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
             if (expander) {
                 doc = expander.expand(doc)
             }
-            message.setBody(doc.dataAsMap)
+            if (doc.isJson()) {
+                log.info("Setting converted body: ${doc.dataAsMap}")
+                message.setBody(doc.dataAsMap)
+            } else {
+                log.info("Setting body as data.")
+                message.setBody(doc.data)
+            }
         }
         exchange.setOut(message)
     }

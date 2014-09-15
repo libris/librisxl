@@ -39,19 +39,21 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
     void configure() {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
-        Processor turtleProcessor = getPlugin("turtleconverter_processor")
+        Processor turtleConverterProcessor = getPlugin("turtleconverter_processor")
         Processor prawnRunner = getPlugin("prawnrunner_processor")
         String primaryStorageId = whelk.storage.id
-        assert formatConverterProcessor, turtleProcessor
+        assert formatConverterProcessor
 
-        from("direct:"+primaryStorageId).multicast().parallelProcessing().to("activemq:libris.index", "activemq:libris.graphstore")
+        from("direct:"+primaryStorageId).process(formatConverterProcessor).multicast().parallelProcessing().to("activemq:libris.index", "activemq:libris.graphstore")
 
-        from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer"))).routingSlip("typeQDestination").to("activemq:libris.prawn")
+        if (whelk.index) {
+            from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer"))).routingSlip("typeQDestination").to("activemq:libris.prawn")
 
-        for (type in elasticTypes) {
-            from("direct:$type").threads(1,parallelProcesses).process(formatConverterProcessor)
+            for (type in elasticTypes) {
+                from("direct:$type").threads(1,parallelProcesses)
                 //.aggregate(header("dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
                 .routingSlip("elasticDestination")
+            }
         }
 
         from("activemq:libris.prawn")
@@ -59,7 +61,8 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         // Routes for graphstore
         if (whelk.graphStore) {
-            from("activemq:libris.graphstore").process(turtleProcessor)
+            from("activemq:libris.graphstore")
+                //.process(turtleConverterProcessor).setHeader(Exchange.CONTENT_TYPE, constant("application/sparql-update"))
                 .aggregate(header("entry:dataset"), new GraphstoreBatchUpdateAggregationStrategy()).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
                 .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
         }
@@ -84,6 +87,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
 
     def serializer
+    int counter = 0
 
     GraphstoreBatchUpdateAggregationStrategy() {
         ObjectMapper mapper = new ObjectMapper()
@@ -92,31 +96,34 @@ class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
     }
 
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-        Object newBody = newExchange.getIn().getBody()
         String identifier = newExchange.getIn().getHeader("entry:identifier")
         def bos = new ByteArrayOutputStream()
         serializer.writer = new OutputStreamWriter(bos, "UTF-8")
         if (oldExchange == null) {
             // First message in aggregate
             serializer.prelude() // prefixes and base
+            serializer.uniqueBNodeSuffix = "-${System.nanoTime()}"
 
             // Set contenttype header
             newExchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/sparql-update")
 
+            def obj = newExchange.getIn().getBody()
+
             serializer.writeln "CLEAR GRAPH <$identifier> ;"
             serializer.writeln "INSERT DATA { GRAPH <$identifier> {"
             serializer.flush()
-            serializer.objectToTurtle(newExchange.getIn().getBody(Map.class))
+            serializer.objectToTurtle(obj)
             serializer.writeln "} } ;"
             serializer.flush()
 
-            newExchange.getIn().setBody(bos.toString("UTF-8"))
+            newExchange.getIn().setBody(bos.toByteArray())
 
             return newExchange
         } else {
             // Append to existing message
-            //
             StringBuilder update = new StringBuilder(oldExchange.getIn().getBody(String.class))
+
+            serializer.uniqueBNodeSuffix = "-${System.nanoTime()}"
 
             serializer.writeln "CLEAR GRAPH <$identifier> ;"
             serializer.writeln "INSERT DATA { GRAPH <$identifier> {"
@@ -127,12 +134,11 @@ class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
 
             update.append(bos.toString("UTF-8"))
 
-            log.info("Appended data:\n${update.toString()}")
-
-            oldExchange.getIn().setBody(update.toString())
+            oldExchange.getIn().setBody(update.toString().getBytes("UTF-8"))
 
             return oldExchange
         }
+        counter++
     }
 }
 

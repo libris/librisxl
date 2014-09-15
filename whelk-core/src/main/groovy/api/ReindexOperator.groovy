@@ -41,7 +41,7 @@ class ReindexOperator extends AbstractOperator {
 
         log.info("Starting reindexing.")
 
-        if (!dataset) {
+        if (!dataset && whelk.index) {
             log.debug("Requesting new index for ${whelk.index.id}.")
             indexName = whelk.index.createNewCurrentIndex(whelk.id)
         }
@@ -78,7 +78,7 @@ class ReindexOperator extends AbstractOperator {
         }
         log.info("Reindexed $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds.")
         // TODO: Find a way to do this AFTER the indexing queue is empty.
-        if (!dataset) {
+        if (!dataset && whelk.index) {
             whelk.index.reMapAliases(whelk.id)
         }
     }

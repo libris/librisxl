@@ -5,8 +5,9 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.whelks.*
 
 @Log
-class JsonLDTurtleConverter extends BasicRDFFormatConverter {
+class JsonLDTurtleConverter extends BasicFormatConverter {
 
+    String resultContentType = "text/turtle"
     String requiredContentType = "application/ld+json"
     def context
     def base
@@ -20,12 +21,10 @@ class JsonLDTurtleConverter extends BasicRDFFormatConverter {
         this.base = base
     }
 
-    Map<String, RDFDescription> doConvert(Document doc) {
-        Map<String, RDFDescription> docs = new HashMap<String, RDFDescription>()
+    Document doConvert(Document doc) {
         def source = mapper.readValue(doc.data, Map)
         def bytes = JsonLdToTurtle.toTurtle(context, source, base).toByteArray()
-        docs.put(doc.identifier, new RDFDescription(identifier: doc.identifier, data: bytes, contentType: "text/turtle"))
-        return docs
+        return new Document().withData(bytes).withIdentifier(doc.identifier).withContentType(resultContentType)
     }
 
 }

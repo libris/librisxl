@@ -15,6 +15,12 @@
   <logger name="org.apache.camel">
       <level value="info"/>
   </logger>
+  <logger name="org.apache.camel">
+      <level value="info"/>
+  </logger>
+  <logger name="org.apache.camel.component.http4">
+      <level value="trace"/>
+  </logger>
   <logger name="org.apache.camel.mock">
       <level value="info"/>
   </logger>
@@ -22,7 +28,10 @@
       <level value="info"/>
   </logger>
   <logger name="se.kb.libris.whelks.camel.FormatConverterProcessor">
-      <level value="info"/>
+      <level value="debug"/>
+  </logger>
+  <logger name="se.kb.libris.whelks.camel.GraphstoreBatchUpdateAggregationStrategy">
+      <level value="debug"/>
   </logger>
   <logger name="se.kb.libris.whelks.api.BasicAPI">
       <level value="info"/>
@@ -65,6 +74,9 @@
   </logger>
 <logger name="se.kb.libris.whelks.api.DocumentAPI">
       <level value="info"/>
+  </logger>
+<logger name="se.kb.libris.whelks.api.ReindexOperator">
+      <level value="trace"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.TransferOperator">
       <level value="info"/>
