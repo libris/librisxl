@@ -22,15 +22,22 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     MarcFrameConverter(uriSpacePath="oldspace.json") {
         def loader = getClass().classLoader
-
         loader.getResourceAsStream(uriSpacePath).withStream {
             uriMinter = new LibrisURIMinter(mapper.readValue(it, Map))
         }
-
         def config = loader.getResourceAsStream("marcframe.json").withStream {
             mapper.readValue(it, Map)
         }
+        initialize(uriMinter, config)
+    }
+
+    MarcFrameConverter(URIMinter uriMinter, Map config) {
+        initialize(uriMinter, config)
+    }
+
+    void initialize(URIMinter uriMinter, Map config) {
         def tokenMaps = [:]
+        def loader = getClass().classLoader
         config.tokenMaps.each { key, sourceRef ->
             if (sourceRef instanceof String) {
                 tokenMaps[key] = loader.getResourceAsStream(sourceRef).withStream {
