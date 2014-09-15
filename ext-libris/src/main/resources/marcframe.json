@@ -1654,7 +1654,11 @@
     },
 
     "003": {"domainEntity": "Record", "property": "systemName"},
-    "005": {"domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S"},
+    "005": {
+      "domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S",
+      "_specSource": {"005": "20130814170612.0"},
+      "_specResult": {"modified": "2013-08-14T17:06:12.0+0200"}
+    },
 
     "006": {
       "TODO:tokenSyncedWith": "typeOfRecord",
@@ -2675,7 +2679,10 @@
         }
       },
       "Unspecified": {},
-      "repeatable": true
+      "repeatable": true,
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
 
     },
 
@@ -3141,7 +3148,10 @@
           "tokenMap": "visualMatter"
         }
       },
-      "repeatable": false
+      "repeatable": false,
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
 
     "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
@@ -3279,7 +3289,10 @@
       "$b": {
         "link": "identifierAssigner", "rangeEntity": "Organization", "property": "name"
       },
-      "TODO": "repeatable, use addProperty or wrap in Identifier object?"
+      "TODO": "repeatable, use addProperty or wrap in Identifier object?",
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
 
     "034": {
@@ -3309,7 +3322,10 @@
       "$t": {"addProperty": "gRingLongitude"},
       "$x": {"property": "startDate"},
       "$y": {"property": "endDate"},
-      "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"}
+      "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"},
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
 
     "030": {},
@@ -3440,7 +3456,10 @@
         "property": "version",
         "splitValuePattern": "(\\d+)(?:/(swe))?",
         "splitValueProperties": ["version", "language"]
-      }
+      },
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
     "083": {
       "inherit": "082"
@@ -3456,7 +3475,10 @@
       "$2": {"link": "inScheme",
              "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
              "property": "notation"},
-      "$b": {"property": "classificationItem", "ignored": true}
+      "$b": {"property": "classificationItem", "ignored": true},
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
 
     "085": {},
@@ -3995,7 +4017,10 @@
              "property": "notation"},
       "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
              "ignored": true},
-      "$a": {"property": "prefLabel"}
+      "$a": {"property": "prefLabel"},
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
     "651": {
       "inherit": "650",
@@ -4260,11 +4285,7 @@
       }
     },
     "001" : {"inherit": "bib"},
-    "005": {
-      "inherit": "bib",
-      "_specSource": {"005": "20130814170612.0"},
-      "_specResult": {"modified": "2013-08-14T17:06:12.0+0200"}
-    },
+    "005": {"inherit": "bib"},
     "008": {
       "[0:0]": {}
     },
@@ -4327,7 +4348,10 @@
           "NOTE": "due to this promote hack, Instance is now Work",
           "$t": {"domainEntity": "Instance", "property": "uniformTitle"}
         }
-      }
+      },
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
     "110" : {
       "inherit": "bib",
