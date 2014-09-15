@@ -1631,7 +1631,7 @@
       "[20:24]": {
         "domainEntity": "Record",
         "property": "entryMap",
-        "patternMap": "entryMap"
+        "TODO:patternMap": "entryMap"
       },
       "repeatable": false
     },
@@ -1884,7 +1884,7 @@
       "Visual": {
         "[1:4]": {
           "property": "runningTime",
-          "patternMap": "visualRunningTime"
+          "TODO:patternMap": "visualRunningTime"
         },
         "[5:6]": {
           "link": "audience",
@@ -2129,7 +2129,7 @@
         },
         "[6:9]": {
           "property": "imageBitDepth",
-          "patternMap": "computerImageBitDepth"
+          "TODO:patternMap": "computerImageBitDepth"
         },
         "[9:10]": {
           "link": "fileFormats",
@@ -2664,7 +2664,7 @@
     },
 
     "008": {
-      "repeatedBy": "006",
+      "TODO:repeatedBy": "006",
       "[0:6]": {
         "domainEntity": "Record",
         "property": "date"
@@ -3072,7 +3072,7 @@
       "Visual": {
         "[18:21]": {
           "property": "runningTime",
-          "patternMap": "visualRunningTime"
+          "TODO:patternMap": "visualRunningTime"
         },
         "[22:23]": {
           "link": "audience",
@@ -3234,7 +3234,7 @@
       "$b": {
         "link": "identifierAssigner", "rangeEntity": "Organization", "property": "name"
       },
-      "repeatable": true
+      "TODO": "repeatable, use addProperty or wrap in Identifier object?"
     },
 
     "034": {
@@ -3264,8 +3264,7 @@
       "$t": {"addProperty": "gRingLongitude"},
       "$x": {"property": "startDate"},
       "$y": {"property": "endDate"},
-      "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"},
-      "repeatable": true
+      "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"}
     },
 
     "030": {},
@@ -3398,9 +3397,6 @@
     "084": {
       "note:candidate:domainEntity": "Work",
       "addLink": "classification",
-      "match-domain": {
-        "Work": {"addLink": "class"}, "Holding": {"addLink": "callno"}
-      },
       "rangeEntity": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "uriTemplateDefaults": {"inScheme.notation": "kssb"},
@@ -3554,7 +3550,7 @@
       "$d": {"property": "cartographicZone"},
       "$g": {"property": "cartographicExclusionGRing"},
       "$f": {"property": "cartographicOuterGRing"},
-      "repeatable": true
+      "TODO": "repeatable, use addProperty for all or wrap in object?"
     },
 
     "256": {
@@ -3665,7 +3661,7 @@
       "addLink": "series",
       "rangeEntity": "Serial",
       "$a": {"property": "title", "interpunctionChars": ".,=;"},
-      "$0": {"key": "authorityRecordControlNumber"},
+      "$0": {"TODO:property": "authorityRecordControlNumber"},
       "$n": {"addProperty": "numberOfPartOfAWork"},
       "$p": {"addProperty": "nameOfPartOfAWork", "interpunctionChars": ".,=;"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
@@ -4367,7 +4363,7 @@
       "[0:0]": {}
     },
     "014": {},
-    "084": {"inherit": "bib:650"},
+    "084": {"inherit": "bib", "addLink": "callno"},
     "600": {"inherit": "bib:100", "addLink": "subject"},
     "650": {"inherit": "bib:650"},
     "653": {},

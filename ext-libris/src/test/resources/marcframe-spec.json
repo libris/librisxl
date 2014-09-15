@@ -1,0 +1,405 @@
+{
+
+  "marcTypeFromTypeOfRecord": {
+    "*": "bib",
+    "z": "auth"
+  },
+
+  "tokenMaps": {
+    "relatorCode": "relatorcodes.json",
+    "enumeration": {
+      "a": "/def/enum/content/Irregular",
+      "b": "/def/enum/content/Regular",
+      "c": null
+    },
+    "computerImageBitDepth": {
+      "---": null,
+      "001~999": "/def/enum/carrier/TODO:value-in-digit",
+      "mmm": "/def/enum/carrier/MultipleImageBitDepth"
+    }
+  },
+
+  "bib": {
+
+    "000": {
+      "[5:6]": {
+        "domainEntity": "Record",
+        "link": "status",
+        "uriTemplate": "{_}",
+        "tokenMap": "status"
+      },
+      "[6:7]": {
+        "domainEntity": "Instance",
+        "tokenMap": "typeOfRecord",
+        "addProperty": "@type"
+      },
+      "[7:8]": {
+        "domainEntity": "Instance",
+        "tokenMap": "bibLevel",
+        "addProperty": "@type"
+      }
+    },
+
+    "001": {"domainEntity": "Record", "property": "controlNumber"},
+    "005": {"domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S"},
+
+    "007": {
+      "addLink": "hasFormat",
+      "[0:1]": {
+        "addProperty": "@type",
+        "tokenMap": {
+          "a": "Map",
+          "c": "Electronic",
+          "z": null
+        }
+      },
+      "tokenTypeMap": "[0:1]",
+      "Map": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapMaterial"
+        },
+        "[3:4]": {
+          "link": "color",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapColor"
+        },
+        "[4:5]": {
+          "link": "medium",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapMedium"
+        }
+      },
+      "Electronic": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerMaterial"
+        },
+        "[3:4]": {
+          "link": "color",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerColor"
+        },
+        "[4:5]": {
+          "link": "dimensionsCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerDimensions"
+        }
+      },
+      "repeatable": true
+    },
+
+    "008": {
+      "[0:6]": {
+        "domainEntity": "Record",
+        "property": "date"
+      },
+      "recTypeBibLevelMap": {
+        "a,h,t": {
+          "Text": ["a", "c", "d", "m"],
+          "Serial": ["9", "b", "i", "p", "s"]
+        }
+      },
+      "Text": {
+        "[18:19]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[24:25]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        }
+      },
+      "Serial": {
+        "[18:19]": {
+          "link": "frequencyCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsFrequency"
+        }
+      },
+      "repeatable": false
+    },
+
+    "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
+
+    "020": {
+      "domainEntity": "Instance",
+      "addLink": "identifier",
+      "match-domain": {
+        "EBook": {"addLink": "commonEndeavor"}
+      },
+      "rangeEntity": "Identifier",
+      "$a": {
+        "property": "identifierValue",
+        "splitValuePattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?",
+        "splitValueProperties": ["identifierValue", "identifierNote"],
+        "defaults": {
+          "identifierScheme": {"@id": "/def/identifiers/isbn"}
+        }
+      },
+      "$c": {"domainEntity": "Instance", "property": "availability"},
+      "$q": {"property": "identifierNote"},
+      "$z": {
+        "property": "identifierValue",
+        "defaults": {
+          "identifierScheme": {"@id": "/def/identifiers/isbn"},
+          "identifierStatus": "canceledInvalid"
+        }
+      }
+    },
+
+    "024": {
+      "domainEntity": "Instance",
+      "addLink": "identifier",
+      "rangeEntity": "Identifier",
+      "i1": {
+        "link": "identifierScheme",
+        "tokenMap": {
+          "0": "isrc",
+          "1": "upc",
+          "2": "ismn",
+          "3": "ean",
+          "4": "sici",
+          "7": {"valueFrom": "$2"}
+        },
+        "uriTemplate": "/def/identifiers/{_}",
+        "matchUriToken": "^\\S+$"
+      },
+      "$a": {"property": "identifierValue"},
+      "$2": {
+        "link": "identifierScheme",
+        "uriTemplate": "/def/identifiers/{_}",
+        "matchUriToken": "^\\S+$",
+        "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
+      }
+    },
+
+    "028": {
+      "domainEntity": "Instance",
+      "$a": {
+        "property": "publisherNumber",
+        "match-i1": {
+          "0": {"property": "issueNumber"},
+          "1": {"property": "matrixNumber"},
+          "2": {"property": "musicPlate"},
+          "3": {"property": "musicPublisher"},
+          "4": {"property": "videorecordingNumber"},
+          "5": {"property": "publisherNumber"}
+        }
+      },
+      "$b": {
+        "link": "identifierAssigner", "rangeEntity": "Organization", "property": "name"
+      }
+    },
+
+    "034": {
+      "NOTE:domain": "Cartography",
+      "addLink": "cartographicAscensionAndDeclination",
+      "rangeEntity": "CartographyCoordinates",
+      "TODO": "draft",
+      "TODO:i1": {},
+      "TODO:i2": {"0": "OuterRing", "1": "ExcludingRing"},
+      "$a": {"property": "cartographicScale"},
+      "$b": {"addProperty": "constantRatioLinearHorizontalScale"},
+      "$d": {"property": "westernmostLongitudeCoordinates"},
+      "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"}
+    },
+
+    "035": {
+      "domainEntity": "Record",
+      "match-pattern": {
+        "$a": {
+          "^http://dbpedia\\.org/": {
+            "domainEntity": "Instance",
+            "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
+          }
+        }
+      },
+      "$a": {"addProperty": "systemNumber"},
+      "$9": {"addProperty": "librisIIINumber"}
+    },
+
+    "082": {
+      "note:candidate:domainEntity": "Work",
+      "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
+      "addLink": "classification",
+      "rangeEntity": "Concept",
+      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
+      "$a": {"property": "notation"},
+      "$2": {
+        "note": "ignorable?",
+        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
+        "defaults": {
+          "notation": "DDC",
+          "isVersionOf": {"@id": "http://dewey.info/scheme/ddc/"}
+        },
+        "property": "version",
+        "splitValuePattern": "(\\d+)(?:/(swe))?",
+        "splitValueProperties": ["version", "language"]
+      }
+    },
+
+    "083": {
+      "inherit": "082"
+    },
+
+    "084": {
+      "note:candidate:domainEntity": "Work",
+      "addLink": "classification",
+      "match-domain": {
+        "Work": {"addLink": "class"}, "Holding": {"addLink": "callno"}
+      },
+      "rangeEntity": "Concept",
+      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "uriTemplateDefaults": {"inScheme.notation": "kssb"},
+      "$a": {"property": "notation"},
+      "$2": {"link": "inScheme",
+             "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+             "property": "notation"},
+      "$b": {"property": "classificationItem", "ignored": true}
+    },
+
+    "100": {
+      "note:candidate:domainEntity": "Work",
+      "rangeEntity": "Person",
+      "TODO:match-i1": {
+        "1": {
+          "$a": {"...": "use $a rule below"}
+        },
+        "3": {
+          "rangeEntity": "Family"
+        }
+      },
+      "link": "attributedTo",
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "$a": {"property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+        "splitValueProperties": ["familyName", "givenName"], "rejoin": ", "},
+      "$b": {"property": "numeration"},
+      "$c": {"addProperty": "personTitle"},
+      "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
+        "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-"},
+      "$j": {"TODO:property": "influencedBy"},
+      "construct": {
+        "controlledLabel": {", ": [ "familyName",
+                          {" ": ["givenName", {"(%s)": [1, "numeration"]}]},
+                          "personTitle",
+                          {"%s-%s": [1, "birthYear", "deathYear"]} ]}
+      }
+    },
+
+    "260": {
+      "domainEntity": "Instance",
+      "addLink": "provider",
+      "splitLink": [
+        {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
+        {"codes": ["e", "f", "g"], "addLink": "manufacture"}
+      ],
+      "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
+      "rangeEntity": "ProviderEvent",
+      "i1": {"TODO:property": "latest", "TODO:tokenMap": {"2": false, "3": true}},
+      "$a": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ",:"},
+      "$b": {"property": "providerName", "interpunctionChars": ",:;"},
+      "$c": {"property": "providerDate", "interpunctionChars": ",;"},
+      "$e": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
+      "$f": {"property": "providerName", "interpunctionChars": ",:;"},
+      "$g": {"property": "providerDate", "interpunctionChars": ",;"},
+      "$3": {"property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"}
+    },
+
+    "533": {
+      "addLink": "reproduction", "rangeEntity": "CreativeWork",
+      "pendingResources": {
+        "_:event": {"addLink": "provider", "rangeEntity": "ProviderEvent"}
+      },
+      "$a": {"property": "description", "interpunctionChars": ":"},
+      "$b": {"about": "_:event", "addLink": "providerPlace", "rangeEntity": "Place", "property": "label", "interpunctionChars": ":"},
+      "$c": {"about": "_:event", "addProperty": "providerName", "interpunctionChars": ","},
+      "$d": {"about": "_:event", "property": "providerDate"},
+      "$e": {"property": "physicalDescription"},
+      "$f": {"addProperty": "seriesStatement"},
+      "$m": {"addProperty": "datesAndOrSequentialDesignationOfIssuesReproduced"},
+      "$n": {"addProperty": "note"},
+      "$3": {"property": "materialsSpecified"},
+      "$5": {"property": "institutionToWhichFieldApplies"},
+      "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"}
+    },
+
+    "650": {
+      "note:candidate:domainEntity": "Work",
+      "addLink": "subject",
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "rangeEntity": "Concept",
+      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
+      "uriTemplateDefaults": {"inScheme.notation": "_"},
+      "match-code": {
+        "v x y z": {
+          "uriTemplate": "/topic/{+inScheme.notation}/{broader.prefLabel*}",
+          "TODO": "use uriTemplate:s here only if scheme token in $2 (else bnode)",
+          "$a": {"addLink": "broader", "uriTemplate": "_:{_}",
+                 "property": "prefLabel"},
+          "$v": {"addLink": "broader", "uriTemplate": "_:{_}",
+               "TODO": "use /topic/saogf/{_}, but only if $2=sao",
+                 "property": "prefLabel"},
+          "$x": {"addLink": "broader", "uriTemplate": "_:{_}",
+                 "property": "prefLabel"},
+          "$y": {"addLink": "broader", "uriTemplate": "_:{_}",
+                 "property": "prefLabel"},
+          "$z": {"addLink": "broader", "uriTemplate": "_:{_}",
+                "TODO": "use /place/{_}, but only if $2=sao",
+                "rangeEntity": "Place",
+                "property": "prefLabel"}
+        }
+      },
+      "i2": {
+        "link": "inScheme",
+        "rangeEntity": "ConceptScheme",
+        "uriTemplate": "/topic/{+_}",
+        "property": "notation",
+        "tokenMap": "thesaurus"
+      },
+      "$2": {"link": "inScheme",
+             "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+             "property": "notation"},
+      "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
+             "ignored": true},
+      "$a": {"property": "prefLabel"}
+    }
+  },
+
+  "auth": {
+
+    "100" : {
+      "inherit": "bib",
+      "definesDomainEntity": "Person",
+      "match-code": {
+        "t v x y z": {
+          "definesDomainEntity": null,
+          "promoteToDomainEntity": "Work",
+          "NOTE": "due to this promote hack, Instance is now Work",
+          "$t": {"domainEntity": "Instance", "property": "uniformTitle"}
+        }
+      }
+    },
+
+    "150" : {
+      "inherit": "bib:650",
+      "addLink": null,
+      "computeLinks": null,
+      "rangeEntity": null,
+      "domainEntity": null,
+      "definesDomainEntity": "Concept",
+      "uriTemplateDefaults": {"inScheme.notation": "sao"},
+      "dependsOn": ["040", "042"],
+      "$2": null,
+      "$9": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
+      "$0": null
+    }
+
+  }
+
+}

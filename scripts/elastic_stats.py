@@ -5,11 +5,11 @@ def packaged(data, known=None):
     for o in data.values():
         for mtype, typemapping in o.items():
             props = typemapping['properties']
-            if 'unknown' not in props:
+            if '_marcUncompleted' not in props:
                 continue
-            unknown = props['unknown']['properties']
+            uncompleted = props['_marcUncompleted']['properties']
             def get_fields():
-                for tag, mapping in unknown.items():
+                for tag, mapping in uncompleted.items():
                     if 'properties' not in mapping:
                         subfields = None
                     else:
@@ -34,7 +34,7 @@ def to_facet_query(data, for_mtype, known=None, indent="  "):
         for field, subfields in fields:
             if not subfields:
                 continue
-            qs = '"unknown.%(field)s.%(subfield)s": { "terms": {"size": 5, "field": "unknown.%(field)s.subfields.%(subfield)s"}}'
+            qs = '"_marcUncompleted.%(field)s.%(subfield)s": { "terms": {"size": 5, "field": "_marcUncompleted.%(field)s.subfields.%(subfield)s"}}'
             for subfield in subfields:
                 yield indent + (qs % vars())
 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
       "facets" : {
         %s
       },
-      "fields": ["unknown"]
+      "fields": ["_marcUncompleted"]
     }' | python -mjson.tool"""
     #    "query": {"term": {"field": "value"}}
 
