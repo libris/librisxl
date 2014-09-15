@@ -3397,9 +3397,6 @@
     "084": {
       "note:candidate:domainEntity": "Work",
       "addLink": "classification",
-      "match-domain": {
-        "Work": {"addLink": "class"}, "Holding": {"addLink": "callno"}
-      },
       "rangeEntity": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "uriTemplateDefaults": {"inScheme.notation": "kssb"},
@@ -4366,7 +4363,7 @@
       "[0:0]": {}
     },
     "014": {},
-    "084": {"inherit": "bib:650"},
+    "084": {"inherit": "bib", "addLink": "callno"},
     "600": {"inherit": "bib:100", "addLink": "subject"},
     "650": {"inherit": "bib:650"},
     "653": {},
