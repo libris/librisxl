@@ -1634,7 +1634,8 @@
         "TODO:patternMap": "entryMap"
       },
       "repeatable": false,
-      "_specSource": {"leader": "00887cam a2200277 a 4500", "fields": [{"001": "0000000"}]},
+      "_specOriginalLeader": "00887cam a2200277 a 4500",
+      "_specSource": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
       "_specResult": {
         "@type": "Record",
         "@id": "/bib/0000000",
@@ -4306,8 +4307,9 @@
   "auth": {
     "000": {
       "inherit": "bib",
+      "_specOriginalLeader": "01341cz  a2200397n  4500",
       "_specSource": {
-        "leader": "01341cz  a2200397n  4500",
+        "leader": "     cz  a       n  4500",
         "fields": [{"001": "140482"}]
       },
       "_specResult": {
