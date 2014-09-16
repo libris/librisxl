@@ -60,9 +60,8 @@ class MarcFrameConverterSpec extends Specification {
         [leader: "00187nx  a22000971n44500"]    | "hold"
     }
 
-    def "should convert field spec #fieldSpec.marcType #fieldSpec.code"() {
+    def "should convert field spec for #fieldSpec.marcType #fieldSpec.code"() {
         given:
-        when:
         def marcType = fieldSpec.marcType
         def marc = deepcopy(marcSkeletons[marcType])
         if (fieldSpec.source.fields) {
@@ -70,6 +69,7 @@ class MarcFrameConverterSpec extends Specification {
         } else {
             marc.fields << fieldSpec.source
         }
+        when:
         def result = converter.createFrame(marc)
         def expected = deepcopy(marcResults[marcType])
         // test id generation separately
@@ -86,8 +86,32 @@ class MarcFrameConverterSpec extends Specification {
         fieldSpec << fieldSpecs
     }
 
-    def "should revert field spec #fieldSpec.marcType #fieldSpec.code"() {
-        // TODO
+    @Ignore // TODO
+    def "should revert field spec for #fieldSpec.marcType #fieldSpec.code"() {
+        given:
+        def marcType = fieldSpec.marcType
+        def jsonld = deepcopy(marcResults[marcType])
+        fieldSpec.result.each { prop, obj ->
+            def value = jsonld[prop]
+            if (value instanceof Map) value.putAll(obj)
+            else jsonld[prop] = obj
+        }
+        when:
+        def result = converter.conversion.revert(jsonld)
+        // FIXME: 006, 007 and 008 are overeagerly generated
+        result.fields = result.fields.findAll { field ->
+            ! ['006', '007', '008'].find { field.containsKey(it) }
+        }
+        def expected = deepcopy(marcSkeletons[marcType])
+        if (fieldSpec.source.fields) {
+            expected.fields = fieldSpec.source.fields
+        } else {
+            expected.fields << fieldSpec.source
+        }
+        then:
+        result == expected
+        where:
+        fieldSpec << fieldSpecs
     }
 
     def "should store failed marc data"() {
