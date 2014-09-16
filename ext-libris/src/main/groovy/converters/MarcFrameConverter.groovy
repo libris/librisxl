@@ -1072,8 +1072,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     def revertOne(Map data, Map currentEntity, Set onlyCodes=null) {
-        def i1 = ind1? ind1.revert(data, currentEntity) : null
-        def i2 = ind2? ind2.revert(data, currentEntity) : null
+        def i1 = ind1? ind1.revert(data, currentEntity) : ' '
+        def i2 = ind2? ind2.revert(data, currentEntity) : ' '
         def subs = []
         subfields.collect { code, subhandler ->
             if (!subhandler)
@@ -1089,7 +1089,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 subs << [(code): value]
             }
         }
-        return subs.length? [ind1: i1, ind2: i2, subfields: subs] : null
+        return i1 != null && i2 != null && subs.length?
+            [ind1: i1, ind2: i2, subfields: subs] :
+            null
     }
 }
 
