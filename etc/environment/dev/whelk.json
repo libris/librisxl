@@ -8,6 +8,7 @@
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
+        "GRAPHSTORE_UPDATE_URI": "http://localhost:8890/sparql-graph-crud-auth",
         "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616"
     },
     "_id": "libris",

@@ -509,10 +509,14 @@
     "prawnrunner_processor": {
         "_class" : "se.kb.libris.whelks.camel.PrawnRunner"
     },
+    "graphstore_aggregator": {
+        "_class" : "se.kb.libris.whelks.camel.GraphstoreBatchUpdateAggregationStrategy",
+        "_params": "context.jsonld, http://libris.kb.se/resource/"
+    },
     "routebuilder": {
         "_class" : "se.kb.libris.whelks.camel.WhelkRouteBuilder",
         "_plugins" : [
-            "elastic_camel_processor", "turtleconverter_processor", "shapecomputer", "prawnrunner_processor"
+            "elastic_camel_processor", "turtleconverter_processor", "shapecomputer", "prawnrunner_processor","graphstore_aggregator"
         ],
         "_params": {
             "elasticBatchSize": 2000,

@@ -29,6 +29,7 @@ dependencies {
     compile "org.apache.camel:camel-elasticsearch:${camelVersion}"
     compile "org.apache.camel:camel-jackson:${camelVersion}"
     compile "org.apache.camel:camel-http4:${camelVersion}"
+    compile "org.apache.camel:camel-groovy:${camelVersion}"
     compile "org.apache.activemq:activemq-camel:${activeMQVersion}"
     compile "org.apache.activemq:activemq-broker:${activeMQVersion}"
 }

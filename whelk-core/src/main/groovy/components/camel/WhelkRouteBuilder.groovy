@@ -3,9 +3,7 @@ package se.kb.libris.whelks.camel
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.Whelk
-import se.kb.libris.whelks.plugin.Plugin
-import se.kb.libris.whelks.plugin.WhelkAware
-import se.kb.libris.whelks.plugin.JsonLdToTurtle
+import se.kb.libris.whelks.plugin.*
 
 import org.apache.camel.*
 import org.apache.camel.impl.*
@@ -39,7 +37,8 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
     void configure() {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
-        Processor turtleConverterProcessor = getPlugin("turtleconverter_processor")
+        //Processor turtleConverterProcessor = getPlugin("turtleconverter_processor")
+        AggregationStrategy graphstoreAggregationStrategy = getPlugin("graphstore_aggregator")
         Processor prawnRunner = getPlugin("prawnrunner_processor")
         String primaryStorageId = whelk.storage.id
         assert formatConverterProcessor
@@ -51,7 +50,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
             for (type in elasticTypes) {
                 from("direct:$type").threads(1,parallelProcesses)
-                //.aggregate(header("dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
+                //.aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
                 .routingSlip("elasticDestination")
             }
         }
@@ -62,9 +61,9 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         // Routes for graphstore
         if (whelk.graphStore) {
             from("activemq:libris.graphstore")
-                //.process(turtleConverterProcessor).setHeader(Exchange.CONTENT_TYPE, constant("application/sparql-update"))
-                .aggregate(header("entry:dataset"), new GraphstoreBatchUpdateAggregationStrategy()).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
-                .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
+                .filter("groovy", "['auth','bib'].contains(request.getHeader('entry:dataset'))")
+                .aggregate(header("entry:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
+                .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}?authUsername=adm&authPassword=adm")
         }
         from("direct:unknown").to("mock:unknown")
     }
@@ -84,21 +83,24 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 }
 
 @Log
-class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
+class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements AggregationStrategy {
 
-    def serializer
-    int counter = 0
+    JsonLdToTurtle serializer
 
-    GraphstoreBatchUpdateAggregationStrategy() {
-        ObjectMapper mapper = new ObjectMapper()
-        def context = JsonLdToTurtle.parseContext(mapper.readValue(this.getClass().getClassLoader().getResourceAsStream("context.jsonld"), Map))
-        serializer = new JsonLdToTurtle(context, new ByteArrayOutputStream(), "http://libris.kb.se/resource/")
+    GraphstoreBatchUpdateAggregationStrategy(String contextPath, String base=null) {
+        def loader = getClass().classLoader
+        def contextSrc = loader.getResourceAsStream(contextPath).withStream {
+            mapper.readValue(it, Map)
+        }
+        def context = JsonLdToTurtle.parseContext(contextSrc)
+        serializer = new JsonLdToTurtle(context, new ByteArrayOutputStream(), base)
     }
 
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
         String identifier = newExchange.getIn().getHeader("entry:identifier")
         def bos = new ByteArrayOutputStream()
         serializer.writer = new OutputStreamWriter(bos, "UTF-8")
+        File f = new File("out_turtle.ttl")
         if (oldExchange == null) {
             // First message in aggregate
             serializer.prelude() // prefixes and base
@@ -118,6 +120,8 @@ class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
 
             newExchange.getIn().setBody(bos.toByteArray())
 
+            f << newExchange.getIn().getBody()
+
             return newExchange
         } else {
             // Append to existing message
@@ -136,9 +140,10 @@ class GraphstoreBatchUpdateAggregationStrategy implements AggregationStrategy {
 
             oldExchange.getIn().setBody(update.toString().getBytes("UTF-8"))
 
+            f << oldExchange.getIn().getBody()
+
             return oldExchange
         }
-        counter++
     }
 }
 
