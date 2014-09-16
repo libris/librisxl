@@ -1633,12 +1633,33 @@
         "property": "entryMap",
         "TODO:patternMap": "entryMap"
       },
-      "repeatable": false
+      "repeatable": false,
+      "_specOriginalLeader": "00887cam a2200277 a 4500",
+      "_specSource": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
+      "_specResult": {
+        "@type": "Record",
+        "@id": "/bib/0000000",
+        "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
+        "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
+        "catForm": {"@id": "/def/enum/record/AACR2"},
+        "entryMap":  "4500",
+        "controlNumber": "0000000",
+        "about": {"@type": ["Text", "Monograph"], "@id": "/resource/bib/0000000"}
+      }
     },
 
-    "001": {"domainEntity": "Record", "property": "controlNumber"},
+    "001": {
+      "domainEntity": "Record", "property": "controlNumber",
+      "_specSource": {"fields": [{"001": "7149593"}]},
+      "_specResult": {"controlNumber": "7149593"}
+    },
+
     "003": {"domainEntity": "Record", "property": "systemName"},
-    "005": {"domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S"},
+    "005": {
+      "domainEntity": "Record", "property": "modified", "parseDateTime": "yyyyMMddHHmmss.S",
+      "_specSource": {"005": "20130814170612.0"},
+      "_specResult": {"modified": "2013-08-14T17:06:12.0+0200"}
+    },
 
     "006": {
       "TODO:tokenSyncedWith": "typeOfRecord",
@@ -2659,7 +2680,10 @@
         }
       },
       "Unspecified": {},
-      "repeatable": true
+      "repeatable": true,
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
 
     },
 
@@ -3125,7 +3149,10 @@
           "tokenMap": "visualMatter"
         }
       },
-      "repeatable": false
+      "repeatable": false,
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
 
     "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
@@ -3136,7 +3163,7 @@
       "TODO:$z": "canceledInvalid",
       "TODO:$2": "restrictedTo: http://www.loc.gov/standards/sourcelist/national-bibliography.html"
     },
-    
+
     "016": {},
     "017": {},
     "018": {},
@@ -3164,7 +3191,21 @@
           "identifierScheme": {"@id": "/def/identifiers/isbn"},
           "identifierStatus": "canceledInvalid"
         }
-      }
+      },
+      "_specSource": {
+        "020": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "91-0-056322-6 (inb.)"},
+          {"c": "310:00"}
+          ]}
+      },
+      "_specResult": {"about": {
+        "identifier": [
+          {"@type": "Identifier",
+            "identifierValue": "91-0-056322-6",
+            "identifierNote": "inb.",
+            "identifierScheme": {"@id": "/def/identifiers/isbn"}}],
+            "availability": "310:00"
+      }}
     },
 
     "022": {
@@ -3211,6 +3252,21 @@
         "uriTemplate": "/def/identifiers/{_}",
         "matchUriToken": "^\\S+$",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
+      },
+      "_specName": "indicator as tokenMap",
+      "_specSource": {
+        "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"}]}
+      },
+      "_specResult": {
+        "about": {
+          "identifier": [
+            {
+              "@type": "Identifier",
+              "identifierValue":  "1234567890",
+              "identifierScheme": {"@id": "/def/identifiers/ean"}
+            }
+          ]
+        }
       }
     },
 
@@ -3220,21 +3276,24 @@
 
     "028": {
       "domainEntity": "Instance",
-      "$a": {
-        "property": "publisherNumber",
-        "TODO:match-i1": {
-          "0": {"property": "issueNumber"},
-          "1": {"property": "matrixNumber"},
-          "2": {"property": "musicPlate"},
-          "3": {"property": "musicPublisher"},
-          "4": {"property": "videorecordingNumber"},
-          "5": {"property": "publisherNumber"}
-        }
+      "match-i1": {
+        "0": {"$a": {"property": "issueNumber"}},
+        "1": {"$a": {"property": "matrixNumber"}},
+        "2": {"$a": {"property": "musicPlate"}},
+        "3": {"$a": {"property": "musicPublisher"}},
+        "4": {"$a": {"property": "videorecordingNumber"}},
+        "5": {"$a": {"property": "publisherNumber"}}
       },
+      "$a": {"property": "publisherNumber"},
       "$b": {
         "link": "identifierAssigner", "rangeEntity": "Organization", "property": "name"
       },
-      "TODO": "repeatable, use addProperty or wrap in Identifier object?"
+      "TODO": "repeatable, use addProperty or wrap in Identifier object?",
+      "_specName": "use indicator as property switch",
+      "_specSource": {"028": {"ind1": "0", "subfields": [{"a": "1"}]}},
+      "_specResult": {"about": {
+        "issueNumber": "1"
+      }}
     },
 
     "034": {
@@ -3264,7 +3323,10 @@
       "$t": {"addProperty": "gRingLongitude"},
       "$x": {"property": "startDate"},
       "$y": {"property": "endDate"},
-      "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"}
+      "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"},
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
 
     "030": {},
@@ -3283,7 +3345,14 @@
         }
       },
       "$a": {"addProperty": "systemNumber"},
-      "$9": {"addProperty": "librisIIINumber"}
+      "$9": {"addProperty": "librisIIINumber"},
+      "_specName": "interpret dbpedia URI as sameAs of instance",
+      "_specSource": {
+        "035": {"subfields": [{"a": "http://dbpedia.org/resource/August_Strindberg"}]}
+      },
+      "_specResult": {"about": {
+        "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
+      }}
     },
 
     "036": {},
@@ -3388,7 +3457,10 @@
         "property": "version",
         "splitValuePattern": "(\\d+)(?:/(swe))?",
         "splitValueProperties": ["version", "language"]
-      }
+      },
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
     "083": {
       "inherit": "082"
@@ -3404,7 +3476,10 @@
       "$2": {"link": "inScheme",
              "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
              "property": "notation"},
-      "$b": {"property": "classificationItem", "ignored": true}
+      "$b": {"property": "classificationItem", "ignored": true},
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
 
     "085": {},
@@ -3438,7 +3513,20 @@
                           {" ": ["givenName", {"(%s)": [1, "numeration"]}]},
                           "personTitle",
                           {"%s-%s": [1, "birthYear", "deathYear"]} ]}
-      }
+      },
+      "_specSource": {
+        "100": {"ind1": "1", "ind2": " ", "subfields": [
+          {"a": "Jansson, Tove,"},
+          {"d": "1914-2001"}
+                          ]}},
+      "_specResult": {"about": {
+        "attributedTo": {"@type": "Person",
+          "familyName":  "Jansson",
+          "givenName":  "Tove",
+          "birthYear":  "1914",
+          "deathYear":  "2001",
+          "controlledLabel":  "Jansson, Tove, 1914-2001"}
+      }}
     },
     "110": {
       "note:candidate:domainEntity": "Work",
@@ -3513,7 +3601,17 @@
       "$f": {"property": "titleDate"},
       "$h": {"domainEntity": "Instance", "property": "mediaTerm", "surroundingChars": "[]"},
       "$n": {"property": "partNumber"},
-      "$p": {"property": "partTitle"}
+      "$p": {"property": "partTitle"},
+      "_specSource": {
+        "245": {"ind1": "0", "ind2": "0", "subfields": [
+          {"a": "Anteckningar från en ö"},
+          {"c": "Tove Jansson, Tuulikki Pietilä"}
+      ]}},
+      "_specResult": {"about": {
+        "instanceTitle": {"@type": "Title",
+          "titleValue":  "Anteckningar från en ö"},
+          "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
+      }}
     },
     "246": {
       "inherit": "245",
@@ -3577,7 +3675,66 @@
       "$e": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
       "$f": {"property": "providerName", "interpunctionChars": ",:;"},
       "$g": {"property": "providerDate", "interpunctionChars": ",;"},
-      "$3": {"property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"}
+      "$3": {"property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"},
+      "_spec": [
+        {
+          "source": {
+            "260": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}, {"e": "Finland"}
+              ]}
+          },
+          "result": {"about": {
+            "publication": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Stockholm"},
+                  "providerName":  "Bonnier",
+                  "providerDate":  "1996"}
+            ],
+            "manufacture": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Finland"}}
+            ]
+          }}
+        }, {
+          "source": {
+            "260": {"subfields": [{"a": "London ;"}, {"a": "New York :"}, {"b": "Routledge Falmer ;"}, {"a": "[London] :"}, {"b": "Open University,"}, {"c": "2002"}]}
+          },
+          "TODO:result": {"about": {
+            "publication": [
+              {"@type": "ProviderEvent",
+                "place": [{"@type": "Place", "label":  "London"},
+                        {"@type": "Place", "label":  "New York"}],
+                  "providerName":  "Routledge Falmer"},
+              {"@type": "ProviderEvent",
+                "assumedPlace": {"@type": "Place", "label":  "London"},
+                  "providerName":  "Open University",
+                  "providerDate":  "2002"}
+            ]
+          }}
+        },
+        {
+          "name": "Upprepade utgivarbyten för fortlöpande resurser",
+          "source": {
+            "fields": [
+              {"260": {"ind1": "_", "ind2": "_", "subfields":
+                [{"3": "Sammanfattad utgivningstid:"}, {"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-"}, {"e": "(Stockholm :"}, {"f": "Fram)"}]}},
+              {"260": {"ind1": "_", "ind2": "_", "subfields": 
+                [{"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-1925"}]}},
+              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+                [{"a": "Lund :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1926-1927"}]}},
+              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+                [{"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1928-1931"}]}},
+              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+                [{"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet,"}, {"c": "1932-1953"}]}},
+              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+                [{"a": "Hägersten :"}, {"b": "Clarté,"}, {"c": "1991-1995"}]}},
+              {"260": {"ind1": "3", "ind2": "_", "subfields": 
+                [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
+            ]
+          },
+          "TODO:result": null
+        }
+      ]
     },
 
     "261": {},
@@ -3702,8 +3859,8 @@
     },
 
     "511": {
+      "match-i1": {"1": {"$a": {"addProperty": "participantNote"}}},
       "$a": {
-        "match-i1": {"1": {"addProperty": "participantNote"}},
         "domainEntity": "Instance",
         "addProperty": "performerNote"
       }
@@ -3756,7 +3913,27 @@
       "$n": {"addProperty": "note"},
       "$3": {"property": "materialsSpecified"},
       "$5": {"property": "institutionToWhichFieldApplies"},
-      "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"}
+      "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"},
+      "_specName": "group properties into nested entities",
+      "_specSource": {
+        "533": {"ind1": " ", "ind2": " ",
+          "subfields": [
+            {"a": "Digitalt faksimil och elektronisk text"},
+            {"c": "Litteraturbanken"},
+            {"d": "2010"} ]}},
+      "_specResult": {"about": {
+        "reproduction": [
+          {
+            "@type": "CreativeWork",
+            "description":  "Digitalt faksimil och elektronisk text",
+            "provider":  [
+                {"@type": "ProviderEvent",
+                    "providerDate":  "2010",
+                    "providerName":  ["Litteraturbanken"]
+                }]
+          }
+        ]
+      }}
     },
 
     "534": {},
@@ -3880,7 +4057,10 @@
              "property": "notation"},
       "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
              "ignored": true},
-      "$a": {"property": "prefLabel"}
+      "$a": {"property": "prefLabel"},
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
     "651": {
       "inherit": "650",
@@ -3918,7 +4098,21 @@
           "addLink": "attributedTo"
         }
       },
-      "addLink": "influencedBy", "rangeEntity": "Person"
+      "addLink": "influencedBy", "rangeEntity": "Person",
+      "_specSource": {"700":
+        {"ind1": "1", "ind2": " ", "subfields": [
+          {"a": "Pietilä, Tuulikki,"},
+          {"d": "1917-"}
+          ]}
+      },
+      "_specResult": {"about": {
+        "influencedBy": [
+          {"@type": "Person",
+            "familyName":  "Pietilä",
+            "givenName":  "Tuulikki",
+            "birthYear":  "1917",
+            "controlledLabel":  "Pietilä, Tuulikki, 1917-"}]
+      }}
     },
 
     "710": {"inherit": "110", "addLink": "influencedBy"},
@@ -4111,7 +4305,26 @@
   },
 
   "auth": {
-    "000": {"inherit": "bib"},
+    "000": {
+      "inherit": "bib",
+      "_specOriginalLeader": "01341cz  a2200397n  4500",
+      "_specSource": {
+        "leader": "     cz  a       n  4500",
+        "fields": [{"001": "140482"}]
+      },
+      "_specResult": {
+        "@type": "Record",
+        "@id": "/auth/140482",
+        "controlNumber": "140482",
+        "entryMap": "4500",
+        "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
+        "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
+        "about": {
+          "@type": ["Authority"],
+          "@id": "/resource/auth/140482"
+        }
+      }
+    },
     "001" : {"inherit": "bib"},
     "005": {"inherit": "bib"},
     "008": {
@@ -4127,7 +4340,11 @@
         "TODO": "inCollection if . = sgp?",
         "link": "inScheme", "rangeEntity": "ConceptScheme",
         "uriTemplate": "/topic/{_}",
-        "property": "notation"
+        "property": "notation",
+      "_specSource": {"040": {"subfields": [{"f":"barn"}]}},
+      "_specResult": {"about": {
+        "inScheme":  {"@type": "ConceptScheme", "@id": "/topic/barn", "notation": "barn"}
+      }}
       }
     },
     "042" : {"inherit": "bib", "TODO": "about-inCollection-skönlitteratur?"},
@@ -4172,7 +4389,10 @@
           "NOTE": "due to this promote hack, Instance is now Work",
           "$t": {"domainEntity": "Instance", "property": "uniformTitle"}
         }
-      }
+      },
+      "_specName": "TODO",
+      "_specResult": {"about": {
+      }}
     },
     "110" : {
       "inherit": "bib",
@@ -4206,7 +4426,15 @@
       "dependsOn": ["040", "042"],
       "$2": null,
       "$9": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
-      "$0": null
+      "$0": null,
+      "_specName": "",
+      "_specSource": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
+      "_specResult": {"about": {
+        "@type": "Concept",
+        "@id": "/resource/auth/140482",
+        "prefLabel": "Barnpsykologi",
+        "sameAs":  [{"@id": "/topic/sao/Barnpsykologi"}]
+      }}
     },
     "151" : {
       "definesDomainEntity": "Place",
@@ -4293,7 +4521,15 @@
       "inherit": "150",
       "definesDomainEntity": null,
       "rangeEntity": "Concept",
-      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
+      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
+      "_specSource": {"550": {"subfields": [{"a": "Psykologi"}, {"w": "g"}]}},
+      "_specResult": {"about": {
+        "broader": [
+          {"@type": "Concept",
+            "@id": "/topic/sao/Psykologi",
+            "prefLabel":  "Psykologi"}
+      ]
+      }}
     },
     "551" : {
         "inherit": "550",
