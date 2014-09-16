@@ -14,7 +14,7 @@ class MarcFrameConverterSpec extends Specification {
         }
     }
 
-    static List fieldDefinitions = []
+    static List fieldSpecs = []
     static marcSkeletons = [:]
     static marcResults = [:]
 
@@ -26,9 +26,15 @@ class MarcFrameConverterSpec extends Specification {
                     marcResults[marcType] = field._specResult
                 }
                 if (field._specSource && field._specResult) {
-                    field._marcType = marcType
-                    field._code = code
-                    fieldDefinitions << field
+                    fieldSpecs << [source: field._specSource, result: field._specResult,
+                                   marcType: marcType, code: code]
+                } else if (field._spec instanceof List) {
+                    field._spec.each {
+                        if (it instanceof Map && it.source && it.result) {
+                            fieldSpecs << [source: it.source, result: it.result,
+                                           marcType: marcType, code: code]
+                        }
+                    }
                 }
             }
         }
@@ -54,22 +60,22 @@ class MarcFrameConverterSpec extends Specification {
         [leader: "00187nx  a22000971n44500"]    | "hold"
     }
 
-    def "should convert field spec #fieldDfn._marcType #fieldDfn._code"() {
+    def "should convert field spec #fieldSpec.marcType #fieldSpec.code"() {
         given:
         when:
-        def marcType = fieldDfn._marcType
+        def marcType = fieldSpec.marcType
         def marc = deepcopy(marcSkeletons[marcType])
-        if (source.fields) {
-            marc.fields = source.fields
+        if (fieldSpec.source.fields) {
+            marc.fields = fieldSpec.source.fields
         } else {
-            marc.fields << source
+            marc.fields << fieldSpec.source
         }
         def result = converter.createFrame(marc)
         def expected = deepcopy(marcResults[marcType])
         // test id generation separately
         expected['@id'] = result['@id']
         expected['about']['@id'] = result['about']['@id']
-        spec.each { prop, obj ->
+        fieldSpec.result.each { prop, obj ->
             def value = expected[prop]
             if (value instanceof Map) value.putAll(obj)
             else expected[prop] = obj
@@ -77,32 +83,11 @@ class MarcFrameConverterSpec extends Specification {
         then:
         result == expected
         where:
-        fieldDfn << fieldDefinitions
-        source = fieldDfn._specSource
-        spec = fieldDfn._specResult
+        fieldSpec << fieldSpecs
     }
 
     def "should match indicator as property switch"() {
         // TODO
-    }
-
-    def "should handle complex 260 fields"() {
-    /*
-
-    260	_	_	#a London ; #a New York : #b Routledge Falmer ; #a [London] : #b Open University, #c 2002
-
-    260#3
-    Upprepade utgivarbyten för fortlöpande resurser:
-
-    260	_	_	#3 Sammanfattad utgivningstid: #a Lund : #b Svenska Clartésektionen, #c 1924- #e (Stockholm : #f Fram)
-    260	_	_	#a Lund : #b Svenska Clartésektionen, #c 1924-1925
-    260	2	_	#a Lund : #b Svenska Clartéavdelningen, #c 1926-1927
-    260	2	_	#a Stockholm : #b Svenska Clartéavdelningen, #c 1928-1931
-    260	2	_	#a Stockholm : #b Svenska Clartéförbundet, #c 1932-1953
-    260	2	_	#a Hägersten : #b Clarté, #c 1991-1995
-    260	3	_	#a Stockholm : #b Clarté, #c 1953-1991, 1995-
-
-    */
     }
 
     def "should store failed marc data"() {
