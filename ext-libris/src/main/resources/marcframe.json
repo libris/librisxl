@@ -3275,23 +3275,23 @@
 
     "028": {
       "domainEntity": "Instance",
-      "$a": {
-        "property": "publisherNumber",
-        "TODO:match-i1": {
-          "0": {"property": "issueNumber"},
-          "1": {"property": "matrixNumber"},
-          "2": {"property": "musicPlate"},
-          "3": {"property": "musicPublisher"},
-          "4": {"property": "videorecordingNumber"},
-          "5": {"property": "publisherNumber"}
-        }
+      "match-i1": {
+        "0": {"$a": {"property": "issueNumber"}},
+        "1": {"$a": {"property": "matrixNumber"}},
+        "2": {"$a": {"property": "musicPlate"}},
+        "3": {"$a": {"property": "musicPublisher"}},
+        "4": {"$a": {"property": "videorecordingNumber"}},
+        "5": {"$a": {"property": "publisherNumber"}}
       },
+      "$a": {"property": "publisherNumber"},
       "$b": {
         "link": "identifierAssigner", "rangeEntity": "Organization", "property": "name"
       },
       "TODO": "repeatable, use addProperty or wrap in Identifier object?",
-      "_specName": "TODO",
+      "_specName": "use indicator as property switch",
+      "_specSource": {"028": {"ind1": "0", "subfields": [{"a": "1"}]}},
       "_specResult": {"about": {
+        "issueNumber": "1"
       }}
     },
 
@@ -3858,8 +3858,8 @@
     },
 
     "511": {
+      "match-i1": {"1": {"$a": {"addProperty": "participantNote"}}},
       "$a": {
-        "match-i1": {"1": {"addProperty": "participantNote"}},
         "domainEntity": "Instance",
         "addProperty": "performerNote"
       }

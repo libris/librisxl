@@ -86,7 +86,7 @@ class MarcFrameConverterSpec extends Specification {
         fieldSpec << fieldSpecs
     }
 
-    def "should match indicator as property switch"() {
+    def "should revert field spec #fieldSpec.marcType #fieldSpec.code"() {
         // TODO
     }
 

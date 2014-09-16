@@ -794,11 +794,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
         def matchI1 = fieldDfn['match-i1']
         if (matchI1) {
-            matchRules << new IndMatchRule(this, fieldDfn, matchI1, 'i1')
+            matchRules << new IndMatchRule(this, fieldDfn, matchI1, 'ind1')
         }
         def matchI2 = fieldDfn['match-i2']
         if (matchI2) {
-            matchRules << new IndMatchRule(this, fieldDfn, matchI2, 'i2')
+            matchRules << new IndMatchRule(this, fieldDfn, matchI2, 'ind2')
         }
         def matchCode = fieldDfn['match-code']
         if (matchCode) {
