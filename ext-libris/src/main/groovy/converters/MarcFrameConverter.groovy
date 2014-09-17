@@ -1072,8 +1072,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     def revertOne(Map data, Map currentEntity, Set onlyCodes=null) {
-        def i1 = ind1? ind1.revert(data, currentEntity) : null
-        def i2 = ind2? ind2.revert(data, currentEntity) : null
+        def i1 = ind1? ind1.revert(data, currentEntity) : ' '
+        def i2 = ind2? ind2.revert(data, currentEntity) : ' '
         def subs = []
         subfields.collect { code, subhandler ->
             if (!subhandler)
@@ -1089,7 +1089,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 subs << [(code): value]
             }
         }
-        return subs.length? [ind1: i1, ind2: i2, subfields: subs] : null
+        return i1 != null && i2 != null && subs.length?
+            [ind1: i1, ind2: i2, subfields: subs] :
+            null
     }
 }
 
@@ -1254,6 +1256,24 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         if (property) {
             return revertObject(entity[property])
+        } else if (link) {
+            def obj = entity['@id']
+            if (subUriTemplate) {
+                def tpltStr = subUriTemplate.template
+                // NOTE: requires variable slot to be at end of template
+                def exprIdx = tpltStr.indexOf('{_}')
+                if (exprIdx > -1) {
+                    assert tpltStr.size() == exprIdx + 3
+                    obj = URLDecoder.decode(obj.substring(exprIdx))
+                } else {
+                    exprIdx = tpltStr.indexOf('{+_}')
+                    if (exprIdx > -1) {
+                        assert tpltStr.size() == exprIdx + 4
+                        obj = obj.substring(exprIdx)
+                    }
+                }
+            }
+            return revertObject(obj)
         }
         return null
     }

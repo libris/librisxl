@@ -3194,8 +3194,12 @@
       },
       "_specSource": {
         "020": {"ind1": " ", "ind2": " ", "subfields": [
-          {"a": "91-0-056322-6 (inb.)"},
-          {"c": "310:00"}
+          {"a": "91-0-056322-6 (inb.)"}, {"c": "310:00"}
+          ]}
+      },
+      "_specNormalized": {
+        "020": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "91-0-056322-6"}, {"c": "310:00"}, {"q": "inb."}
           ]}
       },
       "_specResult": {"about": {
@@ -3545,7 +3549,7 @@
       "note:candidate:domainEntity": "Work",
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"},
-      "$l": {"property": "language"}
+      "$l": {"link": "language", "rangeEntity": "Language", "property": "label"}
     },
 
     "210": {
@@ -3571,7 +3575,7 @@
       "$k": {"addProperty": "subtitle"},
       "$p": {"addProperty": "partTitle"},
       "$n": {"addProperty": "partNumber"},
-      "$l": {"property": "language"},
+      "$l": {"link": "language", "rangeEntity": "Language", "property": "label"},
       "$f": {"property": "date"},
       "$d": {"addProperty": "treatySigningDate"},
       "$s": {"property": "version"},
@@ -4091,9 +4095,9 @@
       "match-code": {
         "t": {
           "$t": {"property": "uniformTitle"},
-          "$l": {"property": "language"},
+          "$l": {"link": "language", "rangeEntity": "Language", "property": "label"},
           "splitLink": [
-            {"codes": ["t"], "addLink": "influencedBy", "spliceEntity": "Work"}
+            {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "Work"}
           ],
           "addLink": "attributedTo"
         }
@@ -4189,7 +4193,7 @@
       "inherit": "772",
       "TODO:note": "uncommon",
       "addLink": "alternateEdition",
-      "$e": {"property": "language", "TODO:inherit": "008:[35:38]"},
+      "$e": {"link": "language", "rangeEntity": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
       "$f": {"property": "publicationCountry", "TODO:inherit": "008:[15:18]"}
     },
     "776": {

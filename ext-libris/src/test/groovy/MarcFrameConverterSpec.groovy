@@ -26,12 +26,16 @@ class MarcFrameConverterSpec extends Specification {
                     marcResults[marcType] = field._specResult
                 }
                 if (field._specSource && field._specResult) {
-                    fieldSpecs << [source: field._specSource, result: field._specResult,
+                    fieldSpecs << [source: field._specSource,
+                                   normalized: field._specNormalized,
+                                   result: field._specResult,
                                    marcType: marcType, code: code]
                 } else if (field._spec instanceof List) {
                     field._spec.each {
                         if (it instanceof Map && it.source && it.result) {
-                            fieldSpecs << [source: it.source, result: it.result,
+                            fieldSpecs << [source: it.source,
+                                           normalized: it.normalized,
+                                           result: it.result,
                                            marcType: marcType, code: code]
                         }
                     }
@@ -86,7 +90,7 @@ class MarcFrameConverterSpec extends Specification {
         fieldSpec << fieldSpecs
     }
 
-    @Ignore // TODO
+    //@Ignore
     def "should revert field spec for #fieldSpec.marcType #fieldSpec.code"() {
         given:
         def marcType = fieldSpec.marcType
@@ -103,10 +107,11 @@ class MarcFrameConverterSpec extends Specification {
             ! ['006', '007', '008'].find { field.containsKey(it) }
         }
         def expected = deepcopy(marcSkeletons[marcType])
-        if (fieldSpec.source.fields) {
-            expected.fields = fieldSpec.source.fields
+        def source = fieldSpec.normalized ?: fieldSpec.source
+        if (source.fields) {
+            expected.fields = source.fields
         } else {
-            expected.fields << fieldSpec.source
+            expected.fields << source
         }
         then:
         result == expected
