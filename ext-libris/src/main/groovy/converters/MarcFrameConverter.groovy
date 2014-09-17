@@ -1256,6 +1256,24 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         if (property) {
             return revertObject(entity[property])
+        } else if (link) {
+            def obj = entity['@id']
+            if (subUriTemplate) {
+                def tpltStr = subUriTemplate.template
+                // NOTE: requires variable slot to be at end of template
+                def exprIdx = tpltStr.indexOf('{_}')
+                if (exprIdx > -1) {
+                    assert tpltStr.size() == exprIdx + 3
+                    obj = URLDecoder.decode(obj.substring(exprIdx))
+                } else {
+                    exprIdx = tpltStr.indexOf('{+_}')
+                    if (exprIdx > -1) {
+                        assert tpltStr.size() == exprIdx + 4
+                        obj = obj.substring(exprIdx)
+                    }
+                }
+            }
+            return revertObject(obj)
         }
         return null
     }
