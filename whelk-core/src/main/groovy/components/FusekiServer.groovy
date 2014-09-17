@@ -12,9 +12,9 @@ import com.hp.hpl.jena.tdb.TDBFactory
 import se.kb.libris.whelks.plugin.BasicPlugin
 
 @Log
-class FusekiComponent extends BasicPlugin {
+class FusekiServer extends BasicPlugin {
 
-    FusekiComponent() {
+    FusekiServer() {
         log.info("Starting a Fuseki server.")
 
         def datasetPath = "/libris"

@@ -5,8 +5,8 @@
     "activemqbroker": {
         "_class": "se.kb.libris.whelks.component.support.ActiveMQBroker"
     },
-    "fusekinode": {
-        "_class": "se.kb.libris.whelks.component.support.FusekiComponent"
+    "fusekiserver": {
+        "_class": "se.kb.libris.whelks.component.support.FusekiServer"
     },
     "shapecomputer": {
         "_class" : "se.kb.libris.whelks.plugin.UriToElasticType",
