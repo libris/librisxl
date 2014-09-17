@@ -98,6 +98,9 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         log.debug("Will create index $currentIndex.")
         performExecute(client.admin().indices().prepareCreate(currentIndex).setSettings(es_settings))
         setTypeMapping(currentIndex, defaultType)
+        availableTypes.each {
+            setTypeMapping(currentIndex, it)
+        }
         return currentIndex
     }
 
@@ -142,6 +145,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             // Kanske en matchall-query filtrerad på _type och _id?
     }
 
+    /*
     @Override
     void index(Document doc) {
         String indexName = this.whelk.id
@@ -150,7 +154,9 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             addDocuments([doc], indexName)
         }
     }
+    */
 
+    @Override
     Document get(URI uri) {
         throw new UnsupportedOperationException("Not implemented yet.")
     }
@@ -216,6 +222,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         return results
     }
 
+    /*
     String determineDocumentType(Document doc, String indexName) {
         def idxType = doc.entry['dataset']?.toLowerCase()
         log.trace("dataset in entry is ${idxType} for ${doc.identifier}")
@@ -288,6 +295,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             }
         }
     }
+    */
 
     def Map<String, String[]> convertHighlight(Map<String, HighlightField> hfields) {
         def map = new TreeMap<String, String[]>()
@@ -343,7 +351,4 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         }
         return null
     }
-
-
-
 }

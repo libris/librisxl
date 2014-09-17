@@ -34,7 +34,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     }
 
     void onStart() {
-        log.info("[${this.id}] onStart() not overridden.")
+        log.debug("[${this.id}] onStart() not overridden.")
     }
 
 }

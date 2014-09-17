@@ -56,10 +56,8 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
                 doc = expander.expand(doc)
             }
             if (doc.isJson()) {
-                log.info("Setting converted body: ${doc.dataAsMap}")
                 message.setBody(doc.dataAsMap)
             } else {
-                log.info("Setting body as data.")
                 message.setBody(doc.data)
             }
         }
@@ -91,11 +89,6 @@ class ElasticTypeRouteProcessor implements Processor {
         String indexType = shapeComputer.calculateShape(identifier)
         String indexId = shapeComputer.translateIdentifier(new URI(identifier))
         String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
-        if (dataset && types.contains(dataset)) {
-            message.setHeader("typeQDestination", "direct:$dataset")
-        } else {
-            message.setHeader("typeQDestination", "direct:unknown")
-        }
 
         message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=INDEX&indexName=${indexName}&indexType=${indexType}")
         message.getBody(Map.class).put("elastic_id", indexId)

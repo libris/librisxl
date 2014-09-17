@@ -43,6 +43,7 @@
 
                      LinkExpander le = getLinkExpanderFor(d)
                      if (le) {
+                         log.debug("Expanding links for ${d.identifier}")
                          d = le.expand(d)
                      }
                      if (mode == DisplayMode.META) {
@@ -85,7 +86,7 @@
                  response.sendError(response.SC_INTERNAL_SERVER_ERROR, wre.message)
              }
          } else if (request.getMethod() == "PUT") {
-             log.info("PATH: $path")
+             log.debug("PATH: $path")
              try {
                  if (path == "/") {
                      throw new WhelkRuntimeException("PUT requires a proper URI.")

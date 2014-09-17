@@ -46,26 +46,18 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         from("direct:"+primaryStorageId).process(formatConverterProcessor).multicast().parallelProcessing().to("activemq:libris.index", "activemq:libris.graphstore")
 
         if (whelk.index) {
-            from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer"))).routingSlip("typeQDestination").to("activemq:libris.prawn")
-
-            for (type in elasticTypes) {
-                from("direct:$type").threads(1,parallelProcesses)
+            from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
                 //.aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
                 .routingSlip("elasticDestination")
-            }
         }
-
-        from("activemq:libris.prawn")
-            .process(prawnRunner).end()
 
         // Routes for graphstore
         if (whelk.graphStore) {
             from("activemq:libris.graphstore")
                 .filter("groovy", "['auth','bib'].contains(request.getHeader('entry:dataset'))")
                 .aggregate(header("entry:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
-                .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}?authUsername=adm&authPassword=adm")
+                .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
         }
-        from("direct:unknown").to("mock:unknown")
     }
 
     // Plugin methods
