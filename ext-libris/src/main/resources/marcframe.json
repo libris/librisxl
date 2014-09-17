@@ -3159,7 +3159,8 @@
 
     "013": {},
     "015": {
-      "inherit": "024",
+      "TODO:inherit": "024?",
+      "$a": {"property": "nationalBibliographicNumber"},
       "TODO:$z": "canceledInvalid",
       "TODO:$2": "restrictedTo: http://www.loc.gov/standards/sourcelist/national-bibliography.html"
     },
@@ -3281,8 +3282,8 @@
     "028": {
       "domainEntity": "Instance",
       "match-i1": {
-        "0": {"$a": {"property": "issueNumber"}},
-        "1": {"$a": {"property": "matrixNumber"}},
+        "0": {"$a": {"property": "audioIssueNumber"}},
+        "1": {"$a": {"property": "audioMatrixNumber"}},
         "2": {"$a": {"property": "musicPlate"}},
         "3": {"$a": {"property": "musicPublisher"}},
         "4": {"$a": {"property": "videorecordingNumber"}},
@@ -3296,7 +3297,7 @@
       "_specName": "use indicator as property switch",
       "_specSource": {"028": {"ind1": "0", "subfields": [{"a": "1"}]}},
       "_specResult": {"about": {
-        "issueNumber": "1"
+        "audioIssueNumber": "1"
       }}
     },
 
