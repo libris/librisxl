@@ -108,6 +108,8 @@ class MarcConversion {
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
     Map marcTypeMap = [:]
+    Map reverseMarcTypeMap = [:]
+    Map reverseCoreTypeMap = [:]
     def marcHandlers = [:]
     Map tokenMaps
     Set primaryTags = new HashSet()
@@ -121,19 +123,32 @@ class MarcConversion {
         ['bib', 'auth', 'hold'].each {
             buildHandlers(config, it)
         }
+        marcTypeMap.each { k, v -> reverseMarcTypeMap[v] = k }
+        tokenMaps['typeOfRecord'].each { k, v -> reverseCoreTypeMap[v] = k }
     }
 
-    String getMarcCategory(leader) {
+    String getMarcCategory(String leader) {
         def typeOfRecord = getTypeOfRecord(leader)
         return marcTypeMap[typeOfRecord] ?: marcTypeMap['*']
     }
 
-    String getTypeOfRecord(leader) {
+    String getTypeOfRecord(String leader) {
         return leader.substring(6, 7)
     }
 
-    String getBibLevel(leader) {
+    String getBibLevel(String leader) {
         return leader.substring(7, 8)
+    }
+
+    String revertMarcCategory(Map data) {
+        def types = data.about['@type']
+        if (types instanceof String) { types = [types] }
+        def key = null
+        for (type in types) {
+            key = reverseCoreTypeMap[type]
+            if (key) break
+        }
+        return marcTypeMap[key] ?: marcTypeMap['*']
     }
 
     void buildHandlers(config, marcCategory) {
@@ -283,8 +298,8 @@ class MarcConversion {
         def marc = [:]
         def fields = []
         marc['fields'] = fields
-        def recType = "bib" // TODO: compute from about-type
-        def fieldHandlers = marcHandlers[recType]
+        def marcCat = revertMarcCategory(data)
+        def fieldHandlers = marcHandlers[marcCat]
         fieldHandlers.each { tag, handler ->
             def value = handler.revert(data)
             if (tag == "000") {
@@ -1295,6 +1310,7 @@ class MarcSubFieldHandler extends ConversionPart {
             if (subUriTemplate) {
                 def tpltStr = subUriTemplate.template
                 // NOTE: requires variable slot to be at end of template
+                // TODO: unify with extractToken
                 def exprIdx = tpltStr.indexOf('{_}')
                 if (exprIdx > -1) {
                     assert tpltStr.size() == exprIdx + 3
