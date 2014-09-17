@@ -4314,6 +4314,12 @@
   "auth": {
     "000": {
       "inherit": "bib",
+      "[17:18]": {
+        "domainEntity": "Record",
+        "link": "encLevel",
+        "uriTemplate": "{_}",
+        "tokenMap": {"n": "/def/enum/record/FullLevel", "o": "/def/enum/record/PartialPreliminaryLevel"}
+      },
       "_specOriginalLeader": "01341cz  a2200397n  4500",
       "_specSource": {
         "leader": "     cz  a       n  4500",
@@ -4324,6 +4330,7 @@
         "@id": "/auth/140482",
         "controlNumber": "140482",
         "entryMap": "4500",
+        "encLevel": {"@id": "/def/enum/record/FullLevel"},
         "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
         "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
         "about": {
