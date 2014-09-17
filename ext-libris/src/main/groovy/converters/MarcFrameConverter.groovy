@@ -108,8 +108,7 @@ class MarcConversion {
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
     Map marcTypeMap = [:]
-    Map reverseMarcTypeMap = [:]
-    Map reverseCoreTypeMap = [:]
+    Map coreTypeMarcCategoryMap = [Authority: 'auth']
     def marcHandlers = [:]
     Map tokenMaps
     Set primaryTags = new HashSet()
@@ -123,8 +122,6 @@ class MarcConversion {
         ['bib', 'auth', 'hold'].each {
             buildHandlers(config, it)
         }
-        marcTypeMap.each { k, v -> reverseMarcTypeMap[v] = k }
-        tokenMaps['typeOfRecord'].each { k, v -> reverseCoreTypeMap[v] = k }
     }
 
     String getMarcCategory(String leader) {
@@ -143,12 +140,12 @@ class MarcConversion {
     String revertMarcCategory(Map data) {
         def types = data.about['@type']
         if (types instanceof String) { types = [types] }
-        def key = null
+        def marcCat = null
         for (type in types) {
-            key = reverseCoreTypeMap[type]
-            if (key) break
+            marcCat = coreTypeMarcCategoryMap[type]
+            if (marcCat) break
         }
-        return marcTypeMap[key] ?: marcTypeMap['*']
+        return marcCat ?: 'bib'
     }
 
     void buildHandlers(config, marcCategory) {
@@ -182,6 +179,9 @@ class MarcConversion {
                 assert handler.property || handler.uriTemplate, "Incomplete: $tag: $fieldDfn"
             }
             fieldHandlers[tag] = handler
+            if (fieldDfn.definesDomainEntity) {
+                coreTypeMarcCategoryMap[fieldDfn.definesDomainEntity] = marcCategory
+            }
         }
     }
 
@@ -1043,6 +1043,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     def revert(Map data) {
         def entity = getEntity(data)
+
+        def types = data.about['@type']
+        if (types instanceof String) { types = [types] }
+        if (definesDomainEntityType && !(types.contains(definesDomainEntityType)))
+            return null
+
         def entities = [entity]
 
         if (link) {
