@@ -1075,7 +1075,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 if (!(linked instanceof List)) {
                     linked = [linked]
                 }
-                resultItems += linked.collect { revertOne(data, it, rule.codes) }
+                linked.each {
+                    def item = revertOne(data, it, rule.codes)
+                    if (item)
+                        resultItems << item
+                }
             }
             if (resultItems.size() /*&& !repeatLink*/) {
                 def merged = resultItems[0]
@@ -1140,6 +1144,7 @@ class MarcSubFieldHandler extends ConversionPart {
     List<String> splitValueProperties
     String rejoin
     Map defaults
+    String marcDefault
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
         this.fieldHandler = fieldHandler
@@ -1172,6 +1177,7 @@ class MarcSubFieldHandler extends ConversionPart {
             rejoin = subDfn.rejoin
         }
         defaults = subDfn.defaults
+        marcDefault = subDfn.marcDefault
     }
 
     boolean convertSubValue(subVal, ent, uriTemplateParams, localEntites) {
@@ -1303,7 +1309,7 @@ class MarcSubFieldHandler extends ConversionPart {
             }
             return revertObject(obj)
         }
-        return null
+        return marcDefault
     }
 
 }
