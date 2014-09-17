@@ -16,7 +16,8 @@
     "_plugins": {
         "_support": [
             "elasticnode",
-            "activemqbroker"
+            "activemqbroker",
+            "fusekinode"
             ],
         "_camel": [
             "routebuilder"

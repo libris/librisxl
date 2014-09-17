@@ -1,4 +1,4 @@
-package se.kb.libris.whelks.component
+package se.kb.libris.whelks.component.support
 import groovy.util.logging.Slf4j as Log
 
 import se.kb.libris.whelks.plugin.*

@@ -1,9 +1,12 @@
 {
     "elasticnode": {
-        "_class": "se.kb.libris.whelks.component.ElasticSearchNode"
+        "_class": "se.kb.libris.whelks.component.support.ElasticSearchNode"
     },
     "activemqbroker": {
-        "_class": "se.kb.libris.whelks.component.ActiveMQBroker"
+        "_class": "se.kb.libris.whelks.component.support.ActiveMQBroker"
+    },
+    "fusekinode": {
+        "_class": "se.kb.libris.whelks.component.support.FusekiComponent"
     },
     "shapecomputer": {
         "_class" : "se.kb.libris.whelks.plugin.UriToElasticType",
@@ -206,9 +209,9 @@
     "documentapi" : {
         "_class" : "se.kb.libris.whelks.api.DocumentAPI",
         "_plugins" : [
+            "linkexpander",
             "marcconverter",
-            "marcxml2jsonldconverter",
-            "linkexpander"
+            "marcxml2jsonldconverter"
             ],
         "_params": {
             "contextHeaders": {
