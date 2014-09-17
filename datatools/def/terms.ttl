@@ -656,6 +656,16 @@ marcenum:bibLevel a skos:Collection;
     owl:equivalentClass dbpo:Device .
 
 ##
+# Specific properties
+
+:audioIssueNumber a owl:DatatypeProperty;
+    owl:equivalentProperty bf:issueNumber;
+    rdfs:subPropertyOf sdo:issueNumber .
+
+:audioMatrixNumber a owl:DatatypeProperty;
+    owl:equivalentProperty bf:matrixNumber .
+
+##
 # Agents
 
 :name a owl:ObjectProperty;
