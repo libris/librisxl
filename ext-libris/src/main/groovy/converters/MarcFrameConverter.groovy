@@ -1029,10 +1029,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     def revert(Map data) {
         def entity = getEntity(data)
         def entities = [entity]
+
         if (link) {
             entities = entity[link]
             if (!(entities instanceof List)) // should be if repeat == true
-                entities = [entities]
+                entities = entities? [entities] : []
             if (rangeEntityName) {
                 entities = entities.findAll {
                     if (!it) return false
@@ -1043,7 +1044,27 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         }
-        def results = entities.collect { revertOne(data, it) }.findAll()
+
+        def aboutMap = [:]
+        if (pendingResources) {
+            pendingResources.each { key, pending ->
+                def link = pending.link ?: pending.addLink
+                def rangeEntity = pending.rangeEntity
+                entities.each {
+                    def about = it[link]
+                    // TODO: if multiple, spread according to repeated subfield groups(?)...
+                    if (about instanceof List) {
+                        about = about[0]
+                    }
+                    if (about && (!rangeEntity || about['@type'] == rangeEntity)) {
+                        aboutMap[key] = about
+                    }
+                }
+            }
+        }
+
+        def results = entities.collect { revertOne(data, it, null, aboutMap) }.findAll()
+
         if (splitLinkRules) {
             // TODO: refine, e.g. handle spliceEntityName..
             def resultItems = []
@@ -1071,16 +1092,22 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return results
     }
 
-    def revertOne(Map data, Map currentEntity, Set onlyCodes=null) {
+    def revertOne(Map data, Map currentEntity, Set onlyCodes=null, Map aboutMap=null) {
+        // TODO: revert match rules ...
+
         def i1 = ind1? ind1.revert(data, currentEntity) : ' '
         def i2 = ind2? ind2.revert(data, currentEntity) : ' '
+
         def subs = []
         subfields.collect { code, subhandler ->
             if (!subhandler)
                 return
             if (onlyCodes && !onlyCodes.contains(code))
                 return
-            def value = subhandler.revert(data, currentEntity)
+            def selectedEntity = subhandler.about? aboutMap[subhandler.about] : currentEntity
+            if (!selectedEntity)
+                return
+            def value = subhandler.revert(data, selectedEntity)
             if (value instanceof List) {
                 value.each {
                     subs << [(code): it]
@@ -1089,6 +1116,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 subs << [(code): value]
             }
         }
+
         return i1 != null && i2 != null && subs.length?
             [ind1: i1, ind2: i2, subfields: subs] :
             null
