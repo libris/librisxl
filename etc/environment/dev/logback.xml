@@ -67,7 +67,7 @@
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
 <logger name="se.kb.libris.whelks.Document">
       <level value="info"/>
@@ -97,7 +97,7 @@
     <level value="info"/>
 </logger>
 <logger name="se.kb.libris.whelks.plugin.JsonLDLinkExpander">
-  <level value="debug"/>
+  <level value="info"/>
 </logger>
 <logger name="se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter">
   <level value="info"/>

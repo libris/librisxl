@@ -162,7 +162,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             }
         }
         exchange.setIn(message)
-        log.info("Sending message to camel regaring ${document.identifier}")
+        log.debug("Sending message to camel regaring ${document.identifier}")
         producerTemplate.asyncSend("direct:${this.id}", exchange)
     }
 

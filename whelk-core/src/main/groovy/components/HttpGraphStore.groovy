@@ -202,4 +202,21 @@ class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
         }
     }
 
+    public void remove(URI identifier) {
+        def uri = new URIBuilder(updateURI).build()
+        def post = new HttpPost(uri)
+        def body = "CLEAR GRAPH <"+identifier.toString()+"> ;"
+        def params = new BasicNameValuePair("update", body)
+        def entity = new UrlEncodedFormEntity([params])
+        post.setEntity(entity)
+        log.debug("Posting: $body")
+        def response = client.execute(post, HttpClientContext.create())
+        if (response.statusLine.statusCode >= 100 && response.statusLine.statusCode < 300) {
+            EntityUtils.consumeQuietly(response.getEntity())
+        } else if (response.statusLine.statusCode == 400) {
+            log.warn("Error reponse 400: ${response.statusLine.reasonPhrase}")
+        } else {
+            throw new WhelkAddException("Batch update failed: ${EntityUtils.toString(response.getEntity(), "utf-8")}", [])
+        }
+    }
 }

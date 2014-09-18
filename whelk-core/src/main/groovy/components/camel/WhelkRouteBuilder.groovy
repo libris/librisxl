@@ -47,7 +47,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         if (whelk.index) {
             from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
-                //.aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(elasticBatchTimeout) // WAIT FOR NEXT RELEASE
+                .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip("elasticDestination")
         }
 
@@ -142,7 +142,7 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
 @Log
 class ArrayListAggregationStrategy implements AggregationStrategy {
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-        log.info("Called aggregator for message in dataset: ${newExchange.in.getHeader("entry:dataset")}")
+        log.debug("Called aggregator for message in dataset: ${newExchange.in.getHeader("entry:dataset")}")
         Object newBody = newExchange.getIn().getBody()
         ArrayList<Object> list = null
         if (oldExchange == null) {
