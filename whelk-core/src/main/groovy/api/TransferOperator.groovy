@@ -53,7 +53,7 @@ class TransferOperator extends AbstractOperator implements Plugin {
 
         for (doc in sourceStorage.getAll(dataset)) {
             log.trace("Storing doc ${doc.identifier} with type ${doc.contentType}")
-            if (!doc.entry.deleted) {
+            if (doc && !doc.entry.deleted) {
                 if (fc) {
                     if (filter) {
                         docs << filter.filter(fc.convert(doc))
