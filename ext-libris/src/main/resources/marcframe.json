@@ -3595,8 +3595,8 @@
     "243": {},
 
     "245": {
-      "i1": {},
-      "i2": {},
+      "i1": {"property": "searchElement", "tokenMap": {"0": false}, "marcDefault": "1"},
+      "i2": {"marcDefault": "0"},
       "domainEntity": "Instance",
       "link": "instanceTitle",
       "rangeEntity": "Title",
@@ -3614,8 +3614,10 @@
       ]}},
       "_specResult": {"about": {
         "instanceTitle": {"@type": "Title",
-          "titleValue":  "Anteckningar från en ö"},
-          "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
+          "titleValue":  "Anteckningar från en ö",
+          "searchElement": false
+        },
+        "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
       }}
     },
     "246": {
@@ -4312,6 +4314,12 @@
   "auth": {
     "000": {
       "inherit": "bib",
+      "[17:18]": {
+        "domainEntity": "Record",
+        "link": "encLevel",
+        "uriTemplate": "{_}",
+        "tokenMap": {"n": "/def/enum/record/FullLevel", "o": "/def/enum/record/PartialPreliminaryLevel"}
+      },
       "_specOriginalLeader": "01341cz  a2200397n  4500",
       "_specSource": {
         "leader": "     cz  a       n  4500",
@@ -4322,6 +4330,7 @@
         "@id": "/auth/140482",
         "controlNumber": "140482",
         "entryMap": "4500",
+        "encLevel": {"@id": "/def/enum/record/FullLevel"},
         "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
         "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
         "about": {

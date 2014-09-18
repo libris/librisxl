@@ -108,6 +108,7 @@ class MarcConversion {
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
     Map marcTypeMap = [:]
+    Map coreTypeMarcCategoryMap = [Authority: 'auth']
     def marcHandlers = [:]
     Map tokenMaps
     Set primaryTags = new HashSet()
@@ -123,17 +124,28 @@ class MarcConversion {
         }
     }
 
-    String getMarcCategory(leader) {
+    String getMarcCategory(String leader) {
         def typeOfRecord = getTypeOfRecord(leader)
         return marcTypeMap[typeOfRecord] ?: marcTypeMap['*']
     }
 
-    String getTypeOfRecord(leader) {
+    String getTypeOfRecord(String leader) {
         return leader.substring(6, 7)
     }
 
-    String getBibLevel(leader) {
+    String getBibLevel(String leader) {
         return leader.substring(7, 8)
+    }
+
+    String revertMarcCategory(Map data) {
+        def types = data.about['@type']
+        if (types instanceof String) { types = [types] }
+        def marcCat = null
+        for (type in types) {
+            marcCat = coreTypeMarcCategoryMap[type]
+            if (marcCat) break
+        }
+        return marcCat ?: 'bib'
     }
 
     void buildHandlers(config, marcCategory) {
@@ -167,6 +179,9 @@ class MarcConversion {
                 assert handler.property || handler.uriTemplate, "Incomplete: $tag: $fieldDfn"
             }
             fieldHandlers[tag] = handler
+            if (fieldDfn.definesDomainEntity) {
+                coreTypeMarcCategoryMap[fieldDfn.definesDomainEntity] = marcCategory
+            }
         }
     }
 
@@ -283,8 +298,8 @@ class MarcConversion {
         def marc = [:]
         def fields = []
         marc['fields'] = fields
-        def recType = "bib" // TODO: compute from about-type
-        def fieldHandlers = marcHandlers[recType]
+        def marcCat = revertMarcCategory(data)
+        def fieldHandlers = marcHandlers[marcCat]
         fieldHandlers.each { tag, handler ->
             def value = handler.revert(data)
             if (tag == "000") {
@@ -1028,6 +1043,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     def revert(Map data) {
         def entity = getEntity(data)
+
+        def types = data.about['@type']
+        if (types instanceof String) { types = [types] }
+        if (definesDomainEntityType && !(types.contains(definesDomainEntityType)))
+            return null
+
         def entities = [entity]
 
         if (link) {
@@ -1075,7 +1096,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 if (!(linked instanceof List)) {
                     linked = [linked]
                 }
-                resultItems += linked.collect { revertOne(data, it, rule.codes) }
+                linked.each {
+                    def item = revertOne(data, it, rule.codes)
+                    if (item)
+                        resultItems << item
+                }
             }
             if (resultItems.size() /*&& !repeatLink*/) {
                 def merged = resultItems[0]
@@ -1140,6 +1165,7 @@ class MarcSubFieldHandler extends ConversionPart {
     List<String> splitValueProperties
     String rejoin
     Map defaults
+    String marcDefault
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
         this.fieldHandler = fieldHandler
@@ -1172,6 +1198,7 @@ class MarcSubFieldHandler extends ConversionPart {
             rejoin = subDfn.rejoin
         }
         defaults = subDfn.defaults
+        marcDefault = subDfn.marcDefault
     }
 
     boolean convertSubValue(subVal, ent, uriTemplateParams, localEntites) {
@@ -1289,6 +1316,7 @@ class MarcSubFieldHandler extends ConversionPart {
             if (subUriTemplate) {
                 def tpltStr = subUriTemplate.template
                 // NOTE: requires variable slot to be at end of template
+                // TODO: unify with extractToken
                 def exprIdx = tpltStr.indexOf('{_}')
                 if (exprIdx > -1) {
                     assert tpltStr.size() == exprIdx + 3
@@ -1303,7 +1331,7 @@ class MarcSubFieldHandler extends ConversionPart {
             }
             return revertObject(obj)
         }
-        return null
+        return marcDefault
     }
 
 }
