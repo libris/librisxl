@@ -97,8 +97,8 @@ class TransferOperator extends AbstractOperator implements Plugin {
         def map = super.getStatus()
         if (hasRun) {
             if (fromStorage) {
-                map.get("lastrun").put("fromStorage", fromStorage)
-                map.get("lastrun").put("toStorage", toStorage)
+                map.get("lastrun", [:]).put("fromStorage", fromStorage)
+                map.get("lastrun", [:]).put("toStorage", toStorage)
             }
         } else {
             if (fromStorage) {
