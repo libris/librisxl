@@ -4000,13 +4000,16 @@
       "TODO:i1": {},
       "TODO:i2": {},
       "match-code": {
-        "2 TODO:needs multiple match-code support": {
+        "2": {
           "TODO:implies": {"i2": "7"},
+          "i2": {"marcDefault": "7"},
           "$2": {
             "link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"
           },
+          "addLink": null,
+          "link": "focus",
           "splitLink": [
-            {"codes": ["2"], "addLink": "focus", "spliceEntity": "Concept"}
+            {"codes": ["2"], "addLink": "subject", "spliceEntity": "Concept"}
           ]
         },
         "x": {
@@ -4015,7 +4018,28 @@
       },
       "addLink": "subject",
       "rangeEntity": "Organization",
-      "$x": {"property": "name"}
+      "$x": {"property": "name"},
+      "_specName": "multiple match-code",
+      "_specSource": {
+        "610": {
+          "ind1": "2",
+          "ind2": "7",
+          "subfields": [{"a": "Kungl. biblioteket"}, {"x": "samlingar"}, {"2": "sao"}]
+        }
+      },
+      "_specResult": {"about": {
+        "subject": [
+          {
+            "@type": "Concept",
+            "focus": {
+              "@type": "Organization",
+              "isPartOf": {"@type": "Organization", "name": "Kungl. biblioteket"},
+              "name": "samlingar"
+            },
+            "inScheme": {"@type": "ConceptScheme", "notation": "sao"}
+          }
+        ]
+      }}
     },
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
     "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "Work"},
