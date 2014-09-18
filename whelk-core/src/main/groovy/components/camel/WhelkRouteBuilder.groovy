@@ -43,7 +43,15 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         String primaryStorageId = whelk.storage.id
         assert formatConverterProcessor
 
-        from("direct:"+primaryStorageId).process(formatConverterProcessor).multicast().parallelProcessing().to("activemq:libris.index", "activemq:libris.graphstore")
+        def eligableMQs = []
+        if (whelk.index) {
+            eligableMQs.add("activemq:libris.index")
+        }
+        if (whelk.graphStore) {
+            eligableMQs.add("activemq:libris.graphstore")
+        }
+
+        from("direct:"+primaryStorageId).process(formatConverterProcessor).multicast().parallelProcessing().to(eligableMQs as String[])
 
         if (whelk.index) {
             from("activemq:libris.index")

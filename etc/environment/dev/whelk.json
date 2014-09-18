@@ -16,8 +16,7 @@
     "_plugins": {
         "_support": [
             "elasticnode",
-            "fusekiserver",
-            "activemqbroker"
+            "fusekiserver"
             ],
         "_camel": [
             "routebuilder"
