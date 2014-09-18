@@ -76,7 +76,7 @@ class TransferOperator extends AbstractOperator implements Plugin {
                 log.warn("Document ${doc?.identifier} is deleted. Don't try to add it.")
             }
             runningTime = System.currentTimeMillis() - startTime
-            if (count++ % 10000 == 0) {
+            if (count++ % 5000 == 0) {
                 targetStorage.bulkStore(docs)
                 docs = []
             }
