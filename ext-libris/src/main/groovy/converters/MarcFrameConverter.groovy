@@ -1223,7 +1223,12 @@ class MarcSubFieldHandler extends ConversionPart {
         if (link) {
             def entId = null
             if (subUriTemplate) {
-                entId = subUriTemplate.expand(["_": subVal])
+                try {
+                    entId = subUriTemplate.expand(["_": subVal])
+                } catch (IllegalArgumentException e) {
+                    // TODO: improve?
+                    // bad characters in what should have been a proper URI path ({+_} expansion)
+                }
             }
             def newEnt = fieldHandler.newEntity(rangeEntityName, entId)
             fieldHandler.addValue(ent, link, newEnt, repeatLink)
