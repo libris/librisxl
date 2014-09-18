@@ -54,18 +54,23 @@ class TransferOperator extends AbstractOperator implements Plugin {
         for (doc in sourceStorage.getAll(dataset)) {
             log.trace("Storing doc ${doc.identifier} with type ${doc.contentType}")
             if (doc && !doc.entry.deleted) {
-                if (fc) {
-                    if (filter) {
-                        docs << filter.filter(fc.convert(doc))
+                try {
+                    if (fc) {
+                        if (filter) {
+                            docs << filter.filter(fc.convert(doc))
+                        } else {
+                            docs << fc.convert(doc)
+                        }
                     } else {
-                        docs << fc.convert(doc)
+                        if (filter) {
+                            docs << filter.filter(doc)
+                        } else {
+                            docs << doc
+                        }
                     }
-                } else {
-                    if (filter) {
-                        docs << filter.filter(doc)
-                    } else {
-                        docs << doc
-                    }
+                } catch (Exception e) {
+                    log.error("Failed to transmogrify document ${doc?.identifier}")
+                    throw e
                 }
             } else {
                 log.warn("Document ${doc?.identifier} is deleted. Don't try to add it.")

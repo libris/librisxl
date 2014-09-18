@@ -46,7 +46,9 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         from("direct:"+primaryStorageId).process(formatConverterProcessor).multicast().parallelProcessing().to("activemq:libris.index", "activemq:libris.graphstore")
 
         if (whelk.index) {
-            from("activemq:libris.index").process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
+            from("activemq:libris.index")
+                .threads(1,parallelProcesses)
+                .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
                 .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip("elasticDestination")
         }
@@ -56,6 +58,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             from("activemq:libris.graphstore")
                 .filter("groovy", "['auth','bib'].contains(request.getHeader('entry:dataset'))")
                 .aggregate(header("entry:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
+                .threads(1,parallelProcesses)
                 .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
         }
     }
@@ -78,6 +81,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements AggregationStrategy {
 
     JsonLdToTurtle serializer
+    File debugOutputFile = null
 
     GraphstoreBatchUpdateAggregationStrategy(String contextPath, String base=null) {
         def loader = getClass().classLoader
@@ -86,6 +90,9 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
         }
         def context = JsonLdToTurtle.parseContext(contextSrc)
         serializer = new JsonLdToTurtle(context, new ByteArrayOutputStream(), base)
+        if (log.isDebugEnabled()) {
+            debugOutputFile = new File("aggregator_data_tap.ttl")
+        }
     }
 
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
@@ -111,6 +118,10 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
 
             newExchange.getIn().setBody(bos.toByteArray())
 
+            if (debugOutputFile) {
+                debugOutputFile << newExchange.getIn().getBody()
+            }
+
             return newExchange
         } else {
             // Append to existing message
@@ -128,6 +139,10 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
             update.append(bos.toString("UTF-8"))
 
             oldExchange.getIn().setBody(update.toString().getBytes("UTF-8"))
+
+            if (debugOutputFile) {
+                debugOutputFile << oldExchange.getIn().getBody()
+            }
 
             return oldExchange
         }
