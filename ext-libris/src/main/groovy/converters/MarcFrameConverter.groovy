@@ -805,24 +805,26 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def matchDomain = fieldDfn['match-domain']
         if (matchDomain) {
-            matchRules << new DomainMatchRule(this, fieldDfn, matchDomain)
+            matchRules << new DomainMatchRule(this, fieldDfn, 'match-domain', matchDomain)
         }
         def matchI1 = fieldDfn['match-i1']
         if (matchI1) {
-            matchRules << new IndMatchRule(this, fieldDfn, matchI1, 'ind1')
+            matchRules << new IndMatchRule(this, fieldDfn, 'match-i1', matchI1, 'ind1')
         }
         def matchI2 = fieldDfn['match-i2']
         if (matchI2) {
-            matchRules << new IndMatchRule(this, fieldDfn, matchI2, 'ind2')
+            matchRules << new IndMatchRule(this, fieldDfn, 'match-i2', matchI2, 'ind2')
         }
         def matchCode = fieldDfn['match-code']
         if (matchCode) {
-            matchRules << new CodeMatchRule(this, fieldDfn, matchCode)
+            matchRules << new CodeMatchRule(this, fieldDfn, 'match-code', matchCode)
         }
         def matchPattern = fieldDfn['match-pattern']
         if (matchPattern) {
-            matchRules << new CodePatternMatchRule(this, fieldDfn, matchPattern)
+            matchRules << new CodePatternMatchRule(
+            this, fieldDfn, 'match-pattern', matchPattern)
         }
+
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
             if (m) {
@@ -1337,13 +1339,25 @@ class MarcSubFieldHandler extends ConversionPart {
 }
 
 abstract class MatchRule {
+    static matchRuleKeys = [
+        'match-domain', 'match-i1', 'match-i2', 'match-code', 'match-pattern'
+    ]
     Map ruleMap = [:]
-    MatchRule(handler, fieldDfn, rules) {
+    MatchRule(handler, fieldDfn, ruleKey, rules) {
         rules.each { key, matchDfn ->
-            def comboDfn = fieldDfn + matchDfn
-            ['match-domain', 'match-i1', 'match-i2', 'match-code', 'match-pattern'].each {
-                comboDfn.remove(it)
+            def comboDfn = fieldDfn.clone()
+            // create nested combinations, but prevent recursive nesting
+            if (comboDfn.nestedMatch) {
+                matchRuleKeys.each {
+                    comboDfn.remove(it)
+                }
+            } else {
+                def newRule = comboDfn[ruleKey].clone()
+                newRule.remove(key)
+                comboDfn[ruleKey] = newRule
+                comboDfn.nestedMatch = true
             }
+            comboDfn += matchDfn
             def tag = null
             ruleMap[key] = new MarcFieldHandler(handler.conversion, tag, comboDfn)
         }
@@ -1355,8 +1369,8 @@ abstract class MatchRule {
 }
 
 class DomainMatchRule extends MatchRule {
-    DomainMatchRule(handler, fieldDfn, rules) {
-        super(handler, fieldDfn, rules)
+    DomainMatchRule(handler, fieldDfn, ruleKey, rules) {
+        super(handler, fieldDfn, ruleKey, rules)
     }
     String getKey(entity, value) {
         def type = entity['@type']
@@ -1368,8 +1382,8 @@ class DomainMatchRule extends MatchRule {
 
 class IndMatchRule extends MatchRule {
     String indKey
-    IndMatchRule(handler, fieldDfn, rules, indKey) {
-        super(handler, fieldDfn, rules)
+    IndMatchRule(handler, fieldDfn, ruleKey, rules, indKey) {
+        super(handler, fieldDfn, ruleKey, rules)
         this.indKey = indKey
     }
     String getKey(entity, value) {
@@ -1378,8 +1392,8 @@ class IndMatchRule extends MatchRule {
 }
 
 class CodeMatchRule extends MatchRule {
-    CodeMatchRule(handler, fieldDfn, rules) {
-        super(handler, fieldDfn, parseRules(rules))
+    CodeMatchRule(handler, fieldDfn, ruleKey, rules) {
+        super(handler, fieldDfn, ruleKey, parseRules(rules))
     }
     static Map parseRules(Map rules) {
         def parsed = [:]
@@ -1400,8 +1414,8 @@ class CodeMatchRule extends MatchRule {
 
 class CodePatternMatchRule extends MatchRule {
     Map<String, Map> patterns = [:]
-    CodePatternMatchRule(handler, fieldDfn, rules) {
-        super(handler, fieldDfn, parseRules(rules))
+    CodePatternMatchRule(handler, fieldDfn, ruleKey, rules) {
+        super(handler, fieldDfn, ruleKey, parseRules(rules))
         fillPatternCombos(rules)
     }
     static Map parseRules(Map rules) {
