@@ -68,7 +68,7 @@ class TransferOperator extends AbstractOperator implements Plugin {
                     }
                 }
             } else {
-                log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
+                log.warn("Document ${doc?.identifier} is deleted. Don't try to add it.")
             }
             runningTime = System.currentTimeMillis() - startTime
             if (count++ % 10000 == 0) {
