@@ -92,7 +92,6 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
         String identifier = newExchange.getIn().getHeader("entry:identifier")
         def bos = new ByteArrayOutputStream()
         serializer.writer = new OutputStreamWriter(bos, "UTF-8")
-        File f = new File("out_turtle.ttl")
         if (oldExchange == null) {
             // First message in aggregate
             serializer.prelude() // prefixes and base
@@ -112,8 +111,6 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
 
             newExchange.getIn().setBody(bos.toByteArray())
 
-            f << newExchange.getIn().getBody()
-
             return newExchange
         } else {
             // Append to existing message
@@ -131,8 +128,6 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
             update.append(bos.toString("UTF-8"))
 
             oldExchange.getIn().setBody(update.toString().getBytes("UTF-8"))
-
-            f << oldExchange.getIn().getBody()
 
             return oldExchange
         }
