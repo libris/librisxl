@@ -25,6 +25,7 @@ class TransferOperator extends AbstractOperator implements Plugin {
     String toStorage = null
 
     boolean showSpinner = false
+    ExecutorService queue
 
     @Override
     void setParameters(Map parameters) {
@@ -40,15 +41,26 @@ class TransferOperator extends AbstractOperator implements Plugin {
         Storage targetStorage = whelk.getStorages().find { it.id == toStorage }
         Storage sourceStorage = whelk.getStorages().find { it.id == fromStorage }
         assert targetStorage, sourceStorage
+        queue = Executors.newSingleThreadExecutor()
         List docs = []
         log.info("Transferring data from $fromStorage to $toStorage")
         boolean versioningOriginalSetting = targetStorage.versioning
         targetStorage.versioning = false
 
-        FormatConverter fc = plugins.find { it instanceof FormatConverter && it.requiredContentType == sourceStorage.contentTypes.first() }
-        Filter filter = plugins.find { it instanceof Filter && (!fc || fc.resultContentType == it.requiredContentType) }
+        FormatConverter fc = plugins.find {
+            it instanceof FormatConverter &&
+            it.requiredContentType == sourceStorage.contentTypes.first() &&
+            it.resultContentType == targetStorage.contentTypes.first()
+        }
+        Filter filter = plugins.find {
+            it instanceof Filter && ((!fc && it.requiredContentType == sourceStorage.contentTypes.first()) ||
+            (!fc || fc.resultContentType == it.requiredContentType))
+        }
         if (fc) {
             log.info("Using formatconverter ${fc.id}")
+        }
+        if (filter) {
+            log.info("Using filter ${filter.id}")
         }
 
         for (doc in sourceStorage.getAll(dataset)) {
@@ -76,8 +88,8 @@ class TransferOperator extends AbstractOperator implements Plugin {
                 log.warn("Document ${doc?.identifier} is deleted. Don't try to add it.")
             }
             runningTime = System.currentTimeMillis() - startTime
-            if (count++ % 5000 == 0) {
-                targetStorage.bulkStore(docs)
+            if (count++ % 20000 == 0) {
+                addDocs(docs, targetStorage)
                 docs = []
             }
             if (showSpinner) {
@@ -90,11 +102,22 @@ class TransferOperator extends AbstractOperator implements Plugin {
         }
 
         if (docs.size() > 0) {
-            targetStorage.bulkStore(docs)
+            queue.execute({
+                addDocs(docs, targetStorage)
+            } as Runnable)
         }
         log.info("Transferred $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds." as String)
         targetStorage.versioning = versioningOriginalSetting
         operatorState=OperatorState.FINISHING
+        log.debug("Shutting down queue")
+        queue.shutdown()
+    }
+
+    private addDocs(final List<Document> docs, Storage targetStorage) {
+        log.info("Saving batch")
+        queue.execute({
+            targetStorage.bulkStore(docs)
+        } as Runnable)
     }
 
     @Override

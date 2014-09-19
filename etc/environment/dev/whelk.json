@@ -15,8 +15,7 @@
     "_docBaseUri" : "http://libris.kb.se/",
     "_plugins": {
         "_support": [
-            "elasticnode",
-            "fusekiserver"
+            "elasticnode"
             ],
         "_camel": [
             "routebuilder"
@@ -24,8 +23,8 @@
         "_components": [
             "jsonldstorage",
             "marcxmlstorage",
-            "index",
-            "graphstore"
+            "marcxmlstorage2",
+            "index"
         ]
     },
     "_masterComponent": "pairtreehybridstorage",

@@ -288,8 +288,7 @@
         "_class" : "se.kb.libris.whelks.api.TransferOperator",
         "_plugins" : [
             "marcconverter",
-            "marcxml2jsonldconverter",
-            "linkcompleter"
+            "marcxml2jsonldconverter"
             ]
     },
     "rebuildoperator": {
@@ -564,6 +563,19 @@
             "elasticHost": "_property:ELASTIC_HOST",
             "contentTypes" : [ "application/marcxml+xml" ],
             "baseStorageSuffix": "marcxml",
+            "versioning" : false
+        }
+    },
+    "marcxmlstorage2": {
+        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+        "_plugins" : [
+            "shapecomputer"
+            ],
+        "_params" : {
+            "storageDir": "_property:STORAGE_PATH",
+            "elasticHost": "_property:ELASTIC_HOST",
+            "contentTypes" : [ "application/marcxml+xml" ],
+            "baseStorageSuffix": "marcxml2",
             "versioning" : false
         }
     },
