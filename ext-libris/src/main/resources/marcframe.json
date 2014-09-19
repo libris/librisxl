@@ -3990,7 +3990,7 @@
           "splitLink": [
             {"codes": ["t"], "addLink": "subject", "spliceEntity": "Work"}
           ],
-          "addLink": "attributedTo"
+          "link": "attributedTo"
         }
       },
       "addLink": "subject", "rangeEntity": "Person"
@@ -4126,7 +4126,7 @@
           "splitLink": [
             {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "Work"}
           ],
-          "addLink": "attributedTo"
+          "link": "attributedTo"
         }
       },
       "addLink": "influencedBy", "rangeEntity": "Person",
@@ -4508,7 +4508,7 @@
           "splitLink": [
             {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "Work"}
           ],
-          "addLink": "attributedTo"
+          "link": "attributedTo"
         }
       },
       "match-domain": {
