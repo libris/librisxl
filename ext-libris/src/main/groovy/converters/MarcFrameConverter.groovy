@@ -224,7 +224,7 @@ class MarcConversion {
         def preprocFields = []
         def primaryFields = []
         def otherFields = []
-        def sourceMap = [leader: leader]
+        def sourceMap = [leader: leader, _bnodeCounter: 0]
 
         marcSource.fields.each { field ->
             field.each { tag, value ->
@@ -865,7 +865,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def handled = new HashSet()
 
-        def linkage = computeLinkage(entity, value, handled)
+        def linkage = computeLinkage(sourceMap, entity, value, handled)
         if (linkage.newEntity) {
             entity = linkage.newEntity
         }
@@ -938,7 +938,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return unhandled.size() == 0
     }
 
-    def computeLinkage(entity, value, handled) {
+    def computeLinkage(sourceMap, entity, value, handled) {
         def codeLinkSplits = [:]
         // TODO: clear unused codeLinkSplits afterwards..
         def splitResults = []
@@ -1003,7 +1003,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def entRef = newEnt
             if (useLinks && link) {
                 if (!newEnt['@id'])
-                    newEnt['@id'] = "_:t-${UUID.randomUUID()}" as String
+                    newEnt['@id'] = "_:b-${sourceMap._bnodeCounter++}" as String
                 entRef = ['@id': newEnt['@id']]
             }
             if (link) {
