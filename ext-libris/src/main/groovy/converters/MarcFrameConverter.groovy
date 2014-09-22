@@ -1007,7 +1007,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 entRef = ['@id': newEnt['@id']]
             }
             if (link) {
-                addValue(entity, link, newEnt, lRepeatLink)
+                addValue(entity, link, newEnt, repeatLink)
             }
             useLinks.each {
                 addValue(entity, it, entRef, lRepeatLink)
