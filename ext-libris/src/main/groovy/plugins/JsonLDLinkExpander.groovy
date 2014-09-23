@@ -20,7 +20,7 @@ import org.apache.http.client.protocol.*
 
 
 @Log
-class JsonLDLinkExpander extends BasicLinkExpander implements WhelkAware {
+class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
 
     Map nodesToExpand
     List requiredDataset
@@ -41,7 +41,7 @@ class JsonLDLinkExpander extends BasicLinkExpander implements WhelkAware {
         return false
     }
 
-    Document doExpand(Document doc) {
+    Document doFilter(Document doc) {
         log.debug("Expanding ${doc.identifier}")
         def dataMap = doc.dataAsMap
         nodesToExpand.each { key, instructions ->

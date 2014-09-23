@@ -33,7 +33,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
     List<Plugin> plugins = new ArrayList<Plugin>()
     List<Storage> storages = new ArrayList<Storage>()
     Map<Pattern, API> apis = new LinkedHashMap<Pattern, API>()
-    List<LinkExpander> linkExpanders = new ArrayList<LinkExpander>()
 
     Index index
     GraphStore graphStore
@@ -332,8 +331,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 throw new PluginConfigurationException("GraphStore ${index.id} already configured for whelk ${this.id}.")
             }
             this.graphStore = plugin
-        } else if (plugin instanceof LinkExpander) {
-            this.linkExpanders.add(plugin)
         }
         // And always add to plugins
         this.plugins.add(plugin)
@@ -565,7 +562,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     List<SparqlEndpoint> getSparqlEndpoints() { return plugins.findAll { it instanceof SparqlEndpoint } }
     SparqlEndpoint getSparqlEndpoint() { return plugins.find { it instanceof SparqlEndpoint } }
-    List<LinkFinder> getLinkFinders() { return plugins.findAll { it instanceof LinkFinder }}
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
     List<Filter> getFilters() { return plugins.findAll { it instanceof Filter }}
     Importer getImporter(String id) { return plugins.find { it instanceof Importer && it.id == id } }

@@ -34,6 +34,14 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         return relatedDocs
     }
 
+    @Override
+    boolean valid(Document doc) {
+        if (doc && doc.isJson() && doc.contentType == "application/ld+json") {
+            return true
+        }
+        return false
+    }
+
     Document doFilter(Document doc) {
         log.trace("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
         anonymousIds = [:]

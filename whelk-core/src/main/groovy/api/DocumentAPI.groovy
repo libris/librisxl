@@ -41,10 +41,9 @@
                  def d = whelk.get(new URI(path), version, accepting)
                  if (d && (mode== DisplayMode.META || !d.entry['deleted'])) {
 
-                     LinkExpander le = getLinkExpanderFor(d)
-                     if (le) {
-                         log.debug("Expanding links for ${d.identifier}")
-                         d = le.expand(d)
+                     for (filter in getFiltersFor(d)) {
+                         log.debug("Filtering using ${filter.id} for ${d.identifier}")
+                         d = filter.filter(d)
                      }
                      if (mode == DisplayMode.META) {
                          sendResponse(response, d.metadataAsJson, "application/json")
@@ -168,7 +167,7 @@
          return ds
      }
 
-     LinkExpander getLinkExpanderFor(Document doc) { return plugins.find { it instanceof LinkExpander && it.valid(doc) } }
+     List<Filter> getFiltersFor(Document doc) { return plugins.findAll { it instanceof Filter && it.valid(doc) } }
  }
 
 enum DisplayMode {

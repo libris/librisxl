@@ -5,16 +5,16 @@ import se.kb.libris.whelks.Document
 abstract class BasicFilter extends BasicPlugin implements Filter {
 
     Document transmogrify(Document doc) {
-        return convert(doc)
+        return filter(doc)
     }
 
-    final Document filter(final Document doc) {
-        Document newdoc = doc
-        if (doc.contentType == requiredContentType) {
-            newdoc = doFilter(doc)
+    final Document filter(final Document document) {
+        if (valid(document)) {
+            return doFilter(document)
         }
-        return newdoc
+        return document
     }
 
+    abstract boolean valid(Document doc)
     abstract protected Document doFilter(final Document doc)
 }

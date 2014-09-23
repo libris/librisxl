@@ -14,8 +14,14 @@ class JsonLDSerialsLinkFinderFilter extends BasicFilter implements WhelkAware {
     Whelk whelk
     String requiredContentType = "application/ld+json"
 
+    @Override
     Document doFilter(Document doc) {
         return doc
+    }
+
+    @Override
+    boolean valid(Document doc) {
+        return false
     }
 }
 

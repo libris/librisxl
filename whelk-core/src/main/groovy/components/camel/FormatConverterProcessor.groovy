@@ -21,7 +21,7 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
     // Maybe rename to DocumentConverterProcessor
 
     FormatConverter converter
-    LinkExpander expander
+    Filter expander
 
     static final ObjectMapper mapper = new ObjectMapper()
     String whelkName
@@ -29,7 +29,7 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
     void bootstrap(String whelkName) {
         this.whelkName = whelkName
         this.converter = plugins.find { it instanceof FormatConverter  }
-        this.expander = plugins.find { it instanceof LinkExpander }
+        this.expander = plugins.find { it instanceof Filter }
         log.info("Calling bootstrap for ${this.id}. converter: $converter expander: $expander plugins: $plugins")
     }
 
@@ -53,7 +53,7 @@ class FormatConverterProcessor extends BasicPlugin implements Processor {
                 doc = converter.convert(doc)
             }
             if (expander) {
-                doc = expander.expand(doc)
+                doc = expander.filter(doc)
             }
             if (doc.isJson()) {
                 message.setBody(doc.dataAsMap)

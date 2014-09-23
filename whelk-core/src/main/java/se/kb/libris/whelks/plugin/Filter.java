@@ -4,5 +4,5 @@ import se.kb.libris.whelks.Document;
 
 public interface Filter extends Transmogrifier {
     public Document filter(Document doc);
-    public String getRequiredContentType();
+    public boolean valid(Document doc);
 }
