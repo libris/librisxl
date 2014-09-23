@@ -139,6 +139,7 @@ class HttpGraphStore extends HttpEndpoint implements GraphStore {
 }
 
 @Log
+@Deprecated
 class HttpBatchGraphStore extends HttpGraphStore implements BatchGraphStore {
 
     String updateURI

@@ -320,15 +320,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (plugin instanceof WhelkAware) {
             plugin.setWhelk(this)
         }
-        if (plugin instanceof Prawn) {
-            prawnsActive = true
-            log.debug("[${this.id}] Starting Prawn: ${plugin.id}")
-            log.debug("Adding to queue ${plugin.trigger}")
-            queues.get(plugin.trigger).add(plugin.getQueue())
-            def t = new Thread(plugin)
-            t.start()
-            prawnThreads << t
-        }
         if (plugin instanceof Storage) {
             this.storages.add(plugin)
         } else if (plugin instanceof Index) {
