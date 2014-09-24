@@ -47,10 +47,10 @@
       "p": "MixedMaterial",
       "r": "Realia",
       "t": "ManuscriptText",
-      "u": "Holding",
-      "v": "Holding",
-      "x": "Holding",
-      "y": "Holding",
+      "u": "SomeProducts",
+      "v": "SomeProducts",
+      "x": "SomeProducts",
+      "y": "SomeProducts",
       "z": "Authority"
     },
     "bibLevel": {
@@ -4276,7 +4276,7 @@
 
     "856": {
       "addLink": "isPrimaryTopicOf", "rangeEntity": "Document",
-      "TODO:match-i2": {
+      "match-i2": {
         "0": {"addLink": "encoding", "rangeEntity": "MediaObject"},
         "1": {"addLink": "hasFormat", "rangeEntity": "Electronic"},
         "2": {"addLink": "isPrimaryTopicOf", "rangeEntity": "Document"},
@@ -4631,7 +4631,7 @@
   "hold": {
     "000": {"inherit": "bib"},
     "001" : {"inherit": "bib"},
-    "004": {"link": "annotates", "uriTemplate": "/resource/bib/{_}"},
+    "004": {"link": "exampleOfWork", "uriTemplate": "/resource/bib/{_}"},
     "005": {"inherit": "bib"},
     "008": {
       "[0:0]": {}
@@ -4644,35 +4644,53 @@
     "698": {},
 
     "852": {
-      "definesDomainEntity": "Holding",
-      "$3": {"property": "materialsSpecified"},
+      "addLink": "offers",
+      "rangeEntity": "Offer",
+      "TODO:i2": {
+        "property": "shelvingOrder"
+      },
       "$2": {"property": "sourceOfClassificationOrShelvingScheme"},
+      "$3": {"property": "materialsSpecified"},
       "$8": {"property": "sequenceNumber"},
       "$a": {"property": "location"},
+      "$b": {
+        "addLink": "heldBy",
+        "rangeEntity": "Organization",
+        "property": "notation",
+        "NOTE": "libris deviates from standard (sublocationOrCollection)"
+      },
       "$c": {"addProperty": "shelvingLocation"},
-      "$b": {"addProperty": "sublocationOrCollection"},
-      "$e": {"addProperty": "address"},
       "$d": {"addProperty": "formerShelvingLocation"},
-      "$g": {"addProperty": "nonCodedLocationQualifier"},
+      "$e": {"addProperty": "address"},
       "$f": {"addProperty": "codedLocationQualifier"},
-      "$i": {"addProperty": "itemPart"},
+      "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {"property": "classificationPart"},
-      "$k": {"addProperty": "callNumberPrefix"},
+      "$i": {"addProperty": "itemPart"},
       "$j": {"property": "shelvingControlNumber"},
-      "$m": {"addProperty": "callNumberSuffix"},
+      "$k": {"addProperty": "callNumberPrefix"},
       "$l": {"property": "shelvingFormOfTitle"},
+      "$m": {"addProperty": "callNumberSuffix"},
       "$n": {"property": "countryCode"},
-      "$q": {"property": "piecePhysicalCondition"},
       "$p": {"property": "pieceDesignation"},
+      "$q": {"property": "itemCondition"},
       "$s": {"addProperty": "copyrightArticleFeeCode"},
-      "$u": {"addProperty": "uniformResourceIdentifier"},
       "$t": {"property": "copyNumber"},
-      "$x": {"addProperty": "nonpublicNote"},
+      "$u": {"addProperty": "url"},
+      "$x": {"addProperty": "internalNote"},
       "$z": {"addProperty": "publicNote"}
     },
 
-    "856": {},
-    "866": {}
+    "856": {
+      "inherit": "bib"
+    },
+    "866": {
+      "NOTE:domainIncludes": "Aggregate",
+      "addLink": "workExample",
+      "rangeEntity": "SomeProducts",
+      "$a": {"property": "scopeNote"},
+      "$x": {"addProperty": "internalNote"},
+      "$z": {"addProperty": "publicNote"}
+    }
   }
 
 }
