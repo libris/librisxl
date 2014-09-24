@@ -163,7 +163,7 @@ def countries():
 @dataset
 def nationalities():
     source = scriptpath('../source/nationalitetskoder.tsv')
-    items = load_data(source)
+    items = load_data(source, encoding='latin-1')
     for code, item in items.items():
         item['@id'] = "/def/nationalities/%s" % code
         item['@type'] = ['Nationality', 'Concept']
@@ -295,12 +295,11 @@ def split_dataset(base, data):
     return context, resultset
 
 
-def load_data(fpath):
+def load_data(fpath, encoding='utf-8'):
     csv_dialect = ('excel' if fpath.endswith('.csv')
             else 'excel-tab' if fpath.endswith('.tsv')
             else None)
     if csv_dialect:
-        encoding = 'latin-1'
         with open(fpath, 'rb') as fp:
             reader = csv.DictReader(fp, dialect=csv_dialect)
             return {item.pop('code'):
