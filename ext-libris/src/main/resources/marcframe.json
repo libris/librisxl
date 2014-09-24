@@ -47,10 +47,10 @@
       "p": "MixedMaterial",
       "r": "Realia",
       "t": "ManuscriptText",
-      "u": "SomeProducts",
-      "v": "SomeProducts",
-      "x": "SomeProducts",
-      "y": "SomeProducts",
+      "u": "HeldMaterial",
+      "v": "HeldMaterial",
+      "x": "HeldMaterial",
+      "y": "HeldMaterial",
       "z": "Authority"
     },
     "bibLevel": {
@@ -4631,12 +4631,12 @@
   "hold": {
     "000": {"inherit": "bib"},
     "001" : {"inherit": "bib"},
-    "004": {"link": "exampleOfWork", "uriTemplate": "/resource/bib/{_}"},
+    "004": {"link": "holdingFor", "uriTemplate": "/resource/bib/{_}"},
     "005": {"inherit": "bib"},
     "008": {
       "[0:0]": {}
     },
-    "014": {},
+    "014": {"addProperty": "librisIIINumber"},
     "084": {"inherit": "bib", "addLink": "callno"},
     "600": {"inherit": "bib:100", "addLink": "subject"},
     "650": {"inherit": "bib:650"},
@@ -4647,9 +4647,9 @@
       "addLink": "offers",
       "rangeEntity": "Offer",
       "TODO:i2": {
-        "property": "shelvingOrder"
+        "property": "shelfOrder"
       },
-      "$2": {"property": "sourceOfClassificationOrShelvingScheme"},
+      "$2": {"property": "sourceOfClassificationOrShelfMarkScheme"},
       "$3": {"property": "materialsSpecified"},
       "$8": {"property": "sequenceNumber"},
       "$a": {"property": "location"},
@@ -4659,16 +4659,16 @@
         "property": "notation",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },
-      "$c": {"addProperty": "shelvingLocation"},
-      "$d": {"addProperty": "formerShelvingLocation"},
+      "$c": {"addProperty": "shelfLocation"},
+      "$d": {"addProperty": "formerShelfLocation"},
       "$e": {"addProperty": "address"},
       "$f": {"addProperty": "codedLocationQualifier"},
       "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {"property": "classificationPart"},
-      "$i": {"addProperty": "itemPart"},
-      "$j": {"property": "shelvingControlNumber"},
+      "$i": {"addProperty": "availability", "NOTE": "deviates from standard (itemPart)?"},
+      "$j": {"property": "shelfControlNumber"},
       "$k": {"addProperty": "callNumberPrefix"},
-      "$l": {"property": "shelvingFormOfTitle"},
+      "$l": {"property": "shelfLabel"},
       "$m": {"addProperty": "callNumberSuffix"},
       "$n": {"property": "countryCode"},
       "$p": {"property": "pieceDesignation"},
@@ -4676,8 +4676,8 @@
       "$s": {"addProperty": "copyrightArticleFeeCode"},
       "$t": {"property": "copyNumber"},
       "$u": {"addProperty": "url"},
-      "$x": {"addProperty": "internalNote"},
-      "$z": {"addProperty": "publicNote"}
+      "$x": {"addProperty": "editorialNote"},
+      "$z": {"addProperty": "copyNote"}
     },
 
     "856": {
@@ -4688,8 +4688,8 @@
       "addLink": "workExample",
       "rangeEntity": "SomeProducts",
       "$a": {"property": "scopeNote"},
-      "$x": {"addProperty": "internalNote"},
-      "$z": {"addProperty": "publicNote"}
+      "$x": {"addProperty": "editorialNote"},
+      "$z": {"addProperty": "copyNote"}
     }
   }
 

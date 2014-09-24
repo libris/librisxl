@@ -140,13 +140,18 @@ marcenum:bibLevel a skos:Collection;
 :Carrier a owl:Class;
     owl:equivalentClass dc:MediaType .
 
-:SomeProducts a owl:Class;
+:HeldMaterial a owl:Class;
     rdfs:subClassOf bf:HeldMaterial, sdo:SomeProducts .
 
 :Offer a owl:Class;
     rdfs:subClassOf sdo:Offer .
 
-:heldBy a owl:Class;
+:holdingFor a owl:ObjectProperty;
+    rdfs:domain :HeldMaterial;
+    rdfs:range :Organization;
+    rdfs:subPropertyOf sdo:exampleOfWork, bf:holdingFor .
+
+:heldBy a owl:ObjectProperty;
     rdfs:domain :Offer;
     rdfs:range :Organization;
     rdfs:subPropertyOf sdo:seller, bf:heldBy .
