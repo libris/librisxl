@@ -4636,7 +4636,9 @@
     "008": {
       "[0:0]": {}
     },
-    "014": {"addProperty": "librisIIINumber"},
+    "014": {
+      "$a": {"addProperty": "librisIIINumber"}
+    },
     "084": {"inherit": "bib", "addLink": "callno"},
     "600": {"inherit": "bib:100", "addLink": "subject"},
     "650": {"inherit": "bib:650"},
