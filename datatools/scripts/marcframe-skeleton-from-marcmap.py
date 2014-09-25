@@ -345,9 +345,10 @@ for tag, field in sorted(marcmap['bib'].items()):
                                     broader_types.append({"@id": broader_id})
                             dest = enum_defs[type_id] = {
                                 "@id": type_id, "@type": "Concept",
-                                "broader": broader_types,
                                 "inCollection": in_coll
                             }
+                            if broader_types:
+                                dest["broader"] = broader_types
                             add_labels(dfn, dest)
 
                     if skip_unlinked_maps and not is_link:

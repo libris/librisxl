@@ -12,51 +12,46 @@
       "@type": "Collection"
     },
     "/def/enum/record/IncreaseInEncodingLevel": {
-      "prefLabel_en": "Increase in encoding level",
       "inCollection": [
         {"@id": "/def/enum/record/status-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Increase in encoding level",
       "@id": "/def/enum/record/IncreaseInEncodingLevel",
       "@type": "Concept",
       "prefLabel": "Uppgraderad eller kompletterad post (jfr Fullständighetsnivå)"
     },
     "/def/enum/record/IncreaseInEncodingLevelFromPrepublication": {
-      "prefLabel_en": "Increase in encoding level from prepublication",
       "inCollection": [
         {"@id": "/def/enum/record/status-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Increase in encoding level from prepublication",
       "@id": "/def/enum/record/IncreaseInEncodingLevelFromPrepublication",
       "@type": "Concept",
       "prefLabel": "Uppgraderad CIP-post (jfr Fullständighetsnivå)"
     },
     "/def/enum/record/CorrectedOrRevised": {
-      "prefLabel_en": "Corrected or revised",
       "inCollection": [
         {"@id": "/def/enum/record/status-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Corrected or revised",
       "@id": "/def/enum/record/CorrectedOrRevised",
       "@type": "Concept",
       "prefLabel": "Rättad eller reviderad post (sätts maskinellt)"
     },
     "/def/enum/record/Deleted": {
-      "prefLabel_en": "Deleted",
       "inCollection": [
         {"@id": "/def/enum/record/status-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Deleted",
       "@id": "/def/enum/record/Deleted",
       "@type": "Concept",
       "prefLabel": "Borttagen post (används ej)"
     },
     "/def/enum/record/New": {
-      "prefLabel_en": "New",
       "inCollection": [
         {"@id": "/def/enum/record/status-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "New",
       "@id": "/def/enum/record/New",
       "@type": "Concept",
       "prefLabel": "Ny post"
@@ -66,21 +61,19 @@
       "@type": "Collection"
     },
     "/def/terms/LanguageMaterial": {
-      "prefLabel_en": "Language material",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Language material",
       "@id": "/def/terms/LanguageMaterial",
       "@type": "Concept",
       "prefLabel": "Text: tryck"
     },
     "/def/terms/PrintedMusic": {
-      "prefLabel_en": "Printed music",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Printed music",
       "@id": "/def/terms/PrintedMusic",
       "@type": "Concept",
       "prefLabel": "Musik: tryck"
@@ -91,125 +84,112 @@
       ],
       "prefLabel_en": "Archive and manuscripts control (OBSOLETE)",
       "@id": "/def/terms/ArchiveOrManuscriptsControl-Obsolete",
-      "@type": "Concept",
-      "broader": []
+      "@type": "Concept"
     },
     "/def/terms/PrintedCartographicMaterial": {
-      "prefLabel_en": "Printed cartographic material",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Printed cartographic material",
       "@id": "/def/terms/PrintedCartographicMaterial",
       "@type": "Concept",
       "prefLabel": "Karta: tryck"
     },
     "/def/terms/ManuscriptMusic": {
-      "prefLabel_en": "Manuscript music",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Manuscript music",
       "@id": "/def/terms/ManuscriptMusic",
       "@type": "Concept",
       "prefLabel": "Musik: handskrift"
     },
     "/def/terms/ProjectedMedium": {
-      "prefLabel_en": "Projected medium",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Projected medium",
       "@id": "/def/terms/ProjectedMedium",
       "@type": "Concept",
       "prefLabel": "Projicerbar grafisk resurs (hit video, DVD, film, projicerbar bild)"
     },
     "/def/terms/ManuscriptCartographicMaterial": {
-      "prefLabel_en": "Manuscript cartographic material",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Manuscript cartographic material",
       "@id": "/def/terms/ManuscriptCartographicMaterial",
       "@type": "Concept",
       "prefLabel": "Karta: handskrift"
     },
     "/def/terms/NonmusicalSoundRecording": {
-      "prefLabel_en": "Nonmusical sound recording",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Nonmusical sound recording",
       "@id": "/def/terms/NonmusicalSoundRecording",
       "@type": "Concept",
       "prefLabel": "Ljudupptagning (ej musik)"
     },
     "/def/terms/TwoDimensionalNonprojectableGraphic": {
-      "prefLabel_en": "Two-dimensional nonprojectable graphic",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Two-dimensional nonprojectable graphic",
       "@id": "/def/terms/TwoDimensionalNonprojectableGraphic",
       "@type": "Concept",
       "prefLabel": "Bild (ej projicerbar)"
     },
     "/def/terms/MusicalSoundRecording": {
-      "prefLabel_en": "Musical sound recording",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Musical sound recording",
       "@id": "/def/terms/MusicalSoundRecording",
       "@type": "Concept",
       "prefLabel": "Musikupptagning"
     },
     "/def/terms/ComputerFile": {
-      "prefLabel_en": "Computer file",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Computer file",
       "@id": "/def/terms/ComputerFile",
       "@type": "Concept",
       "prefLabel": "Elektronisk resurs"
     },
     "/def/terms/Kit": {
-      "prefLabel_en": "Kit",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Kit",
       "@id": "/def/terms/Kit",
       "@type": "Concept",
       "prefLabel": "Paket"
     },
     "/def/terms/MixedMaterial": {
-      "prefLabel_en": "Mixed material",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Mixed material",
       "@id": "/def/terms/MixedMaterial",
       "@type": "Concept",
       "prefLabel": "Blandad resurs"
     },
     "/def/terms/ThreeDimensionalArtifactOrNaturallyOccurringObject": {
-      "prefLabel_en": "Three-dimensional artifact or naturally occurring object",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Three-dimensional artifact or naturally occurring object",
       "@id": "/def/terms/ThreeDimensionalArtifactOrNaturallyOccurringObject",
       "@type": "Concept",
       "prefLabel": "Föremål"
     },
     "/def/terms/ManuscriptLanguageMaterial": {
-      "prefLabel_en": "Manuscript language material",
       "inCollection": [
         {"@id": "/def/terms/typeOfRecord-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Manuscript language material",
       "@id": "/def/terms/ManuscriptLanguageMaterial",
       "@type": "Concept",
       "prefLabel": "Text: handskrift / opublicerad"
@@ -219,61 +199,55 @@
       "@type": "Collection"
     },
     "/def/terms/MonographicComponentPart": {
-      "prefLabel_en": "Monographic component part",
       "inCollection": [
         {"@id": "/def/terms/bibLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Monographic component part",
       "@id": "/def/terms/MonographicComponentPart",
       "@type": "Concept",
       "prefLabel": "Monografiskt bidrag"
     },
     "/def/terms/Collection": {
-      "prefLabel_en": "Collection",
       "inCollection": [
         {"@id": "/def/terms/bibLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Collection",
       "@id": "/def/terms/Collection",
       "@type": "Concept",
       "prefLabel": "Samling (arkivaliska o.d.)"
     },
     "/def/terms/SerialComponentPart": {
-      "prefLabel_en": "Serial component part",
       "inCollection": [
         {"@id": "/def/terms/bibLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Serial component part",
       "@id": "/def/terms/SerialComponentPart",
       "@type": "Concept",
       "prefLabel": "Seriellt bidrag"
     },
     "/def/terms/Subunit": {
-      "prefLabel_en": "Subunit",
       "inCollection": [
         {"@id": "/def/terms/bibLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Subunit",
       "@id": "/def/terms/Subunit",
       "@type": "Concept",
       "prefLabel": "Del av samling"
     },
     "/def/terms/IntegratingResource": {
-      "prefLabel_en": "Integrating resource",
       "inCollection": [
         {"@id": "/def/terms/bibLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Integrating resource",
       "@id": "/def/terms/IntegratingResource",
       "@type": "Concept",
       "prefLabel": "Integrerande resurs (kontinuerlig uppdatering)"
     },
     "/def/terms/MonographItem": {
-      "prefLabel_en": "Monograph/item",
       "inCollection": [
         {"@id": "/def/terms/bibLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Monograph/item",
       "@id": "/def/terms/MonographItem",
       "@type": "Concept",
       "prefLabel": "Monografisk resurs"
@@ -284,15 +258,13 @@
       ],
       "@id": "/def/terms/Periodica_[endast_i_utländska_poster_skall_ÄNDRAS_till_\"s\"]",
       "@type": "Concept",
-      "broader": [],
       "prefLabel": "Periodica [endast i utländska poster, skall ÄNDRAS till \"s\"]"
     },
     "/def/terms/Serial": {
-      "prefLabel_en": "Serial",
       "inCollection": [
         {"@id": "/def/terms/bibLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Serial",
       "@id": "/def/terms/Serial",
       "@type": "Concept",
       "prefLabel": "Seriell resurs"
@@ -303,7 +275,6 @@
       ],
       "@id": "/def/terms/Avtalspost_[administrativ_post_för_licensbundna_e-resurser]",
       "@type": "Concept",
-      "broader": [],
       "prefLabel": "Avtalspost [administrativ post för licensbundna e-resurser]"
     },
     "/def/enum/record/typeOfControl-collection": {
@@ -311,11 +282,10 @@
       "@type": "Collection"
     },
     "/def/enum/record/ArchivalControl": {
-      "prefLabel_en": "Archival control",
       "inCollection": [
         {"@id": "/def/enum/record/typeOfControl-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Archival control",
       "@id": "/def/enum/record/ArchivalControl",
       "@type": "Concept",
       "prefLabel": "Resursen beskrivs enligt arkivalisk princip"
@@ -330,7 +300,6 @@
       ],
       "@id": "/def/enum/record/UCS-Unicode",
       "@type": "Concept",
-      "broader": [],
       "prefLabel": "UCS/Unicode"
     },
     "/def/enum/record/encLevel-collection": {
@@ -343,8 +312,7 @@
       ],
       "prefLabel_en": "System-identified MARC error in a batchloaded record (LOCAL)",
       "@id": "/def/enum/record/SystemIdentifiedMarcErrorInABatchloadedRecordLocal",
-      "@type": "Concept",
-      "broader": []
+      "@type": "Concept"
     },
     "/def/enum/record/FullLevelInputByOclcParticipantsLocal": {
       "inCollection": [
@@ -352,8 +320,7 @@
       ],
       "prefLabel_en": "Full-level input by OCLC participants (LOCAL)",
       "@id": "/def/enum/record/FullLevelInputByOclcParticipantsLocal",
-      "@type": "Concept",
-      "broader": []
+      "@type": "Concept"
     },
     "/def/enum/record/LessThanFullLevelInputByOclcParticipantsLocal": {
       "inCollection": [
@@ -361,8 +328,7 @@
       ],
       "prefLabel_en": "Less-than-full-level input by OCLC participants (LOCAL)",
       "@id": "/def/enum/record/LessThanFullLevelInputByOclcParticipantsLocal",
-      "@type": "Concept",
-      "broader": []
+      "@type": "Concept"
     },
     "/def/enum/record/DeletedRecordLocal": {
       "inCollection": [
@@ -370,8 +336,7 @@
       ],
       "prefLabel_en": "Deleted record (LOCAL)",
       "@id": "/def/enum/record/DeletedRecordLocal",
-      "@type": "Concept",
-      "broader": []
+      "@type": "Concept"
     },
     "/def/enum/record/LessThanFullLevelInputAddedFromABatchProcessLocal": {
       "inCollection": [
@@ -379,8 +344,7 @@
       ],
       "prefLabel_en": "Less-than-full-level input added from a batch process (LOCAL)",
       "@id": "/def/enum/record/LessThanFullLevelInputAddedFromABatchProcessLocal",
-      "@type": "Concept",
-      "broader": []
+      "@type": "Concept"
     },
     "/def/enum/record/FullLevelInputAddedFromABatchProcessLocal": {
       "inCollection": [
@@ -388,85 +352,76 @@
       ],
       "prefLabel_en": "Full-level input added from a batch process (LOCAL)",
       "@id": "/def/enum/record/FullLevelInputAddedFromABatchProcessLocal",
-      "@type": "Concept",
-      "broader": []
+      "@type": "Concept"
     },
     "/def/enum/record/FullLevelMaterialNotExamined": {
-      "prefLabel_en": "Full level, material not examined",
       "inCollection": [
         {"@id": "/def/enum/record/encLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Full level, material not examined",
       "@id": "/def/enum/record/FullLevelMaterialNotExamined",
       "@type": "Concept",
       "prefLabel": "Retrospektiv nivå: omkatalogisering"
     },
     "/def/enum/record/AbbreviatedLevel": {
-      "prefLabel_en": "Abbreviated level",
       "inCollection": [
         {"@id": "/def/enum/record/encLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Abbreviated level",
       "@id": "/def/enum/record/AbbreviatedLevel",
       "@type": "Concept",
       "prefLabel": "Miniminivå (jfr KRS 1.0D1)"
     },
     "/def/enum/record/LessThanFullLevelMaterialNotExamined": {
-      "prefLabel_en": "Less-than-full level, material not examined",
       "inCollection": [
         {"@id": "/def/enum/record/encLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Less-than-full level, material not examined",
       "@id": "/def/enum/record/LessThanFullLevelMaterialNotExamined",
       "@type": "Concept",
       "prefLabel": "Retrospektiv nivå: enligt katalogkort e.d."
     },
     "/def/enum/record/PartialPreliminaryLevel": {
-      "prefLabel_en": "Partial (preliminary) level",
       "inCollection": [
         {"@id": "/def/enum/record/encLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Partial (preliminary) level",
       "@id": "/def/enum/record/PartialPreliminaryLevel",
       "@type": "Concept",
       "prefLabel": "Preliminär post (hit beställningsposter)"
     },
     "/def/enum/record/CoreLevel": {
-      "prefLabel_en": "Core level",
       "inCollection": [
         {"@id": "/def/enum/record/encLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Core level",
       "@id": "/def/enum/record/CoreLevel",
       "@type": "Concept",
       "prefLabel": "Verknivå (\"förkortad katalogisering\", jfr KRS 1.0D, anm 1)"
     },
     "/def/enum/record/MinimalLevel": {
-      "prefLabel_en": "Minimal level",
       "inCollection": [
         {"@id": "/def/enum/record/encLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Minimal level",
       "@id": "/def/enum/record/MinimalLevel",
       "@type": "Concept",
       "prefLabel": "Biblioteksnivå (jfr KRS 1.0D2)"
     },
     "/def/enum/record/PrepublicationLevel": {
-      "prefLabel_en": "Prepublication level",
       "inCollection": [
         {"@id": "/def/enum/record/encLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Prepublication level",
       "@id": "/def/enum/record/PrepublicationLevel",
       "@type": "Concept",
       "prefLabel": "CIP-post"
     },
     "/def/enum/record/FullLevel": {
-      "prefLabel_en": "Full level",
       "inCollection": [
         {"@id": "/def/enum/record/encLevel-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "Full level",
       "@id": "/def/enum/record/FullLevel",
       "@type": "Concept",
       "prefLabel": "Nationalbibliografisk nivå (jfr KRS 1.0D3)"
@@ -476,21 +431,19 @@
       "@type": "Collection"
     },
     "/def/enum/record/Aacr2": {
-      "prefLabel_en": "AACR 2",
       "inCollection": [
         {"@id": "/def/enum/record/catForm-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "AACR 2",
       "@id": "/def/enum/record/Aacr2",
       "@type": "Concept",
       "prefLabel": "AACR2/KRS (normalvärde)"
     },
     "/def/enum/record/Isbd": {
-      "prefLabel_en": "ISBD",
       "inCollection": [
         {"@id": "/def/enum/record/catForm-collection"}
       ],
-      "broader": [],
+      "prefLabel_en": "ISBD",
       "@id": "/def/enum/record/Isbd",
       "@type": "Concept",
       "prefLabel": "ISBD-interpunktion finns"
@@ -501,7 +454,6 @@
       ],
       "@id": "/def/enum/record/ISBDPunctuationOmitted",
       "@type": "Concept",
-      "broader": [],
       "prefLabel": "ISBD-interpunktion saknas"
     },
     "/def/enum/record/linked-collection": {
@@ -514,7 +466,6 @@
       ],
       "@id": "/def/enum/record/Set",
       "@type": "Concept",
-      "broader": [],
       "prefLabel": "Set"
     },
     "/def/enum/record/PartWithDependentTitle": {
@@ -523,7 +474,6 @@
       ],
       "@id": "/def/enum/record/PartWithDependentTitle",
       "@type": "Concept",
-      "broader": [],
       "prefLabel": "Del med beroende titel"
     },
     "/def/enum/record/PartWithIndependentTitle": {
@@ -532,7 +482,6 @@
       ],
       "@id": "/def/enum/record/PartWithIndependentTitle",
       "@type": "Concept",
-      "broader": [],
       "prefLabel": "Del med oberoende titel"
     },
     "/def/enum/record/RecordHasLinks-Obsolete": {
@@ -541,7 +490,6 @@
       ],
       "@id": "/def/enum/record/RecordHasLinks-Obsolete",
       "@type": "Concept",
-      "broader": [],
       "prefLabel": "Fält 760-787 finns i posten (OBSOLET)"
     },
     "/def/enum/record/entryMap-collection": {
@@ -554,7 +502,6 @@
       ],
       "@id": "/def/enum/record/EntryMap",
       "@type": "Concept",
-      "broader": [],
       "prefLabel": "EntryMap"
     },
     "/def/enum/content/illustrations-collection": {
