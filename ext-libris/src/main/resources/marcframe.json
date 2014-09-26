@@ -117,7 +117,7 @@
       "f": "/def/enum/content/Plate",
       "g": "/def/enum/content/Music",
       "h": "/def/enum/content/Facsimile",
-      "i": "/def/enum/content/CoatsOfArm",
+      "i": "/def/enum/content/CoatsOfArms",
       "j": "/def/enum/content/GenealogicalTable",
       "k": "/def/enum/content/Form",
       "l": "/def/enum/content/Sample",
@@ -167,7 +167,7 @@
       "p": "/def/enum/content/ProgrammedText",
       "q": "/def/enum/content/Filmography",
       "r": "/def/enum/content/Directory",
-      "s": "/def/enum/content/Statistic",
+      "s": "/def/enum/content/Statistics",
       "t": "/def/enum/content/TechnicalReport",
       "u": "/def/enum/content/StandardsSpecification",
       "v": "/def/enum/content/LegalCaseOrCaseNote",
@@ -188,15 +188,15 @@
       "z": null
     },
     "booksConfPub": {
-      "0": false,
+      "0": "/def/enum/content/NotAConferencePublication",
       "1": "/def/enum/content/ConferencePublication"
     },
     "booksFestschrift": {
-      "0": false,
+      "0": "/def/enum/content/NotAFestschrift",
       "1": "/def/enum/content/Festschrift"
     },
     "booksIndex": {
-      "0": false,
+      "0": "/def/enum/content/NoIndex",
       "1": "/def/enum/content/IndexPresent"
     },
     "booksLiteraryForm": {
@@ -209,9 +209,9 @@
       "h": "/def/enum/content/HumorSatiresEtc",
       "i": "/def/enum/content/Letter",
       "j": "/def/enum/content/ShortStory",
-      "m": "/def/enum/content/MixedForm",
+      "m": "/def/enum/content/MixedForms",
       "p": "/def/enum/content/Poetry",
-      "s": "/def/enum/content/Speeche",
+      "s": "/def/enum/content/Speech",
       "u": null
     },
     "booksBiography": {
@@ -224,7 +224,7 @@
       "an": "/def/enum/content/Anthem",
       "bd": "/def/enum/content/Ballad",
       "bg": "/def/enum/content/BluegrassMusic",
-      "bl": "/def/enum/content/Blue",
+      "bl": "/def/enum/content/Blues",
       "bt": "/def/enum/content/Ballet",
       "ca": "/def/enum/content/Chaconne",
       "cb": "/def/enum/content/ChantsOtherReligion",
@@ -254,9 +254,9 @@
       "mi": "/def/enum/content/Minuet",
       "mo": "/def/enum/content/Motet",
       "mp": "/def/enum/content/MotionPictureMusic",
-      "mr": "/def/enum/content/Marche",
-      "ms": "/def/enum/content/Masse",
-      "mu": "/def/enum/content/MultipleForm",
+      "mr": "/def/enum/content/March",
+      "ms": "/def/enum/content/Mass",
+      "mu": "/def/enum/content/MultipleForms",
       "mz": "/def/enum/content/Mazurka",
       "nc": "/def/enum/content/Nocturne",
       "nn": null,
@@ -290,7 +290,7 @@
       "uu": null,
       "vl": "/def/enum/content/Villancico",
       "vr": "/def/enum/content/Variation",
-      "wz": "/def/enum/content/Waltze",
+      "wz": "/def/enum/content/Waltz",
       "za": "/def/enum/content/Zarzuela",
       "zz": null,
       "||": "/def/enum/content/NoAttemptToCode"
@@ -307,7 +307,7 @@
       "j": "/def/enum/content/PerformerConductorPart",
       "k": "/def/enum/content/VocalScore",
       "l": "/def/enum/content/CompleteMusicalNotationForScore",
-      "m": "/def/enum/content/MultipleScoreFormat",
+      "m": "/def/enum/content/MultipleScoreFormats",
       "n": null,
       "u": null,
       "z": null
@@ -358,7 +358,7 @@
       "i": "/def/enum/content/Instruction",
       "j": "/def/enum/content/LanguageInstruction",
       "k": "/def/enum/content/Comedy",
-      "l": "/def/enum/content/LecturesSpeeche",
+      "l": "/def/enum/content/LecturesSpeech",
       "m": "/def/enum/content/Memoir",
       "n": null,
       "o": "/def/enum/content/Folktale",
@@ -462,16 +462,16 @@
       "z": null
     },
     "mapsPrimeMeridian": {
-      "e": "/def/enum/content/GreenwichObsolete",
-      "f": "/def/enum/content/FerroObsolete",
-      "g": "/def/enum/content/ParisObsolete",
-      "p": "/def/enum/content/PhiladelphiaObsolete",
-      "w": "/def/enum/content/WashingtonDCObsolete",
+      "e": "/def/enum/content/Greenwich-Obsolete",
+      "f": "/def/enum/content/Ferro-Obsolete",
+      "g": "/def/enum/content/Paris-Obsolete",
+      "p": "/def/enum/content/Philadelphia-Obsolete",
+      "w": "/def/enum/content/WashingtonDC-Obsolete",
       "z": null
     },
     "visualRunningTime": {
       "---": "/def/enum/content/RunningTimeUnknown",
-      "000": "/def/enum/content/RunningTimeExceedsThreeCharacter",
+      "000": "/def/enum/content/RunningTimeExceedsThreeCharacters",
       "001~999": "/def/enum/content/RunningTime",
       "nnn": null,
       "|||": "/def/enum/content/NoAttemptToCode"
@@ -507,13 +507,13 @@
       "z": "/def/enum/content/OtherTechnique"
     },
     "visualMatter": {
-      "l": "/def/enum/content/StillsObsolete",
-      "m": "/def/enum/content/ScriptsMaterialObsolete",
-      "o": "/def/enum/content/PostersObsolete",
-      "p": "/def/enum/content/PressbooksObsolete",
-      "q": "/def/enum/content/LobbyCardsObsolete",
-      "r": "/def/enum/content/InstructionalMaterialsObsolete",
-      "s": "/def/enum/content/MusicObsolete",
+      "l": "/def/enum/content/Stills-Obsolete",
+      "m": "/def/enum/content/ScriptsMaterial-Obsolete",
+      "o": "/def/enum/content/Posters-Obsolete",
+      "p": "/def/enum/content/Pressbooks-Obsolete",
+      "q": "/def/enum/content/LobbyCards-Obsolete",
+      "r": "/def/enum/content/InstructionalMaterials-Obsolete",
+      "s": "/def/enum/content/Music-Obsolete",
       "z": null
     },
     "computerItem": {
@@ -608,7 +608,7 @@
       "p": "/def/enum/content/ProgrammedText",
       "q": "/def/enum/content/Filmography",
       "r": "/def/enum/content/Directory",
-      "s": "/def/enum/content/Statistic",
+      "s": "/def/enum/content/Statistics",
       "t": "/def/enum/content/TechnicalReport",
       "u": "/def/enum/content/StandardsSpecification",
       "v": "/def/enum/content/LegalCaseOrCaseNote",
@@ -636,7 +636,7 @@
       "p": "/def/enum/content/ProgrammedText",
       "q": "/def/enum/content/Filmography",
       "r": "/def/enum/content/Directory",
-      "s": "/def/enum/content/Statistic",
+      "s": "/def/enum/content/Statistics",
       "t": "/def/enum/content/TechnicalReport",
       "u": "/def/enum/content/StandardsSpecification",
       "v": "/def/enum/content/LegalCaseOrCaseNote",
@@ -690,7 +690,7 @@
       "f": "/def/enum/carrier/Skin",
       "g": "/def/enum/carrier/Textile",
       "i": "/def/enum/carrier/Plastic",
-      "j": "/def/enum/carrier/Glas",
+      "j": "/def/enum/carrier/Glass",
       "l": "/def/enum/carrier/Vinyl",
       "n": "/def/enum/carrier/Vellum",
       "p": "/def/enum/carrier/Plaster",
@@ -726,9 +726,9 @@
     },
     "mapAspect": {
       "_": null,
-      "f": "/def/enum/carrier/FacsimileObsolete",
-      "o": "/def/enum/carrier/OriginalObsolete",
-      "r": "/def/enum/carrier/ReproductionObsolete",
+      "f": "/def/enum/carrier/Facsimile-Obsolete",
+      "o": "/def/enum/carrier/Original-Obsolete",
+      "r": "/def/enum/carrier/Reproduction-Obsolete",
       "u": null
     },
     "computerMaterial": {
@@ -752,7 +752,7 @@
       "b": "/def/enum/carrier/BlackOrWhite",
       "c": "/def/enum/carrier/Multicolored",
       "g": "/def/enum/carrier/GrayScale",
-      "m": "/def/enum/carrier/MixedColor",
+      "m": "/def/enum/carrier/MixedColors",
       "n": null,
       "u": null,
       "z": null
@@ -776,13 +776,13 @@
     "computerImageBitDepth": {
       "---": null,
       "001~999": "/def/enum/carrier/TODO:value-in-digit",
-      "mmm": "/def/enum/carrier/MultipleImageBitDepth",
+      "mmm": "/def/enum/carrier/MultipleImageBitDepths",
       "nnn": null,
       "|||": "/def/enum/carrier/Inget_försök_att_koda"
     },
     "computerFileFormats": {
       "a": "/def/enum/carrier/OneFileFormat",
-      "m": "/def/enum/carrier/MultipleFileFormat",
+      "m": "/def/enum/carrier/MultipleFileFormats",
       "u": null
     },
     "computerQATarget": {
@@ -796,7 +796,7 @@
       "b": "/def/enum/carrier/FileReproducedFromMicroform",
       "c": "/def/enum/carrier/FileReproducedFromElectronicResource",
       "d": "/def/enum/carrier/FileReproducedFromIntermediate",
-      "m": "/def/enum/carrier/MixedSource",
+      "m": "/def/enum/carrier/MixedSources",
       "n": null,
       "u": null
     },
@@ -854,7 +854,7 @@
       "c": "/def/enum/carrier/MathematicOrScientificBraille",
       "d": "/def/enum/carrier/ComputerBraille",
       "e": "/def/enum/carrier/MusicBraille",
-      "m": "/def/enum/carrier/MultipleBrailleType",
+      "m": "/def/enum/carrier/MultipleBrailleTypes",
       "n": null,
       "u": null,
       "z": null
@@ -912,7 +912,7 @@
       "z": null
     },
     "projGraphEmulsion": {
-      "d": "/def/enum/carrier/Glas",
+      "d": "/def/enum/carrier/Glass",
       "e": "/def/enum/carrier/Synthetic",
       "j": "/def/enum/carrier/SafetyFilm",
       "k": "/def/enum/carrier/FilmBaseOtherThanSafetyFilm",
@@ -960,7 +960,7 @@
     },
     "projGraphSupport": {
       "c": "/def/enum/carrier/Paper",
-      "d": "/def/enum/carrier/Glas",
+      "d": "/def/enum/carrier/Glass",
       "e": "/def/enum/carrier/Synthetic",
       "h": "/def/enum/carrier/Metal",
       "j": "/def/enum/carrier/MetalOrGlas",
@@ -1081,7 +1081,7 @@
       "a": "/def/enum/carrier/Canvas",
       "b": "/def/enum/carrier/BristolBoard",
       "c": "/def/enum/carrier/CardboardIllustrationBoard",
-      "d": "/def/enum/carrier/Glas",
+      "d": "/def/enum/carrier/Glass",
       "e": "/def/enum/carrier/Synthetic",
       "f": "/def/enum/carrier/Skin",
       "g": "/def/enum/carrier/Textile",
@@ -1152,7 +1152,7 @@
       "a": "/def/enum/carrier/Workprint",
       "b": "/def/enum/carrier/Trim",
       "c": "/def/enum/carrier/Outtake",
-      "d": "/def/enum/carrier/Rushe",
+      "d": "/def/enum/carrier/Rush",
       "e": "/def/enum/carrier/MixingTrack",
       "f": "/def/enum/carrier/TitleBandsIntertitleRoll",
       "g": "/def/enum/carrier/ProductionRoll",
@@ -1213,7 +1213,7 @@
       "c": "/def/enum/carrier/NitratePungentOdor",
       "d": "/def/enum/carrier/NitrateBrownishDiscolorationFadingDusty",
       "e": "/def/enum/carrier/NitrateSticky",
-      "f": "/def/enum/carrier/NitrateFrothyBubblesBlister",
+      "f": "/def/enum/carrier/NitrateFrothyBubblesBlisters",
       "g": "/def/enum/carrier/NitrateCongealed",
       "h": "/def/enum/carrier/NitratePowder",
       "k": "/def/enum/carrier/NonNitrateDetectableDeteriorationDiacetateOdor",
@@ -1276,7 +1276,7 @@
       "a": "/def/enum/carrier/Meteorological",
       "b": "/def/enum/carrier/SurfaceObserving",
       "c": "/def/enum/carrier/SpaceObserving",
-      "m": "/def/enum/carrier/MixedUse",
+      "m": "/def/enum/carrier/MixedUses",
       "n": null,
       "u": null,
       "z": null
@@ -1407,12 +1407,12 @@
       "f": "/def/enum/carrier/14MPerSec",
       "h": "/def/enum/carrier/120Rpm",
       "i": "/def/enum/carrier/160Rpm",
-      "k": "/def/enum/carrier/1516Ip",
-      "l": "/def/enum/carrier/178Ip",
-      "m": "/def/enum/carrier/334Ip",
-      "o": "/def/enum/carrier/712Ip",
-      "p": "/def/enum/carrier/15Ip",
-      "r": "/def/enum/carrier/30Ip",
+      "k": "/def/enum/carrier/1516Ips",
+      "l": "/def/enum/carrier/178Ips",
+      "m": "/def/enum/carrier/334Ips",
+      "o": "/def/enum/carrier/712Ips",
+      "p": "/def/enum/carrier/15Ips",
+      "r": "/def/enum/carrier/30Ips",
       "u": null,
       "z": null
     },
@@ -1528,7 +1528,7 @@
       "e": "/def/enum/content/DetailedDate",
       "i": "/def/enum/content/InclusiveDatesOfCollection",
       "k": "/def/enum/content/RangeOfYearsOfBulkOfCollection",
-      "m": "/def/enum/content/MultipleDate",
+      "m": "/def/enum/content/MultipleDates",
       "n": "/def/enum/content/DatesUnknown",
       "p": "/def/enum/content/DateOfDistributionReleaseIssueOrProductionRecordingSessionWhenDifferent",
       "q": "/def/enum/content/QuestionableDate",
@@ -1542,7 +1542,7 @@
       "o": "/def/enum/content/CompletelyRomanizedPrintedCardsRomanized",
       "r": "/def/enum/content/CompletelyRomanizedPrintedCardsInScript",
       "s": "/def/enum/content/Shortened",
-      "x": "/def/enum/content/MissingCharacter"
+      "x": "/def/enum/content/MissingCharacters"
     },
     "catalogingSource": {
       "_": "/def/enum/content/NationalBibliographicAgency",
@@ -1551,30 +1551,30 @@
       "u": null
     },
     "computerFrequency": {
-      "a": "/def/enum/content/AnnualObsolete",
-      "b": "/def/enum/content/BimonthlyObsolete",
-      "c": "/def/enum/content/SemiweeklyObsolete",
-      "d": "/def/enum/content/DailyObsolete",
-      "e": "/def/enum/content/BiweeklyObsolete",
-      "f": "/def/enum/content/SemiannualObsolete",
-      "g": "/def/enum/content/BiennialObsolete",
-      "h": "/def/enum/content/TriennialObsolete",
-      "i": "/def/enum/content/ThreeTimesAWeekObsolete",
-      "j": "/def/enum/content/ThreeTimesAMonthObsolete",
-      "m": "/def/enum/content/MonthlyObsolete",
+      "a": "/def/enum/content/Annual-Obsolete",
+      "b": "/def/enum/content/Bimonthly-Obsolete",
+      "c": "/def/enum/content/Semiweekly-Obsolete",
+      "d": "/def/enum/content/Daily-Obsolete",
+      "e": "/def/enum/content/Biweekly-Obsolete",
+      "f": "/def/enum/content/Semiannual-Obsolete",
+      "g": "/def/enum/content/Biennial-Obsolete",
+      "h": "/def/enum/content/Triennial-Obsolete",
+      "i": "/def/enum/content/ThreeTimesAWeek-Obsolete",
+      "j": "/def/enum/content/ThreeTimesAMonth-Obsolete",
+      "m": "/def/enum/content/Monthly-Obsolete",
       "n": null,
-      "q": "/def/enum/content/QuarterlyObsolete",
-      "s": "/def/enum/content/SemimonthlyObsolete",
-      "t": "/def/enum/content/ThreeTimesAYearObsolete",
+      "q": "/def/enum/content/Quarterly-Obsolete",
+      "s": "/def/enum/content/Semimonthly-Obsolete",
+      "t": "/def/enum/content/ThreeTimesAYear-Obsolete",
       "u": null,
-      "w": "/def/enum/content/WeeklyObsolete",
-      "z": "/def/enum/content/OtherFrequenciesObsolete"
+      "w": "/def/enum/content/Weekly-Obsolete",
+      "z": "/def/enum/content/OtherFrequencies-Obsolete"
     },
     "computerRegularity": {
-      "n": "/def/enum/content/NormalizedIrregularObsolete",
-      "r": "/def/enum/content/RegularObsolete",
+      "n": "/def/enum/content/NormalizedIrregular-Obsolete",
+      "r": "/def/enum/content/Regular-Obsolete",
       "u": null,
-      "x": "/def/enum/content/CompletelyIrregularObsolete"
+      "x": "/def/enum/content/CompletelyIrregular-Obsolete"
     }
 
   },

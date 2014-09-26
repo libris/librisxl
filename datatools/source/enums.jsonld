@@ -596,7 +596,7 @@
       "@type": "Concept",
       "prefLabel": "Plansch/er"
     },
-    "/def/enum/content/CoatsOfArm": {
+    "/def/enum/content/CoatsOfArms": {
       "prefLabel_en": "Coats of arms",
       "inCollection": [
         {"@id": "/def/enum/content/illustrations-collection"}
@@ -604,7 +604,7 @@
       "broader": [
         {"@id": "/def/terms#Text"}
       ],
-      "@id": "/def/enum/content/CoatsOfArm",
+      "@id": "/def/enum/content/CoatsOfArms",
       "@type": "Concept",
       "prefLabel": "Vapensköldar"
     },
@@ -1263,7 +1263,7 @@
       "@type": "Concept",
       "prefLabel": "Programmerad text"
     },
-    "/def/enum/content/Statistic": {
+    "/def/enum/content/Statistics": {
       "prefLabel_en": "Statistics",
       "inCollection": [
         {"@id": "/def/enum/content/contentType-collection"},
@@ -1274,7 +1274,7 @@
         {"@id": "/def/terms#Text"},
         {"@id": "/def/terms#Serial"}
       ],
-      "@id": "/def/enum/content/Statistic",
+      "@id": "/def/enum/content/Statistics",
       "@type": "Concept",
       "prefLabel": "Statistik"
     },
@@ -1710,7 +1710,7 @@
       "@type": "Concept",
       "prefLabel": "Noveller"
     },
-    "/def/enum/content/MixedForm": {
+    "/def/enum/content/MixedForms": {
       "prefLabel_en": "Mixed forms",
       "inCollection": [
         {"@id": "/def/enum/content/literaryForm-collection"}
@@ -1718,7 +1718,7 @@
       "broader": [
         {"@id": "/def/terms#Text"}
       ],
-      "@id": "/def/enum/content/MixedForm",
+      "@id": "/def/enum/content/MixedForms",
       "@type": "Concept",
       "prefLabel": "Skönlitterära verk av mer än en genre"
     },
@@ -1760,7 +1760,7 @@
       "@type": "Concept",
       "prefLabel": "Ej skönlitterärt verk"
     },
-    "/def/enum/content/Speeche": {
+    "/def/enum/content/Speech": {
       "prefLabel_en": "Speeches",
       "inCollection": [
         {"@id": "/def/enum/content/literaryForm-collection"}
@@ -1768,7 +1768,7 @@
       "broader": [
         {"@id": "/def/terms#Text"}
       ],
-      "@id": "/def/enum/content/Speeche",
+      "@id": "/def/enum/content/Speech",
       "@type": "Concept",
       "prefLabel": "Tal"
     },
@@ -2141,7 +2141,7 @@
       "@type": "Concept",
       "prefLabel": "Toccata"
     },
-    "/def/enum/content/Waltze": {
+    "/def/enum/content/Waltz": {
       "prefLabel_en": "Waltzes",
       "inCollection": [
         {"@id": "/def/enum/content/composition-collection"}
@@ -2149,7 +2149,7 @@
       "broader": [
         {"@id": "/def/terms#Audio"}
       ],
-      "@id": "/def/enum/content/Waltze",
+      "@id": "/def/enum/content/Waltz",
       "@type": "Concept",
       "prefLabel": "Vals"
     },
@@ -2165,7 +2165,7 @@
       "@type": "Concept",
       "prefLabel": "Rondo"
     },
-    "/def/enum/content/Blue": {
+    "/def/enum/content/Blues": {
       "prefLabel_en": "Blues",
       "inCollection": [
         {"@id": "/def/enum/content/composition-collection"}
@@ -2173,7 +2173,7 @@
       "broader": [
         {"@id": "/def/terms#Audio"}
       ],
-      "@id": "/def/enum/content/Blue",
+      "@id": "/def/enum/content/Blues",
       "@type": "Concept",
       "prefLabel": "Blues"
     },
@@ -2562,7 +2562,7 @@
       "@type": "Concept",
       "prefLabel": "Ricercare"
     },
-    "/def/enum/content/MultipleForm": {
+    "/def/enum/content/MultipleForms": {
       "prefLabel_en": "Multiple forms",
       "inCollection": [
         {"@id": "/def/enum/content/composition-collection"}
@@ -2570,7 +2570,7 @@
       "broader": [
         {"@id": "/def/terms#Audio"}
       ],
-      "@id": "/def/enum/content/MultipleForm",
+      "@id": "/def/enum/content/MultipleForms",
       "@type": "Concept",
       "prefLabel": "Flera former"
     },
@@ -2586,7 +2586,7 @@
       "@type": "Concept",
       "prefLabel": "Filmmusik"
     },
-    "/def/enum/content/Masse": {
+    "/def/enum/content/Mass": {
       "prefLabel_en": "Masses",
       "inCollection": [
         {"@id": "/def/enum/content/composition-collection"}
@@ -2594,11 +2594,11 @@
       "broader": [
         {"@id": "/def/terms#Audio"}
       ],
-      "@id": "/def/enum/content/Masse",
+      "@id": "/def/enum/content/Mass",
       "@type": "Concept",
       "prefLabel": "Mässa"
     },
-    "/def/enum/content/Marche": {
+    "/def/enum/content/March": {
       "prefLabel_en": "Marches",
       "inCollection": [
         {"@id": "/def/enum/content/composition-collection"}
@@ -2606,7 +2606,7 @@
       "broader": [
         {"@id": "/def/terms#Audio"}
       ],
-      "@id": "/def/enum/content/Marche",
+      "@id": "/def/enum/content/March",
       "@type": "Concept",
       "prefLabel": "Marsch"
     },
@@ -2790,7 +2790,7 @@
       ],
       "prefLabel": "Direktion för enstaka instrument (performer-conductor part)"
     },
-    "/def/enum/content/MultipleScoreFormat": {
+    "/def/enum/content/MultipleScoreFormats": {
       "prefLabel_en": "Multiple score formats",
       "inCollection": [
         {"@id": "/def/enum/content/additionalType-collection"}
@@ -2798,7 +2798,7 @@
       "broader": [
         {"@id": "/def/terms#Audio"}
       ],
-      "@id": "/def/enum/content/MultipleScoreFormat",
+      "@id": "/def/enum/content/MultipleScoreFormats",
       "@type": "Concept",
       "prefLabel": "Flera stämformat tillsammans"
     },
@@ -3108,7 +3108,7 @@
       "@type": "Concept",
       "prefLabel": "Memoarer"
     },
-    "/def/enum/content/LecturesSpeeche": {
+    "/def/enum/content/LecturesSpeech": {
       "prefLabel_en": "Lectures, speeches",
       "inCollection": [
         {"@id": "/def/enum/content/text-collection"}
@@ -3116,7 +3116,7 @@
       "broader": [
         {"@id": "/def/terms#Audio"}
       ],
-      "@id": "/def/enum/content/LecturesSpeeche",
+      "@id": "/def/enum/content/LecturesSpeech",
       "@type": "Concept",
       "prefLabel": "Tal eller föreläsning"
     },
@@ -4162,7 +4162,7 @@
       "@type": "Concept",
       "prefLabel": "Speltid okänd"
     },
-    "/def/enum/content/RunningTimeExceedsThreeCharacter": {
+    "/def/enum/content/RunningTimeExceedsThreeCharacters": {
       "prefLabel_en": "Running time exceeds three characters",
       "inCollection": [
         {"@id": "/def/enum/content/runningTime-collection"}
@@ -4170,7 +4170,7 @@
       "broader": [
         {"@id": "/def/terms#Visual"}
       ],
-      "@id": "/def/enum/content/RunningTimeExceedsThreeCharacter",
+      "@id": "/def/enum/content/RunningTimeExceedsThreeCharacters",
       "@type": "Concept",
       "prefLabel": "Speltid överstiger 999 minuter"
     },
@@ -5505,7 +5505,7 @@
       "@type": "Concept",
       "prefLabel": "Plast (hit vinylskivor)"
     },
-    "/def/enum/carrier/Glas": {
+    "/def/enum/carrier/Glass": {
       "prefLabel_en": "Glass",
       "inCollection": [
         {"@id": "/def/enum/carrier/medium-collection"},
@@ -5519,7 +5519,7 @@
         {"@id": "/def/terms#ProjectedImage"},
         {"@id": "/def/terms#StillImage"}
       ],
-      "@id": "/def/enum/carrier/Glas",
+      "@id": "/def/enum/carrier/Glass",
       "@type": "Concept",
       "prefLabel": "Glas"
     },
@@ -6000,11 +6000,11 @@
       ],
       "prefLabel": "Gråskala"
     },
-    "/def/enum/carrier/MixedColor": {
+    "/def/enum/carrier/MixedColors": {
       "inCollection": [
         {"@id": "/def/enum/carrier/color-collection"}
       ],
-      "@id": "/def/enum/carrier/MixedColor",
+      "@id": "/def/enum/carrier/MixedColors",
       "@type": "Concept",
       "broader": [
         {"@id": "/def/terms#Electronic"}
@@ -6111,11 +6111,11 @@
       "@id": "/def/enum/carrier/imageBitDepth-collection",
       "@type": "Collection"
     },
-    "/def/enum/carrier/MultipleImageBitDepth": {
+    "/def/enum/carrier/MultipleImageBitDepths": {
       "inCollection": [
         {"@id": "/def/enum/carrier/imageBitDepth-collection"}
       ],
-      "@id": "/def/enum/carrier/MultipleImageBitDepth",
+      "@id": "/def/enum/carrier/MultipleImageBitDepths",
       "@type": "Concept",
       "broader": [
         {"@id": "/def/terms#Electronic"}
@@ -6159,11 +6159,11 @@
       ],
       "prefLabel": "Ett genomgående filformat"
     },
-    "/def/enum/carrier/MultipleFileFormat": {
+    "/def/enum/carrier/MultipleFileFormats": {
       "inCollection": [
         {"@id": "/def/enum/carrier/fileFormats-collection"}
       ],
-      "@id": "/def/enum/carrier/MultipleFileFormat",
+      "@id": "/def/enum/carrier/MultipleFileFormats",
       "@type": "Concept",
       "broader": [
         {"@id": "/def/terms#Electronic"}
@@ -6244,11 +6244,11 @@
       ],
       "prefLabel": "Filens källa är ett mellanoriginal (ej mikroform)"
     },
-    "/def/enum/carrier/MixedSource": {
+    "/def/enum/carrier/MixedSources": {
       "inCollection": [
         {"@id": "/def/enum/carrier/antecedent-collection"}
       ],
-      "@id": "/def/enum/carrier/MixedSource",
+      "@id": "/def/enum/carrier/MixedSources",
       "@type": "Concept",
       "broader": [
         {"@id": "/def/terms#Electronic"}
@@ -6509,7 +6509,7 @@
       "@type": "Concept",
       "prefLabel": "Punktskrift för databehandling (åttapunktsskrift)"
     },
-    "/def/enum/carrier/MultipleBrailleType": {
+    "/def/enum/carrier/MultipleBrailleTypes": {
       "prefLabel_en": "Multiple braille types",
       "inCollection": [
         {"@id": "/def/enum/carrier/tacBrailleWriting-collection"}
@@ -6517,7 +6517,7 @@
       "broader": [
         {"@id": "/def/terms#TactileMaterial"}
       ],
-      "@id": "/def/enum/carrier/MultipleBrailleType",
+      "@id": "/def/enum/carrier/MultipleBrailleTypes",
       "@type": "Concept",
       "prefLabel": "Flera typer av punktskriftssystem"
     },
@@ -8362,7 +8362,7 @@
       "@type": "Concept",
       "prefLabel": "Separata ljudspår"
     },
-    "/def/enum/carrier/Rushe": {
+    "/def/enum/carrier/Rush": {
       "prefLabel_en": "Rushes",
       "inCollection": [
         {"@id": "/def/enum/carrier/motionPicElements-collection"}
@@ -8370,7 +8370,7 @@
       "broader": [
         {"@id": "/def/terms#MovingImage"}
       ],
-      "@id": "/def/enum/carrier/Rushe",
+      "@id": "/def/enum/carrier/Rush",
       "@type": "Concept",
       "prefLabel": "Snabbkopior"
     },
@@ -8806,7 +8806,7 @@
       "@type": "Concept",
       "prefLabel": "Nitratfilm: Hopklibbad"
     },
-    "/def/enum/carrier/NitrateFrothyBubblesBlister": {
+    "/def/enum/carrier/NitrateFrothyBubblesBlisters": {
       "prefLabel_en": "Nitrate: frothy, bubbles, blisters",
       "inCollection": [
         {"@id": "/def/enum/carrier/motionPicDeterioration-collection"}
@@ -8814,7 +8814,7 @@
       "broader": [
         {"@id": "/def/terms#MovingImage"}
       ],
-      "@id": "/def/enum/carrier/NitrateFrothyBubblesBlister",
+      "@id": "/def/enum/carrier/NitrateFrothyBubblesBlisters",
       "@type": "Concept",
       "prefLabel": "Nitratfilm: Bubblor och blåsor"
     },
@@ -9254,7 +9254,7 @@
       "@type": "Concept",
       "prefLabel": "Företeelser på himlakroppens yta"
     },
-    "/def/enum/carrier/MixedUse": {
+    "/def/enum/carrier/MixedUses": {
       "prefLabel_en": "Mixed uses",
       "inCollection": [
         {"@id": "/def/enum/carrier/remoteSensImageUse-collection"}
@@ -9262,7 +9262,7 @@
       "broader": [
         {"@id": "/def/terms#RemoteSensingImage"}
       ],
-      "@id": "/def/enum/carrier/MixedUse",
+      "@id": "/def/enum/carrier/MixedUses",
       "@type": "Concept",
       "prefLabel": "Kombinerade användningar"
     },
@@ -10403,7 +10403,7 @@
       "@type": "Concept",
       "prefLabel": "120 varv per minut (cylinder)"
     },
-    "/def/enum/carrier/1516Ip": {
+    "/def/enum/carrier/1516Ips": {
       "prefLabel_en": "15/16 ips",
       "inCollection": [
         {"@id": "/def/enum/carrier/soundSpeed-collection"}
@@ -10411,11 +10411,11 @@
       "broader": [
         {"@id": "/def/terms#SoundRecording"}
       ],
-      "@id": "/def/enum/carrier/1516Ip",
+      "@id": "/def/enum/carrier/1516Ips",
       "@type": "Concept",
       "prefLabel": "15/16 tum per sekund (rulle, kassett, spole)"
     },
-    "/def/enum/carrier/334Ip": {
+    "/def/enum/carrier/334Ips": {
       "prefLabel_en": "3 3/4 ips",
       "inCollection": [
         {"@id": "/def/enum/carrier/soundSpeed-collection"}
@@ -10423,11 +10423,11 @@
       "broader": [
         {"@id": "/def/terms#SoundRecording"}
       ],
-      "@id": "/def/enum/carrier/334Ip",
+      "@id": "/def/enum/carrier/334Ips",
       "@type": "Concept",
       "prefLabel": "3 3/4 tum per sekund (rulle, kassett, spole)"
     },
-    "/def/enum/carrier/178Ip": {
+    "/def/enum/carrier/178Ips": {
       "prefLabel_en": "1 7/8 ips",
       "inCollection": [
         {"@id": "/def/enum/carrier/soundSpeed-collection"}
@@ -10435,11 +10435,11 @@
       "broader": [
         {"@id": "/def/terms#SoundRecording"}
       ],
-      "@id": "/def/enum/carrier/178Ip",
+      "@id": "/def/enum/carrier/178Ips",
       "@type": "Concept",
       "prefLabel": "1 7/8 tum per sekund (rulle, kassett, spole)"
     },
-    "/def/enum/carrier/712Ip": {
+    "/def/enum/carrier/712Ips": {
       "prefLabel_en": "7 1/2 ips",
       "inCollection": [
         {"@id": "/def/enum/carrier/soundSpeed-collection"}
@@ -10447,11 +10447,11 @@
       "broader": [
         {"@id": "/def/terms#SoundRecording"}
       ],
-      "@id": "/def/enum/carrier/712Ip",
+      "@id": "/def/enum/carrier/712Ips",
       "@type": "Concept",
       "prefLabel": "7 1/2 tum per sekund (rulle, kassett, spole)"
     },
-    "/def/enum/carrier/15Ip": {
+    "/def/enum/carrier/15Ips": {
       "prefLabel_en": "15 ips",
       "inCollection": [
         {"@id": "/def/enum/carrier/soundSpeed-collection"}
@@ -10459,11 +10459,11 @@
       "broader": [
         {"@id": "/def/terms#SoundRecording"}
       ],
-      "@id": "/def/enum/carrier/15Ip",
+      "@id": "/def/enum/carrier/15Ips",
       "@type": "Concept",
       "prefLabel": "15 tum per sekund (rulle, kassett, spole)"
     },
-    "/def/enum/carrier/30Ip": {
+    "/def/enum/carrier/30Ips": {
       "prefLabel_en": "30 ips",
       "inCollection": [
         {"@id": "/def/enum/carrier/soundSpeed-collection"}
@@ -10471,7 +10471,7 @@
       "broader": [
         {"@id": "/def/terms#SoundRecording"}
       ],
-      "@id": "/def/enum/carrier/30Ip",
+      "@id": "/def/enum/carrier/30Ips",
       "@type": "Concept",
       "prefLabel": "30 tum per sekund (rulle, kassett, spole)"
     },
@@ -11210,7 +11210,7 @@
       "@type": "Concept",
       "prefLabel": "Årtal för huvuddel av samling"
     },
-    "/def/enum/content/MultipleDate": {
+    "/def/enum/content/MultipleDates": {
       "prefLabel_en": "Multiple dates",
       "inCollection": [
         {"@id": "/def/enum/content/publicationStatus-collection"}
@@ -11224,7 +11224,7 @@
         {"@id": "/def/terms#Serial"},
         {"@id": "/def/terms#Visual"}
       ],
-      "@id": "/def/enum/content/MultipleDate",
+      "@id": "/def/enum/content/MultipleDates",
       "@type": "Concept",
       "prefLabel": "Flera årtal (monografisk resurs)"
     },
@@ -11430,7 +11430,7 @@
       "@type": "Concept",
       "prefLabel": "Icke-latinska tecken finns i såväl originalform som translittererad form"
     },
-    "/def/enum/content/MissingCharacter": {
+    "/def/enum/content/MissingCharacters": {
       "prefLabel_en": "Missing characters",
       "inCollection": [
         {"@id": "/def/enum/content/modifiedRecord-collection"}
@@ -11444,7 +11444,7 @@
         {"@id": "/def/terms#Serial"},
         {"@id": "/def/terms#Visual"}
       ],
-      "@id": "/def/enum/content/MissingCharacter",
+      "@id": "/def/enum/content/MissingCharacters",
       "@type": "Concept",
       "prefLabel": "Vissa tecken och symboler har uteslutits i posten"
     },
