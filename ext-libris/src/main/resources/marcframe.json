@@ -3988,7 +3988,7 @@
         "t": {
           "$t": {"property": "uniformTitle"},
           "splitLink": [
-            {"codes": ["t"], "addLink": "subject", "spliceEntity": "Work"}
+            {"codes": ["t"], "addLink": "subject", "spliceEntity": "ConceptualWork"}
           ],
           "link": "attributedTo"
         }
@@ -4042,7 +4042,7 @@
       }}
     },
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
-    "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "Work"},
+    "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "ConceptualWork"},
     "648": {
       "inherit": "650",
       "$a": {
@@ -4124,7 +4124,7 @@
           "$t": {"property": "uniformTitle"},
           "$l": {"link": "language", "rangeEntity": "Language", "property": "label"},
           "splitLink": [
-            {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "Work"}
+            {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "ConceptualWork"}
           ],
           "link": "attributedTo"
         }
@@ -4423,7 +4423,7 @@
       "match-code": {
         "t v x y z": {
           "definesDomainEntity": null,
-          "promoteToDomainEntity": "Work",
+          "promoteToDomainEntity": "ConceptualWork",
           "NOTE": "due to this promote hack, Instance is now Work",
           "$t": {"domainEntity": "Instance", "property": "uniformTitle"}
         }
@@ -4442,7 +4442,7 @@
     },
     "130" : {
       "inherit": "bib",
-      "definesDomainEntity": "Work"
+      "definesDomainEntity": "ConceptualWork"
     },
     "148" : {
       "definesDomainEntity": "Concept",
@@ -4506,7 +4506,7 @@
         "t": {
           "$t": {"property": "uniformTitle"},
           "splitLink": [
-            {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "Work"}
+            {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "ConceptualWork"}
           ],
           "link": "attributedTo"
         }
