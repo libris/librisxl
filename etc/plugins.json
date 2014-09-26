@@ -568,19 +568,6 @@
             "versioning" : false
         }
     },
-    "marcxmlstorage2": {
-        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
-        "_plugins" : [
-            "shapecomputer"
-            ],
-        "_params" : {
-            "storageDir": "_property:STORAGE_PATH",
-            "elasticHost": "_property:ELASTIC_HOST",
-            "contentTypes" : [ "application/marcxml+xml" ],
-            "baseStorageSuffix": "marcxml2",
-            "versioning" : false
-        }
-    },
     "graphstore": {
         "_class" : "se.kb.libris.whelks.component.HttpBatchGraphStore",
         "_plugins" : [

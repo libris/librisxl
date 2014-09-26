@@ -8,6 +8,6 @@ import se.kb.libris.whelks.result.SearchResult;
 import se.kb.libris.whelks.exception.WhelkIndexException;
 
 public interface Index extends Component {
-    public void flush();
     public SearchResult query(Query query);
+    public void flush();
 }

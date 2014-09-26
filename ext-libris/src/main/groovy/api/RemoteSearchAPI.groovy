@@ -89,7 +89,6 @@ class RemoteSearchAPI extends BasicAPI {
         def databaseList = (request.getParameter("databases") ?: DEFAULT_DATABASE).split(",") as List
         def queryStr, url
         MarcRecord record
-        OaiPmhXmlConverter oaiPmhXmlConverter
         String output = ""
 
         urlParams['maximumRecords'] = n

@@ -39,6 +39,8 @@ def parse_resourcemap(dataset, part, marcframe):
             if not basename[0].isupper():
                 continue
             rclass = newclass(enumgraph, basename, baseclass, groupname)
+            if isinstance(coldefs, unicode):
+                continue
             for coldfn in coldefs.values():
                 if coldfn.get('addLink') == link:
                     map_key = coldfn['tokenMap']
