@@ -8045,7 +8045,7 @@
       "@id": "/def/enum/carrier/nonProjPrimary-collection",
       "@type": "Collection"
     },
-    "/def/enum/carrier/Canva": {
+    "/def/enum/carrier/Canvas": {
       "prefLabel_en": "Canvas",
       "inCollection": [
         {"@id": "/def/enum/carrier/nonProjPrimary-collection"},
@@ -8054,7 +8054,7 @@
       "broader": [
         {"@id": "/def/terms#StillImage"}
       ],
-      "@id": "/def/enum/carrier/Canva",
+      "@id": "/def/enum/carrier/Canvas",
       "@type": "Concept",
       "prefLabel": "Målarduk"
     },
