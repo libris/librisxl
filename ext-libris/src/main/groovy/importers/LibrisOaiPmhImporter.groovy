@@ -33,7 +33,9 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
             assert identifier
             if (mdrecord) {
                 assert dataset
-                def entry = ["identifier":identifier,"dataset":"hold","contentType":"application/marcxml+xml"]
+                def entry = ["identifier":identifier,
+                             "dataset":dataset,
+                             "contentType":"application/marcxml+xml"]
                 def meta = [:]
 
                 if (preserveTimestamps && it.header.datestamp) {

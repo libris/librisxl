@@ -190,6 +190,10 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
                     if (it.header.setSpec) {
                         for (spec in it.header.setSpec) {
+                            String link = new String("/"+(specUriMapping[spec.toString().split(":")[0]] ?: spec.toString().split(":")[0])+"/" + spec.toString().split(":")[1])
+                            log.trace("Built link $link")
+                            meta.get("link", []).add(link)
+                    /*
                             for (key in specUriMapping.keySet()) {
                                 if (spec.toString().startsWith(key+":")) {
                                     String link = new String("/"+(specUriMapping[spec.toString().split(":")[0]] ?: spec.toString().split(":")[0])+"/" + spec.toString().split(":")[1])
@@ -197,6 +201,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                                     meta.get("link", []).add(link)
                                 }
                             }
+                            */
                         }
                     }
 
