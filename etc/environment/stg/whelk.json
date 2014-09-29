@@ -4,6 +4,7 @@
         "STORAGE_PATH": "/data/librisxl/storage",
         "ELASTIC_HOST": "localhost",
         "ELASTIC_PORT": 9300,
+        "ELASTIC_TYPES": ["auth","bib","hold","def","sys"],
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
