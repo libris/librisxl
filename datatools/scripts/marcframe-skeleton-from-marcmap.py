@@ -81,17 +81,22 @@ common_columns = {
 
 def to_name(name):
     name = name[0].upper() + name[1:]
-    if name == 'Indexes':
-        name = 'Index'
-    elif name == 'Theses':
+    if name == 'Theses':
         name = 'Thesis'
     elif 'And' in name:
         name = 'Or'.join(s[0:-1] if s.endswith('s') else s
                 for s in name.split('And'))
-    elif name.endswith(('Atlas', 'Series')):
+    elif name[0].isdigit() \
+            or name.startswith(('Missing', 'Mixed', 'Multiple')) \
+            or name.endswith(('Atlas', 'Arms', 'Blues', 'BubblesBlisters',
+                'Canvas', 'Characteristics', 'Contents',
+                'ExceedsThreeCharacters', 'Glass', 'Series', 'Statistics')):
         pass
     elif name.endswith('ies'):
         name = name[0:-3] + 'y'
+    elif name in {'Indexes', 'LecturesSpeeches', 'Marches', 'Masses', 'Rushes',
+                  'Speeches', 'Waltzes', }:
+        name = name[0:-2]
     elif name.endswith('s'):
         name = name[0:-1]
     return name
@@ -345,9 +350,10 @@ for tag, field in sorted(marcmap['bib'].items()):
                                     broader_types.append({"@id": broader_id})
                             dest = enum_defs[type_id] = {
                                 "@id": type_id, "@type": "Concept",
-                                "broader": broader_types,
                                 "inCollection": in_coll
                             }
+                            if broader_types:
+                                dest["broader"] = broader_types
                             add_labels(dfn, dest)
 
                     if skip_unlinked_maps and not is_link:

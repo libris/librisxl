@@ -72,6 +72,7 @@
                         "about.@type",
                         "about.instanceTitle",
                         "about.titleVariation",
+                        "about.keyTitle",
                         "about.responsibilityStatement",
                         "about.publication",
                         "about.identifier",
