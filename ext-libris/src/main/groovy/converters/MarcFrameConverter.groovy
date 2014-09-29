@@ -50,8 +50,8 @@ class MarcFrameConverter extends BasicFormatConverter {
         conversion = new MarcConversion(config, uriMinter, tokenMaps)
     }
 
-    Map createFrame(Map marcSource) {
-        return conversion.createFrame(marcSource)
+    Map createFrame(Map marcSource, Map extraData=null) {
+        return conversion.createFrame(marcSource, null, extraData)
     }
 
     @Override
@@ -71,7 +71,8 @@ class MarcFrameConverter extends BasicFormatConverter {
     @Override
     Document doConvert(final Document doc) {
         def source = doc.dataAsMap
-        def result = createFrame(source)
+        def meta = doc.meta
+        def result = createFrame(source, meta)
         log.trace("Created frame: $result")
 
         return new Document().withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta).withContentType("application/ld+json")
@@ -201,7 +202,7 @@ class MarcConversion {
         return merged
     }
 
-    Map createFrame(Map marcSource, String recordId=null) {
+    Map createFrame(Map marcSource, String recordId=null, Map extraData) {
 
         def record = ["@type": "Record", "@id": recordId]
 
@@ -272,6 +273,14 @@ class MarcConversion {
         if (work.find { k, v -> k != "@type" }) {
             instance['instanceOf'] = work
         }
+
+        // TODO:
+        //extraData.get("oaipmhSetSpecs", []).each {
+        //    if (it.startsWith("bib:" and !record.about.holdingFor) {
+        //        record.about.holdingFor = ["@type": "Record", controlNumber: it]
+        //    }
+        //}
+
         return record
     }
 
