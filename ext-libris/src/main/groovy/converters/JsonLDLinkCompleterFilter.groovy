@@ -18,17 +18,18 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     def anonymousIds
 
-    def loadRelatedDocs(Document doc) {
+    protected loadRelatedDocs(Document doc) {
         def relatedDocs = [:]
-        log.trace("Doc has these links: ${doc.links}")
-        for (link in doc.getLinks()) {
-            log.trace("Doc has link to ${link}")
-            def idStr = link.replace("/resource", "")
-            def linkedDoc = whelk.get(new URI(idStr))
-            if (linkedDoc) {
-                relatedDocs[link] = linkedDoc.dataAsMap
-            } else {
-                log.trace("Missing document for ${link}")
+        for (spec in doc.meta.get("oaipmhSetSpecs", [])) {
+            log.trace("Doc has link to ${spec}")
+            if (spec.startsWith("authority:")) {
+                def idStr = spec.replace("authority:", "/auth/")
+                def linkedDoc = whelk.get(new URI(idStr))
+                if (linkedDoc) {
+                    relatedDocs[idStr] = linkedDoc.dataAsMap
+                } else {
+                    log.trace("Missing document for ${idStr}")
+                }
             }
         }
         return relatedDocs

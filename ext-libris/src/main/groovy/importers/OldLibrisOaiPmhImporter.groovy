@@ -34,7 +34,6 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
     long runningTime = 0
 
-    def specUriMapping = [:]
 
     ExecutorService queue
     Semaphore tickets
@@ -49,7 +48,6 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
     OldOAIPMHImporter(Map settings) {
         this.serviceUrl = settings.get('serviceUrl',SERVICE_BASE_URL)
         this.preserveTimestamps = settings.get("preserveTimestamps", true)
-        this.specUriMapping = settings.get("specUriMapping", [:])
         this.numberOfThreads = settings.get("numberOfThreads", 50000)
     }
 
@@ -190,18 +188,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
                     if (it.header.setSpec) {
                         for (spec in it.header.setSpec) {
-                            String link = new String("/"+(specUriMapping[spec.toString().split(":")[0]] ?: spec.toString().split(":")[0])+"/" + spec.toString().split(":")[1])
-                            log.trace("Built link $link")
-                            meta.get("link", []).add(link)
-                    /*
-                            for (key in specUriMapping.keySet()) {
-                                if (spec.toString().startsWith(key+":")) {
-                                    String link = new String("/"+(specUriMapping[spec.toString().split(":")[0]] ?: spec.toString().split(":")[0])+"/" + spec.toString().split(":")[1])
-
-                                    meta.get("link", []).add(link)
-                                }
-                            }
-                            */
+                            meta.get("oaipmhSetSpecs", []).add(spec.toString())
                         }
                     }
 
@@ -214,7 +201,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                             }
                         }
                         def marcmeta = meta
-                        marcmeta.put("oaipmh_header", createString(it.header))
+                        marcmeta.put("oaipmhHeader", createString(it.header))
                         marcdocuments << new Document(["entry":entry, "meta":marcmeta]).withData(mdrecord).withContentType("application/marcxml+xml")
                     } catch (Exception e) {
                         log.error("Conversion failed for id ${entry.identifier}", e)

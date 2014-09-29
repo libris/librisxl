@@ -234,10 +234,6 @@
             "marcconverter", "linkcompleter"
         ],
         "_params" : {
-            "specUriMapping" : {
-                "authority" : "auth",
-                "bibid" : "bib"
-            },
             "datasetMapping" : {
                 "Holdings" : "hold",
                 "Bibliographic" : "bib",
@@ -252,10 +248,6 @@
             "marcconverter", "linkcompleter"
         ],
         "_params" : {
-            "specUriMapping" : {
-                "authority" : "auth",
-                "bibid" : "bib"
-            },
             "preserveTimestamps" : true,
             "numberOfThreads": 50000
         }

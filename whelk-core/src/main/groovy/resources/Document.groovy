@@ -126,9 +126,11 @@ class Document {
         return (entry.get("version") ?: 0)
     }
 
+    /*
     List getLinks() {
         return meta.get("link", [])
     }
+    */
 
     // Setters
     long updateTimestamp() {
@@ -273,6 +275,7 @@ class Document {
         return withMetaEntry(entryFile.getText("utf-8"))
     }
 
+    /*
     Document withLink(String identifier) {
         if (!meta["link"]) {
             meta["link"] = []
@@ -280,6 +283,7 @@ class Document {
         meta["link"] << identifier
         return this
     }
+    */
 
     @Deprecated
     Document withLink(String identifier, String type) {

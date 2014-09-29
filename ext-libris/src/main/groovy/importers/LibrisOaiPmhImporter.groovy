@@ -20,7 +20,6 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
 
     LibrisOaiPmhImporter(Map settings) {
         preserveTimestamps = settings.get("preserveTimestamps", preserveTimestamps)
-        specUriMapping = settings.get("specUriMapping", specUriMapping)
         datasetMapping = settings.get("datasetMapping", datasetMapping)
     }
 
@@ -44,10 +43,14 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
                 }
 
                 for (spec in it.header.setSpec) {
+                    /*
                     String link = new String("/"+(specUriMapping[spec.toString().split(":")[0]] ?: spec.toString().split(":")[0])+"/" + spec.toString().split(":")[1])
                     log.trace("Built link $link")
                     meta.get("link", []).add(link)
+                    */
+                    meta.get("oaipmhSetSpecs", []).add(spec.toString())
                 }
+                meta.put("oaipmhHeader", createString(it.header))
 
                 docs << new Document(["entry":entry, "meta":meta]).withData(mdrecord)
             } else if (it.header.@deleted == 'true') {
