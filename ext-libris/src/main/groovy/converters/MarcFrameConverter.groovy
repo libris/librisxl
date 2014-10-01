@@ -62,7 +62,7 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     Document doConvert(final Object record, final Map metaentry) {
         def source = MarcJSONConverter.toJSONMap(record)
-        def result = createFrame(source)
+        def result = createFrame(source, metaentry.meta)
         log.trace("Created frame: $result")
 
         return new Document().withData(mapper.writeValueAsBytes(result)).setMetaEntry(metaentry).withContentType(getResultContentType())
@@ -202,7 +202,7 @@ class MarcConversion {
         return merged
     }
 
-    Map createFrame(Map marcSource, String recordId=null, Map extraData) {
+    Map createFrame(Map marcSource, String recordId=null, Map extraData=null) {
 
         def record = ["@type": "Record", "@id": recordId]
 
@@ -274,12 +274,12 @@ class MarcConversion {
             instance['instanceOf'] = work
         }
 
-        // TODO:
-        //extraData.get("oaipmhSetSpecs", []).each {
-        //    if (it.startsWith("bib:" and !record.about.holdingFor) {
-        //        record.about.holdingFor = ["@type": "Record", controlNumber: it]
-        //    }
-        //}
+        // TODO: move this to an "extra data" section in marcframe.json?
+        extraData?.get("oaipmhSetSpecs")?.each {
+            if (it.startsWith("bibid:") && !record.about.holdingFor) {
+                record.about.holdingFor = ["@type": "Record", controlNumber: it.substring(6)]
+            }
+        }
 
         return record
     }
