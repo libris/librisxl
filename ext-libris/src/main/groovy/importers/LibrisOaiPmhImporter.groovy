@@ -21,6 +21,7 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
     LibrisOaiPmhImporter(Map settings) {
         preserveTimestamps = settings.get("preserveTimestamps", preserveTimestamps)
         datasetMapping = settings.get("datasetMapping", datasetMapping)
+        specUriMapping = ["authority":"auth"]
     }
 
     void parseResult(final OAIPMH) {

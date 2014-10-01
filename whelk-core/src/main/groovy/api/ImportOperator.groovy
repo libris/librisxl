@@ -74,7 +74,7 @@ class ImportOperator extends AbstractOperator {
             for (ds in dataset.split(",")) {
                 log.info("Import from OAIPMH ${ds}")
                 totalCount = totalCount + importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
-                log.info("Count is now: $count")
+                log.info("Count is now: $totalCount")
             }
         } else {
             if (!serviceUrl) {
