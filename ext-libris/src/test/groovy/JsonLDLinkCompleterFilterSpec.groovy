@@ -3,10 +3,9 @@ package se.kb.libris.whelks.plugin
 import spock.lang.Specification
 import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
-import se.kb.libris.whelks.Link
 import se.kb.libris.whelks.component.ElasticJsonMapper
 import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.component.Storage
+import se.kb.libris.whelks.Whelk
 
 @Log
 class JsonLDLinkCompleterFilterSpec extends Specification {
@@ -15,19 +14,17 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
 
     def "convert should insert auth link into bib jsonld"() {
         given:
-        def storage = Mock(Storage) // TODO: let mock fetch up example documents
+        def whelk = Mock(Whelk) // TODO: let mock fetch up example documents
         def filter = new JsonLDLinkCompleterFilter()
-        filter.setStorage(storage)
+        filter.setWhelk(whelk)
         def doclinks = [
-            "/auth/94541",
-            "/auth/139860",
-            "/auth/191503",
-            "/auth/140482",
-            "/auth/349968",
-            "/auth/345526"
-        ].collect {
-            new Link(new URI(it), "auth")
-        }
+            "authority:94541",
+            "authority:139860",
+            "authority:191503",
+            "authority:140482",
+            "authority:349968",
+            "authority:345526"
+        ]
         def bibDoc = makeDoc ([
             "@id": "/bib/12661",
             "@type": "Record",
@@ -99,7 +96,6 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
         def doc = filter.doFilter(bibDoc)
         def docMap = mapper.readValue(doc.dataAsString, Map)
         then:
-        println "work: $work"
         def work = docMap.about.instanceOf
         work.attributedTo."@id" == "/resource/auth/94541"
         work.influencedBy[0]."@id" == "/resource/auth/191503"
@@ -111,15 +107,15 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
         work.subject[2]."@id" == "/resource/auth/345526"
         work["class"][0]."@id" == "/resource/auth/140482"
         work["class"][1]."@id" == "/resource/auth/139860"
-
     }
 
     def makeDoc(data, links) {
         def doc = new Document()
                 .withIdentifier("http://libris.kb.se/bib/12661")
                 .withData(mapper.writeValueAsString(data))
+                .withContentType("application/ld+json")
         links.each {
-            doc.withLink(it.identifier.toString(), it.type)
+            doc.meta.get("oaipmhSetSpecs", []).add(it)
         }
         return doc
     }

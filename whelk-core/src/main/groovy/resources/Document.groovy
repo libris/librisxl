@@ -126,12 +126,6 @@ class Document {
         return (entry.get("version") ?: 0)
     }
 
-    /*
-    List getLinks() {
-        return meta.get("link", [])
-    }
-    */
-
     // Setters
     long updateTimestamp() {
         setTimestamp(new Date().getTime())
@@ -274,16 +268,6 @@ class Document {
     Document withMetaEntry(File entryFile) {
         return withMetaEntry(entryFile.getText("utf-8"))
     }
-
-    /*
-    Document withLink(String identifier) {
-        if (!meta["link"]) {
-            meta["link"] = []
-        }
-        meta["link"] << identifier
-        return this
-    }
-    */
 
     @Deprecated
     Document withLink(String identifier, String type) {
