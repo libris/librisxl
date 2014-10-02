@@ -64,25 +64,37 @@
              }
 
          } else if (request.method == "POST") {
-             try {
-                 def entry = [
-                 "contentType":request.getContentType()
-                 ]
-                 Document doc = new Document().withData(request.getInputStream().getBytes()).withEntry(entry).withMeta(request.getParameterMap())
-                 def identifier = convertAndSaveDocument(doc)
+             log.debug("POST detected.")
+             int pathsize = path.split("/").size()
+             if (pathsize == 0 || pathsize == 2) {
+                 try {
+                     def entry = [
+                         "contentType":request.getContentType()
+                     ]
+                     if (pathsize == 2) {
+                         entry["dataset"] = path.split("/")[-1]
+                     } else {
+                         // TODO: Temporary fix to make sure kitin still works.
+                         entry["dataset"] = "bib"
+                     }
+                     Document doc = new Document().withData(request.getInputStream().getBytes()).withEntry(entry).withMeta(request.getParameterMap())
+                     def identifier = convertAndSaveDocument(doc)
 
-                 log.debug("Saved document $identifier")
+                     log.debug("Saved document $identifier")
 
-                 def locationRef = request.getRequestURL()
-                 while (locationRef[-1] == '/') {
-                     locationRef.deleteCharAt(locationRef.length()-1)
+                     def locationRef = request.getRequestURL()
+                     while (locationRef[-1] == '/') {
+                         locationRef.deleteCharAt(locationRef.length()-1)
+                     }
+                     locationRef.append(identifier)
+
+                         sendDocumentSavedResponse(response, locationRef.toString(), doc.timestamp as String)
+
+                 } catch (WhelkRuntimeException wre) {
+                     response.sendError(response.SC_INTERNAL_SERVER_ERROR, wre.message)
                  }
-                 locationRef.append(identifier)
-
-                     sendDocumentSavedResponse(response, locationRef.toString(), doc.timestamp as String)
-
-             } catch (WhelkRuntimeException wre) {
-                 response.sendError(response.SC_INTERNAL_SERVER_ERROR, wre.message)
+             } else {
+                 response.sendError(response.SC_BAD_REQUEST, "POST only allowed to root or dataset")
              }
          } else if (request.getMethod() == "PUT") {
              log.debug("PATH: $path")
@@ -136,18 +148,19 @@
 
      URI convertAndSaveDocument(Document doc) {
          doc = this.whelk.sanityCheck(doc)
-         log.debug("Saving document first pass.")
+         log.debug("Saving document first pass. (${doc.identifier})")
          def identifier = this.whelk.add(doc)
          for (fc in plugins.findAll { it instanceof FormatConverter && it.requiredContentType == doc.contentType }) {
              try {
                  log.debug("Running formatconverter ${fc.id} on ${doc.identifier}")
-                     doc = fc.convert(doc)
-                     doc = this.whelk.sanityCheck(doc)
-                     identifier = this.whelk.add(doc)
+                 doc = fc.convert(doc)
+                 doc = this.whelk.sanityCheck(doc)
+                 identifier = this.whelk.add(doc)
              } catch (WhelkAddException wae) {
                  log.warn("Converted to ${doc.contentType} but there are no storages for that.")
              }
          }
+         return identifier
      }
 
 
