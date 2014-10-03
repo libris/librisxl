@@ -4655,6 +4655,7 @@
         "addLink": "heldBy",
         "rangeEntity": "Organization",
         "property": "notation",
+        "TODO": "move to about-resource and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },
       "$c": {"addProperty": "shelfLocation"},
@@ -4663,7 +4664,11 @@
       "$f": {"addProperty": "codedLocationQualifier"},
       "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {"property": "classificationPart"},
-      "$i": {"addProperty": "availability", "NOTE": "deviates from standard (itemPart)?"},
+      "$i": {
+        "addProperty": "availability",
+        "NOTE": "deviates from standard (itemPart)?",
+        "TODO": "optional controlled values (see websearch holdings"
+      },
       "$j": {"property": "shelfControlNumber"},
       "$k": {"addProperty": "callNumberPrefix"},
       "$l": {"property": "shelfLabel"},
