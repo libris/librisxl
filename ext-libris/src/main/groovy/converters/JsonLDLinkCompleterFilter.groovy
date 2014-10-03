@@ -13,7 +13,7 @@ import groovy.util.logging.Slf4j as Log
 class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     String requiredContentType = "application/ld+json"
-    String ANONYMOUS_ID_PREFIX = "_:t-"
+    String ANONYMOUS_ID_PREFIX = "_:"
     Whelk whelk
 
     def anonymousIds
