@@ -3512,13 +3512,8 @@
       "$c": {"addProperty": "personTitle"},
       "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
         "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-"},
-      "$j": {"TODO:property": "influencedBy"},
-      "construct": {
-        "controlledLabel": {", ": [ "familyName",
-                          {" ": ["givenName", {"(%s)": [1, "numeration"]}]},
-                          "personTitle",
-                          {"%s-%s": [1, "birthYear", "deathYear"]} ]}
-      },
+      "$j": {"property": "comment"},
+      "$q": {"property": "label"},
       "_specSource": {
         "100": {"ind1": "1", "ind2": " ", "subfields": [
           {"a": "Jansson, Tove,"},
@@ -3529,8 +3524,7 @@
           "familyName":  "Jansson",
           "givenName":  "Tove",
           "birthYear":  "1914",
-          "deathYear":  "2001",
-          "controlledLabel":  "Jansson, Tove, 1914-2001"}
+          "deathYear":  "2001"}
       }}
     },
     "110": {
@@ -4141,8 +4135,8 @@
           {"@type": "Person",
             "familyName":  "Pietilä",
             "givenName":  "Tuulikki",
-            "birthYear":  "1917",
-            "controlledLabel":  "Pietilä, Tuulikki, 1917-"}]
+            "birthYear":  "1917"}
+        ]
       }}
     },
 

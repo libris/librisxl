@@ -757,7 +757,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     boolean repeatLink = false
     String rangeEntityName
     List splitLinkRules
-    Map construct = [:]
     Map<String, MarcSubFieldHandler> subfields = [:]
     List matchRules = []
     Map pendingResources
@@ -806,10 +805,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 link: it.link ?: it.addLink,
                 spliceEntityName: it.spliceEntity,
                 repeatLink: 'addLink' in it]
-        }
-
-        fieldDfn.construct.each { prop, tplt ->
-            construct[prop] = new StringConstruct(tplt)
         }
 
         def matchDomain = fieldDfn['match-domain']
@@ -934,13 +929,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         linkage.splitResults.each {
             if (it.entity.find { k, v -> k != "@type" }) {
                 addValue(domainEntity, it.rule.link, it.entity, it.rule.repeatLink)
-            }
-        }
-
-        if (construct) {
-            construct.each { prop, tplt ->
-                def v = tplt.expand(entity)
-                if (v) entity[prop] = v
             }
         }
 
