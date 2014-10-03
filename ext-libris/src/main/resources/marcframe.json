@@ -3249,12 +3249,14 @@
           "7": {"valueFrom": "$2"}
         },
         "uriTemplate": "/def/identifiers/{_}",
+        "property": "notation",
         "matchUriToken": "^\\S+$"
       },
       "$a": {"property": "identifierValue"},
       "$2": {
         "link": "identifierScheme",
         "uriTemplate": "/def/identifiers/{_}",
+        "property": "notation",
         "matchUriToken": "^\\S+$",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
       },
@@ -3268,7 +3270,7 @@
             {
               "@type": "Identifier",
               "identifierValue":  "1234567890",
-              "identifierScheme": {"@id": "/def/identifiers/ean"}
+              "identifierScheme": {"@id": "/def/identifiers/ean", "notation": "ean"}
             }
           ]
         }
@@ -3369,7 +3371,7 @@
       "$a": {"link": "originalCatalogingAgency", "rangeEntity": "Organization", "property": "name"},
       "$b": {
         "addLink": "language",
-        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$"
+        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
       "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
       "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
@@ -3384,7 +3386,7 @@
         "TODO:unifyWith": ["008:language", "240.a?", "546"],
         "TODO": "not repeated if equal with existing",
         "addLink": "language",
-        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$"
+        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
       "$b": {
         "link": "hasSummaryLanguage"
@@ -3392,7 +3394,7 @@
       "$h": {
         "TODO": "sync with some isVersionOf/translationOf built from many fields",
         "addLink": "originalLanguage",
-        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$"
+        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
       "$k": {
         "link": "translatedFromLanguage"
@@ -4383,7 +4385,7 @@
     "043" : {
       "$a": {
         "link": "nationality",
-        "uriTemplate": "/def/nationalities/{_}", "matchUriToken": "^[a-z-]{7}$"
+        "uriTemplate": "/def/nationalities/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "notation"
       }
     },
     "046" : {
