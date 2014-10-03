@@ -4667,7 +4667,7 @@
       "$i": {
         "addProperty": "availability",
         "NOTE": "deviates from standard (itemPart)?",
-        "TODO": "optional controlled values (see websearch holdings"
+        "TODO": "optional controlled values (see websearch holdings interface)"
       },
       "$j": {"property": "shelfControlNumber"},
       "$k": {"addProperty": "callNumberPrefix"},

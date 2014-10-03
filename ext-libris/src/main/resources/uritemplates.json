@@ -8,7 +8,7 @@
     "uriTemplate": "/def/languages/{notation}", "matchUriToken": "^\\w{2,3}$"
   },
   {
-    "matchType": "IdentifierSchem",
+    "matchType": "IdentifierScheme",
     "uriTemplate": "/def/identifiers/{identifierScheme}"
   },
   {
