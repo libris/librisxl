@@ -86,9 +86,16 @@
                      while (locationRef[-1] == '/') {
                          locationRef.deleteCharAt(locationRef.length()-1)
                      }
+
+                     if (locationRef.toString().endsWith(entry['dataset'])) {
+                         int endPos = locationRef.length()
+                         int startPos = endPos - entry['dataset'].length() - 1
+                         locationRef.delete(startPos, endPos)
+                     }
+
                      locationRef.append(identifier)
 
-                         sendDocumentSavedResponse(response, locationRef.toString(), doc.timestamp as String)
+                     sendDocumentSavedResponse(response, locationRef.toString(), doc.timestamp as String)
 
                  } catch (WhelkRuntimeException wre) {
                      response.sendError(response.SC_INTERNAL_SERVER_ERROR, wre.message)
