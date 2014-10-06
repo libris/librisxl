@@ -50,32 +50,20 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         def relatedDocs = loadRelatedDocs(doc)
 
         def json = doc.dataAsMap
-        def work = json.get("about")
+        def resource = json.get("about")
 
         if (relatedDocs.size() > 0) {
-            work.each { key, value ->
+            resource.each { key, value ->
                 log.trace("trying to find and update entity $key")
                 changedData = findAndUpdateEntityIds(value, relatedDocs) || changedData
-            }
-            if (work.get("instanceOf")) {
-                work."instanceOf".each {  k, v ->
-                    log.trace("trying to find and update instanceof entity $k")
-                    changedData = findAndUpdateEntityIds(v, relatedDocs) || changedData
-                }
             }
             log.trace("Changed data? $changedData")
             if (changedData) {
                 if (!anonymousIds.isEmpty()) {
                     log.trace("second pass to try to match unmatched anonymous @id:s")
-                    work.each { key, value ->
+                    resource.each { key, value ->
                         log.trace("trying to match anonymous @id:s for $key")
                         findAndUpdateEntityIds(value, ["fakedoc":["@type":"dummy"]])
-                    }
-                    if (work.get("instanceOf")) {
-                        work."instanceOf".each {  k, v ->
-                            log.trace("trying to match anonymous instanceof @id:s for $key")
-                            findAndUpdateEntityIds(v, ["fakedoc":["@type":"dummy"]])
-                        }
                     }
                 }
                 return doc.withData(json)
@@ -167,11 +155,32 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     boolean updatePersonId(item, relatedItem, relatedDocId) {
         log.trace("Updating person $item")
-        if (item["controlledLabel"] == relatedItem["controlledLabel"]) {  //ignore case in comparison?
+        def properties = [
+            "name",
+            "familyName",
+            "givenName",
+            "birthYear",
+            "deathYear",
+            "notation",
+            "personTitle",
+        ]
+        // criteria: all properties in item must be equal to those in relatedItem
+        int shared = 0
+        for (prop in properties) {
+            def value = item[prop]
+            if (value instanceof String) {
+                shared++
+                if (value != relatedItem[prop]) {
+                    return false
+                }
+            }
+        }
+        if (shared == 0) {
+            return false
+        } else {
             item["@id"] = relatedItem["@id"]
             return true
         }
-        return false
     }
 
     def updateSameAsAndId(item, relatedItem, relatedDocId) {
@@ -214,7 +223,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         return changed
     }
 
-    boolean updateWorkId(item, relatedItem, relatedDocId) {
+    boolean updateConceptualWorkId(item, relatedItem, relatedDocId) {
         if (item["uniformTitle"] == relatedItem["uniformTitle"]) { //ignore case in comparison?
             def attributedTo = item.attributedTo
             if (attributedTo instanceof List)
