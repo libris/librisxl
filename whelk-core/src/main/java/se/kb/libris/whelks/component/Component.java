@@ -16,4 +16,5 @@ public interface Component extends WhelkAware {
      * @param whelkId ID of the whelk calling the method. (May be null)
      */
     public void remove(URI uri);
+    boolean handlesContent(String contentType);
 }

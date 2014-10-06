@@ -28,7 +28,6 @@
             "index"
         ]
     },
-    "_masterComponent": "pairtreehybridstorage",
     "_apis": [
         { "/_remotesearch": "remotesearch" },
         { "/_operations": "operator" },

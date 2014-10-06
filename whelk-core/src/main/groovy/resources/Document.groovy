@@ -107,6 +107,7 @@ class Document {
         return ret
     }
 
+    @JsonIgnore
     String getMetadataAsJson() {
         log.trace("For $identifier. Meta is: $meta, entry is: $entry")
         return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "entry":entry])
@@ -193,6 +194,11 @@ class Document {
         return this
     }
 
+    Document withVersion(long v) {
+        setVersion((int)v)
+        return this
+    }
+
     Document withVersion(int v) {
         setVersion(v)
         return this
@@ -253,6 +259,10 @@ class Document {
     Document withMetaEntry(Map metaEntry) {
         withEntry(metaEntry.entry)
         withMeta(metaEntry.meta)
+        if (metaEntry.data) {
+
+            withData(metaEntry.data)
+        }
         return this
     }
 
@@ -269,16 +279,7 @@ class Document {
         return withMetaEntry(entryFile.getText("utf-8"))
     }
 
-    @Deprecated
-    Document withLink(String identifier, String type) {
-        if (!meta["link"]) {
-            meta["link"] = []
-        }
-        log.warn("Using deprecated method withLinks(String, String)")
-        meta["link"] << identifier
-        return this
-    }
-
+    @JsonIgnore
     boolean isJson() {
         getContentType() ==~ /application\/(\w+\+)*json/ || getContentType() ==~ /application\/x-(\w+)-json/
     }
@@ -286,20 +287,22 @@ class Document {
     /**
      * Takes either a String or a File as argument.
      */
-    @Deprecated
-    Document fromJson(json) {
+    static Document fromJson(String json) {
         try {
             Document newDoc = mapper.readValue(json, Document)
+            /*
             if (newDoc.data) {
                 setData(newDoc.data)
             }
             this.identifier = newDoc.identifier
             this.entry = newDoc.entry
             this.meta = newDoc.meta
+            */
+            return newDoc
         } catch (JsonParseException jpe) {
             throw new DocumentException(jpe)
         }
-        return this
+        //return this
     }
 
     private void calculateChecksum() {

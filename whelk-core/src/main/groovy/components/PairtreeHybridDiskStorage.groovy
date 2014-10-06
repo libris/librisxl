@@ -356,11 +356,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         return path
     }
 
-    @Override
-    public boolean handlesContent(String ctype) {
-        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
-    }
-
 
     private Document createTombstone(uri) {
         def tombstone = new Document().withIdentifier(uri).withData("DELETED ENTRY")

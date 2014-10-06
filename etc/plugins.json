@@ -567,6 +567,17 @@
             "versioning" : false
         }
     },
+    "esjsonldstorage": {
+        "_class" : "se.kb.libris.whelks.component.ElasticSearchStorage",
+        "_plugins" : [
+            "shapecomputer"
+            ],
+        "_params" : {
+            "elasticHost": "_property:ELASTIC_HOST",
+            "contentTypes": ["application/ld+json"],
+            "versioning" : false
+        }
+    },
     "marcxmlstorage": {
         "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
         "_plugins" : [

@@ -37,4 +37,10 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         log.debug("[${this.id}] onStart() not overridden.")
     }
 
+    @Override
+    public boolean handlesContent(String ctype) {
+        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
+    }
+
+
 }
