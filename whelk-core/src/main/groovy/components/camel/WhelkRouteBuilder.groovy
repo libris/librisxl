@@ -27,12 +27,16 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     long batchTimeout = 5000
     int parallelProcesses = 20
     List<String> elasticTypes
+    String indexMessageQueue
+    String graphstoreMessageQueue
 
     WhelkRouteBuilder(Map settings) {
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
         graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
         batchTimeout = settings.get("batchTimeout", batchTimeout)
         elasticTypes = settings.get("elasticTypes")
+        indexMessageQueue = settings.get("indexMessageQueue")
+        graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
     }
 
     void configure() {
@@ -45,16 +49,16 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         def eligableMQs = []
         if (whelk.index) {
-            eligableMQs.add("activemq:libris.index")
+            eligableMQs.add(indexMessageQueue)
         }
         if (whelk.graphStore) {
-            eligableMQs.add("activemq:libris.graphstore")
+            eligableMQs.add(graphstoreMessageQueue)
         }
 
         from("direct:"+primaryStorageId).process(formatConverterProcessor).multicast().parallelProcessing().to(eligableMQs as String[])
 
         if (whelk.index) {
-            from("activemq:libris.index")
+            from(indexMessageQueue)
                 .threads(1,parallelProcesses)
                 .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
                 .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
@@ -63,7 +67,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         // Routes for graphstore
         if (whelk.graphStore) {
-            from("activemq:libris.graphstore")
+            from(graphstoreMessageQueue)
                 .filter("groovy", "['auth','bib'].contains(request.getHeader('entry:dataset'))")
                 .aggregate(header("entry:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
                 .threads(1,parallelProcesses)

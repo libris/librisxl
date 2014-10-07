@@ -49,6 +49,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
     // Set by init()-method
     CamelContext camelContext = null
 
+    private ProducerTemplate producerTemplate
+
     /*
      * Whelk methods
      *******************************/
@@ -89,7 +91,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
     }
 
-    Document get(URI uri, version=null, List contentTypes=[], boolean expandLinks = true) {
+    Document get(URI uri, String version=null, List contentTypes=[], boolean expandLinks = true) {
         Document doc = null
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
@@ -103,9 +105,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         // TODO: Check this
         if (!doc) {
             doc = storage.get(uri, version)
-        }
-
-        if (expandLinks) {
         }
 
         return doc
@@ -141,7 +140,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 d.withData(dataMap)
             }
         }
-        d.timestamp = new Date().getTime()
+        d.updateTimestamp()
         return d
     }
 
@@ -167,6 +166,32 @@ class StandardWhelk extends HttpServlet implements Whelk {
         log.info("Flushing data.")
         // TODO: Implement storage and graphstore flush if necessary
         index?.flush()
+    }
+
+    // TODO: Should find a way not to notify for every storage. Only primary storage.
+    @Override
+    void notifyCamel(Document document, Map extraInfo) {
+        if (!producerTemplate) {
+            producerTemplate = getCamelContext().createProducerTemplate();
+        }
+        Exchange exchange = new DefaultExchange(getCamelContext())
+        Message message = new DefaultMessage()
+        if (document.isJson()) {
+            message.setBody(document.dataAsMap, Map)
+        } else {
+            message.setBody(document.data)
+        }
+        document.entry.each { key, value ->
+            message.setHeader("entry:$key", value)
+        }
+        if (extraInfo) {
+            extraInfo.each { key, value ->
+                message.setHeader("extra:$key", value)
+            }
+        }
+        exchange.setIn(message)
+        log.trace("Sending message to camel regaring ${document.identifier}")
+        producerTemplate.asyncSend("direct:${this.id}", exchange)
     }
 
     /*

@@ -79,11 +79,11 @@ abstract class BasicElasticComponent extends BasicComponent {
         return response
     }
 
-    void createIndexIfNotExists(String indexName) {
+    void createIndexIfNotExists(String indexName, boolean storageIndex = false) {
         if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
             log.info("Couldn't find index by name $indexName. Creating ...")
-            if (indexName.startsWith(".")) {
-                // It's a meta index. No need for aliases and such.
+            if (indexName.startsWith(".") || storageIndex) {
+                // It's a meta/storage index. No need for aliases and such.
                 if (!es_settings) {
                     es_settings = loadJson("es_settings.json")
                 }

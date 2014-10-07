@@ -2,6 +2,7 @@ package se.kb.libris.whelks.component;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.io.OutputStream;
 import se.kb.libris.whelks.Document;
 

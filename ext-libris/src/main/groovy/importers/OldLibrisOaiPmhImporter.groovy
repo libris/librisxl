@@ -79,7 +79,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                 log.info("Turning off versioning in ${st.id}")
                 // Preserve original setting
                 versioningSettings.put(st.id, st.versioning)
-                st.versioning = false
+                //st.versioning = false
             }
         }
         queue = Executors.newSingleThreadExecutor()

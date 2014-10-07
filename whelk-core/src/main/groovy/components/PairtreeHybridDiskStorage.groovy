@@ -107,7 +107,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                     "id": translateIdentifier(doc.identifier)
                 ]
             )
-            notifyCamel(doc, [:])
+            whelk.notifyCamel(doc, [:])
         }
         return result
     }
@@ -131,7 +131,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 ]
 
                 //Send to camel route
-                notifyCamel(doc, [:])
+                whelk.notifyCamel(doc, [:])
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
@@ -140,30 +140,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             log.trace("batchLoad() meantime after indexing ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
             log.debug("batchLoad() completed in ${System.currentTimeMillis() - startTime} milliseconds.")
         }
-    }
-
-    void notifyCamel(Document document, Map extraInfo) {
-        if (!producerTemplate) {
-            producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
-        }
-        Exchange exchange = new DefaultExchange(getWhelk().getCamelContext())
-        Message message = new DefaultMessage()
-        if (document.isJson()) {
-            message.setBody(document.dataAsMap, Map)
-        } else {
-            message.setBody(document.data)
-        }
-        document.entry.each { key, value ->
-            message.setHeader("entry:$key", value)
-        }
-        if (extraInfo) {
-            extraInfo.each { key, value ->
-                message.setHeader("extra:$key", value)
-            }
-        }
-        exchange.setIn(message)
-        log.debug("Sending message to camel regaring ${document.identifier}")
-        producerTemplate.asyncSend("direct:${this.id}", exchange)
     }
 
     @groovy.transform.CompileStatic
@@ -270,7 +246,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 log.debug("Trying to see if requested version is actually current version.")
                 def document = loadDocument(uri)
                 if (document && document.version == version as int) {
-                    log.debug("Why, yes it was!")
+                    log.debug("Why yes, it was!")
                     return document
                 } else {
                     log.debug("Nah, it wasn't")
@@ -453,7 +429,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 timeRangeQuery = timeRangeQuery.from(since.getTime())
             }
             if (until) {
-                timeRangeQuery = timeRangeQuery.to(since.getTime())
+                timeRangeQuery = timeRangeQuery.to(until.getTime())
             }
             query = query.must(timeRangeQuery)
         }

@@ -538,7 +538,9 @@
             "elasticBatchSize": 2000,
             "graphstoreBatchSize": 1000,
             "batchTimeout": 5000,
-            "elasticTypes": "_property:ELASTIC_TYPES"
+            "elasticTypes": "_property:ELASTIC_TYPES",
+            "indexMessageQueue": "_property:MQ_INDEX",
+            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE"
         }
     },
     "index": {
@@ -574,8 +576,9 @@
             ],
         "_params" : {
             "elasticHost": "_property:ELASTIC_HOST",
+            "indexName": "libris_storage",
             "contentTypes": ["application/ld+json"],
-            "versioning" : false
+            "versioning" : true
         }
     },
     "marcxmlstorage": {

@@ -9,7 +9,9 @@
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:8890/sparql-graph-crud",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
-        "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616"
+        "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
+        "MQ_INDEX": "activemq:libris.index",
+        "MQ_GRAPHSTORE": "activemq:libris.graphstore"
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",

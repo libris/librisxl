@@ -340,8 +340,11 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     private Map getMetaEntry(id, queriedIndex) {
         //def emei = ".$queriedIndex"
         def emei = this.whelk.primaryStorage.indexName
+        log.info("Requested id: $id")
+        id = shapeComputer.translateIndexIdTo(id)
+        log.info("Translated id: $id")
         try {
-            def grb = new GetRequestBuilder(client, emei).setType(METAENTRY_INDEX_TYPE).setId(id)
+            def grb = new GetRequestBuilder(client, emei).setType(METAENTRY_INDEX_TYPE).setId(shapeComputer.translateIdentifier(id))
             def result = performExecute(grb)
             if (result.exists) {
                 return result.sourceAsMap
