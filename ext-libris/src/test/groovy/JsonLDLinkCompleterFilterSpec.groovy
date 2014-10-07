@@ -35,7 +35,8 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
         ]],
         "/auth/345526": [about: ["@id": "/resource/auth/345526", "@type":"ConceptualWork",
             "uniformTitle":"Metamorphoses",
-            "attributedTo":[ "@type":"Person",
+            "attributedTo":["@type":"Person",
+                "@id": "/person/ovidiusnaso",
                 "familyName":"Ovidius Naso", "givenName":"Publius", "birthYear":"43"]
         ]]
     ]
@@ -88,10 +89,12 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
                             [
                                 "@type" : "Concept",
                                 "@id" : "/topic/sao/Arkiv",
+                                "prefLabel" : "Arkiv"
                             ],
                             [
                                 "@type" : "Concept",
-                                "sameAs": ["@id" : "/topic/sao/Arkiv"]
+                                "sameAs": ["@id" : "/topic/sao/Arkiv"],
+                                "prefLabel" : "Arkiv"
                             ],
                             [
                                 "@type" : "Concept",
@@ -100,15 +103,13 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
                         ]
                     ],
                     [
-                        "@type": "Work",
+                        "@type": "ConceptualWork",
                         "uniformTitle": "Metamorphoses",
                         "attributedTo": [
-                            [
-                                "@type": "Person",
-                                "familyName": "Ovidius Naso",
-                                "givenName": "Publius",
-                                "birthYear": "43"
-                            ]
+                            "@type": "Person",
+                            "familyName": "Ovidius Naso",
+                            "givenName": "Publius",
+                            "birthYear": "43"
                         ]
                     ]
                 ],
@@ -139,6 +140,7 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
         resource.subject[1].broader[1]?."@id" == "/resource/auth/139860"
         resource.subject[1].broader[2]?."@id" == "/resource/auth/349968"
         resource.subject[2]."@id" == "/resource/auth/345526"
+        resource.subject[2].attributedTo."@id" == "/person/ovidiusnaso"
         resource["class"][0]."@id" == "/resource/auth/140482"
         resource["class"][1]."@id" == "/resource/auth/139860"
     }

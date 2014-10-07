@@ -140,7 +140,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                     log.trace("Could not update object of type ${obj["@type"]}")
                     updated = false
                 }
-            } else if (!obj.containsKey("@type") && obj.get("@id", "").startsWith(ANONYMOUS_ID_PREFIX)) {
+            } else if (!obj.containsKey("@type") && obj.get("@id")?.startsWith(ANONYMOUS_ID_PREFIX)) {
                 if (anonymousIds.containsKey(obj["@id"])) {
                     obj["@id"] = anonymousIds[obj["@id"]]
                     updated = true
@@ -153,7 +153,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         return updated
     }
 
-    boolean updatePersonId(item, relatedItem, relatedDocId) {
+    boolean updatePersonId(item, relatedItem, relatedDocId=null) {
         log.trace("Updating person $item")
         def properties = [
             "name",
@@ -183,38 +183,39 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         }
     }
 
-    def updateSameAsAndId(item, relatedItem, relatedDocId) {
+    def updateSameAsAndId(item, relatedItem) {
         item["sameAs"] = ["@id": item["@id"]]
         item["@id"] = relatedItem["@id"]
-        log.trace("${item}")
     }
 
-    boolean updateConceptId(item, relatedItem, relatedDocId) {
-        def changed = false
-        def authItemSameAs = relatedItem.get("sameAs")?.get("@id")
-        if (item["@id"] && item["@id"] == authItemSameAs) {
+    boolean updateConceptId(item, relatedItem, relatedDocId=null) {
+        boolean changed = false
+        def authItemSameAsIds = collectItemIds(relatedItem.get("sameAs"))
+        if (item["@id"] && item["@id"] in authItemSameAsIds) {
             updateSameAsAndId(item, relatedItem)
             return true
         }
-        def same = item.get("sameAs")?.get("@id") == authItemSameAs
+        // TODO: sameAsIds intersect authItemSameAsIds
+        def sameAsIds = collectItemIds(item.get("sameAs"))
+        boolean same = sameAsIds.intersect(authItemSameAsIds).size() > 0
         if (same || (item["prefLabel"] && item["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"]))) {
             item["@id"] = relatedItem["@id"]
             return true
         }
         def broader = item.get("broader")
-        def narrower = item.get("narrower")
         if (broader && broader instanceof List) {
-            broader.each { bConcept ->
-                if (bConcept.get("prefLabel") && bConcept["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"])) {
-                    updateSameAsAndId(bConcept, relatedItem)
+            broader.each {
+                if (it.get("prefLabel") && it["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"])) {
+                    updateSameAsAndId(it, relatedItem)
                     changed = true
                 }
             }
         }
+        def narrower = item.get("narrower")
         if (narrower && narrower instanceof List) {
-            narrower.each { nConcept ->
-                if (nConcept.get("prefLabel") && nConcept["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"])) {
-                    updateSameAsAndId(nConcept, relatedItem)
+            narrower.each {
+                if (it.get("prefLabel") && it["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"])) {
+                    updateSameAsAndId(it, relatedItem)
                     changed = true
                 }
             }
@@ -223,20 +224,26 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         return changed
     }
 
+    List collectItemIds(itemOrItems) {
+        if (itemOrItems instanceof List)
+            return itemOrItems*.get("@id")
+        if ("@id" in itemOrItems)
+            return [itemOrItems["@id"]]
+        else
+            return []
+    }
+
     boolean updateConceptualWorkId(item, relatedItem, relatedDocId) {
-        if (item["uniformTitle"] == relatedItem["uniformTitle"]) { //ignore case in comparison?
+        if (item["uniformTitle"] == relatedItem["uniformTitle"]) {
             def attributedTo = item.attributedTo
             if (attributedTo instanceof List)
                 attributedTo = attributedTo[0]
             def authObject = relatedItem.attributedTo
             if (authObject instanceof List)
                 authObject = authObject[0]
-            if (
-                    (!attributedTo && !authObject) ||
+            if ((!attributedTo && !authObject) ||
                     ((attributedTo && authObject) &&
-                     (attributedTo["@type"] == "Person" && authObject["@type"] == "Person" &&
-                      attributedTo["controlledLabel"] == authObject["controlledLabel"]))  //ignore case in comparison?
-            ) {
+                     updatePersonId(attributedTo, authObject))) {
                 item["@id"] = relatedItem["@id"] ?: relatedDocId
                 return true
             }
@@ -246,7 +253,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
 
     //TODO: lookup for example NB=Kungl. biblioteket ??
-    boolean updateOrganizationId(item, relatedItem, relatedDocId) {
+    boolean updateOrganizationId(item, relatedItem, relatedDocId=null) {
         if (item["name"] == relatedItem["name"]) {
             item["@id"] = relatedItem["@id"]
             return true
