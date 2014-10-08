@@ -1,5 +1,9 @@
 [
   {
+    "matchType": "Record",
+    "uriTemplate": "/resource/bib/{controlNumber}"
+  },
+  {
     "matchType": "Country",
     "uriTemplate": "/def/countries/{notation}"
   },
@@ -47,6 +51,6 @@
   },
   {
     "matchType": "Nationality",
-    "uriTemplate": "/def/nationalities/{_}", "matchUriToken": "^[a-z-]{7}$"
+    "uriTemplate": "/def/nationalities/{notation}", "matchUriToken": "^[a-z-]{7}$"
   }
 ]
