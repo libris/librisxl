@@ -99,27 +99,6 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
             }
         }
 
-        log.debug("Checking for controlNumbers")
-        boolean altered = false
-        for (key in ["precededBy", "succeededBy"]) {
-            for (item in resource.get(key)) {
-                def describedBy = item.get("describedBy")
-                if (describedBy) {
-                    for (cn in describedBy) {
-                        if (cn.get("@type") == "Record") {
-                            item.put("@id", new String("/resource/bib/${cn.controlNumber}"))
-                        }
-                    }
-                    item.remove("describedBy")
-                    altered = true
-                }
-            }
-        }
-
-        if (altered) {
-            return doc.withData(json)
-        }
-
         return doc
     }
 

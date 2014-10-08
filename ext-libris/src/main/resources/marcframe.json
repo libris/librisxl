@@ -3567,7 +3567,10 @@
       "i2": {},
       "link": "exampleOfWork",
       "rangeEntity": "ConceptualWork",
-      "$0": {"addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber"},
+      "$0": {
+        "addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber",
+        "uriTemplate": "/resource/bib/{_}"
+      },
       "$a": {"property": "title"},
       "$k": {"addProperty": "subtitle"},
       "$p": {"addProperty": "partTitle"},
@@ -4191,7 +4194,10 @@
       "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
       "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
       "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
-      "$w": {"addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber"},
+      "$w": {
+        "addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber",
+        "uriTemplate": "/resource/bib/{_}"
+      },
       "$x": {"property": "issn", "TODO:targetMatch": "022"},
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {"addProperty": "isbn", "TODO:targetMatch": "020"},
