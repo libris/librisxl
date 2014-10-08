@@ -143,12 +143,11 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         if (item.get("@type") && item.containsKey("@value")) {
             return false
         }
-        // TODO: if (!prop.containsKey("@id")) return // or if @id is a "known unknown"
-        def changedData = updateEntityId(item, relatedItemsIndex)
-        item.each { key, value ->
-            if (key == "sameAs")
-                return
-            changedData = findAndUpdateEntityIds(value, relatedItemsIndex) || changedData
+        boolean changedData = updateEntityId(item, relatedItemsIndex)
+        if (!changedData) {
+            item.each { key, value ->
+                changedData = findAndUpdateEntityIds(value, relatedItemsIndex) || changedData
+            }
         }
         return changedData
     }
