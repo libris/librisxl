@@ -86,13 +86,14 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                 log.trace("trying to find and update entity $key")
                 changedData = findAndUpdateEntityIds(value, relatedItemsIndex) || changedData
             }
+            // TODO: optimize or remove need for bnode rewriting
             log.trace("Changed data? $changedData")
             if (changedData) {
                 if (!bnodeIdMap.isEmpty()) {
                     log.trace("second pass to try to match unmatched bnode @id:s")
                     resource.each { key, value ->
                         log.trace("trying to match bnode @id:s for $key")
-                        findAndUpdateEntityIds(value, ["fakedoc":["@type":"dummy"]])
+                        findAndUpdateEntityIds(value, [byType: [:], byIdOrSameAs: [:]])
                     }
                 }
                 return doc.withData(json)
