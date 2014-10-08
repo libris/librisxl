@@ -2,13 +2,14 @@
     "_properties": {
         "WHELK_WORK_DIR": "/var/run/whelk",
         "STORAGE_PATH": "/data/librisxl/storage",
-        "ELASTIC_HOST": "localhost",
+        "ELASTIC_HOST": "10.50.16.150",
+        "ELASTIC_CLUSTER": "kbelasticsearch",
         "ELASTIC_PORT": 9300,
         "ELASTIC_TYPES": ["auth","bib","hold","def","sys"],
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
-        "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
+        "ACTIVEMQ_BROKER_URL": "tcp://hp02.libris.kb.se:61616",
         "MQ_INDEX": "activemq:devlibris.index",
         "MQ_GRAPHSTORE": "activemq:devlibris.graphstore"
     },
@@ -21,8 +22,7 @@
         "_components": [
             "jsonldstorage",
             "marcxmlstorage",
-            "index",
-            "graphstore"
+            "index"
         ]
     },
     "_apis": [

@@ -7,7 +7,6 @@
     "_source" : {
         "enabled" : true
     },
-    "store" : false,
     "properties" : {
         "identifier" : {
             "type" : "string",
