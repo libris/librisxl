@@ -32,21 +32,36 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         this.entityShapes = entityShapes
     }
 
-    protected loadRelatedDocs(Document doc) {
-        def relatedDocs = [:]
-        for (spec in doc.meta.get("oaipmhSetSpecs", [])) {
+    protected buildRelatedItemsIndex(Document doc) {
+        def byType = [:]
+        def byIdOrSameAs = [:]
+        def relatedItemsIndex = [byType: byType, byIdOrSameAs: byIdOrSameAs]
+        def oaipmhSetSpecs = doc.meta.get("oaipmhSetSpecs") ?: []
+        for (spec in oaipmhSetSpecs) {
             log.trace("Doc has link to ${spec}")
             if (spec.startsWith("authority:")) {
                 def idStr = spec.replace("authority:", "/auth/")
                 def linkedDoc = whelk.get(new URI(idStr))
                 if (linkedDoc) {
-                    relatedDocs[idStr] = linkedDoc.dataAsMap
+                    def data = linkedDoc.dataAsMap
+                    def about = data.about ?: data
+                    def id = about["@id"]
+                    if (id) {
+                        byIdOrSameAs[id] = about
+                    }
+                    def sameAsIds = collectItemIds(about["sameAs"])
+                    sameAsIds.each {
+                        byIdOrSameAs[it] = about
+                    }
+                    collectTypes(about).each {
+                        byType.get(it, []) << about
+                    }
                 } else {
                     log.trace("Missing document for ${idStr}")
                 }
             }
         }
-        return relatedDocs
+        return relatedItemsIndex
     }
 
     @Override
@@ -61,15 +76,15 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         log.trace("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
         bnodeIdMap = [:]
         def changedData = false
-        def relatedDocs = loadRelatedDocs(doc)
+        def relatedItemsIndex = buildRelatedItemsIndex(doc)
 
         def json = doc.dataAsMap
         def resource = json.get("about")
 
-        if (relatedDocs.size() > 0) {
+        if (relatedItemsIndex.byType.size() > 0) {
             resource.each { key, value ->
                 log.trace("trying to find and update entity $key")
-                changedData = findAndUpdateEntityIds(value, relatedDocs) || changedData
+                changedData = findAndUpdateEntityIds(value, relatedItemsIndex) || changedData
             }
             log.trace("Changed data? $changedData")
             if (changedData) {
@@ -112,92 +127,123 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
      * For given object and each nested object within, call updateEntityId.
      * (An object is a List or a Map (with a @type, but not a @value).)
      */
-    boolean findAndUpdateEntityIds(obj, relatedDocs) {
-        if (obj instanceof List) {
+    boolean findAndUpdateEntityIds(item, relatedItemsIndex) {
+        if (item instanceof List) {
             def changedData = false
-            for (o in obj) {
-                changedData = findAndUpdateEntityIds(o, relatedDocs) || changedData
+            for (o in item) {
+                changedData = findAndUpdateEntityIds(o, relatedItemsIndex) || changedData
             }
             return changedData
         }
         // skip native literals
-        if (!(obj instanceof Map)) {
+        if (!(item instanceof Map)) {
             return false
         }
         // skip expanded literals
-        if (obj.get("@type") && obj.containsKey("@value")) {
+        if (item.get("@type") && item.containsKey("@value")) {
             return false
         }
         // TODO: if (!prop.containsKey("@id")) return // or if @id is a "known unknown"
-        def changedData = updateEntityId(obj, relatedDocs)
-        obj.each { key, value ->
+        def changedData = updateEntityId(item, relatedItemsIndex)
+        item.each { key, value ->
             if (key == "sameAs")
                 return
-            changedData = findAndUpdateEntityIds(value, relatedDocs) || changedData
+            changedData = findAndUpdateEntityIds(value, relatedItemsIndex) || changedData
         }
         return changedData
     }
 
-    // TODO: 1
-    // - if property value instanceof Map, require match and update of that as well
-    // - change relatedDocs to relatedDocsIndex [byType, byIdOrSameAs]
-    // - check byIdOrSameAs before looping byType
-    // TODO: 2
-    // - also match on embedded (anon) sameAs of relatedItem (for e.g. persons)
-    // - also match across properties (prefLabel/label, aliases, nicknames or similar?)
-
-    boolean updateEntityId(obj, relatedDocs) {
-        boolean updated = false
-        def objType = obj.get("@type")
-        def currentObjId = obj["@id"]
-        relatedDocs.each { docId, relatedDoc ->
-            boolean match = false
-            def relatedItem = relatedDoc.about ?: relatedDoc
-            def relatedSameAsIds = collectItemIds(relatedItem["sameAs"])
-            if (currentObjId && currentObjId in relatedSameAsIds) {
-                match = true
-            } else if (collectItemIds(obj["sameAs"]).intersect(relatedSameAsIds).size() > 0) {
-                match = true
-            } else if (relatedItem.get("@type") == objType) {
-                def properties = entityShapes[objType]
-                if (properties) {
-                    match = matchEntities(properties, obj, relatedItem)
+    boolean updateEntityId(item, relatedItemsIndex) {
+        def currentItemId = item["@id"]
+        def matchedId = null
+        def sameItem = relatedItemsIndex.byIdOrSameAs[currentItemId]
+        if (sameItem) {
+            matchedId = sameItem["@id"]
+        } else {
+            def objType = item["@type"]
+            relatedItemsIndex.byType[objType].each { relatedItem ->
+                // TODO: we don't need to check @id or sameAs here if
+                // byIdOrSameAs above is enough. Only for nested items do we
+                // need to do such a check...
+                if (matchItems(item, relatedItem)) {
+                    matchedId = relatedItem["@id"]
                 }
             }
-            if (match) {
-                obj["@id"] = relatedItem["@id"]
-                updated = true
+        }
+        if (matchedId) {
+            item["@id"] = matchedId
+            if (currentItemId) {
+                if (currentItemId.startsWith(BNODE_ID_PREFIX)) {
+                    bnodeIdMap[currentItemId] = item["@id"]
+                } else if (currentItemId != item["@id"]) {
+                    item["sameAs"] = ["@id": currentItemId]
+                }
+            }
+            return true
+        } else if (!item.containsKey("@type") && item.get("@id")?.startsWith(BNODE_ID_PREFIX)) {
+            if (bnodeIdMap.containsKey(item["@id"])) {
+                item["@id"] = bnodeIdMap[item["@id"]]
+                return true
             }
         }
-        if (updated && currentObjId) {
-            if (currentObjId.startsWith(BNODE_ID_PREFIX)) {
-                bnodeIdMap[currentObjId] = obj["@id"]
-            } else if (currentObjId != obj["@id"]) {
-                obj["sameAs"] = ["@id": currentObjId]
-            }
-        } else if (!obj.containsKey("@type") && obj.get("@id")?.startsWith(BNODE_ID_PREFIX)) {
-            if (bnodeIdMap.containsKey(obj["@id"])) {
-                obj["@id"] = bnodeIdMap[obj["@id"]]
-                updated = true
-            }
-        }
-        return updated
+        return false
     }
 
-    boolean matchEntities(properties, item, relatedItem) {
-        log.trace("Updating entity $item")
+    boolean matchItems(item, relatedItem) {
+        def itemId = item["@id"]
+        if (itemId && itemId == relatedItem["@id"]) {
+            return true
+        }
+        def relatedSameAsIds = collectItemIds(relatedItem["sameAs"])
+        if (itemId && itemId in relatedSameAsIds) {
+            return true
+        }
+        if (collectItemIds(item["sameAs"]).intersect(relatedSameAsIds).size() > 0) {
+            return true
+        }
+        return matchByShape(item, relatedItem)
+    }
+
+    boolean matchByShape(item, relatedItem) {
+        def objType = item["@type"]
+        if (relatedItem.get("@type") != objType)
+            return false
+        def properties = entityShapes[objType]
+        if (!properties)
+            return false
         // criteria: all properties in item must be equal to those in relatedItem
         int shared = 0
         for (prop in properties.keySet()) {
             def value = item[prop]
+            def relatedValue = relatedItem[prop]
             if (value instanceof String) {
                 shared++
-                if (value != relatedItem[prop]) {
+                if (value != relatedValue) {
                     return false
                 }
+            } else if (value instanceof Map && relatedValue instanceof Map) {
+                if (matchItems(value, relatedValue)) {
+                    value["@id"] = relatedValue["@id"]
+                    return true
+                } else {
+                    return false
+                }
+
             }
         }
         return shared > 0
+    }
+
+    List collectTypes(item) {
+        def type = item["@type"]
+        if (type instanceof List)
+            return type
+        else if (type instanceof String)
+            return [type]
+        else if (type instanceof Map && "@id" in itemOrItems)
+            return [type["@id"]]
+        else
+            return []
     }
 
     List collectItemIds(itemOrItems) {
@@ -208,79 +254,5 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         else
             return []
     }
-
-    /*
-    def updateSameAsAndId(item, relatedItem) {
-        item["sameAs"] = ["@id": item["@id"]]
-        item["@id"] = relatedItem["@id"]
-    }
-
-    boolean updateConceptId(item, relatedItem, relatedDocId=null) {
-        boolean changed = false
-        def authItemSameAsIds = collectItemIds(relatedItem.get("sameAs"))
-        if (item["@id"] && item["@id"] in authItemSameAsIds) {
-            updateSameAsAndId(item, relatedItem)
-            return true
-        }
-        def sameAsIds = collectItemIds(item.get("sameAs"))
-        boolean same = sameAsIds.intersect(authItemSameAsIds).size() > 0
-        if (same || (item["prefLabel"] && item["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"]))) {
-            item["@id"] = relatedItem["@id"]
-            return true
-        }
-        def broader = item.get("broader")
-        if (broader && broader instanceof List) {
-            broader.each {
-                if (it.get("prefLabel") && it["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"])) {
-                    updateSameAsAndId(it, relatedItem)
-                    changed = true
-                }
-            }
-        }
-        def narrower = item.get("narrower")
-        if (narrower && narrower instanceof List) {
-            narrower.each {
-                if (it.get("prefLabel") && it["prefLabel"].equalsIgnoreCase(relatedItem["prefLabel"])) {
-                    updateSameAsAndId(it, relatedItem)
-                    changed = true
-                }
-            }
-        }
-
-        return changed
-    }
-
-    boolean updateConceptualWorkId(item, relatedItem, relatedDocId) {
-        if (item["uniformTitle"] == relatedItem["uniformTitle"]) {
-            def attributedTo = item.attributedTo
-            if (attributedTo instanceof List)
-                attributedTo = attributedTo[0]
-            def authObject = relatedItem.attributedTo
-            if (authObject instanceof List)
-                authObject = authObject[0]
-            if ((!attributedTo && !authObject) ||
-                    ((attributedTo && authObject) &&
-                     updatePersonId(attributedTo, authObject))) {
-                item["@id"] = relatedItem["@id"] ?: relatedDocId
-                return true
-            }
-        }
-        return false
-    }
-
-
-    //TODO: lookup for example NB=Kungl. biblioteket ??
-    boolean updateOrganizationId(item, relatedItem, relatedDocId=null) {
-        if (item["name"] == relatedItem["name"]) {
-            item["@id"] = relatedItem["@id"]
-            return true
-        }
-        if (item["label"] == relatedItem["label"]) {
-            item["@id"] = relatedItem["@id"]
-            return true
-        }
-        return false
-    }
-    */
 
 }
