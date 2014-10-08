@@ -42,6 +42,10 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
         return idxType
     }
 
+    String translateIdentifier(String id) {
+        return translateIdentifier(new URI(id))
+    }
+
     String translateIdentifier(URI uri) {
         return Base64.encodeBase64URLSafeString(uri.getPath().getBytes("UTF-8"))
         //def idelements = uri.path.split("/") as List
@@ -58,7 +62,7 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
             }
             return  new String("/"+pathelements.join("/"))
         } else {
-            String decodedIdentifier = new String(Base64.decode(id), "UTF-8")
+            String decodedIdentifier = new String(Base64.decodeBase64(id), "UTF-8")
             log.info("Decoded new style id into $decodedIdentifier")
             return decodedIdentifier
         }

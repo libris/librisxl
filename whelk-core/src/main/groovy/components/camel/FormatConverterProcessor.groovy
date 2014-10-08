@@ -70,14 +70,15 @@ class ElasticTypeRouteProcessor implements Processor {
 
     List types
     ElasticShapeComputer shapeComputer
-    String elasticHost
+    String elasticHost, elasticCluster
     int elasticPort
 
-    ElasticTypeRouteProcessor(String elasticHost, int elasticPort, List<String> availableTypes, ElasticShapeComputer esc) {
+    ElasticTypeRouteProcessor(String elasticHost, String elasticCluster, int elasticPort, List<String> availableTypes, ElasticShapeComputer esc) {
         this.types = availableTypes
         this.shapeComputer = esc
         this.elasticHost = elasticHost
         this.elasticPort = elasticPort
+        this.elasticCluster = elasticCluster
     }
 
     @Override
@@ -88,7 +89,7 @@ class ElasticTypeRouteProcessor implements Processor {
         String indexName = message.getHeader("extra:index", shapeComputer.whelkName)
         String indexType = shapeComputer.calculateShape(identifier)
         String indexId = shapeComputer.translateIdentifier(new URI(identifier))
-        String elasticCluster = System.getProperty("elastic.cluster", BasicElasticComponent.DEFAULT_CLUSTER)
+        log.debug("Processing MQ message for ${indexName}. ID: $identifier (encoded: $indexId)")
 
         message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=BULK_INDEX&indexName=${indexName}&indexType=${indexType}")
         message.getBody(Map.class).put("elastic_id", indexId)
