@@ -76,6 +76,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         for (storage in availableStorages) {
             storage.store(doc)
         }
+        notifyCamel(doc, [:])
         return new URI(doc.identifier)
     }
 

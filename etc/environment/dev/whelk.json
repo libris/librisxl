@@ -26,6 +26,7 @@
             ],
         "_components": [
             "jsonldstorage",
+            "esjsonldstorage",
             "marcxmlstorage",
             "index"
         ]

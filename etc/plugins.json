@@ -280,7 +280,6 @@
     "transferoperator": {
         "_class" : "se.kb.libris.whelks.api.TransferOperator",
         "_plugins" : [
-            "linkcompleter",
             "marcconverter",
             "marcxml2jsonldconverter"
             ]
@@ -552,6 +551,7 @@
                  "bib" : [ "text", "book", "serial" ]
             },
             "elasticHost": "_property:ELASTIC_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
             "availableTypes": "_property:ELASTIC_TYPES"
         },
         "_unique" : true
@@ -564,6 +564,7 @@
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
             "elasticHost": "_property:ELASTIC_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes": ["application/ld+json"],
             "baseStorageSuffix": "pairtree",
             "versioning" : false
@@ -576,6 +577,7 @@
             ],
         "_params" : {
             "elasticHost": "_property:ELASTIC_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
             "indexName": "libris_storage",
             "contentTypes": ["application/ld+json"],
             "versioning" : true
@@ -589,6 +591,7 @@
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
             "elasticHost": "_property:ELASTIC_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes" : [ "application/marcxml+xml" ],
             "baseStorageSuffix": "marcxml",
             "versioning" : false

@@ -8,9 +8,6 @@ import org.elasticsearch.action.delete.*
 import org.elasticsearch.common.unit.TimeValue
 import static org.elasticsearch.index.query.QueryBuilders.*
 
-import org.apache.camel.*
-import org.apache.camel.impl.*
-
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.exception.*
 
@@ -65,7 +62,6 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         }
         log.debug("Saving doc (${doc.identifier}) with version ${doc.version}")
         performExecute(prepareIndexingRequest(doc, doc.identifier, indexName))
-        whelk.notifyCamel(doc, [:])
         return true
     }
 
