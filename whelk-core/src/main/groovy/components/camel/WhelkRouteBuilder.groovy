@@ -31,38 +31,38 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     String graphstoreMessageQueue
 
     WhelkRouteBuilder(Map settings) {
-        elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
-        graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
-        batchTimeout = settings.get("batchTimeout", batchTimeout)
-        elasticTypes = settings.get("elasticTypes")
-        indexMessageQueue = settings.get("indexMessageQueue")
-        graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
+    elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
+    graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
+    batchTimeout = settings.get("batchTimeout", batchTimeout)
+    elasticTypes = settings.get("elasticTypes")
+    indexMessageQueue = settings.get("indexMessageQueue")
+    graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
+}
+
+void configure() {
+    Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
+    //Processor turtleConverterProcessor = getPlugin("turtleconverter_processor")
+    AggregationStrategy graphstoreAggregationStrategy = getPlugin("graphstore_aggregator")
+    Processor prawnRunner = getPlugin("prawnrunner_processor")
+    String primaryStorageId = whelk.storage.id
+    assert formatConverterProcessor
+
+    def eligableMQs = []
+    if (whelk.index) {
+        eligableMQs.add(indexMessageQueue)
+    }
+    if (whelk.graphStore) {
+        eligableMQs.add(graphstoreMessageQueue)
     }
 
-    void configure() {
-        Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
-        //Processor turtleConverterProcessor = getPlugin("turtleconverter_processor")
-        AggregationStrategy graphstoreAggregationStrategy = getPlugin("graphstore_aggregator")
-        Processor prawnRunner = getPlugin("prawnrunner_processor")
-        String primaryStorageId = whelk.storage.id
-        assert formatConverterProcessor
+    from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligableMQs as String[])
 
-        def eligableMQs = []
-        if (whelk.index) {
-            eligableMQs.add(indexMessageQueue)
-        }
-        if (whelk.graphStore) {
-            eligableMQs.add(graphstoreMessageQueue)
-        }
-
-        from("direct:"+primaryStorageId).process(formatConverterProcessor).multicast().parallelProcessing().to(eligableMQs as String[])
-
-        if (whelk.index) {
-            from(indexMessageQueue)
-                .threads(1,parallelProcesses)
-                .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
-                .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
-                .routingSlip("elasticDestination")
+    if (whelk.index) {
+        from(indexMessageQueue)
+            .threads(1,parallelProcesses)
+            .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
+            .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
+            .routingSlip("elasticDestination")
         }
 
         // Routes for graphstore

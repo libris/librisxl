@@ -7,7 +7,6 @@
     "_source" : {
         "enabled" : true
     },
-    "store" : true,
     "properties" : {
         "controlledLabel" : {
             "type" : "string",

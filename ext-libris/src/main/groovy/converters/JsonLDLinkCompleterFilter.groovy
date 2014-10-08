@@ -73,7 +73,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
         boolean altered = false
         for (key in ["precededBy", "succeededBy"]) {
-            for (item in work.get(key)) {
+            for (item in resource.get(key)) {
                 def describedBy = item.get("describedBy")
                 if (describedBy) {
                     for (cn in describedBy) {

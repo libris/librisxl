@@ -280,6 +280,7 @@
     "transferoperator": {
         "_class" : "se.kb.libris.whelks.api.TransferOperator",
         "_plugins" : [
+            "linkcompleter",
             "marcconverter",
             "marcxml2jsonldconverter"
             ]

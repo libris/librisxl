@@ -25,9 +25,7 @@
             "routebuilder"
             ],
         "_components": [
-            "jsonldstorage",
             "esjsonldstorage",
-            "marcxmlstorage",
             "index"
         ]
     },
