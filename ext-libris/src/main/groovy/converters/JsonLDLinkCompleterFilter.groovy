@@ -156,15 +156,19 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         def currentItemId = item["@id"]
         def matchedId = null
         def sameItem = relatedItemsIndex.byIdOrSameAs[currentItemId]
+        if (!sameItem) {
+            for (id in collectItemIds(item["sameAs"])) {
+                sameItem = relatedItemsIndex.byIdOrSameAs[id]
+                if (sameItem)
+                    break
+            }
+        }
         if (sameItem) {
             matchedId = sameItem["@id"]
         } else {
             def objType = item["@type"]
             relatedItemsIndex.byType[objType].each { relatedItem ->
-                // TODO: we don't need to check @id or sameAs here if
-                // byIdOrSameAs above is enough. Only for nested items do we
-                // need to do such a check...
-                if (matchItems(item, relatedItem)) {
+                if (matchByShape(item, relatedItem)) {
                     matchedId = relatedItem["@id"]
                 }
             }
