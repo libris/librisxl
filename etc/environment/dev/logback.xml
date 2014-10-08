@@ -13,10 +13,10 @@
 </logger>
 -->
   <logger name="org.apache.camel">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="org.apache.camel.component.http4">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="org.apache.camel.mock">
       <level value="info"/>
@@ -26,6 +26,9 @@
   </logger>
   <logger name="se.kb.libris.whelks.camel.FormatConverterProcessor">
       <level value="info"/>
+  </logger>
+  <logger name="se.kb.libris.whelks.camel.ElasticTypeRouteProcessor">
+      <level value="debug"/>
   </logger>
   <logger name="se.kb.libris.whelks.camel.GraphstoreBatchUpdateAggregationStrategy">
       <level value="info"/>

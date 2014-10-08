@@ -47,6 +47,9 @@ void configure() {
     String primaryStorageId = whelk.storage.id
     assert formatConverterProcessor
 
+    String elasticCluster = System.getProperty("elastic.cluster", global.ELASTIC_CLUSTER)
+    log.info("Using cluster $elasticCluster for camel routes.")
+
     def eligableMQs = []
     if (whelk.index) {
         eligableMQs.add(indexMessageQueue)
@@ -60,7 +63,7 @@ void configure() {
     if (whelk.index) {
         from(indexMessageQueue)
             .threads(1,parallelProcesses)
-            .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
+            .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, elasticCluster, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
             .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
             .routingSlip("elasticDestination")
         }
