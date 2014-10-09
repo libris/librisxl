@@ -63,7 +63,7 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
             return  new String("/"+pathelements.join("/"))
         } else {
             String decodedIdentifier = new String(Base64.decodeBase64(id), "UTF-8")
-            log.info("Decoded new style id into $decodedIdentifier")
+            log.debug("Decoded new style id into $decodedIdentifier")
             return decodedIdentifier
         }
     }
