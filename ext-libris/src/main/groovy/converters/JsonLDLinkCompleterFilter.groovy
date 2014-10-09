@@ -231,7 +231,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
     List collectItemIds(itemOrItems) {
         if (itemOrItems instanceof List)
-            return itemOrItems*.get("@id")
+            return itemOrItems*.get("@id").findAll()
         if ("@id" in itemOrItems)
             return [itemOrItems["@id"]]
         else
