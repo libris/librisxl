@@ -102,10 +102,6 @@ class MarcFrameConverterSpec extends Specification {
         }
         when:
         def result = converter.conversion.revert(jsonld)
-        // FIXME: 006, 007 and 008 are overeagerly generated
-        result.fields = result.fields.findAll { field ->
-            ! ['006', '007', '008'].find { field.containsKey(it) }
-        }
         def expected = deepcopy(marcSkeletons[marcType])
         def source = fieldSpec.normalized ?: fieldSpec.source
         if (source.fields) {

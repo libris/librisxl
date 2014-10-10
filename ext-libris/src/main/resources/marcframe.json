@@ -2681,10 +2681,18 @@
       },
       "Unspecified": {},
       "repeatable": true,
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
-
+      "_specSource": {"007":"aj  a   "},
+      "_specResult": {
+        "about": {
+          "hasFormat": [
+            {
+              "@type": ["Map"],
+              "carrierType": [{"@id": "/def/enum/carrier/MapATwoDimensionalMap"}],
+              "medium": {"@id": "/def/enum/carrier/Paper"}
+            }
+          ]
+        }
+      }
     },
 
     "008": {
