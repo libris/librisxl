@@ -909,8 +909,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def ent = (subDfn.domainEntityName)?
                         entityMap[subDfn.domainEntityName] :
                         (linkage.codeLinkSplits[code] ?: entity)
-                    if ((subDfn.matchI1 && subDfn.matchI1 != value.ind1) ||
-                        (subDfn.matchI2 && subDfn.matchI2 != value.ind2)) {
+                    if ((subDfn.requiresI1 && subDfn.requiresI1 != value.ind1) ||
+                        (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
                         ok = true // rule does not apply here
                     } else {
                         ok = subDfn.convertSubValue(subVal, ent, uriTemplateParams, localEntites)
@@ -1155,22 +1155,23 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def i2 = ind2? ind2.revert(data, currentEntity) : (matchCandidate?.ind2 ?: ' ')
 
         def subs = []
+        def failedRequired = false
         subfields.collect { code, subhandler ->
             if (!subhandler)
                 return
             if (onlyCodes && !onlyCodes.contains(code))
                 return
-            if (subhandler.matchI1) {
+            if (subhandler.requiresI1) {
                 if (i1 == null) {
-                    i1 = subhandler.matchI1
-                } else if (i1 != subhandler.matchI1) {
+                    i1 = subhandler.requiresI1
+                } else if (i1 != subhandler.requiresI1) {
                     return
                 }
             }
-            if (subhandler.matchI2) {
+            if (subhandler.requiresI2) {
                 if (i2 == null) {
-                    i2 = subhandler.matchI2
-                } else if (i2 != subhandler.matchI2) {
+                    i2 = subhandler.requiresI2
+                } else if (i2 != subhandler.requiresI2) {
                     return
                 }
             }
@@ -1184,10 +1185,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             } else if (value != null) {
                 subs << [(code): value]
+            } else {
+                if (subhandler.requiresI1 || subhandler.requiresI2) {
+                    failedRequired = true
+                }
             }
         }
 
-        return i1 != null && i2 != null && subs.length?
+        return !failedRequired && i1 != null && i2 != null && subs.length?
             [ind1: i1, ind2: i2, subfields: subs] :
             null
     }
@@ -1211,8 +1216,8 @@ class MarcSubFieldHandler extends ConversionPart {
     String rejoin
     Map defaults
     String marcDefault
-    String matchI1
-    String matchI2
+    String requiresI1
+    String requiresI2
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
         this.fieldHandler = fieldHandler
@@ -1246,8 +1251,8 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         defaults = subDfn.defaults
         marcDefault = subDfn.marcDefault
-        matchI1 = subDfn['match-i1']
-        matchI2 = subDfn['match-i2']
+        requiresI1 = subDfn['requires-i1']
+        requiresI2 = subDfn['requires-i2']
     }
 
     boolean convertSubValue(subVal, ent, uriTemplateParams, localEntites) {

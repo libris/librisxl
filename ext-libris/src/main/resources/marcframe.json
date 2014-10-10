@@ -3262,7 +3262,7 @@
       },
       "$a": {"property": "identifierValue"},
       "$2": {
-        "match-i1": "7",
+        "requires-i1": "7",
         "link": "identifierScheme",
         "uriTemplate": "/def/identifiers/{_}",
         "property": "notation",
