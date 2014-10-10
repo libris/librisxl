@@ -909,7 +909,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def ent = (subDfn.domainEntityName)?
                         entityMap[subDfn.domainEntityName] :
                         (linkage.codeLinkSplits[code] ?: entity)
-                    ok = subDfn.convertSubValue(subVal, ent, uriTemplateParams, localEntites)
+                    if ((subDfn.matchI1 && subDfn.matchI1 != value.ind1) ||
+                        (subDfn.matchI2 && subDfn.matchI2 != value.ind2)) {
+                        ok = true // rule does not apply here
+                    } else {
+                        ok = subDfn.convertSubValue(subVal, ent, uriTemplateParams, localEntites)
+                    }
                 }
                 if (!ok && !handled.contains(code)) {
                     unhandled << code
@@ -1143,6 +1148,20 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 return
             if (onlyCodes && !onlyCodes.contains(code))
                 return
+            if (subhandler.matchI1) {
+                if (i1 == null) {
+                    i1 = subhandler.matchI1
+                } else if (i1 != subhandler.matchI1) {
+                    return
+                }
+            }
+            if (subhandler.matchI2) {
+                if (i2 == null) {
+                    i2 = subhandler.matchI2
+                } else if (i2 != subhandler.matchI2) {
+                    return
+                }
+            }
             def selectedEntity = subhandler.about? aboutMap[subhandler.about] : currentEntity
             if (!selectedEntity)
                 return
@@ -1180,6 +1199,8 @@ class MarcSubFieldHandler extends ConversionPart {
     String rejoin
     Map defaults
     String marcDefault
+    String matchI1
+    String matchI2
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
         this.fieldHandler = fieldHandler
@@ -1213,6 +1234,8 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         defaults = subDfn.defaults
         marcDefault = subDfn.marcDefault
+        matchI1 = subDfn['match-i1']
+        matchI2 = subDfn['match-i2']
     }
 
     boolean convertSubValue(subVal, ent, uriTemplateParams, localEntites) {

@@ -2681,7 +2681,8 @@
       },
       "Unspecified": {},
       "repeatable": true,
-      "_specSource": {"007":"aj  a   "},
+      "_specSource": {"007":"aj  a|||"},
+      "_specNormalized": {"007":"aj  a   "},
       "_specResult": {
         "about": {
           "hasFormat": [
@@ -3253,8 +3254,7 @@
           "1": "upc",
           "2": "ismn",
           "3": "ean",
-          "4": "sici",
-          "7": {"valueFrom": "$2"}
+          "4": "sici"
         },
         "uriTemplate": "/def/identifiers/{_}",
         "property": "notation",
@@ -3262,27 +3262,49 @@
       },
       "$a": {"property": "identifierValue"},
       "$2": {
+        "match-i1": "7",
         "link": "identifierScheme",
         "uriTemplate": "/def/identifiers/{_}",
         "property": "notation",
         "matchUriToken": "^\\S+$",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
       },
-      "_specName": "indicator as tokenMap",
-      "_specSource": {
-        "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"}]}
-      },
-      "_specResult": {
-        "about": {
-          "identifier": [
-            {
-              "@type": "Identifier",
-              "identifierValue":  "1234567890",
-              "identifierScheme": {"@id": "/def/identifiers/ean", "notation": "ean"}
+      "_spec": [
+        {
+          "name": "indicator as tokenMap",
+          "source": {
+            "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"}]}
+          },
+          "result": {
+            "about": {
+              "identifier": [
+                {
+                  "@type": "Identifier",
+                  "identifierValue":  "1234567890",
+                  "identifierScheme": {"@id": "/def/identifiers/ean", "notation": "ean"}
+                }
+              ]
             }
-          ]
+          }
+        },
+        {
+          "name": "indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "xyz"}]}
+          },
+          "result": {
+            "about": {
+              "identifier": [
+                {
+                  "@type": "Identifier",
+                  "identifierValue":  "1234567890",
+                  "identifierScheme": {"@id": "/def/identifiers/xyz", "notation": "xyz"}
+                }
+              ]
+            }
+          }
         }
-      }
+      ]
     },
 
     "025": {},
