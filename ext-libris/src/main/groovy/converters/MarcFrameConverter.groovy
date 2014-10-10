@@ -422,13 +422,26 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
 
     def revert(Map data) {
         def value = null
+        def entity = data
+        if (addLink) {
+            entity = getEntity(data).get(addLink)?.getAt(0)
+        }
+        if (!entity)
+            return null
         if (baseConverter)
-            value = baseConverter.revert(data)
-        // TODO:
-        //def converter = computeConverter(data)
-        //return value combinedWith converter.convert(data, valueSb)
+            value = baseConverter.revert(entity)
+        def tokenBasedConverter = !useRecTypeBibLevel? handlerMap[value] : null
+        if (tokenBasedConverter) {
+            value = value ?: ""
+            def restValue = tokenBasedConverter.revert(entity)
+            return value + restValue.substring(value.size())
+        }
+        if (value.find { it != MarcFixedFieldHandler.FIXED_NONE } == null) {
+            return null
+        }
         return value
     }
+
 }
 
 class MarcFixedFieldHandler {
@@ -553,8 +566,10 @@ class ConversionPart {
             return data
         if (domainEntityName == 'Work')
             return data.about.instanceOf
-        else
+        else if (data.about)
             return data.about
+        else
+            return data
     }
 
     def revertObject(obj) {
