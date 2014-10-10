@@ -3327,7 +3327,7 @@
       },
       "TODO": "repeatable, use addProperty or wrap in Identifier object?",
       "_specName": "use indicator as property switch",
-      "_specSource": {"028": {"ind1": "0", "subfields": [{"a": "1"}]}},
+      "_specSource": {"028": {"ind1": "0", "ind2": " ", "subfields": [{"a": "1"}]}},
       "_specResult": {"about": {
         "audioIssueNumber": "1"
       }}

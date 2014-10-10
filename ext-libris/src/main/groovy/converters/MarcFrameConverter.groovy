@@ -1060,7 +1060,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return entity
     }
 
-    def revert(Map data) {
+    def revert(Map data, MatchCandidate matchCandidate=null) {
+
+        for (rule in matchRules) {
+            for (candidate in rule.candidates) {
+                def matchedResults = candidate.handler.revert(data, candidate)
+                if (matchedResults) {
+                    return matchedResults
+                }
+            }
+        }
+
         def entity = getEntity(data)
 
         def types = data.about['@type']
@@ -1103,7 +1113,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        def results = entities.collect { revertOne(data, it, null, aboutMap) }.findAll()
+        def results = entities.collect {
+            revertOne(data, it, null, aboutMap, matchCandidate)
+        }.findAll()
 
         if (splitLinkRules) {
             // TODO: refine, e.g. handle spliceEntityName..
@@ -1136,11 +1148,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return results
     }
 
-    def revertOne(Map data, Map currentEntity, Set onlyCodes=null, Map aboutMap=null) {
-        // TODO: revert match rules ...
+    def revertOne(Map data, Map currentEntity, Set onlyCodes=null, Map aboutMap=null,
+            MatchCandidate matchCandidate=null) {
 
-        def i1 = ind1? ind1.revert(data, currentEntity) : ' '
-        def i2 = ind2? ind2.revert(data, currentEntity) : ' '
+        def i1 = ind1? ind1.revert(data, currentEntity) : (matchCandidate?.ind1 ?: ' ')
+        def i2 = ind2? ind2.revert(data, currentEntity) : (matchCandidate?.ind2 ?: ' ')
 
         def subs = []
         subfields.collect { code, subhandler ->
@@ -1406,6 +1418,15 @@ abstract class MatchRule {
         return ruleMap[getKey(entity, value)]
     }
     abstract String getKey(entity, value)
+    List<MatchCandidate> getCandidates() {
+        return []
+    }
+}
+
+class MatchCandidate {
+    String ind1
+    String ind2
+    MarcFieldHandler handler
 }
 
 class DomainMatchRule extends MatchRule {
@@ -1428,6 +1449,11 @@ class IndMatchRule extends MatchRule {
     }
     String getKey(entity, value) {
         return value[indKey]
+    }
+    List<MatchCandidate> getCandidates() {
+        return ruleMap.collect { token, handler ->
+            new MatchCandidate(handler: handler, (indKey): token)
+        }
     }
 }
 
