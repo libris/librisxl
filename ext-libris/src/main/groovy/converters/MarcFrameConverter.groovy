@@ -1062,11 +1062,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     def revert(Map data, MatchCandidate matchCandidate=null) {
 
-        for (rule in matchRules) {
-            for (candidate in rule.candidates) {
-                def matchedResults = candidate.handler.revert(data, candidate)
-                if (matchedResults) {
-                    return matchedResults
+        def matchedResults = []
+
+        if (matchCandidate == null) {
+            for (rule in matchRules) {
+                for (candidate in rule.candidates) {
+                    matchedResults += candidate.handler.revert(data, candidate)
                 }
             }
         }
@@ -1145,7 +1146,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 results += resultItems
             }
         }
-        return results
+        return matchedResults + results
     }
 
     def revertOne(Map data, Map currentEntity, Set onlyCodes=null, Map aboutMap=null,
