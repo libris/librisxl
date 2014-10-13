@@ -3533,18 +3533,21 @@
     "100": {
       "note:candidate:domainEntity": "Work",
       "rangeEntity": "Person",
-      "TODO:match-i1": {
+      "match-i1": {
+        "0": {
+          "$a": {"property": "name"}
+        },
         "1": {
-          "$a": {"...": "use $a rule below"}
+          "$a": {"property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", "}
         },
         "3": {
-          "rangeEntity": "Family"
+          "rangeEntity": "Family",
+          "$a": {"property": "name"}
         }
       },
       "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "$a": {"property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
-        "splitValueProperties": ["familyName", "givenName"], "rejoin": ", "},
       "$b": {"property": "numeration"},
       "$c": {"addProperty": "personTitle"},
       "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
