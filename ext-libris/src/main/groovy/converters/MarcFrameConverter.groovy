@@ -1146,7 +1146,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 results += resultItems
             }
         }
-        return matchedResults + results
+        return results + matchedResults
     }
 
     def revertOne(Map data, Map currentEntity, Set onlyCodes=null, Map aboutMap=null,
@@ -1182,10 +1182,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def value = subhandler.revert(data, selectedEntity)
             if (value instanceof List) {
                 value.each {
-                    subs << [(code): it]
+                    if (!matchCandidate || matchCandidate.matchValue(code, it)) {
+                        subs << [(code): it]
+                    }
                 }
             } else if (value != null) {
-                subs << [(code): value]
+                if (!matchCandidate || matchCandidate.matchValue(code, value)) {
+                    subs << [(code): value]
+                }
             } else {
                 if (subhandler.requiresI1 || subhandler.requiresI2) {
                     failedRequired = true
@@ -1433,6 +1437,16 @@ class MatchCandidate {
     String ind1
     String ind2
     MarcFieldHandler handler
+    String code
+    Pattern pattern
+    boolean matchValue(String code, String value) {
+        return true
+        if (!pattern) {
+            return true
+        } else {
+            return (code == this.code) && pattern.matcher(value)
+        }
+    }
 }
 
 class DomainMatchRule extends MatchRule {
@@ -1519,6 +1533,14 @@ class CodePatternMatchRule extends MatchRule {
             }
         }
         return key
+    }
+    List<MatchCandidate> getCandidates() {
+        return patterns.collect { code, patternDfn ->
+            new MatchCandidate(
+                    handler: ruleMap[patternDfn.key],
+                    code: code,
+                    pattern: patternDfn.pattern)
+        }
     }
 }
 

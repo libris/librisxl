@@ -3384,12 +3384,17 @@
       "$a": {"addProperty": "systemNumber"},
       "$9": {"addProperty": "librisIIINumber"},
       "_specName": "interpret dbpedia URI as sameAs of instance",
-      "_specSource": {
-        "035": {"subfields": [{"a": "http://dbpedia.org/resource/August_Strindberg"}]}
-      },
-      "_specResult": {"about": {
-        "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
-      }}
+      "_specSource": [
+        {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}},
+        {"035": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "http://dbpedia.org/resource/August_Strindberg"}]}}
+      ],
+      "_specResult": {
+        "systemNumber": ["123"],
+        "about": {
+          "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
+        }
+      }
     },
 
     "036": {},
