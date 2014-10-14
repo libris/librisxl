@@ -3698,19 +3698,33 @@
       "$h": {"domainEntity": "Instance", "property": "mediaTerm", "surroundingChars": "[]"},
       "$n": {"property": "partNumber"},
       "$p": {"property": "partTitle"},
-      "_specTODO": "example with implied searchElement",
-      "_specSource": {
-        "245": {"ind1": "0", "ind2": "0", "subfields": [
-          {"a": "Anteckningar från en ö"},
-          {"c": "Tove Jansson, Tuulikki Pietilä"}
-      ]}},
-      "_specResult": {"about": {
-        "instanceTitle": {"@type": "Title",
-          "titleValue":  "Anteckningar från en ö",
-          "searchElement": false
+      "_spec": [
+        {
+          "source": {
+            "245": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Anteckningar från en ö"}
+          ]}},
+          "result": {"about": {
+            "instanceTitle": {"@type": "Title",
+              "titleValue":  "Anteckningar från en ö"
+            }
+          }}
         },
-        "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
-      }}
+        {
+          "source": {
+            "245": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "Anteckningar från en ö"},
+              {"c": "Tove Jansson, Tuulikki Pietilä"}
+          ]}},
+          "result": {"about": {
+            "instanceTitle": {"@type": "Title",
+              "titleValue":  "Anteckningar från en ö",
+              "searchElement": false
+            },
+            "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
+          }}
+        }
+      ]
     },
     "246": {
       "inherit": "245",

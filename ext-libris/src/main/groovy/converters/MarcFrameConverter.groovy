@@ -1383,8 +1383,9 @@ class MarcSubFieldHandler extends ConversionPart {
             if (vs.size() == splitValueProperties.size())
                 return vs.join(rejoin)
         }
+        def value = null
         if (property) {
-            return revertObject(entity[property])
+            value = revertObject(entity[property])
         } else if (link) {
             def obj = entity['@id']
             if (subUriTemplate) {
@@ -1403,9 +1404,9 @@ class MarcSubFieldHandler extends ConversionPart {
                     }
                 }
             }
-            return revertObject(obj)
+            value = revertObject(obj)
         }
-        return marcDefault
+        return value != null? value : marcDefault
     }
 
 }
