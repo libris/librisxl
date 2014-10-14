@@ -1316,7 +1316,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
 
         if (defaults) {
-            defaults.each { k, v -> if (!(k in ent)) ent[k] = v }
+            defaults.each { k, v -> if (v != null && !(k in ent)) ent[k] = v }
         }
         return ok
     }
@@ -1364,7 +1364,7 @@ class MarcSubFieldHandler extends ConversionPart {
         if (entity == null)
             return null
         // TODO: match defaults only if not set by other subfield...
-        if (defaults && defaults.any { p, o -> entity[p] != o })
+        if (defaults && defaults.any { p, o -> o == null && (p in entity) || entity[p] != o })
             return null
         if (splitValueProperties && rejoin) {
             // TODO: and properties not all corresponding to codes...
