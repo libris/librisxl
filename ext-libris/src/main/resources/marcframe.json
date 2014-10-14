@@ -3765,7 +3765,7 @@
         {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
         {"codes": ["e", "f", "g"], "addLink": "manufacture"}
       ],
-      "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
+      "TODO": ["splitByRepetitionAndInterpunctionPattern"],
       "rangeEntity": "ProviderEvent",
       "i1": {"TODO:property": "latest", "TODO:tokenMap": {"2": false, "3": true}},
       "$a": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ",:"},
@@ -3782,6 +3782,14 @@
               {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}, {"e": "Finland"}
               ]}
           },
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"a": "Finland"}
+            ]}}
+          ],
           "result": {"about": {
             "publication": [
               {"@type": "ProviderEvent",
@@ -3839,7 +3847,45 @@
     "261": {},
     "262": {},
     "263": {},
-    "264": {},
+
+    "264": {
+      "match-i2": {
+        "0": {"addLink": "production"},
+        "1": {"addLink": "publication"},
+        "2": {"addLink": "distribution"},
+        "3": {"addLink": "manufacture"},
+        "4": {"addLink": "copyright"}
+      },
+      "rangeEntity": "ProviderEvent",
+      "$a": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ",:"},
+      "$b": {"property": "providerName", "interpunctionChars": ",:;"},
+      "$c": {"property": "providerDate", "interpunctionChars": ",;"},
+      "_spec": [
+        {
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"a": "Finland"}
+            ]}}
+          ],
+          "result": {"about": {
+            "publication": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Stockholm"},
+                  "providerName":  "Bonnier",
+                  "providerDate":  "1996"}
+            ],
+            "manufacture": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Finland"}}
+            ]
+          }}
+        }
+      ]
+    },
+
     "265": {},
     "270": {},
 
