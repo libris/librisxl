@@ -34,82 +34,12 @@
              log.debug("POST detected.")
              int pathsize = path.split("/").size()
              if (pathsize == 0 || pathsize == 2) {
-                 try {
-                     def entry = [
-                         "contentType":request.getContentType()
-                     ]
-                     if (pathsize == 2) {
-                         entry["dataset"] = path.split("/")[-1]
-                     } else {
-                         // TODO: Temporary fix to make sure kitin still works.
-                         entry["dataset"] = "bib"
-                     }
-                     Document doc = new Document().withData(request.getInputStream().getBytes()).withEntry(entry).withMeta(request.getParameterMap())
-                     def identifier = convertAndSaveDocument(doc)
-
-                     log.debug("Saved document $identifier")
-
-                     def locationRef = request.getRequestURL()
-                     while (locationRef[-1] == '/') {
-                         locationRef.deleteCharAt(locationRef.length()-1)
-                     }
-
-                     if (locationRef.toString().endsWith(entry['dataset'])) {
-                         int endPos = locationRef.length()
-                         int startPos = endPos - entry['dataset'].length() - 1
-                         locationRef.delete(startPos, endPos)
-                     }
-
-                     locationRef.append(identifier)
-
-                     sendDocumentSavedResponse(response, locationRef.toString(), doc.timestamp as String)
-
-                 } catch (DocumentException de) {
-                     response.sendError(response.SC_BAD_REQUEST, de.message)
-                 } catch (WhelkRuntimeException wre) {
-                     response.sendError(response.SC_INTERNAL_SERVER_ERROR, wre.message)
-                 }
+                 handlePutAndPostRequest(request, response, path, false)
              } else {
                  response.sendError(response.SC_BAD_REQUEST, "POST only allowed to root or dataset")
              }
          } else if (request.getMethod() == "PUT") {
-             log.debug("PATH: $path")
-             try {
-                 if (path == "/") {
-                     throw new WhelkRuntimeException("PUT requires a proper URI.")
-                 }
-                 def identifier
-                     def entry = [
-                     "identifier":path,
-                     "contentType":request.getContentType(),
-                     "dataset":getDatasetBasedOnPath(path)
-                     ]
-                     def meta = request.getParameterMap()
-
-                     // Check If-Match
-                     String ifMatch = request.getHeader("If-Match")
-                     if (ifMatch
-                             && this.whelk.get(new URI(path))
-                             && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
-                         response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
-                     } else {
-                         try {
-                             Document doc = new Document(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
-
-                             identifier = convertAndSaveDocument(doc)
-                             sendDocumentSavedResponse(response, request.getRequestURL().toString(), doc.timestamp as String)
-
-                         } catch (DocumentException de) {
-                             log.warn("Document exception: ${de.message}")
-                             response.sendError(HttpServletResponse.SC_BAD_REQUEST, de.message)
-                         } catch (WhelkAddException wae) {
-                             log.warn("Whelk failed to store document: ${wae.message}")
-                             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
-                         }
-                     }
-             } catch (WhelkRuntimeException wre) {
-                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST, wre.message)
-             }
+             handlePutAndPostRequest(request, response, path, true)
          }
          else if (request.method == "DELETE") {
              try {
@@ -156,6 +86,61 @@
              }
          } catch (WhelkRuntimeException wrte) {
              response.sendError(response.SC_INTERNAL_SERVER_ERROR, wrte.message)
+         }
+     }
+
+     void handlePutAndPostRequest(HttpServletRequest request, HttpServletResponse response, String path, boolean identifierSupplied) {
+         log.debug("PATH: $path")
+         try {
+             if (path == "/") {
+                 throw new WhelkRuntimeException("PUT requires a proper URI.")
+             }
+             def entry = [
+                 "contentType":request.getContentType(),
+                 "dataset":getDatasetBasedOnPath(path)
+             ]
+             if (identifierSupplied) {
+                 entry['identifier'] = path
+                 // Check If-Match
+                 String ifMatch = request.getHeader("If-Match")
+                 if (ifMatch && this.whelk.get(new URI(path)) && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
+                     response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
+                     return
+                 }
+             }
+
+             try {
+                 Document doc = new Document(["entry":entry,"meta":request.getParameterMap()]).withData(request.getInputStream().getBytes())
+
+                 def identifier = convertAndSaveDocument(doc)
+                 def locationRef = request.getRequestURL()
+
+                 if (!identifierSupplied) {
+                     while (locationRef[-1] == '/') {
+                         locationRef.deleteCharAt(locationRef.length()-1)
+                     }
+
+                     if (entry['dataset'] && locationRef.toString().endsWith(entry['dataset'])) {
+                         int endPos = locationRef.length()
+                         int startPos = endPos - entry['dataset'].length() - 1
+                         locationRef.delete(startPos, endPos)
+                     }
+
+                     locationRef.append(identifier)
+
+                 }
+
+                 sendDocumentSavedResponse(response, locationRef.toString(), doc.timestamp as String)
+
+             } catch (DocumentException de) {
+                 log.warn("Document exception: ${de.message}")
+                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, de.message)
+             } catch (WhelkAddException wae) {
+                 log.warn("Whelk failed to store document: ${wae.message}")
+                 response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
+             }
+         } catch (WhelkRuntimeException wre) {
+             response.setStatus(HttpServletResponse.SC_BAD_REQUEST, wre.message)
          }
      }
 

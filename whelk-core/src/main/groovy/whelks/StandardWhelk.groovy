@@ -150,7 +150,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (d.contentType == "application/ld+json") {
             // TODO: Make sure map serialization works.
             Map dataMap = d.dataAsMap
-            throw new DocumentException("Unable to deserialize data.")
+            if (!dataMap) {
+                throw new DocumentException("Unable to deserialize data.")
+            }
             if (dataMap.get("@id") != d.identifier) {
                 dataMap.put("@id", d.identifier)
                 d.withData(dataMap)
