@@ -1,10 +1,13 @@
 import json
 from lxml import etree
+import sys
 
-from sys import argv, stdout
-fpath = argv[1]
-with open(fpath) as f:
-    root = etree.parse(f)
+if len(sys.argv) > 1:
+    fpath = sys.argv[1]
+    with open(fpath) as f:
+        root = etree.parse(f)
+else:
+    root = etree.parse(sys.stdin)
 
 MARC = '{http://www.loc.gov/MARC21/slim}'
 
@@ -25,4 +28,4 @@ for elem in root.findall('*'):
 
 data['fields'] = fields
 
-json.dump(data, stdout)
+json.dump(data, sys.stdout)

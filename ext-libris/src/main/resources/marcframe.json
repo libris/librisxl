@@ -3600,7 +3600,7 @@
       "$b": {"property": "numeration"},
       "$c": {"addProperty": "personTitle"},
       "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
-        "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-"},
+        "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-", "allowEmpty": true},
       "$j": {"property": "comment"},
       "$q": {"property": "label"},
       "_specSource": {
@@ -3698,18 +3698,33 @@
       "$h": {"domainEntity": "Instance", "property": "mediaTerm", "surroundingChars": "[]"},
       "$n": {"property": "partNumber"},
       "$p": {"property": "partTitle"},
-      "_specSource": {
-        "245": {"ind1": "0", "ind2": "0", "subfields": [
-          {"a": "Anteckningar från en ö"},
-          {"c": "Tove Jansson, Tuulikki Pietilä"}
-      ]}},
-      "_specResult": {"about": {
-        "instanceTitle": {"@type": "Title",
-          "titleValue":  "Anteckningar från en ö",
-          "searchElement": false
+      "_spec": [
+        {
+          "source": {
+            "245": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Anteckningar från en ö"}
+          ]}},
+          "result": {"about": {
+            "instanceTitle": {"@type": "Title",
+              "titleValue":  "Anteckningar från en ö"
+            }
+          }}
         },
-        "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
-      }}
+        {
+          "source": {
+            "245": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "Anteckningar från en ö"},
+              {"c": "Tove Jansson, Tuulikki Pietilä"}
+          ]}},
+          "result": {"about": {
+            "instanceTitle": {"@type": "Title",
+              "titleValue":  "Anteckningar från en ö",
+              "searchElement": false
+            },
+            "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
+          }}
+        }
+      ]
     },
     "246": {
       "inherit": "245",
@@ -3764,7 +3779,7 @@
         {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
         {"codes": ["e", "f", "g"], "addLink": "manufacture"}
       ],
-      "TODO": ["splitByRepetitionAndInterpunctionPattern", "moveTo:264"],
+      "TODO": ["splitByRepetitionAndInterpunctionPattern"],
       "rangeEntity": "ProviderEvent",
       "i1": {"TODO:property": "latest", "TODO:tokenMap": {"2": false, "3": true}},
       "$a": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ",:"},
@@ -3781,6 +3796,14 @@
               {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}, {"e": "Finland"}
               ]}
           },
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"a": "Finland"}
+            ]}}
+          ],
           "result": {"about": {
             "publication": [
               {"@type": "ProviderEvent",
@@ -3838,7 +3861,45 @@
     "261": {},
     "262": {},
     "263": {},
-    "264": {},
+
+    "264": {
+      "match-i2": {
+        "0": {"addLink": "production"},
+        "1": {"addLink": "publication"},
+        "2": {"addLink": "distribution"},
+        "3": {"addLink": "manufacture"},
+        "4": {"addLink": "copyright"}
+      },
+      "rangeEntity": "ProviderEvent",
+      "$a": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ",:"},
+      "$b": {"property": "providerName", "interpunctionChars": ",:;"},
+      "$c": {"property": "providerDate", "interpunctionChars": ",;"},
+      "_spec": [
+        {
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"a": "Finland"}
+            ]}}
+          ],
+          "result": {"about": {
+            "publication": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Stockholm"},
+                  "providerName":  "Bonnier",
+                  "providerDate":  "1996"}
+            ],
+            "manufacture": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Finland"}}
+            ]
+          }}
+        }
+      ]
+    },
+
     "265": {},
     "270": {},
 
@@ -4223,9 +4284,8 @@
       "addLink": "influencedBy", "rangeEntity": "Person",
       "_specSource": {"700":
         {"ind1": "1", "ind2": " ", "subfields": [
-          {"a": "Pietilä, Tuulikki,"},
-          {"d": "1917-"}
-          ]}
+          {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}
+        ]}
       },
       "_specResult": {"about": {
         "influencedBy": [

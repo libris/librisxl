@@ -1220,6 +1220,7 @@ class MarcSubFieldHandler extends ConversionPart {
     Pattern splitValuePattern
     List<String> splitValueProperties
     String rejoin
+    boolean allowEmpty
     Map defaults
     String marcDefault
     boolean required = false
@@ -1256,6 +1257,7 @@ class MarcSubFieldHandler extends ConversionPart {
             splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
             splitValueProperties = subDfn.splitValueProperties
             rejoin = subDfn.rejoin
+            allowEmpty = subDfn.allowEmpty
         }
         defaults = subDfn.defaults
         marcDefault = subDfn.marcDefault
@@ -1370,14 +1372,20 @@ class MarcSubFieldHandler extends ConversionPart {
         if (defaults && defaults.any { p, o -> o == null && (p in entity) || entity[p] != o })
             return null
         if (splitValueProperties && rejoin) {
-            // TODO: and properties not all corresponding to codes...
-            def vs = splitValueProperties.collect { entity[it] }.findAll()
-            // TODO: revert splitValuePattern, check if prop
+            def vs = []
+            splitValueProperties.each {
+                def v = entity[it]
+                if (v == null && allowEmpty)
+                    v = ""
+                if (v != null)
+                    vs << v
+            }
             if (vs.size() == splitValueProperties.size())
                 return vs.join(rejoin)
         }
+        def value = null
         if (property) {
-            return revertObject(entity[property])
+            value = revertObject(entity[property])
         } else if (link) {
             def obj = entity['@id']
             if (subUriTemplate) {
@@ -1396,9 +1404,9 @@ class MarcSubFieldHandler extends ConversionPart {
                     }
                 }
             }
-            return revertObject(obj)
+            value = revertObject(obj)
         }
-        return marcDefault
+        return value != null? value : marcDefault
     }
 
 }
