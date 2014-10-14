@@ -34,6 +34,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
     List<Storage> storages = new ArrayList<Storage>()
     Map<Pattern, API> apis = new LinkedHashMap<Pattern, API>()
 
+    Map locationConfig = ["preCursor": "/resource"]
+
     Index index
     GraphStore graphStore
 
@@ -112,10 +114,43 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     Location locate(URI uri) {
+        log.debug("Locating $uri")
         def doc = get(uri)
         if (doc) {
             return new Location(doc)
         }
+
+        String identifier = uri.getPath().toString()
+        log.trace("Nothing found at identifier $identifier")
+
+        if (locationConfig['preCursor'] && identifier.startsWith(locationConfig['preCursor'])) {
+            identifier = identifier.substring(locationConfig['preCursor'].length())
+            log.trace("New place to look: $identifier")
+        }
+        if (locationConfig['postCursor'] && identifier.endsWith(locationConfig['postCursor'])) {
+            identifier = identifier.substring(0, identifier.length() - locationConfig['postCursor'].length())
+            log.trace("New place to look: $identifier")
+        }
+        log.debug("Checking if new identifier (${identifier}) has something to get")
+        if (get(new URI(identifier))) {
+            return new Location().withURI(identifier).withResponseCode(303)
+        }
+
+        log.debug("Looking for identifiers in record.")
+
+        def query = new ElasticQuery(["terms":["sameAs.@id:"+identifier]])
+        def result = index.query(query)
+        if (result.numberOfHits > 1) {
+            log.error("Something is terribly wrong. Got too many hits for sameAs.")
+        }
+        if (result.numberOfHits == 1) {
+            log.trace("Results: ${result.toJson()}")
+            // TODO: Adapt to new search results.
+            def foundIdentifier = result.toMap(null, []).list[0].identifier
+            return new Location().withURI(foundIdentifier).withResponseCode(301)
+        }
+
+
         return null
     }
 

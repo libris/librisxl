@@ -63,7 +63,19 @@
          }
          log.debug("Accepting $accepting")
          try {
-             def d = whelk.get(new URI(path), version, accepting)
+             def d = null
+             if (version) {
+                 d = whelk.get(new URI(path), version, accepting)
+             } else {
+                 def location = whelk.locate(new URI(path))
+                 d = location?.document
+                 if (!d && location?.uri) {
+                     def locationRef = request.getScheme() + "//" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
+                     response.setHeader("Location", locationRef + location.uri.toString())
+                     sendResponse(response, null, null, location.responseCode)
+                     return
+                 }
+             }
              if (d && (mode== DisplayMode.META || !d.entry['deleted'])) {
 
                  for (filter in getFiltersFor(d)) {

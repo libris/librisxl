@@ -6,6 +6,9 @@ import groovy.util.logging.Slf4j as Log
 class Location {
 
     Document document
+    URI uri
+
+    int responseCode = 200
 
     Location() {}
 
@@ -13,7 +16,17 @@ class Location {
         this.document = doc
     }
 
-    URI getDescribedBy() { return null}
-    URI found() { return null}
+    Location withResponseCode(int code) {
+        responseCode = code
+        return this
+    }
 
+    Location withURI(String location) {
+        return withURI(new URI(location))
+    }
+
+    Location withURI(URI location) {
+        uri = location
+        return this
+    }
 }

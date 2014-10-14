@@ -32,11 +32,15 @@ abstract class BasicAPI extends BasicPlugin implements API {
     }
 
     void sendResponse(HttpServletResponse response, String text, String contentType, int statusCode = 200) {
-        response.setCharacterEncoding("UTF-8")
-        response.setContentType(getMajorContentType(contentType))
         response.setStatus(statusCode)
-        response.writer.write(text)
-        response.writer.flush()
+        if (contentType) {
+            response.setContentType(getMajorContentType(contentType))
+        }
+        if (text) {
+            response.setCharacterEncoding("UTF-8")
+            response.writer.write(text)
+            response.writer.flush()
+        }
     }
 
     String getMajorContentType(String contentType) {
