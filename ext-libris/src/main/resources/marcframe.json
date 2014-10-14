@@ -3187,39 +3187,84 @@
       "rangeEntity": "Identifier",
       "$a": {
         "property": "identifierValue",
-        "splitValuePattern": "(\\S+)(?:\\s*\\(([^)]+)\\))?",
+        "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
         "splitValueProperties": ["identifierValue", "identifierNote"],
         "defaults": {
-          "identifierScheme": {"@id": "/def/identifiers/isbn"}
+          "identifierScheme": {"@id": "/def/identifiers/isbn"},
+          "identifierStatus": null
         }
       },
       "$c": {"domainEntity": "Instance", "property": "availability"},
       "$q": {"property": "identifierNote"},
       "$z": {
         "property": "identifierValue",
+        "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
+        "splitValueProperties": ["identifierValue", "identifierNote"],
         "defaults": {
           "identifierScheme": {"@id": "/def/identifiers/isbn"},
           "identifierStatus": "canceledInvalid"
         }
       },
-      "_specSource": {
-        "020": {"ind1": " ", "ind2": " ", "subfields": [
-          {"a": "91-0-056322-6 (inb.)"}, {"c": "310:00"}
-          ]}
-      },
-      "_specNormalized": {
-        "020": {"ind1": " ", "ind2": " ", "subfields": [
-          {"a": "91-0-056322-6"}, {"c": "310:00"}, {"q": "inb."}
-          ]}
-      },
-      "_specResult": {"about": {
-        "identifier": [
-          {"@type": "Identifier",
-            "identifierValue": "91-0-056322-6",
-            "identifierNote": "inb.",
-            "identifierScheme": {"@id": "/def/identifiers/isbn"}}],
+      "_spec": [
+        {
+          "source": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "91-0-056322-6 (inb.)"}, {"c": "310:00"} ]}
+          },
+          "normalized": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "91-0-056322-6"}, {"c": "310:00"}, {"q": "inb."} ]}
+          },
+          "result": {"about": {
+            "identifier": [
+              {"@type": "Identifier",
+                "identifierValue": "91-0-056322-6",
+                "identifierNote": "inb.",
+                "identifierScheme": {"@id": "/def/identifiers/isbn"}}],
             "availability": "310:00"
-      }}
+          }}
+        },
+        {
+          "source": {
+            "020": {"ind1":" ","ind2":" ","subfields":[
+              {"z":"9780240811444 (pbk. : alk. paper)"} ]}
+          },
+          "normalized": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"q": "pbk. : alk. paper"}, {"z": "9780240811444"} ]}
+          },
+          "result": {"about": {
+            "identifier": [
+              {
+                "@type": "Identifier",
+                "identifierNote": "pbk. : alk. paper",
+                "identifierScheme": {"@id": "/def/identifiers/isbn"},
+                "identifierStatus": "canceledInvalid",
+                "identifierValue": "9780240811444"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "020":
+            {"ind1":" ","ind2":" ","subfields":[{"a":"(US)"} ]}
+          },
+          "normalized": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"q": "US"} ]}
+          },
+          "result": {"about": {
+            "identifier": [
+              {
+                "@type": "Identifier",
+                "identifierNote": "US",
+                "identifierScheme": {"@id": "/def/identifiers/isbn"}
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "022": {
@@ -3535,19 +3580,23 @@
       "rangeEntity": "Person",
       "match-i1": {
         "0": {
-          "$a": {"property": "name"}
+          "$a": {"property": "name", "required": true}
         },
         "1": {
-          "$a": {"property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
-            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", "}
+          "$a": {
+            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+            "required": true
+          }
         },
         "3": {
           "rangeEntity": "Family",
-          "$a": {"property": "name"}
+          "$a": {"property": "name", "required": true}
         }
       },
       "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "$a": {"required": true},
       "$b": {"property": "numeration"},
       "$c": {"addProperty": "personTitle"},
       "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
@@ -3558,7 +3607,12 @@
         "100": {"ind1": "1", "ind2": " ", "subfields": [
           {"a": "Jansson, Tove,"},
           {"d": "1914-2001"}
-                          ]}},
+      ]}},
+      "_specNormalized": {
+        "100": {"ind1": "1", "ind2": " ", "subfields": [
+          {"a": "Jansson, Tove"},
+          {"d": "1914-2001"}
+      ]}},
       "_specResult": {"about": {
         "attributedTo": {"@type": "Person",
           "familyName":  "Jansson",

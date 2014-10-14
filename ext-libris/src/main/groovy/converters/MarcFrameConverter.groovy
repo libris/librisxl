@@ -1157,6 +1157,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def subs = []
         def failedRequired = false
+
         subfields.collect { code, subhandler ->
             if (!subhandler)
                 return
@@ -1191,7 +1192,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     subs << [(code): value]
                 }
             } else {
-                if (subhandler.requiresI1 || subhandler.requiresI2) {
+                if (subhandler.required || subhandler.requiresI1 || subhandler.requiresI2) {
                     failedRequired = true
                 }
             }
@@ -1221,6 +1222,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String rejoin
     Map defaults
     String marcDefault
+    boolean required = false
     String requiresI1
     String requiresI2
 
@@ -1233,6 +1235,7 @@ class MarcSubFieldHandler extends ConversionPart {
         super.setTokenMap(fieldHandler, subDfn)
         link = subDfn.link
         about = subDfn.about
+        required = subDfn.required
         repeatLink = false
         if (subDfn.addLink) {
             repeatLink = true
@@ -1316,7 +1319,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
 
         if (defaults) {
-            defaults.each { k, v -> if (!(k in ent)) ent[k] = v }
+            defaults.each { k, v -> if (v != null && !(k in ent)) ent[k] = v }
         }
         return ok
     }
@@ -1364,7 +1367,7 @@ class MarcSubFieldHandler extends ConversionPart {
         if (entity == null)
             return null
         // TODO: match defaults only if not set by other subfield...
-        if (defaults && defaults.any { p, o -> entity[p] != o })
+        if (defaults && defaults.any { p, o -> o == null && (p in entity) || entity[p] != o })
             return null
         if (splitValueProperties && rejoin) {
             // TODO: and properties not all corresponding to codes...
