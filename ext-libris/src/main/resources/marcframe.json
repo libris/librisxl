@@ -3580,19 +3580,23 @@
       "rangeEntity": "Person",
       "match-i1": {
         "0": {
-          "$a": {"property": "name"}
+          "$a": {"property": "name", "required": true}
         },
         "1": {
-          "$a": {"property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
-            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", "}
+          "$a": {
+            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+            "required": true
+          }
         },
         "3": {
           "rangeEntity": "Family",
-          "$a": {"property": "name"}
+          "$a": {"property": "name", "required": true}
         }
       },
       "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "$a": {"required": true},
       "$b": {"property": "numeration"},
       "$c": {"addProperty": "personTitle"},
       "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
@@ -3603,7 +3607,12 @@
         "100": {"ind1": "1", "ind2": " ", "subfields": [
           {"a": "Jansson, Tove,"},
           {"d": "1914-2001"}
-                          ]}},
+      ]}},
+      "_specNormalized": {
+        "100": {"ind1": "1", "ind2": " ", "subfields": [
+          {"a": "Jansson, Tove"},
+          {"d": "1914-2001"}
+      ]}},
       "_specResult": {"about": {
         "attributedTo": {"@type": "Person",
           "familyName":  "Jansson",
