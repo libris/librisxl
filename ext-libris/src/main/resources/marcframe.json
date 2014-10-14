@@ -3600,7 +3600,7 @@
       "$b": {"property": "numeration"},
       "$c": {"addProperty": "personTitle"},
       "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
-        "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-"},
+        "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-", "allowEmpty": true},
       "$j": {"property": "comment"},
       "$q": {"property": "label"},
       "_specSource": {
@@ -3698,6 +3698,7 @@
       "$h": {"domainEntity": "Instance", "property": "mediaTerm", "surroundingChars": "[]"},
       "$n": {"property": "partNumber"},
       "$p": {"property": "partTitle"},
+      "_specTODO": "example with implied searchElement",
       "_specSource": {
         "245": {"ind1": "0", "ind2": "0", "subfields": [
           {"a": "Anteckningar från en ö"},
@@ -4223,9 +4224,8 @@
       "addLink": "influencedBy", "rangeEntity": "Person",
       "_specSource": {"700":
         {"ind1": "1", "ind2": " ", "subfields": [
-          {"a": "Pietilä, Tuulikki,"},
-          {"d": "1917-"}
-          ]}
+          {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}
+        ]}
       },
       "_specResult": {"about": {
         "influencedBy": [
