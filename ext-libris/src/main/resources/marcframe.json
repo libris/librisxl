@@ -2681,10 +2681,19 @@
       },
       "Unspecified": {},
       "repeatable": true,
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
-
+      "_specSource": {"007":"aj  a|||"},
+      "_specNormalized": {"007":"aj  a   "},
+      "_specResult": {
+        "about": {
+          "hasFormat": [
+            {
+              "@type": ["Map"],
+              "carrierType": [{"@id": "/def/enum/carrier/MapATwoDimensionalMap"}],
+              "medium": {"@id": "/def/enum/carrier/Paper"}
+            }
+          ]
+        }
+      }
     },
 
     "008": {
@@ -3245,8 +3254,7 @@
           "1": "upc",
           "2": "ismn",
           "3": "ean",
-          "4": "sici",
-          "7": {"valueFrom": "$2"}
+          "4": "sici"
         },
         "uriTemplate": "/def/identifiers/{_}",
         "property": "notation",
@@ -3254,27 +3262,49 @@
       },
       "$a": {"property": "identifierValue"},
       "$2": {
+        "requires-i1": "7",
         "link": "identifierScheme",
         "uriTemplate": "/def/identifiers/{_}",
         "property": "notation",
         "matchUriToken": "^\\S+$",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
       },
-      "_specName": "indicator as tokenMap",
-      "_specSource": {
-        "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"}]}
-      },
-      "_specResult": {
-        "about": {
-          "identifier": [
-            {
-              "@type": "Identifier",
-              "identifierValue":  "1234567890",
-              "identifierScheme": {"@id": "/def/identifiers/ean", "notation": "ean"}
+      "_spec": [
+        {
+          "name": "indicator as tokenMap",
+          "source": {
+            "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"}]}
+          },
+          "result": {
+            "about": {
+              "identifier": [
+                {
+                  "@type": "Identifier",
+                  "identifierValue":  "1234567890",
+                  "identifierScheme": {"@id": "/def/identifiers/ean", "notation": "ean"}
+                }
+              ]
             }
-          ]
+          }
+        },
+        {
+          "name": "indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "xyz"}]}
+          },
+          "result": {
+            "about": {
+              "identifier": [
+                {
+                  "@type": "Identifier",
+                  "identifierValue":  "1234567890",
+                  "identifierScheme": {"@id": "/def/identifiers/xyz", "notation": "xyz"}
+                }
+              ]
+            }
+          }
         }
-      }
+      ]
     },
 
     "025": {},
@@ -3297,7 +3327,7 @@
       },
       "TODO": "repeatable, use addProperty or wrap in Identifier object?",
       "_specName": "use indicator as property switch",
-      "_specSource": {"028": {"ind1": "0", "subfields": [{"a": "1"}]}},
+      "_specSource": {"028": {"ind1": "0", "ind2": " ", "subfields": [{"a": "1"}]}},
       "_specResult": {"about": {
         "audioIssueNumber": "1"
       }}
@@ -3354,12 +3384,17 @@
       "$a": {"addProperty": "systemNumber"},
       "$9": {"addProperty": "librisIIINumber"},
       "_specName": "interpret dbpedia URI as sameAs of instance",
-      "_specSource": {
-        "035": {"subfields": [{"a": "http://dbpedia.org/resource/August_Strindberg"}]}
-      },
-      "_specResult": {"about": {
-        "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
-      }}
+      "_specSource": [
+        {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}},
+        {"035": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "http://dbpedia.org/resource/August_Strindberg"}]}}
+      ],
+      "_specResult": {
+        "systemNumber": ["123"],
+        "about": {
+          "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
+        }
+      }
     },
 
     "036": {},
@@ -3498,18 +3533,21 @@
     "100": {
       "note:candidate:domainEntity": "Work",
       "rangeEntity": "Person",
-      "TODO:match-i1": {
+      "match-i1": {
+        "0": {
+          "$a": {"property": "name"}
+        },
         "1": {
-          "$a": {"...": "use $a rule below"}
+          "$a": {"property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", "}
         },
         "3": {
-          "rangeEntity": "Family"
+          "rangeEntity": "Family",
+          "$a": {"property": "name"}
         }
       },
       "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "$a": {"property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
-        "splitValueProperties": ["familyName", "givenName"], "rejoin": ", "},
       "$b": {"property": "numeration"},
       "$c": {"addProperty": "personTitle"},
       "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",

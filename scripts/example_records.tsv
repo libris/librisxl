@@ -205,12 +205,25 @@ bib/3673618	Beiträge zum ausländischen und internationalen Privatrecht (En ser
 bib/13906314	Jag vet vem du är [Kombinerat material] / av Kerstin Erlandsson-Svevar (textbok, mp3-CD ; barn/ungdom)
 bib/14218500	Mindfulness i svåra situationer [Kombinerat material] : träningsprogram / Igor Ardoris
 bib/14786209	Guldfisken [Kombinerat material] / Susanna Alakoski
-bib/14130458	Från tunnelbana till fåtölj [Kombinerat material] : en bilderbok för vuxna (Christers labbpost)
+bib/14130458	Från tunnelbana till fåtölj [Kombinerat material] : en bilderbok för vuxna (Christers labbpost; har RDA-fält)
 bib/8997956	Kart- & bildteknik = Mapping and image science / Swedish Cartographic Society / Kartografiska sällskapet [seriell]
 bib/12683491	Kammarmusik-nytt : Kammarmusikförbundets tidskrift [seriell]
 bib/4112475	Nordisk museologi [seriell]
 bib/3413533	Hemmets Journal [seriell]
 bib/1513208	Styrelser och revisorer i Sveriges börsföretag / Anneli Sundin, Sven-Ivan Sundqvist [seriell]
+bib/11798968	Post kopplad till exempel på bestånd
+bib/16583077	Post kopplad till exempel på bestånd
+bib/14854711	Post kopplad till exempel på bestånd
+bib/12191039	Post kopplad till exempel på bestånd
+bib/335431	Post kopplad till exempel på bestånd
+bib/2944641	Post kopplad till exempel på bestånd
+bib/2413961	Post kopplad till exempel på bestånd
+bib/14805941	Post kopplad till exempel på bestånd
+bib/1858131	Post kopplad till exempel på bestånd
+bib/8261414	Post kopplad till exempel på bestånd
+bib/568184	Post kopplad till exempel på bestånd
+bib/10380624	Post kopplad till exempel på bestånd
+bib/7274677	Post kopplad till exempel på bestånd
 
 hold/15726821
 hold/15958795
@@ -240,4 +253,17 @@ hold/718815
 hold/718817
 hold/718818
 hold/718819
-
+hold/26746600	(http://libris.kb.se/bib/11798968?tab3=marc&vw=full) – monografiskt bestånd med enbart sigel
+hold/39698169	(http://libris.kb.se/bib/16583077?tab3=marc&vw=full) – monografiskt videobestånd med enkelt hyllsignum (852h)
+hold/37789933	(http://libris.kb.se/bib/14854711?tab3=marc&vw=full) – monografiskt bestånd med flerledat hyllsignum (852h+j), intern beståndsanmärkning, teknisk anmärkning (NB-kodning som används för uttag av NB-produkter) m.m.
+hold/29592875	(http://libris.kb.se/bib/12191039?tab3=marc&vw=full) – monografiskt bestånd ursrpungligen maskinellt genererat från medieleverantör Dawson (Förvärvsrutinen), här med lokalt definierat fält 948  (finns flera sådana lokalt definierade beståndsfält, se http://www.kb.se/katalogisering/Formathandboken/Bestand/9XX/
+hold/6080741	(http://libris.kb.se/bib/335431?tab3=marc&vw=full) – monografiskt bestånd till konverterad del i flerbandsverk (där 852 med ”$8 \c” avser delen och det det andra 852 avser huvudpost
+hold/28174569	(http://libris.kb.se/bib/2944641?tab3=marc&vw=full) – monografiskt äldretryck med exemplarinfo för flera exemplar
+hold/26221124	(http://libris.kb.se/bib/2413961?tab3=marc&vw=full) – monografiskt äldretryck med personbiuppslag på tidigare ägare
+hold/37769794	(http://libris.kb.se/bib/14805941?tab3=marc&vw=full) – eboksbestånd med maskinellt genererat proveniensflaggade beståndsfält (Atingo), samma modell kommer att implementeras även för e-böcer från Elib
+hold/37985194	((http://libris.kb.se/bib/14805941?tab3=marc&vw=full) – samma som ovan, men här maskinellt kompletterad med deleteflagga för att lokala systemleverantörer ska kunna hantera tillgång
+hold/40508888	(http://libris.kb.se/bib/1858131?tab3=marc&vw=full) – tidskrift med enkelt hyllsignum (852h) + beståndsinfo (866)
+hold/14225535	(http://libris.kb.se/bib/8261414?tab3=marc&vw=full) – tidskrift med konverterat bestånd: biblänk (014) + flera exemplar i fkera sammanlänkade ($8) 852 + bestånd (866)
+hold/33359920	(http://libris.kb.se/bib/568184?tab3=marc&vw=full) – tidskrift med årgångsindelat bestånd i upprepade 863 (kan ev. användas för att i framtiden generera separata bibliografiska tidskriftsårgångsposter, önsekmål från ffa folkbibliotek)
+hold/30966941	(http://libris.kb.se/bib/10380624?tab3=marc&vw=full) – e-tidskrift med maskinellt genererat länkserverbestånd (inkl. åtkomstlänkar) till flera olika leverantörer/plattformar
+hold/24217080	(http://libris.kb.se/bib/7274677?tab3=marc&vw=full) – monografiskt bestånd med produktkod (leader/07) av betydelse för uttag av statistik/nyförvärvslista

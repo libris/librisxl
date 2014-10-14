@@ -422,13 +422,26 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
 
     def revert(Map data) {
         def value = null
+        def entity = data
+        if (addLink) {
+            entity = getEntity(data).get(addLink)?.getAt(0)
+        }
+        if (!entity)
+            return null
         if (baseConverter)
-            value = baseConverter.revert(data)
-        // TODO:
-        //def converter = computeConverter(data)
-        //return value combinedWith converter.convert(data, valueSb)
+            value = baseConverter.revert(entity)
+        def tokenBasedConverter = !useRecTypeBibLevel? handlerMap[value] : null
+        if (tokenBasedConverter) {
+            value = value ?: ""
+            def restValue = tokenBasedConverter.revert(entity)
+            return value + restValue.substring(value.size())
+        }
+        if (value.find { it != MarcFixedFieldHandler.FIXED_NONE } == null) {
+            return null
+        }
         return value
     }
+
 }
 
 class MarcFixedFieldHandler {
@@ -553,8 +566,10 @@ class ConversionPart {
             return data
         if (domainEntityName == 'Work')
             return data.about.instanceOf
-        else
+        else if (data.about)
             return data.about
+        else
+            return data
     }
 
     def revertObject(obj) {
@@ -894,7 +909,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def ent = (subDfn.domainEntityName)?
                         entityMap[subDfn.domainEntityName] :
                         (linkage.codeLinkSplits[code] ?: entity)
-                    ok = subDfn.convertSubValue(subVal, ent, uriTemplateParams, localEntites)
+                    if ((subDfn.requiresI1 && subDfn.requiresI1 != value.ind1) ||
+                        (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
+                        ok = true // rule does not apply here
+                    } else {
+                        ok = subDfn.convertSubValue(subVal, ent, uriTemplateParams, localEntites)
+                    }
                 }
                 if (!ok && !handled.contains(code)) {
                     unhandled << code
@@ -1040,7 +1060,18 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return entity
     }
 
-    def revert(Map data) {
+    def revert(Map data, MatchCandidate matchCandidate=null) {
+
+        def matchedResults = []
+
+        if (matchCandidate == null) {
+            for (rule in matchRules) {
+                for (candidate in rule.candidates) {
+                    matchedResults += candidate.handler.revert(data, candidate)
+                }
+            }
+        }
+
         def entity = getEntity(data)
 
         def types = data.about['@type']
@@ -1083,7 +1114,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        def results = entities.collect { revertOne(data, it, null, aboutMap) }.findAll()
+        def results = entities.collect {
+            revertOne(data, it, null, aboutMap, matchCandidate)
+        }.findAll()
 
         if (splitLinkRules) {
             // TODO: refine, e.g. handle spliceEntityName..
@@ -1113,35 +1146,58 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 results += resultItems
             }
         }
-        return results
+        return results + matchedResults
     }
 
-    def revertOne(Map data, Map currentEntity, Set onlyCodes=null, Map aboutMap=null) {
-        // TODO: revert match rules ...
+    def revertOne(Map data, Map currentEntity, Set onlyCodes=null, Map aboutMap=null,
+            MatchCandidate matchCandidate=null) {
 
-        def i1 = ind1? ind1.revert(data, currentEntity) : ' '
-        def i2 = ind2? ind2.revert(data, currentEntity) : ' '
+        def i1 = ind1? ind1.revert(data, currentEntity) : (matchCandidate?.ind1 ?: ' ')
+        def i2 = ind2? ind2.revert(data, currentEntity) : (matchCandidate?.ind2 ?: ' ')
 
         def subs = []
+        def failedRequired = false
         subfields.collect { code, subhandler ->
             if (!subhandler)
                 return
             if (onlyCodes && !onlyCodes.contains(code))
                 return
+            if (subhandler.requiresI1) {
+                if (i1 == null) {
+                    i1 = subhandler.requiresI1
+                } else if (i1 != subhandler.requiresI1) {
+                    return
+                }
+            }
+            if (subhandler.requiresI2) {
+                if (i2 == null) {
+                    i2 = subhandler.requiresI2
+                } else if (i2 != subhandler.requiresI2) {
+                    return
+                }
+            }
             def selectedEntity = subhandler.about? aboutMap[subhandler.about] : currentEntity
             if (!selectedEntity)
                 return
             def value = subhandler.revert(data, selectedEntity)
             if (value instanceof List) {
                 value.each {
-                    subs << [(code): it]
+                    if (!matchCandidate || matchCandidate.matchValue(code, it)) {
+                        subs << [(code): it]
+                    }
                 }
             } else if (value != null) {
-                subs << [(code): value]
+                if (!matchCandidate || matchCandidate.matchValue(code, value)) {
+                    subs << [(code): value]
+                }
+            } else {
+                if (subhandler.requiresI1 || subhandler.requiresI2) {
+                    failedRequired = true
+                }
             }
         }
 
-        return i1 != null && i2 != null && subs.length?
+        return !failedRequired && i1 != null && i2 != null && subs.length?
             [ind1: i1, ind2: i2, subfields: subs] :
             null
     }
@@ -1165,6 +1221,8 @@ class MarcSubFieldHandler extends ConversionPart {
     String rejoin
     Map defaults
     String marcDefault
+    String requiresI1
+    String requiresI2
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
         this.fieldHandler = fieldHandler
@@ -1198,6 +1256,8 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         defaults = subDfn.defaults
         marcDefault = subDfn.marcDefault
+        requiresI1 = subDfn['requires-i1']
+        requiresI2 = subDfn['requires-i2']
     }
 
     boolean convertSubValue(subVal, ent, uriTemplateParams, localEntites) {
@@ -1368,6 +1428,25 @@ abstract class MatchRule {
         return ruleMap[getKey(entity, value)]
     }
     abstract String getKey(entity, value)
+    List<MatchCandidate> getCandidates() {
+        return []
+    }
+}
+
+class MatchCandidate {
+    String ind1
+    String ind2
+    MarcFieldHandler handler
+    String code
+    Pattern pattern
+    boolean matchValue(String code, String value) {
+        return true
+        if (!pattern) {
+            return true
+        } else {
+            return (code == this.code) && pattern.matcher(value)
+        }
+    }
 }
 
 class DomainMatchRule extends MatchRule {
@@ -1390,6 +1469,11 @@ class IndMatchRule extends MatchRule {
     }
     String getKey(entity, value) {
         return value[indKey]
+    }
+    List<MatchCandidate> getCandidates() {
+        return ruleMap.collect { token, handler ->
+            new MatchCandidate(handler: handler, (indKey): token)
+        }
     }
 }
 
@@ -1449,6 +1533,14 @@ class CodePatternMatchRule extends MatchRule {
             }
         }
         return key
+    }
+    List<MatchCandidate> getCandidates() {
+        return patterns.collect { code, patternDfn ->
+            new MatchCandidate(
+                    handler: ruleMap[patternDfn.key],
+                    code: code,
+                    pattern: patternDfn.pattern)
+        }
     }
 }
 

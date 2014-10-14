@@ -68,7 +68,9 @@ class MarcFrameConverterSpec extends Specification {
         given:
         def marcType = fieldSpec.marcType
         def marc = deepcopy(marcSkeletons[marcType])
-        if (fieldSpec.source.fields) {
+        if (fieldSpec.source instanceof List) {
+            marc.fields += fieldSpec.source
+        } else if (fieldSpec.source.fields) {
             marc.fields = fieldSpec.source.fields
         } else {
             marc.fields << fieldSpec.source
@@ -102,13 +104,11 @@ class MarcFrameConverterSpec extends Specification {
         }
         when:
         def result = converter.conversion.revert(jsonld)
-        // FIXME: 006, 007 and 008 are overeagerly generated
-        result.fields = result.fields.findAll { field ->
-            ! ['006', '007', '008'].find { field.containsKey(it) }
-        }
         def expected = deepcopy(marcSkeletons[marcType])
         def source = fieldSpec.normalized ?: fieldSpec.source
-        if (source.fields) {
+        if (source instanceof List) {
+            expected.fields += source
+        } else if (source.fields) {
             expected.fields = source.fields
         } else {
             expected.fields << source
