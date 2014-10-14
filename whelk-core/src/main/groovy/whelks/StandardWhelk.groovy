@@ -111,6 +111,14 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return doc
     }
 
+    Location locate(URI uri) {
+        def doc = get(uri)
+        if (doc) {
+            return new Location(doc)
+        }
+        return null
+    }
+
     @Override
     void remove(URI uri) {
         components.each {
@@ -133,9 +141,16 @@ class StandardWhelk extends HttpServlet implements Whelk {
             d.withIdentifier(mintIdentifier(d))
             log.debug("Document was missing identifier. Setting identifier ${d.identifier}")
         }
+        if (!d.data || d.data.length == 0) {
+            log.error("No data in document.")
+            throw new DocumentException("No data in document.")
+        }
+
         // TODO: Self describing
         if (d.contentType == "application/ld+json") {
+            // TODO: Make sure map serialization works.
             Map dataMap = d.dataAsMap
+            throw new DocumentException("Unable to deserialize data.")
             if (dataMap.get("@id") != d.identifier) {
                 dataMap.put("@id", d.identifier)
                 d.withData(dataMap)

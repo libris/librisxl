@@ -28,41 +28,8 @@
      protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
          String path = getCleanPath(pathVars)
          log.debug "Path: $path"
-         def mode = DisplayMode.DOCUMENT
-         (path, mode) = determineDisplayMode(path)
          if (request.method == "GET") {
-             def version = request.getParameter("version")
-             def accepting = request.getHeader("accept")?.split(",").collect {
-                 int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
-                 it.substring(0,last)
-             }
-             log.debug("Accepting $accepting")
-             try {
-                 def d = whelk.get(new URI(path), version, accepting)
-                 if (d && (mode== DisplayMode.META || !d.entry['deleted'])) {
-
-                     for (filter in getFiltersFor(d)) {
-                         log.debug("Filtering using ${filter.id} for ${d.identifier}")
-                         d = filter.filter(d)
-                     }
-                     if (mode == DisplayMode.META) {
-                         sendResponse(response, d.metadataAsJson, "application/json")
-                     } else {
-                         def ctheader = contextHeaders.get(path.split("/")[1])
-                         if (ctheader) {
-                             response.setHeader("Link", "<$ctheader>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"")
-                         }
-                         response.setHeader("ETag", d.timestamp as String)
-                         sendResponse(response, d.dataAsString, d.contentType)
-                     }
-                 } else {
-                     log.debug("Failed to find a document with URI $path")
-                     response.sendError(response.SC_NOT_FOUND)
-                 }
-             } catch (WhelkRuntimeException wrte) {
-                 response.sendError(response.SC_INTERNAL_SERVER_ERROR, wrte.message)
-             }
-
+             handleGetRequest(request, response, path)
          } else if (request.method == "POST") {
              log.debug("POST detected.")
              int pathsize = path.split("/").size()
@@ -97,6 +64,8 @@
 
                      sendDocumentSavedResponse(response, locationRef.toString(), doc.timestamp as String)
 
+                 } catch (DocumentException de) {
+                     response.sendError(response.SC_BAD_REQUEST, de.message)
                  } catch (WhelkRuntimeException wre) {
                      response.sendError(response.SC_INTERNAL_SERVER_ERROR, wre.message)
                  }
@@ -150,6 +119,43 @@
              } catch (WhelkRuntimeException wre) {
                  response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
              }
+         }
+     }
+
+
+     void handleGetRequest(HttpServletRequest request, HttpServletResponse response, String path) {
+         def mode = DisplayMode.DOCUMENT
+         (path, mode) = determineDisplayMode(path)
+         def version = request.getParameter("version")
+         def accepting = request.getHeader("accept")?.split(",").collect {
+             int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
+             it.substring(0,last)
+         }
+         log.debug("Accepting $accepting")
+         try {
+             def d = whelk.get(new URI(path), version, accepting)
+             if (d && (mode== DisplayMode.META || !d.entry['deleted'])) {
+
+                 for (filter in getFiltersFor(d)) {
+                     log.debug("Filtering using ${filter.id} for ${d.identifier}")
+                     d = filter.filter(d)
+                 }
+                 if (mode == DisplayMode.META) {
+                     sendResponse(response, d.metadataAsJson, "application/json")
+                 } else {
+                     def ctheader = contextHeaders.get(path.split("/")[1])
+                     if (ctheader) {
+                         response.setHeader("Link", "<$ctheader>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"")
+                     }
+                     response.setHeader("ETag", d.timestamp as String)
+                     sendResponse(response, d.dataAsString, d.contentType)
+                 }
+             } else {
+                 log.debug("Failed to find a document with URI $path")
+                 response.sendError(response.SC_NOT_FOUND)
+             }
+         } catch (WhelkRuntimeException wrte) {
+             response.sendError(response.SC_INTERNAL_SERVER_ERROR, wrte.message)
          }
      }
 

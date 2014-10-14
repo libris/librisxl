@@ -24,6 +24,7 @@ public interface Whelk {
     public Iterable<Document> loadAll(Date since);
     public Iterable<Document> loadAll(String dataset);
     public Iterable<Document> loadAll(String dataset, Date since);
+    public Location locate(URI identifier);
 
     public InputStream sparql(String query);
 
