@@ -31,6 +31,7 @@
   "ConceptualWork": {"uniformTitle": "", "attributedTo": {}},
 
   "Country": {"name": ""},
+  "Event": {"label": ""},
   "Family": {"name": ""},
   "Meeting": {"name": ""},
   "Organization": {"name": ""},
