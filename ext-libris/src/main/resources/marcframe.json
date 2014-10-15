@@ -13,17 +13,6 @@
 
     "relatorCode": "relatorcodes.json",
 
-    "thesaurus": {
-      "0": "lcsh",
-      "1": "lcsh/csh",
-      "2": "mesh",
-      "3": "nal",
-      "4": null,
-      "5": "csh",
-      "6": "rvm",
-      "7": null
-    },
-
     "status": {
       "a": "/def/enum/record/IncreaseInEncodingLevel",
       "c": "/def/enum/record/CorrectedOrRevised",
@@ -4217,19 +4206,22 @@
           "uriTemplate": "/topic/{+inScheme.notation}/{broader.prefLabel*}",
           "TODO": "use uriTemplate:s here only if scheme token in $2 (else bnode)",
           "$a": {"addLink": "broader", "uriTemplate": "_:{_}",
+                 "rangeEntity": "Concept",
                  "property": "prefLabel"},
           "$v": {"addLink": "broader", "uriTemplate": "_:{_}",
                "TODO": "use /topic/saogf/{_}, but only if $2=sao",
+                 "rangeEntity": "Concept",
                  "property": "prefLabel"},
           "$x": {"addLink": "broader", "uriTemplate": "_:{_}",
+                 "rangeEntity": "Concept",
                  "property": "prefLabel"},
           "$y": {"addLink": "broader", "uriTemplate": "_:{_}",
-                "rangeEntity": "Event",
+                 "rangeEntity": "Event",
                  "property": "prefLabel"},
           "$z": {"addLink": "broader", "uriTemplate": "_:{_}",
-                "TODO": "use /place/{_}, but only if $2=sao",
-                "rangeEntity": "Place",
-                "property": "prefLabel"}
+                 "TODO": "use /place/{_}, but only if $2=sao",
+                 "rangeEntity": "Place",
+                 "property": "prefLabel"}
         }
       },
       "i2": {
@@ -4237,11 +4229,23 @@
         "rangeEntity": "ConceptScheme",
         "uriTemplate": "/topic/{+_}",
         "property": "notation",
-        "tokenMap": "thesaurus"
+        "tokenMap": {
+          "0": "lcsh",
+          "1": "lcsh/csh",
+          "2": "mesh",
+          "3": "nal",
+          "4": null,
+          "5": "csh",
+          "6": "rvm",
+          "7": null
+        }
       },
-      "$2": {"link": "inScheme",
-             "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
-             "property": "notation"},
+      "$2": {
+        "requires-i2": "7",
+        "link": "inScheme",
+        "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+        "property": "notation"
+      },
       "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
              "ignored": true},
       "$a": {"property": "prefLabel"},
