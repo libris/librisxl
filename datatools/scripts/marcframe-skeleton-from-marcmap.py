@@ -102,8 +102,7 @@ def to_name(name):
     return name
 
 
-fixprops = marcmap['bib']['fixprops']
-def fixprop_to_name(propname, key):
+def fixprop_to_name(fixprops, propname, key):
     dfn = fixprops[propname].get(key)
     if dfn and 'id' in dfn:
         return to_name(dfn['id'])
@@ -119,6 +118,8 @@ if include_lang:
           "tokenMaps": None, "bib": None}]
     enum_defs = out['enumDefs'] = OrderedDict()
 
+
+# TODO: tokenMaps per marc_type(?)
 tokenMaps = out['tokenMaps'] = OrderedDict()
 #compositionTypeMap = out['compositionTypeMap'] = OrderedDict()
 #contentTypeMap = out['contentTypeMap'] = OrderedDict()
@@ -160,273 +161,281 @@ def add_labels(src, dest):
         dest['prefLabel_en'] = en
 
 
-section = out['bib'] = OrderedDict()
+for marc_type in 'bib', 'auth', 'hold':
 
-prevtag, outf = None, None
-for tag, field in sorted(marcmap['bib'].items()):
-    if not tag.isdigit():
-        continue
-    prevf, outf = outf, OrderedDict()
-    section[tag] = outf
-    fixmaps = field.get('fixmaps')
-    subfields = field.get('subfield')
-    subtypes = None
+    fixprops = marcmap[marc_type]['fixprops']
 
-    if fixmaps:
-        tokenTypeMap = OrderedDict()
-        for fixmap in fixmaps:
-            content_type = None
-            orig_type_name = None
-            type_name = None
-            if len(fixmaps) > 1:
-                if tag == '008':
-                    rt_bl_map = outf.setdefault('recTypeBibLevelMap', OrderedDict())
-                else:
-                    outf['addLink'] = 'hasFormat' if tag == '007' else 'hasPart'
-                    outf['[0:1]'] = {
-                        'addProperty': '@type',
-                        'tokenMap': tokenTypeMap,
-                    }
-                    outf['tokenTypeMap'] = '[0:1]'
+    section = out[marc_type] = OrderedDict()
 
-                orig_type_name =  fixmap['name'].split(tag + '_')[1]
-                type_name = fixmap.get('term') or orig_type_name
-                if tag in ('006', '008'):
-                    type_name = content_name_map.get(type_name, type_name)
-                elif tag in ('007'):
-                    type_name = carrier_name_map.get(type_name, type_name)
+    prevtag, outf = None, None
+    for tag, field in sorted(marcmap[marc_type].items()):
+        if not tag.isdigit():
+            continue
+        prevf, outf = outf, OrderedDict()
+        section[tag] = outf
+        fixmaps = field.get('fixmaps')
+        subfields = field.get('subfield')
+        subtypes = None
 
-                fm = outf[type_name] = OrderedDict()
-                if include_lang:
-                    add_labels(fixmap, fm)
-
-                if tag == '008':
-                    for combo in fixmap['matchRecTypeBibLevel']:
-                        rt_bl_map[combo] = type_name
-                        rt, bl = combo
-                        subtype_name = fixprop_to_name('typeOfRecord', rt)
-                        if not subtype_name:
-                            continue
-                        comp_name = fixprop_to_name('bibLevel', bl)
-                        if not comp_name:
-                            continue
-
-                        #is_serial = type_name == 'Serial'
-                        #if comp_name == 'MonographItem' or is_serial:
-                        #    content_type = contentTypeMap.setdefault(type_name, OrderedDict())
-                        #    subtypes = content_type.setdefault('subclasses', OrderedDict())
-                        #    if is_serial:
-                        #        subtype_name += 'Serial'
-                        #    typedef = subtypes[subtype_name] = OrderedDict()
-                        #    typedef['typeOfRecord'] = rt
-                        #else:
-                        #    comp_type = compositionTypeMap.setdefault(comp_name, OrderedDict())
-                        #    comp_type['bibLevel'] = bl
-                        #    parts = comp_type.setdefault('partRange', set())
-                        #    parts.add(type_name)
-                        #    parts.add(subtype_name)
-
-                else:
-                    for k in fixmap['matchKeys']:
-                        tokenTypeMap[k] = type_name
-            else:
-                fm = outf
-
-            #local_enums = set()
-            real_fm = fm
-            for col in fixmap['columns']:
-                off, length = col['offset'], col['length']
-                key = (#str(off) if length == 1 else
-                        '[%s:%s]' % (off, off+length))
-                if key in common_columns.get(tag, ()):
-                    # IMP: verify expected props?
-                    fm = outf
-                else:
-                    fm = real_fm
-
-                dfn_key = col.get('propRef')
-                if not dfn_key:
-                    continue
-                if orig_type_name == 'ComputerFile':
-                    orig_type_name = 'Computer'
-                if orig_type_name and dfn_key.title().startswith(orig_type_name):
-                    new_propname = dfn_key[len(orig_type_name):]
-                    new_propname = new_propname[0].lower() + new_propname[1:]
-                    #print new_propname, '<-', dfn_key
-                else:
-                    new_propname = None
-
-                fm[key] = col_dfn = OrderedDict()
-                propname = new_propname or dfn_key or col.get('propId')
-                if propname in propname_map:
-                    propname = propname_map[propname]
-                domainname = 'Record' if tag == '000' else None
-                is_link = False
-                repeat = False
-                valuemap = None
-                tokenmap = None
-                if include_lang:
-                    add_labels(col, col_dfn)
-
-                if dfn_key in fixprops:
-                    valuemap = fixprops[dfn_key]
-
-                    fixtyperefmap = fixprop_typerefs.get(tag)
-                    enum_base = {'000': '/def/enum/record/',
-                                '006': '/def/enum/content/',
-                                '007': '/def/enum/carrier/',
-                                '008': '/def/enum/content/'}.get(tag, dfn_key)
-
-                    if fixtyperefmap:
-                        is_link = length < 3
-                        if dfn_key in fixtyperefmap:
-                            domainname = None
-                            if tag == '000':
-                                enum_base = "/def/terms/"
-                            if tag == '007':
-                                propname = 'carrierType'
-                                repeat = True
-                            elif tag in ('006', '008'):
-                                propname = 'contentType'
-                                repeat = True
-
-                    overwriting = dfn_key not in tokenMaps
-                    tokenmap = tokenMaps.setdefault(dfn_key, {})
-                    off_key = find_boolean_off_key(tokenmap)
-
-                    for key, dfn in valuemap.items():
-                        # TODO: '_' actually means something occasionally..
-                        if 'id' in dfn:
-                            v = dfn['id']
-                            subname = to_name(v)
-                        else:
-                            subname = dfn['label_sv']
-                            for char, repl in [(' (', '-'), (' ', '_'), ('/', '-')]:
-                                subname = subname.replace(char, repl)
-                            for badchar in ',()':
-                                subname = subname.replace(badchar, '')
-
-                        if key in ('_', '|') and any(t in subname for t in ('No', 'Ej', 'Inge')):
-                            continue
-                        elif subname.replace('Obsolete', '') in {
-                                'Unknown', 'Other', 'NotApplicable', 'Unspecified', 'Undefined'}:
-                            type_id = None
-                        elif key == off_key:
-                            type_id = False
-                        elif enum_base:
-                            type_id = enum_base + subname
-                        else:
-                            type_id = subname
-
-                        if type_id and type_id.endswith('Obsolete') and type_id[-9] != '-':
-                            type_id = type_id[:-8] + '-Obsolete'
-
-                        if overwriting:
-                            assert tokenmap.get(key, type_id) == type_id, "%s: %s missing in %r" % (
-                                    key, type_id, tokenmap)
-
-                        #assert type_id is None or type_id not in enums, type_id
-                        tokenmap[key] = type_id
-                        #local_enums.add(type_id)
-                        # TODO: factor out this as build_enum_defs
-                        if include_lang and type_id:
-                            if type_id in enum_defs:
-                                in_coll = enum_defs[type_id]['inCollection']
-                                broader_types = enum_defs[type_id]['broader']
-                            else:
-                                in_coll = []
-                                broader_types = []
-                            if type_name:
-                                broader_id = "/def/terms#%s" % type_name
-                            else:
-                                broader_id = None
-                            for coll_id in [#enum_base + dfn_key + '-collection',
-                                            enum_base + propname + '-collection']:
-                                enum_defs[coll_id] = {"@id": coll_id, "@type": "Collection"}
-                                if not any(r['@id'] == coll_id for r in in_coll):
-                                    in_coll.append({"@id": coll_id})
-                                if broader_id and not any(
-                                        r['@id'] == broader_id for r in broader_types):
-                                    broader_types.append({"@id": broader_id})
-                            dest = enum_defs[type_id] = {
-                                "@id": type_id, "@type": "Concept",
-                                "inCollection": in_coll
-                            }
-                            if broader_types:
-                                dest["broader"] = broader_types
-                            add_labels(dfn, dest)
-
-                    if skip_unlinked_maps and not is_link:
-                        tokenMaps[dfn_key] = {"TODO": "SKIPPED"}
-
-                else:
-                    pass
-
-                if domainname:
-                    col_dfn['domainEntity'] = domainname
-
-                if is_link:
-                    col_dfn['addLink' if repeat else 'link'] = propname
-                    col_dfn['uriTemplate'] = "{_}"
-                else:
-                    col_dfn['addProperty' if repeat else 'property'] = propname
-
-                if tokenmap:
-                    items = sorted((k.lower(), v) for k, v in tokenmap.items())
-                    tkey = get_tokenmap_key(dfn_key, items)
-                    if tkey != dfn_key:
-                        del tokenMaps[dfn_key]
+        if fixmaps:
+            tokenTypeMap = OrderedDict()
+            for fixmap in fixmaps:
+                content_type = None
+                orig_type_name = None
+                type_name = None
+                if len(fixmaps) > 1:
+                    if tag == '008':
+                        rt_bl_map = outf.setdefault('recTypeBibLevelMap', OrderedDict())
                     else:
-                        tokenMaps[dfn_key] = OrderedDict(items)
-                    col_dfn['tokenMap' if is_link else 'patternMap'] = tkey
+                        outf['addLink'] = 'hasFormat' if tag == '007' else 'hasPart'
+                        outf['[0:1]'] = {
+                            'addProperty': '@type',
+                            'tokenMap': tokenTypeMap,
+                        }
+                        outf['tokenTypeMap'] = '[0:1]'
 
-            #enums |= local_enums
+                    orig_type_name =  fixmap['name'].split(tag + '_')[1]
+                    type_name = fixmap.get('term') or orig_type_name
+                    if tag in ('006', '008'):
+                        type_name = content_name_map.get(type_name, type_name)
+                    elif tag in ('007'):
+                        type_name = carrier_name_map.get(type_name, type_name)
 
-    elif not subfields:
-        outf['addProperty'] = field['id']
+                    fm = outf[type_name] = OrderedDict()
+                    if include_lang:
+                        add_labels(fixmap, fm)
 
-    else:
-        for ind_key in ('ind1', 'ind2'):
-            ind = field.get(ind_key)
-            if not ind:
-                continue
-            ind_keys = sorted(k for k in ind if k != '_')
-            if ind_keys:
-                outf[ind_key.replace('ind', 'i')] = {}
-        for code, subfield in subfields.items():
-            sid = subfield.get('id') or ""
-            if sid.endswith('Obsolete'):
-                outf['obsolete'] = True
-                sid = sid[0:-8]
-            if (code, sid) in [('6', 'linkage'), ('8', 'fieldLinkAndSequenceNumber')]:
-                continue
-            subf = outf['$' + code] = OrderedDict()
-            p_key = 'addProperty' if subfield.get('repeatable', False) else 'property'
-            subf[p_key] = sid
-            if include_lang:
-                add_labels(subfield, subf)
-        if len(outf.keys()) > 1 and outf == prevf:
-            section[tag] = {'inherit': prevtag}
-    if show_repeatable and 'repeatable' in field:
-        outf['repeatable'] = field['repeatable']
-    if include_lang:
-        add_labels(field, outf)
-    prevtag = tag
+                    if tag == '008':
+                        for combo in fixmap['matchRecTypeBibLevel']:
+                            rt_bl_map[combo] = type_name
+                            rt, bl = combo
+                            subtype_name = fixprop_to_name(fixprops, 'typeOfRecord', rt)
+                            if not subtype_name:
+                                continue
+                            comp_name = fixprop_to_name(fixprops, 'bibLevel', bl)
+                            if not comp_name:
+                                continue
+
+                            #is_serial = type_name == 'Serial'
+                            #if comp_name == 'MonographItem' or is_serial:
+                            #    content_type = contentTypeMap.setdefault(type_name, OrderedDict())
+                            #    subtypes = content_type.setdefault('subclasses', OrderedDict())
+                            #    if is_serial:
+                            #        subtype_name += 'Serial'
+                            #    typedef = subtypes[subtype_name] = OrderedDict()
+                            #    typedef['typeOfRecord'] = rt
+                            #else:
+                            #    comp_type = compositionTypeMap.setdefault(comp_name, OrderedDict())
+                            #    comp_type['bibLevel'] = bl
+                            #    parts = comp_type.setdefault('partRange', set())
+                            #    parts.add(type_name)
+                            #    parts.add(subtype_name)
+
+                    else:
+                        for k in fixmap['matchKeys']:
+                            tokenTypeMap[k] = type_name
+                else:
+                    fm = outf
+
+                #local_enums = set()
+                real_fm = fm
+                for col in fixmap['columns']:
+                    off, length = col['offset'], col['length']
+                    key = (#str(off) if length == 1 else
+                            '[%s:%s]' % (off, off+length))
+                    if key in common_columns.get(tag, ()):
+                        # IMP: verify expected props?
+                        fm = outf
+                    else:
+                        fm = real_fm
+
+                    dfn_key = col.get('propRef')
+                    if not dfn_key:
+                        continue
+                    if orig_type_name == 'ComputerFile':
+                        orig_type_name = 'Computer'
+                    if orig_type_name and dfn_key.title().startswith(orig_type_name):
+                        new_propname = dfn_key[len(orig_type_name):]
+                        new_propname = new_propname[0].lower() + new_propname[1:]
+                        #print new_propname, '<-', dfn_key
+                    else:
+                        new_propname = None
+
+                    fm[key] = col_dfn = OrderedDict()
+                    propname = new_propname or dfn_key or col.get('propId')
+                    if propname in propname_map:
+                        propname = propname_map[propname]
+                    domainname = 'Record' if tag == '000' else None
+                    is_link = False
+                    repeat = False
+                    valuemap = None
+                    tokenmap = None
+                    if include_lang:
+                        add_labels(col, col_dfn)
+
+                    if dfn_key in fixprops:
+                        valuemap = fixprops[dfn_key]
+
+                        fixtyperefmap = fixprop_typerefs.get(tag)
+                        enum_base = {'000': '/def/enum/record/',
+                                    '006': '/def/enum/content/',
+                                    '007': '/def/enum/carrier/',
+                                    '008': '/def/enum/content/'}.get(tag, dfn_key)
+
+                        if fixtyperefmap:
+                            is_link = length < 3
+                            if dfn_key in fixtyperefmap:
+                                domainname = None
+                                if tag == '000':
+                                    enum_base = "/def/terms/"
+                                if tag == '007':
+                                    propname = 'carrierType'
+                                    repeat = True
+                                elif tag in ('006', '008'):
+                                    propname = 'contentType'
+                                    repeat = True
+
+                        overwriting = dfn_key not in tokenMaps
+                        tokenmap = tokenMaps.setdefault(dfn_key, {})
+                        off_key = find_boolean_off_key(tokenmap)
+
+                        for key, dfn in valuemap.items():
+                            # TODO: '_' actually means something occasionally..
+                            if 'id' in dfn:
+                                v = dfn['id']
+                                subname = to_name(v)
+                            else:
+                                subname = dfn['label_sv']
+                                for char, repl in [(' (', '-'), (' ', '_'), ('/', '-')]:
+                                    subname = subname.replace(char, repl)
+                                for badchar in ',()':
+                                    subname = subname.replace(badchar, '')
+
+                            if key in ('_', '|') and any(t in subname for t in ('No', 'Ej', 'Inge')):
+                                continue
+                            elif subname.replace('Obsolete', '') in {
+                                    'Unknown', 'Other', 'NotApplicable', 'Unspecified', 'Undefined'}:
+                                type_id = None
+                            elif key == off_key:
+                                type_id = False
+                            elif enum_base:
+                                type_id = enum_base + subname
+                            else:
+                                type_id = subname
+
+                            if type_id and type_id.endswith('Obsolete') and type_id[-9] != '-':
+                                type_id = type_id[:-8] + '-Obsolete'
+
+                            if overwriting:
+                                assert tokenmap.get(key, type_id) == type_id, "%s: %s missing in %r" % (
+                                        key, type_id, tokenmap)
+
+                            #assert type_id is None or type_id not in enums, type_id
+                            if tokenmap.get(key, type_id) != type_id:
+                                #print >> sys.stderr, "tokenMap mismatch in %s for key %s: %s != %s" % (dfn_key, key, type_id, tokenmap[key])
+                                tokenmap[marc_type + '-' + key] = type_id
+                            else:
+                                tokenmap[key] = type_id
+                            #local_enums.add(type_id)
+                            # TODO: factor out this as build_enum_defs
+                            if include_lang and type_id:
+                                if type_id in enum_defs:
+                                    in_coll = enum_defs[type_id]['inCollection']
+                                    broader_types = enum_defs[type_id]['broader']
+                                else:
+                                    in_coll = []
+                                    broader_types = []
+                                if type_name:
+                                    broader_id = "/def/terms#%s" % type_name
+                                else:
+                                    broader_id = None
+                                for coll_id in [#enum_base + dfn_key + '-collection',
+                                                enum_base + propname + '-collection']:
+                                    enum_defs[coll_id] = {"@id": coll_id, "@type": "Collection"}
+                                    if not any(r['@id'] == coll_id for r in in_coll):
+                                        in_coll.append({"@id": coll_id})
+                                    if broader_id and not any(
+                                            r['@id'] == broader_id for r in broader_types):
+                                        broader_types.append({"@id": broader_id})
+                                dest = enum_defs[type_id] = {
+                                    "@id": type_id, "@type": "Concept",
+                                    "inCollection": in_coll
+                                }
+                                if broader_types:
+                                    dest["broader"] = broader_types
+                                add_labels(dfn, dest)
+
+                        if skip_unlinked_maps and not is_link:
+                            tokenMaps[dfn_key] = {"TODO": "SKIPPED"}
+
+                    else:
+                        pass
+
+                    if domainname:
+                        col_dfn['domainEntity'] = domainname
+
+                    if is_link:
+                        col_dfn['addLink' if repeat else 'link'] = propname
+                        col_dfn['uriTemplate'] = "{_}"
+                    else:
+                        col_dfn['addProperty' if repeat else 'property'] = propname
+
+                    if tokenmap:
+                        items = sorted((k.lower(), v) for k, v in tokenmap.items())
+                        tkey = get_tokenmap_key(dfn_key, items)
+                        if tkey != dfn_key:
+                            del tokenMaps[dfn_key]
+                        else:
+                            tokenMaps[dfn_key] = OrderedDict(items)
+                        col_dfn['tokenMap' if is_link else 'patternMap'] = tkey
+
+                #enums |= local_enums
+
+        elif not subfields:
+            outf['addProperty'] = field['id']
+
+        else:
+            for ind_key in ('ind1', 'ind2'):
+                ind = field.get(ind_key)
+                if not ind:
+                    continue
+                ind_keys = sorted(k for k in ind if k != '_')
+                if ind_keys:
+                    outf[ind_key.replace('ind', 'i')] = {}
+            for code, subfield in subfields.items():
+                sid = subfield.get('id') or ""
+                if sid.endswith('Obsolete'):
+                    outf['obsolete'] = True
+                    sid = sid[0:-8]
+                if (code, sid) in [('6', 'linkage'), ('8', 'fieldLinkAndSequenceNumber')]:
+                    continue
+                subf = outf['$' + code] = OrderedDict()
+                p_key = 'addProperty' if subfield.get('repeatable', False) else 'property'
+                subf[p_key] = sid
+                if include_lang:
+                    add_labels(subfield, subf)
+            if len(outf.keys()) > 1 and outf == prevf:
+                section[tag] = {'inherit': prevtag}
+        if show_repeatable and 'repeatable' in field:
+            outf['repeatable'] = field['repeatable']
+        if include_lang:
+            add_labels(field, outf)
+        prevtag = tag
 
 
-field_index = {}
-for tag, field in out['bib'].items():
-    if not any(k.startswith('$') for k in field):
-        continue
-    def hash_dict(d):
-        return tuple((k, hash_dict(v) if isinstance(v, dict) else v)
-                for k, v in d.items())
-    fieldhash = hash_dict(field)
-    if fieldhash in field_index:
-        field.clear()
-        field['inherits'] = field_index[fieldhash]
-    else:
-        field_index[fieldhash] = tag
+    field_index = {}
+    for tag, field in out[marc_type].items():
+        if not any(k.startswith('$') for k in field):
+            continue
+        def hash_dict(d):
+            return tuple((k, hash_dict(v) if isinstance(v, dict) else v)
+                    for k, v in d.items())
+        fieldhash = hash_dict(field)
+        if fieldhash in field_index:
+            field.clear()
+            field['inherits'] = field_index[fieldhash]
+        else:
+            field_index[fieldhash] = tag
 
 
 ## sanity check..
