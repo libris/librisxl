@@ -1373,15 +1373,21 @@ class MarcSubFieldHandler extends ConversionPart {
             return null
         if (splitValueProperties && rejoin) {
             def vs = []
+            boolean allEmpty = true
             splitValueProperties.each {
                 def v = entity[it]
-                if (v == null && allowEmpty)
+                if (v == null && allowEmpty) {
                     v = ""
-                if (v != null)
+                } else {
+                    allEmpty = false
+                }
+                if (v != null) {
                     vs << v
+                }
             }
-            if (vs.size() == splitValueProperties.size())
+            if (vs.size() == splitValueProperties.size() && !allEmpty) {
                 return vs.join(rejoin)
+            }
         }
         def value = null
         if (property) {
