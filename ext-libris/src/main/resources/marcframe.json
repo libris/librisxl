@@ -2682,7 +2682,7 @@
       "Unspecified": {},
       "repeatable": true,
       "_specSource": {"007":"aj  a|||"},
-      "_specNormalized": {"007":"aj  a   "},
+      "_specNormalized": {"007":"aj  a                  "},
       "_specResult": {
         "about": {
           "hasFormat": [
