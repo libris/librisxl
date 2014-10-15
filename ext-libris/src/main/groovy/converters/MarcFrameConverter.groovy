@@ -1470,7 +1470,6 @@ class MatchCandidate {
     String code
     Pattern pattern
     boolean matchValue(String code, String value) {
-        return true
         if (!pattern) {
             return true
         } else {
