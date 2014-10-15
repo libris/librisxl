@@ -1550,6 +1550,14 @@ class CodeMatchRule extends MatchRule {
             }
         }
     }
+    List<MatchCandidate> getCandidates() {
+        def candidates = []
+        for (handler in ruleMap.values()) {
+            candidates << new MatchCandidate(handler: handler)
+            break
+        }
+        return candidates
+    }
 }
 
 class CodePatternMatchRule extends MatchRule {
