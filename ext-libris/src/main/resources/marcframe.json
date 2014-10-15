@@ -3532,10 +3532,11 @@
       "addLink": "classification",
       "rangeEntity": "Concept",
       "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
-      "$a": {"property": "notation"},
+      "$a": {"property": "notation", "required": true},
       "$2": {
-        "note": "ignorable?",
+        "note": "ignorable (just use defaults)?",
         "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "required": true,
         "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
         "defaults": {
           "notation": "DDC",
@@ -3543,7 +3544,8 @@
         },
         "property": "version",
         "splitValuePattern": "(\\d+)(?:/(swe))?",
-        "splitValueProperties": ["version", "language"]
+        "splitValueProperties": ["version", "language"],
+        "rejoin": "/"
       },
       "_specName": "TODO",
       "_specResult": {"about": {
@@ -3559,7 +3561,7 @@
       "rangeEntity": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "uriTemplateDefaults": {"inScheme.notation": "kssb"},
-      "$a": {"property": "notation"},
+      "$a": {"property": "notation", "required": true},
       "$2": {"link": "inScheme",
              "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
              "property": "notation"},
@@ -4055,7 +4057,7 @@
     "525": {},
     "526": {},
 
-    "530": {"TODO:addLink": "hasFormat", "$a": {"addProperty": "comment"}},
+    "530": {"addLink": "hasFormat", "$a": {"addProperty": "comment"}},
 
     "533": {
       "addLink": "reproduction", "rangeEntity": "CreativeWork",
