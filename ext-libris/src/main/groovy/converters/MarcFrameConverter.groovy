@@ -1370,62 +1370,87 @@ class MarcSubFieldHandler extends ConversionPart {
     }
 
     def revert(Map data, Map currentEntity) {
-        def entity = domainEntityName?
-            getEntity(data) : currentEntity
-        // TODO: taking list[0] not enough – need to at least produce result list
-        if (entity == null)
+        currentEntity = domainEntityName? getEntity(data) : currentEntity
+        if (currentEntity == null)
             return null
-        if (link) {
-            entity = entity[link]
-            if (entity instanceof List) entity = entity[0]
+
+        def entities = link? currentEntity[link] : [currentEntity]
+        if (entities == null) {
+            return null
         }
-        if (entity == null)
-            return null
-        // TODO: match defaults only if not set by other subfield...
-        if (defaults && defaults.any { p, o -> o == null && (p in entity) || entity[p] != o })
-            return null
-        if (splitValueProperties && rejoin) {
-            def vs = []
-            boolean allEmpty = true
-            splitValueProperties.each {
-                def v = entity[it]
-                if (v == null && allowEmpty) {
-                    v = ""
-                } else {
-                    allEmpty = false
-                }
-                if (v != null) {
-                    vs << v
-                }
-            }
-            if (vs.size() == splitValueProperties.size() && !allEmpty) {
-                return vs.join(rejoin)
-            }
+        if (entities instanceof Map) {
+            entities = [entities]
         }
-        def value = null
-        if (property) {
-            value = revertObject(entity[property])
-        } else if (link) {
-            def obj = entity['@id']
-            if (subUriTemplate) {
-                def tpltStr = subUriTemplate.template
-                // NOTE: requires variable slot to be at end of template
-                // TODO: unify with extractToken
-                def exprIdx = tpltStr.indexOf('{_}')
-                if (exprIdx > -1) {
-                    assert tpltStr.size() == exprIdx + 3
-                    obj = URLDecoder.decode(obj.substring(exprIdx))
-                } else {
-                    exprIdx = tpltStr.indexOf('{+_}')
-                    if (exprIdx > -1) {
-                        assert tpltStr.size() == exprIdx + 4
-                        obj = obj.substring(exprIdx)
+
+        if (rangeEntityName) {
+            entities = entities.findAll { it['@type'] == rangeEntityName }
+        }
+
+        def values = []
+
+        for (entity in entities) {
+            // TODO: match defaults only if not set by other subfield...
+
+            if (defaults && defaults.any { p, o -> o == null && (p in entity) || entity[p] != o }) {
+                continue
+            }
+
+            if (splitValueProperties && rejoin) {
+                def vs = []
+                boolean allEmpty = true
+                splitValueProperties.each {
+                    def v = entity[it]
+                    if (v == null && allowEmpty) {
+                        v = ""
+                    } else {
+                        allEmpty = false
+                    }
+                    if (v != null) {
+                        vs << v
                     }
                 }
+                if (vs.size() == splitValueProperties.size() && !allEmpty) {
+                    values << vs.join(rejoin)
+                    continue
+                }
             }
-            value = revertObject(obj)
+
+            def value = null
+            if (property) {
+                value = revertObject(entity[property])
+            } else if (link) {
+                def obj = entity['@id']
+                if (subUriTemplate) {
+                    def tpltStr = subUriTemplate.template
+                    // NOTE: requires variable slot to be at end of template
+                    // TODO: unify with extractToken
+                    def exprIdx = tpltStr.indexOf('{_}')
+                    if (exprIdx > -1) {
+                        assert tpltStr.size() == exprIdx + 3
+                        obj = URLDecoder.decode(obj.substring(exprIdx))
+                    } else {
+                        exprIdx = tpltStr.indexOf('{+_}')
+                        if (exprIdx > -1) {
+                            assert tpltStr.size() == exprIdx + 4
+                            obj = obj.substring(exprIdx)
+                        }
+                    }
+                }
+                value = revertObject(obj)
+            }
+            if (value != null) {
+                values << value
+            } else if (marcDefault) {
+                values << marcDefault
+            }
         }
-        return value != null? value : marcDefault
+
+        if (values.size() == 0)
+            return null
+        else if (values.size() == 1)
+            return values[0]
+        else
+            return values
     }
 
 }
