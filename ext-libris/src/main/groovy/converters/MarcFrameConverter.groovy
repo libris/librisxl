@@ -353,6 +353,15 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         } else {
             buildHandlersByTokens(fieldDfn, tokenMap)
         }
+        int maxFieldSize = 0
+        handlerMap.values().each {
+            if (it.fieldSize > maxFieldSize) {
+                maxFieldSize = it.fieldSize
+            }
+        }
+        handlerMap.values().each {
+            it.fieldSize = maxFieldSize
+        }
     }
 
     private void buildHandlersByRecTypeBibLevel(fieldDfn, recTypeBibLevelMap) {
@@ -421,25 +430,25 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     }
 
     def revert(Map data) {
-        def value = null
-        def entity = data
+        def entities = [data]
         if (addLink) {
-            entity = getEntity(data).get(addLink)?.getAt(0)
+            entities = getEntity(data).get(addLink) ?: []
         }
-        if (!entity)
-            return null
-        if (baseConverter)
-            value = baseConverter.revert(entity)
-        def tokenBasedConverter = !useRecTypeBibLevel? handlerMap[value] : null
-        if (tokenBasedConverter) {
-            value = value ?: ""
-            def restValue = tokenBasedConverter.revert(entity)
-            return value + restValue.substring(value.size())
+        def values = []
+        for (entity in entities) {
+            def value = null
+            if (baseConverter)
+                value = baseConverter.revert(entity)
+            def tokenBasedConverter = !useRecTypeBibLevel? handlerMap[value] : null
+            if (tokenBasedConverter) {
+                def restValue = tokenBasedConverter.revert(entity)
+                value = value + restValue.substring(value.size())
+            }
+            if (value.find { it != MarcFixedFieldHandler.FIXED_NONE }) {
+                values << value
+            }
         }
-        if (value.find { it != MarcFixedFieldHandler.FIXED_NONE } == null) {
-            return null
-        }
-        return value
+        return values
     }
 
 }
@@ -450,6 +459,7 @@ class MarcFixedFieldHandler {
     static final String FIXED_NONE = " "
     static final String FIXED_UNDEF = "|"
     def columns = []
+    int fieldSize = 0
 
     MarcFixedFieldHandler(conversion, tag, fieldDfn) {
         this.tag = tag
@@ -459,6 +469,9 @@ class MarcFixedFieldHandler {
                 def start = m[0][1].toInteger()
                 def end = m[0][2].toInteger()
                 columns << new Column(conversion, obj, start, end, obj['default'])
+                if (end > fieldSize) {
+                    fieldSize = end
+                }
             }
         }
         columns.sort { it.start }
@@ -485,7 +498,7 @@ class MarcFixedFieldHandler {
     }
 
     def revert(Map data) {
-        def value = new StringBuilder(FIXED_NONE * (columns[-1].end))
+        def value = new StringBuilder(FIXED_NONE * fieldSize)
         for (col in columns) {
             def obj = col.revert(data)
             // TODO: ambiguity trouble if this is a List!
