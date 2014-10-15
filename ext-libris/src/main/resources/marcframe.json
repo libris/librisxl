@@ -4199,6 +4199,7 @@
     "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "ConceptualWork"},
     "648": {
       "inherit": "650",
+      "rangeEntity": "Event",
       "$a": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
@@ -4223,6 +4224,7 @@
           "$x": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "property": "prefLabel"},
           "$y": {"addLink": "broader", "uriTemplate": "_:{_}",
+                "rangeEntity": "Event",
                  "property": "prefLabel"},
           "$z": {"addLink": "broader", "uriTemplate": "_:{_}",
                 "TODO": "use /place/{_}, but only if $2=sao",
@@ -4602,7 +4604,7 @@
     },
     "148" : {
       "definesDomainEntity": "Concept",
-      "TODO": "chronological-concept a Event?",
+      "definesDomainEntity": "Event",
       "$a": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
