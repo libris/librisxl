@@ -4207,21 +4207,21 @@
           "TODO": "use uriTemplate:s here only if scheme token in $2 (else bnode)",
           "$a": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "rangeEntity": "Concept",
-                 "property": "prefLabel"},
+                 "property": "prefLabel", "itemPos": "first", "required": true},
           "$v": {"addLink": "broader", "uriTemplate": "_:{_}",
                "TODO": "use /topic/saogf/{_}, but only if $2=sao",
                  "rangeEntity": "Concept",
-                 "property": "prefLabel"},
+                 "property": "prefLabel", "itemPos": "rest"},
           "$x": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "rangeEntity": "Concept",
-                 "property": "prefLabel"},
+                 "property": "prefLabel", "itemPos": "rest"},
           "$y": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "rangeEntity": "Event",
-                 "property": "prefLabel"},
+                 "property": "prefLabel", "itemPos": "rest"},
           "$z": {"addLink": "broader", "uriTemplate": "_:{_}",
                  "TODO": "use /place/{_}, but only if $2=sao",
                  "rangeEntity": "Place",
-                 "property": "prefLabel"}
+                 "property": "prefLabel", "itemPos": "rest"}
         }
       },
       "i2": {
