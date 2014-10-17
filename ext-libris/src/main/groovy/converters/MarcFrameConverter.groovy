@@ -1239,6 +1239,7 @@ class MarcSubFieldHandler extends ConversionPart {
     boolean required = false
     String requiresI1
     String requiresI2
+    String itemPos
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
         this.fieldHandler = fieldHandler
@@ -1276,6 +1277,7 @@ class MarcSubFieldHandler extends ConversionPart {
         marcDefault = subDfn.marcDefault
         requiresI1 = subDfn['requires-i1']
         requiresI2 = subDfn['requires-i2']
+        itemPos = subDfn.itemPos
     }
 
     boolean convertSubValue(subVal, ent, uriTemplateParams, localEntites) {
@@ -1382,18 +1384,23 @@ class MarcSubFieldHandler extends ConversionPart {
             entities = [entities]
         }
 
-        if (rangeEntityName) {
-            entities = entities.findAll { it['@type'] == rangeEntityName }
-        }
-
         def values = []
 
+        boolean rest = false
         for (entity in entities) {
-            // TODO: match defaults only if not set by other subfield...
+            if (!rest) {
+                rest = true
+                if (itemPos == "rest")
+                    continue
+            } else if (itemPos == "first")
+                break
 
-            if (defaults && defaults.any { p, o -> o == null && (p in entity) || entity[p] != o }) {
+            if (rangeEntityName && entity['@type'] != rangeEntityName)
                 continue
-            }
+
+            // TODO: match defaults only if not set by other subfield...
+            if (defaults && defaults.any { p, o -> o == null && (p in entity) || entity[p] != o })
+                continue
 
             if (splitValueProperties && rejoin) {
                 def vs = []

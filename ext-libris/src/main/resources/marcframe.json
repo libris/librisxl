@@ -4203,25 +4203,24 @@
       "uriTemplateDefaults": {"inScheme.notation": "_"},
       "match-code": {
         "v x y z": {
-          "uriTemplate": "/topic/{+inScheme.notation}/{broader.prefLabel*}",
-          "TODO": "use uriTemplate:s here only if scheme token in $2 (else bnode)",
-          "$a": {"addLink": "broader", "uriTemplate": "_:{_}",
+          "uriTemplate": null,
+          "$a": {"addLink": "broader",
                  "rangeEntity": "Concept",
-                 "property": "prefLabel"},
-          "$v": {"addLink": "broader", "uriTemplate": "_:{_}",
+                 "property": "prefLabel", "itemPos": "first", "required": true},
+          "$v": {"addLink": "broader",
                "TODO": "use /topic/saogf/{_}, but only if $2=sao",
                  "rangeEntity": "Concept",
-                 "property": "prefLabel"},
-          "$x": {"addLink": "broader", "uriTemplate": "_:{_}",
+                 "property": "prefLabel", "itemPos": "rest"},
+          "$x": {"addLink": "broader",
                  "rangeEntity": "Concept",
-                 "property": "prefLabel"},
-          "$y": {"addLink": "broader", "uriTemplate": "_:{_}",
+                 "property": "prefLabel", "itemPos": "rest"},
+          "$y": {"addLink": "broader",
                  "rangeEntity": "Event",
-                 "property": "prefLabel"},
-          "$z": {"addLink": "broader", "uriTemplate": "_:{_}",
+                 "property": "prefLabel", "itemPos": "rest"},
+          "$z": {"addLink": "broader",
                  "TODO": "use /place/{_}, but only if $2=sao",
                  "rangeEntity": "Place",
-                 "property": "prefLabel"}
+                 "property": "prefLabel", "itemPos": "rest"}
         }
       },
       "i2": {
