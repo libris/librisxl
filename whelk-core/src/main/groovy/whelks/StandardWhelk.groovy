@@ -78,7 +78,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         for (storage in availableStorages) {
             storage.store(doc)
         }
-        notifyCamel(doc, [:])
+        notifyCamel(doc.identifier, ADD_OPERATION, [:])
         return new URI(doc.identifier)
     }
 
@@ -141,7 +141,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         def query = new ElasticQuery(["terms":["sameAs.@id:"+identifier]])
         def result = index.query(query)
         if (result.numberOfHits > 1) {
-            log.error("Something is terribly wrong. Got too many hits for sameAs.")
+            log.error("Something is terribly wrong. Got too many hits for sameAs. Don't know how to handle it. Yet.")
         }
         if (result.numberOfHits == 1) {
             log.trace("Results: ${result.toJson()}")
@@ -156,6 +156,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     @Override
     void remove(URI uri) {
+        log.debug("Sending DELETE operation to camel.")
+        notifyCamel(uri.toString(), REMOVE_OPERATION, [:])
         components.each {
             ((Component)it).remove(uri)
         }
@@ -221,9 +223,27 @@ class StandardWhelk extends HttpServlet implements Whelk {
         index?.flush()
     }
 
-    // TODO: Should find a way not to notify for every storage. Only primary storage.
     @Override
-    void notifyCamel(Document document, Map extraInfo) {
+    void notifyCamel(String identifier, String operation, Map extraInfo) {
+        if (!producerTemplate) {
+            producerTemplate = getCamelContext().createProducerTemplate();
+        }
+        Exchange exchange = new DefaultExchange(getCamelContext())
+        Message message = new DefaultMessage()
+        message.setBody(identifier, String)
+        if (extraInfo) {
+            extraInfo.each { key, value ->
+                message.setHeader("whelk:$key", value)
+            }
+        }
+        message.setHeader("whelk:operation", operation)
+        exchange.setIn(message)
+        log.trace("Sending $operation message to camel regaring ${identifier}")
+        producerTemplate.asyncSend("direct:${this.id}", exchange)
+    }
+
+    // TODO: Should find a way not to notify for every storage. Only primary storage.
+    void onotifyCamel(Document document, Map extraInfo) {
         if (!producerTemplate) {
             producerTemplate = getCamelContext().createProducerTemplate();
         }

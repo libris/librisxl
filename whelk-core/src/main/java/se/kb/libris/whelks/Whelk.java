@@ -9,6 +9,11 @@ import se.kb.libris.whelks.result.SparqlResult;
 import org.apache.camel.CamelContext;
 
 public interface Whelk {
+
+    // constants
+    static final String ADD_OPERATION = "ADD";
+    static final String REMOVE_OPERATION = "DELETE";
+
     // storage
     public URI add(Document d);
     public URI add(byte[] data,
@@ -37,5 +42,5 @@ public interface Whelk {
     // ecosystem
     public Map getGlobal();
     public CamelContext getCamelContext();
-    public void notifyCamel(Document document, Map extraInfo);
+    public void notifyCamel(String identifier, String operation, Map extraInfo);
 }

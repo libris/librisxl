@@ -31,47 +31,54 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     String graphstoreMessageQueue
 
     WhelkRouteBuilder(Map settings) {
-    elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
-    graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
-    batchTimeout = settings.get("batchTimeout", batchTimeout)
-    elasticTypes = settings.get("elasticTypes")
-    indexMessageQueue = settings.get("indexMessageQueue")
-    graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
-}
-
-void configure() {
-    Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
-    //Processor turtleConverterProcessor = getPlugin("turtleconverter_processor")
-    AggregationStrategy graphstoreAggregationStrategy = getPlugin("graphstore_aggregator")
-    Processor prawnRunner = getPlugin("prawnrunner_processor")
-    String primaryStorageId = whelk.storage.id
-    assert formatConverterProcessor
-
-    String elasticCluster = System.getProperty("elastic.cluster", global.ELASTIC_CLUSTER)
-    log.info("Using cluster $elasticCluster for camel routes.")
-
-    def eligableMQs = []
-    if (whelk.index) {
-        eligableMQs.add(indexMessageQueue)
-    }
-    if (whelk.graphStore) {
-        eligableMQs.add(graphstoreMessageQueue)
+        elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
+        graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
+        batchTimeout = settings.get("batchTimeout", batchTimeout)
+        elasticTypes = settings.get("elasticTypes")
+        indexMessageQueue = settings.get("indexMessageQueue")
+        graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
     }
 
-    from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligableMQs as String[])
+    void configure() {
+        Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
+        //Processor turtleConverterProcessor = getPlugin("turtleconverter_processor")
+        AggregationStrategy graphstoreAggregationStrategy = getPlugin("graphstore_aggregator")
+        Processor prawnRunner = getPlugin("prawnrunner_processor")
+        String primaryStorageId = whelk.storage.id
+        assert formatConverterProcessor
 
-    if (whelk.index) {
-        from(indexMessageQueue)
-            .threads(1,parallelProcesses)
-            .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, elasticCluster, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
-            .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
-            .routingSlip("elasticDestination")
+        String elasticCluster = System.getProperty("elastic.cluster", global.ELASTIC_CLUSTER)
+        log.info("Using cluster $elasticCluster for camel routes.")
+
+        def eligbleMQs = []
+        if (whelk.index) {
+            eligbleMQs.add(indexMessageQueue)
+        }
+        if (whelk.graphStore) {
+            eligbleMQs.add(graphstoreMessageQueue)
+        }
+
+        from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
+
+        if (whelk.index) {
+            from(indexMessageQueue)
+                .threads(1,parallelProcesses)
+                .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, elasticCluster, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
+                .choice()
+                    .when(header("whelk:operation").isEqualTo(Whelk.REMOVE_OPERATION))
+                        .to("direct:elasticdeletes")
+                        .endChoice()
+                    .otherwise()
+                        .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
+                        .routingSlip(header("elasticDestination"))
+
+            from("direct:elasticdeletes").delay(batchTimeout+1).routingSlip(header("elasticDestination"))
         }
 
         // Routes for graphstore
         if (whelk.graphStore) {
             from(graphstoreMessageQueue)
-                .filter("groovy", "['auth','bib'].contains(request.getHeader('entry:dataset'))")
+                .filter("groovy", "['auth','bib'].contains(request.getHeader('entry:dataset'))") // Only save auth and bib
                 .aggregate(header("entry:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
                 .threads(1,parallelProcesses)
                 .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")

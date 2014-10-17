@@ -11,6 +11,7 @@ import se.kb.libris.whelks.Document
 import se.kb.libris.whelks.exception.*
 import se.kb.libris.whelks.plugin.BasicPlugin
 import se.kb.libris.whelks.plugin.Plugin
+import se.kb.libris.whelks.Whelk
 
 import se.kb.libris.conch.Tools
 
@@ -107,7 +108,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                     "id": translateIdentifier(doc.identifier)
                 ]
             )
-            whelk.notifyCamel(doc, [:])
+            whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, [:])
         }
         return result
     }
@@ -131,7 +132,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 ]
 
                 //Send to camel route
-                whelk.notifyCamel(doc, [:])
+                whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, [:])
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")

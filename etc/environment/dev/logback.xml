@@ -18,7 +18,7 @@
   <logger name="org.apache.camel.component.http4">
       <level value="info"/>
   </logger>
-  <logger name="org.apache.camel.mock">
+  <logger name="org.apache.camel.component.elasticsearch">
       <level value="info"/>
   </logger>
   <logger name="org.apache.activemq">
@@ -28,7 +28,7 @@
       <level value="info"/>
   </logger>
   <logger name="se.kb.libris.whelks.camel.ElasticTypeRouteProcessor">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="se.kb.libris.whelks.camel.GraphstoreBatchUpdateAggregationStrategy">
       <level value="info"/>
@@ -49,16 +49,16 @@
       <level value="info"/>
   </logger> 
   <logger name="se.kb.libris.whelks.StandardWhelk">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.BasicElasticComponent">
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearch">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.ElasticSearchStorage">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.plugin.BasicPlugin">
       <level value="info"/>
@@ -70,13 +70,13 @@
       <level value="info"/>
   </logger>
  <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.Document">
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.DocumentAPI">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.ReindexOperator">
       <level value="info"/>
