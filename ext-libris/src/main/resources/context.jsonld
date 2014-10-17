@@ -89,6 +89,8 @@
       "aspect": "sdo:aspect",
       "attributedTo": "prov:wasAttributedTo",
       "audience": "dc:audience",
+      "audioIssueNumber": "bf:issueNumber",
+      "audioMatrixNumber": "bf:matrixNumber",
       "authorList": {
         "@container": "@list",
         "@id": "bibo:authorList"
@@ -156,6 +158,10 @@
       "extent": "dc:extent",
       "extractedFrom": "describedBy",
       "familyName": "sdo:familyName",
+      "focus": "foaf:focus",
+      "focusOf": {
+        "@reverse": "focus"
+      },
       "format": "dc:format",
       "formatOf": "dc:isFormatOf",
       "frequency": "sdo:frequency",
