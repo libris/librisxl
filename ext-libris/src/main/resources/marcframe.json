@@ -4649,12 +4649,15 @@
       "uriTemplate": "/topic/sao/{prefLabel}"
     },
     "150" : {
-      "inherit": "bib:650",
+      "TODO:tooDifferentTo?:inherit": "bib:650",
+      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
+      "uriTemplateDefaults": {"inScheme.notation": "_"},
       "addLink": null,
       "computeLinks": null,
       "rangeEntity": null,
       "domainEntity": null,
       "definesDomainEntity": "Concept",
+      "$a": {"property": "prefLabel"},
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "dependsOn": ["040", "042"],
       "$2": null,
