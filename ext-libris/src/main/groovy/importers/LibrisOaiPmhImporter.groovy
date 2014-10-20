@@ -65,6 +65,10 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
     }
 
 
+    int doImport(String ds, int maxNrOfDocsToImport) {
+        return doImport(ds, null, maxNrOfDocsToImport, false, true, null)
+    }
+
     int doImport(String ds, String token, int maxNrOfDocsToImport, boolean silent, boolean picky, Date since = null) {
         String startUrl = serviceUrl.replace("{dataset}", ds)
         Properties properties = new Properties()

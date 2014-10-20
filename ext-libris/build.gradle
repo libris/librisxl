@@ -11,6 +11,7 @@ dependencies {
     compile 'commons-collections:commons-collections:3.2.1'
     compile 'com.damnhandy:handy-uri-templates:2.0.2'
     compile 'se.kb.libris.commons:isbntools:1.0'
+    compile 'mysql:mysql-connector-java:5.1.33'
     providedCompile 'javax.servlet:servlet-api:2.5'
 }
 

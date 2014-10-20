@@ -56,6 +56,10 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         enhancer = plugins.find { it instanceof JsonLDLinkCompleterFilter }
     }
 
+    int doImport(String dataset, int nrOfDocs) {
+        return doImport(dataset, null, nrOfDocs)
+    }
+
     int doImport(String dataset, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
         getAuthentication()
         this.cancelled = false

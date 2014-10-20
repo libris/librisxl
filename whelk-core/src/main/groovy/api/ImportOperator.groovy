@@ -80,7 +80,7 @@ class ImportOperator extends AbstractOperator {
             if (!serviceUrl) {
                 throw new WhelkRuntimeException("URL is required for import.")
             }
-            count = importer.doImport(dataset, numToImport, true, picky, new URL(serviceUrl))
+            count = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
         }
         count = totalCount
         runningTime = System.currentTimeMillis() - startTime

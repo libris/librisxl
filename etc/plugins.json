@@ -228,6 +228,12 @@
     "linkcompleter" : {
         "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter"
     },
+    "mysqlimporter" : {
+        "_class" : "se.kb.libris.whelks.importers.MySQLImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ]
+    },
     "oaipmhimporter2" : {
         "_class" : "se.kb.libris.whelks.importers.LibrisOaiPmhImporter",
         "_plugins" : [
@@ -274,7 +280,8 @@
         "_class" : "se.kb.libris.whelks.api.ImportOperator",
         "_plugins": [
             "oaipmhimporter",
-            "oaipmhimporter2"
+            "oaipmhimporter2",
+            "mysqlimporter"
         ]
     },
     "transferoperator": {

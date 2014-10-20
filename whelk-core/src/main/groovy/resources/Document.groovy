@@ -171,9 +171,11 @@ class Document {
         this.entry['identifier'] = i
         return this
     }
+    /*
     Document withIdentifier(URI uri) {
         return withIdentifier(uri.toString())
     }
+    */
 
     Document withContentType(String ctype) {
         setContentType(ctype)

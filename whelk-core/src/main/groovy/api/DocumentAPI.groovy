@@ -90,7 +90,12 @@
                          response.setHeader("Link", "<$ctheader>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"")
                      }
                      response.setHeader("ETag", d.timestamp as String)
-                     sendResponse(response, d.dataAsString, d.contentType)
+                     def contentType = getMajorContentType(d.contentType)
+                     if (path in contextHeaders.collect { it.value })  {
+                         contentType = d.contentType
+                         log.debug("request is for context file. Must serve original content-type ($contentType).")
+                     }
+                     sendResponse(response, d.dataAsString, contentType)
                  }
              } else {
                  log.debug("Failed to find a document with URI $path")

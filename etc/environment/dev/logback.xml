@@ -76,7 +76,7 @@
       <level value="info"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.DocumentAPI">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
 <logger name="se.kb.libris.whelks.api.ReindexOperator">
       <level value="info"/>
@@ -107,6 +107,9 @@
 </logger>
 <logger name="se.kb.libris.whelks.plugin.MarcXml2JsonLDConverter">
   <level value="info"/>
+</logger>
+<logger name="se.kb.libris.whelks.importers.MySQLImporter">
+  <level value="debug"/>
 </logger>
 <logger name="se.kb.libris.whelks.importers.OaiPmhImporter">
   <level value="info"/>
