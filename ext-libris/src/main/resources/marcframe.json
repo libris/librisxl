@@ -11,6 +11,17 @@
 
   "tokenMaps": {
 
+    "thesaurus": {
+      "0": "lcsh",
+      "1": "lcsh/csh",
+      "2": "mesh",
+      "3": "nal",
+      "4": null,
+      "5": "csh",
+      "6": "rvm",
+      "7": null
+    },
+
     "relatorCode": "relatorcodes.json",
 
     "status": {
@@ -4143,26 +4154,31 @@
       "TODO:i1": {},
       "TODO:i2": {},
       "match-code": {
-        "2": {
-          "TODO:implies": {"i2": "7"},
-          "i2": {"marcDefault": "7"},
-          "$2": {
-            "link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"
-          },
-          "addLink": null,
-          "link": "focus",
-          "splitLink": [
-            {"codes": ["2"], "addLink": "subject", "spliceEntity": "Concept"}
-          ]
-        },
         "x": {
+          "$x": {"property": "name"},
           "$a": {"link": "isPartOf", "rangeEntity": "Organization", "property": "name"}
         }
       },
       "addLink": "subject",
       "rangeEntity": "Organization",
-      "$x": {"property": "name"},
-      "_specName": "multiple match-code",
+      "pendingResources": {
+        "_:concept": {"link": "focusOf", "rangeEntity": "Concept"}
+      },
+      "i2": {
+        "about": "_:concept",
+        "link": "inScheme",
+        "rangeEntity": "ConceptScheme",
+        "uriTemplate": "/topic/{+_}",
+        "property": "notation",
+        "tokenMap": "thesaurus"
+      },
+      "$2": {
+        "requires-i2": "7",
+        "about": "_:concept",
+        "link": "inScheme",
+        "rangeEntity": "ConceptScheme",
+        "property": "notation"
+      },
       "_specSource": {
         "610": {
           "ind1": "2",
@@ -4173,13 +4189,13 @@
       "_specResult": {"about": {
         "subject": [
           {
-            "@type": "Concept",
-            "focus": {
-              "@type": "Organization",
-              "isPartOf": {"@type": "Organization", "name": "Kungl. biblioteket"},
-              "name": "samlingar"
-            },
-            "inScheme": {"@type": "ConceptScheme", "notation": "sao"}
+            "@type": "Organization",
+            "isPartOf": {"@type": "Organization", "name": "Kungl. biblioteket"},
+            "name": "samlingar",
+            "focusOf": {
+              "@type": "Concept",
+              "inScheme": {"@type": "ConceptScheme", "notation": "sao"}
+            }
           }
         ]
       }}
@@ -4228,16 +4244,7 @@
         "rangeEntity": "ConceptScheme",
         "uriTemplate": "/topic/{+_}",
         "property": "notation",
-        "tokenMap": {
-          "0": "lcsh",
-          "1": "lcsh/csh",
-          "2": "mesh",
-          "3": "nal",
-          "4": null,
-          "5": "csh",
-          "6": "rvm",
-          "7": null
-        }
+        "tokenMap": "thesaurus"
       },
       "$2": {
         "requires-i2": "7",
@@ -4248,9 +4255,36 @@
       "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
              "ignored": true},
       "$a": {"property": "prefLabel"},
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
+      "_spec": [
+        {
+          "source": {"650": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Information"},
+            {"y": "Information Age"}
+          ]}},
+          "result": {"about": {
+            "subject": [
+              {
+                "@type": "Concept",
+                "broader": [
+                  {
+                    "@type": "Concept",
+                    "prefLabel": "Information"
+                  },
+                  {
+                    "@type": "Event",
+                    "prefLabel": "Information Age"
+                  }
+                ],
+                "inScheme": {
+                  "@id": "/topic/lcsh",
+                  "@type": "ConceptScheme",
+                  "notation": "lcsh"
+                }
+              }
+            ]
+          }}
+        }
+      ]
     },
     "651": {
       "inherit": "650",
@@ -4615,12 +4649,15 @@
       "uriTemplate": "/topic/sao/{prefLabel}"
     },
     "150" : {
-      "inherit": "bib:650",
+      "TODO:tooDifferentTo?:inherit": "bib:650",
+      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
+      "uriTemplateDefaults": {"inScheme.notation": "_"},
       "addLink": null,
       "computeLinks": null,
       "rangeEntity": null,
       "domainEntity": null,
       "definesDomainEntity": "Concept",
+      "$a": {"property": "prefLabel"},
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "dependsOn": ["040", "042"],
       "$2": null,

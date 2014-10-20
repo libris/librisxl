@@ -1094,42 +1094,67 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def entities = [entity]
 
-        if (link) {
-            entities = entity[link]
-            if (!(entities instanceof List)) // should be if repeat == true
-                entities = entities? [entities] : []
-            if (rangeEntityName) {
-                entities = entities.findAll {
-                    if (!it) return false
-                    it['_DEBUG_VIA'] = link
-                    def type = it['@type']
-                    return (type instanceof List)?
-                        rangeEntityName in type : type == rangeEntityName
-                }
-            }
-        }
+        def results = []
 
-        def aboutMap = [:]
-        if (pendingResources) {
-            pendingResources.each { key, pending ->
-                def link = pending.link ?: pending.addLink
-                def rangeEntity = pending.rangeEntity
-                entities.each {
-                    def about = it[link]
-                    // TODO: if multiple, spread according to repeated subfield groups(?)...
-                    if (about instanceof List) {
-                        about = about[0]
-                    }
-                    if (about && (!rangeEntity || about['@type'] == rangeEntity)) {
-                        aboutMap[key] = about
+        def useLinks = []
+        if (computeLinks && computeLinks.mapping instanceof Map) {
+            computeLinks.mapping.each { code, compLink ->
+                if (compLink in entity) {
+                    if (code == '*') {
+                        useLinks << [link: compLink, subfield: null]
+                    } else {
+                        useLinks << [link: compLink, subfield: [(computeLinks.use): code]]
                     }
                 }
             }
+        } else {
+            useLinks << [link: link, subfield: null]
         }
 
-        def results = entities.collect {
-            revertOne(data, it, null, aboutMap, matchCandidate)
-        }.findAll()
+        for (useLink in useLinks) {
+            def useEntities = entities
+            if (useLink.link) {
+                useEntities = entity[useLink.link]
+                if (!(useEntities instanceof List)) // should be if repeat == true
+                    useEntities = useEntities? [useEntities] : []
+                if (rangeEntityName) {
+                    useEntities = useEntities.findAll {
+                        if (!it) return false
+                        def type = it['@type']
+                        return (type instanceof List)?
+                            rangeEntityName in type : type == rangeEntityName
+                    }
+                }
+            }
+
+            def aboutMap = [:]
+            if (pendingResources) {
+                pendingResources.each { key, pending ->
+                    def link = pending.link ?: pending.addLink
+                    def rangeEntity = pending.rangeEntity
+                    useEntities.each {
+                        def about = it[link]
+                        // TODO: if multiple, spread according to repeated subfield groups(?)...
+                        if (about instanceof List) {
+                            about = about[0]
+                        }
+                        if (about && (!rangeEntity || about['@type'] == rangeEntity)) {
+                            aboutMap[key] = about
+                        }
+                    }
+                }
+            }
+
+            useEntities.each {
+                def field = revertOne(data, it, null, aboutMap, matchCandidate)
+                if (field) {
+                    if (useLink.subfield) {
+                        field.subfields << useLink.subfield
+                    }
+                    results << field
+                }
+            }
+        }
 
         if (splitLinkRules) {
             // TODO: refine, e.g. handle spliceEntityName..

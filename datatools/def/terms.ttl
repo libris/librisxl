@@ -812,6 +812,12 @@ marcenum:bibLevel a skos:Collection;
 :editorialNote a owl:DatatypeProperty;
     owl:equivalentProperty skos:editorialNote .
 
+:focus a owl:ObjectProperty;
+    owl:equivalentProperty foaf:focus .
+
+:focusOf a owl:ObjectProperty;
+    owl:inverseOf :focus .
+
 :inCollection a owl:ObjectProperty;
     owl:inverseOf skos:member;
     rdfs:domain skos:Concept;
