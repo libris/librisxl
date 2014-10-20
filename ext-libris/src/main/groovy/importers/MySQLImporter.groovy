@@ -65,7 +65,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                     bib_id  = resultSet.getInt("bib_id")
                     MarcRecord record = Iso2709Deserializer.deserialize(resultSet.getBytes("data"))
                     int auth_id = resultSet.getInt("auth_id")
-                    def doc = (docSet.containsKey(bib_id) ? docSet.get(bib_id) : 
+                    def doc = docSet.containsKey(bib_id) ? docSet.get(bib_id) : null
 
                     if (auth_id) {
                         log.trace("Found auth_id $auth_id for $bib_id (Don't know what to do with it yet, though.)")
