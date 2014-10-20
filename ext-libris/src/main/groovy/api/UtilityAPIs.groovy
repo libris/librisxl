@@ -32,7 +32,7 @@ class FormatterAPI extends BasicAPI {
                         log.info("Found converter: ${fc.id}")
                         doc = fc.convert(doc)
                     } else {
-                        log.error("No formatconverter found for $requestedContentType")
+                        log.error("No formatconverter found to convert from ${doc.contentType} to $requestedContentType")
                         response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE)
                     }
                 } else {
