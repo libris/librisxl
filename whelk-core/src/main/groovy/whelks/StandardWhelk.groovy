@@ -94,12 +94,14 @@ class StandardWhelk extends HttpServlet implements Whelk {
             storage.bulkStore(docs)
             foundStorage = true
         }
+        log.debug("Documents stored. Now notifying camel ...")
         if (foundStorage) {
             // Notify camel last, to make sure documents are available when processors call them.
             for (doc in docs) {
                 notifyCamel(doc.identifier, ADD_OPERATION, [:])
             }
         }
+        log.debug("Bulk operation completed.")
     }
 
     Document get(URI uri, String version=null, List contentTypes=[], boolean expandLinks = true) {
