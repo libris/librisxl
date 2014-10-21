@@ -4382,7 +4382,11 @@
       "$k": {"addProperty": "seriesLabel", "TODO:targetMatch": "4xx, 8xx"},
       "$m": {"property": "mediaNote"},
       "$n": {"addProperty": "note"},
-      "$o": {"addLink": "identifier", "rangeEntity": "Identifier", "addProperty": "identifierValue"},
+      "$o": {
+        "addLink": "identifier", "rangeEntity": "Identifier",
+        "addProperty": "identifierValue",
+        "defaults": {"identifierScheme": null}
+      },
       "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
       "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
       "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
@@ -4391,11 +4395,44 @@
         "addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber",
         "uriTemplate": "/resource/bib/{_}"
       },
-      "$x": {"property": "issn", "TODO:targetMatch": "022"},
+      "$x": {
+        "TODO:targetMatch": "022",
+        "link": "identifier", "rangeEntity": "Identifier",
+        "property": "identifierValue",
+        "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
+      },
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
-      "$z": {"addProperty": "isbn", "TODO:targetMatch": "020"},
+      "$z": {
+        "TODO:targetMatch": "020",
+        "addLink": "identifier", "rangeEntity": "Identifier",
+        "property": "identifierValue",
+        "defaults": {"identifierScheme": {"@id": "/def/identifiers/isbn"}}
+      },
       "$9": {"addProperty": "partNumber"},
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"}
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "_spec": [
+        {
+          "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
+            {"s": "Main Thing"},
+            {"z": "00-0-000000-0"}
+          ]}},
+          "result": {"about": {
+            "isPartOf": [
+              {
+                "@type": "CreativeWork",
+                "uniformTitle": "Main Thing",
+                "identifier": [
+                  {
+                    "@type": "Identifier",
+                    "identifierScheme": {"@id": "/def/identifiers/isbn"},
+                    "identifierValue": "00-0-000000-0"
+                  }
+                ]
+              }
+            ]
+          }}
+        }
+      ]
     },
     "773": {
       "inherit": "772",
@@ -4425,7 +4462,7 @@
     },
     "777": {
       "inherit": "772",
-      "TODO:addProperty": "inConjunctionWith"
+      "addLink": "inConjunctionWith", "TODO": "determine link"
     },
     "780": {
       "inherit": "772",
