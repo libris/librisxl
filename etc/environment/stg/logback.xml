@@ -23,6 +23,9 @@
   <logger name="se.kb.libris.whelks.StandardWhelk">
       <level value="debug"/>
   </logger>
+  <logger name="se.kb.libris.whelks.importers.MySQLImporter">
+      <level value="debug"/>
+  </logger>
   <logger name="se.kb.libris.whelks.component.ElasticSearch">
       <level value="info"/>
   </logger>
