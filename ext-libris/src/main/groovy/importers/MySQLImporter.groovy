@@ -94,7 +94,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                             recordMeta.get("oaipmhSetSpecs", []).add("authority:" + auth_id)
                         }
                     } else if (dataset == "hold") {
-                        int bib_id = resultSet.getint("bib_id")
+                        int bib_id = resultSet.getInt("bib_id")
                         if (bib_id > 0) {
                             log.trace("Found bib_id $bib_id for $recordId Adding to oaipmhSetSpecs")
                             recordMeta.get("oaipmhSetSpecs", []).add("bibid:" + bib_id)

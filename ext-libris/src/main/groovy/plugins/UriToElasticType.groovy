@@ -21,10 +21,6 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
         this.whelkName = id
     }
 
-    String calculateShape(String uri) {
-        return calculateShape(new URI(uri))
-    }
-
     String calculateShape(URI uri) {
         String identifier = uri.path.toString()
         log.debug("Received uri $identifier")
