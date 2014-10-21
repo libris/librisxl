@@ -66,7 +66,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
             }
             if (dataset == "hold") {
                 log.info("Creating hold load statement.")
-                statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id LIMIT 1000")
+                statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id LIMIT 5000")
             }
 
             if (!statement) {
