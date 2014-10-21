@@ -3,6 +3,7 @@ package se.kb.libris.whelks.importers
 import groovy.util.logging.Slf4j as Log
 
 import java.sql.*
+import java.util.concurrent.*
 
 import se.kb.libris.whelks.*
 import se.kb.libris.whelks.plugin.*
@@ -27,10 +28,16 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
     boolean cancelled = false
 
+    ExecutorService queue
+    Semaphore tickets
+
+    int numberOfThreads
+
     int recordCount
     long startTime
 
     MySQLImporter(Map settings) {
+        this.numberOfThreads = settings.get("numberOfThreads", 50000)
     }
 
     void bootstrap(String whelkId) {
@@ -44,41 +51,66 @@ class MySQLImporter extends BasicPlugin implements Importer {
         startTime = System.currentTimeMillis()
         cancelled = false
 
+        tickets = new Semaphore(numberOfThreads)
+        queue = Executors.newSingleThreadExecutor()
+
         try {
             Class.forName("com.mysql.jdbc.Driver")
 
             log.debug("Connecting to database...")
             conn = connectToUri(serviceUrl)
 
-            log.debug("Creating statement...")
-            statement = conn.prepareStatement("SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id WHERE bib.bib_id > ? ORDER BY bib.bib_id LIMIT 1000")
+            if (dataset == "bib") {
+                log.info("Creating bib load statement.")
+                statement = conn.prepareStatement("SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id LIMIT 1000")
+            }
+            if (dataset == "hold") {
+                log.info("Creating hold load statement.")
+                statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id LIMIT 1000")
+            }
 
-            int bib_id = 0
+            if (!statement) {
+                throw new Exception("No valid dataset selected")
+            }
+
+            int recordId = 0
 
             for (;;) {
-                statement.setInt(1, bib_id)
+                statement.setInt(1, recordId)
                 resultSet = statement.executeQuery()
-                def docSet = [:]
+                def recordMap = [:]
 
-                int lastBibId = bib_id
+                int lastRecordId = recordId
                 while(resultSet.next()){
-                    bib_id  = resultSet.getInt("bib_id")
+                    recordId  = resultSet.getInt(1)
                     MarcRecord record = Iso2709Deserializer.deserialize(resultSet.getBytes("data"))
-                    int auth_id = resultSet.getInt("auth_id")
-                    def doc = docSet.containsKey(bib_id) ? docSet.get(bib_id) : null
 
-                    if (auth_id) {
-                        log.trace("Found auth_id $auth_id for $bib_id (Don't know what to do with it yet, though.)")
+                    def recordMeta = recordMap.get(recordId, ["record":record, "meta": [:]]).get("meta")
+
+                    if (dataset == "bib") {
+                        int auth_id = resultSet.getInt("auth_id")
+                        if (auth_id > 0) {
+                            log.trace("Found auth_id $auth_id for $recordId Adding to oaipmhSetSpecs")
+                            recordMeta.get("oaipmhSetSpecs", []).add("authority:" + auth_id)
+                        }
+                    } else if (dataset == "hold") {
+                        int bib_id = resultSet.getint("bib_id")
+                        if (bib_id > 0) {
+                            log.trace("Found bib_id $bib_id for $recordId Adding to oaipmhSetSpecs")
+                            recordMeta.get("oaipmhSetSpecs", []).add("bibid:" + bib_id)
+                        }
                     }
 
-                    log.info("id: $bib_id  count: $recordCount doc_id: ${doc?.identifier}")
+                    recordMap.put(recordId, ["record": record, "meta": recordMeta])
 
-                    docSet.put(bib_id, doc)
+                    //log.info("id: $recordId  count: $recordCount")
 
                     recordCount++
                 }
 
-                if (cancelled || lastBibId == bib_id) {
+                addDocuments(dataset, recordMap)
+
+                if (cancelled || lastRecordId == recordId) {
                     recordCount--
                     log.info("Same id. Breaking.")
                     break
@@ -87,6 +119,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                     log.info("Max docs reached. Breaking.")
                     break
                 }
+
             }
 
         } catch(SQLException se) {
@@ -101,15 +134,18 @@ class MySQLImporter extends BasicPlugin implements Importer {
     }
 
 
-    void addDocuments(String dataset, final List recordSet) {
+    void addDocuments(String dataset, final Map recordMap) {
+        if (tickets.availablePermits() < 10) {
+            log.info("Trying to acquire semaphore for adding to queue. ${tickets.availablePermits()} available.")
+        }
         tickets.acquire()
         queue.execute({
             try {
                 def docs = []
-                recordSet.each { record, auths ->
-                    def entry = ["identifier":"/"+dataset+"/"+record.getControlfields("001").get(0).getData(),"dataset":dataset]
-                    def meta = [:]
-                    docs << enhancer.filter(marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta]))
+                recordMap.each { id, data ->
+                    def entry = ["identifier":"/"+dataset+"/"+data.record.getControlfields("001").get(0).getData(),"dataset":dataset]
+                    log.info("doc entry: ${entry}, meta: ${data.meta}")
+                    docs << enhancer.filter(marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta]))
                     }
                 log.debug("Saving collected documents.")
                 whelk.bulkAdd(docs, docs.first().contentType)

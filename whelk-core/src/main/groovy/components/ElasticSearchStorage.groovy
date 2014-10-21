@@ -226,7 +226,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     private Document createTombstone(uri) {
-        def tombstone = new Document().withIdentifier(uri).withData("DELETED ENTRY")
+        def tombstone = new Document().withIdentifier(uri.toString()).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
         tombstone.updateTimestamp()
         return tombstone

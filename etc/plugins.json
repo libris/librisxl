@@ -232,7 +232,11 @@
         "_class" : "se.kb.libris.whelks.importers.MySQLImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
-        ]
+        ],
+        "_params" : {
+            "preserveTimestamps" : true,
+            "numberOfThreads": 50000
+        }
     },
     "oaipmhimporter2" : {
         "_class" : "se.kb.libris.whelks.importers.LibrisOaiPmhImporter",

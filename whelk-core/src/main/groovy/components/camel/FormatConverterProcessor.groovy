@@ -90,7 +90,7 @@ class ElasticTypeRouteProcessor implements Processor {
         String identifier = message.getHeader("entry:identifier")
         String indexName = message.getHeader("whelk:index", shapeComputer.whelkName)
         message.setHeader("whelk:index", indexName)
-        String indexType = shapeComputer.calculateShape(identifier)
+        String indexType = shapeComputer.calculateShape((String)identifier)
         message.setHeader("whelk:type", indexType)
         String indexId = shapeComputer.translateIdentifier(new URI(identifier))
         message.setHeader("whelk:id", indexId)
