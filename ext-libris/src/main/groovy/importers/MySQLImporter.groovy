@@ -110,13 +110,14 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
                 addDocuments(dataset, recordMap)
 
+                if (nrOfDocs > 0 && recordCount > nrOfDocs) {
+                    log.info("Max docs reached. Breaking.")
+                    break
+                }
+
                 if (cancelled || lastRecordId == recordId) {
                     recordCount--
                     log.info("Same id. Breaking.")
-                    break
-                }
-                if (nrOfDocs > 0 && recordCount > nrOfDocs) {
-                    log.info("Max docs reached. Breaking.")
                     break
                 }
 
@@ -130,6 +131,8 @@ class MySQLImporter extends BasicPlugin implements Importer {
             log.info("Record count: ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds.")
             close()
         }
+        log.debug("Shutting down queue")
+        queue.shutdown()
         return recordCount
     }
 
@@ -146,7 +149,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                     def entry = ["identifier":"/"+dataset+"/"+data.record.getControlfields("001").get(0).getData(),"dataset":dataset]
                     docs << enhancer.filter(marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta]))
                 }
-                log.debug("Saving collected documents.")
+                log.debug("Saving ${docs.size()} collected documents.")
                 whelk.bulkAdd(docs, docs.first().contentType)
             } finally {
                 tickets.release()
@@ -164,7 +167,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
 
     public void close() {
-        log.info("Closing down everything.")
+        log.info("Closing down mysql connections.")
         try {
             statement.cancel()
             if (resultSet != null) {
