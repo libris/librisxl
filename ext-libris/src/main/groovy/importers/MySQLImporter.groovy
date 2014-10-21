@@ -131,8 +131,8 @@ class MySQLImporter extends BasicPlugin implements Importer {
             log.info("Record count: ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds.")
             close()
         }
-        log.debug("Shutting down queue")
         queue.shutdown()
+        log.debug("Shutting down queue")
         return recordCount
     }
 
@@ -145,12 +145,14 @@ class MySQLImporter extends BasicPlugin implements Importer {
         queue.execute({
             try {
                 def docs = []
+                log.debug("Converting MARC21 into JSONLD")
                 recordMap.each { id, data ->
                     def entry = ["identifier":"/"+dataset+"/"+data.record.getControlfields("001").get(0).getData(),"dataset":dataset]
                     docs << enhancer.filter(marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta]))
                 }
                 log.debug("Saving ${docs.size()} collected documents.")
                 whelk.bulkAdd(docs, docs.first().contentType)
+                log.debug("Documents saved.")
             } finally {
                 tickets.release()
             }
