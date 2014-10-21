@@ -112,6 +112,7 @@ abstract class BasicElasticComponent extends BasicComponent {
     }
 
     void flush() {
+        log.debug("Flusing ${this.id}")
         def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
     }
 

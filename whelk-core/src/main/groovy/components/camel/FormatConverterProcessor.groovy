@@ -40,30 +40,34 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
         Message message = exchange.getIn()
         log.debug("Received message to ${this.id}.")
         log.debug("Message type: ${message.getHeader('whelk:operation')}")
-        log.debug("converter: $converter expander: $expander")
-        log.debug("all plugins: $plugins")
-        Document doc = whelk.get(new URI(message.getBody()))
-        log.debug("Loaded document ${doc?.identifier}")
-        if (doc && (converter || expander)) {
-            log.debug("Running converter/expander.")
-            if (converter) {
-                doc = converter.convert(doc)
+        if (message.getHeader("whelk:operation") == Whelk.REMOVE_OPERATION) {
+            message.setHeader("entry:identifier", message.body)
+        } else {
+            log.debug("converter: $converter expander: $expander")
+            log.debug("all plugins: $plugins")
+            Document doc = whelk.get(new URI(message.getBody()))
+            log.debug("Loaded document ${doc?.identifier}")
+            if (doc && (converter || expander)) {
+                log.debug("Running converter/expander.")
+                if (converter) {
+                    doc = converter.convert(doc)
+                }
+                if (expander) {
+                    doc = expander.filter(doc)
+                }
             }
-            if (expander) {
-                doc = expander.filter(doc)
+            if (doc) {
+                if (doc.isJson()) {
+                    message.setBody(doc.dataAsMap)
+                } else {
+                    message.setBody(doc.data)
+                }
+                doc.entry.each { key, value ->
+                    message.setHeader("entry:$key", value)
+                }
             }
+            exchange.setOut(message)
         }
-        if (doc) {
-            if (doc.isJson()) {
-                message.setBody(doc.dataAsMap)
-            } else {
-                message.setBody(doc.data)
-            }
-            doc.entry.each { key, value ->
-                message.setHeader("entry:$key", value)
-            }
-        }
-        exchange.setOut(message)
     }
 }
 
@@ -100,13 +104,13 @@ class ElasticTypeRouteProcessor implements Processor {
         }
         log.debug("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $indexId)")
 
-        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexName=${indexName}&indexType=${indexType}")
-        if (operation == Whelk.REMOVE_OPERATION) {
-            log.info(">>> Setting message body to $indexId")
-            message.setBody(indexId)
-        } else {
-            message.getBody(Map.class).put("elastic_id", indexId)
-        }
+            message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexName=${indexName}&indexType=${indexType}")
+            if (operation == Whelk.REMOVE_OPERATION) {
+                log.info(">>> Setting message body to $indexId")
+                message.setBody(indexId)
+            } else {
+                message.getBody(Map.class).put("elastic_id", indexId)
+            }
         exchange.setOut(message)
     }
 }

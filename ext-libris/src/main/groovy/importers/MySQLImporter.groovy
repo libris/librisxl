@@ -144,9 +144,8 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 def docs = []
                 recordMap.each { id, data ->
                     def entry = ["identifier":"/"+dataset+"/"+data.record.getControlfields("001").get(0).getData(),"dataset":dataset]
-                    log.info("doc entry: ${entry}, meta: ${data.meta}")
                     docs << enhancer.filter(marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta]))
-                    }
+                }
                 log.debug("Saving collected documents.")
                 whelk.bulkAdd(docs, docs.first().contentType)
             } finally {

@@ -89,8 +89,16 @@ class StandardWhelk extends HttpServlet implements Whelk {
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String contentType) {
         log.debug("Bulk add ${docs.size()} document")
+        boolean foundStorage = false
         for (storage in getStorages(contentType)) {
             storage.bulkStore(docs)
+            foundStorage = true
+        }
+        if (foundStorage) {
+            // Notify camel last, to make sure documents are available when processors call them.
+            for (doc in docs) {
+                notifyCamel(doc.identifier, ADD_OPERATION, [:])
+            }
         }
     }
 

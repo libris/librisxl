@@ -79,7 +79,6 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
                 }
             }
             breq.add(prepareIndexingRequest(doc, doc.identifier, indexName))
-            whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, [:])
         }
         def response = performExecute(breq)
         if (response.hasFailures()) {
