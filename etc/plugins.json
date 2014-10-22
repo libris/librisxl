@@ -212,7 +212,8 @@
         "_plugins" : [
             "linkexpander",
             "marcconverter",
-            "marcxml2jsonldconverter"
+            "marcxml2jsonldconverter",
+            "turtleconverter"
             ],
         "_params": {
             "contextHeaders": {
