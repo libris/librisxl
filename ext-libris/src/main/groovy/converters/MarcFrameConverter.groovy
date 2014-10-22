@@ -276,8 +276,13 @@ class MarcConversion {
 
         // TODO: move this to an "extra data" section in marcframe.json?
         extraData?.get("oaipmhSetSpecs")?.each {
-            if (it.startsWith("bibid:") && !record.about.holdingFor) {
-                record.about.holdingFor = ["@type": "Record", controlNumber: it.substring(6)]
+            def prefix = "bibid:"
+            if (it.startsWith(prefix) && !record.about.holdingFor) {
+                record.about.holdingFor = ["@type": "Record", controlNumber: it.substring(prefix.size())]
+            }
+            prefix = "location:"
+            if (it.startsWith(prefix) && !record.about.heldBy) {
+                record.about.heldBy = ["@type": "Organization", notation: it.substring(prefix.size())]
             }
         }
 
