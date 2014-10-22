@@ -3,6 +3,7 @@
         "WHELK_WORK_DIR": "work",
         "STORAGE_PATH": "work/storage",
         "ELASTIC_HOST": "localhost",
+        "ELASTIC_STORAGE_HOST": "localhost",
         "ELASTIC_PORT": 9300,
         "ELASTIC_TYPES": ["auth","bib","hold","def","sys"],
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",

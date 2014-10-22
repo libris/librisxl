@@ -62,11 +62,11 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
             if (dataset == "bib") {
                 log.info("Creating bib load statement.")
-                statement = conn.prepareStatement("SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id LIMIT 1000")
+                statement = conn.prepareStatement("SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id LIMIT 6000")
             }
             if (dataset == "hold") {
                 log.info("Creating hold load statement.")
-                statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id LIMIT 5000")
+                statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id LIMIT 6000")
             }
 
             if (!statement) {
