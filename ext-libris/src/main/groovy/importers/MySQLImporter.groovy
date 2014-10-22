@@ -66,7 +66,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
             }
             if (dataset == "hold") {
                 log.info("Creating hold load statement.")
-                statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id LIMIT 6000")
+                statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id, shortname FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id LIMIT 6000")
             }
 
             if (!statement) {
@@ -95,9 +95,14 @@ class MySQLImporter extends BasicPlugin implements Importer {
                         }
                     } else if (dataset == "hold") {
                         int bib_id = resultSet.getInt("bib_id")
+                        String sigel = resultSet.getString("shortname")
                         if (bib_id > 0) {
                             log.trace("Found bib_id $bib_id for $recordId Adding to oaipmhSetSpecs")
                             recordMeta.get("oaipmhSetSpecs", []).add("bibid:" + bib_id)
+                        }
+                        if (sigel) {
+                            log.trace("Found sigel $sigel for $recordId Adding to oaipmhSetSpecs")
+                            recordMeta.get("oaipmhSetSpecs", []).add("location:" + sigel)
                         }
                     }
 
@@ -150,6 +155,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 log.debug("Converting MARC21 into JSONLD")
                 recordMap.each { id, data ->
                     def entry = ["identifier":"/"+dataset+"/"+data.record.getControlfields("001").get(0).getData(),"dataset":dataset]
+                    log.trace("Entry: ${entry}, Meta: ${data.meta}")
                     docs << enhancer.filter(marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta]))
                 }
                 log.debug("Saving ${docs.size()} collected documents.")

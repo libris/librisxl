@@ -109,7 +109,7 @@
   <level value="info"/>
 </logger>
 <logger name="se.kb.libris.whelks.importers.MySQLImporter">
-  <level value="info"/>
+  <level value="debug"/>
 </logger>
 <logger name="se.kb.libris.whelks.importers.OaiPmhImporter">
   <level value="info"/>

@@ -9,7 +9,9 @@
         "GRAPHSTORE_DATA_URI": "http://hp03.libris.kb.se:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://hp03.libris.kb.se:3030/libris/query",
         "GRAPHSTORE_UPDATE_URI": "http://hp03.libris.kb.se:3030/libris/update",
-        "ACTIVEMQ_BROKER_URL": "tcp://hp02.libris.kb.se:61616"
+        "ACTIVEMQ_BROKER_URL": "tcp://hp02.libris.kb.se:61616",
+        "MQ_INDEX": "activemq:libris.index",
+        "MQ_GRAPHSTORE": "activemq:libris.graphstore"
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
