@@ -74,7 +74,7 @@ auth/143787	Deckare, sao
 auth/158278	Romaner
 
 bib/11279947	[Akademisk avhandling = Text,Monograph,Thesis] Neural correlates of individual differences in personality and intelligence
-bib/16309110	[Bilder = ?,?,?]	Julkalendern 2013
+bib/16309110	[Bilder = ?,?,?] Julkalendern 2013
 bib/14747945	[Datorspel (TV-spel) = Multimedia,Monograph,Game] Bioshock
 bib/11773502	[Elektroniska resurser,Direktåtkomst = ?,?,?] Ritningsläsning
 bib/11454989	[Elektroniska resurser,Fjärråtkomst,Fortlöpande resurser,Tidskrift - elektronisk och tryckt manifestation = ?,?,?] Tjugofyra7
@@ -114,34 +114,34 @@ bib/8435499	[-||-]
 bib/8435506	[-||-]
 bib/8595377	[–||– förenklat sätt att notera repliker som följer på artikel/recension = ?,?,?]
 bib/10796401	subject.broader:historia
-bib/11311266
-bib/11357644
-bib/11601582
-bib/11691597
-bib/11850823
-bib/11911628
-bib/12035894
-bib/12289439
+bib/11311266	
+bib/11357644	
+bib/11601582	
+bib/11691597	
+bib/11850823	
+bib/11911628	
+bib/12035894	
+bib/12289439	
 bib/1234	Water and water pollution handbook. Vol. 2
-bib/12384646
-bib/12732969
-bib/12743333
-bib/13531679
-bib/13543149
-bib/13584984
-bib/13884869
-bib/13973072
+bib/12384646	
+bib/12732969	
+bib/12743333	
+bib/13531679	
+bib/13543149	
+bib/13584984	
+bib/13884869	
+bib/13973072	
 bib/14006223	har subject.broader.prefLabel:Aktiemarknad
 bib/2912361	har relation.@type=Work, relation.uniformTitle:Metamorphoses (auth/345526)
-bib/3222798
-bib/3678656
-bib/4582889
+bib/3222798	
+bib/3678656	
+bib/4582889	
 bib/48077	Länkar till Pengar auth/156486 via subject
-bib/5067018
-bib/5299954
-bib/6128247
+bib/5067018	
+bib/5299954	
+bib/6128247	
 bib/664491	(länkar till Tove Jansson auth/19153 via attributedTo)
-bib/7149593
+bib/7149593	
 bib/816912	(länkar till Lars Jansson auth/191493 via contributorList)
 bib/8261338	Kalle Anka & C:o (Serie)
 bib/827126	Mumintrollet (länkar till Tove Jansson auth/19153 som attributedTo)
@@ -225,34 +225,34 @@ bib/568184	Post kopplad till exempel på bestånd
 bib/10380624	Post kopplad till exempel på bestånd
 bib/7274677	Post kopplad till exempel på bestånd
 
-hold/15726821
-hold/15958795
-hold/18472436
-hold/22266746
-hold/23452070
-hold/32752629
-hold/718795
-hold/718796
-hold/718797
-hold/718798
-hold/718800
-hold/718801
-hold/718802
-hold/718803
-hold/718804
-hold/718805
-hold/718806
-hold/718807
-hold/718809
-hold/718810
-hold/718811
-hold/718812
-hold/718813
-hold/718814
-hold/718815
-hold/718817
-hold/718818
-hold/718819
+hold/15726821	
+hold/15958795	
+hold/18472436	
+hold/22266746	
+hold/23452070	
+hold/32752629	
+hold/718795	
+hold/718796	
+hold/718797	
+hold/718798	
+hold/718800	
+hold/718801	
+hold/718802	
+hold/718803	
+hold/718804	
+hold/718805	
+hold/718806	
+hold/718807	
+hold/718809	
+hold/718810	
+hold/718811	
+hold/718812	
+hold/718813	
+hold/718814	
+hold/718815	
+hold/718817	
+hold/718818	
+hold/718819	
 hold/26746600	(http://libris.kb.se/bib/11798968?tab3=marc&vw=full) – monografiskt bestånd med enbart sigel
 hold/39698169	(http://libris.kb.se/bib/16583077?tab3=marc&vw=full) – monografiskt videobestånd med enkelt hyllsignum (852h)
 hold/37789933	(http://libris.kb.se/bib/14854711?tab3=marc&vw=full) – monografiskt bestånd med flerledat hyllsignum (852h+j), intern beståndsanmärkning, teknisk anmärkning (NB-kodning som används för uttag av NB-produkter) m.m.
