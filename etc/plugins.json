@@ -575,7 +575,7 @@
             ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
-            "elasticHost": "_property:ELASTIC_HOST",
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes": ["application/ld+json"],
             "baseStorageSuffix": "pairtree",
@@ -588,7 +588,7 @@
             "shapecomputer"
             ],
         "_params" : {
-            "elasticHost": "_property:ELASTIC_HOST",
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "indexName": "libris_storage",
             "contentTypes": ["application/ld+json"],
@@ -602,7 +602,7 @@
             ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
-            "elasticHost": "_property:ELASTIC_HOST",
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes" : [ "application/marcxml+xml" ],
             "baseStorageSuffix": "marcxml",
