@@ -185,7 +185,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     Document sanityCheck(Document d) {
         if (!d.identifier) {
-            d.withIdentifier(mintIdentifier(d))
+            d.withIdentifier(mintIdentifier(d).toString())
             log.debug("Document was missing identifier. Setting identifier ${d.identifier}")
         }
         if (!d.data || d.data.length == 0) {

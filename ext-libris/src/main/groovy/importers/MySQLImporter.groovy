@@ -128,11 +128,13 @@ class MySQLImporter extends BasicPlugin implements Importer {
         } catch(Exception e) {
             log.error("Exception", e)
         } finally {
-            log.info("Record count: ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds.")
+            log.info("Record count: ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds for sql results.")
             close()
         }
+
         queue.shutdown()
-        log.debug("Shutting down queue")
+        queue.awaitTermination(7, TimeUnit.DAYS)
+        log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
         return recordCount
     }
 
