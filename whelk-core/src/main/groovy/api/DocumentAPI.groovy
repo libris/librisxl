@@ -76,7 +76,7 @@ class DocumentAPI extends BasicAPI {
                 def location = whelk.locate(new URI(path))
                 d = location?.document
                 if (!d && location?.uri) {
-                    def locationRef = request.getScheme() + "//" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
+                    def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
                     response.setHeader("Location", locationRef + location.uri.toString())
                     sendResponse(response, null, null, location.responseCode)
                     return
