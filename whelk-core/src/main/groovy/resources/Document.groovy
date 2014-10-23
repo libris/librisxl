@@ -34,9 +34,6 @@ class Document {
     @JsonIgnore
     static final MODIFIED_KEY = "modified"
 
-    private long timestamp = 0L
-    private long modified
-
     // store serialized data
     @JsonIgnore
     private Map serializedDataInMap
@@ -47,23 +44,27 @@ class Document {
     Document() {
         entry = [:]
         meta = [:]
+        updateTimestamp()
     }
 
     Document(String jsonString) {
         entry = [:]
         meta = [:]
+        updateTimestamp()
         withMetaEntry(jsonString)
     }
 
     Document(Map jsonMap) {
         entry = [:]
         meta = [:]
+        updateTimestamp()
         withMetaEntry(jsonMap)
     }
 
     Document(File jsonFile) {
         entry = [:]
         meta = [:]
+        updateTimestamp()
         withMetaEntry(jsonFile)
     }
 
@@ -71,6 +72,7 @@ class Document {
         entry = [:]
         meta = [:]
         setData(datafile.readBytes())
+        updateTimestamp()
         withMetaEntry(entryfile)
     }
 
@@ -116,37 +118,34 @@ class Document {
     String getContentType() { entry["contentType"] }
 
     long getTimestamp() {
-        return (entry.get(TIMESTAMP_KEY) ?: 0L)
+        return (entry.get(TIMESTAMP_KEY, 0L))
     }
 
     long getModified() {
-        return (entry.get(MODIFIED_KEY) ?: 0L)
+        return entry.get(MODIFIED_KEY, 0L)
     }
 
     int getVersion() {
-        return (entry.get("version") ?: 0)
+        return entry.get("version", 0)
     }
 
     // Setters
-    long updateTimestamp() {
+    private void updateTimestamp() {
         setTimestamp(new Date().getTime())
-        log.debug("Updating timestamp for ${this.identifier} to ${timestamp} (${new Date(timestamp)})")
-        return this.timestamp
     }
 
     long updateModified() {
         setModified(new Date().getTime())
         log.trace("Updating modified for ${this.identifier} to ${modified}")
-        return this.modified
+        return modified
     }
 
     void setTimestamp(long ts) {
-        this.timestamp = ts
+        log.debug("Setting timestamp $ts")
         this.entry[TIMESTAMP_KEY] = ts
     }
 
     void setModified(long mt) {
-        this.modified = mt
         this.entry[MODIFIED_KEY] = mt
     }
 
@@ -223,18 +222,20 @@ class Document {
     }
 
     Document setEntry(Map entryData) {
+        log.debug("Clearing entry")
         this.entry = [:]
         return withEntry(entryData)
     }
 
     Document withEntry(Map entrydata) {
-        if (entrydata?.get("identifier", null)) {
+        log.debug("withEntry: $entrydata")
+        if (entrydata?.containsKey("identifier")) {
             this.identifier = entrydata["identifier"]
         }
-        if (entrydata?.get(TIMESTAMP_KEY, null)) {
+        if (entrydata?.containsKey(TIMESTAMP_KEY)) {
             setTimestamp(entrydata.get(TIMESTAMP_KEY))
         }
-        if (entrydata?.get(MODIFIED_KEY, null)) {
+        if (entrydata?.containsKey(MODIFIED_KEY)) {
             setModified(entrydata.get(MODIFIED_KEY))
         }
         if (entrydata != null) {
@@ -256,13 +257,12 @@ class Document {
     Document setMetaEntry(Map metaEntry) {
         setEntry(metaEntry.entry)
         withMeta(metaEntry.meta)
-        return this
     }
+
     Document withMetaEntry(Map metaEntry) {
         withEntry(metaEntry.entry)
         withMeta(metaEntry.meta)
         if (metaEntry.data) {
-
             withData(metaEntry.data)
         }
         return this

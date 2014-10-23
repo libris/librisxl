@@ -31,6 +31,7 @@ class ImportOperator extends AbstractOperator {
 
     long startTime
     int totalCount = 0
+    int startAtId = 0
 
     @Override
     void setParameters(Map parameters) {
@@ -47,6 +48,7 @@ class ImportOperator extends AbstractOperator {
                 this.since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dateString)
             }
         }
+        this.startAtId = parameters.get("startAt", [0]).first() as int
     }
 
     void doRun(long startTime) {
@@ -80,7 +82,13 @@ class ImportOperator extends AbstractOperator {
             if (!serviceUrl) {
                 throw new WhelkRuntimeException("URL is required for import.")
             }
+            try {
+                importer.startAt = startAtId
+            } catch (MissingMethodException mme) {
+                log.info("Importer has no startAt parameter.")
+            }
             count = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
+
         }
         count = totalCount
         runningTime = System.currentTimeMillis() - startTime

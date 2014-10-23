@@ -149,7 +149,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             if (this.contentTypes && !this.contentTypes.contains(doc.contentType)) {
                 throw new WhelkAddException("[${this.id}] Not configured to handle documents of type ${doc.contentType}")
             }
-            doc.updateTimestamp()
+            doc.updateModified()
             if (this.versioning) {
                 try {
                     doc = checkAndUpdateExisting(doc)

@@ -32,9 +32,11 @@ class MySQLImporter extends BasicPlugin implements Importer {
     Semaphore tickets
 
     int numberOfThreads
+    int startAt = 0
 
     int recordCount
     long startTime
+
 
     MySQLImporter(Map settings) {
         this.numberOfThreads = settings.get("numberOfThreads", 50000)
@@ -73,7 +75,8 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 throw new Exception("No valid dataset selected")
             }
 
-            int recordId = 0
+            int recordId = startAt
+            log.info("Starting loading at ID $recordId")
 
             for (;;) {
                 statement.setInt(1, recordId)
@@ -156,7 +159,9 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 recordMap.each { id, data ->
                     def entry = ["identifier":"/"+dataset+"/"+data.record.getControlfields("001").get(0).getData(),"dataset":dataset]
                     log.trace("Entry: ${entry}, Meta: ${data.meta}")
-                    docs << enhancer.filter(marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta]))
+                    def doc = enhancer.filter(marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta]))
+                    log.info("Created doc with timestamp ${doc.timestamp}")
+                    docs << doc
                 }
                 log.debug("Saving ${docs.size()} collected documents.")
                 whelk.bulkAdd(docs, docs.first().contentType)

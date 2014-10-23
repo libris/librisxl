@@ -117,7 +117,7 @@ class DocumentAPI extends BasicAPI {
                     if (ctheader) {
                         response.setHeader("Link", "<$ctheader>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"")
                     }
-                    response.setHeader("ETag", d.timestamp as String)
+                    response.setHeader("ETag", d.modified as String)
                     def contentType = getMajorContentType(d.contentType)
                     if (path in contextHeaders.collect { it.value })  {
                         contentType = d.contentType
@@ -146,12 +146,12 @@ class DocumentAPI extends BasicAPI {
             ]
             if (identifierSupplied) {
                 entry['identifier'] = path
-                    // Check If-Match
-                    String ifMatch = request.getHeader("If-Match")
-                    if (ifMatch && this.whelk.get(new URI(path)) && this.whelk.get(new URI(path))?.timestamp as String != ifMatch) {
-                        response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
-                            return
-                    }
+                // Check If-Match
+                String ifMatch = request.getHeader("If-Match")
+                if (ifMatch && this.whelk.get(new URI(path)) && this.whelk.get(new URI(path))?.modified as String != ifMatch) {
+                    response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
+                        return
+                }
             }
 
             try {
@@ -175,7 +175,7 @@ class DocumentAPI extends BasicAPI {
 
                 }
 
-                sendDocumentSavedResponse(response, locationRef.toString(), doc.timestamp as String)
+                sendDocumentSavedResponse(response, locationRef.toString(), doc.modified as String)
 
             } catch (DocumentException de) {
                 log.warn("Document exception: ${de.message}")
@@ -207,9 +207,9 @@ class DocumentAPI extends BasicAPI {
     }
 
 
-    void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String timestamp) {
+    void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
         response.setHeader("Location", locationRef)
-        response.setHeader("ETag", timestamp as String)
+        response.setHeader("ETag", etag as String)
         response.setStatus(HttpServletResponse.SC_CREATED, "Thank you! Document ingested.")
     }
 

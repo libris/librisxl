@@ -75,6 +75,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
+        doc.updateModified()
         for (storage in availableStorages) {
             storage.store(doc)
         }
@@ -205,7 +206,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 d.withData(dataMap)
             }
         }
-        d.updateTimestamp()
         return d
     }
 

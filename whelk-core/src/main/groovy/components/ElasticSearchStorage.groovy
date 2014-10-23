@@ -52,6 +52,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     @Override
     boolean store(Document doc) {
+        doc.updateModified()
         if (versioning) {
             def oldDoc = null
             (oldDoc, doc) = fetchAndUpdateVersion(doc)
@@ -69,7 +70,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     void bulkStore(List docs) {
         def breq = client.prepareBulk()
         for (doc in docs) {
-            doc.updateTimestamp()
+            doc.updateModified()
             if (versioning) {
                 def oldDoc = null
                 (oldDoc, doc) = fetchAndUpdateVersion(doc)
@@ -227,7 +228,6 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     private Document createTombstone(uri) {
         def tombstone = new Document().withIdentifier(uri.toString()).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
-        tombstone.updateTimestamp()
         return tombstone
     }
 }
