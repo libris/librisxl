@@ -136,16 +136,16 @@ class Document {
 
     long updateModified() {
         setModified(new Date().getTime())
-        log.trace("Updating modified for ${this.identifier} to ${modified}")
         return modified
     }
 
     void setTimestamp(long ts) {
-        log.debug("Setting timestamp $ts")
+        log.trace("Setting timestamp $ts")
         this.entry[TIMESTAMP_KEY] = ts
     }
 
     void setModified(long mt) {
+        log.trace("Updating modified for ${this.identifier} to ${mt}")
         this.entry[MODIFIED_KEY] = mt
     }
 
@@ -159,7 +159,6 @@ class Document {
         serializedDataInMap = null
         checksum = null
         calculateChecksum()
-        updateModified()
     }
 
     /*

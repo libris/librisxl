@@ -140,19 +140,25 @@ class DocumentAPI extends BasicAPI {
             if (path == "/") {
                 throw new WhelkRuntimeException("PUT requires a proper URI.")
             }
-            def entry = [
-            "contentType":request.getContentType(),
-            "dataset":getDatasetBasedOnPath(path)
-            ]
+            def entry = [:]
+
             if (identifierSupplied) {
-                entry['identifier'] = path
-                // Check If-Match
-                String ifMatch = request.getHeader("If-Match")
-                if (ifMatch && this.whelk.get(new URI(path)) && this.whelk.get(new URI(path))?.modified as String != ifMatch) {
-                    response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
+                Document existingDoc = whelk.get(new URI(path))
+                if (existingDoc) {
+                    // Check If-Match
+                    String ifMatch = request.getHeader("If-Match")
+                    if (ifMatch && existingDoc.modified as String != ifMatch) {
+                        response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                         return
+                    }
+                    entry = existingDoc.entry
+                }
+                else {
+                    entry['identifier'] = path
                 }
             }
+            entry["contentType"] = request.getContentType()
+            entry["dataset"] = getDatasetBasedOnPath(path)
 
             try {
                 Document doc = new Document(["entry":entry,"meta":request.getParameterMap()]).withData(request.getInputStream().getBytes())
