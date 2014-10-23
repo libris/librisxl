@@ -1,6 +1,6 @@
-package se.kb.libris.whelks.component
+package whelk.component
 
-import se.kb.libris.whelks.Document
+import whelk.Document
 
 import spock.lang.*
 

@@ -1,21 +1,21 @@
 {
     "elasticnode": {
-        "_class": "se.kb.libris.whelks.component.support.ElasticSearchNode"
+        "_class": "whelk.component.support.ElasticSearchNode"
     },
     "activemqbroker": {
-        "_class": "se.kb.libris.whelks.component.support.ActiveMQBroker"
+        "_class": "whelk.component.support.ActiveMQBroker"
     },
     "fusekiserver": {
-        "_class": "se.kb.libris.whelks.component.support.FusekiServer"
+        "_class": "whelk.component.support.FusekiServer"
     },
     "shapecomputer": {
-        "_class" : "se.kb.libris.whelks.plugin.UriToElasticType",
+        "_class" : "whelk.plugin.UriToElasticType",
         "_params": {
             "defaultType": "record"
         }
     },
     "remotesearch": {
-        "_class": "se.kb.libris.whelks.api.RemoteSearchAPI",
+        "_class": "whelk.api.RemoteSearchAPI",
         "_plugins" : [
             "marcconverter"
         ],
@@ -25,36 +25,36 @@
         }
     },
     "isxntool": {
-        "_class": "se.kb.libris.whelks.api.ISXNTool"
+        "_class": "whelk.api.ISXNTool"
     },
     "marcxml2jsonldconverter": {
-        "_class": "se.kb.libris.whelks.plugin.MarcXml2JsonLDConverter",
+        "_class": "whelk.plugin.MarcXml2JsonLDConverter",
         "_plugins": [
             "marcconverter"
         ]
     },
     "marcconverter" : {
-        "_class" : "se.kb.libris.whelks.plugin.MarcFrameConverter"
+        "_class" : "whelk.plugin.MarcFrameConverter"
     },
     "jsonld2marcconverter" : {
-        "_class" : "se.kb.libris.whelks.plugin.JsonLD2MarcConverter"
+        "_class" : "whelk.plugin.JsonLD2MarcConverter"
     },
     "turtleconverter" : {
-        "_class" : "se.kb.libris.whelks.plugin.JsonLDTurtleConverter",
+        "_class" : "whelk.plugin.JsonLDTurtleConverter",
         "_params": "context.jsonld, http://libris.kb.se/resource/"
     },
     "cleanupindexconverter" : {
-        "_class" : "se.kb.libris.whelks.plugin.CleanupIndexFormatConverter"
+        "_class" : "whelk.plugin.CleanupIndexFormatConverter"
     },
     "libcount" : {
-        "_class" : "se.kb.libris.whelks.api.HoldCounter",
+        "_class" : "whelk.api.HoldCounter",
         "_params" : {
             "path" : "_libcount",
             "defaultIndexType"  : "hold"
         }
     },
     "search" : {
-        "_class" : "se.kb.libris.whelks.api.SearchAPI",
+        "_class" : "whelk.api.SearchAPI",
         "_params" : {
             "indexTypes" : {
                 "bib" : {
@@ -205,10 +205,10 @@
         }
     },
     "sparqlapi" : {
-        "_class" : "se.kb.libris.whelks.api.SparqlAPI"
+        "_class" : "whelk.api.SparqlAPI"
     },
     "documentapi" : {
-        "_class" : "se.kb.libris.whelks.api.DocumentAPI",
+        "_class" : "whelk.api.DocumentAPI",
         "_plugins" : [
             "linkexpander",
             "marcconverter",
@@ -224,13 +224,13 @@
         }
     },
     "completeexpander" : {
-        "_class" : "se.kb.libris.whelks.api.CompleteExpander"
+        "_class" : "whelk.api.CompleteExpander"
     },
     "linkcompleter" : {
-        "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter"
+        "_class" : "whelk.plugin.JsonLDLinkCompleterFilter"
     },
     "mysqlimporter" : {
-        "_class" : "se.kb.libris.whelks.importers.MySQLImporter",
+        "_class" : "whelk.importer.MySQLImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],
@@ -240,7 +240,7 @@
         }
     },
     "oaipmhimporter2" : {
-        "_class" : "se.kb.libris.whelks.importers.LibrisOaiPmhImporter",
+        "_class" : "whelk.importer.LibrisOaiPmhImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],
@@ -254,7 +254,7 @@
         }
     },
     "oaipmhimporter" : {
-        "_class" : "se.kb.libris.whelks.importers.OldOAIPMHImporter",
+        "_class" : "whelk.importer.OldOAIPMHImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],
@@ -264,7 +264,7 @@
         }
     },
     "operator" : {
-        "_class" : "se.kb.libris.whelks.api.OperatorAPI",
+        "_class" : "whelk.api.OperatorAPI",
         "_plugins": [
             "reindexoperator",
             "importoperator",
@@ -279,10 +279,10 @@
         }
     },
     "reindexoperator": {
-        "_class" : "se.kb.libris.whelks.api.ReindexOperator"
+        "_class" : "whelk.api.ReindexOperator"
     },
     "importoperator": {
-        "_class" : "se.kb.libris.whelks.api.ImportOperator",
+        "_class" : "whelk.api.ImportOperator",
         "_plugins": [
             "oaipmhimporter",
             "oaipmhimporter2",
@@ -290,7 +290,7 @@
         ]
     },
     "transferoperator": {
-        "_class" : "se.kb.libris.whelks.api.TransferOperator",
+        "_class" : "whelk.api.TransferOperator",
         "_plugins" : [
             "linkcompleter",
             "marcconverter",
@@ -298,17 +298,17 @@
             ]
     },
     "rebuildoperator": {
-        "_class" : "se.kb.libris.whelks.api.RebuildMetaIndexOperator"
+        "_class" : "whelk.api.RebuildMetaIndexOperator"
     },
     "formatter" : {
-        "_class" : "se.kb.libris.whelks.api.FormatterAPI",
+        "_class" : "whelk.api.FormatterAPI",
         "_plugins" : [
             "marcconverter",
             "jsonld2marcconverter"
         ]
     },
     "linkexpander" : {
-        "_class" : "se.kb.libris.whelks.plugin.JsonLDLinkExpander",
+        "_class" : "whelk.plugin.JsonLDLinkExpander",
         "_plugins" : [
             "index"
         ],
@@ -527,22 +527,22 @@
         }
     },
     "elastic_camel_processor": {
-        "_class" : "se.kb.libris.whelks.camel.FormatConverterProcessor",
+        "_class" : "whelk.camel.FormatConverterProcessor",
         "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ]
     },
     "turtleconverter_processor": {
-        "_class" : "se.kb.libris.whelks.camel.FormatConverterProcessor",
+        "_class" : "whelk.camel.FormatConverterProcessor",
         "_plugins" : ["turtleconverter"]
     },
     "prawnrunner_processor": {
-        "_class" : "se.kb.libris.whelks.camel.PrawnRunner"
+        "_class" : "whelk.camel.PrawnRunner"
     },
     "graphstore_aggregator": {
-        "_class" : "se.kb.libris.whelks.camel.GraphstoreBatchUpdateAggregationStrategy",
+        "_class" : "whelk.camel.GraphstoreBatchUpdateAggregationStrategy",
         "_params": "context.jsonld, http://libris.kb.se/resource/"
     },
     "routebuilder": {
-        "_class" : "se.kb.libris.whelks.camel.WhelkRouteBuilder",
+        "_class" : "whelk.camel.WhelkRouteBuilder",
         "_plugins" : [
             "elastic_camel_processor", "turtleconverter_processor", "shapecomputer", "prawnrunner_processor","graphstore_aggregator"
         ],
@@ -556,7 +556,7 @@
         }
     },
     "index": {
-        "_class" : "se.kb.libris.whelks.component.ElasticSearchClient",
+        "_class" : "whelk.component.ElasticSearchClient",
         "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ],
         "_params": {
             "typeConfiguration": {
@@ -570,7 +570,7 @@
         "_unique" : true
     },
     "jsonldstorage": {
-        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+        "_class" : "whelk.component.PairtreeHybridDiskStorage",
         "_plugins" : [
             "shapecomputer"
             ],
@@ -584,7 +584,7 @@
         }
     },
     "esjsonldstorage": {
-        "_class" : "se.kb.libris.whelks.component.ElasticSearchStorage",
+        "_class" : "whelk.component.ElasticSearchStorage",
         "_plugins" : [
             "shapecomputer"
             ],
@@ -597,7 +597,7 @@
         }
     },
     "marcxmlstorage": {
-        "_class" : "se.kb.libris.whelks.component.PairtreeHybridDiskStorage",
+        "_class" : "whelk.component.PairtreeHybridDiskStorage",
         "_plugins" : [
             "shapecomputer"
             ],
@@ -611,7 +611,7 @@
         }
     },
     "graphstore": {
-        "_class" : "se.kb.libris.whelks.component.HttpBatchGraphStore",
+        "_class" : "whelk.component.HttpBatchGraphStore",
         "_plugins" : [
             "turtleconverter"
             ],

@@ -1,9 +1,9 @@
-package se.kb.libris.whelks.swepub.plugin
+package whelk.swepub.plugin
 
 import groovy.util.logging.Slf4j as Log
 
-import se.kb.libris.whelks.*
-import se.kb.libris.whelks.plugin.*
+import whelk.*
+import whelk.plugin.*
 
 @Log
 class SwepubTurtleConverter extends BasicRDFFormatConverter {

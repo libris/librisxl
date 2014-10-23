@@ -1,4 +1,4 @@
-package se.kb.libris.whelks.plugin
+package whelk.plugin
 
 import spock.lang.Specification
 

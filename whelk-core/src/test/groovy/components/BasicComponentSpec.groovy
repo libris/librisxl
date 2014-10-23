@@ -1,8 +1,8 @@
-package se.kb.libris.whelks.component
+package whelk.component
 
-import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.plugin.FormatConverter
-import se.kb.libris.whelks.plugin.LinkExpander
+import whelk.Document
+import whelk.plugin.FormatConverter
+import whelk.plugin.LinkExpander
 
 import spock.lang.*
 

@@ -1,11 +1,11 @@
-package se.kb.libris.whelks.swepub.importers
+package whelk.importer.swepub
 
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
 
-import se.kb.libris.whelks.importers.*
-import se.kb.libris.whelks.*
+import whelk.importer.*
+import whelk.*
 
 @Log
 class ModsImporter extends DumpImporter {

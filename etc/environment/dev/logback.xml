@@ -24,100 +24,100 @@
   <logger name="org.apache.activemq">
       <level value="info"/>
   </logger>
-  <logger name="se.kb.libris.whelks.camel.FormatConverterProcessor">
+  <logger name="whelk.camel.FormatConverterProcessor">
       <level value="info"/>
   </logger>
-  <logger name="se.kb.libris.whelks.camel.ElasticTypeRouteProcessor">
+  <logger name="whelk.camel.ElasticTypeRouteProcessor">
       <level value="info"/>
   </logger>
-  <logger name="se.kb.libris.whelks.camel.GraphstoreBatchUpdateAggregationStrategy">
+  <logger name="whelk.camel.GraphstoreBatchUpdateAggregationStrategy">
       <level value="info"/>
   </logger>
-  <logger name="se.kb.libris.whelks.api.BasicAPI">
+  <logger name="whelk.api.BasicAPI">
       <level value="info"/>
   </logger>
-  <logger name="se.kb.libris.whelks.plugin.EntityExtractionDocumentSplitter">
+  <logger name="whelk.plugin.EntityExtractionDocumentSplitter">
       <level value="info"/>
   </logger>
-  <logger name="se.kb.libris.whelks.plugin.BasicListener">
+  <logger name="whelk.plugin.BasicListener">
       <level value="info"/>
   </logger>
-  <logger name="se.kb.libris.whelks.AbstractWhelkServlet">
+  <logger name="whelk.AbstractWhelkServlet">
       <level value="info"/>
   </logger>
-  <logger name="se.kb.libris.whelks.WhelkInitializer">
+  <logger name="whelk.WhelkInitializer">
       <level value="info"/>
   </logger> 
-  <logger name="se.kb.libris.whelks.StandardWhelk">
+  <logger name="whelk.StandardWhelk">
       <level value="info"/>
   </logger>
- <logger name="se.kb.libris.whelks.component.BasicElasticComponent">
+ <logger name="whelk.component.BasicElasticComponent">
       <level value="info"/>
   </logger>
- <logger name="se.kb.libris.whelks.component.ElasticSearch">
+ <logger name="whelk.component.ElasticSearch">
       <level value="info"/>
   </logger>
- <logger name="se.kb.libris.whelks.component.ElasticSearchStorage">
+ <logger name="whelk.component.ElasticSearchStorage">
       <level value="info"/>
   </logger>
- <logger name="se.kb.libris.whelks.plugin.BasicPlugin">
+ <logger name="whelk.plugin.BasicPlugin">
       <level value="info"/>
   </logger>
- <logger name="se.kb.libris.whelks.component.BasicComponent">
+ <logger name="whelk.component.BasicComponent">
       <level value="info"/>
   </logger>
- <logger name="se.kb.libris.whelks.component.PairtreeHybridDiskStorage">
+ <logger name="whelk.component.PairtreeHybridDiskStorage">
       <level value="info"/>
   </logger>
- <logger name="se.kb.libris.whelks.component.HttpBatchGraphStore">
+ <logger name="whelk.component.HttpBatchGraphStore">
       <level value="info"/>
   </logger>
-<logger name="se.kb.libris.whelks.Document">
+<logger name="whelk.Document">
       <level value="trace"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.DocumentAPI">
+<logger name="whelk.api.DocumentAPI">
       <level value="debug"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.ReindexOperator">
+<logger name="whelk.api.ReindexOperator">
       <level value="info"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.TransferOperator">
+<logger name="whelk.api.TransferOperator">
       <level value="info"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.OperatorRestlet">
+<logger name="whelk.api.OperatorRestlet">
       <level value="info"/>
   </logger>
-<logger name="se.kb.libris.whelks.component.UriToElasticType">
+<logger name="whelk.component.UriToElasticType">
       <level value="info"/>
   </logger>
-<logger name="se.kb.libris.whelks.component.ElasticQuery">
+<logger name="whelk.component.ElasticQuery">
       <level value="info"/>
   </logger>
-<logger name="se.kb.libris.whelks.Query">
+<logger name="whelk.Query">
       <level value="info"/>
   </logger>
-<logger name="se.kb.libris.whelks.api.RemoteSearchAPI">
+<logger name="whelk.api.RemoteSearchAPI">
     <level value="info"/>
 </logger>
-<logger name="se.kb.libris.whelks.plugin.JsonLDLinkExpander">
+<logger name="whelk.plugin.JsonLDLinkExpander">
   <level value="info"/>
 </logger>
-<logger name="se.kb.libris.whelks.plugin.JsonLDLinkCompleterFilter">
+<logger name="whelk.plugin.JsonLDLinkCompleterFilter">
   <level value="info"/>
 </logger>
-<logger name="se.kb.libris.whelks.plugin.MarcXml2JsonLDConverter">
+<logger name="whelk.plugin.MarcXml2JsonLDConverter">
   <level value="info"/>
 </logger>
-<logger name="se.kb.libris.whelks.importers.MySQLImporter">
+<logger name="whelk.importer.MySQLImporter">
   <level value="debug"/>
 </logger>
-<logger name="se.kb.libris.whelks.importers.OaiPmhImporter">
+<logger name="whelk.importer.OaiPmhImporter">
   <level value="info"/>
 </logger>
-<logger name="se.kb.libris.whelks.importers.LibrisOaiPmhImporter">
+<logger name="whelk.importer.LibrisOaiPmhImporter">
   <level value="info"/>
 </logger>
-<logger name="se.kb.libris.whelks.plugin.LibrisURIMinter">
+<logger name="whelk.plugin.LibrisURIMinter">
   <level value="warn"/>
 </logger>
 

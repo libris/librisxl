@@ -22,7 +22,7 @@
 
     <servlet>
         <servlet-name>WhelkServlet</servlet-name>
-        <servlet-class>se.kb.libris.whelks.StandardWhelk</servlet-class>
+        <servlet-class>whelk.StandardWhelk</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

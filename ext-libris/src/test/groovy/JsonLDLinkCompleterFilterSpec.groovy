@@ -1,11 +1,11 @@
-package se.kb.libris.whelks.plugin
+package whelk.plugin
 
 import spock.lang.Specification
 import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
-import se.kb.libris.whelks.component.ElasticJsonMapper
-import se.kb.libris.whelks.Document
-import se.kb.libris.whelks.Whelk
+import whelk.component.ElasticJsonMapper
+import whelk.Document
+import whelk.Whelk
 
 @Log
 class JsonLDLinkCompleterFilterSpec extends Specification {
