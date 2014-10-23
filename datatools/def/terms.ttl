@@ -685,6 +685,8 @@ marcenum:bibLevel a skos:Collection;
 # Agents
 
 :name a owl:ObjectProperty;
+    rdfs:label "Namn"@sv;
+    rdfs:comment "Aktörens allmänna namn"@sv;
     owl:equivalentProperty foaf:name .
 
 :attributedTo a owl:ObjectProperty;
@@ -822,6 +824,66 @@ marcenum:bibLevel a skos:Collection;
     owl:inverseOf skos:member;
     rdfs:domain skos:Concept;
     rdfs:range skos:Collection .
+
+# Domain Specific Term Classes
+
+:Term a owl:Class;
+    rdfs:label "Allmänt ämnesord"@sv;
+    owl:equivalentClass :Concept .
+
+:GenreTerm a owl:Class;
+    rdfs:label "Genre-/formterm"@sv;
+    rdfs:subClassOf :Concept .
+
+:ChronologicalTerm a owl:Class;
+    rdfs:label "Kronologiskt ämnesord"@sv;
+    rdfs:subClassOf :Concept;
+    rdfs:subClassOf [ a owl:Restriction;
+            owl:onProperty foaf:focus;
+            owl:allValuesFrom :Event ] .
+
+:GeographicalTerm a owl:Class;
+    rdfs:label "Geografiskt ämnesord"@sv;
+    rdfs:subClassOf :Concept;
+    rdfs:subClassOf [ a owl:Restriction;
+            owl:onProperty foaf:focus;
+            owl:allValuesFrom :Place ] .
+
+:MeetingTerm a owl:Class;
+    rdfs:label "Term för möte"@sv;
+    rdfs:subClassOf :Concept;
+    rdfs:subClassOf [ a owl:Restriction;
+            owl:onProperty foaf:focus;
+            owl:allValuesFrom :Meeting ] .
+
+:OrganizationTerm a owl:Class;
+    rdfs:label "Term för organisation"@sv;
+    rdfs:subClassOf :Concept;
+    rdfs:subClassOf [ a owl:Restriction;
+            owl:onProperty foaf:focus;
+            owl:allValuesFrom :Organization ] .
+
+:PersonTerm a owl:Class;
+    rdfs:label "Personterm"@sv;
+    rdfs:subClassOf :Concept;
+    rdfs:subClassOf [ a owl:Restriction;
+            owl:onProperty foaf:focus;
+            owl:allValuesFrom :Person ] .
+
+:FamilyTerm a owl:Class;
+    rdfs:label "Familjeterm"@sv;
+    rdfs:subClassOf :Concept;
+    rdfs:subClassOf [ a owl:Restriction;
+            owl:onProperty foaf:focus;
+            owl:allValuesFrom :Family ] .
+
+:WorkTerm a owl:Class;
+    rdfs:label "Term för verk"@sv;
+    rdfs:subClassOf :Concept;
+    rdfs:subClassOf :Concept;
+    rdfs:subClassOf [ a owl:Restriction;
+            owl:onProperty foaf:focus;
+            owl:allValuesFrom :ConceptualWork ] .
 
 
 ##
