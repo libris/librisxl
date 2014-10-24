@@ -278,12 +278,12 @@ class MarcConversion {
         extraData?.get("oaipmhSetSpecs")?.each {
             if (marcCat == "hold") {
                 def prefix = "bibid:"
-                if (it.startsWith(prefix) && !record.about.holdingFor) {
-                    record.about.holdingFor = ["@type": "Record", controlNumber: it.substring(prefix.size())]
+                if (it.startsWith(prefix) && !instance.holdingFor) {
+                    instance.holdingFor = ["@type": "Record", controlNumber: it.substring(prefix.size())]
                 }
                 prefix = "location:"
-                if (it.startsWith(prefix) && !record.about.heldBy) {
-                    record.about.heldBy = ["@type": "Organization", notation: it.substring(prefix.size())]
+                if (it.startsWith(prefix) && !instance.heldBy) {
+                    instance.heldBy = ["@type": "Organization", notation: it.substring(prefix.size())]
                 }
             }
         }
