@@ -4755,7 +4755,7 @@
         }
       },
       "domainEntity": "Instance", "NOTE": "really Work - see 100",
-      "addLink": "hasVersion", "rangeEntity": "Person"
+      "addLink": "attributedTo", "rangeEntity": "Person"
     },
     "410": {
       "inherit": "bib:610", "addLink": "hasVersion"
