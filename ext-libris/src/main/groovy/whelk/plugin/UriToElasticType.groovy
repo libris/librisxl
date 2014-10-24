@@ -51,7 +51,7 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
 
     String translateIndexIdTo(id) {
         if (id.contains(URI_SEPARATOR)) {
-            log.warn("Using old style index id's")
+            log.warn("Using old style index id's for $id")
             def pathelements = []
             id.split(URI_SEPARATOR).each {
                 pathelements << java.net.URLEncoder.encode(it, "UTF-8")
