@@ -18,21 +18,21 @@ dependencies {
 task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
     description "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'se.kb.libris.conch.converter.MarcJSONConverter'
+    main = 'whelk.converter.MarcJSONConverter'
     args(System.getProperty('args', "").split() as String[])
 }
 
 task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
     description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'se.kb.libris.whelks.plugin.MarcFrameConverter'
+    main = 'whelk.plugin.MarcFrameConverter'
     args(System.getProperty('args', "").split() as String[])
 }
 
 task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
     description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'se.kb.libris.whelks.plugin.JsonLdToTurtle'
+    main = 'whelk.plugin.JsonLdToTurtle'
     args(System.getProperty('args', "").split() as String[])
 }
 task jettyRun(type: JettyRun, overwrite: true) {
@@ -52,7 +52,7 @@ task whelkOperation(dependsOn: 'classes', type: JavaExec) {
   description "Run import or reindex. (USAGE: -Dargs='<call without for usage instructions>' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
   classpath = sourceSets.main.runtimeClasspath
   workingDir = ".."
-  main = 'se.kb.libris.whelks.WhelkOperator'
+  main = 'whelk.WhelkOperator'
   minHeapSize = "2g"
   maxHeapSize = "2g"
   def mock_es_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
