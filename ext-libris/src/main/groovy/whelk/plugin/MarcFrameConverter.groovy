@@ -337,6 +337,187 @@ class MarcConversion {
 
 }
 
+class ConversionPart {
+
+    String domainEntityName
+    Map tokenMap
+    Map reverseTokenMap
+
+    void setTokenMap(fieldHandler, dfn) {
+        def tokenMap = dfn.tokenMap
+        if (tokenMap) {
+            reverseTokenMap = [:]
+            this.tokenMap = (tokenMap instanceof String)?
+                fieldHandler.tokenMaps[tokenMap] : tokenMap
+            this.tokenMap.each { k, v ->
+                if (v != null) {
+                    reverseTokenMap[v] = k
+                }
+            }
+        }
+    }
+
+    Map getEntity(Map data) {
+        if (domainEntityName == 'Record')
+            return data
+        if (domainEntityName == 'Work')
+            return data.about.instanceOf
+        else if (data.about)
+            return data.about
+        else
+            return data
+    }
+
+    def revertObject(obj) {
+        if (reverseTokenMap) {
+            if (obj instanceof List) {
+                return obj.collect { reverseTokenMap[it] }
+            } else {
+                return reverseTokenMap[obj]
+            }
+        } else {
+            return obj
+        }
+    }
+
+}
+
+abstract class BaseMarcFieldHandler extends ConversionPart {
+
+    MarcConversion conversion
+    String tag
+    Map tokenMaps
+
+    BaseMarcFieldHandler(conversion, tag) {
+        this.conversion = conversion
+        this.tag = tag
+        this.tokenMaps = conversion.tokenMaps
+    }
+
+    abstract boolean convert(sourceMap, value, entityMap)
+
+    abstract def revert(Map data)
+
+    void addValue(obj, key, value, repeatable) {
+        def current = obj[key]
+        if (current || repeatable) {
+            def l = current ?: []
+            l << value
+            value = l
+        }
+        obj[key] = value
+    }
+
+    Map newEntity(type, id=null) {
+        def ent = [:]
+        if (type) ent["@type"] = type
+        if (id) ent["@id"] = id
+        return ent
+    }
+
+}
+
+class MarcFixedFieldHandler {
+
+    String tag
+    static final String FIXED_NONE = " "
+    static final String FIXED_UNDEF = "|"
+    def columns = []
+    int fieldSize = 0
+
+    MarcFixedFieldHandler(conversion, tag, fieldDfn) {
+        this.tag = tag
+        fieldDfn.each { key, obj ->
+            def m = (key =~ /^\[(\d+):(\d+)\]$/)
+            if (m) {
+                def start = m[0][1].toInteger()
+                def end = m[0][2].toInteger()
+                columns << new Column(conversion, obj, start, end, obj['default'])
+                if (end > fieldSize) {
+                    fieldSize = end
+                }
+            }
+        }
+        columns.sort { it.start }
+    }
+
+    boolean convert(sourceMap, value, entityMap) {
+        def success = true
+        def failedFixedFields = entityMap.marcRemains.failedFixedFields
+        for (col in columns) {
+            if (!col.convert(sourceMap, value, entityMap)) {
+                success = false
+                def unmapped = failedFixedFields[tag]
+                if (unmapped == null) {
+                    unmapped = failedFixedFields[tag] = [:]
+                }
+                def key = "${col.start}"
+                if (col.end && col.end != col.start + 1) {
+                    key += "_${col.end - col.start}"
+                }
+                unmapped[key] = col.getToken(value)
+            }
+        }
+        return success
+    }
+
+    def revert(Map data) {
+        def value = new StringBuilder(FIXED_NONE * fieldSize)
+        for (col in columns) {
+            def obj = col.revert(data)
+            // TODO: ambiguity trouble if this is a List!
+            if (obj instanceof List) obj = obj.find { it }
+            if (obj) {
+                assert col.width - obj.size() > -1
+                assert value.size() > col.start
+                assert col.width >= obj.size()
+                def end = col.start + obj.size() - 1
+                value[col.start .. end] = obj
+            }
+        }
+        return value.toString()
+    }
+
+    class Column extends MarcSimpleFieldHandler {
+        int start
+        int end
+        String defaultValue
+        Column(conversion, fieldDfn, start, end, defaultValue) {
+            super(conversion, null, fieldDfn)
+            assert start > -1 && end >= start
+            this.start = start
+            this.end = end
+            this.defaultValue = defaultValue
+        }
+        int getWidth() { return end - start }
+        String getToken(value) {
+            if (value.size() < start)
+                return ""
+            if (value.size() < end)
+                return value.substring(start)
+            return value.substring(start, end)
+        }
+        boolean convert(sourceMap, value, entityMap) {
+            def token = getToken(value)
+            if (token == "")
+                return true
+            if (token == defaultValue)
+                return true
+            boolean isNothing = token.find { it != FIXED_NONE && it != FIXED_UNDEF } == null
+            if (isNothing)
+                return true
+            return super.convert(sourceMap, token, entityMap)
+        }
+        def revert(Map data) {
+            def v = super.revert(data)
+            if (v == null && defaultValue)
+                return defaultValue
+            return v
+        }
+    }
+
+}
+
 class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
 
     MarcFixedFieldHandler baseConverter
@@ -456,187 +637,6 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
             }
         }
         return values
-    }
-
-}
-
-class MarcFixedFieldHandler {
-
-    String tag
-    static final String FIXED_NONE = " "
-    static final String FIXED_UNDEF = "|"
-    def columns = []
-    int fieldSize = 0
-
-    MarcFixedFieldHandler(conversion, tag, fieldDfn) {
-        this.tag = tag
-        fieldDfn.each { key, obj ->
-            def m = (key =~ /^\[(\d+):(\d+)\]$/)
-            if (m) {
-                def start = m[0][1].toInteger()
-                def end = m[0][2].toInteger()
-                columns << new Column(conversion, obj, start, end, obj['default'])
-                if (end > fieldSize) {
-                    fieldSize = end
-                }
-            }
-        }
-        columns.sort { it.start }
-    }
-
-    boolean convert(sourceMap, value, entityMap) {
-        def success = true
-        def failedFixedFields = entityMap.marcRemains.failedFixedFields
-        for (col in columns) {
-            if (!col.convert(sourceMap, value, entityMap)) {
-                success = false
-                def unmapped = failedFixedFields[tag]
-                if (unmapped == null) {
-                    unmapped = failedFixedFields[tag] = [:]
-                }
-                def key = "${col.start}"
-                if (col.end && col.end != col.start + 1) {
-                    key += "_${col.end - col.start}"
-                }
-                unmapped[key] = col.getToken(value)
-            }
-        }
-        return success
-    }
-
-    def revert(Map data) {
-        def value = new StringBuilder(FIXED_NONE * fieldSize)
-        for (col in columns) {
-            def obj = col.revert(data)
-            // TODO: ambiguity trouble if this is a List!
-            if (obj instanceof List) obj = obj.find { it }
-            if (obj) {
-                assert col.width - obj.size() > -1
-                assert value.size() > col.start
-                assert col.width >= obj.size()
-                def end = col.start + obj.size() - 1
-                value[col.start .. end] = obj
-            }
-        }
-        return value.toString()
-    }
-
-    class Column extends MarcSimpleFieldHandler {
-        int start
-        int end
-        String defaultValue
-        Column(conversion, fieldDfn, start, end, defaultValue) {
-            super(conversion, null, fieldDfn)
-            assert start > -1 && end >= start
-            this.start = start
-            this.end = end
-            this.defaultValue = defaultValue
-        }
-        int getWidth() { return end - start }
-        String getToken(value) {
-            if (value.size() < start)
-                return ""
-            if (value.size() < end)
-                return value.substring(start)
-            return value.substring(start, end)
-        }
-        boolean convert(sourceMap, value, entityMap) {
-            def token = getToken(value)
-            if (token == "")
-                return true
-            if (token == defaultValue)
-                return true
-            boolean isNothing = token.find { it != FIXED_NONE && it != FIXED_UNDEF } == null
-            if (isNothing)
-                return true
-            return super.convert(sourceMap, token, entityMap)
-        }
-        def revert(Map data) {
-            def v = super.revert(data)
-            if (v == null && defaultValue)
-                return defaultValue
-            return v
-        }
-    }
-
-}
-
-class ConversionPart {
-
-    String domainEntityName
-    Map tokenMap
-    Map reverseTokenMap
-
-    void setTokenMap(fieldHandler, dfn) {
-        def tokenMap = dfn.tokenMap
-        if (tokenMap) {
-            reverseTokenMap = [:]
-            this.tokenMap = (tokenMap instanceof String)?
-                fieldHandler.tokenMaps[tokenMap] : tokenMap
-            this.tokenMap.each { k, v ->
-                if (v != null) {
-                    reverseTokenMap[v] = k
-                }
-            }
-        }
-    }
-
-    Map getEntity(Map data) {
-        if (domainEntityName == 'Record')
-            return data
-        if (domainEntityName == 'Work')
-            return data.about.instanceOf
-        else if (data.about)
-            return data.about
-        else
-            return data
-    }
-
-    def revertObject(obj) {
-        if (reverseTokenMap) {
-            if (obj instanceof List) {
-                return obj.collect { reverseTokenMap[it] }
-            } else {
-                return reverseTokenMap[obj]
-            }
-        } else {
-            return obj
-        }
-    }
-
-}
-
-abstract class BaseMarcFieldHandler extends ConversionPart {
-
-    MarcConversion conversion
-    String tag
-    Map tokenMaps
-
-    BaseMarcFieldHandler(conversion, tag) {
-        this.conversion = conversion
-        this.tag = tag
-        this.tokenMaps = conversion.tokenMaps
-    }
-
-    abstract boolean convert(sourceMap, value, entityMap)
-
-    abstract def revert(Map data)
-
-    void addValue(obj, key, value, repeatable) {
-        def current = obj[key]
-        if (current || repeatable) {
-            def l = current ?: []
-            l << value
-            value = l
-        }
-        obj[key] = value
-    }
-
-    Map newEntity(type, id=null) {
-        def ent = [:]
-        if (type) ent["@type"] = type
-        if (id) ent["@id"] = id
-        return ent
     }
 
 }
