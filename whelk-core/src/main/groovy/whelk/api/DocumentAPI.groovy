@@ -4,6 +4,8 @@ import javax.servlet.http.*
 
 import javax.activation.MimetypesFileTypeMap
 
+import org.apache.http.entity.ContentType
+
 import whelk.util.Tools
 import whelk.*
 import whelk.component.*
@@ -157,8 +159,8 @@ class DocumentAPI extends BasicAPI {
                     entry['identifier'] = path
                 }
             }
-            // TODO: Check that content-type only contains mimetype, not charsets and other crap
-            entry["contentType"] = request.getContentType()
+            entry["contentType"] = ContentType.parse(request.getContentType()).getMimeType()
+            log.info("Set ct: ${entry.contentType}")
             entry["dataset"] = getDatasetBasedOnPath(path)
 
             try {
