@@ -212,10 +212,8 @@ class MarcConversion {
         // TODO:
         // * always one record and a primary "thing"
         // * the type of this thing is determined during processing
-        def work = [:]
         def instance = [:]
         entityMap['Instance'] = instance
-        entityMap['Work'] = work
         record.about = instance
 
         def leader = marcSource.leader
@@ -267,11 +265,6 @@ class MarcConversion {
             def uriMap = uriMinter.computePaths(record, marcCat)
             record['@id'] = uriMap['document']
             instance['@id'] = uriMap['thing']
-        }
-
-        // TODO: only(?) bib (monographies), and use a config-defined link..
-        if (work.find { k, v -> k != "@type" }) {
-            instance['instanceOf'] = work
         }
 
         // TODO: move this to an "extra data" section in marcframe.json?
@@ -360,8 +353,6 @@ class ConversionPart {
     Map getEntity(Map data) {
         if (domainEntityName == 'Record')
             return data
-        if (domainEntityName == 'Work')
-            return data.about.instanceOf
         else if (data.about)
             return data.about
         else
