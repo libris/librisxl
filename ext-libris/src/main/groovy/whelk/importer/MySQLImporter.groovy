@@ -56,7 +56,11 @@ class MySQLImporter extends BasicPlugin implements Importer {
         tickets = new Semaphore(numberOfThreads)
         queue = Executors.newSingleThreadExecutor()
 
+        log.info("Suspending camel during import.")
+        whelk.camelContext.suspend()
+
         try {
+
             Class.forName("com.mysql.jdbc.Driver")
 
             log.debug("Connecting to database...")
@@ -139,6 +143,11 @@ class MySQLImporter extends BasicPlugin implements Importer {
             log.info("Record count: ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds for sql results.")
             close()
         }
+
+        queue.execute({
+            log.info("Starting camel context ...")
+            whelk.camelContext.resume()
+        } as Runnable)
 
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)

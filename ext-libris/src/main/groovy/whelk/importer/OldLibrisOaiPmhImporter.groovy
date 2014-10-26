@@ -128,6 +128,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         } as Runnable)
         log.debug("Shutting down queue")
         queue.shutdown()
+
         return recordCount
     }
 

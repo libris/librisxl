@@ -157,6 +157,7 @@ class DocumentAPI extends BasicAPI {
                     entry['identifier'] = path
                 }
             }
+            // TODO: Check that content-type only contains mimetype, not charsets and other crap
             entry["contentType"] = request.getContentType()
             entry["dataset"] = getDatasetBasedOnPath(path)
 

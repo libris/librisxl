@@ -25,7 +25,7 @@
       <level value="info"/>
   </logger>
   <logger name="whelk.camel.FormatConverterProcessor">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
   <logger name="whelk.camel.ElasticTypeRouteProcessor">
       <level value="info"/>
@@ -73,7 +73,7 @@
       <level value="info"/>
   </logger>
 <logger name="whelk.Document">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
 <logger name="whelk.api.DocumentAPI">
       <level value="debug"/>
