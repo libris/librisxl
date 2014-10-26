@@ -1085,7 +1085,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def entity = getEntity(data)
 
-        def types = data.about['@type']
+        def types = entity['@type']
         if (types instanceof String) { types = [types] }
         if (definesDomainEntityType && !(types.contains(definesDomainEntityType)))
             return null
