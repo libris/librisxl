@@ -121,9 +121,9 @@ marcenum:bibLevel a skos:Collection;
     owl:equivalentClass sdo:CreativeWork;
     rdfs:subClassOf dc:BibliographicResource  .
 
-:ConceptualWork a owl:Class;
-    rdfs:label "Konceptuellt verk"@sv;
-    rdfs:subClassOf :CreativeWork, bf:Work, sdo:ProductModel, :Concept . #, rdfa:Pattern .
+:UniformWork a owl:Class;
+    rdfs:label "Uniformt verk"@sv;
+    rdfs:subClassOf :CreativeWork, bf:Work, sdo:ProductModel . #, rdfa:Pattern .
 
 :Product a owl:Class;
     rdfs:label "Instans"@sv;
@@ -161,7 +161,7 @@ marcenum:bibLevel a skos:Collection;
 :exampleOfWork a owl:ObjectProperty ;
     owl:equivalentProperty sdo:exampleOfWork;
     rdfs:subPropertyOf bf:instanceOf;
-    sdo:rangeIncludes :ConceptualWork .
+    sdo:rangeIncludes :UniformWork .
 
 :workExample a owl:ObjectProperty ;
     owl:equivalentProperty sdo:workExample;
@@ -573,6 +573,9 @@ marcenum:bibLevel a skos:Collection;
 :title a owl:DatatypeProperty;
     owl:equivalentProperty bf:title, dc:title .
 
+:uniformTitle a owl:DatatypeProperty;
+    rdfs:subPropertyOf skos:prefLabel .
+
 :instanceTitle a owl:ObjectProperty;
     owl:equivalentProperty bf:instanceTitle .
 
@@ -886,7 +889,7 @@ marcenum:bibLevel a skos:Collection;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
             owl:onProperty foaf:focus;
-            owl:allValuesFrom :ConceptualWork ] .
+            owl:allValuesFrom :UniformWork ] .
 
 
 ##

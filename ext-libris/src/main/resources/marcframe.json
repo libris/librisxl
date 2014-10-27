@@ -3638,6 +3638,7 @@
     },
     "130": {
       "note:candidate:domainEntity": "Work",
+      "TODO": "very similar to 240?",
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"},
       "$l": {"link": "language", "rangeEntity": "Language", "property": "label"}
@@ -3660,7 +3661,7 @@
       "i1": {},
       "i2": {},
       "link": "exampleOfWork",
-      "rangeEntity": "ConceptualWork",
+      "rangeEntity": "UniformWork",
       "$0": {
         "addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber",
         "uriTemplate": "/resource/bib/{_}"
@@ -4140,9 +4141,9 @@
       "inherit": "100",
       "match-code": {
         "t": {
-          "$t": {"property": "uniformTitle"},
+          "$t": {"property": "title"},
           "splitLink": [
-            {"codes": ["t"], "addLink": "subject", "spliceEntity": "ConceptualWork"}
+            {"codes": ["t"], "addLink": "subject", "spliceEntity": "UniformWork"}
           ],
           "link": "attributedTo"
         }
@@ -4201,7 +4202,7 @@
       }}
     },
     "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
-    "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "ConceptualWork"},
+    "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "UniformWork"},
     "648": {
       "inherit": "650",
       "rangeEntity": "Event",
@@ -4314,10 +4315,10 @@
       "inherit": "100",
       "match-code": {
         "t": {
-          "$t": {"property": "uniformTitle"},
+          "$t": {"property": "title"},
           "$l": {"link": "language", "rangeEntity": "Language", "property": "label"},
           "splitLink": [
-            {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "ConceptualWork"}
+            {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "UniformWork"}
           ],
           "link": "attributedTo"
         }
@@ -4348,8 +4349,8 @@
         "2": {"addLink": "influentialPart"}
       },
       "addLink": "influentialRelation",
-      "rangeEntity": "CreativeWork",
-      "$a": {"property": "uniformTitle"}
+      "rangeEntity": "UniformWork",
+      "$a": {"property": "title"}
     },
 
 
@@ -4655,7 +4656,7 @@
       "match-code": {
         "t v x y z": {
           "definesDomainEntity": null,
-          "promoteToDomainEntity": "ConceptualWork",
+          "promoteToDomainEntity": "UniformWork",
           "NOTE": "due to this promote hack, Instance is now Work",
           "$t": {"domainEntity": "Instance", "property": "title"}
         }
@@ -4678,7 +4679,7 @@
               {"t": "Anteckningar från en ö"}
           ]}},
           "result": {"about": {
-            "@type": "ConceptualWork",
+            "@type": "UniformWork",
             "title": "Anteckningar från en ö",
             "attributedTo": {"@type": "Person",
               "familyName":  "Jansson", "givenName":  "Tove"}
@@ -4696,7 +4697,7 @@
     },
     "130" : {
       "inherit": "bib",
-      "definesDomainEntity": "ConceptualWork"
+      "definesDomainEntity": "UniformWork"
     },
     "148" : {
       "definesDomainEntity": "Concept",
@@ -4761,9 +4762,9 @@
       "inherit": "bib:100",
       "match-code": {
         "t": {
-          "$t": {"property": "uniformTitle"},
+          "$t": {"property": "title"},
           "splitLink": [
-            {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "ConceptualWork"}
+            {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "UniformWork"}
           ],
           "link": "attributedTo"
         }
