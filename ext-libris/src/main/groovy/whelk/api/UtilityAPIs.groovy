@@ -4,6 +4,8 @@ import groovy.util.logging.Slf4j as Log
 
 import javax.servlet.http.*
 
+import org.apache.http.entity.ContentType
+
 import whelk.util.Tools
 
 import whelk.*

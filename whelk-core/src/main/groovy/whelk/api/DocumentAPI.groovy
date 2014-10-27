@@ -202,6 +202,7 @@ class DocumentAPI extends BasicAPI {
         doc = this.whelk.sanityCheck(doc)
         log.debug("Saving document first pass. (${doc.identifier})")
         def identifier = this.whelk.add(doc)
+        /*
         for (fc in plugins.findAll { it instanceof FormatConverter && it.requiredContentType == doc.contentType }) {
             try {
                 log.debug("Running formatconverter ${fc.id} on ${doc.identifier}")
@@ -212,6 +213,7 @@ class DocumentAPI extends BasicAPI {
                 log.warn("Converted to ${doc.contentType} but there are no storages for that.")
             }
         }
+        */
         return identifier
     }
 
