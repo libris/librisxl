@@ -827,12 +827,16 @@ marcenum:bibLevel a skos:Collection;
 
 # Domain Specific Term Classes
 
-:Term a owl:Class;
+:TopicalTerm a owl:Class;
     rdfs:label "Allmänt ämnesord"@sv;
     owl:equivalentClass :Concept .
 
 :GenreTerm a owl:Class;
     rdfs:label "Genre-/formterm"@sv;
+    rdfs:subClassOf :Concept .
+
+:AspectTerm a owl:Class;
+    rdfs:label "Aspektterm"@sv;
     rdfs:subClassOf :Concept .
 
 :ChronologicalTerm a owl:Class;
@@ -879,7 +883,6 @@ marcenum:bibLevel a skos:Collection;
 
 :WorkTerm a owl:Class;
     rdfs:label "Term för verk"@sv;
-    rdfs:subClassOf :Concept;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
             owl:onProperty foaf:focus;
