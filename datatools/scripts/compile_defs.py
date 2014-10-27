@@ -210,12 +210,15 @@ def to_jsonld(source, contextref, contextobj=None, index=None):
         nodes = data['@graph']
         index_key = None
     base = contextobj.get('@base')
+    to_embed = {}
+    refs = {}
     for node in nodes:
         nodeid = node['@id']
         if base and nodeid.startswith(base):
             node['@id'] = nodeid[len(base)-1:]
         elif nodeid.startswith('_:'):
-            del node['@id'] # TODO: lossy if referenced, should be embedded..
+            to_embed[nodeid] = node
+            continue
         if index_key:
             key = None
             if index_key in ('#', '/'):
@@ -225,6 +228,18 @@ def to_jsonld(source, contextref, contextobj=None, index=None):
                 key = node[index_key]
             if key:
                 graphmap[key] = node
+            for value in node.values():
+                values = value if isinstance(value, list) else [value]
+                for value in values:
+                    if not isinstance(value, dict):
+                        continue
+                    valueid = value.get('@id', '')
+                    if valueid.startswith('_:'):
+                        assert valueid not in refs # NOTE: not a tree...
+                        refs[valueid] = value
+    for idref, obj in refs.items():
+        obj.update(to_embed[idref])
+        #del obj['@id']
 
     return data
 
