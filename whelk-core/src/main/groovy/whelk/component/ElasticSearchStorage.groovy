@@ -188,8 +188,8 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
                                 response.hits.hits.each {
                                     try {
                                         results.add(Document.fromJson(it.sourceAsString))
-                                    } catch (org.codehaus.jackson.map.JsonMappingException jme) {
-                                        log.error("Failed to deserialize document ${it.id}", jme)
+                                    } catch (Exception e) {
+                                        log.error("Failed to deserialize document ${it.id} ${e.message}")
                                     }
                                 }
                                 log.debug("Found " + results.size() + " items. Scroll ID: " + response.scrollId)
