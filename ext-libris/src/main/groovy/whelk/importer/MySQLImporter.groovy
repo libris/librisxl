@@ -171,9 +171,11 @@ class MySQLImporter extends BasicPlugin implements Importer {
                     def doc = enhancer.filter(marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta]))
                     docs << doc
                 }
-                log.debug("Saving ${docs.size()} collected documents.")
-                whelk.bulkAdd(docs, docs.first().contentType)
-                log.debug("Documents saved.")
+                if (!docs.isEmpty()) {
+                    log.debug("Saving ${docs.size()} collected documents.")
+                    whelk.bulkAdd(docs, docs.first().contentType)
+                    log.debug("Documents saved.")
+                }
             } finally {
                 tickets.release()
             }
