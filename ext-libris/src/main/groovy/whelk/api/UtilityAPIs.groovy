@@ -2,6 +2,7 @@ package whelk.api
 
 import groovy.util.logging.Slf4j as Log
 
+import javax.activation.MimetypesFileTypeMap
 import javax.servlet.http.*
 
 import whelk.util.Tools
