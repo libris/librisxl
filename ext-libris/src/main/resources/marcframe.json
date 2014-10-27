@@ -4657,12 +4657,34 @@
           "definesDomainEntity": null,
           "promoteToDomainEntity": "ConceptualWork",
           "NOTE": "due to this promote hack, Instance is now Work",
-          "$t": {"domainEntity": "Instance", "property": "uniformTitle"}
+          "$t": {"domainEntity": "Instance", "property": "title"}
         }
       },
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
+      "_spec": [
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"}
+          ]}},
+          "result": {"about": {
+            "@type": "Person",
+            "familyName":  "Jansson", "givenName":  "Tove"
+          }}
+        },
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"}
+          ]}},
+          "result": {"about": {
+            "@type": "ConceptualWork",
+            "title": "Anteckningar från en ö",
+            "attributedTo": {"@type": "Person",
+              "familyName":  "Jansson", "givenName":  "Tove"}
+          }}
+        }
+      ]
     },
     "110" : {
       "inherit": "bib",
