@@ -89,6 +89,13 @@ div > dl {
   font-size: 0.8em;
 }
 
+li.ext {
+  border-color: #d51;
+}
+.ext a {
+  color: #d51;
+}
+
 body svg {
   visibility: hidden;
 }
