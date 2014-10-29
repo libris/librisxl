@@ -149,7 +149,7 @@ abstract class BasicElasticComponent extends BasicComponent {
         if (shapeComputer == null) {
             shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
         }
-        return shapeComputer.translateIdentifier(id)
+        return shapeComputer.toElasticId(id)
     }
 
     void index(byte[] data, Map params) throws WhelkIndexException  {

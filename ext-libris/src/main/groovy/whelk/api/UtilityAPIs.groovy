@@ -160,7 +160,7 @@ class CompleteExpander extends BasicAPI {
             response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
         } else {
             identifier = pathVars.first()
-            authDoc = whelk.get(new URI(identifier))
+            authDoc = whelk.get(identifier)
             if (!authDoc) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND)
             } else {

@@ -79,12 +79,13 @@ class ElasticTypeRouteProcessor implements Processor {
     String elasticHost, elasticCluster
     int elasticPort
 
-    ElasticTypeRouteProcessor(String elasticHost, String elasticCluster, int elasticPort, List<String> availableTypes, ElasticShapeComputer esc) {
-        this.types = availableTypes
-        this.shapeComputer = esc
-        this.elasticHost = elasticHost
-        this.elasticPort = elasticPort
-        this.elasticCluster = elasticCluster
+    //ElasticTypeRouteProcessor(String elasticHost, String elasticCluster, int elasticPort, List<String> availableTypes, ElasticShapeComputer esc) {
+    ElasticTypeRouteProcessor(Index index) {
+        this.types = index.availableTypes
+        this.shapeComputer = index.shapeComputer
+        this.elasticHost = index.elastichost
+        this.elasticPort = index.elasticport
+        this.elasticCluster = index.elasticcluster
     }
 
     @Override
@@ -94,9 +95,9 @@ class ElasticTypeRouteProcessor implements Processor {
         String identifier = message.getHeader("entry:identifier")
         String indexName = message.getHeader("whelk:index", shapeComputer.whelkName)
         message.setHeader("whelk:index", indexName)
-        String indexType = shapeComputer.calculateShape(identifier)
+        String indexType = shapeComputer.calculateTypeFromIdentifier(identifier)
         message.setHeader("whelk:type", indexType)
-        String indexId = shapeComputer.translateIdentifier(identifier)
+        String indexId = shapeComputer.toElasticId(identifier)
         message.setHeader("whelk:id", indexId)
         String operation = message.getHeader("whelk:operation") ?: "BULK_INDEX"
         if (operation == Whelk.ADD_OPERATION) {

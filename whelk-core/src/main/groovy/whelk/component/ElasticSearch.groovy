@@ -138,9 +138,9 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             log.debug("r: $r success: ${r.successfulShards} failed: ${r.failedShards}")
         }
 
-        log.debug("Deleting object with identifier ${shapeComputer.translateIdentifier(identifier)}.")
+        log.debug("Deleting object with identifier ${shapeComputer.toElasticId(identifier)}.")
 
-        client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(identifier), shapeComputer.translateIdentifier(identifier)))
+        client.delete(new DeleteRequest(indexName, shapeComputer.calculateTypeFromIdentifier(identifier), shapeComputer.toElasticId(identifier)))
 
             // Kanske en matchall-query filtrerad på _type och _id?
     }
@@ -323,12 +323,12 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
     Document createResultDocumentFromHit(hit, queriedIndex) {
         log.trace("creating document. ID: ${hit?.id}, index: $queriedIndex")
-        def metaEntryMap = getMetaEntry(hit.id, queriedIndex)
+        def metaEntryMap = null //getMetaEntry(hit.id, queriedIndex)
         if (metaEntryMap) {
             return new Document(metaEntryMap).withData(hit.source())
         } else {
             log.trace("Meta entry not found for document. Will assume application/json for content-type.")
-            return new Document().withData(hit.source()).withContentType("application/json").withIdentifier(shapeComputer.translateIndexIdTo(hit.id))
+            return new Document().withData(hit.source()).withContentType("application/json").withIdentifier(shapeComputer.fromElasticId(hit.id))
         }
     }
 
@@ -339,7 +339,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         id = shapeComputer.translateIndexIdTo(id)
         log.trace("Translated id: $id")
         try {
-            def grb = new GetRequestBuilder(client, emei).setType(METAENTRY_INDEX_TYPE).setId(shapeComputer.translateIdentifier(id))
+            def grb = new GetRequestBuilder(client, emei).setType(METAENTRY_INDEX_TYPE).setId(shapeComputer.toElasticId(id))
             def result = performExecute(grb)
             if (result.exists) {
                 return result.sourceAsMap
