@@ -108,7 +108,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                     "id": translateIdentifier(doc.identifier)
                 ]
             )
-            whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, [:])
         }
         return result
     }
@@ -130,9 +129,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 "id": translateIdentifier(doc.identifier),
                 "data":((Document)doc).metadataAsJson
                 ]
-
-                //Send to camel route
-                whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, [:])
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
