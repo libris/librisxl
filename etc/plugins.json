@@ -550,7 +550,6 @@
             "elasticBatchSize": 2000,
             "graphstoreBatchSize": 1000,
             "batchTimeout": 5000,
-            "elasticTypes": "_property:ELASTIC_TYPES",
             "indexMessageQueue": "_property:MQ_INDEX",
             "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE"
         }
@@ -565,7 +564,7 @@
             },
             "elasticHost": "_property:ELASTIC_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "availableTypes": "_property:ELASTIC_TYPES"
+            "availableTypes": ["auth","bib","hold","def","sys"]
         },
         "_unique" : true
     },
