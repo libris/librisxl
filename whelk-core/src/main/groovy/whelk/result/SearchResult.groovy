@@ -34,27 +34,6 @@ class SearchResult {
         this.hits.add(doc)
     }
 
-    /*
-    String toJson() {
-        log.debug("Manual toJson()")
-        def jsonString = new StringBuilder()
-        jsonString << "{"
-        jsonString << "\"hits\": " << numberOfHits << ","
-        jsonString << "\"list\": ["
-        hits.eachWithIndex() { it, i ->
-            if (i > 0) { jsonString << "," }
-            jsonString << "{\"identifier\": \"" << it.identifier << "\","
-            jsonString << "\"data\":" << it.dataAsString << "}"
-        }
-        jsonString << "]"
-        if (facets) {
-            jsonString << ",\"facets\":" << jsonifyFacets()
-        }
-        jsonString << "}"
-        return jsonString.toString()
-    }
-    */
-
     Map toMap(String resultKey, List keys) {
         def result = [:]
         result['hits'] = numberOfHits

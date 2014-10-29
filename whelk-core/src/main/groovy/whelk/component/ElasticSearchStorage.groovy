@@ -99,7 +99,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     protected prepareIndexingRequest(doc, identifier, index) {
         if (identifier) {
-            String encodedIdentifier = shapeComputer.translateIdentifier(new URI(doc.identifier))
+            String encodedIdentifier = shapeComputer.translateIdentifier(doc.identifier)
             return client.prepareIndex(indexName, ELASTIC_STORAGE_TYPE, encodedIdentifier).setSource(doc.toJson().getBytes("UTF-8"))
         } else {
             return client.prepareIndex(indexName + VERSION_STORAGE_SUFFIX, ELASTIC_STORAGE_TYPE).setSource(doc.toJson().getBytes("UTF-8"))
@@ -107,12 +107,12 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     Document get(String identifier) {
-        get(new URI(identifier))
+        return get(identifier, null)
     }
 
     @Override
-    Document get(URI uri, String version = null) {
-        def grq = client.prepareGet(indexName, ELASTIC_STORAGE_TYPE, shapeComputer.translateIdentifier(uri))
+    Document get(String identifier, String version) {
+        def grq = client.prepareGet(indexName, ELASTIC_STORAGE_TYPE, shapeComputer.translateIdentifier(identifier))
         def response = grq.execute().actionGet();
 
         int v = (version ? version as int : -1)
@@ -120,13 +120,13 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         if (!response.exists) {
             return null
         }
-        log.trace("Get response for ${uri.toString()}: " + response.sourceAsMap)
+        log.trace("Get response for ${identifier}: " + response.sourceAsMap)
         Document document = Document.fromJson(response.sourceAsString)
         if (document && (v < 0 || document.version == v)) {
             return document
         } else {
             log.debug("Current version (${document.version}) of document not the one requested ($v). Looking in the cellar ...")
-            def query = boolQuery().must(termQuery("identifier", uri.toString())).must(termQuery("entry.version", v))
+            def query = boolQuery().must(termQuery("identifier", identifier)).must(termQuery("entry.version", v))
             def srq = client.prepareSearch(indexName + VERSION_STORAGE_SUFFIX).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query).setSize(1)
             response = performExecute(srq)
             log.trace("Response from version search: $response")
@@ -221,16 +221,16 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     @Override
-    void remove(URI id) {
+    void remove(String identifier) {
         if (!versioning) {
-            client.delete(new DeleteRequest(indexName, ELASTIC_STORAGE_TYPE, shapeComputer.translateIdentifier(id)))
+            client.delete(new DeleteRequest(indexName, ELASTIC_STORAGE_TYPE, shapeComputer.translateIdentifier(identifier)))
         } else {
             store(createTombstone(id))
         }
     }
 
-    private Document createTombstone(uri) {
-        def tombstone = new Document().withIdentifier(uri.toString()).withData("DELETED ENTRY")
+    private Document createTombstone(id) {
+        def tombstone = new Document().withIdentifier(id).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
         return tombstone
     }

@@ -21,8 +21,8 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
         this.whelkName = id
     }
 
-    String calculateShape(URI uri) {
-        String identifier = uri.path.toString()
+    String calculateShape(String id) {
+        String identifier = new URI(id).path.toString()
         log.debug("Received uri $identifier")
         String idxType
         try {
@@ -39,17 +39,10 @@ class UriToElasticType extends BasicPlugin implements ElasticShapeComputer {
     }
 
     String translateIdentifier(String id) {
-        return translateIdentifier(new URI(id))
+        return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
     }
 
-    String translateIdentifier(URI uri) {
-        return Base64.encodeBase64URLSafeString(uri.getPath().getBytes("UTF-8"))
-        //def idelements = uri.path.split("/") as List
-        //idelements.remove(0)
-        //return idelements.join(URI_SEPARATOR)
-    }
-
-    String translateIndexIdTo(id) {
+    String translateIndexIdTo(String id) {
         if (id.contains(URI_SEPARATOR)) {
             log.warn("Using old style index id's for $id")
             def pathelements = []

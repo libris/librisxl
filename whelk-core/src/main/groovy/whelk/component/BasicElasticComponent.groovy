@@ -33,16 +33,19 @@ abstract class BasicElasticComponent extends BasicComponent {
     BasicElasticComponent(Map settings) {
         super()
         this.elastichost = settings.get('elasticHost')
-        this.elasticcluster = settings.get('elasticCluster', DEFAULT_CLUSTER)
-        this.elasticport = settings.get('elasticPort', elasticport)
+        if (!elastichost) {
+            this.elastichost = System.getProperty("elastic.host")
+        }
+        this.elasticcluster = settings.get('elasticCluster')
+        if (!elasticcluster) {
+            this.elasticcluster = System.getProperty("elastic.cluster", DEFAULT_CLUSTER)
+        }
+        this.elasticport = settings.get('elasticPort', System.getProperty("elastic.port", ""+elasticport)) as int
         this.batchUpdateSize = settings.get('batchUpdateSize', batchUpdateSize)
         connectClient()
     }
 
     void connectClient() {
-        elastichost = System.getProperty("elastic.host", elastichost)
-        elasticcluster = System.getProperty("elastic.cluster", elasticcluster)
-        elasticport = System.getProperty("elastic.port", ""+elasticport) as int
         if (elastichost) {
             log.info("Connecting to $elastichost:$elasticport using cluster $elasticcluster")
             def sb = ImmutableSettings.settingsBuilder()
@@ -142,15 +145,11 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
     }
 
-    String translateIdentifier(String uri) {
-        return translateIdentifier(new URI(uri))
-    }
-
-    String translateIdentifier(URI uri) {
+    String translateIdentifier(String id) {
         if (shapeComputer == null) {
             shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
         }
-        return shapeComputer.translateIdentifier(uri)
+        return shapeComputer.translateIdentifier(id)
     }
 
     void index(byte[] data, Map params) throws WhelkIndexException  {
@@ -162,8 +161,8 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
     }
 
-    void deleteEntry(URI uri, indexName, indexType) {
-        def response = performExecute(client.prepareDelete(indexName, indexType, translateIdentifier(uri)))
+    void deleteEntry(String identifier, indexName, indexType) {
+        def response = performExecute(client.prepareDelete(indexName, indexType, translateIdentifier(identifier)))
         log.debug("Deleted ${response.id} with type ${response.type} from ${response.index}. Document found: ${response.found}")
     }
 

@@ -2,7 +2,6 @@ package whelk
 
 import groovy.util.logging.Slf4j as Log
 
-import java.net.URI
 import java.net.URISyntaxException
 import java.util.regex.*
 import java.util.UUID
@@ -57,7 +56,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
      * Whelk methods
      *******************************/
     @Override
-    URI add(byte[] data,
+    String add(byte[] data,
             Map<String, Object> entrydata,
             Map<String, Object> metadata) {
         Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
@@ -66,7 +65,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     @Override
     @groovy.transform.CompileStatic
-    URI add(Document doc) {
+    String add(Document doc) {
         log.debug("Add single document ${doc.identifier}")
         if (!doc.data || doc.data.length < 1) {
             throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
@@ -80,7 +79,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             storage.store(doc)
         }
         notifyCamel(doc.identifier, ADD_OPERATION, [:])
-        return new URI(doc.identifier)
+        return doc.identifier
     }
 
     /**
@@ -105,33 +104,33 @@ class StandardWhelk extends HttpServlet implements Whelk {
         log.debug("Bulk operation completed.")
     }
 
-    Document get(URI uri, String version=null, List contentTypes=[], boolean expandLinks = true) {
+    Document get(String identifier, String version=null, List contentTypes=[], boolean expandLinks = true) {
         Document doc = null
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
             def s = getStorage(contentType)
             if (s) {
                 log.debug("Found $contentType storage ${s.id}.")
-                doc = s.get(uri, version)
+                doc = s.get(identifier, version)
                 break
             }
         }
         // TODO: Check this
         if (!doc) {
-            doc = storage.get(uri, version)
+            doc = storage.get(identifier, version)
         }
 
         return doc
     }
 
-    Location locate(URI uri) {
+    Location locate(String uri) {
         log.debug("Locating $uri")
         def doc = get(uri)
         if (doc) {
             return new Location(doc)
         }
 
-        String identifier = uri.getPath().toString()
+        String identifier = new URI(uri).getPath().toString()
         log.trace("Nothing found at identifier $identifier")
 
         if (locationConfig['preCursor'] && identifier.startsWith(locationConfig['preCursor'])) {
@@ -143,8 +142,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
             log.trace("New place to look: $identifier")
         }
         log.debug("Checking if new identifier (${identifier}) has something to get")
-        if (get(new URI(identifier))) {
-            return new Location().withURI(identifier).withResponseCode(303)
+        if (get(identifier)) {
+            return new Location().withURI(new URI(identifier)).withResponseCode(303)
         }
 
         log.debug("Looking for identifiers in record.")
@@ -166,11 +165,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     @Override
-    void remove(URI uri) {
+    void remove(String id) {
         log.debug("Sending DELETE operation to camel.")
-        notifyCamel(uri.toString(), REMOVE_OPERATION, [:])
+        notifyCamel(id, REMOVE_OPERATION, [:])
         components.each {
-            ((Component)it).remove(uri)
+            ((Component)it).remove(id)
         }
     }
 
@@ -186,7 +185,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     Document sanityCheck(Document d) {
         if (!d.identifier) {
-            d.withIdentifier(mintIdentifier(d).toString())
+            d.withIdentifier(mintIdentifier(d))
             log.debug("Document was missing identifier. Setting identifier ${d.identifier}")
         }
         if (!d.data || d.data.length == 0) {
@@ -345,17 +344,17 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     @Override
-    URI mintIdentifier(Document d) {
-        URI identifier
+    String mintIdentifier(Document d) {
+        String identifier
         for (minter in uriMinters) {
-            identifier = minter.mint(d)
+            identifier = minter.mint(d)?.toString()
         }
         if (!identifier) {
             try {
                 if (d.entry.dataset) {
-                    identifier = new URI("/" + d.entry.dataset + "/" + UUID.randomUUID());
+                    identifier = new URI("/" + d.entry.dataset + "/" + UUID.randomUUID()).toString();
                 } else {
-                    identifier = new URI("/"+ UUID.randomUUID());
+                    identifier = new URI("/"+ UUID.randomUUID()).toString();
                 }
             } catch (URISyntaxException ex) {
                 throw new WhelkRuntimeException("Could not mint URI", ex);

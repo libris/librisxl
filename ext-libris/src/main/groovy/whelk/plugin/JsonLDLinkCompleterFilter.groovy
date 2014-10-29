@@ -40,7 +40,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
             log.trace("Doc has link to ${spec}")
             if (spec.startsWith("authority:")) {
                 def idStr = spec.replace("authority:", "/auth/")
-                def linkedDoc = whelk.get(new URI(idStr))
+                def linkedDoc = whelk.get(idStr)
                 if (linkedDoc) {
                     def data = linkedDoc.dataAsMap
                     def about = data.about ?: data

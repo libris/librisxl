@@ -45,7 +45,7 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
         } else {
             log.debug("converter: $converter expander: $expander")
             log.debug("all plugins: $plugins")
-            Document doc = whelk.get(new URI(message.getBody()))
+            Document doc = whelk.get(message.getBody())
             log.debug("Loaded document ${doc?.identifier}")
             if (doc && (converter || expander)) {
                 log.debug("Running converter/expander.")
@@ -94,9 +94,9 @@ class ElasticTypeRouteProcessor implements Processor {
         String identifier = message.getHeader("entry:identifier")
         String indexName = message.getHeader("whelk:index", shapeComputer.whelkName)
         message.setHeader("whelk:index", indexName)
-        String indexType = shapeComputer.calculateShape(new URI(identifier))
+        String indexType = shapeComputer.calculateShape(identifier)
         message.setHeader("whelk:type", indexType)
-        String indexId = shapeComputer.translateIdentifier(new URI(identifier))
+        String indexId = shapeComputer.translateIdentifier(identifier)
         message.setHeader("whelk:id", indexId)
         String operation = message.getHeader("whelk:operation") ?: "BULK_INDEX"
         if (operation == Whelk.ADD_OPERATION) {

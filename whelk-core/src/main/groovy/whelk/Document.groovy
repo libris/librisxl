@@ -4,7 +4,6 @@ import groovy.transform.TypeChecked
 import groovy.util.logging.Slf4j as Log
 
 import java.io.*
-import java.net.URI
 import java.util.*
 import java.nio.ByteBuffer
 import java.lang.annotation.*
@@ -169,11 +168,6 @@ class Document {
         this.entry['identifier'] = i
         return this
     }
-    /*
-    Document withIdentifier(URI uri) {
-        return withIdentifier(uri.toString())
-    }
-    */
 
     Document withContentType(String ctype) {
         setContentType(ctype)

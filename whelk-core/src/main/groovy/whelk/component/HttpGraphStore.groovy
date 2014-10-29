@@ -35,7 +35,7 @@ class HttpEndpoint extends BasicComponent implements SparqlEndpoint {
         throw new UnsupportedOperationException("HttpEndpoint can only query graph store.")
     }
 
-    public Document get(URI uri) {
+    public Document get(String id) {
         throw new UnsupportedOperationException("Not implemented yet.")
     }
 
@@ -58,7 +58,7 @@ class HttpEndpoint extends BasicComponent implements SparqlEndpoint {
         return new ByteArrayInputStream(EntityUtils.toByteArray(response.getEntity()))
     }
 
-    public void remove(URI uri) {
+    public void remove(String id) {
         throw new UnsupportedOperationException("Not implemented yet.")
     }
 

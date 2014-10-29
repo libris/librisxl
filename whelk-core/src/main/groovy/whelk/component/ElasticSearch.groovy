@@ -125,10 +125,10 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     @Override
-    void remove(URI uri) {
+    void remove(String identifier) {
         String indexName = this.whelk.id
-        log.debug("Peforming deletebyquery to remove documents extracted from $uri")
-        def delQuery = termQuery("extractedFrom.@id", uri.toString())
+        log.debug("Peforming deletebyquery to remove documents extracted from $identifier")
+        def delQuery = termQuery("extractedFrom.@id", identifier)
         log.debug("DelQuery: $delQuery")
 
         def response = performExecute(client.prepareDeleteByQuery(indexName).setQuery(delQuery))
@@ -138,9 +138,9 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             log.debug("r: $r success: ${r.successfulShards} failed: ${r.failedShards}")
         }
 
-        log.debug("Deleting object with identifier ${shapeComputer.translateIdentifier(uri)}.")
+        log.debug("Deleting object with identifier ${shapeComputer.translateIdentifier(identifier)}.")
 
-        client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(uri), shapeComputer.translateIdentifier(uri)))
+        client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(identifier), shapeComputer.translateIdentifier(identifier)))
 
             // Kanske en matchall-query filtrerad på _type och _id?
     }
@@ -155,11 +155,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         }
     }
     */
-
-    @Override
-    Document get(URI uri) {
-        throw new UnsupportedOperationException("Not implemented yet.")
-    }
 
     /*
     @Override
