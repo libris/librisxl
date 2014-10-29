@@ -208,7 +208,7 @@ class MarcConversion {
 
         def marcRemains = [failedFixedFields: [:], uncompleted: [], broken: []]
 
-        def record = ["@type": "Record", "@id": recordId]
+        def record = ["@id": recordId]
         def thing = [:]
         record[thingLink] = thing
 
@@ -707,6 +707,11 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
 
         def ent = entityMap[domainEntityName]
+        if (definesDomainEntityType) {
+            ent['@type'] = definesDomainEntityType
+        }
+
+
         if (ent == null)
             return false
         if (link) {
