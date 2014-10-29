@@ -108,6 +108,7 @@ class MarcConversion {
 
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
+    String thingLink
     Map marcTypeMap = [:]
     Map coreTypeMarcCategoryMap = [Authority: 'auth']
     def marcHandlers = [:]
@@ -117,6 +118,7 @@ class MarcConversion {
     URIMinter uriMinter
 
     MarcConversion(Map config, URIMinter uriMinter, Map tokenMaps) {
+        thingLink = config.thingLink
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps
@@ -139,7 +141,7 @@ class MarcConversion {
     }
 
     String revertMarcCategory(Map data) {
-        def types = data.about['@type']
+        def types = (thingLink? data[thingLink] : data) ['@type']
         if (types instanceof String) { types = [types] }
         def marcCat = null
         for (type in types) {
@@ -204,17 +206,14 @@ class MarcConversion {
 
     Map createFrame(Map marcSource, String recordId=null, Map extraData=null) {
 
-        def record = ["@type": "Record", "@id": recordId]
-
         def marcRemains = [failedFixedFields: [:], uncompleted: [], broken: []]
 
+        def record = ["@type": "Record", "@id": recordId]
+        def thing = [:]
+        record[thingLink] = thing
+
         def entityMap = [Record: record, marcRemains: marcRemains]
-        // TODO:
-        // * always one record and a primary "thing"
-        // * the type of this thing is determined during processing
-        def instance = [:]
-        entityMap['Instance'] = instance
-        record.about = instance
+        entityMap['Instance'] = thing
 
         def leader = marcSource.leader
         def marcCat = getMarcCategory(leader)
@@ -264,19 +263,19 @@ class MarcConversion {
         if (record['@id'] == null) {
             def uriMap = uriMinter.computePaths(record, marcCat)
             record['@id'] = uriMap['document']
-            instance['@id'] = uriMap['thing']
+            thing['@id'] = uriMap['thing']
         }
 
         // TODO: move this to an "extra data" section in marcframe.json?
         extraData?.get("oaipmhSetSpecs")?.each {
             if (marcCat == "hold") {
                 def prefix = "bibid:"
-                if (it.startsWith(prefix) && !instance.holdingFor) {
-                    instance.holdingFor = ["@type": "Record", controlNumber: it.substring(prefix.size())]
+                if (it.startsWith(prefix) && !thing.holdingFor) {
+                    thing.holdingFor = ["@type": "Record", controlNumber: it.substring(prefix.size())]
                 }
                 prefix = "location:"
-                if (it.startsWith(prefix) && !instance.heldBy) {
-                    instance.heldBy = ["@type": "Organization", notation: it.substring(prefix.size())]
+                if (it.startsWith(prefix) && !thing.heldBy) {
+                    thing.heldBy = ["@type": "Organization", notation: it.substring(prefix.size())]
                 }
             }
         }
@@ -332,6 +331,7 @@ class MarcConversion {
 
 class ConversionPart {
 
+    MarcConversion conversion
     String domainEntityName
     Map tokenMap
     Map reverseTokenMap
@@ -353,8 +353,8 @@ class ConversionPart {
     Map getEntity(Map data) {
         if (domainEntityName == 'Record')
             return data
-        else if (data.about)
-            return data.about
+        else if (conversion.thingLink in data)
+            return data[conversion.thingLink]
         else
             return data
     }
@@ -375,7 +375,6 @@ class ConversionPart {
 
 abstract class BaseMarcFieldHandler extends ConversionPart {
 
-    MarcConversion conversion
     String tag
     Map tokenMaps
 
@@ -1259,6 +1258,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String itemPos
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
+        this.conversion = fieldHandler.conversion
         this.fieldHandler = fieldHandler
         this.code = code
         domainEntityName = subDfn.domainEntity

@@ -1579,6 +1579,8 @@
 
   },
 
+  "thingLink": "about",
+
   "bib": {
 
     "000": {
@@ -1649,6 +1651,7 @@
     },
 
     "001": {
+      "aboutType": "Record",
       "domainEntity": "Record", "property": "controlNumber",
       "_specSource": {"fields": [{"001": "7149593"}]},
       "_specResult": {"controlNumber": "7149593"}
