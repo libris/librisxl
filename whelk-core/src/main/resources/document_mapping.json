@@ -11,10 +11,6 @@
         "data": {
             "type": "binary"
         },
-        "identifier" : {
-            "type" : "string",
-            "index" : "not_analyzed"
-        },
         "entry" : {
             "properties" : {
                 "dataset" : {

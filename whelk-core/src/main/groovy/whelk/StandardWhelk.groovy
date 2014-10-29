@@ -78,7 +78,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         for (storage in availableStorages) {
             storage.store(doc)
         }
-        notifyCamel(doc.identifier, ADD_OPERATION, [:])
+        notifyCamel(doc, ADD_OPERATION, [:])
         return doc.identifier
     }
 
@@ -98,7 +98,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (foundStorage) {
             // Notify camel last, to make sure documents are available when processors call them.
             for (doc in docs) {
-                notifyCamel(doc.identifier, ADD_OPERATION, [:])
+                notifyCamel(doc, ADD_OPERATION, [:])
             }
         }
         log.debug("Bulk operation completed.")
@@ -167,7 +167,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     @Override
     void remove(String id) {
         log.debug("Sending DELETE operation to camel.")
-        notifyCamel(id, REMOVE_OPERATION, [:])
+        notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id])
         components.each {
             ((Component)it).remove(id)
         }
@@ -251,8 +251,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         producerTemplate.asyncSend("direct:${this.id}", exchange)
     }
 
-    // TODO: Should find a way not to notify for every storage. Only primary storage.
-    void onotifyCamel(Document document, Map extraInfo) {
+    void notifyCamel(Document document, String operation, Map extraInfo) {
         if (!producerTemplate) {
             producerTemplate = getCamelContext().createProducerTemplate();
         }
@@ -268,11 +267,12 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         if (extraInfo) {
             extraInfo.each { key, value ->
-                message.setHeader("extra:$key", value)
+                message.setHeader("whelk:$key", value)
             }
         }
+        message.setHeader("whelk:operation", operation)
         exchange.setIn(message)
-        log.trace("Sending message to camel regaring ${document.identifier}")
+        log.trace("Sending document in message to camel regaring ${document.identifier}")
         producerTemplate.asyncSend("direct:${this.id}", exchange)
     }
 

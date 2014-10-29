@@ -44,9 +44,25 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
             message.setHeader("entry:identifier", message.body)
         } else {
             log.debug("converter: $converter expander: $expander")
-            log.debug("all plugins: $plugins")
-            Document doc = whelk.get(message.getBody())
-            log.debug("Loaded document ${doc?.identifier}")
+            def body = message.getBody()
+            Document doc
+            if (body instanceof String) {
+                doc = whelk.get(message.getBody())
+                log.debug("Loaded document ${doc?.identifier}")
+            } else {
+                log.debug("Setting document data with type ${body.getClass().getName()}")
+                doc = new Document().withData(body)
+                message.headers.each { key, value ->
+                    if (key.startsWith("entry:")) {
+                        log.debug("Setting entry $key = $value")
+                        doc.entry.put(key.substring(6), value)
+                    }
+                    if (key.startsWith("meta:")) {
+                        log.debug("Setting meta $key = $value")
+                        doc.meta.put(key.substring(5), value)
+                    }
+                }
+            }
             if (doc && (converter || expander)) {
                 log.debug("Running converter/expander.")
                 if (converter) {
@@ -57,6 +73,7 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
                 }
             }
             if (doc) {
+                log.debug("Resetting document ${doc.identifier} in message.")
                 if (doc.isJson()) {
                     message.setBody(doc.dataAsMap)
                 } else {
@@ -74,14 +91,12 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
 @Log
 class ElasticTypeRouteProcessor implements Processor {
 
-    List types
     ElasticShapeComputer shapeComputer
     String elasticHost, elasticCluster
     int elasticPort
 
     //ElasticTypeRouteProcessor(String elasticHost, String elasticCluster, int elasticPort, List<String> availableTypes, ElasticShapeComputer esc) {
     ElasticTypeRouteProcessor(Index index) {
-        this.types = index.availableTypes
         this.shapeComputer = index.shapeComputer
         this.elasticHost = index.elastichost
         this.elasticPort = index.elasticport
@@ -91,7 +106,6 @@ class ElasticTypeRouteProcessor implements Processor {
     @Override
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
-        def dataset = message.getHeader("entry:dataset")
         String identifier = message.getHeader("entry:identifier")
         String indexName = message.getHeader("whelk:index", shapeComputer.whelkName)
         message.setHeader("whelk:index", indexName)
@@ -107,10 +121,10 @@ class ElasticTypeRouteProcessor implements Processor {
 
             message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexName=${indexName}&indexType=${indexType}")
             if (operation == Whelk.REMOVE_OPERATION) {
-                log.info(">>> Setting message body to $indexId")
+                log.info(">>> Setting message body to $indexId in preparation for REMOVE operation")
                 message.setBody(indexId)
             } else {
-                message.getBody(Map.class).put("elastic_id", indexId)
+                message.getBody(Map.class).put("encodedId", indexId)
             }
         exchange.setOut(message)
     }

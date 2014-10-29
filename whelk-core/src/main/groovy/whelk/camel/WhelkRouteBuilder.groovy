@@ -63,7 +63,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         if (whelk.index) {
             from(indexMessageQueue)
                 .threads(1,parallelProcesses)
-                //.process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, elasticCluster, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
                 .process(new ElasticTypeRouteProcessor(whelk.index))
                 .choice()
                     .when(header("whelk:operation").isEqualTo(Whelk.REMOVE_OPERATION))
