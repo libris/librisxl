@@ -4652,12 +4652,12 @@
 
     "100" : {
       "inherit": "bib",
-      "definesDomainEntity": "Person",
+      "aboutType": "Person", "link": null, "rangeEntity": null,
       "match-code": {
         "t v x y z": {
-          "definesDomainEntity": null,
-          "promoteToDomainEntity": "UniformWork",
-          "NOTE": "due to this promote hack, Instance is now Work",
+          "aboutType": "UniformWork",
+          "link": "attributedTo",
+          "rangeEntity": "Person",
           "$t": {"domainEntity": "Instance", "property": "title"}
         }
       },
@@ -4689,19 +4689,18 @@
     },
     "110" : {
       "inherit": "bib",
-      "definesDomainEntity": "Organization"
+      "aboutType": "Organization", "link": null, "rangeEntity": null
     },
     "111" : {
       "inherit": "bib",
-      "definesDomainEntity": "Meeting"
+      "aboutType": "Meeting", "link": null, "rangeEntity": null
     },
     "130" : {
       "inherit": "bib",
-      "definesDomainEntity": "UniformWork"
+      "aboutType": "UniformWork", "link": null, "rangeEntity": null
     },
     "148" : {
-      "definesDomainEntity": "Concept",
-      "definesDomainEntity": "Event",
+      "aboutType": "Event", "link": null, "rangeEntity": null,
       "$a": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
@@ -4716,7 +4715,7 @@
       "computeLinks": null,
       "rangeEntity": null,
       "domainEntity": null,
-      "definesDomainEntity": "Concept",
+      "aboutType": "Concept",
       "$a": {"property": "prefLabel"},
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "dependsOn": ["040", "042"],
@@ -4733,7 +4732,7 @@
       }}
     },
     "151" : {
-      "definesDomainEntity": "Place",
+      "aboutType": "Place", "link": null, "rangeEntity": null,
       "$a": {"property": "prefLabel"},
       "uriTemplate": "/place/{prefLabel}"
     },
@@ -4812,10 +4811,10 @@
       }
     },
     "510" : {"inherit": "bib:110", "domainEntity": null, "addLink": "seeAlso"},
-    "511" : {"inherit": "bib:111", "definesDomainEntity": null, "addLink": "seeAlso"},
+    "511" : {"inherit": "bib:111", "aboutType": null, "addLink": "seeAlso"},
     "550" : {
       "inherit": "150",
-      "definesDomainEntity": null,
+      "aboutType": null,
       "rangeEntity": "Concept",
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
       "_specSource": {"550": {"subfields": [{"a": "Psykologi"}, {"w": "g"}]}},
@@ -4839,7 +4838,7 @@
     "580" : {
       "TODO": "incomplete",
       "inherit": "180",
-      "definesDomainEntity": null,
+      "aboutType": null,
       "rangeEntity": "Concept"
     },
     "667" : {

@@ -797,25 +797,19 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         dependsOn = fieldDfn.dependsOn
 
-        if (fieldDfn.definesDomainEntity) {
-            // implies no links, no range
-            definesDomainEntityType = fieldDfn.definesDomainEntity
+        if (fieldDfn.aboutType) {
+            definesDomainEntityType = fieldDfn.aboutType
             domainEntityName = 'Instance'
         } else {
-            if (fieldDfn.promoteToDomainEntity) {
-                definesDomainEntityType = fieldDfn.promoteToDomainEntity
-                domainEntityName = 'Instance'
-            } else {
-                domainEntityName = fieldDfn.domainEntity ?: 'Instance'
-            }
-            if (fieldDfn.addLink) {
-                link = fieldDfn.addLink
-                repeatLink = true
-            } else {
-                link = fieldDfn.link
-            }
-            rangeEntityName = fieldDfn.rangeEntity
+            domainEntityName = fieldDfn.domainEntity ?: 'Instance'
         }
+        if (fieldDfn.addLink) {
+            link = fieldDfn.addLink
+            repeatLink = true
+        } else {
+            link = fieldDfn.link
+        }
+        rangeEntityName = fieldDfn.rangeEntity
 
         if (fieldDfn.uriTemplate) {
             uriTemplate = UriTemplate.fromTemplate(fieldDfn.uriTemplate)
