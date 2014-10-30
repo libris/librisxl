@@ -207,6 +207,7 @@ abstract class BasicElasticComponent extends BasicComponent {
     }
 
     def loadJson(String file) {
+        log.trace("Loading file $file")
         def json
         try {
             json = getClass().classLoader.getResourceAsStream(file).withStream {
