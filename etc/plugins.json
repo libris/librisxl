@@ -528,7 +528,7 @@
     },
     "elastic_camel_processor": {
         "_class" : "whelk.camel.FormatConverterProcessor",
-        "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ]
+        "_plugins" : ["linkexpander", "cleanupindexconverter" ]
     },
     "turtleconverter_processor": {
         "_class" : "whelk.camel.FormatConverterProcessor",
@@ -544,13 +544,12 @@
     "routebuilder": {
         "_class" : "whelk.camel.WhelkRouteBuilder",
         "_plugins" : [
-            "elastic_camel_processor", "turtleconverter_processor", "shapecomputer", "prawnrunner_processor","graphstore_aggregator"
+            "elastic_camel_processor", "turtleconverter_processor", "prawnrunner_processor","graphstore_aggregator"
         ],
         "_params": {
             "elasticBatchSize": 2000,
             "graphstoreBatchSize": 1000,
             "batchTimeout": 5000,
-            "elasticTypes": "_property:ELASTIC_TYPES",
             "indexMessageQueue": "_property:MQ_INDEX",
             "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE"
         }
@@ -565,7 +564,7 @@
             },
             "elasticHost": "_property:ELASTIC_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "availableTypes": "_property:ELASTIC_TYPES"
+            "availableTypes": ["auth","bib","hold","def","sys"]
         },
         "_unique" : true
     },

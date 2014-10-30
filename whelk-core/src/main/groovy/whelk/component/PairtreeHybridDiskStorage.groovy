@@ -108,7 +108,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                     "id": translateIdentifier(doc.identifier)
                 ]
             )
-            whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, [:])
         }
         return result
     }
@@ -130,9 +129,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 "id": translateIdentifier(doc.identifier),
                 "data":((Document)doc).metadataAsJson
                 ]
-
-                //Send to camel route
-                whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, [:])
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
@@ -221,8 +217,8 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
 
-    Document get(URI uri, String version = null) {
-        loadDocument(uri, version)
+    Document get(String id, String version = null) {
+        loadDocument(id, version)
     }
 
     @groovy.transform.CompileStatic
@@ -272,7 +268,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                             Document nextDocument = loadDocument(nextIdentifier)
                             while (!nextDocument) {
                                 super.log.warn("Document ${nextIdentifier} not found in storage. Removing it from index $indexName.")
-                                deleteEntry(new URI(nextIdentifier), indexName, BasicElasticComponent.METAENTRY_INDEX_TYPE)
+                                deleteEntry(nextIdentifier, indexName, BasicElasticComponent.METAENTRY_INDEX_TYPE)
                                 try {
                                     nextIdentifier = elasticResultIterator.next()
                                     nextDocument = loadDocument(nextIdentifier)
@@ -291,20 +287,20 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    void remove(URI uri) {
+    void remove(String id) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
 
         if (versioning) {
-            storeAsFile(createTombstone(uri))
+            storeAsFile(createTombstone(id))
         } else {
-            def fn = buildPath(uri)
+            def fn = buildPath(id)
             log.debug("Deleting $fn")
             if (!new File(fn).deleteDir()) {
-                log.error("Failed to delete $uri")
-                throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
+                log.error("Failed to delete $id")
+                throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $id")
             }
         }
-        deleteEntry(uri, indexName, METAENTRY_INDEX_TYPE)
+        deleteEntry(id, indexName, METAENTRY_INDEX_TYPE)
         /*
         if (!producerTemplate) {
             producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
@@ -334,8 +330,8 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
 
-    private Document createTombstone(uri) {
-        def tombstone = new Document().withIdentifier(uri).withData("DELETED ENTRY")
+    private Document createTombstone(String id) {
+        def tombstone = new Document().withIdentifier(id).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
         return tombstone
     }

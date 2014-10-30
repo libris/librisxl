@@ -1,6 +1,5 @@
 package whelk.component;
 
-import java.net.URI;
 import java.util.*;
 import whelk.Query;
 import whelk.Document;

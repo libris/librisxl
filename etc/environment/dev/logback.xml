@@ -25,7 +25,7 @@
       <level value="info"/>
   </logger>
   <logger name="whelk.camel.FormatConverterProcessor">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="whelk.camel.ElasticTypeRouteProcessor">
       <level value="info"/>
@@ -76,7 +76,7 @@
       <level value="info"/>
   </logger>
 <logger name="whelk.api.DocumentAPI">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
 <logger name="whelk.api.ReindexOperator">
       <level value="info"/>
@@ -109,7 +109,7 @@
   <level value="info"/>
 </logger>
 <logger name="whelk.importer.MySQLImporter">
-  <level value="debug"/>
+  <level value="info"/>
 </logger>
 <logger name="whelk.importer.OaiPmhImporter">
   <level value="info"/>

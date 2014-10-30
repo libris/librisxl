@@ -26,7 +26,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     int graphstoreBatchSize = 1000
     long batchTimeout = 5000
     int parallelProcesses = 20
-    List<String> elasticTypes
     String indexMessageQueue
     String graphstoreMessageQueue
 
@@ -34,7 +33,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
         graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
         batchTimeout = settings.get("batchTimeout", batchTimeout)
-        elasticTypes = settings.get("elasticTypes")
         indexMessageQueue = settings.get("indexMessageQueue")
         graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
     }
@@ -63,7 +61,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         if (whelk.index) {
             from(indexMessageQueue)
                 .threads(1,parallelProcesses)
-                .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, elasticCluster, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
+                .process(new ElasticTypeRouteProcessor(whelk.index))
                 .choice()
                     .when(header("whelk:operation").isEqualTo(Whelk.REMOVE_OPERATION))
                         .to("direct:elasticdeletes")

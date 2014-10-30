@@ -125,10 +125,10 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     @Override
-    void remove(URI uri) {
+    void remove(String identifier) {
         String indexName = this.whelk.id
-        log.debug("Peforming deletebyquery to remove documents extracted from $uri")
-        def delQuery = termQuery("extractedFrom.@id", uri.toString())
+        log.debug("Peforming deletebyquery to remove documents extracted from $identifier")
+        def delQuery = termQuery("extractedFrom.@id", identifier)
         log.debug("DelQuery: $delQuery")
 
         def response = performExecute(client.prepareDeleteByQuery(indexName).setQuery(delQuery))
@@ -138,9 +138,9 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             log.debug("r: $r success: ${r.successfulShards} failed: ${r.failedShards}")
         }
 
-        log.debug("Deleting object with identifier ${shapeComputer.translateIdentifier(uri)}.")
+        log.debug("Deleting object with identifier ${shapeComputer.toElasticId(identifier)}.")
 
-        client.delete(new DeleteRequest(indexName, shapeComputer.calculateShape(uri), shapeComputer.translateIdentifier(uri)))
+        client.delete(new DeleteRequest(indexName, shapeComputer.calculateTypeFromIdentifier(identifier), shapeComputer.toElasticId(identifier)))
 
             // Kanske en matchall-query filtrerad på _type och _id?
     }
@@ -155,11 +155,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         }
     }
     */
-
-    @Override
-    Document get(URI uri) {
-        throw new UnsupportedOperationException("Not implemented yet.")
-    }
 
     /*
     @Override
@@ -328,12 +323,12 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
     Document createResultDocumentFromHit(hit, queriedIndex) {
         log.trace("creating document. ID: ${hit?.id}, index: $queriedIndex")
-        def metaEntryMap = getMetaEntry(hit.id, queriedIndex)
+        def metaEntryMap = null //getMetaEntry(hit.id, queriedIndex)
         if (metaEntryMap) {
             return new Document(metaEntryMap).withData(hit.source())
         } else {
             log.trace("Meta entry not found for document. Will assume application/json for content-type.")
-            return new Document().withData(hit.source()).withContentType("application/json").withIdentifier(shapeComputer.translateIndexIdTo(hit.id))
+            return new Document().withData(hit.source()).withContentType("application/json").withIdentifier(shapeComputer.fromElasticId(hit.id))
         }
     }
 
@@ -344,7 +339,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         id = shapeComputer.translateIndexIdTo(id)
         log.trace("Translated id: $id")
         try {
-            def grb = new GetRequestBuilder(client, emei).setType(METAENTRY_INDEX_TYPE).setId(shapeComputer.translateIdentifier(id))
+            def grb = new GetRequestBuilder(client, emei).setType(METAENTRY_INDEX_TYPE).setId(shapeComputer.toElasticId(id))
             def result = performExecute(grb)
             if (result.exists) {
                 return result.sourceAsMap

@@ -52,7 +52,7 @@ class DocumentAPI extends BasicAPI {
         else if (request.method == "DELETE") {
             try {
                 log.debug("Removing resource at $path")
-                whelk.remove(new URI(path))
+                whelk.remove(path)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
@@ -73,9 +73,9 @@ class DocumentAPI extends BasicAPI {
         try {
             def d = null
             if (version) {
-                d = whelk.get(new URI(path), version, accepting)
+                d = whelk.get(path, version, accepting)
             } else {
-                def location = whelk.locate(new URI(path))
+                def location = whelk.locate(path)
                 d = location?.document
                 if (!d && location?.uri) {
                     def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
@@ -89,7 +89,7 @@ class DocumentAPI extends BasicAPI {
             if (path ==~ /(.*\.\w+)/) {
                 log.debug("Found extension in $path")
                 if (!d && extensionContentType) {
-                    d = whelk.get(new URI(path.substring(0, path.lastIndexOf("."))))
+                    d = whelk.get(path.substring(0, path.lastIndexOf(".")))
                 }
                 accepting = [extensionContentType]
             }
@@ -145,7 +145,7 @@ class DocumentAPI extends BasicAPI {
             def entry = [:]
 
             if (identifierSupplied) {
-                Document existingDoc = whelk.get(new URI(path))
+                Document existingDoc = whelk.get(path)
                 if (existingDoc) {
                     // Check If-Match
                     String ifMatch = request.getHeader("If-Match")
@@ -166,7 +166,10 @@ class DocumentAPI extends BasicAPI {
             try {
                 Document doc = new Document(["entry":entry,"meta":request.getParameterMap()]).withData(request.getInputStream().getBytes())
 
-                def identifier = convertAndSaveDocument(doc)
+                doc = this.whelk.sanityCheck(doc)
+                log.debug("Saving document (${doc.identifier})")
+                def identifier = this.whelk.add(doc)
+
                 def locationRef = request.getRequestURL()
 
                 if (!identifierSupplied) {
@@ -198,11 +201,11 @@ class DocumentAPI extends BasicAPI {
         }
     }
 
+    /*
     URI convertAndSaveDocument(Document doc) {
         doc = this.whelk.sanityCheck(doc)
         log.debug("Saving document first pass. (${doc.identifier})")
         def identifier = this.whelk.add(doc)
-        /*
         for (fc in plugins.findAll { it instanceof FormatConverter && it.requiredContentType == doc.contentType }) {
             try {
                 log.debug("Running formatconverter ${fc.id} on ${doc.identifier}")
@@ -213,9 +216,9 @@ class DocumentAPI extends BasicAPI {
                 log.warn("Converted to ${doc.contentType} but there are no storages for that.")
             }
         }
-        */
         return identifier
     }
+        */
 
 
     void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {

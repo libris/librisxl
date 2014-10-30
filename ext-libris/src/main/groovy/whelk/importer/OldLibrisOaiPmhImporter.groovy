@@ -68,6 +68,9 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         this.silent = silent
         this.recordCount = 0
         this.nrDeleted = 0
+        if (!serviceUrl) {
+            serviceUrl = SERVICE_BASE_URL
+        }
         String baseUrl = serviceUrl.replace("{dataset}", dataset)
 
         String urlString = baseUrl + "?verb=ListRecords&metadataPrefix=marcxml"
@@ -229,7 +232,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             } else if (it.header.@deleted == 'true') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                     try {
-                        whelk.remove(new URI(deleteIdentifier))
+                        whelk.remove(deleteIdentifier)
                     } catch (Exception e2) {
                         log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
                     }

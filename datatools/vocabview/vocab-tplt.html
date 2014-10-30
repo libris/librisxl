@@ -59,9 +59,11 @@
           <dd>
             <ul class="baseclasses">
               % for c in sorted(rclass.objects(union(RDFS.subClassOf, OWL.equivalentClass)))
-              <li>
-                <a href="${link(c)}">${c.qname()}</a>
-              </li>
+                % if isinstance(c.identifier, URIRef)
+                  <li class="${listclass(c)}">
+                    <a href="${link(c)}">${c.qname()}</a>
+                  </li>
+                % endif
               % endfor
             </ul>
           </dd>
@@ -69,7 +71,7 @@
           <dd>
           <ul class="subclasses">
               % for c in sorted(rclass.subjects(union(RDFS.subClassOf, OWL.equivalentClass)))
-              <li><a href="${link(c)}">${c.qname()}</a></li>
+              <li class="${listclass(c)}"><a href="${link(c)}">${c.qname()}</a></li>
               % endfor
             </ul>
           </dd>
@@ -77,7 +79,7 @@
           <dd>
             <ul class="properties">
               % for prop in sorted(rclass.subjects(DOMAIN))
-              <li>
+              <li class="${listclass(prop)}">
                 <a href="${link(prop)}"><code>${prop.qname()}</code></a>
                 % if prop.value(SKOS.notation)
                 <span>(${prop.value(SKOS.notation)})</span>
@@ -101,7 +103,7 @@
           <dd>
             <ul class="properties range-of">
               % for prop in sorted(rclass.subjects(RANGE))
-              <li>
+              <li class="${listclass(prop)}">
                 &larr; <a href="${link(prop)}"><code>${prop.qname()}</code></a>
                 % set domain = prop.value(DOMAIN)
                 % if domain
@@ -141,7 +143,7 @@
           <dd>
             <ul class="baseproperties">
               % for p in sorted(rprop.objects(union(RDFS.subPropertyOf, OWL.equivalentProperty)))
-              <li>
+              <li class="${listclass(p)}">
                 <a href="${link(p)}">${p.qname()}</a>
               </li>
               % endfor
@@ -151,7 +153,7 @@
           <dd>
           <ul class="subproperties">
               % for p in sorted(rprop.subjects(union(RDFS.subPropertyOf, OWL.equivalentProperty)))
-              <li>
+              <li class="${listclass(p)}">
                 <a href="${link(p)}">${p.qname()}</a>
               </li>
               % endfor
@@ -161,7 +163,7 @@
           <dd>
             <ul>
               % for c in sorted(rprop.objects(DOMAIN))
-              <li>
+              <li class="${listclass(c)}">
                 <a href="${link(c)}"><code>${c.qname()}</code></a>
                 <i>${(label(c))}</i>
               </li>
@@ -172,7 +174,7 @@
           <dd>
             <ul>
               % for c in sorted(rprop.objects(RANGE))
-              <li>
+              <li class="${listclass(c)}">
                 <a href="${link(c)}"><code>${c.qname()}</code></a>
                 <i>${(label(c))}</i>
               </li>

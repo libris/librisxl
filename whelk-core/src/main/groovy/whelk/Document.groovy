@@ -4,7 +4,6 @@ import groovy.transform.TypeChecked
 import groovy.util.logging.Slf4j as Log
 
 import java.io.*
-import java.net.URI
 import java.util.*
 import java.nio.ByteBuffer
 import java.lang.annotation.*
@@ -21,7 +20,6 @@ import whelk.exception.*
 
 @Log
 class Document {
-    String identifier
     byte[] data
     Map entry = [:] // For "technical" metadata about the record, such as contentType, timestamp, etc.
     Map meta  = [:] // For extra metadata about the object, e.g. links and such.
@@ -77,6 +75,11 @@ class Document {
     }
 
     @JsonIgnore
+    String getIdentifier() {
+        entry['identifier']
+    }
+
+    @JsonIgnore
     String getDataAsString() {
         return new String(getData(), "UTF-8")
     }
@@ -93,6 +96,7 @@ class Document {
         return serializedDataInMap
     }
 
+    @JsonIgnore
     String getChecksum() { checksum }
 
     String toJson() {
@@ -115,16 +119,20 @@ class Document {
         return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "entry":entry])
     }
 
+    @JsonIgnore
     String getContentType() { entry["contentType"] }
 
+    @JsonIgnore
     long getTimestamp() {
         return (entry.get(TIMESTAMP_KEY, 0L))
     }
 
+    @JsonIgnore
     long getModified() {
         return entry.get(MODIFIED_KEY, 0L)
     }
 
+    @JsonIgnore
     int getVersion() {
         return entry.get("version", 0)
     }
@@ -137,6 +145,10 @@ class Document {
     long updateModified() {
         setModified(new Date().getTime())
         return modified
+    }
+
+    void setIdentifier(String identifier) {
+        entry['identifier'] = identifier
     }
 
     void setTimestamp(long ts) {
@@ -165,15 +177,9 @@ class Document {
      * Convenience methods
      */
     Document withIdentifier(String i) {
-        this.identifier = i
         this.entry['identifier'] = i
         return this
     }
-    /*
-    Document withIdentifier(URI uri) {
-        return withIdentifier(uri.toString())
-    }
-    */
 
     Document withContentType(String ctype) {
         setContentType(ctype)
@@ -291,14 +297,6 @@ class Document {
     static Document fromJson(String json) {
         try {
             Document newDoc = mapper.readValue(json, Document)
-            /*
-            if (newDoc.data) {
-                setData(newDoc.data)
-            }
-            this.identifier = newDoc.identifier
-            this.entry = newDoc.entry
-            this.meta = newDoc.meta
-            */
             return newDoc
         } catch (JsonParseException jpe) {
             throw new DocumentException(jpe)

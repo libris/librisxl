@@ -32,6 +32,9 @@ def link(obj):
         return obj.identifier
     return '#' + obj.qname()
 
+def listclass(o):
+    return 'ext' if ':' in o.qname() else ''
+
 union = lambda *args: reduce(lambda a, b: a | b, args)
 
 html = tplt.render(dict(vars(__builtins__), **vars())).encode('utf-8')

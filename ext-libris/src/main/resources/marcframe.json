@@ -1579,57 +1579,59 @@
 
   },
 
+  "thingLink": "about",
+
   "bib": {
 
     "000": {
       "[5:6]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "status",
         "uriTemplate": "{_}",
         "tokenMap": "status"
       },
       "[6:7]": {
-        "domainEntity": "Instance",
+        "aboutEntity": "?instance",
         "tokenMap": "typeOfRecord",
         "addProperty": "@type"
       },
       "[7:8]": {
-        "domainEntity": "Instance",
+        "aboutEntity": "?instance",
         "tokenMap": "bibLevel",
         "addProperty": "@type"
       },
       "[8:9]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "typeOfControl",
         "uriTemplate": "{_}",
         "tokenMap": "typeOfControl"
       },
       "[9:10]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "characterCoding",
         "uriTemplate": "{_}",
         "tokenMap": "characterCoding"
       },
       "[17:18]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "encLevel",
         "uriTemplate": "{_}",
         "tokenMap": "encLevel"
       },
       "[18:19]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "catForm",
         "uriTemplate": "{_}",
         "tokenMap": "catForm"
       },
       "[19:20]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "linked",
         "uriTemplate": "{_}",
         "tokenMap": "linked"
       },
       "[20:24]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "property": "entryMap",
         "TODO:patternMap": "entryMap"
       },
@@ -1649,14 +1651,15 @@
     },
 
     "001": {
-      "domainEntity": "Record", "property": "controlNumber",
+      "aboutType": "Record",
+      "aboutEntity": "?record", "property": "controlNumber",
       "_specSource": {"fields": [{"001": "7149593"}]},
       "_specResult": {"controlNumber": "7149593"}
     },
 
-    "003": {"domainEntity": "Record", "property": "systemName"},
+    "003": {"aboutEntity": "?record", "property": "systemName"},
     "005": {
-      "domainEntity": "Record", "property": "modified",
+      "aboutEntity": "Record", "property": "modified",
       "parseDateTime": "yyyyMMddHHmmss.S", "timeZone": "CET",
       "_specSource": {"005": "20130814170612.0"},
       "_specResult": {"modified": "2013-08-14T17:06:12.0+02:00"}
@@ -2700,7 +2703,7 @@
     "008": {
       "TODO:repeatedBy": "006",
       "[0:6]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "property": "date"
       },
       "[6:7]": {
@@ -2721,13 +2724,13 @@
           "link": "place",
           "linkedEntity": {
             "link": "containedIn",
-            "rangeEntity": "Country",
+            "resourceType": "Country",
             "uriTemplate": "/def/countries/{_}"
           }
         }
       },
       "[35:38]": {
-        "note:candidate:domainEntity": "Work",
+        "note:candidate:aboutEntity": "Work",
         "addLink": "language",
         "uriTemplate": "/def/languages/{_}",
         "matchUriToken": "^\\w{2,3}$",
@@ -2736,13 +2739,13 @@
         }
       },
       "[38:39]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "modifiedRecord",
         "uriTemplate": "{_}",
         "tokenMap": "modifiedRecord"
       },
       "[39:40]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "catalogingSource",
         "uriTemplate": "{_}",
         "tokenMap": "catalogingSource"
@@ -3165,7 +3168,7 @@
       }}
     },
 
-    "010": {"domainEntity": "Instance", "$a": {"property": "lccn"}},
+    "010": {"aboutEntity": "?instance", "$a": {"property": "lccn"}},
 
     "013": {},
     "015": {
@@ -3180,12 +3183,12 @@
     "018": {},
 
     "020": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "addLink": "identifier",
       "match-domain": {
         "EBook": {"addLink": "commonEndeavor"}
       },
-      "rangeEntity": "Identifier",
+      "resourceType": "Identifier",
       "$a": {
         "property": "identifierValue",
         "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
@@ -3195,7 +3198,7 @@
           "identifierStatus": null
         }
       },
-      "$c": {"domainEntity": "Instance", "property": "availability"},
+      "$c": {"aboutEntity": "?instance", "property": "availability"},
       "$q": {"property": "identifierNote"},
       "$z": {
         "property": "identifierValue",
@@ -3269,9 +3272,9 @@
     },
 
     "022": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "addLink": "identifier",
-      "rangeEntity": "Identifier",
+      "resourceType": "Identifier",
       "$a": {
         "property": "identifierValue",
         "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
@@ -3290,9 +3293,9 @@
     },
 
     "024": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "addLink": "identifier",
-      "rangeEntity": "Identifier",
+      "resourceType": "Identifier",
       "i1": {
         "link": "identifierScheme",
         "tokenMap": {
@@ -3358,7 +3361,7 @@
     "027": {},
 
     "028": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "match-i1": {
         "0": {"$a": {"property": "audioIssueNumber"}},
         "1": {"$a": {"property": "audioMatrixNumber"}},
@@ -3369,7 +3372,7 @@
       },
       "$a": {"property": "publisherNumber"},
       "$b": {
-        "link": "identifierAssigner", "rangeEntity": "Organization", "property": "name"
+        "link": "identifierAssigner", "resourceType": "Organization", "property": "name"
       },
       "TODO": "repeatable, use addProperty or wrap in Identifier object?",
       "_specName": "use indicator as property switch",
@@ -3382,7 +3385,7 @@
     "034": {
       "NOTE:domain": "Cartography",
       "addLink": "cartographicAscensionAndDeclination",
-      "rangeEntity": "CartographyCoordinates",
+      "resourceType": "CartographyCoordinates",
       "TODO": "draft",
       "TODO:i1": {},
       "TODO:i2": {"0": "OuterRing", "1": "ExcludingRing"},
@@ -3406,7 +3409,7 @@
       "$t": {"addProperty": "gRingLongitude"},
       "$x": {"property": "startDate"},
       "$y": {"property": "endDate"},
-      "$z": {"link": "extraterrestrialBody", "rangeEntity": "PlanetaryObject", "property": "name"},
+      "$z": {"link": "extraterrestrialBody", "resourceType": "PlanetaryObject", "property": "name"},
       "_specName": "TODO",
       "_specResult": {"about": {
       }}
@@ -3418,11 +3421,11 @@
     "033": {},
 
     "035": {
-      "domainEntity": "Record",
+      "aboutEntity": "?record",
       "match-pattern": {
         "$a": {
           "^http://dbpedia\\.org/": {
-            "domainEntity": "Instance",
+            "aboutEntity": "?instance",
             "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
           }
         }
@@ -3448,14 +3451,14 @@
     "038": {},
 
     "040": {
-      "domainEntity": "Record",
-      "$a": {"link": "originalCatalogingAgency", "rangeEntity": "Organization", "property": "name"},
+      "aboutEntity": "?record",
+      "$a": {"link": "originalCatalogingAgency", "resourceType": "Organization", "property": "name"},
       "$b": {
         "addLink": "language",
         "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
-      "$c": {"link": "transcribingAgency", "rangeEntity": "Organization", "property": "name"},
-      "$d": {"link": "modifyingAgency", "rangeEntity": "Organization", "property": "name"},
+      "$c": {"link": "transcribingAgency", "resourceType": "Organization", "property": "name"},
+      "$d": {"link": "modifyingAgency", "resourceType": "Organization", "property": "name"},
       "$e": {"property": "descriptionRules"},
       "9": {"property": "license"}
     },
@@ -3482,7 +3485,7 @@
       }
     },
     "042": {
-      "domainEntity": "Record",
+      "aboutEntity": "?record",
       "$a": {"property": "authenticationCode"},
       "$9": {"addProperty": "bibliographyCode"}
     },
@@ -3496,7 +3499,7 @@
     "049": {},
 
     "050": {
-      "note:candidate:domainEntity": "Work",
+      "note:candidate:aboutEntity": "Work",
       "$a": {"property": "classificationLcc"},
       "$b": {"ignored": true}
     },
@@ -3523,20 +3526,20 @@
     "074": {},
 
     "080": {
-      "note:candidate:domainEntity": "Work",
+      "note:candidate:aboutEntity": "Work",
       "$a": {"property": "classificationUdc"}
     },
 
     "082": {
-      "note:candidate:domainEntity": "Work",
+      "note:candidate:aboutEntity": "Work",
       "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
       "addLink": "classification",
-      "rangeEntity": "Concept",
+      "resourceType": "Concept",
       "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
       "$a": {"property": "notation", "required": true},
       "$2": {
         "note": "ignorable (just use defaults)?",
-        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "link": "inScheme", "resourceType": "ConceptScheme",
         "required": true,
         "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
         "defaults": {
@@ -3557,14 +3560,14 @@
     },
 
     "084": {
-      "note:candidate:domainEntity": "Work",
+      "note:candidate:aboutEntity": "Work",
       "addLink": "classification",
-      "rangeEntity": "Concept",
+      "resourceType": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "uriTemplateDefaults": {"inScheme.notation": "kssb"},
       "$a": {"property": "notation", "required": true},
       "$2": {"link": "inScheme",
-             "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+             "resourceType": "ConceptScheme", "uriTemplate": "/topic/{+_}",
              "property": "notation"},
       "$b": {"property": "classificationItem", "ignored": true},
       "_specName": "TODO",
@@ -3579,8 +3582,8 @@
     "099": {},
 
     "100": {
-      "note:candidate:domainEntity": "Work",
-      "rangeEntity": "Person",
+      "note:candidate:aboutEntity": "Work",
+      "resourceType": "Person",
       "match-i1": {
         "0": {
           "$a": {"property": "name", "required": true}
@@ -3593,7 +3596,7 @@
           }
         },
         "3": {
-          "rangeEntity": "Family",
+          "resourceType": "Family",
           "$a": {"property": "name", "required": true}
         }
       },
@@ -3625,29 +3628,30 @@
       }}
     },
     "110": {
-      "note:candidate:domainEntity": "Work",
-      "rangeEntity": "Organization",
+      "note:candidate:aboutEntity": "Work",
+      "resourceType": "Organization",
       "link": "attributedTo",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "name"}
     },
     "111": {
       "inherit": "110",
-      "rangeEntity": "Meeting",
-      "$c": {"link": "location", "rangeEntity": "Place", "property": "label"},
+      "resourceType": "Meeting",
+      "$c": {"link": "location", "resourceType": "Place", "property": "label"},
       "$d": {"property": "date"}
     },
     "130": {
-      "note:candidate:domainEntity": "Work",
+      "note:candidate:aboutEntity": "Work",
+      "TODO": "very similar to 240?",
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"},
-      "$l": {"link": "language", "rangeEntity": "Language", "property": "label"}
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"}
     },
 
     "210": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "addLink": "abbreviatedTitle",
-      "rangeEntity": "Title",
+      "resourceType": "Title",
       "$a": {"property": "titleValue"},
       "$b": {"property": "titleQualifier"},
       "$2": {"property": "titleSource"}
@@ -3661,16 +3665,16 @@
       "i1": {},
       "i2": {},
       "link": "exampleOfWork",
-      "rangeEntity": "ConceptualWork",
+      "resourceType": "UniformWork",
       "$0": {
-        "addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber",
+        "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
         "uriTemplate": "/resource/bib/{_}"
       },
       "$a": {"property": "title"},
       "$k": {"addProperty": "subtitle"},
       "$p": {"addProperty": "partTitle"},
       "$n": {"addProperty": "partNumber"},
-      "$l": {"link": "language", "rangeEntity": "Language", "property": "label"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$f": {"property": "date"},
       "$d": {"addProperty": "treatySigningDate"},
       "$s": {"property": "version"},
@@ -3691,14 +3695,14 @@
     "245": {
       "i1": {"property": "searchElement", "tokenMap": {"0": false}, "marcDefault": "1"},
       "i2": {"marcDefault": "0"},
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "link": "instanceTitle",
-      "rangeEntity": "Title",
+      "resourceType": "Title",
       "$a": {"property": "titleValue", "interpunctionChars": ":/"},
       "$b": {"property": "subtitle", "interpunctionChars": "/"},
-      "$c": {"domainEntity": "Instance", "property": "responsibilityStatement"},
+      "$c": {"aboutEntity": "?instance", "property": "responsibilityStatement"},
       "$f": {"property": "titleDate"},
-      "$h": {"domainEntity": "Instance", "property": "mediaTerm", "surroundingChars": "[]"},
+      "$h": {"aboutEntity": "?instance", "property": "mediaTerm", "surroundingChars": "[]"},
       "$n": {"property": "partNumber"},
       "$p": {"property": "partTitle"},
       "_spec": [
@@ -3743,9 +3747,9 @@
     "249": {},
 
     "250": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "link": "editionStatement",
-      "rangeEntity": "EditionEntity",
+      "resourceType": "EditionEntity",
       "$a": {"property": "edition"},
       "$b": {"property": "editionResponsibility"}
     },
@@ -3754,7 +3758,7 @@
 
     "255": {
       "TODO:match-repetition?": {
-        "addLink": "hasFormat", "rangeEntity": "Product"
+        "addLink": "hasFormat", "resourceType": "Product"
       },
       "NOTE:domain": "Cartography",
       "$a": {"property": "cartographicScale"},
@@ -3768,7 +3772,7 @@
     },
 
     "256": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "$a": {"property": "fileType"}
     },
 
@@ -3776,19 +3780,19 @@
     "258": {},
 
     "260": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "addLink": "provider",
       "splitLink": [
         {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
         {"codes": ["e", "f", "g"], "addLink": "manufacture"}
       ],
       "TODO": ["splitByRepetitionAndInterpunctionPattern"],
-      "rangeEntity": "ProviderEvent",
+      "resourceType": "ProviderEvent",
       "i1": {"TODO:property": "latest", "TODO:tokenMap": {"2": false, "3": true}},
-      "$a": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ",:"},
+      "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
       "$b": {"property": "providerName", "interpunctionChars": ",:;"},
       "$c": {"property": "providerDate", "interpunctionChars": ",;"},
-      "$e": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
+      "$e": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
       "$f": {"property": "providerName", "interpunctionChars": ",:;"},
       "$g": {"property": "providerDate", "interpunctionChars": ",;"},
       "$3": {"property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"},
@@ -3873,8 +3877,8 @@
         "3": {"addLink": "manufacture"},
         "4": {"addLink": "copyright"}
       },
-      "rangeEntity": "ProviderEvent",
-      "$a": {"link": "place", "rangeEntity": "Place", "property": "label", "interpunctionChars": ",:"},
+      "resourceType": "ProviderEvent",
+      "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
       "$b": {"property": "providerName", "interpunctionChars": ",:;"},
       "$c": {"property": "providerDate", "interpunctionChars": ",;"},
       "_spec": [
@@ -3910,14 +3914,14 @@
       "TODO:match-repetition?": {
         "addLink": "hasFormat"
       },
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "addLink": "hasFormat",
-      "rangeEntity": "Product",
+      "resourceType": "Product",
       "$a": {"property": "extent", "interpunctionChars": "+:;"},
       "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
       "$b": {"property": "otherPhysicalDetails", "interpunctionChars": ";+"},
       "$e": {"property": "accompanyingMaterial"},
-      "$f": {"link": "device", "rangeEntity": "Device", "property": "label"},
+      "$f": {"link": "device", "resourceType": "Device", "property": "label"},
       "$3": {
         "TODO:previousEndsWith": "+",
         "property": "materialsSpecified"
@@ -3928,13 +3932,13 @@
     "307": {},
 
     "310": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "$a": {"property": "frequency"}
     },
 
     "321": {
       "addLink": "replaces",
-      "rangeEntity": "Serial",
+      "resourceType": "Serial",
       "$a": {"property": "frequency"},
       "$b": {"property": "date"}
     },
@@ -3955,7 +3959,7 @@
     "355": {},
     "357": {},
     "362": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "$a": {"addProperty": "issueNumber"}
     },
     "363": {},
@@ -3975,10 +3979,10 @@
     "411": {},
 
     "440": {
-      "note:candidate:domainEntity": "Work",
+      "note:candidate:aboutEntity": "Work",
       "TODO:prefer": "490 or 773? See also mapping for 240",
       "addLink": "series",
-      "rangeEntity": "Serial",
+      "resourceType": "Serial",
       "$a": {"property": "title", "interpunctionChars": ".,=;"},
       "$0": {"TODO:property": "authorityRecordControlNumber"},
       "$n": {"addProperty": "numberOfPartOfAWork"},
@@ -3990,32 +3994,32 @@
     "490": {
       "inherit": "440",
       "TODO:preferLinkedVersion": "773?",
-      "$l": {"link": "callno", "rangeEntity": "Concept", "property": "notation"}
+      "$l": {"link": "callno", "resourceType": "Concept", "property": "notation"}
     },
 
-    "500": {"$a": {"domainEntity": "Instance", "addProperty": "comment"}},
+    "500": {"$a": {"aboutEntity": "?instance", "addProperty": "comment"}},
     "501": {},
     "502": {
-      "addLink": "hasAnnotation", "rangeEntity": "DissertationAnnotation",
+      "addLink": "hasAnnotation", "resourceType": "DissertationAnnotation",
       "$a": {"property": "note"},
       "$b": {"property": "degree"},
       "$c": {"property": "location"},
       "$d": {"property": "date"},
       "$g": {"property": "comment"}
     },
-    "504": {"$a": {"domainEntity": "Instance", "addProperty": "supplementaryContentNote"}},
+    "504": {"$a": {"aboutEntity": "?instance", "addProperty": "supplementaryContentNote"}},
 
     "505": {
-      "$a": {"domainEntity": "Instance", "addProperty": "listOfContents", "TODO": "$t, $r"}
+      "$a": {"aboutEntity": "?instance", "addProperty": "listOfContents", "TODO": "$t, $r"}
     },
 
     "506": {},
     "507": {},
-    "508": {"$a": {"domainEntity": "Instance", "addProperty": "creditsNote"}},
+    "508": {"$a": {"aboutEntity": "?instance", "addProperty": "creditsNote"}},
 
     "510": {
       "addProperty": "citedBy",
-      "rangeEntity": "CreativeWork",
+      "resourceType": "CreativeWork",
       "$a": {"property": "title"},
       "$c": {"property": "pagination"}
     },
@@ -4023,7 +4027,7 @@
     "511": {
       "match-i1": {"1": {"$a": {"addProperty": "participantNote"}}},
       "$a": {
-        "domainEntity": "Instance",
+        "aboutEntity": "?instance",
         "addProperty": "performerNote"
       }
     },
@@ -4035,13 +4039,13 @@
     "518": {},
 
     "520": {
-      "domainEntity": "Instance",
+      "aboutEntity": "?instance",
       "$a": {"addProperty": "summary"},
       "match-code": {
         "u": {
           "TODO": "unify with summary or the generic annotation model?",
           "addLink": "describedBy",
-          "rangeEntity": "WebPage",
+          "resourceType": "WebPage",
           "$a": {"property": "label"},
           "$u": {"property": "@id"}
         }
@@ -4050,7 +4054,7 @@
 
     "521": {
       "addLink": "audience",
-      "rangeEntity": "Audience",
+      "resourceType": "Audience",
       "$a": {"property": "label"}
     },
     "522": {},
@@ -4061,12 +4065,12 @@
     "530": {"addLink": "hasFormat", "$a": {"addProperty": "comment"}},
 
     "533": {
-      "addLink": "reproduction", "rangeEntity": "CreativeWork",
+      "addLink": "reproduction", "resourceType": "CreativeWork",
       "pendingResources": {
-        "_:event": {"addLink": "provider", "rangeEntity": "ProviderEvent"}
+        "_:event": {"addLink": "provider", "resourceType": "ProviderEvent"}
       },
       "$a": {"property": "description", "interpunctionChars": ":"},
-      "$b": {"about": "_:event", "addLink": "providerPlace", "rangeEntity": "Place", "property": "label", "interpunctionChars": ":"},
+      "$b": {"about": "_:event", "addLink": "providerPlace", "resourceType": "Place", "property": "label", "interpunctionChars": ":"},
       "$c": {"about": "_:event", "addProperty": "providerName", "interpunctionChars": ","},
       "$d": {"about": "_:event", "property": "providerDate"},
       "$e": {"property": "physicalDescription"},
@@ -4101,13 +4105,13 @@
     "534": {},
     "535": {},
     "536": {},
-    "538": {"$a": {"domainEntity": "Instance", "addProperty": "systemRequirements"}},
+    "538": {"$a": {"aboutEntity": "?instance", "addProperty": "systemRequirements"}},
     "540": {},
     "541": {},
     "542": {},
     "544": {},
     "545": {},
-    "546": {"domainEntity": "Instance", "$a": {"addProperty": "languageNote"}},
+    "546": {"aboutEntity": "?instance", "$a": {"addProperty": "languageNote"}},
     "547": {},
 
     "550": {},
@@ -4116,7 +4120,7 @@
     "556": {},
     "561": {},
     "562": {
-      "addLink": "workExample", "rangeEntity": "Product",
+      "addLink": "workExample", "resourceType": "Product",
       "$a": {"addProperty": "itemCondition"},
       "$b": {"addProperty": "copyIdentification"},
       "$c": {"addProperty": "versionIdentification"},
@@ -4133,22 +4137,22 @@
     "584": {},
     "585": {},
     "586": {},
-    "588": {"$a": {"domainEntity": "Record", "addProperty": "sourceNote"}},
+    "588": {"$a": {"aboutEntity": "?record", "addProperty": "sourceNote"}},
     "590": {},
-    "599": {"$a": {"domainEntity": "Record", "addProperty": "technicalNote"}},
+    "599": {"$a": {"aboutEntity": "?record", "addProperty": "technicalNote"}},
 
     "600": {
       "inherit": "100",
       "match-code": {
         "t": {
-          "$t": {"property": "uniformTitle"},
+          "$t": {"property": "title"},
           "splitLink": [
-            {"codes": ["t"], "addLink": "subject", "spliceEntity": "ConceptualWork"}
+            {"codes": ["t"], "addLink": "subject", "spliceEntity": "UniformWork"}
           ],
           "link": "attributedTo"
         }
       },
-      "addLink": "subject", "rangeEntity": "Person"
+      "addLink": "subject", "resourceType": "Person"
     },
     "610": {
       "inherit": "110",
@@ -4157,18 +4161,18 @@
       "match-code": {
         "x": {
           "$x": {"property": "name"},
-          "$a": {"link": "isPartOf", "rangeEntity": "Organization", "property": "name"}
+          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"}
         }
       },
       "addLink": "subject",
-      "rangeEntity": "Organization",
+      "resourceType": "Organization",
       "pendingResources": {
-        "_:concept": {"link": "focusOf", "rangeEntity": "Concept"}
+        "_:concept": {"link": "focusOf", "resourceType": "Concept"}
       },
       "i2": {
         "about": "_:concept",
         "link": "inScheme",
-        "rangeEntity": "ConceptScheme",
+        "resourceType": "ConceptScheme",
         "uriTemplate": "/topic/{+_}",
         "property": "notation",
         "tokenMap": "thesaurus"
@@ -4177,7 +4181,7 @@
         "requires-i2": "7",
         "about": "_:concept",
         "link": "inScheme",
-        "rangeEntity": "ConceptScheme",
+        "resourceType": "ConceptScheme",
         "property": "notation"
       },
       "_specSource": {
@@ -4201,48 +4205,48 @@
         ]
       }}
     },
-    "611": {"inherit": "111", "addLink": "subject", "rangeEntity": "Meeting"},
-    "630": {"inherit": "130", "addLink": "subject", "rangeEntity": "ConceptualWork"},
+    "611": {"inherit": "111", "addLink": "subject", "resourceType": "Meeting"},
+    "630": {"inherit": "130", "addLink": "subject", "resourceType": "UniformWork"},
     "648": {
       "inherit": "650",
-      "rangeEntity": "Event",
+      "resourceType": "Event",
       "$a": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
       }
     },
     "650": {
-      "note:candidate:domainEntity": "Work",
+      "note:candidate:aboutEntity": "Work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "rangeEntity": "Concept",
+      "resourceType": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
       "uriTemplateDefaults": {"inScheme.notation": "_"},
       "match-code": {
         "v x y z": {
           "uriTemplate": null,
           "$a": {"addLink": "broader",
-                 "rangeEntity": "Concept",
+                 "resourceType": "Concept",
                  "property": "prefLabel", "itemPos": "first", "required": true},
           "$v": {"addLink": "broader",
                "TODO": "use /topic/saogf/{_}, but only if $2=sao",
-                 "rangeEntity": "Concept",
+                 "resourceType": "Concept",
                  "property": "prefLabel", "itemPos": "rest"},
           "$x": {"addLink": "broader",
-                 "rangeEntity": "Concept",
+                 "resourceType": "Concept",
                  "property": "prefLabel", "itemPos": "rest"},
           "$y": {"addLink": "broader",
-                 "rangeEntity": "Event",
+                 "resourceType": "Event",
                  "property": "prefLabel", "itemPos": "rest"},
           "$z": {"addLink": "broader",
                  "TODO": "use /place/{_}, but only if $2=sao",
-                 "rangeEntity": "Place",
+                 "resourceType": "Place",
                  "property": "prefLabel", "itemPos": "rest"}
         }
       },
       "i2": {
         "link": "inScheme",
-        "rangeEntity": "ConceptScheme",
+        "resourceType": "ConceptScheme",
         "uriTemplate": "/topic/{+_}",
         "property": "notation",
         "tokenMap": "thesaurus"
@@ -4250,7 +4254,7 @@
       "$2": {
         "requires-i2": "7",
         "link": "inScheme",
-        "rangeEntity": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+        "resourceType": "ConceptScheme", "uriTemplate": "/topic/{+_}",
         "property": "notation"
       },
       "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
@@ -4289,11 +4293,11 @@
     },
     "651": {
       "inherit": "650",
-      "rangeEntity": "Place",
+      "resourceType": "Place",
       "$a": {"property": "prefLabel"},
       "uriTemplate": "/place/{prefLabel}"
     },
-    "653": {"$a": {"domainEntity": "Instance", "property": "keyword"}},
+    "653": {"$a": {"aboutEntity": "?instance", "property": "keyword"}},
 
     "654": {},
 
@@ -4305,8 +4309,8 @@
 
     "658": {},
 
-    "656" : {"rangeEntity": "Profession", "ignored": true},
-    "657" : {"rangeEntity": "FunctionOrRole", "ignored": true},
+    "656" : {"resourceType": "Profession", "ignored": true},
+    "657" : {"resourceType": "FunctionOrRole", "ignored": true},
 
     "662": {},
     "690": {},
@@ -4315,15 +4319,15 @@
       "inherit": "100",
       "match-code": {
         "t": {
-          "$t": {"property": "uniformTitle"},
-          "$l": {"link": "language", "rangeEntity": "Language", "property": "label"},
+          "$t": {"property": "title"},
+          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
           "splitLink": [
-            {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "ConceptualWork"}
+            {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "UniformWork"}
           ],
           "link": "attributedTo"
         }
       },
-      "addLink": "influencedBy", "rangeEntity": "Person",
+      "addLink": "influencedBy", "resourceType": "Person",
       "_specSource": {"700":
         {"ind1": "1", "ind2": " ", "subfields": [
           {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}
@@ -4349,8 +4353,8 @@
         "2": {"addLink": "influentialPart"}
       },
       "addLink": "influentialRelation",
-      "rangeEntity": "CreativeWork",
-      "$a": {"property": "uniformTitle"}
+      "resourceType": "UniformWork",
+      "$a": {"property": "title"}
     },
 
 
@@ -4365,14 +4369,14 @@
     "754": {},
     "755": {},
 
-    "760": {"inherit": "772", "addLink": "subseriesOf", "rangeEntity": "Serial"},
-    "762": {"inherit": "772", "addLink": "subseries", "rangeEntity": "Serial"},
+    "760": {"inherit": "772", "addLink": "subseriesOf", "resourceType": "Serial"},
+    "762": {"inherit": "772", "addLink": "subseries", "resourceType": "Serial"},
     "765": {"inherit": "772", "addLink": "translationOf"},
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "contains"},
     "772": {
       "addLink": "isPartOf",
-      "rangeEntity": "CreativeWork",
+      "resourceType": "CreativeWork",
       "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
       "$b": {"property": "edition", "TODO:targetMatch": "250"},
       "$c": {"property": "qualifyingNote"},
@@ -4384,7 +4388,7 @@
       "$m": {"property": "mediaNote"},
       "$n": {"addProperty": "note"},
       "$o": {
-        "addLink": "identifier", "rangeEntity": "Identifier",
+        "addLink": "identifier", "resourceType": "Identifier",
         "addProperty": "identifierValue",
         "defaults": {"identifierScheme": null}
       },
@@ -4393,19 +4397,19 @@
       "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
       "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
       "$w": {
-        "addLink": "describedBy", "rangeEntity": "Record", "property": "controlNumber",
+        "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
         "uriTemplate": "/resource/bib/{_}"
       },
       "$x": {
         "TODO:targetMatch": "022",
-        "link": "identifier", "rangeEntity": "Identifier",
+        "link": "identifier", "resourceType": "Identifier",
         "property": "identifierValue",
         "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
       },
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
-        "addLink": "identifier", "rangeEntity": "Identifier",
+        "addLink": "identifier", "resourceType": "Identifier",
         "property": "identifierValue",
         "defaults": {"identifierScheme": {"@id": "/def/identifiers/isbn"}}
       },
@@ -4438,7 +4442,7 @@
     "773": {
       "inherit": "772",
       "addLink": "isPartOf",
-      "rangeEntity": "Aggregate",
+      "resourceType": "Aggregate",
       "$c": null,
       "$p": {"property": "abbrevTitle", "TODO:targetMatch": "210"},
       "$q": {"property": "pagination"}
@@ -4447,19 +4451,19 @@
       "inherit": "772",
       "addLink": "hasPart",
       "domainIncludes": "Serial",
-      "rangeEntity": "CreativeWork"
+      "resourceType": "CreativeWork"
     },
     "775": {
       "inherit": "772",
       "TODO:note": "uncommon",
       "addLink": "alternateEdition",
-      "$e": {"link": "language", "rangeEntity": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
+      "$e": {"link": "language", "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
       "$f": {"property": "publicationCountry", "TODO:inherit": "008:[15:18]"}
     },
     "776": {
       "inherit": "772",
       "addLink": "alternateFormat",
-      "rangeEntity": "Product"
+      "resourceType": "Product"
     },
     "777": {
       "inherit": "772",
@@ -4468,18 +4472,18 @@
     "780": {
       "inherit": "772",
       "addLink": "precededBy",
-      "rangeEntity": "Serial"
+      "resourceType": "Serial"
     },
     "785": {
       "inherit": "772",
       "addLink": "succeededBy",
-      "rangeEntity": "Serial"
+      "resourceType": "Serial"
     },
     "786": {
-      "domainEntity": "Record",
+      "aboutEntity": "?record",
       "inherit": "772",
       "addLink": "source",
-      "rangeEntity": "Dataset"
+      "resourceType": "Dataset"
     },
     "787": {
       "inherit": "772",
@@ -4490,7 +4494,7 @@
     "810": {},
     "811": {},
     "830": {
-      "addLink": "isPartOf", "rangeEntity": "PublicationVolume",
+      "addLink": "isPartOf", "resourceType": "PublicationVolume",
       "$a": {"property": "uniformTitle"},
       "$d": {"addProperty": "date"},
       "$v": {"property": "volumeNumber"},
@@ -4508,12 +4512,12 @@
     "855": {},
 
     "856": {
-      "addLink": "isPrimaryTopicOf", "rangeEntity": "Document",
+      "addLink": "isPrimaryTopicOf", "resourceType": "Document",
       "match-i2": {
-        "0": {"addLink": "encoding", "rangeEntity": "MediaObject"},
-        "1": {"addLink": "hasFormat", "rangeEntity": "Electronic"},
-        "2": {"addLink": "isPrimaryTopicOf", "rangeEntity": "Document"},
-        "8": {"addLink": "relation", "rangeEntity": "Document"}
+        "0": {"addLink": "encoding", "resourceType": "MediaObject"},
+        "1": {"addLink": "hasFormat", "resourceType": "Electronic"},
+        "2": {"addLink": "isPrimaryTopicOf", "resourceType": "Document"},
+        "8": {"addLink": "relation", "resourceType": "Document"}
       },
       "TODO?": {
         "if $x=digipic or $y=bild": {"addLink": "depiction"},
@@ -4550,12 +4554,12 @@
     },
 
     "976": {
-      "note:candidate:domainEntity": "Work",
+      "note:candidate:aboutEntity": "Work",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "addLink": "classification",
-      "rangeEntity": "Concept",
+      "resourceType": "Concept",
       "i2": {
-        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "link": "inScheme", "resourceType": "ConceptScheme",
         "uriTemplate": "/topic/{+_}",
         "property": "notation",
         "tokenMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
@@ -4572,7 +4576,7 @@
     "000": {
       "inherit": "bib",
       "[17:18]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "encLevel",
         "uriTemplate": "{_}",
         "tokenMap": {"n": "/def/enum/record/FullLevel", "o": "/def/enum/record/PartialPreliminaryLevel"}
@@ -4606,10 +4610,10 @@
       "inherit": "bib",
       "TODO": "if no $f, drop entire record (or mark as obsolete)",
       "$f": {
-        "domainEntity": "Instance",
+        "aboutEntity": "?instance",
         "IMPROVE:about": "$thing if Concept else $record",
         "TODO": "inCollection if . = sgp?",
-        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "link": "inScheme", "resourceType": "ConceptScheme",
         "uriTemplate": "/topic/{_}",
         "property": "notation",
       "_specSource": {"040": {"subfields": [{"f":"barn"}]}},
@@ -4634,7 +4638,7 @@
       "inherit": "083",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "$2": {
-        "link": "inScheme", "rangeEntity": "ConceptScheme",
+        "link": "inScheme", "resourceType": "ConceptScheme",
         "uriTemplate": "/topic/{+_}",
         "property": "notation"
       }
@@ -4652,34 +4656,55 @@
 
     "100" : {
       "inherit": "bib",
-      "definesDomainEntity": "Person",
+      "aboutType": "Person", "link": null, "resourceType": null,
       "match-code": {
         "t v x y z": {
-          "definesDomainEntity": null,
-          "promoteToDomainEntity": "ConceptualWork",
-          "NOTE": "due to this promote hack, Instance is now Work",
-          "$t": {"domainEntity": "Instance", "property": "uniformTitle"}
+          "aboutType": "UniformWork",
+          "link": "attributedTo",
+          "resourceType": "Person",
+          "$t": {"aboutEntity": "?instance", "property": "title"}
         }
       },
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
+      "_spec": [
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"}
+          ]}},
+          "result": {"about": {
+            "@type": "Person",
+            "familyName":  "Jansson", "givenName":  "Tove"
+          }}
+        },
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"}
+          ]}},
+          "result": {"about": {
+            "@type": "UniformWork",
+            "title": "Anteckningar från en ö",
+            "attributedTo": {"@type": "Person",
+              "familyName":  "Jansson", "givenName":  "Tove"}
+          }}
+        }
+      ]
     },
     "110" : {
       "inherit": "bib",
-      "definesDomainEntity": "Organization"
+      "aboutType": "Organization", "link": null, "resourceType": null
     },
     "111" : {
       "inherit": "bib",
-      "definesDomainEntity": "Meeting"
+      "aboutType": "Meeting", "link": null, "resourceType": null
     },
     "130" : {
       "inherit": "bib",
-      "definesDomainEntity": "ConceptualWork"
+      "aboutType": "UniformWork", "link": null, "resourceType": null
     },
     "148" : {
-      "definesDomainEntity": "Concept",
-      "definesDomainEntity": "Event",
+      "aboutType": "Event", "link": null, "resourceType": null,
       "$a": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
@@ -4692,14 +4717,14 @@
       "uriTemplateDefaults": {"inScheme.notation": "_"},
       "addLink": null,
       "computeLinks": null,
-      "rangeEntity": null,
-      "domainEntity": null,
-      "definesDomainEntity": "Concept",
+      "resourceType": null,
+      "aboutEntity": null,
+      "aboutType": "Concept",
       "$a": {"property": "prefLabel"},
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "dependsOn": ["040", "042"],
       "$2": null,
-      "$9": {"link": "inScheme", "rangeEntity": "ConceptScheme", "property": "notation"},
+      "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "$0": null,
       "_specName": "",
       "_specSource": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
@@ -4711,7 +4736,7 @@
       }}
     },
     "151" : {
-      "definesDomainEntity": "Place",
+      "aboutType": "Place", "link": null, "resourceType": null,
       "$a": {"property": "prefLabel"},
       "uriTemplate": "/place/{prefLabel}"
     },
@@ -4740,9 +4765,9 @@
       "inherit": "bib:100",
       "match-code": {
         "t": {
-          "$t": {"property": "uniformTitle"},
+          "$t": {"property": "title"},
           "splitLink": [
-            {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "ConceptualWork"}
+            {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "UniformWork"}
           ],
           "link": "attributedTo"
         }
@@ -4755,8 +4780,8 @@
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
         }
       },
-      "domainEntity": "Instance", "NOTE": "really Work - see 100",
-      "addLink": "attributedTo", "rangeEntity": "Person"
+      "aboutEntity": "?instance", "NOTE": "really Work - see 100",
+      "addLink": "attributedTo", "resourceType": "Person"
     },
     "410": {
       "inherit": "bib:610", "addLink": "hasVersion"
@@ -4769,7 +4794,7 @@
       "match-code": {
         "x": {
           "addLink": "replaces",
-          "rangeEntity": "Concept",
+          "resourceType": "Concept",
           "uriTemplate": "/topic/sao/{broader.prefLabel*}",
           "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
           "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
@@ -4781,20 +4806,20 @@
     "500": {
       "inherit": "bib:100",
       "TODO": "this is really a link to other auth post..",
-      "domainEntity": "Instance", "NOTE": "not really though - see 100",
+      "aboutEntity": "?instance", "NOTE": "not really though - see 100",
       "match-domain": {
         "Person": {
           "addLink": "hasPersona",
-          "rangeEntity": "Person"
+          "resourceType": "Person"
         }
       }
     },
-    "510" : {"inherit": "bib:110", "domainEntity": null, "addLink": "seeAlso"},
-    "511" : {"inherit": "bib:111", "definesDomainEntity": null, "addLink": "seeAlso"},
+    "510" : {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
+    "511" : {"inherit": "bib:111", "aboutType": null, "addLink": "seeAlso"},
     "550" : {
       "inherit": "150",
-      "definesDomainEntity": null,
-      "rangeEntity": "Concept",
+      "aboutType": null,
+      "resourceType": "Concept",
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
       "_specSource": {"550": {"subfields": [{"a": "Psykologi"}, {"w": "g"}]}},
       "_specResult": {"about": {
@@ -4807,7 +4832,7 @@
     },
     "551" : {
         "inherit": "550",
-      "rangeEntity": "Place",
+      "resourceType": "Place",
       "uriTemplate": "/place/{prefLabel}"
     },
     "555" : {
@@ -4817,16 +4842,16 @@
     "580" : {
       "TODO": "incomplete",
       "inherit": "180",
-      "definesDomainEntity": null,
-      "rangeEntity": "Concept"
+      "aboutType": null,
+      "resourceType": "Concept"
     },
     "667" : {
-      "domainEntity": "Record",
+      "aboutEntity": "?record",
       "$a": {"addProperty": "editorialNote"}
     },
     "670" : {
-      "domainEntity": "Record",
-      "addLink": "source", "rangeEntity": "CreativeWork",
+      "aboutEntity": "?record",
+      "addLink": "source", "resourceType": "CreativeWork",
       "$a": {"property": "label"},
       "$b": {"property": "citation"},
       "$u": {"property": "url"}
@@ -4843,7 +4868,7 @@
     },
     "750" : {
       "inherit": "bib:650",
-      "domainEntity": null,
+      "aboutEntity": null,
       "computeLinks": null,
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
@@ -4857,9 +4882,9 @@
       "inherit": "bib",
       "TODO:match-i2": {
         "0": {"addLink": "sameAs"},
-        "1": {"addLink": "isPrimaryTopicOf", "rangeEntity": "Electronic"},
-        "2": {"addLink": "relation", "rangeEntity": "Document"},
-        "8": {"addLink": "seeAlso", "rangeEntity": "Document"}
+        "1": {"addLink": "isPrimaryTopicOf", "resourceType": "Electronic"},
+        "2": {"addLink": "relation", "resourceType": "Document"},
+        "8": {"addLink": "seeAlso", "resourceType": "Document"}
       }
     }
   },
@@ -4883,7 +4908,7 @@
 
     "852": {
       "addLink": "offers",
-      "rangeEntity": "Offer",
+      "resourceType": "Offer",
       "TODO:i2": {
         "property": "shelfOrder"
       },
@@ -4893,7 +4918,7 @@
       "$a": {"property": "location"},
       "$b": {
         "addLink": "heldBy",
-        "rangeEntity": "Organization",
+        "resourceType": "Organization",
         "property": "notation",
         "TODO": "move to about-resource and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
@@ -4929,7 +4954,7 @@
     "866": {
       "NOTE:domainIncludes": "Aggregate",
       "addLink": "workExample",
-      "rangeEntity": "SomeProducts",
+      "resourceType": "SomeProducts",
       "$a": {"property": "scopeNote"},
       "$x": {"addProperty": "editorialNote"},
       "$z": {"addProperty": "copyNote"}
