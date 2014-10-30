@@ -47,19 +47,25 @@ marcenum:bibLevel a skos:Collection;
 # .. use rdfs:range rdf:langString where applicable?
 
 :label a owl:DatatypeProperty;
+    rdfs:label "etikett"@sv;
     owl:equivalentProperty rdfs:label, sdo:name .
 :comment a owl:DatatypeProperty;
+    rdfs:label "kommentar"@sv;
     owl:equivalentProperty rdfs:comment .
 :value a owl:DatatypeProperty;
+    rdfs:label "värde"@sv;
     owl:equivalentProperty rdf:value .
 
 :seeAlso a owl:ObjectProperty;
+    rdfs:label "se även"@sv;
     owl:equivalentProperty rdfs:seeAlso .
 
 :sameAs a owl:ObjectProperty;
+    rdfs:label "samma sak som"@sv;
     owl:equivalentProperty owl:sameAs .
 
 :identifiedBy a owl:ObjectProperty;
+    rdfs:label "identifierad av"@sv;
     owl:equivalentProperty sdo:sameAs .
 
 :Date a rdfs:Datatype;
@@ -98,15 +104,18 @@ marcenum:bibLevel a skos:Collection;
     rdfs:subClassOf foaf:Document .
 
 :about a owl:ObjectProperty;
+    rdfs:label "handlar om"@sv;
     owl:equivalentProperty sdo:about;
     rdfs:subPropertyOf foaf:primaryTopic .
 
 :describedBy a owl:ObjectProperty;
+    rdfs:label "beskriven av"@sv;
     owl:inverseOf :about;
     owl:equivalentProperty iana:describedby;
     rdfs:subPropertyOf foaf:isPrimaryTopicOf .
 
 :controlNumber a owl:DatatypeProperty;
+    rdfs:label "kontrollnummer"@sv;
     owl:equivalentProperty dc:identifier .
 
 
@@ -131,50 +140,70 @@ marcenum:bibLevel a skos:Collection;
     rdfs:subClassOf sdo:Product, bf:Instance .
 
 :contentType a owl:ObjectProperty;
+    rdfs:label "innehållstyp"@sv;
     rdfs:subPropertyOf dc:type, sdo:additionalType .
 
 :carrierType a owl:ObjectProperty;
+    rdfs:label "bärartype"@sv;
     rdfs:range :Carrier;
     rdfs:subPropertyOf dc:format, sdo:additionalType .
 
 :Carrier a owl:Class;
+    rdfs:label "Bärare"@sv;
     owl:equivalentClass dc:MediaType .
-
-:HeldMaterial a owl:Class;
-    rdfs:subClassOf bf:HeldMaterial, sdo:SomeProducts .
-
-:Offer a owl:Class;
-    rdfs:subClassOf sdo:Offer .
-
-:holdingFor a owl:ObjectProperty;
-    rdfs:domain :HeldMaterial;
-    rdfs:range :Organization;
-    rdfs:subPropertyOf sdo:exampleOfWork, bf:holdingFor .
-
-:heldBy a owl:ObjectProperty;
-    rdfs:domain :Offer;
-    rdfs:range :Organization;
-    rdfs:subPropertyOf sdo:seller, bf:heldBy .
 
 #commonEndeavor?
 
 :exampleOfWork a owl:ObjectProperty ;
+    rdfs:label "exemplifierar verk"@sv;
     owl:equivalentProperty sdo:exampleOfWork;
     rdfs:subPropertyOf bf:instanceOf;
     sdo:rangeIncludes :UniformWork .
 
 :workExample a owl:ObjectProperty ;
+    rdfs:label "exempel på detta verk"@sv;
     owl:equivalentProperty sdo:workExample;
     sdo:rangeIncludes :CreativeWork, :Product .
 
 :format a owl:ObjectProperty;
+    rdfs:label "format"@sv;
     owl:equivalentProperty dc:format .
 
 :formatOf a owl:ObjectProperty;
+    rdfs:label "är format på"@sv;
     owl:equivalentProperty dc:isFormatOf .
 
 :hasFormat a owl:ObjectProperty;
+    rdfs:label "har format"@sv;
     owl:equivalentProperty dc:hasFormat .
+
+
+##
+# Holdings
+
+:HeldMaterial a owl:Class;
+    rdfs:label "Beståndsmaterial"@sv;
+    rdfs:subClassOf bf:HeldMaterial, sdo:SomeProducts .
+
+:Offer a owl:Class;
+    rdfs:label "Erbjudande"@sv;
+    rdfs:subClassOf sdo:Offer .
+
+:holdingFor a owl:ObjectProperty;
+    rdfs:label "bestånd på"@sv;
+    rdfs:domain :HeldMaterial;
+    rdfs:range :Organization;
+    rdfs:subPropertyOf sdo:exampleOfWork, bf:holdingFor .
+
+:heldBy a owl:ObjectProperty;
+    rdfs:label "beståndsinnehavare"@sv;
+    rdfs:domain :Offer;
+    rdfs:range :Organization;
+    rdfs:subPropertyOf sdo:seller, bf:heldBy .
+
+:callno rdfs:subPropertyOf :genre, bf:callno, sdo:sku;
+    rdfs:range :Holding .
+
 
 # Common Content Types
 
@@ -551,71 +580,92 @@ marcenum:bibLevel a skos:Collection;
 # Parts, Events, Relations
 
 :ProviderEvent a owl:Class;
+    rdfs:label "Tillgängliggörande"@sv;
     rdfs:subClassOf prov:Activity, bf:Provider .
 
 :creator a owl:ObjectProperty;
+    rdfs:label "skapare"@sv;
     owl:equivalentProperty dc:creator .
 
 :publisher a owl:ObjectProperty;
+    rdfs:label "utgivare"@sv;
     owl:equivalentProperty dc:publisher, bf:publisher .
 
 :license a owl:ObjectProperty;
+    rdfs:label "licens"@sv;
     owl:equivalentProperty dc:license .
 
 :created a owl:ObjectProperty;
+    rdfs:label "skapad"@sv;
     owl:equivalentProperty dc:created;
     rdfs:range xsd:dateTime .
 
 :modified a owl:ObjectProperty;
+    rdfs:label "modifierad"@sv;
     owl:equivalentProperty dc:modified;
     rdfs:range xsd:dateTime .
 
 :title a owl:DatatypeProperty;
+    rdfs:label "titel"@sv;
     owl:equivalentProperty bf:title, dc:title .
 
 :uniformTitle a owl:DatatypeProperty;
+    rdfs:label "uniform titel"@sv;
     rdfs:subPropertyOf skos:prefLabel .
 
 :instanceTitle a owl:ObjectProperty;
+    rdfs:label "instanstitel"@sv;
     owl:equivalentProperty bf:instanceTitle .
 
 :Title a owl:Class;
+    rdfs:label "Titel"@sv;
     owl:equivalentClass bf:Title .
 
 :titleValue a owl:DatatypeProperty;
+    rdfs:label "titelvärde"@sv;
     owl:equivalentProperty bf:titleValue .
 
 :responsibilityStatement a owl:DatatypeProperty;
+    rdfs:label "upphovsbeskrivning"@sv;
     owl:equivalentProperty bf:responsibilityStatement .
 
 :language a owl:ObjectProperty;
+    rdfs:label "språk"@sv;
     owl:equivalentProperty bf:language;
     rdfs:subPropertyOf dc:language;
     rdfs:range sdo:Language .
 
 :languageNote a owl:ObjectProperty;
+    rdfs:label "språkanteckning"@sv;
     owl:equivalentProperty bf:languageNote .
 
 :versionOf a owl:ObjectProperty;
+    rdfs:label "version av"@sv;
     owl:equivalentProperty dc:isVersionOf .
 
 :hasVersion a owl:ObjectProperty;
+    rdfs:label "har version"@sv;
     owl:equivalentProperty dc:hasVersion .
 
 :hasPart a owl:ObjectProperty;
+    rdfs:label "har del"@sv;
     owl:equivalentProperty dc:hasPart .
 
 :isPartOf a owl:ObjectProperty;
+    rdfs:label "är del av"@sv;
     owl:equivalentProperty dc:isPartOf .
 
 :references a owl:ObjectProperty;
+    rdfs:label "hänvisar till"@sv;
     owl:equivalentProperty dc:references .
 
 :referencedBy a owl:ObjectProperty;
+    rdfs:label "hänvisad till av"@sv;
     owl:inverseOf :references;
     owl:equivalentProperty dc:isReferencedBy .
 
 :relation a owl:ObjectProperty;
+    rdfs:label "relation"@sv;
     owl:equivalentProperty dc:relation .
 
 :influentialRelation a owl:ObjectProperty;
@@ -625,18 +675,23 @@ marcenum:bibLevel a skos:Collection;
     rdfs:subPropertyOf :influencedBy, dc:hasPart .
 
 :replaces a owl:ObjectProperty;
+    rdfs:label "ersätter"@sv;
     owl:equivalentProperty dc:replaces .
 
 :source a owl:ObjectProperty;
+    rdfs:label "källa"@sv;
     owl:equivalentProperty dc:source .
 
 :citation a owl:ObjectProperty;
+    rdfs:label "citat"@sv;
     owl:equivalentProperty sdo:citation .
 
 :subject a owl:ObjectProperty;
+    rdfs:label "ämne"@sv;
     owl:equivalentProperty dc:subject .
 
 :keyword a owl:ObjectProperty;
+    rdfs:label "nyckelord"@sv;
     owl:equivalentProperty sdo:keywords;
     rdfs:subPropertyOf dc:subject;
     rdfs:range xsd:string .
@@ -655,23 +710,28 @@ marcenum:bibLevel a skos:Collection;
     rdfs:subPropertyOf dc:type, sdo:genre .
 
 :version a owl:ObjectProperty;
+    rdfs:label "version"@sv;
     owl:equivalentProperty sdo:version .
 
 :isPrimaryTopicOf a owl:ObjectProperty;
     owl:equivalentProperty foaf:isPrimaryTopicOf .
 
 :audience a owl:ObjectProperty;
+    rdfs:label "målgrupp"@sv;
     rdfs:subPropertyOf sdo:audience;
     rdfs:range :Concept .
 
 :Audience a owl:Class;
+    rdfs:label "Målgrupp"@sv;
     owl:equivalentClass sdo:Audience .
 
 :device a owl:ObjectProperty;
+    rdfs:label "apparat"@sv;
     rdfs:subPropertyOf sdo:device;
     rdfs:range :Device .
 
 :Device a owl:Class;
+    rdfs:label "Apparat"@sv;
     owl:equivalentClass dbpo:Device .
 
 ##
@@ -709,25 +769,32 @@ marcenum:bibLevel a skos:Collection;
     owl:equivalentProperty prov:qualifiedInfluence .
 
 :agent a owl:ObjectProperty;
+    rdfs:label "aktör"@sv;
     owl:equivalentProperty prov:agent .
 
 :role a owl:ObjectProperty;
+    rdfs:label "roll"@sv;
     owl:equivalentProperty prov:hadRole .
 
 :Agent a owl:Class;
+    rdfs:label "Aktör"@sv;
     rdfs:subClassOf foaf:Agent, bf:Agent, prov:Agent .
 
 :Person a owl:Class;
+    rdfs:label "Person"@sv;
     rdfs:subClassOf :Agent;
     owl:equivalentClass foaf:Person, sdo:Person .
 
 :Family a owl:Class;
+    rdfs:label "Familj"@sv;
     rdfs:subClassOf :Agent .
 
 :Event a owl:Class;
+    rdfs:label "Händelse"@sv;
     owl:equivalentClass sdo:Event .
 
 :Meeting a owl:Class;
+    rdfs:label "Sammankomst"@sv;
     rdfs:subClassOf :Event;
     owl:equivalentClass bf:Meeting, bibo:Conference .
 
@@ -735,43 +802,54 @@ marcenum:bibLevel a skos:Collection;
 #    owl:hasKey (:name :familyName :givenName :numeration :birthDate :deathDate :personTitle) .
 
 #titlesAndOtherWordsAssociatedWithName / personTitle
-:jobTitle a owl:ObjectProperty;
+:personTitle a owl:ObjectProperty;
+    rdfs:label "persontitel"@sv;
     owl:equivalentProperty sdo:jobTitle, foaf:title .
 
 :familyName a owl:ObjectProperty;
+    rdfs:label "familjenamn"@sv;
     owl:equivalentProperty sdo:familyName, foaf:familyName .
 
 :givenName a owl:ObjectProperty;
+    rdfs:label "egennamn"@sv;
     owl:equivalentProperty sdo:givenName, foaf:givenName .
 
 :birthDate a owl:ObjectProperty;
+    rdfs:label "födelsedatum"@sv;
     owl:equivalentProperty sdo:birthDate .
 
 :deathDate a owl:ObjectProperty;
+    rdfs:label "dödsdatum"@sv;
     owl:equivalentProperty sdo:deathDate .
 
 :Persona a owl:Class;
+    rdfs:label "Persona"@sv;
     rdfs:subClassOf :Person;
     owl:equivalentClass persona:Persona .
 
 :hasPersona a owl:ObjectProperty;
+    rdfs:label "har persona"@sv;
     rdfs:subPropertyOf rdfs:seeAlso;
     owl:equivalentProperty persona:hasPersona .
 
 :Organization a owl:Class;
+    rdfs:label "Organisation"@sv;
     rdfs:subClassOf :Agent;
     owl:equivalentClass bf:Organization, sdo:Organization, foaf:Organization  .
 
 :Place a owl:Class;
+    rdfs:label "Plats"@sv;
     owl:equivalentClass sdo:Place .
 
 :Country a owl:Class;
+    rdfs:label "Land"@sv;
     owl:equivalentClass sdo:Country .
 
 #generalSubdivision
 #geographicSubdivision
 
 :controlledLabel a owl:DatatypeProperty;
+    rdfs:label "kontrollerad etikett"@sv;
     owl:equivalentProperty bf:authorizedAccessPoint .
     #owl:propertyChainAxiom ( [owl:inverseOf foaf:focus] skos:prefLabel ) .
 
@@ -892,18 +970,6 @@ marcenum:bibLevel a skos:Collection;
             owl:allValuesFrom :UniformWork ] .
 
 
-##
-# Holdings
-
-:Holding a owl:Class;
-    rdfs:label "Bestånd"@sv;
-    owl:equivalentClass bf:Holding;
-    rdfs:subClassOf bf:Offer, sdo:Offer .
-
-:callno rdfs:subPropertyOf :genre, bf:callno, sdo:sku;
-    rdfs:range :Holding .
-
-
 # .. TODO: work-in-progress
 
 :bibLevel a owl:ObjectProperty .
@@ -917,8 +983,6 @@ marcenum:bibLevel a skos:Collection;
     owl:equivalentClass bf:Authority .
 
 :Collection owl:equivalentClass bibo:Collection .
-
-:HeldMaterial owl:equivalentClass bf:HeldMaterial .
 
 :Integrating rdfs:subClassOf :Aggregate .
 
