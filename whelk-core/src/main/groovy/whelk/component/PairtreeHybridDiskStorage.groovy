@@ -105,7 +105,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 [
                     "index": indexName,
                     "type": METAENTRY_INDEX_TYPE,
-                    "id": translateIdentifier(doc.identifier)
+                    "id": toElasticId(doc.identifier)
                 ]
             )
         }
@@ -126,7 +126,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 entries << [
                 "index":indexName,
                 "type": METAENTRY_INDEX_TYPE,
-                "id": translateIdentifier(doc.identifier),
+                "id": toElasticId(doc.identifier),
                 "data":((Document)doc).metadataAsJson
                 ]
             }
@@ -301,12 +301,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             }
         }
         deleteEntry(id, indexName, METAENTRY_INDEX_TYPE)
-        /*
-        if (!producerTemplate) {
-            producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
-        }
-        producerTemplate.sendBodyAndHeaders("direct:${this.id}", translateIdentifier(uri), ["operation":"DELETE","entry:identifier":uri.toString()])
-        */
     }
 
     @groovy.transform.CompileStatic
@@ -394,7 +388,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             entryList << [
             "index":indexName,
             "type": METAENTRY_INDEX_TYPE,
-            "id": translateIdentifier(document.identifier),
+            "id": toElasticId(document.identifier),
             "data":((Document)document).metadataAsJson
             ]
             if (diskCount++ % 2000 == 0) {

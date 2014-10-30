@@ -96,8 +96,8 @@ class ElasticTypeRouteProcessor implements Processor {
     int elasticPort
 
     //ElasticTypeRouteProcessor(String elasticHost, String elasticCluster, int elasticPort, List<String> availableTypes, ElasticShapeComputer esc) {
-    ElasticTypeRouteProcessor(Index index) {
-        this.shapeComputer = index.shapeComputer
+    ElasticTypeRouteProcessor(ElasticShapeComputer index) {
+        this.shapeComputer = index
         this.elasticHost = index.elastichost
         this.elasticPort = index.elasticport
         this.elasticCluster = index.elasticcluster
@@ -107,7 +107,7 @@ class ElasticTypeRouteProcessor implements Processor {
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
         String identifier = message.getHeader("entry:identifier")
-        String indexName = message.getHeader("whelk:index", shapeComputer.whelkName)
+        String indexName = message.getHeader("whelk:index", shapeComputer.whelk.id)
         message.setHeader("whelk:index", indexName)
         String indexType = shapeComputer.calculateTypeFromIdentifier(identifier)
         message.setHeader("whelk:type", indexType)

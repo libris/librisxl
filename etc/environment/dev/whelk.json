@@ -26,6 +26,7 @@
             ],
         "_components": [
             "esjsonldstorage",
+            "jsonldstorage",
             "index"
         ]
     },

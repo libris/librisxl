@@ -21,8 +21,6 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     String indexName
 
-    private ElasticShapeComputer shapeComputer
-
     ElasticSearchStorage(Map settings) {
         super(settings)
         this.contentTypes = settings.get('contentTypes', null)
@@ -35,8 +33,6 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             this.indexName = this.id
         }
         log.info("Elastic Storage using index name $indexName")
-        shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
-        assert shapeComputer
     }
 
     @Override
@@ -99,7 +95,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     protected prepareIndexingRequest(doc, identifier, index) {
         if (identifier) {
-            String encodedIdentifier = shapeComputer.toElasticId(doc.identifier)
+            String encodedIdentifier = toElasticId(doc.identifier)
             return client.prepareIndex(indexName, ELASTIC_STORAGE_TYPE, encodedIdentifier).setSource(doc.toJson().getBytes("UTF-8"))
         } else {
             return client.prepareIndex(indexName + VERSION_STORAGE_SUFFIX, ELASTIC_STORAGE_TYPE).setSource(doc.toJson().getBytes("UTF-8"))
@@ -112,7 +108,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     @Override
     Document get(String identifier, String version) {
-        def grq = client.prepareGet(indexName, ELASTIC_STORAGE_TYPE, shapeComputer.toElasticId(identifier))
+        def grq = client.prepareGet(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier))
         def response = grq.execute().actionGet();
 
         int v = (version ? version as int : -1)
@@ -223,7 +219,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     @Override
     void remove(String identifier) {
         if (!versioning) {
-            client.delete(new DeleteRequest(indexName, ELASTIC_STORAGE_TYPE, shapeComputer.toElasticId(identifier)))
+            client.delete(new DeleteRequest(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier)))
         } else {
             store(createTombstone(id))
         }

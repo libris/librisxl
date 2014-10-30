@@ -1,5 +1,7 @@
 package whelk.component
 
+import org.apache.commons.codec.binary.Base64
+
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.*
 import org.elasticsearch.common.transport.*
@@ -10,7 +12,7 @@ import org.elasticsearch.action.admin.indices.alias.get.*
 
 import whelk.exception.*
 
-abstract class BasicElasticComponent extends BasicComponent {
+abstract class BasicElasticComponent extends BasicComponent implements ElasticShapeComputer {
     Client client
     def defaultMapping, es_settings
     static final String METAENTRY_INDEX_TYPE = "entry"
@@ -24,7 +26,8 @@ abstract class BasicElasticComponent extends BasicComponent {
 
     int batchUpdateSize = 2000
 
-    ElasticShapeComputer shapeComputer = null
+    String defaultType
+    static final String DEFAULT_TYPE = "record"
 
     BasicElasticComponent() {
         super()
@@ -42,6 +45,7 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
         this.elasticport = settings.get('elasticPort', System.getProperty("elastic.port", ""+elasticport)) as int
         this.batchUpdateSize = settings.get('batchUpdateSize', batchUpdateSize)
+        this.defaultType = settings.get("defaultType", DEFAULT_TYPE)
         connectClient()
     }
 
@@ -132,7 +136,7 @@ abstract class BasicElasticComponent extends BasicComponent {
                 if (re.failed) {
                     log.error "Fail message for id ${re.id}, type: ${re.type}, index: ${re.index}: ${re.failureMessage}"
                     try {
-                        fails << translateIndexIdTo(re.id)
+                        fails << fromElasticId(re.id)
                     } catch (Exception e1) {
                         log.error("TranslateIndexIdTo cast an exception", e1)
                         fails << "Failed translation for \"$re\""
@@ -145,13 +149,6 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
     }
 
-    String translateIdentifier(String id) {
-        if (shapeComputer == null) {
-            shapeComputer = plugins.find { it instanceof ElasticShapeComputer }
-        }
-        return shapeComputer.toElasticId(id)
-    }
-
     void index(byte[] data, Map params) throws WhelkIndexException  {
         try {
             def response = performExecute(client.prepareIndex(params['index'], params['type'], params['id']).setSource(data))
@@ -162,7 +159,7 @@ abstract class BasicElasticComponent extends BasicComponent {
     }
 
     void deleteEntry(String identifier, indexName, indexType) {
-        def response = performExecute(client.prepareDelete(indexName, indexType, translateIdentifier(identifier)))
+        def response = performExecute(client.prepareDelete(indexName, indexType, toElasticId(identifier)))
         log.debug("Deleted ${response.id} with type ${response.type} from ${response.index}. Document found: ${response.found}")
     }
 
@@ -218,4 +215,45 @@ abstract class BasicElasticComponent extends BasicComponent {
         }
         return json
     }
+
+    /**
+     * ElasticShapeComputer methods
+     */
+
+    String calculateTypeFromIdentifier(String id) {
+        String identifier = new URI(id).path.toString()
+        log.debug("Received uri $identifier")
+        String idxType
+        try {
+            def identParts = identifier.split("/")
+            idxType = (identParts[1] == whelk.id && identParts.size() > 3 ? identParts[2] : identParts[1])
+        } catch (Exception e) {
+            log.error("Tried to use first part of URI ${identifier} as type. Failed: ${e.message}")
+        }
+        if (!idxType) {
+            idxType = defaultType
+        }
+        log.debug("Using type $idxType for ${identifier}")
+        return idxType
+    }
+
+    String toElasticId(String id) {
+        return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
+    }
+
+    String fromElasticId(String id) {
+        if (id.contains("::")) {
+            log.warn("Using old style index id's for $id")
+            def pathelements = []
+            id.split("::").each {
+                pathelements << java.net.URLEncoder.encode(it, "UTF-8")
+            }
+            return  new String("/"+pathelements.join("/"))
+        } else {
+            String decodedIdentifier = new String(Base64.decodeBase64(id), "UTF-8")
+            log.debug("Decoded new style id into $decodedIdentifier")
+            return decodedIdentifier
+        }
+    }
+
 }

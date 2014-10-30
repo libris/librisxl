@@ -8,12 +8,6 @@
     "fusekiserver": {
         "_class": "whelk.component.support.FusekiServer"
     },
-    "shapecomputer": {
-        "_class" : "whelk.plugin.UriToElasticType",
-        "_params": {
-            "defaultType": "record"
-        }
-    },
     "remotesearch": {
         "_class": "whelk.api.RemoteSearchAPI",
         "_plugins" : [
@@ -556,7 +550,7 @@
     },
     "index": {
         "_class" : "whelk.component.ElasticSearchClient",
-        "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ],
+        "_plugins" : ["linkexpander", "cleanupindexconverter" ],
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
@@ -570,9 +564,6 @@
     },
     "jsonldstorage": {
         "_class" : "whelk.component.PairtreeHybridDiskStorage",
-        "_plugins" : [
-            "shapecomputer"
-            ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
@@ -584,9 +575,6 @@
     },
     "esjsonldstorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
-        "_plugins" : [
-            "shapecomputer"
-            ],
         "_params" : {
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
@@ -597,9 +585,6 @@
     },
     "marcxmlstorage": {
         "_class" : "whelk.component.PairtreeHybridDiskStorage",
-        "_plugins" : [
-            "shapecomputer"
-            ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
