@@ -2,7 +2,12 @@ package whelk.plugin
 
 import groovy.util.logging.Slf4j as Log
 
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
+
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Document
@@ -647,13 +652,15 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
 
 class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
-    static final String DT_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SZ"
+    static final DateTimeFormatter DT_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XXX")
     static final String URI_SLOT = '{_}'
 
     String property
     String uriTemplate
     Pattern matchUriToken = null
-    String dateTimeFormat
+    DateTimeFormatter dateTimeFormat
+    ZoneId timeZone
     boolean ignored = false
     // TODO: working, but not so useful until capable of merging entities..
     //MarcSimpleFieldHandler linkedHandler
@@ -667,7 +674,12 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         } else {
             property = fieldDfn.property
         }
-        dateTimeFormat = fieldDfn.parseDateTime
+        if (fieldDfn.parseDateTime) {
+            dateTimeFormat = DateTimeFormatter.ofPattern(fieldDfn.parseDateTime)
+            if (fieldDfn.timeZone) {
+                timeZone =ZoneId.of(fieldDfn.timeZone)
+            }
+        }
         ignored = fieldDfn.get('ignored', false)
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
@@ -703,7 +715,10 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (dateTimeFormat) {
-            value = Date.parse(dateTimeFormat, value).format(DT_FORMAT)
+            value = (timeZone?
+                    LocalDateTime.parse(value, dateTimeFormat).atZone(timeZone) :
+                    ZonedDateTime.parse(value, dateTimeFormat)
+                ).format(DT_FORMAT)
         }
 
         def ent = entityMap[aboutEntityName]
@@ -741,7 +756,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         if (property) {
             def v = entity[property]
             if (v && dateTimeFormat)
-                return Date.parse(DT_FORMAT, v).format(dateTimeFormat)
+                return ZonedDateTime.parse(v, DT_FORMAT).format(dateTimeFormat)
             return revertObject(v)
         } else {
             def entities = entity instanceof List? entity : [entity]
