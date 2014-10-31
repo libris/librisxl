@@ -83,6 +83,8 @@ div > dl {
 .baseclasses > li, .subclasses > li, .instances > li {
   border: 1px solid #7af;
   border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 4px;
 }
 
 .properties {
@@ -94,6 +96,9 @@ li.ext {
 }
 .ext a {
   color: #d51;
+}
+.ext p {
+  font-size: 0.8em;
 }
 
 body svg {

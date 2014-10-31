@@ -10,10 +10,16 @@ SCHEMA = Namespace("http://schema.org/")
 
 graph = Graph()
 
+extgraph = Graph()
+
 args = sys.argv[1:]
+destgraph = graph
 for fpath in args:
+    if fpath == '--':
+        destgraph = extgraph
+        continue
     with open(fpath) as fp:
-        graph.parse(fp, format=guess_format(fpath))
+        destgraph.parse(fp, format=guess_format(fpath))
 
 env = Environment(loader=PackageLoader(__name__, '.'),
         variable_start_string='${', variable_end_string='}',
