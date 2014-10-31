@@ -193,7 +193,7 @@ marcenum:bibLevel a skos:Collection;
     rdfs:label "bestånd på"@sv;
     rdfs:domain :HeldMaterial;
     rdfs:range :Organization;
-    rdfs:subPropertyOf sdo:exampleOfWork, bf:holdingFor .
+    rdfs:subPropertyOf bf:holdingFor .
 
 :heldBy a owl:ObjectProperty;
     rdfs:label "beståndsinnehavare"@sv;
@@ -350,7 +350,6 @@ marcenum:bibLevel a skos:Collection;
 
 :ComponentPart a owl:Class;
     rdfs:label "Del av sammansatt resurs"@sv;
-    owl:equivalentClass bibo:DocumentPart;
     vann:termGroup marcenum:bibLevel;
     rdfs:subClassOf :Part .
 
@@ -387,6 +386,7 @@ marcenum:bibLevel a skos:Collection;
 
 :MonographicComponentPart a owl:Class;
     rdfs:label "Del av sammansatt monografisk resurs"@sv;
+    owl:equivalentClass bibo:DocumentPart;
     rdfs:subClassOf :Monograph, :ComponentPart .
 
 :SerialComponentPart a owl:Class;
