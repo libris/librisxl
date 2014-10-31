@@ -924,49 +924,49 @@ marcenum:bibLevel a skos:Collection;
     rdfs:label "Kronologiskt ämnesord"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Event ] .
 
 :GeographicalTerm a owl:Class;
     rdfs:label "Geografiskt ämnesord"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Place ] .
 
 :MeetingTerm a owl:Class;
     rdfs:label "Term för möte"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Meeting ] .
 
 :OrganizationTerm a owl:Class;
     rdfs:label "Term för organisation"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Organization ] .
 
 :PersonTerm a owl:Class;
     rdfs:label "Personterm"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Person ] .
 
 :FamilyTerm a owl:Class;
     rdfs:label "Familjeterm"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Family ] .
 
 :WorkTerm a owl:Class;
     rdfs:label "Term för verk"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :UniformWork ] .
 
 
