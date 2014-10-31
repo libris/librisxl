@@ -109,10 +109,26 @@
               </ul>
             </dd>
           % endif
+          % set restrictions = sorted(getrestrictions(rclass))
+          % if restrictions
+            <dt>Restrictions</dt>
+            <dd>
+              <ul class="">
+                % for restr in restrictions
+                  % set prop = restr.value(OWL.onProperty)
+                  % set rtype = restr.value(OWL.allValuesFrom)
+                  <li>
+                    <a href="${link(prop)}">${prop.qname()}</a>
+                    &rarr;
+                    <a href="${link(rtype)}">${rtype.qname()}</a>
+                  </li>
+                % endfor
+              </ul>
+            </dd>
+          % endif
           % set rangeprops = sorted(rclass.subjects(RANGE))
           % if rangeprops
             <dt>In range of properties</dt>
-            <dd>
             <dd>
               <ul class="properties range-of">
                 % for prop in rangeprops

@@ -26,6 +26,12 @@ env = Environment(loader=PackageLoader(__name__, '.'),
         line_statement_prefix='%')
 tplt = env.get_template('vocab-tplt.html')
 
+def getrestrictions(rclass):
+    for c in rclass.objects(RDFS.subClassOf):
+        rtype = c.value(RDF.type)
+        if rtype and rtype.identifier == OWL.Restriction:
+            yield c
+
 def label(obj, lang='sv'):
     label = None
     for label in obj.objects(RDFS.label):
