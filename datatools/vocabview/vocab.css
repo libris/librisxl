@@ -65,14 +65,27 @@ body > section > div:target {
   background-color: #fff;
 }
 
+section > h1 {
+  color: #999;
+  border-bottom: 1px solid #eee;
+}
+
 div > h2 {
   margin: 0;
   padding: 0.2em;
   background-color: #eee;
   border-radius: 4px 4px 0 0;
 }
+div > p,
 div > dl {
   margin: 0.4em;
+}
+
+dt {
+  color: #999;
+}
+dd {
+  margin-bottom: 0.5em;
 }
 
 .baseclasses, .subclasses, .instances,

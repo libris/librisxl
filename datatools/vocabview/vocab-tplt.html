@@ -80,12 +80,12 @@
         <h2><code>${rclass.qname()}</code></h2>
         ${classinfo(rclass, "...")}
         <dl>
-          ${itemsblock(rclass.objects(OWL.equivalentClass), "equivalent classes", 'baseclasses', True)}
-          ${itemsblock(rclass.objects(RDFS.subClassOf), "base classes", 'baseclasses')}
-          ${itemsblock(rclass.subjects(RDFS.subClassOf), "subclasses", 'subclasses')}
+          ${itemsblock(rclass.objects(OWL.equivalentClass), "Equivalent classes", 'baseclasses', True)}
+          ${itemsblock(rclass.objects(RDFS.subClassOf), "Base classes", 'baseclasses')}
+          ${itemsblock(rclass.subjects(RDFS.subClassOf), "Subclasses", 'subclasses')}
           % set props = sorted(rclass.subjects(DOMAIN))
           % if props
-            <dt>properties</dt>
+            <dt>Properties</dt>
             <dd>
               <ul class="properties">
                 % for prop in props
@@ -111,7 +111,7 @@
           % endif
           % set rangeprops = sorted(rclass.subjects(RANGE))
           % if rangeprops
-            <dt>in range of properties</dt>
+            <dt>In range of properties</dt>
             <dd>
             <dd>
               <ul class="properties range-of">
@@ -127,7 +127,7 @@
             </dd>
           % endif
           % if any(rclass.subjects(RDF.type))
-          <dt>instances</dt>
+          <dt>Instances</dt>
           <dd>
           <ul class="instances">
               % for i in sorted(rclass.subjects(RDF.type))
@@ -153,12 +153,12 @@
           % endif
         </p>
         <dl>
-          ${itemsblock(rprop.objects(OWL.equivalentProperty), "equivalent properties", 'baseproperties', True)}
-          ${itemsblock(rprop.objects(RDFS.subPropertyOf), "base properties", 'baseproperties')}
-          ${itemsblock(rprop.subjects(union(RDFS.subPropertyOf, OWL.equivalentProperty)), "subproperties", 'subproperties')}
+          ${itemsblock(rprop.objects(OWL.equivalentProperty), "Equivalent properties", 'baseproperties', True)}
+          ${itemsblock(rprop.objects(RDFS.subPropertyOf), "Base properties", 'baseproperties')}
+          ${itemsblock(rprop.subjects(union(RDFS.subPropertyOf, OWL.equivalentProperty)), "Subproperties", 'subproperties')}
           % set domains = sorted(rprop.objects(DOMAIN))
           % if domains
-            <dt>domain(s)</dt>
+            <dt>Domain(s)</dt>
             <dd>
               <ul>
                 % for c in domains
@@ -172,7 +172,7 @@
           % endif
           % set ranges = sorted(rprop.objects(RANGE))
           % if ranges
-            <dt>range(s)</dt>
+            <dt>Range(s)</dt>
             <dd>
               <ul>
                 % for c in ranges
