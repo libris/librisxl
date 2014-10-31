@@ -156,6 +156,14 @@
           ${itemsblock(rprop.objects(OWL.equivalentProperty), "Equivalent properties", 'baseproperties', True)}
           ${itemsblock(rprop.objects(RDFS.subPropertyOf), "Base properties", 'baseproperties')}
           ${itemsblock(rprop.subjects(union(RDFS.subPropertyOf, OWL.equivalentProperty)), "Subproperties", 'subproperties')}
+          % set inverse = rprop.value(OWL.inverseOf)
+          % if inverse
+            <dt>Inverse of</dt>
+            <dd>
+              <a href="${link(inverse)}"><code>${inverse.qname()}</code></a>
+              <i>${(label(inverse) or '')}</i>
+            </dd>
+          % endif
           % set domains = sorted(rprop.objects(DOMAIN))
           % if domains
             <dt>Domain(s)</dt>
@@ -164,7 +172,7 @@
                 % for c in domains
                 <li class="${listclass(c)}">
                   <a href="${link(c)}"><code>${c.qname()}</code></a>
-                  <i>${(label(c))}</i>
+                  <i>${(label(c) or '')}</i>
                 </li>
                 % endfor
               </ul>
@@ -178,7 +186,7 @@
                 % for c in ranges
                 <li class="${listclass(c)}">
                   <a href="${link(c)}"><code>${c.qname()}</code></a>
-                  <i>${(label(c))}</i>
+                  <i>${(label(c) or '')}</i>
                 </li>
                 % endfor
               </ul>
