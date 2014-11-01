@@ -176,6 +176,12 @@
             <em>&mdash; ${(rprop.value(RDFS.comment))}</em>
           % endif
         </p>
+        % set notes = sorted(rprop.objects(SKOS.note))
+        % if notes
+          % for note in notes
+            <p class="note">${note}</p>
+          % endfor
+        % endif
         <dl>
           ${itemsblock(rprop.objects(OWL.equivalentProperty), "Equivalent properties", 'baseproperties', True)}
           ${itemsblock(rprop.objects(RDFS.subPropertyOf), "Base properties", 'baseproperties')}

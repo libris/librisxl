@@ -88,6 +88,15 @@ dd {
   margin-bottom: 0.5em;
 }
 
+p.note {
+  display: inline-block;
+  color: #333;
+  background-color: #ffe;
+  border: 1px dotted #ccc;
+  padding: 0.1em;
+  margin: 0.1em 0;
+}
+
 .baseclasses, .subclasses, .instances,
 .baseclasses > li, .subclasses > li, .instances > li {
   list-style: none;
