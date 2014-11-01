@@ -83,7 +83,7 @@
           ${itemsblock(rclass.objects(OWL.equivalentClass), "Equivalent classes", 'baseclasses', True)}
           ${itemsblock(rclass.objects(RDFS.subClassOf), "Base classes", 'baseclasses')}
           ${itemsblock(rclass.subjects(RDFS.subClassOf), "Subclasses", 'subclasses')}
-          % set props = sorted(rclass.subjects(DOMAIN))
+          % set props = sorted(set(rclass.subjects(DOMAIN)))
           % if props
             <dt>Properties</dt>
             <dd>
@@ -95,9 +95,13 @@
                   <span>(${prop.value(SKOS.notation)})</span>
                   % endif
                   <i>${(label(prop) or '')}</i>
-                  % set _range = prop.value(RANGE)
-                  % if _range
-                  <span>&rarr; <a href="${link(_range)}">${_range.qname()}</a></span>
+                  % set ranges = sorted(set(prop.objects(RANGE)))
+                  % if ranges
+                    <span>&rarr;
+                      % for range_ in ranges
+                        <a href="${link(range_)}">${range_.qname()}</a>{% if not loop.last %},{% endif %}
+                      % endfor
+                    </span>
                   % endif
                   <!--!
                   % for g in prop.objects(VANN.termGroup)
@@ -126,7 +130,7 @@
               </ul>
             </dd>
           % endif
-          % set rangeprops = sorted(rclass.subjects(RANGE))
+          % set rangeprops = sorted(set(rclass.subjects(RANGE)))
           % if rangeprops
             <dt>In range of properties</dt>
             <dd>
@@ -134,9 +138,13 @@
                 % for prop in rangeprops
                 <li class="${listclass(prop)}">
                   &larr; <a href="${link(prop)}"><code>${prop.qname()}</code></a>
-                  % set domain = prop.value(DOMAIN)
-                  % if domain
-                  <span>&larr; <a href="${link(domain)}">${domain.qname()}</a></span>
+                  % set domains = sorted(set(prop.objects(DOMAIN)))
+                  % if domains
+                    <span>&larr;
+                      % for domain in domains
+                        <a href="${link(domain)}">${domain.qname()}</a>{% if not loop.last %},{% endif %}
+                      % endfor
+                    </span>
                   % endif
                 </li>
               % endfor
@@ -180,7 +188,7 @@
               <i>${(label(inverse) or '')}</i>
             </dd>
           % endif
-          % set domains = sorted(rprop.objects(DOMAIN))
+          % set domains = sorted(set(rprop.objects(DOMAIN)))
           % if domains
             <dt>Domain(s)</dt>
             <dd>
@@ -194,7 +202,7 @@
               </ul>
             </dd>
           % endif
-          % set ranges = sorted(rprop.objects(RANGE))
+          % set ranges = sorted(set(rprop.objects(RANGE)))
           % if ranges
             <dt>Range(s)</dt>
             <dd>
