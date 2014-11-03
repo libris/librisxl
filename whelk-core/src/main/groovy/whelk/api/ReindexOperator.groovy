@@ -79,7 +79,7 @@ class ReindexOperator extends AbstractOperator {
         }
         log.info("Reindexed $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds.")
         // TODO: Find a way to do this AFTER the indexing queue is empty.
-        if (!dataset && whelk.index) {
+        if (!dataset && whelk.index && !cancelled) {
             whelk.index.reMapAliases(whelk.id)
         }
     }
