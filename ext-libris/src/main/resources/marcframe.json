@@ -3668,7 +3668,7 @@
       "resourceType": "UniformWork",
       "$0": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "/resource/bib/{_}"
+        "uriTemplate": "/bib/{_}"
       },
       "$a": {"property": "title"},
       "$k": {"addProperty": "subtitle"},
@@ -4398,7 +4398,7 @@
       "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
       "$w": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "/resource/bib/{_}"
+        "uriTemplate": "/bib/{_}"
       },
       "$x": {
         "TODO:targetMatch": "022",
