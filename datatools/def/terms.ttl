@@ -25,7 +25,7 @@
 : a owl:Ontology;
     rdfs:label "LIBRIS Terms"@en;
     rdfs:comment "This vocabulary serves as a central mapping to public, well-known properties and classes."@en;
-    owl:imports dc:, skos:, foaf:, bibo:, rdael:, sdo:, bf: .
+    owl:imports dc:, dctype:, skos:, prov:, foaf:, bibo:, sdo:, bf: .
 
 # Various sources beyond the linked defintions themselves:
 # - <http://bibframe.org/documentation/resource-types/#proposal>
