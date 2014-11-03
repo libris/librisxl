@@ -55,6 +55,7 @@ class OperatorAPI extends BasicAPI {
             new Thread(op).start()
             response.setStatus(HttpServletResponse.SC_SEE_OTHER)
             response.setHeader("Location", request.getRequestURL().toString())
+            return
         }
         if (isBusy() && operators.containsKey(req.cancel?.first())) {
             log.debug("Cancelling operation ${req.cancel.first()}")
