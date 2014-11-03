@@ -165,7 +165,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return null
     }
 
-    void remove(String id, long removeQueueDelay = 5000) {
+    void remove(String id, long removeQueueDelay = batchQueueTimeout) {
         log.debug("Sending DELETE operation to camel.")
         notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id, "timeout":removeQueueDelay])
         components.each {
@@ -267,7 +267,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         if (extraInfo) {
             extraInfo.each { key, value ->
-                log.info("NotifyCamel setting whelk:$key = $value")
                 message.setHeader("whelk:$key", value)
             }
         }
@@ -398,6 +397,10 @@ class StandardWhelk extends HttpServlet implements Whelk {
             log.debug("Setting up and configuring Apache Camel")
             def whelkCamelMain = new WhelkCamelMain()
             for (route in plugins.findAll { it instanceof RouteBuilder }) {
+                if (route.batchTimeout > batchQueueTimeout) {
+                    batchQueueTimeout = route.batchTimeout
+                    log.info("Adjusting batchQueueTimeout to $batchQueueTimeout")
+                }
                 whelkCamelMain.addRoutes(route)
             }
 

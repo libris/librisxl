@@ -28,7 +28,7 @@
       <level value="info"/>
   </logger>
   <logger name="whelk.camel.ElasticTypeRouteProcessor">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
   <logger name="whelk.camel.GraphstoreBatchUpdateAggregationStrategy">
       <level value="info"/>
