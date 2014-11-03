@@ -49,6 +49,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     // Set by init()-method
     CamelContext camelContext = null
+    long batchQueueTimeout = 0L
 
     private ProducerTemplate producerTemplate
 
@@ -164,10 +165,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return null
     }
 
-    @Override
-    void remove(String id) {
+    void remove(String id, long removeQueueDelay = 5000) {
         log.debug("Sending DELETE operation to camel.")
-        notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id])
+        notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id, "timeout":removeQueueDelay])
         components.each {
             ((Component)it).remove(id)
         }
@@ -267,6 +267,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         if (extraInfo) {
             extraInfo.each { key, value ->
+                log.info("NotifyCamel setting whelk:$key = $value")
                 message.setHeader("whelk:$key", value)
             }
         }
