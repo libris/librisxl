@@ -10,15 +10,27 @@ SCHEMA = Namespace("http://schema.org/")
 
 graph = Graph()
 
+extgraph = Graph()
+
 args = sys.argv[1:]
+destgraph = graph
 for fpath in args:
+    if fpath == '--':
+        destgraph = extgraph
+        continue
     with open(fpath) as fp:
-        graph.parse(fp, format=guess_format(fpath))
+        destgraph.parse(fp, format=guess_format(fpath))
 
 env = Environment(loader=PackageLoader(__name__, '.'),
         variable_start_string='${', variable_end_string='}',
         line_statement_prefix='%')
 tplt = env.get_template('vocab-tplt.html')
+
+def getrestrictions(rclass):
+    for c in rclass.objects(RDFS.subClassOf):
+        rtype = c.value(RDF.type)
+        if rtype and rtype.identifier == OWL.Restriction:
+            yield c
 
 def label(obj, lang='sv'):
     label = None

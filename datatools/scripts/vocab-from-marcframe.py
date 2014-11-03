@@ -1,6 +1,7 @@
 import json
 from urlparse import urljoin
 from rdflib import *
+from rdflib.namespace import *
 from rdflib.util import guess_format
 
 SDO = Namespace("http://schema.org/")
@@ -20,8 +21,9 @@ def parse_marcframe(dataset, marcframe):
         parse_resourcemap(dataset, part, marcframe)
 
         g = dataset.get_context(DATASET_BASE["marcframe/fields"])
-        for field in marcframe[part].values():
-            add_terms(g, field)
+        for tag, field in marcframe[part].items():
+            marc_source = "%s %s" % (part, tag)
+            add_terms(g, marc_source, field)
 
     return g
 
@@ -82,7 +84,7 @@ def parse_resourcemap(dataset, part, marcframe):
 
 
 
-def add_terms(g, dfn, parentdomain=None):
+def add_terms(g, marc_source, dfn, parentdomain=None):
 
     for k, v in dfn.items():
         if not v:
@@ -110,6 +112,14 @@ def add_terms(g, dfn, parentdomain=None):
             domainname = dfn.get('domainEntity', parentdomain)
             rangename = dfn.get('rangeEntity')
 
+        marc_source_path = marc_source
+        if k.startswith('$'):
+            marc_source_path = "%s.%s" % (marc_source, k[1:])
+        elif k.startswith('['):
+            marc_source_path = marc_source + k
+        elif k in ('i1', 'i2'):
+            marc_source_path = "%s.%s" % (marc_source, k)
+
         if not rtypes:
             if not isinstance(v, list):
                 v = [v]
@@ -117,10 +127,10 @@ def add_terms(g, dfn, parentdomain=None):
                 if isinstance(subdfn, dict):
                     subdomainname = (rangename if
                             is_link and not key_is_property else None)
-                    add_terms(g, subdfn, subdomainname)
+                    add_terms(g, marc_source_path, subdfn, subdomainname)
             continue
 
-        newprop(g, v, rtypes, domainname, rangename)
+        newprop(g, v, rtypes, domainname, rangename, marc_source_path)
 
 
 def newclass(g, name, base=None, termgroup=None):
@@ -138,7 +148,7 @@ def newclass(g, name, base=None, termgroup=None):
         rclass.add(VANN.termGroup, Literal(termgroup))#ENUM[termgroup])
     return rclass
 
-def newprop(g, name, rtypes, domainname=None, rangename=None):
+def newprop(g, name, rtypes, domainname=None, rangename=None, marc_source=None):
     if not name or name in ('@id', '@type'):
         return
     rprop = g.resource(URIRef(TERMS[name]))
@@ -148,6 +158,8 @@ def newprop(g, name, rtypes, domainname=None, rangename=None):
         rprop.add(SDO.domainIncludes, TERMS[domainname])
     if rangename:
         rprop.add(SDO.rangeIncludes, TERMS[rangename])
+    if marc_source:
+        rprop.add(SKOS.note, Literal("MARC "+ marc_source))
     return rprop
 
 
