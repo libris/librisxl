@@ -106,11 +106,11 @@ def add_terms(g, marc_source, dfn, parentdomain=None):
         key_is_property = k in ('property', 'addProperty')
 
         if key_is_property and is_link:
-            domainname = dfn.get('rangeEntity')
+            domainname = dfn.get('resourceType')
             rangename = None
         else:
-            domainname = dfn.get('domainEntity', parentdomain)
-            rangename = dfn.get('rangeEntity')
+            domainname = dfn.get('aboutType', parentdomain)
+            rangename = dfn.get('resourceType')
 
         marc_source_path = marc_source
         if k.startswith('$'):
