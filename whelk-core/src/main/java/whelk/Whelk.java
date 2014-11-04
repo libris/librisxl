@@ -11,6 +11,7 @@ public interface Whelk {
 
     // constants
     static final String ADD_OPERATION = "ADD";
+    static final String BULK_ADD_OPERATION = "BULK_ADD";
     static final String REMOVE_OPERATION = "DELETE";
 
     // storage

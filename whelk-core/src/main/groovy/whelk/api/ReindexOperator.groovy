@@ -62,7 +62,7 @@ class ReindexOperator extends AbstractOperator {
                         log.trace("Expected exception ${wae.message}")
                     }
                 }
-                whelk.notifyCamel(doc, Whelk.ADD_OPERATION, ["index":indexName])
+                whelk.notifyCamel(doc, Whelk.BULK_ADD_OPERATION, ["index":indexName])
                 count++
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")

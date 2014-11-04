@@ -113,8 +113,11 @@ class ElasticTypeRouteProcessor implements Processor {
         message.setHeader("whelk:type", indexType)
         String indexId = shapeComputer.toElasticId(identifier)
         message.setHeader("whelk:id", indexId)
-        String operation = message.getHeader("whelk:operation") ?: "BULK_INDEX"
+        String operation = message.getHeader("whelk:operation")
         if (operation == Whelk.ADD_OPERATION) {
+            operation = "INDEX"
+        }
+        if (operation == Whelk.BULK_ADD_OPERATION) {
             operation = "BULK_INDEX"
         }
         log.debug("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $indexId)")

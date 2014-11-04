@@ -162,11 +162,11 @@ class DocumentAPI extends BasicAPI {
                 }
             }
             entry["contentType"] = ContentType.parse(request.getContentType()).getMimeType()
-            log.info("Set ct: ${entry.contentType}")
+            log.debug("Set ct: ${entry.contentType}")
             entry["dataset"] = getDatasetBasedOnPath(path)
 
             if (request.getParameterMap()) {
-                log.info("Setting meta from parameter map.")
+                log.debug("Setting meta from parameter map.")
                 meta = request.getParameterMap()
             }
 

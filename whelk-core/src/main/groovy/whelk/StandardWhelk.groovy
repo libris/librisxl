@@ -98,9 +98,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         log.debug("Documents stored. Now notifying camel ...")
         if (foundStorage) {
-            // Notify camel last, to make sure documents are available when processors call them.
             for (doc in docs) {
-                notifyCamel(doc, ADD_OPERATION, [:])
+                notifyCamel(doc, BULK_ADD_OPERATION, [:])
             }
         }
         log.debug("Bulk operation completed.")
@@ -249,7 +248,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
         message.setHeader("whelk:operation", operation)
         exchange.setIn(message)
         log.trace("Sending $operation message to camel regaring ${identifier}")
-        producerTemplate.asyncSend("direct:${this.id}", exchange)
+        if (operation == BULK_ADD_OPERATION) {
+            producerTemplate.asyncSend("direct:bulk_${this.id}", exchange)
+        } else {
+            producerTemplate.asyncSend("direct:${this.id}", exchange)
+        }
     }
 
     void notifyCamel(Document document, String operation, Map extraInfo) {
@@ -274,7 +277,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
         message.setHeader("whelk:operation", operation)
         exchange.setIn(message)
         log.trace("Sending document in message to camel regaring ${document.identifier}")
-        producerTemplate.asyncSend("direct:${this.id}", exchange)
+        if (operation == BULK_ADD_OPERATION) {
+            producerTemplate.asyncSend("direct:bulk_${this.id}", exchange)
+        } else {
+            producerTemplate.asyncSend("direct:${this.id}", exchange)
+        }
     }
 
     /*
