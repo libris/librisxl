@@ -22,6 +22,7 @@ public interface Whelk {
     public void bulkAdd(List<Document> d, String contentType);
     public Document get(String identifier);
     public void remove(String identifier);
+    public Map<String, String> getVersions(String identifier);
 
     // search/lookup
     public SearchResult search(Query query);

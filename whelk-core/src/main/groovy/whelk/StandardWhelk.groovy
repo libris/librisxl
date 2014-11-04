@@ -167,8 +167,16 @@ class StandardWhelk extends HttpServlet implements Whelk {
             return new Location().withURI(foundIdentifier).withResponseCode(301)
         }
 
-
         return null
+    }
+
+    Map<String, String> getVersions(String identifier) {
+        def docs = storage.getAllVersions(identifier)
+        def versions = [:]
+        for (d in docs) {
+            versions[(d.version)] = d.checksum
+        }
+        return versions
     }
 
     void remove(String id, long removeQueueDelay = batchQueueTimeout) {

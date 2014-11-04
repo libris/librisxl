@@ -110,9 +110,13 @@ class DocumentAPI extends BasicAPI {
 
                 for (filter in getFiltersFor(d)) {
                     log.debug("Filtering using ${filter.id} for ${d.identifier}")
-                        d = filter.filter(d)
+                    d = filter.filter(d)
                 }
                 if (mode == DisplayMode.META) {
+                    def versions = whelk.getVersions(d.identifier)
+                    if (versions) {
+                        d.entry.versions = versions
+                    }
                     sendResponse(response, d.metadataAsJson, "application/json")
                 } else {
                     def ctheader = contextHeaders.get(path.split("/")[1])

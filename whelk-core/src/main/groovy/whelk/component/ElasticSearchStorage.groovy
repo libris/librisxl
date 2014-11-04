@@ -86,6 +86,22 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         }
     }
 
+    List<Document> getAllVersions(String identifier) {
+        if (versioning) {
+            def query = termQuery("identifier", identifier)
+            def srq = client.prepareSearch(indexName + VERSION_STORAGE_SUFFIX).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query)
+            def response = performExecute(srq)
+            def docs = []
+            response.hits.hits.each {
+                log.info("Building document.")
+                docs << Document.fromJson(it.sourceAsString)
+            }
+            return docs
+        } else {
+            return [get(identifier)]
+        }
+    }
+
     protected fetchAndUpdateVersion(Document newDoc) {
         Document currentDoc = get(newDoc.identifier)
         if (currentDoc && currentDoc.checksum != newDoc.checksum) {
