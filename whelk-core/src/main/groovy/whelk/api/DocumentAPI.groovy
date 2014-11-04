@@ -143,6 +143,7 @@ class DocumentAPI extends BasicAPI {
                 throw new WhelkRuntimeException("PUT requires a proper URI.")
             }
             def entry = [:]
+            def meta = [:]
 
             if (identifierSupplied) {
                 Document existingDoc = whelk.get(path)
@@ -154,6 +155,7 @@ class DocumentAPI extends BasicAPI {
                         return
                     }
                     entry = existingDoc.entry
+                    meta = existingDoc.meta
                 }
                 else {
                     entry['identifier'] = path
@@ -163,8 +165,13 @@ class DocumentAPI extends BasicAPI {
             log.info("Set ct: ${entry.contentType}")
             entry["dataset"] = getDatasetBasedOnPath(path)
 
+            if (request.getParameterMap()) {
+                log.info("Setting meta from parameter map.")
+                meta = request.getParameterMap()
+            }
+
             try {
-                Document doc = new Document(["entry":entry,"meta":request.getParameterMap()]).withData(request.getInputStream().getBytes())
+                Document doc = new Document(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
 
                 doc = this.whelk.sanityCheck(doc)
                 log.debug("Saving document (${doc.identifier})")

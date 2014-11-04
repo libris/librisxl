@@ -75,6 +75,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
+        // TODO: How to handle modified if document is not updated.
         doc.updateModified()
         for (storage in availableStorages) {
             storage.store(doc)

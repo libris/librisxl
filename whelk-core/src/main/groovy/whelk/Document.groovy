@@ -144,7 +144,7 @@ class Document {
 
     long updateModified() {
         setModified(new Date().getTime())
-        return modified
+        return getModified()
     }
 
     void setIdentifier(String identifier) {

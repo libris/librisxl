@@ -73,7 +73,7 @@
       <level value="info"/>
   </logger>
 <logger name="whelk.Document">
-      <level value="info"/>
+      <level value="trace"/>
   </logger>
 <logger name="whelk.api.DocumentAPI">
       <level value="info"/>

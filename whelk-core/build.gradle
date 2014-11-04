@@ -25,7 +25,7 @@ dependencies {
     compile "com.google.guava:guava:16.0.1"
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile "org.apache.camel:camel-core:${camelVersion}"
-    compile "org.apache.camel:camel-elasticsearch:${camelVersion}" //2.15-SNAPSHOT"
+    compile "org.apache.camel:camel-elasticsearch:2.15-SNAPSHOT"
     compile "org.apache.camel:camel-jackson:${camelVersion}"
     compile "org.apache.camel:camel-http4:${camelVersion}"
     compile "org.apache.camel:camel-groovy:${camelVersion}"
