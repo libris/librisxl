@@ -166,8 +166,8 @@ class DocumentAPI extends BasicAPI {
             entry["dataset"] = getDatasetBasedOnPath(path)
 
             if (request.getParameterMap()) {
-                log.debug("Setting meta from parameter map.")
                 meta = request.getParameterMap()
+                log.debug("Setting meta from parameter map: $meta")
             }
 
             try {

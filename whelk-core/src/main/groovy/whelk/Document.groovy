@@ -142,7 +142,7 @@ class Document {
         setTimestamp(new Date().getTime())
     }
 
-    long updateModified() {
+    protected long updateModified() {
         setModified(new Date().getTime())
         return getModified()
     }
@@ -151,12 +151,13 @@ class Document {
         entry['identifier'] = identifier
     }
 
-    void setTimestamp(long ts) {
+    protected void setTimestamp(long ts) {
         log.trace("Setting timestamp $ts")
         this.entry[TIMESTAMP_KEY] = ts
+        this.entry[MODIFIED_KEY] = ts
     }
 
-    void setModified(long mt) {
+    protected void setModified(long mt) {
         log.trace("Updating modified for ${this.identifier} to ${mt}")
         this.entry[MODIFIED_KEY] = mt
     }
@@ -190,12 +191,12 @@ class Document {
         this.entry["contentType"] = ctype
     }
 
-    Document withTimestamp(long ts) {
+    protected Document withTimestamp(long ts) {
         setTimestamp(ts)
         return this
     }
 
-    Document withModified(long mt) {
+    protected Document withModified(long mt) {
         setModified(mt)
         return this
     }

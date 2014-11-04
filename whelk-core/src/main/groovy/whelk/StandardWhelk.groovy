@@ -75,12 +75,18 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
-        // TODO: How to handle modified if document is not updated.
+        long lastUpdated = doc.modified
         doc.updateModified()
+        boolean saved = false
         for (storage in availableStorages) {
-            storage.store(doc)
+            saved = (storage.store(doc) || saved)
         }
-        notifyCamel(doc, ADD_OPERATION, [:])
+        if (saved) {
+            notifyCamel(doc, ADD_OPERATION, [:])
+        } else {
+            log.info("Save failed, resetting modified time.")
+            doc.modified = lastUpdated
+        }
         return doc.identifier
     }
 

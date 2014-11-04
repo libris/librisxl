@@ -48,7 +48,6 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     @Override
     boolean store(Document doc) {
-        doc.updateModified()
         if (versioning) {
             def oldDoc = null
             (oldDoc, doc) = fetchAndUpdateVersion(doc)
@@ -58,15 +57,19 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             }
         }
         log.debug("Saving doc (${doc.identifier}) with version ${doc.version}")
-        performExecute(prepareIndexingRequest(doc, doc.identifier, indexName))
-        return true
+        try {
+            performExecute(prepareIndexingRequest(doc, doc.identifier, indexName))
+            return true
+        } catch (Exception e) {
+            log.error("Failed to save document ${doc?.identifier}", e)
+        }
+        return false
     }
 
     @Override
     void bulkStore(List docs) {
         def breq = client.prepareBulk()
         for (doc in docs) {
-            doc.updateModified()
             if (versioning) {
                 def oldDoc = null
                 (oldDoc, doc) = fetchAndUpdateVersion(doc)
