@@ -35,7 +35,7 @@ class DocumentAPI extends BasicAPI {
     }
     protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         String path = getCleanPath(pathVars)
-        log.debug "Path: $path"
+        log.debug "Path: $path req method: ${request.method}"
         if (request.method == "GET") {
             handleGetRequest(request, response, path)
         } else if (request.method == "POST") {
@@ -48,8 +48,7 @@ class DocumentAPI extends BasicAPI {
             }
         } else if (request.getMethod() == "PUT") {
             handlePutAndPostRequest(request, response, path, true)
-        }
-        else if (request.method == "DELETE") {
+        } else if (request.method == "DELETE") {
             try {
                 log.debug("Removing resource at $path")
                 whelk.remove(path)

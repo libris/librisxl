@@ -180,11 +180,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     void remove(String id, long removeQueueDelay = batchQueueTimeout) {
-        log.debug("Sending DELETE operation to camel.")
-        notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id, "timeout":removeQueueDelay])
         components.each {
             ((Component)it).remove(id)
         }
+        log.debug("Sending DELETE operation to camel.")
+        notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id, "timeout":removeQueueDelay])
     }
 
     @Override

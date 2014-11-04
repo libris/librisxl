@@ -104,7 +104,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     protected fetchAndUpdateVersion(Document newDoc) {
         Document currentDoc = get(newDoc.identifier)
-        if (currentDoc && currentDoc.checksum != newDoc.checksum) {
+        if (currentDoc && !currentDoc.entry['deleted'] && currentDoc.checksum != newDoc.checksum) {
             newDoc.setVersion(currentDoc.version + 1)
         } else {
             currentDoc = null
@@ -238,9 +238,11 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     @Override
     void remove(String identifier) {
         if (!versioning) {
+            log.info("Deleting record at $indexName with id ${toElasticId(identifier)}")
             client.delete(new DeleteRequest(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier)))
         } else {
-            store(createTombstone(id))
+            log.info("Creating tombstone record at $indexName with id ${toElasticId(identifier)}")
+            store(createTombstone(identifier))
         }
     }
 
