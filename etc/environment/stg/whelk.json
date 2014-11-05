@@ -11,6 +11,7 @@
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
         "ACTIVEMQ_BROKER_URL": "tcp://hp02.libris.kb.se:61616",
         "MQ_INDEX": "activemq:devlibris.index",
+        "MQ_BULK_INDEX": "activemq:devlibris.bulk.index",
         "MQ_GRAPHSTORE": "activemq:devlibris.graphstore"
     },
     "_id": "libris",
@@ -20,8 +21,7 @@
             "routebuilder"
             ],
         "_components": [
-            "jsonldstorage",
-            "marcxmlstorage",
+            "esjsonldstorage",
             "index"
         ]
     },
