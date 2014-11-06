@@ -4,6 +4,7 @@
         "STORAGE_PATH": "/ssd/storage",
         "ELASTIC_HOST": "localhost",
         "ELASTIC_STORAGE_HOST": "localhost",
+        "ELASTIC_CLUSTER": "whelks",
         "ELASTIC_PORT": 9300,
         "GRAPHSTORE_DATA_URI": "http://hp03.libris.kb.se:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://hp03.libris.kb.se:3030/libris/query",
