@@ -3748,8 +3748,9 @@
 
     "250": {
       "aboutEntity": "?instance",
-      "link": "editionStatement",
-      "resourceType": "EditionEntity",
+      "TODO:match-repetition?": {
+      },
+      "addLink": "hasVersion", "resourceType": "Product",
       "$a": {"property": "edition"},
       "$b": {"property": "editionResponsibility"}
     },
