@@ -39,7 +39,7 @@ public class AuthenticationFilter implements Filter {
 
         if (supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             try {
-
+                String user = "";
                 String toBeEncrtypted = "";
                 JSONObject result = decrypt(getEncryptionKey(), toBeEncrtypted);
                 JSONObject userInfo = getUserInfo(result);
