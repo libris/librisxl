@@ -20,6 +20,15 @@
         </init-param>
     </filter>
 
+    <filter>
+        <filter-name>AuthenticationFilter</filter-name>
+        <filter-class>whelk.AuthenticationFilter</filter-class>
+        <init-param>
+            <param-name>supportedMethods</param-name>
+            <param-value>POST, PUT, DELETE</param-value>
+        </init-param>
+    </filter>
+
     <servlet>
         <servlet-name>WhelkServlet</servlet-name>
         <servlet-class>whelk.StandardWhelk</servlet-class>
@@ -34,6 +43,11 @@
     <filter-mapping>
         <filter-name>CORS</filter-name>
         <servlet-name>WhelkServlet</servlet-name>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthenticationFilter</filter-name>
+        <url-pattern>/*</url-pattern>
     </filter-mapping>
 
     <welcome-file-list>
