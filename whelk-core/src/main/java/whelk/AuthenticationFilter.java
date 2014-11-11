@@ -105,12 +105,12 @@ public class AuthenticationFilter implements Filter {
     }
 
     private JSONObject decrypt(String key, String encrypted) throws Exception{
-        Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding");
         Key aesKey = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
-        cipher.init(Cipher.DECRYPT_MODE, aesKey); //, new IvParameterSpec(new byte[16]));
+        cipher.init(Cipher.DECRYPT_MODE, aesKey);
         byte[] decodeValue = Base64.decodeBase64(encrypted);
         byte[] decryptValue = cipher.doFinal(decodeValue);
-        String jsonString = new String(decryptValue, "UTF-8").replaceAll("%+$", "");
+        String jsonString = new String(decryptValue, "UTF-8");
         System.out.println("Decrypted value: " + jsonString);
         JSONParser parser = new JSONParser();
         return (JSONObject)parser.parse(jsonString);
