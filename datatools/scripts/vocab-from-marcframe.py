@@ -109,7 +109,14 @@ def add_terms(g, marc_source, dfn, parentdomain=None):
             domainname = dfn.get('resourceType')
             rangename = None
         else:
-            domainname = dfn.get('aboutType', parentdomain)
+            domainname = parentdomain
+            about = dfn.get('aboutEntity')
+            if about == '?record':
+                domainname = 'Record'
+            elif about == '?instance' or not about and not parentdomain:
+                if 'bib' in marc_source.lower():
+                    domainname = 'CreativeWork'
+            domainname = dfn.get('aboutType') or domainname
             rangename = dfn.get('resourceType')
 
         marc_source_path = marc_source

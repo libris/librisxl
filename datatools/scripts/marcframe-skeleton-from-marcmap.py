@@ -117,6 +117,8 @@ if include_lang:
           "@language": "sv",
           "tokenMaps": None, "bib": None}]
     enum_defs = out['enumDefs'] = OrderedDict()
+else:
+    enum_defs = []
 
 
 # TODO: tokenMaps per marc_type(?)
@@ -341,28 +343,28 @@ for marc_type in 'bib', 'auth', 'hold':
                             if include_lang and type_id:
                                 if type_id in enum_defs:
                                     in_coll = enum_defs[type_id]['inCollection']
-                                    broader_types = enum_defs[type_id]['broader']
+                                    related_types = enum_defs[type_id]['related']
                                 else:
                                     in_coll = []
-                                    broader_types = []
+                                    related_types = []
                                 if type_name:
-                                    broader_id = "/def/terms#%s" % type_name
+                                    related_id = "/def/terms#%s" % type_name
                                 else:
-                                    broader_id = None
+                                    related_id = None
                                 for coll_id in [#enum_base + dfn_key + '-collection',
                                                 enum_base + propname + '-collection']:
                                     enum_defs[coll_id] = {"@id": coll_id, "@type": "Collection"}
                                     if not any(r['@id'] == coll_id for r in in_coll):
                                         in_coll.append({"@id": coll_id})
-                                    if broader_id and not any(
-                                            r['@id'] == broader_id for r in broader_types):
-                                        broader_types.append({"@id": broader_id})
+                                    if related_id and not any(
+                                            r['@id'] == related_id for r in related_types):
+                                        related_types.append({"@id": related_id})
                                 dest = enum_defs[type_id] = {
                                     "@id": type_id, "@type": "Concept",
                                     "inCollection": in_coll
                                 }
-                                if broader_types:
-                                    dest["broader"] = broader_types
+                                #if related_types:
+                                dest["related"] = related_types
                                 add_labels(dfn, dest)
 
                         if skip_unlinked_maps and not is_link:
@@ -437,6 +439,12 @@ for marc_type in 'bib', 'auth', 'hold':
         else:
             field_index[fieldhash] = tag
 
+
+# cleanup
+for enum in enum_defs.values():
+    for k, v in enum.items():
+        if not v:
+            del enum[k]
 
 ## sanity check..
 #prevranges = None
