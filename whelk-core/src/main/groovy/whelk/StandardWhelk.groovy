@@ -50,7 +50,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     // Set by init()-method
     CamelContext camelContext = null
-    long batchQueueTimeout = 0L
 
     private ProducerTemplate producerTemplate
 
@@ -182,12 +181,12 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return versions
     }
 
-    void remove(String id, long removeQueueDelay = batchQueueTimeout) {
+    void remove(String id) {
         components.each {
             ((Component)it).remove(id)
         }
         log.debug("Sending DELETE operation to camel.")
-        notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id, "timeout":removeQueueDelay])
+        notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id])
     }
 
     @Override
@@ -443,10 +442,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
             log.debug("Setting up and configuring Apache Camel")
             def whelkCamelMain = new WhelkCamelMain()
             for (route in plugins.findAll { it instanceof RouteBuilder }) {
-                if (route.batchTimeout > batchQueueTimeout) {
-                    batchQueueTimeout = route.batchTimeout
-                    log.info("Adjusting batchQueueTimeout to $batchQueueTimeout")
-                }
                 whelkCamelMain.addRoutes(route)
             }
 

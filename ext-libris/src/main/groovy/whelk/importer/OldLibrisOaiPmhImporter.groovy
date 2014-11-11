@@ -232,7 +232,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             } else if (it.header.@deleted == 'true') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                     try {
-                        whelk.remove(deleteIdentifier, 0)
+                        whelk.remove(deleteIdentifier)
                     } catch (Exception e2) {
                         log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
                     }

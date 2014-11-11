@@ -82,7 +82,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))
 
-            //from("direct:elasticdeletes").delay(header("whelk:timeout")).routingSlip(header("elasticDestination"))
         }
 
         // Routes for graphstore
