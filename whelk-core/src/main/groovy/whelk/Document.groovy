@@ -26,15 +26,15 @@ class Document {
     private String checksum = null
 
     @JsonIgnore
-    private static final ObjectMapper mapper = new ObjectMapper()
+    static final ObjectMapper mapper = new ObjectMapper()
     @JsonIgnore
-    static final TIMESTAMP_KEY = "timestamp"
+    static final String TIMESTAMP_KEY = "timestamp"
     @JsonIgnore
-    static final MODIFIED_KEY = "modified"
+    static final String MODIFIED_KEY = "modified"
 
     // store serialized data
     @JsonIgnore
-    private Map serializedDataInMap
+    protected Map serializedDataInMap
 
     /*
      * Constructors

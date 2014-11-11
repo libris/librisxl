@@ -241,7 +241,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     @Override
     void flush() {
-        log.info("Flushing data.")
+        log.debug("Flushing data.")
         // TODO: Implement storage and graphstore flush if necessary
         index?.flush()
     }

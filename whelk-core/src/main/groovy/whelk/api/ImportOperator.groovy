@@ -74,9 +74,9 @@ class ImportOperator extends AbstractOperator {
             importer.serviceUrl = serviceUrl
             this.totalCount = 0
             for (ds in dataset.split(",")) {
-                log.info("Import from OAIPMH ${ds}")
+                log.debug("Import from OAIPMH ${ds}")
                 totalCount = totalCount + importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
-                log.info("Count is now: $totalCount")
+                log.debug("Count is now: $totalCount")
             }
         } else {
             if (!serviceUrl) {
@@ -85,7 +85,7 @@ class ImportOperator extends AbstractOperator {
             try {
                 importer.startAt = startAtId
             } catch (MissingMethodException mme) {
-                log.info("Importer has no startAt parameter.")
+                log.debug("Importer has no startAt parameter.")
             }
             count = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
 

@@ -83,7 +83,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
         } else {
             for (st in this.whelk.getStorages()) {
-                log.info("Turning off versioning in ${st.id}")
+                log.debug("Turning off versioning in ${st.id}")
                 // Preserve original setting
                 versioningSettings.put(st.id, st.versioning)
                 //st.versioning = false
@@ -94,10 +94,10 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         URL url
         if (startResumptionToken) {
             url = new URL(baseUrl + "?verb=ListRecords&resumptionToken=" + startResumptionToken)
-            log.info("Harvesting OAIPMH data from ${url.toString()}. Pickymode: $picky")
+            log.debug("Harvesting OAIPMH data from ${url.toString()}. Pickymode: $picky")
         } else {
             url = new URL(urlString)
-            log.info("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
+            log.debug("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
         }
         String resumptionToken = harvest(url)
         log.debug("resumptionToken: $resumptionToken")
@@ -119,10 +119,10 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             }
             log.debug("resumptionToken: $resumptionToken")
         }
-        log.info("Flushing data ...")
+        log.debug("Flushing data ...")
         queue.execute({
             this.whelk.flush()
-            log.info("Resetting versioning setting for storages")
+            log.debug("Resetting versioning setting for storages")
             if (!from) {
                 for (st in this.whelk.getStorages()) {
                     st.versioning = versioningSettings.get(st.id)
