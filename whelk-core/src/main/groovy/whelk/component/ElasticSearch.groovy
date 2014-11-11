@@ -229,10 +229,10 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         log.trace("creating document. ID: ${hit?.id}, index: $queriedIndex")
         def metaEntryMap = null //getMetaEntry(hit.id, queriedIndex)
         if (metaEntryMap) {
-            return new Document(metaEntryMap).withData(hit.source())
+            return whelk.createDocument(metaEntryMap?.contentType).withData(hit.source())
         } else {
             log.trace("Meta entry not found for document. Will assume application/json for content-type.")
-            return new Document().withData(hit.source()).withContentType("application/json").withIdentifier(fromElasticId(hit.id))
+            return whelk.createDocument("application/json").withData(hit.source()).withIdentifier(fromElasticId(hit.id))
         }
     }
 

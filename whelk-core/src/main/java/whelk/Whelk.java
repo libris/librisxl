@@ -16,9 +16,11 @@ public interface Whelk {
 
     // storage
     public String add(Document d);
+    /*
     public String add(byte[] data,
             Map<String, Object> entrydata,
             Map<String, Object> metadata);
+            */
     public void bulkAdd(List<Document> d, String contentType);
     public Document get(String identifier);
     public void remove(String identifier);

@@ -24,7 +24,7 @@ class JsonLDTurtleConverter extends BasicFormatConverter {
     Document doConvert(Document doc) {
         def source = mapper.readValue(doc.data, Map)
         def bytes = JsonLdToTurtle.toTurtle(context, source, base).toByteArray()
-        return new Document().withData(bytes).withIdentifier(doc.identifier).withContentType(resultContentType)
+        return StandardWhelk.createDocument(resultContentType).withData(bytes).withIdentifier(doc.identifier)
     }
 
 }

@@ -174,13 +174,7 @@ class DocumentAPI extends BasicAPI {
             }
 
             try {
-                Document doc
-                if (entry["contentType"] == "application/ld+json") {
-                    log.info("Creating new jsonlddocument.")
-                    doc = new JsonLdDocument(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
-                } else {
-                    doc = new Document(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
-                }
+                Document doc = whelk.createDocument(entry["contentType"]).withMetaEntry(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
 
                 doc = this.whelk.sanityCheck(doc)
                 log.debug("Saving document (${doc.identifier})")

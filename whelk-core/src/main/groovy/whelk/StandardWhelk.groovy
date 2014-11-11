@@ -17,6 +17,7 @@ import whelk.result.*
 
 import whelk.util.Tools
 
+import org.codehaus.jackson.JsonParseException
 import org.codehaus.jackson.map.ObjectMapper
 
 import org.apache.camel.*
@@ -56,6 +57,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     /*
      * Whelk methods
      *******************************/
+    /*
     @Override
     String add(byte[] data,
             Map<String, Object> entrydata,
@@ -63,6 +65,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
         return add(doc)
     }
+    */
 
     @Override
     @groovy.transform.CompileStatic
@@ -76,7 +79,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
         long lastUpdated = doc.modified
-        doc.updateModified()
+        doc.entry.put(Document.MODIFIED_KEY, new Date().getTime())
         boolean saved = false
         for (storage in availableStorages) {
             saved = (storage.store(doc) || saved)
@@ -85,7 +88,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             notifyCamel(doc, ADD_OPERATION, [:])
         } else {
             log.info("Save failed, resetting modified time.")
-            doc.modified = lastUpdated
+            doc.entry.put(Document.MODIFIED_KEY, lastUpdated)
         }
         return doc.identifier
     }
@@ -238,6 +241,27 @@ class StandardWhelk extends HttpServlet implements Whelk {
             throw new WhelkRuntimeException("Couldn't find storage. (storageId = $storageId)")
         }
     }
+
+    static Document createDocument(String contentType) {
+        if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
+            return new JsonDocument().withContentType(contentType)
+        } else {
+            return new DefaultDocument().withContentType(contentType)
+        }
+    }
+
+    static Document createDocumentFromJson(String json) {
+        try {
+            Document document = mapper.readValue(json, DefaultDocument)
+            if (document.isJson()) {
+                return new JsonDocument(document)
+            }
+            return document
+        } catch (JsonParseException jpe) {
+            throw new DocumentException(jpe)
+        }
+    }
+
 
     @Override
     void flush() {

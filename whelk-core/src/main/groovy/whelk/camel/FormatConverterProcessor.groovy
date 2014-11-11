@@ -51,7 +51,7 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
                 log.debug("Loaded document ${doc?.identifier}")
             } else {
                 log.debug("Setting document data with type ${body.getClass().getName()}")
-                doc = new Document().withData(body)
+                doc = whelk.createDocument(message.getHeader("entry:contentType")).withData(body)
                 message.headers.each { key, value ->
                     if (key.startsWith("entry:")) {
                         log.debug("Setting entry $key = $value")

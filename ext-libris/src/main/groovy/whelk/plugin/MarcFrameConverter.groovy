@@ -11,6 +11,7 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Document
+import whelk.StandardWhelk
 
 import whelk.converter.MarcJSONConverter
 
@@ -70,7 +71,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         def result = createFrame(source, metaentry.meta)
         log.trace("Created frame: $result")
 
-        return new Document().withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry).withContentType(getResultContentType())
+        return StandardWhelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry)
     }
 
     @Override
@@ -80,7 +81,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         def result = createFrame(source, meta)
         log.trace("Created frame: $result")
 
-        return new Document().withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta).withContentType("application/ld+json")
+        return StandardWhelk.createDocument("application/ld+json").withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta)
     }
 
     public static void main(String[] args) {

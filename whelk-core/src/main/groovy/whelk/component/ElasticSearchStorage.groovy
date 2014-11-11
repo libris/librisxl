@@ -94,7 +94,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             def docs = []
             response.hits.hits.each {
                 log.info("Building document.")
-                docs << Document.fromJson(it.sourceAsString)
+                docs << StandardWhelk.createDocumentFromJson(it.sourceAsString)
             }
             return docs
         } else {
@@ -136,7 +136,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             return null
         }
         log.trace("Get response for ${identifier}: " + response.sourceAsMap)
-        Document document = Document.fromJson(response.sourceAsString)
+        Document document = StandardWhelk.createDocumentFromJson(response.sourceAsString)
         if (document && (v < 0 || document.version == v)) {
             return document
         } else {
@@ -146,7 +146,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             response = performExecute(srq)
             log.trace("Response from version search: $response")
             if (response.hits.totalHits == 1) {
-                return Document.fromJson(response.hits.hits[0].sourceAsString)
+                return StandardWhelk.createDocumentFromJson(response.hits.hits[0].sourceAsString)
             }
         }
         return null
@@ -202,7 +202,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
                                 log.debug "Total hits: ${response.hits.totalHits}"
                                 response.hits.hits.each {
                                     try {
-                                        results.add(Document.fromJson(it.sourceAsString))
+                                        results.add(StandardWhelk.createDocumentFromJson(it.sourceAsString))
                                     } catch (Exception e) {
                                         log.error("Failed to deserialize document ${it.id} ${e.message}")
                                     }
@@ -247,7 +247,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     private Document createTombstone(id) {
-        def tombstone = new Document().withIdentifier(id).withData("DELETED ENTRY")
+        def tombstone = whelk.createDocument("text/plain").withIdentifier(id).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
         return tombstone
     }

@@ -95,7 +95,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    @groovy.transform.CompileStatic
     public boolean store(Document doc) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         boolean result = storeAsFile(doc)
@@ -225,7 +224,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         return loadDocument(new URI(uri), version)
     }
 
-    @groovy.transform.CompileStatic
     private Document loadDocument(URI uri, String version = null) {
         log.debug("Received request for ${uri.toString()} with version $version")
         String filePath = buildPath(uri, (version ? version as int : 0))
@@ -233,7 +231,8 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         try {
             log.trace("filePath: $filePath")
             File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
-            def document = new Document(FileUtils.readFileToString(metafile, "utf-8"))
+            def metaEntry = mapper.readValue(FileUtils.readFileToString(metafile, "utf-8"), Map)
+            def document = whelk.createDocument(metaEntry?.contentType).withMetaEntry(metaEntry)
             File sourcefile = new File(filePath + "/" + fileName + FILE_EXTENSIONS.get(document.contentType, DATAFILE_EXTENSION))
             return document.withData(FileUtils.readFileToByteArray(sourcefile))
         } catch (FileNotFoundException fnfe) {
@@ -302,12 +301,10 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         deleteEntry(id, indexName, METAENTRY_INDEX_TYPE)
     }
 
-    @groovy.transform.CompileStatic
     String buildPath(String id, int version = 0) {
         return buildPath(new URI(id), version)
     }
 
-    @groovy.transform.CompileStatic
     String buildPath(URI uri, int version = 0) {
         String id = uri.toString()
         int pos = id.lastIndexOf("/")
@@ -324,12 +321,11 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
 
     private Document createTombstone(String id) {
-        def tombstone = new Document().withIdentifier(id).withData("DELETED ENTRY")
+        def tombstone = whelk.createDocument("text/plain").withIdentifier(id).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
         return tombstone
     }
 
-    @groovy.transform.CompileStatic
     Iterable<Document> getAllRaw(String dataset = null) {
         File baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
         log.info("Starting reading for getAllRaw() at ${baseDir.getPath()}.")
@@ -353,7 +349,8 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
                     public Document next() {
                         if (lastValidEntry) {
-                            Document document = new Document(FileUtils.readFileToString(lastValidEntry, "utf-8"))
+                            def metaEntry = mapper.readValue(FileUtils.readFileToString(lastValidEntry, "utf-8"), Map)
+                            def document = whelk.createDocument(metaEntry?.contentType).withMetaEntry(metaEntry)
                             try {
                                 document.withData(FileUtils.readFileToByteArray(new File(lastValidEntry.getParentFile(), document.getEntry().get(PairtreeHybridDiskStorage.FILE_NAME_KEY))))
                             } catch (FileNotFoundException fnfe) {

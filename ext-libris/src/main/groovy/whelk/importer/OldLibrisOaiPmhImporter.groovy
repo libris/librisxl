@@ -210,7 +210,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         }
                         def marcmeta = meta
                         marcmeta.put("oaipmhHeader", createString(it.header))
-                        marcdocuments << new Document(["entry":entry, "meta":marcmeta]).withData(mdrecord).withContentType("application/marcxml+xml")
+                        marcdocuments << StandardWhelk.createDocument("application/marcxml+xml").withMetaEntry(["entry":entry, "meta":marcmeta]).withData(mdrecord)
                     } catch (Exception e) {
                         log.error("Conversion failed for id ${entry.identifier}", e)
                     }

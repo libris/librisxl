@@ -199,9 +199,8 @@ class RemoteSearchAPI extends BasicAPI {
 
                     def jsonRec = MarcJSONConverter.toJSONString(record)
                     log.trace("Marcjsonconverter for done")
-                    def xMarcJsonDoc = new Document()
-                    .withData(jsonRec.getBytes("UTF-8"))
-                    .withContentType("application/x-marc-json")
+                    def xMarcJsonDoc = whelk.createDocument("application/x-marc-json")
+                        .withData(jsonRec.getBytes("UTF-8"))
                     //Convert xMarcJsonDoc to ld+json
                     def jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
                     if (!jsonDoc.identifier) {
