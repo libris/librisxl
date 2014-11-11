@@ -2,7 +2,6 @@ package whelk
 
 import groovy.util.logging.Slf4j as Log
 
-import java.net.URI
 import java.net.URISyntaxException
 import java.util.regex.*
 import java.util.UUID
@@ -18,6 +17,7 @@ import whelk.result.*
 
 import whelk.util.Tools
 
+import org.codehaus.jackson.JsonParseException
 import org.codehaus.jackson.map.ObjectMapper
 
 import org.apache.camel.*
@@ -56,17 +56,19 @@ class StandardWhelk extends HttpServlet implements Whelk {
     /*
      * Whelk methods
      *******************************/
+    /*
     @Override
-    URI add(byte[] data,
+    String add(byte[] data,
             Map<String, Object> entrydata,
             Map<String, Object> metadata) {
         Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
         return add(doc)
     }
+    */
 
     @Override
     @groovy.transform.CompileStatic
-    URI add(Document doc) {
+    String add(Document doc) {
         log.debug("Add single document ${doc.identifier}")
         if (!doc.data || doc.data.length < 1) {
             throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
@@ -75,12 +77,19 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
-        doc.updateModified()
+        long lastUpdated = doc.modified
+        doc.entry.put(Document.MODIFIED_KEY, new Date().getTime())
+        boolean saved = false
         for (storage in availableStorages) {
-            storage.store(doc)
+            saved = (storage.store(doc) || saved)
         }
-        notifyCamel(doc.identifier, ADD_OPERATION, [:])
-        return new URI(doc.identifier)
+        if (saved) {
+            notifyCamel(doc, ADD_OPERATION, [:])
+        } else {
+            log.info("Save failed, resetting modified time.")
+            doc.entry.put(Document.MODIFIED_KEY, lastUpdated)
+        }
+        return doc.identifier
     }
 
     /**
@@ -97,41 +106,40 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         log.debug("Documents stored. Now notifying camel ...")
         if (foundStorage) {
-            // Notify camel last, to make sure documents are available when processors call them.
             for (doc in docs) {
-                notifyCamel(doc.identifier, ADD_OPERATION, [:])
+                notifyCamel(doc, BULK_ADD_OPERATION, [:])
             }
         }
         log.debug("Bulk operation completed.")
     }
 
-    Document get(URI uri, String version=null, List contentTypes=[], boolean expandLinks = true) {
+    Document get(String identifier, String version=null, List contentTypes=[], boolean expandLinks = true) {
         Document doc = null
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
             def s = getStorage(contentType)
             if (s) {
                 log.debug("Found $contentType storage ${s.id}.")
-                doc = s.get(uri, version)
+                doc = s.get(identifier, version)
                 break
             }
         }
         // TODO: Check this
         if (!doc) {
-            doc = storage.get(uri, version)
+            doc = storage.get(identifier, version)
         }
 
         return doc
     }
 
-    Location locate(URI uri) {
+    Location locate(String uri) {
         log.debug("Locating $uri")
         def doc = get(uri)
         if (doc) {
             return new Location(doc)
         }
 
-        String identifier = uri.getPath().toString()
+        String identifier = new URI(uri).getPath().toString()
         log.trace("Nothing found at identifier $identifier")
 
         if (locationConfig['preCursor'] && identifier.startsWith(locationConfig['preCursor'])) {
@@ -143,8 +151,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
             log.trace("New place to look: $identifier")
         }
         log.debug("Checking if new identifier (${identifier}) has something to get")
-        if (get(new URI(identifier))) {
-            return new Location().withURI(identifier).withResponseCode(303)
+        if (get(identifier)) {
+            return new Location().withURI(new URI(identifier)).withResponseCode(303)
         }
 
         log.debug("Looking for identifiers in record.")
@@ -161,17 +169,24 @@ class StandardWhelk extends HttpServlet implements Whelk {
             return new Location().withURI(foundIdentifier).withResponseCode(301)
         }
 
-
         return null
     }
 
-    @Override
-    void remove(URI uri) {
-        log.debug("Sending DELETE operation to camel.")
-        notifyCamel(uri.toString(), REMOVE_OPERATION, [:])
-        components.each {
-            ((Component)it).remove(uri)
+    Map<String, String> getVersions(String identifier) {
+        def docs = storage.getAllVersions(identifier)
+        def versions = [:]
+        for (d in docs) {
+            versions[(d.version)] = d.checksum
         }
+        return versions
+    }
+
+    void remove(String id) {
+        components.each {
+            ((Component)it).remove(id)
+        }
+        log.debug("Sending DELETE operation to camel.")
+        notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id])
     }
 
     @Override
@@ -186,7 +201,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     Document sanityCheck(Document d) {
         if (!d.identifier) {
-            d.withIdentifier(mintIdentifier(d).toString())
+            d.withIdentifier(mintIdentifier(d))
             log.debug("Document was missing identifier. Setting identifier ${d.identifier}")
         }
         if (!d.data || d.data.length == 0) {
@@ -226,9 +241,30 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
     }
 
+    static Document createDocument(String contentType) {
+        if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
+            return new JsonDocument().withContentType(contentType)
+        } else {
+            return new DefaultDocument().withContentType(contentType)
+        }
+    }
+
+    static Document createDocumentFromJson(String json) {
+        try {
+            Document document = mapper.readValue(json, DefaultDocument)
+            if (document.isJson()) {
+                return new JsonDocument(document)
+            }
+            return document
+        } catch (JsonParseException jpe) {
+            throw new DocumentException(jpe)
+        }
+    }
+
+
     @Override
     void flush() {
-        log.info("Flushing data.")
+        log.debug("Flushing data.")
         // TODO: Implement storage and graphstore flush if necessary
         index?.flush()
     }
@@ -249,11 +285,14 @@ class StandardWhelk extends HttpServlet implements Whelk {
         message.setHeader("whelk:operation", operation)
         exchange.setIn(message)
         log.trace("Sending $operation message to camel regaring ${identifier}")
-        producerTemplate.asyncSend("direct:${this.id}", exchange)
+        if (operation == BULK_ADD_OPERATION) {
+            producerTemplate.asyncSend("direct:bulk_${this.id}", exchange)
+        } else {
+            producerTemplate.asyncSend("direct:${this.id}", exchange)
+        }
     }
 
-    // TODO: Should find a way not to notify for every storage. Only primary storage.
-    void onotifyCamel(Document document, Map extraInfo) {
+    void notifyCamel(Document document, String operation, Map extraInfo) {
         if (!producerTemplate) {
             producerTemplate = getCamelContext().createProducerTemplate();
         }
@@ -269,12 +308,17 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         if (extraInfo) {
             extraInfo.each { key, value ->
-                message.setHeader("extra:$key", value)
+                message.setHeader("whelk:$key", value)
             }
         }
+        message.setHeader("whelk:operation", operation)
         exchange.setIn(message)
-        log.trace("Sending message to camel regaring ${document.identifier}")
-        producerTemplate.asyncSend("direct:${this.id}", exchange)
+        log.trace("Sending document in message to camel regaring ${document.identifier}")
+        if (operation == BULK_ADD_OPERATION) {
+            producerTemplate.asyncSend("direct:bulk_${this.id}", exchange)
+        } else {
+            producerTemplate.asyncSend("direct:${this.id}", exchange)
+        }
     }
 
     /*
@@ -345,17 +389,17 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     @Override
-    URI mintIdentifier(Document d) {
-        URI identifier
+    String mintIdentifier(Document d) {
+        String identifier
         for (minter in uriMinters) {
-            identifier = minter.mint(d)
+            identifier = minter.mint(d)?.toString()
         }
         if (!identifier) {
             try {
                 if (d.entry.dataset) {
-                    identifier = new URI("/" + d.entry.dataset + "/" + UUID.randomUUID());
+                    identifier = new URI("/" + d.entry.dataset + "/" + UUID.randomUUID()).toString();
                 } else {
-                    identifier = new URI("/"+ UUID.randomUUID());
+                    identifier = new URI("/"+ UUID.randomUUID()).toString();
                 }
             } catch (URISyntaxException ex) {
                 throw new WhelkRuntimeException("Could not mint URI", ex);

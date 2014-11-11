@@ -44,6 +44,6 @@ abstract class BasicAPI extends BasicPlugin implements API {
     }
 
     String getMajorContentType(String contentType) {
-        return contentType.replaceAll("/[\\w]+\\+", "/")
+        return contentType?.replaceAll("/[\\w]+\\+", "/")
     }
 }

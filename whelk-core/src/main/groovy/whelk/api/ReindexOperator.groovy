@@ -62,10 +62,11 @@ class ReindexOperator extends AbstractOperator {
                         log.trace("Expected exception ${wae.message}")
                     }
                 }
-                whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, ["index":indexName])
+                whelk.notifyCamel(doc, Whelk.BULK_ADD_OPERATION, ["index":indexName])
                 count++
             } else {
                 log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
+                whelk.notifyCamel(doc.identifier, Whelk.REMOVE_OPERATION, ["index":indexName])
             }
             runningTime = System.currentTimeMillis() - startTime
             if (showSpinner) {
@@ -78,7 +79,7 @@ class ReindexOperator extends AbstractOperator {
         }
         log.info("Reindexed $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds.")
         // TODO: Find a way to do this AFTER the indexing queue is empty.
-        if (!dataset && whelk.index) {
+        if (!dataset && whelk.index && !cancelled) {
             whelk.index.reMapAliases(whelk.id)
         }
     }

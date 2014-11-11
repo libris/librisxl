@@ -2,10 +2,16 @@ package whelk.plugin
 
 import groovy.util.logging.Slf4j as Log
 
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
+
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Document
+import whelk.StandardWhelk
 
 import whelk.converter.MarcJSONConverter
 
@@ -65,7 +71,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         def result = createFrame(source, metaentry.meta)
         log.trace("Created frame: $result")
 
-        return new Document().withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry).withContentType(getResultContentType())
+        return StandardWhelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry)
     }
 
     @Override
@@ -75,7 +81,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         def result = createFrame(source, meta)
         log.trace("Created frame: $result")
 
-        return new Document().withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta).withContentType("application/ld+json")
+        return StandardWhelk.createDocument("application/ld+json").withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta)
     }
 
     public static void main(String[] args) {
@@ -108,6 +114,7 @@ class MarcConversion {
 
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
+    String thingLink
     Map marcTypeMap = [:]
     Map coreTypeMarcCategoryMap = [Authority: 'auth']
     def marcHandlers = [:]
@@ -117,6 +124,7 @@ class MarcConversion {
     URIMinter uriMinter
 
     MarcConversion(Map config, URIMinter uriMinter, Map tokenMaps) {
+        thingLink = config.thingLink
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps
@@ -139,7 +147,7 @@ class MarcConversion {
     }
 
     String revertMarcCategory(Map data) {
-        def types = data.about['@type']
+        def types = (thingLink? data[thingLink] : data) ['@type']
         if (types instanceof String) { types = [types] }
         def marcCat = null
         for (type in types) {
@@ -204,17 +212,14 @@ class MarcConversion {
 
     Map createFrame(Map marcSource, String recordId=null, Map extraData=null) {
 
-        def record = ["@type": "Record", "@id": recordId]
-
         def marcRemains = [failedFixedFields: [:], uncompleted: [], broken: []]
 
-        def entityMap = [Record: record, marcRemains: marcRemains]
-        // TODO:
-        // * always one record and a primary "thing"
-        // * the type of this thing is determined during processing
-        def instance = [:]
-        entityMap['Instance'] = instance
-        record.about = instance
+        def record = ["@id": recordId]
+        def thing = [:]
+        record[thingLink] = thing
+
+        def entityMap = ["?record": record, marcRemains: marcRemains]
+        entityMap['?instance'] = thing
 
         def leader = marcSource.leader
         def marcCat = getMarcCategory(leader)
@@ -264,19 +269,19 @@ class MarcConversion {
         if (record['@id'] == null) {
             def uriMap = uriMinter.computePaths(record, marcCat)
             record['@id'] = uriMap['document']
-            instance['@id'] = uriMap['thing']
+            thing['@id'] = uriMap['thing']
         }
 
         // TODO: move this to an "extra data" section in marcframe.json?
         extraData?.get("oaipmhSetSpecs")?.each {
             if (marcCat == "hold") {
                 def prefix = "bibid:"
-                if (it.startsWith(prefix) && !instance.holdingFor) {
-                    instance.holdingFor = ["@type": "Record", controlNumber: it.substring(prefix.size())]
+                if (it.startsWith(prefix) && !thing.holdingFor) {
+                    thing.holdingFor = ["@type": "Record", controlNumber: it.substring(prefix.size())]
                 }
                 prefix = "location:"
-                if (it.startsWith(prefix) && !instance.heldBy) {
-                    instance.heldBy = ["@type": "Organization", notation: it.substring(prefix.size())]
+                if (it.startsWith(prefix) && !thing.heldBy) {
+                    thing.heldBy = ["@type": "Organization", notation: it.substring(prefix.size())]
                 }
             }
         }
@@ -332,7 +337,8 @@ class MarcConversion {
 
 class ConversionPart {
 
-    String domainEntityName
+    MarcConversion conversion
+    String aboutEntityName
     Map tokenMap
     Map reverseTokenMap
 
@@ -351,10 +357,10 @@ class ConversionPart {
     }
 
     Map getEntity(Map data) {
-        if (domainEntityName == 'Record')
+        if (aboutEntityName == '?record')
             return data
-        else if (data.about)
-            return data.about
+        else if (conversion.thingLink in data)
+            return data[conversion.thingLink]
         else
             return data
     }
@@ -375,14 +381,28 @@ class ConversionPart {
 
 abstract class BaseMarcFieldHandler extends ConversionPart {
 
-    MarcConversion conversion
     String tag
     Map tokenMaps
+    String definesDomainEntityType
+    String link
+    boolean repeatable = false
+    String resourceType
 
-    BaseMarcFieldHandler(conversion, tag) {
+    BaseMarcFieldHandler(conversion, tag, fieldDfn) {
         this.conversion = conversion
         this.tag = tag
         this.tokenMaps = conversion.tokenMaps
+        if (fieldDfn.aboutType) {
+            definesDomainEntityType = fieldDfn.aboutType
+        }
+        aboutEntityName = fieldDfn.aboutEntity ?: '?instance'
+        if (fieldDfn.addLink) {
+            link = fieldDfn.addLink
+            repeatable = true
+        } else {
+            link = fieldDfn.link
+        }
+        resourceType = fieldDfn.resourceType
     }
 
     abstract boolean convert(sourceMap, value, entityMap)
@@ -514,13 +534,12 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     MarcFixedFieldHandler baseConverter
     Map<String, MarcFixedFieldHandler> handlerMap = [:]
     boolean useRecTypeBibLevel = false
-    String addLink = null
     String repeatedAddLink = null
     Map tokenNames = [:]
 
     TokenSwitchFieldHandler(conversion, tag, Map fieldDfn, tokenMapKey='tokenTypeMap') {
-        super(conversion, tag)
-        addLink = fieldDfn.addLink
+        super(conversion, tag, fieldDfn)
+        assert !link || repeatable // this kind should always be repeatable if linked
         if (fieldDfn['match-repeated']) {
             repeatedAddLink = fieldDfn['match-repeated'].addLink
         }
@@ -589,16 +608,16 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         if (converter == null)
             return false
 
-        def addLink = this.addLink
+        def addLink = this.link
         if (sourceMap[tag].size() > 1 && repeatedAddLink) {
             addLink = repeatedAddLink
         }
         if (addLink) {
-            def ent = entityMap.Instance
+            def ent = entityMap['?instance']
             def newEnt = newEntity(null)
             addValue(ent, addLink, newEnt, true)
             entityMap = entityMap.clone()
-            entityMap.Instance = newEnt
+            entityMap['?instance'] = newEnt
         }
 
         def baseOk = true
@@ -610,8 +629,8 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
 
     def revert(Map data) {
         def entities = [data]
-        if (addLink) {
-            entities = getEntity(data).get(addLink) ?: []
+        if (link) {
+            entities = getEntity(data).get(link) ?: []
         }
         def values = []
         for (entity in entities) {
@@ -634,39 +653,35 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
 
 class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
-    static final String DT_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SZ"
+    static final DateTimeFormatter DT_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XXX")
     static final String URI_SLOT = '{_}'
 
     String property
-    String link
-    String rangeEntityName
     String uriTemplate
     Pattern matchUriToken = null
-    boolean repeat = false
-    String dateTimeFormat
+    DateTimeFormatter dateTimeFormat
+    ZoneId timeZone
     boolean ignored = false
     // TODO: working, but not so useful until capable of merging entities..
     //MarcSimpleFieldHandler linkedHandler
 
     MarcSimpleFieldHandler(conversion, tag, fieldDfn) {
-        super(conversion, tag)
+        super(conversion, tag, fieldDfn)
         super.setTokenMap(this, fieldDfn)
         if (fieldDfn.addProperty) {
             property = fieldDfn.addProperty
-            repeat = true
+            repeatable = true
         } else {
             property = fieldDfn.property
         }
-        domainEntityName = fieldDfn.domainEntity ?: 'Instance'
-        dateTimeFormat = fieldDfn.parseDateTime
-        ignored = fieldDfn.get('ignored', false)
-        if (fieldDfn.addLink) {
-            link = fieldDfn.addLink
-            repeat = true
-        } else {
-            link = fieldDfn.link
+        if (fieldDfn.parseDateTime) {
+            dateTimeFormat = DateTimeFormatter.ofPattern(fieldDfn.parseDateTime)
+            if (fieldDfn.timeZone) {
+                timeZone =ZoneId.of(fieldDfn.timeZone)
+            }
         }
-        rangeEntityName = fieldDfn.rangeEntity
+        ignored = fieldDfn.get('ignored', false)
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
             matchUriToken = Pattern.compile(fieldDfn.matchUriToken)
@@ -701,15 +716,23 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (dateTimeFormat) {
-            value = Date.parse(dateTimeFormat, value).format(DT_FORMAT)
+            value = (timeZone?
+                    LocalDateTime.parse(value, dateTimeFormat).atZone(timeZone) :
+                    ZonedDateTime.parse(value, dateTimeFormat)
+                ).format(DT_FORMAT)
         }
 
-        def ent = entityMap[domainEntityName]
+        def ent = entityMap[aboutEntityName]
+        if (definesDomainEntityType) {
+            ent['@type'] = definesDomainEntityType
+        }
+
+
         if (ent == null)
             return false
         if (link) {
-            def newEnt = newEntity(rangeEntityName)
-            addValue(ent, link, newEnt, repeat)
+            def newEnt = newEntity(resourceType)
+            addValue(ent, link, newEnt, repeatable)
             ent = newEnt
         }
         if (uriTemplate) {
@@ -719,9 +742,9 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 ent['@value'] = value
             }
         //} else if (linkedHandler) {
-        //    linkedHandler.convert(sourceMap, value,[Instance: ent])
+        //    linkedHandler.convert(sourceMap, value,["?instance": ent])
         } else {
-            addValue(ent, property, value, repeat)
+            addValue(ent, property, value, repeatable)
         }
 
         return true
@@ -734,7 +757,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         if (property) {
             def v = entity[property]
             if (v && dateTimeFormat)
-                return Date.parse(DT_FORMAT, v).format(dateTimeFormat)
+                return ZonedDateTime.parse(v, DT_FORMAT).format(dateTimeFormat)
             return revertObject(v)
         } else {
             def entities = entity instanceof List? entity : [entity]
@@ -775,13 +798,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     MarcSubFieldHandler ind1
     MarcSubFieldHandler ind2
     List<String> dependsOn
-    String definesDomainEntityType
     UriTemplate uriTemplate
     Map uriTemplateDefaults
-    String link
     Map computeLinks
-    boolean repeatLink = false
-    String rangeEntityName
     List splitLinkRules
     Map<String, MarcSubFieldHandler> subfields = [:]
     List matchRules = []
@@ -790,32 +809,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     static GENERIC_REL_URI_TEMPLATE = UriTemplate.fromTemplate("generic:{_}")
 
     MarcFieldHandler(conversion, tag, fieldDfn) {
-        super(conversion, tag)
+        super(conversion, tag, fieldDfn)
         ind1 = fieldDfn.i1? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
         ind2 = fieldDfn.i2? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
         pendingResources = fieldDfn.pendingResources
 
         dependsOn = fieldDfn.dependsOn
-
-        if (fieldDfn.definesDomainEntity) {
-            // implies no links, no range
-            definesDomainEntityType = fieldDfn.definesDomainEntity
-            domainEntityName = 'Instance'
-        } else {
-            if (fieldDfn.promoteToDomainEntity) {
-                definesDomainEntityType = fieldDfn.promoteToDomainEntity
-                domainEntityName = 'Instance'
-            } else {
-                domainEntityName = fieldDfn.domainEntity ?: 'Instance'
-            }
-            if (fieldDfn.addLink) {
-                link = fieldDfn.addLink
-                repeatLink = true
-            } else {
-                link = fieldDfn.link
-            }
-            rangeEntityName = fieldDfn.rangeEntity
-        }
 
         if (fieldDfn.uriTemplate) {
             uriTemplate = UriTemplate.fromTemplate(fieldDfn.uriTemplate)
@@ -830,7 +829,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             [codes: new HashSet(it.codes),
                 link: it.link ?: it.addLink,
                 spliceEntityName: it.spliceEntity,
-                repeatLink: 'addLink' in it]
+                repeatable: 'addLink' in it]
         }
 
         def matchDomain = fieldDfn['match-domain']
@@ -862,7 +861,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
         if (splitLinkRules) {
-            assert rangeEntityName, "splitLinks requires rangeEntity in: ${fieldDfn}"
+            assert resourceType, "splitLinks requires resourceType in: ${fieldDfn}"
         }
     }
 
@@ -876,22 +875,22 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             throw new MalformedFieldValueException()
         }
 
-        def domainEntity = entityMap[domainEntityName]
-        if (domainEntity == null) return false
+        def aboutEntity = entityMap[aboutEntityName]
+        if (aboutEntity == null) return false
 
         if (definesDomainEntityType) {
-            domainEntity['@type'] = definesDomainEntityType
+            aboutEntity['@type'] = definesDomainEntityType
         }
 
         for (rule in matchRules) {
-            def handler = rule.getHandler(domainEntity, value)
+            def handler = rule.getHandler(aboutEntity, value)
             if (handler) {
                 // TODO: resolve combined config
                 return handler.convert(sourceMap, value, entityMap)
             }
         }
 
-        def entity = domainEntity
+        def entity = aboutEntity
 
         def handled = new HashSet()
 
@@ -917,8 +916,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 def subDfn = subfields[code]
                 def ok = false
                 if (subDfn) {
-                    def ent = (subDfn.domainEntityName)?
-                        entityMap[subDfn.domainEntityName] :
+                    def ent = (subDfn.aboutEntityName)?
+                        entityMap[subDfn.aboutEntityName] :
                         (linkage.codeLinkSplits[code] ?: entity)
                     if ((subDfn.requiresI1 && subDfn.requiresI1 != value.ind1) ||
                         (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
@@ -936,7 +935,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (uriTemplate) {
             uriTemplateDefaults.each { k, v ->
                 if (!uriTemplateParams.containsKey(k)) {
-                    v = getByPath(domainEntity, k) ?: v
+                    v = getByPath(aboutEntity, k) ?: v
                     uriTemplateParams[k] = v
                 }
             }
@@ -959,7 +958,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         linkage.splitResults.each {
             if (it.entity.find { k, v -> k != "@type" }) {
-                addValue(domainEntity, it.rule.link, it.entity, it.rule.repeatLink)
+                addValue(aboutEntity, it.rule.link, it.entity, it.rule.repeatable)
             }
         }
 
@@ -978,7 +977,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     newEnt = ["@type": rule.spliceEntityName]
                     spliceEntity = newEnt
                 } else {
-                    newEnt = ["@type": rangeEntityName]
+                    newEnt = ["@type": resourceType]
                 }
                 splitResults << [rule: rule, entity: newEnt]
                 rule.codes.each {
@@ -987,7 +986,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
         def newEnt = null
-        if ((!splitResults || spliceEntity) && rangeEntityName) {
+        if ((!splitResults || spliceEntity) && resourceType) {
             def useLinks = Collections.emptyList()
             if (computeLinks) {
                 def use = computeLinks.use
@@ -1017,9 +1016,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
 
-            newEnt = newEntity(rangeEntityName)
+            newEnt = newEntity(resourceType)
 
-            def lRepeatLink = repeatLink
+            def lRepeatLink = repeatable
             if (useLinks) {
                 lRepeatLink = true
             }
@@ -1035,7 +1034,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 entRef = ['@id': newEnt['@id']]
             }
             if (link) {
-                addValue(entity, link, newEnt, repeatLink)
+                addValue(entity, link, newEnt, repeatable)
             }
             useLinks.each {
                 addValue(entity, it, entRef, lRepeatLink)
@@ -1064,7 +1063,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def entity = localEntites[id]
         if (entity == null) {
             def pending = pendingResources[id]
-            entity = localEntites[id] = newEntity(pending.rangeEntity)
+            entity = localEntites[id] = newEntity(pending.resourceType)
             def link = pending.link ?: pending.addLink
             addValue(owner, link, entity, pending.containsKey('addLink'))
         }
@@ -1115,12 +1114,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 useEntities = entity[useLink.link]
                 if (!(useEntities instanceof List)) // should be if repeat == true
                     useEntities = useEntities? [useEntities] : []
-                if (rangeEntityName) {
+                if (resourceType) {
                     useEntities = useEntities.findAll {
                         if (!it) return false
                         def type = it['@type']
                         return (type instanceof List)?
-                            rangeEntityName in type : type == rangeEntityName
+                            resourceType in type : type == resourceType
                     }
                 }
             }
@@ -1129,14 +1128,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             if (pendingResources) {
                 pendingResources.each { key, pending ->
                     def link = pending.link ?: pending.addLink
-                    def rangeEntity = pending.rangeEntity
+                    def resourceType = pending.resourceType
                     useEntities.each {
                         def about = it[link]
                         // TODO: if multiple, spread according to repeated subfield groups(?)...
                         if (about instanceof List) {
                             about = about[0]
                         }
-                        if (about && (!rangeEntity || about['@type'] == rangeEntity)) {
+                        if (about && (!resourceType || about['@type'] == resourceType)) {
                             aboutMap[key] = about
                         }
                     }
@@ -1170,7 +1169,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         resultItems << item
                 }
             }
-            if (resultItems.size() /*&& !repeatLink*/) {
+            if (resultItems.size() /*&& !repeatable*/) {
                 def merged = resultItems[0]
                 if (resultItems.size() > 1) {
                     for (map in resultItems[1..-1]) {
@@ -1248,10 +1247,10 @@ class MarcSubFieldHandler extends ConversionPart {
     char[] surroundingChars
     String link
     String about
-    boolean repeatLink
+    boolean repeatable
     String property
     boolean repeatProperty
-    String rangeEntityName
+    String resourceType
     UriTemplate subUriTemplate
     Pattern splitValuePattern
     List<String> splitValueProperties
@@ -1265,18 +1264,19 @@ class MarcSubFieldHandler extends ConversionPart {
     String itemPos
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
+        this.conversion = fieldHandler.conversion
         this.fieldHandler = fieldHandler
         this.code = code
-        domainEntityName = subDfn.domainEntity
+        aboutEntityName = subDfn.aboutEntity
         interpunctionChars = subDfn.interpunctionChars?.toCharArray()
         surroundingChars = subDfn.surroundingChars?.toCharArray()
         super.setTokenMap(fieldHandler, subDfn)
         link = subDfn.link
         about = subDfn.about
         required = subDfn.required
-        repeatLink = false
+        repeatable = false
         if (subDfn.addLink) {
-            repeatLink = true
+            repeatable = true
             link = subDfn.addLink
         }
         property = subDfn.property
@@ -1285,7 +1285,7 @@ class MarcSubFieldHandler extends ConversionPart {
             property = subDfn.addProperty
             repeatProperty = true
         }
-        rangeEntityName = subDfn.rangeEntity
+        resourceType = subDfn.resourceType
         if (subDfn.uriTemplate) {
             subUriTemplate = UriTemplate.fromTemplate(subDfn.uriTemplate)
         }
@@ -1330,8 +1330,8 @@ class MarcSubFieldHandler extends ConversionPart {
                     // bad characters in what should have been a proper URI path ({+_} expansion)
                 }
             }
-            def newEnt = fieldHandler.newEntity(rangeEntityName, entId)
-            fieldHandler.addValue(ent, link, newEnt, repeatLink)
+            def newEnt = fieldHandler.newEntity(resourceType, entId)
+            fieldHandler.addValue(ent, link, newEnt, repeatable)
             ent = newEnt
             uriTemplateKeyBase = "${link}."
             ok = true
@@ -1395,7 +1395,7 @@ class MarcSubFieldHandler extends ConversionPart {
     }
 
     def revert(Map data, Map currentEntity) {
-        currentEntity = domainEntityName? getEntity(data) : currentEntity
+        currentEntity = aboutEntityName? getEntity(data) : currentEntity
         if (currentEntity == null)
             return null
 
@@ -1418,7 +1418,7 @@ class MarcSubFieldHandler extends ConversionPart {
             } else if (itemPos == "first")
                 break
 
-            if (rangeEntityName && entity['@type'] != rangeEntityName)
+            if (resourceType && entity['@type'] != resourceType)
                 continue
 
             // TODO: match defaults only if not set by other subfield...

@@ -4,7 +4,6 @@ import groovy.transform.TypeChecked
 import groovy.util.logging.Slf4j as Log
 
 import java.io.*
-import java.net.URI
 import java.util.*
 import java.nio.ByteBuffer
 import java.lang.annotation.*
@@ -20,60 +19,58 @@ import whelk.exception.*
 
 
 @Log
-class Document {
-    String identifier
+class DefaultDocument implements Document {
     byte[] data
     Map entry = [:] // For "technical" metadata about the record, such as contentType, timestamp, etc.
     Map meta  = [:] // For extra metadata about the object, e.g. links and such.
     private String checksum = null
 
     @JsonIgnore
-    private static final ObjectMapper mapper = new ObjectMapper()
-    @JsonIgnore
-    static final TIMESTAMP_KEY = "timestamp"
-    @JsonIgnore
-    static final MODIFIED_KEY = "modified"
-
-    // store serialized data
-    @JsonIgnore
-    private Map serializedDataInMap
+    static final ObjectMapper mapper = new ObjectMapper()
 
     /*
      * Constructors
      */
-    Document() {
+    DefaultDocument() {
         entry = [:]
         meta = [:]
         updateTimestamp()
     }
 
-    Document(String jsonString) {
+    /*
+    private DefaultDocument(String jsonString) {
         entry = [:]
         meta = [:]
         updateTimestamp()
         withMetaEntry(jsonString)
     }
 
-    Document(Map jsonMap) {
+    private DefaultDocument(Map jsonMap) {
         entry = [:]
         meta = [:]
         updateTimestamp()
         withMetaEntry(jsonMap)
     }
 
-    Document(File jsonFile) {
+    private DefaultDocument(File jsonFile) {
         entry = [:]
         meta = [:]
         updateTimestamp()
         withMetaEntry(jsonFile)
     }
 
-    Document(File datafile, File entryfile) {
+    private DefaultDocument(File datafile, File entryfile) {
         entry = [:]
         meta = [:]
         setData(datafile.readBytes())
         updateTimestamp()
         withMetaEntry(entryfile)
+    }
+    */
+
+    @JsonIgnore
+    String getIdentifier() {
+        entry['identifier']
     }
 
     @JsonIgnore
@@ -82,17 +79,6 @@ class Document {
     }
 
     @JsonIgnore
-    Map getDataAsMap() {
-        if (!isJson()) {
-            throw new DocumentException("Cannot serialize data as Map. (Content-type is $contentType)")
-        }
-        if (!serializedDataInMap) {
-            log.trace("Serializing data as map")
-            this.serializedDataInMap = mapper.readValue(new String(this.data, "UTF-8"), Map)
-        }
-        return serializedDataInMap
-    }
-
     String getChecksum() { checksum }
 
     String toJson() {
@@ -115,16 +101,20 @@ class Document {
         return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "entry":entry])
     }
 
-    String getContentType() { entry["contentType"] }
+    @JsonIgnore
+    String getContentType() { entry[CONTENT_TYPE_KEY] }
 
+    @JsonIgnore
     long getTimestamp() {
         return (entry.get(TIMESTAMP_KEY, 0L))
     }
 
+    @JsonIgnore
     long getModified() {
         return entry.get(MODIFIED_KEY, 0L)
     }
 
+    @JsonIgnore
     int getVersion() {
         return entry.get("version", 0)
     }
@@ -136,12 +126,17 @@ class Document {
 
     long updateModified() {
         setModified(new Date().getTime())
-        return modified
+        return getModified()
     }
 
-    void setTimestamp(long ts) {
+    void setIdentifier(String identifier) {
+        entry['identifier'] = identifier
+    }
+
+    protected void setTimestamp(long ts) {
         log.trace("Setting timestamp $ts")
         this.entry[TIMESTAMP_KEY] = ts
+        this.entry[MODIFIED_KEY] = ts
     }
 
     void setModified(long mt) {
@@ -155,8 +150,6 @@ class Document {
 
     void setData(byte[] data) {
         this.data = data
-        // Whenever data is changed, reset serializedDataInMap and checksum
-        serializedDataInMap = null
         checksum = null
         calculateChecksum()
     }
@@ -164,69 +157,59 @@ class Document {
     /*
      * Convenience methods
      */
-    Document withIdentifier(String i) {
-        this.identifier = i
+    DefaultDocument withIdentifier(String i) {
         this.entry['identifier'] = i
         return this
     }
-    /*
-    Document withIdentifier(URI uri) {
-        return withIdentifier(uri.toString())
-    }
-    */
 
-    Document withContentType(String ctype) {
+    DefaultDocument withContentType(String ctype) {
         setContentType(ctype)
         return this
     }
 
     void setContentType(String ctype) {
-        this.entry["contentType"] = ctype
+        this.entry[CONTENT_TYPE_KEY] = ctype
     }
 
-    Document withTimestamp(long ts) {
+    protected DefaultDocument withTimestamp(long ts) {
         setTimestamp(ts)
         return this
     }
 
-    Document withModified(long mt) {
+    DefaultDocument withModified(long mt) {
         setModified(mt)
         return this
     }
 
-    Document withVersion(long v) {
+    DefaultDocument withVersion(long v) {
         setVersion((int)v)
         return this
     }
 
-    Document withVersion(int v) {
+    DefaultDocument withVersion(int v) {
         setVersion(v)
         return this
     }
 
-    Document withData(byte[] data) {
+    DefaultDocument withData(byte[] data) {
         setData(data)
         return this
     }
 
-    Document withData(String dataString) {
+    DefaultDocument withData(String dataString) {
         return withData(dataString.getBytes("UTF-8"))
     }
 
     /**
      * Convenience method to set data from dictionary, assuming data is to be stored as json.
      */
-    Document withData(Map dataMap) {
-        return withData(mapper.writeValueAsBytes(dataMap))
-    }
-
-    Document setEntry(Map entryData) {
+    void setEntry(Map entryData) {
         log.debug("Clearing entry")
         this.entry = [:]
-        return withEntry(entryData)
+        withEntry(entryData)
     }
 
-    Document withEntry(Map entrydata) {
+    DefaultDocument withEntry(Map entrydata) {
         log.debug("withEntry: $entrydata")
         if (entrydata?.containsKey("identifier")) {
             this.identifier = entrydata["identifier"]
@@ -237,6 +220,9 @@ class Document {
         if (entrydata?.containsKey(MODIFIED_KEY)) {
             setModified(entrydata.get(MODIFIED_KEY))
         }
+        if (entrydata?.containsKey(CONTENT_TYPE_KEY)) {
+            setContentType(entrydata.get(CONTENT_TYPE_KEY))
+        }
         if (entrydata != null) {
             this.entry.putAll(entrydata)
             if (checksum) {
@@ -245,7 +231,7 @@ class Document {
         }
         return this
     }
-    Document withMeta(Map metadata) {
+    DefaultDocument withMeta(Map metadata) {
         if (metadata != null) {
             this.meta = [:]
             this.meta.putAll(metadata)
@@ -253,12 +239,12 @@ class Document {
         return this
     }
 
-    Document setMetaEntry(Map metaEntry) {
+    DefaultDocument setMetaEntry(Map metaEntry) {
         setEntry(metaEntry.entry)
         withMeta(metaEntry.meta)
     }
 
-    Document withMetaEntry(Map metaEntry) {
+    DefaultDocument withMetaEntry(Map metaEntry) {
         withEntry(metaEntry.entry)
         withMeta(metaEntry.meta)
         if (metaEntry.data) {
@@ -271,39 +257,18 @@ class Document {
      * Expects a JSON string containing meta and entry as dictionaries.
      * It's the reverse of getMetadataAsJson().
      */
-    Document withMetaEntry(String jsonEntry) {
+    DefaultDocument withMetaEntry(String jsonEntry) {
         Map metaEntry = mapper.readValue(jsonEntry, Map)
         return withMetaEntry(metaEntry)
     }
 
-    Document withMetaEntry(File entryFile) {
+    DefaultDocument withMetaEntry(File entryFile) {
         return withMetaEntry(entryFile.getText("utf-8"))
     }
 
     @JsonIgnore
     boolean isJson() {
         getContentType() ==~ /application\/(\w+\+)*json/ || getContentType() ==~ /application\/x-(\w+)-json/
-    }
-
-    /**
-     * Takes either a String or a File as argument.
-     */
-    static Document fromJson(String json) {
-        try {
-            Document newDoc = mapper.readValue(json, Document)
-            /*
-            if (newDoc.data) {
-                setData(newDoc.data)
-            }
-            this.identifier = newDoc.identifier
-            this.entry = newDoc.entry
-            this.meta = newDoc.meta
-            */
-            return newDoc
-        } catch (JsonParseException jpe) {
-            throw new DocumentException(jpe)
-        }
-        //return this
     }
 
     private void calculateChecksum() {

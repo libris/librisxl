@@ -9,8 +9,10 @@ mkdir -p $BUILD_DIR
 D3JS=$BUILD_DIR/d3.v3.min.js
 curl http://d3js.org/d3.v3.min.js -o $D3JS -z $D3JS
 
+VOCAB_DIR=$BUILD_DIR/vocab-cache
+
 pushd $(dirname $0)
-    python vocab_to_html.py $VOCAB > $BUILD_DIR/index.html
+    python vocab_to_html.py $VOCAB_DIR $VOCAB > $BUILD_DIR/index.html
     cp graph.* $BUILD_DIR/
     cp vocab.* $BUILD_DIR/
 popd

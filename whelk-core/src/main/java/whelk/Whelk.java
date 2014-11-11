@@ -1,7 +1,6 @@
 package whelk;
 
 import java.io.InputStream;
-import java.net.URI;
 import java.util.*;
 import whelk.plugin.Plugin;
 import whelk.result.SearchResult;
@@ -12,16 +11,20 @@ public interface Whelk {
 
     // constants
     static final String ADD_OPERATION = "ADD";
+    static final String BULK_ADD_OPERATION = "BULK_ADD";
     static final String REMOVE_OPERATION = "DELETE";
 
     // storage
-    public URI add(Document d);
-    public URI add(byte[] data,
+    public String add(Document d);
+    /*
+    public String add(byte[] data,
             Map<String, Object> entrydata,
             Map<String, Object> metadata);
+            */
     public void bulkAdd(List<Document> d, String contentType);
-    public Document get(URI identifier);
-    public void remove(URI identifier);
+    public Document get(String identifier);
+    public void remove(String identifier);
+    public Map<String, String> getVersions(String identifier);
 
     // search/lookup
     public SearchResult search(Query query);
@@ -29,7 +32,7 @@ public interface Whelk {
     public Iterable<Document> loadAll(Date since);
     public Iterable<Document> loadAll(String dataset);
     public Iterable<Document> loadAll(String dataset, Date since);
-    public Location locate(URI identifier);
+    public Location locate(String identifier);
 
     public InputStream sparql(String query);
 
@@ -37,7 +40,7 @@ public interface Whelk {
     public String getId(); // Whelk ID
     public void addPlugin(Plugin plugin);
     public void flush();
-    public URI mintIdentifier(Document document);
+    public String mintIdentifier(Document document);
 
     // ecosystem
     public Map getGlobal();

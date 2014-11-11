@@ -25,7 +25,7 @@
 : a owl:Ontology;
     rdfs:label "LIBRIS Terms"@en;
     rdfs:comment "This vocabulary serves as a central mapping to public, well-known properties and classes."@en;
-    owl:imports dc:, skos:, foaf:, bibo:, rdael:, sdo:, bf: .
+    owl:imports dc:, dctype:, skos:, prov:, foaf:, bibo:, sdo:, bf: .
 
 # Various sources beyond the linked defintions themselves:
 # - <http://bibframe.org/documentation/resource-types/#proposal>
@@ -47,19 +47,25 @@ marcenum:bibLevel a skos:Collection;
 # .. use rdfs:range rdf:langString where applicable?
 
 :label a owl:DatatypeProperty;
+    rdfs:label "etikett"@sv;
     owl:equivalentProperty rdfs:label, sdo:name .
 :comment a owl:DatatypeProperty;
+    rdfs:label "kommentar"@sv;
     owl:equivalentProperty rdfs:comment .
 :value a owl:DatatypeProperty;
+    rdfs:label "värde"@sv;
     owl:equivalentProperty rdf:value .
 
 :seeAlso a owl:ObjectProperty;
+    rdfs:label "se även"@sv;
     owl:equivalentProperty rdfs:seeAlso .
 
 :sameAs a owl:ObjectProperty;
+    rdfs:label "samma sak som"@sv;
     owl:equivalentProperty owl:sameAs .
 
 :identifiedBy a owl:ObjectProperty;
+    rdfs:label "identifierad av"@sv;
     owl:equivalentProperty sdo:sameAs .
 
 :Date a rdfs:Datatype;
@@ -98,15 +104,18 @@ marcenum:bibLevel a skos:Collection;
     rdfs:subClassOf foaf:Document .
 
 :about a owl:ObjectProperty;
+    rdfs:label "handlar om"@sv;
     owl:equivalentProperty sdo:about;
     rdfs:subPropertyOf foaf:primaryTopic .
 
 :describedBy a owl:ObjectProperty;
+    rdfs:label "beskriven av"@sv;
     owl:inverseOf :about;
     owl:equivalentProperty iana:describedby;
     rdfs:subPropertyOf foaf:isPrimaryTopicOf .
 
 :controlNumber a owl:DatatypeProperty;
+    rdfs:label "kontrollnummer"@sv;
     owl:equivalentProperty dc:identifier .
 
 
@@ -121,9 +130,9 @@ marcenum:bibLevel a skos:Collection;
     owl:equivalentClass sdo:CreativeWork;
     rdfs:subClassOf dc:BibliographicResource  .
 
-:ConceptualWork a owl:Class;
-    rdfs:label "Konceptuellt verk"@sv;
-    rdfs:subClassOf :CreativeWork, bf:Work, sdo:ProductModel, :Concept . #, rdfa:Pattern .
+:UniformWork a owl:Class;
+    rdfs:label "Uniformt verk"@sv;
+    rdfs:subClassOf :CreativeWork, bf:Work, sdo:ProductModel . #, rdfa:Pattern .
 
 :Product a owl:Class;
     rdfs:label "Instans"@sv;
@@ -131,50 +140,70 @@ marcenum:bibLevel a skos:Collection;
     rdfs:subClassOf sdo:Product, bf:Instance .
 
 :contentType a owl:ObjectProperty;
+    rdfs:label "innehållstyp"@sv;
     rdfs:subPropertyOf dc:type, sdo:additionalType .
 
 :carrierType a owl:ObjectProperty;
+    rdfs:label "bärartype"@sv;
     rdfs:range :Carrier;
     rdfs:subPropertyOf dc:format, sdo:additionalType .
 
 :Carrier a owl:Class;
+    rdfs:label "Bärare"@sv;
     owl:equivalentClass dc:MediaType .
-
-:HeldMaterial a owl:Class;
-    rdfs:subClassOf bf:HeldMaterial, sdo:SomeProducts .
-
-:Offer a owl:Class;
-    rdfs:subClassOf sdo:Offer .
-
-:holdingFor a owl:ObjectProperty;
-    rdfs:domain :HeldMaterial;
-    rdfs:range :Organization;
-    rdfs:subPropertyOf sdo:exampleOfWork, bf:holdingFor .
-
-:heldBy a owl:ObjectProperty;
-    rdfs:domain :Offer;
-    rdfs:range :Organization;
-    rdfs:subPropertyOf sdo:seller, bf:heldBy .
 
 #commonEndeavor?
 
 :exampleOfWork a owl:ObjectProperty ;
+    rdfs:label "exemplifierar verk"@sv;
     owl:equivalentProperty sdo:exampleOfWork;
     rdfs:subPropertyOf bf:instanceOf;
-    sdo:rangeIncludes :ConceptualWork .
+    sdo:rangeIncludes :UniformWork .
 
 :workExample a owl:ObjectProperty ;
+    rdfs:label "exempel på detta verk"@sv;
     owl:equivalentProperty sdo:workExample;
     sdo:rangeIncludes :CreativeWork, :Product .
 
 :format a owl:ObjectProperty;
+    rdfs:label "format"@sv;
     owl:equivalentProperty dc:format .
 
 :formatOf a owl:ObjectProperty;
+    rdfs:label "är format på"@sv;
     owl:equivalentProperty dc:isFormatOf .
 
 :hasFormat a owl:ObjectProperty;
+    rdfs:label "har format"@sv;
     owl:equivalentProperty dc:hasFormat .
+
+
+##
+# Holdings
+
+:HeldMaterial a owl:Class;
+    rdfs:label "Beståndsmaterial"@sv;
+    rdfs:subClassOf bf:HeldMaterial, sdo:SomeProducts .
+
+:Offer a owl:Class;
+    rdfs:label "Erbjudande"@sv;
+    rdfs:subClassOf sdo:Offer .
+
+:holdingFor a owl:ObjectProperty;
+    rdfs:label "bestånd på"@sv;
+    rdfs:domain :HeldMaterial;
+    rdfs:range :Organization;
+    rdfs:subPropertyOf bf:holdingFor .
+
+:heldBy a owl:ObjectProperty;
+    rdfs:label "beståndsinnehavare"@sv;
+    rdfs:domain :Offer;
+    rdfs:range :Organization;
+    rdfs:subPropertyOf sdo:seller, bf:heldBy .
+
+:callno rdfs:subPropertyOf :genre, bf:callno, sdo:sku;
+    rdfs:range :Holding .
+
 
 # Common Content Types
 
@@ -321,7 +350,6 @@ marcenum:bibLevel a skos:Collection;
 
 :ComponentPart a owl:Class;
     rdfs:label "Del av sammansatt resurs"@sv;
-    owl:equivalentClass bibo:DocumentPart;
     vann:termGroup marcenum:bibLevel;
     rdfs:subClassOf :Part .
 
@@ -358,6 +386,7 @@ marcenum:bibLevel a skos:Collection;
 
 :MonographicComponentPart a owl:Class;
     rdfs:label "Del av sammansatt monografisk resurs"@sv;
+    owl:equivalentClass bibo:DocumentPart;
     rdfs:subClassOf :Monograph, :ComponentPart .
 
 :SerialComponentPart a owl:Class;
@@ -551,68 +580,92 @@ marcenum:bibLevel a skos:Collection;
 # Parts, Events, Relations
 
 :ProviderEvent a owl:Class;
+    rdfs:label "Tillgängliggörande"@sv;
     rdfs:subClassOf prov:Activity, bf:Provider .
 
 :creator a owl:ObjectProperty;
+    rdfs:label "skapare"@sv;
     owl:equivalentProperty dc:creator .
 
 :publisher a owl:ObjectProperty;
+    rdfs:label "utgivare"@sv;
     owl:equivalentProperty dc:publisher, bf:publisher .
 
 :license a owl:ObjectProperty;
+    rdfs:label "licens"@sv;
     owl:equivalentProperty dc:license .
 
 :created a owl:ObjectProperty;
+    rdfs:label "skapad"@sv;
     owl:equivalentProperty dc:created;
     rdfs:range xsd:dateTime .
 
 :modified a owl:ObjectProperty;
+    rdfs:label "modifierad"@sv;
     owl:equivalentProperty dc:modified;
     rdfs:range xsd:dateTime .
 
 :title a owl:DatatypeProperty;
+    rdfs:label "titel"@sv;
     owl:equivalentProperty bf:title, dc:title .
 
+:uniformTitle a owl:DatatypeProperty;
+    rdfs:label "uniform titel"@sv;
+    rdfs:subPropertyOf skos:prefLabel .
+
 :instanceTitle a owl:ObjectProperty;
+    rdfs:label "instanstitel"@sv;
     owl:equivalentProperty bf:instanceTitle .
 
 :Title a owl:Class;
+    rdfs:label "Titel"@sv;
     owl:equivalentClass bf:Title .
 
 :titleValue a owl:DatatypeProperty;
+    rdfs:label "titelvärde"@sv;
     owl:equivalentProperty bf:titleValue .
 
 :responsibilityStatement a owl:DatatypeProperty;
+    rdfs:label "upphovsbeskrivning"@sv;
     owl:equivalentProperty bf:responsibilityStatement .
 
 :language a owl:ObjectProperty;
+    rdfs:label "språk"@sv;
     owl:equivalentProperty bf:language;
     rdfs:subPropertyOf dc:language;
     rdfs:range sdo:Language .
 
 :languageNote a owl:ObjectProperty;
+    rdfs:label "språkanteckning"@sv;
     owl:equivalentProperty bf:languageNote .
 
 :versionOf a owl:ObjectProperty;
+    rdfs:label "version av"@sv;
     owl:equivalentProperty dc:isVersionOf .
 
 :hasVersion a owl:ObjectProperty;
+    rdfs:label "har version"@sv;
     owl:equivalentProperty dc:hasVersion .
 
 :hasPart a owl:ObjectProperty;
+    rdfs:label "har del"@sv;
     owl:equivalentProperty dc:hasPart .
 
 :isPartOf a owl:ObjectProperty;
+    rdfs:label "är del av"@sv;
     owl:equivalentProperty dc:isPartOf .
 
 :references a owl:ObjectProperty;
+    rdfs:label "hänvisar till"@sv;
     owl:equivalentProperty dc:references .
 
 :referencedBy a owl:ObjectProperty;
+    rdfs:label "hänvisad till av"@sv;
     owl:inverseOf :references;
     owl:equivalentProperty dc:isReferencedBy .
 
 :relation a owl:ObjectProperty;
+    rdfs:label "relation"@sv;
     owl:equivalentProperty dc:relation .
 
 :influentialRelation a owl:ObjectProperty;
@@ -622,18 +675,23 @@ marcenum:bibLevel a skos:Collection;
     rdfs:subPropertyOf :influencedBy, dc:hasPart .
 
 :replaces a owl:ObjectProperty;
+    rdfs:label "ersätter"@sv;
     owl:equivalentProperty dc:replaces .
 
 :source a owl:ObjectProperty;
+    rdfs:label "källa"@sv;
     owl:equivalentProperty dc:source .
 
 :citation a owl:ObjectProperty;
+    rdfs:label "citat"@sv;
     owl:equivalentProperty sdo:citation .
 
 :subject a owl:ObjectProperty;
+    rdfs:label "ämne"@sv;
     owl:equivalentProperty dc:subject .
 
 :keyword a owl:ObjectProperty;
+    rdfs:label "nyckelord"@sv;
     owl:equivalentProperty sdo:keywords;
     rdfs:subPropertyOf dc:subject;
     rdfs:range xsd:string .
@@ -652,23 +710,28 @@ marcenum:bibLevel a skos:Collection;
     rdfs:subPropertyOf dc:type, sdo:genre .
 
 :version a owl:ObjectProperty;
+    rdfs:label "version"@sv;
     owl:equivalentProperty sdo:version .
 
 :isPrimaryTopicOf a owl:ObjectProperty;
     owl:equivalentProperty foaf:isPrimaryTopicOf .
 
 :audience a owl:ObjectProperty;
+    rdfs:label "målgrupp"@sv;
     rdfs:subPropertyOf sdo:audience;
     rdfs:range :Concept .
 
 :Audience a owl:Class;
+    rdfs:label "Målgrupp"@sv;
     owl:equivalentClass sdo:Audience .
 
 :device a owl:ObjectProperty;
+    rdfs:label "apparat"@sv;
     rdfs:subPropertyOf sdo:device;
     rdfs:range :Device .
 
 :Device a owl:Class;
+    rdfs:label "Apparat"@sv;
     owl:equivalentClass dbpo:Device .
 
 ##
@@ -706,25 +769,32 @@ marcenum:bibLevel a skos:Collection;
     owl:equivalentProperty prov:qualifiedInfluence .
 
 :agent a owl:ObjectProperty;
+    rdfs:label "aktör"@sv;
     owl:equivalentProperty prov:agent .
 
 :role a owl:ObjectProperty;
+    rdfs:label "roll"@sv;
     owl:equivalentProperty prov:hadRole .
 
 :Agent a owl:Class;
+    rdfs:label "Aktör"@sv;
     rdfs:subClassOf foaf:Agent, bf:Agent, prov:Agent .
 
 :Person a owl:Class;
+    rdfs:label "Person"@sv;
     rdfs:subClassOf :Agent;
     owl:equivalentClass foaf:Person, sdo:Person .
 
 :Family a owl:Class;
+    rdfs:label "Familj"@sv;
     rdfs:subClassOf :Agent .
 
 :Event a owl:Class;
+    rdfs:label "Händelse"@sv;
     owl:equivalentClass sdo:Event .
 
 :Meeting a owl:Class;
+    rdfs:label "Sammankomst"@sv;
     rdfs:subClassOf :Event;
     owl:equivalentClass bf:Meeting, bibo:Conference .
 
@@ -732,43 +802,54 @@ marcenum:bibLevel a skos:Collection;
 #    owl:hasKey (:name :familyName :givenName :numeration :birthDate :deathDate :personTitle) .
 
 #titlesAndOtherWordsAssociatedWithName / personTitle
-:jobTitle a owl:ObjectProperty;
+:personTitle a owl:ObjectProperty;
+    rdfs:label "persontitel"@sv;
     owl:equivalentProperty sdo:jobTitle, foaf:title .
 
 :familyName a owl:ObjectProperty;
+    rdfs:label "familjenamn"@sv;
     owl:equivalentProperty sdo:familyName, foaf:familyName .
 
 :givenName a owl:ObjectProperty;
+    rdfs:label "egennamn"@sv;
     owl:equivalentProperty sdo:givenName, foaf:givenName .
 
 :birthDate a owl:ObjectProperty;
+    rdfs:label "födelsedatum"@sv;
     owl:equivalentProperty sdo:birthDate .
 
 :deathDate a owl:ObjectProperty;
+    rdfs:label "dödsdatum"@sv;
     owl:equivalentProperty sdo:deathDate .
 
 :Persona a owl:Class;
-    rdfs:subClassOf :Person, :Concept;
+    rdfs:label "Persona"@sv;
+    rdfs:subClassOf :Person;
     owl:equivalentClass persona:Persona .
 
 :hasPersona a owl:ObjectProperty;
+    rdfs:label "har persona"@sv;
     rdfs:subPropertyOf rdfs:seeAlso;
     owl:equivalentProperty persona:hasPersona .
 
 :Organization a owl:Class;
+    rdfs:label "Organisation"@sv;
     rdfs:subClassOf :Agent;
     owl:equivalentClass bf:Organization, sdo:Organization, foaf:Organization  .
 
 :Place a owl:Class;
+    rdfs:label "Plats"@sv;
     owl:equivalentClass sdo:Place .
 
 :Country a owl:Class;
+    rdfs:label "Land"@sv;
     owl:equivalentClass sdo:Country .
 
 #generalSubdivision
 #geographicSubdivision
 
 :controlledLabel a owl:DatatypeProperty;
+    rdfs:label "kontrollerad etikett"@sv;
     owl:equivalentProperty bf:authorizedAccessPoint .
     #owl:propertyChainAxiom ( [owl:inverseOf foaf:focus] skos:prefLabel ) .
 
@@ -827,7 +908,7 @@ marcenum:bibLevel a skos:Collection;
 
 # Domain Specific Term Classes
 
-:Term a owl:Class;
+:TopicalTerm a owl:Class;
     rdfs:label "Allmänt ämnesord"@sv;
     owl:equivalentClass :Concept .
 
@@ -835,67 +916,58 @@ marcenum:bibLevel a skos:Collection;
     rdfs:label "Genre-/formterm"@sv;
     rdfs:subClassOf :Concept .
 
+:AspectTerm a owl:Class;
+    rdfs:label "Aspektterm"@sv;
+    rdfs:subClassOf :Concept .
+
 :ChronologicalTerm a owl:Class;
     rdfs:label "Kronologiskt ämnesord"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Event ] .
 
 :GeographicalTerm a owl:Class;
     rdfs:label "Geografiskt ämnesord"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Place ] .
 
 :MeetingTerm a owl:Class;
     rdfs:label "Term för möte"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Meeting ] .
 
 :OrganizationTerm a owl:Class;
     rdfs:label "Term för organisation"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Organization ] .
 
 :PersonTerm a owl:Class;
     rdfs:label "Personterm"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Person ] .
 
 :FamilyTerm a owl:Class;
     rdfs:label "Familjeterm"@sv;
     rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
+            owl:onProperty :focus;
             owl:allValuesFrom :Family ] .
 
 :WorkTerm a owl:Class;
     rdfs:label "Term för verk"@sv;
     rdfs:subClassOf :Concept;
-    rdfs:subClassOf :Concept;
     rdfs:subClassOf [ a owl:Restriction;
-            owl:onProperty foaf:focus;
-            owl:allValuesFrom :ConceptualWork ] .
-
-
-##
-# Holdings
-
-:Holding a owl:Class;
-    rdfs:label "Bestånd"@sv;
-    owl:equivalentClass bf:Holding;
-    rdfs:subClassOf bf:Offer, sdo:Offer .
-
-:callno rdfs:subPropertyOf :genre, bf:callno, sdo:sku;
-    rdfs:range :Holding .
+            owl:onProperty :focus;
+            owl:allValuesFrom :UniformWork ] .
 
 
 # .. TODO: work-in-progress
@@ -907,16 +979,451 @@ marcenum:bibLevel a skos:Collection;
 
 # Data below is generated by script from marcframe and base vocabularies:
 
+<http://libris.kb.se/def/enum/carrier/ActivityCard> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/ApertureCard> a owl:Class ;
+    rdfs:subClassOf :Microform .
+
+<http://libris.kb.se/def/enum/carrier/Atlas> a owl:Class ;
+    rdfs:subClassOf :Map .
+
+<http://libris.kb.se/def/enum/carrier/Braille> a owl:Class ;
+    rdfs:subClassOf :TactileMaterial,
+        :Text .
+
+<http://libris.kb.se/def/enum/carrier/CelestialGlobe> a owl:Class ;
+    rdfs:subClassOf :Globe .
+
+<http://libris.kb.se/def/enum/carrier/Chart> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/ChipCartridge> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/Collage> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/Combination> a owl:Class ;
+    rdfs:subClassOf :TactileMaterial .
+
+<http://libris.kb.se/def/enum/carrier/ComputerCard> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/ComputerDisc> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/ComputerDiscCartridge> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/ComputerOpticalDiscCartridge> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/Cylinder> a owl:Class ;
+    rdfs:subClassOf :SoundRecording .
+
+<http://libris.kb.se/def/enum/carrier/Diagram> a owl:Class ;
+    rdfs:subClassOf :Map .
+
+<http://libris.kb.se/def/enum/carrier/Drawing> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/EarthMoonGlobe> a owl:Class ;
+    rdfs:subClassOf :Globe .
+
+<http://libris.kb.se/def/enum/carrier/FilmCartridge> a owl:Class ;
+    rdfs:subClassOf :MovingImage .
+
+<http://libris.kb.se/def/enum/carrier/FilmCassette> a owl:Class ;
+    rdfs:subClassOf :MovingImage .
+
+<http://libris.kb.se/def/enum/carrier/FilmReel> a owl:Class ;
+    rdfs:subClassOf :MovingImage .
+
+<http://libris.kb.se/def/enum/carrier/FilmRoll> a owl:Class ;
+    rdfs:subClassOf :MovingImage .
+
+<http://libris.kb.se/def/enum/carrier/Filmslip> a owl:Class ;
+    rdfs:subClassOf :ProjectedImage .
+
+<http://libris.kb.se/def/enum/carrier/FilmstripCartridge> a owl:Class ;
+    rdfs:subClassOf :ProjectedImage .
+
+<http://libris.kb.se/def/enum/carrier/FilmstripRoll> a owl:Class ;
+    rdfs:subClassOf :ProjectedImage .
+
+<http://libris.kb.se/def/enum/carrier/FlashCard> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/Icon> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/LargePrint> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/carrier/MagneticDisk> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/MagnetoOpticalDisc> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/MapATwoDimensionalMap> a owl:Class ;
+    rdfs:subClassOf :Map .
+
+<http://libris.kb.se/def/enum/carrier/Microfiche> a owl:Class ;
+    rdfs:subClassOf :Microform .
+
+<http://libris.kb.se/def/enum/carrier/MicroficheCassette> a owl:Class ;
+    rdfs:subClassOf :Microform .
+
+<http://libris.kb.se/def/enum/carrier/MicrofilmCartridge> a owl:Class ;
+    rdfs:subClassOf :Microform .
+
+<http://libris.kb.se/def/enum/carrier/MicrofilmCassette> a owl:Class ;
+    rdfs:subClassOf :Microform .
+
+<http://libris.kb.se/def/enum/carrier/MicrofilmReel> a owl:Class ;
+    rdfs:subClassOf :Microform .
+
+<http://libris.kb.se/def/enum/carrier/MicrofilmRoll> a owl:Class ;
+    rdfs:subClassOf :Microform .
+
+<http://libris.kb.se/def/enum/carrier/MicrofilmSlip> a owl:Class ;
+    rdfs:subClassOf :Microform .
+
+<http://libris.kb.se/def/enum/carrier/Microopaque> a owl:Class ;
+    rdfs:subClassOf :Microform .
+
+<http://libris.kb.se/def/enum/carrier/Model> a owl:Class ;
+    rdfs:subClassOf :Map .
+
+<http://libris.kb.se/def/enum/carrier/Moon> a owl:Class ;
+    rdfs:subClassOf :TactileMaterial .
+
+<http://libris.kb.se/def/enum/carrier/OnlineResource> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/OpticalDisc> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/OtherFilmstripType> a owl:Class ;
+    rdfs:subClassOf :ProjectedImage .
+
+<http://libris.kb.se/def/enum/carrier/Painting> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/Photograph> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/PhotomechanicalPrint> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/Photonegative> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/Photoprint> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/Picture> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/PlanetaryOrLunarGlobe> a owl:Class ;
+    rdfs:subClassOf :Globe .
+
+<http://libris.kb.se/def/enum/carrier/Postcard> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/Poster> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/Print> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/Profile> a owl:Class ;
+    rdfs:subClassOf :Map .
+
+<http://libris.kb.se/def/enum/carrier/Radiograph> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/RegularPrint> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/carrier/RemoteSensingImage> a owl:Class ;
+    rdfs:subClassOf :Map .
+
+<http://libris.kb.se/def/enum/carrier/Roll> a owl:Class ;
+    rdfs:subClassOf :SoundRecording .
+
+<http://libris.kb.se/def/enum/carrier/Section> a owl:Class ;
+    rdfs:subClassOf :Map .
+
+<http://libris.kb.se/def/enum/carrier/Slide> a owl:Class ;
+    rdfs:subClassOf :ProjectedImage .
+
+<http://libris.kb.se/def/enum/carrier/SoundCartridge> a owl:Class ;
+    rdfs:subClassOf :SoundRecording .
+
+<http://libris.kb.se/def/enum/carrier/SoundCassette> a owl:Class ;
+    rdfs:subClassOf :SoundRecording .
+
+<http://libris.kb.se/def/enum/carrier/SoundDisc> a owl:Class ;
+    rdfs:subClassOf :SoundRecording .
+
+<http://libris.kb.se/def/enum/carrier/SoundTapeReel> a owl:Class ;
+    rdfs:subClassOf :SoundRecording .
+
+<http://libris.kb.se/def/enum/carrier/SoundTrackFilm> a owl:Class ;
+    rdfs:subClassOf :SoundRecording .
+
+<http://libris.kb.se/def/enum/carrier/StudyPrint> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/TactileWithNoWritingSystem> a owl:Class ;
+    rdfs:subClassOf :TactileMaterial .
+
+<http://libris.kb.se/def/enum/carrier/TapeCartridge> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/TapeCassette> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/TapeReel> a owl:Class ;
+    rdfs:subClassOf :Electronic .
+
+<http://libris.kb.se/def/enum/carrier/TechnicalDrawing> a owl:Class ;
+    rdfs:subClassOf :StillImage .
+
+<http://libris.kb.se/def/enum/carrier/TerrestrialGlobe> a owl:Class ;
+    rdfs:subClassOf :Globe .
+
+<http://libris.kb.se/def/enum/carrier/TextInLooseleafBinder> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/carrier/Transparency> a owl:Class ;
+    rdfs:subClassOf :ProjectedImage .
+
+<http://libris.kb.se/def/enum/carrier/Videocartridge> a owl:Class ;
+    rdfs:subClassOf :VideoRecording .
+
+<http://libris.kb.se/def/enum/carrier/Videocassette> a owl:Class ;
+    rdfs:subClassOf :VideoRecording .
+
+<http://libris.kb.se/def/enum/carrier/Videodisc> a owl:Class ;
+    rdfs:subClassOf :VideoRecording .
+
+<http://libris.kb.se/def/enum/carrier/Videoreel> a owl:Class ;
+    rdfs:subClassOf :VideoRecording .
+
+<http://libris.kb.se/def/enum/carrier/View> a owl:Class ;
+    rdfs:subClassOf :Map .
+
+<http://libris.kb.se/def/enum/carrier/WireRecording> a owl:Class ;
+    rdfs:subClassOf :SoundRecording .
+
+<http://libris.kb.se/def/enum/content/AbstractsSummary> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/ArtOriginal> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/ArtReproduction> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/BibliographicData> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/Bibliography> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Calendar> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Catalog> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Chart> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Combination> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/ComicOrGraphicNovel> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/ComputerProgram> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/Dictionary> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Diorama> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Directory> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Discography> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Document> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/Encyclopedia> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Filmography> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Filmstrip> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/FlashCard> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Font> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/Game> a owl:Class ;
+    rdfs:subClassOf :Digital,
+        :Visual .
+
+<http://libris.kb.se/def/enum/content/Graphic> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Handbook> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Index> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/InteractiveMultimedia> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/Kit> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/LawReportOrDigest> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/LegalArticle> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/LegalCaseOrCaseNote> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Legislation> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/MicroscopeSlide> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Model> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/MonographicSeries> a owl:Class ;
+    rdfs:subClassOf :Serial .
+
+<http://libris.kb.se/def/enum/content/MotionPicture> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Newspaper> a owl:Class ;
+    rdfs:subClassOf :Serial .
+
+<http://libris.kb.se/def/enum/content/NumericData> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/Offprint> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/OnlineSystemOrService> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/PatentDocument> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Periodical> a owl:Class ;
+    rdfs:subClassOf :Serial .
+
+<http://libris.kb.se/def/enum/content/Picture> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/ProgrammedText> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Realia> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Representational> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/Review> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Slide> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Sound> a owl:Class ;
+    rdfs:subClassOf :Digital .
+
+<http://libris.kb.se/def/enum/content/StandardsSpecification> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Statistics> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/SurveysOfLiteratureInASubjectArea> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/TechnicalDrawing> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/TechnicalReport> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Thesis> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/Toy> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Transparency> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Treaty> a owl:Class ;
+    rdfs:subClassOf :Text .
+
+<http://libris.kb.se/def/enum/content/UpdatingDatabase> a owl:Class ;
+    rdfs:subClassOf :Serial .
+
+<http://libris.kb.se/def/enum/content/UpdatingLooseLeaf> a owl:Class ;
+    rdfs:subClassOf :Serial .
+
+<http://libris.kb.se/def/enum/content/UpdatingWebSite> a owl:Class ;
+    rdfs:subClassOf :Serial .
+
+<http://libris.kb.se/def/enum/content/Videorecording> a owl:Class ;
+    rdfs:subClassOf :Visual .
+
+<http://libris.kb.se/def/enum/content/Yearbook> a owl:Class ;
+    rdfs:subClassOf :Text .
+
 :Authority a owl:Class ;
     owl:equivalentClass bf:Authority .
 
 :Collection owl:equivalentClass bibo:Collection .
 
+:HeldMaterial owl:equivalentClass bf:HeldMaterial .
+
 :Integrating rdfs:subClassOf :Aggregate .
 
-:Map owl:equivalentClass sdo:Map .
+:Kit rdfs:subClassOf :Product .
+
+:Mixed a owl:Class ;
+    rdfs:subClassOf :CreativeWork .
 
 :Monograph rdfs:subClassOf :Aggregate .
+
+:NotatedMusic rdfs:subClassOf :Product .
 
 :Periodical rdfs:subClassOf :Aggregate ;
     owl:equivalentClass bibo:Periodical,
@@ -926,469 +1433,797 @@ marcenum:bibLevel a skos:Collection;
 
 :SubCollection rdfs:subClassOf :Aggregate .
 
-:Text owl:equivalentClass sdo:Text .
+<http://libris.kb.se/def/terms#TODO:repeatedBy> a owl:Class ;
+    rdfs:subClassOf :CreativeWork .
+
+:Unspecified a owl:Class ;
+    rdfs:subClassOf :Product .
 
 :abbrevTitle a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Aggregate .
+    sdo:domainIncludes :Aggregate ;
+    skos:note "MARC bib 773.p" .
 
 :abbreviatedTitle a owl:ObjectProperty ;
-    sdo:domainIncludes :Instance ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Title ;
-    owl:equivalentProperty bf:abbreviatedTitle .
+    owl:equivalentProperty bf:abbreviatedTitle ;
+    skos:note "MARC bib 210" .
 
 :accompanyingMaterial a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Product .
+    sdo:domainIncludes :Product ;
+    skos:note "MARC bib 300.e" .
 
 :additionalCarrierType a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[12:13]",
+        "MARC bib 006[6:7]",
+        "MARC bib 006[7:8]",
+        "MARC bib 008[23:24]",
+        "MARC bib 008[29:30]" .
 
 :additionalType a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    owl:equivalentProperty sdo:additionalType .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty sdo:additionalType ;
+    skos:note "MARC bib 006[16:17]",
+        "MARC bib 006[17:18]",
+        "MARC bib 006[3:4]",
+        "MARC bib 008[20:21]",
+        "MARC bib 008[33:34]",
+        "MARC bib 008[34:35]" .
 
 :address a owl:DatatypeProperty ;
+    sdo:domainIncludes :Offer ;
     owl:equivalentProperty dbpo:address,
-        sdo:address .
+        sdo:address ;
+    skos:note "MARC hold 852.e" .
 
 :alphabet a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[16:17]",
+        "MARC bib 008[33:34]" .
 
 :altLabel a owl:FunctionalProperty ;
-    sdo:domainIncludes :Document .
+    sdo:domainIncludes :Document ;
+    skos:note "MARC auth 400",
+        "MARC bib 856.y" .
 
-:alternateEdition a owl:ObjectProperty .
+:alternateEdition a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 775" .
 
 :alternateFormat a owl:ObjectProperty ;
-    sdo:rangeIncludes :Product .
+    sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Product ;
+    skos:note "MARC bib 776" .
 
 :angularScale a owl:DatatypeProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
-
-:annotates a owl:FunctionalProperty,
-        owl:ObjectProperty ;
-    owl:equivalentProperty bf:annotates,
-        bibo:annotates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.h" .
 
 :antecedent a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[11:12]" .
 
 :aspect a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    owl:equivalentProperty sdo:aspect .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty sdo:aspect ;
+    skos:note "MARC bib 007[2:3]" .
 
 :attributedTo a owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork,
+        :UniformWork ;
     sdo:rangeIncludes :Organization,
-        :Person .
+        :Person ;
+    skos:note "MARC auth 100",
+        "MARC auth 400",
+        "MARC bib 100",
+        "MARC bib 110",
+        "MARC bib 600",
+        "MARC bib 700" .
 
 :audience a owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Audience ;
     owl:equivalentProperty bf:audience,
         dc:audience,
-        sdo:audience .
+        sdo:audience ;
+    skos:note "MARC bib 006[5:6]",
+        "MARC bib 008[22:23]",
+        "MARC bib 521" .
+
+:audioIssueNumber a owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 028.a" .
+
+:audioMatrixNumber a owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 028.a" .
 
 :authenticationCode a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 042.a" .
 
 :availability a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Instance ;
-    owl:equivalentProperty sdo:availability .
+    sdo:domainIncludes :CreativeWork,
+        :Offer ;
+    owl:equivalentProperty sdo:availability ;
+    skos:note "MARC bib 020.c",
+        "MARC hold 852.i" .
 
 :base a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[12:13]" .
 
 :bibliographicRecordControlNumber a owl:DatatypeProperty ;
-    sdo:domainIncludes :Serial .
+    sdo:domainIncludes :Serial ;
+    skos:note "MARC bib 440.w" .
 
-:bibliographyCode a owl:DatatypeProperty .
+:bibliographyCode a owl:DatatypeProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 042.9" .
 
 :biography a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[17:18]",
+        "MARC bib 008[34:35]" .
 
 :birthDate a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty dbpo:birthDate .
+    owl:equivalentProperty dbpo:birthDate ;
+    skos:note "MARC auth 046.f" .
 
-:broader sdo:domainIncludes :Concept ;
-    sdo:rangeIncludes :Place .
+:broader sdo:domainIncludes :Concept,
+        :CreativeWork ;
+    sdo:rangeIncludes :Concept,
+        :Event,
+        :Place ;
+    skos:note "MARC auth 450.a",
+        "MARC auth 450.x",
+        "MARC bib 650.a",
+        "MARC bib 650.v",
+        "MARC bib 650.x",
+        "MARC bib 650.y",
+        "MARC bib 650.z" .
 
-:callNumberPrefix a owl:DatatypeProperty .
+:callNumberPrefix a owl:DatatypeProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.k" .
 
-:callNumberSuffix a owl:DatatypeProperty .
+:callNumberSuffix a owl:DatatypeProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.m" .
 
 :callno a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:rangeIncludes :Concept .
+    sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Concept ;
+    skos:note "MARC bib 490.l",
+        "MARC hold 084" .
+
+:carrierType sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[1:2]" .
 
 :cartographicAscensionAndDeclination a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :CartographyCoordinates ;
-    owl:equivalentProperty bf:cartographicAscensionAndDeclination .
+    owl:equivalentProperty bf:cartographicAscensionAndDeclination ;
+    skos:note "MARC bib 034" .
 
 :cartographicCoordinates a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:cartographicCoordinates .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:cartographicCoordinates ;
+    skos:note "MARC bib 255.c" .
 
 :cartographicEquinox a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates ;
-    owl:equivalentProperty bf:cartographicEquinox .
+    sdo:domainIncludes :CartographyCoordinates,
+        :CreativeWork ;
+    owl:equivalentProperty bf:cartographicEquinox ;
+    skos:note "MARC bib 034.p",
+        "MARC bib 255.e" .
 
 :cartographicExclusionGRing a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:cartographicExclusionGRing .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:cartographicExclusionGRing ;
+    skos:note "MARC bib 255.g" .
 
 :cartographicOuterGRing a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:cartographicOuterGRing .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:cartographicOuterGRing ;
+    skos:note "MARC bib 255.f" .
 
 :cartographicProjection a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:cartographicProjection .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:cartographicProjection ;
+    skos:note "MARC bib 255.b" .
 
 :cartographicScale a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates ;
-    owl:equivalentProperty bf:cartographicScale .
+    sdo:domainIncludes :CartographyCoordinates,
+        :CreativeWork ;
+    owl:equivalentProperty bf:cartographicScale ;
+    skos:note "MARC bib 034.a",
+        "MARC bib 255.a" .
 
 :cartographicZone a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 255.d" .
 
 :catForm a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 000[18:19]" .
 
 :catalogingSource a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 008[39:40]" .
 
 :characterCoding a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 000[9:10]" .
 
 :citation a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC auth 670.b" .
 
 :citedBy a owl:DatatypeProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :CreativeWork ;
-    owl:equivalentProperty bibo:citedBy .
-
-:class a owl:ObjectProperty ;
-    owl:equivalentProperty dbpo:class .
+    owl:equivalentProperty bibo:citedBy ;
+    skos:note "MARC bib 510" .
 
 :classification a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Concept ;
     owl:equivalentProperty bf:classification,
-        dbpo:classification .
+        dbpo:classification ;
+    skos:note "MARC bib 060",
+        "MARC bib 082",
+        "MARC bib 084",
+        "MARC bib 976" .
 
 :classificationDdc a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Concept ;
-    owl:equivalentProperty bf:classificationDdc .
+    owl:equivalentProperty bf:classificationDdc ;
+    skos:note "MARC bib 082" .
 
 :classificationItem a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Concept ;
-    owl:equivalentProperty bf:classificationItem .
+    owl:equivalentProperty bf:classificationItem ;
+    skos:note "MARC bib 060.b",
+        "MARC bib 072.b",
+        "MARC bib 084.b" .
 
 :classificationLcc a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:classificationLcc .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:classificationLcc ;
+    skos:note "MARC bib 050.a" .
 
 :classificationNlm a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:classificationNlm .
+    sdo:domainIncludes :Concept ;
+    owl:equivalentProperty bf:classificationNlm ;
+    skos:note "MARC bib 060.a" .
 
 :classificationPart a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.h" .
 
 :classificationUdc a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:classificationUdc .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:classificationUdc ;
+    skos:note "MARC bib 080.a" .
 
-:codedLocationQualifier a owl:DatatypeProperty .
+:closeMatch skos:note "MARC auth 083",
+        "MARC auth 750" .
+
+:codedLocationQualifier a owl:DatatypeProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.f" .
 
 :coden a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :CreativeWork ;
     owl:equivalentProperty bf:coden,
         dbpo:coden,
-        bibo:coden .
+        bibo:coden ;
+    skos:note "MARC bib 772.y" .
 
 :color a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    owl:equivalentProperty sdo:color .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty sdo:color ;
+    skos:note "MARC bib 007[3:4]",
+        "MARC bib 007[9:10]" .
 
 :comment a owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptualWork,
+    sdo:domainIncludes :CreativeWork,
         :DissertationAnnotation,
         :Document,
-        :Instance ;
-    owl:equivalentProperty sdo:comment .
+        :Person,
+        :UniformWork ;
+    owl:equivalentProperty sdo:comment ;
+    skos:note "MARC bib 100.j",
+        "MARC bib 240.g",
+        "MARC bib 500.a",
+        "MARC bib 502.g",
+        "MARC bib 530.a",
+        "MARC bib 856.z" .
 
-:commonEndeavor a owl:ObjectProperty .
+:commonEndeavor a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 020" .
 
 :composition a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[1:3]",
+        "MARC bib 008[18:20]" .
 
 :compression a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[12:13]" .
 
 :confPub a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[12:13]",
+        "MARC bib 008[29:30]" .
 
 :constantRatioLinearHorizontalScale a owl:DatatypeProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.b" .
 
 :constantRatioLinearVerticalScale a owl:DatatypeProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.c" .
 
 :containedIn a owl:FunctionalProperty,
         owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Country ;
-    owl:equivalentProperty sdo:containedIn .
+    owl:equivalentProperty sdo:containedIn ;
+    skos:note "MARC bib 008[15:18]" .
 
-:contains a owl:ObjectProperty .
+:contains a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 770" .
 
-:contentType owl:equivalentProperty sdo:contentType .
+:contentType sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty sdo:contentType ;
+    skos:note "MARC bib 006[10:11]",
+        "MARC bib 006[16:17]",
+        "MARC bib 006[4:5]",
+        "MARC bib 006[7:8]",
+        "MARC bib 006[8:9]",
+        "MARC bib 006[9:10]",
+        "MARC bib 008[21:22]",
+        "MARC bib 008[24:25]",
+        "MARC bib 008[25:26]",
+        "MARC bib 008[26:27]",
+        "MARC bib 008[27:28]",
+        "MARC bib 008[33:34]" .
 
 :contents a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[10:11]",
+        "MARC bib 006[8:9]",
+        "MARC bib 006[9:10]",
+        "MARC bib 008[25:26]",
+        "MARC bib 008[26:27]",
+        "MARC bib 008[27:28]" .
 
 :controlNumber a owl:FunctionalProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 001",
+        "MARC bib 240.0",
+        "MARC bib 772.w" .
 
 :controlledLabel a owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 772.a" .
 
 :copyIdentification a owl:DatatypeProperty ;
-    sdo:domainIncludes :Product .
+    sdo:domainIncludes :Product ;
+    skos:note "MARC bib 562.b" .
+
+:copyNote a owl:DatatypeProperty ;
+    sdo:domainIncludes :Offer,
+        :SomeProducts ;
+    owl:equivalentProperty bf:copyNote ;
+    skos:note "MARC hold 852.z",
+        "MARC hold 866.z" .
 
 :copyNumber a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.t" .
 
-:copyrightArticleFeeCode a owl:DatatypeProperty .
+:copyright a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 264" .
+
+:copyrightArticleFeeCode a owl:DatatypeProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.s" .
 
 :countryCode a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.n" .
 
 :creditsNote a owl:DatatypeProperty ;
-    sdo:domainIncludes :Instance ;
-    owl:equivalentProperty bf:creditsNote .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:creditsNote ;
+    skos:note "MARC bib 508.a" .
 
 :date a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptualWork,
+    sdo:domainIncludes :CreativeWork,
         :DissertationAnnotation,
         :PublicationVolume,
         :Record,
-        :Serial ;
+        :Serial,
+        :UniformWork ;
     owl:equivalentProperty dbpo:date,
-        dc:date .
+        dc:date ;
+    skos:note "MARC bib 008[0:6]",
+        "MARC bib 111.d",
+        "MARC bib 130.d",
+        "MARC bib 240.f",
+        "MARC bib 321.b",
+        "MARC bib 502.d",
+        "MARC bib 830.d" .
+
+:datesAndOrSequentialDesignationOfIssuesReproduced a owl:DatatypeProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 533.m" .
 
 :deathDate a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty dbpo:deathDate .
+    owl:equivalentProperty dbpo:deathDate ;
+    skos:note "MARC auth 046.g" .
 
 :declinationNorthernLimit a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.j" .
 
 :declinationSouthernLimit a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.k" .
 
 :degree a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :DissertationAnnotation ;
-    owl:equivalentProperty bibo:degree .
+    owl:equivalentProperty bibo:degree ;
+    skos:note "MARC bib 502.b" .
 
 :depiction a owl:ObjectProperty ;
-    owl:equivalentProperty foaf:depiction .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty foaf:depiction ;
+    skos:note "MARC bib 856" .
 
-:describedBy sdo:domainIncludes :ConceptualWork,
-        :CreativeWork ;
+:describedBy sdo:domainIncludes :CreativeWork,
+        :UniformWork ;
     sdo:rangeIncludes :Record,
-        :WebPage .
+        :WebPage ;
+    skos:note "MARC bib 240.0",
+        "MARC bib 520",
+        "MARC bib 772.w" .
 
 :description a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Document ;
+    sdo:domainIncludes :CreativeWork,
+        :Document ;
     owl:equivalentProperty dbpo:description,
         dc:description,
-        sdo:description .
+        sdo:description ;
+    skos:note "MARC bib 533.a",
+        "MARC bib 856.3" .
 
 :descriptionRules a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 040.e" .
 
 :details a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[6:7]" .
 
 :device a owl:FunctionalProperty ;
     sdo:domainIncludes :Product ;
     sdo:rangeIncludes :Device ;
-    owl:equivalentProperty sdo:device .
+    owl:equivalentProperty sdo:device ;
+    skos:note "MARC bib 300.f" .
 
 :dimensions a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Product ;
-    owl:equivalentProperty bf:dimensions .
+    owl:equivalentProperty bf:dimensions ;
+    skos:note "MARC bib 300.c" .
 
 :dimensionsCategory a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[4:5]" .
 
 :distanceFromEarth a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.r" .
+
+:distribution a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:distribution,
+        sdo:distribution ;
+    skos:note "MARC bib 264" .
 
 :easternmostLongitudeCoordinates a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.e" .
 
 :edition a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :CreativeWork,
-        :EditionEntity ;
+        :Product ;
     owl:equivalentProperty bf:edition,
         <http://prismstandard.org/namespaces/1.2/basic/edition>,
-        bibo:edition .
+        bibo:edition ;
+    skos:note "MARC bib 250.a",
+        "MARC bib 772.b" .
 
 :editionResponsibility a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :EditionEntity ;
-    owl:equivalentProperty bf:editionResponsibility .
+    sdo:domainIncludes :Product ;
+    owl:equivalentProperty bf:editionResponsibility ;
+    skos:note "MARC bib 250.b" .
 
-:editionStatement a owl:FunctionalProperty,
-        owl:ObjectProperty ;
-    sdo:domainIncludes :Instance ;
-    sdo:rangeIncludes :EditionEntity .
-
-:editorialNote sdo:domainIncludes :Document .
+:editorialNote sdo:domainIncludes :Document,
+        :Offer,
+        :SomeProducts ;
+    skos:note "MARC auth 667.a",
+        "MARC bib 856.x",
+        "MARC hold 852.x",
+        "MARC hold 866.x" .
 
 :emulsion a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[10:11]" .
 
 :encLevel a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC auth 000[17:18]",
+        "MARC bib 000[17:18]" .
 
 :encoding a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :MediaObject ;
-    owl:equivalentProperty sdo:encoding .
+    owl:equivalentProperty sdo:encoding ;
+    skos:note "MARC bib 856" .
 
 :endDate a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :CartographyCoordinates ;
     owl:equivalentProperty dbpo:endDate,
-        sdo:endDate .
+        sdo:endDate ;
+    skos:note "MARC bib 034.y" .
 
 :entryMap a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 000[20:24]" .
 
-:exampleOfWork a owl:FunctionalProperty .
+:exampleOfWork a owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 240" .
 
 :extent a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Product ;
     owl:equivalentProperty bf:extent,
-        dc:extent .
+        dc:extent ;
+    skos:note "MARC bib 300.a" .
 
 :extraterrestrialBody a owl:FunctionalProperty,
         owl:ObjectProperty ;
     sdo:domainIncludes :CartographyCoordinates ;
-    sdo:rangeIncludes :PlanetaryObject .
+    sdo:rangeIncludes :PlanetaryObject ;
+    skos:note "MARC bib 034.z" .
 
 :festschrift a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[13:14]",
+        "MARC bib 008[30:31]" .
 
 :fileAspect a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[2:3]" .
 
 :fileFormats a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[9:10]" .
 
 :fileType a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 256.a" .
 
-:focus a owl:ObjectProperty .
+:focusOf a owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Concept ;
+    skos:note "MARC bib 610" .
 
-:formerShelvingLocation a owl:DatatypeProperty .
+:formerShelfLocation a owl:DatatypeProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.d" .
 
 :frequency a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Serial ;
+    sdo:domainIncludes :CreativeWork,
+        :Serial ;
     owl:equivalentProperty bf:frequency,
         dbpo:frequency,
-        sdo:frequency .
+        sdo:frequency ;
+    skos:note "MARC bib 310.a",
+        "MARC bib 321.a" .
 
 :frequencyCategory a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[1:2]",
+        "MARC bib 008[18:19]" .
 
 :gRingLatitude a owl:DatatypeProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.s" .
 
 :gRingLongitude a owl:DatatypeProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.t" .
 
 :generation a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[11:12]" .
 
-:genre owl:equivalentProperty bf:genre,
+:genre sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:genre,
         dbpo:genre,
-        sdo:genre .
+        sdo:genre ;
+    skos:note "MARC bib 655" .
 
 :govtPub a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[11:12]",
+        "MARC bib 008[28:29]" .
 
 :hasAnnotation a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :DissertationAnnotation ;
-    owl:equivalentProperty bf:hasAnnotation .
+    owl:equivalentProperty bf:hasAnnotation ;
+    skos:note "MARC bib 502" .
 
-:hasFormat sdo:domainIncludes :Instance,
+:hasFormat sdo:domainIncludes :CreativeWork,
         :Product ;
     sdo:rangeIncludes :Electronic,
-        :Product .
+        :Product ;
+    skos:note "MARC bib 007",
+        "MARC bib 255",
+        "MARC bib 300",
+        "MARC bib 530",
+        "MARC bib 856" .
 
-:hasPart sdo:rangeIncludes :CreativeWork ;
+:hasPart sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :CreativeWork ;
     owl:equivalentProperty bf:hasPart,
-        sdo:hasPart .
+        sdo:hasPart ;
+    skos:note "MARC bib 006",
+        "MARC bib 041",
+        "MARC bib 774" .
 
-:hasPersona sdo:rangeIncludes :Person .
+:hasPersona sdo:rangeIncludes :Person ;
+    skos:note "MARC auth 500" .
 
 :hasSummaryLanguage a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 041.b" .
 
-:hasVersion sdo:domainIncludes :Instance ;
-    sdo:rangeIncludes :Person .
+:hasVersion sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Product ;
+    skos:note "MARC auth 400",
+        "MARC auth 410",
+        "MARC auth 411",
+        "MARC bib 250" .
+
+:heldBy sdo:domainIncludes :Offer ;
+    sdo:rangeIncludes :Organization ;
+    owl:equivalentProperty bf:heldBy ;
+    skos:note "MARC hold 852.b" .
+
+:hiddenLabel skos:note "MARC auth 450.a" .
+
+:historyNote skos:note "MARC auth 688.a" .
+
+:holdingFor a owl:FunctionalProperty ;
+    owl:equivalentProperty bf:holdingFor ;
+    skos:note "MARC hold 004" .
 
 :iSSN a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[3:4]",
+        "MARC bib 008[20:21]" .
 
-:identifier a owl:ObjectProperty ;
-    sdo:domainIncludes :CreativeWork,
-        :Instance ;
+:identifier a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Identifier ;
     owl:equivalentProperty bf:identifier,
         dc:identifier,
-        bibo:identifier .
+        bibo:identifier ;
+    skos:note "MARC bib 020",
+        "MARC bib 022",
+        "MARC bib 024",
+        "MARC bib 772.o",
+        "MARC bib 772.x",
+        "MARC bib 772.z" .
 
 :identifierAssigner a owl:FunctionalProperty,
         owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Organization ;
-    owl:equivalentProperty bf:identifierAssigner .
+    owl:equivalentProperty bf:identifierAssigner ;
+    skos:note "MARC bib 028.b" .
 
 :identifierNote a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Identifier .
+    sdo:domainIncludes :Identifier ;
+    skos:note "MARC bib 020.q" .
 
 :identifierScheme a rdf:Property,
         owl:FunctionalProperty,
         owl:ObjectProperty ;
     sdo:domainIncludes :Identifier ;
-    owl:equivalentProperty bf:identifierScheme .
+    owl:equivalentProperty bf:identifierScheme ;
+    skos:note "MARC bib 024.2",
+        "MARC bib 024.i1" .
 
 :identifierStatus a rdf:Property ;
     owl:equivalentProperty bf:identifierStatus .
@@ -1396,596 +2231,1061 @@ marcenum:bibLevel a skos:Collection;
 :identifierValue a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Identifier ;
-    owl:equivalentProperty bf:identifierValue .
+    owl:equivalentProperty bf:identifierValue ;
+    skos:note "MARC bib 020.a",
+        "MARC bib 020.z",
+        "MARC bib 022.a",
+        "MARC bib 022.z",
+        "MARC bib 024.a",
+        "MARC bib 772.o",
+        "MARC bib 772.x",
+        "MARC bib 772.z" .
 
 :illustrations a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[1:2]",
+        "MARC bib 006[2:3]",
+        "MARC bib 006[3:4]",
+        "MARC bib 006[4:5]",
+        "MARC bib 008[18:19]",
+        "MARC bib 008[19:20]",
+        "MARC bib 008[20:21]",
+        "MARC bib 008[21:22]" .
 
 :imageBitDepth a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[6:9]" .
 
 :inCollection a rdf:Property .
 
+:inConjunctionWith a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 777" .
+
 :inScheme a owl:FunctionalProperty ;
     sdo:domainIncludes :Concept,
-        :Instance ;
-    sdo:rangeIncludes :ConceptScheme .
+        :Organization ;
+    sdo:rangeIncludes :ConceptScheme ;
+    skos:note "MARC auth 040.f",
+        "MARC auth 065.2",
+        "MARC auth 150.9",
+        "MARC bib 082.2",
+        "MARC bib 084.2",
+        "MARC bib 610.2",
+        "MARC bib 610.i2",
+        "MARC bib 650.2",
+        "MARC bib 650.i2",
+        "MARC bib 976.i2" .
 
 :index a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    owl:equivalentProperty bf:index .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:index ;
+    skos:note "MARC bib 006[14:15]",
+        "MARC bib 008[31:32]" .
 
-:influencedBy sdo:rangeIncludes :Person ;
-    owl:equivalentProperty dbpo:influencedBy .
+:influencedBy sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Person ;
+    owl:equivalentProperty dbpo:influencedBy ;
+    skos:note "MARC bib 700",
+        "MARC bib 710" .
 
-:influentialRelation sdo:rangeIncludes :CreativeWork .
+:influentialPart sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 730" .
+
+:influentialRelation sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :UniformWork ;
+    skos:note "MARC bib 730" .
 
 :instanceTitle a owl:FunctionalProperty ;
-    sdo:domainIncludes :Instance ;
-    sdo:rangeIncludes :Title .
+    sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Title ;
+    skos:note "MARC bib 245" .
+
+:institutionToWhichFieldApplies a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 533.5" .
 
 :inventoryLevel a owl:DatatypeProperty ;
     sdo:domainIncludes :Product ;
-    owl:equivalentProperty sdo:inventoryLevel .
+    owl:equivalentProperty sdo:inventoryLevel ;
+    skos:note "MARC bib 562.e" .
 
 :isPartOf a owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Aggregate,
         :CreativeWork,
         :Organization,
         :PublicationVolume ;
     owl:equivalentProperty dbpo:isPartOf,
-        sdo:isPartOf .
+        sdo:isPartOf ;
+    skos:note "MARC bib 610.a",
+        "MARC bib 772",
+        "MARC bib 773",
+        "MARC bib 830" .
 
-:isPrimaryTopicOf sdo:rangeIncludes :Document,
-        :Electronic .
+:isPrimaryTopicOf sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Document,
+        :Electronic ;
+    skos:note "MARC auth 856",
+        "MARC bib 856" .
 
 :isVersionOf a rdf:Property ;
     owl:equivalentProperty dc:isVersionOf .
 
-:isbn a owl:DatatypeProperty ;
-    sdo:domainIncludes :CreativeWork ;
-    owl:equivalentProperty bf:isbn,
-        dbpo:isbn,
-        <http://prismstandard.org/namespaces/1.2/basic/isbn>,
-        bibo:isbn,
-        sdo:isbn .
-
 :issn a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork,
-        :PublicationVolume,
+    sdo:domainIncludes :PublicationVolume,
         :Serial ;
     owl:equivalentProperty bf:issn,
         dbpo:issn,
         <http://prismstandard.org/namespaces/1.2/basic/issn>,
         bibo:issn,
-        sdo:issn .
+        sdo:issn ;
+    skos:note "MARC bib 440.x",
+        "MARC bib 830.x" .
 
-:issueNumber a owl:DatatypeProperty,
-        owl:FunctionalProperty ;
+:issueNumber a owl:DatatypeProperty ;
+    sdo:domainIncludes :CreativeWork ;
     owl:equivalentProperty bf:issueNumber,
-        sdo:issueNumber .
+        sdo:issueNumber ;
+    skos:note "MARC bib 362.a" .
 
-:itemCondition a owl:DatatypeProperty ;
-    sdo:domainIncludes :Product ;
-    owl:equivalentProperty sdo:itemCondition .
-
-:itemPart a owl:DatatypeProperty .
+:itemCondition a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer,
+        :Product ;
+    owl:equivalentProperty sdo:itemCondition ;
+    skos:note "MARC bib 562.a",
+        "MARC hold 852.q" .
 
 :keyTitle a owl:ObjectProperty ;
-    owl:equivalentProperty bf:keyTitle .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:keyTitle ;
+    skos:note "MARC bib 222" .
 
 :keyword a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Instance .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 653.a" .
 
 :label a owl:FunctionalProperty ;
     sdo:domainIncludes :Audience,
         :CreativeWork,
         :Device,
+        :Language,
+        :Person,
         :Place,
         :WebPage ;
-    owl:equivalentProperty bf:label .
+    owl:equivalentProperty bf:label ;
+    skos:note "MARC auth 670.a",
+        "MARC auth 675.a",
+        "MARC bib 100.q",
+        "MARC bib 111.c",
+        "MARC bib 130.l",
+        "MARC bib 240.l",
+        "MARC bib 260.a",
+        "MARC bib 260.e",
+        "MARC bib 264.a",
+        "MARC bib 300.f",
+        "MARC bib 520.a",
+        "MARC bib 521.a",
+        "MARC bib 533.b",
+        "MARC bib 700.l",
+        "MARC bib 775.e" .
 
-:language a owl:DatatypeProperty,
-        owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptualWork ;
+:language a owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork,
+        :UniformWork ;
+    sdo:rangeIncludes :Language ;
     owl:equivalentProperty dbpo:language,
         dc:language,
-        sdo:language .
+        sdo:language ;
+    skos:note "MARC bib 008[35:38]",
+        "MARC bib 040.b",
+        "MARC bib 041.a",
+        "MARC bib 130.l",
+        "MARC bib 240.l",
+        "MARC bib 700.l",
+        "MARC bib 775.e" .
 
-:languageNote a owl:DatatypeProperty .
+:languageNote a owl:DatatypeProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 546.a" .
 
 :lccn a owl:DatatypeProperty,
         owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
     owl:equivalentProperty bf:lccn,
         dbpo:lccn,
-        bibo:lccn .
+        bibo:lccn ;
+    skos:note "MARC bib 010.a" .
 
-:librisIIINumber a owl:DatatypeProperty .
+:librisIIINumber a owl:DatatypeProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 035.9",
+        "MARC hold 014.a" .
 
 :license a owl:DatatypeProperty,
         owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
     owl:equivalentProperty dbpo:license,
-        sdo:license .
+        sdo:license ;
+    skos:note "MARC bib 040" .
 
 :lifeSpan a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Person .
+    sdo:domainIncludes :Person ;
+    skos:note "MARC bib 100.d" .
 
 :linkNote a owl:DatatypeProperty ;
-    sdo:domainIncludes :CreativeWork .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 772.i" .
 
 :linked a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 000[19:20]" .
 
 :listOfContents a owl:DatatypeProperty ;
-    sdo:domainIncludes :Instance .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 505.a" .
 
 :literaryForm a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[16:17]",
+        "MARC bib 008[33:34]" .
 
 :location a owl:DatatypeProperty,
         owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :DissertationAnnotation ;
+    sdo:domainIncludes :CreativeWork,
+        :DissertationAnnotation,
+        :Offer ;
     sdo:rangeIncludes :Place ;
     owl:equivalentProperty dbpo:location,
-        sdo:location .
+        sdo:location ;
+    skos:note "MARC bib 111.c",
+        "MARC bib 502.c",
+        "MARC hold 852.a" .
 
 :manufacture a owl:ObjectProperty ;
-    sdo:domainIncludes :ProviderEvent ;
-    owl:equivalentProperty bf:manufacture .
+    sdo:domainIncludes :CreativeWork,
+        :ProviderEvent ;
+    owl:equivalentProperty bf:manufacture ;
+    skos:note "MARC bib 260",
+        "MARC bib 264" .
 
 :material a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    owl:equivalentProperty dbpo:material .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty dbpo:material ;
+    skos:note "MARC bib 006[8:9]",
+        "MARC bib 008[25:26]" .
 
 :materialsSpecified a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Product .
-
-:matrixNumber a owl:DatatypeProperty,
-        owl:FunctionalProperty ;
-    owl:equivalentProperty bf:matrixNumber .
+    sdo:domainIncludes :CreativeWork,
+        :Offer,
+        :Product ;
+    skos:note "MARC bib 300.3",
+        "MARC bib 533.3",
+        "MARC bib 562.3",
+        "MARC hold 852.3" .
 
 :matter a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[10:11]",
+        "MARC bib 006[11:12]",
+        "MARC bib 006[12:13]",
+        "MARC bib 006[6:7]",
+        "MARC bib 006[7:8]",
+        "MARC bib 006[8:9]",
+        "MARC bib 006[9:10]",
+        "MARC bib 008[23:24]",
+        "MARC bib 008[24:25]",
+        "MARC bib 008[25:26]",
+        "MARC bib 008[26:27]",
+        "MARC bib 008[27:28]",
+        "MARC bib 008[28:29]",
+        "MARC bib 008[29:30]" .
 
 :mediaNote a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 772.m" .
 
 :mediaTerm a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Instance .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 245.h" .
 
 :medium a owl:DatatypeProperty,
         owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :ConceptualWork ;
-    owl:equivalentProperty dc:medium .
+    sdo:domainIncludes :CreativeWork,
+        :UniformWork ;
+    owl:equivalentProperty dc:medium ;
+    skos:note "MARC bib 007[4:5]",
+        "MARC bib 240.h" .
 
 :modified a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Record .
+    skos:note "MARC bib 005" .
 
 :modifiedRecord a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 008[38:39]" .
 
 :modifyingAgency a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:rangeIncludes :Organization .
+    sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Organization ;
+    skos:note "MARC bib 040.d" .
 
 :motionPicAspect a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[2:3]" .
 
 :motionPicBase a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[12:13]" .
 
 :motionPicCategories a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[13:14]" .
 
 :motionPicColor a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[3:4]" .
 
 :motionPicColorStock a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[14:15]" .
 
 :motionPicCompleteness a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[16:17]" .
 
 :motionPicConfiguration a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[8:9]" .
 
 :motionPicDeterioration a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[15:16]" .
 
 :motionPicDimensions a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[7:8]" .
 
 :motionPicElements a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[9:10]" .
 
 :motionPicFormat a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[4:5]" .
 
 :motionPicGeneration a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[11:12]" .
 
 :motionPicMedium a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[6:7]" .
 
 :motionPicPosNeg a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[10:11]" .
 
 :motionPicSound a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[5:6]" .
 
 :musicArrangement a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptualWork .
+    sdo:domainIncludes :UniformWork ;
+    skos:note "MARC bib 240.o" .
 
 :musicKey a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptualWork ;
-    owl:equivalentProperty bf:musicKey .
+    sdo:domainIncludes :UniformWork ;
+    owl:equivalentProperty bf:musicKey ;
+    skos:note "MARC bib 240.r" .
 
 :musicPerformanceMedium a owl:DatatypeProperty ;
-    sdo:domainIncludes :ConceptualWork .
+    sdo:domainIncludes :UniformWork ;
+    skos:note "MARC bib 240.m" .
 
 :musicPlate a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:musicPlate .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:musicPlate ;
+    skos:note "MARC bib 028.a" .
 
 :musicPublisher a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 028.a" .
 
 :name a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Organization,
-        :Person,
+    sdo:domainIncludes :CreativeWork,
+        :Organization,
         :PlanetaryObject ;
-    owl:equivalentProperty sdo:name .
+    owl:equivalentProperty sdo:name ;
+    skos:note "MARC bib 028.b",
+        "MARC bib 034.z",
+        "MARC bib 040.a",
+        "MARC bib 040.c",
+        "MARC bib 040.d",
+        "MARC bib 100.a",
+        "MARC bib 110.a",
+        "MARC bib 610.a",
+        "MARC bib 610.x" .
 
 :nameOfPartOfAWork a owl:DatatypeProperty ;
-    sdo:domainIncludes :Serial .
+    sdo:domainIncludes :Serial ;
+    skos:note "MARC bib 440.p" .
+
+:nationalBibliographicNumber a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 015.a" .
 
 :nationality a owl:FunctionalProperty,
         owl:ObjectProperty ;
     owl:equivalentProperty dbpo:nationality,
-        sdo:nationality .
+        sdo:nationality ;
+    skos:note "MARC auth 043.a" .
 
 :nature a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[7:8]",
+        "MARC bib 008[24:25]" .
 
-:nonCodedLocationQualifier a owl:DatatypeProperty .
+:nonCodedLocationQualifier a owl:DatatypeProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.g" .
 
 :nonProjAspect a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[2:3]" .
 
 :nonProjColor a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[3:4]" .
 
 :nonProjPrimary a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[4:5]" .
 
 :nonProjSecondary a owl:FunctionalProperty,
-        owl:ObjectProperty .
-
-:nonpublicNote a owl:DatatypeProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[5:6]" .
 
 :northernmostLatitudeCoordinates a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.f" .
 
 :notation a rdf:Property,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Concept,
-        :ConceptScheme ;
-    owl:equivalentProperty bf:notation .
+        :ConceptScheme,
+        :Organization ;
+    owl:equivalentProperty bf:notation ;
+    skos:note "MARC auth 040.f",
+        "MARC auth 043.a",
+        "MARC auth 065.2",
+        "MARC auth 150.9",
+        "MARC auth 750.0",
+        "MARC bib 024.2",
+        "MARC bib 024.i1",
+        "MARC bib 040.b",
+        "MARC bib 041.a",
+        "MARC bib 041.h",
+        "MARC bib 082.a",
+        "MARC bib 084.2",
+        "MARC bib 084.a",
+        "MARC bib 490.l",
+        "MARC bib 610.2",
+        "MARC bib 610.i2",
+        "MARC bib 650.0",
+        "MARC bib 650.2",
+        "MARC bib 650.i2",
+        "MARC bib 976.a",
+        "MARC bib 976.i2",
+        "MARC hold 852.b" .
 
 :note a owl:FunctionalProperty ;
     sdo:domainIncludes :CreativeWork,
         :DissertationAnnotation ;
     owl:equivalentProperty bf:note,
-        dbpo:note .
+        dbpo:note ;
+    skos:note "MARC auth 678.a",
+        "MARC bib 502.a",
+        "MARC bib 533.n",
+        "MARC bib 772.n" .
 
 :numberOfPartOfAWork a owl:DatatypeProperty ;
-    sdo:domainIncludes :Serial .
+    sdo:domainIncludes :Serial ;
+    skos:note "MARC bib 440.n" .
 
 :numeration a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Person .
+    sdo:domainIncludes :Person ;
+    skos:note "MARC bib 100.b" .
+
+:offers a owl:ObjectProperty ;
+    sdo:rangeIncludes :Offer ;
+    owl:equivalentProperty sdo:offers ;
+    skos:note "MARC hold 852" .
 
 :originalCatalogingAgency a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:rangeIncludes :Organization .
+    sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Organization ;
+    skos:note "MARC bib 040.a" .
 
 :originalItem a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[5:6]",
+        "MARC bib 008[22:23]" .
 
 :originalLanguage a owl:ObjectProperty ;
-    owl:equivalentProperty dbpo:originalLanguage .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty dbpo:originalLanguage ;
+    skos:note "MARC bib 041.h" .
 
 :otherPhysicalDetails a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Product .
+    sdo:domainIncludes :Product ;
+    skos:note "MARC bib 300.b" .
 
 :pagination a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Aggregate ;
-    owl:equivalentProperty sdo:pagination .
+    sdo:domainIncludes :Aggregate,
+        :CreativeWork ;
+    owl:equivalentProperty sdo:pagination ;
+    skos:note "MARC bib 510.c",
+        "MARC bib 773.q" .
 
 :partNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptualWork,
-        :Title ;
-    owl:equivalentProperty bf:partNumber .
+    sdo:domainIncludes :CreativeWork,
+        :Title,
+        :UniformWork ;
+    owl:equivalentProperty bf:partNumber ;
+    skos:note "MARC bib 240.n",
+        "MARC bib 245.n",
+        "MARC bib 772.9" .
 
 :partTitle a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptualWork,
-        :Title ;
-    owl:equivalentProperty bf:partTitle .
+    sdo:domainIncludes :Title,
+        :UniformWork ;
+    owl:equivalentProperty bf:partTitle ;
+    skos:note "MARC bib 240.p",
+        "MARC bib 245.p" .
 
-:participantNote a owl:DatatypeProperty .
+:participantNote a owl:DatatypeProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 511.a" .
 
 :parts a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[4:5]",
+        "MARC bib 008[21:22]" .
 
 :performerNote a owl:DatatypeProperty ;
-    sdo:domainIncludes :Instance ;
-    owl:equivalentProperty bf:performerNote .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:performerNote ;
+    skos:note "MARC bib 511.a" .
 
 :personTitle a owl:DatatypeProperty ;
-    sdo:domainIncludes :Person .
+    sdo:domainIncludes :Person ;
+    skos:note "MARC bib 100.c" .
 
 :physicalDescription a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 533.e",
+        "MARC bib 772.h" .
 
 :pieceDesignation a owl:DatatypeProperty,
-        owl:FunctionalProperty .
-
-:piecePhysicalCondition a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.p" .
 
 :place a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :ProviderEvent ;
+    sdo:domainIncludes :CreativeWork,
+        :ProviderEvent ;
     sdo:rangeIncludes :Place ;
     owl:equivalentProperty dbpo:place,
-        <http://purl.org/NET/c4dm/event.owl#place> .
+        <http://purl.org/NET/c4dm/event.owl#place> ;
+    skos:note "MARC bib 008[15:18]",
+        "MARC bib 260.a",
+        "MARC bib 260.e",
+        "MARC bib 264.a" .
 
 :placePublisherAndDateOfPublication a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 772.d" .
 
 :posNeg a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[3:4]",
+        "MARC bib 007[7:8]" .
 
 :precededBy a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Serial ;
-    owl:equivalentProperty bf:precededBy .
+    owl:equivalentProperty bf:precededBy ;
+    skos:note "MARC bib 780" .
 
 :prefLabel a owl:FunctionalProperty ;
     sdo:domainIncludes :Concept,
-        :Place .
+        :CreativeWork,
+        :Event,
+        :Place ;
+    skos:note "MARC auth 148.a",
+        "MARC auth 150.a",
+        "MARC auth 151.a",
+        "MARC auth 180.x",
+        "MARC auth 181.z",
+        "MARC auth 450.a",
+        "MARC auth 450.x",
+        "MARC bib 648.a",
+        "MARC bib 650.a",
+        "MARC bib 650.v",
+        "MARC bib 650.x",
+        "MARC bib 650.y",
+        "MARC bib 650.z",
+        "MARC bib 651.a",
+        "MARC bib 976.b" .
 
 :presentationFormat a owl:DatatypeProperty ;
-    sdo:domainIncludes :Product .
+    sdo:domainIncludes :Product ;
+    skos:note "MARC bib 562.d" .
 
-:previousTitle a owl:ObjectProperty .
+:previousTitle a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 247" .
 
 :primeMeridian a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[7:8]",
+        "MARC bib 008[24:25]" .
+
+:production a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:production,
+        dbpo:production ;
+    skos:note "MARC bib 264" .
 
 :projGraphAspect a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[2:3]" .
 
 :projGraphColor a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[3:4]" .
 
 :projGraphDimensions a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[7:8]" .
 
 :projGraphEmulsion a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[4:5]" .
 
 :projGraphMedium a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[6:7]" .
 
 :projGraphSound a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[5:6]" .
 
 :projGraphSupport a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[8:9]" .
 
 :projection a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[5:7]",
+        "MARC bib 008[22:24]" .
 
 :provider a owl:ObjectProperty ;
-    sdo:domainIncludes :Instance ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :ProviderEvent ;
     owl:equivalentProperty bf:provider,
-        sdo:provider .
+        sdo:provider ;
+    skos:note "MARC bib 260",
+        "MARC bib 533" .
 
 :providerDate a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :ProviderEvent ;
-    owl:equivalentProperty bf:providerDate .
+    sdo:domainIncludes :CreativeWork,
+        :ProviderEvent ;
+    owl:equivalentProperty bf:providerDate ;
+    skos:note "MARC bib 260.c",
+        "MARC bib 260.g",
+        "MARC bib 264.c",
+        "MARC bib 533.d" .
 
 :providerName a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :ProviderEvent ;
-    owl:equivalentProperty bf:providerName .
+    sdo:domainIncludes :CreativeWork,
+        :ProviderEvent ;
+    owl:equivalentProperty bf:providerName ;
+    skos:note "MARC bib 260.b",
+        "MARC bib 260.f",
+        "MARC bib 264.b",
+        "MARC bib 533.c" .
 
-:publicNote a owl:DatatypeProperty .
+:providerPlace a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Place ;
+    owl:equivalentProperty bf:providerPlace ;
+    skos:note "MARC bib 533.b" .
 
 :publication a owl:ObjectProperty ;
-    sdo:domainIncludes :ProviderEvent ;
+    sdo:domainIncludes :CreativeWork,
+        :ProviderEvent ;
     owl:equivalentProperty bf:publication,
-        sdo:publication .
+        sdo:publication ;
+    skos:note "MARC bib 260",
+        "MARC bib 264" .
 
 :publicationCountry a owl:DatatypeProperty,
         owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 008[15:18]",
+        "MARC bib 775.f" .
 
 :publicationOtherYear a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 008[11:15]" .
 
 :publicationStatus a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 008[6:7]" .
 
 :publicationYear a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 008[7:11]" .
 
 :publisherNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:publisherNumber .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:publisherNumber ;
+    skos:note "MARC bib 028.a" .
 
 :qATarget a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[10:11]" .
 
 :qualifyingNote a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 772.c" .
 
 :range a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    owl:equivalentProperty dbpo:range .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty dbpo:range ;
+    skos:note "MARC bib 007[5:6]" .
 
 :reductionRatioExactRightJustifiedWithLeadingZero a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[6:9]" .
 
 :reformattingQuality a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[13:14]" .
 
 :regularity a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[2:3]",
+        "MARC bib 008[19:20]" .
 
-:relation sdo:rangeIncludes :Document ;
-    owl:equivalentProperty dbpo:relation .
+:relation sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Document ;
+    owl:equivalentProperty dbpo:relation ;
+    skos:note "MARC auth 856",
+        "MARC bib 787",
+        "MARC bib 856" .
 
 :relief a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[1:2]",
+        "MARC bib 006[2:3]",
+        "MARC bib 006[3:4]",
+        "MARC bib 006[4:5]",
+        "MARC bib 008[18:19]",
+        "MARC bib 008[19:20]",
+        "MARC bib 008[20:21]",
+        "MARC bib 008[21:22]" .
 
 :remoteSensImageAltitude a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[3:4]" .
 
 :remoteSensImageAttitude a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[4:5]" .
 
 :remoteSensImageCloud a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[5:6]" .
 
 :remoteSensImageConstruction a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[6:7]" .
 
 :remoteSensImageData a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[9:11]" .
 
 :remoteSensImageSensor a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[8:9]" .
 
 :remoteSensImageUse a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[7:8]" .
 
-:replaces sdo:rangeIncludes :Concept,
-        :Serial .
+:replaces sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Concept,
+        :Serial ;
+    skos:note "MARC auth 450",
+        "MARC bib 321" .
 
 :reportNumber a owl:DatatypeProperty ;
     sdo:domainIncludes :CreativeWork ;
-    owl:equivalentProperty bf:reportNumber .
+    owl:equivalentProperty bf:reportNumber ;
+    skos:note "MARC bib 772.r" .
 
 :reproduction a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    owl:equivalentProperty bf:reproduction .
+    sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :CreativeWork ;
+    owl:equivalentProperty bf:reproduction ;
+    skos:note "MARC bib 007[5:6]",
+        "MARC bib 533" .
 
 :responsibilityStatement a owl:FunctionalProperty ;
-    sdo:domainIncludes :Instance .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 245.c" .
 
 :rightAscensionEasternLimit a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.m" .
 
 :rightAscensionWesternLimit a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.n" .
 
 :runningTime a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[1:4]",
+        "MARC bib 008[18:21]" .
 
-:sameAs sdo:domainIncludes :Concept ;
-    owl:equivalentProperty sdo:sameAs .
+:sameAs sdo:domainIncludes :Concept,
+        :CreativeWork ;
+    owl:equivalentProperty sdo:sameAs ;
+    skos:note "MARC auth 400",
+        "MARC auth 856",
+        "MARC bib 035.a.a",
+        "MARC bib 650.0" .
 
 :scopeNote a owl:FunctionalProperty ;
     sdo:domainIncludes :CartographyCoordinates,
         :CreativeWork,
-        :ProviderEvent .
+        :ProviderEvent,
+        :SomeProducts ;
+    skos:note "MARC auth 400.i",
+        "MARC auth 680.i",
+        "MARC bib 034.3",
+        "MARC bib 260.3",
+        "MARC bib 772.g",
+        "MARC hold 866.a" .
 
-:seeAlso sdo:rangeIncludes :Document .
+:searchElement a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Title ;
+    skos:note "MARC bib 245.i1" .
+
+:seeAlso sdo:rangeIncludes :Document ;
+    skos:note "MARC auth 510",
+        "MARC auth 511",
+        "MARC auth 856" .
 
 :sequenceNumber a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.8" .
 
 :series a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Serial ;
     owl:equivalentProperty bf:series,
-        dbpo:series .
+        dbpo:series ;
+    skos:note "MARC bib 440" .
 
 :seriesLabel a owl:DatatypeProperty ;
-    sdo:domainIncludes :CreativeWork .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 772.k" .
 
-:shelvingControlNumber a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+:seriesStatement a owl:DatatypeProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 533.f" .
 
-:shelvingFormOfTitle a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+:shelfControlNumber a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.j" .
 
-:shelvingLocation a owl:DatatypeProperty .
+:shelfLabel a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.l" .
+
+:shelfLocation a owl:DatatypeProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.c" .
+
+:shelfOrder a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852" .
 
 :sound a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[5:6]" .
 
 :soundAspect a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[2:3]" .
 
 :soundCapture a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[13:14]" .
 
 :soundDimensions a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[6:7]" .
 
 :soundGroove a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[5:6]" .
 
 :soundKindOfCutting a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[11:12]" .
 
 :soundKindOfDisc a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[9:10]" .
 
 :soundKindOfMaterial a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[10:11]" .
 
 :soundPlaybackChannel a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[4:5]" .
 
 :soundPlaybackCharacter a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[12:13]" .
 
 :soundSpeed a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[3:4]" .
 
 :soundTapeConfiguration a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[8:9]" .
 
 :soundTapeWidth a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[7:8]" .
 
 :source a owl:DatatypeProperty,
         owl:FunctionalProperty ;
@@ -1994,224 +3294,367 @@ marcenum:bibLevel a skos:Collection;
     sdo:rangeIncludes :CreativeWork,
         :Dataset ;
     owl:equivalentProperty dbpo:source,
-        sdo:source .
+        sdo:source ;
+    skos:note "MARC auth 670",
+        "MARC bib 034.2",
+        "MARC bib 786" .
 
 :sourceNote a owl:DatatypeProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 588.a" .
 
-:sourceOfClassificationOrShelvingScheme a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+:sourceOfClassificationOrShelfMarkScheme a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :Offer ;
+    skos:note "MARC hold 852.2" .
 
 :southernmostLatitudeCoordinates a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.g" .
 
 :standardTechnicalReportNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 772.u" .
 
 :startDate a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :CartographyCoordinates ;
     owl:equivalentProperty dbpo:startDate,
-        sdo:startDate .
+        sdo:startDate ;
+    skos:note "MARC bib 034.x" .
 
 :status a owl:FunctionalProperty,
         owl:ObjectProperty ;
     sdo:domainIncludes :Record ;
     owl:equivalentProperty dbpo:status,
         bibo:status,
-        sdo:status .
+        sdo:status ;
+    skos:note "MARC bib 000[5:6]" .
 
-:subject sdo:rangeIncludes :Concept,
+:subject sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Concept,
         :Meeting,
         :Organization,
         :Person,
-        :Work ;
-    owl:equivalentProperty bf:subject .
-
-:sublocationOrCollection a owl:DatatypeProperty .
+        :UniformWork ;
+    owl:equivalentProperty bf:subject ;
+    skos:note "MARC auth 083",
+        "MARC auth 750",
+        "MARC bib 072",
+        "MARC bib 600",
+        "MARC bib 610",
+        "MARC bib 611",
+        "MARC bib 630",
+        "MARC bib 650",
+        "MARC hold 600" .
 
 :subseries a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Serial ;
-    owl:equivalentProperty bf:subseries .
+    owl:equivalentProperty bf:subseries ;
+    skos:note "MARC bib 762" .
 
 :subseriesOf a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Serial ;
-    owl:equivalentProperty bf:subseriesOf .
+    owl:equivalentProperty bf:subseriesOf ;
+    skos:note "MARC bib 760" .
 
 :subtitle a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptualWork,
-        :Title ;
+    sdo:domainIncludes :Title,
+        :UniformWork ;
     owl:equivalentProperty bf:subtitle,
-        dbpo:subtitle .
+        dbpo:subtitle ;
+    skos:note "MARC bib 240.k",
+        "MARC bib 245.b" .
 
 :succeededBy a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Serial ;
-    owl:equivalentProperty bf:succeededBy .
+    owl:equivalentProperty bf:succeededBy ;
+    skos:note "MARC bib 785" .
 
 :summary a owl:DatatypeProperty ;
-    owl:equivalentProperty bf:summary .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:summary ;
+    skos:note "MARC bib 520.a" .
 
 :supplementaryContentNote a owl:DatatypeProperty ;
-    sdo:domainIncludes :Instance ;
-    owl:equivalentProperty bf:supplementaryContentNote .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:supplementaryContentNote ;
+    skos:note "MARC bib 504.a" .
 
 :systemName a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 003" .
 
 :systemNumber a owl:DatatypeProperty ;
-    owl:equivalentProperty bf:systemNumber .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:systemNumber ;
+    skos:note "MARC bib 035.a" .
 
 :systemRequirements a owl:DatatypeProperty ;
-    sdo:domainIncludes :Instance .
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 538.a" .
 
 :tacBrailleMusic a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[6:7]",
+        "MARC bib 007[7:8]",
+        "MARC bib 007[8:9]" .
 
 :tacBrailleWriting a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[3:4]",
+        "MARC bib 007[4:5]" .
 
 :tacContraction a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[5:6]" .
 
 :tacSpecPhysicalChar a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[9:10]" .
 
 :technicalNote a owl:DatatypeProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 599.a" .
 
 :technique a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    owl:equivalentProperty dbpo:technique .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty dbpo:technique ;
+    skos:note "MARC bib 006[17:18]",
+        "MARC bib 008[34:35]" .
 
 :text a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    owl:equivalentProperty sdo:text .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty sdo:text ;
+    skos:note "MARC bib 006[13:14]",
+        "MARC bib 006[14:15]",
+        "MARC bib 008[30:31]",
+        "MARC bib 008[31:32]" .
 
 :timeOfExamination a owl:DatatypeProperty,
-        owl:FunctionalProperty .
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[17:23]" .
 
 :title a owl:FunctionalProperty ;
-    sdo:domainIncludes :ConceptualWork,
-        :CreativeWork,
-        :Serial ;
+    sdo:domainIncludes :CreativeWork,
+        :Person,
+        :Serial,
+        :UniformWork ;
     owl:equivalentProperty dbpo:title,
-        sdo:title .
+        sdo:title ;
+    skos:note "MARC auth 100.t",
+        "MARC auth 400.t",
+        "MARC bib 240.a",
+        "MARC bib 440.a",
+        "MARC bib 510.a",
+        "MARC bib 600.t",
+        "MARC bib 700.t",
+        "MARC bib 730.a",
+        "MARC bib 740.a",
+        "MARC bib 772.t" .
 
 :titleDate a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Title ;
-    owl:equivalentProperty dbpo:titleDate .
+    owl:equivalentProperty dbpo:titleDate ;
+    skos:note "MARC bib 245.f" .
 
 :titleQualifier a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Title ;
-    owl:equivalentProperty bf:titleQualifier .
+    owl:equivalentProperty bf:titleQualifier ;
+    skos:note "MARC bib 210.b" .
 
 :titleSource a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Title ;
-    owl:equivalentProperty bf:titleSource .
+    owl:equivalentProperty bf:titleSource ;
+    skos:note "MARC bib 210.2" .
 
 :titleType a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:titleType .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:titleType ;
+    skos:note "MARC bib 246.i" .
 
 :titleValue a owl:FunctionalProperty ;
-    sdo:domainIncludes :Title .
+    sdo:domainIncludes :Title ;
+    skos:note "MARC bib 210.a",
+        "MARC bib 245.a" .
 
 :titleVariation a owl:ObjectProperty ;
-    owl:equivalentProperty bf:titleVariation .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:titleVariation ;
+    skos:note "MARC bib 246" .
 
 :transcribingAgency a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:rangeIncludes :Organization .
+    sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :Organization ;
+    skos:note "MARC bib 040.c" .
 
 :translatedFromLanguage a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 041.k" .
 
-:translatedTitle a owl:ObjectProperty .
+:translatedTitle a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 242" .
 
 :translation a owl:ObjectProperty ;
-    owl:equivalentProperty bf:translation .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:translation ;
+    skos:note "MARC bib 767" .
 
 :translationOf a owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
     owl:equivalentProperty bf:translationOf,
-        bibo:translationOf .
+        bibo:translationOf ;
+    skos:note "MARC bib 765" .
 
 :transposition a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[16:17]",
+        "MARC bib 008[33:34]" .
 
 :treatySigningDate a owl:DatatypeProperty ;
-    sdo:domainIncludes :ConceptualWork .
+    sdo:domainIncludes :UniformWork ;
+    skos:note "MARC bib 240.d" .
 
 :typeOfControl a owl:FunctionalProperty,
         owl:ObjectProperty ;
-    sdo:domainIncludes :Record .
+    sdo:domainIncludes :Record ;
+    skos:note "MARC bib 000[8:9]" .
 
 :typeOfEntry a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 006[17:18]",
+        "MARC bib 008[34:35]" .
 
-:uniformResourceIdentifier a owl:DatatypeProperty .
-
-:uniformTitle a owl:DatatypeProperty,
-        owl:FunctionalProperty ;
+:uniformTitle a owl:FunctionalProperty ;
     sdo:domainIncludes :CreativeWork,
-        :Instance,
-        :PublicationVolume .
+        :PublicationVolume ;
+    skos:note "MARC bib 130.a",
+        "MARC bib 772.s",
+        "MARC bib 830.a" .
 
 :url a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CreativeWork ;
-    owl:equivalentProperty sdo:url .
+    sdo:domainIncludes :CreativeWork,
+        :Offer ;
+    owl:equivalentProperty sdo:url ;
+    skos:note "MARC auth 670.u",
+        "MARC hold 852.u" .
 
 :version a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :ConceptScheme,
-        :ConceptualWork .
+        :UniformWork ;
+    skos:note "MARC bib 082.2",
+        "MARC bib 240.s" .
 
 :versionIdentification a owl:DatatypeProperty ;
-    sdo:domainIncludes :Product .
+    sdo:domainIncludes :Product ;
+    skos:note "MARC bib 562.c" .
 
 :videoColor a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[3:4]" .
 
 :videoDimensions a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[7:8]" .
 
 :videoFormat a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[4:5]" .
 
 :videoMedium a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[6:7]" .
 
 :videoPlayback a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[8:9]" .
 
 :videoSound a owl:FunctionalProperty,
-        owl:ObjectProperty .
+        owl:ObjectProperty ;
+    sdo:domainIncludes :CreativeWork ;
+    skos:note "MARC bib 007[5:6]" .
 
 :videorecordingNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    owl:equivalentProperty bf:videorecordingNumber .
+    sdo:domainIncludes :CreativeWork ;
+    owl:equivalentProperty bf:videorecordingNumber ;
+    skos:note "MARC bib 028.a" .
 
 :volumeNumber a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :PublicationVolume ;
-    owl:equivalentProperty sdo:volumeNumber .
+    owl:equivalentProperty sdo:volumeNumber ;
+    skos:note "MARC bib 830.v" .
 
 :volumeNumberSequentialDesignation a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :Serial .
+    sdo:domainIncludes :Serial ;
+    skos:note "MARC bib 440.v" .
 
 :westernmostLongitudeCoordinates a owl:DatatypeProperty,
         owl:FunctionalProperty ;
-    sdo:domainIncludes :CartographyCoordinates .
+    sdo:domainIncludes :CartographyCoordinates ;
+    skos:note "MARC bib 034.d" .
+
+:workExample sdo:domainIncludes :CreativeWork ;
+    sdo:rangeIncludes :SomeProducts ;
+    skos:note "MARC bib 562",
+        "MARC hold 866" .
+
+:Globe rdfs:subClassOf :Product .
+
+:MovingImage rdfs:subClassOf :Product .
+
+:TactileMaterial a owl:Class ;
+    rdfs:subClassOf :Product .
+
+:ProjectedImage rdfs:subClassOf :Product .
+
+:Map rdfs:subClassOf :Product ;
+    owl:equivalentClass sdo:Map .
+
+:Digital rdfs:subClassOf :CreativeWork .
 
 :Electronic owl:equivalentClass bf:Electronic .
 
-:Serial rdfs:subClassOf :Aggregate .
+:StillImage rdfs:subClassOf :Product .
+
+:Visual a owl:Class ;
+    rdfs:subClassOf :CreativeWork .
+
+:Serial rdfs:subClassOf :Aggregate,
+        :CreativeWork .
+
+:Text rdfs:subClassOf :Product ;
+    owl:equivalentClass sdo:Text .
 

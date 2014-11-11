@@ -86,7 +86,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
         }
         if (instructions['method'] == "get") {
             log.debug("getting from whelk for node $node")
-            def doc = whelk.get(new URI(node['@id']))
+            def doc = whelk.get(node['@id'])
             return (doc ? doc.dataAsMap : node)
         }
         if (instructions['method'] == "http") {

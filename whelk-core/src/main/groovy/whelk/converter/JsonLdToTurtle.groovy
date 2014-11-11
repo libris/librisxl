@@ -1,6 +1,6 @@
 package whelk.plugin
 
-import org.apache.commons.lang3.StringEscapeUtils
+import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
 
 import org.codehaus.jackson.map.ObjectMapper
 
@@ -108,7 +108,7 @@ class JsonLdToTurtle {
 
     def objectToTurtle(obj, level=0, viaKey=null) {
         def indent = INDENT * (level + 1)
-        if (obj instanceof String || obj[keys.value]) {
+        if (!(obj instanceof Map) || obj[keys.value]) {
             toLiteral(obj, viaKey)
             return Collections.emptyList()
         }
@@ -197,14 +197,18 @@ class JsonLdToTurtle {
                 }
             }
         }
-        def escaped = StringEscapeUtils.escapeJava(value)
-        write('"')
-        write(escaped)
-        write('"')
-        if (datatype)
-            write("^^" + termFor(datatype))
-        else if (lang)
-            write("@" + lang)
+        if (value instanceof String) {
+            def escaped = escapeJava(value)
+            write('"')
+            write(escaped)
+            write('"')
+            if (datatype)
+                write("^^" + termFor(datatype))
+            else if (lang)
+                write("@" + lang)
+        } else { // boolean or number
+            write(value.toString())
+        }
     }
 
     static Map parseContext(Map src) {

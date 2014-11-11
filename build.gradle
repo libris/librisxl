@@ -30,8 +30,8 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'groovy'
 
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 
     sourceSets {
         main {
@@ -75,7 +75,7 @@ subprojects {
     processResources.dependsOn copyConfiguration
 
     dependencies {
-        compile 'org.codehaus.groovy:groovy-all:2.3.3'
+        compile 'org.codehaus.groovy:groovy-all:2.3.6'
         compile 'com.vividsolutions:jts:1.13'
         compile 'commons-cli:commons-cli:1.2'
         compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'

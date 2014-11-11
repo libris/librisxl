@@ -95,7 +95,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    @groovy.transform.CompileStatic
     public boolean store(Document doc) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         boolean result = storeAsFile(doc)
@@ -105,10 +104,9 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 [
                     "index": indexName,
                     "type": METAENTRY_INDEX_TYPE,
-                    "id": translateIdentifier(doc.identifier)
+                    "id": toElasticId(doc.identifier)
                 ]
             )
-            whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, [:])
         }
         return result
     }
@@ -127,12 +125,9 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                 entries << [
                 "index":indexName,
                 "type": METAENTRY_INDEX_TYPE,
-                "id": translateIdentifier(doc.identifier),
+                "id": toElasticId(doc.identifier),
                 "data":((Document)doc).metadataAsJson
                 ]
-
-                //Send to camel route
-                whelk.notifyCamel(doc.identifier, Whelk.ADD_OPERATION, [:])
             }
         }
         log.trace("batchLoad() meantime after index prep ${System.currentTimeMillis() - startTime} milliseconds elapsed.")
@@ -149,7 +144,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             if (this.contentTypes && !this.contentTypes.contains(doc.contentType)) {
                 throw new WhelkAddException("[${this.id}] Not configured to handle documents of type ${doc.contentType}")
             }
-            doc.updateModified()
             if (this.versioning) {
                 try {
                     doc = checkAndUpdateExisting(doc)
@@ -221,8 +215,8 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
 
-    Document get(URI uri, String version = null) {
-        loadDocument(uri, version)
+    Document get(String id, String version = null) {
+        loadDocument(id, version)
     }
 
     @groovy.transform.CompileStatic
@@ -230,7 +224,6 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         return loadDocument(new URI(uri), version)
     }
 
-    @groovy.transform.CompileStatic
     private Document loadDocument(URI uri, String version = null) {
         log.debug("Received request for ${uri.toString()} with version $version")
         String filePath = buildPath(uri, (version ? version as int : 0))
@@ -238,7 +231,8 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         try {
             log.trace("filePath: $filePath")
             File metafile = new File(filePath + "/" + ENTRY_FILE_NAME)
-            def document = new Document(FileUtils.readFileToString(metafile, "utf-8"))
+            def metaEntry = mapper.readValue(FileUtils.readFileToString(metafile, "utf-8"), Map)
+            def document = whelk.createDocument(metaEntry?.contentType).withMetaEntry(metaEntry)
             File sourcefile = new File(filePath + "/" + fileName + FILE_EXTENSIONS.get(document.contentType, DATAFILE_EXTENSION))
             return document.withData(FileUtils.readFileToByteArray(sourcefile))
         } catch (FileNotFoundException fnfe) {
@@ -272,7 +266,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
                             Document nextDocument = loadDocument(nextIdentifier)
                             while (!nextDocument) {
                                 super.log.warn("Document ${nextIdentifier} not found in storage. Removing it from index $indexName.")
-                                deleteEntry(new URI(nextIdentifier), indexName, BasicElasticComponent.METAENTRY_INDEX_TYPE)
+                                deleteEntry(nextIdentifier, indexName, BasicElasticComponent.METAENTRY_INDEX_TYPE)
                                 try {
                                     nextIdentifier = elasticResultIterator.next()
                                     nextDocument = loadDocument(nextIdentifier)
@@ -291,34 +285,26 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    void remove(URI uri) {
+    void remove(String id) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
 
         if (versioning) {
-            storeAsFile(createTombstone(uri))
+            storeAsFile(createTombstone(id))
         } else {
-            def fn = buildPath(uri)
+            def fn = buildPath(id)
             log.debug("Deleting $fn")
             if (!new File(fn).deleteDir()) {
-                log.error("Failed to delete $uri")
-                throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $uri")
+                log.error("Failed to delete $id")
+                throw new WhelkRuntimeException("" + this.getClass().getName() + " failed to delete $id")
             }
         }
-        deleteEntry(uri, indexName, METAENTRY_INDEX_TYPE)
-        /*
-        if (!producerTemplate) {
-            producerTemplate = getWhelk().getCamelContext().createProducerTemplate();
-        }
-        producerTemplate.sendBodyAndHeaders("direct:${this.id}", translateIdentifier(uri), ["operation":"DELETE","entry:identifier":uri.toString()])
-        */
+        deleteEntry(id, indexName, METAENTRY_INDEX_TYPE)
     }
 
-    @groovy.transform.CompileStatic
     String buildPath(String id, int version = 0) {
         return buildPath(new URI(id), version)
     }
 
-    @groovy.transform.CompileStatic
     String buildPath(URI uri, int version = 0) {
         String id = uri.toString()
         int pos = id.lastIndexOf("/")
@@ -334,13 +320,12 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
 
-    private Document createTombstone(uri) {
-        def tombstone = new Document().withIdentifier(uri).withData("DELETED ENTRY")
+    private Document createTombstone(String id) {
+        def tombstone = whelk.createDocument("text/plain").withIdentifier(id).withData("DELETED ENTRY")
         tombstone.entry['deleted'] = true
         return tombstone
     }
 
-    @groovy.transform.CompileStatic
     Iterable<Document> getAllRaw(String dataset = null) {
         File baseDir = (dataset != null ? new File(this.storageDir + "/" + dataset) : new File(this.storageDir))
         log.info("Starting reading for getAllRaw() at ${baseDir.getPath()}.")
@@ -364,7 +349,8 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
                     public Document next() {
                         if (lastValidEntry) {
-                            Document document = new Document(FileUtils.readFileToString(lastValidEntry, "utf-8"))
+                            def metaEntry = mapper.readValue(FileUtils.readFileToString(lastValidEntry, "utf-8"), Map)
+                            def document = whelk.createDocument(metaEntry?.contentType).withMetaEntry(metaEntry)
                             try {
                                 document.withData(FileUtils.readFileToByteArray(new File(lastValidEntry.getParentFile(), document.getEntry().get(PairtreeHybridDiskStorage.FILE_NAME_KEY))))
                             } catch (FileNotFoundException fnfe) {
@@ -398,7 +384,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             entryList << [
             "index":indexName,
             "type": METAENTRY_INDEX_TYPE,
-            "id": translateIdentifier(document.identifier),
+            "id": toElasticId(document.identifier),
             "data":((Document)document).metadataAsJson
             ]
             if (diskCount++ % 2000 == 0) {

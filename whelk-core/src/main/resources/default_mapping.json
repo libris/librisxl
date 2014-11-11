@@ -2,7 +2,7 @@
     "date_detection" : false,
     "_id" : {
         "type": "string",
-        "path": "elastic_id"
+        "path": "encodedId"
     },
     "_timestamp" : {
         "enabled" : true,

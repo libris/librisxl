@@ -26,16 +26,16 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     int graphstoreBatchSize = 1000
     long batchTimeout = 5000
     int parallelProcesses = 20
-    List<String> elasticTypes
     String indexMessageQueue
+    String bulkIndexMessageQueue
     String graphstoreMessageQueue
 
     WhelkRouteBuilder(Map settings) {
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
         graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
         batchTimeout = settings.get("batchTimeout", batchTimeout)
-        elasticTypes = settings.get("elasticTypes")
         indexMessageQueue = settings.get("indexMessageQueue")
+        bulkIndexMessageQueue = settings.get("bulkIndexMessageQueue", indexMessageQueue)
         graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
     }
 
@@ -59,11 +59,14 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         }
 
         from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
+        from("direct:bulk_"+whelk.id).process(formatConverterProcessor).to(bulkIndexMessageQueue)
 
         if (whelk.index) {
             from(indexMessageQueue)
                 .threads(1,parallelProcesses)
-                .process(new ElasticTypeRouteProcessor(global.ELASTIC_HOST, elasticCluster, global.ELASTIC_PORT, elasticTypes, getPlugin("shapecomputer")))
+                .process(new ElasticTypeRouteProcessor(whelk.index))
+                .routingSlip(header("elasticDestination"))
+                /*
                 .choice()
                     .when(header("whelk:operation").isEqualTo(Whelk.REMOVE_OPERATION))
                         .to("direct:elasticdeletes")
@@ -71,8 +74,14 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                     .otherwise()
                         .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                         .routingSlip(header("elasticDestination"))
+                        */
 
-            from("direct:elasticdeletes").delay(batchTimeout+1).routingSlip(header("elasticDestination"))
+            from(bulkIndexMessageQueue)
+                .threads(1,parallelProcesses)
+                .process(new ElasticTypeRouteProcessor(whelk.index))
+                .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
+                .routingSlip(header("elasticDestination"))
+
         }
 
         // Routes for graphstore

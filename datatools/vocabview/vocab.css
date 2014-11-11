@@ -65,14 +65,37 @@ body > section > div:target {
   background-color: #fff;
 }
 
+section > h1 {
+  color: #999;
+  border-bottom: 1px solid #eee;
+}
+
 div > h2 {
   margin: 0;
   padding: 0.2em;
   background-color: #eee;
   border-radius: 4px 4px 0 0;
 }
-div > dl {
+div > p,
+div > dl,
+div.notes {
   margin: 0.4em;
+}
+
+dt {
+  color: #999;
+}
+dd {
+  margin-bottom: 0.5em;
+}
+
+p.note {
+  display: inline-block;
+  color: #333;
+  background-color: #ffe;
+  border: 1px dotted #ccc;
+  padding: 0.1em;
+  margin: 0.1em 0;
 }
 
 .baseclasses, .subclasses, .instances,
@@ -83,9 +106,21 @@ div > dl {
 .baseclasses > li, .subclasses > li, .instances > li {
   border: 1px solid #7af;
   border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 4px;
 }
 
 .properties {
+  font-size: 0.8em;
+}
+
+li.ext {
+  border-color: #d51;
+}
+.ext a {
+  color: #d51;
+}
+.ext p {
   font-size: 0.8em;
 }
 

@@ -11,17 +11,17 @@
         "data": {
             "type": "binary"
         },
-        "identifier" : {
-            "type" : "string",
-            "index" : "not_analyzed"
-        },
         "entry" : {
             "properties" : {
-                "dataset" : {
+                "identifier" : {
                     "type" : "string",
                     "index" : "not_analyzed"
                 },
-                "identifier" : {
+                "checksum" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                },
+                "dataset" : {
                     "type" : "string",
                     "index" : "not_analyzed"
                 },

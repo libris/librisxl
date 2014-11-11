@@ -21,10 +21,10 @@
   </appender>
 
   <logger name="whelk.StandardWhelk">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="whelk.importer.MySQLImporter">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="whelk.component.ElasticSearch">
       <level value="info"/>

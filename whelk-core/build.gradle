@@ -2,7 +2,7 @@ apply plugin: "application"
 
 
 dependencies {
-    def camelVersion = "2.13.2"
+    def camelVersion = "2.14.0"
     def activeMQVersion = "5.10.0"
 
     compile project(":locgov-pairtree")

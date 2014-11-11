@@ -8,12 +8,6 @@
     "fusekiserver": {
         "_class": "whelk.component.support.FusekiServer"
     },
-    "shapecomputer": {
-        "_class" : "whelk.plugin.UriToElasticType",
-        "_params": {
-            "defaultType": "record"
-        }
-    },
     "remotesearch": {
         "_class": "whelk.api.RemoteSearchAPI",
         "_plugins" : [
@@ -528,7 +522,7 @@
     },
     "elastic_camel_processor": {
         "_class" : "whelk.camel.FormatConverterProcessor",
-        "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ]
+        "_plugins" : ["linkexpander", "cleanupindexconverter" ]
     },
     "turtleconverter_processor": {
         "_class" : "whelk.camel.FormatConverterProcessor",
@@ -544,20 +538,20 @@
     "routebuilder": {
         "_class" : "whelk.camel.WhelkRouteBuilder",
         "_plugins" : [
-            "elastic_camel_processor", "turtleconverter_processor", "shapecomputer", "prawnrunner_processor","graphstore_aggregator"
+            "elastic_camel_processor", "turtleconverter_processor", "prawnrunner_processor","graphstore_aggregator"
         ],
         "_params": {
             "elasticBatchSize": 2000,
             "graphstoreBatchSize": 1000,
             "batchTimeout": 5000,
-            "elasticTypes": "_property:ELASTIC_TYPES",
             "indexMessageQueue": "_property:MQ_INDEX",
+            "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX",
             "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE"
         }
     },
     "index": {
         "_class" : "whelk.component.ElasticSearchClient",
-        "_plugins" : ["linkexpander", "shapecomputer", "cleanupindexconverter" ],
+        "_plugins" : ["linkexpander", "cleanupindexconverter" ],
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
@@ -565,15 +559,12 @@
             },
             "elasticHost": "_property:ELASTIC_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "availableTypes": "_property:ELASTIC_TYPES"
+            "availableTypes": ["auth","bib","hold","def","sys"]
         },
         "_unique" : true
     },
     "jsonldstorage": {
         "_class" : "whelk.component.PairtreeHybridDiskStorage",
-        "_plugins" : [
-            "shapecomputer"
-            ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
@@ -585,9 +576,6 @@
     },
     "esjsonldstorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
-        "_plugins" : [
-            "shapecomputer"
-            ],
         "_params" : {
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
@@ -598,9 +586,6 @@
     },
     "marcxmlstorage": {
         "_class" : "whelk.component.PairtreeHybridDiskStorage",
-        "_plugins" : [
-            "shapecomputer"
-            ],
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",

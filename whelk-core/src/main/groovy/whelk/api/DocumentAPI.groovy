@@ -35,7 +35,7 @@ class DocumentAPI extends BasicAPI {
     }
     protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         String path = getCleanPath(pathVars)
-        log.debug "Path: $path"
+        log.debug "Path: $path req method: ${request.method}"
         if (request.method == "GET") {
             handleGetRequest(request, response, path)
         } else if (request.method == "POST") {
@@ -48,11 +48,10 @@ class DocumentAPI extends BasicAPI {
             }
         } else if (request.getMethod() == "PUT") {
             handlePutAndPostRequest(request, response, path, true)
-        }
-        else if (request.method == "DELETE") {
+        } else if (request.method == "DELETE") {
             try {
                 log.debug("Removing resource at $path")
-                whelk.remove(new URI(path))
+                whelk.remove(path)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
@@ -73,9 +72,9 @@ class DocumentAPI extends BasicAPI {
         try {
             def d = null
             if (version) {
-                d = whelk.get(new URI(path), version, accepting)
+                d = whelk.get(path, version, accepting)
             } else {
-                def location = whelk.locate(new URI(path))
+                def location = whelk.locate(path)
                 d = location?.document
                 if (!d && location?.uri) {
                     def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
@@ -89,7 +88,7 @@ class DocumentAPI extends BasicAPI {
             if (path ==~ /(.*\.\w+)/) {
                 log.debug("Found extension in $path")
                 if (!d && extensionContentType) {
-                    d = whelk.get(new URI(path.substring(0, path.lastIndexOf("."))))
+                    d = whelk.get(path.substring(0, path.lastIndexOf(".")))
                 }
                 accepting = [extensionContentType]
             }
@@ -110,9 +109,13 @@ class DocumentAPI extends BasicAPI {
 
                 for (filter in getFiltersFor(d)) {
                     log.debug("Filtering using ${filter.id} for ${d.identifier}")
-                        d = filter.filter(d)
+                    d = filter.filter(d)
                 }
                 if (mode == DisplayMode.META) {
+                    def versions = whelk.getVersions(d.identifier)
+                    if (versions) {
+                        d.entry.versions = versions
+                    }
                     sendResponse(response, d.metadataAsJson, "application/json")
                 } else {
                     def ctheader = contextHeaders.get(path.split("/")[1])
@@ -143,9 +146,10 @@ class DocumentAPI extends BasicAPI {
                 throw new WhelkRuntimeException("PUT requires a proper URI.")
             }
             def entry = [:]
+            def meta = [:]
 
             if (identifierSupplied) {
-                Document existingDoc = whelk.get(new URI(path))
+                Document existingDoc = whelk.get(path)
                 if (existingDoc) {
                     // Check If-Match
                     String ifMatch = request.getHeader("If-Match")
@@ -154,19 +158,28 @@ class DocumentAPI extends BasicAPI {
                         return
                     }
                     entry = existingDoc.entry
+                    meta = existingDoc.meta
                 }
                 else {
                     entry['identifier'] = path
                 }
             }
             entry["contentType"] = ContentType.parse(request.getContentType()).getMimeType()
-            log.info("Set ct: ${entry.contentType}")
+            log.debug("Set ct: ${entry.contentType}")
             entry["dataset"] = getDatasetBasedOnPath(path)
 
-            try {
-                Document doc = new Document(["entry":entry,"meta":request.getParameterMap()]).withData(request.getInputStream().getBytes())
+            if (request.getParameterMap()) {
+                meta = request.getParameterMap()
+                log.debug("Setting meta from parameter map: $meta")
+            }
 
-                def identifier = convertAndSaveDocument(doc)
+            try {
+                Document doc = whelk.createDocument(entry["contentType"]).withMetaEntry(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
+
+                doc = this.whelk.sanityCheck(doc)
+                log.debug("Saving document (${doc.identifier})")
+                def identifier = this.whelk.add(doc)
+
                 def locationRef = request.getRequestURL()
 
                 if (!identifierSupplied) {
@@ -198,6 +211,7 @@ class DocumentAPI extends BasicAPI {
         }
     }
 
+    /*
     URI convertAndSaveDocument(Document doc) {
         doc = this.whelk.sanityCheck(doc)
         log.debug("Saving document first pass. (${doc.identifier})")
@@ -214,6 +228,7 @@ class DocumentAPI extends BasicAPI {
         }
         return identifier
     }
+        */
 
 
     void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
