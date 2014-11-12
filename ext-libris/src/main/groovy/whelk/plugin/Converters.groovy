@@ -1,5 +1,17 @@
 package whelk.converter
 
+import com.fasterxml.jackson.core.type.TypeReference
+import groovy.json.JsonSlurper
+import org.json.simple.JSONObject
+import se.kb.libris.util.marc.Datafield
+import se.kb.libris.util.marc.MarcRecordBuilder
+import se.kb.libris.util.marc.impl.ControlfieldImpl
+import se.kb.libris.util.marc.impl.DatafieldImpl
+import se.kb.libris.util.marc.impl.MarcRecordImpl
+import se.kb.libris.util.marc.io.MarcRecordReader
+import se.kb.libris.util.marc.io.MarcRecordWriter
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter
+
 import java.text.Normalizer
 //import org.json.simple.*
 import groovy.util.logging.Slf4j as Log
@@ -125,5 +137,68 @@ class MarcJSONConverter {
         println toJSONString(record)
         /*println not_quite_so_old_toJSONString(record)*//*.replaceAll(
             /(?m)\{\s+(\S+: "[^"]+")\s+\}/, '{$1}')*/
+    }
+}
+@Log
+class JSONMarcConverter {
+    protected final static ObjectMapper mapper = new ObjectMapper();
+    static MarcRecord fromJson(String json) {
+
+        MarcRecord record = new MarcRecordImpl();
+        Map resultJson = mapper.readValue(json, Map);
+        def fields = resultJson.get("fields");
+        def leader = resultJson.get("leader");
+
+        record.setLeader(leader);
+
+        for (Map field in fields) {
+            field.each {String fieldKey, fieldValue ->
+
+                if (fieldKey.toInteger() <= 10) {
+                    Controlfield controlfield = new ControlfieldImpl(fieldKey, fieldValue);
+                    record.addField(controlfield);
+                }else {
+                    Datafield datafield = new DatafieldImpl(fieldKey);
+                    if (fieldValue instanceof Map) {
+                        fieldValue.each {dataKey, dataValue ->
+                            if (dataValue instanceof ArrayList) {
+                                for (Map subFields in dataValue) {
+                                    subFields.each {subKey, subValue ->
+                                       datafield.addSubfield(subKey as char, subValue);
+                                    }
+                                }
+                            }else {
+                                int ind = 1;
+                                if (dataKey.equals("ind1"))
+                                    ind = 0;
+                                datafield.setIndicator(ind, (dataValue as char));
+                            }
+                        }
+                        record.addField(datafield);
+                    }
+                }
+            }
+        }
+        return record;
+    }
+
+    static String marcRecordAsXMLString(MarcRecord record) {
+
+        OutputStream output = new OutputStream() {
+            StringBuilder builder = new StringBuilder();
+            @Override
+            void write(int b) throws IOException {
+                this.builder.append((char) b);
+            }
+
+            public String toString(){
+                return this.builder.toString();
+            }
+        }
+
+        MarcRecordWriter writer = new MarcXmlRecordWriter(output);
+        writer.writeRecord(record);
+        writer.close();
+        return output.toString();
     }
 }
