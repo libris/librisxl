@@ -63,7 +63,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         if (whelk.index) {
             from(indexMessageQueue)
-                .threads(1,parallelProcesses)
+                //.threads(1,parallelProcesses)
                 .process(new ElasticTypeRouteProcessor(whelk.index))
                 .routingSlip(header("elasticDestination"))
                 /*
@@ -77,7 +77,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                         */
 
             from(bulkIndexMessageQueue)
-                .threads(1,parallelProcesses)
+                //.threads(1,parallelProcesses)
                 .process(new ElasticTypeRouteProcessor(whelk.index))
                 .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))

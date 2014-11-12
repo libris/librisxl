@@ -11,7 +11,7 @@
         "GRAPHSTORE_UPDATE_URI": "http://hp03.libris.kb.se:3030/libris/update",
         "ACTIVEMQ_BROKER_URL": "tcp://hp02.libris.kb.se:61616",
         "MQ_INDEX": "activemq:libris.index",
-        "MQ_BULK_INDEX": "activemq:libris.bulk.index",
+        "MQ_BULK_INDEX": "activemq:libris.bulk.index?concurrentConsumers=20",
         "MQ_GRAPHSTORE": "activemq:libris.graphstore"
     },
     "_id": "libris",
