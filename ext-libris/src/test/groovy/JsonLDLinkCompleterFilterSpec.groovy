@@ -3,6 +3,7 @@ package whelk.plugin
 import spock.lang.Specification
 import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log
+import whelk.DefaultDocument
 import whelk.component.ElasticJsonMapper
 import whelk.Document
 import whelk.Whelk
@@ -146,7 +147,7 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
     }
 
     def makeDoc(path, data, links=[]) {
-        def doc = new Document()
+        def doc = new DefaultDocument()
                 .withIdentifier(path)
                 .withData(mapper.writeValueAsString(data))
                 .withContentType("application/ld+json")

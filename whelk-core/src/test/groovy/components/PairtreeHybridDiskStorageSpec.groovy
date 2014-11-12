@@ -1,5 +1,6 @@
 package whelk.component
 
+import whelk.DefaultDocument
 import whelk.Document
 
 import spock.lang.*
@@ -37,7 +38,7 @@ class PairtreeHybridDiskStorageSpec extends Specification {
     }
 
     def makeDoc(id) {
-        def doc = new Document()
+        def doc = new DefaultDocument()
         doc.identifier = id
         return doc
     }
