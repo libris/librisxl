@@ -16,6 +16,7 @@ public interface Document {
     public long getModified();
     public void setModified(long ts);
     public String getChecksum();
+    public String getDataset();
     public int getVersion();
     public byte[] getData();
 

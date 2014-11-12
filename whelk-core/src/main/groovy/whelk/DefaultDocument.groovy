@@ -119,6 +119,11 @@ class DefaultDocument implements Document {
         return entry.get("version", 0)
     }
 
+    @JsonIgnore
+    String getDataset() {
+        return entry.get("dataset")
+    }
+
     // Setters
     private void updateTimestamp() {
         setTimestamp(new Date().getTime())

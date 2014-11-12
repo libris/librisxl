@@ -20,6 +20,7 @@ import java.util.*;
 public class AuthenticationFilter implements Filter {
 
     private List<String> supportedMethods;
+    private String encryptionKey = null;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -41,7 +42,7 @@ public class AuthenticationFilter implements Filter {
             try {
                 String user = "";
                 String toBeEncrtypted = httpRequest.getHeader("xlkey");
-                JSONObject result = decrypt(getEncryptionKey(), toBeEncrtypted);
+                JSONObject result = decrypt(toBeEncrtypted);
                 JSONObject userInfo = getUserInfo(result);
 
                 if (!isExpired(Long.parseLong(result.get("exp").toString()))) {
@@ -63,10 +64,6 @@ public class AuthenticationFilter implements Filter {
     @Override
     public void destroy() {
 
-    }
-
-    private String getEncryptionKey() {
-        return "XXXXXXXXXXXXXXXX";
     }
 
     private boolean exclude(String path) {
@@ -104,9 +101,23 @@ public class AuthenticationFilter implements Filter {
         return null;
     }
 
-    private JSONObject decrypt(String key, String encrypted) throws Exception{
+    private String getEncryptionKey() {
+        if (encryptionKey == null) {
+            Properties properties = new Properties();
+            try {
+                properties.load(this.getClass().getClassLoader().getResourceAsStream("api.properties"));
+            } catch (IOException ioe) {
+                throw new RuntimeException("Failed to load api properties.", ioe);
+            }
+            encryptionKey = properties.getProperty("encryptionkey");
+        }
+        System.out.println("Encryptionkey: " + encryptionKey);
+        return encryptionKey;
+    }
+
+    private JSONObject decrypt(String encrypted) throws Exception{
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding");
-        Key aesKey = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
+        Key aesKey = new SecretKeySpec(getEncryptionKey().getBytes("UTF-8"), "AES");
         cipher.init(Cipher.DECRYPT_MODE, aesKey);
         byte[] decodeValue = Base64.decodeBase64(encrypted);
         byte[] decryptValue = cipher.doFinal(decodeValue);
