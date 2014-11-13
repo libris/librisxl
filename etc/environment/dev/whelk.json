@@ -28,7 +28,8 @@
         "_components": [
             "esjsonldstorage",
             "jsonldstorage",
-            "index"
+            "index",
+            "graphstore"
         ]
     },
     "_apis": [

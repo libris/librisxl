@@ -51,33 +51,25 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         log.info("Using cluster $elasticCluster for camel routes.")
 
         def eligbleMQs = []
+        def eligbleBulkMQs = []
         if (whelk.index) {
             eligbleMQs.add(indexMessageQueue)
+            eligbleBulkMQs.add(bulkIndexMessageQueue)
         }
         if (whelk.graphStore) {
             eligbleMQs.add(graphstoreMessageQueue)
+            eligbleBulkMQs.add(graphstoreMessageQueue)
         }
 
         from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
-        from("direct:bulk_"+whelk.id).process(formatConverterProcessor).to(bulkIndexMessageQueue)
+        from("direct:bulk_"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleBulkMQs as String[])
 
         if (whelk.index) {
             from(indexMessageQueue)
-                //.threads(1,parallelProcesses)
                 .process(new ElasticTypeRouteProcessor(whelk.index))
                 .routingSlip(header("elasticDestination"))
-                /*
-                .choice()
-                    .when(header("whelk:operation").isEqualTo(Whelk.REMOVE_OPERATION))
-                        .to("direct:elasticdeletes")
-                        .endChoice()
-                    .otherwise()
-                        .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
-                        .routingSlip(header("elasticDestination"))
-                        */
 
             from(bulkIndexMessageQueue)
-                //.threads(1,parallelProcesses)
                 .process(new ElasticTypeRouteProcessor(whelk.index))
                 .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))
