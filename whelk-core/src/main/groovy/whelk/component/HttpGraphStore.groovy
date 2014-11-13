@@ -59,7 +59,7 @@ class HttpEndpoint extends BasicComponent implements SparqlEndpoint {
     }
 
     public void remove(String id) {
-        throw new UnsupportedOperationException("Not implemented yet.")
+        log.warn("Remove called on ${this.id} but it isn't implemented yet.")
     }
 
     void componentBootstrap(String str) {}
