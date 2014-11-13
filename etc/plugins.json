@@ -21,8 +21,8 @@
     "isxntool": {
         "_class": "whelk.api.ISXNTool"
     },
-    "marcjsonld2marcxmlconverter" : {
-        "_class": "whelk.converter.MarcJsonLD2MarcXMLConverter",
+    "jsonld2marcxmlconverter" : {
+        "_class": "whelk.converter.JsonLD2MarcXMLConverter",
         "_plugins": [
             "jsonld2marcconverter"
         ]
@@ -214,7 +214,7 @@
             "marcconverter",
             "marcxml2jsonldconverter",
             "turtleconverter",
-            "marcjsonld2marcxmlconverter"
+            "jsonld2marcxmlconverter"
             ],
         "_params": {
             "contextHeaders": {
