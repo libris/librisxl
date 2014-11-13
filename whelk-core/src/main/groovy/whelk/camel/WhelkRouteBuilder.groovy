@@ -78,11 +78,26 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         // Routes for graphstore
         if (whelk.graphStore) {
-            from(graphstoreMessageQueue)
+            def credentials = global.GRAPHSTORE_UPDATE_AUTH_USER?
+                "?authenticationPreemptive=true&authUsername=${global.GRAPHSTORE_UPDATE_AUTH_USER}&authPassword=${global.GRAPHSTORE_UPDATE_AUTH_PASS}" : ""
+
+            def camelStep = from(graphstoreMessageQueue)
                 .filter("groovy", "['auth','bib'].contains(request.getHeader('entry:dataset'))") // Only save auth and bib
                 .aggregate(header("entry:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
                 .threads(1,parallelProcesses)
-                .to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}")
+
+            def postParameter = global.GRAPHSTORE_UPDATE_POST_PARAMETER
+            if (postParameter) {
+                camelStep.process {
+                    def msg = it.getIn()
+                    msg.setHeader(Exchange.CONTENT_TYPE, "application/x-www-form-urlencoded")
+                    def body = (postParameter + "=" +
+                        URLEncoder.encode(msg.getBody(String), "UTF-8").replaceAll(/\+/, "%20")).getBytes("UTF-8")
+                    msg.setBody(body)
+                }
+            }
+
+            camelStep.to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}" + credentials)
         }
     }
 
@@ -114,7 +129,7 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
         def context = JsonLdToTurtle.parseContext(contextSrc)
         serializer = new JsonLdToTurtle(context, new ByteArrayOutputStream(), base)
         if (log.isDebugEnabled()) {
-            debugOutputFile = new File("aggregator_data_tap.ttl")
+            debugOutputFile = new File("aggregator_data_tap.rq")
         }
     }
 
