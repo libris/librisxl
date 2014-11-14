@@ -16,6 +16,11 @@
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
+    "_docMetaMapping" : {
+        "hold": {
+            "sigel" : "about.heldBy.notation"
+        }
+    },
     "_plugins": {
         "_support": [
             "elasticnode",

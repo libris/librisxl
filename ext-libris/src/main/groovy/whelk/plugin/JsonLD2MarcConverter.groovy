@@ -45,6 +45,6 @@ class JsonLD2MarcConverter extends BasicFormatConverter {
         def result = conversion.revert(source)
         log.trace("Created frame: $result")
 
-        return StandardWhelk.createDocument("application/x-marc-json").withIdentifier(doc.identifier).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta)
+        return whelk.createDocument("application/x-marc-json").withIdentifier(doc.identifier).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta)
     }
 }

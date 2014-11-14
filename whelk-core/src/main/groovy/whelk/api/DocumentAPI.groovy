@@ -176,7 +176,13 @@ class DocumentAPI extends BasicAPI {
             try {
                 Document doc = whelk.createDocument(entry["contentType"]).withMetaEntry(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
 
+                if (!hasPermission(request.getAttribute("user"), doc)) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
+                    return
+                }
+
                 doc = this.whelk.sanityCheck(doc)
+
                 log.debug("Saving document (${doc.identifier})")
                 def identifier = this.whelk.add(doc)
 
@@ -211,25 +217,11 @@ class DocumentAPI extends BasicAPI {
         }
     }
 
-    /*
-    URI convertAndSaveDocument(Document doc) {
-        doc = this.whelk.sanityCheck(doc)
-        log.debug("Saving document first pass. (${doc.identifier})")
-        def identifier = this.whelk.add(doc)
-        for (fc in plugins.findAll { it instanceof FormatConverter && it.requiredContentType == doc.contentType }) {
-            try {
-                log.debug("Running formatconverter ${fc.id} on ${doc.identifier}")
-                    doc = fc.convert(doc)
-                    doc = this.whelk.sanityCheck(doc)
-                    identifier = this.whelk.add(doc)
-            } catch (WhelkAddException wae) {
-                log.warn("Converted to ${doc.contentType} but there are no storages for that.")
-            }
+    boolean hasPermission(info, doc) {
+        if (info) {
+            return false
         }
-        return identifier
     }
-        */
-
 
     void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
         response.setHeader("Location", locationRef)

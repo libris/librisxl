@@ -71,7 +71,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         def result = createFrame(source, metaentry.meta)
         log.trace("Created frame: $result")
 
-        return StandardWhelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry)
+        return whelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry)
     }
 
     @Override
@@ -81,7 +81,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         def result = createFrame(source, meta)
         log.trace("Created frame: $result")
 
-        return StandardWhelk.createDocument("application/ld+json").withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta)
+        return whelk.createDocument("application/ld+json").withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta)
     }
 
     public static void main(String[] args) {

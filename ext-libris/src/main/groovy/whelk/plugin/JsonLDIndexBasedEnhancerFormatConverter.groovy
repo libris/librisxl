@@ -13,11 +13,6 @@ class JsonLDIndexBasedEnhancerFormatConverter extends BasicFormatConverter imple
     String requiredContentType = "application/ld+json"
     String resultContentType = "application/ld+json"
     ObjectMapper mapper = new ObjectMapper()
-    def whelk
-
-    public void setWhelk(Whelk whelk) {
-        this.whelk = whelk
-    }
 
     Document doConvert(Document doc) {
         def json = mapper.readValue(doc.dataAsString, Map)

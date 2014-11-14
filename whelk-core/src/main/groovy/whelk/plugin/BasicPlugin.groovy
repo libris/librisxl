@@ -8,12 +8,15 @@ import java.lang.reflect.Method
 import org.codehaus.jackson.map.*
 
 import whelk.exception.*
+import whelk.Whelk
 
 @Log
-public abstract class BasicPlugin implements Plugin {
+public abstract class BasicPlugin implements WhelkAware {
     String id = null
     private List<Plugin> plugins = new ArrayList<Plugin>();
     Map global
+
+    Whelk whelk
 
     public final static mapper = new ObjectMapper()
 

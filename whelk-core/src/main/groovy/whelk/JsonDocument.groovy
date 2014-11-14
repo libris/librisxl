@@ -13,6 +13,9 @@ class JsonDocument extends DefaultDocument {
     @JsonIgnore
     protected Map serializedDataInMap
 
+    @JsonIgnore
+    Map metaExtractions = null
+
     JsonDocument() {
         super()
     }
@@ -33,20 +36,54 @@ class JsonDocument extends DefaultDocument {
     @JsonIgnore
     boolean isJson() { true }
 
+    protected JsonDocument withMetaExtrationMapping(Map mapping) {
+        this.metaExtractions = mapping
+        return this
+    }
+
     JsonDocument withData(Map dataMap) {
         return withData(mapper.writeValueAsBytes(dataMap))
     }
 
     void setData(byte[] data) {
-        serializedDataInMap = null
+        this.serializedDataInMap = null
         super.setData(data)
+        if (getContentType() == "application/ld+json") {
+            extractMetaFieldsFromData()
+        }
+    }
+
+    private void extractMetaFieldsFromData() {
+        def d = getDataAsMap()
+        if (metaExtractions) {
+            metaExtractions.each { dset, rule ->
+                if (getDataset() == dset) {
+                    rule.each { metakey, jsonldpath ->
+                        try {
+                            def p = d + "." + jsonldpath
+                            meta.put(metakey, Eval.me(p))
+                            log.info("Meta is now: $meta")
+                        } catch (NullPointerException npe) {
+                            log.warn("Failed to set $jsonldpath for $metakey")
+                        }
+                    }
+                }
+            }
+        }
+        /*
+        if (getDataset() == "hold") {
+            if (d?.about?.heldBy?.notation) {
+                meta.sigel = d.about.heldBy.notation
+            }
+        }
+        */
     }
 
     @JsonIgnore
     Map getDataAsMap() {
         if (!serializedDataInMap) {
             log.trace("Serializing data as map")
-            this.serializedDataInMap = mapper.readValue(new String(this.data, "UTF-8"), Map)
+            this.serializedDataInMap = mapper.readValue(new String(getData(), "UTF-8"), Map)
         }
         return serializedDataInMap
     }

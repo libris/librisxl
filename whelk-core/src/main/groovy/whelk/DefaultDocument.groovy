@@ -20,7 +20,7 @@ import whelk.exception.*
 
 @Log
 class DefaultDocument implements Document {
-    byte[] data
+    protected byte[] data
     Map entry = [:] // For "technical" metadata about the record, such as contentType, timestamp, etc.
     Map meta  = [:] // For extra metadata about the object, e.g. links and such.
     private String checksum = null
@@ -28,45 +28,11 @@ class DefaultDocument implements Document {
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
 
-    /*
-     * Constructors
-     */
     DefaultDocument() {
         entry = [:]
         meta = [:]
         updateTimestamp()
     }
-
-    /*
-    private DefaultDocument(String jsonString) {
-        entry = [:]
-        meta = [:]
-        updateTimestamp()
-        withMetaEntry(jsonString)
-    }
-
-    private DefaultDocument(Map jsonMap) {
-        entry = [:]
-        meta = [:]
-        updateTimestamp()
-        withMetaEntry(jsonMap)
-    }
-
-    private DefaultDocument(File jsonFile) {
-        entry = [:]
-        meta = [:]
-        updateTimestamp()
-        withMetaEntry(jsonFile)
-    }
-
-    private DefaultDocument(File datafile, File entryfile) {
-        entry = [:]
-        meta = [:]
-        setData(datafile.readBytes())
-        updateTimestamp()
-        withMetaEntry(entryfile)
-    }
-    */
 
     @JsonIgnore
     String getIdentifier() {
@@ -93,6 +59,10 @@ class DefaultDocument implements Document {
         byte[] ret = new byte[(int)length]
         System.arraycopy(getData(), (int)offset, ret, 0, (int)length)
         return ret
+    }
+
+    byte[] getData() {
+        return data
     }
 
     @JsonIgnore
@@ -141,7 +111,9 @@ class DefaultDocument implements Document {
     protected void setTimestamp(long ts) {
         log.trace("Setting timestamp $ts")
         this.entry[TIMESTAMP_KEY] = ts
-        this.entry[MODIFIED_KEY] = ts
+        if (getModified() < 1) {
+            this.entry[MODIFIED_KEY] = ts
+        }
     }
 
     void setModified(long mt) {
