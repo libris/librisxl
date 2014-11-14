@@ -2,4 +2,4 @@ logback.xml
 whelks.json
 whelk.json
 plugins.json
-encryptionkey=IiwiYWJvdXQiOnsiQHR5cGUiOlsiVGVx
+api.properties
