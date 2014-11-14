@@ -2,14 +2,15 @@ package whelk;
 
 import org.apache.commons.codec.binary.Base64;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import javax.crypto.*;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Key;
 import java.util.*;
@@ -19,6 +20,7 @@ import java.util.*;
  */
 public class AuthenticationFilter implements Filter {
 
+    private ObjectMapper mapper = null;
     private List<String> supportedMethods;
     private String encryptionKey = null;
 
@@ -32,28 +34,26 @@ public class AuthenticationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        String path = httpRequest.getRequestURI();
-        if (exclude(path)) {
-            chain.doFilter(request, response);
-        }
-
-        if (supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+        if (isApiCall(httpRequest) && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             try {
-                String user = "";
                 String toBeEncrtypted = httpRequest.getHeader("xlkey");
-                JSONObject result = decrypt(toBeEncrtypted);
-                JSONObject userInfo = getUserInfo(result);
+                String json = decrypt(toBeEncrtypted);
 
-                if (!isExpired(Long.parseLong(result.get("exp").toString()))) {
-                System.out.println("############ NOT EXPIRED");
-                    if (user.equalsIgnoreCase(userInfo.get("email").toString())) {
-                        System.out.println("################# SAME USER PROCEED!!!");
-                            // Populate request with stuff backend needs.
-                    }
+                if (mapper == null) {
+                    mapper = new ObjectMapper();
                 }
 
+                HashMap result = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+                if (!isExpired(Long.parseLong(result.get("exp").toString()))) {
+                    request.setAttribute("user", result.get("user"));
+                    chain.doFilter(request, response);
+                }else {
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
+                }
             } catch (Exception e) {
+                httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
                 e.printStackTrace();
             }
         }else {
@@ -66,12 +66,8 @@ public class AuthenticationFilter implements Filter {
 
     }
 
-    private boolean exclude(String path) {
-        if (path.endsWith("_operations")) {
-            return true;
-        }
-
-        return false;
+    private boolean isApiCall(HttpServletRequest httpRequest) {
+        return httpRequest.getServerPort() == 80 ? true : false;
     }
 
     private JSONObject getUserInfo(JSONObject obj) {
@@ -84,8 +80,8 @@ public class AuthenticationFilter implements Filter {
 
     private boolean isExpired(long unixtime) {
         Date now = new Date();
-        Date expires = new Date(unixtime * 1000);
-        return now.compareTo(expires) != 0;
+        Date expires = new Date(unixtime);
+        return now.compareTo(expires) > 0;
     }
 
     /**
@@ -111,30 +107,16 @@ public class AuthenticationFilter implements Filter {
             }
             encryptionKey = properties.getProperty("encryptionkey");
         }
-        System.out.println("Encryptionkey: " + encryptionKey);
+        //System.out.println("Encryptionkey: " + encryptionKey);
         return encryptionKey;
     }
 
-    private JSONObject decrypt(String encrypted) throws Exception{
+    private String decrypt(String encrypted) throws Exception{
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding");
         Key aesKey = new SecretKeySpec(getEncryptionKey().getBytes("UTF-8"), "AES");
         cipher.init(Cipher.DECRYPT_MODE, aesKey);
         byte[] decodeValue = Base64.decodeBase64(encrypted);
         byte[] decryptValue = cipher.doFinal(decodeValue);
-        String jsonString = new String(decryptValue, "UTF-8");
-        System.out.println("Decrypted value: " + jsonString);
-        JSONParser parser = new JSONParser();
-        return (JSONObject)parser.parse(jsonString);
-    }
-
-    private String encrypt(String key, String text) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
-        Key aesKey = new SecretKeySpec(key.getBytes(), "AES");
-
-        cipher.init(Cipher.ENCRYPT_MODE, aesKey, new IvParameterSpec(new byte[16]));
-        byte[] encryptValue = cipher.doFinal(text.getBytes());
-        byte[] encodedValue = Base64.encodeBase64(encryptValue);
-
-        return new String(encodedValue);
+        return new String(decryptValue, "UTF-8");
     }
 }
