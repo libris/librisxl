@@ -19,7 +19,7 @@
       <level value="info"/>
   </logger>
   <logger name="org.apache.camel.component.elasticsearch">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="org.apache.activemq">
       <level value="info"/>

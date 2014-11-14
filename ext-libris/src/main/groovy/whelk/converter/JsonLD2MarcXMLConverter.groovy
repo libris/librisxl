@@ -13,7 +13,7 @@ import static whelk.converter.JSONMarcConverter.marcRecordAsXMLString
  * Created by Markus Holm on 2014-11-12.
  */
 @Log
-class MarcJsonLD2MarcXMLConverter extends BasicFormatConverter {
+class JsonLD2MarcXMLConverter extends BasicFormatConverter {
 
     JsonLD2MarcConverter jsonldConverter = null
 

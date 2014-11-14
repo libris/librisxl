@@ -25,6 +25,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
     Map nodesToExpand
     List requiredDataset
     Whelk whelk
+    Index index
 
     PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
     HttpClient client = HttpClients.custom().setConnectionManager(cm).build()
@@ -67,6 +68,13 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
         return doc.withData(dataMap)
     }
 
+    Index getIndex() {
+        if (!index) {
+            index = plugins.find { it instanceof Index }
+        }
+        return index
+    }
+
     Map expandNode(Map node, Map instructions) {
         if (instructions['method'] == "query") {
             Map queryMap = [ 'terms': [ instructions['field']+":"+node['@id'] ] ]
@@ -74,7 +82,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
                 queryMap.putAll(instructions['queryProperties'])
             }
             def query = new ElasticQuery(queryMap)
-            def result = whelk.index.query(query, instructions['index'], instructions['dataset'])
+            def result = getIndex().query(query, instructions['index'], instructions['dataset'])
             if (result.numberOfHits) {
                 log.trace("data is : " + result.hits[0].dataAsString)
                 log.trace("ct is : " + result.hits[0].contentType)
