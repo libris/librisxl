@@ -35,8 +35,8 @@ public class AuthenticationFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        //isApiCall(httpRequest) &&
-        if (supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+
+        if (isApiCall(httpRequest) && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             try {
                 String toBeEncrtypted = httpRequest.getHeader("xlkey");
                 String json = decrypt(toBeEncrtypted);
