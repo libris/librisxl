@@ -42,7 +42,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     // Set by configuration
     Map global = [:]
     URI docBaseUri
-    Map documentMetaFromDataMapping = null
+    Map documentDataToMetaMapping = null
 
     final static ObjectMapper mapper = new ObjectMapper()
 
@@ -244,7 +244,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     Document createDocument(String contentType) {
         if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
-            return new JsonDocument().withContentType(contentType).withMetaExtrationMapping(documentMetaFromDataMapping)
+            return new JsonDocument(documentDataToMetaMapping).withContentType(contentType)
         } else {
             return new DefaultDocument().withContentType(contentType)
         }
@@ -254,7 +254,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         try {
             Document document = mapper.readValue(json, DefaultDocument)
             if (document.isJson()) {
-                return new JsonDocument(document).withMetaExtrationMapping(documentMetaFromDataMapping)
+                return new JsonDocument(documentDataToMetaMapping).fromDocument(document)
             }
             return document
         } catch (JsonParseException jpe) {
@@ -527,7 +527,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         def disabled = System.getProperty("disable.plugins", "").split(",")
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])
-        setDocumentMetaFromDataMapping(whelkConfig["_docMetaMapping"])
+        documentDataToMetaMapping = whelkConfig["_docMetaMapping"]
         this.global = whelkConfig["_properties"].asImmutable()
         whelkConfig["_plugins"].each { key, value ->
             log.trace("key: $key, value: $value")

@@ -20,10 +20,15 @@ class JsonDocument extends DefaultDocument {
         super()
     }
 
-    JsonDocument(Document otherDocument) {
+    JsonDocument(Map metaMapping) {
+        this.metaExtractions = metaMapping
+    }
+
+    JsonDocument fromDocument(Document otherDocument) {
         setEntry(otherDocument.getEntry())
         setMeta(otherDocument.getMeta())
         setData(otherDocument.getData())
+        return this
     }
 
     void setContentType(String ctype) {
@@ -35,11 +40,6 @@ class JsonDocument extends DefaultDocument {
 
     @JsonIgnore
     boolean isJson() { true }
-
-    protected JsonDocument withMetaExtrationMapping(Map mapping) {
-        this.metaExtractions = mapping
-        return this
-    }
 
     JsonDocument withData(Map dataMap) {
         return withData(mapper.writeValueAsBytes(dataMap))
@@ -60,9 +60,8 @@ class JsonDocument extends DefaultDocument {
                 if (getDataset() == dset) {
                     rule.each { metakey, jsonldpath ->
                         try {
-                            def p = d + "." + jsonldpath
-                            meta.put(metakey, Eval.me(p))
-                            log.info("Meta is now: $meta")
+                            def p = "d." + jsonldpath
+                            meta.put(metakey, Eval.x(d, "x.$jsonldpath"))
                         } catch (NullPointerException npe) {
                             log.warn("Failed to set $jsonldpath for $metakey")
                         }
@@ -70,13 +69,6 @@ class JsonDocument extends DefaultDocument {
                 }
             }
         }
-        /*
-        if (getDataset() == "hold") {
-            if (d?.about?.heldBy?.notation) {
-                meta.sigel = d.about.heldBy.notation
-            }
-        }
-        */
     }
 
     @JsonIgnore

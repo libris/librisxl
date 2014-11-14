@@ -49,7 +49,7 @@
       <level value="info"/>
   </logger> 
   <logger name="whelk.StandardWhelk">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
  <logger name="whelk.component.BasicElasticComponent">
       <level value="info"/>
@@ -72,11 +72,11 @@
  <logger name="whelk.component.HttpBatchGraphStore">
       <level value="info"/>
   </logger>
-<logger name="whelk.Document">
-      <level value="info"/>
+<logger name="whelk.JsonDocument">
+      <level value="debug"/>
   </logger>
 <logger name="whelk.api.DocumentAPI">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
 <logger name="whelk.api.ReindexOperator">
       <level value="info"/>
