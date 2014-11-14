@@ -57,6 +57,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     Map<String,String> configuredTypes
     List<String> availableTypes
 
+    Class searchResultClass = null
 
     ElasticSearch(Map settings) {
         super(settings)
@@ -64,6 +65,9 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         availableTypes = (settings ? settings.get("availableTypes", []) : [])
         if (settings.batchUpdateSize) {
             this.batchUpdateSize = settings.batchUpdateSize
+        }
+        if (settings.searchResultClass) {
+            this.searchResultClass = Class.forName(settings.searchResultClass)
         }
     }
 
@@ -177,7 +181,15 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         def response = client.search(new SearchRequest(idxlist as String[], jsonDsl.getBytes("utf-8")).searchType(SearchType.DFS_QUERY_THEN_FETCH).types(indexTypes)).actionGet()
         log.trace("SearchResponse: " + response)
 
-        def results = new SearchResult(0)
+        def results
+        if (searchResultClass) {
+            results = searchResultClass.newInstance()
+        } else {
+            results = new SearchResult()
+        }
+        results.numberOfHits = 0
+        results.resultSize = response.hits.hits.size()
+        results.searchCompletedInMillis = response.tookInMillis
 
         if (response) {
             log.trace "Total hits: ${response.hits.totalHits}"

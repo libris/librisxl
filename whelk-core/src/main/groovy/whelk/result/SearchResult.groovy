@@ -10,16 +10,13 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class SearchResult {
 
-    List hits
+    List hits = new ArrayList<Document>()
     Map facets
     final static ObjectMapper mapper = new ElasticJsonMapper()
 
     long numberOfHits = 0
-
-    SearchResult(long nrHits) {
-        this.numberOfHits = nrHits
-        this.hits = new ArrayList<Document>()
-    }
+    long searchCompletedInMillis = 0
+    int resultSize = 0
 
     void setNumberOfHits(int nrHits) {
         this.numberOfHits = nrHits
@@ -97,5 +94,26 @@ class SearchResult {
     private jsonifyFacets() {
         return mapper.writeValueAsString(facets)
     }
+}
+
+@Log
+class JsonLdSearchResult extends SearchResult {
+
+    @Override
+    Map toMap(String resultKey, List keys) {
+        def result = ["size": resultSize, "total_number_of_hits": numberOfHits, "completed_in_milliseconds": searchCompletedInMillis, "items": [] ]
+        hits.each {
+            if (resultKey) {
+                result["items"] << Eval.x(it.dataAsMap.asImmutable(), "x.$resultKey")
+            } else {
+                result["items"] << it.dataAsMap.asImmutable()
+            }
+        }
+        if (facets) {
+            result['facets'] = facets
+        }
+        return result
+    }
+
 }
 
