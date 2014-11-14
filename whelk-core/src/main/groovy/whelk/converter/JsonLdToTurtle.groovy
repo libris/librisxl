@@ -96,11 +96,11 @@ class JsonLdToTurtle {
     }
 
     void prelude() {
-        prefixes.each { k, v ->
-            writeln("PREFIX ${k}: <${v}>")
-        }
         if (base) {
             writeln("BASE <${base}>")
+        }
+        prefixes.each { k, v ->
+            writeln("PREFIX ${k}: <${v}>")
         }
         writeln()
         flush()
@@ -121,6 +121,7 @@ class JsonLdToTurtle {
             return Collections.emptyList()
         }
         def topObjects = []
+        def first = true
         obj.each { key, vs ->
             def term = termFor(key)
             def revKey = (term == null)? revKeyFor(key) : null
@@ -139,9 +140,13 @@ class JsonLdToTurtle {
                     topObjects << node
                 }
             } else {
+                if (!first) {
+                    writeln(" ;")
+                }
+                first = false
                 if (term == "@type") {
                     term = "a"
-                    writeln(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
+                    write(indent + term + " " + vs.collect { termFor(it) }.join(", "))
                     return
                 }
                 term = toValidTerm(term)
@@ -155,11 +160,10 @@ class JsonLdToTurtle {
                         topObjects.addAll(objectToTurtle(v, level + 1, key))
                     }
                 }
-                writeln(" ;")
             }
         }
         if (level == 0) {
-            writeln(indent + ".")
+            writeln(" .")
             writeln()
             topObjects.each {
                 objectToTurtle(it)
@@ -167,6 +171,7 @@ class JsonLdToTurtle {
             flush()
             return Collections.emptyList()
         } else {
+            writeln()
             write(indent + "]")
             return topObjects
         }
