@@ -14,6 +14,7 @@ class JsonLdToTurtle {
     Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language"]
     Map prefixes = [:]
     def uniqueBNodeSuffix = ""
+    String bnodeSkolemBase = null
 
     JsonLdToTurtle(Map context, OutputStream outStream, String base=null) {
         this.context = context.context
@@ -74,7 +75,12 @@ class JsonLdToTurtle {
         if (cI > -1) {
             def pfx = ref.substring(0, cI)
             if (pfx == "_") {
-                return toValidTerm(ref + uniqueBNodeSuffix)
+                def nodeId = ref + uniqueBNodeSuffix
+                if (bnodeSkolemBase) {
+                    ref = bnodeSkolemBase + nodeId.substring(2)
+                } else {
+                    return toValidTerm(nodeId)
+                }
             } else if (context[pfx]) {
                 return ref
             }
@@ -93,6 +99,10 @@ class JsonLdToTurtle {
         prelude()
         objectToTurtle(obj)
         flush()
+    }
+
+    String genSkolemId() {
+        return bnodeSkolemBase + UUID.randomUUID()
     }
 
     void prelude() {
@@ -153,6 +163,9 @@ class JsonLdToTurtle {
                 write(indent + term + " ")
                 vs.eachWithIndex { v, i ->
                     if (i > 0) write(" , ")
+                    if (bnodeSkolemBase && v instanceof Map && !v[keys.id]) {
+                        v[keys.id] = s = genSkolemId()
+                    }
                     if (v instanceof Map && keys.id in v) {
                         topObjects << v
                         write(refRepr(v[keys.id]))
