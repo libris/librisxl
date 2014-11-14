@@ -15,7 +15,7 @@ class SearchResult {
     final static ObjectMapper mapper = new ElasticJsonMapper()
 
     long numberOfHits = 0
-    long searchCompletedInMillis = 0
+    String searchCompletedInISO8601duration = ""
     int resultSize = 0
 
     void setNumberOfHits(int nrHits) {
@@ -101,7 +101,7 @@ class JsonLdSearchResult extends SearchResult {
 
     @Override
     Map toMap(String resultKey, List keys) {
-        def result = ["size": resultSize, "total_number_of_hits": numberOfHits, "completed_in_milliseconds": searchCompletedInMillis, "items": [] ]
+        def result = ["@context":"/sys/context/lib.jsonld", "itemsPerPage": resultSize, "totalResults": numberOfHits, "duration": searchCompletedInISO8601duration, "items": [] ]
         hits.each {
             if (resultKey) {
                 result["items"] << Eval.x(it.dataAsMap.asImmutable(), "x.$resultKey")
