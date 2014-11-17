@@ -199,22 +199,24 @@ This is now available as:
 
     $ brew install virtuoso
 
-2. Edit virtuoso.ini to increase/disable SPARQL query timeout...(?)
-
-3. Launch:
+2. Launch:
 
     $ cd cd /usr/local/Cellar/virtuoso/7.1.0/var/lib/virtuoso/db/
     $ virtuoso-t -f
 
-4. Find your way through the Conductor interface at <http://127.0.0.1:8890/>.
+3. Find your way through the Conductor interface at <http://127.0.0.1:8890/>.
    Add a user with `SPARQL_UPDATE` access and set sparql-auth to Basic HTTP
-   authentication...
+   authentication (due to Camel http4 having problems using Digest ...).
 
-This is now available as:
+4. Edit whelk.json for the relevant environment:
 
-    $ GRAPH_STORE=http://127.0.0.1:8890/sparql-graph-crud-auth
-    $ GRAPH_STORE=http://127.0.0.1:8890/sparql-auth
-    $ ENDPOINT=http://127.0.0.1:8890/sparql
+    "GRAPHSTORE_DATA_URI": "http://127.0.0.1:8890/sparql-graph-crud",
+    "GRAPHSTORE_QUERY_URI": "http://127.0.0.1:8890/sparql",
+    "GRAPHSTORE_UPDATE_URI": "http://127.0.0.1:8890/sparql-auth",
+    "GRAPHSTORE_UPDATE_POST_PARAMETER": "update",
+    "GRAPHSTORE_UPDATE_AUTH_USER": "dba",
+    "GRAPHSTORE_UPDATE_AUTH_PASS": ...
+
 
 ### Upgrading to listening components
 
