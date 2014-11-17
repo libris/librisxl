@@ -219,8 +219,11 @@ class DocumentAPI extends BasicAPI {
 
     boolean hasPermission(info, doc) {
         if (info) {
+            log.info("User has no privileges")
             return false
         }
+        log.info("User is a-okey.")
+        return true
     }
 
     void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
