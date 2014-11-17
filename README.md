@@ -193,6 +193,28 @@ This is now available as:
     $ GRAPH_STORE=http://localhost:3030/libris/data
     $ ENDPOINT=http://localhost:3030/libris/query
 
+### Using Virtuoso
+
+1. Install Virtuoso; e.g. by running:
+
+    $ brew install virtuoso
+
+2. Edit virtuoso.ini to increase/disable SPARQL query timeout...(?)
+
+3. Launch:
+
+    $ cd cd /usr/local/Cellar/virtuoso/7.1.0/var/lib/virtuoso/db/
+    $ virtuoso-t -f
+
+4. Find your way through the Conductor interface at <http://127.0.0.1:8890/>.
+   Add a user with `SPARQL_UPDATE` access and set sparql-auth to Basic HTTP
+   authentication...
+
+This is now available as:
+
+    $ GRAPH_STORE=http://127.0.0.1:8890/sparql-graph-crud-auth
+    $ GRAPH_STORE=http://127.0.0.1:8890/sparql-auth
+    $ ENDPOINT=http://127.0.0.1:8890/sparql
 
 ### Upgrading to listening components
 
