@@ -540,7 +540,11 @@
     },
     "graphstore_aggregator": {
         "_class" : "whelk.camel.GraphstoreBatchUpdateAggregationStrategy",
-        "_params": "context.jsonld, http://libris.kb.se/resource/"
+        "_params": {
+          "contextPath": "context.jsonld",
+          "base": "http://libris.kb.se/resource/",
+          "bnodeSkolemBase": "tag:libris.kb.se,2014:bnode:"
+        }
     },
     "routebuilder": {
         "_class" : "whelk.camel.WhelkRouteBuilder",
@@ -549,7 +553,7 @@
         ],
         "_params": {
             "elasticBatchSize": 2000,
-            "graphstoreBatchSize": 1000,
+            "graphstoreBatchSize": 32,
             "batchTimeout": 5000,
             "indexMessageQueue": "_property:MQ_INDEX",
             "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX",

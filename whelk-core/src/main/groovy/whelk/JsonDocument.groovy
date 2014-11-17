@@ -1,5 +1,9 @@
 package whelk
 
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 import groovy.util.logging.Slf4j as Log
 
 import org.codehaus.jackson.map.*
@@ -9,6 +13,13 @@ import whelk.exception.*
 
 @Log
 class JsonDocument extends DefaultDocument {
+
+    static final DateTimeFormatter DT_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XXX")
+
+    @JsonIgnore
+    def timeZone = ZoneId.systemDefault()
+
     // store serialized data
     @JsonIgnore
     protected Map serializedDataInMap
@@ -87,7 +98,9 @@ class JsonDocument extends DefaultDocument {
         if (getContentType() == "application/ld+json") {
             log.trace("Setting modified in document data.")
             def map = getDataAsMap()
-            map.put("modified", new Date(mt).format("yyyy-MM-dd'T'HH:mm:ss.SZ", TimeZone.default))
+            def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
+            def timestamp = time.format(DT_FORMAT)
+            map.put("modified", timestamp)
             withData(map)
         }
     }
