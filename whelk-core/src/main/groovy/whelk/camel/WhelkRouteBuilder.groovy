@@ -121,13 +121,16 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
     JsonLdToTurtle serializer
     File debugOutputFile = null
 
-    GraphstoreBatchUpdateAggregationStrategy(String contextPath, String base=null) {
+    GraphstoreBatchUpdateAggregationStrategy(Map config) {
         def loader = getClass().classLoader
-        def contextSrc = loader.getResourceAsStream(contextPath).withStream {
+        def contextSrc = loader.getResourceAsStream(config.contextPath).withStream {
             mapper.readValue(it, Map)
         }
         def context = JsonLdToTurtle.parseContext(contextSrc)
-        serializer = new JsonLdToTurtle(context, new ByteArrayOutputStream(), base)
+        serializer = new JsonLdToTurtle(context, new ByteArrayOutputStream(), config.base)
+        if (config.bnodeSkolemBase) {
+            serializer.bnodeSkolemBase = config.bnodeSkolemBase
+        }
         if (log.isDebugEnabled()) {
             debugOutputFile = new File("aggregator_data_tap.rq")
         }
