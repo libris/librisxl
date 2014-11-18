@@ -1620,6 +1620,7 @@
       },
       "[18:19]": {
         "aboutEntity": "?record",
+        "TODO:deriveFrom": "bibliography/bibliographyCode",
         "link": "catForm",
         "uriTemplate": "{_}",
         "tokenMap": "catForm"
@@ -2510,36 +2511,6 @@
           "link": "remoteSensImageData",
           "uriTemplate": "{_}",
           "tokenMap": "remoteSensImageData"
-        },
-        "[2:3]": {
-          "link": "soundAspect",
-          "uriTemplate": "{_}",
-          "tokenMap": "mapAspect"
-        },
-        "[9:10]": {
-          "link": "soundKindOfDisc",
-          "uriTemplate": "{_}",
-          "tokenMap": "soundKindOfDisc"
-        },
-        "[10:11]": {
-          "link": "soundKindOfMaterial",
-          "uriTemplate": "{_}",
-          "tokenMap": "soundKindOfMaterial"
-        },
-        "[11:12]": {
-          "link": "soundKindOfCutting",
-          "uriTemplate": "{_}",
-          "tokenMap": "soundKindOfCutting"
-        },
-        "[12:13]": {
-          "link": "soundPlaybackCharacter",
-          "uriTemplate": "{_}",
-          "tokenMap": "soundPlaybackCharacter"
-        },
-        "[13:14]": {
-          "link": "soundCapture",
-          "uriTemplate": "{_}",
-          "tokenMap": "soundCapture"
         }
       },
       "SoundRecording": {
@@ -2602,6 +2573,11 @@
           "link": "soundCapture",
           "uriTemplate": "{_}",
           "tokenMap": "soundCapture"
+        },
+        "[2:3]": {
+          "link": "soundAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
         }
       },
       "Text": {
@@ -2609,36 +2585,6 @@
           "addLink": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "textMaterial"
-        },
-        "[3:4]": {
-          "link": "videoColor",
-          "uriTemplate": "{_}",
-          "tokenMap": "videoColor"
-        },
-        "[4:5]": {
-          "link": "videoFormat",
-          "uriTemplate": "{_}",
-          "tokenMap": "videoFormat"
-        },
-        "[5:6]": {
-          "link": "videoSound",
-          "uriTemplate": "{_}",
-          "tokenMap": "projGraphSound"
-        },
-        "[6:7]": {
-          "link": "videoMedium",
-          "uriTemplate": "{_}",
-          "tokenMap": "projGraphMedium"
-        },
-        "[7:8]": {
-          "link": "videoDimensions",
-          "uriTemplate": "{_}",
-          "tokenMap": "videoDimensions"
-        },
-        "[8:9]": {
-          "link": "videoPlayback",
-          "uriTemplate": "{_}",
-          "tokenMap": "motionPicConfiguration"
         }
       },
       "VideoRecording": {
@@ -2676,11 +2622,6 @@
           "link": "videoPlayback",
           "uriTemplate": "{_}",
           "tokenMap": "motionPicConfiguration"
-        },
-        "[9:11]": {
-          "link": "remoteSensImageData",
-          "uriTemplate": "{_}",
-          "tokenMap": "remoteSensImageData"
         }
       },
       "Unspecified": {},
@@ -3487,7 +3428,7 @@
     "042": {
       "aboutEntity": "?record",
       "$a": {"property": "authenticationCode"},
-      "$9": {"addProperty": "bibliographyCode"}
+      "$9": {"addLink": "bibliography", "resourceType": "Organization", "property": "notation"}
     },
     "043": {"ignored": true},
 

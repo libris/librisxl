@@ -118,7 +118,7 @@ if include_lang:
           "tokenMaps": None, "bib": None}]
     enum_defs = out['enumDefs'] = OrderedDict()
 else:
-    enum_defs = []
+    enum_defs = {}
 
 
 # TODO: tokenMaps per marc_type(?)
