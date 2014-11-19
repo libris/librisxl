@@ -1,0 +1,19 @@
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#>
+
+
+INSERT {
+    ?term vs:term_status "unstable"
+} WHERE {
+    {
+        ?term a owl:Class
+        FILTER NOT EXISTS { ?term owl:equivalentClass ?eqc }
+    } UNION {
+        {
+            ?term a owl:ObjectProperty
+        } UNION {
+            ?term a owl:DatatypeProperty
+        }
+        FILTER NOT EXISTS { ?term owl:equivalentProperty ?eqp }
+    }
+}
