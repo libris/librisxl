@@ -168,6 +168,8 @@ def parse_configs(confdir, lang, tokenmap):
                             col['propRef'] = tokenmap['propRefs'][col['label_' + lang]]
                         except KeyError:
                             pass
+                    if tablename == '007_Text' and col['propRef'] != 'textMaterial':
+                        print tablerow, tableval
                     columns.append(col)
 
             block[tagcode]['fixmaps'] = fixmaps.values()
@@ -203,7 +205,9 @@ def fixkey_to_prop_id(key):
 def columnsdict(l):
     d = odict()
     for o in l:
-        if 'offset' in o and 'length' in o:
+        if 'name' in o:
+            d['{name}'.format(**o)] = o
+        elif 'offset' in o and 'length' in o:
             d['{offset}:{length}'.format(**o)] = o
         else:
             break
