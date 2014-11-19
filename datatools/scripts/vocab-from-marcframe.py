@@ -87,6 +87,8 @@ def parse_resourcemap(dataset, part, marcframe):
 def add_terms(g, marc_source, dfn, parentdomain=None):
 
     for k, v in dfn.items():
+        if k.startswith('_'):
+            continue
         if not v:
             continue
         if k == 'defaults':
@@ -110,10 +112,12 @@ def add_terms(g, marc_source, dfn, parentdomain=None):
             rangename = None
         else:
             domainname = parentdomain
-            about = dfn.get('aboutEntity')
-            if about == '?record':
+            aboutEntity = dfn.get('aboutEntity')
+            if dfn.get('about', "").startswith('_:'):
+                domainname = None
+            elif aboutEntity == '?record':
                 domainname = 'Record'
-            elif about == '?instance' or not about and not parentdomain:
+            elif aboutEntity == '?instance' or (not aboutEntity and not parentdomain):
                 if 'bib' in marc_source.lower():
                     domainname = 'CreativeWork'
             domainname = dfn.get('aboutType') or domainname
@@ -132,8 +136,16 @@ def add_terms(g, marc_source, dfn, parentdomain=None):
                 v = [v]
             for subdfn in v:
                 if isinstance(subdfn, dict):
-                    subdomainname = (rangename if
-                            is_link and not key_is_property else None)
+                    if not rangename and \
+                            'tokenTypeMap' in dfn or 'recTypeBibLevelMap' in dfn and \
+                            k[0].isupper():
+                        subdomainname = k
+                    elif is_link and not key_is_property:
+                        subdomainname = rangename
+                    elif k.startswith('['):
+                        subdomainname = parentdomain
+                    else :
+                        subdomainname = None
                     add_terms(g, marc_source_path, subdfn, subdomainname)
             continue
 

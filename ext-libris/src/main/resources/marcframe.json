@@ -3821,6 +3821,7 @@
         "3": {"addLink": "manufacture"},
         "4": {"addLink": "copyright"}
       },
+      "addLink": "provider",
       "resourceType": "ProviderEvent",
       "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
       "$b": {"property": "providerName", "interpunctionChars": ",:;"},
