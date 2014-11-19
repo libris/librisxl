@@ -90,6 +90,9 @@
 <logger name="whelk.component.UriToElasticType">
       <level value="info"/>
   </logger>
+<logger name="whelk.component.LinkedDataAPIQuery">
+      <level value="trace"/>
+  </logger>
 <logger name="whelk.component.ElasticQuery">
       <level value="info"/>
   </logger>

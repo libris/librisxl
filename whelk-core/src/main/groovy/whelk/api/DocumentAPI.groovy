@@ -59,8 +59,19 @@ class DocumentAPI extends BasicAPI {
         }
     }
 
+    void handleQuery(HttpServletRequest request, HttpServletResponse response, String path) {
+        log.info("Handle query for ds " + getDatasetBasedOnPath(path))
+        def query = new LinkedDataAPIQuery(request.parameterMap)
+        query.setIndexTypes(getDatasetBasedOnPath(path))
+        log.info("query: " + query.toJsonQuery())
+        sendResponse(response, this.whelk.search(query).toJson(), "application/json")
+    }
 
     void handleGetRequest(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (path.endsWith("/")) {
+            handleQuery(request, response, path)
+            return
+        }
         def mode = DisplayMode.DOCUMENT
         (path, mode) = determineDisplayMode(path)
         def version = request.getParameter("version")

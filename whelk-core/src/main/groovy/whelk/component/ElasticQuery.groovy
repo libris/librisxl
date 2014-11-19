@@ -96,7 +96,10 @@ class ElasticQuery extends Query {
     }
 
     Map buildQueryStringQuery() {
-        Map qsMap = ['query_string': ['query': this.query, "default_operator": "and"]]
+        Map qsMap = [:]
+        if (this.query) {
+            qsMap = ['query_string': ['query': this.query, "default_operator": "and"]]
+        }
 
         if (this.fields) {
             def fieldsList = []
