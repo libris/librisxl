@@ -1580,10 +1580,6 @@ content:Yearbook a owl:Class ;
 
 :SubCollection rdfs:subClassOf :Aggregate .
 
-:Unspecified a owl:Class ;
-    rdfs:subClassOf :Product ;
-    vs:term_status "unstable" .
-
 :abbrevTitle a owl:DatatypeProperty,
         owl:FunctionalProperty ;
     sdo:domainIncludes :Aggregate ;
