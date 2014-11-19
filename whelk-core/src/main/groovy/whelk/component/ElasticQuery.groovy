@@ -1,4 +1,4 @@
-package whelk.component
+package whelk
 
 import groovy.util.logging.Slf4j as Log
 

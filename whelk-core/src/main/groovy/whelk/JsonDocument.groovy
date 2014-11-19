@@ -10,6 +10,7 @@ import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
 import whelk.exception.*
+import whelk.util.Tools
 
 @Log
 class JsonDocument extends DefaultDocument {
@@ -67,14 +68,16 @@ class JsonDocument extends DefaultDocument {
     private void extractMetaFieldsFromData() {
         def d = getDataAsMap()
         if (metaExtractions) {
-            metaExtractions.each { dset, rule ->
+            metaExtractions.each { dset, rules ->
                 if (getDataset() == dset) {
-                    rule.each { metakey, jsonldpath ->
+                    rules.each { jsonldpath ->
                         try {
-                            def p = "d." + jsonldpath
-                            meta.put(metakey, Eval.x(d, "x.$jsonldpath"))
+                            def value = Eval.x(d, "x.$jsonldpath")
+                            if (value) {
+                                meta = Tools.insertAt(meta, jsonldpath, value)
+                            }
                         } catch (NullPointerException npe) {
-                            log.warn("Failed to set $jsonldpath for $metakey")
+                            log.warn("Failed to set $jsonldpath for $meta")
                         }
                     }
                 }

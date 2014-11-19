@@ -17,9 +17,9 @@
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
     "_docMetaMapping" : {
-        "hold": {
-            "sigel" : "about.heldBy.notation"
-        }
+        "hold": [
+            "about.heldBy.notation"
+        ]
     },
     "_plugins": {
         "_support": [
