@@ -64,7 +64,9 @@ class DocumentAPI extends BasicAPI {
         def query = new LinkedDataAPIQuery(request.parameterMap)
         query.setIndexTypes(getDatasetBasedOnPath(path))
         log.info("query: " + query.toJsonQuery())
-        sendResponse(response, this.whelk.search(query).toJson(), "application/json")
+        def callback = request.getParameter("callback")
+        def jsonResult = (callback ? callback + "(" : "") + this.whelk.search(query).toJson() + (callback ? ");" : "")
+        sendResponse(response, jsonResult, "application/json")
     }
 
     void handleGetRequest(HttpServletRequest request, HttpServletResponse response, String path) {

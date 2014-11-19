@@ -63,7 +63,7 @@ class SearchAPI extends BasicAPI implements API {
             elasticQuery.sorting = indexConfig?.get("sortby")
         }
         try {
-            def callback = queryMap.get("callback")
+            def callback = queryMap.get("callback")?.first()
             def jsonResult =
             (callback ? callback + "(" : "") +
             performQuery(elasticQuery, indexConfig) +

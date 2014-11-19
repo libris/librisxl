@@ -9,20 +9,25 @@ class LinkedDataAPIQuery extends ElasticQuery {
 
     def keyWords = ["_page", "_pageSize", "_sort", "_where", "_orderBy", "_select", "callback"]
     final static ObjectMapper mapper = new ObjectMapper()
-    Map requestMap
+    final String Q_MAPS_TO = "_all"
+    Map requestMap = [:]
 
-    LinkedDataAPIQuery(Map requestMap) {
-        this.requestMap = requestMap
-        log.info("reqmap: $requestMap")
-        if (requestMap.containsKey("_pageSize")) {
-            n = requestMap["_pageSize"][0] as int
+    LinkedDataAPIQuery(Map reqMap) {
+        for (w in reqMap) {
+            if (!keyWords.contains(w.key)) {
+                log.debug("Copying key ${w.key} to new map.")
+                this.requestMap.put(w.key, w.value)
+            }
         }
-        if (requestMap.containsKey("_page")) {
-            start = (((requestMap["_page"][0] as int) - 1) * n)
-            log.info("Set start: $start")
+        log.debug("reqmap: $requestMap")
+        if (reqMap.containsKey("_pageSize")) {
+            n = reqMap["_pageSize"][0] as int
         }
-        if (requestMap.containsKey("_sort")) {
-            requestMap.get("_sort").each {
+        if (reqMap.containsKey("_page")) {
+            start = (((reqMap["_page"][0] as int) - 1) * n)
+        }
+        if (reqMap.containsKey("_sort")) {
+            reqMap.get("_sort").each {
                 def direction = "ASC"
                 if (it && it.startsWith("-")) {
                     it = it.substring(1)
@@ -46,8 +51,11 @@ class LinkedDataAPIQuery extends ElasticQuery {
         def boolMustGroup = []
         def boolShouldGroup = []
         requestMap.each { k, values ->
-            log.info("$k = $values")
-            if (!(k in keyWords)) {
+            if (!k.startsWith("_")) {
+                log.trace("$k = $values")
+                if (k == "q") {
+                    k = Q_MAPS_TO
+                }
                 def v = values.first()
                 if (k.startsWith("min-")) {
                     k = k.substring(4)
