@@ -77,7 +77,7 @@
       <h1>Classes</h1>
       % for rclass in rclasses
       <div id="${rclass.qname()}" class="class">
-        <h2><code>${rclass.qname()}</code></h2>
+        <h2 class="${rclass.value(VS.term_status)}"><code>${rclass.qname()}</code></h2>
         ${classinfo(rclass, "...")}
         <dl>
           ${itemsblock(rclass.objects(OWL.equivalentClass), "Equivalent classes", 'baseclasses', True)}
@@ -169,7 +169,7 @@
       <h1>Properties</h1>
       % for rprop in rproperties
       <div id="${rprop.qname()}" class="property">
-        <h2><code>${rprop.qname()}</code></h2>
+        <h2 class="${rprop.value(VS.term_status)}"><code>${rprop.qname()}</code></h2>
         <p>
           ${(label(rprop) or '...')}
           % if rprop.value(RDFS.comment)

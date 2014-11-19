@@ -1,0 +1,5 @@
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX sdo: <http://schema.org/>
+PREFIX : <http://libris.kb.se/def/terms#>
+
+DELETE DATA { :title owl:equivalentProperty sdo:title  }

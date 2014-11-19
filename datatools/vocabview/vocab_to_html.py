@@ -8,6 +8,7 @@ from jinja2 import Environment, PackageLoader
 
 DC = Namespace("http://purl.org/dc/terms/")
 VANN = Namespace("http://purl.org/vocab/vann/")
+VS = Namespace("http://www.w3.org/2003/06/sw-vocab-status/ns#")
 SCHEMA = Namespace("http://schema.org/")
 
 vocab_url_map = {str(SCHEMA): "http://schema.org/docs/schema_org_rdfa.html"}
@@ -32,7 +33,7 @@ if vocabcache:
             extgraph.parse(fpath, format='turtle')
         else:
             vocab_url = vocab_url_map.get(str(vocab), vocab)
-            print "Fetching", vocab_url, "to", fpath
+            print >>sys.stderr, "Fetching", vocab_url, "to", fpath
             g = Graph().parse(vocab_url)
             with open(fpath, 'w') as f:
                 g.serialize(f, format='turtle')
