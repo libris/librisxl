@@ -1660,7 +1660,7 @@
 
     "003": {"aboutEntity": "?record", "property": "systemName"},
     "005": {
-      "aboutEntity": "Record", "property": "modified",
+      "aboutEntity": "?record", "property": "modified",
       "parseDateTime": "yyyyMMddHHmmss.S", "timeZone": "CET",
       "_specSource": {"005": "20130814170612.0"},
       "_specResult": {"modified": "2013-08-14T17:06:12.0+02:00"}
