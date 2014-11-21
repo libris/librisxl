@@ -550,7 +550,7 @@
             },
             "elasticHost": "_property:ELASTIC_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "availableTypes": ["auth","bib","hold","def","sys"],
+            "availableTypes": "_property:AVAILABLE_TYPES",
             "searchResultClass": "whelk.result.JsonLdSearchResult"
         },
         "_unique" : true
