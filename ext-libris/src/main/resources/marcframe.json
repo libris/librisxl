@@ -3247,11 +3247,12 @@
           "3": "ean",
           "4": "sici"
         },
+        "definedElsewhereToken": "7",
         "uriTemplate": "/def/identifiers/{_}",
         "property": "notation",
         "matchUriToken": "^\\S+$"
       },
-      "TODO:i2": {},
+      "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
       "$a": {"property": "identifierValue"},
       "$2": {
         "requires-i1": "7",
@@ -3586,7 +3587,26 @@
       "note:candidate:aboutEntity": "Work",
       "resourceType": "Organization",
       "link": "attributedTo",
-      "TOOO:i1": {},
+      "TODO": "change splitValueProperties to work on result, to handle match combo",
+      "i1": {"marcDefault": "2"},
+      "match-i1": {
+        "0": {
+          "$a": {"property": "name", "required": true}
+        },
+        "1": {
+          "$a": {
+            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+            "required": true
+          }
+        }
+      },
+      "match-code": {
+        "b": {
+          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"},
+          "$b": {"property": "name"}
+        }
+      },
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "name"}
     },
@@ -3599,7 +3619,6 @@
     "130": {
       "note:candidate:aboutEntity": "Work",
       "TODO": "very similar to 240?",
-      "TOOO:i1": {},
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"}
@@ -3748,7 +3767,7 @@
       ],
       "TODO": ["splitByRepetitionAndInterpunctionPattern"],
       "resourceType": "ProviderEvent",
-      "i1": {"TODO:property": "latest", "TODO:tokenMap": {"2": false, "3": true}},
+      "TODO:i1": {"property": "latest", "tokenMap": {"2": false, "3": true}},
       "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
       "$b": {"property": "providerName", "interpunctionChars": ",:;"},
       "$c": {"property": "providerDate", "interpunctionChars": ",;"},
@@ -4148,7 +4167,8 @@
         "resourceType": "ConceptScheme",
         "uriTemplate": "/topic/{+_}",
         "property": "notation",
-        "tokenMap": "thesaurus"
+        "tokenMap": "thesaurus",
+        "definedElsewhereToken": "7"
       },
       "$2": {
         "requires-i2": "7",

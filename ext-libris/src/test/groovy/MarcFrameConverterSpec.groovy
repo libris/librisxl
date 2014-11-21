@@ -129,8 +129,8 @@ class MarcFrameConverterSpec extends Specification {
                 ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
                 ["100": "..."],
                 ["100": ["ind1": "0", "subfields": [["a": "somebody"], ["?": "?"]]]],
-                ["100": ["ind1": "x", "subfields": [["a": "somebody"]]]],
-                ["100": ["ind2": "0", "subfields": [["a": "somebody"]]]]
+                ["100": ["ind2": "0", "subfields": [["a": "somebody"]]]],
+                ["024": ["ind1": "9", "subfields": [["a": "123"]]]]
             ]
         ]
         when:
@@ -138,9 +138,9 @@ class MarcFrameConverterSpec extends Specification {
         then:
         frame._marcUncompleted == [
             ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
-            ["100": ["ind1": "0", "subfields": [["a": "somebody"], ["?": "?"]]/*, "_mapped": ["ind1", "a"]*/]],
-            ["100": ["ind1": "x", "subfields": [["a": "somebody"]]]],
-            ["100": ["ind2": "0", "subfields": [["a": "somebody"]]]]
+            ["100": ["ind1": "0", "subfields": [["a": "somebody"], ["?": "?"]]], "_unhandled": ["?"]],
+            ["100": ["ind2": "0", "subfields": [["a": "somebody"]]], "_unhandled": ["a"]],
+            ["024": ["ind1": "9", "subfields": [["a": "123"]]], "_unhandled": ["ind1"]]
         ]
         frame._marcBroken == [["100": "..."]]
         frame._marcFailedFixedFields == [
