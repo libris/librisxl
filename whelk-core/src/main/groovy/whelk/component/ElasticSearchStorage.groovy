@@ -30,7 +30,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     void componentBootstrap(String str) {
         if (!this.indexName) {
-            this.indexName = this.id
+            this.indexName = str+"_"+this.id
         }
         log.info("Elastic Storage using index name $indexName")
     }

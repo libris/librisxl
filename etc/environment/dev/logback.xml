@@ -93,8 +93,8 @@
 <logger name="whelk.LinkedDataAPIQuery">
       <level value="trace"/>
   </logger>
-<logger name="whelk.component.ElasticQuery">
-      <level value="info"/>
+<logger name="whelk.ElasticQuery">
+      <level value="trace"/>
   </logger>
 <logger name="whelk.Query">
       <level value="info"/>
