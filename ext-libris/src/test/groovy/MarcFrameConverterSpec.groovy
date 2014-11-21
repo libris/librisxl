@@ -128,7 +128,9 @@ class MarcFrameConverterSpec extends Specification {
                 ["001": "0000000"],
                 ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
                 ["100": "..."],
-                ["100": ["subfields": [["?": "?"]]]]
+                ["100": ["ind1": "0", "subfields": [["a": "somebody"], ["?": "?"]]]],
+                ["100": ["ind1": "x", "subfields": [["a": "somebody"]]]],
+                ["100": ["ind2": "0", "subfields": [["a": "somebody"]]]]
             ]
         ]
         when:
@@ -136,7 +138,9 @@ class MarcFrameConverterSpec extends Specification {
         then:
         frame._marcUncompleted == [
             ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
-            ["100": ["subfields": [["?": "?"]]]]
+            ["100": ["ind1": "0", "subfields": [["a": "somebody"], ["?": "?"]]/*, "_mapped": ["ind1", "a"]*/]],
+            ["100": ["ind1": "x", "subfields": [["a": "somebody"]]]],
+            ["100": ["ind2": "0", "subfields": [["a": "somebody"]]]]
         ]
         frame._marcBroken == [["100": "..."]]
         frame._marcFailedFixedFields == [

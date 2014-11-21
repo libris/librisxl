@@ -1660,7 +1660,7 @@
 
     "003": {"aboutEntity": "?record", "property": "systemName"},
     "005": {
-      "aboutEntity": "Record", "property": "modified",
+      "aboutEntity": "?record", "property": "modified",
       "parseDateTime": "yyyyMMddHHmmss.S", "timeZone": "CET",
       "_specSource": {"005": "20130814170612.0"},
       "_specResult": {"modified": "2013-08-14T17:06:12.0+02:00"}
@@ -3216,6 +3216,7 @@
       "aboutEntity": "?instance",
       "addLink": "identifier",
       "resourceType": "Identifier",
+      "TODO:i1": {},
       "$a": {
         "property": "identifierValue",
         "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
@@ -3250,6 +3251,7 @@
         "property": "notation",
         "matchUriToken": "^\\S+$"
       },
+      "TODO:i2": {},
       "$a": {"property": "identifierValue"},
       "$2": {
         "requires-i1": "7",
@@ -3311,6 +3313,7 @@
         "4": {"$a": {"property": "videorecordingNumber"}},
         "5": {"$a": {"property": "publisherNumber"}}
       },
+      "TODO:i2": {},
       "$a": {"property": "publisherNumber"},
       "$b": {
         "link": "identifierAssigner", "resourceType": "Organization", "property": "name"
@@ -3441,6 +3444,8 @@
 
     "050": {
       "note:candidate:aboutEntity": "Work",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
       "$a": {"property": "classificationLcc"},
       "$b": {"ignored": true}
     },
@@ -3451,6 +3456,8 @@
     "060": {
       "addLink": "classification",
       "resourceType": "Concept",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
       "$a": {"property": "classificationNlm"},
       "$b": {"property": "classificationItem", "ignored": true}
     },
@@ -3463,6 +3470,7 @@
       "inherit": "084",
       "addLink": "subject",
       "resourceType": "Concept",
+      "TOOO:i2": {},
       "$b": {"addProperty": "classificationItem"}
     },
 
@@ -3470,6 +3478,7 @@
 
     "080": {
       "note:candidate:aboutEntity": "Work",
+      "TOOO:i1": {},
       "$a": {"property": "classificationUdc"}
     },
 
@@ -3478,6 +3487,8 @@
       "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
       "addLink": "classification",
       "resourceType": "Concept",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
       "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
       "$a": {"property": "notation", "required": true},
       "$2": {
@@ -3499,7 +3510,8 @@
       }}
     },
     "083": {
-      "inherit": "082"
+      "inherit": "082",
+      "i2": null
     },
 
     "084": {
@@ -3574,6 +3586,7 @@
       "note:candidate:aboutEntity": "Work",
       "resourceType": "Organization",
       "link": "attributedTo",
+      "TOOO:i1": {},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "name"}
     },
@@ -3586,6 +3599,7 @@
     "130": {
       "note:candidate:aboutEntity": "Work",
       "TODO": "very similar to 240?",
+      "TOOO:i1": {},
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"}
@@ -3595,6 +3609,8 @@
       "aboutEntity": "?instance",
       "addLink": "abbreviatedTitle",
       "resourceType": "Title",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
       "$a": {"property": "titleValue"},
       "$b": {"property": "titleQualifier"},
       "$2": {"property": "titleSource"}
@@ -3605,8 +3621,8 @@
       "$2": null
     },
     "240": {
-      "i1": {},
-      "i2": {},
+      "TODO:i1": {},
+      "TODO:i2": {},
       "link": "exampleOfWork",
       "resourceType": "UniformWork",
       "$0": {
@@ -3814,6 +3830,7 @@
     "263": {},
 
     "264": {
+      "TOOO:i1": {},
       "match-i2": {
         "0": {"addLink": "production"},
         "1": {"addLink": "publication"},
@@ -3928,6 +3945,7 @@
       "TODO:prefer": "490 or 773? See also mapping for 240",
       "addLink": "series",
       "resourceType": "Serial",
+      "TOOO:i2": {},
       "$a": {"property": "title", "interpunctionChars": ".,=;"},
       "$0": {"TODO:property": "authorityRecordControlNumber"},
       "$n": {"addProperty": "numberOfPartOfAWork"},
@@ -3938,6 +3956,8 @@
     },
     "490": {
       "inherit": "440",
+      "TOOO:i1": {},
+      "i2": null,
       "TODO:preferLinkedVersion": "773?",
       "$l": {"link": "callno", "resourceType": "Concept", "property": "notation"}
     },
@@ -3955,6 +3975,8 @@
     "504": {"$a": {"aboutEntity": "?instance", "addProperty": "supplementaryContentNote"}},
 
     "505": {
+      "TOOO:i1": {},
+      "TOOO:i2": {},
       "$a": {"aboutEntity": "?instance", "addProperty": "listOfContents", "TODO": "$t, $r"}
     },
 
@@ -3965,6 +3987,7 @@
     "510": {
       "addProperty": "citedBy",
       "resourceType": "CreativeWork",
+      "TOOO:i1": {},
       "$a": {"property": "title"},
       "$c": {"property": "pagination"}
     },
@@ -3985,6 +4008,7 @@
 
     "520": {
       "aboutEntity": "?instance",
+      "TOOO:i1": {},
       "$a": {"addProperty": "summary"},
       "match-code": {
         "u": {
@@ -4000,6 +4024,7 @@
     "521": {
       "addLink": "audience",
       "resourceType": "Audience",
+      "TOOO:i1": {},
       "$a": {"property": "label"}
     },
     "522": {},
@@ -4084,10 +4109,15 @@
     "586": {},
     "588": {"$a": {"aboutEntity": "?record", "addProperty": "sourceNote"}},
     "590": {},
-    "599": {"$a": {"aboutEntity": "?record", "addProperty": "technicalNote"}},
+    "599": {
+      "TOOO:i1": {},
+      "$a": {"aboutEntity": "?record", "addProperty": "technicalNote"}
+    },
 
     "600": {
       "inherit": "100",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
       "match-code": {
         "t": {
           "$t": {"property": "title"},
@@ -4101,8 +4131,6 @@
     },
     "610": {
       "inherit": "110",
-      "TODO:i1": {},
-      "TODO:i2": {},
       "match-code": {
         "x": {
           "$x": {"property": "name"},
@@ -4150,8 +4178,16 @@
         ]
       }}
     },
-    "611": {"inherit": "111", "addLink": "subject", "resourceType": "Meeting"},
-    "630": {"inherit": "130", "addLink": "subject", "resourceType": "UniformWork"},
+    "611": {
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "inherit": "111", "addLink": "subject", "resourceType": "Meeting"
+    },
+    "630": {
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "inherit": "130", "addLink": "subject", "resourceType": "UniformWork"
+    },
     "648": {
       "inherit": "650",
       "resourceType": "Event",
@@ -4189,6 +4225,7 @@
                  "property": "prefLabel", "itemPos": "rest"}
         }
       },
+      "TOOO:i1": {},
       "i2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
@@ -4239,10 +4276,15 @@
     "651": {
       "inherit": "650",
       "resourceType": "Place",
+      "i1": null,
       "$a": {"property": "prefLabel"},
       "uriTemplate": "/place/{prefLabel}"
     },
-    "653": {"$a": {"aboutEntity": "?instance", "property": "keyword"}},
+    "653": {
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "$a": {"aboutEntity": "?instance", "property": "keyword"}
+    },
 
     "654": {},
 
@@ -4254,8 +4296,14 @@
 
     "658": {},
 
-    "656" : {"resourceType": "Profession", "ignored": true},
-    "657" : {"resourceType": "FunctionOrRole", "ignored": true},
+    "656" : {
+      "TOOO:i2": {},
+      "resourceType": "Profession", "ignored": true
+    },
+    "657" : {
+      "TOOO:i2": {},
+      "resourceType": "FunctionOrRole", "ignored": true
+    },
 
     "662": {},
     "690": {},
@@ -4273,6 +4321,7 @@
         }
       },
       "addLink": "influencedBy", "resourceType": "Person",
+      "TOOO:i2": {},
       "_specSource": {"700":
         {"ind1": "1", "ind2": " ", "subfields": [
           {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}
@@ -4288,12 +4337,13 @@
       }}
     },
 
-    "710": {"inherit": "110", "addLink": "influencedBy"},
+    "710": {"inherit": "110", "TOOO:i2": {}, "addLink": "influencedBy"},
     "711": {"inherit": "111"},
 
     "720": {},
 
     "730": {
+      "TOOO:i1": {},
       "TODO:match-i2": {
         "2": {"addLink": "influentialPart"}
       },
@@ -4322,6 +4372,8 @@
     "772": {
       "addLink": "isPartOf",
       "resourceType": "CreativeWork",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
       "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
       "$b": {"property": "edition", "TODO:targetMatch": "250"},
       "$c": {"property": "qualifyingNote"},
@@ -4440,6 +4492,7 @@
     "811": {},
     "830": {
       "addLink": "isPartOf", "resourceType": "PublicationVolume",
+      "TODO:i2": {},
       "$a": {"property": "uniformTitle"},
       "$d": {"addProperty": "date"},
       "$v": {"property": "volumeNumber"},
@@ -4458,6 +4511,7 @@
 
     "856": {
       "addLink": "isPrimaryTopicOf", "resourceType": "Document",
+      "TODO:i1": {},
       "match-i2": {
         "0": {"addLink": "encoding", "resourceType": "MediaObject"},
         "1": {"addLink": "hasFormat", "resourceType": "Electronic"},
@@ -4492,6 +4546,7 @@
     "883": {},
 
     "886": {
+      "TODO:i1": {},
       "TODO:addLink": "quotedMARC", "datatype": "XMLLiteral", "$_": {}
     },
     "887": {
@@ -4804,7 +4859,10 @@
     "675" : {
       "$a": {"property": "label"}
     },
-    "678" : {"$a": {"addProperty": "note"}},
+    "678" : {
+      "TODO:i1": {},
+      "$a": {"addProperty": "note"}
+    },
     "680" : {
       "$i": {"addProperty": "scopeNote"}
     },
@@ -4819,12 +4877,14 @@
         "Concept": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
       },
+      "i1": null,
       "$0": {"addProperty": "notation"},
       "$2": null
     },
     "755" : {"inherit": "750"},
     "856": {
       "inherit": "bib",
+      "TODO:i1": {},
       "TODO:match-i2": {
         "0": {"addLink": "sameAs"},
         "1": {"addLink": "isPrimaryTopicOf", "resourceType": "Electronic"},
@@ -4843,6 +4903,7 @@
       "[0:0]": {}
     },
     "014": {
+      "TODO:i1": {},
       "$a": {"addProperty": "librisIIINumber"}
     },
     "084": {"inherit": "bib", "addLink": "callno"},
@@ -4854,6 +4915,7 @@
     "852": {
       "addLink": "offers",
       "resourceType": "Offer",
+      "TODO:i1": {},
       "TODO:i2": {
         "property": "shelfOrder"
       },
@@ -4900,6 +4962,8 @@
       "NOTE:domainIncludes": "Aggregate",
       "addLink": "workExample",
       "resourceType": "SomeProducts",
+      "TODO:i1": {},
+      "TODO:i2": {},
       "$a": {"property": "scopeNote"},
       "$x": {"addProperty": "editorialNote"},
       "$z": {"addProperty": "copyNote"}
