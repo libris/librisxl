@@ -301,9 +301,9 @@ class MarcConversion {
                         result = handler.convert(state, sourceMap, value)
                     }
                 }
-                if (!result.ok) {
+                if (!result?.ok) {
                     field = field.clone()
-                    if (result.unhandled) {
+                    if (result?.unhandled) {
                         field['_unhandled'] = result.unhandled as List
                     }
                     state.marcRemains.uncompleted << field
