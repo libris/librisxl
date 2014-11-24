@@ -37,7 +37,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
     ExecutorService queue
     Semaphore tickets
-    int numberOfThreads = 10000
+    int numberOfThreads = 1000
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
@@ -48,7 +48,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
     OldOAIPMHImporter(Map settings) {
         this.serviceUrl = settings.get('serviceUrl',SERVICE_BASE_URL)
         this.preserveTimestamps = settings.get("preserveTimestamps", true)
-        this.numberOfThreads = settings.get("numberOfThreads", 50000)
+        this.numberOfThreads = settings.get("numberOfThreads", numberOfThreads)
     }
 
     void bootstrap(String whelkId) {

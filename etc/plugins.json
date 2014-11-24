@@ -261,7 +261,7 @@
         ],
         "_params" : {
             "preserveTimestamps" : true,
-            "numberOfThreads": 50000
+            "numberOfThreads": 5000
         }
     },
     "operator" : {
