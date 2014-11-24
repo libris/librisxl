@@ -76,8 +76,13 @@ class JsonDocument extends DefaultDocument {
                             if (value) {
                                 meta = Tools.insertAt(meta, jsonldpath, value)
                             }
+                        } catch (MissingPropertyException mpe) {
+                            log.trace("Unable to set meta property $jsonldpath : $mpe")
                         } catch (NullPointerException npe) {
                             log.warn("Failed to set $jsonldpath for $meta")
+                        } catch (Exception e) {
+                            log.error("Failed to extract meta info: $e", e)
+                            throw e
                         }
                     }
                 }
