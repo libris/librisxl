@@ -227,12 +227,12 @@ class RemoteSearchAPI extends BasicAPI {
         }
     }
 
-    class MetaproxySearchResult extends SearchResult {
+    class MetaproxySearchResult extends JsonLdSearchResult {
 
         String database, error
 
         MetaproxySearchResult(String db, int nrHits) {
-            super(nrHits)
+            this.numberOfHits = nrHits
             this.database = db
         }
     }
