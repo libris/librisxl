@@ -3105,7 +3105,7 @@
         }
       },
       "repeatable": false,
-    "_spec": [
+      "_spec": [
         {
           "source": [
             {"008": "900101s1977    sw            000 0aswe  "}
