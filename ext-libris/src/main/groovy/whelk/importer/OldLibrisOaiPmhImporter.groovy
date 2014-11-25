@@ -111,11 +111,11 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                 String rtok = harvest(url)
                 resumptionToken = rtok
             } catch (XmlParsingFailedException xpfe) {
-                log.warn("Harvesting failed. Retrying ...")
+                log.warn("[$dataset / $recordCount] Harvesting failed. Retrying ...")
             }
             elapsed = System.currentTimeMillis() - loadUrlTime
             if (elapsed > 6000) {
-                log.warn("Harvest took more than 3 seconds ($elapsed)")
+                log.warn("[$dataset / $recordCount] Harvest took more than 6 seconds ($elapsed)")
             }
             log.debug("resumptionToken: $resumptionToken")
         }
@@ -152,7 +152,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         long elapsed = System.currentTimeMillis()
         def xmlString = normalizeString(url.text)
         if ((System.currentTimeMillis() - elapsed) > 5000) {
-            log.warn("Load from URL ${url.toString()} took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
+            log.warn("[$dataset / $recordCount] Load from URL ${url.toString()} took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
         }
         def OAIPMH
         elapsed = System.currentTimeMillis()
@@ -173,7 +173,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             }
         }
         if ((System.currentTimeMillis() - elapsed) > 1000) {
-            log.warn("XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
+            log.warn("[$dataset / $recordCount] XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
         }
         def documents = []
         def marcdocuments = []
@@ -241,8 +241,8 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                 throw new WhelkRuntimeException("Failed to handle record: " + createString(it))
             }
         }
-        if ((System.currentTimeMillis() - elapsed) > 3000) {
-            log.warn("Conversion of documents took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
+        if ((System.currentTimeMillis() - elapsed) > 5000) {
+            log.warn("[$dataset / $recordCount] Conversion of documents took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
         }
         if (documents?.size() > 0) {
             addDocuments(documents)
@@ -270,8 +270,8 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                 //def storage = whelk.getStorage(document.get(0).contentType)
                 //storage.bulkStore(documents)
                 this.whelk.bulkAdd(documents, documents.get(0).contentType)
-                if ((System.currentTimeMillis() - elapsed) > 3000) {
-                    log.warn("Bulk add took more than 3 seconds (${System.currentTimeMillis() - elapsed})")
+                if ((System.currentTimeMillis() - elapsed) > 10000) {
+                    log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
                 }
             } catch (WhelkAddException wae) {
                 log.warn("Failed adding: ${wae.message} (${wae.failedIdentifiers})")
