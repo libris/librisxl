@@ -339,7 +339,7 @@
                     "dataset" : "auth",
                     "field" : "about.@id",
                     "queryProperties": {
-                        "_source.include" : ["about.*"]
+                        "_source.include" : ["about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName"]
                     },
                     "resultKey" : "about"
                 },
@@ -357,7 +357,7 @@
                     "dataset" : "auth",
                     "field" : "about.@id",
                     "queryProperties": {
-                        "_source.include" : ["about.*"]
+                        "_source.include" : ["about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName"]
                     },
                     "resultKey" : "about"
                 },
