@@ -2650,7 +2650,8 @@
       "[6:7]": {
         "link": "publicationStatus",
         "uriTemplate": "{_}",
-        "tokenMap": "publicationStatus"
+        "tokenMap": "publicationStatus",
+        "TODO:specialRule": "foldPublicationDate"
       },
       "[7:11]": {
         "property": "publicationYear"
@@ -3104,9 +3105,27 @@
         }
       },
       "repeatable": false,
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
+    "_spec": [
+        {
+          "source": [
+            {"008": "900101s1977    sw            000 0aswe  "}
+          ],
+          "result": {
+            "date": "900101",
+            "about": {
+              "language": [{"@id": "/def/languages/swe"}],
+              "publicationStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "publicationYear":  "1977",
+              "publicationCountry": [{"@id": "/def/countries/sw"}],
+              "biography": {"@id": "/def/enum/content/Autobiography"},
+              "confPub": {"@id": "/def/enum/content/NotAConferencePublication"},
+              "festschrift": {"@id": "/def/enum/content/NotAFestschrift"},
+              "index": {"@id": "/def/enum/content/NoIndex"},
+              "literaryForm": {"@id": "/def/enum/content/NotFictionNotFurtherSpecified"}
+            }
+          }
+        }
+      ]
     },
 
     "010": {"aboutEntity": "?instance", "$a": {"property": "lccn"}},
