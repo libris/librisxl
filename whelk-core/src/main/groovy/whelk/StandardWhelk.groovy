@@ -117,7 +117,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 notifyCamel(doc, BULK_ADD_OPERATION, [:])
             }
         } else {
-            log.warn("Nothing stored. No storages found.")
+            log.warn("Nothing stored. No storages found for $contentType.")
         }
         for (storage in getStorages(contentType)) {
             storage.bulkStore(docs)
@@ -211,14 +211,20 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return sparqlEndpoint?.sparql(query)
     }
 
+    def preparedDocuments = []
+
     Document prepareDocument(Document doc, long mt = -1) {
         doc = sanityCheck(doc)
+        if (doc.identifier in prepareDocuments) {
+            log.debug("prepareDocument already called for ${doc.identifier}")
+        }
+        preparedDocuments << doc.identifier
         if (mt < 0) {
             mt = doc.updateModified()
         }
         if (doc.contentType == "application/ld+json") {
             log.trace("Setting modified in document data.")
-            def map = getDataAsMap()
+            def map = doc.getDataAsMap()
             def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
             def timestamp = time.format(DT_FORMAT)
             map.put("modified", timestamp)

@@ -58,7 +58,7 @@
       <level value="info"/>
   </logger>
  <logger name="whelk.component.ElasticSearchStorage">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
  <logger name="whelk.plugin.BasicPlugin">
       <level value="info"/>
@@ -91,10 +91,10 @@
       <level value="info"/>
   </logger>
 <logger name="whelk.LinkedDataAPIQuery">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
 <logger name="whelk.ElasticQuery">
-      <level value="trace"/>
+      <level value="info"/>
   </logger>
 <logger name="whelk.Query">
       <level value="info"/>
