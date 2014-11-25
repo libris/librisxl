@@ -130,18 +130,18 @@ class RemoteSearchAPI extends BasicAPI {
                     queue.shutdown()
                 }
                 // Merge results
-                def results = ['hits':[:],'list':[]]
+                def results = ['totalResults':[:],'items':[]]
                 int biggestList = 0
                 for (result in resultLists) { if (result.hits.size() > biggestList) { biggestList = result.hits.size() } }
                 def errors = [:]
                 for (int i = 0; i <= biggestList; i++) {
                     for (result in resultLists) {
-                        results.hits[result.database] = result.numberOfHits
+                        results.totalResults[result.database] = result.numberOfHits
                         try {
                             if (result.error) {
                                 errors.get(result.database, [:]).put(""+i, result.error)
                             } else if (i < result.hits.size()) {
-                                results.list << ['database':result.database,'data':result.hits[i].dataAsMap]
+                                results.items << ['database':result.database,'data':result.hits[i].dataAsMap]
                             }
                         } catch (ArrayIndexOutOfBoundsException aioobe) {
                             log.debug("Overstepped array bounds.")
