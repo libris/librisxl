@@ -3646,7 +3646,7 @@
       "resourceType": "UniformWork",
       "$0": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "/bib/{_}"
+        "uriTemplate": "/auth/{_}"
       },
       "$a": {"property": "title"},
       "$k": {"addProperty": "subtitle"},
