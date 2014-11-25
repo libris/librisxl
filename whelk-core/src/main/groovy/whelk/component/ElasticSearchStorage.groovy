@@ -93,7 +93,6 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             def response = performExecute(srq)
             def docs = []
             response.hits.hits.each {
-                log.info("Building document.")
                 docs << whelk.createDocumentFromJson(it.sourceAsString)
             }
             return docs
@@ -238,10 +237,10 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     @Override
     void remove(String identifier) {
         if (!versioning) {
-            log.info("Deleting record at $indexName with id ${toElasticId(identifier)}")
+            log.debug("Deleting record at $indexName with id ${toElasticId(identifier)}")
             client.delete(new DeleteRequest(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier)))
         } else {
-            log.info("Creating tombstone record at $indexName with id ${toElasticId(identifier)}")
+            log.debug("Creating tombstone record at $indexName with id ${toElasticId(identifier)}")
             store(createTombstone(identifier))
         }
     }

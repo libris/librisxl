@@ -124,7 +124,7 @@ class ElasticTypeRouteProcessor implements Processor {
 
             message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexName=${indexName}&indexType=${indexType}")
             if (operation == Whelk.REMOVE_OPERATION) {
-                log.info(">>> Setting message body to $indexId in preparation for REMOVE operation.")
+                log.debug(">>> Setting message body to $indexId in preparation for REMOVE operation.")
                 message.setBody(indexId)
             } else {
                 message.getBody(Map.class).put("encodedId", indexId)

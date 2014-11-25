@@ -117,7 +117,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 notifyCamel(doc, BULK_ADD_OPERATION, [:])
             }
         } else {
-            log.warn("Nothing stored. No storages found for $contentType.")
+            log.debug("No storages found for $contentType.")
         }
         for (storage in getStorages(contentType)) {
             storage.bulkStore(docs)

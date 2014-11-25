@@ -75,7 +75,11 @@ class ImportOperator extends AbstractOperator {
             this.totalCount = 0
             for (ds in dataset.split(",")) {
                 log.debug("Import from OAIPMH ${ds}")
-                totalCount = totalCount + importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
+                int dsImportCount = importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
+                totalCount = totalCount + dsImportCount
+                if (dsImportCount > 0) {
+                    log.info("Imported $dsImportCount document from $ds.")
+                }
                 log.debug("Count is now: $totalCount")
             }
         } else {
