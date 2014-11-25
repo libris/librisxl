@@ -1643,9 +1643,11 @@ content:Yearbook a owl:Class ;
 
 :alternateFormat a owl:ObjectProperty ;
     sdo:domainIncludes :CreativeWork ;
-    sdo:rangeIncludes :Product ;
+    sdo:rangeIncludes :Electronic,
+        :Product ;
     vs:term_status "unstable" ;
-    skos:note "MARC bib 776" .
+    skos:note "MARC bib 776",
+        "MARC bib 856" .
 
 :angularScale a owl:DatatypeProperty ;
     sdo:domainIncludes :CartographyCoordinates ;
@@ -2367,13 +2369,11 @@ content:Yearbook a owl:Class ;
 
 :hasFormat sdo:domainIncludes :CreativeWork,
         :Product ;
-    sdo:rangeIncludes :Electronic,
-        :Product ;
+    sdo:rangeIncludes :Product ;
     skos:note "MARC bib 007",
         "MARC bib 255",
         "MARC bib 300",
-        "MARC bib 530",
-        "MARC bib 856" .
+        "MARC bib 530" .
 
 :hasPart sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :CreativeWork ;
@@ -2520,7 +2520,6 @@ content:Yearbook a owl:Class ;
 
 :influencedBy sdo:domainIncludes :CreativeWork ;
     sdo:rangeIncludes :Person ;
-    owl:equivalentProperty dbpo:influencedBy ;
     skos:note "MARC bib 700",
         "MARC bib 710" .
 
@@ -2555,7 +2554,8 @@ content:Yearbook a owl:Class ;
         :PublicationVolume ;
     owl:equivalentProperty dbpo:isPartOf,
         sdo:isPartOf ;
-    skos:note "MARC bib 610.a",
+    skos:note "MARC bib 110.a",
+        "MARC bib 610.a",
         "MARC bib 772",
         "MARC bib 773",
         "MARC bib 830" .
@@ -2650,6 +2650,12 @@ content:Yearbook a owl:Class ;
     sdo:domainIncludes :CreativeWork ;
     vs:term_status "unstable" ;
     skos:note "MARC bib 546.a" .
+
+:latest a owl:DatatypeProperty,
+        owl:FunctionalProperty ;
+    sdo:domainIncludes :ProviderEvent ;
+    vs:term_status "unstable" ;
+    skos:note "MARC bib 260" .
 
 :lccn a owl:DatatypeProperty,
         owl:FunctionalProperty ;
@@ -2783,6 +2789,7 @@ content:Yearbook a owl:Class ;
 
 :modified a owl:DatatypeProperty,
         owl:FunctionalProperty ;
+    sdo:domainIncludes :Record ;
     vs:term_status "unstable" ;
     skos:note "MARC bib 005" .
 
@@ -2931,6 +2938,7 @@ content:Yearbook a owl:Class ;
         "MARC bib 040.d",
         "MARC bib 100.a",
         "MARC bib 110.a",
+        "MARC bib 110.b",
         "MARC bib 610.a",
         "MARC bib 610.x" .
 
