@@ -179,6 +179,7 @@ marcenum:bibLevel a skos:Collection;
 
 :hasFormat a owl:ObjectProperty;
     rdfs:label "har format"@sv;
+    rdfs:subPropertyOf :exampleOfWork;
     owl:equivalentProperty dc:hasFormat .
 
 
@@ -649,7 +650,8 @@ marcenum:bibLevel a skos:Collection;
 
 :hasVersion a owl:ObjectProperty;
     rdfs:label "har version"@sv;
-    owl:equivalentProperty dc:hasVersion .
+    owl:equivalentProperty dc:hasVersion;
+    rdfs:subPropertyOf :exampleOfWork .
 
 :hasPart a owl:ObjectProperty;
     rdfs:label "har del"@sv;

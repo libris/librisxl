@@ -2650,7 +2650,8 @@
       "[6:7]": {
         "link": "publicationStatus",
         "uriTemplate": "{_}",
-        "tokenMap": "publicationStatus"
+        "tokenMap": "publicationStatus",
+        "TODO:specialRule": "foldPublicationDate"
       },
       "[7:11]": {
         "property": "publicationYear"
@@ -3104,9 +3105,27 @@
         }
       },
       "repeatable": false,
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
+      "_spec": [
+        {
+          "source": [
+            {"008": "900101s1977    sw            000 0aswe  "}
+          ],
+          "result": {
+            "date": "900101",
+            "about": {
+              "language": [{"@id": "/def/languages/swe"}],
+              "publicationStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "publicationYear":  "1977",
+              "publicationCountry": [{"@id": "/def/countries/sw"}],
+              "biography": {"@id": "/def/enum/content/Autobiography"},
+              "confPub": {"@id": "/def/enum/content/NotAConferencePublication"},
+              "festschrift": {"@id": "/def/enum/content/NotAFestschrift"},
+              "index": {"@id": "/def/enum/content/NoIndex"},
+              "literaryForm": {"@id": "/def/enum/content/NotFictionNotFurtherSpecified"}
+            }
+          }
+        }
+      ]
     },
 
     "010": {"aboutEntity": "?instance", "$a": {"property": "lccn"}},
@@ -3587,7 +3606,10 @@
       "note:candidate:aboutEntity": "Work",
       "resourceType": "Organization",
       "link": "attributedTo",
-      "TODO": "change splitValueProperties to work on result, to handle match combo",
+      "TODO": [
+        "change splitValueProperties to work on result, to handle match combo",
+        "splitByRepetitionAndInterpunctionPattern ($n $d ...)?"
+      ],
       "i1": {"marcDefault": "2"},
       "match-i1": {
         "0": {
@@ -3636,6 +3658,7 @@
     },
     "222": {
       "inherit": "210",
+      "NOTE:domain": "Serial/Periodical",
       "addLink": "keyTitle",
       "$2": null
     },
@@ -3646,7 +3669,7 @@
       "resourceType": "UniformWork",
       "$0": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "/bib/{_}"
+        "uriTemplate": "/auth/{_}"
       },
       "$a": {"property": "title"},
       "$k": {"addProperty": "subtitle"},
@@ -3665,6 +3688,9 @@
     "242": {
       "inherit": "245",
       "addLink": "translatedTitle",
+      "$f": null,
+      "$g": null,
+      "$y": {"link": "language", "property": "notation"},
       "TODO": "Correct property? merge into 245?"
     },
 
@@ -3676,13 +3702,26 @@
       "aboutEntity": "?instance",
       "link": "instanceTitle",
       "resourceType": "Title",
-      "$a": {"property": "titleValue", "interpunctionChars": ":/"},
+      "$a": {
+        "property": "titleValue",
+        "interpunctionChars": ":/",
+        "TODO:interpunctionRules": {
+          " :": {"$b": {"property": "subtitle"}},
+          " =": {"$b": {"property": "parallellTitle"}},
+          " .": {"TODO": "$a and $b represent equal titles"}
+        }
+      },
       "$b": {"property": "subtitle", "interpunctionChars": "/"},
-      "$c": {"aboutEntity": "?instance", "property": "responsibilityStatement"},
-      "$f": {"property": "titleDate"},
+      "$c": {
+        "aboutEntity": "?instance", "property": "responsibilityStatement",
+        "NOTE": "interpunction may include data about included parts (e.g. short stories)"
+      },
+      "$f": {"aboutEntity": "?instance", "property": "temporalCoverageNote"},
+      "$g": {"aboutEntity": "?instance", "property": "generalTemporalCoverageNote"},
       "$h": {"aboutEntity": "?instance", "property": "mediaTerm", "surroundingChars": "[]"},
-      "$n": {"property": "partNumber"},
-      "$p": {"property": "partTitle"},
+      "$n": {"addProperty": "partNumber"},
+      "$p": {"addProperty": "partTitle"},
+      "$s": {"property": "version"},
       "_spec": [
         {
           "source": {
@@ -3714,12 +3753,20 @@
     "246": {
       "inherit": "245",
       "addLink": "titleVariation",
-      "$i": {"property": "titleType"}
+      "i2": {
+        "property": "titleType",
+        "TODO:tokenMap": {}, "TODO:if _": "use $i"
+      },
+      "$i": {"property": "titleType"},
+      "$f": {"property": "coverage"},
+      "$g": {"property": "note"},
+      "$h": {"property": "mediaTerm", "surroundingChars": "[]"}
     },
     "247": {
+      "NOTE:domain": "Integrating",
       "inherit": "245",
       "addLink": "previousTitle",
-      "TODO": "Or merge into 246? Sometimes?"
+      "TODO": "Previously misused as 246?"
     },
 
     "249": {},
@@ -3765,7 +3812,7 @@
         {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
         {"codes": ["e", "f", "g"], "addLink": "manufacture"}
       ],
-      "TODO": ["splitByRepetitionAndInterpunctionPattern"],
+      "TODO": "splitByRepetitionAndInterpunctionPattern",
       "resourceType": "ProviderEvent",
       "TODO:i1": {"property": "latest", "tokenMap": {"2": false, "3": true}},
       "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
@@ -4488,11 +4535,13 @@
     },
     "780": {
       "inherit": "772",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
       "addLink": "precededBy",
       "resourceType": "Serial"
     },
     "785": {
-      "inherit": "772",
+      "inherit": "780",
       "addLink": "succeededBy",
       "resourceType": "Serial"
     },
