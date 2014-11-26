@@ -235,7 +235,7 @@ class DocumentAPI extends BasicAPI {
             log.info("User has no privileges")
             return false
         }
-        log.info("User is a-okey.")
+        log.trace("User is a-okey.")
         return true
     }
 

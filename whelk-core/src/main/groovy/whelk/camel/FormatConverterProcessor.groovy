@@ -74,11 +74,13 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
             }
             if (doc) {
                 log.debug("Resetting document ${doc.identifier} in message.")
+                    /*
                 if (doc.isJson()) {
                     message.setBody(doc.dataAsMap)
                 } else {
+                */
                     message.setBody(doc.data)
-                }
+                //}
                 doc.entry.each { key, value ->
                     message.setHeader("entry:$key", value)
                 }
@@ -89,7 +91,25 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
 }
 
 @Log
+class APIXProcessor implements Processor {
+    @Override
+    public void process(Exchange exchange) throws Exception {
+        Message message = exchange.getIn()
+        String identifier = message.getHeader("entry:identifier")
+        log.info("processing $identifier for APIX")
+        String dataset = message.getHeader("entry:dataset")
+
+        message.setHeader(Exchange.HTTP_PATH, identifier)
+        message.setHeader(Exchange.CONTENT_TYPE, "application/xml")
+
+        exchange.setOut(message)
+    }
+}
+
+@Log
 class ElasticTypeRouteProcessor implements Processor {
+
+    static final ObjectMapper mapper = new ObjectMapper()
 
     ElasticShapeComputer shapeComputer
     String elasticHost, elasticCluster
@@ -127,7 +147,9 @@ class ElasticTypeRouteProcessor implements Processor {
                 log.debug(">>> Setting message body to $indexId in preparation for REMOVE operation.")
                 message.setBody(indexId)
             } else {
-                message.getBody(Map.class).put("encodedId", indexId)
+                def dataMap = mapper.readValue(new String(message.getBody(), "UTF-8"), Map)
+                dataMap.put("encodedId", indexId)
+                message.setBody(dataMap)
             }
         exchange.setOut(message)
     }

@@ -65,7 +65,7 @@ class ReindexOperator extends AbstractOperator {
                 whelk.notifyCamel(doc, Whelk.BULK_ADD_OPERATION, ["index":indexName])
                 count++
             } else {
-                log.warn("Document ${doc.identifier} is deleted. Don't try to add it.")
+                log.debug("Document ${doc.identifier} is deleted. Don't try to add it.")
                 whelk.notifyCamel(doc.identifier, Whelk.REMOVE_OPERATION, ["index":indexName])
             }
             runningTime = System.currentTimeMillis() - startTime

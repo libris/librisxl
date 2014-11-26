@@ -537,7 +537,8 @@
             "batchTimeout": 5000,
             "indexMessageQueue": "_property:MQ_INDEX",
             "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX",
-            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE"
+            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE",
+            "exportToAPIX": false
         }
     },
     "index": {
