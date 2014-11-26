@@ -32,8 +32,8 @@
             "routebuilder"
             ],
         "_components": [
-            "esjsonldstorage",
             "jsonldstorage",
+            "diskjsonldstorage",
             "index",
             "graphstore"
         ]

@@ -556,7 +556,7 @@
         },
         "_unique" : true
     },
-    "jsonldstorage": {
+    "diskjsonldstorage": {
         "_class" : "whelk.component.PairtreeHybridDiskStorage",
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
@@ -567,7 +567,7 @@
             "versioning" : false
         }
     },
-    "esjsonldstorage": {
+    "jsonldstorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
         "_params" : {
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
