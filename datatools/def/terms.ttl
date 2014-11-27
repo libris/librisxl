@@ -149,12 +149,16 @@ marcenum:bibLevel a skos:Collection;
 
 :carrierType a owl:ObjectProperty;
     rdfs:label "bärartype"@sv;
-    rdfs:range :Carrier;
+    rdfs:range :CarrierType;
     rdfs:subPropertyOf dc:format, sdo:additionalType .
 
-:Carrier a owl:Class;
-    rdfs:label "Bärare"@sv;
+:MediaType a owl:Class;
+    rdfs:label "Mediatyp"@sv;
     owl:equivalentClass dc:MediaType .
+
+:CarrierType a owl:Class;
+    rdfs:label "Bärartyp"@sv;
+    rdfs:subClassOf :MediaType .
 
 #commonEndeavor?
 
