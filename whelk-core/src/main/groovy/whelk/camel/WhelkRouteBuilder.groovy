@@ -128,7 +128,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 .filter("groovy", "['bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save hold and bib
                 .process(new APIXProcessor()).to("http4:127.0.0.1:8100")
         }
-
     }
 
     // Plugin methods
