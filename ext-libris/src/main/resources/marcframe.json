@@ -2645,19 +2645,19 @@
       "TODO:repeatedBy": "006",
       "[0:6]": {
         "aboutEntity": "?record",
-        "property": "date"
+        "property": "createdNote", "TODO:parseDate": "yyMMdd"
       },
       "[6:7]": {
-        "link": "publicationStatus",
+        "link": "_providerDateStatus",
         "uriTemplate": "{_}",
         "tokenMap": "publicationStatus",
         "TODO:specialRule": "foldPublicationDate"
       },
       "[7:11]": {
-        "property": "publicationYear"
+        "property": "_providerYear"
       },
       "[11:15]": {
-        "property": "publicationOtherYear"
+        "property": "_providerOtherYear"
       },
       "[15:18]": {
         "addLink": "publicationCountry",
@@ -3111,11 +3111,11 @@
             {"008": "900101s1977    sw            000 0aswe  "}
           ],
           "result": {
-            "date": "900101",
+            "createdNote": "900101",
             "about": {
               "language": [{"@id": "/def/languages/swe"}],
-              "publicationStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-              "publicationYear":  "1977",
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear":  "1977",
               "publicationCountry": [{"@id": "/def/countries/sw"}],
               "biography": {"@id": "/def/enum/content/Autobiography"},
               "confPub": {"@id": "/def/enum/content/NotAConferencePublication"},

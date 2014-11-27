@@ -3,22 +3,26 @@
   "bib": {
 
     "fold publication date": {
-      "matchProperty": "publicationStatus",
+      "matchProperty": "_providerDateStatus",
       "onValue": {
         "/def/enum/content/SingleKnownDateProbableDate": {
-          "sourceProperty": "publicationYear",
-          "destinationPropertyPath": ["publication", "providerDate"]
+          "match-type": {
+            "Manuscript*": {
+              "destinationPropertyPath": ["manufacture", "providerDate"]
+            }
+          },
+          "destinationPropertyPath": ["publication", "providerDate"],
+          "sourceProperty": "_providerYear",
+          "matchValuePattern": "[0-9u]{4}"
         },
         "/def/enum/content/ContinuingResourceCurrentlyPublished": {
-          "sourceProperty": "publicationYear",
-          "append": "-",
-          "destinationPropertyPath": ["publication", "providerDate"]
+          "property": "temporalCoverageNote",
+          "sourceProperties": ["_providerYear", "_providerOtherYear"],
+          "matchValuePattern": "[0-9u]{4}",
+          "join": "-"
         },
-        "/def/enum/content/ContinuingResourceCeasedPublication": {
-          "joinProperties": ["publicationYear", "publicationOtherYear"],
-          "separator": "-",
-          "destinationPropertyPath": ["publication", "providerDate"]
-        },
+        "/def/enum/content/ContinuingResourceCeasedPublication":
+          "/def/enum/content/ContinuingResourceCurrentlyPublished",
         "/def/enum/content/MultipleDates": [
           {
             "sourceProperty": "publicationYear",
@@ -32,23 +36,68 @@
       },
       "_spec": [
         {
-          "source": [
-            {"008": "      s1977    sw                       "}
-          ],
-          "normalized": [
-            {"008": "      s1977    sw                       "},
-            {"264": {"ind1": " ", "ind2": "1", "subfields": [{"c": "1977"}]}}
-          ],
+          "source": {
+            "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+            "_providerYear":  "1977"
+          },
+          "normalized": {
+            "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+            "_providerYear":  "1977",
+            "publication": [
+              {
+                "@type": "ProviderEvent",
+                "providerDate":  "1977"
+              }
+            ]
+          },
           "result": {
-            "about": {
-              "publication": [
-                {
-                  "@type": "ProviderEvent",
-                  "providerDate":  "1977",
-                  "place": {"containedIn": {"@type": "Country", "@id": "/def/countries/sw"}}
-                }
-              ]
-            }
+            "publication": [
+              {
+                "@type": "ProviderEvent",
+                "providerDate":  "1977"
+              }
+            ]
+          }
+        },
+        {
+          "source": {
+            "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+            "_providerYear":  "1977",
+            "publication": [
+              {
+                "@type": "ProviderEvent",
+                "providerDate":  "1977"
+              }
+            ]
+          },
+          "result": {
+            "publication": [
+              {
+                "@type": "ProviderEvent",
+                "providerDate":  "1977"
+              }
+            ]
+          }
+        },
+        {
+          "source": {
+            "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+            "_providerYear":  "1977",
+            "publication": [
+              {
+                "@type": "ProviderEvent",
+                "providerDate":  "ca 1977"
+              }
+            ]
+          },
+          "result": {
+            "publication": [
+              {
+                "@type": "ProviderEvent",
+                "providerDate":  "1977",
+                "providerDateNote":  "ca 1977"
+              }
+            ]
           }
         }
       ]
@@ -60,10 +109,16 @@
     "fold publicationCountry into publication": {
     },
 
+    "sync carrierType from MARC with terms in RDA": {
+    },
+
+    "sync mediaTerm strings with carrierType": {
+    },
+
     "flattened hasFormat": {
     },
 
-    "combined multiple formats, identifiers and publications": {
+    "grouped hasFormat, hasPart, identifier, publication": {
     }
 
   },
