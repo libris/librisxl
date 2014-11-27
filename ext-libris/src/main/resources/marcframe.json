@@ -3971,9 +3971,53 @@
       "$b": {"property": "date"}
     },
 
-    "336": {},
-    "337": {},
-    "338": {},
+    "336": {
+      "addLink": "hasPart",
+      "resourceType": "CreativeWork",
+      "pendingResources": {
+        "_:contentType": {"link": "contentType", "resourceType": "Class"}
+      },
+      "$a": {"about": "_:contentType", "property": "label"},
+      "$b": {"about": "_:contentType", "property": "notation"},
+      "$2": {"about": "_:contentType", "property": "termGroup"},
+      "$8": {"about": "_:contentType", "property": "_groupID"}
+    },
+    "337": {
+      "pendingResources": {
+        "_:mediaType": {"link": "mediaType", "resourceType": "MediaType"}
+      },
+      "addLink": "hasFormat",
+      "resourceType": "Product",
+      "$a": {"about": "_:mediaType", "property": "label"},
+      "$b": {"about": "_:mediaType", "property": "notation"},
+      "$2": {"about": "_:mediaType", "property": "termGroup"},
+      "$8": {"about": "_:mediaType", "property": "_groupID"}
+    },
+    "338": {
+      "pendingResources": {
+        "_:carrierType": {"link": "carrierType", "resourceType": "CarrierType"}
+      },
+      "addLink": "hasFormat", "resourceType": "Product",
+      "$a": {"about": "_:carrierType", "property": "label"},
+      "$b": {"about": "_:carrierType", "property": "notation"},
+      "$2": {"about": "_:carrierType", "property": "termGroup"},
+      "$8": {"about": "_:carrierType", "property": "_groupID"},
+      "_spec": [
+        {
+          "source": {
+            "338": {"subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "rdacarrier"}]}
+          },
+          "result": {
+            "about": {
+              "hasFormat": [{
+                "@type": "Product",
+                "carrierType": {"@type": "CarrierType", "notation": "nc", "label": "volume", "termGroup": "rdacarrier"}
+              }]
+            }
+          }
+        }
+      ]
+    },
 
     "340": {},
     "342": {},
