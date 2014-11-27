@@ -34,12 +34,13 @@ class MySQLImporter extends BasicPlugin implements Importer {
     int numberOfThreads
     int startAt = 0
 
+    int addBatchSize = 6000
+
     int recordCount
     long startTime
 
-
     MySQLImporter(Map settings) {
-        this.numberOfThreads = settings.get("numberOfThreads", 50000)
+        this.numberOfThreads = settings.get("numberOfThreads", 1)
     }
 
     void bootstrap(String whelkId) {
@@ -53,11 +54,12 @@ class MySQLImporter extends BasicPlugin implements Importer {
         startTime = System.currentTimeMillis()
         cancelled = false
 
-        tickets = new Semaphore(numberOfThreads)
-        queue = Executors.newSingleThreadExecutor()
+        tickets = new Semaphore(20)
+        //queue = Executors.newSingleThreadExecutor()
+        queue = Executors.newFixedThreadPool(numberOfThreads)
 
-        log.info("Suspending camel during import.")
-        whelk.camelContext.suspend()
+        //log.info("Suspending camel during import.")
+        //whelk.camelContext.suspend()
 
         try {
 
@@ -82,10 +84,13 @@ class MySQLImporter extends BasicPlugin implements Importer {
             int recordId = startAt
             log.info("Starting loading at ID $recordId")
 
+            def recordMap
+
             for (;;) {
                 statement.setInt(1, recordId)
                 resultSet = statement.executeQuery()
-                def recordMap = [:]
+                log.debug("Reset statement with $recordId")
+                recordMap = [:]
 
                 int lastRecordId = recordId
                 while(resultSet.next()){
@@ -144,10 +149,12 @@ class MySQLImporter extends BasicPlugin implements Importer {
             close()
         }
 
+        /*
         queue.execute({
             log.info("Starting camel context ...")
             whelk.camelContext.resume()
         } as Runnable)
+        */
 
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
@@ -157,27 +164,42 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
 
     void addDocuments(String dataset, final Map recordMap) {
-        if (tickets.availablePermits() < 10) {
+        if (tickets.availablePermits() < 5) {
             log.info("Trying to acquire semaphore for adding to queue. ${tickets.availablePermits()} available.")
         }
         tickets.acquire()
         queue.execute({
             try {
-                def docs = []
-                log.debug("Converting MARC21 into JSONLD")
+                log.debug("Starting new conversion and storage thread.")
+                List docs = new ArrayList()
+                int batchCount = 0
+                int mapSize = recordMap.size()
                 recordMap.each { id, data ->
+                    if (docs.isEmpty()) {
+                        log.debug("Converting MARC21 into JSONLD")
+                    }
                     def entry = ["identifier":"/"+dataset+"/"+data.record.getControlfields("001").get(0).getData(),"dataset":dataset]
                     log.trace("Entry: ${entry}, Meta: ${data.meta}")
-                    def doc = enhancer.filter(marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta]))
+                    def doc = marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta])
+                    if (enhancer) {
+                        doc = enhancer.filter(doc)
+                    }
                     docs << doc
+                    if (++batchCount % addBatchSize == 0) {
+                        log.debug("Saving ${docs.size()} collected documents ($batchCount out of $mapSize).")
+                        whelk.bulkAdd(docs, docs.first().contentType)
+                        log.debug("Documents saved.")
+                        docs.clear()
+                    }
                 }
                 if (!docs.isEmpty()) {
-                    log.debug("Saving ${docs.size()} collected documents.")
+                    log.debug("Saving remaining ${docs.size()} collected documents.")
                     whelk.bulkAdd(docs, docs.first().contentType)
-                    log.debug("Documents saved.")
+                    log.debug("Documents remainder saved.")
                 }
             } finally {
                 tickets.release()
+                log.debug("HOORAY!! Queue event completed.")
             }
         } as Runnable)
     }

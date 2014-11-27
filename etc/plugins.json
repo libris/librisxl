@@ -237,7 +237,7 @@
         ],
         "_params" : {
             "preserveTimestamps" : true,
-            "numberOfThreads": 50000
+            "numberOfThreads": 5
         }
     },
     "oaipmhimporter2" : {
@@ -261,7 +261,7 @@
         ],
         "_params" : {
             "preserveTimestamps" : true,
-            "numberOfThreads": 5000
+            "numberOfThreads": 20
         }
     },
     "operator" : {

@@ -101,6 +101,7 @@ class BenchmarkOperator extends AbstractOperator {
     String fromStorage = null
     boolean withSerialization = false
     boolean showSpinner = false
+    int bmcount = 0
 
     @Override
     void setParameters(Map parameters) {
@@ -116,34 +117,30 @@ class BenchmarkOperator extends AbstractOperator {
         this.showSpinner = parameters.get("showSpinner", false)
     }
 
-    void doRunBenchmark(long startTime) {
+    void doRunBenchmark() {
         def storage = this.whelk.getStorage()
         log.info("Starting benchmark method on ${storage.id}")
         storage.benchmark()
     }
 
-    void doRun(long startTime) {
+    int getCount() { bmcount }
+
+    void doRun() {
+        bmcount = 0
         for (doc in whelk.loadAll(dataset, since, fromStorage)) {
             if (doc) {
-                if (count == 0) {
+                if (bmcount == 0) {
                     println "First document received at ${new Date()}"
                 }
-                count++
-                runningTime = System.currentTimeMillis() - startTime
+                bmcount++
                 if (withSerialization) {
                     doc.getData()
                 }
-            }
-            if (showSpinner) {
-                def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
-                Tools.printSpinner("Benchmarking from ${fromStorage ?: "primary storage"}. ${count} documents read sofar (${new Date()}). $velocityMsg", count)
             }
             if (cancelled) {
                 break
             }
         }
-        runningTime = System.currentTimeMillis() - startTime
-        log.info("$count documents read. Total time elapsed: ${runningTime/1000} seconds.")
     }
 
     @Override
@@ -164,12 +161,12 @@ class BenchmarkOperator extends AbstractOperator {
 abstract class AbstractOperator extends BasicPlugin implements Runnable {
     abstract String getOid()
     String dataset
-    int count = 0
     long runningTime = 0
     OperatorState operatorState = OperatorState.IDLE
     Whelk whelk
     boolean hasRun = false
     boolean cancelled = false
+    long startTime
     List<String> errorMessages
 
     void setParameters(Map parameters) {
@@ -186,28 +183,27 @@ abstract class AbstractOperator extends BasicPlugin implements Runnable {
             log.debug("Starting operation")
             operatorState=OperatorState.RUNNING
             cancelled = false
-            count = 0
             runningTime = 0
+            startTime = System.currentTimeMillis()
             errorMessages = []
-            doRun(System.currentTimeMillis())
+            doRun()
         } finally {
             operatorState=OperatorState.IDLE
+            runningTime = System.currentTimeMillis() - startTime
             hasRun = true
         }
     }
 
-    abstract void doRun(long startTime);
+    abstract void doRun()
+
+    abstract int getCount()
 
     Map getStatus() {
-        double rt = (runningTime > 0 ? runningTime/1000 : 0.0)
-        float velocity = 0.0
-        if (rt > 0) {
-            velocity = count/rt
-        }
         if (operatorState == OperatorState.IDLE) {
+            float velocity = (runningTime > 0 ? (1000*count)/runningTime : 0.0)
             def map = ["state":operatorState]
             if (hasRun) {
-                map.put("lastrun", ["dataset":dataset,"average_velocity":(velocity > 0 ? velocity : "unlimited"),"count":count,"runningTime":rt])
+                map.put("lastrun", ["dataset":dataset,"average_velocity":(velocity > 0 ? velocity : "unlimited"),"count":count,"runningTime":(runningTime/1000)])
                 if (errorMessages) {
                     map.get("lastrun").put("errors",errorMessages)
                 }
@@ -217,6 +213,11 @@ abstract class AbstractOperator extends BasicPlugin implements Runnable {
             }
             return map
         } else {
+            if (startTime > 0) {
+                runningTime = System.currentTimeMillis() - startTime
+            }
+            float velocity = (runningTime > 0 ? (1000*count)/runningTime : 0.0)
+            long rt = (System.currentTimeMillis() - this.startTime)/1000
             return ["state":operatorState,"dataset":dataset,"velocity":velocity,"count":count,"runningTime":rt, "errors":errorMessages]
         }
     }

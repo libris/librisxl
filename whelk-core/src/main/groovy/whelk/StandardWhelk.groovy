@@ -113,7 +113,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (!suitableStorages.isEmpty()) {
             log.debug("Notifying camel ...")
             for (doc in docs) {
-                doc = prepareDocument(doc)
+                //doc = prepareDocument(doc)
                 notifyCamel(doc, BULK_ADD_OPERATION, [:])
             }
         } else {

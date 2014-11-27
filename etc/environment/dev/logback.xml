@@ -15,6 +15,9 @@
   <logger name="org.apache.camel">
       <level value="info"/>
   </logger>
+  <logger name="org.apache.jena.fuseki">
+      <level value="warn"/>
+  </logger>
   <logger name="org.apache.camel.component.http4">
       <level value="info"/>
   </logger>
@@ -112,7 +115,7 @@
   <level value="info"/>
 </logger>
 <logger name="whelk.importer.MySQLImporter">
-  <level value="info"/>
+  <level value="debug"/>
 </logger>
 <logger name="whelk.importer.OaiPmhImporter">
   <level value="info"/>

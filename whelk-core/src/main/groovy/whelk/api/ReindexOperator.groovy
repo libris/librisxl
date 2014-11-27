@@ -24,6 +24,7 @@ class ReindexOperator extends AbstractOperator {
     String fromStorage = null
 
     boolean showSpinner = false
+    int reindexcount = 0
 
     @Override
     void setParameters(Map parameters) {
@@ -36,8 +37,11 @@ class ReindexOperator extends AbstractOperator {
         this.showSpinner = parameters.get("showSpinner", false)
     }
 
-    void doRun(long startTime) {
+    int getCount() { reindexcount }
+
+    void doRun() {
         String indexName = whelk.id
+        reindexcount = 0
 
         log.info("Starting reindexing.")
 
@@ -63,21 +67,15 @@ class ReindexOperator extends AbstractOperator {
                     }
                 }
                 whelk.notifyCamel(doc, Whelk.BULK_ADD_OPERATION, ["index":indexName])
-                count++
+                reindexcount++
             } else {
                 log.debug("Document ${doc.identifier} is deleted. Don't try to add it.")
                 whelk.notifyCamel(doc.identifier, Whelk.REMOVE_OPERATION, ["index":indexName])
-            }
-            runningTime = System.currentTimeMillis() - startTime
-            if (showSpinner) {
-                def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
-                Tools.printSpinner("Rebuilding from ${fromStorage}. ${count} documents rebuilt sofar. $velocityMsg", count)
             }
             if (cancelled) {
                 break
             }
         }
-        log.info("Reindexed $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds.")
         // TODO: Find a way to do this AFTER the indexing queue is empty.
         if (!dataset && whelk.index && !cancelled) {
             whelk.index.reMapAliases(whelk.id)
@@ -118,7 +116,8 @@ class RebuildMetaIndexOperator extends AbstractOperator {
         this.storageId = parameters.get("storage", null)?.first()
         log.debug("parameters: $parameters")
     }
-    void doRun(long startTime) {
+    int getCount() { 0 }
+    void doRun() {
         if (storageId) {
             def store = whelk.storages.find { it.id == storageId }
             if (store) {

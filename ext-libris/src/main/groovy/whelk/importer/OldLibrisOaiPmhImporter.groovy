@@ -37,7 +37,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
     ExecutorService queue
     Semaphore tickets
-    int numberOfThreads = 1000
+    int numberOfThreads = 1
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
@@ -77,7 +77,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
         def versioningSettings = [:]
 
-        tickets = new Semaphore(numberOfThreads)
+        tickets = new Semaphore(100)
 
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -89,7 +89,8 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                 //st.versioning = false
             }
         }
-        queue = Executors.newSingleThreadExecutor()
+        //queue = Executors.newSingleThreadExecutor()
+        queue = Executors.newFixedThreadPool(numberOfThreads)
         startTime = System.currentTimeMillis()
         URL url
         if (startResumptionToken) {
@@ -131,6 +132,8 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         } as Runnable)
         log.debug("Shutting down queue")
         queue.shutdown()
+        queue.awaitTermination(7, TimeUnit.DAYS)
+        log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
 
         return recordCount
     }

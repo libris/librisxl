@@ -67,7 +67,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     @Override
-    void bulkStore(List docs) {
+    void bulkStore(final List docs) {
         def breq = client.prepareBulk()
         for (doc in docs) {
             if (versioning) {
