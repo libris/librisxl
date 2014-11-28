@@ -5020,6 +5020,11 @@
       "$a": {"addProperty": "librisIIINumber"}
     },
     "084": {"inherit": "bib", "addLink": "callno"},
+
+    "562": {
+      "inherit": "bib"
+    },
+
     "600": {"inherit": "bib:100", "addLink": "subject"},
     "650": {"inherit": "bib:650"},
     "653": {},
