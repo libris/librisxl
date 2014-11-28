@@ -34,7 +34,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
     int numberOfThreads
     int startAt = 0
 
-    int addBatchSize = 6000
+    int addBatchSize = 5000
 
     int recordCount
     long startTime
@@ -90,42 +90,34 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 statement.setInt(1, recordId)
                 resultSet = statement.executeQuery()
                 log.debug("Reset statement with $recordId")
-                recordMap = [:]
 
                 int lastRecordId = recordId
                 while(resultSet.next()){
                     recordId  = resultSet.getInt(1)
                     MarcRecord record = Iso2709Deserializer.deserialize(resultSet.getBytes("data"))
 
-                    def recordMeta = recordMap.get(recordId, ["record":record, "meta": [:]]).get("meta")
+                    buildDocument(recordId, record, dataset, null)
 
                     if (dataset == "bib") {
                         int auth_id = resultSet.getInt("auth_id")
                         if (auth_id > 0) {
                             log.trace("Found auth_id $auth_id for $recordId Adding to oaipmhSetSpecs")
-                            recordMeta.get("oaipmhSetSpecs", []).add("authority:" + auth_id)
+                            buildDocument(recordId, record, dataset, "authority:"+auth_id)
                         }
                     } else if (dataset == "hold") {
                         int bib_id = resultSet.getInt("bib_id")
                         String sigel = resultSet.getString("shortname")
                         if (bib_id > 0) {
                             log.trace("Found bib_id $bib_id for $recordId Adding to oaipmhSetSpecs")
-                            recordMeta.get("oaipmhSetSpecs", []).add("bibid:" + bib_id)
+                            buildDocument(recordId, record, dataset, "bibid:" + bib_id)
                         }
                         if (sigel) {
                             log.trace("Found sigel $sigel for $recordId Adding to oaipmhSetSpecs")
-                            recordMeta.get("oaipmhSetSpecs", []).add("location:" + sigel)
+                            buildDocument(recordId, record, dataset, "location:" + sigel)
                         }
                     }
 
-                    recordMap.put(recordId, ["record": record, "meta": recordMeta])
-
-                    //log.info("id: $recordId  count: $recordCount")
-
-                    recordCount++
                 }
-
-                addDocuments(dataset, recordMap)
 
                 if (nrOfDocs > 0 && recordCount > nrOfDocs) {
                     log.info("Max docs reached. Breaking.")
@@ -133,12 +125,13 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 }
 
                 if (cancelled || lastRecordId == recordId) {
-                    recordCount--
                     log.info("Same id. Breaking.")
                     break
                 }
 
             }
+            log.debug("Clearing out remaining docs ...")
+            buildDocument(0, null, dataset, null)
 
         } catch(SQLException se) {
             log.error("SQL Exception", se)
@@ -162,44 +155,55 @@ class MySQLImporter extends BasicPlugin implements Importer {
         return recordCount
     }
 
+    List<Document> documentList = new ArrayList<Document>()
+    Document documentBuild = null
 
-    void addDocuments(String dataset, final Map recordMap) {
-        if (tickets.availablePermits() < 5) {
-            log.info("Trying to acquire semaphore for adding to queue. ${tickets.availablePermits()} available.")
+    void buildDocument(int id, MarcRecord record, String dataset, String oaipmhSetSpecValue) {
+        String identifier = "/"+dataset+"/"+id
+        if (documentBuild && (documentBuild.identifier != identifier || !record)) {
+            /*
+            log.info("dbi: ${documentBuild.identifier}")
+            log.info("id: ${identifier}")
+            log.info("record: $record")
+            */
+            if (!record) {
+                log.debug("Received flush list signal.")
+            } else {
+                log.trace("New document received. Adding last ($documentBuild.identifier}) to the queue")
+            }
+            documentList << documentBuild
+            if (documentList.size() % addBatchSize == 0 || !record) {
+                log.debug("documentList is full. Sending it to bulkAdd (open the trapdoor)")
+                addDocuments(documentList)
+                documentList = new ArrayList<Document>()
+            }
+            documentBuild = null
+        }
+        if (record && !documentBuild) {
+            log.trace("Creating new Document")
+            def entry = ["identifier":identifier,"dataset":dataset]
+            documentBuild = marcFrameConverter.doConvert(record, ["entry":entry,"meta":[:]])
+            if (enhancer) {
+                documentBuild = enhancer.filter(documentBuild)
+            }
+            recordCount++
+        }
+        if (documentBuild && oaipmhSetSpecValue) {
+            documentBuild.meta.get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
+        }
+    }
+    void addDocuments(final List<Document> docs) {
+        if (tickets.availablePermits() < 1) {
+            log.info("Queues are full at the moment. Waiting for some to finish.")
         }
         tickets.acquire()
         queue.execute({
             try {
-                log.debug("Starting new conversion and storage thread.")
-                List docs = new ArrayList()
-                int batchCount = 0
-                int mapSize = recordMap.size()
-                recordMap.each { id, data ->
-                    if (docs.isEmpty()) {
-                        log.debug("Converting MARC21 into JSONLD")
-                    }
-                    def entry = ["identifier":"/"+dataset+"/"+data.record.getControlfields("001").get(0).getData(),"dataset":dataset]
-                    log.trace("Entry: ${entry}, Meta: ${data.meta}")
-                    def doc = marcFrameConverter.doConvert(data.record, ["entry":entry,"meta":data.meta])
-                    if (enhancer) {
-                        doc = enhancer.filter(doc)
-                    }
-                    docs << doc
-                    if (++batchCount % addBatchSize == 0) {
-                        log.debug("Saving ${docs.size()} collected documents ($batchCount out of $mapSize).")
-                        whelk.bulkAdd(docs, docs.first().contentType)
-                        log.debug("Documents saved.")
-                        docs.clear()
-                    }
-                }
-                if (!docs.isEmpty()) {
-                    log.debug("Saving remaining ${docs.size()} collected documents.")
-                    whelk.bulkAdd(docs, docs.first().contentType)
-                    log.debug("Documents remainder saved.")
-                }
+                log.debug("Starting add of ${docs.size()} documents.")
+                whelk.bulkAdd(docs, docs.first().contentType)
             } finally {
                 tickets.release()
-                log.debug("HOORAY!! Queue event completed.")
+                log.debug("Add completed.")
             }
         } as Runnable)
     }

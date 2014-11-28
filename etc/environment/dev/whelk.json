@@ -3,7 +3,6 @@
         "WHELK_WORK_DIR": "work",
         "STORAGE_PATH": "work/storage",
         "ELASTIC_HOST": "localhost",
-        "ELASTIC_CLUSTER": "markuscluster",
         "ELASTIC_STORAGE_HOST": "localhost",
         "ELASTIC_PORT": 9300,
         "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],
@@ -25,6 +24,8 @@
     },
     "_plugins": {
         "_support": [
+            "elasticnode",
+            "fusekiserver",
             "activemqbroker"
             ],
         "_camel": [
@@ -32,6 +33,8 @@
             ],
         "_components": [
             "jsonldstorage",
+            "diskjsonldstorage",
+            "graphstore",
             "index"
         ]
     },
