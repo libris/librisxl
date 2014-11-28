@@ -20,18 +20,20 @@ class MarcFrameConverterSpec extends Specification {
 
     static {
         ['bib', 'auth', 'hold'].each { marcType ->
-            converter.config[marcType].each { code, field ->
+            converter.config[marcType].each { code, dfn ->
+                if (code in ['thingLink', 'postProcessing'])
+                    return
                 if (code == '000') {
-                    marcSkeletons[marcType] = field._specSource
-                    marcResults[marcType] = field._specResult
+                    marcSkeletons[marcType] = dfn._specSource
+                    marcResults[marcType] = dfn._specResult
                 }
-                if (field._specSource && field._specResult) {
-                    fieldSpecs << [source: field._specSource,
-                                   normalized: field._specNormalized,
-                                   result: field._specResult,
+                if (dfn._specSource && dfn._specResult) {
+                    fieldSpecs << [source: dfn._specSource,
+                                   normalized: dfn._specNormalized,
+                                   result: dfn._specResult,
                                    marcType: marcType, code: code]
-                } else if (field._spec instanceof List) {
-                    field._spec.each {
+                } else if (dfn._spec instanceof List) {
+                    dfn._spec.each {
                         if (it instanceof Map && it.source && it.result) {
                             fieldSpecs << [source: it.source,
                                            normalized: it.normalized,
@@ -76,7 +78,7 @@ class MarcFrameConverterSpec extends Specification {
             marc.fields << fieldSpec.source
         }
         when:
-        def result = converter.createFrame(marc)
+        def result = converter.runConvert(marc)
         def expected = deepcopy(marcResults[marcType])
         // test id generation separately
         expected['@id'] = result['@id']
@@ -135,7 +137,7 @@ class MarcFrameConverterSpec extends Specification {
             ]
         ]
         when:
-        def frame = converter.createFrame(marc)
+        def frame = converter.runConvert(marc)
         then:
         frame._marcUncompleted == [
             ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],

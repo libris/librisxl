@@ -1579,10 +1579,11 @@
 
   },
 
-  "thingLink": "about",
+  "bib": {
 
-  "postProcessing": {
-    "bib": [
+    "thingLink": "about",
+
+    "postProcessing": [
       {
         "type": "FoldLinkedProperty",
         "statusFlag": "_providerDateStatus",
@@ -1595,10 +1596,7 @@
           "Manuscript": "manufacture"
         }
       }
-    ]
-  },
-
-  "bib": {
+    ],
 
     "000": {
       "[5:6]": {
@@ -4703,6 +4701,9 @@
   },
 
   "auth": {
+
+    "thingLink": "about",
+
     "000": {
       "inherit": "bib",
       "[17:18]": {
@@ -5025,6 +5026,9 @@
   },
 
   "hold": {
+
+    "thingLink": "about",
+
     "000": {"inherit": "bib"},
     "001" : {"inherit": "bib"},
     "004": {"link": "holdingFor", "uriTemplate": "/resource/bib/{_}"},
