@@ -112,6 +112,8 @@ class MarcFrameConverter extends BasicFormatConverter {
 
 class MarcConversion {
 
+    static MARC_CATEGORIES = ['bib', 'auth', 'hold']
+
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
     String thingLink
@@ -122,14 +124,22 @@ class MarcConversion {
     Set primaryTags = new HashSet()
 
     URIMinter uriMinter
+    Map<String, List<MarcFramePostProcStep>> postProcSteps = [:]
 
     MarcConversion(Map config, URIMinter uriMinter, Map tokenMaps) {
         thingLink = config.thingLink
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps
-        ['bib', 'auth', 'hold'].each {
-            buildHandlers(config, it)
+        def loader = getClass().classLoader
+        MARC_CATEGORIES.each { marcCat ->
+            buildHandlers(config, marcCat)
+            postProcSteps[marcCat] = config.postProcessing[marcCat].collect {
+                switch (it.type) {
+                    case 'FoldLinkedProperty': new FoldLinkedPropertyStep(it); break
+                    case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(it); break
+                }
+            }
         }
     }
 
@@ -288,6 +298,10 @@ class MarcConversion {
             }
         }
 
+        postProcSteps[marcCat].each {
+            it.modify(record, thing)
+        }
+
         return record
     }
 
@@ -315,11 +329,16 @@ class MarcConversion {
     }
 
     Map revert(data) {
+        def marcCat = revertMarcCategory(data)
+        def fieldHandlers = marcHandlers[marcCat]
+
+        postProcSteps[marcCat].each {
+            it.unmodify(data, data[thingLink])
+        }
+
         def marc = [:]
         def fields = []
         marc['fields'] = fields
-        def marcCat = revertMarcCategory(data)
-        def fieldHandlers = marcHandlers[marcCat]
         fieldHandlers.each { tag, handler ->
             def value = handler.revert(data)
             if (tag == "000") {

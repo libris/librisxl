@@ -1581,6 +1581,23 @@
 
   "thingLink": "about",
 
+  "postProcessing": {
+    "bib": [
+      {
+        "type": "FoldLinkedProperty",
+        "statusFlag": "_providerDateStatus",
+        "statusFlagValue": "/def/enum/content/SingleKnownDateProbableDate",
+        "sourceProperty": "_providerYear",
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "providerDate",
+        "defaultLink": "publication",
+        "typeLinkMap": {
+          "Manuscript": "manufacture"
+        }
+      }
+    ]
+  },
+
   "bib": {
 
     "000": {
