@@ -1594,7 +1594,83 @@
         "defaultLink": "publication",
         "typeLinkMap": {
           "Manuscript": "manufacture"
-        }
+        },
+        "_name": "fold publication date",
+        "_spec": [
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977"
+            },
+            "normalized": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"providerDate": "1977"} ]
+            }
+          },
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+            }
+          },
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "ca 1977"} ]
+            },
+            "result": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [
+                {
+                  "@type": "ProviderEvent",
+                  "providerDate": "ca 1977"
+                }
+              ]
+            }
+          },
+          {
+            "source": {
+              "@type": ["ManuscriptText"],
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977"
+            },
+            "result": {
+              "@type": ["ManuscriptText"],
+              "manufacture": [ {"providerDate": "1977"} ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "FoldJoinedProperties",
+        "statusFlag": "_providerDateStatus",
+        "statusFlagValue": "/def/enum/content/ContinuingResourceCurrentlyPublished",
+        "sourceProperties": ["_providerYear", "_providerOtherYear"],
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "temporalCoverageNote",
+        "separator": "-",
+        "_spec": [
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/ContinuingResourceCurrentlyPublished"},
+              "_providerYear": "1977",
+              "_providerOtherYear": "9999"
+            },
+            "result": {
+              "temporalCoverageNote": "1977-"
+            }
+          }
+        ]
       }
     ],
 

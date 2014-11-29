@@ -53,7 +53,13 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
                 return
             }
         }
-        thing[link] = [(property): value]
+        if (thing[link]) {
+            return
+        }
+        thing.remove(statusFlag)
+        thing.remove(sourceProperty)
+        thing[link] = []
+        thing[link] << [(property): value]
     }
 
     void unmodify(Map record, Map thing) {

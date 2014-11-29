@@ -2,117 +2,19 @@
 
   "bib": {
 
-    "fold publication date": {
-      "matchProperty": "_providerDateStatus",
-      "onValue": {
-        "/def/enum/content/SingleKnownDateProbableDate": {
-          "match-type": {
-            "Manuscript*": {
-              "destinationPropertyPath": ["manufacture", "providerDate"]
-            }
-          },
-          "destinationPropertyPath": ["publication", "providerDate"],
-          "sourceProperty": "_providerYear",
-          "matchValuePattern": "[0-9u]{4}"
-        },
-        "/def/enum/content/ContinuingResourceCurrentlyPublished": {
-          "property": "temporalCoverageNote",
-          "sourceProperties": ["_providerYear", "_providerOtherYear"],
-          "matchValuePattern": "[0-9u]{4}",
-          "join": "-"
-        },
-        "/def/enum/content/ContinuingResourceCeasedPublication":
-          "/def/enum/content/ContinuingResourceCurrentlyPublished",
-        "/def/enum/content/MultipleDates": [
-          {
-            "sourceProperty": "publicationYear",
-            "destinationPropertyPath": ["publication", 0, "providerDate"]
-          },
-          {
-            "sourceProperty": "publicationOtherYear",
-            "destinationPropertyPath": ["publication", -1, "providerDate"]
-          }
-        ]
-      },
-      "_spec": [
-        {
-          "source": {
-            "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-            "_providerYear":  "1977"
-          },
-          "normalized": {
-            "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-            "_providerYear":  "1977",
-            "publication": [
-              {
-                "@type": "ProviderEvent",
-                "providerDate":  "1977"
-              }
-            ]
-          },
-          "result": {
-            "publication": [
-              {
-                "@type": "ProviderEvent",
-                "providerDate":  "1977"
-              }
-            ]
-          }
-        },
-        {
-          "source": {
-            "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-            "_providerYear":  "1977",
-            "publication": [
-              {
-                "@type": "ProviderEvent",
-                "providerDate":  "1977"
-              }
-            ]
-          },
-          "result": {
-            "publication": [
-              {
-                "@type": "ProviderEvent",
-                "providerDate":  "1977"
-              }
-            ]
-          }
-        },
-        {
-          "source": {
-            "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-            "_providerYear":  "1977",
-            "publication": [
-              {
-                "@type": "ProviderEvent",
-                "providerDate":  "ca 1977"
-              }
-            ]
-          },
-          "result": {
-            "publication": [
-              {
-                "@type": "ProviderEvent",
-                "providerDate":  "1977",
-                "providerDateNote":  "ca 1977"
-              }
-            ]
-          }
-        }
-      ]
-    },
-
     "fold originalLanguage into exampleOfWork": {
     },
 
     "fold publicationCountry into publication": {
     },
 
-    "sync carrierType from MARC with terms in RDA": {
+    "flatten qualifiedInfluence with roles to influencedBy and other links": {
     },
 
     "sync mediaTerm strings with carrierType": {
+    },
+
+    "sync carrierType from MARC with terms in RDA": {
     },
 
     "flattened hasFormat": {

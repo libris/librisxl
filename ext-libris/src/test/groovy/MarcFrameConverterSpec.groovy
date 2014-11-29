@@ -11,18 +11,31 @@ class MarcFrameConverterSpec extends Specification {
         void initialize(URIMinter uriMinter, Map config) {
             super.initialize(uriMinter, config)
             this.config = config
+            super.conversion.doPostProcessing = false
         }
     }
 
-    static List fieldSpecs = []
+    static fieldSpecs = []
     static marcSkeletons = [:]
     static marcResults = [:]
 
+    static postProcStepSpecs = []
+
     static {
         ['bib', 'auth', 'hold'].each { marcType ->
+            def ruleSets = converter.conversion.marcRuleSets
             converter.config[marcType].each { code, dfn ->
-                if (code in ['thingLink', 'postProcessing'])
+                if (code == 'thingLink')
                     return
+                if (code == 'postProcessing') {
+                    ruleSets[marcType].postProcSteps.eachWithIndex { step, i ->
+                        dfn[i]._spec.each {
+                            postProcStepSpecs << [step: step, spec: it]
+                        }
+                    }
+                    return
+                }
+
                 if (code == '000') {
                     marcSkeletons[marcType] = dfn._specSource
                     marcResults[marcType] = dfn._specResult
@@ -150,6 +163,16 @@ class MarcFrameConverterSpec extends Specification {
         frame._marcFailedFixedFields == [
             "008": ["38": "E", "39": "E", "29": "E", "30": "E", "31": "E", "34": "E"]
         ]
+    }
+
+    def "should handle postprocessing"() {
+        when:
+        def data = deepcopy(item.spec.source)
+        item.step.modify(null, data)
+        then:
+        data == item.spec.result
+        where:
+        item << postProcStepSpecs
     }
 
     private deepcopy(orig) {

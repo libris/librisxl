@@ -121,6 +121,7 @@ class MarcConversion {
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
     Map<String, MarcRuleSet> marcRuleSets = [:]
+    boolean doPostProcessing = true
     Map marcTypeMap = [:]
     Map tokenMaps
 
@@ -221,8 +222,10 @@ class MarcConversion {
             record._marcFailedFixedFields = marcRemains.failedFixedFields
         }
 
-        marcRuleSet.postProcSteps.each {
-            it.modify(record, thing)
+        if (doPostProcessing) {
+            marcRuleSet.postProcSteps.each {
+                it.modify(record, thing)
+            }
         }
 
         // TODO: make this configurable
@@ -275,8 +278,10 @@ class MarcConversion {
     Map revert(data) {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
-        marcRuleSet.postProcSteps.each {
-            it.unmodify(data, data[marcRuleSet.thingLink])
+        if (doPostProcessing) {
+            marcRuleSet.postProcSteps.each {
+                it.unmodify(data, data[marcRuleSet.thingLink])
+            }
         }
 
         def marc = [:]
