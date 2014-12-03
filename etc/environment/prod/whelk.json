@@ -1,9 +1,8 @@
 {
     "_properties": {
         "WHELK_WORK_DIR": "/var/run/whelk",
-        "STORAGE_PATH": "/ssd/storage",
-        "ELASTIC_HOST": "localhost",
-        "ELASTIC_STORAGE_HOST": "localhost",
+        "ELASTIC_HOST": "hp01.libris.kb.se",
+        "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
         "ELASTIC_CLUSTER": "whelks",
         "ELASTIC_PORT": 9300,
         "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],

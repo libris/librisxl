@@ -573,7 +573,7 @@
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes": ["application/ld+json"],
-            "versioning" : true
+            "versioning" : false
         }
     },
     "marcxmlstorage": {

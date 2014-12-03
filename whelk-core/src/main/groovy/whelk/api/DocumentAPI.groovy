@@ -25,6 +25,9 @@ class DocumentAPI extends BasicAPI {
         if (path.endsWith("/meta")) {
             return [path[0 .. -6], DisplayMode.META]
         }
+        if (path.endsWith("/_raw")) {
+            return [path[0 .. -6], DisplayMode.RAW]
+        }
         return [path, DisplayMode.DOCUMENT]
     }
     String getCleanPath(List pathVars) {
@@ -120,9 +123,11 @@ class DocumentAPI extends BasicAPI {
 
             if (d && (mode== DisplayMode.META || !d.entry['deleted'])) {
 
-                for (filter in getFiltersFor(d)) {
-                    log.debug("Filtering using ${filter.id} for ${d.identifier}")
-                    d = filter.filter(d)
+                if (mode == DisplayMode.DOCUMENT) {
+                    for (filter in getFiltersFor(d)) {
+                        log.debug("Filtering using ${filter.id} for ${d.identifier}")
+                        d = filter.filter(d)
+                    }
                 }
                 if (mode == DisplayMode.META) {
                     def versions = whelk.getVersions(d.identifier)
@@ -259,5 +264,5 @@ class DocumentAPI extends BasicAPI {
 }
 
 enum DisplayMode {
-DOCUMENT, META
+DOCUMENT, META, RAW
 }

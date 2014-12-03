@@ -54,6 +54,9 @@ class MySQLImporter extends BasicPlugin implements Importer {
         startTime = System.currentTimeMillis()
         cancelled = false
 
+        int sqlLimit = 6000
+        if (nrOfDocs > 0 && nrOfDocs < sqlLimit) { sqlLimit = nrOfDocs }
+
         tickets = new Semaphore(20)
         //queue = Executors.newSingleThreadExecutor()
         queue = Executors.newFixedThreadPool(numberOfThreads)
@@ -70,11 +73,11 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
             if (dataset == "bib") {
                 log.info("Creating bib load statement.")
-                statement = conn.prepareStatement("SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id LIMIT 6000")
+                statement = conn.prepareStatement("SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id LIMIT $sqlLimit")
             }
             if (dataset == "hold") {
                 log.info("Creating hold load statement.")
-                statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id, shortname FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id LIMIT 6000")
+                statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id, shortname FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id LIMIT $sqlLimit")
             }
 
             if (!statement) {
@@ -84,7 +87,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
             int recordId = startAt
             log.info("Starting loading at ID $recordId")
 
-            def recordMap
+            MarcRecord record = null
 
             for (;;) {
                 statement.setInt(1, recordId)
@@ -94,7 +97,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 int lastRecordId = recordId
                 while(resultSet.next()){
                     recordId  = resultSet.getInt(1)
-                    MarcRecord record = Iso2709Deserializer.deserialize(resultSet.getBytes("data"))
+                    record = Iso2709Deserializer.deserialize(resultSet.getBytes("data"))
 
                     buildDocument(recordId, record, dataset, null)
 
@@ -131,7 +134,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
             }
             log.debug("Clearing out remaining docs ...")
-            buildDocument(0, null, dataset, null)
+            buildDocument(0, record, dataset, null)
 
         } catch(SQLException se) {
             log.error("SQL Exception", se)
@@ -156,42 +159,69 @@ class MySQLImporter extends BasicPlugin implements Importer {
     }
 
     List<Document> documentList = new ArrayList<Document>()
-    Document documentBuild = null
+    Map buildingMetaRecord = [:]
+    MarcRecord lastRecord
+    Stack<Future> futures = new Stack<Future>()
 
     void buildDocument(int id, MarcRecord record, String dataset, String oaipmhSetSpecValue) {
         String identifier = "/"+dataset+"/"+id
-        if (documentBuild && (documentBuild.identifier != identifier || !record)) {
-            /*
-            log.info("dbi: ${documentBuild.identifier}")
-            log.info("id: ${identifier}")
-            log.info("record: $record")
-            */
-            if (!record) {
+        while (!futures.isEmpty()) {
+            log.debug("Harvesting futures.")
+            documentList << futures.pop().get()
+        }
+        if (documentList.size() >= addBatchSize || !record) {
+            log.debug("documentList is full. Sending it to bulkAdd (open the trapdoor)")
+            whelk.bulkAdd(documentList, documentList.first().contentType)
+            log.debug("documents added.")
+            documentList = new ArrayList<Document>()
+        }
+
+        if (lastRecord && (buildingMetaRecord?.identifier != identifier || id == 0)) {
+            if (id == 0) {
                 log.debug("Received flush list signal.")
             } else {
-                log.trace("New document received. Adding last ($documentBuild.identifier}) to the queue")
-            }
-            documentList << documentBuild
-            if (documentList.size() % addBatchSize == 0 || !record) {
-                log.debug("documentList is full. Sending it to bulkAdd (open the trapdoor)")
-                addDocuments(documentList)
-                documentList = new ArrayList<Document>()
-            }
-            documentBuild = null
-        }
-        if (record && !documentBuild) {
-            log.trace("Creating new Document")
-            def entry = ["identifier":identifier,"dataset":dataset]
-            documentBuild = marcFrameConverter.doConvert(record, ["entry":entry,"meta":[:]])
-            if (enhancer) {
-                documentBuild = enhancer.filter(documentBuild)
+                log.trace("New document received. Adding last ($buildingMetaRecord.identifier}) to the queue")
             }
             recordCount++
+            // Add converter to queue
+            futures.push(queue.submit(new MarcDocumentConverter(marcFrameConverter, enhancer, record, buildingMetaRecord)))
+            buildingMetaRecord.clear()
         }
-        if (documentBuild && oaipmhSetSpecValue) {
-            documentBuild.meta.get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
+        if (oaipmhSetSpecValue) {
+            buildingMetaRecord.get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
+        }
+        lastRecord = record
+        buildingMetaRecord["identifier"] = identifier
+    }
+
+    class MarcDocumentConverter implements Callable<Document> {
+
+        private MarcRecord record
+        private Map meta
+        private MarcFrameConverter converter
+        private Filter filter
+
+
+        MarcDocumentConverter(FormatConverter c, Filter f, final MarcRecord mr, final Map m) {
+            this.record = mr
+            this.meta = m
+            this.converter = c
+            this.filter = f
+        }
+
+        @Override
+        Document call() {
+            def entry = ["identifier":meta.identifier,"dataset":dataset]
+            meta.remove("identifier")
+            Document doc = converter.doConvert(lastRecord, ["entry":entry,"meta":meta])
+            if (filter) {
+                doc = filter.filter(doc)
+            }
+            return doc
         }
     }
+
+    @Deprecated
     void addDocuments(final List<Document> docs) {
         if (tickets.availablePermits() < 1) {
             log.info("Queues are full at the moment. Waiting for some to finish.")
