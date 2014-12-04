@@ -1,28 +1,26 @@
 package whelk;
 
-import org.apache.commons.codec.binary.Base64;
-
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.json.simple.JSONObject;
 
-import javax.crypto.*;
-import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.security.Key;
+import java.io.InputStreamReader;
 import java.util.*;
 
-/**
- * Created by Markus Holm on 2014-10-28.
- */
 public class AuthenticationFilter implements Filter {
 
     private ObjectMapper mapper = null;
     private List<String> supportedMethods;
-    private String encryptionKey = null;
+    private String url = null;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -38,8 +36,11 @@ public class AuthenticationFilter implements Filter {
 
         if (isApiCall(httpRequest) && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             try {
-                String toBeEncrtypted = httpRequest.getHeader("xlkey");
-                String json = decrypt(toBeEncrtypted);
+                String token = httpRequest.getHeader("xlkey");
+                String json = verifyToken(token);
+                if (json == null || json.isEmpty()) {
+                    httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR, "Content is null");
+                }
 
                 if (mapper == null) {
                     mapper = new ObjectMapper();
@@ -59,6 +60,34 @@ public class AuthenticationFilter implements Filter {
         }else {
             chain.doFilter(request, response);
         }
+    }
+
+    private String verifyToken(String token) {
+
+        try {
+
+            HttpClient client = HttpClientBuilder.create().build();
+            HttpGet get = new HttpGet(getVerifyUrl());
+
+            get.setHeader("Authorization", "Bearer " + token);
+            HttpResponse response = client.execute(get);
+
+            BufferedReader rd = new BufferedReader(
+                    new InputStreamReader(response.getEntity().getContent()));
+
+            StringBuffer result = new StringBuffer();
+            String line = "";
+            while ((line = rd.readLine()) != null) {
+                result.append(line);
+            }
+            return result.toString();
+
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+
     }
 
     @Override
@@ -97,26 +126,16 @@ public class AuthenticationFilter implements Filter {
         return null;
     }
 
-    private String getEncryptionKey() {
-        if (encryptionKey == null) {
+    private String getVerifyUrl() {
+        if (url == null) {
             Properties properties = new Properties();
             try {
                 properties.load(this.getClass().getClassLoader().getResourceAsStream("api.properties"));
             } catch (IOException ioe) {
                 throw new RuntimeException("Failed to load api properties.", ioe);
             }
-            encryptionKey = properties.getProperty("encryptionkey");
+            url = properties.getProperty("verifyurl");
         }
-        //System.out.println("Encryptionkey: " + encryptionKey);
-        return encryptionKey;
-    }
-
-    private String decrypt(String encrypted) throws Exception{
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding");
-        Key aesKey = new SecretKeySpec(getEncryptionKey().getBytes("UTF-8"), "AES");
-        cipher.init(Cipher.DECRYPT_MODE, aesKey);
-        byte[] decodeValue = Base64.decodeBase64(encrypted);
-        byte[] decryptValue = cipher.doFinal(decodeValue);
-        return new String(decryptValue, "UTF-8");
+        return url;
     }
 }
