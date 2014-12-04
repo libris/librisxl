@@ -218,8 +218,10 @@ class MarcConversion {
         def thing = [:]
         record[thingLink] = thing
 
-        def entityMap = ["?record": record, marcRemains: marcRemains]
-        entityMap['?instance'] = thing
+        def state = [
+            entityMap: ['?record': record, '?instance': thing],
+            marcRemains: marcRemains
+        ]
 
         def leader = marcSource.leader
         def marcCat = getMarcCategory(leader)
@@ -248,12 +250,12 @@ class MarcConversion {
             }
         }
 
-        fieldHandlers["000"].convert(sourceMap, leader, entityMap)
+        fieldHandlers["000"].convert(state, sourceMap, leader)
 
-        processFields(fieldHandlers, sourceMap, preprocFields, entityMap)
+        processFields(state, fieldHandlers, sourceMap, preprocFields)
 
-        processFields(fieldHandlers, sourceMap, primaryFields, entityMap)
-        processFields(fieldHandlers, sourceMap, otherFields, entityMap)
+        processFields(state, fieldHandlers, sourceMap, primaryFields)
+        processFields(state, fieldHandlers, sourceMap, otherFields)
 
         if (marcRemains.uncompleted.size() > 0) {
             record._marcUncompleted = marcRemains.uncompleted
@@ -289,21 +291,25 @@ class MarcConversion {
         return record
     }
 
-    void processFields(fieldHandlers, sourceMap, fields, entityMap) {
+    void processFields(state, fieldHandlers, sourceMap, fields) {
         fields.each { field ->
             try {
-                def ok = false
+                def result = null
                 field.each { tag, value ->
                     def handler = fieldHandlers[tag]
                     if (handler) {
-                        ok = handler.convert(sourceMap, value, entityMap)
+                        result = handler.convert(state, sourceMap, value)
                     }
                 }
-                if (!ok) {
-                    entityMap.marcRemains.uncompleted << field
+                if (!result || !result.ok) {
+                    field = field.clone()
+                    if (result && result.unhandled) {
+                        field['_unhandled'] = result.unhandled as List
+                    }
+                    state.marcRemains.uncompleted << field
                 }
             } catch (MalformedFieldValueException e) {
-                entityMap.marcRemains.broken << field
+                state.marcRemains.broken << field
             }
         }
     }
@@ -388,6 +394,9 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     boolean repeatable = false
     String resourceType
 
+    static final ConvertResult OK = new ConvertResult(true)
+    static final ConvertResult FAIL = new ConvertResult(false)
+
     BaseMarcFieldHandler(conversion, tag, fieldDfn) {
         this.conversion = conversion
         this.tag = tag
@@ -405,7 +414,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         resourceType = fieldDfn.resourceType
     }
 
-    abstract boolean convert(sourceMap, value, entityMap)
+    abstract ConvertResult convert(state, sourceMap, value)
 
     abstract def revert(Map data)
 
@@ -426,6 +435,18 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         return ent
     }
 
+}
+
+class ConvertResult {
+    boolean ok
+    Set unhandled = Collections.emptySet()
+    ConvertResult(boolean ok) {
+        this.ok = ok
+    }
+    ConvertResult(Set unhandled) {
+        this.ok = unhandled.size() == 0
+        this.unhandled = unhandled
+    }
 }
 
 class MarcFixedFieldHandler {
@@ -452,11 +473,11 @@ class MarcFixedFieldHandler {
         columns.sort { it.start }
     }
 
-    boolean convert(sourceMap, value, entityMap) {
+    ConvertResult convert(state, sourceMap, value) {
         def success = true
-        def failedFixedFields = entityMap.marcRemains.failedFixedFields
+        def failedFixedFields = state.marcRemains.failedFixedFields
         for (col in columns) {
-            if (!col.convert(sourceMap, value, entityMap)) {
+            if (!col.convert(state, sourceMap, value).ok) {
                 success = false
                 def unmapped = failedFixedFields[tag]
                 if (unmapped == null) {
@@ -469,7 +490,7 @@ class MarcFixedFieldHandler {
                 unmapped[key] = col.getToken(value)
             }
         }
-        return success
+        return new ConvertResult(success)
     }
 
     def revert(Map data) {
@@ -508,16 +529,16 @@ class MarcFixedFieldHandler {
                 return value.substring(start)
             return value.substring(start, end)
         }
-        boolean convert(sourceMap, value, entityMap) {
+        ConvertResult convert(state, sourceMap, value) {
             def token = getToken(value)
             if (token == "")
-                return true
+                return OK
             if (token == defaultValue)
-                return true
+                return OK
             boolean isNothing = token.find { it != FIXED_NONE && it != FIXED_UNDEF } == null
             if (isNothing)
-                return true
-            return super.convert(sourceMap, token, entityMap)
+                return OK
+            return super.convert(state, sourceMap, token)
         }
         def revert(Map data) {
             def v = super.revert(data)
@@ -590,7 +611,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         handlerMap[token] = new MarcFixedFieldHandler(conversion, tag, dfn)
     }
 
-    String getToken(sourceMap, value, entityMap) {
+    String getToken(sourceMap, value) {
         if (useRecTypeBibLevel) {
             def typeOfRecord = conversion.getTypeOfRecord(sourceMap.leader)
             def bibLevel = conversion.getBibLevel(sourceMap.leader)
@@ -602,29 +623,31 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         }
     }
 
-    boolean convert(sourceMap, value, entityMap) {
-        def token = getToken(sourceMap, value, entityMap)
+    ConvertResult convert(state, sourceMap, value) {
+        def token = getToken(sourceMap, value)
         def converter = handlerMap[token]
         if (converter == null)
-            return false
+            return FAIL
 
         def addLink = this.link
         if (sourceMap[tag].size() > 1 && repeatedAddLink) {
             addLink = repeatedAddLink
         }
+        def entityMap = state.entityMap
         if (addLink) {
             def ent = entityMap['?instance']
             def newEnt = newEntity(null)
             addValue(ent, addLink, newEnt, true)
-            entityMap = entityMap.clone()
-            entityMap['?instance'] = newEnt
+            state = state.clone()
+            state.entityMap = entityMap.clone()
+            state.entityMap['?instance'] = newEnt
         }
 
         def baseOk = true
         if (baseConverter)
-            baseOk = baseConverter.convert(sourceMap, value, entityMap)
-        def ok = converter.convert(sourceMap, value, entityMap)
-        return baseOk && ok
+            baseOk = baseConverter.convert(state, sourceMap, value)
+        def ok = converter.convert(state, sourceMap, value).ok
+        return new ConvertResult(baseOk && ok)
     }
 
     def revert(Map data) {
@@ -700,16 +723,16 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         //}
     }
 
-    boolean convert(sourceMap, value, entityMap) {
+    ConvertResult convert(state, sourceMap, value) {
         if (ignored || !(property || link))
             return
 
         if (tokenMap) {
             def mapped = tokenMap[value] ?: tokenMap[value.toLowerCase()]
             if (mapped == null) {
-                return tokenMap.containsKey(value)
+                return new ConvertResult(tokenMap.containsKey(value))
             } else if (mapped == false) {
-                return true
+                return OK
             } else {
                 value = mapped
             }
@@ -722,14 +745,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 ).format(DT_FORMAT)
         }
 
-        def ent = entityMap[aboutEntityName]
+        def ent = state.entityMap[aboutEntityName]
         if (definesDomainEntityType) {
             ent['@type'] = definesDomainEntityType
         }
 
 
         if (ent == null)
-            return false
+            return FAIL
         if (link) {
             def newEnt = newEntity(resourceType)
             addValue(ent, link, newEnt, repeatable)
@@ -747,7 +770,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             addValue(ent, property, value, repeatable)
         }
 
-        return true
+        return OK
     }
 
     def revert(Map data) {
@@ -869,14 +892,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         subfields[code] = dfn? new MarcSubFieldHandler(this, code, dfn) : null
     }
 
-    boolean convert(sourceMap, value, entityMap) {
+    ConvertResult convert(state, sourceMap, value) {
 
         if (!(value instanceof Map)) {
             throw new MalformedFieldValueException()
         }
 
-        def aboutEntity = entityMap[aboutEntityName]
-        if (aboutEntity == null) return false
+        def aboutEntity = state.entityMap[aboutEntityName]
+        if (aboutEntity == null)
+            return FAIL
 
         if (definesDomainEntityType) {
             aboutEntity['@type'] = definesDomainEntityType
@@ -886,7 +910,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def handler = rule.getHandler(aboutEntity, value)
             if (handler) {
                 // TODO: resolve combined config
-                return handler.convert(sourceMap, value, entityMap)
+                return handler.convert(state, sourceMap, value)
             }
         }
 
@@ -905,11 +929,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def localEntites = [:]
 
-        // TODO: track unhandled indicators
-        if (ind1)
-            ind1.convertSubValue(value.ind1, entity, uriTemplateParams, localEntites)
-        if (ind2)
-            ind2.convertSubValue(value.ind2, entity, uriTemplateParams, localEntites)
+        [ind1: ind1, ind2: ind2].each { indKey, handler ->
+            if (!handler)
+                return
+            def ok = handler.convertSubValue(
+                    value[indKey], entity, uriTemplateParams, localEntites)
+            if (!ok && handler.marcDefault == null) {
+                unhandled << indKey
+            }
+        }
 
         value.subfields.each {
             it.each { code, subVal ->
@@ -917,7 +945,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 def ok = false
                 if (subDfn) {
                     def ent = (subDfn.aboutEntityName)?
-                        entityMap[subDfn.aboutEntityName] :
+                        state.entityMap[subDfn.aboutEntityName] :
                         (linkage.codeLinkSplits[code] ?: entity)
                     if ((subDfn.requiresI1 && subDfn.requiresI1 != value.ind1) ||
                         (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
@@ -962,7 +990,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        return unhandled.size() == 0
+        return new ConvertResult(unhandled)
     }
 
     def computeLinkage(sourceMap, entity, value, handled) {
@@ -1257,6 +1285,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String rejoin
     boolean allowEmpty
     Map defaults
+    String definedElsewhereToken
     String marcDefault
     boolean required = false
     String requiresI1
@@ -1298,6 +1327,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         defaults = subDfn.defaults
         marcDefault = subDfn.marcDefault
+        definedElsewhereToken = subDfn.definedElsewhereToken
         requiresI1 = subDfn['requires-i1']
         requiresI2 = subDfn['requires-i2']
         itemPos = subDfn.itemPos
@@ -1311,9 +1341,13 @@ class MarcSubFieldHandler extends ConversionPart {
             subVal = clearChars(subVal)
 
         if (tokenMap) {
+            if (subVal == definedElsewhereToken) {
+                return true
+            }
             subVal = tokenMap[subVal]
-            if (subVal == null)
+            if (subVal == null) {
                 return false
+            }
         }
 
         if (about) {

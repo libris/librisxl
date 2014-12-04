@@ -11,6 +11,8 @@ import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.model.dataformat.JsonLibrary
 import org.apache.camel.processor.aggregate.*
 
+import org.apache.camel.component.http4.*
+
 import org.codehaus.jackson.map.ObjectMapper
 
 class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
@@ -29,14 +31,16 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     String indexMessageQueue
     String bulkIndexMessageQueue
     String graphstoreMessageQueue
+    boolean exportToAPIX = false
 
     WhelkRouteBuilder(Map settings) {
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
         graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
         batchTimeout = settings.get("batchTimeout", batchTimeout)
         indexMessageQueue = settings.get("indexMessageQueue")
-        bulkIndexMessageQueue = settings.get("bulkIndexMessageQueue", indexMessageQueue)
+        bulkIndexMessageQueue = settings.get("bulkIndexMessageQueue")
         graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
+        exportToAPIX = settings.get("exportToAPIX", exportToAPIX)
     }
 
     void configure() {
@@ -60,9 +64,28 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             eligbleMQs.add(graphstoreMessageQueue)
             eligbleBulkMQs.add(graphstoreMessageQueue)
         }
+        if (exportToAPIX) {
+            eligbleMQs.add("activemq:apix.queue")
+            eligbleBulkMQs.add("activemq:apix.queue")
+        }
 
-        from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
-        from("direct:bulk_"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleBulkMQs as String[])
+        onException(HttpOperationFailedException.class)
+            .handled(true)
+            .bean(new HttpFailedBean(), "handle")
+            .choice()
+                .when(header("retry"))
+                    .to("direct:retries")
+                .otherwise()
+                    .end()
+
+        from("direct:retries").delay(10000).routingSlip(header("next"))
+
+        if (eligbleMQs.size() > 0) {
+            from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
+        }
+        if (eligbleBulkMQs.size() > 0) {
+            from("direct:bulk_"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleBulkMQs as String[])
+        }
 
         if (whelk.index) {
             from(indexMessageQueue)
@@ -99,6 +122,12 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
             camelStep.to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}" + credentials)
         }
+
+        if (exportToAPIX) {
+            from("activemq:apix.queue")
+                .filter("groovy", "['bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save hold and bib
+                .process(new APIXProcessor()).to("http4:127.0.0.1:8100")
+        }
     }
 
     // Plugin methods
@@ -116,18 +145,42 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 }
 
 @Log
+class HttpFailedBean {
+
+    void handle(Exchange exchange, Exception e) {
+        log.info("Handling failed http with status code ${e.statusCode}.")
+        Message message = exchange.getIn()
+        /*
+        for (header in message.headers) {
+            log.info("Found header ${header.key} = ${header.value}")
+        }
+        */
+        if (e.statusCode < 400) {
+            message.setHeader("handled", true)
+        } else {
+            message.setHeader("handled", false)
+            message.setHeader("retry", true)
+            message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))
+        }
+    }
+}
+
+@Log
 class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements AggregationStrategy {
 
     JsonLdToTurtle serializer
     File debugOutputFile = null
 
-    GraphstoreBatchUpdateAggregationStrategy(String contextPath, String base=null) {
+    GraphstoreBatchUpdateAggregationStrategy(Map config) {
         def loader = getClass().classLoader
-        def contextSrc = loader.getResourceAsStream(contextPath).withStream {
+        def contextSrc = loader.getResourceAsStream(config.contextPath).withStream {
             mapper.readValue(it, Map)
         }
         def context = JsonLdToTurtle.parseContext(contextSrc)
-        serializer = new JsonLdToTurtle(context, new ByteArrayOutputStream(), base)
+        serializer = new JsonLdToTurtle(context, new ByteArrayOutputStream(), config.base)
+        if (config.bnodeSkolemBase) {
+            serializer.bnodeSkolemBase = config.bnodeSkolemBase
+        }
         if (log.isDebugEnabled()) {
             debugOutputFile = new File("aggregator_data_tap.rq")
         }
@@ -145,7 +198,7 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
             // Set contenttype header
             newExchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/sparql-update")
 
-            def obj = newExchange.getIn().getBody()
+            def obj = mapper.readValue(new String(newExchange.getIn().getBody(), "UTF-8"), Map)
 
             serializer.writeln "CLEAR GRAPH <$identifier> ;"
             serializer.writeln "INSERT DATA { GRAPH <$identifier> {"
@@ -163,6 +216,8 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
             return newExchange
         } else {
             // Append to existing message
+            def obj = mapper.readValue(new String(newExchange.getIn().getBody(), "UTF-8"), Map)
+
             StringBuilder update = new StringBuilder(oldExchange.getIn().getBody(String.class))
 
             serializer.uniqueBNodeSuffix = "-${System.nanoTime()}"
@@ -170,7 +225,7 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
             serializer.writeln "CLEAR GRAPH <$identifier> ;"
             serializer.writeln "INSERT DATA { GRAPH <$identifier> {"
             serializer.flush()
-            serializer.objectToTurtle(newExchange.getIn().getBody(Map.class))
+            serializer.objectToTurtle(obj)
             serializer.writeln "} } ;"
             serializer.flush()
 

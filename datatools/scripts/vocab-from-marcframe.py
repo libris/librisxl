@@ -38,7 +38,7 @@ def parse_resourcemap(dataset, part, marcframe):
 
     def parse_fixed(tag, link, baseclass, groupname):
         for basename, coldefs in marcframe[part][tag].items():
-            if not basename[0].isupper():
+            if basename.startswith('TODO') or not basename[0].isupper():
                 continue
             rclass = newclass(enumgraph, basename, baseclass, groupname)
             if isinstance(coldefs, unicode):
@@ -87,6 +87,8 @@ def parse_resourcemap(dataset, part, marcframe):
 def add_terms(g, marc_source, dfn, parentdomain=None):
 
     for k, v in dfn.items():
+        if k.startswith('_'):
+            continue
         if not v:
             continue
         if k == 'defaults':
@@ -110,10 +112,12 @@ def add_terms(g, marc_source, dfn, parentdomain=None):
             rangename = None
         else:
             domainname = parentdomain
-            about = dfn.get('aboutEntity')
-            if about == '?record':
+            aboutEntity = dfn.get('aboutEntity')
+            if dfn.get('about', "").startswith('_:'):
+                domainname = None
+            elif aboutEntity == '?record':
                 domainname = 'Record'
-            elif about == '?instance' or not about and not parentdomain:
+            elif aboutEntity == '?instance' or (not aboutEntity and not parentdomain):
                 if 'bib' in marc_source.lower():
                     domainname = 'CreativeWork'
             domainname = dfn.get('aboutType') or domainname
@@ -132,8 +136,16 @@ def add_terms(g, marc_source, dfn, parentdomain=None):
                 v = [v]
             for subdfn in v:
                 if isinstance(subdfn, dict):
-                    subdomainname = (rangename if
-                            is_link and not key_is_property else None)
+                    if not rangename and \
+                            'tokenTypeMap' in dfn or 'recTypeBibLevelMap' in dfn and \
+                            k[0].isupper():
+                        subdomainname = k
+                    elif is_link and not key_is_property:
+                        subdomainname = rangename
+                    elif k.startswith('['):
+                        subdomainname = parentdomain
+                    else :
+                        subdomainname = None
                     add_terms(g, marc_source_path, subdfn, subdomainname)
             continue
 
@@ -190,15 +202,17 @@ def add_equivalent(dataset, g, refgraph):
 
 
 if __name__ == '__main__':
-    import sys
+    import sys, os, glob
     args = sys.argv[1:]
+    if '-g' in args:
+        args.remove('-g')
+        fmt = 'trig'
+    else:
+        fmt = 'turtle'
     source = args.pop(0)
     termspath = args.pop(0) if args else None
 
     dataset = ConjunctiveGraph()
-    dataset.bind('', TERMS)
-    dataset.bind('owl', OWL)
-    dataset.bind('sdo', SDO)
 
     with open(source) as fp:
         marcframe = json.load(fp)
@@ -216,4 +230,9 @@ if __name__ == '__main__':
         dataset.remove((None, VANN.termGroup, None))
         dataset.namespace_manager = tg.namespace_manager
 
-    dataset.serialize(sys.stdout, format='trig')
+    for update_fpath in glob.glob(
+            os.path.join(os.path.dirname(__file__), 'vocab-update-*.rq')):
+        with open(update_fpath) as fp:
+            dataset.update(fp.read())
+
+    dataset.serialize(sys.stdout, format=fmt)

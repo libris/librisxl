@@ -40,6 +40,9 @@ task jettyRun(type: JettyRun, overwrite: true) {
     jettyRun.httpPort = 8180
     jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:etc/whelk.json')"
 
+    //reload = "automatic"
+    //scanIntervalSeconds = 1
+
     def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
     def mock_c_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-c-cluster"
     //System.setProperty('cassandra.host', System.getProperty('cassandra.host', "localhost"))

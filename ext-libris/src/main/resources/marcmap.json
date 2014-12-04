@@ -1603,7 +1603,7 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageAltitude", 
-              "label_en": "Speed", 
+              "label_en": "Altitude of Sensor", 
               "entity": "Expression"
             }, 
             {
@@ -1612,7 +1612,7 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageAttitude", 
-              "label_en": "Playback Channel", 
+              "label_en": "Attitude of Sensor", 
               "entity": "Expression"
             }, 
             {
@@ -1621,7 +1621,7 @@
               "length": 1, 
               "default": "0", 
               "propRef": "remoteSensImageCloud", 
-              "label_en": "Groove Width/Groove Pitch", 
+              "label_en": "Cloud Cover", 
               "entity": "Expression"
             }, 
             {
@@ -1630,7 +1630,7 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageConstruction", 
-              "label_en": "Dimensions", 
+              "label_en": "Platform Constriction Time", 
               "entity": "Expression"
             }, 
             {
@@ -1639,7 +1639,7 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageUse", 
-              "label_en": "Tape Width", 
+              "label_en": "Platform Use Category", 
               "entity": "Expression"
             }, 
             {
@@ -1648,7 +1648,7 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageSensor", 
-              "label_en": "Tape Configuration", 
+              "label_en": "Sensor Type", 
               "entity": "Expression"
             }, 
             {
@@ -1657,54 +1657,11 @@
               "length": 2, 
               "default": "nn", 
               "propRef": "remoteSensImageData", 
+              "label_en": "Data Type", 
               "entity": "Expression"
-            }, 
-            {
-              "label_en": "Original vs. Reproduction Aspect (OBSOLETE)", 
-              "offset": 2, 
-              "length": 1, 
-              "default": "_", 
-              "propRef": "soundAspect"
-            }, 
-            {
-              "label_en": "Kind of Disc", 
-              "offset": 9, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "soundKindOfDisc", 
-              "entity": "Expression"
-            }, 
-            {
-              "label_en": "Kind of Material", 
-              "offset": 10, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "soundKindOfMaterial", 
-              "entity": "Expression"
-            }, 
-            {
-              "label_en": "Kind of Cutting", 
-              "offset": 11, 
-              "length": 1, 
-              "default": "h", 
-              "propRef": "soundKindOfCutting"
-            }, 
-            {
-              "label_en": "Playback Characteristics", 
-              "offset": 12, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "soundPlaybackCharacter"
-            }, 
-            {
-              "label_en": "Capture & Storage Techniques", 
-              "offset": 13, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "soundCapture"
             }
           ], 
-          "label_en": "&Sound Recording"
+          "label_en": "Remote Sensing &Image"
         }, 
         {
           "name": "007_SoundRecording", 
@@ -1727,6 +1684,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundSpeed", 
+              "label_en": "Speed", 
               "entity": "Manifestation"
             }, 
             {
@@ -1735,6 +1693,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundPlaybackChannel", 
+              "label_en": "Playback Channel", 
               "entity": "Manifestation"
             }, 
             {
@@ -1743,6 +1702,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundGroove", 
+              "label_en": "Groove Width/Groove Pitch", 
               "entity": "Manifestation"
             }, 
             {
@@ -1751,6 +1711,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundDimensions", 
+              "label_en": "Dimensions", 
               "entity": "Manifestation"
             }, 
             {
@@ -1759,6 +1720,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundTapeWidth", 
+              "label_en": "Tape Width", 
               "entity": "Manifestation"
             }, 
             {
@@ -1767,6 +1729,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundTapeConfiguration", 
+              "label_en": "Tape Configuration", 
               "entity": "Manifestation"
             }, 
             {
@@ -1775,6 +1738,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundKindOfDisc", 
+              "label_en": "Kind of Disc", 
               "entity": "Manifestation"
             }, 
             {
@@ -1783,6 +1747,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundKindOfMaterial", 
+              "label_en": "Kind of Material", 
               "entity": "Manifestation"
             }, 
             {
@@ -1791,6 +1756,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundKindOfCutting", 
+              "label_en": "Kind of Cutting", 
               "entity": "Manifestation"
             }, 
             {
@@ -1799,6 +1765,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundPlaybackCharacter", 
+              "label_en": "Playback Characteristics", 
               "entity": "Manifestation"
             }, 
             {
@@ -1807,10 +1774,18 @@
               "length": 1, 
               "default": "|", 
               "propRef": "soundCapture", 
+              "label_en": "Capture & Storage Techniques", 
               "entity": "Manifestation"
+            }, 
+            {
+              "label_en": "Original vs. Reproduction Aspect (OBSOLETE)", 
+              "offset": 2, 
+              "length": 1, 
+              "default": "_", 
+              "propRef": "soundAspect"
             }
           ], 
-          "label_en": "&Text"
+          "label_en": "&Sound Recording"
         }, 
         {
           "name": "007_Text", 
@@ -1826,51 +1801,9 @@
               "default": "a", 
               "propRef": "textMaterial", 
               "label_en": "Specific Material Designation"
-            }, 
-            {
-              "label_en": "Color", 
-              "offset": 3, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "videoColor"
-            }, 
-            {
-              "label_en": "Format", 
-              "offset": 4, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "videoFormat"
-            }, 
-            {
-              "label_en": "Sound on Medium", 
-              "offset": 5, 
-              "length": 1, 
-              "default": "_", 
-              "propRef": "videoSound"
-            }, 
-            {
-              "label_en": "Medium for Sound", 
-              "offset": 6, 
-              "length": 1, 
-              "default": "_", 
-              "propRef": "videoMedium"
-            }, 
-            {
-              "label_en": "Dimensions", 
-              "offset": 7, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "videoDimensions"
-            }, 
-            {
-              "label_en": "Playback Channels", 
-              "offset": 8, 
-              "length": 1, 
-              "default": "k", 
-              "propRef": "videoPlayback"
             }
           ], 
-          "label_en": "&Video Recording"
+          "label_en": "&Text"
         }, 
         {
           "name": "007_VideoRecording", 
@@ -1893,7 +1826,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoColor", 
-              "label_en": "Altitude of Sensor", 
+              "label_en": "Color", 
               "entity": "Manifestation"
             }, 
             {
@@ -1902,7 +1835,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoFormat", 
-              "label_en": "Attitude of Sensor", 
+              "label_en": "Format", 
               "entity": "Manifestation"
             }, 
             {
@@ -1911,7 +1844,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoSound", 
-              "label_en": "Cloud Cover", 
+              "label_en": "Sound on Medium", 
               "entity": "Manifestation"
             }, 
             {
@@ -1920,7 +1853,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoMedium", 
-              "label_en": "Platform Constriction Time", 
+              "label_en": "Medium for Sound", 
               "entity": "Manifestation"
             }, 
             {
@@ -1929,7 +1862,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoDimensions", 
-              "label_en": "Platform Use Category", 
+              "label_en": "Dimensions", 
               "entity": "Manifestation"
             }, 
             {
@@ -1938,18 +1871,11 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoPlayback", 
-              "label_en": "Sensor Type", 
+              "label_en": "Playback Channels", 
               "entity": "Manifestation"
-            }, 
-            {
-              "label_en": "Data Type", 
-              "offset": 9, 
-              "length": 2, 
-              "default": "nn", 
-              "propRef": "remoteSensImageData"
             }
           ], 
-          "label_en": "Remote Sensing &Image"
+          "label_en": "&Video Recording"
         }, 
         {
           "name": "007_Unspecified", 
@@ -49534,7 +49460,7 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageAltitude", 
-              "label_en": "Speed"
+              "label_en": "Altitude of Sensor"
             }, 
             {
               "label_sv": "Sensorns riktning", 
@@ -49542,7 +49468,7 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageAttitude", 
-              "label_en": "Playback Channel"
+              "label_en": "Attitude of Sensor"
             }, 
             {
               "label_sv": "Molnt\u00e4cke (i procent)", 
@@ -49550,7 +49476,7 @@
               "length": 1, 
               "default": "0", 
               "propRef": "remoteSensImageCloud", 
-              "label_en": "Groove Width/Groove Pitch"
+              "label_en": "Cloud Cover"
             }, 
             {
               "label_sv": "Plattform", 
@@ -49558,7 +49484,7 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageConstruction", 
-              "label_en": "Dimensions"
+              "label_en": "Platform Constriction Time"
             }, 
             {
               "label_sv": "\u00c4ndam\u00e5let med upptagningen", 
@@ -49566,7 +49492,7 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageUse", 
-              "label_en": "Tape Width"
+              "label_en": "Platform Use Category"
             }, 
             {
               "label_sv": "Typ av sensor", 
@@ -49574,52 +49500,18 @@
               "length": 1, 
               "default": "a", 
               "propRef": "remoteSensImageSensor", 
-              "label_en": "Tape Configuration"
+              "label_en": "Sensor Type"
             }, 
             {
               "label_sv": "Typ av information", 
               "offset": 9, 
               "length": 2, 
               "default": "nn", 
-              "propRef": "remoteSensImageData"
-            }, 
-            {
-              "label_en": "Kind of Disc", 
-              "offset": 9, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "soundKindOfDisc"
-            }, 
-            {
-              "label_en": "Kind of Material", 
-              "offset": 10, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "soundKindOfMaterial"
-            }, 
-            {
-              "label_en": "Kind of Cutting", 
-              "offset": 11, 
-              "length": 1, 
-              "default": "h", 
-              "propRef": "soundKindOfCutting"
-            }, 
-            {
-              "label_en": "Playback Characteristics", 
-              "offset": 12, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "soundPlaybackCharacter"
-            }, 
-            {
-              "label_en": "Capture & Storage Techniques", 
-              "offset": 13, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "soundCapture"
+              "propRef": "remoteSensImageData", 
+              "label_en": "Data Type"
             }
           ], 
-          "label_en": "&Sound Recording"
+          "label_en": "Remote Sensing &Image"
         }, 
         {
           "name": "007_SoundRecording", 
@@ -49641,80 +49533,91 @@
               "offset": 3, 
               "length": 1, 
               "default": "a", 
-              "propRef": "soundSpeed"
+              "propRef": "soundSpeed", 
+              "label_en": "Speed"
             }, 
             {
               "label_sv": "Ljudkonfiguration", 
               "offset": 4, 
               "length": 1, 
               "default": "m", 
-              "propRef": "soundPlaybackChannel"
+              "propRef": "soundPlaybackChannel", 
+              "label_en": "Playback Channel"
             }, 
             {
               "label_sv": "Sp\u00e5r", 
               "offset": 5, 
               "length": 1, 
               "default": "m", 
-              "propRef": "soundGroove"
+              "propRef": "soundGroove", 
+              "label_en": "Groove Width/Groove Pitch"
             }, 
             {
               "label_sv": "Storlek (diameter l\u00e4ngd x bredd)", 
               "offset": 6, 
               "length": 1, 
               "default": "a", 
-              "propRef": "soundDimensions"
+              "propRef": "soundDimensions", 
+              "label_en": "Dimensions"
             }, 
             {
               "label_sv": "Magnetbandets bredd", 
               "offset": 7, 
               "length": 1, 
               "default": "l", 
-              "propRef": "soundTapeWidth"
+              "propRef": "soundTapeWidth", 
+              "label_en": "Tape Width"
             }, 
             {
               "label_sv": "Antal sp\u00e5r p\u00e5 bandet", 
               "offset": 8, 
               "length": 1, 
               "default": "a", 
-              "propRef": "soundTapeConfiguration"
+              "propRef": "soundTapeConfiguration", 
+              "label_en": "Tape Configuration"
             }, 
             {
               "label_sv": "Typ eller generation", 
               "offset": 9, 
               "length": 1, 
               "default": "a", 
-              "propRef": "soundKindOfDisc"
+              "propRef": "soundKindOfDisc", 
+              "label_en": "Kind of Disc"
             }, 
             {
               "label_sv": "Material", 
               "offset": 10, 
               "length": 1, 
               "default": "a", 
-              "propRef": "soundKindOfMaterial"
+              "propRef": "soundKindOfMaterial", 
+              "label_en": "Kind of Material"
             }, 
             {
               "label_sv": "Sp\u00e5rsk\u00e4rning", 
               "offset": 11, 
               "length": 1, 
               "default": "h", 
-              "propRef": "soundKindOfCutting"
+              "propRef": "soundKindOfCutting", 
+              "label_en": "Kind of Cutting"
             }, 
             {
               "label_sv": "Inspelningskontroll", 
               "offset": 12, 
               "length": 1, 
               "default": "a", 
-              "propRef": "soundPlaybackCharacter"
+              "propRef": "soundPlaybackCharacter", 
+              "label_en": "Playback Characteristics"
             }, 
             {
               "label_sv": "Inspelnings- och lagringsteknik", 
               "offset": 13, 
               "length": 1, 
               "default": "a", 
-              "propRef": "soundCapture"
+              "propRef": "soundCapture", 
+              "label_en": "Capture & Storage Techniques"
             }
           ], 
-          "label_en": "&Text"
+          "label_en": "&Sound Recording"
         }, 
         {
           "name": "007_Text", 
@@ -49730,51 +49633,9 @@
               "default": "a", 
               "propRef": "textMaterial", 
               "label_en": "Specific Material Designation"
-            }, 
-            {
-              "label_en": "Color", 
-              "offset": 3, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "videoColor"
-            }, 
-            {
-              "label_en": "Format", 
-              "offset": 4, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "videoFormat"
-            }, 
-            {
-              "label_en": "Sound on Medium", 
-              "offset": 5, 
-              "length": 1, 
-              "default": "_", 
-              "propRef": "videoSound"
-            }, 
-            {
-              "label_en": "Medium for Sound", 
-              "offset": 6, 
-              "length": 1, 
-              "default": "_", 
-              "propRef": "videoMedium"
-            }, 
-            {
-              "label_en": "Dimensions", 
-              "offset": 7, 
-              "length": 1, 
-              "default": "a", 
-              "propRef": "videoDimensions"
-            }, 
-            {
-              "label_en": "Playback Channels", 
-              "offset": 8, 
-              "length": 1, 
-              "default": "k", 
-              "propRef": "videoPlayback"
             }
           ], 
-          "label_en": "&Video Recording"
+          "label_en": "&Text"
         }, 
         {
           "name": "007_VideoRecording", 
@@ -49797,7 +49658,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoColor", 
-              "label_en": "Altitude of Sensor"
+              "label_en": "Color"
             }, 
             {
               "label_sv": "Format", 
@@ -49805,7 +49666,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoFormat", 
-              "label_en": "Attitude of Sensor"
+              "label_en": "Format"
             }, 
             {
               "label_sv": "Ljud och dess plats", 
@@ -49813,7 +49674,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoSound", 
-              "label_en": "Cloud Cover"
+              "label_en": "Sound on Medium"
             }, 
             {
               "label_sv": "Ljudb\u00e4rare", 
@@ -49821,7 +49682,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoMedium", 
-              "label_en": "Platform Constriction Time"
+              "label_en": "Medium for Sound"
             }, 
             {
               "label_sv": "Filmbredd", 
@@ -49829,7 +49690,7 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoDimensions", 
-              "label_en": "Platform Use Category"
+              "label_en": "Dimensions"
             }, 
             {
               "label_sv": "Ljudkonfigurtion", 
@@ -49837,17 +49698,10 @@
               "length": 1, 
               "default": "|", 
               "propRef": "videoPlayback", 
-              "label_en": "Sensor Type"
-            }, 
-            {
-              "label_en": "Data Type", 
-              "offset": 9, 
-              "length": 2, 
-              "default": "nn", 
-              "propRef": "remoteSensImageData"
+              "label_en": "Playback Channels"
             }
           ], 
-          "label_en": "Remote Sensing &Image"
+          "label_en": "&Video Recording"
         }, 
         {
           "name": "007_Unspecified", 

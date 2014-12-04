@@ -7,6 +7,10 @@ import java.util.regex.*
 import java.util.UUID
 import java.util.concurrent.BlockingQueue
 import javax.servlet.http.*
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 
 import whelk.api.*
 import whelk.camel.*
@@ -54,6 +58,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     private ProducerTemplate producerTemplate
 
+    static final DateTimeFormatter DT_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XXX")
+
+    def timeZone = ZoneId.systemDefault()
+
     /*
      * Whelk methods
      *******************************/
@@ -79,7 +88,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
         long lastUpdated = doc.modified
-        doc.entry.put(Document.MODIFIED_KEY, new Date().getTime())
+        doc = prepareDocument(doc)
         boolean saved = false
         for (storage in availableStorages) {
             saved = (storage.store(doc) || saved)
@@ -88,7 +97,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             notifyCamel(doc, ADD_OPERATION, [:])
         } else {
             log.info("Save failed, resetting modified time.")
-            doc.entry.put(Document.MODIFIED_KEY, lastUpdated)
+            doc = prepareDocument(doc, lastUpdated)
         }
         return doc.identifier
     }
@@ -100,16 +109,18 @@ class StandardWhelk extends HttpServlet implements Whelk {
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String contentType) {
         log.debug("Bulk add ${docs.size()} document")
-        boolean foundStorage = false
-        for (storage in getStorages(contentType)) {
-            storage.bulkStore(docs)
-            foundStorage = true
-        }
-        log.debug("Documents stored. Now notifying camel ...")
-        if (foundStorage) {
+        def suitableStorages = getStorages(contentType)
+        if (!suitableStorages.isEmpty()) {
+            log.debug("Notifying camel ...")
             for (doc in docs) {
+                doc = sanityCheck(doc)
                 notifyCamel(doc, BULK_ADD_OPERATION, [:])
             }
+        } else {
+            log.debug("No storages found for $contentType.")
+        }
+        for (storage in getStorages(contentType)) {
+            storage.bulkStore(docs)
         }
         log.debug("Bulk operation completed.")
     }
@@ -200,6 +211,50 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return sparqlEndpoint?.sparql(query)
     }
 
+    Document prepareDocument(Document doc, long mt = -1) {
+        doc = sanityCheck(doc)
+        if (mt < 0) {
+            mt = doc.updateModified()
+        }
+        if (doc.contentType == "application/ld+json") {
+            log.trace("Setting modified in document data.")
+            def map = doc.getDataAsMap()
+            def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
+            def timestamp = time.format(DT_FORMAT)
+            map.put("modified", timestamp)
+            if (documentDataToMetaMapping) {
+                def meta = doc.meta
+                boolean modified = false
+                documentDataToMetaMapping.each { dset, rules ->
+                    if (doc.getDataset() == dset) {
+                        rules.each { jsonldpath ->
+                            try {
+                                def value = Eval.x(map, "x.$jsonldpath")
+                                if (value) {
+                                    meta = Tools.insertAt(meta, jsonldpath, value)
+                                    modified = true
+                                }
+                            } catch (MissingPropertyException mpe) {
+                                log.trace("Unable to set meta property $jsonldpath : $mpe")
+                            } catch (NullPointerException npe) {
+                                log.warn("Failed to set $jsonldpath for $meta")
+                            } catch (Exception e) {
+                                log.error("Failed to extract meta info: $e", e)
+                                throw e
+                            }
+                        }
+                    }
+                }
+                if (modified) {
+                    log.trace("Document meta is modified. Setting new values.")
+                    doc.withMeta(meta)
+                }
+            }
+            doc.withData(map)
+        }
+    }
+
+
     Document sanityCheck(Document d) {
         if (!d.identifier) {
             d.withIdentifier(mintIdentifier(d))
@@ -244,7 +299,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     Document createDocument(String contentType) {
         if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
-            return new JsonDocument(documentDataToMetaMapping).withContentType(contentType)
+            return new JsonDocument().withContentType(contentType)
         } else {
             return new DefaultDocument().withContentType(contentType)
         }
@@ -254,7 +309,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         try {
             Document document = mapper.readValue(json, DefaultDocument)
             if (document.isJson()) {
-                return new JsonDocument(documentDataToMetaMapping).fromDocument(document)
+                return new JsonDocument().fromDocument(document)
             }
             return document
         } catch (JsonParseException jpe) {

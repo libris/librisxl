@@ -251,7 +251,11 @@ class DefaultDocument implements Document {
     private void calculateChecksum() {
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
-        m.update(data)
+        byte[] metabytes = meta.toString().getBytes()
+        byte[] checksumbytes = new byte[data.length + metabytes.length];
+        System.arraycopy(data, 0, checksumbytes, 0, data.length);
+        System.arraycopy(metabytes, 0, checksumbytes, data.length, metabytes.length);
+        m.update(checksumbytes)
         byte[] digest = m.digest()
         BigInteger bigInt = new BigInteger(1,digest)
         String hashtext = bigInt.toString(16)

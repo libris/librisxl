@@ -15,9 +15,6 @@
   <logger name="org.apache.camel">
       <level value="info"/>
   </logger>
-  <logger name="org.apache.jena.fuseki">
-      <level value="warn"/>
-  </logger>
   <logger name="org.apache.camel.component.http4">
       <level value="info"/>
   </logger>
@@ -52,7 +49,7 @@
       <level value="info"/>
   </logger> 
   <logger name="whelk.StandardWhelk">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
  <logger name="whelk.component.BasicElasticComponent">
       <level value="info"/>
@@ -61,7 +58,7 @@
       <level value="info"/>
   </logger>
  <logger name="whelk.component.ElasticSearchStorage">
-      <level value="info"/>
+      <level value="trace"/>
   </logger>
  <logger name="whelk.plugin.BasicPlugin">
       <level value="info"/>
@@ -94,10 +91,10 @@
       <level value="info"/>
   </logger>
 <logger name="whelk.LinkedDataAPIQuery">
-      <level value="info"/>
+      <level value="trace"/>
   </logger>
 <logger name="whelk.ElasticQuery">
-      <level value="info"/>
+      <level value="trace"/>
   </logger>
 <logger name="whelk.Query">
       <level value="info"/>
@@ -115,7 +112,7 @@
   <level value="info"/>
 </logger>
 <logger name="whelk.importer.MySQLImporter">
-  <level value="debug"/>
+  <level value="info"/>
 </logger>
 <logger name="whelk.importer.OaiPmhImporter">
   <level value="info"/>

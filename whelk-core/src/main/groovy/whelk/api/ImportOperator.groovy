@@ -29,7 +29,6 @@ class ImportOperator extends AbstractOperator {
 
     Importer importer = null
 
-    long startTime
     int totalCount = 0
     int startAtId = 0
 
@@ -51,8 +50,7 @@ class ImportOperator extends AbstractOperator {
         this.startAtId = parameters.get("startAt", [0]).first() as int
     }
 
-    void doRun(long startTime) {
-        this.startTime = startTime
+    void doRun() {
         assert dataset
         if (importerPlugin) {
             importer = plugins.find { it instanceof Importer && it.id == importerPlugin }
@@ -75,7 +73,11 @@ class ImportOperator extends AbstractOperator {
             this.totalCount = 0
             for (ds in dataset.split(",")) {
                 log.debug("Import from OAIPMH ${ds}")
-                totalCount = totalCount + importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
+                int dsImportCount = importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
+                totalCount = totalCount + dsImportCount
+                if (dsImportCount > 0) {
+                    log.info("Imported $dsImportCount document from $ds.")
+                }
                 log.debug("Count is now: $totalCount")
             }
         } else {
@@ -87,25 +89,13 @@ class ImportOperator extends AbstractOperator {
             } catch (MissingMethodException mme) {
                 log.debug("Importer has no startAt parameter.")
             }
-            count = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
+            totalCount = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
 
         }
-        count = totalCount
-        runningTime = System.currentTimeMillis() - startTime
-        long elapsed = ((System.currentTimeMillis() - startTime) / 1000)
+        importer = null // Release
     }
 
-    @Override
-    Map getStatus() {
-        if (runningTime == 0) {
-            runningTime = System.currentTimeMillis() - startTime
-        }
-        if (operatorState == OperatorState.RUNNING) {
-            count = (importer ? importer.recordCount : 0)
-        }
-        def status = super.getStatus()
-        return status
-    }
+    int getCount() { (importer ? importer.recordCount : totalCount) }
 
     @Override
     void cancel() {

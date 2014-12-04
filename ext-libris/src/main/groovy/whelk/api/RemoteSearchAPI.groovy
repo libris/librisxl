@@ -130,18 +130,18 @@ class RemoteSearchAPI extends BasicAPI {
                     queue.shutdown()
                 }
                 // Merge results
-                def results = ['hits':[:],'list':[]]
+                def results = ['totalResults':[:],'items':[]]
                 int biggestList = 0
                 for (result in resultLists) { if (result.hits.size() > biggestList) { biggestList = result.hits.size() } }
                 def errors = [:]
                 for (int i = 0; i <= biggestList; i++) {
                     for (result in resultLists) {
-                        results.hits[result.database] = result.numberOfHits
+                        results.totalResults[result.database] = result.numberOfHits
                         try {
                             if (result.error) {
                                 errors.get(result.database, [:]).put(""+i, result.error)
                             } else if (i < result.hits.size()) {
-                                results.list << ['database':result.database,'data':result.hits[i].dataAsMap]
+                                results.items << ['database':result.database,'data':result.hits[i].dataAsMap]
                             }
                         } catch (ArrayIndexOutOfBoundsException aioobe) {
                             log.debug("Overstepped array bounds.")
@@ -186,29 +186,42 @@ class RemoteSearchAPI extends BasicAPI {
             def docStrings, results
             try {
                 log.debug("requesting data from url: $url")
-                def xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim")
-                int numHits = xmlRecords.'zs:numberOfRecords'.toInteger()
-                docStrings = getXMLRecordStrings(xmlRecords)
-                results = new MetaproxySearchResult(database, numHits)
-                for (docString in docStrings) {
-                    def record = MarcXmlRecordReader.fromXml(docString)
-                    // Not always available (and also unreliable)
-                    //id = record.getControlfields("001").get(0).getData()
+                def xmlRecords = new XmlSlurper().parseText(url.text).declareNamespace(zs:"http://www.loc.gov/zing/srw/", tag0:"http://www.loc.gov/MARC21/slim", diag:"http://www.loc.gov/zing/srw/diagnostic/")
+                def errorMessage = null
+                int numHits = 0
+                try {
+                    numHits = xmlRecords.'zs:numberOfRecords'.toInteger()
+                } catch (NumberFormatException nfe) {
+                    def emessageElement = xmlRecords.'zs:diagnostics'.'diag:diagnostic'.'diag:message'
+                    errorMessage = emessageElement.text()
+                }
+                if (!errorMessage) {
+                    docStrings = getXMLRecordStrings(xmlRecords)
+                    results = new MetaproxySearchResult(database, numHits)
+                    for (docString in docStrings) {
+                        def record = MarcXmlRecordReader.fromXml(docString)
+                        // Not always available (and also unreliable)
+                        //id = record.getControlfields("001").get(0).getData()
 
-                    log.trace("Marcxmlrecordreader for done")
+                        log.trace("Marcxmlrecordreader for done")
 
-                    def jsonRec = MarcJSONConverter.toJSONString(record)
-                    log.trace("Marcjsonconverter for done")
-                    def xMarcJsonDoc = whelk.createDocument("application/x-marc-json")
+                        def jsonRec = MarcJSONConverter.toJSONString(record)
+                        log.trace("Marcjsonconverter for done")
+                        def xMarcJsonDoc = whelk.createDocument("application/x-marc-json")
                         .withData(jsonRec.getBytes("UTF-8"))
-                    //Convert xMarcJsonDoc to ld+json
-                    def jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
-                    if (!jsonDoc.identifier) {
-                        jsonDoc.identifier = this.whelk.mintIdentifier(jsonDoc)
-                    }
-                    log.trace("Marcframeconverter done")
+                        //Convert xMarcJsonDoc to ld+json
+                        def jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
+                        if (!jsonDoc.identifier) {
+                            jsonDoc.identifier = this.whelk.mintIdentifier(jsonDoc)
+                        }
+                        log.trace("Marcframeconverter done")
 
-                    results.addHit(jsonDoc)
+                        results.addHit(jsonDoc)
+                    }
+                } else {
+                    log.warn("Received errorMessage from metaproxy: $errorMessage")
+                    results = new MetaproxySearchResult(database, 0)
+                    results.error = errorMessage
                 }
             } catch (org.xml.sax.SAXParseException spe) {
                 log.error("Failed to parse XML: ${url.text}")
@@ -227,12 +240,12 @@ class RemoteSearchAPI extends BasicAPI {
         }
     }
 
-    class MetaproxySearchResult extends SearchResult {
+    class MetaproxySearchResult extends JsonLdSearchResult {
 
         String database, error
 
         MetaproxySearchResult(String db, int nrHits) {
-            super(nrHits)
+            this.numberOfHits = nrHits
             this.database = db
         }
     }

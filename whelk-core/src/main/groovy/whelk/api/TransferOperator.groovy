@@ -23,6 +23,7 @@ class TransferOperator extends AbstractOperator implements Plugin {
     // Unique for this operator
     String fromStorage = null
     String toStorage = null
+    int transfercount = 0
 
     boolean showSpinner = false
     ExecutorService queue
@@ -37,10 +38,13 @@ class TransferOperator extends AbstractOperator implements Plugin {
         assert toStorage
     }
 
-    void doRun(long startTime) {
+    int getCount() { transfercount }
+
+    void doRun() {
         Storage targetStorage = whelk.getStorages().find { it.id == toStorage }
         Storage sourceStorage = whelk.getStorages().find { it.id == fromStorage }
         assert targetStorage, sourceStorage
+        transfercount = 0
         queue = Executors.newSingleThreadExecutor()
         List docs = []
         log.info("Transferring data from $fromStorage to $toStorage")
@@ -87,14 +91,9 @@ class TransferOperator extends AbstractOperator implements Plugin {
             } else {
                 log.warn("Document ${doc?.identifier} is deleted. Don't try to add it.")
             }
-            runningTime = System.currentTimeMillis() - startTime
-            if (count++ % 20000 == 0) {
+            if (transfercount++ % 20000 == 0) {
                 addDocs(docs, targetStorage)
                 docs = []
-            }
-            if (showSpinner) {
-                def velocityMsg = "Current velocity: ${count/(runningTime/1000)}."
-                Tools.printSpinner("Transferring from ${fromStorage} to ${toStorage}. ${count} documents transferred sofar. $velocityMsg", count)
             }
             if (cancelled) {
                 break
@@ -106,7 +105,6 @@ class TransferOperator extends AbstractOperator implements Plugin {
                 addDocs(docs, targetStorage)
             } as Runnable)
         }
-        log.info("Transferred $count documents in ${((System.currentTimeMillis() - startTime)/1000)} seconds." as String)
         targetStorage.versioning = versioningOriginalSetting
         operatorState=OperatorState.FINISHING
         log.debug("Shutting down queue")

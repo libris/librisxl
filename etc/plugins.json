@@ -237,7 +237,7 @@
         ],
         "_params" : {
             "preserveTimestamps" : true,
-            "numberOfThreads": 50000
+            "numberOfThreads": 50
         }
     },
     "oaipmhimporter2" : {
@@ -261,7 +261,7 @@
         ],
         "_params" : {
             "preserveTimestamps" : true,
-            "numberOfThreads": 50000
+            "numberOfThreads": 100
         }
     },
     "operator" : {
@@ -318,7 +318,6 @@
             "nodesToExpand": {
                  "about.additionalCarrierType" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -328,7 +327,6 @@
                 },
                 "about.alphabet" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -338,17 +336,15 @@
                 },
                 "about.attributedTo" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "auth",
                     "field" : "about.@id",
                     "queryProperties": {
-                        "_source.include" : ["about.*"]
+                        "_source.include" : ["about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName"]
                     },
                     "resultKey" : "about"
                 },
                 "about.audience" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -358,17 +354,15 @@
                 },
                 "about.author" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "auth",
                     "field" : "about.@id",
                     "queryProperties": {
-                        "_source.include" : ["about.*"]
+                        "_source.include" : ["about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName"]
                     },
                     "resultKey" : "about"
                 },
                 "about.biography" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -378,7 +372,6 @@
                 },
                 "about.confPub" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -388,7 +381,6 @@
                 },
                 "about.contentType" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -398,7 +390,6 @@
                 },
                 "about.festschrift" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -408,7 +399,6 @@
                 },
                 "about.frequencyCategory" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -418,7 +408,6 @@
                 },
                 "about.illustrations" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -428,7 +417,6 @@
                 },
                 "about.language" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -438,7 +426,6 @@
                 },
                 "about.literaryForm" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -448,7 +435,6 @@
                 },
                 "about.nature" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -458,7 +444,6 @@
                 },
                 "about.originalItem" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -468,7 +453,6 @@
                 },
                 "about.originalLanguage" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -478,7 +462,6 @@
                 },
                 "about.publicationCountry" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -488,7 +471,6 @@
                 },
                 "about.publicationStatus" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -498,7 +480,6 @@
                 },
                 "about.regularity" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -508,7 +489,6 @@
                 },
                 "about.typeOfEntry" : {
                     "method": "query",
-                    "index" : "libris",
                     "dataset" : "def",
                     "field" : "about.@id",
                     "queryProperties": {
@@ -540,7 +520,11 @@
     },
     "graphstore_aggregator": {
         "_class" : "whelk.camel.GraphstoreBatchUpdateAggregationStrategy",
-        "_params": "context.jsonld, http://libris.kb.se/resource/"
+        "_params": {
+          "contextPath": "context.jsonld",
+          "base": "http://libris.kb.se/resource/",
+          "bnodeSkolemBase": "tag:libris.kb.se,2014:bnode:"
+        }
     },
     "routebuilder": {
         "_class" : "whelk.camel.WhelkRouteBuilder",
@@ -549,11 +533,12 @@
         ],
         "_params": {
             "elasticBatchSize": 2000,
-            "graphstoreBatchSize": 1000,
+            "graphstoreBatchSize": 32,
             "batchTimeout": 5000,
             "indexMessageQueue": "_property:MQ_INDEX",
             "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX",
-            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE"
+            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE",
+            "exportToAPIX": false
         }
     },
     "index": {
@@ -566,12 +551,12 @@
             },
             "elasticHost": "_property:ELASTIC_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "availableTypes": ["auth","bib","hold","def","sys"],
+            "availableTypes": "_property:AVAILABLE_TYPES",
             "searchResultClass": "whelk.result.JsonLdSearchResult"
         },
         "_unique" : true
     },
-    "jsonldstorage": {
+    "diskjsonldstorage": {
         "_class" : "whelk.component.PairtreeHybridDiskStorage",
         "_params" : {
             "storageDir": "_property:STORAGE_PATH",
@@ -582,14 +567,13 @@
             "versioning" : false
         }
     },
-    "esjsonldstorage": {
+    "jsonldstorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
         "_params" : {
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "indexName": "libris_storage",
             "contentTypes": ["application/ld+json"],
-            "versioning" : true
+            "versioning" : false
         }
     },
     "marcxmlstorage": {

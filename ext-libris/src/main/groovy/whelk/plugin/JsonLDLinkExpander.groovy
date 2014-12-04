@@ -79,10 +79,13 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
         if (instructions['method'] == "query") {
             Map queryMap = [ 'terms': [ instructions['field']+":"+node['@id'] ] ]
             if (instructions['queryProperties']) {
+                if (instructions['queryProperties']['_source.include']) {
+                    instructions['queryProperties']['_source.include'] << instructions['field']
+                }
                 queryMap.putAll(instructions['queryProperties'])
             }
             def query = new ElasticQuery(queryMap)
-            def result = getIndex().query(query, instructions['index'], instructions['dataset'])
+            def result = getIndex().query(query, this.whelk.id, instructions['dataset'])
             if (result.numberOfHits) {
                 log.trace("data is : " + result.hits[0].dataAsString)
                 log.trace("ct is : " + result.hits[0].contentType)

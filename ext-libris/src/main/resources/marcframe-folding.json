@@ -1,0 +1,76 @@
+{
+
+  "bib": {
+
+    "fold publication date": {
+      "matchProperty": "publicationStatus",
+      "onValue": {
+        "/def/enum/content/SingleKnownDateProbableDate": {
+          "sourceProperty": "publicationYear",
+          "destinationPropertyPath": ["publication", "providerDate"]
+        },
+        "/def/enum/content/ContinuingResourceCurrentlyPublished": {
+          "sourceProperty": "publicationYear",
+          "append": "-",
+          "destinationPropertyPath": ["publication", "providerDate"]
+        },
+        "/def/enum/content/ContinuingResourceCeasedPublication": {
+          "joinProperties": ["publicationYear", "publicationOtherYear"],
+          "separator": "-",
+          "destinationPropertyPath": ["publication", "providerDate"]
+        },
+        "/def/enum/content/MultipleDates": [
+          {
+            "sourceProperty": "publicationYear",
+            "destinationPropertyPath": ["publication", 0, "providerDate"]
+          },
+          {
+            "sourceProperty": "publicationOtherYear",
+            "destinationPropertyPath": ["publication", -1, "providerDate"]
+          }
+        ]
+      },
+      "_spec": [
+        {
+          "source": [
+            {"008": "      s1977    sw                       "}
+          ],
+          "normalized": [
+            {"008": "      s1977    sw                       "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [{"c": "1977"}]}}
+          ],
+          "result": {
+            "about": {
+              "publication": [
+                {
+                  "@type": "ProviderEvent",
+                  "providerDate":  "1977",
+                  "place": {"containedIn": {"@type": "Country", "@id": "/def/countries/sw"}}
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    "fold originalLanguage into exampleOfWork": {
+    },
+
+    "fold publicationCountry into publication": {
+    },
+
+    "flattened hasFormat": {
+    },
+
+    "combined multiple formats, identifiers and publications": {
+    }
+
+  },
+
+  "auth": {
+    "combined Person sameAs and citation": {
+    }
+  }
+
+}

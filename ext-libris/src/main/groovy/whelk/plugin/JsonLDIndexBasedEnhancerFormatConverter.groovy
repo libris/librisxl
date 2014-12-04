@@ -1,7 +1,7 @@
 package whelk.plugin
 
 import whelk.*
-import whelk.component.ElasticQuery
+import whelk.ElasticQuery
 
 import org.codehaus.jackson.map.ObjectMapper
 import groovy.util.logging.Slf4j as Log

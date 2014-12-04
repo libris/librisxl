@@ -1,0 +1,14 @@
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX dbpo: <http://dbpedia.org/ontology/>
+PREFIX sdo: <http://schema.org/>
+PREFIX : <http://libris.kb.se/def/terms#>
+
+DELETE DATA {
+
+    :influencedBy owl:equivalentProperty dbpo:influencedBy .
+
+    :title owl:equivalentProperty sdo:title .
+
+    :Unspecified a owl:Class; rdfs:subClassOf :Product .
+
+}

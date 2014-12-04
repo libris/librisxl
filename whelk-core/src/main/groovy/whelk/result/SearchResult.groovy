@@ -17,6 +17,7 @@ class SearchResult {
     long numberOfHits = 0
     String searchCompletedInISO8601duration = ""
     int resultSize = 0
+    int startIndex = 0
 
     void setNumberOfHits(int nrHits) {
         this.numberOfHits = nrHits
@@ -101,7 +102,7 @@ class JsonLdSearchResult extends SearchResult {
 
     @Override
     Map toMap(String resultKey, List keys) {
-        def result = ["@context":"/sys/context/lib.jsonld", "itemsPerPage": resultSize, "totalResults": numberOfHits, "duration": searchCompletedInISO8601duration, "items": [] ]
+        def result = ["@context":"/sys/context/lib.jsonld", "startIndex":startIndex, "itemsPerPage": resultSize, "totalResults": numberOfHits, "duration": searchCompletedInISO8601duration, "items": [] ]
         hits.each {
             if (resultKey) {
                 result["items"] << Eval.x(it.dataAsMap.asImmutable(), "x.$resultKey")

@@ -1,6 +1,6 @@
 package whelk.plugin
 
-import whelk.component.ElasticQuery
+import whelk.ElasticQuery
 import whelk.Document
 import whelk.Whelk
 

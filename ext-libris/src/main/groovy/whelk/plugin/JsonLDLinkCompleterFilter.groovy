@@ -45,6 +45,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
                     def data = linkedDoc.dataAsMap
                     def about = data.about ?: data
                     def id = about["@id"]
+                    log.trace("found item @id: $id")
                     if (id) {
                         byIdOrSameAs[id] = about
                     }
@@ -79,10 +80,17 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
 
         def json = doc.dataAsMap
         def resource = json.get("about")
+        if (doc.identifier == "/bib/13531679") {
+            log.info("my about: $resource")
+        }
 
         if (relatedItemsIndex.byType.size() > 0) {
             resource.each { key, value ->
                 log.trace("trying to find and update entity $key")
+                if (key == "attributedTo") {
+                    log.info("Value: $value")
+                    log.info("related: $relatedItemsIndex")
+                }
                 changedData = findAndUpdateEntityIds(value, relatedItemsIndex) || changedData
             }
             // TODO: optimize or remove need for bnode rewriting

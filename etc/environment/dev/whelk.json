@@ -5,36 +5,37 @@
         "ELASTIC_HOST": "localhost",
         "ELASTIC_STORAGE_HOST": "localhost",
         "ELASTIC_PORT": 9300,
+        "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:8890/sparql-graph-crud",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
         "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
-        "MQ_INDEX": "activemq:libris.index",
-        "MQ_BULK_INDEX": "activemq:libris.bulk.index?concurrentConsumers=5",
-        "MQ_GRAPHSTORE": "activemq:libris.graphstore"
+        "MQ_INDEX": "activemq:devlibris.index",
+        "MQ_BULK_INDEX": "activemq:devlibris.bulk.index?concurrentConsumers=5",
+        "MQ_GRAPHSTORE": "activemq:devlibris.graphstore"
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
     "_docMetaMapping" : {
-        "hold": {
-            "sigel" : "about.heldBy.notation"
-        }
+        "hold": [
+            "about.heldBy.notation"
+        ]
     },
     "_plugins": {
         "_support": [
             "elasticnode",
-            "activemqbroker",
-            "fusekiserver"
+            "fusekiserver",
+            "activemqbroker"
             ],
         "_camel": [
             "routebuilder"
             ],
         "_components": [
-            "esjsonldstorage",
             "jsonldstorage",
-            "index",
-            "graphstore"
+            "diskjsonldstorage",
+            "graphstore",
+            "index"
         ]
     },
     "_apis": [

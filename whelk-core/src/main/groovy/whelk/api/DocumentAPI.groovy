@@ -25,6 +25,9 @@ class DocumentAPI extends BasicAPI {
         if (path.endsWith("/meta")) {
             return [path[0 .. -6], DisplayMode.META]
         }
+        if (path.endsWith("/_raw")) {
+            return [path[0 .. -6], DisplayMode.RAW]
+        }
         return [path, DisplayMode.DOCUMENT]
     }
     String getCleanPath(List pathVars) {
@@ -59,8 +62,21 @@ class DocumentAPI extends BasicAPI {
         }
     }
 
+    void handleQuery(HttpServletRequest request, HttpServletResponse response, String path) {
+        log.debug("Handle query for ds " + getDatasetBasedOnPath(path))
+        def query = new LinkedDataAPIQuery(request.parameterMap)
+        query.setIndexTypes(getDatasetBasedOnPath(path))
+        log.trace("query: " + query.toJsonQuery())
+        def callback = request.getParameter("callback")
+        def jsonResult = (callback ? callback + "(" : "") + this.whelk.search(query).toJson() + (callback ? ");" : "")
+        sendResponse(response, jsonResult, "application/json")
+    }
 
     void handleGetRequest(HttpServletRequest request, HttpServletResponse response, String path) {
+        if (path.endsWith("/")) {
+            handleQuery(request, response, path)
+            return
+        }
         def mode = DisplayMode.DOCUMENT
         (path, mode) = determineDisplayMode(path)
         def version = request.getParameter("version")
@@ -107,9 +123,11 @@ class DocumentAPI extends BasicAPI {
 
             if (d && (mode== DisplayMode.META || !d.entry['deleted'])) {
 
-                for (filter in getFiltersFor(d)) {
-                    log.debug("Filtering using ${filter.id} for ${d.identifier}")
-                    d = filter.filter(d)
+                if (mode == DisplayMode.DOCUMENT) {
+                    for (filter in getFiltersFor(d)) {
+                        log.debug("Filtering using ${filter.id} for ${d.identifier}")
+                        d = filter.filter(d)
+                    }
                 }
                 if (mode == DisplayMode.META) {
                     def versions = whelk.getVersions(d.identifier)
@@ -219,8 +237,11 @@ class DocumentAPI extends BasicAPI {
 
     boolean hasPermission(info, doc) {
         if (info) {
+            log.info("User has no privileges")
             return false
         }
+        log.trace("User is a-okey.")
+        return true
     }
 
     void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
@@ -243,5 +264,5 @@ class DocumentAPI extends BasicAPI {
 }
 
 enum DisplayMode {
-DOCUMENT, META
+DOCUMENT, META, RAW
 }

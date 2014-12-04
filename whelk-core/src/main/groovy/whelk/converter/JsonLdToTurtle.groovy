@@ -14,6 +14,7 @@ class JsonLdToTurtle {
     Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language"]
     Map prefixes = [:]
     def uniqueBNodeSuffix = ""
+    String bnodeSkolemBase = null
 
     JsonLdToTurtle(Map context, OutputStream outStream, String base=null) {
         this.context = context.context
@@ -74,7 +75,12 @@ class JsonLdToTurtle {
         if (cI > -1) {
             def pfx = ref.substring(0, cI)
             if (pfx == "_") {
-                return toValidTerm(ref + uniqueBNodeSuffix)
+                def nodeId = ref + uniqueBNodeSuffix
+                if (bnodeSkolemBase) {
+                    ref = bnodeSkolemBase + nodeId.substring(2)
+                } else {
+                    return toValidTerm(nodeId)
+                }
             } else if (context[pfx]) {
                 return ref
             }
@@ -95,12 +101,16 @@ class JsonLdToTurtle {
         flush()
     }
 
+    String genSkolemId() {
+        return bnodeSkolemBase + UUID.randomUUID()
+    }
+
     void prelude() {
-        prefixes.each { k, v ->
-            writeln("PREFIX ${k}: <${v}>")
-        }
         if (base) {
             writeln("BASE <${base}>")
+        }
+        prefixes.each { k, v ->
+            writeln("PREFIX ${k}: <${v}>")
         }
         writeln()
         flush()
@@ -121,6 +131,7 @@ class JsonLdToTurtle {
             return Collections.emptyList()
         }
         def topObjects = []
+        def first = true
         obj.each { key, vs ->
             def term = termFor(key)
             def revKey = (term == null)? revKeyFor(key) : null
@@ -139,15 +150,22 @@ class JsonLdToTurtle {
                     topObjects << node
                 }
             } else {
+                if (!first) {
+                    writeln(" ;")
+                }
+                first = false
                 if (term == "@type") {
                     term = "a"
-                    writeln(indent + term + " " + vs.collect { termFor(it) }.join(", ") + " ;")
+                    write(indent + term + " " + vs.collect { termFor(it) }.join(", "))
                     return
                 }
                 term = toValidTerm(term)
                 write(indent + term + " ")
                 vs.eachWithIndex { v, i ->
                     if (i > 0) write(" , ")
+                    if (bnodeSkolemBase && v instanceof Map && !v[keys.id]) {
+                        v[keys.id] = s = genSkolemId()
+                    }
                     if (v instanceof Map && keys.id in v) {
                         topObjects << v
                         write(refRepr(v[keys.id]))
@@ -155,11 +173,10 @@ class JsonLdToTurtle {
                         topObjects.addAll(objectToTurtle(v, level + 1, key))
                     }
                 }
-                writeln(" ;")
             }
         }
         if (level == 0) {
-            writeln(indent + ".")
+            writeln(" .")
             writeln()
             topObjects.each {
                 objectToTurtle(it)
@@ -167,6 +184,7 @@ class JsonLdToTurtle {
             flush()
             return Collections.emptyList()
         } else {
+            writeln()
             write(indent + "]")
             return topObjects
         }
