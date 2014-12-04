@@ -159,39 +159,41 @@ class MySQLImporter extends BasicPlugin implements Importer {
     }
 
     List<Document> documentList = new ArrayList<Document>()
-    Map buildingMetaRecord = [:]
-    MarcRecord lastRecord
+    ConcurrentHashMap buildingMetaRecord = new ConcurrentHashMap()
+    String lastIdentifier = null
+    MarcRecord lastRecord = null
     Stack<Future> futures = new Stack<Future>()
 
     void buildDocument(int id, MarcRecord record, String dataset, String oaipmhSetSpecValue) {
         String identifier = "/"+dataset+"/"+id
+        log.trace("building document $identifier")
         while (!futures.isEmpty()) {
-            log.debug("Harvesting futures.")
             documentList << futures.pop().get()
         }
-        if (documentList.size() >= addBatchSize || !record) {
+        if (documentList.size() >= addBatchSize || id == 0) {
             log.debug("documentList is full. Sending it to bulkAdd (open the trapdoor)")
             whelk.bulkAdd(documentList, documentList.first().contentType)
             log.debug("documents added.")
             documentList = new ArrayList<Document>()
         }
 
-        if (lastRecord && (buildingMetaRecord?.identifier != identifier || id == 0)) {
+        if (lastRecord && lastIdentifier && (lastIdentifier != identifier || id == 0)) {
             if (id == 0) {
                 log.debug("Received flush list signal.")
             } else {
-                log.trace("New document received. Adding last ($buildingMetaRecord.identifier}) to the queue")
+                log.trace("New document received. Adding last ($lastIdentifier}) to the queue")
             }
             recordCount++
+            log.trace("pushing to queue: dataset: $dataset, meta: $buildingMetaRecord")
             // Add converter to queue
-            futures.push(queue.submit(new MarcDocumentConverter(marcFrameConverter, enhancer, record, buildingMetaRecord)))
-            buildingMetaRecord.clear()
+            futures.push(queue.submit(new MarcDocumentConverter(lastIdentifier, dataset, marcFrameConverter, enhancer, lastRecord, buildingMetaRecord.lastIdentifier)))
+            buildingMetaRecord.remove(lastIdentifier)
         }
         if (oaipmhSetSpecValue) {
-            buildingMetaRecord.get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
+            buildingMetaRecord.get(identifier, [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
         }
         lastRecord = record
-        buildingMetaRecord["identifier"] = identifier
+        lastIdentifier = identifier
     }
 
     class MarcDocumentConverter implements Callable<Document> {
@@ -200,19 +202,25 @@ class MySQLImporter extends BasicPlugin implements Importer {
         private Map meta
         private MarcFrameConverter converter
         private Filter filter
+        private String dataset
+        private String identifier
 
-
-        MarcDocumentConverter(FormatConverter c, Filter f, final MarcRecord mr, final Map m) {
+        MarcDocumentConverter(String i, String d, FormatConverter c, Filter f, final MarcRecord mr, final Map m) {
             this.record = mr
             this.meta = m
             this.converter = c
             this.filter = f
+            this.dataset = d
+            this.identifier = i
         }
 
         @Override
         Document call() {
-            def entry = ["identifier":meta.identifier,"dataset":dataset]
-            meta.remove("identifier")
+            def entry = ["identifier":identifier,"dataset":dataset]
+            if (!identifier) {
+                log.error("Bad sit: entry is $entry")
+                throw new RuntimeException("No, i don't wanna.")
+            }
             Document doc = converter.doConvert(lastRecord, ["entry":entry,"meta":meta])
             if (filter) {
                 doc = filter.filter(doc)
