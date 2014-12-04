@@ -20,8 +20,7 @@ public class AuthenticationFilter implements Filter {
 
     private ObjectMapper mapper = null;
     private List<String> supportedMethods;
-    private String encryptionKey = null;
-    private static String PROD_URL = "http://bibdb-stg.libris.kb.se/api/o/verify";
+    private String url = null;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -68,7 +67,7 @@ public class AuthenticationFilter implements Filter {
         try {
 
             HttpClient client = HttpClientBuilder.create().build();
-            HttpGet get = new HttpGet(PROD_URL);
+            HttpGet get = new HttpGet(getVerifyUrl());
 
             get.setHeader("Authorization", "Bearer " + token);
             HttpResponse response = client.execute(get);
@@ -125,5 +124,18 @@ public class AuthenticationFilter implements Filter {
             return Arrays.asList(supportedMethods.replace(" ", "").split(","));
         }
         return null;
+    }
+
+    private String getVerifyUrl() {
+        if (url == null) {
+            Properties properties = new Properties();
+            try {
+                properties.load(this.getClass().getClassLoader().getResourceAsStream("api.properties"));
+            } catch (IOException ioe) {
+                throw new RuntimeException("Failed to load api properties.", ioe);
+            }
+            url = properties.getProperty("verifyurl");
+        }
+        return url;
     }
 }
