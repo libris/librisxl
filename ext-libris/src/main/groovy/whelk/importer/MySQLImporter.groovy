@@ -99,24 +99,24 @@ class MySQLImporter extends BasicPlugin implements Importer {
                     recordId  = resultSet.getInt(1)
                     record = Iso2709Deserializer.deserialize(resultSet.getBytes("data"))
 
-                    buildDocument(recordId, record, dataset, null)
+                    buildDocument(record, dataset, null)
 
                     if (dataset == "bib") {
                         int auth_id = resultSet.getInt("auth_id")
                         if (auth_id > 0) {
                             log.trace("Found auth_id $auth_id for $recordId Adding to oaipmhSetSpecs")
-                            buildDocument(recordId, record, dataset, "authority:"+auth_id)
+                            buildDocument(record, dataset, "authority:"+auth_id)
                         }
                     } else if (dataset == "hold") {
                         int bib_id = resultSet.getInt("bib_id")
                         String sigel = resultSet.getString("shortname")
                         if (bib_id > 0) {
                             log.trace("Found bib_id $bib_id for $recordId Adding to oaipmhSetSpecs")
-                            buildDocument(recordId, record, dataset, "bibid:" + bib_id)
+                            buildDocument(record, dataset, "bibid:" + bib_id)
                         }
                         if (sigel) {
                             log.trace("Found sigel $sigel for $recordId Adding to oaipmhSetSpecs")
-                            buildDocument(recordId, record, dataset, "location:" + sigel)
+                            buildDocument(record, dataset, "location:" + sigel)
                         }
                     }
 
@@ -134,7 +134,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
             }
             log.debug("Clearing out remaining docs ...")
-            buildDocument(0, record, dataset, null)
+            buildDocument(null, dataset, null)
 
         } catch(SQLException se) {
             log.error("SQL Exception", se)
@@ -161,39 +161,38 @@ class MySQLImporter extends BasicPlugin implements Importer {
     List<Document> documentList = new ArrayList<Document>()
     ConcurrentHashMap buildingMetaRecord = new ConcurrentHashMap()
     String lastIdentifier = null
-    MarcRecord lastRecord = null
     Stack<Future> futures = new Stack<Future>()
 
-    void buildDocument(int id, MarcRecord record, String dataset, String oaipmhSetSpecValue) {
-        String identifier = "/"+dataset+"/"+id
-        log.trace("building document $identifier")
-        while (!futures.isEmpty()) {
-            documentList << futures.pop().get()
+    void buildDocument(MarcRecord record, String dataset, String oaipmhSetSpecValue) {
+        String identifier = null
+        if (record) {
+            identifier = "/"+dataset+"/"+record.getControlfields("001").get(0).getData()
+            buildingMetaRecord.get(identifier, [:]).put("record", record)
         }
-        if (documentList.size() >= addBatchSize || id == 0) {
+        log.trace("building document $identifier")
+        if (documentList.size() >= addBatchSize || record == null) {
             log.debug("documentList is full. Sending it to bulkAdd (open the trapdoor)")
             whelk.bulkAdd(documentList, documentList.first().contentType)
             log.debug("documents added.")
             documentList = new ArrayList<Document>()
         }
 
-        if (lastRecord && lastIdentifier && (lastIdentifier != identifier || id == 0)) {
-            if (id == 0) {
-                log.debug("Received flush list signal.")
-            } else {
-                log.trace("New document received. Adding last ($lastIdentifier}) to the queue")
-            }
+        if (lastIdentifier && lastIdentifier != identifier) {
+            log.trace("New document received. Adding last ($lastIdentifier}) to the queue")
             recordCount++
             log.trace("pushing to queue: dataset: $dataset, meta: $buildingMetaRecord")
             // Add converter to queue
-            futures.push(queue.submit(new MarcDocumentConverter(lastIdentifier, dataset, marcFrameConverter, enhancer, lastRecord, buildingMetaRecord.lastIdentifier)))
+            futures.push(queue.submit(new MarcDocumentConverter(lastIdentifier, dataset, marcFrameConverter, enhancer, buildingMetaRecord.get(lastIdentifier).record, buildingMetaRecord.get(lastIdentifier).get("meta", [:]))))
             buildingMetaRecord.remove(lastIdentifier)
         }
         if (oaipmhSetSpecValue) {
-            buildingMetaRecord.get(identifier, [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
+            buildingMetaRecord.get(identifier, [:]).get("meta", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
         }
-        lastRecord = record
         lastIdentifier = identifier
+
+        while (!futures.isEmpty()) {
+            documentList << futures.pop().get()
+        }
     }
 
     class MarcDocumentConverter implements Callable<Document> {
@@ -221,7 +220,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 log.error("Bad sit: entry is $entry")
                 throw new RuntimeException("No, i don't wanna.")
             }
-            Document doc = converter.doConvert(lastRecord, ["entry":entry,"meta":meta])
+            Document doc = converter.doConvert(this.record, ["entry":entry,"meta":meta])
             if (filter) {
                 doc = filter.filter(doc)
             }
