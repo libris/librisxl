@@ -494,17 +494,29 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
 
     abstract def revert(Map data)
 
-    void addValue(obj, key, value, repeatable) {
+    static void addValue(obj, key, value, repeatable) {
         def current = obj[key]
         if (current || repeatable) {
             def l = current ?: []
+
+            def vId = value instanceof Map? value["@id"] : null
+            if (vId) {
+                def existing = l.find { it instanceof Map && it["@id"] == vId }
+                if (existing) {
+                    existing.putAll(value)
+                    return
+                }
+            } else if (l.find { it == value }) {
+                return
+            }
+
             l << value
             value = l
         }
         obj[key] = value
     }
 
-    Map newEntity(type, id=null) {
+    static Map newEntity(type, id=null) {
         def ent = [:]
         if (type) ent["@type"] = type
         if (id) ent["@id"] = id

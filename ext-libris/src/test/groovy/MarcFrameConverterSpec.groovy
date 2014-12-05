@@ -79,6 +79,20 @@ class MarcFrameConverterSpec extends Specification {
         [leader: "00187nx  a22000971n44500"]    | "hold"
     }
 
+    def "should treat arrays as sets of objects"() {
+        given:
+        def obj = [:]
+        def prop = "label"
+        when:
+        2.times {
+            BaseMarcFieldHandler.addValue(obj, prop, value, true)
+        }
+        then:
+        obj[prop] == [value]
+        where:
+        value << ["Text", ["@id": "/link"]]
+    }
+
     def "should convert field spec for #fieldSpec.marcType #fieldSpec.code"() {
         given:
         def marcType = fieldSpec.marcType
