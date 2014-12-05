@@ -1671,6 +1671,27 @@
             }
           }
         ]
+      },
+      {
+        "type": "FoldJoinedProperties",
+        "statusFlag": "_providerDateStatus",
+        "statusFlagValue": "/def/enum/content/ContinuingResourceCeasedPublication",
+        "sourceProperties": ["_providerYear", "_providerOtherYear"],
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "temporalCoverageNote",
+        "separator": "-",
+        "_spec": [
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/ContinuingResourceCeasedPublication"},
+              "_providerYear": "1977",
+              "_providerOtherYear": "2017"
+            },
+            "result": {
+              "temporalCoverageNote": "1977-2017"
+            }
+          }
+        ]
       }
     ],
 

@@ -82,6 +82,7 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
 
 
 class FoldJoinedPropertiesStep extends MarcFramePostProcStepBase {
+    static String INFINITY_YEAR = "9999"
     String statusFlag
     String statusFlagValue
     List<String> sourceProperties
@@ -89,9 +90,38 @@ class FoldJoinedPropertiesStep extends MarcFramePostProcStepBase {
     String separator
 
     void modify(Map record, Map thing) {
+        if (thing[statusFlag]?.get(ID) != statusFlagValue)
+            return
+        def values = []
+        for (prop in sourceProperties) {
+            def value = thing[prop]
+            if (!matchValuePattern.matcher(value))
+                return
+            values << (value == INFINITY_YEAR? "" : value)
+        }
+        thing.remove(statusFlag)
+        sourceProperties.each { thing.remove(it) }
+        thing[property] = values.join(separator)
     }
 
     void unmodify(Map record, Map thing) {
+        if (thing[statusFlag])
+            return
+        if (sourceProperties.find { thing[it] })
+            return
+        def value = thing[property]
+        if (!value)
+            return
+        if (value.endsWith(separator))
+            value += INFINITY_YEAR
+        def values = value.split(separator)
+        if (values.size() != sourceProperties.size())
+            return
+        values.eachWithIndex { v, i ->
+            if (!matchValuePattern.matcher(v))
+                return
+            thing[sourceProperties[i]] = v
+        }
     }
 
 }
