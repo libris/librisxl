@@ -4717,7 +4717,7 @@
       "addLink": "isPrimaryTopicOf", "resourceType": "Document",
       "TODO:i1": {},
       "match-i2": {
-        "0": {"addLink": "encoding", "resourceType": "MediaObject"},
+        "0": {"addLink": "associatedMedia", "resourceType": "MediaObject"},
         "1": {"addLink": "alternateFormat", "resourceType": "Electronic"},
         "2": {"addLink": "isPrimaryTopicOf", "resourceType": "Document"},
         "8": {"addLink": "relation", "resourceType": "Document"}
