@@ -169,7 +169,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         return query(q, indexName, indexTypes as String[])
     }
 
-    SearchResult query(Query q, String indexName, String[] indexTypes) {
+    SearchResult query(Query q, String indexName, String[] indexTypes, Class resultClass = searchResultClass) {
         log.trace "Querying index $indexName and indextype $indexTypes"
         log.trace "Doing query on $q"
         def idxlist = [indexName]
@@ -182,8 +182,8 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         log.trace("SearchResponse: " + response)
 
         def results
-        if (searchResultClass) {
-            results = searchResultClass.newInstance()
+        if (resultClass) {
+            results = resultClass.newInstance()
         } else {
             results = new SearchResult()
         }

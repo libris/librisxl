@@ -13,7 +13,8 @@
         "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
         "MQ_INDEX": "activemq:devlibris.index",
         "MQ_BULK_INDEX": "activemq:devlibris.bulk.index?concurrentConsumers=5",
-        "MQ_GRAPHSTORE": "activemq:devlibris.graphstore"
+        "MQ_GRAPHSTORE": "activemq:devlibris.graphstore",
+        "APIX_URI": "http://127.0.0.1:8100"
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
