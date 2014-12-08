@@ -503,7 +503,8 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
             if (vId) {
                 def existing = l.find { it instanceof Map && it["@id"] == vId }
                 if (existing) {
-                    existing.putAll(value)
+                    value.putAll(existing)
+                    l[l.indexOf(existing)] = value
                     return
                 }
             } else if (l.find { it == value }) {
