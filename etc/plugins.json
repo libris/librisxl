@@ -237,7 +237,7 @@
         ],
         "_params" : {
             "preserveTimestamps" : true,
-            "numberOfThreads": 50000
+            "numberOfThreads": 50
         }
     },
     "oaipmhimporter2" : {
@@ -261,7 +261,7 @@
         ],
         "_params" : {
             "preserveTimestamps" : true,
-            "numberOfThreads": 5000
+            "numberOfThreads": 100
         }
     },
     "operator" : {
@@ -573,8 +573,8 @@
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes": ["application/ld+json"],
-            "indexName":"libris_storage",
-            "versioning" : true
+            "versioning" : true,
+            "indexName" : "_property:STORAGE_INDEX"
         }
     },
     "marcxmlstorage": {

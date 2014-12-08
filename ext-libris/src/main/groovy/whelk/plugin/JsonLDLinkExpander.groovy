@@ -22,7 +22,7 @@ import org.apache.http.client.protocol.*
 @Log
 class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
 
-    Map nodesToExpand
+    final Map nodesToExpand
     List requiredDataset
     Whelk whelk
     Index index
@@ -31,7 +31,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
     HttpClient client = HttpClients.custom().setConnectionManager(cm).build()
 
     JsonLDLinkExpander(Map settings) {
-        this.nodesToExpand = settings.get('nodesToExpand')
+        this.nodesToExpand = settings.get('nodesToExpand').asImmutable()
         this.requiredDataset = settings.get('requiredDataset')
     }
 
@@ -79,6 +79,9 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
         if (instructions['method'] == "query") {
             Map queryMap = [ 'terms': [ instructions['field']+":"+node['@id'] ] ]
             if (instructions['queryProperties']) {
+                if (instructions['queryProperties']['_source.include'] && !instructions['queryProperties']['_source.include'].contains(instructions['field'])) {
+                    instructions['queryProperties']['_source.include'] << instructions['field']
+                }
                 queryMap.putAll(instructions['queryProperties'])
             }
             def query = new ElasticQuery(queryMap)
@@ -88,7 +91,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
                 log.trace("ct is : " + result.hits[0].contentType)
                 return  (instructions['resultKey'] ? result.hits[0].dataAsMap.get(instructions['resultKey']) : result.hits[0].dataAsMap)
             } else {
-                log.debug("No results for $queryMap")
+                log.debug("No results in query.")
                 return node
             }
         }

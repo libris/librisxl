@@ -113,7 +113,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (!suitableStorages.isEmpty()) {
             log.debug("Notifying camel ...")
             for (doc in docs) {
-                doc = prepareDocument(doc)
+                //doc = sanityCheck(doc)
                 notifyCamel(doc, BULK_ADD_OPERATION, [:])
             }
         } else {
@@ -211,14 +211,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return sparqlEndpoint?.sparql(query)
     }
 
-    def preparedDocuments = []
-
     Document prepareDocument(Document doc, long mt = -1) {
         doc = sanityCheck(doc)
-        if (doc.identifier in prepareDocuments) {
-            log.debug("prepareDocument already called for ${doc.identifier}")
-        }
-        preparedDocuments << doc.identifier
         if (mt < 0) {
             mt = doc.updateModified()
         }

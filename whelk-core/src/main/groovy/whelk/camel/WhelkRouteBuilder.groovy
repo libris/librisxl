@@ -74,11 +74,11 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             .bean(new HttpFailedBean(), "handle")
             .choice()
                 .when(header("retry"))
-                    .to("direct:retries")
+                    .to("activemq:retries")
                 .otherwise()
                     .end()
 
-        from("direct:retries").delay(10000).routingSlip(header("next"))
+        from("activemq:retries").delay(10000).routingSlip(header("next"))
 
         if (eligbleMQs.size() > 0) {
             from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
@@ -128,7 +128,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 .filter("groovy", "['bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save hold and bib
                 .process(new APIXProcessor()).to("http4:127.0.0.1:8100")
         }
-
     }
 
     // Plugin methods
@@ -151,11 +150,6 @@ class HttpFailedBean {
     void handle(Exchange exchange, Exception e) {
         log.info("Handling failed http with status code ${e.statusCode}.")
         Message message = exchange.getIn()
-        /*
-        for (header in message.headers) {
-            log.info("Found header ${header.key} = ${header.value}")
-        }
-        */
         if (e.statusCode < 400) {
             message.setHeader("handled", true)
         } else {
