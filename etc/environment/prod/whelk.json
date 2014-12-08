@@ -5,6 +5,7 @@
         "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
         "ELASTIC_CLUSTER": "whelks",
         "ELASTIC_PORT": 9300,
+        "STORAGE_INDEX": "libris_storage",
         "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],
         "GRAPHSTORE_DATA_URI": "http://hp04.libris.kb.se:8890/sparql-graph-crud",
         "GRAPHSTORE_QUERY_URI": "http://hp04.libris.kb.se:8890/sparql",
