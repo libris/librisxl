@@ -74,11 +74,11 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             .bean(new HttpFailedBean(), "handle")
             .choice()
                 .when(header("retry"))
-                    .to("activemq:retries")
+                    .to("activemq:"+whelk.id+".retries")
                 .otherwise()
                     .end()
 
-        from("activemq:retries").delay(10000).routingSlip(header("next"))
+        from("activemq:"+whelk.id+".retries").delay(10000).routingSlip(header("next"))
 
         if (eligbleMQs.size() > 0) {
             from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
