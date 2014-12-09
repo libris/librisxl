@@ -288,7 +288,7 @@ class MarcConversion {
         def fields = []
         marc['fields'] = fields
         marcRuleSet.fieldHandlers.each { tag, handler ->
-            def value = handler.revert(data)
+            def value = handler.revert(data, marc)
             if (tag == "000") {
                 marc.leader = value
             } else {
@@ -492,7 +492,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
 
     abstract ConvertResult convert(state, sourceMap, value)
 
-    abstract def revert(Map data)
+    abstract def revert(Map data, Map result)
 
     static void addValue(obj, key, value, repeatable) {
         def current = obj[key]
@@ -582,7 +582,7 @@ class MarcFixedFieldHandler {
         return new ConvertResult(success)
     }
 
-    def revert(Map data) {
+    def revert(Map data, Map result) {
         def value = new StringBuilder(FIXED_NONE * fieldSize)
         for (col in columns) {
             def obj = col.revert(data)
@@ -630,7 +630,7 @@ class MarcFixedFieldHandler {
             return super.convert(state, sourceMap, token)
         }
         def revert(Map data) {
-            def v = super.revert(data)
+            def v = super.revert(data, null)
             if (v == null && defaultValue)
                 return defaultValue
             return v
@@ -700,10 +700,10 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         handlerMap[token] = new MarcFixedFieldHandler(ruleSet, tag, dfn)
     }
 
-    String getToken(sourceMap, value) {
+    String getToken(leader, value) {
         if (useRecTypeBibLevel) {
-            def typeOfRecord = ruleSet.conversion.getTypeOfRecord(sourceMap.leader)
-            def bibLevel = ruleSet.conversion.getBibLevel(sourceMap.leader)
+            def typeOfRecord = ruleSet.conversion.getTypeOfRecord(leader)
+            def bibLevel = ruleSet.conversion.getBibLevel(leader)
             return typeOfRecord + bibLevel
         } else if (value) {
             return value[0]
@@ -713,7 +713,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     }
 
     ConvertResult convert(state, sourceMap, value) {
-        def token = getToken(sourceMap, value)
+        def token = getToken(sourceMap.leader, value)
         def converter = handlerMap[token]
         if (converter == null)
             return FAIL
@@ -739,7 +739,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         return new ConvertResult(baseOk && ok)
     }
 
-    def revert(Map data) {
+    def revert(Map data, Map result) {
         def entities = [data]
         if (link) {
             entities = getEntity(data).get(link) ?: []
@@ -748,11 +748,21 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         for (entity in entities) {
             def value = null
             if (baseConverter)
-                value = baseConverter.revert(entity)
-            def tokenBasedConverter = !useRecTypeBibLevel? handlerMap[value] : null
+                value = baseConverter.revert(entity, result)
+            def tokenBasedConverter = handlerMap[getToken(result.leader, value)]
             if (tokenBasedConverter) {
-                def restValue = tokenBasedConverter.revert(entity)
-                value = value + restValue.substring(value.size())
+                def overlay = tokenBasedConverter.revert(entity, result)
+                if (value.size() == 1) {
+                    value = value + overlay.substring(1)
+                } else {
+                    def combined = value.split('')
+                    overlay.eachWithIndex { c, i ->
+                        if (c != " ") {
+                            combined[i] = c
+                        }
+                    }
+                    value = combined.join("")
+                }
             }
             if (value.find { it != MarcFixedFieldHandler.FIXED_NONE }) {
                 values << value
@@ -862,7 +872,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         return OK
     }
 
-    def revert(Map data) {
+    def revert(Map data, Map result) {
         def entity = getEntity(data)
         if (link)
             entity = entity[link]
@@ -1187,14 +1197,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return entity
     }
 
-    def revert(Map data, MatchCandidate matchCandidate=null) {
+    def revert(Map data, Map result, MatchCandidate matchCandidate=null) {
 
         def matchedResults = []
 
         if (matchCandidate == null) {
             for (rule in matchRules) {
                 for (candidate in rule.candidates) {
-                    matchedResults += candidate.handler.revert(data, candidate)
+                    matchedResults += candidate.handler.revert(data, result, candidate)
                 }
             }
         }

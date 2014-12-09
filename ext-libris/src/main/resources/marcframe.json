@@ -4117,7 +4117,7 @@
       "_spec": [
         {
           "source": {
-            "338": {"subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "rdacarrier"}]}
+            "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "rdacarrier"}]}
           },
           "result": {
             "about": {
