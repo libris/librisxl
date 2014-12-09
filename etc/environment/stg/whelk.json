@@ -2,7 +2,7 @@
     "_properties": {
         "WHELK_WORK_DIR": "/var/run/whelk",
         "STORAGE_PATH": "/data/librisxl/storage",
-        "ELASTIC_HOST": "localhost",
+        "ELASTIC_SEARCH_HOST": "localhost",
         "ELASTIC_STORAGE_HOST": "localhost",
         "ELASTIC_CLUSTER": "librisxl",
         "ELASTIC_PORT": 9300,
