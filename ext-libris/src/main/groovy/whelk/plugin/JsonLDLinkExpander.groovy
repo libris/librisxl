@@ -46,7 +46,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
         log.debug("Expanding ${doc.identifier}")
         def dataMap = doc.dataAsMap
         nodesToExpand.each { key, instructions ->
-            log.debug("key: $key, instructions: $instructions")
+            log.trace("key: $key, instructions: $instructions")
             def mapSegment = getNestedObject(key, dataMap)
             if (mapSegment instanceof List) {
                 int i = 0
@@ -55,11 +55,11 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
                     i++
                 }
             } else if (mapSegment instanceof Map) {
-                log.debug("trying to replace mapsegment $mapSegment")
+                log.trace("trying to replace mapsegment $mapSegment")
                 def expandedNode = expandNode(mapSegment, instructions)
                 setNestedObject(key, expandedNode, dataMap)
             } else if (mapSegment == null) {
-                log.debug("Path $key not available in ${doc.identifier}")
+                log.trace("Path $key not available in ${doc.identifier}")
                 return
             } else {
                 throw new WhelkRuntimeException("The path key \"$key\" in ${doc.identifier} does not point to a Map or a List. Please check configuration.")
@@ -91,7 +91,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
                 log.trace("ct is : " + result.hits[0].contentType)
                 return  (instructions['resultKey'] ? result.hits[0].dataAsMap.get(instructions['resultKey']) : result.hits[0].dataAsMap)
             } else {
-                log.debug("No results in query.")
+                log.trace("No results in query.")
                 return node
             }
         }
