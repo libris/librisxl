@@ -186,18 +186,20 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             if (mdrecord) {
                 try {
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
+                    String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
 
-                    def entry = ["identifier":"/"+this.dataset+"/"+record.getControlfields("001").get(0).getData(),"dataset":this.dataset]
+                    def entry = ["identifier":recordId,"dataset":this.dataset]
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
                         log.debug("Record ${entry.identifier} is suppressed. Next ...")
                         return
                     }
+                    String originalIdentifier = null
                     try {
-                        def originalIdentifier = record.getDatafields("901").collect { it.getSubfields("i").data}.flatten().first()
+                        originalIdentifier = record.getDatafields("901").collect { it.getSubfields("i").data}.flatten().first()
                         if (originalIdentifier) {
                             log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
-                                entry['identifier'] = originalIdentifier
+                            entry['identifier'] = originalIdentifier
                         }
                     } catch (NoSuchElementException nsee) {
                         log.trace("Record doesn't have a 901i field.")
@@ -219,11 +221,16 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
                     try {
                         if (marcFrameConverter) {
-                            if (enhancer) {
-                                documents << enhancer.filter(marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta]))
-                            } else {
-                                documents << marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
+                            def doc = marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
+                            if (originalIdentifier) {
+                                def dataMap = doc.dataAsMap
+                                dataMap['sameAs'] = ['@id':recordId]
+                                doc = doc.withData(dataMap)
                             }
+                            if (enhancer) {
+                                doc = enhancer.filter(doc)
+                            }
+                            documents << doc
                         }
                         def marcmeta = meta
                         marcmeta.put("oaipmhHeader", createString(it.header))
