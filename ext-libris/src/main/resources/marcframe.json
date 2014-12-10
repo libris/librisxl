@@ -2980,7 +2980,7 @@
       "TODO:repeatedBy": "006",
       "[0:6]": {
         "aboutEntity": "?record",
-        "property": "createdNote", "TODO:parseDate": "yyMMdd"
+        "property": "createdRawDate", "TODO:parseDate": "yyMMdd"
       },
       "[6:7]": {
         "link": "_providerDateStatus",
@@ -3446,7 +3446,7 @@
             {"008": "900101s1977    sw            000 0aswe  "}
           ],
           "result": {
-            "createdNote": "900101",
+            "createdRawDate": "900101",
             "about": {
               "language": [{"@id": "/def/languages/swe"}],
               "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
