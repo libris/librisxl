@@ -78,8 +78,10 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
         Message message = exchange.getIn()
         log.debug("Received message to ${this.id}.")
         log.debug("Message type: ${message.getHeader('whelk:operation')}")
+        log.debug("Dataset: ${message.getHeader('entry:dataset')}")
         if (message.getHeader("whelk:operation") == Whelk.REMOVE_OPERATION) {
             message.setHeader("entry:identifier", message.body)
+            message.setHeader("entry:dataset", message.getHeader("whelk:dataset"))
         } else {
             createAndPrepareDocumentFromMessage(message)
             exchange.setOut(message)

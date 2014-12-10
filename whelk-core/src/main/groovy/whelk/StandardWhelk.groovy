@@ -194,11 +194,13 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     void remove(String id) {
+        def doc= get(id)
         components.each {
             ((Component)it).remove(id)
         }
         log.debug("Sending DELETE operation to camel.")
-        notifyCamel(id, REMOVE_OPERATION, ["entry:identifier":id])
+        log.info("document is: ${doc?.identifier} with dataset ${doc?.dataset}")
+        notifyCamel(id, REMOVE_OPERATION, ["identifier":id, "dataset":doc?.dataset])
     }
 
     @Override

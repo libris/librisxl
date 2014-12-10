@@ -28,7 +28,7 @@
       <level value="info"/>
   </logger>
   <logger name="whelk.camel.FormatConverterProcessor">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
   <logger name="whelk.camel.APIXProcessor">
       <level value="debug"/>

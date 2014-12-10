@@ -104,7 +104,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 "?authenticationPreemptive=true&authUsername=${global.GRAPHSTORE_UPDATE_AUTH_USER}&authPassword=${global.GRAPHSTORE_UPDATE_AUTH_PASS}" : ""
 
             def camelStep = from(graphstoreMessageQueue)
-                .filter("groovy", "['auth','bib'].contains(request.getHeader('entry:dataset'))") // Only save auth and bib
+                .filter("groovy", "request.getHeader('whelk:operation') != 'DELETE' && ['auth','bib'].contains(request.getHeader('entry:dataset'))") // Only save auth and bib
                 .aggregate(header("entry:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
                 .threads(1,parallelProcesses)
 
@@ -126,7 +126,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             from("activemq:apix.queue")
                 .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save hold and bib
                 .process(apixProcessor)
-                .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.PUT))
                 .to(apixUri)
         }
     }
