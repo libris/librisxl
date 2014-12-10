@@ -188,6 +188,11 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
 
                     def entry = ["identifier":"/"+this.dataset+"/"+record.getControlfields("001").get(0).getData(),"dataset":this.dataset]
+                    def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
+                    if ("SUPPRESSRECORD" in aList) {
+                        log.debug("Record ${entry.identifier} is suppressed. Next ...")
+                        return
+                    }
 
                     if (preserveTimestamps && it.header.datestamp) {
                         def date = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())

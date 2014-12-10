@@ -106,7 +106,7 @@
     <level value="info"/>
 </logger>
 <logger name="whelk.plugin.JsonLDLinkExpander">
-  <level value="trace"/>
+  <level value="info"/>
 </logger>
 <logger name="whelk.plugin.JsonLDLinkCompleterFilter">
   <level value="info"/>

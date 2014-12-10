@@ -1,7 +1,7 @@
 {
     "_properties": {
         "WHELK_WORK_DIR": "/var/run/whelk",
-        "ELASTIC_HOST": "hp01.libris.kb.se",
+        "ELASTIC_SEARCH_HOST": "hp01.libris.kb.se",
         "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
         "ELASTIC_CLUSTER": "whelks",
         "ELASTIC_PORT": 9300,

@@ -549,7 +549,7 @@
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
                  "bib" : [ "text", "book", "serial" ]
             },
-            "elasticHost": "_property:ELASTIC_HOST",
+            "elasticHost": "_property:ELASTIC_SEARCH_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "availableTypes": "_property:AVAILABLE_TYPES",
             "searchResultClass": "whelk.result.JsonLdSearchResult"

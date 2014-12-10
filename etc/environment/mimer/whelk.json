@@ -1,6 +1,6 @@
 {
     "_properties": {
-        "ELASTIC_HOST": "localhost",
+        "ELASTIC_SEARCH_HOST": "localhost",
         "ELASTIC_STORAGE_HOST": "localhost",
         "ELASTIC_PORT": 9300,
         "AVAILABLE_TYPES": ["eld","def","sys"],
