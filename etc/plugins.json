@@ -525,6 +525,7 @@
     },
     "apixprocessor": {
         "_class": "whelk.camel.APIXProcessor",
+        "_params": "/0.1/cat/test/",
         "_plugins" : ["jsonld2marcxmlconverter"]
     },
     "routebuilder": {
@@ -539,7 +540,7 @@
             "indexMessageQueue": "_property:MQ_INDEX",
             "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX",
             "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE",
-            "apixUri": "_property:APIX_URI"
+            "apixUri": "_property:APIX_HOST"
         }
     },
     "index": {
