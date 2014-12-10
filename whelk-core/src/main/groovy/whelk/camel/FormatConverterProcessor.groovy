@@ -32,8 +32,7 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
         log.info("Calling bootstrap for ${this.id}. converter: $converter expander: $expander plugins: $plugins")
     }
 
-    Document createAndPrepareDocumentFromMessage(Message docMessage) {
-        log.debug("converter: $converter expander: $expander")
+    Document createDocument(Message docMessage) {
         def body = docMessage.getBody()
         Document doc
         if (body instanceof String) {
@@ -53,6 +52,11 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
                 }
             }
         }
+        return doc
+    }
+
+    Document runConverters(Document doc) {
+        log.debug("converter: $converter expander: $expander")
         if (doc && (converter || expander)) {
             if (converter) {
                 log.debug("Running converter ${converter.id}.")
@@ -63,14 +67,15 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
                 doc = expander.filter(doc)
             }
         }
-        if (doc) {
-            log.debug("Resetting document ${doc.identifier} in message.")
-            docMessage.setBody(doc.data)
-            doc.entry.each { key, value ->
-                docMessage.setHeader("entry:$key", value)
-            }
-        }
         return doc
+    }
+
+    void prepareMessage(Document doc, Message docMessage) {
+        log.debug("Resetting document ${doc.identifier} in message.")
+        docMessage.setBody(doc.data)
+        doc.entry.each { key, value ->
+            docMessage.setHeader("entry:$key", value)
+        }
     }
 
     @Override
@@ -83,7 +88,9 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
             message.setHeader("entry:identifier", message.body)
             message.setHeader("entry:dataset", message.getHeader("whelk:dataset"))
         } else {
-            createAndPrepareDocumentFromMessage(message)
+            def doc = createDocument(message)
+            doc = runConverters(doc)
+            prepareMessage(doc, message)
             exchange.setOut(message)
         }
     }

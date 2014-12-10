@@ -39,8 +39,12 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
             message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + message.getHeader("entry:identifier"))
         } else {
-            def doc = createAndPrepareDocumentFromMessage(message) 
+            def doc = createDocument(message)
+
             String voyagerUri = getVoyagerUri(doc) ?: "/" + message.getHeader("entry:dataset") +"/new"
+            doc = runConverters(doc)
+            prepareMessage(doc, message)
+
             message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.PUT)
         }
@@ -53,7 +57,9 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
         if (doc.identifier ==~ /\/(auth|bib|hold)\/\d+/) {
             return doc.identifier
         }
-        return null
+        String sameAs = doc.getDataAsMap().get("sameAs")?.get("@id")
+
+        return sameAs
     }
 }
 
