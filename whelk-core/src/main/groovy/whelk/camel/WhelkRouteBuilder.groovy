@@ -43,6 +43,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         apixUri = settings.get("apixUri")
         if (apixUri) {
             apixUri = apixUri.replace("http://", "http4:")
+            apixUri = apixUri.replace("https://", "https4:")
         }
     }
 
@@ -150,9 +151,11 @@ class HttpFailedBean {
     void handle(Exchange exchange, Exception e) {
         log.info("Handling failed http with status code ${e.statusCode}.")
         Message message = exchange.getIn()
+        // TODO: More fine grained error handling
         if (e.statusCode < 400) {
             message.setHeader("handled", true)
         } else {
+            log.info("Failed to deliver to ${e.uri} with status ${e.statusCode}. Sending message to retry queue.")
             message.setHeader("handled", false)
             message.setHeader("retry", true)
             message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))

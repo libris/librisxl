@@ -32,20 +32,30 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
         log.debug("processing ${message.getHeader('entry:identifier')} for APIX")
         log.info("Received operation: " + operation)
         log.info("dataset: ${message.getHeader('entry:dataset')}")
+        boolean messagePrepared = false
 
+        if (message.getHeader("CamelHttpPath")) {
+            log.debug("Message is already prepped ... Forego all treatment.")
+            message.setHeader(Exchange.HTTP_PATH, message.getHeader("CamelHttpPath"))
+            messagePrepared = true
+        }
 
         message.setHeader(Exchange.CONTENT_TYPE, "application/xml")
         if (operation == Whelk.REMOVE_OPERATION) {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
-            message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + message.getHeader("entry:identifier"))
+            if (!messagePrepared) {
+                message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + message.getHeader("entry:identifier"))
+            }
         } else {
-            def doc = createDocument(message)
+            if (!messagePrepared) {
+                def doc = createDocument(message)
 
-            String voyagerUri = getVoyagerUri(doc) ?: "/" + message.getHeader("entry:dataset") +"/new"
-            doc = runConverters(doc)
-            prepareMessage(doc, message)
+                String voyagerUri = getVoyagerUri(doc) ?: "/" + message.getHeader("entry:dataset") +"/new"
+                doc = runConverters(doc)
+                prepareMessage(doc, message)
 
-            message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
+                message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
+            }
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.PUT)
         }
 
