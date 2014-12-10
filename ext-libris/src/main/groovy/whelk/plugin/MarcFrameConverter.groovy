@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.regex.Pattern
 
 import org.codehaus.jackson.map.ObjectMapper
@@ -777,6 +778,9 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
     static final DateTimeFormatter DT_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XXX")
+    static final DateTimeFormatter DT_FORMAT_FALLBACK =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XX")
+
     static final String URI_SLOT = '{_}'
 
     String property
@@ -878,8 +882,10 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             entity = entity[link]
         if (property) {
             def v = entity[property]
-            if (v && dateTimeFormat)
-                return ZonedDateTime.parse(v, DT_FORMAT).format(dateTimeFormat)
+            if (v && dateTimeFormat) {
+                def zonedDateTime = parseDate(v)
+                return zonedDateTime.format(dateTimeFormat)
+            }
             return revertObject(v)
         } else {
             def entities = entity instanceof List? entity : [entity]
@@ -893,6 +899,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 }
             }
             return null
+        }
+    }
+
+    static ZonedDateTime parseDate(String s) {
+        try {
+            return ZonedDateTime.parse(s, DT_FORMAT)
+        } catch (DateTimeParseException e) {
+            return ZonedDateTime.parse(s, DT_FORMAT_FALLBACK)
         }
     }
 

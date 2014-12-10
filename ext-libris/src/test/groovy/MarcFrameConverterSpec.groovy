@@ -79,6 +79,13 @@ class MarcFrameConverterSpec extends Specification {
         [leader: "00187nx  a22000971n44500"]    | "hold"
     }
 
+    def "should parse formatted #date"() {
+        expect:
+        MarcSimpleFieldHandler.parseDate(date)
+        where:
+        date << ['2014-06-10T12:05:05.0+02:00', '2014-06-10T12:05:05.0+0200']
+    }
+
     def "should treat arrays as sets of objects"() {
         given:
         def obj = [:]
