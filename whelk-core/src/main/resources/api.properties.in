@@ -1,2 +1,4 @@
 encryptionkey=<secret key>
 verifyurl=<verify url>
+apixUsername=<username>
+apixPassword=<password>

@@ -44,6 +44,11 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         if (apixUri) {
             apixUri = apixUri.replace("http://", "http4:")
             apixUri = apixUri.replace("https://", "https4:")
+            def properties = new java.util.Properties()
+            properties.load(this.getClass().getClassLoader().getResourceAsStream("api.properties"))
+            apixUri = apixUri +
+                "?authUsername=" + properties.getProperty("apixUsername") +
+                "&authPassword=" + properties.getProperty("apixPassword")
         }
     }
 
