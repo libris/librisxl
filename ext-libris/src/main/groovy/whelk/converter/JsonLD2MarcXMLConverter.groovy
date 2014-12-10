@@ -31,6 +31,13 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
 
         log.debug("Creating new document ${doc.identifier} from doc with entry: ${doc.entry} and meta: ${doc.meta}")
 
+        log.debug("Setting document identifier in field 901.")
+        def df = record.createDatafield("901")
+        df.addSubfield("i".charAt(0), doc.identifier)
+        df.addSubfield("m".charAt(0), doc.modified as String)
+        df.addSubfield("c".charAt(0), doc.checksum)
+        record.addField(df)
+
         Document document = whelk.createDocument(getResultContentType())
         document.setIdentifier(doc.getIdentifier())
         document.data = marcRecordAsXMLString(record)

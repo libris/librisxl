@@ -275,6 +275,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 throw new DocumentException("Unable to deserialize data.")
             }
             if (dataMap.get("@id") != d.identifier) {
+                log.trace("@id in data (${dataMap['@id']}) differs from document identifier ${d.identifier}. Correcting data.")
                 dataMap.put("@id", d.identifier)
                 d.withData(dataMap)
             }

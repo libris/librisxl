@@ -28,10 +28,10 @@
       <level value="info"/>
   </logger>
   <logger name="whelk.camel.FormatConverterProcessor">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="whelk.camel.APIXProcessor">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="whelk.camel.ElasticTypeRouteProcessor">
       <level value="info"/>

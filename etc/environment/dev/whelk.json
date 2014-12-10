@@ -11,7 +11,6 @@
         "GRAPHSTORE_UPDATE_URI": "http://localhost:8890/sparql-graph-crud",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
         "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
-        "APIX_HOST": "http://127.0.0.1:8100",
         "MQ_INDEX": "activemq:devlibris.index",
         "MQ_BULK_INDEX": "activemq:devlibris.bulk.index?concurrentConsumers=5",
         "MQ_GRAPHSTORE": "activemq:devlibris.graphstore"
