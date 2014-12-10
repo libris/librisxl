@@ -11,27 +11,42 @@ class MarcFrameConverterSpec extends Specification {
         void initialize(URIMinter uriMinter, Map config) {
             super.initialize(uriMinter, config)
             this.config = config
+            super.conversion.doPostProcessing = false
         }
     }
 
-    static List fieldSpecs = []
+    static fieldSpecs = []
     static marcSkeletons = [:]
     static marcResults = [:]
 
+    static postProcStepSpecs = []
+
     static {
         ['bib', 'auth', 'hold'].each { marcType ->
-            converter.config[marcType].each { code, field ->
-                if (code == '000') {
-                    marcSkeletons[marcType] = field._specSource
-                    marcResults[marcType] = field._specResult
+            def ruleSets = converter.conversion.marcRuleSets
+            converter.config[marcType].each { code, dfn ->
+                if (code == 'thingLink')
+                    return
+                if (code == 'postProcessing') {
+                    ruleSets[marcType].postProcSteps.eachWithIndex { step, i ->
+                        dfn[i]._spec.each {
+                            postProcStepSpecs << [step: step, spec: it]
+                        }
+                    }
+                    return
                 }
-                if (field._specSource && field._specResult) {
-                    fieldSpecs << [source: field._specSource,
-                                   normalized: field._specNormalized,
-                                   result: field._specResult,
+
+                if (code == '000') {
+                    marcSkeletons[marcType] = dfn._specSource
+                    marcResults[marcType] = dfn._specResult
+                }
+                if (dfn._specSource && dfn._specResult) {
+                    fieldSpecs << [source: dfn._specSource,
+                                   normalized: dfn._specNormalized,
+                                   result: dfn._specResult,
                                    marcType: marcType, code: code]
-                } else if (field._spec instanceof List) {
-                    field._spec.each {
+                } else if (dfn._spec instanceof List) {
+                    dfn._spec.each {
                         if (it instanceof Map && it.source && it.result) {
                             fieldSpecs << [source: it.source,
                                            normalized: it.normalized,
@@ -64,6 +79,20 @@ class MarcFrameConverterSpec extends Specification {
         [leader: "00187nx  a22000971n44500"]    | "hold"
     }
 
+    def "should treat arrays as sets of objects"() {
+        given:
+        def obj = [:]
+        def prop = "label"
+        when:
+        2.times {
+            BaseMarcFieldHandler.addValue(obj, prop, value, true)
+        }
+        then:
+        obj[prop] == [value]
+        where:
+        value << ["Text", ["@id": "/link"]]
+    }
+
     def "should convert field spec for #fieldSpec.marcType #fieldSpec.code"() {
         given:
         def marcType = fieldSpec.marcType
@@ -76,7 +105,7 @@ class MarcFrameConverterSpec extends Specification {
             marc.fields << fieldSpec.source
         }
         when:
-        def result = converter.createFrame(marc)
+        def result = converter.runConvert(marc)
         def expected = deepcopy(marcResults[marcType])
         // test id generation separately
         expected['@id'] = result['@id']
@@ -135,7 +164,7 @@ class MarcFrameConverterSpec extends Specification {
             ]
         ]
         when:
-        def frame = converter.createFrame(marc)
+        def frame = converter.runConvert(marc)
         then:
         frame._marcUncompleted == [
             ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
@@ -148,6 +177,16 @@ class MarcFrameConverterSpec extends Specification {
         frame._marcFailedFixedFields == [
             "008": ["38": "E", "39": "E", "29": "E", "30": "E", "31": "E", "34": "E"]
         ]
+    }
+
+    def "should handle postprocessing"() {
+        when:
+        def data = deepcopy(item.spec.source)
+        item.step.modify(null, data)
+        then:
+        data == item.spec.result
+        where:
+        item << postProcStepSpecs
     }
 
     private deepcopy(orig) {

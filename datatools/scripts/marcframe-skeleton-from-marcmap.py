@@ -333,7 +333,8 @@ for marc_type in 'bib', 'auth', 'hold':
                                         key, type_id, tokenmap)
 
                             #assert type_id is None or type_id not in enums, type_id
-                            if tokenmap.get(key, type_id) != type_id:
+                            existing_type_id = tokenmap.get(key, type_id)
+                            if existing_type_id is not None and existing_type_id != type_id:
                                 #print >> sys.stderr, "tokenMap mismatch in %s for key %s: %s != %s" % (dfn_key, key, type_id, tokenmap[key])
                                 tokenmap[marc_type + '-' + key] = type_id
                             else:
