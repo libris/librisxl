@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.regex.Pattern
 
 import org.codehaus.jackson.map.ObjectMapper
@@ -56,8 +57,12 @@ class MarcFrameConverter extends BasicFormatConverter {
         conversion = new MarcConversion(config, uriMinter, tokenMaps)
     }
 
-    Map createFrame(Map marcSource, Map extraData=null) {
-        return conversion.createFrame(marcSource, null, extraData)
+    Map runConvert(Map marcSource, Map extraData=null) {
+        return conversion.convert(marcSource, null, extraData)
+    }
+
+    Map runRevert(Map data) {
+        return conversion.revert(data)
     }
 
     @Override
@@ -68,7 +73,7 @@ class MarcFrameConverter extends BasicFormatConverter {
 
     Document doConvert(final Object record, final Map metaentry) {
         def source = MarcJSONConverter.toJSONMap(record)
-        def result = createFrame(source, metaentry.meta)
+        def result = runConvert(source, metaentry.meta)
         log.trace("Created frame: $result")
 
         return whelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry)
@@ -78,7 +83,7 @@ class MarcFrameConverter extends BasicFormatConverter {
     Document doConvert(final Document doc) {
         def source = doc.dataAsMap
         def meta = doc.meta
-        def result = createFrame(source, meta)
+        def result = runConvert(source, meta)
         log.trace("Created frame: $result")
 
         return whelk.createDocument("application/ld+json").withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta)
@@ -100,9 +105,9 @@ class MarcFrameConverter extends BasicFormatConverter {
         def source = converter.mapper.readValue(new File(fpath), Map)
         def result = null
         if (cmd == "revert") {
-            result = converter.conversion.revert(source)
+            result = converter.runRevert(source)
         } else {
-            result = converter.createFrame(source)
+            result = converter.runConvert(source)
         }
         converter.mapper.writeValue(System.out, result)
     }
@@ -112,24 +117,26 @@ class MarcFrameConverter extends BasicFormatConverter {
 
 class MarcConversion {
 
+    static MARC_CATEGORIES = ['bib', 'auth', 'hold']
+
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
-    String thingLink
+    Map<String, MarcRuleSet> marcRuleSets = [:]
+    boolean doPostProcessing = true
     Map marcTypeMap = [:]
-    Map coreTypeMarcCategoryMap = [Authority: 'auth']
-    def marcHandlers = [:]
     Map tokenMaps
-    Set primaryTags = new HashSet()
 
     URIMinter uriMinter
 
     MarcConversion(Map config, URIMinter uriMinter, Map tokenMaps) {
-        thingLink = config.thingLink
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps
-        ['bib', 'auth', 'hold'].each {
-            buildHandlers(config, it)
+        def loader = getClass().classLoader
+        MARC_CATEGORIES.each { marcCat ->
+            def marcRuleSet = new MarcRuleSet(this, marcCat)
+            marcRuleSets[marcCat] = marcRuleSet
+            marcRuleSet.buildHandlers(config)
         }
     }
 
@@ -146,86 +153,33 @@ class MarcConversion {
         return leader.substring(7, 8)
     }
 
-    String revertMarcCategory(Map data) {
-        def types = (thingLink? data[thingLink] : data) ['@type']
-        if (types instanceof String) { types = [types] }
-        def marcCat = null
-        for (type in types) {
-            marcCat = coreTypeMarcCategoryMap[type]
-            if (marcCat) break
+    MarcRuleSet getRuleSetFromJsonLd(Map data) {
+        def selected = null
+        for (ruleSet in marcRuleSets.values()) {
+            if (ruleSet.matchesData(data)) {
+                selected = ruleSet
+                break
+            }
         }
-        return marcCat ?: 'bib'
+        return selected ?: marcRuleSets['bib']
     }
 
-    void buildHandlers(config, marcCategory) {
-        def fieldHandlers = marcHandlers[marcCategory] = [:]
-        def subConf = config[marcCategory]
-        subConf.each { tag, fieldDfn ->
-            if (fieldDfn.inherit) {
-                fieldDfn = processInherit(config, subConf, tag, fieldDfn)
-            }
-            if (fieldDfn.ignored || fieldDfn.size() == 0) {
-                return
-            }
-            def handler = null
-            if (fieldDfn.tokenTypeMap) {
-                handler = new TokenSwitchFieldHandler(this, tag, fieldDfn)
-            } else if (fieldDfn.recTypeBibLevelMap) {
-                handler = new TokenSwitchFieldHandler(this, tag, fieldDfn, 'recTypeBibLevelMap')
-            } else if (fieldDfn.find { it.key[0] == '[' }) {
-                handler = new MarcFixedFieldHandler(this, tag, fieldDfn)
-            } else if (fieldDfn.find { it.key[0] == '$' }) {
-                handler = new MarcFieldHandler(this, tag, fieldDfn)
-                if (handler.dependsOn) {
-                    primaryTags += handler.dependsOn
-                }
-                if (handler.definesDomainEntityType != null) {
-                    primaryTags << tag
-                }
-            }
-            else {
-                handler = new MarcSimpleFieldHandler(this, tag, fieldDfn)
-                assert handler.property || handler.uriTemplate, "Incomplete: $tag: $fieldDfn"
-            }
-            fieldHandlers[tag] = handler
-            if (fieldDfn.definesDomainEntity) {
-                coreTypeMarcCategoryMap[fieldDfn.definesDomainEntity] = marcCategory
-            }
-        }
-    }
+    Map convert(Map marcSource, String recordId=null, Map extraData=null) {
 
-    def processInherit(config, subConf, tag, fieldDfn) {
-        def ref = fieldDfn.inherit
-        def refTag = tag
-        if (ref.contains(':')) {
-            (ref, refTag) = ref.split(':')
-        }
-        def baseDfn = (ref in subConf)? subConf[ref] : config[ref][refTag]
-        if (baseDfn.inherit) {
-            subConf = (ref in config)? config[ref] : subConf
-            baseDfn = processInherit(config, subConf, ref ?: refTag, baseDfn)
-        }
-        def merged = baseDfn + fieldDfn
-        merged.remove('inherit')
-        return merged
-    }
-
-    Map createFrame(Map marcSource, String recordId=null, Map extraData=null) {
+        def leader = marcSource.leader
+        def marcCat = getMarcCategory(leader)
+        def marcRuleSet = marcRuleSets[marcCat]
 
         def marcRemains = [failedFixedFields: [:], uncompleted: [], broken: []]
 
         def record = ["@id": recordId]
         def thing = [:]
-        record[thingLink] = thing
+        record[marcRuleSet.thingLink] = thing
 
         def state = [
             entityMap: ['?record': record, '?instance': thing],
             marcRemains: marcRemains
         ]
-
-        def leader = marcSource.leader
-        def marcCat = getMarcCategory(leader)
-        def fieldHandlers = marcHandlers[marcCat]
 
         def preprocFields = []
         def primaryFields = []
@@ -242,13 +196,15 @@ class MarcConversion {
 
                 if (tag in PREPROC_TAGS) {
                     preprocFields << field
-                } else if (tag in primaryTags) {
+                } else if (tag in marcRuleSet.primaryTags) {
                     primaryFields << field
                 } else {
                     otherFields << field
                 }
             }
         }
+
+        def fieldHandlers = marcRuleSet.fieldHandlers
 
         fieldHandlers["000"].convert(state, sourceMap, leader)
 
@@ -265,6 +221,12 @@ class MarcConversion {
         }
         if (marcRemains.failedFixedFields.size() > 0) {
             record._marcFailedFixedFields = marcRemains.failedFixedFields
+        }
+
+        if (doPostProcessing) {
+            marcRuleSet.postProcSteps.each {
+                it.modify(record, thing)
+            }
         }
 
         // TODO: make this configurable
@@ -315,13 +277,19 @@ class MarcConversion {
     }
 
     Map revert(data) {
+        def marcRuleSet = getRuleSetFromJsonLd(data)
+
+        if (doPostProcessing) {
+            marcRuleSet.postProcSteps.each {
+                it.unmodify(data, data[marcRuleSet.thingLink])
+            }
+        }
+
         def marc = [:]
         def fields = []
         marc['fields'] = fields
-        def marcCat = revertMarcCategory(data)
-        def fieldHandlers = marcHandlers[marcCat]
-        fieldHandlers.each { tag, handler ->
-            def value = handler.revert(data)
+        marcRuleSet.fieldHandlers.each { tag, handler ->
+            def value = handler.revert(data, marc)
             if (tag == "000") {
                 marc.leader = value
             } else {
@@ -341,9 +309,117 @@ class MarcConversion {
 
 }
 
-class ConversionPart {
+class MarcRuleSet {
 
     MarcConversion conversion
+    String name
+
+    String thingLink
+    def fieldHandlers = [:]
+    List<MarcFramePostProcStep> postProcSteps
+
+    Set primaryTags = new HashSet()
+    Set aboutTypes = new HashSet()
+
+    MarcRuleSet(conversion, name) {
+        this.conversion = conversion
+        this.name = name
+        if (this.name == 'auth') {
+            aboutTypes << 'Authority'
+        }
+    }
+
+    void buildHandlers(config) {
+        def subConf = config[name]
+
+        subConf.each { tag, dfn ->
+
+            if (tag == 'thingLink') {
+                thingLink = dfn
+                return
+            } else if (tag == 'postProcessing') {
+                postProcSteps = dfn.collect {
+                    def props = it.clone()
+                    for (k in it.keySet())
+                        if (k[0] == '_')
+                            props.remove(k)
+                    switch (it.type) {
+                        case 'FoldLinkedProperty': new FoldLinkedPropertyStep(props); break
+                        case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(props); break
+                    }
+                }
+                return
+            }
+
+            if (dfn.inherit) {
+                dfn = processInherit(config, subConf, tag, dfn)
+            }
+            if (dfn.ignored || dfn.size() == 0) {
+                return
+            }
+            def handler = null
+            if (dfn.tokenTypeMap) {
+                handler = new TokenSwitchFieldHandler(this, tag, dfn)
+            } else if (dfn.recTypeBibLevelMap) {
+                handler = new TokenSwitchFieldHandler(this, tag, dfn, 'recTypeBibLevelMap')
+            } else if (dfn.find { it.key[0] == '[' }) {
+                handler = new MarcFixedFieldHandler(this, tag, dfn)
+            } else if (dfn.find { it.key[0] == '$' }) {
+                handler = new MarcFieldHandler(this, tag, dfn)
+                if (handler.dependsOn) {
+                    primaryTags += handler.dependsOn
+                }
+                if (handler.definesDomainEntityType != null) {
+                    primaryTags << tag
+                }
+            }
+            else {
+                handler = new MarcSimpleFieldHandler(this, tag, dfn)
+                assert handler.property || handler.uriTemplate, "Incomplete: $tag: $fieldDfn"
+            }
+            fieldHandlers[tag] = handler
+            if (dfn.aboutType) {
+                aboutTypes << dfn.aboutType
+            }
+        }
+    }
+
+    def processInherit(config, subConf, tag, fieldDfn) {
+        def ref = fieldDfn.inherit
+        def refTag = tag
+        if (ref.contains(':')) {
+            (ref, refTag) = ref.split(':')
+        }
+        def baseDfn = (ref in subConf)? subConf[ref] : config[ref][refTag]
+        if (baseDfn.inherit) {
+            subConf = (ref in config)? config[ref] : subConf
+            baseDfn = processInherit(config, subConf, ref ?: refTag, baseDfn)
+        }
+        def merged = baseDfn + fieldDfn
+        merged.remove('inherit')
+        return merged
+    }
+
+    boolean matchesData(Map data) {
+        def thing = data[thingLink]
+        if (!thing)
+            return false
+        def types = thing['@type']
+        if (types instanceof String)
+            types = [types]
+        for (type in types) {
+            if (type in aboutTypes)
+                return true
+        }
+        return false
+    }
+
+}
+
+
+class ConversionPart {
+
+    MarcRuleSet ruleSet
     String aboutEntityName
     Map tokenMap
     Map reverseTokenMap
@@ -363,12 +439,13 @@ class ConversionPart {
     }
 
     Map getEntity(Map data) {
-        if (aboutEntityName == '?record')
+        if (aboutEntityName == '?record') {
             return data
-        else if (conversion.thingLink in data)
-            return data[conversion.thingLink]
-        else
-            return data
+        }
+        if (ruleSet.thingLink in data) {
+            return data[ruleSet.thingLink]
+        }
+        return data
     }
 
     def revertObject(obj) {
@@ -397,10 +474,10 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     static final ConvertResult OK = new ConvertResult(true)
     static final ConvertResult FAIL = new ConvertResult(false)
 
-    BaseMarcFieldHandler(conversion, tag, fieldDfn) {
-        this.conversion = conversion
+    BaseMarcFieldHandler(ruleSet, tag, fieldDfn) {
+        this.ruleSet = ruleSet
         this.tag = tag
-        this.tokenMaps = conversion.tokenMaps
+        this.tokenMaps = ruleSet.conversion.tokenMaps
         if (fieldDfn.aboutType) {
             definesDomainEntityType = fieldDfn.aboutType
         }
@@ -416,19 +493,32 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
 
     abstract ConvertResult convert(state, sourceMap, value)
 
-    abstract def revert(Map data)
+    abstract def revert(Map data, Map result)
 
-    void addValue(obj, key, value, repeatable) {
+    static void addValue(obj, key, value, repeatable) {
         def current = obj[key]
         if (current || repeatable) {
             def l = current ?: []
+
+            def vId = value instanceof Map? value["@id"] : null
+            if (vId) {
+                def existing = l.find { it instanceof Map && it["@id"] == vId }
+                if (existing) {
+                    value.putAll(existing)
+                    l[l.indexOf(existing)] = value
+                    return
+                }
+            } else if (l.find { it == value }) {
+                return
+            }
+
             l << value
             value = l
         }
         obj[key] = value
     }
 
-    Map newEntity(type, id=null) {
+    static Map newEntity(type, id=null) {
         def ent = [:]
         if (type) ent["@type"] = type
         if (id) ent["@id"] = id
@@ -457,14 +547,14 @@ class MarcFixedFieldHandler {
     def columns = []
     int fieldSize = 0
 
-    MarcFixedFieldHandler(conversion, tag, fieldDfn) {
+    MarcFixedFieldHandler(ruleSet, tag, fieldDfn) {
         this.tag = tag
         fieldDfn.each { key, obj ->
             def m = (key =~ /^\[(\d+):(\d+)\]$/)
             if (m) {
                 def start = m[0][1].toInteger()
                 def end = m[0][2].toInteger()
-                columns << new Column(conversion, obj, start, end, obj['default'])
+                columns << new Column(ruleSet, obj, start, end, obj['default'])
                 if (end > fieldSize) {
                     fieldSize = end
                 }
@@ -493,7 +583,7 @@ class MarcFixedFieldHandler {
         return new ConvertResult(success)
     }
 
-    def revert(Map data) {
+    def revert(Map data, Map result) {
         def value = new StringBuilder(FIXED_NONE * fieldSize)
         for (col in columns) {
             def obj = col.revert(data)
@@ -514,8 +604,8 @@ class MarcFixedFieldHandler {
         int start
         int end
         String defaultValue
-        Column(conversion, fieldDfn, start, end, defaultValue) {
-            super(conversion, null, fieldDfn)
+        Column(ruleSet, fieldDfn, start, end, defaultValue) {
+            super(ruleSet, null, fieldDfn)
             assert start > -1 && end >= start
             this.start = start
             this.end = end
@@ -541,7 +631,7 @@ class MarcFixedFieldHandler {
             return super.convert(state, sourceMap, token)
         }
         def revert(Map data) {
-            def v = super.revert(data)
+            def v = super.revert(data, null)
             if (v == null && defaultValue)
                 return defaultValue
             return v
@@ -558,13 +648,13 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     String repeatedAddLink = null
     Map tokenNames = [:]
 
-    TokenSwitchFieldHandler(conversion, tag, Map fieldDfn, tokenMapKey='tokenTypeMap') {
-        super(conversion, tag, fieldDfn)
+    TokenSwitchFieldHandler(ruleSet, tag, Map fieldDfn, tokenMapKey='tokenTypeMap') {
+        super(ruleSet, tag, fieldDfn)
         assert !link || repeatable // this kind should always be repeatable if linked
         if (fieldDfn['match-repeated']) {
             repeatedAddLink = fieldDfn['match-repeated'].addLink
         }
-        this.baseConverter = new MarcFixedFieldHandler(conversion, tag, fieldDfn)
+        this.baseConverter = new MarcFixedFieldHandler(ruleSet, tag, fieldDfn)
         def tokenMap = fieldDfn[tokenMapKey]
         if (tokenMapKey == 'recTypeBibLevelMap') {
             this.useRecTypeBibLevel = true
@@ -608,13 +698,13 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     }
 
     private void addHandler(token, dfn) {
-        handlerMap[token] = new MarcFixedFieldHandler(conversion, tag, dfn)
+        handlerMap[token] = new MarcFixedFieldHandler(ruleSet, tag, dfn)
     }
 
-    String getToken(sourceMap, value) {
+    String getToken(leader, value) {
         if (useRecTypeBibLevel) {
-            def typeOfRecord = conversion.getTypeOfRecord(sourceMap.leader)
-            def bibLevel = conversion.getBibLevel(sourceMap.leader)
+            def typeOfRecord = ruleSet.conversion.getTypeOfRecord(leader)
+            def bibLevel = ruleSet.conversion.getBibLevel(leader)
             return typeOfRecord + bibLevel
         } else if (value) {
             return value[0]
@@ -624,7 +714,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     }
 
     ConvertResult convert(state, sourceMap, value) {
-        def token = getToken(sourceMap, value)
+        def token = getToken(sourceMap.leader, value)
         def converter = handlerMap[token]
         if (converter == null)
             return FAIL
@@ -650,7 +740,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         return new ConvertResult(baseOk && ok)
     }
 
-    def revert(Map data) {
+    def revert(Map data, Map result) {
         def entities = [data]
         if (link) {
             entities = getEntity(data).get(link) ?: []
@@ -659,11 +749,21 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         for (entity in entities) {
             def value = null
             if (baseConverter)
-                value = baseConverter.revert(entity)
-            def tokenBasedConverter = !useRecTypeBibLevel? handlerMap[value] : null
+                value = baseConverter.revert(entity, result)
+            def tokenBasedConverter = handlerMap[getToken(result.leader, value)]
             if (tokenBasedConverter) {
-                def restValue = tokenBasedConverter.revert(entity)
-                value = value + restValue.substring(value.size())
+                def overlay = tokenBasedConverter.revert(entity, result)
+                if (value.size() == 1) {
+                    value = value + overlay.substring(1)
+                } else {
+                    def combined = value.split('')
+                    overlay.eachWithIndex { c, i ->
+                        if (c != " ") {
+                            combined[i] = c
+                        }
+                    }
+                    value = combined.join("")
+                }
             }
             if (value.find { it != MarcFixedFieldHandler.FIXED_NONE }) {
                 values << value
@@ -678,6 +778,9 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
     static final DateTimeFormatter DT_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XXX")
+    static final DateTimeFormatter DT_FORMAT_FALLBACK =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XX")
+
     static final String URI_SLOT = '{_}'
 
     String property
@@ -689,8 +792,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     // TODO: working, but not so useful until capable of merging entities..
     //MarcSimpleFieldHandler linkedHandler
 
-    MarcSimpleFieldHandler(conversion, tag, fieldDfn) {
-        super(conversion, tag, fieldDfn)
+    MarcSimpleFieldHandler(ruleSet, tag, fieldDfn) {
+        super(ruleSet, tag, fieldDfn)
         super.setTokenMap(this, fieldDfn)
         if (fieldDfn.addProperty) {
             property = fieldDfn.addProperty
@@ -718,7 +821,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             }
         }
         //if (fieldDfn.linkedEntity) {
-        //    linkedHandler = new MarcSimpleFieldHandler(conversion,
+        //    linkedHandler = new MarcSimpleFieldHandler(ruleSet,
         //            tag + ":linked", fieldDfn.linkedEntity)
         //}
     }
@@ -773,14 +876,16 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         return OK
     }
 
-    def revert(Map data) {
+    def revert(Map data, Map result) {
         def entity = getEntity(data)
         if (link)
             entity = entity[link]
         if (property) {
             def v = entity[property]
-            if (v && dateTimeFormat)
-                return ZonedDateTime.parse(v, DT_FORMAT).format(dateTimeFormat)
+            if (v && dateTimeFormat) {
+                def zonedDateTime = parseDate(v)
+                return zonedDateTime.format(dateTimeFormat)
+            }
             return revertObject(v)
         } else {
             def entities = entity instanceof List? entity : [entity]
@@ -794,6 +899,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 }
             }
             return null
+        }
+    }
+
+    static ZonedDateTime parseDate(String s) {
+        try {
+            return ZonedDateTime.parse(s, DT_FORMAT)
+        } catch (DateTimeParseException e) {
+            return ZonedDateTime.parse(s, DT_FORMAT_FALLBACK)
         }
     }
 
@@ -831,8 +944,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     static GENERIC_REL_URI_TEMPLATE = UriTemplate.fromTemplate("generic:{_}")
 
-    MarcFieldHandler(conversion, tag, fieldDfn) {
-        super(conversion, tag, fieldDfn)
+    MarcFieldHandler(ruleSet, tag, fieldDfn) {
+        super(ruleSet, tag, fieldDfn)
         ind1 = fieldDfn.i1? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
         ind2 = fieldDfn.i2? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
         pendingResources = fieldDfn.pendingResources
@@ -1098,14 +1211,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return entity
     }
 
-    def revert(Map data, MatchCandidate matchCandidate=null) {
+    def revert(Map data, Map result, MatchCandidate matchCandidate=null) {
 
         def matchedResults = []
 
         if (matchCandidate == null) {
             for (rule in matchRules) {
                 for (candidate in rule.candidates) {
-                    matchedResults += candidate.handler.revert(data, candidate)
+                    matchedResults += candidate.handler.revert(data, result, candidate)
                 }
             }
         }
@@ -1293,7 +1406,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String itemPos
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
-        this.conversion = fieldHandler.conversion
+        this.ruleSet = fieldHandler.ruleSet
         this.fieldHandler = fieldHandler
         this.code = code
         aboutEntityName = subDfn.aboutEntity
@@ -1540,7 +1653,7 @@ abstract class MatchRule {
             }
             comboDfn += matchDfn
             def tag = null
-            ruleMap[key] = new MarcFieldHandler(handler.conversion, tag, comboDfn)
+            ruleMap[key] = new MarcFieldHandler(handler.ruleSet, tag, comboDfn)
         }
     }
     MarcFieldHandler getHandler(entity, value) {

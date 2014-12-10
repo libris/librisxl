@@ -90,10 +90,24 @@
       "u": null,
       "z": null
     },
+    "auth-encLevel": {
+      "n": "/def/enum/record/CompleteAuthorityRecord",
+      "o": "/def/enum/record/IncompleteAuthorityRecord"
+    },
+    "hold-encLevel": {
+      "1": "/def/enum/record/HoldingsLevel1",
+      "2": "/def/enum/record/HoldingsLevel2",
+      "3": "/def/enum/record/HoldingsLevel3",
+      "4": "/def/enum/record/HoldingsLevel4",
+      "5": "/def/enum/record/HoldingsLevel4WithPieceDesignation",
+      "m": "/def/enum/record/MixedLevels",
+      "u": null,
+      "z": "/def/enum/record/OtherLevel"
+    },
     "catForm": {
       "_": null,
       "a": "/def/enum/record/AACR2",
-      "c": "/def/enum/record/MissingISBD",
+      "c": "/def/enum/record/ISBDPunctuationOmitted",
       "i": "/def/enum/record/ISBD",
       "u": null
     },
@@ -102,7 +116,7 @@
       "a": "/def/enum/record/Set",
       "b": "/def/enum/record/PartWithIndependentTitle",
       "c": "/def/enum/record/PartWithDependentTitle",
-      "r": null
+      "r": "/def/enum/record/RecordHasLinks-Obsolete"
     },
     "entryMap": {
       "4500": "/def/enum/record/EntryMap"
@@ -1547,7 +1561,7 @@
     "catalogingSource": {
       "_": "/def/enum/content/NationalBibliographicAgency",
       "c": "/def/enum/content/CooperativeCatalogingProgram",
-      "d": null,
+      "d": "/def/enum/content/OtherSource",
       "u": null
     },
     "computerFrequency": {
@@ -1575,13 +1589,334 @@
       "r": "/def/enum/content/Regular-Obsolete",
       "u": null,
       "x": "/def/enum/content/CompletelyIrregular-Obsolete"
+    },
+    "subdivision": {
+      "d": "/def/enum/content/SubdividedGeographicallyDirect",
+      "i": "/def/enum/content/SubdividedGeographicallyIndirect",
+      "n": null
+    },
+    "romanization": {
+      "a": "/def/enum/content/InternationalStandard",
+      "b": "/def/enum/content/NationalStandard",
+      "c": "/def/enum/content/NationalLibraryAssociationAssociationStandard",
+      "d": "/def/enum/content/NationalLibraryOrBibliographicAgencyStandard",
+      "e": "/def/enum/content/LocalStandard",
+      "f": "/def/enum/content/StandardOfUnknownOrigin",
+      "g": "/def/enum/content/ConventionalRomanizationOrConventionalFormOfNameInLanguageOfCatalogingAgency",
+      "n": null
+    },
+    "languageOfCatalog": {
+      "b": "/def/enum/content/EnglishOrFrench",
+      "e": "/def/enum/content/EnglishOnly",
+      "f": "/def/enum/content/FrenchOnly"
+    },
+    "kindOfRecord": {
+      "a": "/def/enum/content/EstablishedHeadingRecord",
+      "b": "/def/enum/content/ReferenceRecordUntracedRecord",
+      "c": "/def/enum/content/ReferenceRecordTracedRecord",
+      "d": "/def/enum/content/SubdivisionRecord",
+      "e": "/def/enum/content/NodeLabelRecord",
+      "f": "/def/enum/content/EstablishedHeadingOrSubdivisionRecord",
+      "g": "/def/enum/content/ReferenceOrSubdivisionRecord"
+    },
+    "catalogingRules": {
+      "a": "/def/enum/content/EarlierRule",
+      "b": "/def/enum/content/Aacr1",
+      "c": "/def/enum/content/Aacr2",
+      "d": "/def/enum/content/Aacr2CompatibleHeading",
+      "n": null,
+      "z": null
+    },
+    "subjectHeading": {
+      "a": "/def/enum/content/LibraryOfCongressSubjectHeading",
+      "b": "/def/enum/content/LcSubjectHeadingsForChildrenSLiterature",
+      "c": "/def/enum/content/MedicalSubjectHeading",
+      "d": "/def/enum/content/NationalAgriculturalLibrarySubjectAuthorityFile",
+      "k": "/def/enum/content/CanadianSubjectHeading",
+      "n": null,
+      "r": "/def/enum/content/ArtOrArchitectureThesauru",
+      "s": "/def/enum/content/SearsListOfSubjectHeading",
+      "v": "/def/enum/content/RepertoireDesVedettesMatiere",
+      "z": null
+    },
+    "typeOfSeries": {
+      "a": "/def/enum/content/MonographicSeries",
+      "b": "/def/enum/content/MultipartItem",
+      "c": "/def/enum/content/SeriesLikePhrase",
+      "n": null,
+      "z": null
+    },
+    "numberedSeries": {
+      "a": "/def/enum/content/NumberedSeries",
+      "b": "/def/enum/content/UnnumberedSeries",
+      "c": "/def/enum/content/SeriesNumberingVary",
+      "n": null
+    },
+    "headingSeries": {
+      "a": "/def/enum/content/Appropriate",
+      "b": "/def/enum/content/NotAppropriate"
+    },
+    "subjectSubdivision": {
+      "a": "/def/enum/content/Topical",
+      "b": "/def/enum/content/Form",
+      "c": "/def/enum/content/Chronological",
+      "d": "/def/enum/content/Geographic",
+      "e": "/def/enum/content/Language",
+      "n": null
+    },
+    "govtAgency": {
+      "a": "/def/enum/content/AutonomousOrSemiAutonomousComponentOfMalaysia",
+      "c": "/def/enum/content/Multilocal",
+      "f": "/def/enum/content/FederalNational",
+      "i": "/def/enum/content/InternationalIntergovernmental",
+      "l": "/def/enum/content/Local",
+      "m": "/def/enum/content/Multistate",
+      "o": "/def/enum/content/GovernmentAgencyTypeUndetermined",
+      "s": "/def/enum/content/StateProvincialTerritorialDependentEtc",
+      "u": "/def/enum/content/UnknownIfHeadingIsGovernmentAgency",
+      "z": "/def/enum/content/OtherTypeOfGovernmentAgency"
+    },
+    "reference": {
+      "a": "/def/enum/content/TracingsAreConsistentWithTheHeading",
+      "b": "/def/enum/content/TracingsAreNotNecessarilyConsistentWithTheHeading",
+      "n": null
+    },
+    "recordUpdate": {
+      "a": "/def/enum/content/RecordCanBeUsed",
+      "b": "/def/enum/content/RecordIsBeingUpdated"
+    },
+    "personalName": {
+      "a": "/def/enum/content/DifferentiatedPersonalName",
+      "b": "/def/enum/content/UndifferentiatedPersonalName",
+      "n": null
+    },
+    "level": {
+      "a": "/def/enum/content/FullyEstablishedHeading",
+      "b": "/def/enum/content/Memorandum",
+      "c": "/def/enum/content/Provisional",
+      "d": "/def/enum/content/Preliminary",
+      "n": null
+    },
+    "modified": {
+      "s": "/def/enum/content/Shortened",
+      "x": "/def/enum/content/MissingCharacters"
+    },
+    "type": {
+      "u": null,
+      "v": "/def/enum/record/MultipartItemHolding",
+      "x": "/def/enum/record/SinglePartItemHolding",
+      "y": "/def/enum/record/SerialItemHolding"
+    },
+    "statistics": {
+      "_": "/def/enum/record/Löpande_katalogisering_-_Odefinierat",
+      "o": "/def/enum/record/Undertrycks_i_nyförvärvslista",
+      "r": "/def/enum/record/Retrospektiv_katalogisering"
+    },
+    "itemInfoInRecord": {
+      "i": "/def/enum/record/Exemplarinformation",
+      "n": "/def/enum/record/Exemplarinformation_finns_ej"
+    },
+    "receipt": {
+      "0": null,
+      "1": "/def/enum/content/OtherReceiptOrAcquisitionStatu",
+      "2": "/def/enum/content/Completed",
+      "3": "/def/enum/content/OnOrder",
+      "4": "/def/enum/content/CurrentlyReceived",
+      "5": "/def/enum/content/NotCurrentlyReceived",
+      "_": "/def/enum/content/Uppgift_saknas"
+    },
+    "method": {
+      "c": "/def/enum/content/CooperativeOrConsortialPurchase",
+      "d": "/def/enum/content/Deposit",
+      "e": "/def/enum/content/Exchange",
+      "f": "/def/enum/content/Free",
+      "g": "/def/enum/content/Gift",
+      "l": "/def/enum/content/Pliktleverans",
+      "m": "/def/enum/content/Membership",
+      "n": "/def/enum/content/NonLibraryPurchase",
+      "p": "/def/enum/content/Purchase",
+      "u": null,
+      "z": "/def/enum/content/OtherMethodOfAcquisition"
+    },
+    "generalRetention": {
+      "0": null,
+      "1": "/def/enum/content/OtherGeneralRetentionPolicy",
+      "2": "/def/enum/content/RetainedExceptAsReplacedByUpdate",
+      "3": "/def/enum/content/SampleIssueRetained",
+      "4": "/def/enum/content/RetainedUntilReplacedByMicroform",
+      "5": "/def/enum/content/RetainedUntilReplacedByCumulationReplacementVolumeOrRevision",
+      "6": "/def/enum/content/RetainedForALimitedPeriod",
+      "7": "/def/enum/content/NotRetained",
+      "8": "/def/enum/content/PermanentlyRetained"
+    },
+    "policyType": {
+      "l": "/def/enum/content/Latest",
+      "p": "/def/enum/content/Previou"
+    },
+    "unitType": {
+      "e": "/def/enum/content/EditionSPart",
+      "i": "/def/enum/content/IssueSPart",
+      "m": "/def/enum/content/MonthSTime",
+      "s": "/def/enum/content/SupplementSPart",
+      "w": "/def/enum/content/WeekSTime",
+      "y": "/def/enum/content/YearSTime"
+    },
+    "completeness": {
+      "0": null,
+      "1": "/def/enum/content/Complete",
+      "2": "/def/enum/content/Incomplete",
+      "3": "/def/enum/content/Scattered",
+      "4": null,
+      "_": "/def/enum/content/Uppgift_saknas"
+    },
+    "lendingPolicy": {
+      "_": "/def/enum/content/Uppgift_saknas",
+      "a": "/def/enum/content/WillLend",
+      "b": "/def/enum/content/WillNotLend",
+      "c": "/def/enum/content/WillLendHardCopyOnly",
+      "l": "/def/enum/content/LimitedLendingPolicy",
+      "u": null
+    },
+    "reproduction": {
+      "_": "/def/enum/content/Uppgift_saknas",
+      "a": "/def/enum/content/WillReproduce",
+      "b": "/def/enum/content/WillNotReproduce",
+      "u": null
+    },
+    "copyReport": {
+      "0": "/def/enum/content/Separate",
+      "1": "/def/enum/content/Composite",
+      "_": "/def/enum/content/Uppgift_saknas"
+    },
+    "numberUnits": {
+      "1": "/def/enum/content/1",
+      "2": "/def/enum/content/2",
+      "3": "/def/enum/content/3",
+      "4": "/def/enum/content/4",
+      "5": "/def/enum/content/5",
+      "6": "/def/enum/content/6",
+      "7": "/def/enum/content/7",
+      "8": "/def/enum/content/8",
+      "9": "/def/enum/content/9"
     }
 
   },
 
-  "thingLink": "about",
-
   "bib": {
+
+    "thingLink": "about",
+
+    "postProcessing": [
+      {
+        "type": "FoldLinkedProperty",
+        "statusFlag": "_providerDateStatus",
+        "statusFlagValue": "/def/enum/content/SingleKnownDateProbableDate",
+        "sourceProperty": "_providerYear",
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "providerDate",
+        "defaultLink": "publication",
+        "typeLinkMap": {
+          "Manuscript": "manufacture"
+        },
+        "_name": "fold publication date",
+        "_spec": [
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977"
+            },
+            "normalized": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"providerDate": "1977"} ]
+            }
+          },
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+            }
+          },
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "ca 1977"} ]
+            },
+            "result": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [
+                {
+                  "@type": "ProviderEvent",
+                  "providerDate": "ca 1977"
+                }
+              ]
+            }
+          },
+          {
+            "source": {
+              "@type": ["ManuscriptText"],
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977"
+            },
+            "result": {
+              "@type": ["ManuscriptText"],
+              "manufacture": [ {"providerDate": "1977"} ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "FoldJoinedProperties",
+        "statusFlag": "_providerDateStatus",
+        "statusFlagValue": "/def/enum/content/ContinuingResourceCurrentlyPublished",
+        "sourceProperties": ["_providerYear", "_providerOtherYear"],
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "temporalCoverageNote",
+        "separator": "-",
+        "_spec": [
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/ContinuingResourceCurrentlyPublished"},
+              "_providerYear": "1977",
+              "_providerOtherYear": "9999"
+            },
+            "result": {
+              "temporalCoverageNote": "1977-"
+            }
+          }
+        ]
+      },
+      {
+        "type": "FoldJoinedProperties",
+        "statusFlag": "_providerDateStatus",
+        "statusFlagValue": "/def/enum/content/ContinuingResourceCeasedPublication",
+        "sourceProperties": ["_providerYear", "_providerOtherYear"],
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "temporalCoverageNote",
+        "separator": "-",
+        "_spec": [
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/ContinuingResourceCeasedPublication"},
+              "_providerYear": "1977",
+              "_providerOtherYear": "2017"
+            },
+            "result": {
+              "temporalCoverageNote": "1977-2017"
+            }
+          }
+        ]
+      }
+    ],
 
     "000": {
       "[5:6]": {
@@ -2645,19 +2980,19 @@
       "TODO:repeatedBy": "006",
       "[0:6]": {
         "aboutEntity": "?record",
-        "property": "date"
+        "property": "createdRawDate", "TODO:parseDate": "yyMMdd"
       },
       "[6:7]": {
-        "link": "publicationStatus",
+        "link": "_providerDateStatus",
         "uriTemplate": "{_}",
         "tokenMap": "publicationStatus",
         "TODO:specialRule": "foldPublicationDate"
       },
       "[7:11]": {
-        "property": "publicationYear"
+        "property": "_providerYear"
       },
       "[11:15]": {
-        "property": "publicationOtherYear"
+        "property": "_providerOtherYear"
       },
       "[15:18]": {
         "addLink": "publicationCountry",
@@ -3111,11 +3446,11 @@
             {"008": "900101s1977    sw            000 0aswe  "}
           ],
           "result": {
-            "date": "900101",
+            "createdRawDate": "900101",
             "about": {
               "language": [{"@id": "/def/languages/swe"}],
-              "publicationStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-              "publicationYear":  "1977",
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear":  "1977",
               "publicationCountry": [{"@id": "/def/countries/sw"}],
               "biography": {"@id": "/def/enum/content/Autobiography"},
               "confPub": {"@id": "/def/enum/content/NotAConferencePublication"},
@@ -4005,7 +4340,7 @@
       "_spec": [
         {
           "source": {
-            "338": {"subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "rdacarrier"}]}
+            "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "rdacarrier"}]}
           },
           "result": {
             "about": {
@@ -4626,7 +4961,7 @@
       "addLink": "isPrimaryTopicOf", "resourceType": "Document",
       "TODO:i1": {},
       "match-i2": {
-        "0": {"addLink": "encoding", "resourceType": "MediaObject"},
+        "0": {"addLink": "associatedMedia", "resourceType": "MediaObject"},
         "1": {"addLink": "alternateFormat", "resourceType": "Electronic"},
         "2": {"addLink": "isPrimaryTopicOf", "resourceType": "Document"},
         "8": {"addLink": "relation", "resourceType": "Document"}
@@ -4686,13 +5021,16 @@
   },
 
   "auth": {
+
+    "thingLink": "about",
+
     "000": {
       "inherit": "bib",
       "[17:18]": {
         "aboutEntity": "?record",
         "link": "encLevel",
-        "uriTemplate": "{_}",
-        "tokenMap": {"n": "/def/enum/record/FullLevel", "o": "/def/enum/record/PartialPreliminaryLevel"}
+        "tokenMap": "auth-encLevel",
+        "uriTemplate": "{_}"
       },
       "_specOriginalLeader": "01341cz  a2200397n  4500",
       "_specSource": {
@@ -4704,7 +5042,7 @@
         "@id": "/auth/140482",
         "controlNumber": "140482",
         "entryMap": "4500",
-        "encLevel": {"@id": "/def/enum/record/FullLevel"},
+        "encLevel": {"@id": "/def/enum/record/CompleteAuthorityRecord"},
         "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
         "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
         "about": {
@@ -4715,9 +5053,107 @@
     },
     "001" : {"inherit": "bib"},
     "005": {"inherit": "bib"},
+
     "008": {
-      "[0:0]": {}
+      "[0:6]": {"property": "date"},
+      "[6:7]": {
+        "link": "subdivision",
+        "uriTemplate": "{_}",
+        "tokenMap": "subdivision"
+      },
+      "[7:8]": {
+        "link": "romanization",
+        "uriTemplate": "{_}",
+        "tokenMap": "romanization"
+      },
+      "[8:9]": {
+        "link": "languageOfCatalog",
+        "uriTemplate": "{_}",
+        "tokenMap": "languageOfCatalog"
+      },
+      "[9:10]": {
+        "link": "kindOfRecord",
+        "uriTemplate": "{_}",
+        "tokenMap": "kindOfRecord"
+      },
+      "[10:11]": {
+        "link": "catalogingRules",
+        "uriTemplate": "{_}",
+        "tokenMap": "catalogingRules"
+      },
+      "[11:12]": {
+        "link": "subjectHeading",
+        "uriTemplate": "{_}",
+        "tokenMap": "subjectHeading"
+      },
+      "[12:13]": {
+        "link": "typeOfSeries",
+        "uriTemplate": "{_}",
+        "tokenMap": "typeOfSeries"
+      },
+      "[13:14]": {
+        "link": "numberedSeries",
+        "uriTemplate": "{_}",
+        "tokenMap": "numberedSeries"
+      },
+      "[16:17]": {
+        "link": "headingSeries",
+        "uriTemplate": "{_}",
+        "tokenMap": "headingSeries"
+      },
+      "[17:18]": {
+        "link": "subjectSubdivision",
+        "uriTemplate": "{_}",
+        "tokenMap": "subjectSubdivision"
+      },
+      "[28:29]": {
+        "link": "govtAgency",
+        "uriTemplate": "{_}",
+        "tokenMap": "govtAgency"
+      },
+      "[29:30]": {
+        "link": "reference",
+        "uriTemplate": "{_}",
+        "tokenMap": "reference"
+      },
+      "[31:32]": {
+        "link": "recordUpdate",
+        "uriTemplate": "{_}",
+        "tokenMap": "recordUpdate"
+      },
+      "[32:33]": {
+        "link": "personalName",
+        "uriTemplate": "{_}",
+        "tokenMap": "personalName"
+      },
+      "[33:34]": {
+        "link": "level",
+        "uriTemplate": "{_}",
+        "tokenMap": "level"
+      },
+      "[38:39]": {
+        "link": "modified",
+        "uriTemplate": "{_}",
+        "tokenMap": "modified"
+      },
+      "[39:40]": {
+        "link": "catalogingSource",
+        "uriTemplate": "{_}",
+        "tokenMap": "catalogingSource"
+      },
+      "[14:15]": {
+        "link": "headingMain",
+        "uriTemplate": "{_}",
+        "tokenMap": "headingSeries"
+      },
+      "[15:16]": {
+        "link": "headingSubject",
+        "uriTemplate": "{_}",
+        "tokenMap": "headingSeries"
+      },
+      "repeatable": false
     },
+
     "035" : {"inherit": "bib"},
     "040" : {
       "inherit": "bib",
@@ -5008,13 +5444,110 @@
   },
 
   "hold": {
-    "000": {"inherit": "bib"},
+
+    "thingLink": "about",
+
+    "000": {
+      "[5:6]": {
+        "domainEntity": "Record",
+        "link": "status",
+        "uriTemplate": "{_}",
+        "tokenMap": "status"
+      },
+      "[6:7]": {
+        "domainEntity": "Record",
+        "link": "type",
+        "uriTemplate": "{_}",
+        "tokenMap": "type"
+      },
+      "[7:8]": {
+        "domainEntity": "Record",
+        "link": "statistics",
+        "uriTemplate": "{_}",
+        "tokenMap": "statistics"
+      },
+      "[9:10]": {
+        "domainEntity": "Record",
+        "link": "characterCoding",
+        "uriTemplate": "{_}",
+        "tokenMap": "characterCoding"
+      },
+      "[17:18]": {
+        "domainEntity": "Record",
+        "link": "encLevel",
+        "uriTemplate": "{_}",
+        "tokenMap": "hold-encLevel"
+      },
+      "[18:19]": {
+        "domainEntity": "Record",
+        "link": "itemInfoInRecord",
+        "uriTemplate": "{_}",
+        "tokenMap": "itemInfoInRecord"
+      },
+      "repeatable": false
+    },
+
     "001" : {"inherit": "bib"},
     "004": {"link": "holdingFor", "uriTemplate": "/resource/bib/{_}"},
     "005": {"inherit": "bib"},
+
+    "007": {"inherit": "bib"},
+
     "008": {
-      "[0:0]": {}
+      "[0:6]": {"property": "date"},
+      "[6:7]": {
+        "link": "receipt",
+        "uriTemplate": "{_}",
+        "tokenMap": "receipt"
+      },
+      "[7:8]": {
+        "link": "method",
+        "uriTemplate": "{_}",
+        "tokenMap": "method"
+      },
+      "[12:13]": {
+        "link": "generalRetention",
+        "uriTemplate": "{_}",
+        "tokenMap": "generalRetention"
+      },
+      "[13:14]": {
+        "link": "policyType",
+        "uriTemplate": "{_}",
+        "tokenMap": "policyType"
+      },
+      "[15:16]": {
+        "link": "unitType",
+        "uriTemplate": "{_}",
+        "tokenMap": "unitType"
+      },
+      "[16:17]": {
+        "link": "completeness",
+        "uriTemplate": "{_}",
+        "tokenMap": "completeness"
+      },
+      "[20:21]": {
+        "link": "lendingPolicy",
+        "uriTemplate": "{_}",
+        "tokenMap": "lendingPolicy"
+      },
+      "[21:22]": {
+        "link": "reproduction",
+        "uriTemplate": "{_}",
+        "tokenMap": "reproduction"
+      },
+      "[25:26]": {
+        "link": "copyReport",
+        "uriTemplate": "{_}",
+        "tokenMap": "copyReport"
+      },
+      "[14:15]": {
+        "link": "numberUnits",
+        "uriTemplate": "{_}",
+        "tokenMap": "numberUnits"
+      },
+      "repeatable": false
     },
+
     "014": {
       "TODO:i1": {},
       "$a": {"addProperty": "librisIIINumber"}
