@@ -126,6 +126,9 @@
 <logger name="whelk.importer.LibrisOaiPmhImporter">
   <level value="info"/>
 </logger>
+<logger name="whelk.importer.OldOAIPMHImporter">
+  <level value="info"/>
+</logger>
 <logger name="whelk.plugin.LibrisURIMinter">
   <level value="warn"/>
 </logger>

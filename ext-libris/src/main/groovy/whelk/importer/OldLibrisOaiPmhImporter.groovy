@@ -193,6 +193,15 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         log.debug("Record ${entry.identifier} is suppressed. Next ...")
                         return
                     }
+                    try {
+                        def originalIdentifier = record.getDatafields("901").collect { it.getSubfields("i").data}.flatten().first()
+                        if (originalIdentifier) {
+                            log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
+                                entry['identifier'] = originalIdentifier
+                        }
+                    } catch (NoSuchElementException nsee) {
+                        log.trace("Record doesn't have a 901i field.")
+                    }
 
                     if (preserveTimestamps && it.header.datestamp) {
                         def date = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
