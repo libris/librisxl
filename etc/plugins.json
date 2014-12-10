@@ -515,9 +515,6 @@
         "_class" : "whelk.camel.FormatConverterProcessor",
         "_plugins" : ["turtleconverter"]
     },
-    "prawnrunner_processor": {
-        "_class" : "whelk.camel.PrawnRunner"
-    },
     "graphstore_aggregator": {
         "_class" : "whelk.camel.GraphstoreBatchUpdateAggregationStrategy",
         "_params": {
@@ -526,10 +523,14 @@
           "bnodeSkolemBase": "tag:libris.kb.se,2014:bnode:"
         }
     },
+    "apixprocessor": {
+        "_class": "whelk.camel.APIXProcessor",
+        "_plugins" : ["jsonld2marcxmlconverter"]
+    },
     "routebuilder": {
         "_class" : "whelk.camel.WhelkRouteBuilder",
         "_plugins" : [
-            "elastic_camel_processor", "turtleconverter_processor", "prawnrunner_processor","graphstore_aggregator"
+            "elastic_camel_processor", "turtleconverter_processor", "graphstore_aggregator","apixprocessor"
         ],
         "_params": {
             "elasticBatchSize": 2000,
@@ -538,7 +539,7 @@
             "indexMessageQueue": "_property:MQ_INDEX",
             "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX",
             "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE",
-            "exportToAPIX": false
+            "apixUri": "_property:APIX_URI"
         }
     },
     "index": {

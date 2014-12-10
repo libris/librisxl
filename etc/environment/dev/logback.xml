@@ -30,6 +30,9 @@
   <logger name="whelk.camel.FormatConverterProcessor">
       <level value="info"/>
   </logger>
+  <logger name="whelk.camel.APIXProcessor">
+      <level value="debug"/>
+  </logger>
   <logger name="whelk.camel.ElasticTypeRouteProcessor">
       <level value="info"/>
   </logger>
@@ -115,7 +118,7 @@
   <level value="info"/>
 </logger>
 <logger name="whelk.importer.MySQLImporter">
-  <level value="debug"/>
+  <level value="info"/>
 </logger>
 <logger name="whelk.importer.OaiPmhImporter">
   <level value="info"/>

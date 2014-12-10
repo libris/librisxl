@@ -182,7 +182,12 @@ class DocumentAPI extends BasicAPI {
                     entry['identifier'] = path
                 }
             }
-            entry["contentType"] = ContentType.parse(request.getContentType()).getMimeType()
+            String cType = ContentType.parse(request.getContentType()).getMimeType()
+            if (cType == "application/x-www-form-urlencoded") {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content-Type application/x-www-form-urlencoded is not supported")
+            }
+
+            entry["contentType"] = cType
             log.debug("Set ct: ${entry.contentType}")
             entry["dataset"] = getDatasetBasedOnPath(path)
 
@@ -199,10 +204,10 @@ class DocumentAPI extends BasicAPI {
                     return
                 }
 
-                doc = this.whelk.sanityCheck(doc)
+                doc = whelk.sanityCheck(doc)
 
                 log.debug("Saving document (${doc.identifier})")
-                def identifier = this.whelk.add(doc)
+                def identifier = whelk.add(doc)
 
                 def locationRef = request.getRequestURL()
 

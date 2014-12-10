@@ -31,7 +31,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     String indexMessageQueue
     String bulkIndexMessageQueue
     String graphstoreMessageQueue
-    boolean exportToAPIX = false
+    String apixUri = null
 
     WhelkRouteBuilder(Map settings) {
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
@@ -40,19 +40,18 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         indexMessageQueue = settings.get("indexMessageQueue")
         bulkIndexMessageQueue = settings.get("bulkIndexMessageQueue")
         graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
-        exportToAPIX = settings.get("exportToAPIX", exportToAPIX)
+        apixUri = settings.get("apixUri")
+        if (apixUri) {
+            apixUri = apixUri.replace("http://", "http4:")
+        }
     }
 
     void configure() {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
-        //Processor turtleConverterProcessor = getPlugin("turtleconverter_processor")
         AggregationStrategy graphstoreAggregationStrategy = getPlugin("graphstore_aggregator")
-        Processor prawnRunner = getPlugin("prawnrunner_processor")
-        String primaryStorageId = whelk.storage.id
-        assert formatConverterProcessor
+        APIXProcessor apixProcessor = getPlugin("apixprocessor")
 
-        String elasticCluster = System.getProperty("elastic.cluster", global.ELASTIC_CLUSTER)
-        log.info("Using cluster $elasticCluster for camel routes.")
+        String primaryStorageId = whelk.storage.id
 
         def eligbleMQs = []
         def eligbleBulkMQs = []
@@ -64,9 +63,9 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             eligbleMQs.add(graphstoreMessageQueue)
             eligbleBulkMQs.add(graphstoreMessageQueue)
         }
-        if (exportToAPIX) {
+        if (apixUri) {
             eligbleMQs.add("activemq:apix.queue")
-            eligbleBulkMQs.add("activemq:apix.queue")
+            //eligbleBulkMQs.add("activemq:apix.queue")
         }
 
         onException(HttpOperationFailedException.class)
@@ -123,10 +122,12 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             camelStep.to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}" + credentials)
         }
 
-        if (exportToAPIX) {
+        if (apixUri) {
             from("activemq:apix.queue")
-                .filter("groovy", "['bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save hold and bib
-                .process(new APIXProcessor()).to("http4:127.0.0.1:8100")
+                .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save hold and bib
+                .process(apixProcessor)
+                .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.PUT))
+                .to(apixUri)
         }
     }
 
