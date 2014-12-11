@@ -525,7 +525,7 @@
     },
     "apixprocessor": {
         "_class": "whelk.camel.APIXProcessor",
-        "_params": "/0.1/cat/test/",
+        "_params": "/apix/0.1/cat/test/",
         "_plugins" : ["jsonld2marcxmlconverter"]
     },
     "routebuilder": {

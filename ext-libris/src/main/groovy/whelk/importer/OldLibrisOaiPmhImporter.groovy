@@ -224,7 +224,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                             def doc = marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
                             if (originalIdentifier) {
                                 def dataMap = doc.dataAsMap
-                                dataMap['sameAs'] = ['@id':recordId]
+                                dataMap['controlNumber'] = recordId
                                 doc = doc.withData(dataMap)
                             }
                             if (enhancer) {

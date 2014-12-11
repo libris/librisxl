@@ -11,6 +11,11 @@ import se.kb.libris.util.marc.impl.MarcRecordImpl
 import se.kb.libris.util.marc.io.MarcRecordReader
 import se.kb.libris.util.marc.io.MarcRecordWriter
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter
+import se.kb.libris.util.marc.io.DomSerializer
+import javax.xml.transform.*;
+import javax.xml.transform.dom.*;
+import javax.xml.transform.stream.*;
+import org.w3c.dom.*;
 
 import java.text.Normalizer
 //import org.json.simple.*
@@ -184,7 +189,7 @@ class JSONMarcConverter {
 
     static String marcRecordAsXMLString(MarcRecord record) {
 
-        OutputStream output = new OutputStream() {
+        OutputStream out = new OutputStream() {
             StringBuilder builder = new StringBuilder();
             @Override
             void write(int b) throws IOException {
@@ -196,9 +201,33 @@ class JSONMarcConverter {
             }
         }
 
+
+
+        // Start
+        DocumentFragment docFragment = DomSerializer.serialize(record, javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument())
+        StringWriter sw = new StringWriter()
+        Source source = new DOMSource(docFragment)
+        Result result = new StreamResult(sw)
+        Transformer transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer()
+        transformer.setOutputProperty("omit-xml-declaration", "yes")
+
+        try {
+            transformer.setOutputProperty("encoding", "UTF-8")
+            transformer.transform(source, result)
+        } catch (javax.xml.transform.TransformerException e) {
+            System.err.println(e.getMessage());
+        }
+
+        out.write(("  " + sw.getBuffer() + "\n").getBytes("UTF-8"));
+        out.flush();
+
+        // Stop
+
+        /*
         MarcRecordWriter writer = new MarcXmlRecordWriter(output);
         writer.writeRecord(record);
         writer.close();
-        return output.toString();
+        */
+        return out.toString();
     }
 }

@@ -30,8 +30,8 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
         String operation = message.getHeader("whelk:operation")
 
         log.debug("processing ${message.getHeader('entry:identifier')} for APIX")
-        log.info("Received operation: " + operation)
-        log.info("dataset: ${message.getHeader('entry:dataset')}")
+        log.debug("Received operation: " + operation)
+        log.debug("dataset: ${message.getHeader('entry:dataset')}")
         boolean messagePrepared = false
 
         if (message.getHeader("CamelHttpPath")) {
@@ -67,9 +67,30 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
         if (doc.identifier ==~ /\/(auth|bib|hold)\/\d+/) {
             return doc.identifier
         }
-        String sameAs = doc.getDataAsMap().get("sameAs")?.get("@id")
-
-        return sameAs
+        String controlNumber = doc.getDataAsMap().get("controlNumber")
+        if (controlNumber) {
+            return "/"+doc.dataset+"/"+controlNumber
+        }
+        return null
     }
 }
 
+@Log
+class APIXResponseProcessor implements Processor {
+    @Override
+    public void process(Exchange exchange) throws Exception {
+        Message message = exchange.getIn()
+        message.getHeaders().each { key, value -> 
+            log.info("APIX response message header: $key = $value")
+        }
+        log.info("APIX reponse code: ${message.getHeader('CamelHttpResponseCode')} for ${message.getHeader('CamelHttpMethod')} ${message.getHeader('CamelHttpPath')}")
+        if (message.getHeader("CamelHttpMethod") == HttpMethods.PUT && message.getHeader("CamelHttpResponseCode") == 200) {
+            def xmlresponse = new XmlSlurper(false,false).parseText(message.getBody(String.class))
+            if (xmlresponse.@status == "ERROR") {
+                log.error("APIX responded with error code ${xmlresponse.@error_code} (${xmlresponse.@error_message}) when calling ${message.getHeader('CamelHttpPath')} for document ${message.getHeader('entry:identifier')}")
+            } else {
+                log.info("Received XML response from APIX: " + message.getBody(String.class))
+            }
+        }
+    }
+}

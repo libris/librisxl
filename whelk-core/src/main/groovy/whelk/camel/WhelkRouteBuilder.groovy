@@ -46,9 +46,10 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             apixUri = apixUri.replace("https://", "https4:")
             def properties = new java.util.Properties()
             properties.load(this.getClass().getClassLoader().getResourceAsStream("api.properties"))
-            apixUri = apixUri +
-                "?authUsername=" + properties.getProperty("apixUsername") +
-                "&authPassword=" + properties.getProperty("apixPassword")
+            apixUri = apixUri + "?" +
+                "authUsername=" + properties.getProperty("apixUsername") + "&" +
+                "authPassword=" + properties.getProperty("apixPassword") + "&" +
+                "authenticationPreemptive=true"
         }
     }
 
@@ -130,9 +131,10 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         if (apixUri) {
             from("activemq:apix.queue")
-                .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save hold and bib
+                .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save auth hold and bib
                 .process(apixProcessor)
                 .to(apixUri)
+                .process(new APIXResponseProcessor())
         }
     }
 
@@ -159,6 +161,9 @@ class HttpFailedBean {
         // TODO: More fine grained error handling
         if (e.statusCode < 400) {
             message.setHeader("handled", true)
+        } else if (e.statusCode == 404) {
+            message.setHeader("handled", true)
+            log.warn("Tried to ${message.getHeader('whelk:operation')} ${message.getHeader('entry:identifier')} but got a 404. Guess it's not there ...")
         } else {
             log.info("Failed to deliver to ${e.uri} with status ${e.statusCode}. Sending message to retry queue.")
             message.setHeader("handled", false)
