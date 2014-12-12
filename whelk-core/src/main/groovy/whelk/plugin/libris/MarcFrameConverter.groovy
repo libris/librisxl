@@ -1,4 +1,4 @@
-package whelk.plugin
+package whelk.plugin.libris
 
 import groovy.util.logging.Slf4j as Log
 
@@ -12,6 +12,7 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Document
+import whelk.plugin.*
 import whelk.StandardWhelk
 
 import whelk.converter.MarcJSONConverter

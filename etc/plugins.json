@@ -9,7 +9,7 @@
         "_class": "whelk.component.support.FusekiServer"
     },
     "remotesearch": {
-        "_class": "whelk.api.RemoteSearchAPI",
+        "_class": "whelk.api.libris.RemoteSearchAPI",
         "_plugins" : [
             "marcconverter"
         ],
@@ -19,35 +19,35 @@
         }
     },
     "isxntool": {
-        "_class": "whelk.api.ISXNTool"
+        "_class": "whelk.api.libris.ISXNTool"
     },
     "jsonld2marcxmlconverter" : {
-        "_class": "whelk.converter.JsonLD2MarcXMLConverter",
+        "_class": "whelk.converter.libris.JsonLD2MarcXMLConverter",
         "_plugins": [
             "jsonld2marcconverter"
         ]
     },
     "marcxml2jsonldconverter": {
-        "_class": "whelk.plugin.MarcXml2JsonLDConverter",
+        "_class": "whelk.plugin.libris.MarcXml2JsonLDConverter",
         "_plugins": [
             "marcconverter"
         ]
     },
     "marcconverter" : {
-        "_class" : "whelk.plugin.MarcFrameConverter"
+        "_class" : "whelk.plugin.libris.MarcFrameConverter"
     },
     "jsonld2marcconverter" : {
-        "_class" : "whelk.plugin.JsonLD2MarcConverter"
+        "_class" : "whelk.plugin.libris.JsonLD2MarcConverter"
     },
     "turtleconverter" : {
         "_class" : "whelk.plugin.JsonLDTurtleConverter",
         "_params": "context.jsonld, http://libris.kb.se/resource/"
     },
     "cleanupindexconverter" : {
-        "_class" : "whelk.plugin.CleanupIndexFormatConverter"
+        "_class" : "whelk.plugin.libris.CleanupIndexFormatConverter"
     },
     "libcount" : {
-        "_class" : "whelk.api.HoldCounter",
+        "_class" : "whelk.api.libris.HoldCounter",
         "_params" : {
             "path" : "_libcount",
             "defaultIndexType"  : "hold"
@@ -225,13 +225,13 @@
         }
     },
     "completeexpander" : {
-        "_class" : "whelk.api.CompleteExpander"
+        "_class" : "whelk.api.libris.CompleteExpander"
     },
     "linkcompleter" : {
-        "_class" : "whelk.plugin.JsonLDLinkCompleterFilter"
+        "_class" : "whelk.plugin.libris.JsonLDLinkCompleterFilter"
     },
     "mysqlimporter" : {
-        "_class" : "whelk.importer.MySQLImporter",
+        "_class" : "whelk.importer.libris.MySQLImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],
@@ -241,7 +241,7 @@
         }
     },
     "oaipmhimporter2" : {
-        "_class" : "whelk.importer.LibrisOaiPmhImporter",
+        "_class" : "whelk.importer.libris.LibrisOaiPmhImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],
@@ -255,7 +255,7 @@
         }
     },
     "oaipmhimporter" : {
-        "_class" : "whelk.importer.OldOAIPMHImporter",
+        "_class" : "whelk.importer.libris.OldOAIPMHImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],
@@ -302,14 +302,14 @@
         "_class" : "whelk.api.RebuildMetaIndexOperator"
     },
     "formatter" : {
-        "_class" : "whelk.api.FormatterAPI",
+        "_class" : "whelk.api.libris.FormatterAPI",
         "_plugins" : [
             "marcconverter",
             "jsonld2marcconverter"
         ]
     },
     "linkexpander" : {
-        "_class" : "whelk.plugin.JsonLDLinkExpander",
+        "_class" : "whelk.plugin.libris.JsonLDLinkExpander",
         "_plugins" : [
             "index"
         ],

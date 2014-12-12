@@ -1,4 +1,4 @@
-package whelk.api
+package whelk.api.libris
 
 import groovy.util.logging.Slf4j as Log
 import groovy.xml.StreamingMarkupBuilder
@@ -8,9 +8,11 @@ import java.util.concurrent.*
 import javax.servlet.http.*
 
 import whelk.*
+import whelk.api.*
 import whelk.component.*
 import whelk.exception.*
 import whelk.plugin.*
+import whelk.plugin.libris.*
 import whelk.result.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*

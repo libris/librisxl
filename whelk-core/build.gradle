@@ -34,6 +34,11 @@ dependencies {
     compile "org.apache.jena:jena-core:2.12.0"
     compile "org.apache.jena:jena-fuseki:1.1.0"
     compile "org.apache.jena:jena-tdb:1.1.0"
+    // From ext-libris
+    compile 'commons-collections:commons-collections:3.2.1'
+    compile 'com.damnhandy:handy-uri-templates:2.0.2'
+    compile 'se.kb.libris.commons:isbntools:1.0'
+    compile 'mysql:mysql-connector-java:5.1.33'
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {

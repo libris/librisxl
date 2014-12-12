@@ -1,8 +1,9 @@
-package whelk.plugin
+package whelk.plugin.libris
 
 import whelk.ElasticQuery
 import whelk.Document
 import whelk.Whelk
+import whelk.plugin.*
 
 import static whelk.util.Tools.*
 

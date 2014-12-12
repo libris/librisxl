@@ -1,4 +1,4 @@
-package whelk.plugin
+package whelk.plugin.libris
 
 import java.util.regex.Pattern
 import groovy.util.logging.Slf4j as Log

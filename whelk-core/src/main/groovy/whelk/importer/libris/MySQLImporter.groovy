@@ -1,4 +1,4 @@
-package whelk.importer
+package whelk.importer.libris
 
 import groovy.util.logging.Slf4j as Log
 
@@ -6,7 +6,9 @@ import java.sql.*
 import java.util.concurrent.*
 
 import whelk.*
+import whelk.importer.*
 import whelk.plugin.*
+import whelk.plugin.libris.*
 
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*

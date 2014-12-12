@@ -1,10 +1,11 @@
-package whelk.plugin
+package whelk.plugin.libris
 
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
 
 import whelk.*
+import whelk.plugin.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import whelk.converter.MarcJSONConverter

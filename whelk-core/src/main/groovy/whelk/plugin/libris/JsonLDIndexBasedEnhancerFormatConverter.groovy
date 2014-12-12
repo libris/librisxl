@@ -1,6 +1,7 @@
-package whelk.plugin
+package whelk.plugin.libris
 
 import whelk.*
+import whelk.plugin.*
 import whelk.ElasticQuery
 
 import org.codehaus.jackson.map.ObjectMapper

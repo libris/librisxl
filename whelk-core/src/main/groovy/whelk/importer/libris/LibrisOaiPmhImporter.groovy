@@ -1,8 +1,9 @@
-package whelk.importer
+package whelk.importer.libris
 
 import groovy.util.logging.Slf4j as Log
 
 import whelk.*
+import whelk.importer.*
 import whelk.plugin.*
 
 @Log

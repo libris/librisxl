@@ -68,7 +68,7 @@ class ImportOperator extends AbstractOperator {
             throw new WhelkRuntimeException("Couldn't find any importers working for ${whelk.id} or specified importer \"${importerPlugin}\" is unavailable.")
         }
         log.debug("Importer name: ${importer.getClass().getName()}")
-        if (importer instanceof OaiPmhImporter || importer.getClass().getName() == "whelk.importer.OldOAIPMHImporter") {
+        if (importer instanceof OaiPmhImporter || importer.getClass().getName() == "whelk.importer.libris.OldOAIPMHImporter") {
             importer.serviceUrl = serviceUrl
             this.totalCount = 0
             for (ds in dataset.split(",")) {

@@ -1,4 +1,4 @@
-package whelk.importer
+package whelk.importer.libris
 
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
@@ -8,10 +8,12 @@ import java.text.*
 import java.util.concurrent.*
 
 import whelk.*
+import whelk.importer.*
 import whelk.exception.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import whelk.plugin.*
+import whelk.plugin.libris.*
 import whelk.converter.MarcJSONConverter
 import whelk.util.Tools
 

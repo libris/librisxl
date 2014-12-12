@@ -1,10 +1,11 @@
-package whelk.converter
+package whelk.converter.libris
 
 import groovy.util.logging.Slf4j as Log
 import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
 import whelk.plugin.BasicFormatConverter
-import whelk.plugin.JsonLD2MarcConverter
+import whelk.plugin.libris.JsonLD2MarcConverter
+import whelk.converter.*
 
 import static whelk.converter.JSONMarcConverter.marcRecordAsXMLString
 

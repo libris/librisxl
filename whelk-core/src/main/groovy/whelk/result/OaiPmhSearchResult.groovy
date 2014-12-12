@@ -3,7 +3,7 @@ package whelk.result
 import groovy.util.logging.Slf4j
 import groovy.xml.StreamingMarkupBuilder
 import whelk.Document
-import whelk.converter.JsonLD2MarcXMLConverter
+import whelk.converter.libris.JsonLD2MarcXMLConverter
 
 /**
  * Created by Markus Holm on 14-12-12.

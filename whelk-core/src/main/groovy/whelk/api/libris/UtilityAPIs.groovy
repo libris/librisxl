@@ -1,4 +1,4 @@
-package whelk.api
+package whelk.api.libris
 
 import groovy.util.logging.Slf4j as Log
 
@@ -9,6 +9,7 @@ import org.apache.http.entity.ContentType
 import whelk.util.Tools
 
 import whelk.*
+import whelk.api.*
 import whelk.component.*
 import whelk.exception.*
 import whelk.plugin.*
