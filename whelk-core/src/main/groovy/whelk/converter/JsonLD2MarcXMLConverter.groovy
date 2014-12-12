@@ -40,7 +40,7 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
 
         Document document = whelk.createDocument(getResultContentType())
         document.setIdentifier(doc.getIdentifier())
-        document.data = marcRecordAsXMLString(record)
+        document.data = whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)
 
         log.debug("Document ${doc.identifier} created successfully with entry: ${doc.entry} and meta: ${doc.meta}")
         return document
