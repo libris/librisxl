@@ -23,7 +23,7 @@
   <logger name="whelk.StandardWhelk">
       <level value="info"/>
   </logger>
-  <logger name="whelk.importer.MySQLImporter">
+  <logger name="whelk.importer.libris.MySQLImporter">
       <level value="info"/>
   </logger>
   <logger name="whelk.component.ElasticSearch">

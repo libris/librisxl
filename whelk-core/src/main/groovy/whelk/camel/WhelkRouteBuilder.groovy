@@ -49,7 +49,8 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             apixUri = apixUri + "?" +
                 "authUsername=" + properties.getProperty("apixUsername") + "&" +
                 "authPassword=" + properties.getProperty("apixPassword") + "&" +
-                "authenticationPreemptive=true"
+                "authenticationPreemptive=true" + "&" +
+                "httpClient.redirectsEnabled=false"
         }
     }
 
@@ -156,10 +157,11 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 class HttpFailedBean {
 
     void handle(Exchange exchange, Exception e) {
-        log.info("Handling failed http with status code ${e.statusCode}.")
+        log.info("Handling non 2xx http response (${e.statusCode}).")
         Message message = exchange.getIn()
         // TODO: More fine grained error handling
         if (e.statusCode < 400) {
+            log.info("received status ${e.statusCode} from http, setting handled=true")
             message.setHeader("handled", true)
         } else if (e.statusCode == 404) {
             message.setHeader("handled", true)

@@ -7,6 +7,8 @@ import whelk.plugin.BasicFormatConverter
 import whelk.plugin.libris.JsonLD2MarcConverter
 import whelk.converter.*
 
+import org.codehaus.jackson.map.*
+
 import static whelk.converter.JSONMarcConverter.marcRecordAsXMLString
 
 @Log
@@ -28,11 +30,10 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
 
         log.debug("Creating new document ${doc.identifier} from doc with entry: ${doc.entry} and meta: ${doc.meta}")
 
-        log.debug("Setting document identifier in field 901.")
-        def df = record.createDatafield("901")
-        df.addSubfield("i".charAt(0), doc.identifier)
-        df.addSubfield("m".charAt(0), doc.modified as String)
-        df.addSubfield("c".charAt(0), doc.checksum)
+        log.debug("Setting document identifier in field 877.")
+        def df = record.createDatafield("877")
+        df.addSubfield("a".charAt(0), mapper.writeValueAsString(["identifier":doc.identifier,"modified":doc.modified,"checksum":doc.checksum]))
+        df.addSubfield("2".charAt(0), "librisxl")
         record.addField(df)
 
         Document document = whelk.createDocument(getResultContentType())

@@ -80,16 +80,19 @@ class APIXResponseProcessor implements Processor {
     @Override
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
-        message.getHeaders().each { key, value -> 
-            log.info("APIX response message header: $key = $value")
+        if (log.isTraceEnabled()) {
+            message.getHeaders().each { key, value -> 
+                log.trace("APIX response message header: $key = $value")
+            }
         }
         log.info("APIX reponse code: ${message.getHeader('CamelHttpResponseCode')} for ${message.getHeader('CamelHttpMethod')} ${message.getHeader('CamelHttpPath')}")
         if (message.getHeader("CamelHttpMethod") == HttpMethods.PUT && message.getHeader("CamelHttpResponseCode") == 200) {
-            def xmlresponse = new XmlSlurper(false,false).parseText(message.getBody(String.class))
+            String xmlBody = message.getBody(String.class)
+            def xmlresponse = new XmlSlurper(false,false).parseText(xmlBody)
             if (xmlresponse.@status == "ERROR") {
                 log.error("APIX responded with error code ${xmlresponse.@error_code} (${xmlresponse.@error_message}) when calling ${message.getHeader('CamelHttpPath')} for document ${message.getHeader('entry:identifier')}")
             } else {
-                log.info("Received XML response from APIX: " + message.getBody(String.class))
+                log.info("Received XML response from APIX: $xmlBody")
             }
         }
     }

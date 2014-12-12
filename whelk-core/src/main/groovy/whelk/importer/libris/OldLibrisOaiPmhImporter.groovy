@@ -198,13 +198,25 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                     }
                     String originalIdentifier = null
                     try {
-                        originalIdentifier = record.getDatafields("901").collect { it.getSubfields("i").data}.flatten().first()
+                        for (field in record.getDatafields("877")) {
+                            if (!field.getSubfields("2").isEmpty() && fields.getSubfields("2").first().data == "librisxl") {
+                                def xlData = mapper.readValue(fields.getSubfields("a").first().data, Map)
+                                originalIdentifier = xlData.identifier
+                            }
+                        }
                         if (originalIdentifier) {
                             log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
                             entry['identifier'] = originalIdentifier
                         }
+                        /*
+                        originalIdentifier = record.getDatafields("877").collect { it.getSubfields("a").data}.flatten().first()
+                        if (originalIdentifier) {
+                            log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
+                            entry['identifier'] = originalIdentifier
+                        }
+                        */
                     } catch (NoSuchElementException nsee) {
-                        log.trace("Record doesn't have a 901i field.")
+                        log.trace("Record doesn't have a 877 field.")
                     }
 
                     if (preserveTimestamps && it.header.datestamp) {
