@@ -75,6 +75,7 @@ subprojects {
     processResources.dependsOn copyConfiguration
 
     dependencies {
+        compile 'se.kb.libris:marc:1.2.7'
         compile 'org.codehaus.groovy:groovy-all:2.3.6'
         compile 'com.vividsolutions:jts:1.13'
         compile 'commons-cli:commons-cli:1.2'

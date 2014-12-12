@@ -7,7 +7,6 @@ apply plugin: 'war'
 dependencies {
     compile project(":whelk-core")
     //compile 'org.mozilla:rhino:1.7R4'
-    compile 'se.kb.libris:marc:1.2.7'
     compile 'commons-collections:commons-collections:3.2.1'
     compile 'com.damnhandy:handy-uri-templates:2.0.2'
     compile 'se.kb.libris.commons:isbntools:1.0'
