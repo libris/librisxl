@@ -1,0 +1,607 @@
+{
+    "elasticnode": {
+        "_class": "whelk.component.support.ElasticSearchNode"
+    },
+    "activemqbroker": {
+        "_class": "whelk.component.support.ActiveMQBroker"
+    },
+    "fusekiserver": {
+        "_class": "whelk.component.support.FusekiServer"
+    },
+    "remotesearch": {
+        "_class": "whelk.api.libris.RemoteSearchAPI",
+        "_plugins" : [
+            "marcconverter"
+        ],
+        "_params": {
+            "metaproxyInfoUrl":"http://mproxy.libris.kb.se/db_Metaproxy.xml",
+            "metaproxyBaseUrl":"http://mproxy.libris.kb.se:8000"
+        }
+    },
+    "isxntool": {
+        "_class": "whelk.api.libris.ISXNTool"
+    },
+    "jsonld2marcxmlconverter" : {
+        "_class": "whelk.converter.libris.JsonLD2MarcXMLConverter",
+        "_plugins": [
+            "jsonld2marcconverter"
+        ]
+    },
+    "marcxml2jsonldconverter": {
+        "_class": "whelk.plugin.libris.MarcXml2JsonLDConverter",
+        "_plugins": [
+            "marcconverter"
+        ]
+    },
+    "marcconverter" : {
+        "_class" : "whelk.plugin.libris.MarcFrameConverter"
+    },
+    "jsonld2marcconverter" : {
+        "_class" : "whelk.plugin.libris.JsonLD2MarcConverter"
+    },
+    "turtleconverter" : {
+        "_class" : "whelk.plugin.JsonLDTurtleConverter",
+        "_params": "context.jsonld, http://libris.kb.se/resource/"
+    },
+    "cleanupindexconverter" : {
+        "_class" : "whelk.plugin.libris.CleanupIndexFormatConverter"
+    },
+    "libcount" : {
+        "_class" : "whelk.api.libris.HoldCounter",
+        "_params" : {
+            "path" : "_libcount",
+            "defaultIndexType"  : "hold"
+        }
+    },
+    "search" : {
+        "_class" : "whelk.api.SearchAPI",
+        "_params" : {
+            "indexTypes" : {
+                "bib" : {
+                    "queryFields" : [],
+                    "infoFields" : [],
+                    "defaultBoost" : "about.instanceTitle.titleValue:50,about.identifier.identifierValue:50,about.instanceOf.attributedTo.controlledLabel:50,about.instanceOf.influencedBy.controlledLabel:10,about.instanceOf.subject.prefLabel:10,about.publication.providerName:10",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.instanceTitle.titleValue" : "asc",
+                        "about.identifier.identifierValue" : "asc"
+                    },
+                    "queryFacets" : "about.@type,about.language.@id,encLevel.@id",
+                    "resultFields" : [
+                        "about.@type",
+                        "about.instanceTitle",
+                        "about.titleVariation",
+                        "about.keyTitle",
+                        "about.responsibilityStatement",
+                        "about.publication",
+                        "about.identifier",
+                        "about.instanceOf.attributedTo",
+                        "about.instanceOf.influencedBy",
+                        "encLevel.@id"
+                    ]
+                },
+                "auth": {
+                    "queryFields": [],
+                    "infoFields": [],
+                    "defaultBoost": "about.uniformTitle:50,about.controlledLabel:50,about.prefLabel:50,about.altLabel:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.controlledLabel" : "asc",
+                        "about.prefLabel" : "asc",
+                        "about.altLabel" : "asc",
+                        "about.uniformTitle" : "asc"
+                    },
+                    "queryFacets" : "about.@type"
+                },
+                "hold": {
+                    "queryFields": [],
+                    "infoFields": [],
+                    "defaultBoost": "about.sublocationOrCollection:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.sublocationOrCollection" : "asc"
+                    },
+                    "queryFacets" : "about.annotates.@id"
+                },
+                "person" : {
+                    "types" : [ "auth" ],
+                    "queryFields":[
+                        "about.controlledLabel",
+                        "about.label",
+                        "about.altLabel",
+                        "about.name",
+                        "about.familyName",
+                        "about.givenName",
+                        "about.sameAs.controlledLabel",
+                        "about.@id"
+                    ],
+                    "infoFields":[
+                        "birthYear",
+                        "deathYear",
+                        "authorOf",
+                        "hasAnnotation.about"
+                    ],
+                    "defaultBoost" : "controlledLabel:50,label:50,altLabel:20",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "controlledLabel" : "asc",
+                        "label" : "asc",
+                        "altLabel" : "asc",
+                        "@id" : "desc"
+                    },
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+
+                "concept" : {
+                    "queryFields":[
+                        "about.prefLabel",
+                        "about.label",
+                        "about.closeMatch.inScheme.prefLabel",
+                        "about.hiddenLabel"
+                    ],
+                    "infoFields": [],
+                    "defaultBoost": "prefLabel:50,label:50,closeMatch.inScheme.prefLabel:30,hiddenLabel:20",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "prefLabel" : "asc",
+                        "label" : "asc",
+                        "closeMatch.inScheme.prefLabel" : "asc",
+                        "hiddenLabel" : "asc"
+                    },
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "def": {
+                    "queryFields":[
+                        "about.prefLabel",
+                        "about.prefLabel_en",
+                        "about.notation",
+                        "about.langCode",
+                        "about.langTag"
+                    ],
+                    "infoFields": [],
+                    "defaultBoost": "about.prefLabel:50",
+                    "sortby": {
+                        "recordPriority" : "desc",
+                        "_score" : "desc",
+                        "about.prefLabel" : "asc",
+                        "about.notation" : "asc"
+                    },
+                    "queryFacets" : "about.@type"
+                },
+                "relator": {
+                    "types" : [ "def" ],
+                    "queryFields":[
+                        "about.label",
+                        "about.label_en",
+                        "about.prefLabel_en",
+                        "about.notation"
+                    ],
+                    "defaultBoost": "about.label:50",
+                    "sortby": {
+                        "_score" : "desc",
+                        "about.label" : "asc",
+                        "about.notation" : "asc"
+                    },
+                    "terms" : [ "about.@type:ObjectProperty" ]
+                },
+                "facet_expansion": {
+                    "types": ["def"],
+                    "queryProperties": {
+                        "_source.include" : ["about.prefLabel"]
+                    }
+                }
+            }
+        }
+    },
+    "sparqlapi" : {
+        "_class" : "whelk.api.SparqlAPI"
+    },
+    "documentapi" : {
+        "_class" : "whelk.api.DocumentAPI",
+        "_plugins" : [
+            "linkexpander",
+            "marcconverter",
+            "marcxml2jsonldconverter",
+            "turtleconverter",
+            "jsonld2marcxmlconverter"
+            ],
+        "_params": {
+            "contextHeaders": {
+                "bib": "/sys/context/lib.jsonld",
+                "auth": "/sys/context/lib.jsonld",
+                "hold": "/sys/context/lib.jsonld"
+            }
+        }
+    },
+    "completeexpander" : {
+        "_class" : "whelk.api.libris.CompleteExpander"
+    },
+    "linkcompleter" : {
+        "_class" : "whelk.plugin.libris.JsonLDLinkCompleterFilter"
+    },
+    "mysqlimporter" : {
+        "_class" : "whelk.importer.libris.MySQLImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "preserveTimestamps" : true,
+            "numberOfThreads": 50
+        }
+    },
+    "oaipmhimporter2" : {
+        "_class" : "whelk.importer.libris.LibrisOaiPmhImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "datasetMapping" : {
+                "Holdings" : "hold",
+                "Bibliographic" : "bib",
+                "Authority" : "auth"
+            },
+            "preserveTimestamps" : true
+        }
+    },
+    "oaipmhimporter" : {
+        "_class" : "whelk.importer.libris.OldOAIPMHImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "preserveTimestamps" : true,
+            "numberOfThreads": 100
+        }
+    },
+    "operator" : {
+        "_class" : "whelk.api.OperatorAPI",
+        "_plugins": [
+            "reindexoperator",
+            "importoperator",
+            "transferoperator",
+            "rebuildoperator"
+            ],
+        "_params" : {
+            "indexingQueueSize" : 50,
+            "graphstoreQueueSize" : 1000,
+            "indexBatchSize" : 10000,
+            "graphBatchSize" : 1500
+        }
+    },
+    "reindexoperator": {
+        "_class" : "whelk.api.ReindexOperator"
+    },
+    "importoperator": {
+        "_class" : "whelk.api.ImportOperator",
+        "_plugins": [
+            "oaipmhimporter",
+            "oaipmhimporter2",
+            "mysqlimporter"
+        ]
+    },
+    "transferoperator": {
+        "_class" : "whelk.api.TransferOperator",
+        "_plugins" : [
+            "linkcompleter",
+            "marcconverter",
+            "marcxml2jsonldconverter"
+            ]
+    },
+    "rebuildoperator": {
+        "_class" : "whelk.api.RebuildMetaIndexOperator"
+    },
+    "formatter" : {
+        "_class" : "whelk.api.libris.FormatterAPI",
+        "_plugins" : [
+            "marcconverter",
+            "jsonld2marcconverter"
+        ]
+    },
+    "linkexpander" : {
+        "_class" : "whelk.plugin.libris.JsonLDLinkExpander",
+        "_plugins" : [
+            "index"
+        ],
+        "_params" : {
+            "requiredDataset" : [ "bib" ],
+            "nodesToExpand": {
+                 "about.additionalCarrierType" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.alphabet" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.attributedTo" : {
+                    "method": "query",
+                    "dataset" : "auth",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.audience" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.author" : {
+                    "method": "query",
+                    "dataset" : "auth",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.biography" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.confPub" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.contentType" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.festschrift" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.frequencyCategory" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.illustrations" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.language" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.literaryForm" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.nature" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.originalItem" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.originalLanguage" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.publicationCountry" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.publicationStatus" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.regularity" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.typeOfEntry" : {
+                    "method": "query",
+                    "dataset" : "def",
+                    "field" : "about.@id",
+                    "queryProperties": {
+                        "_source.include" : ["@id", "about.*"]
+                    },
+                    "resultKey" : "about"
+                },
+                "about.not.used.language" : {
+                    "method" : "http",
+                    "url" : "http://localhost:8180/whelk-webapi"
+                },
+                "about.nonsense.at.the.same.whelk" : {
+                    "method" : "get"
+                }
+
+            }
+        }
+    },
+    "elastic_camel_processor": {
+        "_class" : "whelk.camel.FormatConverterProcessor",
+        "_plugins" : ["linkexpander", "cleanupindexconverter" ]
+    },
+    "turtleconverter_processor": {
+        "_class" : "whelk.camel.FormatConverterProcessor",
+        "_plugins" : ["turtleconverter"]
+    },
+    "graphstore_aggregator": {
+        "_class" : "whelk.camel.GraphstoreBatchUpdateAggregationStrategy",
+        "_params": {
+          "contextPath": "context.jsonld",
+          "base": "http://libris.kb.se/resource/",
+          "bnodeSkolemBase": "tag:libris.kb.se,2014:bnode:"
+        }
+    },
+    "apixprocessor": {
+        "_class": "whelk.camel.APIXProcessor",
+        "_params": "/apix/0.1/cat/test/",
+        "_plugins" : ["jsonld2marcxmlconverter"]
+    },
+    "routebuilder": {
+        "_class" : "whelk.camel.WhelkRouteBuilder",
+        "_plugins" : [
+            "elastic_camel_processor", "turtleconverter_processor", "graphstore_aggregator","apixprocessor"
+        ],
+        "_params": {
+            "elasticBatchSize": 2000,
+            "graphstoreBatchSize": 32,
+            "batchTimeout": 5000,
+            "indexMessageQueue": "_property:MQ_INDEX",
+            "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX",
+            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE",
+            "apixUri": "_property:APIX_HOST"
+        }
+    },
+    "index": {
+        "_class" : "whelk.component.ElasticSearchClient",
+        "_plugins" : ["linkexpander", "cleanupindexconverter" ],
+        "_params": {
+            "typeConfiguration": {
+                "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],
+                 "bib" : [ "text", "book", "serial" ]
+            },
+            "elasticHost": "_property:ELASTIC_SEARCH_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "availableTypes": "_property:AVAILABLE_TYPES",
+            "searchResultClass": "whelk.result.JsonLdSearchResult"
+        },
+        "_unique" : true
+    },
+    "diskjsonldstorage": {
+        "_class" : "whelk.component.PairtreeHybridDiskStorage",
+        "_params" : {
+            "storageDir": "_property:STORAGE_PATH",
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes": ["application/ld+json"],
+            "baseStorageSuffix": "pairtree",
+            "versioning" : false
+        }
+    },
+    "jsonldstorage": {
+        "_class" : "whelk.component.ElasticSearchStorage",
+        "_params" : {
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes": ["application/ld+json"],
+            "versioning" : true,
+            "indexName" : "_property:STORAGE_INDEX"
+        }
+    },
+    "marcxmlstorage": {
+        "_class" : "whelk.component.PairtreeHybridDiskStorage",
+        "_params" : {
+            "storageDir": "_property:STORAGE_PATH",
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes" : [ "application/marcxml+xml" ],
+            "baseStorageSuffix": "marcxml",
+            "versioning" : false
+        }
+    },
+    "graphstore": {
+        "_class" : "whelk.component.HttpBatchGraphStore",
+        "_plugins" : [
+            "turtleconverter"
+            ],
+        "_params" : {
+            "handlesDatasets": ["auth","bib"],
+            "graphStoreUri": "_property:GRAPHSTORE_DATA_URI",
+            "queryUri": "_property:GRAPHSTORE_QUERY_URI",
+            "updateUri": "_property:GRAPHSTORE_UPDATE_URI",
+            "contextPath": "context.jsonld",
+            "baseUri": "http://libris.kb.se/resource/"
+        }
+    }
+}

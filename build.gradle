@@ -64,12 +64,6 @@ subprojects {
             into "src/main/resources"
             include "**/*"
         }
-
-        copy {
-            from "../etc/"
-            into "src/main/resources"
-            include "plugins.json"
-        }
     }
 
     processResources.dependsOn copyConfiguration
