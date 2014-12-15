@@ -177,16 +177,16 @@ abstract class BasicElasticComponent extends BasicComponent implements ElasticSh
         log.info("Creating mappings for $indexName/$itype ...")
         //XContentBuilder mapping = jsonBuilder().startObject().startObject("mappings")
         if (!defaultMapping) {
-            defaultMapping = loadJson("default_mapping.json")
+            defaultMapping = loadJson("es_mappings/default_mapping.json")
         }
-        def typePropertyMapping = loadJson("${itype}_mapping_properties.json")
+        def typePropertyMapping = loadJson("es_mappings/${itype}_mapping_properties.json")
         def typeMapping
         if (typePropertyMapping) {
             log.debug("Found properties mapping for $itype. Using them with defaults.")
             typeMapping = new HashMap(defaultMapping)
             typeMapping.put("properties", typePropertyMapping.get("properties"))
         } else {
-            typeMapping = loadJson("${itype}_mapping.json") ?: defaultMapping
+            typeMapping = loadJson("es_mappings/${itype}_mapping.json") ?: defaultMapping
         }
         // Append special mapping for @id-fields
         if (!typeMapping.dynamic_templates) {
