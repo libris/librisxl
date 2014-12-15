@@ -1,0 +1,41 @@
+{
+    "_timestamp" : {
+        "enabled" : true,
+        "store" : true,
+        "path" : "entry.timestamp"
+    },
+    "_source" : {
+        "enabled" : true
+    },
+    "properties" : {
+        "data": {
+            "type": "binary"
+        },
+        "entry" : {
+            "properties" : {
+                "identifier" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                },
+                "checksum" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                },
+                "dataset" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                },
+                "timestamp" : {
+                    "type" : "date"
+                },
+                "modified" : {
+                    "type" : "date"
+                },
+                "contentType" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                }
+            }
+        }
+    }
+}

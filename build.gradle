@@ -64,13 +64,25 @@ allprojects {
 
 task copyConfiguration << {
     println "Target environment: ${environment}"
+    println "Target configuration: ${configuration}"
+
+    def resources = new File("src/main/resources")
+    if( !resources.exists() ) {
+        resources.mkdirs()
+    }
 
     copy {
         from "etc/environment/${environment}"
+        from "etc/configuration/_all"
         from "etc/configuration/${configuration}"
         into "src/main/resources"
         include "**/*"
     }
+}
+
+clean << {
+    println "Cleaning out resources."
+    delete "src/main/resources/*"
 }
 
 

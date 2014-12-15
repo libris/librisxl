@@ -1,0 +1,52 @@
+{
+    "properties": {
+        "about": {
+            "properties" : {
+                "prefLabel" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "prefLabel_en" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "langCode" : {
+                    "type" : "string",
+                    "index_analyzer" : "completer"
+                },
+                "matches" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                },
+                "@type" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                },
+                "@id" : {
+                    "type" : "string",
+                    "index" : "not_analyzed"
+                },
+        "label" : {
+            "type" : "string",
+            "index_analyzer" : "completer"
+        },
+        "closeMatch": {
+            "properties": {
+                "inScheme": {
+                    "properties": {
+                        "prefLabel" : {
+                            "type" : "string",
+                            "index_analyzer" : "completer"
+                        }
+                    }
+                }
+            }
+        },
+        "hiddenLabel" : {
+            "type" : "string",
+            "index_analyzer" : "completer"
+        }
+            }
+        }
+    }
+}
