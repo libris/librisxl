@@ -198,23 +198,19 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                     }
                     String originalIdentifier = null
                     try {
-                        for (field in record.getDatafields("877")) {
+                        for (field in record.getDatafields("887")) {
                             if (!field.getSubfields("2").isEmpty() && fields.getSubfields("2").first().data == "librisxl") {
                                 def xlData = mapper.readValue(fields.getSubfields("a").first().data, Map)
                                 originalIdentifier = xlData.identifier
                             }
                         }
-                        if (originalIdentifier) {
-                            log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
-                            entry['identifier'] = originalIdentifier
-                        }
                         /*
-                        originalIdentifier = record.getDatafields("877").collect { it.getSubfields("a").data}.flatten().first()
+                        originalIdentifier = record.getDatafields("999").collect { it.getSubfields("i").data}.flatten().first()
+                        */
                         if (originalIdentifier) {
                             log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
                             entry['identifier'] = originalIdentifier
                         }
-                        */
                     } catch (NoSuchElementException nsee) {
                         log.trace("Record doesn't have a 877 field.")
                     }
@@ -238,7 +234,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                             def doc = marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
                             if (originalIdentifier) {
                                 def dataMap = doc.dataAsMap
-                                dataMap['controlNumber'] = recordId
+                                dataMap['controlNumber'] = record.getControlfields("001").get(0).getData()
                                 doc = doc.withData(dataMap)
                             }
                             if (enhancer) {
