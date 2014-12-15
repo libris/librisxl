@@ -3,3 +3,5 @@ whelks.json
 whelk.json
 plugins.json
 api.properties
+oaipmh.properties
+marc*.json

@@ -1,1 +1,1 @@
-include "whelk-core","locgov-pairtree","ext-libris"
+include 'librisxl-tools/locgov-pairtree'
