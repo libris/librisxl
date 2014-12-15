@@ -1,18 +1,16 @@
 # Libris-XL
 
-Libris-XL is divided over three subprojects:
+The project layout is as follows:
 
-* whelk-core:
-    contains the core components, whelks and storages, indexes and triplestores.
-* ext-libris:
-    contains extensions to the core components, such as format converters. Stuff used for specific implementations.
-* whelk-webapi:
-    contains the sources for the web API.
-
-Also:
-
-* datatools:
-    See datatools/README.md
+* etc/
+    Configuration files for different environments and configurations. The files from here are copied into src/main/resources on project build.
+* src/
+    Standard gradle/maven source-layout
+* lib/
+    Third party libraries not available from maven central or other online repositories.
+* librisxl-tools/
+    Various scripts and datatools used for maintenance and operations.
+    See librisxl-tools/datatools/README.md
 
 
 ## Dependencies
@@ -41,7 +39,8 @@ This starts a local whelk, using an embedded elasticsearch and storage configure
 
 Get/create/update datasets:
 
-    $ python datatools/scripts/compile_defs.py -c datatools/cache/ -o datatools/build/
+    $ cd librisxl-tools/
+    $ python librisxl-tools/datatools/scripts/compile_defs.py -c librisxl-tools/datatools/cache/ -o librisxl-tools/datatools/build/
 
 Load into the running whelk:
 
@@ -52,7 +51,7 @@ Load into the running whelk:
 
 Create a local OAI-PMH dump of examples and run a full import, load into running whelk:
 
-    $ python scripts/assemble_oaipmh_records.py *******:**** scripts/example_records.tsv /tmp/oaidump
+    $ python librisxl-tools/scripts/assemble_oaipmh_records.py *******:**** librisxl-tools/scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
 
     Make sure whelk is running
@@ -66,7 +65,7 @@ Create a local OAI-PMH dump of examples and run a full import, load into running
 
 Unless you have set up a graph store (see below), you need to add `-Ddisable.plugins="fusekigraphstore"` to the invocations above to avoid error messages.
 
-There is also a script, `scripts/update_mock_storage.sh`, for uploading test documents into your local whelk. (See the script for how the actual HTTP PUT is constructed.) However, this does not create the necessary links between bib and auth.
+There is also a script, `librisxl-tools/scripts/update_mock_storage.sh`, for uploading test documents into your local whelk. (See the script for how the actual HTTP PUT is constructed.) However, this does not create the necessary links between bib and auth.
 
 
 ### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)
@@ -105,27 +104,12 @@ Run the marcframe converter on that to print out the resulting JSON-LD:
 
 For running a proper instance (e.g. in production), you should use a standalone elasticsearch instance, and deploy a whelk war into a webapp container.
 
-## Environment Configuration
-
-The application requires a couple of environment variables to be defined:
-
-    file.encoding=utf8
-    whelk.config.uri=file:///<path-to-whelks.json>
-    plugin.config.uri=file:///<path-to-plugins.json>
-    elastic.host=<hostname>
-    elastic.cluster=<clustername>
-    info.aduna.platform.appdata.basedir=/<path-to-aduna>
-
-If you are serving the Web API using Tomcat, you may be able to define these (via JAVA_OPTS), in:
-
-    $CATALINA_HOME/bin/setenv.sh
-
 ### Configure standalone elasticsearch
 
 First set up configuration of it:
 
-    $ cp ext-libris/src/main/resources/oaipmh.properties.in ext-libris/src/main/resources/oaipmh.properties
-    $ vim ext-libris/src/main/resources/oaipmh.properties # ... (ask for directions)
+    $ cp etc/configuration/libris/oaipmh.properties.in etc/configuration/libris/oaipmh.properties
+    $ vim etc/configuration/libris/oaipmh.properties # ... (ask for directions)
 
 ### Perform whelk operations
 
@@ -217,41 +201,6 @@ This is now available as:
     "GRAPHSTORE_UPDATE_AUTH_USER": "dba",
     "GRAPHSTORE_UPDATE_AUTH_PASS": ...
 
-
-### Upgrading to listening components
-
-1. Remove old state files:
-
-    $ rm work/*.state
-
-2. Start up the whelk
-
-    $ gradle jettyRun
-
-2. Remove the old ".libris" meta index. With the whelk running:
-
-    $ curl -XDELETE http://localhost:9200/.libris/
-
-3. Shutdown the whelk
-
-4. The /def/ entries had misaligned storage paths in the last version. Therefor you must remove them from storage:
-
-    $ rm -fr work/storage/libris_pairtree/main/def/
-    $ rm -fr work/storage/libris_pairtree/main/sys/
-
-5. Start the whelk
-
-    $ gradle jettyRun
-
-6. Reload the definitions:
-
-    $ scripts/load_defs_whelk.sh http://localhost:8180/whelk-webapi
-
-7. Rebuild all meta entries.
-
-    $ curl http://localhost:8180/whelk-webapi/_operations?operation=rebuild
-
-8. Done! Be happy.
 
 ## Whelk maintenance (rebuilding and reloading)
 
