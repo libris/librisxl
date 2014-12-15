@@ -36,8 +36,8 @@ public class AuthenticationFilter implements Filter {
 
         if (isApiCall(httpRequest) && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             try {
-                String token = httpRequest.getHeader("xlkey");
-                String json = verifyToken(token);
+                String token = httpRequest.getHeader("Authorization");
+                String json = verifyToken(token.replace("Bearer ", ""));
                 if (json == null || json.isEmpty()) {
                     httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR, "Content is null");
                 }
