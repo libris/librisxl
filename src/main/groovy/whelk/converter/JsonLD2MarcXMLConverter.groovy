@@ -32,14 +32,15 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
 
         log.debug("Setting document identifier in field 887.")
         def df = record.createDatafield("887")
-        df.addSubfield("a".charAt(0), mapper.writeValueAsString(["identifier":doc.identifier,"modified":doc.modified,"checksum":doc.checksum]))
+        df.addSubfield("a".charAt(0), mapper.writeValueAsString(["@id":doc.identifier,"modified":doc.modified,"checksum":doc.checksum]))
         df.addSubfield("2".charAt(0), "librisxl")
         record.addField(df)
 
-        Document document = whelk.createDocument(getResultContentType()).withEntry(doc.entry).withContentType(getResultContentType()).withData(whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record))
+        Document xmlDocument = whelk.createDocument(getResultContentType()).withEntry(doc.entry).withContentType(getResultContentType()).withData(whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record))
+        log.info("marcDocument: ${xmlDocument.dataAsString}")
 
-        log.debug("Document ${doc.identifier} created successfully with entry: ${doc.entry} and meta: ${doc.meta}")
-        return document
+        log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.entry} and meta: ${xmlDocument.meta}")
+        return xmlDocument
     }
 
     @Override

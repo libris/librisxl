@@ -201,7 +201,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         for (field in record.getDatafields("887")) {
                             if (!field.getSubfields("2").isEmpty() && fields.getSubfields("2").first().data == "librisxl") {
                                 def xlData = mapper.readValue(fields.getSubfields("a").first().data, Map)
-                                originalIdentifier = xlData.identifier
+                                originalIdentifier = xlData.get("@id")
                             }
                         }
                         /*

@@ -188,22 +188,6 @@ class JSONMarcConverter {
     }
 
     static String marcRecordAsXMLString(MarcRecord record) {
-
-        OutputStream out = new OutputStream() {
-            StringBuilder builder = new StringBuilder();
-            @Override
-            void write(int b) throws IOException {
-                this.builder.append((char) b);
-            }
-
-            public String toString(){
-                return this.builder.toString();
-            }
-        }
-
-
-
-        // Start
         DocumentFragment docFragment = DomSerializer.serialize(record, javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument())
         StringWriter sw = new StringWriter()
         Source source = new DOMSource(docFragment)
@@ -218,16 +202,6 @@ class JSONMarcConverter {
             System.err.println(e.getMessage());
         }
 
-        out.write(("  " + sw.getBuffer() + "\n").getBytes("UTF-8"));
-        out.flush();
-
-        // Stop
-
-        /*
-        MarcRecordWriter writer = new MarcXmlRecordWriter(output);
-        writer.writeRecord(record);
-        writer.close();
-        */
-        return out.toString();
+        return sw.toString()
     }
 }
