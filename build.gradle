@@ -22,16 +22,6 @@ def loadConfiguration() {
     System.setProperty 'file.encoding', encoding
 }
 
-/*
-tasks.withType(GroovyCompile) {
-    groovyOptions.encoding = "UTF-8"
-}
-
-tasks.withType(Compile) {
-    options.encoding = "UTF-8"
-}
-*/
-
 allprojects {
     version "0.7.0"
 
@@ -79,12 +69,6 @@ task copyConfiguration << {
         include "**/*"
     }
 }
-
-clean << {
-    println "Cleaning out resources."
-    delete "src/main/resources/*"
-}
-
 
 processResources.dependsOn copyConfiguration
 
