@@ -6,7 +6,7 @@ The project layout is as follows:
     Configuration files for different environments and configurations. The files from here are copied into src/main/resources on project build.
 * src/
     Standard gradle/maven source-layout
-* lib/
+* dep/
     Third party libraries not available from maven central or other online repositories.
 * librisxl-tools/
     Various scripts and datatools used for maintenance and operations.

@@ -47,7 +47,7 @@ allprojects {
         mavenCentral()
         maven { url "http://maven.restlet.org/" }
         maven { url "http://repository.codehaus.org/" }
-        flatDir name: 'localDir', dirs: 'lib'
+        flatDir name: 'localDir', dirs: 'dep/lib'
     }
 
 }
@@ -73,28 +73,27 @@ task copyConfiguration << {
 processResources.dependsOn copyConfiguration
 
 dependencies {
-    compile 'se.kb.libris:marc:1.2.7'
-    compile 'org.codehaus.groovy:groovy-all:2.3.6'
-    compile 'com.vividsolutions:jts:1.13'
-    compile 'commons-cli:commons-cli:1.2'
-    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
-    compile 'ch.qos.logback:logback-classic:1.0.0'
-    compile 'commons-io:commons-io:2.4'
-    compile 'commons-codec:commons-codec:1.7'
-    compile 'com.thetransactioncompany:cors-filter:2.1.2'
-    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-    //testCompile 'cglib:cglib-nodep:2.2'
     def camelVersion = "2.14.0"
     def activeMQVersion = "5.10.0"
-
-    compile project(":librisxl-tools/locgov-pairtree")
-    compile "org.elasticsearch:elasticsearch:1.3.4"
-    compile "com.netflix.astyanax:astyanax-cassandra:1.56.43"
-    compile "com.netflix.astyanax:astyanax-thrift:1.56.43"
+    // KB dependencies
+    compile 'se.kb.libris:marc:1.2.7'
+    compile 'se.kb.libris.commons:isbntools:1.0'
+    // Common tools
+    compile 'org.codehaus.groovy:groovy-all:2.3.6'
+    compile 'ch.qos.logback:logback-classic:1.0.0'
+    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
+    compile 'commons-cli:commons-cli:1.2'
+    compile 'commons-io:commons-io:2.4'
+    compile 'commons-codec:commons-codec:1.7'
+    compile "com.google.guava:guava:16.0.1"
+    compile 'commons-collections:commons-collections:3.2.1'
     compile "org.apache.httpcomponents:httpclient:4.3.1"
     compile "stax:stax:1.2.0"
     compile "stax:stax-api:1.0.1"
-    compile "com.google.guava:guava:16.0.1"
+    compile 'com.damnhandy:handy-uri-templates:2.0.2'
+    // Integration
+    compile "com.netflix.astyanax:astyanax-cassandra:1.56.43"
+    compile "com.netflix.astyanax:astyanax-thrift:1.56.43"
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile "org.apache.camel:camel-core:${camelVersion}"
     compile "org.apache.camel:camel-elasticsearch:2.15-SNAPSHOT"
@@ -106,12 +105,14 @@ dependencies {
     compile "org.apache.jena:jena-core:2.12.0"
     compile "org.apache.jena:jena-fuseki:1.1.0"
     compile "org.apache.jena:jena-tdb:1.1.0"
-    // From ext-libris
-    compile 'commons-collections:commons-collections:3.2.1'
-    compile 'com.damnhandy:handy-uri-templates:2.0.2'
-    compile 'se.kb.libris.commons:isbntools:1.0'
+    compile 'com.vividsolutions:jts:1.13'
     compile 'mysql:mysql-connector-java:5.1.33'
+    // Servlet dependencies
+    compile 'com.thetransactioncompany:cors-filter:2.1.2'
     providedCompile 'javax.servlet:servlet-api:2.5'
+    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
+    // From dep
+    compile project(":dep/locgov-pairtree")
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
@@ -152,27 +153,6 @@ task jettyRun(type: JettyRun, overwrite: true) {
     def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
     def mock_c_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-c-cluster"
     System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-}
-
-task whelkOperation(dependsOn: 'classes', type: JavaExec) {
-  description "Run import or reindex. (USAGE: -Dargs='<call without for usage instructions>' -Dwhelk.config.uri=<config-url> -Delastic.host='<host>' (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>'))"
-  classpath = sourceSets.main.runtimeClasspath
-  workingDir = "."
-  main = 'whelk.WhelkOperator'
-  minHeapSize = "2g"
-  maxHeapSize = "2g"
-  def mock_es_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
-  def mock_c_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-c-cluster"
-  systemProperty 'elastic.host', System.getProperty('elastic.host', "")
-  systemProperty 'elastic.cluster', System.getProperty('elastic.cluster', mock_es_cluster)
-  systemProperty 'cassandra.host', System.getProperty('cassandra.host', "localhost")
-  systemProperty 'cassandra.cluster', System.getProperty('cassandra.cluster', mock_c_cluster)
-  systemProperty 'file.encoding', "UTF-8"
-  //systemProperty 'whelk.config.uri', System.getProperty('whelk.config.uri', null)
-  //systemProperty 'plugin.config.uri', System.getProperty('plugin.config.uri', null)
-  systemProperty 'disable.plugins', System.getProperty('disable.plugins', 'indexingprawn')
-  systemProperty 'picky', System.getProperty('picky', 'false')
-  args(System.getProperty('args', "").split() as String[])
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
