@@ -44,12 +44,12 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
         if (operation == Whelk.REMOVE_OPERATION) {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
             if (!messagePrepared) {
-                message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + message.getHeader("entry:identifier"))
+                String voyagerUri = getVoyagerUri(message.getHeader("whelk:identifier"), message.getHeader("whelk:dataset"), message.getHeader("whelk:controlNumber")) ?: "/" + message.getHeader("entry:dataset") +"/new"
+                message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
             }
         } else {
             if (!messagePrepared) {
                 def doc = createDocument(message)
-
                 String voyagerUri = getVoyagerUri(doc) ?: "/" + message.getHeader("entry:dataset") +"/new"
                 doc = runConverters(doc)
                 prepareMessage(doc, message)
@@ -63,17 +63,20 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
     }
 
 
-    String getVoyagerUri(Document doc) {
-        if (doc.identifier ==~ /\/(auth|bib|hold)\/\d+/) {
-            log.debug("Identified apix uri: ${doc.identifier}")
-            return doc.identifier
+    String getVoyagerUri(String xlIdentifier, String dataset, String controlNumber) {
+        if (xlIdentifier ==~ /\/(auth|bib|hold)\/\d+/) {
+            log.debug("Identified apix uri: ${xlIdentifier}")
+            return xlIdentifier
         }
-        String controlNumber = doc.getDataAsMap().get("controlNumber")
         if (controlNumber) {
-            log.debug("Constructing apix uri: /${doc.dataset}/${controlNumber}")
-            return "/"+doc.dataset+"/"+controlNumber
+            log.debug("Constructing apix uri: /${dataset}/${controlNumber}")
+            return "/"+dataset+"/"+controlNumber
         }
         return null
+    }
+
+    String getVoyagerUri(Document doc) {
+        return getVoyagerUri(doc.identifier, doc.dataset, doc.getDataAsMap().get("controlNumber"))
     }
 }
 
@@ -111,7 +114,7 @@ class APIXResponseProcessor implements Processor {
                 def docDataMap = doc.getDataAsMap()
                 docDataMap['controlNumber'] = recordNumber
                 doc.withData(docDataMap)
-                whelk.add(doc, true)
+                whelk.add(doc, false)
             } catch (Exception e) {
                 log.error("Tried to get controlNumber from APIX response and failed: ${e.message}", e)
             }

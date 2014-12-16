@@ -167,7 +167,7 @@ class APIXHttpResponseFailedBean {
     void handle(Exchange exchange, Exception e) {
         log.info("Handling non 2xx http response (${e.statusCode}).")
         Message message = exchange.getIn()
-        if (e.statusCode == "303") {
+        if (e.statusCode == 303) {
             log.debug("All is well. Got statuscode ${e.statusCode}. Sending exchange to response processor.")
             apixResponseProcessor.process(exchange)
         } else if (e.statusCode == 404) {
