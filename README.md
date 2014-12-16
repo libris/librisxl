@@ -44,7 +44,7 @@ Get/create/update datasets:
 
 Load into the running whelk:
 
-    $ scripts/load_defs_whelk.sh http://localhost:8180/whelk-webapi
+    $ scripts/load_defs_whelk.sh http://localhost:8180/whelk
 
 
 ### Import/update local storage from test data
@@ -58,7 +58,7 @@ Create a local OAI-PMH dump of examples and run a full import, load into running
     
     $ gradle jettyrun
     
-    and go to http://localhost:8180/whelk-webapi/_operations using a browser
+    and go to http://localhost:8180/whelk/_operations using a browser
 
 
 (Using the OAI-PMH dump makes out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
@@ -86,7 +86,7 @@ There is also a script, `librisxl-tools/scripts/update_mock_storage.sh`, for upl
         $ cd scripts
         $ get-and-put-record.sh <bib|auth|hold> <id>
 
-5. To see JsonLD record, go to <http://localhost:8180/whelk-webapi/bib/7149593>
+5. To see JsonLD record, go to <http://localhost:8180/whelk/bib/7149593>
 
 ### Run standalone data conversion on a single document
 
@@ -232,7 +232,7 @@ If the JSONLD format has been updated, in such a way that the marcframeconverter
     where type is bib, auth or hold. 
     When the whelk starts up, it will detect that the type is missing and create proper mappings for the given type.
 
-2.  $ curl -XPOST http://localhost:8180/whelk-webapi/\_operations -d 'operation=import&dataset=auth,bib,hold&url=http://localhost:8000/{dataset}/oaipmh&importer=oaipmhimporter'
+2.  $ curl -XPOST http://localhost:8180/whelk/\_operations -d 'operation=import&dataset=auth,bib,hold&url=http://localhost:8000/{dataset}/oaipmh&importer=oaipmhimporter'
 
 
 ### Reindexing
@@ -287,8 +287,8 @@ Say that the server has melted into a tiny puddle of silicon and plastic. After 
 3. Reload all data from OAIPMH (se above, starting at step 2 (No need to delete anything. There isn't anything to delete.)), starting with auth. Thereafter bib, and finally hold.
 
 ## APIs and URLs
-WHELK-WEBAPI, DOCUMENT API:
-http://<host>:<PORT>/whelk-webapi/bib/7149593
+whelk, DOCUMENT API:
+http://<host>:<PORT>/whelk/bib/7149593
 
 ELASTIC SEARCH, INDEX SEARCH API:
 Find 'tove' in libris index, index-typedoc 'person':
@@ -301,19 +301,19 @@ curl -XPUT http://<host>:9200/libris/bib/_mapping -d@etc/resources/_all/default_
 ELASTIC SEARCH, ANALYZE INDEXED VALUES FOR A SPECIFIC FIELD:
 curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.untouched" } } } }'
 
-WHELK-WEBAPI, SEARCH API:
-http://<host>:<PORT>/whelk-webapi/<indextype>/_search?q=(<field>:)strindberg
+whelk, SEARCH API:
+http://<host>:<PORT>/whelk/<indextype>/_search?q=(<field>:)strindberg
 OR 
-http://<host>:<PORT>/whelk-webapi/<indextype>?<field>:strindberg
+http://<host>:<PORT>/whelk/<indextype>?<field>:strindberg
 
 INDEX TYPES:
 bib, auth, person, def, sys
 
 EXPAND AUTOCOMPLETE:
-http://<host>:<PORT>/whelk-webapi/_expand?name=Jansson,%20Tove,%201914-2001.
+http://<host>:<PORT>/whelk/_expand?name=Jansson,%20Tove,%201914-2001.
 
 REMOTESEARCH
-http://<host>:<PORT>/whelk-webapi/_remotesearch?q=astrid
+http://<host>:<PORT>/whelk/_remotesearch?q=astrid
 
 HOLDINGCOUNT
-http://<host>:<PORT>/whelk-webapi/_libcount?id=/resource/bib/7149593
+http://<host>:<PORT>/whelk/_libcount?id=/resource/bib/7149593

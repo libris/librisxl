@@ -148,7 +148,7 @@ task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
     args(System.getProperty('args', "").split() as String[])
 }
 task jettyRun(type: JettyRun, overwrite: true) {
-    jettyRun.contextPath = 'whelk-webapi'
+    jettyRun.contextPath = 'whelk'
     jettyRun.httpPort = 8180
     jettyRun.description = "Starts a jetty instance. (USAGE: To use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:etc/whelk.json'))"
 
