@@ -85,7 +85,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 .otherwise()
                     .end()
 
-        from("activemq:"+whelk.id+".retries").delay(10000).routingSlip(header("next"))
+        from("activemq:"+whelk.id+".retries").delay(60000).routingSlip(header("next"))
 
         if (eligbleMQs.size() > 0) {
             from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
@@ -159,18 +159,22 @@ class HttpFailedBean {
     void handle(Exchange exchange, Exception e) {
         log.info("Handling non 2xx http response (${e.statusCode}).")
         Message message = exchange.getIn()
-        // TODO: More fine grained error handling
-        if (e.statusCode < 400) {
+        if (e.statusCode in [200,201,303]) {
+            log.debug("All is well. Got statuscode ${e.statusCode}")
+        } else if (e.statusCode == 404) {
             log.info("received status ${e.statusCode} from http, setting handled=true")
             message.setHeader("handled", true)
-        } else if (e.statusCode == 404) {
-            message.setHeader("handled", true)
-            log.warn("Tried to ${message.getHeader('whelk:operation')} ${message.getHeader('entry:identifier')} but got a 404. Guess it's not there ...")
-        } else {
+        } else if (e.statusCode < 500) {
             log.info("Failed to deliver to ${e.uri} with status ${e.statusCode}. Sending message to retry queue.")
             message.setHeader("handled", false)
             message.setHeader("retry", true)
             message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))
+        } else {
+            log.error("Unrecoverable error received: ${e.statusCode}", e)
+            message.headers.each { key, value ->
+                log.info("header: $key = $value")
+            }
+            log.info("message body: ${message.body}")
         }
     }
 }
