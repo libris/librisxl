@@ -285,3 +285,35 @@ Say that the server has melted into a tiny puddle of silicon and plastic. After 
 2. Deploy the whelk normally.
 
 3. Reload all data from OAIPMH (se above, starting at step 2 (No need to delete anything. There isn't anything to delete.)), starting with auth. Thereafter bib, and finally hold.
+
+## APIs and URLs
+WHELK-WEBAPI, DOCUMENT API:
+http://<host>:<PORT>/whelk-webapi/bib/7149593
+
+ELASTIC SEARCH, INDEX SEARCH API:
+Find 'tove' in libris index, index-typedoc 'person':
+http://<host>:9200/libris/auth/_search?q=tove
+
+ELASTIC SEARCH, MAPPING:
+PUT mapping with prop config:
+curl -XPUT http://<host>:9200/libris/bib/_mapping -d@etc/resources/_all/default_mapping.json
+
+ELASTIC SEARCH, ANALYZE INDEXED VALUES FOR A SPECIFIC FIELD:
+curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.untouched" } } } }'
+
+WHELK-WEBAPI, SEARCH API:
+http://<host>:<PORT>/whelk-webapi/<indextype>/_search?q=(<field>:)strindberg
+OR 
+http://<host>:<PORT>/whelk-webapi/<indextype>?<field>:strindberg
+
+INDEX TYPES:
+bib, auth, person, def, sys
+
+EXPAND AUTOCOMPLETE:
+http://<host>:<PORT>/whelk-webapi/_expand?name=Jansson,%20Tove,%201914-2001.
+
+REMOTESEARCH
+http://<host>:<PORT>/whelk-webapi/_remotesearch?q=astrid
+
+HOLDINGCOUNT
+http://<host>:<PORT>/whelk-webapi/_libcount?id=/resource/bib/7149593

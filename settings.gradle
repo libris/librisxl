@@ -1,1 +1,1 @@
-include 'librisxl-tools/locgov-pairtree'
+include 'dep/locgov-pairtree'
