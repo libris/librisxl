@@ -77,6 +77,13 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
 
 @Log
 class APIXResponseProcessor implements Processor {
+
+    Whelk whelk
+
+    APIXResponseProcessor(Whelk w) {
+        this.whelk = w
+    }
+
     @Override
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
@@ -93,6 +100,18 @@ class APIXResponseProcessor implements Processor {
                 log.error("APIX responded with error code ${xmlresponse.@error_code} (${xmlresponse.@error_message}) when calling ${message.getHeader('CamelHttpPath')} for document ${message.getHeader('entry:identifier')}")
             } else {
                 log.info("Received XML response from APIX: $xmlBody")
+            }
+        } else if (message.getHeader("CamelHttpMethod") == HttpMethods.PUT && message.getHeader("CamelHttpResponseCode") == 201) {
+            log.debug("Document created in APIX. Try to harvest the identifier ...")
+            try {
+                String recordNumber = message.getHeader("Location")?.split("/")[-1]
+                Document doc = whelk.get(message.getHeader("entry:identifier"))
+                def docDataMap = doc.getDataAsMap()
+                docDataMap['controlNumber'] = recordNumber
+                doc.withData(docDataMap)
+                whelk.add(doc, true)
+            } catch (Exception e) {
+                log.error("Tried to get controlNumber from APIX response and failed: ${e.message}", e)
             }
         }
     }

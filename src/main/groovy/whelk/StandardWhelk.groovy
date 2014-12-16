@@ -66,19 +66,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
     /*
      * Whelk methods
      *******************************/
-    /*
-    @Override
-    String add(byte[] data,
-            Map<String, Object> entrydata,
-            Map<String, Object> metadata) {
-        Document doc = new Document().withData(data).withEntry(entrydata).withMeta(metadata)
-        return add(doc)
-    }
-    */
-
-    @Override
     @groovy.transform.CompileStatic
-    String add(Document doc) {
+    String add(Document doc, boolean sendNotificationToCamel = true) {
         log.debug("Add single document ${doc.identifier}")
         if (!doc.data || doc.data.length < 1) {
             throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
@@ -94,7 +83,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
             saved = (storage.store(doc) || saved)
         }
         if (saved) {
-            notifyCamel(doc, ADD_OPERATION, [:])
+            if (sendNotificationToCamel) {
+                notifyCamel(doc, ADD_OPERATION, [:])
+            } else if (log.isDebugEnabled()) {
+                log.debug("Saved document silently, without notifying camel.")
+            }
         } else {
             log.info("Save failed, resetting modified time.")
             doc = prepareDocument(doc, lastUpdated)
