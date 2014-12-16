@@ -1,17 +1,10 @@
 .gradle
-/whelk-core/build
-/whelk-webapi/build
-/ext-*/build
-/locgov-*/build
+/dep/locgov-*/build
 .*.swp
 /work
-/ext-*/**/target
-/ext-*/**/work
-/ext-*/**/whelk.json
-/ext-*/**/logback.xml
-/locgov-pairtree/**/plugins.json
 whelkoperator.lck
 /mystuff
+/src/main/resources/*
 .idea
 build
 *.iml
@@ -20,4 +13,3 @@ gradle/wrapper/gradle-wrapper.properties
 gradlew
 gradlew.bat
 target/camel-elasticsearch-test.log
-src/**/*.properties
