@@ -227,6 +227,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
             def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
             def timestamp = time.format(DT_FORMAT)
             map.put("modified", timestamp)
+
+            // TODO: Make this configurable, or move it to uriminter
+            if (!map.get("about")?.containsKey("@id")) {
+                map.get("about").put("@id", "/resource"+doc.identifier)
+            }
             if (documentDataToMetaMapping) {
                 def meta = doc.meta
                 boolean modified = false
