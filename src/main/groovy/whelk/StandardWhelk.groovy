@@ -67,7 +67,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
      * Whelk methods
      *******************************/
     @groovy.transform.CompileStatic
-    String add(Document doc, boolean sendNotificationToCamel = true) {
+    String add(Document doc, boolean minorUpdate = false) {
         log.debug("Add single document ${doc.identifier}")
         if (!doc.data || doc.data.length < 1) {
             throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
@@ -77,13 +77,13 @@ class StandardWhelk extends HttpServlet implements Whelk {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
         long lastUpdated = doc.modified
-        doc = prepareDocument(doc)
+        doc = prepareDocument(doc, (minorUpdate ? lastUpdated : -1))
         boolean saved = false
         for (storage in availableStorages) {
             saved = (storage.store(doc) || saved)
         }
         if (saved) {
-            if (sendNotificationToCamel) {
+            if (!minorUpdate) {
                 notifyCamel(doc, ADD_OPERATION, [:])
             } else if (log.isDebugEnabled()) {
                 log.debug("Saved document silently, without notifying camel.")

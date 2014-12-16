@@ -114,7 +114,7 @@ class APIXResponseProcessor implements Processor {
                 def docDataMap = doc.getDataAsMap()
                 docDataMap['controlNumber'] = recordNumber
                 doc.withData(docDataMap)
-                whelk.add(doc, false)
+                whelk.add(doc, true)
             } catch (Exception e) {
                 log.error("Tried to get controlNumber from APIX response and failed: ${e.message}", e)
             }
