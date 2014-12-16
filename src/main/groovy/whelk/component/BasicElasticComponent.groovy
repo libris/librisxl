@@ -92,7 +92,7 @@ abstract class BasicElasticComponent extends BasicComponent implements ElasticSh
             if (indexName.startsWith(".") || storageIndex) {
                 // It's a meta/storage index. No need for aliases and such.
                 if (!es_settings) {
-                    es_settings = loadJson("es_settings.json")
+                    es_settings = loadJson("es/es_settings.json")
                 }
                 performExecute(client.admin().indices().prepareCreate(indexName).setSettings(es_settings))
             } else {
@@ -177,16 +177,16 @@ abstract class BasicElasticComponent extends BasicComponent implements ElasticSh
         log.info("Creating mappings for $indexName/$itype ...")
         //XContentBuilder mapping = jsonBuilder().startObject().startObject("mappings")
         if (!defaultMapping) {
-            defaultMapping = loadJson("es_mappings/default_mapping.json")
+            defaultMapping = loadJson("es/default_mapping.json")
         }
-        def typePropertyMapping = loadJson("es_mappings/${itype}_mapping_properties.json")
+        def typePropertyMapping = loadJson("es/${itype}_mapping_properties.json")
         def typeMapping
         if (typePropertyMapping) {
             log.debug("Found properties mapping for $itype. Using them with defaults.")
             typeMapping = new HashMap(defaultMapping)
             typeMapping.put("properties", typePropertyMapping.get("properties"))
         } else {
-            typeMapping = loadJson("es_mappings/${itype}_mapping.json") ?: defaultMapping
+            typeMapping = loadJson("es/${itype}_mapping.json") ?: defaultMapping
         }
         // Append special mapping for @id-fields
         if (!typeMapping.dynamic_templates) {

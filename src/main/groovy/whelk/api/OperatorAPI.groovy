@@ -27,7 +27,7 @@ class OperatorAPI extends BasicAPI {
     ObjectMapper mapper = new ObjectMapper()
 
 
-    static final OPERATIONS_HTML_FILE = "operator.html"
+    static final OPERATIONS_HTML_FILE = "operations.html"
 
     Map operators = [:]
 

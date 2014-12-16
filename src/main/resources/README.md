@@ -1,13 +1,10 @@
 DO NOT PUT ANY FILES HERE!!
 (unless you know what you are doing)
 
-The only files that live here are:
-- README.txt
-- META-INF/*
-- operator.html
+The only file that live here README.md (this file).
 
 All other files are populated at build time from:
-- etc/configurations/_all
-- etc/configurations/<configuration>
+- etc/resources/_all
+- etc/resources/<configuration>
 - etc/environment/<environment>
 
