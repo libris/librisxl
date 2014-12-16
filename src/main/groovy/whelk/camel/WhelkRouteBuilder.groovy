@@ -76,9 +76,11 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             //eligbleBulkMQs.add("activemq:apix.queue")
         }
 
+        APIXResponseProcessor apixResponseProcessor = new APIXResponseProcessor(whelk)
+
         onException(HttpOperationFailedException.class)
             .handled(true)
-            .bean(new HttpFailedBean(), "handle")
+            .bean(new APIXHttpResponseFailedBean(apixResponseProcessor), "handle")
             .choice()
                 .when(header("retry"))
                     .to("activemq:"+whelk.id+".retries")
@@ -135,7 +137,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save auth hold and bib
                 .process(apixProcessor)
                 .to(apixUri)
-                .process(new APIXResponseProcessor())
+                .process(apixResponseProcessor)
         }
     }
 
@@ -154,13 +156,20 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 }
 
 @Log
-class HttpFailedBean {
+class APIXHttpResponseFailedBean {
+
+    APIXResponseProcessor apixResponseProcessor
+
+    APIXHttpResponseFailedBean(APIXResponseProcessor arp) {
+        this.apixResponseProcessor = arp
+    }
 
     void handle(Exchange exchange, Exception e) {
         log.info("Handling non 2xx http response (${e.statusCode}).")
         Message message = exchange.getIn()
-        if (e.statusCode in [200,201,303]) {
-            log.debug("All is well. Got statuscode ${e.statusCode}")
+        if (e.statusCode == "303") {
+            log.debug("All is well. Got statuscode ${e.statusCode}. Sending exchange to response processor.")
+            apixResponseProcessor.process(exchange)
         } else if (e.statusCode == 404) {
             log.info("received status ${e.statusCode} from http, setting handled=true")
             message.setHeader("handled", true)

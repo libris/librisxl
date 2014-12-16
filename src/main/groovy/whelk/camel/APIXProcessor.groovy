@@ -65,10 +65,12 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
 
     String getVoyagerUri(Document doc) {
         if (doc.identifier ==~ /\/(auth|bib|hold)\/\d+/) {
+            log.debug("Identified apix uri: ${doc.identifier}")
             return doc.identifier
         }
         String controlNumber = doc.getDataAsMap().get("controlNumber")
         if (controlNumber) {
+            log.debug("Constructing apix uri: /${doc.dataset}/${controlNumber}")
             return "/"+doc.dataset+"/"+controlNumber
         }
         return null
