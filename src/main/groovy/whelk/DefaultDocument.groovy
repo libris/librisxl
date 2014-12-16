@@ -248,6 +248,11 @@ class DefaultDocument implements Document {
         getContentType() ==~ /application\/(\w+\+)*json/ || getContentType() ==~ /application\/x-(\w+)-json/
     }
 
+    @JsonIgnore
+    boolean isDeleted() {
+        return entry.get("deleted", false)
+    }
+
     private void calculateChecksum() {
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()

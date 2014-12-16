@@ -196,10 +196,12 @@ class StandardWhelk extends HttpServlet implements Whelk {
         def extraInfo = [
                 "identifier":id,
             ]
-        if (doc) {
+        if (doc && !doc.deleted) {
             extraInfo["dataset"] = doc.dataset
-            // Temporary necessity to handle removal of librisxl-born documents from voyager
-            extraInfo["controlNumber"] = doc.dataAsMap().get("controlNumber")
+            if (doc instanceof JsonDocument) {
+                // Temporary necessity to handle removal of librisxl-born documents from voyager
+                extraInfo["controlNumber"] = doc.dataAsMap.get("controlNumber")
+            }
         }
         notifyCamel(id, REMOVE_OPERATION, extraInfo)
     }

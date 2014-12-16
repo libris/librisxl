@@ -31,4 +31,5 @@ public interface Document {
     public String getMetadataAsJson();
 
     public boolean isJson();
+    public boolean isDeleted();
 }
