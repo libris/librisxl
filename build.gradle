@@ -24,6 +24,8 @@ def loadConfiguration() {
 
 allprojects {
     version "0.7.0"
+    war.baseName = "whelk"
+    war.appendix = configuration
 
     apply plugin: 'java'
     apply plugin: 'groovy'
@@ -148,13 +150,12 @@ task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
 task jettyRun(type: JettyRun, overwrite: true) {
     jettyRun.contextPath = 'whelk-webapi'
     jettyRun.httpPort = 8180
-    jettyRun.description = "Starts a jetty instance. (USAGE: -Delastic.host='<host>' -Delastic.cluster='[cluster]')\nTo use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:etc/whelk.json')"
+    jettyRun.description = "Starts a jetty instance. (USAGE: To use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:etc/whelk.json'))"
 
     //reload = "automatic"
     //scanIntervalSeconds = 1
 
     def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
-    def mock_c_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-c-cluster"
     System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
 }
 
