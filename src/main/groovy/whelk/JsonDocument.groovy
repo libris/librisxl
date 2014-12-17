@@ -33,7 +33,9 @@ class JsonDocument extends DefaultDocument {
     boolean isJson() { true }
 
     JsonDocument withData(Map dataMap) {
-        return withData(mapper.writeValueAsBytes(dataMap))
+        setData(mapper.writeValueAsBytes(dataMap))
+        this.serializedDataInMap = dataMap
+        return this
     }
 
     void setData(byte[] data) {

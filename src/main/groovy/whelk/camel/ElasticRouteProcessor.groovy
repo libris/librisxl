@@ -32,7 +32,7 @@ class ElasticTypeRouteProcessor implements Processor {
     @Override
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
-        String identifier = message.getHeader("entry:identifier")
+        String identifier = message.getHeader("document:identifier")
         String indexName = message.getHeader("whelk:index", shapeComputer.whelk.id)
         message.setHeader("whelk:index", indexName)
         String indexType = shapeComputer.calculateTypeFromIdentifier(identifier)

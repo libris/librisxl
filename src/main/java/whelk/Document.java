@@ -1,6 +1,7 @@
 package whelk;
 
 import java.util.Map;
+import java.util.List;
 
 public interface Document {
     static final String TIMESTAMP_KEY = "timestamp";
@@ -19,6 +20,10 @@ public interface Document {
     public String getDataset();
     public int getVersion();
     public byte[] getData();
+    public List<String> getIdentifiers();
+    public List<String> getDatasets();
+    public void addIdentifier(String id);
+    public void addDataset(String id);
 
     public Document withData(byte [] data);
     public long updateModified();

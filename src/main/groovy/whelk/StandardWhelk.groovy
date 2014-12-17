@@ -77,7 +77,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
         long lastUpdated = doc.modified
-        doc = prepareDocument(doc, (minorUpdate ? lastUpdated : -1))
+        doc = prepareDocument(doc)
         boolean saved = false
         for (storage in availableStorages) {
             saved = (storage.store(doc) || saved)
@@ -162,6 +162,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
         log.debug("Looking for identifiers in record.")
 
+        // TODO: This query MUST be made against storage index. It will not be safe otherwise
         def query = new ElasticQuery(["terms":["sameAs.@id:"+identifier]])
         def result = index.query(query)
         if (result.numberOfHits > 1) {
@@ -193,17 +194,12 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         log.debug("Sending DELETE operation to camel.")
         log.info("document is: ${doc?.identifier} with dataset ${doc?.dataset}")
-        def extraInfo = [
-                "identifier":id,
-            ]
-        if (doc && !doc.deleted) {
-            extraInfo["dataset"] = doc.dataset
-            if (doc instanceof JsonDocument) {
-                // Temporary necessity to handle removal of librisxl-born documents from voyager
-                extraInfo["controlNumber"] = doc.dataAsMap.get("controlNumber")
-            }
+        def extraInfo = [:]
+        if (doc && !doc.deleted && doc instanceof JsonDocument) {
+            // Temporary necessity to handle removal of librisxl-born documents from voyager
+            extraInfo["controlNumber"] = doc.dataAsMap.get("controlNumber")
         }
-        notifyCamel(id, REMOVE_OPERATION, extraInfo)
+        notifyCamel(id, dataset, REMOVE_OPERATION, extraInfo)
     }
 
     @Override
@@ -229,7 +225,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             map.put("modified", timestamp)
 
             // TODO: Make this configurable, or move it to uriminter
-            if (!map.get("about")?.containsKey("@id")) {
+            if (map.containsKey("about") && !map.get("about")?.containsKey("@id")) {
                 map.get("about").put("@id", "/resource"+doc.identifier)
             }
             if (documentDataToMetaMapping) {
@@ -337,7 +333,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     @Override
-    void notifyCamel(String identifier, String operation, Map extraInfo) {
+    void notifyCamel(String identifier, String dataset, String operation, Map extraInfo) {
         if (!producerTemplate) {
             producerTemplate = getCamelContext().createProducerTemplate();
         }
@@ -350,6 +346,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
             }
         }
         message.setHeader("whelk:operation", operation)
+        message.setHeader("document:identifier", identifier)
+        message.setHeader("document:dataset", dataset)
+
         exchange.setIn(message)
         log.trace("Sending $operation message to camel regaring ${identifier}")
         if (operation == BULK_ADD_OPERATION) {
@@ -370,9 +369,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
         } else {
             message.setBody(document.data)
         }
-        document.entry.each { key, value ->
-            message.setHeader("entry:$key", value)
-        }
+        message.setHeader("document.entry", document.entry.inspect())
+        message.setHeader("document.meta", document.meta.inspect())
+        // For conveniance
+        message.setHeader("document:identifier", document.identifier)
+        message.setHeader("document:dataset", document.dataset)
         if (extraInfo) {
             extraInfo.each { key, value ->
                 message.setHeader("whelk:$key", value)

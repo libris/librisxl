@@ -169,6 +169,7 @@ class DocumentAPI extends BasicAPI {
             if (identifierSupplied) {
                 Document existingDoc = whelk.get(path)
                 if (existingDoc) {
+                    log.debug("Document with identifier ${existingDoc.identifier} already exists.")
                     // Check If-Match
                     String ifMatch = request.getHeader("If-Match")
                     if (ifMatch && existingDoc.modified as String != ifMatch) {

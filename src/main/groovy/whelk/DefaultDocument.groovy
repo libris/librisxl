@@ -20,9 +20,14 @@ import whelk.exception.*
 
 @Log
 class DefaultDocument implements Document {
-    protected byte[] data
+    protected byte[] data = new byte[0]
     Map entry = [:] // For "technical" metadata about the record, such as contentType, timestamp, etc.
     Map meta  = [:] // For extra metadata about the object, e.g. links and such.
+
+    @JsonIgnore
+    private Set<String> identifiers = new LinkedHashSet<String>()
+    @JsonIgnore
+    private Set<String> datasets = new LinkedHashSet<String>()
     private String checksum = null
 
     @JsonIgnore
@@ -37,6 +42,20 @@ class DefaultDocument implements Document {
     @JsonIgnore
     String getIdentifier() {
         entry['identifier']
+    }
+
+    @JsonIgnore
+    List<String> getIdentifiers() {
+        def idList = [getIdentifier()]
+        idList.addAll(identifiers)
+        return idList
+    }
+
+    @JsonIgnore
+    List<String> getDatasets() {
+        def dsList = [getDataset()]
+        dsList.addAll(datasets)
+        return dsList
     }
 
     @JsonIgnore
@@ -94,6 +113,8 @@ class DefaultDocument implements Document {
         return entry.get("dataset")
     }
 
+
+
     // Setters
     private void updateTimestamp() {
         setTimestamp(new Date().getTime())
@@ -127,8 +148,17 @@ class DefaultDocument implements Document {
 
     void setData(byte[] data) {
         this.data = data
-        checksum = null
         calculateChecksum()
+    }
+
+    void addIdentifier(String id) {
+        identifiers.add(id)
+        entry["alternateIdentifiers"] = identifiers
+    }
+
+    void addDataset(String ds) {
+        datasets = ds
+        entry["alternateDatasets"] = datasets
     }
 
     /*
@@ -200,6 +230,14 @@ class DefaultDocument implements Document {
         if (entrydata?.containsKey(CONTENT_TYPE_KEY)) {
             setContentType(entrydata.get(CONTENT_TYPE_KEY))
         }
+        if (entrydata?.containsKey("alternateIdentifiers")) {
+            log.info("Setting $identifiers")
+            this.identifiers = entrydata.get("alternateIdentifiers")
+            log.info("Identifiers now: $identifiers")
+        }
+        if (entrydata?.containsKey("alternateDatasets")) {
+            this.datasets = entrydata.get("alternateDatasets")
+        }
         if (entrydata != null) {
             this.entry.putAll(entrydata)
             if (checksum) {
@@ -212,6 +250,7 @@ class DefaultDocument implements Document {
         if (metadata != null) {
             this.meta = [:]
             this.meta.putAll(metadata)
+            calculateChecksum()
         }
         return this
     }
@@ -254,6 +293,7 @@ class DefaultDocument implements Document {
     }
 
     private void calculateChecksum() {
+        checksum = null
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
         byte[] metabytes = meta.toString().getBytes()

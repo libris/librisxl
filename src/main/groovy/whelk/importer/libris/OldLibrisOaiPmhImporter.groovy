@@ -196,9 +196,16 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         log.debug("Record ${entry.identifier} is suppressed. Next ...")
                         return
                     }
+                    def recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
+                    if (preserveTimestamps) {
+                        log.trace("Setting date: $recordDate")
+                        entry.put(Document.MODIFIED_KEY, recordDate.getTime())
+                    }
+
                     String originalIdentifier = null
+                    long originalModified = 0
+
                     try {
-                        long originalModified = 0
                         for (field in record.getDatafields("887")) {
                             if (!field.getSubfields("2").isEmpty() && field.getSubfields("2").first().data == "librisxl") {
                                 def xlData = mapper.readValue(field.getSubfields("a").first().data, Map)
@@ -209,20 +216,11 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         if (originalIdentifier) {
                             log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
                             entry['identifier'] = originalIdentifier
-                            def origDoc = whelk.get(originalIdentifier)
-                            if (origDoc && originalModified == origDoc.modified) {
-                                log.info("Document in storage has same modified time. No need to update.")
-                                return
-                            }
+                            log.info("record timestamp: ${recordDate.getTime()}")
+                            log.info("    xl timestamp: $originalModified")
                         }
                     } catch (NoSuchElementException nsee) {
                         log.trace("Record doesn't have a 877 field.")
-                    }
-
-                    if (preserveTimestamps && it.header.datestamp) {
-                        def date = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
-                        log.trace("Setting date: $date")
-                        entry.put(Document.MODIFIED_KEY, date.getTime())
                     }
 
                     def meta = [:]

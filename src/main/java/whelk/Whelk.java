@@ -45,5 +45,5 @@ public interface Whelk {
     // ecosystem
     public Map getGlobal();
     public CamelContext getCamelContext();
-    public void notifyCamel(String identifier, String operation, Map extraInfo);
+    public void notifyCamel(String identifier, String dataset, String operation, Map extraInfo);
 }

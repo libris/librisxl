@@ -103,7 +103,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
             from(bulkIndexMessageQueue)
                 .process(new ElasticTypeRouteProcessor(whelk.index))
-                .aggregate(header("entry:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
+                .aggregate(header("document:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))
 
         }
@@ -114,8 +114,8 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
                 "?authenticationPreemptive=true&authUsername=${global.GRAPHSTORE_UPDATE_AUTH_USER}&authPassword=${global.GRAPHSTORE_UPDATE_AUTH_PASS}" : ""
 
             def camelStep = from(graphstoreMessageQueue)
-                .filter("groovy", "request.getHeader('whelk:operation') != 'DELETE' && ['auth','bib'].contains(request.getHeader('entry:dataset'))") // Only save auth and bib
-                .aggregate(header("entry:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
+                .filter("groovy", "request.getHeader('whelk:operation') != 'DELETE' && ['auth','bib'].contains(request.getHeader('document:dataset'))") // Only save auth and bib
+                .aggregate(header("document:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
                 .threads(1,parallelProcesses)
 
             def postParameter = global.GRAPHSTORE_UPDATE_POST_PARAMETER
@@ -134,7 +134,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         if (apixUri) {
             from("activemq:apix.queue")
-                .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('entry:dataset'))") // Only save auth hold and bib
+                .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('document:dataset'))") // Only save auth hold and bib
                 .process(apixProcessor)
                 .to(apixUri)
                 .process(apixResponseProcessor)
@@ -169,6 +169,7 @@ class APIXHttpResponseFailedBean {
         Message message = exchange.getIn()
         if (e.statusCode == 303) {
             log.debug("All is well. Got statuscode ${e.statusCode}. Sending exchange to response processor.")
+            exchange.getIn().setHeader("CamelHttpResponseCode", e.statusCode)
             apixResponseProcessor.process(exchange)
         } else if (e.statusCode == 404) {
             log.info("received status ${e.statusCode} from http, setting handled=true")
@@ -210,7 +211,7 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
     }
 
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-        String identifier = newExchange.getIn().getHeader("entry:identifier")
+        String identifier = newExchange.getIn().getHeader("document:identifier")
         def bos = new ByteArrayOutputStream()
         serializer.writer = new OutputStreamWriter(bos, "UTF-8")
         if (oldExchange == null) {
@@ -268,7 +269,7 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
 @Log
 class ArrayListAggregationStrategy implements AggregationStrategy {
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-        log.debug("Called aggregator for message in dataset: ${newExchange.in.getHeader("entry:dataset")}")
+        log.debug("Called aggregator for message in dataset: ${newExchange.in.getHeader("document:dataset")}")
         Object newBody = newExchange.getIn().getBody()
         ArrayList<Object> list = null
         if (oldExchange == null) {

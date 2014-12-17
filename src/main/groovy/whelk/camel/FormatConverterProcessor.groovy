@@ -40,17 +40,9 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
             log.debug("Loaded document ${doc?.identifier}")
         } else {
             log.debug("Setting document data with type ${body.getClass().getName()}")
-            doc = whelk.createDocument(docMessage.getHeader("entry:contentType")).withData(body)
-            docMessage.headers.each { key, value ->
-                if (key.startsWith("entry:")) {
-                    log.debug("Setting entry $key = $value")
-                    doc.entry.put(key.substring(6), value)
-                }
-                if (key.startsWith("meta:")) {
-                    log.debug("Setting meta $key = $value")
-                    doc.meta.put(key.substring(5), value)
-                }
-            }
+            def entry = Eval.me(docMessage.getHeader("document.entry"))
+            def meta = Eval.me(docMessage.getHeader("document.meta"))
+            doc = whelk.createDocument(entry.contentType).withData(body).withMeta(meta).withEntry(entry)
         }
         return doc
     }
@@ -60,7 +52,9 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
         if (doc && (converter || expander)) {
             if (converter) {
                 log.debug("Running converter ${converter.id}.")
+                log.debug("entry before: ${doc.entry}")
                 doc = converter.convert(doc)
+                log.debug("entry after: ${doc.entry}")
             }
             if (expander) {
                 log.debug("Running expander ${expander.id}.")
@@ -73,9 +67,7 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
     void prepareMessage(Document doc, Message docMessage) {
         log.debug("Resetting document ${doc.identifier} in message.")
         docMessage.setBody(doc.data)
-        doc.entry.each { key, value ->
-            docMessage.setHeader("entry:$key", value)
-        }
+        docMessage.setHeader("document.entry", doc.entry.inspect())
     }
 
     @Override
@@ -83,11 +75,8 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
         Message message = exchange.getIn()
         log.debug("Received message to ${this.id}.")
         log.debug("Message type: ${message.getHeader('whelk:operation')}")
-        log.debug("Dataset: ${message.getHeader('entry:dataset')}")
-        if (message.getHeader("whelk:operation") == Whelk.REMOVE_OPERATION) {
-            message.setHeader("entry:identifier", message.body)
-            message.setHeader("entry:dataset", message.getHeader("whelk:dataset"))
-        } else {
+        log.debug("Dataset: ${message.getHeader('document:dataset')}")
+        if (message.getHeader("whelk:operation") != Whelk.REMOVE_OPERATION) {
             def doc = createDocument(message)
             doc = runConverters(doc)
             prepareMessage(doc, message)
