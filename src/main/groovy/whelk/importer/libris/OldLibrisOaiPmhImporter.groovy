@@ -216,8 +216,15 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         if (originalIdentifier) {
                             log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
                             entry['identifier'] = originalIdentifier
-                            log.info("record timestamp: " + getMarcRecordModificationTime(record)?.getTime())
+                            long marcRecordModified = getMarcRecordModificationTime(record)?.getTime()
+                            log.info("record timestamp: $marcRecordModified")
                             log.info("    xl timestamp: $originalModified")
+                            long diff = (marcRecordModified - originalModified) / 1000
+                            log.info("/update time difference: $diff secs.")
+                            if (diff < 60) {
+                                log.info("Record probably not edited in Voyager. Skipping ...")
+                                return
+                            }
                         }
                     } catch (NoSuchElementException nsee) {
                         log.trace("Record doesn't have a 877 field.")
