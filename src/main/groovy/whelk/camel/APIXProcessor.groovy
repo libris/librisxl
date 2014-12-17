@@ -48,6 +48,7 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
                 String voyagerUri = getVoyagerUri(doc)
                 //String voyagerUri = getVoyagerUri(message.getHeader("whelk:identifier"), message.getHeader("whelk:dataset"), message.getHeader("whelk:controlNumber")) ?: "/" + message.getHeader("document:dataset") +"/new"
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
+                prepareMessage(doc, message)
             }
         } else {
             if (!messagePrepared) {
