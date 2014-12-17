@@ -45,8 +45,12 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
             if (!messagePrepared) {
                 def doc = createDocument(message)
-                String voyagerUri = getVoyagerUri(doc)
-                //String voyagerUri = getVoyagerUri(message.getHeader("whelk:identifier"), message.getHeader("whelk:dataset"), message.getHeader("whelk:controlNumber")) ?: "/" + message.getHeader("document:dataset") +"/new"
+                String voyagerUri
+                if (doc instanceof JsonDocument) {
+                    voyagerUri = getVoyagerUri(doc)
+                } else {
+                    voyagerUri = getVoyagerUri(message.getHeader("whelk:identifier"), message.getHeader("whelk:dataset"), null)
+                }
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
                 prepareMessage(doc, message)
             }

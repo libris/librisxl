@@ -216,7 +216,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         if (originalIdentifier) {
                             log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
                             entry['identifier'] = originalIdentifier
-                            log.info("record timestamp: ${recordDate.getTime()}")
+                            log.info("record timestamp: " + getMarcRecordModificationTime(record)?.getTime())
                             log.info("    xl timestamp: $originalModified")
                         }
                     } catch (NoSuchElementException nsee) {
@@ -293,6 +293,14 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         }
         return OAIPMH.ListRecords.resumptionToken
 
+    }
+
+    Date getMarcRecordModificationTime(MarcRecord record) {
+        String datetime = record.getControlfields("005")?.get(0).getData()
+        if (datetime) {
+            return Date.parse("yyyyMMddHHmmss.S",datetime)
+        }
+        return null
     }
 
     void addDocuments(final List documents) {
