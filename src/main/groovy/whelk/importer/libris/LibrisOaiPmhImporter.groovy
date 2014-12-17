@@ -57,7 +57,7 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
                 docs << whelk.createDocument(entry.contentType).withMetaEntry(["entry":entry, "meta":meta]).withData(mdrecord)
             } else if (it.header.@deleted == 'true') {
                 println "Delete record $identifier"
-                whelk.remove(identifier)
+                whelk.remove(identifier, dataset)
             }
         }
         if (!docs.isEmpty()) {

@@ -24,6 +24,10 @@ public interface Whelk {
     public void bulkAdd(List<Document> d, String contentType);
     public Document get(String identifier);
     public void remove(String identifier);
+    /**
+     * For conveniance. If the dataset is known, then pass it along.
+     */
+    public void remove(String identifier, String dataset);
     public Map<String, String> getVersions(String identifier);
 
     // search/lookup

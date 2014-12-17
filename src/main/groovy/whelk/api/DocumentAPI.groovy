@@ -177,6 +177,7 @@ class DocumentAPI extends BasicAPI {
                         return
                     }
                     entry = existingDoc.entry
+                    entry.remove("deleted")
                     meta = existingDoc.meta
                 }
                 else {

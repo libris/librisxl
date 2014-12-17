@@ -14,6 +14,11 @@ public interface Storage extends Component {
     public boolean store(Document d);
     public void bulkStore(List<Document> documents);
     /**
+     * Checks document checksum agains previously stored document, if available. If storage is not versioning, this method always returns true.
+     * @return true if the document would be stored.
+     */
+    public boolean eligibleForStoring(Document d);
+    /**
      * Retrieves an object from this Storage.
      * @param uri the identifier of the object to be retrieved.
      * @return the requested document or null if no object exists for specified identifier.

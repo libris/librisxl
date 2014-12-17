@@ -44,12 +44,13 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
         if (operation == Whelk.REMOVE_OPERATION) {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
             if (!messagePrepared) {
-                String voyagerUri = getVoyagerUri(message.getHeader("whelk:identifier"), message.getHeader("whelk:dataset"), message.getHeader("whelk:controlNumber")) ?: "/" + message.getHeader("document:dataset") +"/new"
+                def doc = createDocument(message)
+                String voyagerUri = getVoyagerUri(doc)
+                //String voyagerUri = getVoyagerUri(message.getHeader("whelk:identifier"), message.getHeader("whelk:dataset"), message.getHeader("whelk:controlNumber")) ?: "/" + message.getHeader("document:dataset") +"/new"
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
             }
         } else {
             if (!messagePrepared) {
-                log.info("CALLING CREATE DOCUMENT FROM APIXPROCESSOR")
                 def doc = createDocument(message)
                 String voyagerUri = getVoyagerUri(doc) ?: "/" + message.getHeader("document:dataset") +"/new"
                 doc = runConverters(doc)
@@ -91,19 +92,13 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
 }
 
 @Log
-class APIXResponseProcessor implements Processor {
-
-    Whelk whelk
-
-    APIXResponseProcessor(Whelk w) {
-        this.whelk = w
-    }
+class APIXResponseProcessor extends FormatConverterProcessor implements Processor {
 
     @Override
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
         if (log.isTraceEnabled()) {
-            message.getHeaders().each { key, value -> 
+            message.getHeaders().each { key, value ->
                 log.trace("APIX response message header: $key = $value")
             }
         }
@@ -116,17 +111,16 @@ class APIXResponseProcessor implements Processor {
             } else {
                 log.info("Received XML response from APIX: $xmlBody")
             }
-        } else if (message.getHeader("CamelHttpMethod") == HttpMethods.PUT && message.getHeader("CamelHttpResponseCode") == 201) {
+        } else if (message.getHeader("CamelHttpMethod") == HttpMethods.PUT && (message.getHeader("CamelHttpResponseCode") == 201 || message.getHeader("CamelHttpResponseCode") == 303)) {
             log.debug("Document created in APIX. Try to harvest the identifier ...")
             try {
-                String recordNumber = message.getHeader("Location")?.split("/")[-1]
-                String dataset = message.getHeader("Location")?.split("/")[-2]
+                String recordNumber = message.getHeader("Location").split("/")[-1]
+                String dataset = message.getHeader("Location").split("/")[-2]
                 Document doc = whelk.get(message.getHeader("document:identifier"))
-                // Is this necessary?
+                log.info("Document type: ${doc.getClass().getName()}")
                 def docDataMap = doc.getDataAsMap()
                 docDataMap['controlNumber'] = recordNumber
                 doc.withData(docDataMap)
-                // Wouldn't we rather:
                 doc.addIdentifier("/"+dataset+"/"+recordNumber)
                 whelk.add(doc, true)
                 log.debug("Added identifier /${dataset}/${recordNumber} to document ${doc.identifier}")

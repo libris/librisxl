@@ -76,11 +76,16 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
-        long lastUpdated = doc.modified
         doc = prepareDocument(doc)
         boolean saved = false
         for (storage in availableStorages) {
-            saved = (storage.store(doc) || saved)
+            if (storage.eligibleForStoring(doc)) {
+                doc = updateModified(doc)
+                saved = (storage.store(doc) || saved)
+                log.debug("Storage ${storage.id} result from save: $saved")
+            } else if (log.isDebugEnabled()) {
+                log.debug("Storage ${storage.id} didn't find document ${doc.identifier} eligible for storing.")
+            }
         }
         if (saved) {
             if (!minorUpdate) {
@@ -88,9 +93,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
             } else if (log.isDebugEnabled()) {
                 log.debug("Saved document silently, without notifying camel.")
             }
-        } else {
-            log.info("Save failed, resetting modified time.")
-            doc = prepareDocument(doc, lastUpdated)
         }
         return doc.identifier
     }
@@ -106,7 +108,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (!suitableStorages.isEmpty()) {
             log.debug("Notifying camel ...")
             for (doc in docs) {
-                doc = sanityCheck(doc)
+                doc = prepareDocument(doc)
                 notifyCamel(doc, BULK_ADD_OPERATION, [:])
             }
         } else {
@@ -187,19 +189,26 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return versions
     }
 
-    void remove(String id) {
+    void remove(String id, String dataset = null) {
         def doc= get(id)
         components.each {
             ((Component)it).remove(id)
         }
+        if (doc?.dataset) {
+            dataset = doc.dataset
+        }
         log.debug("Sending DELETE operation to camel.")
-        log.info("document is: ${doc?.identifier} with dataset ${doc?.dataset}")
+        log.info("document is: ${doc?.identifier} with dataset ${dataset}")
         def extraInfo = [:]
         if (doc && !doc.deleted && doc instanceof JsonDocument) {
             // Temporary necessity to handle removal of librisxl-born documents from voyager
             extraInfo["controlNumber"] = doc.dataAsMap.get("controlNumber")
         }
-        notifyCamel(id, dataset, REMOVE_OPERATION, extraInfo)
+        if (doc) {
+            notifyCamel(doc, REMOVE_OPERATION, extraInfo)
+        } else {
+            notifyCamel(id, dataset, REMOVE_OPERATION, extraInfo)
+        }
     }
 
     @Override
@@ -212,18 +221,29 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return sparqlEndpoint?.sparql(query)
     }
 
-    Document prepareDocument(Document doc, long mt = -1) {
-        doc = sanityCheck(doc)
-        if (mt < 0) {
-            mt = doc.updateModified()
-        }
+    Document updateModified(Document doc, long mt = -1) {
         if (doc.contentType == "application/ld+json") {
-            log.trace("Setting modified in document data.")
+            if (mt < 0) {
+                mt = doc.updateModified()
+            }
             def map = doc.getDataAsMap()
-            def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
-            def timestamp = time.format(DT_FORMAT)
-            map.put("modified", timestamp)
+            if (map.containsKey("modified")) {
+                log.trace("Setting modified in document data.")
+                def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
+                def timestamp = time.format(DT_FORMAT)
+                map.put("modified", timestamp)
+                doc = doc.withData(map)
+            }
+        } else {
+            log.info("Document with content-type ${doc.contentType} cannot have modified automatically updated in data.")
+        }
+        return doc
+    }
 
+    Document prepareDocument(Document doc) {
+        doc = sanityCheck(doc)
+        if (doc.contentType == "application/ld+json") {
+            def map = doc.getDataAsMap()
             // TODO: Make this configurable, or move it to uriminter
             if (map.containsKey("about") && !map.get("about")?.containsKey("@id")) {
                 map.get("about").put("@id", "/resource"+doc.identifier)

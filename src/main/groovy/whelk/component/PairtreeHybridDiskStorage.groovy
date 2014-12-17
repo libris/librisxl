@@ -95,6 +95,17 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
+    boolean eligibleForStoring(Document doc) {
+        if (versioning) {
+            Document currentDoc = get(doc.identifier)
+            if (currentDoc && !currentDoc.isDeleted() && currentDoc.checksum == doc.checksum) {
+                return false
+            }
+        }
+        return true
+    }
+
+    @Override
     public boolean store(Document doc) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         boolean result = storeAsFile(doc)

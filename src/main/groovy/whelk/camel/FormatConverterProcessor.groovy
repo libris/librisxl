@@ -52,9 +52,7 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
         if (doc && (converter || expander)) {
             if (converter) {
                 log.debug("Running converter ${converter.id}.")
-                log.debug("entry before: ${doc.entry}")
                 doc = converter.convert(doc)
-                log.debug("entry after: ${doc.entry}")
             }
             if (expander) {
                 log.debug("Running expander ${expander.id}.")

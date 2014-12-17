@@ -231,9 +231,7 @@ class DefaultDocument implements Document {
             setContentType(entrydata.get(CONTENT_TYPE_KEY))
         }
         if (entrydata?.containsKey("alternateIdentifiers")) {
-            log.info("Setting $identifiers")
             this.identifiers = entrydata.get("alternateIdentifiers")
-            log.info("Identifiers now: $identifiers")
         }
         if (entrydata?.containsKey("alternateDatasets")) {
             this.datasets = entrydata.get("alternateDatasets")

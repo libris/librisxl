@@ -51,4 +51,21 @@ class JsonDocument extends DefaultDocument {
         }
         return serializedDataInMap
     }
+
+    @Override
+    void addIdentifier(String id) {
+        super.addIdentifier(id)
+        if (getContentType() == "application/ld+json") {
+            def docDataMap = getDataAsMap()
+            if (docDataMap.containsKey("sameAs")) {
+                def sameAsList = new HashSet<String>()
+                sameAsList.addAll(docDataMap['sameAs'])
+                sameAsList.add(id)
+                docDataMap.put("sameAs", sameAsList)
+            } else {
+                docDataMap.put("sameAs", [id])
+            }
+            withData(docDataMap)
+        }
+    }
 }

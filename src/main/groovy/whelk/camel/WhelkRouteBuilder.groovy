@@ -58,6 +58,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
         AggregationStrategy graphstoreAggregationStrategy = getPlugin("graphstore_aggregator")
         APIXProcessor apixProcessor = getPlugin("apixprocessor")
+        APIXResponseProcessor apixResponseProcessor = getPlugin("apixresponseprocessor")
 
         String primaryStorageId = whelk.storage.id
 
@@ -75,8 +76,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             eligbleMQs.add("activemq:apix.queue")
             //eligbleBulkMQs.add("activemq:apix.queue")
         }
-
-        APIXResponseProcessor apixResponseProcessor = new APIXResponseProcessor(whelk)
 
         onException(HttpOperationFailedException.class)
             .handled(true)
@@ -170,6 +169,7 @@ class APIXHttpResponseFailedBean {
         if (e.statusCode == 303) {
             log.debug("All is well. Got statuscode ${e.statusCode}. Sending exchange to response processor.")
             exchange.getIn().setHeader("CamelHttpResponseCode", e.statusCode)
+            exchange.getIn().setHeader("Location", message.getHeader("CamelHttpPath"))
             apixResponseProcessor.process(exchange)
         } else if (e.statusCode == 404) {
             log.info("received status ${e.statusCode} from http, setting handled=true")

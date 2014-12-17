@@ -238,6 +238,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                                 def dataMap = doc.dataAsMap
                                 dataMap['controlNumber'] = record.getControlfields("001").get(0).getData()
                                 doc = doc.withData(dataMap)
+                                doc.addIdentifier("/"+this.dataset+"/"+record.getControlfields("001").get(0).getData())
                             }
                             if (enhancer) {
                                 doc = enhancer.filter(doc)
@@ -268,7 +269,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             } else if (it.header.@deleted == 'true') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                     try {
-                        whelk.remove(deleteIdentifier)
+                        whelk.remove(deleteIdentifier, this.dataset)
                     } catch (Exception e2) {
                         log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
                     }

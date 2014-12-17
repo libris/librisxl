@@ -524,6 +524,9 @@
           "bnodeSkolemBase": "tag:libris.kb.se,2014:bnode:"
         }
     },
+    "apixresponseprocessor": {
+        "_class": "whelk.camel.APIXResponseProcessor"
+    },
     "apixprocessor": {
         "_class": "whelk.camel.APIXProcessor",
         "_params": "/apix/0.1/cat/test/",
@@ -532,7 +535,7 @@
     "routebuilder": {
         "_class" : "whelk.camel.WhelkRouteBuilder",
         "_plugins" : [
-            "elastic_camel_processor", "turtleconverter_processor", "graphstore_aggregator","apixprocessor"
+            "elastic_camel_processor", "turtleconverter_processor", "graphstore_aggregator","apixprocessor","apixresponseprocessor"
         ],
         "_params": {
             "elasticBatchSize": 2000,

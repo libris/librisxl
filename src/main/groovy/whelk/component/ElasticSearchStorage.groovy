@@ -47,6 +47,18 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     @Override
+    boolean eligibleForStoring(Document doc) {
+        if (versioning) {
+            Document currentDoc = get(doc.identifier)
+            if (currentDoc && !currentDoc.isDeleted() && currentDoc.checksum == doc.checksum) {
+                return false
+            }
+        }
+        return true
+    }
+
+
+    @Override
     boolean store(Document doc) {
         if (versioning) {
             def oldDoc = null
