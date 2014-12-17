@@ -1598,7 +1598,7 @@ class MarcSubFieldHandler extends ConversionPart {
                 value = revertObject(entity[property])
             } else if (link) {
                 def obj = entity['@id']
-                if (subUriTemplate) {
+                if (obj && subUriTemplate) {
                     def tpltStr = subUriTemplate.template
                     // NOTE: requires variable slot to be at end of template
                     // TODO: unify with extractToken

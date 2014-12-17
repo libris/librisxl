@@ -1,5 +1,7 @@
-package whelk.plugin
+package whelk.plugin.libris
 
+
+import whelk.plugin.URIMinter
 import spock.lang.*
 
 
