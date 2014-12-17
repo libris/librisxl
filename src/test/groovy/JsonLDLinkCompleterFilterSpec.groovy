@@ -1,4 +1,4 @@
-package whelk.plugin
+package whelk.plugin.libris
 
 import spock.lang.Specification
 import org.codehaus.jackson.map.ObjectMapper
