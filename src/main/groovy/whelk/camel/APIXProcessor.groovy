@@ -49,7 +49,7 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
                 if (doc instanceof JsonDocument) {
                     voyagerUri = getVoyagerUri(doc)
                 } else {
-                    voyagerUri = getVoyagerUri(message.getHeader("whelk:identifier"), message.getHeader("whelk:dataset"), null)
+                    voyagerUri = getVoyagerUri(message.getHeader("whelk:identifier"), message.getHeader("whelk:dataset"))
                 }
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
                 prepareMessage(doc, message)
@@ -70,21 +70,17 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
     }
 
 
-    String getVoyagerUri(String xlIdentifier, String dataset, String controlNumber) {
+    String getVoyagerUri(String xlIdentifier, String dataset) {
         if (xlIdentifier ==~ /\/(auth|bib|hold)\/\d+/) {
             log.debug("Identified apix uri: ${xlIdentifier}")
             return xlIdentifier
-        }
-        if (controlNumber) {
-            log.debug("Constructing apix uri: /${dataset}/${controlNumber}")
-            return "/"+dataset+"/"+controlNumber
         }
         log.debug("Could not assertain a voyager URI for $xlIdentifier")
         return null
     }
 
     String getVoyagerUri(Document doc) {
-        String vUri = getVoyagerUri(doc.identifier, doc.dataset, doc.getDataAsMap().get("controlNumber"))
+        String vUri = getVoyagerUri(doc.identifier, doc.dataset)
         log.debug("Looking in ${doc.identifiers}")
         for (altId in doc.identifiers) {
             if (altId ==~ /\/(auth|bib|hold)\/\d+/) {
