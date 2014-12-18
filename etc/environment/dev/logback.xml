@@ -55,7 +55,7 @@
       <level value="info"/>
   </logger> 
   <logger name="whelk.StandardWhelk">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
  <logger name="whelk.component.BasicElasticComponent">
       <level value="info"/>

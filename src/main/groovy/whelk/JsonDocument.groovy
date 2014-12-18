@@ -68,4 +68,13 @@ class JsonDocument extends DefaultDocument {
             withData(docDataMap)
         }
     }
+
+    @Override
+    protected void calculateChecksum() {
+        if (getData().length > 0) {
+            log.trace("Normalizing json data before checksum calculation")
+            setData(mapper.writeValueAsBytes(getDataAsMap()), false)
+        }
+        super.calculateChecksum()
+    }
 }

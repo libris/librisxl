@@ -146,9 +146,11 @@ class DefaultDocument implements Document {
         this.entry["version"] = v
     }
 
-    void setData(byte[] data) {
+    void setData(byte[] data, boolean calcChecksum = true) {
         this.data = data
-        calculateChecksum()
+        if (calcChecksum) {
+            calculateChecksum()
+        }
     }
 
     void addIdentifier(String id) {
@@ -290,7 +292,7 @@ class DefaultDocument implements Document {
         return entry.get("deleted", false)
     }
 
-    private void calculateChecksum() {
+    protected void calculateChecksum() {
         checksum = null
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
