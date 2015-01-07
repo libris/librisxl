@@ -130,7 +130,7 @@ public class AuthenticationFilter implements Filter {
         if (url == null) {
             Properties properties = new Properties();
             try {
-                properties.load(this.getClass().getClassLoader().getResourceAsStream("api.properties"));
+                properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"));
             } catch (IOException ioe) {
                 throw new RuntimeException("Failed to load api properties.", ioe);
             }

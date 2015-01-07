@@ -198,7 +198,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             dataset = doc.dataset
         }
         log.debug("Sending DELETE operation to camel.")
-        log.info("document is: ${doc?.identifier} with dataset ${dataset}")
+        log.debug("document has identifier: ${doc?.identifier} with dataset ${dataset}")
         def extraInfo = [:]
         if (doc && !doc.deleted && doc instanceof JsonDocument) {
             // Temporary necessity to handle removal of librisxl-born documents from voyager

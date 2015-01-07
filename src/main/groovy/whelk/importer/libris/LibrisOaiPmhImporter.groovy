@@ -73,9 +73,9 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
     int doImport(String ds, String token, int maxNrOfDocsToImport, boolean silent, boolean picky, Date since = null) {
         String startUrl = serviceUrl.replace("{dataset}", ds)
         Properties properties = new Properties()
-        properties.load(this.getClass().getClassLoader().getResourceAsStream("oaipmh.properties"))
-        String username = properties.getProperty("username")
-        String password = properties.getProperty("password")
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
+        String username = properties.getProperty("oaipmhUsername")
+        String password = properties.getProperty("oaipmhPassword")
         parseOaipmh(startUrl, username, password, since)
         return recordCount
     }

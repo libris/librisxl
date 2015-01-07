@@ -33,7 +33,11 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     String graphstoreMessageQueue
     String apixUri = null
 
+    java.util.Properties properties = new java.util.Properties()
+
     WhelkRouteBuilder(Map settings) {
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
+
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
         graphstoreBatchSize = settings.get("graphstoreBatchSize", graphstoreBatchSize)
         batchTimeout = settings.get("batchTimeout", batchTimeout)
@@ -44,8 +48,6 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         if (apixUri) {
             apixUri = apixUri.replace("http://", "http4:")
             apixUri = apixUri.replace("https://", "https4:")
-            def properties = new java.util.Properties()
-            properties.load(this.getClass().getClassLoader().getResourceAsStream("api.properties"))
             apixUri = apixUri + "?" +
                 "authUsername=" + properties.getProperty("apixUsername") + "&" +
                 "authPassword=" + properties.getProperty("apixPassword") + "&" +
@@ -109,9 +111,8 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         // Routes for graphstore
         if (whelk.graphStore) {
-            def credentials = global.GRAPHSTORE_UPDATE_AUTH_USER?
-                "?authenticationPreemptive=true&authUsername=${global.GRAPHSTORE_UPDATE_AUTH_USER}&authPassword=${global.GRAPHSTORE_UPDATE_AUTH_PASS}" : ""
-
+            def credentials = global.GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED?
+                "?authenticationPreemptive=true&authUsername=${properties.getProperty("graphstoreUpdateAuthUser")}&authPassword=${properties.getProperty("graphstoreUpdateAuthPass")}" : ""
             def camelStep = from(graphstoreMessageQueue)
                 .filter("groovy", "request.getHeader('whelk:operation') != 'DELETE' && ['auth','bib'].contains(request.getHeader('document:dataset'))") // Only save auth and bib
                 .aggregate(header("document:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)

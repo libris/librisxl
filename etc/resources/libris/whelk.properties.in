@@ -1,0 +1,13 @@
+# Encryption key used for encrypted permissions data
+encryptionkey=<secret key>
+# OAUTH2 settings
+verifyurl=<url>
+# The credentials to use for APIX calls
+apixUsername=<username>
+apixPassword=<password>
+# Credentials for OAIPMH
+oaipmhUsername=<username>
+oaipmhPassword=<password>
+# Virtuoso credentials
+graphstoreUpdateAuthUser=<username>
+graphstoreUpdateAuthPass=<password>
