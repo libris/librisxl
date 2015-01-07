@@ -208,9 +208,13 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                     try {
                         for (field in record.getDatafields("887")) {
                             if (!field.getSubfields("2").isEmpty() && field.getSubfields("2").first().data == "librisxl") {
-                                def xlData = mapper.readValue(field.getSubfields("a").first().data, Map)
-                                originalIdentifier = xlData.get("@id")
-                                originalModified = xlData.get("modified") as long
+                                try {
+                                    def xlData = mapper.readValue(field.getSubfields("a").first().data, Map)
+                                    originalIdentifier = xlData.get("@id")
+                                    originalModified = xlData.get("modified") as long
+                                } catch (Exception e) {
+                                    log.error("Failed to parse 887 as json for $recordId")
+                                }
                             }
                         }
                         if (originalIdentifier) {
