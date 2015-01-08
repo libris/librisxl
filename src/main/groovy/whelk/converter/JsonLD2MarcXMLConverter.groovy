@@ -28,6 +28,7 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
 
         MarcRecord record = JSONMarcConverter.fromJson(jsonldDocument.getDataAsString())
 
+        /*
         log.warn("APPLYING HACK TO MAKE APIX WORK!")
         if (record.getLeader().length() < 24) {
             log.warn("PADDING LEADER UNTIL 24 CHARS LONG!")
@@ -43,6 +44,7 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
             log.warn("REMOVING 035")
             record.fields = fields
         }
+        */
 
         log.debug("Creating new document ${doc.identifier} from doc with entry: ${doc.entry} and meta: ${doc.meta}")
 

@@ -85,7 +85,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
         } else {
             for (st in this.whelk.getStorages()) {
-                log.debug("Turning off versioning in ${st.id}")
+                //log.debug("Turning off versioning in ${st.id}")
                 // Preserve original setting
                 versioningSettings.put(st.id, st.versioning)
                 //st.versioning = false
@@ -258,7 +258,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         }
                         def marcmeta = meta
                         marcmeta.put("oaipmhHeader", createString(it.header))
-                        marcdocuments << whelk.createDocument("application/marcxml+xml").withMetaEntry(["entry":entry, "meta":marcmeta]).withData(mdrecord)
+                        //marcdocuments << whelk.createDocument("application/marcxml+xml").withMetaEntry(["entry":entry, "meta":marcmeta]).withData(mdrecord)
                     } catch (Exception e) {
                         log.error("Conversion failed for id ${entry.identifier}", e)
                     }

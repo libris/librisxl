@@ -50,7 +50,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     boolean eligibleForStoring(Document doc) {
         if (versioning) {
             Document currentDoc = get(doc.identifier)
-            log.info("eligible: $currentDoc - ${currentDoc?.deleted}, checksums: ${currentDoc?.checksum} / ${doc.checksum}")
+            log.trace("eligible: $currentDoc - ${currentDoc?.deleted}, checksums: ${currentDoc?.checksum} / ${doc.checksum}")
             if (currentDoc && !currentDoc.isDeleted() && currentDoc.checksum == doc.checksum) {
                 log.debug("Document ${doc.identifier} is suitable for storing.")
                 return false
