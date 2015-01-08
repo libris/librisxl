@@ -26,11 +26,11 @@ def make_term_map(graph):
                 continue
             yield s_term, o_term
 
-    for s_term, o_term in term_pairs(graph, OWL.equivalentClass | OWL.equivalentProperty):
+    for s_term, o_term in term_pairs(OWL.equivalentClass | OWL.equivalentProperty):
         #assert o_term not in mapping
         add(s_term, o_term)
 
-    for s_term, o_term in term_pairs(graph, RDFS.subPropertyOf | RDFS.subClassOf):
+    for s_term, o_term in term_pairs(RDFS.subPropertyOf | RDFS.subClassOf):
         if o_term in mapping:
             continue
         add(s_term, o_term)
