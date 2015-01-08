@@ -81,16 +81,20 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
         tickets = new Semaphore(100)
 
-        if (from) {
-            urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
-        } else {
+        if (from == null) {
             for (st in this.whelk.getStorages()) {
-                //log.debug("Turning off versioning in ${st.id}")
+                log.debug("Turning off versioning in ${st.id}")
                 // Preserve original setting
                 versioningSettings.put(st.id, st.versioning)
-                //st.versioning = false
+                st.versioning = false
             }
+            from = new Date(0L)
         }
+
+        if (from) {
+            urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        }
+        log.debug("urlString: $urlString")
         //queue = Executors.newSingleThreadExecutor()
         queue = Executors.newFixedThreadPool(numberOfThreads)
         startTime = System.currentTimeMillis()
@@ -181,13 +185,14 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             log.warn("[$dataset / $recordCount] XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
         }
         def documents = []
-        def marcdocuments = []
         elapsed = System.currentTimeMillis()
         OAIPMH.ListRecords.record.each {
             String mdrecord = createString(it.metadata.record)
             if (mdrecord) {
                 try {
+                    log.trace("Record preparation starts.")
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
+                    log.trace("Marc record instantiated from XML.")
                     String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
 
                     def entry = ["identifier":recordId,"dataset":this.dataset]
@@ -196,6 +201,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         log.debug("Record ${entry.identifier} is suppressed. Next ...")
                         return
                     }
+                    log.trace("Checked for suppress record.")
                     def recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
                     if (preserveTimestamps) {
                         log.trace("Setting date: $recordDate")
@@ -205,6 +211,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                     String originalIdentifier = null
                     long originalModified = 0
 
+                    log.trace("Start check for 887")
                     try {
                         for (field in record.getDatafields("887")) {
                             if (!field.getSubfields("2").isEmpty() && field.getSubfields("2").first().data == "librisxl") {
@@ -234,6 +241,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         log.trace("Record doesn't have a 877 field.")
                     }
 
+                    log.trace("887 check complete.")
                     def meta = [:]
 
                     if (it.header.setSpec) {
@@ -241,10 +249,13 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                             meta.get("oaipmhSetSpecs", []).add(spec.toString())
                         }
                     }
+                    log.trace("Record prepared.")
 
                     try {
                         if (marcFrameConverter) {
+                            log.trace("Conversion starts.")
                             def doc = marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
+                            log.trace("Convestion finished.")
                             if (originalIdentifier) {
                                 def dataMap = doc.dataAsMap
                                 dataMap['controlNumber'] = record.getControlfields("001").get(0).getData()
@@ -252,13 +263,12 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                                 doc.addIdentifier("/"+this.dataset+"/"+record.getControlfields("001").get(0).getData())
                             }
                             if (enhancer) {
+                                log.trace("Enhancing starts.")
                                 doc = enhancer.filter(doc)
+                                log.trace("Enhancing finished.")
                             }
                             documents << doc
                         }
-                        def marcmeta = meta
-                        marcmeta.put("oaipmhHeader", createString(it.header))
-                        //marcdocuments << whelk.createDocument("application/marcxml+xml").withMetaEntry(["entry":entry, "meta":marcmeta]).withData(mdrecord)
                     } catch (Exception e) {
                         log.error("Conversion failed for id ${entry.identifier}", e)
                     }
@@ -294,9 +304,6 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         }
         if (documents?.size() > 0) {
             addDocuments(documents)
-        }
-        if (marcdocuments?.size() > 0) {
-            addDocuments(marcdocuments)
         }
 
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
