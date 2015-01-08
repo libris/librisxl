@@ -25,7 +25,6 @@
     },
     "_plugins": {
         "_support": [
-            "elasticnode",
             "fusekiserver",
             "activemqbroker"
             ],
