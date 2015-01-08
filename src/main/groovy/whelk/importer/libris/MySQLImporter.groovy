@@ -170,6 +170,11 @@ class MySQLImporter extends BasicPlugin implements Importer {
         if (record) {
             identifier = "/"+dataset+"/"+record.getControlfields("001").get(0).getData()
             buildingMetaRecord.get(identifier, [:]).put("record", record)
+            def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
+            if ("SUPPRESSRECORD" in aList) {
+                log.debug("Record ${identifier} is suppressed. Next ...")
+                return
+            }
         }
         log.trace("building document $identifier")
         if (documentList.size() >= addBatchSize || record == null) {

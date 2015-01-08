@@ -225,6 +225,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
         if (doc.contentType == "application/ld+json") {
             if (mt < 0) {
                 mt = doc.updateModified()
+            } else {
+                doc.setModified(mt)
             }
             def map = doc.getDataAsMap()
             if (map.containsKey("modified")) {
