@@ -262,7 +262,7 @@
         ],
         "_params" : {
             "preserveTimestamps" : true,
-            "numberOfThreads": 100
+            "numberOfThreads": 20
         }
     },
     "operator" : {
