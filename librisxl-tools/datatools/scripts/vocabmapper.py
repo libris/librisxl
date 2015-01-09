@@ -66,6 +66,8 @@ def remap(mapping, o):
 
 
 def autoframe(data):
+    if '@graph' not in data:
+        return data
     datamap = {o['@id']: o for o in data.pop('@graph')}
     for o in datamap.values():
         for k, v in o.items():
