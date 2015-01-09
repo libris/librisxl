@@ -1,9 +1,8 @@
 import org.gradle.api.plugins.jetty.JettyRun
-plugins {
-  id 'groovy'
-  id 'jetty'
-  id 'war'
-}
+apply plugin: 'groovy'
+apply plugin: 'jetty'
+apply plugin: 'war'
+apply plugin: 'application'
 
 loadConfiguration()
 
@@ -79,7 +78,6 @@ dependencies {
     compile 'se.kb.libris.commons:isbntools:1.0'
     // Common tools
     compile 'org.codehaus.groovy:groovy-all:2.3.6'
-    compile 'ch.qos.logback:logback-classic:1.0.0'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     compile 'commons-cli:commons-cli:1.2'
     compile 'commons-io:commons-io:2.4'
@@ -90,7 +88,10 @@ dependencies {
     compile "stax:stax:1.2.0"
     compile "stax:stax-api:1.0.1"
     compile 'com.damnhandy:handy-uri-templates:2.0.2'
-    compile 'org.slf4j:slf4j-simple:1.7.10'
+    compile 'ch.qos.logback:logback-core:1.1.2'
+    compile 'ch.qos.logback:logback-classic:1.1.2'
+    compile 'org.slf4j:slf4j-api:1.7.6'
+    compile 'org.slf4j:log4j-over-slf4j:1.7.6'
     // Integration
     compile "org.elasticsearch:elasticsearch:1.3.4"
     compile "com.netflix.astyanax:astyanax-cassandra:1.56.43"
@@ -171,18 +172,22 @@ task(console, dependsOn: 'classes', type: JavaExec) {
 }
 
 task fatjar(type: Jar) {
+    configurations.all  {
+        exclude group: "org.slf4j", module: "slf4j-log4j12"
+    }
+    baseName = "whelk"
+    appendix = configuration
+    from {
+        configurations.compile.collect {
+            it.isDirectory() || it.getName().endsWith('.pom') ? it : zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA', 'META-INF/maven', 'log4j.properties', 'org/apache/log4j/*'
+            }
+        }
+    }
     manifest {
         attributes 'Implementation-Title': 'Standalone Whelk',
         'Implementation-Version': version,
         'Main-Class': 'whelk.component.support.JettyServer'
-    }
-    baseName = "whelk"
-    from {
-        configurations.compile.collect {
-            it.isDirectory() || it.getName().endsWith('.pom') ? it : zipTree(it).matching {
-                exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
-            }
-        }
     }
 
     with jar

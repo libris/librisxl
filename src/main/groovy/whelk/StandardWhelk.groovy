@@ -100,15 +100,16 @@ class StandardWhelk extends HttpServlet implements Whelk {
     /**
      * Requires that all documents have an identifier.
      */
-    @Override
     @groovy.transform.CompileStatic
-    void bulkAdd(final List<Document> docs, String contentType) {
+    void bulkAdd(final List<Document> docs, String contentType, boolean prepareDocuments = true) {
         log.debug("Bulk add ${docs.size()} document")
         def suitableStorages = getStorages(contentType)
         if (!suitableStorages.isEmpty()) {
-            log.debug("Notifying camel ...")
             for (doc in docs) {
-                doc = prepareDocument(doc)
+                if (prepareDocuments) {
+                    doc = prepareDocument(doc)
+                }
+                log.debug("Notifying camel ...")
                 notifyCamel(doc, BULK_ADD_OPERATION, [:])
             }
         } else {
@@ -243,6 +244,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     Document prepareDocument(Document doc) {
+        log.info("Preparing document ${doc.identifier}")
         doc = sanityCheck(doc)
         if (doc.contentType == "application/ld+json") {
             def map = doc.getDataAsMap()

@@ -1,14 +1,14 @@
 package whelk.component.support
 
-import groovy.util.logging.Slf4j as Log
-
 import org.eclipse.jetty.*
 import org.eclipse.jetty.server.*
 import org.eclipse.jetty.servlet.*
+import org.eclipse.jetty.util.log.Log
+import org.eclipse.jetty.util.log.Slf4jLog
+
 
 import whelk.*
 
-@Log
 class JettyServer {
 
     static void main(String[] args) {

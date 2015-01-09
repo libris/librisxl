@@ -36,6 +36,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
     long runningTime = 0
 
+    boolean prepareDocuments = true
 
     ExecutorService queue
     Semaphore tickets
@@ -89,6 +90,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                 st.versioning = false
             }
             from = new Date(0L)
+            prepareDocuments = false
         }
 
         if (from) {
@@ -332,7 +334,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                 long elapsed = System.currentTimeMillis()
                 //def storage = whelk.getStorage(document.get(0).contentType)
                 //storage.bulkStore(documents)
-                this.whelk.bulkAdd(documents, documents.get(0).contentType)
+                this.whelk.bulkAdd(documents, documents.get(0).contentType, prepareDocuments)
                 if ((System.currentTimeMillis() - elapsed) > 10000) {
                     log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
                 }
