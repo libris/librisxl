@@ -5,7 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import java.net.URISyntaxException
 import java.util.regex.*
 import java.util.UUID
-import java.util.concurrent.BlockingQueue
+import java.util.concurrent.*
 import javax.servlet.http.*
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -63,6 +63,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     def timeZone = ZoneId.systemDefault()
 
+    ExecutorService bulkNotificationQueue
+
     /*
      * Whelk methods
      *******************************/
@@ -102,23 +104,23 @@ class StandardWhelk extends HttpServlet implements Whelk {
      */
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String contentType, boolean prepareDocuments = true) {
-        log.debug("Bulk add ${docs.size()} document")
+        log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getStorages(contentType)
-        if (!suitableStorages.isEmpty()) {
-            for (doc in docs) {
-                if (prepareDocuments) {
-                    doc = prepareDocument(doc)
-                }
-                log.debug("Notifying camel ...")
-                notifyCamel(doc, BULK_ADD_OPERATION, [:])
-            }
-        } else {
+        if (suitableStorages.isEmpty()) { 
             log.debug("No storages found for $contentType.")
+            return
         }
-        for (storage in getStorages(contentType)) {
+        if (prepareDocuments) {
+            for (doc in docs) {
+                doc = prepareDocument(doc)
+            }
+        }
+        log.debug("Sending to storage(s)")
+        for (storage in suitableStorages) {
+            notifyCamel(docs)
             storage.bulkStore(docs)
         }
-        log.debug("Bulk operation completed.")
+        log.debug("Bulk operation completed")
     }
 
     Document get(String identifier, String version=null, List contentTypes=[], boolean expandLinks = true) {
@@ -244,7 +246,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     Document prepareDocument(Document doc) {
-        log.info("Preparing document ${doc.identifier}")
         doc = sanityCheck(doc)
         if (doc.contentType == "application/ld+json") {
             def map = doc.getDataAsMap()
@@ -380,6 +381,14 @@ class StandardWhelk extends HttpServlet implements Whelk {
         } else {
             producerTemplate.asyncSend("direct:${this.id}", exchange)
         }
+    }
+
+    void notifyCamel(List<Document> documents) {
+        bulkNotificationQueue.execute({
+            for (doc in documents) {
+                notifyCamel(doc, BULK_ADD_OPERATION, [:])
+            }
+        } as Runnable)
     }
 
     void notifyCamel(Document document, String operation, Map extraInfo) {
@@ -554,6 +563,13 @@ class StandardWhelk extends HttpServlet implements Whelk {
             }
             throw e
         }
+        bulkNotificationQueue = Executors.newSingleThreadExecutor()
+    }
+
+    @Override
+    void destroy() {
+        bulkNotificationQueue.shutdown()
+        bulkNotificationQueue.awaitTermination(5, TimeUnit.MINUTES)
     }
 
     /*

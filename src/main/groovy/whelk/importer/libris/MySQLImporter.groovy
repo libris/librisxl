@@ -179,7 +179,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         log.trace("building document $identifier")
         if (documentList.size() >= addBatchSize || record == null) {
             log.debug("documentList is full. Sending it to bulkAdd (open the trapdoor)")
-            whelk.bulkAdd(documentList, documentList.first().contentType)
+            whelk.bulkAdd(documentList, documentList.first().contentType, false)
             log.debug("documents added.")
             documentList = new ArrayList<Document>()
         }

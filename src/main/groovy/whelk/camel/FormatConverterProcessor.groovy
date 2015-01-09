@@ -76,11 +76,9 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
         log.debug("Dataset: ${message.getHeader('document:dataset')}")
         if (message.getHeader("whelk:operation") != Whelk.REMOVE_OPERATION) {
             def doc = createDocument(message)
-            if (doc) {
-                doc = runConverters(doc)
-                prepareMessage(doc, message)
-                exchange.setOut(message)
-            }
+            doc = runConverters(doc)
+            prepareMessage(doc, message)
+            exchange.setOut(message)
         }
     }
 }
