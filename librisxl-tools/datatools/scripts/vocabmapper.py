@@ -35,7 +35,10 @@ def make_term_map(graph):
             continue
         add(s_term, o_term)
 
-    return mapping
+    ctx = {pfx or "@vocab": iri for pfx, iri in graph.namespaces()}
+    ctx["mapping"] = None
+    return {"@context": ctx, "mapping": mapping}
+ 
 
 
 def remap(mapping, o):
@@ -86,18 +89,19 @@ if __name__ == '__main__':
     args = sys.argv[1:]
 
     def json_dump(o):
-        json.dump(o, sys.stdout, indent=2, separators=(',', ': '))
+        print json.dumps(o, indent=2, separators=(',', ': '),
+                sort_keys=True, ensure_ascii=False).encode('utf-8')
 
     if len(args) == 1:
         vocab_fpath = args[0]
         graph = Graph().parse(vocab_fpath, format='turtle')
-        mapping = make_term_map(graph)
-        json_dump(mapping)
+        term_map = make_term_map(graph)
+        json_dump(term_map)
     else:
         map_fpath, fpath = args
         graph = Graph().parse(fpath, format='turtle')
         with open(map_fpath) as fp:
-            mapping = json.load(fp)
+            mapping = json.load(fp)['mapping']
         #remapped = remap(mapping, graph.serialize(format='json-ld-object'))
         from rdflib_jsonld.serializer import from_rdf
         o = from_rdf(graph, auto_compact=True)
