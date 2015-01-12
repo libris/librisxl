@@ -107,7 +107,6 @@ class APIXResponseProcessor extends FormatConverterProcessor implements Processo
         }
         log.info("APIX reponse code: ${message.getHeader('CamelHttpResponseCode')} for ${message.getHeader('CamelHttpMethod')} ${message.getHeader('CamelHttpPath')}")
         if (message.getHeader("CamelHttpMethod") == HttpMethods.PUT && message.getHeader("CamelHttpResponseCode") == 200) {
-            log.debug("200 response code means something went wrong when saving ${message.getHeader('document:identifier')}.")
             String xmlBody = message.getBody(String.class)
             def xmlresponse = new XmlSlurper(false,false).parseText(xmlBody)
             if (xmlresponse.@status == "ERROR") {
@@ -120,10 +119,6 @@ class APIXResponseProcessor extends FormatConverterProcessor implements Processo
                 docMeta['apixErrorMessage'] = xmlresponse.@error_message as String
                 docMeta['apixRequestPath'] = message.getHeader('CamelHttpPath').toString()
                 failedDocument.withMeta(docMeta)
-                log.trace("Resaving document with failure details in meta: ${failedDocument.meta}")
-                log.trace("Test start.")
-                log.trace("mdjson: ${failedDocument.metadataAsJson}")
-                log.trace("Test end.")
                 whelk.add(failedDocument, false)
             } else {
                 log.info("Received XML response from APIX: $xmlBody")
