@@ -159,7 +159,7 @@ class JSONMarcConverter {
         for (Map field in fields) {
             field.each {String fieldKey, fieldValue ->
 
-                if (fieldKey.isInteger() && fieldKey.toInteger() <= 10){
+                if (fieldKey.isInteger() && fieldKey.toInteger() < 10){
                     Controlfield controlfield = new ControlfieldImpl(fieldKey, fieldValue);
                     record.addField(controlfield);
                 }else {
