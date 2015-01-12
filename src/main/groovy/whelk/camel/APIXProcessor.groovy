@@ -111,6 +111,7 @@ class APIXResponseProcessor extends FormatConverterProcessor implements Processo
             def xmlresponse = new XmlSlurper(false,false).parseText(xmlBody)
             if (xmlresponse.@status == "ERROR") {
                 log.error("APIX responded with error code ${xmlresponse.@error_code} (${xmlresponse.@error_message}) when calling ${message.getHeader('CamelHttpPath')} for document ${message.getHeader('document:identifier')}")
+                log.debug("APIX response: $xmlBody")
                 def errorDetails = [:]
                 Document failedDocument = whelk.get(message.getHeader("document:identifier"))
                 def docMeta = failedDocument.meta

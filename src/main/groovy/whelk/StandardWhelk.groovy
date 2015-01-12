@@ -165,8 +165,13 @@ class StandardWhelk extends HttpServlet implements Whelk {
             return new Location().withURI(new URI(identifier)).withResponseCode(303)
         }
 
-        log.debug("Looking for identifiers in record.")
+        log.debug("Check alternate identifiers.")
+        doc = storage.getByAlternateIdentifier(uri)
+        if (doc) {
+            return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
+        }
 
+        log.debug("Looking for identifiers in record.")
         // TODO: This query MUST be made against storage index. It will not be safe otherwise
         def query = new ElasticQuery(["terms":["sameAs.@id:"+identifier]])
         def result = index.query(query)

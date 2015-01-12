@@ -146,22 +146,35 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
         int v = (version ? version as int : -1)
 
-        if (!response.exists) {
-            return null
+        Document document = null
+
+        if (response.exists) {
+            log.trace("Get response for ${identifier}: " + response.sourceAsMap)
+            document = whelk.createDocumentFromJson(response.sourceAsString)
         }
-        log.trace("Get response for ${identifier}: " + response.sourceAsMap)
-        Document document = whelk.createDocumentFromJson(response.sourceAsString)
+
         if (document && (v < 0 || document.version == v)) {
             return document
-        } else {
+        } else if (document != null) {
             log.debug("Current version (${document.version}) of document not the one requested ($v). Looking in the cellar ...")
-            def query = boolQuery().must(termQuery("identifier", identifier)).must(termQuery("entry.version", v))
+            def query = boolQuery().must(termQuery("identifier", document.identifier)).must(termQuery("entry.version", v))
             def srq = client.prepareSearch(indexName + VERSION_STORAGE_SUFFIX).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query).setSize(1)
             response = performExecute(srq)
             log.trace("Response from version search: $response")
             if (response.hits.totalHits == 1) {
                 return whelk.createDocumentFromJson(response.hits.hits[0].sourceAsString)
             }
+        }
+        return null
+    }
+
+    Document getByAlternateIdentifier(String identifier) {
+        def query = termQuery("entry.alternateIdentifiers", identifier)
+        def srq = client.prepareSearch(indexName).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query).setSize(1)
+        def response = performExecute(srq)
+        log.trace("Response from alternate identifiers search: $response")
+        if (response.hits.totalHits == 1) {
+            return whelk.createDocumentFromJson(response.hits.hits[0].sourceAsString)
         }
         return null
     }

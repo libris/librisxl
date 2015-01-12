@@ -230,6 +230,11 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         loadDocument(id, version)
     }
 
+    Document getByAlternateIdentifier(String id) {
+        log.warn("Storage currently has no alternate identifier support! Using primary identifier for request.")
+        return get(id)
+    }
+
     @groovy.transform.CompileStatic
     private Document loadDocument(String uri, String version=null) {
         return loadDocument(new URI(uri), version)

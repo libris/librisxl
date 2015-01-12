@@ -22,6 +22,11 @@ Optionally, see details about using a Graph Store at the end of this document.
 
 ## Working locally
 
+### Setup whelk.properties
+
+Copy etc/resources/libris/whelk.properties.in into etc/resources/libris/whelk.properties and replace the placeholder values with proper ones.
+Ask for directions if you don't know the proper settings.
+
 ### Start the whelk
 
     $ export JAVA_OPTS="-Dfile.encoding=utf-8"
@@ -99,45 +104,6 @@ In order to 1) Get a source record and 2) convert it to "marc-as-json", use this
 Run the marcframe converter on that to print out the resulting JSON-LD:
 
     $ gradle -q runMarcFrame -Dargs=/tmp/bibtest.json
-
-## Setting up a proper instance
-
-For running a proper instance (e.g. in production), you should use a standalone elasticsearch instance, and deploy a whelk war into a webapp container.
-
-### Configure standalone elasticsearch
-
-First set up configuration of it:
-
-    $ cp etc/configuration/libris/oaipmh.properties.in etc/configuration/libris/oaipmh.properties
-    $ vim etc/configuration/libris/oaipmh.properties # ... (ask for directions)
-
-### Perform whelk operations
-
-Run whelkOperation gradle task to import, reindex or rebuild: 
-
-    THIS OPERATION IS DEPRECATED.
-
-    $ gradle whelkOperation -Dargs='ARGS' -Dwhelk.config.uri=<uri-to-config-json> (-Delastic.host='<host>') (-Delastic.cluster='<cluster>') (-Dfile.encoding='<encoding>')
-   
-Where ARGS is:
-
-     -d,--dataset <arg>      dataset (bib|auth|hold)
-     -n,--num <arg>          maximum number of document to import
-     -o,--operation <arg>    which operation to perform (import|reindex|etc)
-     -p,--picky <arg>        picky (true|false)
-     -s,--since <arg>        since Date (yyyy-MM-dd'T'hh:mm:ss) for OAIPMH
-     -u,--serviceUrl <URL>   serviceUrl for OAIPMH
-     -w,--whelk <arg>        the name of the whelk to perform operation on
-                             e.g. libris
-     -c,--component <arg>    which components to use for reindexing (defaults to all)
-
-Example - import a maximum of 10000 documents since 2000-01-01 using etc/whelksoperations.json to configure the whelks from external sources:
-
-    $ gradle whelkOperation -Dargs='-o import -w libris -d bib -s 2000-01-01T00:00:00Z -n 10000 -p true' -Dfile.encoding='utf-8'
-
-Example - "reindex" triple store, performing load from storage, turtle conversion and adding to triple store:
-
-    $ gradle whelkOperation -Dargs='-o reindex -w libris -c sesamegraphstore'
 
 ## Using a Graph Store
 

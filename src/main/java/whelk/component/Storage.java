@@ -20,10 +20,17 @@ public interface Storage extends Component {
     public boolean eligibleForStoring(Document d);
     /**
      * Retrieves an object from this Storage.
-     * @param uri the identifier of the object to be retrieved.
+     * @param identifier the identifier of the object to be retrieved.
      * @return the requested document or null if no object exists for specified identifier.
      */
     public Document get(String identifier, String version);
+    /**
+     * Retrieves an object by one of its alternate identifiers.
+     * @param identifier the identifier of the object to be retrieved.
+     * @return the requested document or null if no object exists for specified identifier.
+     */
+    public Document getByAlternateIdentifier(String identifier);
+
     /**
      * Retrieves all objects from Storage.
      */
