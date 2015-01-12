@@ -175,7 +175,7 @@ task fatjar(type: Jar) {
     configurations.all  {
         exclude group: "org.slf4j", module: "slf4j-log4j12"
     }
-    baseName = "whelk"
+    baseName = environment+"-whelk"
     appendix = configuration
     from {
         configurations.compile.collect {

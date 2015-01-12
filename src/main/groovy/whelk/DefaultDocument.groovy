@@ -34,6 +34,7 @@ class DefaultDocument implements Document {
     static final ObjectMapper mapper = new ObjectMapper()
 
     DefaultDocument() {
+        log.trace("### NEW DOCUMENT INSTANTIATED")
         entry = [:]
         meta = [:]
         updateTimestamp()
@@ -67,7 +68,10 @@ class DefaultDocument implements Document {
     String getChecksum() { checksum }
 
     String toJson() {
-        return mapper.writeValueAsString(this)
+        log.trace("Serializing document.")
+        String jsonString = mapper.writeValueAsString(this)
+        log.trace("Result of serialization: $jsonString")
+        return jsonString
     }
 
     Map toMap() {

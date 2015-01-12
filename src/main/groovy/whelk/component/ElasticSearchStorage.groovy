@@ -50,9 +50,9 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     boolean eligibleForStoring(Document doc) {
         if (versioning) {
             Document currentDoc = get(doc.identifier)
-            log.trace("eligible: $currentDoc - ${currentDoc?.deleted}, checksums: ${currentDoc?.checksum} / ${doc.checksum}")
+            log.debug("eligible: $currentDoc - ${currentDoc?.deleted}, checksums: ${currentDoc?.checksum} / ${doc.checksum}")
             if (currentDoc && !currentDoc.isDeleted() && currentDoc.checksum == doc.checksum) {
-                log.debug("Document ${doc.identifier} is suitable for storing.")
+                log.debug("Document ${doc.identifier} is not suitable for storing.")
                 return false
             }
         }
@@ -126,12 +126,12 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         return [currentDoc, newDoc]
     }
 
-    protected prepareIndexingRequest(doc, identifier, index) {
+    protected prepareIndexingRequest(doc, identifier, idxName) {
         if (identifier) {
             String encodedIdentifier = toElasticId(doc.identifier)
-            return client.prepareIndex(indexName, ELASTIC_STORAGE_TYPE, encodedIdentifier).setSource(doc.toJson().getBytes("UTF-8"))
+            return client.prepareIndex(idxName, ELASTIC_STORAGE_TYPE, encodedIdentifier).setSource(doc.toJson().getBytes("UTF-8"))
         } else {
-            return client.prepareIndex(indexName + VERSION_STORAGE_SUFFIX, ELASTIC_STORAGE_TYPE).setSource(doc.toJson().getBytes("UTF-8"))
+            return client.prepareIndex(idxName + VERSION_STORAGE_SUFFIX, ELASTIC_STORAGE_TYPE).setSource(doc.toJson().getBytes("UTF-8"))
         }
     }
 

@@ -317,3 +317,9 @@ http://<host>:<PORT>/whelk/_remotesearch?q=astrid
 
 HOLDINGCOUNT
 http://<host>:<PORT>/whelk/_libcount?id=/resource/bib/7149593
+
+## Dependencies
+
+### Elastic Search Component for Camel
+
+Built for ES 1.3.4, needs to be recompiled. Also, remove the log4j.properties before building to get rid of the target-catalog.
