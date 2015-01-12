@@ -95,7 +95,7 @@ class FoldJoinedPropertiesStep extends MarcFramePostProcStepBase {
         def values = []
         for (prop in sourceProperties) {
             def value = thing[prop]
-            if (!matchValuePattern.matcher(value))
+            if (value && !matchValuePattern.matcher(value))
                 return
             values << (value == INFINITY_YEAR? "" : value)
         }
