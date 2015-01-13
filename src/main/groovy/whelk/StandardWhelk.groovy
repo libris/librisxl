@@ -38,7 +38,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     List<Storage> storages = new ArrayList<Storage>()
     Map<Pattern, API> apis = new LinkedHashMap<Pattern, API>()
 
-    Map locationConfig = ["preCursor": "/resource"]
+    final Map locationConfig = ["preCursor": "/resource"]
 
     Index index
     GraphStore graphStore
@@ -117,9 +117,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         log.debug("Sending to storage(s)")
         for (storage in suitableStorages) {
-            notifyCamel(docs)
             storage.bulkStore(docs)
         }
+        notifyCamel(docs)
         log.debug("Bulk operation completed")
     }
 

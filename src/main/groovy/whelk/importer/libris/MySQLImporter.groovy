@@ -21,7 +21,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
-
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
 
     Connection conn = null
@@ -40,6 +39,11 @@ class MySQLImporter extends BasicPlugin implements Importer {
     int recordCount
     long startTime
 
+    List<Document> documentList = []
+    ConcurrentHashMap buildingMetaRecord = new ConcurrentHashMap()
+    String lastIdentifier = null
+
+
     MySQLImporter(Map settings) {
     }
 
@@ -57,12 +61,20 @@ class MySQLImporter extends BasicPlugin implements Importer {
         int sqlLimit = 6000
         if (nrOfDocs > 0 && nrOfDocs < sqlLimit) { sqlLimit = nrOfDocs }
 
-        tickets = new Semaphore(20)
+        tickets = new Semaphore(10)
         //queue = Executors.newSingleThreadExecutor()
         queue = Executors.newWorkStealingPool()
 
+        def versioningSettings = [:]
+
         //log.info("Suspending camel during import.")
         //whelk.camelContext.suspend()
+        for (st in this.whelk.getStorages()) {
+            log.debug("Turning off versioning in ${st.id}")
+            // Preserve original setting
+            versioningSettings.put(st.id, st.versioning)
+            st.versioning = false
+        }
 
         try {
 
@@ -91,11 +103,12 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
             for (;;) {
                 statement.setInt(1, recordId)
-                resultSet = statement.executeQuery()
                 log.debug("Reset statement with $recordId")
+                resultSet = statement.executeQuery()
 
+                log.debug("Query executed. Starting processing ...")
                 int lastRecordId = recordId
-                while(resultSet.next()){
+                while(resultSet.next()) {
                     recordId  = resultSet.getInt(1)
                     record = Iso2709Deserializer.deserialize(resultSet.getBytes("data"))
 
@@ -119,7 +132,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
                             buildDocument(record, dataset, "location:" + sigel)
                         }
                     }
-
                 }
 
                 if (nrOfDocs > 0 && recordCount > nrOfDocs) {
@@ -131,7 +143,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
                     log.info("Same id. Breaking.")
                     break
                 }
-
             }
             log.debug("Clearing out remaining docs ...")
             buildDocument(null, dataset, null)
@@ -144,6 +155,14 @@ class MySQLImporter extends BasicPlugin implements Importer {
             log.info("Record count: ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds for sql results.")
             close()
         }
+
+        queue.execute({
+            this.whelk.flush()
+            log.debug("Resetting versioning setting for storages")
+            for (st in this.whelk.getStorages()) {
+                st.versioning = versioningSettings.get(st.id)
+            }
+        } as Runnable)
 
         /*
         queue.execute({
@@ -158,97 +177,84 @@ class MySQLImporter extends BasicPlugin implements Importer {
         return recordCount
     }
 
-    List<Document> documentList = new ArrayList<Document>()
-    ConcurrentHashMap buildingMetaRecord = new ConcurrentHashMap()
-    String lastIdentifier = null
-    Stack<Future> futures = new Stack<Future>()
-
     void buildDocument(MarcRecord record, String dataset, String oaipmhSetSpecValue) {
         String identifier = null
+        if (documentList.size() >= addBatchSize || record == null) {
+            if (tickets.availablePermits() < 1) {
+                log.info("Queues are full at the moment. Waiting for some to finish.")
+            }
+            tickets.acquire()
+            log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
+            queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets))
+            log.debug("     Current poolsize: ${queue.poolSize}")
+            log.debug("queuedSubmissionCount: ${queue.queuedSubmissionCount}")
+            log.debug("      queuedTaskCount: ${queue.queuedTaskCount}")
+            log.debug("   runningThreadCount: ${queue.runningThreadCount}")
+            log.debug("    activeThreadCount: ${queue.activeThreadCount}")
+            log.debug("    available tickets: ${tickets.availablePermits()}")
+            this.documentList = []
+        }
         if (record) {
             def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
             if ("SUPPRESSRECORD" in aList) {
                 log.debug("Record ${identifier} is suppressed. Next ...")
                 return
             }
+            log.trace("building document $identifier")
             identifier = "/"+dataset+"/"+record.getControlfields("001").get(0).getData()
             buildingMetaRecord.get(identifier, [:]).put("record", record)
-        }
-        log.trace("building document $identifier")
-        if (documentList.size() >= addBatchSize || record == null) {
-            log.debug("documentList is full. Sending it to bulkAdd (open the trapdoor)")
-            addDocuments(documentList)
-            //whelk.bulkAdd(documentList, documentList.first().contentType, false)
-            log.debug("documents added.")
-            documentList = new ArrayList<Document>()
-        }
-
-        if (lastIdentifier && lastIdentifier != identifier) {
-            log.trace("New document received. Adding last ($lastIdentifier}) to the queue")
-            recordCount++
-            log.trace("pushing to queue: dataset: $dataset, meta: $buildingMetaRecord")
-
-            // Convert document
-            def currentDocMeta = buildingMetaRecord.remove(lastIdentifier)
-            def entry = ["identifier":lastIdentifier,"dataset":dataset]
-
-            Document doc = marcFrameConverter.doConvert(currentDocMeta.record, ["entry":entry,"meta":currentDocMeta.get("meta", [:])])
-            if (enhancer) {
-                doc = enhancer.filter(doc)
-            }
-            documentList << doc
-
-            /*
-            futures.push(queue.submit(
-                new MarcDocumentConverter(lastIdentifier, dataset, marcFrameConverter, enhancer, buildingMetaRecord.get(lastIdentifier).record, buildingMetaRecord.get(lastIdentifier).get("meta", [:]))
-            ))
-            */
-
-            //buildingMetaRecord.remove(lastIdentifier)
+            buildingMetaRecord.get(identifier, [:]).put("entry", ["identifier":identifier,"dataset":dataset])
         }
         if (oaipmhSetSpecValue) {
             buildingMetaRecord.get(identifier, [:]).get("meta", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
         }
-        lastIdentifier = identifier
-
-        while (!futures.isEmpty()) {
-            documentList << futures.pop().get()
+        if (lastIdentifier && lastIdentifier != identifier) {
+            log.trace("New document received. Adding last ($lastIdentifier}) to the doclist")
+            recordCount++
+            documentList << buildingMetaRecord.remove(lastIdentifier)
         }
+        lastIdentifier = identifier
     }
 
-    class MarcDocumentConverter implements Callable<Document> {
+    class ConvertAndStoreRunner implements Runnable {
 
-        private MarcRecord record
-        private Map meta
+        private Whelk whelk
         private MarcFrameConverter converter
         private Filter filter
-        private String dataset
-        private String identifier
 
-        MarcDocumentConverter(String i, String d, FormatConverter c, Filter f, final MarcRecord mr, final Map m) {
-            this.record = mr
-            this.meta = m
+        private List recordList
+
+        private Semaphore tickets
+
+        ConvertAndStoreRunner(Whelk w, FormatConverter c, Filter f, final List recList, Semaphore t) {
+            this.whelk = w
             this.converter = c
             this.filter = f
-            this.dataset = d
-            this.identifier = i
+
+            this.recordList = recList
+            this.tickets = t
         }
 
         @Override
-        Document call() {
-            def entry = ["identifier":identifier,"dataset":dataset]
-            if (!identifier) {
-                log.error("Bad sit: entry is $entry")
-                throw new RuntimeException("No, i don't wanna.")
+        void run() {
+            try {
+                List<Document> convertedDocs = []
+                recordList.each {
+
+                    Document doc = converter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
+                    if (filter) {
+                        doc = filter.filter(doc)
+                    }
+                    convertedDocs << doc
+                }
+                this.whelk.bulkAdd(convertedDocs, convertedDocs.first().contentType, false)
+            } finally {
+                tickets.release()
             }
-            Document doc = converter.doConvert(this.record, ["entry":entry,"meta":meta])
-            if (filter) {
-                doc = filter.filter(doc)
-            }
-            return doc
         }
     }
 
+    /*
     void addDocuments(final List<Document> docs) {
         if (tickets.availablePermits() < 1) {
             log.info("Queues are full at the moment. Waiting for some to finish.")
@@ -258,12 +264,14 @@ class MySQLImporter extends BasicPlugin implements Importer {
             try {
                 log.debug("Starting add of ${docs.size()} documents.")
                 whelk.bulkAdd(docs, docs.first().contentType, false)
+                log.debug("Bulk add operation completed.")
             } finally {
                 tickets.release()
                 log.debug("Add completed.")
             }
         } as Runnable)
     }
+    */
 
     Connection connectToUri(URI uri) {
         log.info("connect uri: $uri")

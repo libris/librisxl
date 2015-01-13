@@ -117,8 +117,8 @@
 <logger name="whelk.plugin.MarcXml2JsonLDConverter">
   <level value="info"/>
 </logger>
-<logger name="whelk.importer.MySQLImporter">
-  <level value="info"/>
+<logger name="whelk.importer.libris.MySQLImporter">
+  <level value="debug"/>
 </logger>
 <logger name="whelk.importer.OaiPmhImporter">
   <level value="info"/>
