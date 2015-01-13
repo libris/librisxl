@@ -33,7 +33,6 @@
         { "/_sparql": "sparqlapi" },
         { "/_libcount": "libcount" },
         { "/_isxntool":  "isxntool" },
-        { "/_complete/([\\w/]+)$":  "completeexpander" },
         { "/(\\w+)/_search":  "search" },
         { "^/([^_].+)$":  "documentapi" },
         { "^/$":  "documentapi" }

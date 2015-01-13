@@ -11,7 +11,7 @@
       <level value="info"/>
   </logger>
   <logger name="whelk.importer.libris.MySQLImporter">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
   <logger name="whelk.component.ElasticSearch">
       <level value="info"/>

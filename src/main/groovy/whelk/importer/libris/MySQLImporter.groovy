@@ -166,18 +166,19 @@ class MySQLImporter extends BasicPlugin implements Importer {
     void buildDocument(MarcRecord record, String dataset, String oaipmhSetSpecValue) {
         String identifier = null
         if (record) {
-            identifier = "/"+dataset+"/"+record.getControlfields("001").get(0).getData()
-            buildingMetaRecord.get(identifier, [:]).put("record", record)
             def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
             if ("SUPPRESSRECORD" in aList) {
                 log.debug("Record ${identifier} is suppressed. Next ...")
                 return
             }
+            identifier = "/"+dataset+"/"+record.getControlfields("001").get(0).getData()
+            buildingMetaRecord.get(identifier, [:]).put("record", record)
         }
         log.trace("building document $identifier")
         if (documentList.size() >= addBatchSize || record == null) {
             log.debug("documentList is full. Sending it to bulkAdd (open the trapdoor)")
-            whelk.bulkAdd(documentList, documentList.first().contentType, false)
+            addDocuments(documentList)
+            //whelk.bulkAdd(documentList, documentList.first().contentType, false)
             log.debug("documents added.")
             documentList = new ArrayList<Document>()
         }
@@ -186,9 +187,24 @@ class MySQLImporter extends BasicPlugin implements Importer {
             log.trace("New document received. Adding last ($lastIdentifier}) to the queue")
             recordCount++
             log.trace("pushing to queue: dataset: $dataset, meta: $buildingMetaRecord")
-            // Add converter to queue
-            futures.push(queue.submit(new MarcDocumentConverter(lastIdentifier, dataset, marcFrameConverter, enhancer, buildingMetaRecord.get(lastIdentifier).record, buildingMetaRecord.get(lastIdentifier).get("meta", [:]))))
-            buildingMetaRecord.remove(lastIdentifier)
+
+            // Convert document
+            def currentDocMeta = buildingMetaRecord.remove(lastIdentifier)
+            def entry = ["identifier":lastIdentifier,"dataset":dataset]
+
+            Document doc = marcFrameConverter.doConvert(currentDocMeta.record, ["entry":entry,"meta":currentDocMeta.get("meta", [:])])
+            if (enhancer) {
+                doc = enhancer.filter(doc)
+            }
+            documentList << doc
+
+            /*
+            futures.push(queue.submit(
+                new MarcDocumentConverter(lastIdentifier, dataset, marcFrameConverter, enhancer, buildingMetaRecord.get(lastIdentifier).record, buildingMetaRecord.get(lastIdentifier).get("meta", [:]))
+            ))
+            */
+
+            //buildingMetaRecord.remove(lastIdentifier)
         }
         if (oaipmhSetSpecValue) {
             buildingMetaRecord.get(identifier, [:]).get("meta", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
@@ -233,7 +249,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
         }
     }
 
-    @Deprecated
     void addDocuments(final List<Document> docs) {
         if (tickets.availablePermits() < 1) {
             log.info("Queues are full at the moment. Waiting for some to finish.")
@@ -242,7 +257,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         queue.execute({
             try {
                 log.debug("Starting add of ${docs.size()} documents.")
-                whelk.bulkAdd(docs, docs.first().contentType)
+                whelk.bulkAdd(docs, docs.first().contentType, false)
             } finally {
                 tickets.release()
                 log.debug("Add completed.")

@@ -19,6 +19,9 @@
             "metaproxyBaseUrl":"http://mproxy.libris.kb.se:8000"
         }
     },
+    "metasearchapi" : {
+        "_class": "whelk.api.MetaSearchAPI"
+    },
     "isxntool": {
         "_class": "whelk.api.libris.ISXNTool"
     },
