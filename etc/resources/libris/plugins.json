@@ -237,8 +237,7 @@
             "marcconverter", "linkcompleter"
         ],
         "_params" : {
-            "preserveTimestamps" : true,
-            "numberOfThreads": 50
+            "preserveTimestamps" : true
         }
     },
     "oaipmhimporter2" : {
@@ -261,8 +260,7 @@
             "marcconverter", "linkcompleter"
         ],
         "_params" : {
-            "preserveTimestamps" : true,
-            "numberOfThreads": 100
+            "preserveTimestamps" : true
         }
     },
     "operator" : {

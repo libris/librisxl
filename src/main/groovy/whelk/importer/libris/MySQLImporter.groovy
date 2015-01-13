@@ -33,7 +33,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
     ExecutorService queue
     Semaphore tickets
 
-    int numberOfThreads
     int startAt = 0
 
     int addBatchSize = 5000
@@ -42,7 +41,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
     long startTime
 
     MySQLImporter(Map settings) {
-        this.numberOfThreads = settings.get("numberOfThreads", 1)
     }
 
     void bootstrap(String whelkId) {
@@ -61,7 +59,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
         tickets = new Semaphore(20)
         //queue = Executors.newSingleThreadExecutor()
-        queue = Executors.newFixedThreadPool(numberOfThreads)
+        queue = Executors.newWorkStealingPool()
 
         //log.info("Suspending camel during import.")
         //whelk.camelContext.suspend()

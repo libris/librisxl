@@ -40,7 +40,6 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
     ExecutorService queue
     Semaphore tickets
-    int numberOfThreads = 1
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
@@ -51,7 +50,6 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
     OldOAIPMHImporter(Map settings) {
         this.serviceUrl = settings.get('serviceUrl',SERVICE_BASE_URL)
         this.preserveTimestamps = settings.get("preserveTimestamps", true)
-        this.numberOfThreads = settings.get("numberOfThreads", numberOfThreads)
     }
 
     void bootstrap(String whelkId) {
@@ -98,7 +96,8 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         }
         log.debug("urlString: $urlString")
         //queue = Executors.newSingleThreadExecutor()
-        queue = Executors.newFixedThreadPool(numberOfThreads)
+        //queue = Executors.newFixedThreadPool(numberOfThreads)
+        queue = Executors.newWorkStealingPool()
         startTime = System.currentTimeMillis()
         URL url
         if (startResumptionToken) {
