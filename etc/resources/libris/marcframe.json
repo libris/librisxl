@@ -4959,7 +4959,9 @@
 
     "856": {
       "addLink": "isPrimaryTopicOf", "resourceType": "Document",
-      "TODO:i1": {},
+      "TODO:i1": {
+        "marcDefault": "4"
+      },
       "match-i2": {
         "0": {"addLink": "associatedMedia", "resourceType": "MediaObject"},
         "1": {"addLink": "alternateFormat", "resourceType": "Electronic"},
@@ -5488,6 +5490,7 @@
     },
 
     "001" : {"inherit": "bib"},
+    "003": {"TODO:systemNumber-with-default": "SE-LIBR", "note": "used-for-exports"},
     "004": {"link": "holdingFor", "uriTemplate": "/resource/bib/{_}"},
     "005": {"inherit": "bib"},
 
@@ -5567,7 +5570,7 @@
       "addLink": "offers",
       "resourceType": "Offer",
       "TODO:i1": {},
-      "TODO:i2": {
+      "FIXME:i2": {
         "property": "shelfOrder"
       },
       "$2": {"property": "sourceOfClassificationOrShelfMarkScheme"},
