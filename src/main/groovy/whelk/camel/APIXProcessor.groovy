@@ -3,6 +3,7 @@ package whelk.camel
 import groovy.util.logging.Slf4j as Log
 
 import whelk.*
+import whelk.plugin.*
 
 import org.apache.camel.Exchange
 import org.apache.camel.Message
@@ -11,9 +12,10 @@ import org.apache.camel.component.http4.HttpMethods
 
 
 @Log
-class APIXProcessor extends FormatConverterProcessor implements Processor {
+class APIXProcessor extends BasicPlugin implements Processor {
 
     String apixPathPrefix
+    FormatConverterProcessor fcp = null
 
     APIXProcessor(String prefix) {
         StringBuilder pathBuilder = new StringBuilder(prefix)
@@ -21,6 +23,10 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
             pathBuilder.deleteCharAt(pathBuilder.length()-1)
         }
         this.apixPathPrefix = pathBuilder.toString()
+    }
+
+    void bootstrap(String wName) {
+        fcp = getPlugin("camel_format_processor")
     }
 
     @Override
@@ -44,7 +50,7 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
         if (operation == Whelk.REMOVE_OPERATION) {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
             if (!messagePrepared) {
-                def doc = createDocument(message)
+                def doc = fcp.createDocument(message)
                 String voyagerUri
                 if (doc instanceof JsonDocument) {
                     voyagerUri = getVoyagerUri(doc)
@@ -53,15 +59,15 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
                 }
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
                 if (doc) {
-                    prepareMessage(doc, message)
+                    fcp.prepareMessage(doc, message)
                 }
             }
         } else {
             if (!messagePrepared) {
-                def doc = createDocument(message)
+                def doc = fcp.createDocument(message)
                 String voyagerUri = getVoyagerUri(doc) ?: "/" + message.getHeader("document:dataset") +"/new"
-                doc = runConverters(doc)
-                prepareMessage(doc, message)
+                doc = fcp.runConverters(doc)
+                fcp.prepareMessage(doc, message)
 
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
             }
@@ -95,7 +101,7 @@ class APIXProcessor extends FormatConverterProcessor implements Processor {
 }
 
 @Log
-class APIXResponseProcessor extends FormatConverterProcessor implements Processor {
+class APIXResponseProcessor extends BasicPlugin implements Processor {
 
     @Override
     public void process(Exchange exchange) throws Exception {

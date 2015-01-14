@@ -13,20 +13,21 @@ import org.apache.camel.Processor
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
-class ElasticTypeRouteProcessor implements Processor {
-
-    static final ObjectMapper mapper = new ObjectMapper()
+class ElasticRouteProcessor extends BasicPlugin implements Processor {
 
     ElasticShapeComputer shapeComputer
     String elasticHost, elasticCluster
     int elasticPort
 
-    //ElasticTypeRouteProcessor(String elasticHost, String elasticCluster, int elasticPort, List<String> availableTypes, ElasticShapeComputer esc) {
-    ElasticTypeRouteProcessor(ElasticShapeComputer index) {
-        this.shapeComputer = index
-        this.elasticHost = index.elastichost
-        this.elasticPort = index.elasticport
-        this.elasticCluster = index.elasticcluster
+    private ElasticRouteProcessor() {}
+    private static final ElasticRouteProcessor erp = new ElasticRouteProcessor()
+    public static ElasticRouteProcessor getInstance() { return erp }
+
+    void bootstrap(String whelkName) {
+        this.shapeComputer = getPlugin("index")
+        this.elasticHost = shapeComputer.getElasticHost()
+        this.elasticCluster = shapeComputer.getElasticCluster()
+        this.elasticPort = shapeComputer.getElasticPort()
     }
 
     @Override

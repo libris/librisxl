@@ -35,6 +35,9 @@ public abstract class BasicPlugin implements WhelkAware {
     }
     public List<Plugin> getPlugins() { plugins }
     public Map getGlobal() { global }
+    public Plugin getPlugin(String pluginId) {
+        plugins.find { it.id == pluginId }
+    }
 
     @Override
     public int hashCode() {

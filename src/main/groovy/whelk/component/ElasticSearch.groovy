@@ -266,4 +266,8 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         }
         return null
     }
+
+    public String getElasticHost() { elastichost }
+    public String getElasticCluster() { elasticcluster }
+    public int getElasticPort() { elasticport }
 }

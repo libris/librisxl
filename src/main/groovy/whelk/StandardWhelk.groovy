@@ -407,11 +407,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
         } else {
             message.setBody(document.data)
         }
-        message.setHeader("document.entry", document.entry.inspect())
-        message.setHeader("document.meta", document.meta.inspect())
+        message.setHeader("document:metaentry", document.entry.inspect())
         // For conveniance
         message.setHeader("document:identifier", document.identifier)
         message.setHeader("document:dataset", document.dataset)
+        message.setHeader("document:metaentry", document.metadataAsJson)
         if (extraInfo) {
             extraInfo.each { key, value ->
                 message.setHeader("whelk:$key", value)

@@ -24,7 +24,12 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
     FormatConverter converter
     Filter expander
 
-    static final ObjectMapper mapper = new ObjectMapper()
+    /*
+    private FormatConverterProcessor() {}
+    private static final FormatConverterProcessor fcp = new FormatConverterProcessor()
+    public static FormatConverterProcessor getInstance() { return fcp }
+    */
+
 
     void bootstrap(String whelkName) {
         this.converter = plugins.find { it instanceof FormatConverter  }
@@ -40,9 +45,8 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
             log.debug("Loaded document ${doc?.identifier}")
         } else {
             log.debug("Setting document data with type ${body.getClass().getName()}")
-            def entry = Eval.me(docMessage.getHeader("document.entry"))
-            def meta = Eval.me(docMessage.getHeader("document.meta"))
-            doc = whelk.createDocument(entry.contentType).withData(body).withMeta(meta).withEntry(entry)
+            def metaentry = mapper.readValue(docMessage.getHeader("document:metaentry") as String, Map)
+            doc = whelk.createDocument(metaentry.entry.contentType).withData(body).withMeta(metaentry.meta).withEntry(metaentry.entry)
         }
         return doc
     }

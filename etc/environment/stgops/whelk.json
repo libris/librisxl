@@ -27,14 +27,6 @@
         ]
     },
     "_apis": [
-        { "/_remotesearch": "remotesearch" },
-        { "/_operations": "operator" },
-        { "/_format": "formatter" },
-        { "/_sparql": "sparqlapi" },
-        { "/_libcount": "libcount" },
-        { "/_isxntool":  "isxntool" },
-        { "/(\\w+)/_search":  "search" },
-        { "^/([^_].+)$":  "documentapi" },
-        { "^/$":  "documentapi" }
+        { "/_operations": "operator" }
     ]
 }

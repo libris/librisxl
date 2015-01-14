@@ -57,18 +57,19 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     }
 
     void configure() {
-        Processor formatConverterProcessor = getPlugin("elastic_camel_processor")
+        Processor formatConverterProcessor = getPlugin("camel_format_processor")
         AggregationStrategy graphstoreAggregationStrategy = getPlugin("graphstore_aggregator")
         APIXProcessor apixProcessor = getPlugin("apixprocessor")
         APIXResponseProcessor apixResponseProcessor = getPlugin("apixresponseprocessor")
-
-        String primaryStorageId = whelk.storage.id
+        APIXHttpResponseFailedBean apixFailureBean = new APIXHttpResponseFailedBean(apixResponseProcessor)
+        ElasticRouteProcessor elasticTypeRouteProcessor = getPlugin("elasticprocessor")
 
         def eligbleMQs = []
         def eligbleBulkMQs = []
         if (whelk.index) {
             eligbleMQs.add(indexMessageQueue)
             eligbleBulkMQs.add(bulkIndexMessageQueue)
+
         }
         if (whelk.graphStore) {
             eligbleMQs.add(graphstoreMessageQueue)
@@ -81,7 +82,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         onException(HttpOperationFailedException.class)
             .handled(true)
-            .bean(new APIXHttpResponseFailedBean(apixResponseProcessor), "handle")
+            .bean(apixFailureBean, "handle")
             .choice()
                 .when(header("retry"))
                     .to("activemq:"+whelk.id+".retries")
@@ -99,12 +100,12 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
 
         if (whelk.index) {
             from(indexMessageQueue)
-                .process(new ElasticTypeRouteProcessor(whelk.index))
+                .process(elasticTypeRouteProcessor)
                 .routingSlip(header("elasticDestination"))
 
             from(bulkIndexMessageQueue)
-                .process(new ElasticTypeRouteProcessor(whelk.index))
-                .aggregate(header("document:dataset"), new ArrayListAggregationStrategy()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
+                .process(elasticTypeRouteProcessor)
+                .aggregate(header("document:dataset"), ArrayListAggregationStrategy.getInstance()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))
 
         }
@@ -161,6 +162,7 @@ class APIXHttpResponseFailedBean {
     APIXResponseProcessor apixResponseProcessor
 
     APIXHttpResponseFailedBean(APIXResponseProcessor arp) {
+        log.info("Instantiating APIXHttpResponseFailedBean.")
         this.apixResponseProcessor = arp
     }
 
@@ -269,6 +271,16 @@ class GraphstoreBatchUpdateAggregationStrategy extends BasicPlugin implements Ag
 
 @Log
 class ArrayListAggregationStrategy implements AggregationStrategy {
+
+
+    private static final instance = new ArrayListAggregationStrategy();
+
+    static ArrayListAggregationStrategy getInstance() {
+        return instance
+    }
+
+    private ArrayListAggregationStrategy() {}
+
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
         log.debug("Called aggregator for message in dataset: ${newExchange.in.getHeader("document:dataset")}")
         Object newBody = newExchange.getIn().getBody()

@@ -509,7 +509,7 @@
             }
         }
     },
-    "elastic_camel_processor": {
+    "camel_format_processor": {
         "_class" : "whelk.camel.FormatConverterProcessor",
         "_plugins" : ["linkexpander", "cleanupindexconverter" ]
     },
@@ -531,12 +531,18 @@
     "apixprocessor": {
         "_class": "whelk.camel.APIXProcessor",
         "_params": "/apix/0.1/cat/test/",
-        "_plugins" : ["jsonld2marcxmlconverter"]
+        "_plugins" : ["jsonld2marcxmlconverter","camel_format_processor"]
+    },
+    "elasticprocessor": {
+        "_class": "whelk.camel.ElasticRouteProcessor",
+        "_plugins" : [
+            "index"
+        ]
     },
     "routebuilder": {
         "_class" : "whelk.camel.WhelkRouteBuilder",
         "_plugins" : [
-            "elastic_camel_processor", "turtleconverter_processor", "graphstore_aggregator","apixprocessor","apixresponseprocessor"
+            "camel_format_processor", "turtleconverter_processor", "graphstore_aggregator","apixprocessor","apixresponseprocessor","elasticprocessor"
         ],
         "_params": {
             "elasticBatchSize": 2000,

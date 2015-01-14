@@ -23,10 +23,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
 
-    Connection conn = null
-    PreparedStatement statement = null
-    ResultSet resultSet = null
-
     boolean cancelled = false
 
     ExecutorService queue
@@ -57,6 +53,10 @@ class MySQLImporter extends BasicPlugin implements Importer {
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false
+        Connection conn = null
+        PreparedStatement statement = null
+        ResultSet resultSet = null
+
 
         int sqlLimit = 6000
         if (nrOfDocs > 0 && nrOfDocs < sqlLimit) { sqlLimit = nrOfDocs }
@@ -153,7 +153,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
             log.error("Exception", e)
         } finally {
             log.info("Record count: ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds for sql results.")
-            close()
+            close(conn, statement, resultSet)
         }
 
         queue.execute({
@@ -162,14 +162,9 @@ class MySQLImporter extends BasicPlugin implements Importer {
             for (st in this.whelk.getStorages()) {
                 st.versioning = versioningSettings.get(st.id)
             }
+            //log.info("Starting camel context ...")
+            //whelk.camelContext.resume()
         } as Runnable)
-
-        /*
-        queue.execute({
-            log.info("Starting camel context ...")
-            whelk.camelContext.resume()
-        } as Runnable)
-        */
 
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
@@ -282,7 +277,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
     void cancel() { cancelled = true}
 
 
-    public void close() {
+    public void close(Connection conn, PreparedStatement statement, ResultSet resultSet) {
         log.info("Closing down mysql connections.")
         try {
             statement.cancel()
