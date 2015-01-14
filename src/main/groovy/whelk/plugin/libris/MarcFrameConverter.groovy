@@ -376,7 +376,7 @@ class MarcRuleSet {
             }
             else {
                 handler = new MarcSimpleFieldHandler(this, tag, dfn)
-                assert handler.property || handler.uriTemplate, "Incomplete: $tag: $fieldDfn"
+                assert handler.property || handler.uriTemplate, "Incomplete: $tag: $dfn"
             }
             fieldHandlers[tag] = handler
             if (dfn.aboutType) {
