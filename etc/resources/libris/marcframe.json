@@ -5490,7 +5490,10 @@
     },
 
     "001" : {"inherit": "bib"},
-    "003": {"TODO:systemNumber-with-default": "SE-LIBR", "note": "used-for-exports"},
+    "003": {
+      "ignored": true,
+      "TODO:systemNumber-with-default": "SE-LIBR", "note": "used-for-exports"
+    },
     "004": {"link": "holdingFor", "uriTemplate": "/resource/bib/{_}"},
     "005": {"inherit": "bib"},
 
