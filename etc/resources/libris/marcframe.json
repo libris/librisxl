@@ -5451,37 +5451,37 @@
 
     "000": {
       "[5:6]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "status",
         "uriTemplate": "{_}",
         "tokenMap": "status"
       },
       "[6:7]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "type",
         "uriTemplate": "{_}",
         "tokenMap": "type"
       },
       "[7:8]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "statistics",
         "uriTemplate": "{_}",
         "tokenMap": "statistics"
       },
       "[9:10]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "characterCoding",
         "uriTemplate": "{_}",
         "tokenMap": "characterCoding"
       },
       "[17:18]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "encLevel",
         "uriTemplate": "{_}",
         "tokenMap": "hold-encLevel"
       },
       "[18:19]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "itemInfoInRecord",
         "uriTemplate": "{_}",
         "tokenMap": "itemInfoInRecord"
@@ -5555,6 +5555,7 @@
     },
 
     "014": {
+      "aboutEntity": "?record",
       "TODO:i1": {},
       "$a": {"addProperty": "librisIIINumber"}
     },
@@ -5570,6 +5571,7 @@
     "698": {},
 
     "852": {
+      "aboutType": "HeldMaterial",
       "addLink": "offers",
       "resourceType": "Offer",
       "TODO:i1": {},
