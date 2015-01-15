@@ -178,7 +178,7 @@ class MarcConversion {
         record[marcRuleSet.thingLink] = thing
 
         def state = [
-            entityMap: ['?record': record, '?instance': thing],
+            entityMap: ['?record': record, '?thing': thing],
             marcRemains: marcRemains
         ]
 
@@ -482,7 +482,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         if (fieldDfn.aboutType) {
             definesDomainEntityType = fieldDfn.aboutType
         }
-        aboutEntityName = fieldDfn.aboutEntity ?: '?instance'
+        aboutEntityName = fieldDfn.aboutEntity ?: '?thing'
         if (fieldDfn.addLink) {
             link = fieldDfn.addLink
             repeatable = true
@@ -726,12 +726,12 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         }
         def entityMap = state.entityMap
         if (addLink) {
-            def ent = entityMap['?instance']
+            def ent = entityMap['?thing']
             def newEnt = newEntity(null)
             addValue(ent, addLink, newEnt, true)
             state = state.clone()
             state.entityMap = entityMap.clone()
-            state.entityMap['?instance'] = newEnt
+            state.entityMap['?thing'] = newEnt
         }
 
         def baseOk = true
@@ -869,7 +869,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 ent['@value'] = value
             }
         //} else if (linkedHandler) {
-        //    linkedHandler.convert(sourceMap, value,["?instance": ent])
+        //    linkedHandler.convert(sourceMap, value,["?thing": ent])
         } else {
             addValue(ent, property, value, repeatable)
         }
