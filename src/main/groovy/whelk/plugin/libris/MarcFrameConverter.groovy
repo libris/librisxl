@@ -139,6 +139,15 @@ class MarcConversion {
             marcRuleSets[marcCat] = marcRuleSet
             marcRuleSet.buildHandlers(config)
         }
+        addTypeMaps()
+    }
+
+    void addTypeMaps() {
+        tokenMaps.typeOfRecord.each { token, typeName ->
+            def marcCat = marcTypeMap[token] ?: marcTypeMap['*']
+            def marcRuleSet = marcRuleSets[marcCat] 
+            marcRuleSet.aboutTypeMap['?thing'] << typeName
+        }
     }
 
     String getMarcCategory(String leader) {
@@ -320,14 +329,13 @@ class MarcRuleSet {
     List<MarcFramePostProcStep> postProcSteps
 
     Set primaryTags = new HashSet()
-    Set aboutTypes = new HashSet()
+    Map<String, Set<String>> aboutTypeMap = new HashMap<String, Set<String>>()
 
     MarcRuleSet(conversion, name) {
         this.conversion = conversion
         this.name = name
-        if (this.name == 'auth') {
-            aboutTypes << 'Authority'
-        }
+        this.aboutTypeMap['?record'] = new HashSet<String>()
+        this.aboutTypeMap['?thing'] = new HashSet<String>()
     }
 
     void buildHandlers(config) {
@@ -380,7 +388,7 @@ class MarcRuleSet {
             }
             fieldHandlers[tag] = handler
             if (dfn.aboutType) {
-                aboutTypes << dfn.aboutType
+                aboutTypeMap[dfn.aboutEntity ?: '?thing'] << dfn.aboutType
             }
         }
     }
@@ -408,6 +416,7 @@ class MarcRuleSet {
         def types = thing['@type']
         if (types instanceof String)
             types = [types]
+        def aboutTypes = aboutTypeMap['?thing']
         for (type in types) {
             if (type in aboutTypes)
                 return true
