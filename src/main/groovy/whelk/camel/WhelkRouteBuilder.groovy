@@ -174,7 +174,10 @@ class APIXHttpResponseFailedBean {
             log.debug("All is well. Got statuscode ${e.statusCode}. Sending exchange to response processor.")
             exchange.getIn().setHeader("CamelHttpResponseCode", e.statusCode)
             exchange.getIn().setHeader("Location", message.getHeader("CamelHttpPath"))
-            apixResponseProcessor.process(exchange)
+            if (message.getHeader("JMSDestination").toString().toLowerCase().contains("apix")) {
+                log.debug("Handling a 303 from APIX, send it to APIX response processor.")
+                apixResponseProcessor.process(exchange)
+            }
         } else if (e.statusCode == 404) {
             log.info("received status ${e.statusCode} from http, setting handled=true")
             message.setHeader("handled", true)
