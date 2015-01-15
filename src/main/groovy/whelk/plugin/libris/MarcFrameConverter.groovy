@@ -139,6 +139,15 @@ class MarcConversion {
             marcRuleSets[marcCat] = marcRuleSet
             marcRuleSet.buildHandlers(config)
         }
+        addTypeMaps()
+    }
+
+    void addTypeMaps() {
+        tokenMaps.typeOfRecord.each { token, typeName ->
+            def marcCat = marcTypeMap[token] ?: marcTypeMap['*']
+            def marcRuleSet = marcRuleSets[marcCat] 
+            marcRuleSet.aboutTypeMap['?thing'] << typeName
+        }
     }
 
     String getMarcCategory(String leader) {
@@ -178,7 +187,7 @@ class MarcConversion {
         record[marcRuleSet.thingLink] = thing
 
         def state = [
-            entityMap: ['?record': record, '?instance': thing],
+            entityMap: ['?record': record, '?thing': thing],
             marcRemains: marcRemains
         ]
 
@@ -320,14 +329,13 @@ class MarcRuleSet {
     List<MarcFramePostProcStep> postProcSteps
 
     Set primaryTags = new HashSet()
-    Set aboutTypes = new HashSet()
+    Map<String, Set<String>> aboutTypeMap = new HashMap<String, Set<String>>()
 
     MarcRuleSet(conversion, name) {
         this.conversion = conversion
         this.name = name
-        if (this.name == 'auth') {
-            aboutTypes << 'Authority'
-        }
+        this.aboutTypeMap['?record'] = new HashSet<String>()
+        this.aboutTypeMap['?thing'] = new HashSet<String>()
     }
 
     void buildHandlers(config) {
@@ -380,7 +388,7 @@ class MarcRuleSet {
             }
             fieldHandlers[tag] = handler
             if (dfn.aboutType) {
-                aboutTypes << dfn.aboutType
+                aboutTypeMap[dfn.aboutEntity ?: '?thing'] << dfn.aboutType
             }
         }
     }
@@ -408,6 +416,7 @@ class MarcRuleSet {
         def types = thing['@type']
         if (types instanceof String)
             types = [types]
+        def aboutTypes = aboutTypeMap['?thing']
         for (type in types) {
             if (type in aboutTypes)
                 return true
@@ -482,7 +491,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         if (fieldDfn.aboutType) {
             definesDomainEntityType = fieldDfn.aboutType
         }
-        aboutEntityName = fieldDfn.aboutEntity ?: '?instance'
+        aboutEntityName = fieldDfn.aboutEntity ?: '?thing'
         if (fieldDfn.addLink) {
             link = fieldDfn.addLink
             repeatable = true
@@ -726,12 +735,12 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         }
         def entityMap = state.entityMap
         if (addLink) {
-            def ent = entityMap['?instance']
+            def ent = entityMap['?thing']
             def newEnt = newEntity(null)
             addValue(ent, addLink, newEnt, true)
             state = state.clone()
             state.entityMap = entityMap.clone()
-            state.entityMap['?instance'] = newEnt
+            state.entityMap['?thing'] = newEnt
         }
 
         def baseOk = true
@@ -869,7 +878,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 ent['@value'] = value
             }
         //} else if (linkedHandler) {
-        //    linkedHandler.convert(sourceMap, value,["?instance": ent])
+        //    linkedHandler.convert(sourceMap, value,["?thing": ent])
         } else {
             addValue(ent, property, value, repeatable)
         }

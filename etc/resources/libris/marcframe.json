@@ -1926,12 +1926,12 @@
         "tokenMap": "status"
       },
       "[6:7]": {
-        "aboutEntity": "?instance",
+        "aboutEntity": "?thing",
         "tokenMap": "typeOfRecord",
         "addProperty": "@type"
       },
       "[7:8]": {
-        "aboutEntity": "?instance",
+        "aboutEntity": "?thing",
         "tokenMap": "bibLevel",
         "addProperty": "@type"
       },
@@ -3463,7 +3463,7 @@
       ]
     },
 
-    "010": {"aboutEntity": "?instance", "$a": {"property": "lccn"}},
+    "010": {"aboutEntity": "?thing", "$a": {"property": "lccn"}},
 
     "013": {},
     "015": {
@@ -3478,7 +3478,7 @@
     "018": {},
 
     "020": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "addLink": "identifier",
       "match-domain": {
         "EBook": {"addLink": "commonEndeavor"}
@@ -3493,7 +3493,7 @@
           "identifierStatus": null
         }
       },
-      "$c": {"aboutEntity": "?instance", "property": "availability"},
+      "$c": {"aboutEntity": "?thing", "property": "availability"},
       "$q": {"property": "identifierNote"},
       "$z": {
         "property": "identifierValue",
@@ -3567,7 +3567,7 @@
     },
 
     "022": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "addLink": "identifier",
       "resourceType": "Identifier",
       "TODO:i1": {},
@@ -3589,7 +3589,7 @@
     },
 
     "024": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "addLink": "identifier",
       "resourceType": "Identifier",
       "i1": {
@@ -3659,7 +3659,7 @@
     "027": {},
 
     "028": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "match-i1": {
         "0": {"$a": {"property": "audioIssueNumber"}},
         "1": {"$a": {"property": "audioMatrixNumber"}},
@@ -3724,7 +3724,7 @@
       "match-pattern": {
         "$a": {
           "^http://dbpedia\\.org/": {
-            "aboutEntity": "?instance",
+            "aboutEntity": "?thing",
             "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
           }
         }
@@ -3982,7 +3982,7 @@
     },
 
     "210": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "addLink": "abbreviatedTitle",
       "resourceType": "Title",
       "TOOO:i1": {},
@@ -4034,7 +4034,7 @@
     "245": {
       "i1": {"property": "searchElement", "tokenMap": {"0": false}, "marcDefault": "1"},
       "i2": {"marcDefault": "0"},
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "link": "instanceTitle",
       "resourceType": "Title",
       "$a": {
@@ -4048,12 +4048,12 @@
       },
       "$b": {"property": "subtitle", "interpunctionChars": "/"},
       "$c": {
-        "aboutEntity": "?instance", "property": "responsibilityStatement",
+        "aboutEntity": "?thing", "property": "responsibilityStatement",
         "NOTE": "interpunction may include data about included parts (e.g. short stories)"
       },
-      "$f": {"aboutEntity": "?instance", "property": "temporalCoverageNote"},
-      "$g": {"aboutEntity": "?instance", "property": "generalTemporalCoverageNote"},
-      "$h": {"aboutEntity": "?instance", "property": "mediaTerm", "surroundingChars": "[]"},
+      "$f": {"aboutEntity": "?thing", "property": "temporalCoverageNote"},
+      "$g": {"aboutEntity": "?thing", "property": "generalTemporalCoverageNote"},
+      "$h": {"aboutEntity": "?thing", "property": "mediaTerm", "surroundingChars": "[]"},
       "$n": {"addProperty": "partNumber"},
       "$p": {"addProperty": "partTitle"},
       "$s": {"property": "version"},
@@ -4107,7 +4107,7 @@
     "249": {},
 
     "250": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "TODO:match-repetition?": {
       },
       "addLink": "hasVersion", "resourceType": "Product",
@@ -4133,7 +4133,7 @@
     },
 
     "256": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "$a": {"property": "fileType"}
     },
 
@@ -4141,7 +4141,7 @@
     "258": {},
 
     "260": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "addLink": "provider",
       "splitLink": [
         {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
@@ -4277,7 +4277,7 @@
       "TODO:match-repetition?": {
         "addLink": "hasFormat"
       },
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "addLink": "hasFormat",
       "resourceType": "Product",
       "$a": {"property": "extent", "interpunctionChars": "+:;"},
@@ -4295,7 +4295,7 @@
     "307": {},
 
     "310": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "$a": {"property": "frequency"}
     },
 
@@ -4366,7 +4366,7 @@
     "355": {},
     "357": {},
     "362": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "$a": {"addProperty": "issueNumber"}
     },
     "363": {},
@@ -4407,7 +4407,7 @@
       "$l": {"link": "callno", "resourceType": "Concept", "property": "notation"}
     },
 
-    "500": {"$a": {"aboutEntity": "?instance", "addProperty": "comment"}},
+    "500": {"$a": {"aboutEntity": "?thing", "addProperty": "comment"}},
     "501": {},
     "502": {
       "addLink": "hasAnnotation", "resourceType": "DissertationAnnotation",
@@ -4417,17 +4417,17 @@
       "$d": {"property": "date"},
       "$g": {"property": "comment"}
     },
-    "504": {"$a": {"aboutEntity": "?instance", "addProperty": "supplementaryContentNote"}},
+    "504": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}},
 
     "505": {
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {"aboutEntity": "?instance", "addProperty": "listOfContents", "TODO": "$t, $r"}
+      "$a": {"aboutEntity": "?thing", "addProperty": "listOfContents", "TODO": "$t, $r"}
     },
 
     "506": {},
     "507": {},
-    "508": {"$a": {"aboutEntity": "?instance", "addProperty": "creditsNote"}},
+    "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}},
 
     "510": {
       "addProperty": "citedBy",
@@ -4440,7 +4440,7 @@
     "511": {
       "match-i1": {"1": {"$a": {"addProperty": "participantNote"}}},
       "$a": {
-        "aboutEntity": "?instance",
+        "aboutEntity": "?thing",
         "addProperty": "performerNote"
       }
     },
@@ -4452,7 +4452,7 @@
     "518": {},
 
     "520": {
-      "aboutEntity": "?instance",
+      "aboutEntity": "?thing",
       "TOOO:i1": {},
       "$a": {"addProperty": "summary"},
       "match-code": {
@@ -4520,13 +4520,13 @@
     "534": {},
     "535": {},
     "536": {},
-    "538": {"$a": {"aboutEntity": "?instance", "addProperty": "systemRequirements"}},
+    "538": {"$a": {"aboutEntity": "?thing", "addProperty": "systemRequirements"}},
     "540": {},
     "541": {},
     "542": {},
     "544": {},
     "545": {},
-    "546": {"aboutEntity": "?instance", "$a": {"addProperty": "languageNote"}},
+    "546": {"aboutEntity": "?thing", "$a": {"addProperty": "languageNote"}},
     "547": {},
 
     "550": {},
@@ -4729,7 +4729,7 @@
     "653": {
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {"aboutEntity": "?instance", "property": "keyword"}
+      "$a": {"aboutEntity": "?thing", "property": "keyword"}
     },
 
     "654": {},
@@ -5161,7 +5161,7 @@
       "inherit": "bib",
       "TODO": "if no $f, drop entire record (or mark as obsolete)",
       "$f": {
-        "aboutEntity": "?instance",
+        "aboutEntity": "?thing",
         "IMPROVE:about": "$thing if Concept else $record",
         "TODO": "inCollection if . = sgp?",
         "link": "inScheme", "resourceType": "ConceptScheme",
@@ -5213,7 +5213,7 @@
           "aboutType": "UniformWork",
           "link": "attributedTo",
           "resourceType": "Person",
-          "$t": {"aboutEntity": "?instance", "property": "title"}
+          "$t": {"aboutEntity": "?thing", "property": "title"}
         }
       },
       "_spec": [
@@ -5331,7 +5331,7 @@
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
         }
       },
-      "aboutEntity": "?instance", "NOTE": "really Work - see 100",
+      "aboutEntity": "?thing", "NOTE": "really Work - see 100",
       "addLink": "attributedTo", "resourceType": "Person"
     },
     "410": {
@@ -5357,7 +5357,7 @@
     "500": {
       "inherit": "bib:100",
       "TODO": "this is really a link to other auth post..",
-      "aboutEntity": "?instance", "NOTE": "not really though - see 100",
+      "aboutEntity": "?thing", "NOTE": "not really though - see 100",
       "match-domain": {
         "Person": {
           "addLink": "hasPersona",
@@ -5451,42 +5451,76 @@
 
     "000": {
       "[5:6]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "status",
         "uriTemplate": "{_}",
         "tokenMap": "status"
       },
       "[6:7]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "type",
         "uriTemplate": "{_}",
         "tokenMap": "type"
       },
       "[7:8]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "statistics",
         "uriTemplate": "{_}",
         "tokenMap": "statistics"
       },
       "[9:10]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "characterCoding",
         "uriTemplate": "{_}",
         "tokenMap": "characterCoding"
       },
       "[17:18]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "encLevel",
         "uriTemplate": "{_}",
         "tokenMap": "hold-encLevel"
       },
       "[18:19]": {
-        "domainEntity": "Record",
+        "aboutEntity": "?record",
         "link": "itemInfoInRecord",
         "uriTemplate": "{_}",
         "tokenMap": "itemInfoInRecord"
       },
-      "repeatable": false
+      "repeatable": false,
+      "_specOriginalLeader": "00236nxa a22001091n44500",
+      "_specSource": {"leader": "     nx  a       1n", "fields": [
+        {"001": "0000000"},
+        {"004": "7149593"},
+        {"852": {
+          "ind1": " ",
+          "ind2": " ",
+          "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+        }}
+      ]},
+      "_specResult": {
+        "@type": "Record",
+        "@id": "/hold/0000000",
+        "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
+        "controlNumber": "0000000",
+        "encLevel": {"@id": "/def/enum/record/HoldingsLevel1"},
+        "itemInfoInRecord": {"@id": "/def/enum/record/Exemplarinformation_finns_ej"},
+        "status": {"@id": "/def/enum/record/New"},
+        "type": {"@id": "/def/enum/record/SinglePartItemHolding"},
+        "about": {
+          "@id": "/resource/hold/0000000",
+          "@type": "HeldMaterial",
+          "holdingFor": {"@id": "/resource/bib/7149593"},
+          "offers": [
+            {
+              "@type": "Offer",
+              "copyNumber": "1",
+              "heldBy": [{"@type": "Organization", "notation": "H"}],
+              "shelfControlNumber": "65.465",
+              "shelfLocation": ["MAG"]
+            }
+          ]
+        }
+      }
     },
 
     "001" : {"inherit": "bib"},
@@ -5555,6 +5589,7 @@
     },
 
     "014": {
+      "aboutEntity": "?record",
       "TODO:i1": {},
       "$a": {"addProperty": "librisIIINumber"}
     },
@@ -5570,6 +5605,7 @@
     "698": {},
 
     "852": {
+      "aboutType": "HeldMaterial",
       "addLink": "offers",
       "resourceType": "Offer",
       "TODO:i1": {},

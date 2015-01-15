@@ -176,7 +176,9 @@ class JSONMarcConverter {
                                 int ind = 1;
                                 if (dataKey.equals("ind1"))
                                     ind = 0;
-                                datafield.setIndicator(ind, (dataValue as char));
+                                if (dataValue.equals(""))
+                                    dataValue = " "
+                                datafield.setIndicator(ind, dataValue as char);
                             }
                         }
                         record.addField(datafield);
