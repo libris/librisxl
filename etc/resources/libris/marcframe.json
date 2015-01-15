@@ -5486,7 +5486,41 @@
         "uriTemplate": "{_}",
         "tokenMap": "itemInfoInRecord"
       },
-      "repeatable": false
+      "repeatable": false,
+      "_specOriginalLeader": "00236nxa a22001091n44500",
+      "_specSource": {"leader": "     nx  a       1n", "fields": [
+        {"001": "0000000"},
+        {"004": "7149593"},
+        {"852": {
+          "ind1": " ",
+          "ind2": " ",
+          "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+        }}
+      ]},
+      "_specResult": {
+        "@type": "Record",
+        "@id": "/hold/0000000",
+        "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
+        "controlNumber": "0000000",
+        "encLevel": {"@id": "/def/enum/record/HoldingsLevel1"},
+        "itemInfoInRecord": {"@id": "/def/enum/record/Exemplarinformation_finns_ej"},
+        "status": {"@id": "/def/enum/record/New"},
+        "type": {"@id": "/def/enum/record/SinglePartItemHolding"},
+        "about": {
+          "@id": "/resource/hold/0000000",
+          "@type": "HeldMaterial",
+          "holdingFor": {"@id": "/resource/bib/7149593"},
+          "offers": [
+            {
+              "@type": "Offer",
+              "copyNumber": "1",
+              "heldBy": [{"@type": "Organization", "notation": "H"}],
+              "shelfControlNumber": "65.465",
+              "shelfLocation": ["MAG"]
+            }
+          ]
+        }
+      }
     },
 
     "001" : {"inherit": "bib"},
