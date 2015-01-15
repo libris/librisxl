@@ -548,15 +548,16 @@
             "elasticBatchSize": 2000,
             "graphstoreBatchSize": 32,
             "batchTimeout": 5000,
+            "sedaProperties": "?concurrentConsumers=100&blockWhenFull=true",
             "indexMessageQueue": "_property:MQ_INDEX",
             "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX",
             "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE",
+            "apixMessageQueue": "_property:MQ_APIX",
             "apixUri": "_property:APIX_HOST"
         }
     },
     "index": {
         "_class" : "whelk.component.ElasticSearchClient",
-        "_plugins" : ["linkexpander", "cleanupindexconverter" ],
         "_params": {
             "typeConfiguration": {
                 "auth" : [ "person", "organization", "conference", "concept", "conceptscheme" ],

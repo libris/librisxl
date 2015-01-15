@@ -12,8 +12,9 @@
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
         "ACTIVEMQ_BROKER_URL": "tcp://hp04.libris.kb.se:61616?wireFormat.maxInactivityDuration=0",
         "MQ_INDEX": "activemq:stglibris.index",
-        "MQ_BULK_INDEX": "activemq:stglibris.bulk.index?concurrentConsumers=5",
-        "MQ_GRAPHSTORE": "activemq:stglibris.graphstore"
+        "MQ_BULK_INDEX": "activemq:stglibris.bulk.index?concurrentConsumers=10",
+        "MQ_GRAPHSTORE": "activemq:stglibris.graphstore?concurrentConsumers=10",
+        "MQ_APIX": "activemq:devapix"
     },
     "_id": "stglibris",
     "_docBaseUri" : "http://libris.kb.se/",

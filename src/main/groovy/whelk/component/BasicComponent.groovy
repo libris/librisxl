@@ -17,8 +17,6 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     Whelk whelk
     List contentTypes
 
-    boolean master = false
-
     final void bootstrap(String whelkId) {
         assert whelk
 

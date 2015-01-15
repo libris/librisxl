@@ -55,7 +55,7 @@
       <level value="info"/>
   </logger> 
   <logger name="whelk.StandardWhelk">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
  <logger name="whelk.component.BasicElasticComponent">
       <level value="info"/>
@@ -118,7 +118,7 @@
   <level value="info"/>
 </logger>
 <logger name="whelk.importer.libris.MySQLImporter">
-  <level value="debug"/>
+  <level value="info"/>
 </logger>
 <logger name="whelk.importer.OaiPmhImporter">
   <level value="info"/>

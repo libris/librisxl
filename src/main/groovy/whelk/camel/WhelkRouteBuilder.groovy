@@ -28,12 +28,12 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
     int graphstoreBatchSize = 1000
     long batchTimeout = 5000
     int parallelProcesses = 20
-    String indexMessageQueue
-    String bulkIndexMessageQueue
-    String graphstoreMessageQueue
+    String indexMessageQueue, bulkIndexMessageQueue, graphstoreMessageQueue, apixMessageQueue
     String apixUri = null
 
     java.util.Properties properties = new java.util.Properties()
+
+    String sedaProperties = ""
 
     WhelkRouteBuilder(Map settings) {
         properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
@@ -44,7 +44,9 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         indexMessageQueue = settings.get("indexMessageQueue")
         bulkIndexMessageQueue = settings.get("bulkIndexMessageQueue")
         graphstoreMessageQueue = settings.get("graphstoreMessageQueue")
+        apixMessageQueue = settings.get("apixMessageQueue")
         apixUri = settings.get("apixUri")
+        sedaProperties=settings.get("sedaProperties", "")
         if (apixUri) {
             apixUri = apixUri.replace("http://", "http4:")
             apixUri = apixUri.replace("https://", "https4:")
@@ -76,8 +78,7 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
             eligbleBulkMQs.add(graphstoreMessageQueue)
         }
         if (apixUri) {
-            eligbleMQs.add("activemq:apix.queue")
-            //eligbleBulkMQs.add("activemq:apix.queue")
+            eligbleMQs.add(apixMessageQueue)
         }
 
         onException(HttpOperationFailedException.class)
@@ -92,10 +93,10 @@ class WhelkRouteBuilder extends RouteBuilder implements WhelkAware {
         from("activemq:"+whelk.id+".retries").delay(60000).routingSlip(header("next"))
 
         if (eligbleMQs.size() > 0) {
-            from("direct:"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
+            from("seda:" + whelk.id + sedaProperties).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleMQs as String[])
         }
         if (eligbleBulkMQs.size() > 0) {
-            from("direct:bulk_"+whelk.id).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleBulkMQs as String[])
+            from("seda:bulk_" + whelk.id + sedaProperties).process(formatConverterProcessor).multicast().parallelProcessing().to(eligbleBulkMQs as String[])
         }
 
         if (whelk.index) {

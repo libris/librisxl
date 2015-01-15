@@ -63,12 +63,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     def timeZone = ZoneId.systemDefault()
 
-    ExecutorService bulkNotificationQueue
-
     /*
      * Whelk methods
      *******************************/
     @groovy.transform.CompileStatic
+    @groovy.transform.Synchronized
     String add(Document doc, boolean minorUpdate = false) {
         log.debug("Add single document ${doc.identifier}")
         if (!doc.data || doc.data.length < 1) {
@@ -103,6 +102,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
      * Requires that all documents have an identifier.
      */
     @groovy.transform.CompileStatic
+    @groovy.transform.Synchronized
     void bulkAdd(final List<Document> docs, String contentType, boolean prepareDocuments = true) {
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getStorages(contentType)
@@ -144,45 +144,49 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     Location locate(String uri) {
         log.debug("Locating $uri")
-        def doc = get(uri)
-        if (doc) {
-            return new Location(doc)
-        }
+        if (uri) {
+            def doc = get(uri)
+            if (doc) {
+                return new Location(doc)
+            }
 
-        String identifier = new URI(uri).getPath().toString()
-        log.trace("Nothing found at identifier $identifier")
+            String identifier = new URI(uri).getPath().toString()
+            log.trace("Nothing found at identifier $identifier")
 
-        if (locationConfig['preCursor'] && identifier.startsWith(locationConfig['preCursor'])) {
-            identifier = identifier.substring(locationConfig['preCursor'].length())
-            log.trace("New place to look: $identifier")
-        }
-        if (locationConfig['postCursor'] && identifier.endsWith(locationConfig['postCursor'])) {
-            identifier = identifier.substring(0, identifier.length() - locationConfig['postCursor'].length())
-            log.trace("New place to look: $identifier")
-        }
-        log.debug("Checking if new identifier (${identifier}) has something to get")
-        if (get(identifier)) {
-            return new Location().withURI(new URI(identifier)).withResponseCode(303)
-        }
+            if (locationConfig['preCursor'] && identifier.startsWith(locationConfig['preCursor'])) {
+                identifier = identifier.substring(locationConfig['preCursor'].length())
+                log.trace("New place to look: $identifier")
+            }
+            if (locationConfig['postCursor'] && identifier.endsWith(locationConfig['postCursor'])) {
+                identifier = identifier.substring(0, identifier.length() - locationConfig['postCursor'].length())
+                log.trace("New place to look: $identifier")
+            }
+            log.debug("Checking if new identifier (${identifier}) has something to get")
+            if (get(identifier)) {
+                return new Location().withURI(new URI(identifier)).withResponseCode(303)
+            }
 
-        log.debug("Check alternate identifiers.")
-        doc = storage.getByAlternateIdentifier(uri)
-        if (doc) {
-            return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
-        }
+            log.debug("Check alternate identifiers.")
+            doc = storage.getByAlternateIdentifier(uri)
+            if (doc) {
+                return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
+            }
 
-        log.debug("Looking for identifiers in record.")
-        // TODO: This query MUST be made against storage index. It will not be safe otherwise
-        def query = new ElasticQuery(["terms":["sameAs.@id:"+identifier]])
-        def result = index.query(query)
-        if (result.numberOfHits > 1) {
-            log.error("Something is terribly wrong. Got too many hits for sameAs. Don't know how to handle it. Yet.")
-        }
-        if (result.numberOfHits == 1) {
-            log.trace("Results: ${result.toJson()}")
-            // TODO: Adapt to new search results.
-            def foundIdentifier = result.toMap(null, []).list[0].identifier
-            return new Location().withURI(foundIdentifier).withResponseCode(301)
+            if (index) {
+                log.debug("Looking for identifiers in record.")
+                // TODO: This query MUST be made against storage index. It will not be safe otherwise
+                def query = new ElasticQuery(["terms":["sameAs.@id:"+identifier]])
+                def result = index.query(query)
+                if (result.numberOfHits > 1) {
+                    log.error("Something is terribly wrong. Got too many hits for sameAs. Don't know how to handle it. Yet.")
+                }
+                if (result.numberOfHits == 1) {
+                    log.trace("Results: ${result.toJson()}")
+                    // TODO: Adapt to new search results.
+                    def foundIdentifier = result.toMap(null, []).list[0].identifier
+                    return new Location().withURI(foundIdentifier).withResponseCode(301)
+                }
+            }
         }
 
         return null
@@ -197,6 +201,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return versions
     }
 
+    @groovy.transform.Synchronized
     void remove(String id, String dataset = null) {
         def doc= get(id)
         components.each {
@@ -382,18 +387,16 @@ class StandardWhelk extends HttpServlet implements Whelk {
         exchange.setIn(message)
         log.trace("Sending $operation message to camel regaring ${identifier}")
         if (operation == BULK_ADD_OPERATION) {
-            producerTemplate.asyncSend("direct:bulk_${this.id}", exchange)
+            producerTemplate.send("seda:bulk_${this.id}", exchange)
         } else {
-            producerTemplate.asyncSend("direct:${this.id}", exchange)
+            producerTemplate.send("seda:${this.id}", exchange)
         }
     }
 
     void notifyCamel(List<Document> documents) {
-        bulkNotificationQueue.execute({
-            for (doc in documents) {
-                notifyCamel(doc, BULK_ADD_OPERATION, [:])
-            }
-        } as Runnable)
+        for (doc in documents) {
+            notifyCamel(doc, BULK_ADD_OPERATION, [:])
+        }
     }
 
     void notifyCamel(Document document, String operation, Map extraInfo) {
@@ -421,11 +424,13 @@ class StandardWhelk extends HttpServlet implements Whelk {
         exchange.setIn(message)
         log.trace("Sending document in message to camel regaring ${document.identifier}")
         if (operation == BULK_ADD_OPERATION) {
-            producerTemplate.asyncSend("direct:bulk_${this.id}", exchange)
+            producerTemplate.send("seda:bulk_${this.id}", exchange)
         } else {
-            producerTemplate.asyncSend("direct:${this.id}", exchange)
+            producerTemplate.send("seda:${this.id}", exchange)
         }
     }
+
+    String whelkStatus = "STARTING"
 
     /*
      * Servlet methods
@@ -436,14 +441,20 @@ class StandardWhelk extends HttpServlet implements Whelk {
         List pathVars = []
         def whelkinfo = [:]
         whelkinfo["whelk"] = this.id
-        whelkinfo["status"] = "Hardcoded at 'fine'. Should be more dynamic ..."
+        whelkinfo["status"] = whelkStatus
 
         log.debug("Path is $path")
         try {
-            if (request.method == "GET" && path == "/") {
-                whelkinfo["components"] = components.collect {
-                    [ "id": it.id ]
+            if (request.method == "GET" && path == "/" && request.getServerPort() != 80) {
+                def compManifest = [:]
+                components.each {
+                    def plList = []
+                    for (pl in it.plugins) {
+                        plList << ["id":pl.id, "class": pl.getClass().getName()]
+                    }
+                    compManifest[(it.id)] = ["class": it.getClass().getName(), "plugins": plList]
                 }
+                whelkinfo["components"] = compManifest
                 printAvailableAPIs(response, whelkinfo)
             } else {
                 (api, pathVars) = getAPIForPath(path)
@@ -554,6 +565,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             ActiveMQComponent amq = ActiveMQComponent.activeMQComponent()
             amq.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL']))
             whelkCamelMain.addComponent("activemq", amq)
+
             camelContext = whelkCamelMain.camelContext
 
             ctxThread = Thread.start {
@@ -568,13 +580,12 @@ class StandardWhelk extends HttpServlet implements Whelk {
             }
             throw e
         }
-        bulkNotificationQueue = Executors.newSingleThreadExecutor()
+        whelkStatus = "RUNNING"
     }
 
     @Override
     void destroy() {
-        bulkNotificationQueue.shutdown()
-        bulkNotificationQueue.awaitTermination(5, TimeUnit.MINUTES)
+        whelkStatus = "SHUTTING DOWN"
     }
 
     /*

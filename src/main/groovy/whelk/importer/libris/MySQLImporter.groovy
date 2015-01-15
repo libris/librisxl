@@ -61,7 +61,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         int sqlLimit = 6000
         if (nrOfDocs > 0 && nrOfDocs < sqlLimit) { sqlLimit = nrOfDocs }
 
-        tickets = new Semaphore(10)
+        tickets = new Semaphore(0)
         //queue = Executors.newSingleThreadExecutor()
         queue = Executors.newWorkStealingPool()
 
@@ -162,8 +162,8 @@ class MySQLImporter extends BasicPlugin implements Importer {
             for (st in this.whelk.getStorages()) {
                 st.versioning = versioningSettings.get(st.id)
             }
-            //log.info("Starting camel context ...")
-            //whelk.camelContext.resume()
+            log.info("Starting camel context ...")
+            whelk.camelContext.resume()
         } as Runnable)
 
         queue.shutdown()
@@ -175,18 +175,22 @@ class MySQLImporter extends BasicPlugin implements Importer {
     void buildDocument(MarcRecord record, String dataset, String oaipmhSetSpecValue) {
         String identifier = null
         if (documentList.size() >= addBatchSize || record == null) {
+            /*
             if (tickets.availablePermits() < 1) {
                 log.info("Queues are full at the moment. Waiting for some to finish.")
             }
             tickets.acquire()
+            */
             log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
             queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets))
             log.debug("     Current poolsize: ${queue.poolSize}")
+            log.debug("------------------------------")
             log.debug("queuedSubmissionCount: ${queue.queuedSubmissionCount}")
             log.debug("      queuedTaskCount: ${queue.queuedTaskCount}")
             log.debug("   runningThreadCount: ${queue.runningThreadCount}")
             log.debug("    activeThreadCount: ${queue.activeThreadCount}")
-            log.debug("    available tickets: ${tickets.availablePermits()}")
+            log.debug("------------------------------")
+            //log.debug("       completed jobs: ${tickets.availablePermits()}")
             this.documentList = []
         }
         if (record) {

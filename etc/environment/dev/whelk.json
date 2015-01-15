@@ -26,6 +26,7 @@
     "_plugins": {
         "_support": [
             "elasticnode",
+            "fusekiserver",
             "activemqbroker"
             ],
         "_camel": [
@@ -33,6 +34,7 @@
             ],
         "_components": [
             "jsonldstorage",
+            "graphstore",
             "index"
         ]
     },

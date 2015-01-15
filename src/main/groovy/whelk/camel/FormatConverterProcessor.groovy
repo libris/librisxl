@@ -16,6 +16,7 @@ import org.apache.camel.component.jackson.JacksonDataFormat
 
 import org.codehaus.jackson.map.ObjectMapper
 
+
 @Log
 class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAware {
 
@@ -23,12 +24,6 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
 
     FormatConverter converter
     Filter expander
-
-    /*
-    private FormatConverterProcessor() {}
-    private static final FormatConverterProcessor fcp = new FormatConverterProcessor()
-    public static FormatConverterProcessor getInstance() { return fcp }
-    */
 
 
     void bootstrap(String whelkName) {
