@@ -307,7 +307,9 @@ class MarcConversion {
                     return
                 if (value instanceof List) {
                     value.each {
-                        fields << [(tag): it]
+                        if (it) {
+                            fields << [(tag): it]
+                        }
                     }
                 } else {
                     fields << [(tag): value]
