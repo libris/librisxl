@@ -4,7 +4,7 @@ import json
 import sys
 
 args = sys.argv[1:]
-fpath = args.pop(0) if args else "ext-libris/src/main/resources/marcmap.json"
+fpath = args.pop(0) if args else "etc/resources/libris/marcmap.json"
 with open(fpath) as f:
     marcmap = json.load(f)
 
