@@ -22,6 +22,8 @@ def parse_marcframe(dataset, marcframe):
 
         g = dataset.get_context(DATASET_BASE["marcframe/fields"])
         for tag, field in marcframe[part].items():
+            if not isinstance(field, dict):
+                continue
             marc_source = "%s %s" % (part, tag)
             add_terms(g, marc_source, field)
 
