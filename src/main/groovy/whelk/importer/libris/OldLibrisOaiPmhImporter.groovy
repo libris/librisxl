@@ -288,7 +288,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         throw e
                     }
                 }
-            } else if (it.header.@deleted == 'true') {
+            } else if (it.header.@status == 'deleted') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                     try {
                         whelk.remove(deleteIdentifier, this.dataset)
