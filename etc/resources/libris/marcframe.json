@@ -4975,7 +4975,7 @@
       "$3": {"property": "description"},
       "$u": {"property": "@id"},
       "$x": {
-        "addProperty": "editorialNote", "uriTemplate": "{+_}"
+        "addProperty": "cataloguersNote", "uriTemplate": "{+_}"
       },
       "$y": {"property": "altLabel"},
       "$z": {"property": "comment"}
@@ -5644,7 +5644,7 @@
       "$s": {"addProperty": "copyrightArticleFeeCode"},
       "$t": {"property": "copyNumber"},
       "$u": {"addProperty": "url"},
-      "$x": {"addProperty": "editorialNote"},
+      "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"}
     },
 
@@ -5657,8 +5657,8 @@
       "resourceType": "SomeProducts",
       "TODO:i1": {},
       "TODO:i2": {},
-      "$a": {"property": "scopeNote"},
-      "$x": {"addProperty": "editorialNote"},
+      "$a": {"property": "description"},
+      "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"}
     }
   }

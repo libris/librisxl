@@ -307,7 +307,9 @@ class MarcConversion {
                     return
                 if (value instanceof List) {
                     value.each {
-                        fields << [(tag): it]
+                        if (it) {
+                            fields << [(tag): it]
+                        }
                     }
                 } else {
                     fields << [(tag): value]
@@ -593,7 +595,7 @@ class MarcFixedFieldHandler {
         return new ConvertResult(success)
     }
 
-    def revert(Map data, Map result) {
+    def revert(Map data, Map result, boolean keepEmpty=false) {
         def value = new StringBuilder(FIXED_NONE * fieldSize)
         for (col in columns) {
             def obj = col.revert(data)
@@ -607,7 +609,10 @@ class MarcFixedFieldHandler {
                 value[col.start .. end] = obj
             }
         }
-        return value.toString()
+        def repr = value.toString()
+        if (keepEmpty)
+            return repr
+        return repr.find { it != FIXED_NONE }? repr : null
     }
 
     class Column extends MarcSimpleFieldHandler {
@@ -759,10 +764,10 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         for (entity in entities) {
             def value = null
             if (baseConverter)
-                value = baseConverter.revert(entity, result)
+                value = baseConverter.revert(entity, result, true)
             def tokenBasedConverter = handlerMap[getToken(result.leader, value)]
             if (tokenBasedConverter) {
-                def overlay = tokenBasedConverter.revert(entity, result)
+                def overlay = tokenBasedConverter.revert(entity, result, true)
                 if (value.size() == 1) {
                     value = value + overlay.substring(1)
                 } else {
