@@ -5657,7 +5657,7 @@
       "resourceType": "SomeProducts",
       "TODO:i1": {},
       "TODO:i2": {},
-      "$a": {"property": "scopeNote"},
+      "$a": {"property": "description"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"}
     }
