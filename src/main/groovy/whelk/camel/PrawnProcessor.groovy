@@ -17,7 +17,7 @@ class PrawnRunner extends BasicPlugin implements Processor, WhelkAware {
     Whelk whelk
     List<Transmogrifier> transmogrifiers
 
-    void bootstrap(String w) {
+    void bootstrap() {
         transmogrifiers = plugins.findAll { it instanceof Transmogrifier }
     }
 

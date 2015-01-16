@@ -20,13 +20,13 @@ public abstract class BasicPlugin implements WhelkAware {
 
     public final static mapper = new ObjectMapper()
 
-    public final void init(String initString) {
+    public final void init() {
         if (this.id == null) {
             throw new PluginConfigurationException("Plugin ${this.getClass().getName()} must have ID set before init()")
         }
-        bootstrap(initString)
+        bootstrap()
     }
-    void bootstrap(String str) {
+    void bootstrap() {
         log.debug("Bootstrapmethod not found on ${this.getClass().getName()}")
     }
     @Override

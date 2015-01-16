@@ -25,7 +25,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
         this.apixPathPrefix = pathBuilder.toString()
     }
 
-    void bootstrap(String wName) {
+    void bootstrap() {
         fcp = getPlugin("camel_format_processor")
     }
 

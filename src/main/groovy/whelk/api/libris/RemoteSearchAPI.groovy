@@ -78,7 +78,7 @@ class RemoteSearchAPI extends BasicAPI {
     }
 
 
-    void bootstrap(String wn) {
+    void bootstrap() {
         log.debug("plugins: ${plugins}")
         marcFrameConverter = plugins.find { it instanceof FormatConverter && it.resultContentType == "application/ld+json" && it.requiredContentType == "application/x-marc-json" }
         assert marcFrameConverter

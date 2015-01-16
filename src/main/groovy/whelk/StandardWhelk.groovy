@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter
 
 import whelk.api.*
 import whelk.camel.*
+import whelk.camel.route.*
 import whelk.component.*
 import whelk.exception.*
 import whelk.plugin.*
@@ -367,11 +368,15 @@ class StandardWhelk extends HttpServlet implements Whelk {
         index?.flush()
     }
 
+    void notifyCamel(List<Document> documents) {
+        for (doc in documents) {
+            notifyCamel(doc, BULK_ADD_OPERATION, [:])
+        }
+    }
+
+
     @Override
     void notifyCamel(String identifier, String dataset, String operation, Map extraInfo) {
-        if (!producerTemplate) {
-            producerTemplate = getCamelContext().createProducerTemplate();
-        }
         Exchange exchange = new DefaultExchange(getCamelContext())
         Message message = new DefaultMessage()
         message.setBody(identifier, String)
@@ -386,23 +391,10 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
         exchange.setIn(message)
         log.trace("Sending $operation message to camel regaring ${identifier}")
-        if (operation == BULK_ADD_OPERATION) {
-            producerTemplate.send("seda:bulk_${this.id}", exchange)
-        } else {
-            producerTemplate.send("seda:${this.id}", exchange)
-        }
-    }
-
-    void notifyCamel(List<Document> documents) {
-        for (doc in documents) {
-            notifyCamel(doc, BULK_ADD_OPERATION, [:])
-        }
+        sendCamelMessage(operation, exchange)
     }
 
     void notifyCamel(Document document, String operation, Map extraInfo) {
-        if (!producerTemplate) {
-            producerTemplate = getCamelContext().createProducerTemplate();
-        }
         Exchange exchange = new DefaultExchange(getCamelContext())
         Message message = new DefaultMessage()
         if (document.isJson()) {
@@ -423,12 +415,25 @@ class StandardWhelk extends HttpServlet implements Whelk {
         message.setHeader("whelk:operation", operation)
         exchange.setIn(message)
         log.trace("Sending document in message to camel regaring ${document.identifier}")
-        if (operation == BULK_ADD_OPERATION) {
-            producerTemplate.send("seda:bulk_${this.id}", exchange)
-        } else {
-            producerTemplate.send("seda:${this.id}", exchange)
-        }
+        sendCamelMessage(operation, exchange)
     }
+
+    void sendCamelMessage(String operation, Exchange exchange) {
+        if (!producerTemplate) {
+            producerTemplate = getCamelContext().createProducerTemplate();
+        }
+
+        producerTemplate.send(getCamelEndpoint(operation), exchange)
+
+    }
+
+    String getCamelEndpoint(String operation, withConfig = false) {
+        def comp = global.get("CAMEL_MASTER_COMPONENT", "seda")
+        def prefix = global.get("CAMEL_CHANNEL_PREFIX", "")
+        def config = global.get("CAMEL_COMPONENT_CONFIG", "")
+        return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withContentType && config ? "?"+config : "")
+    }
+
 
     String whelkStatus = "STARTING"
 
@@ -557,14 +562,20 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 component.start()
             }
             log.debug("Setting up and configuring Apache Camel")
-            def whelkCamelMain = new WhelkCamelMain()
-            for (route in plugins.findAll { it instanceof RouteBuilder }) {
-                whelkCamelMain.addRoutes(route)
-            }
+            def whelkCamelMain = new WhelkCamelMain(
+                    getCamelEndpoint(ADD_OPERATION, true),
+                    getCamelEndpoint(BULK_ADD_OPERATION, true),
+                    getCamelEndpoint(REMOVE_OPERATION, true)
+                )
 
             ActiveMQComponent amq = ActiveMQComponent.activeMQComponent()
             amq.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL']))
             whelkCamelMain.addComponent("activemq", amq)
+
+            for (route in plugins.findAll { it instanceof RouteBuilder }) {
+                log.info("Adding route ${route.id}")
+                whelkCamelMain.addRoutes(route)
+            }
 
             camelContext = whelkCamelMain.camelContext
 
@@ -612,7 +623,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         // And always add to plugins
         this.plugins.add(plugin)
-        plugin.init(this.id)
+        log.debug("Running init on plugin ${plugin.id}")
+        plugin.init()
     }
 
     private def loadConfig() {
@@ -675,7 +687,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 log.debug("Found api: ${it.value}, should attach at ${it.key}")
                 API api = getPlugin(pluginConfig, it.value, this.id)
                 api.setWhelk(this)
-                api.init(this.id)
+                api.init()
                 apis.put(Pattern.compile(it.key), api)
             }
         }
@@ -805,7 +817,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         plugin.setId(plugname)
         log.trace("Calling init on ${plugin} (${plugin.id})")
-        plugin.init(this.id)
+        plugin.init()
         log.debug("Stashing \"${plugin.id}\".")
         availablePlugins.put(plugname, plugin)
         return plugin

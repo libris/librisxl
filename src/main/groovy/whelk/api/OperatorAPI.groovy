@@ -37,7 +37,7 @@ class OperatorAPI extends BasicAPI {
         this.configurationSettings = settings
     }
 
-    void bootstrap(String initString) {
+    void bootstrap() {
         plugins.findAll { it instanceof AbstractOperator }.each { op ->
             operators[(op.id[0..-9])] = op
         }

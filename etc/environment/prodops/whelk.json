@@ -5,7 +5,6 @@
         "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
         "ELASTIC_CLUSTER": "whelks",
         "ELASTIC_PORT": 9300,
-        "STORAGE_INDEX": "libris_storage",
         "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],
         "GRAPHSTORE_DATA_URI": "http://hp04.libris.kb.se:8890/sparql-graph-crud",
         "GRAPHSTORE_QUERY_URI": "http://hp04.libris.kb.se:8890/sparql",
@@ -16,7 +15,10 @@
         "MQ_INDEX": "activemq:libris.index",
         "MQ_BULK_INDEX": "activemq:libris.bulk.index?concurrentConsumers=10",
         "MQ_GRAPHSTORE": "activemq:libris.graphstore?concurrentConsumers=10"
-        "MQ_APIX": "activemq:apix"
+        "MQ_APIX": "activemq:apix",
+        "CAMEL_MASTER_COMPONENT":"activemq",
+        "CAMEL_CHANNEL_PREFIX":"prodops",
+        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=100"
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
@@ -27,7 +29,9 @@
     },
     "_plugins": {
         "_camel": [
-            "routebuilder"
+            "indexroutebuilder",
+            "graphstoreroutebuilder",
+            "apixroutebuilder"
             ],
         "_components": [
             "jsonldstorage",

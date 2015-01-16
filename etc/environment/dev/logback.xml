@@ -7,11 +7,9 @@
     </encoder>
   </appender>
 
-  <!--
   <logger name="org.elasticsearch">
       <level value="warn"/>
-</logger>
--->
+   </logger>
   <logger name="org.apache.camel">
       <level value="info"/>
   </logger>
@@ -19,14 +17,15 @@
       <level value="warn"/>
   </logger>
   <logger name="org.apache.camel.component.http4">
-      <level value="info"/>
+      <level value="warn"/>
   </logger>
   <logger name="org.apache.camel.component.elasticsearch">
-      <level value="info"/>
+      <level value="warn"/>
   </logger>
   <logger name="org.apache.activemq">
-      <level value="info"/>
+      <level value="warn"/>
   </logger>
+  <logger name="org.apache.camel.builder.RouteBuilder" level="info"/>
   <logger name="whelk.camel.FormatConverterProcessor">
       <level value="info"/>
   </logger>

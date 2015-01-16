@@ -543,20 +543,37 @@
             "index"
         ]
     },
-    "routebuilder": {
-        "_class" : "whelk.camel.WhelkRouteBuilder",
+    "indexroutebuilder": {
+        "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
         "_plugins" : [
-            "camel_format_processor", "turtleconverter_processor", "graphstore_aggregator","apixprocessor","apixresponseprocessor","elasticprocessor"
+            "elasticprocessor"
         ],
         "_params": {
             "elasticBatchSize": 2000,
+            "batchTimeout": 5000,
+            "indexMessageQueue": "_property:MQ_INDEX",
+            "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX"
+        }
+    },
+    "graphstoreroutebuilder": {
+        "_class" : "whelk.camel.route.GraphstoreRouteBuilder",
+        "_plugins" : [
+            "turtleconverter_processor", "graphstore_aggregator"
+        ],
+        "_params": {
             "graphstoreBatchSize": 32,
             "batchTimeout": 5000,
-            "sedaProperties": "?concurrentConsumers=100&blockWhenFull=true",
-            "indexMessageQueue": "_property:MQ_INDEX",
-            "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX",
-            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE",
+            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE"
+        }
+    },
+    "apixroutebuilder": {
+        "_class" : "whelk.camel.route.APIXRouteBuilder",
+        "_plugins" : [
+            "apixprocessor", "apixresponseprocessor"
+        ],
+        "_params": {
             "apixMessageQueue": "_property:MQ_APIX",
+            "retriesQueue": "activemq:apix.retriesQueue",
             "apixUri": "_property:APIX_HOST"
         }
     },
@@ -592,7 +609,6 @@
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes": ["application/ld+json"],
             "versioning" : true,
-            "indexName" : "_property:STORAGE_INDEX"
         }
     },
     "marcxmlstorage": {

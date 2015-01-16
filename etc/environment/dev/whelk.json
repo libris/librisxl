@@ -14,7 +14,13 @@
         "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
         "MQ_INDEX": "activemq:devlibris.index",
         "MQ_BULK_INDEX": "activemq:devlibris.bulk.index?concurrentConsumers=5",
-        "MQ_GRAPHSTORE": "activemq:devlibris.graphstore"
+        "MQ_GRAPHSTORE": "activemq:devlibris.graphstore",
+        "MQ_APIX": "activemq:localapix",
+        "APIX_HOST": "http://localhost:8001",
+        "CAMEL_MASTER_COMPONENT":"activemq",
+        "CAMEL_CHANNEL_PREFIX":"local",
+        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=10"
+
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
@@ -30,7 +36,9 @@
             "activemqbroker"
             ],
         "_camel": [
-            "routebuilder"
+            "indexroutebuilder",
+            "graphstoreroutebuilder",
+            "apixroutebuilder"
             ],
         "_components": [
             "jsonldstorage",

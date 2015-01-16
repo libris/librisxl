@@ -17,10 +17,10 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     Whelk whelk
     List contentTypes
 
-    final void bootstrap(String whelkId) {
+    final void bootstrap() {
         assert whelk
 
-        componentBootstrap(whelkId)
+        componentBootstrap(whelk.id)
     }
 
     abstract void componentBootstrap(String str)

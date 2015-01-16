@@ -26,10 +26,10 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
     Filter expander
 
 
-    void bootstrap(String whelkName) {
+    void bootstrap() {
         this.converter = plugins.find { it instanceof FormatConverter  }
         this.expander = plugins.find { it instanceof Filter }
-        log.info("Calling bootstrap for ${this.id}. converter: $converter expander: $expander plugins: $plugins")
+        log.trace("Calling bootstrap for ${this.id}. converter: $converter expander: $expander plugins: $plugins")
     }
 
     Document createDocument(Message docMessage) {

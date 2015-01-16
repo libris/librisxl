@@ -80,7 +80,7 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
         return recordCount
     }
 
-    void init(String str) {}
+    void init() {}
     void cancel() { ok = false }
 
     @Override

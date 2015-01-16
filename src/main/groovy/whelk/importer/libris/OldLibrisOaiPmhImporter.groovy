@@ -52,7 +52,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         this.preserveTimestamps = settings.get("preserveTimestamps", true)
     }
 
-    void bootstrap(String whelkId) {
+    void bootstrap() {
         marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
         enhancer = plugins.find { it instanceof JsonLDLinkCompleterFilter }
     }

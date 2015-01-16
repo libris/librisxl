@@ -43,7 +43,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
     MySQLImporter(Map settings) {
     }
 
-    void bootstrap(String whelkId) {
+    void bootstrap() {
         marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
         enhancer = plugins.find { it instanceof JsonLDLinkCompleterFilter }
         assert marcFrameConverter

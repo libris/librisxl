@@ -23,7 +23,7 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
     private static final ElasticRouteProcessor erp = new ElasticRouteProcessor()
     public static ElasticRouteProcessor getInstance() { return erp }
 
-    void bootstrap(String whelkName) {
+    void bootstrap() {
         this.shapeComputer = getPlugin("index")
         this.elasticHost = shapeComputer.getElasticHost()
         this.elasticCluster = shapeComputer.getElasticCluster()
@@ -54,7 +54,7 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
                 log.debug(">>> Setting message body to $elasticId in preparation for REMOVE operation.")
                 message.setBody(elasticId)
             } else {
-                def dataMap = mapper.readValue(new String(message.getBody(), "UTF-8"), Map)
+                def dataMap = message.getBody(Map.class)
                 dataMap.put("encodedId", elasticId)
                 message.setBody(dataMap)
             }
