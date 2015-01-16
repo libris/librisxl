@@ -767,6 +767,11 @@ marcenum:bibLevel a skos:Collection;
     rdfs:label "citat"@sv;
     owl:equivalentProperty sdo:citation .
 
+:cataloguersNote a owl:DatatypeProperty;
+    rdfs:label "Intern anteckning"@sv;
+    skos:closeMatch skos:editorialNote;
+    owl:equivalentProperty rdael:cataloguersNote .
+
 :subject a owl:ObjectProperty;
     rdfs:label "ämne"@sv;
     owl:equivalentProperty dc:subject .
