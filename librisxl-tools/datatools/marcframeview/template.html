@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>MARCFrame View</title>
+   <link rel="stylesheet" href="main.css" />
+   <style>
+     body {
+       max-width: 64em;
+     }
+     table, th, td {
+       border: 2px inset;
+       border-collapse: collapse;
+     }
+     th {
+       font-weight: bold;
+     }
+     th, td {
+       vertical-align: top;
+     }
+   </style>
+  </head>
+  <body>
+    <section>
+      <h2>MARC mappings</h2>
+      % for cat in MARC_CATEGORIES
+        % set catdfn = marcframe[cat]
+        <div class="cat" id="${cat}">
+          <h3>${cat}</h3>
+          <p>thingLink: ${catdfn.thingLink}</p>
+          <table class="marcmap">
+            % for tag, dfn in sorted(catdfn.items())
+              % if tag.isdigit() and dfn
+                <tr id="${cat}-${tag}">
+                  <th>${tag}</th>
+                  <td>
+                    % for key, value in sorted(dfn.items())
+                      <p><em>${key}</em> ${value}</p>
+                    % endfor
+                  </td>
+                </tr>
+              % endif
+            % endfor
+          </table>
+          % if catdfn.postProcessing
+            <p>postProcessing: ${catdfn.postProcessing}</p>
+          % endif
+        </div>
+      % endfor
+    </section>
+    <section>
+      <h2>Token Maps</h2>
+        % for tkey, token_map in marcframe.tokenMaps.items()
+          <div class="tokenmap" id="${tkey}">
+            <h3>${tkey}</h3>
+            % if isinstance(token_map, unicode)
+              ${token_map}
+            % else
+              <select>
+                % for key, term in token_map.items()
+                  <option>${key}: ${term}</option>
+                % endfor
+              </select>
+            % endif
+          </div>
+        % endfor
+    </section>
+  </body>
+</html>
