@@ -1972,33 +1972,45 @@
         "TODO:patternMap": "entryMap"
       },
       "repeatable": false,
-      "_specOriginalLeader": "00887cam a2200277 a 4500",
-      "_specSource": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
-      "_specResult": {
-        "@type": "Record",
-        "@id": "/bib/0000000",
-        "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
-        "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
-        "catForm": {"@id": "/def/enum/record/AACR2"},
-        "entryMap":  "4500",
-        "controlNumber": "0000000",
-        "about": {"@type": ["Text", "Monograph"], "@id": "/resource/bib/0000000"}
-      }
+      "_spec": [
+        {
+          "originalLeader": "00887cam a2200277 a 4500",
+          "source": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
+          "result": {
+            "@type": "Record",
+            "@id": "/bib/0000000",
+            "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
+            "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
+            "catForm": {"@id": "/def/enum/record/AACR2"},
+            "entryMap":  "4500",
+            "controlNumber": "0000000",
+            "about": {"@type": ["Text", "Monograph"], "@id": "/resource/bib/0000000"}
+          }
+        }
+      ]
     },
 
     "001": {
       "aboutType": "Record",
       "aboutEntity": "?record", "property": "controlNumber",
-      "_specSource": {"fields": [{"001": "7149593"}]},
-      "_specResult": {"controlNumber": "7149593"}
+      "_spec": [
+        {
+          "source": {"fields": [{"001": "7149593"}]},
+          "result": {"controlNumber": "7149593"}
+        }
+      ]
     },
 
     "003": {"aboutEntity": "?record", "property": "systemName"},
     "005": {
       "aboutEntity": "?record", "property": "modified",
       "parseDateTime": "yyyyMMddHHmmss.S", "timeZone": "CET",
-      "_specSource": {"005": "20130814170612.0"},
-      "_specResult": {"modified": "2013-08-14T17:06:12.0+02:00"}
+      "_spec": [
+        {
+          "source": {"005": "20130814170612.0"},
+          "result": {"modified": "2013-08-14T17:06:12.0+02:00"}
+        }
+      ]
     },
 
     "006": {
@@ -2961,19 +2973,23 @@
       },
       "Unspecified": {},
       "repeatable": true,
-      "_specSource": {"007":"aj  a|||"},
-      "_specNormalized": {"007":"aj  a                  "},
-      "_specResult": {
-        "about": {
-          "hasFormat": [
-            {
-              "@type": ["Map"],
-              "carrierType": [{"@id": "/def/enum/carrier/MapATwoDimensionalMap"}],
-              "medium": {"@id": "/def/enum/carrier/Paper"}
+      "_spec": [
+        {
+          "source": {"007":"aj  a|||"},
+          "normalized": {"007":"aj  a                  "},
+          "result": {
+            "about": {
+              "hasFormat": [
+                {
+                  "@type": ["Map"],
+                  "carrierType": [{"@id": "/def/enum/carrier/MapATwoDimensionalMap"}],
+                  "medium": {"@id": "/def/enum/carrier/Paper"}
+                }
+              ]
             }
-          ]
+          }
         }
-      }
+      ]
     },
 
     "008": {
@@ -3674,11 +3690,15 @@
         "link": "identifierAssigner", "resourceType": "Organization", "property": "name"
       },
       "TODO": "repeatable, use addProperty or wrap in Identifier object?",
-      "_specName": "use indicator as property switch",
-      "_specSource": {"028": {"ind1": "0", "ind2": " ", "subfields": [{"a": "1"}]}},
-      "_specResult": {"about": {
-        "audioIssueNumber": "1"
-      }}
+      "_spec": [
+        {
+          "name": "use indicator as property switch",
+          "source": {"028": {"ind1": "0", "ind2": " ", "subfields": [{"a": "1"}]}},
+          "result": {"about": {
+            "audioIssueNumber": "1"
+          }}
+        }
+      ]
     },
 
     "034": {
@@ -3709,9 +3729,12 @@
       "$x": {"property": "startDate"},
       "$y": {"property": "endDate"},
       "$z": {"link": "extraterrestrialBody", "resourceType": "PlanetaryObject", "property": "name"},
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
+      "_spec": [
+        {
+          "result": {"about": {
+          }}
+        }
+      ]
     },
 
     "030": {},
@@ -3731,18 +3754,22 @@
       },
       "$a": {"addProperty": "systemNumber"},
       "$9": {"addProperty": "librisIIINumber"},
-      "_specName": "interpret dbpedia URI as sameAs of instance",
-      "_specSource": [
-        {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}},
-        {"035": {"ind1": " ", "ind2": " ", "subfields": [
-          {"a": "http://dbpedia.org/resource/August_Strindberg"}]}}
-      ],
-      "_specResult": {
-        "systemNumber": ["123"],
-        "about": {
-          "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
+      "_spec": [
+        {
+          "name": "interpret dbpedia URI as sameAs of instance",
+          "source": [
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}},
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "http://dbpedia.org/resource/August_Strindberg"}]}}
+          ],
+          "result": {
+            "systemNumber": ["123"],
+            "about": {
+              "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
+            }
+          }
         }
-      }
+      ]
     },
 
     "036": {},
@@ -3860,9 +3887,13 @@
         "splitValueProperties": ["version", "language"],
         "rejoin": "/"
       },
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
+      "_spec": [
+        {
+          "name": "TODO",
+          "result": {"about": {
+          }}
+        }
+      ]
     },
     "083": {
       "inherit": "082",
@@ -3880,9 +3911,13 @@
              "resourceType": "ConceptScheme", "uriTemplate": "/topic/{+_}",
              "property": "notation"},
       "$b": {"property": "classificationItem", "ignored": true},
-      "_specName": "TODO",
-      "_specResult": {"about": {
-      }}
+      "_spec": [
+        {
+          "name": "TODO",
+          "result": {"about": {
+          }}
+        }
+      ]
     },
 
     "085": {},
@@ -3919,23 +3954,27 @@
         "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-", "allowEmpty": true},
       "$j": {"property": "comment"},
       "$q": {"property": "label"},
-      "_specSource": {
-        "100": {"ind1": "1", "ind2": " ", "subfields": [
-          {"a": "Jansson, Tove,"},
-          {"d": "1914-2001"}
-      ]}},
-      "_specNormalized": {
-        "100": {"ind1": "1", "ind2": " ", "subfields": [
-          {"a": "Jansson, Tove"},
-          {"d": "1914-2001"}
-      ]}},
-      "_specResult": {"about": {
-        "attributedTo": {"@type": "Person",
-          "familyName":  "Jansson",
-          "givenName":  "Tove",
-          "birthYear":  "1914",
-          "deathYear":  "2001"}
-      }}
+      "_spec": [
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove,"},
+              {"d": "1914-2001"}
+          ]}},
+          "normalized": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"d": "1914-2001"}
+          ]}},
+          "result": {"about": {
+            "attributedTo": {"@type": "Person",
+              "familyName":  "Jansson",
+              "givenName":  "Tove",
+              "birthYear":  "1914",
+              "deathYear":  "2001"}
+          }}
+        }
+      ]
     },
     "110": {
       "note:candidate:aboutEntity": "Work",
@@ -4495,26 +4534,30 @@
       "$3": {"property": "materialsSpecified"},
       "$5": {"property": "institutionToWhichFieldApplies"},
       "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"},
-      "_specName": "group properties into nested entities",
-      "_specSource": {
-        "533": {"ind1": " ", "ind2": " ",
-          "subfields": [
-            {"a": "Digitalt faksimil och elektronisk text"},
-            {"c": "Litteraturbanken"},
-            {"d": "2010"} ]}},
-      "_specResult": {"about": {
-        "reproduction": [
-          {
-            "@type": "CreativeWork",
-            "description":  "Digitalt faksimil och elektronisk text",
-            "provider":  [
-                {"@type": "ProviderEvent",
-                    "providerDate":  "2010",
-                    "providerName":  ["Litteraturbanken"]
-                }]
-          }
-        ]
-      }}
+      "_spec": [
+        {
+          "name": "group properties into nested entities",
+          "source": {
+            "533": {"ind1": " ", "ind2": " ",
+              "subfields": [
+                {"a": "Digitalt faksimil och elektronisk text"},
+                {"c": "Litteraturbanken"},
+                {"d": "2010"} ]}},
+          "result": {"about": {
+            "reproduction": [
+              {
+                "@type": "CreativeWork",
+                "description":  "Digitalt faksimil och elektronisk text",
+                "provider":  [
+                    {"@type": "ProviderEvent",
+                        "providerDate":  "2010",
+                        "providerName":  ["Litteraturbanken"]
+                    }]
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "534": {},
@@ -4603,26 +4646,30 @@
         "resourceType": "ConceptScheme",
         "property": "notation"
       },
-      "_specSource": {
-        "610": {
-          "ind1": "2",
-          "ind2": "7",
-          "subfields": [{"a": "Kungl. biblioteket"}, {"x": "samlingar"}, {"2": "sao"}]
-        }
-      },
-      "_specResult": {"about": {
-        "subject": [
-          {
-            "@type": "Organization",
-            "isPartOf": {"@type": "Organization", "name": "Kungl. biblioteket"},
-            "name": "samlingar",
-            "focusOf": {
-              "@type": "Concept",
-              "inScheme": {"@type": "ConceptScheme", "notation": "sao"}
+      "_spec": [
+        {
+          "source": {
+            "610": {
+              "ind1": "2",
+              "ind2": "7",
+              "subfields": [{"a": "Kungl. biblioteket"}, {"x": "samlingar"}, {"2": "sao"}]
             }
-          }
-        ]
-      }}
+          },
+          "result": {"about": {
+            "subject": [
+              {
+                "@type": "Organization",
+                "isPartOf": {"@type": "Organization", "name": "Kungl. biblioteket"},
+                "name": "samlingar",
+                "focusOf": {
+                  "@type": "Concept",
+                  "inScheme": {"@type": "ConceptScheme", "notation": "sao"}
+                }
+              }
+            ]
+          }}
+        }
+      ]
     },
     "611": {
       "TOOO:i1": {},
@@ -4768,19 +4815,23 @@
       },
       "addLink": "influencedBy", "resourceType": "Person",
       "TOOO:i2": {},
-      "_specSource": {"700":
-        {"ind1": "1", "ind2": " ", "subfields": [
-          {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}
-        ]}
-      },
-      "_specResult": {"about": {
-        "influencedBy": [
-          {"@type": "Person",
-            "familyName":  "Pietilä",
-            "givenName":  "Tuulikki",
-            "birthYear":  "1917"}
-        ]
-      }}
+      "_spec": [
+        {
+          "source": {"700":
+            {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}
+            ]}
+          },
+          "result": {"about": {
+            "influencedBy": [
+              {"@type": "Person",
+                "familyName":  "Pietilä",
+                "givenName":  "Tuulikki",
+                "birthYear":  "1917"}
+            ]
+          }}
+        }
+      ]
     },
 
     "710": {"inherit": "110", "TOOO:i2": {}, "addLink": "influencedBy"},
@@ -5034,24 +5085,28 @@
         "tokenMap": "auth-encLevel",
         "uriTemplate": "{_}"
       },
-      "_specOriginalLeader": "01341cz  a2200397n  4500",
-      "_specSource": {
-        "leader": "     cz  a       n  4500",
-        "fields": [{"001": "140482"}]
-      },
-      "_specResult": {
-        "@type": "Record",
-        "@id": "/auth/140482",
-        "controlNumber": "140482",
-        "entryMap": "4500",
-        "encLevel": {"@id": "/def/enum/record/CompleteAuthorityRecord"},
-        "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
-        "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
-        "about": {
-          "@type": ["Authority"],
-          "@id": "/resource/auth/140482"
+      "_spec": [
+        {
+          "originalLeader": "01341cz  a2200397n  4500",
+          "source": {
+            "leader": "     cz  a       n  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "result": {
+            "@type": "Record",
+            "@id": "/auth/140482",
+            "controlNumber": "140482",
+            "entryMap": "4500",
+            "encLevel": {"@id": "/def/enum/record/CompleteAuthorityRecord"},
+            "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
+            "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
+            "about": {
+              "@type": ["Authority"],
+              "@id": "/resource/auth/140482"
+            }
+          }
         }
-      }
+      ]
     },
     "001" : {"inherit": "bib"},
     "005": {"inherit": "bib"},
@@ -5166,12 +5221,16 @@
         "TODO": "inCollection if . = sgp?",
         "link": "inScheme", "resourceType": "ConceptScheme",
         "uriTemplate": "/topic/{_}",
-        "property": "notation",
-      "_specSource": {"040": {"subfields": [{"f":"barn"}]}},
-      "_specResult": {"about": {
-        "inScheme":  {"@type": "ConceptScheme", "@id": "/topic/barn", "notation": "barn"}
-      }}
-      }
+        "property": "notation"
+      },
+      "_spec": [
+        {
+          "source": {"040": {"subfields": [{"f":"barn"}]}},
+          "result": {"about": {
+            "inScheme":  {"@type": "ConceptScheme", "@id": "/topic/barn", "notation": "barn"}
+          }}
+        }
+      ]
     },
     "042" : {"inherit": "bib", "TODO": "about-inCollection-skönlitteratur?"},
     "043" : {
@@ -5277,14 +5336,18 @@
       "$2": null,
       "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "$0": null,
-      "_specName": "",
-      "_specSource": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
-      "_specResult": {"about": {
-        "@type": "Concept",
-        "@id": "/resource/auth/140482",
-        "prefLabel": "Barnpsykologi",
-        "sameAs":  [{"@id": "/topic/sao/Barnpsykologi"}]
-      }}
+      "_spec": [
+        {
+          "name": "",
+          "source": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
+          "result": {"about": {
+            "@type": "Concept",
+            "@id": "/resource/auth/140482",
+            "prefLabel": "Barnpsykologi",
+            "sameAs":  [{"@id": "/topic/sao/Barnpsykologi"}]
+          }}
+        }
+      ]
     },
     "151" : {
       "aboutType": "Place", "link": null, "resourceType": null,
@@ -5372,14 +5435,18 @@
       "aboutType": null,
       "resourceType": "Concept",
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
-      "_specSource": {"550": {"subfields": [{"a": "Psykologi"}, {"w": "g"}]}},
-      "_specResult": {"about": {
-        "broader": [
-          {"@type": "Concept",
-            "@id": "/topic/sao/Psykologi",
-            "prefLabel":  "Psykologi"}
+      "_spec": [
+        {
+          "source": {"550": {"subfields": [{"a": "Psykologi"}, {"w": "g"}]}},
+          "result": {"about": {
+            "broader": [
+              {"@type": "Concept",
+                "@id": "/topic/sao/Psykologi",
+                "prefLabel":  "Psykologi"}
+          ]
+          }}
+        }
       ]
-      }}
     },
     "551" : {
         "inherit": "550",
@@ -5487,40 +5554,44 @@
         "tokenMap": "itemInfoInRecord"
       },
       "repeatable": false,
-      "_specOriginalLeader": "00236nxa a22001091n44500",
-      "_specSource": {"leader": "     nx  a       1n", "fields": [
-        {"001": "0000000"},
-        {"004": "7149593"},
-        {"852": {
-          "ind1": " ",
-          "ind2": " ",
-          "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
-        }}
-      ]},
-      "_specResult": {
-        "@type": "Record",
-        "@id": "/hold/0000000",
-        "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
-        "controlNumber": "0000000",
-        "encLevel": {"@id": "/def/enum/record/HoldingsLevel1"},
-        "itemInfoInRecord": {"@id": "/def/enum/record/Exemplarinformation_finns_ej"},
-        "status": {"@id": "/def/enum/record/New"},
-        "type": {"@id": "/def/enum/record/SinglePartItemHolding"},
-        "about": {
-          "@id": "/resource/hold/0000000",
-          "@type": "HeldMaterial",
-          "holdingFor": {"@id": "/resource/bib/7149593"},
-          "offers": [
-            {
-              "@type": "Offer",
-              "copyNumber": "1",
-              "heldBy": [{"@type": "Organization", "notation": "H"}],
-              "shelfControlNumber": "65.465",
-              "shelfLocation": ["MAG"]
+      "_spec": [
+        {
+          "originalLeader": "00236nxa a22001091n44500",
+          "source": {"leader": "     nx  a       1n", "fields": [
+            {"001": "0000000"},
+            {"004": "7149593"},
+            {"852": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+            }}
+          ]},
+          "result": {
+            "@type": "Record",
+            "@id": "/hold/0000000",
+            "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
+            "controlNumber": "0000000",
+            "encLevel": {"@id": "/def/enum/record/HoldingsLevel1"},
+            "itemInfoInRecord": {"@id": "/def/enum/record/Exemplarinformation_finns_ej"},
+            "status": {"@id": "/def/enum/record/New"},
+            "type": {"@id": "/def/enum/record/SinglePartItemHolding"},
+            "about": {
+              "@id": "/resource/hold/0000000",
+              "@type": "HeldMaterial",
+              "holdingFor": {"@id": "/resource/bib/7149593"},
+              "offers": [
+                {
+                  "@type": "Offer",
+                  "copyNumber": "1",
+                  "heldBy": [{"@type": "Organization", "notation": "H"}],
+                  "shelfControlNumber": "65.465",
+                  "shelfLocation": ["MAG"]
+                }
+              ]
             }
-          ]
+          }
         }
-      }
+      ]
     },
 
     "001" : {"inherit": "bib"},
