@@ -37,8 +37,7 @@
             ],
         "_camel": [
             "indexroutebuilder",
-            "graphstoreroutebuilder",
-            "apixroutebuilder"
+            "graphstoreroutebuilder"
             ],
         "_components": [
             "jsonldstorage",

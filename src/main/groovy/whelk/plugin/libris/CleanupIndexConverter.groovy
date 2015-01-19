@@ -6,11 +6,9 @@ import whelk.*
 import whelk.plugin.*
 
 @Log
-class CleanupIndexFormatConverter extends BasicFormatConverter {
-    String requiredContentType = "application/ld+json"
-    String resultContentType = "application/ld+json"
+class CleanupIndexFormatConverter extends BasicFilter {
 
-    Document doConvert(Document doc) {
+    Document doFilter(Document doc) {
         def docmap = doc.dataAsMap
         def ct = docmap.remove("@context")
         def broken = docmap.remove("broken")
@@ -19,5 +17,18 @@ class CleanupIndexFormatConverter extends BasicFormatConverter {
             doc.withData(docmap)
         }
         return doc
+    }
+
+    Map doFilter(Map docmap) {
+        def ct = docmap.remove("@context")
+        def broken = docmap.remove("broken")
+        return docmap
+    }
+
+    boolean valid(Document doc) {
+        if (doc && doc.isJson() && doc.contentType == "application/ld+json") {
+            return true
+        }
+        return false
     }
 }

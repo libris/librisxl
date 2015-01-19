@@ -46,7 +46,12 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
     @groovy.transform.Synchronized
     Document doFilter(Document doc) {
         log.debug("Expanding ${doc.identifier}")
-        def dataMap = doc.dataAsMap
+        def dataMap = doFilter(doc.dataAsMap)
+        return doc.withData(dataMap)
+    }
+
+    @groovy.transform.Synchronized
+    Map doFilter(Map dataMap) {
         nodesToExpand.each { key, instructions ->
             log.trace("key: $key, instructions: $instructions")
             def mapSegment = getNestedObject(key, dataMap)
@@ -61,13 +66,13 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
                 def expandedNode = expandNode(mapSegment, instructions)
                 setNestedObject(key, expandedNode, dataMap)
             } else if (mapSegment == null) {
-                log.trace("Path $key not available in ${doc.identifier}")
+                log.trace("Path $key not available.")
                 return
             } else {
-                throw new WhelkRuntimeException("The path key \"$key\" in ${doc.identifier} does not point to a Map or a List. Please check configuration.")
+                throw new WhelkRuntimeException("The path key \"$key\" does not point to a Map or a List. Please check configuration.")
             }
         }
-        return doc.withData(dataMap)
+        return dataMap
     }
 
     Index getIndex() {

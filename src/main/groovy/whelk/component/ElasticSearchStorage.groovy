@@ -68,7 +68,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             (oldDoc, doc) = fetchAndUpdateVersion(doc)
             if (oldDoc) {
                 log.debug("Saving old version with version ${oldDoc.version}.")
-                performExecute(prepareIndexingRequest(oldDoc, null, indexName + VERSION_STORAGE_SUFFIX))
+                performExecute(prepareIndexingRequest(oldDoc, null, indexName))
             }
         }
         log.debug("Saving doc (${doc.identifier}) with version ${doc.version}")
@@ -90,7 +90,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
                 (oldDoc, doc) = fetchAndUpdateVersion(doc)
                 if (oldDoc) {
                     log.debug("Saving old version with version ${oldDoc.version}.")
-                    breq.add(prepareIndexingRequest(oldDoc, null, indexName + VERSION_STORAGE_SUFFIX))
+                    breq.add(prepareIndexingRequest(oldDoc, null, indexName))
                 }
             }
             breq.add(prepareIndexingRequest(doc, doc.identifier, indexName))

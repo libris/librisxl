@@ -162,8 +162,8 @@ class MySQLImporter extends BasicPlugin implements Importer {
             for (st in this.whelk.getStorages()) {
                 st.versioning = versioningSettings.get(st.id)
             }
-            log.info("Starting camel context ...")
-            whelk.camelContext.resume()
+            //log.info("Starting camel context ...")
+            //whelk.camelContext.resume()
         } as Runnable)
 
         queue.shutdown()

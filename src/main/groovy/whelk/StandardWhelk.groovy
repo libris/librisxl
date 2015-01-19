@@ -11,6 +11,8 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+import java.lang.management.*
+
 
 import whelk.api.*
 import whelk.camel.*
@@ -64,11 +66,12 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     def timeZone = ZoneId.systemDefault()
 
+    long MAX_MEMORY_THRESHOLD = 95 // In percent
+
     /*
      * Whelk methods
      *******************************/
     @groovy.transform.CompileStatic
-    @groovy.transform.Synchronized
     String add(Document doc, boolean minorUpdate = false) {
         log.debug("Add single document ${doc.identifier}")
         if (!doc.data || doc.data.length < 1) {
@@ -103,8 +106,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
      * Requires that all documents have an identifier.
      */
     @groovy.transform.CompileStatic
-    @groovy.transform.Synchronized
     void bulkAdd(final List<Document> docs, String contentType, boolean prepareDocuments = true) {
+        checkAvailableMemory()
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getStorages(contentType)
         if (suitableStorages.isEmpty()) { 
@@ -202,7 +205,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return versions
     }
 
-    @groovy.transform.Synchronized
     void remove(String id, String dataset = null) {
         def doc= get(id)
         components.each {
@@ -432,6 +434,30 @@ class StandardWhelk extends HttpServlet implements Whelk {
         def prefix = global.get("CAMEL_CHANNEL_PREFIX", "")
         def config = global.get("CAMEL_COMPONENT_CONFIG", "")
         return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withContentType && config ? "?"+config : "")
+    }
+
+    private checkAvailableMemory() {
+        boolean logMessagePrinted = false
+        MemoryMXBean mem=ManagementFactory.getMemoryMXBean();
+        MemoryUsage heap=mem.getHeapMemoryUsage();
+
+        long totalMemory=heap.getUsed();
+        long maxMemory=heap.getMax();
+        long used=(totalMemory * 100) / maxMemory;
+
+        log.debug("totalMemory: $totalMemory")
+        log.debug("maxMemory: $maxMemory")
+        log.debug("used: $used")
+
+        while (used > MAX_MEMORY_THRESHOLD) {
+            if (!logMessagePrinted) {
+                log.warn("Using more than $MAX_MEMORY_THRESHOLD percent of available memory ($totalMemory / $maxMemory). Blocking.")
+                logMessagePrinted = true
+            }
+            totalMemory=heap.getUsed();
+            maxMemory=heap.getMax();
+            used=(totalMemory * 100) / maxMemory;
+        }
     }
 
 

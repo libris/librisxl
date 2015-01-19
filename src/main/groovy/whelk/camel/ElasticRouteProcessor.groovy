@@ -23,11 +23,14 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
     private static final ElasticRouteProcessor erp = new ElasticRouteProcessor()
     public static ElasticRouteProcessor getInstance() { return erp }
 
+    List<Filter> filters
+
     void bootstrap() {
         this.shapeComputer = getPlugin("index")
         this.elasticHost = shapeComputer.getElasticHost()
         this.elasticCluster = shapeComputer.getElasticCluster()
         this.elasticPort = shapeComputer.getElasticPort()
+        filters = plugins.findAll { it instanceof Filter }
     }
 
     @Override
@@ -49,15 +52,19 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
         }
         log.debug("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $elasticId)")
 
-            message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexName=${indexName}&indexType=${indexType}")
-            if (operation == Whelk.REMOVE_OPERATION) {
-                log.debug(">>> Setting message body to $elasticId in preparation for REMOVE operation.")
-                message.setBody(elasticId)
-            } else {
-                def dataMap = message.getBody(Map.class)
-                dataMap.put("encodedId", elasticId)
-                message.setBody(dataMap)
+        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexName=${indexName}&indexType=${indexType}")
+        if (operation == Whelk.REMOVE_OPERATION) {
+            log.debug(">>> Setting message body to $elasticId in preparation for REMOVE operation.")
+            message.setBody(elasticId)
+        } else {
+            def dataMap = message.getBody(Map.class)
+            for (filter in filters) {
+                log.trace("Applying filter $filter")
+                dataMap = filter.doFilter(dataMap)
             }
+            dataMap.put("encodedId", elasticId)
+            message.setBody(dataMap)
+        }
         exchange.setOut(message)
     }
 }

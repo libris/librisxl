@@ -104,6 +104,8 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
         return doc
     }
 
+    Map doFilter(Map docmap) { throw new UnsupportedOperationException("Not implemented.") }
+
     /**
      * For given object and each nested object within, call updateEntityId.
      * (An object is a List or a Map (with a @type, but not a @value).)

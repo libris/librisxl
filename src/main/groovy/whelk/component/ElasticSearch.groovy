@@ -170,14 +170,17 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     SearchResult query(Query q, String indexName, String[] indexTypes, Class resultClass = searchResultClass) {
-        log.trace "Querying index $indexName and indextype $indexTypes"
         log.trace "Doing query on $q"
+        return query(q.toJsonQuery(), q.start, q.n, indexName, indexTypes, resultClass, q.highlights, q.facets)
+    }
+
+    SearchResult query(String jsonDsl, int start, int n, String indexName, String[] indexTypes, Class resultClass = searchResultClass, List highlights = null, List facets = null) {
+        log.trace "Querying index $indexName and indextype $indexTypes"
         def idxlist = [indexName]
         if (indexName.contains(",")) {
             idxlist = indexName.split(",").collect{it.trim()}
         }
         log.trace("Searching in indexes: $idxlist")
-        def jsonDsl = q.toJsonQuery()
         def response = client.search(new SearchRequest(idxlist as String[], jsonDsl.getBytes("utf-8")).searchType(SearchType.DFS_QUERY_THEN_FETCH).types(indexTypes)).actionGet()
         log.trace("SearchResponse: " + response)
 
@@ -188,22 +191,22 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             results = new SearchResult()
         }
         results.numberOfHits = 0
-        results.resultSize = q.n
-        results.startIndex = q.start
+        results.resultSize = n
+        results.startIndex = start
         results.searchCompletedInISO8601duration = "PT" + response.took.secondsFrac + "S"
 
         if (response) {
             log.trace "Total hits: ${response.hits.totalHits}"
             results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
-                if (q.highlights) {
+                if (highlights) {
                     results.addHit(createResultDocumentFromHit(it, indexName), convertHighlight(it.highlightFields))
                 } else {
                     results.addHit(createResultDocumentFromHit(it, indexName))
                 }
             }
-            if (q.facets) {
-                results.facets = convertFacets(response.facets.facets(), q)
+            if (facets) {
+                results.facets = convertFacets(response.facets.facets(), facets)
             }
         }
         return results
@@ -217,7 +220,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         return map
     }
 
-    def convertFacets(eFacets, query) {
+    def convertFacets(eFacets, queryfacets) {
         def facets = new HashMap<String, Map<String, Integer>>()
         for (def f : eFacets) {
             def termcounts = [:]
@@ -227,7 +230,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
                 }
                 facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
             } catch (MissingMethodException mme) {
-                def group = query.facets.find {it.name == f.name}.group
+                def group = queryfacets.facets.find {it.name == f.name}.group
                 termcounts = facets.get(group, [:])
                 if (f.count) {
                     termcounts[f.name] = f.count

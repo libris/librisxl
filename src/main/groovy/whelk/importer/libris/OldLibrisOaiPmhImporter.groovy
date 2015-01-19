@@ -191,6 +191,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
             String mdrecord = createString(it.metadata.record)
             if (mdrecord) {
                 try {
+                    def documentMap = [:]
                     log.trace("Record preparation starts.")
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
                     log.trace("Marc record instantiated from XML.")
@@ -252,27 +253,13 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                     }
                     log.trace("Record prepared.")
 
-                    try {
-                        if (marcFrameConverter) {
-                            log.trace("Conversion starts.")
-                            def doc = marcFrameConverter.doConvert(record, ["entry":entry,"meta":meta])
-                            log.trace("Convestion finished.")
-                            if (originalIdentifier) {
-                                def dataMap = doc.dataAsMap
-                                dataMap['controlNumber'] = record.getControlfields("001").get(0).getData()
-                                doc = doc.withData(dataMap)
-                                doc.addIdentifier("/"+this.dataset+"/"+record.getControlfields("001").get(0).getData())
-                            }
-                            if (enhancer) {
-                                log.trace("Enhancing starts.")
-                                doc = enhancer.filter(doc)
-                                log.trace("Enhancing finished.")
-                            }
-                            documents << doc
-                        }
-                    } catch (Exception e) {
-                        log.error("Conversion failed for id ${entry.identifier}", e)
-                    }
+                    documentMap['record'] = record
+                    documentMap['entry'] = entry
+                    documentMap['meta'] = meta
+                    documentMap['originalIdentifier'] = originalIdentifier
+
+                    documents << documentMap
+
                     recordCount++
                     def velocityMsg = ""
                     runningTime = System.currentTimeMillis() - startTime
@@ -328,12 +315,37 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         }
         tickets.acquire()
         queue.execute({
+            def convertedDocs = []
+            documents.each {
+                try {
+                    if (marcFrameConverter) {
+                        log.trace("Conversion starts.")
+                        def doc = marcFrameConverter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
+                        log.trace("Convestion finished.")
+                        if (it.originalIdentifier) {
+                            def dataMap = doc.dataAsMap
+                            dataMap['controlNumber'] = it.record.getControlfields("001").get(0).getData()
+                            doc = doc.withData(dataMap)
+                            doc.addIdentifier("/"+this.dataset+"/"+record.getControlfields("001").get(0).getData())
+                        }
+                        if (enhancer) {
+                            log.trace("Enhancing starts.")
+                            doc = enhancer.filter(doc)
+                            log.trace("Enhancing finished.")
+                        }
+                        if (doc) {
+                            convertedDocs << doc
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("Conversion failed for id ${entry.identifier}", e)
+                }
+            }
+
             try {
-                log.debug("Adding ${documents.size()} documents to whelk.")
+                log.debug("Adding ${convertedDocs.size()} documents to whelk.")
                 long elapsed = System.currentTimeMillis()
-                //def storage = whelk.getStorage(document.get(0).contentType)
-                //storage.bulkStore(documents)
-                this.whelk.bulkAdd(documents, documents.get(0).contentType, prepareDocuments)
+                this.whelk.bulkAdd(convertedDocs, convertedDocs.get(0).contentType, prepareDocuments)
                 if ((System.currentTimeMillis() - elapsed) > 10000) {
                     log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
                 }
