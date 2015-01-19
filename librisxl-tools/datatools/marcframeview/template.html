@@ -7,7 +7,8 @@
   </head>
 
   % macro show_value(cat, tag_or_code, key, value)
-    % if key in ('aboutType', 'link', 'addLink', 'property', 'addProperty', 'resourceType')
+  % if (not isinstance(value, basestring) or not value.startswith(('@', '_'))
+        ) and key in ('aboutType', 'link', 'addLink', 'property', 'addProperty', 'resourceType')
       <a href="../vocabview/index.html#${value}">${value}</a>
     % elif key == 'tokenMap'
       <a href="#map-${value}">${value}</a>
