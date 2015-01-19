@@ -7,7 +7,7 @@
   </head>
 
   % macro show_value(cat, tag_or_code, key, value)
-  % if (not isinstance(value, basestring) or not value.startswith(('@', '_'))
+    % if (not isinstance(value, basestring) or not value.startswith(('@', '_'))
         ) and key in ('aboutType', 'link', 'addLink', 'property', 'addProperty', 'resourceType')
       <a href="../vocabview/index.html#${value}">${value}</a>
     % elif key == 'tokenMap'
@@ -108,14 +108,14 @@
     </section>
     <section>
       <h2>Token Maps</h2>
-        % for tkey, token_map in marcframe.tokenMaps.items()
+        % for tkey, token_map in sorted(marcframe.tokenMaps.items())
           <div class="tokenmap" id="map-${tkey}">
             <h3>${tkey}</h3>
             % if isinstance(token_map, unicode)
               ${token_map}
             % else
               <select>
-                % for key, term in token_map.items()
+                % for key, term in sorted(token_map.items())
                   <option>${key}: ${term}</option>
                 % endfor
               </select>
