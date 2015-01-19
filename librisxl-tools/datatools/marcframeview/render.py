@@ -13,10 +13,12 @@ def marc_categories():
     for cat in MARC_CATEGORIES:
         yield cat, marcframe[cat]
 
-def tags(catdfn):
+def fields(catdfn):
     for tag, dfn in sorted(catdfn.items()):
         if tag.isdigit() and dfn:
-            yield tag, dfn
+            kind = 'fixed' if any(k for k in dfn if k[0] == '[' and ':' in k) else \
+                    'field' if any(k for k in dfn if k[0] == '$') else 'control'
+            yield tag, kind, dfn
 
 def codes(dfn):
     for code, subdfn in sorted(dfn.items()):
