@@ -4,8 +4,6 @@
 /work
 whelkoperator.lck
 /mystuff
-/src/main/resources
-!/src/main/resources/README.md
 .idea
 build
 *.iml

@@ -39,15 +39,10 @@ class MarcFrameConverterSpec extends Specification {
                 }
 
                 if (code == '000') {
-                    marcSkeletons[marcType] = dfn._specSource
-                    marcResults[marcType] = dfn._specResult
+                    marcSkeletons[marcType] = dfn._spec[0].source
+                    marcResults[marcType] = dfn._spec[0].result
                 }
-                if (dfn._specSource && dfn._specResult) {
-                    fieldSpecs << [source: dfn._specSource,
-                                   normalized: dfn._specNormalized,
-                                   result: dfn._specResult,
-                                   marcType: marcType, code: code]
-                } else if (dfn._spec instanceof List) {
+                if (dfn._spec instanceof List) {
                     dfn._spec.each {
                         if (it instanceof Map && it.source && it.result) {
                             fieldSpecs << [source: it.source,
