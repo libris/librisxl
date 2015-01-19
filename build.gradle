@@ -55,21 +55,6 @@ allprojects {
 
 }
 
-task copyConfiguration << {
-    println "Target environment: ${environment}"
-    println "Target configuration: ${configuration}"
-
-    copy {
-        from "etc/environment/${environment}"
-        from "etc/resources/_all"
-        from "etc/resources/${configuration}"
-        into "src/main/resources"
-        include "**/*"
-    }
-}
-
-processResources.dependsOn copyConfiguration
-
 dependencies {
     def camelVersion = "2.14.1"
     def activeMQVersion = "5.10.0"
@@ -119,12 +104,14 @@ dependencies {
     compile project(":dep/locgov-pairtree")
 }
 
-task cleanResourcesDir(type: Delete) {
-    delete fileTree(dir: "src/main/resources", exclude: "README.md")
-    delete 'target'
+sourceSets {
+    main {
+        resources {
+            srcDir "etc/environment/${environment}"
+            srcDir "etc/resources/${configuration}"
+        }
+    }
 }
-
-clean.dependsOn cleanResourcesDir
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
