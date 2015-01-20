@@ -1,1 +1,1 @@
-include "whelk-core","locgov-pairtree","ext-libris"
+include 'dep/locgov-pairtree'

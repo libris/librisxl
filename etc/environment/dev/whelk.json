@@ -10,10 +10,17 @@
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:8890/sparql-graph-crud",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
+        "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": false,
         "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
         "MQ_INDEX": "activemq:devlibris.index",
         "MQ_BULK_INDEX": "activemq:devlibris.bulk.index?concurrentConsumers=5",
-        "MQ_GRAPHSTORE": "activemq:devlibris.graphstore"
+        "MQ_GRAPHSTORE": "activemq:devlibris.graphstore",
+        "MQ_APIX": "activemq:localapix",
+        "APIX_HOST": "http://localhost:8001",
+        "CAMEL_MASTER_COMPONENT":"activemq",
+        "CAMEL_CHANNEL_PREFIX":"local",
+        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=10"
+
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
@@ -29,11 +36,11 @@
             "activemqbroker"
             ],
         "_camel": [
-            "routebuilder"
+            "indexroutebuilder",
+            "graphstoreroutebuilder"
             ],
         "_components": [
             "jsonldstorage",
-            "diskjsonldstorage",
             "graphstore",
             "index"
         ]
@@ -43,9 +50,11 @@
         { "/_operations": "operator" },
         { "/_format": "formatter" },
         { "/_sparql": "sparqlapi" },
+        { "/_sys/metasearch":  "metasearchapi" },
         { "/_libcount": "libcount" },
         { "/_isxntool":  "isxntool" },
         { "/_complete/([\\w/]+)$":  "completeexpander" },
+        { "/([\\w/]+)/_oaipmhsearch": "oaipmhsearch"},
         { "/([\\w/]+)/_search":  "search" },
         { "^/([^_].*)$":  "documentapi" },
         { "^/$":  "documentapi" }
