@@ -15,7 +15,8 @@ import org.apache.camel.component.http4.HttpMethods
 class APIXProcessor extends BasicPlugin implements Processor {
 
     String apixPathPrefix
-    FormatConverterProcessor fcp = null
+    List<FormatConverter> converters = []
+    List<Filter> filters = []
 
     APIXProcessor(String prefix) {
         StringBuilder pathBuilder = new StringBuilder(prefix)
@@ -26,7 +27,8 @@ class APIXProcessor extends BasicPlugin implements Processor {
     }
 
     void bootstrap() {
-        fcp = getPlugin("camel_format_processor")
+        converters = plugins.findAll { it instanceof FormatConverter }
+        filters = plugins.findAll { it instanceof Filter }
     }
 
     @Override
@@ -50,7 +52,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
         if (operation == Whelk.REMOVE_OPERATION) {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
             if (!messagePrepared) {
-                def doc = fcp.createDocument(message)
+                def doc = createDocument(message)
                 String voyagerUri
                 if (doc instanceof JsonDocument) {
                     voyagerUri = getVoyagerUri(doc)
@@ -59,15 +61,15 @@ class APIXProcessor extends BasicPlugin implements Processor {
                 }
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
                 if (doc) {
-                    fcp.prepareMessage(doc, message)
+                    prepareMessage(doc, message)
                 }
             }
         } else {
             if (!messagePrepared) {
-                def doc = fcp.createDocument(message)
+                def doc = createDocument(message)
                 String voyagerUri = getVoyagerUri(doc) ?: "/" + message.getHeader("document:dataset") +"/new"
-                doc = fcp.runConverters(doc)
-                fcp.prepareMessage(doc, message)
+                doc = runConverters(doc)
+                prepareMessage(doc, message)
 
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
             }
@@ -76,7 +78,6 @@ class APIXProcessor extends BasicPlugin implements Processor {
 
         exchange.setOut(message)
     }
-
 
     String getVoyagerUri(String xlIdentifier, String dataset) {
         if (xlIdentifier ==~ /\/(auth|bib|hold)\/\d+/) {
@@ -97,6 +98,41 @@ class APIXProcessor extends BasicPlugin implements Processor {
             }
         }
         return vUri
+    }
+
+    Document createDocument(Message docMessage) {
+        def body = docMessage.getBody()
+        Document doc
+        if (body instanceof String) {
+            doc = whelk.get(docMessage.getBody())
+            log.debug("Loaded document ${doc?.identifier}")
+        } else {
+            log.debug("Setting document data with type ${body.getClass().getName()}")
+            def metaentry = mapper.readValue(docMessage.getHeader("document:metaentry") as String, Map)
+            doc = whelk.createDocument(metaentry.entry.contentType).withData(body).withMeta(metaentry.meta).withEntry(metaentry.entry)
+        }
+        return doc
+    }
+
+    Document runConverters(Document doc) {
+        log.debug("converters: $converters filters: $filters")
+        if (doc && (converters || filters)) {
+            for (converter in converters) {
+                log.debug("Running converter ${converter.id}.")
+                doc = converter.convert(doc)
+            }
+            for (filter in filters) {
+                log.debug("Running filter ${filter.id}.")
+                doc = filter.filter(doc)
+            }
+        }
+        return doc
+    }
+
+    void prepareMessage(Document doc, Message docMessage) {
+        log.debug("Resetting document ${doc.identifier} in message.")
+        docMessage.setBody(doc.data)
+        docMessage.setHeader("document:metaentry", doc.metadataAsJson)
     }
 }
 
