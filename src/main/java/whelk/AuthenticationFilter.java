@@ -39,7 +39,7 @@ public class AuthenticationFilter implements Filter {
                 String token = httpRequest.getHeader("Authorization");
                 String json = verifyToken(token.replace("Bearer ", ""));
                 if (json == null || json.isEmpty()) {
-                    httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR, "Content is null");
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
                 }
 
                 if (mapper == null) {
