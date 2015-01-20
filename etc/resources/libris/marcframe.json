@@ -5664,6 +5664,11 @@
       "TODO:i1": {},
       "$a": {"addProperty": "librisIIINumber"}
     },
+
+    "024": {
+      "inherit": "bib"
+    },
+
     "084": {"inherit": "bib", "addLink": "callno"},
 
     "562": {
@@ -5699,7 +5704,10 @@
       "$e": {"addProperty": "address"},
       "$f": {"addProperty": "codedLocationQualifier"},
       "$g": {"addProperty": "nonCodedLocationQualifier"},
-      "$h": {"property": "classificationPart"},
+      "$h": {
+        "property": "classificationPart",
+        "NOTE": "libris deviates from standard (used for all kinds of shelfControlNumber?)"
+      },
       "$i": {
         "addProperty": "availability",
         "NOTE": "deviates from standard (itemPart)?",

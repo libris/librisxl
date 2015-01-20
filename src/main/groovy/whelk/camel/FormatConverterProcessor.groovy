@@ -32,40 +32,6 @@ class FormatConverterProcessor extends BasicPlugin implements Processor,WhelkAwa
         log.trace("Calling bootstrap for ${this.id}. converter: $converter expander: $expander plugins: $plugins")
     }
 
-    Document createDocument(Message docMessage) {
-        def body = docMessage.getBody()
-        Document doc
-        if (body instanceof String) {
-            doc = whelk.get(docMessage.getBody())
-            log.debug("Loaded document ${doc?.identifier}")
-        } else {
-            log.debug("Setting document data with type ${body.getClass().getName()}")
-            def metaentry = mapper.readValue(docMessage.getHeader("document:metaentry") as String, Map)
-            doc = whelk.createDocument(metaentry.entry.contentType).withData(body).withMeta(metaentry.meta).withEntry(metaentry.entry)
-        }
-        return doc
-    }
-
-    Document runConverters(Document doc) {
-        log.debug("converter: $converter expander: $expander")
-        if (doc && (converter || expander)) {
-            if (converter) {
-                log.debug("Running converter ${converter.id}.")
-                doc = converter.convert(doc)
-            }
-            if (expander) {
-                log.debug("Running expander ${expander.id}.")
-                doc = expander.filter(doc)
-            }
-        }
-        return doc
-    }
-
-    void prepareMessage(Document doc, Message docMessage) {
-        log.debug("Resetting document ${doc.identifier} in message.")
-        docMessage.setBody(doc.data)
-        docMessage.setHeader("document.entry", doc.entry.inspect())
-    }
 
     @Override
     public void process(Exchange exchange) throws Exception {

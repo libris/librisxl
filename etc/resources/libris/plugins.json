@@ -513,10 +513,6 @@
             }
         }
     },
-    "camel_format_processor": {
-        "_class" : "whelk.camel.FormatConverterProcessor",
-        "_plugins" : ["linkexpander", "cleanupindexconverter" ]
-    },
     "turtleconverter_processor": {
         "_class" : "whelk.camel.FormatConverterProcessor",
         "_plugins" : ["turtleconverter"]
@@ -535,7 +531,7 @@
     "apixprocessor": {
         "_class": "whelk.camel.APIXProcessor",
         "_params": "/apix/0.1/cat/test/",
-        "_plugins" : ["jsonld2marcxmlconverter","camel_format_processor"]
+        "_plugins" : ["jsonld2marcxmlconverter"]
     },
     "elasticprocessor": {
         "_class": "whelk.camel.ElasticRouteProcessor",
