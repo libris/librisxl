@@ -5,44 +5,117 @@
     <title>MARCFrame View</title>
    <link rel="stylesheet" href="main.css" />
   </head>
+
+  % macro show_value(cat, tag_or_code, key, value)
+    % if (not isinstance(value, basestring) or not value.startswith(('@', '_'))
+        ) and key in ('aboutType', 'link', 'addLink', 'property', 'addProperty', 'resourceType')
+      <a href="../vocabview/index.html#${value}">${value}</a>
+    % elif key == 'tokenMap'
+      <a href="#map-${value}">${value}</a>
+    % elif key == 'inherit' and value.isdigit()
+      <a href="#${cat}-${value}">${cat} ${value}</a>
+    % elif key == 'inherit' and ':' in value
+      TEST <a href="#${value.replace(':', '-')}">${value.replace(':', ' ')}</a>
+    % elif key == 'inherit'
+      <a href="#${value}-${tag_or_code}">${value} ${tag_or_code}</a>
+    % else
+      ${value}
+    % endif
+  % endmacro
+
+  % macro show_dfn(cat, tag, items)
+    <table>
+      % for key, subdfn in items
+        <tr id="${cat}-${tag}-${key}">
+          <th>${key}</th>
+          <td>
+            % for k, v in sorted(subdfn.items())
+              % if not k.startswith('TODO:')
+                <i>${k}</i>: ${show_value(cat, key, k, v)}
+                <br />
+              % endif
+            % endfor
+          </td>
+        </tr>
+      % endfor
+    </table>
+  % endmacro
+
   <body>
+    <nav>
+      % for cat, catdfn in marc_categories()
+        <p>
+          <a href="#${cat}">${cat}</a>
+          % for tag, kind, dfn in fields(catdfn)
+            <a href="#${cat}-${tag}">${tag}</a>
+          % endfor
+      </p>
+      % endfor
+    </nav>
     <section>
       <h2>MARC mappings</h2>
-      % for cat in MARC_CATEGORIES
-        % set catdfn = marcframe[cat]
+      % for cat, catdfn in marc_categories()
         <div class="cat" id="${cat}">
           <h3>${cat}</h3>
           <p>thingLink: ${catdfn.thingLink}</p>
           <table class="marcmap">
-            % for tag, dfn in sorted(catdfn.items())
-              % if tag.isdigit() and dfn
-                <tr id="${cat}-${tag}">
-                  <th>${tag}</th>
-                  <td>
-                    % for key, value in sorted(dfn.items())
-                      <p><em>${key}</em> ${value}</p>
-                    % endfor
-                  </td>
-                </tr>
-              % endif
+            % for tag, kind, dfn in fields(catdfn)
+              <tr id="${cat}-${tag}">
+                <th>${tag}</th>
+                <td>
+                  % for key in ['inherit', 'aboutType', 'link', 'addLink', 'resourceType', 'property', 'addProperty']
+                    % if key in dfn
+                      <p>
+                        <em>${key}:</em>
+                        ${show_value(cat, tag, key, dfn[key])}
+                      </p>
+                    % endif
+                  % endfor
+                  % if kind == 'field'
+                    ${show_dfn(cat, tag, codes(dfn))}
+                  % elif kind == 'fixed'
+                    <table>
+                      % for key, subdfn in sorted(dfn.items())
+                        % if key[0] != '_' and not key.startswith('TODO:')
+                          <tr id="${cat}-${tag}-${key}">
+                            <th>${show_value(cat, tag, 'aboutType', key)}</th>
+                            <td>
+                              % if key[0].isupper() and isinstance(subdfn, dict)
+                                ${show_dfn(cat, tag, sorted(subdfn.items()))}
+                              % elif isinstance(subdfn, dict)
+                                % for k, v in sorted(subdfn.items())
+                                  <i>${k}</i>: ${show_value(cat, code, k, v)}
+                                  <br />
+                                % endfor
+                            % else
+                              ${subdfn}
+                            % endif
+                            </td>
+                          </tr>
+                        % endif
+                      % endfor
+                    </table>
+                  % endif
+                </td>
+              </tr>
             % endfor
           </table>
-          % if catdfn.postProcessing
+          {#% if catdfn.postProcessing
             <p>postProcessing: ${catdfn.postProcessing}</p>
-          % endif
+          % endif#}
         </div>
       % endfor
     </section>
     <section>
       <h2>Token Maps</h2>
-        % for tkey, token_map in marcframe.tokenMaps.items()
-          <div class="tokenmap" id="${tkey}">
+        % for tkey, token_map in sorted(marcframe.tokenMaps.items())
+          <div class="tokenmap" id="map-${tkey}">
             <h3>${tkey}</h3>
             % if isinstance(token_map, unicode)
               ${token_map}
             % else
               <select>
-                % for key, term in token_map.items()
+                % for key, term in sorted(token_map.items())
                   <option>${key}: ${term}</option>
                 % endfor
               </select>
