@@ -33,13 +33,14 @@ public class AuthenticationFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-
-        if (isApiCall(httpRequest) && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+        //isApiCall(httpRequest) &&
+        if (supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             try {
                 String token = httpRequest.getHeader("Authorization");
                 String json = verifyToken(token.replace("Bearer ", ""));
                 if (json == null || json.isEmpty()) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "The access token expired");
+                    return;
                 }
 
                 if (mapper == null) {
@@ -80,6 +81,8 @@ public class AuthenticationFilter implements Filter {
             while ((line = rd.readLine()) != null) {
                 result.append(line);
             }
+
+            rd.close();
             return result.toString();
 
         }catch (Exception e) {
