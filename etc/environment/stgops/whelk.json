@@ -13,7 +13,7 @@
         "MQ_GRAPHSTORE": "activemq:stglibris.graphstore?concurrentConsumers=10",
         "CAMEL_MASTER_COMPONENT":"sendmq",
         "CAMEL_CHANNEL_PREFIX":"stgops",
-        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=100"
+        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=50"
     },
     "_id": "stglibris",
     "_docBaseUri" : "http://libris.kb.se/",

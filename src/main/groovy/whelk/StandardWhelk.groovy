@@ -603,7 +603,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             def sendQName = global.get("CAMEL_MASTER_COMPONENT")
             if (sendQName) {
                 ActiveMQComponent amqsend = ActiveMQComponent.activeMQComponent()
-                amqsend.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 100))
+                amqsend.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 200))
                 whelkCamelMain.addComponent(sendQName, amqsend)
             }
 
