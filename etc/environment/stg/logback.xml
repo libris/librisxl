@@ -7,6 +7,7 @@
     </encoder>
   </appender>
 
+  <logger name="whelk.api.BasicAPI" level="warn"/>
   <logger name="whelk.StandardWhelk">
       <level value="info"/>
   </logger>

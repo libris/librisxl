@@ -433,7 +433,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         def comp = global.get("CAMEL_MASTER_COMPONENT", "seda")
         def prefix = global.get("CAMEL_CHANNEL_PREFIX", "")
         def config = global.get("CAMEL_COMPONENT_CONFIG", "")
-        return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withContentType && config ? "?"+config : "")
+        return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withConfig && config ? "?"+config : "")
     }
 
     private checkAvailableMemory() {
