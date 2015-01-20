@@ -15,11 +15,12 @@ public final class ActiveMQPooledConnectionFactory {
     private ActiveMQPooledConnectionFactory() {
     }
 
-    public static PooledConnectionFactory createPooledConnectionFactory(String brokerUrl=null) {
+    public static PooledConnectionFactory createPooledConnectionFactory(String brokerUrl=null, int maxConnections, int maxActive) {
         ConnectionFactory cf = createConnectionFactory(brokerUrl)
         PooledConnectionFactory pooled = new PooledConnectionFactory()
         pooled.setConnectionFactory(cf)
-        pooled.setMaxConnections(8)
+        pooled.setMaxConnections(maxConnections)
+        pooled.setMaximumActiveSessionPerConnection(maxActive)
         return pooled
     }
 

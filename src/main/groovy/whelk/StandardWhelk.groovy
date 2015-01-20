@@ -594,9 +594,21 @@ class StandardWhelk extends HttpServlet implements Whelk {
                     getCamelEndpoint(REMOVE_OPERATION, true)
                 )
 
-            ActiveMQComponent amq = ActiveMQComponent.activeMQComponent()
-            amq.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL']))
-            whelkCamelMain.addComponent("activemq", amq)
+
+
+            ActiveMQComponent amqreceive = ActiveMQComponent.activeMQComponent()
+            amqreceive.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 100))
+            whelkCamelMain.addComponent("activemq", amqreceive)
+
+            def sendQName = global.get("CAMEL_MASTER_COMPONENT")
+            if (sendQName) {
+                ActiveMQComponent amqsend = ActiveMQComponent.activeMQComponent()
+                amqsend.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 100))
+                whelkCamelMain.addComponent(sendQName, amqsend)
+            }
+
+
+
 
             for (route in plugins.findAll { it instanceof RouteBuilder }) {
                 log.info("Adding route ${route.id}")

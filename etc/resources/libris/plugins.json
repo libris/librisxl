@@ -513,10 +513,6 @@
             }
         }
     },
-    "turtleconverter_processor": {
-        "_class" : "whelk.camel.FormatConverterProcessor",
-        "_plugins" : ["turtleconverter"]
-    },
     "graphstore_aggregator": {
         "_class" : "whelk.camel.GraphstoreBatchUpdateAggregationStrategy",
         "_params": {
@@ -552,7 +548,7 @@
     "graphstoreroutebuilder": {
         "_class" : "whelk.camel.route.GraphstoreRouteBuilder",
         "_plugins" : [
-            "turtleconverter_processor", "graphstore_aggregator"
+            "graphstore_aggregator"
         ],
         "_params": {
             "graphstoreBatchSize": 32,

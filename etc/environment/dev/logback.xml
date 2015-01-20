@@ -22,6 +22,9 @@
   <logger name="org.apache.camel.component.elasticsearch">
       <level value="warn"/>
   </logger>
+  <logger name="org.apache.activemq.camel.component">
+      <level value="debug"/>
+  </logger>
   <logger name="org.apache.activemq">
       <level value="warn"/>
   </logger>

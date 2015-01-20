@@ -16,7 +16,7 @@
         "MQ_BULK_INDEX": "activemq:libris.bulk.index?concurrentConsumers=10",
         "MQ_GRAPHSTORE": "activemq:libris.graphstore?concurrentConsumers=10"
         "MQ_APIX": "activemq:apix",
-        "CAMEL_MASTER_COMPONENT":"activemq",
+        "CAMEL_MASTER_COMPONENT":"sendmq",
         "CAMEL_CHANNEL_PREFIX":"prodops",
         "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=100"
     },
