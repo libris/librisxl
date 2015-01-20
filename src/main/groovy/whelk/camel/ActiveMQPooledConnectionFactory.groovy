@@ -1,11 +1,15 @@
 package whelk.camel
 
+import groovy.util.logging.Slf4j as Log
+
 import java.io.File
-import javax.jms.ConnectionFactory
+import javax.jms.*
+
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.pool.PooledConnectionFactory
 import org.apache.camel.util.FileUtil
 
+@Log
 public final class ActiveMQPooledConnectionFactory {
 
     private ActiveMQPooledConnectionFactory() {
@@ -26,6 +30,14 @@ public final class ActiveMQPooledConnectionFactory {
         connectionFactory.setOptimizedMessageDispatch(true)
         connectionFactory.setUseAsyncSend(true)
         connectionFactory.setAlwaysSessionAsync(true)
+        connectionFactory.setExceptionListener(
+            new ExceptionListener() {
+                public void onException(JMSException ex) {
+                    log.error("ActiveMQ received exception: ${ex.message}", ex)
+                    ex.printStackTrace()
+                }
+            }
+        )
         return connectionFactory
     }
 }
