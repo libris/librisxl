@@ -215,6 +215,9 @@
     "sparqlapi" : {
         "_class" : "whelk.api.SparqlAPI"
     },
+    "iriapi": {
+        "_class" : "whelk.api.IRIAPI"
+    },
     "documentapi" : {
         "_class" : "whelk.api.DocumentAPI",
         "_plugins" : [

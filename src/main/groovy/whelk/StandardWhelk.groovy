@@ -430,9 +430,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     String getCamelEndpoint(String operation, withConfig = false) {
-        def comp = global.get("CAMEL_MASTER_COMPONENT", "seda")
-        def prefix = global.get("CAMEL_CHANNEL_PREFIX", "")
-        def config = global.get("CAMEL_COMPONENT_CONFIG", "")
+        def comp = global.get("CAMEL_MASTER_COMPONENT") ?: "seda"
+        def prefix = global.get("CAMEL_CHANNEL_PREFIX") ?: ""
+        def config = global.get("CAMEL_COMPONENT_CONFIG") ?: ""
         return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withConfig && config ? "?"+config : "")
     }
 
@@ -596,19 +596,18 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
 
 
-            ActiveMQComponent amqreceive = ActiveMQComponent.activeMQComponent()
-            amqreceive.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 100))
-            whelkCamelMain.addComponent("activemq", amqreceive)
+            if (global.containsKey('ACTIVEMQ_BROKER_URL')) {
+                ActiveMQComponent amqreceive = ActiveMQComponent.activeMQComponent()
+                amqreceive.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 100))
+                whelkCamelMain.addComponent("activemq", amqreceive)
 
-            def sendQName = global.get("CAMEL_MASTER_COMPONENT")
-            if (sendQName) {
-                ActiveMQComponent amqsend = ActiveMQComponent.activeMQComponent()
-                amqsend.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 200))
-                whelkCamelMain.addComponent(sendQName, amqsend)
+                def sendQName = global.get("CAMEL_MASTER_COMPONENT")
+                if (sendQName) {
+                    ActiveMQComponent amqsend = ActiveMQComponent.activeMQComponent()
+                    amqsend.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 200))
+                    whelkCamelMain.addComponent(sendQName, amqsend)
+                }
             }
-
-
-
 
             for (route in plugins.findAll { it instanceof RouteBuilder }) {
                 log.info("Adding route ${route.id}")

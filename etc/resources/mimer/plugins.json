@@ -1,0 +1,67 @@
+
+{
+    "elasticnode": {
+        "_class": "whelk.component.support.ElasticSearchNode"
+    },
+    "activemqbroker": {
+        "_class": "whelk.component.support.ActiveMQBroker"
+    },
+    "jsonld2marcxmlconverter" : {
+        "_class": "whelk.converter.libris.JsonLD2MarcXMLConverter",
+        "_plugins": [
+            "jsonld2marcconverter"
+        ]
+    },
+    "jsonld2marcconverter" : {
+        "_class" : "whelk.plugin.libris.JsonLD2MarcConverter"
+    },
+    "turtleconverter" : {
+        "_class" : "whelk.plugin.JsonLDTurtleConverter",
+        "_params": "context.jsonld, http://libris.kb.se/resource/"
+    },
+    "documentapi" : {
+        "_class" : "whelk.api.DocumentAPI",
+        "_plugins" : [
+            "jsonld2marcxmlconverter"
+            ],
+        "_params": {
+        }
+    },
+    "graphstore_aggregator": {
+        "_class" : "whelk.camel.GraphstoreBatchUpdateAggregationStrategy",
+        "_params": {
+          "contextPath": "context.jsonld",
+          "base": "http://libris.kb.se/resource/",
+          "bnodeSkolemBase": "tag:libris.kb.se,2014:bnode:"
+        }
+    },
+    "apixresponseprocessor": {
+        "_class": "whelk.camel.APIXResponseProcessor"
+    },
+    "apixprocessor": {
+        "_class": "whelk.camel.APIXProcessor",
+        "_params": "/apix/0.1/cat/test/",
+        "_plugins" : ["jsonld2marcxmlconverter"]
+    },
+    "apixroutebuilder": {
+        "_class" : "whelk.camel.route.APIXRouteBuilder",
+        "_plugins" : [
+            "apixprocessor", "apixresponseprocessor"
+        ],
+        "_params": {
+            "apixMessageQueue": "_property:MQ_APIX",
+            "retriesQueue": "activemq:apix.retriesQueue",
+            "apixUri": "_property:APIX_HOST"
+        }
+    },
+    "allstorage": {
+        "_class" : "whelk.component.ElasticSearchStorage",
+        "_params" : {
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes": ["*/*"],
+            "versioning" : true
+        }
+    }
+}
+

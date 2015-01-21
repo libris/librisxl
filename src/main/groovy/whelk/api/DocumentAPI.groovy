@@ -16,11 +16,18 @@ import whelk.exception.*
 class DocumentAPI extends BasicAPI {
     MimetypesFileTypeMap mt = new MimetypesFileTypeMap()
 
+    final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
+
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
-        Map contextHeaders = [:]
-        DocumentAPI(Map settings) {
+
+    Map contextHeaders = [:]
+
+    DocumentAPI(Map settings) {
+        if (settings) {
             this.contextHeaders = settings.get("contextHeaders", [:])
         }
+    }
+
     def determineDisplayMode(path) {
         if (path.endsWith("/meta")) {
             return [path[0 .. -6], DisplayMode.META]
@@ -32,14 +39,26 @@ class DocumentAPI extends BasicAPI {
     }
     String getCleanPath(List pathVars) {
         if (pathVars) {
-            return "/"+pathVars.first().replaceAll('\\/\\/', '/')
+            //return "/"+pathVars.first().replaceAll('\\/\\/', '/')
+            if (pathVars.first().startsWith("/")) {
+                return pathVars.first()
+            } else {
+                return "/"+pathVars.first()
+            }
         }
         return "/"
     }
     protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
-        String path = getCleanPath(pathVars)
+        String path = pathVars.first()
         log.debug "Path: $path req method: ${request.method}"
-        if (request.method == "GET") {
+        if (request.method == "GET" && path.startsWith("/_iri/")) {
+            def docBase = new StringBuilder(whelk.docBaseUri.toString())
+            while (docBase[-1] == '/') {
+                docBase.deleteCharAt(docBase.length()-1)
+            }
+            def iri = path - docBase.toString()
+            handleIriRequest(request, response, iri)
+        } else if (request.method == "GET") {
             handleGetRequest(request, response, path)
         } else if (request.method == "POST") {
             log.debug("POST detected.")
@@ -59,7 +78,28 @@ class DocumentAPI extends BasicAPI {
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
             }
+        } else {
+            response.sendError(response.SC_FORBIDDEN, "Inappropriate request.")
         }
+    }
+
+    void handleIriRequest(HttpServletRequest request, HttpServletResponse response, String iriPath) {
+        log.info("identifier: $iriPath")
+
+        def location = whelk.locate(iriPath)
+        def doc = location?.document
+        log.info("location: $location, doc: $doc")
+        def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
+        def locationId = doc?.identifier ?: location?.uri
+        log.info("locationId: $locationId")
+        if (locationId) {
+            response.setHeader("Location", locationRef + locationId)
+            sendResponse(response, null, null, 303)
+            return
+        }
+        log.info("Not found!")
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND)
+
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response, String path) {
@@ -208,6 +248,10 @@ class DocumentAPI extends BasicAPI {
 
                 doc = whelk.sanityCheck(doc)
 
+                getAlternateIdentifiersFromLinkHeaders(request).each {
+                    doc.addIdentifier(it)
+                }
+
                 log.debug("Saving document (${doc.identifier})")
                 def identifier = whelk.add(doc)
 
@@ -268,6 +312,20 @@ class DocumentAPI extends BasicAPI {
     }
 
     List<Filter> getFiltersFor(Document doc) { return plugins.findAll { it instanceof Filter && it.valid(doc) } }
+
+    List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
+        def alts = []
+        for (link in request.getHeaders("Link")) {
+            def (id, rel) = link.split(";")*.trim()
+            if (rel.replaceAll(/"/, "") == "rel=${SAMEAS_NAMESPACE}") {
+                def match = id =~ /<([\S]+)>/
+                if (match.matches()) {
+                    alts << match[0][1]
+                }
+            }
+        }
+        return alts
+    }
 }
 
 enum DisplayMode {

@@ -83,8 +83,11 @@
 <logger name="whelk.JsonDocument">
       <level value="info"/>
   </logger>
+<logger name="whelk.api.IRIAPI">
+      <level value="debug"/>
+  </logger>
 <logger name="whelk.api.DocumentAPI">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
 <logger name="whelk.api.ReindexOperator">
       <level value="info"/>
