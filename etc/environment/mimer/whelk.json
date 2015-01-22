@@ -1,17 +1,12 @@
 {
     "_properties": {
-        "ELASTIC_SEARCH_HOST": "localhost",
-        "ELASTIC_STORAGE_HOST": "localhost",
+        "ELASTIC_STORAGE_HOST": "10.50.16.150",
         "ELASTIC_PORT": 9300,
         "AVAILABLE_TYPES": ["eld","def","sys"]
     },
     "_id": "mimer",
     "_docBaseUri" : "http://libris.kb.se/",
     "_plugins": {
-        "_support": [
-            "elasticnode",
-            "activemqbroker"
-            ],
         "_components": [
             "allstorage"
         ]
