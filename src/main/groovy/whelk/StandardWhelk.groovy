@@ -238,12 +238,12 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     Document updateModified(Document doc, long mt = -1) {
+        if (mt < 0) {
+            mt = doc.updateModified()
+        } else {
+            doc.setModified(mt)
+        }
         if (doc.contentType == "application/ld+json") {
-            if (mt < 0) {
-                mt = doc.updateModified()
-            } else {
-                doc.setModified(mt)
-            }
             def map = doc.getDataAsMap()
             if (map.containsKey("modified")) {
                 log.trace("Setting modified in document data.")
@@ -296,6 +296,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             }
             doc.withData(map)
         }
+        return doc
     }
 
 

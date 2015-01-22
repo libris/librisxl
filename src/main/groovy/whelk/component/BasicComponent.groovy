@@ -37,7 +37,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     @Override
     public boolean handlesContent(String ctype) {
-        return (ctype == "*/*" || !this.contentTypes || this.contentTypes.contains(ctype))
+        return (!this.contentTypes || this.contentTypes.contains("*/*") || this.contentTypes.contains(ctype))
     }
 
 
