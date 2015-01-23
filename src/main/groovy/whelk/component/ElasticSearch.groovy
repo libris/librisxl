@@ -191,11 +191,12 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             results = new SearchResult()
         }
         results.numberOfHits = 0
-        results.resultSize = n
+        results.resultSize = 0
         results.startIndex = start
         results.searchCompletedInISO8601duration = "PT" + response.took.secondsFrac + "S"
 
         if (response) {
+            results.resultSize = response.hits.size()
             log.trace "Total hits: ${response.hits.totalHits}"
             results.numberOfHits = response.hits.totalHits
             response.hits.hits.each {
