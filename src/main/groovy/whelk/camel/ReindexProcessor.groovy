@@ -37,29 +37,15 @@ class ReindexProcessor extends BasicPlugin implements Processor {
 
         jsonResult.iterator()
 
-        /* Map result = jsonResult.toMap(null, [])
+        Map result = jsonResult.toMap(null, [])
          List items = result.get("items")
          for (Map item in items) {
              log.debug("identifiers to add to cue ${item.get("@id")}")
              Document document = this.whelk.get(item.get("@id"))
              documents.add(document)
-
-             System.out.println("###### id ${document.identifier}")
          }
-         log.debug("Adding documents to cue")*/
-        //this.whelk.notifyCamel(documents)
-        /*
-            0 - 1
-            1 - 2
-            2 - 3
-            3 - 4
-            4 - 5
-            5 - 6
-        */
-        /*if (end < jsonResult.getNumberOfHits()) {
-            start++
-            end++
-            process(exchange);
-        }*/
+        log.debug("Adding documents to cue")
+        this.whelk.notifyCamel(documents)
+
     }
 }
