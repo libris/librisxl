@@ -8,13 +8,13 @@ import whelk.Document
 import whelk.plugin.BasicPlugin
 import whelk.result.JsonLdSearchResult
 
-//TODO Pagination
-
 @Log
 class ReindexProcessor extends BasicPlugin implements Processor {
 
     def fields
     def identifier
+    def start = 0
+    def size = 10000
 
     ReindexProcessor(Map settings) {
 
@@ -31,21 +31,25 @@ class ReindexProcessor extends BasicPlugin implements Processor {
         def props = doc.toProperties()
         def incommingIdentifier = props[identifier]
 
-        def query = "{\"query\": {\"multi_match\":{\"query\":\"${incommingIdentifier}\",\"fields\": [${fields.collect{ "\"$it\"" }.join(', ')}] }}}" //TODO
+        def query = "{\"from\": \"${start}\",\"size\": \"${size}\",\"query\": {\"multi_match\":{\"query\":\"${incommingIdentifier}\",\"fields\": [${fields.collect{ "\"$it\"" }.join(', ')}] }}}" //TODO
         log.debug("Running query [ ${query} ]")
         JsonLdSearchResult jsonResult = this.whelk.index.query(query,0, 0, "libris", ["auth", "bib", "hold"] as String[])
-
-        jsonResult.iterator()
 
         Map result = jsonResult.toMap(null, [])
          List items = result.get("items")
          for (Map item in items) {
-             log.debug("identifiers to add to cue ${item.get("@id")}")
+             log.info("identifiers to add to cue ${item.get("@id")}")
              Document document = this.whelk.get(item.get("@id"))
              documents.add(document)
          }
         log.debug("Adding documents to cue")
         this.whelk.notifyCamel(documents)
+
+        if (start < jsonResult.getNumberOfHits() && size < jsonResult.getNumberOfHits()) {
+            start++
+            process(exchange)
+        }
+
 
     }
 }
