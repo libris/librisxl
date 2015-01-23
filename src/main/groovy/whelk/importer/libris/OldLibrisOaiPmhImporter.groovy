@@ -61,6 +61,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         return doImport(dataset, null, nrOfDocs)
     }
 
+    @groovy.transform.Synchronized
     int doImport(String dataset, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
         getAuthentication()
         this.cancelled = false
@@ -140,7 +141,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
         log.debug("Shutting down queue")
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
-        log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
+        log.debug("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
 
         return recordCount
     }

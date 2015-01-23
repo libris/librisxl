@@ -27,9 +27,12 @@ class ScheduledOperator extends BasicPlugin {
             log.info("setting params: $conf")
             op.setParameters(conf)
             log.info("settings: ${op.dataset}, ${op.serviceUrl}")
-            ses.scheduleAtFixedRate(op, 3, conf.interval, TimeUnit.SECONDS)
-            log.info("${op.id} should start in 3 seconds.")
+            try {
+                ses.scheduleWithFixedDelay(op, 30, conf.interval, TimeUnit.SECONDS)
+                log.info("${op.id} will start in 30 seconds.")
+            } catch (RejectedExecutionException ree) {
+                log.error("execution failed", ree)
+            }
         }
-        log.info("Bootstrap finished.")
     }
 }

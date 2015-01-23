@@ -39,13 +39,13 @@
             "indexroutebuilder",
             "graphstoreroutebuilder"
             ],
-        "_maintenance": [
-            "scheduledoperator"
-        ],
         "_components": [
             "jsonldstorage",
             "graphstore",
             "index"
+        ],
+        "_maintenance": [
+            "scheduledoperator"
         ]
     },
     "_apis": [

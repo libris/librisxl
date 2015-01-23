@@ -291,6 +291,7 @@
     "scheduledoperator": {
         "_class": "whelk.plugin.ScheduledOperator",
         "_plugins": [
+            "jsonldstorage",
             "authimportoperator",
             "bibimportoperator",
             "holdimportoperator"
@@ -298,15 +299,15 @@
         "_params": {
             "authupdate": {
                 "operator": "authimportoperator",
-                "interval" : 10
+                "interval" : 300
             },
             "bibupdate": {
                 "operator": "bibimportoperator",
-                "interval" : 10
+                "interval" : 300
             },
             "holdupdate": {
                 "operator": "holdimportoperator",
-                "interval" : 10
+                "interval" : 300
             }
         }
     },

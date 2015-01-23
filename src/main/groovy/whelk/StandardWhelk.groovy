@@ -124,10 +124,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     Map loadState() {
         def stateDoc = getStorage().get(WHELKSTATE_ID)
         if (stateDoc) {
-            log.info("Found stateDoc. data: ${stateDoc.dataAsMap}")
             return stateDoc.getDataAsMap()
-        } else {
-            log.info("Found nothing at $WHELKSTATE_ID")
         }
         return [:]
     }

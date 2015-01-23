@@ -60,7 +60,6 @@ class ImportOperator extends AbstractOperator {
         this.startAtId = parameters.get("startAt") as Integer ?: startAtId
     }
 
-    @groovy.transform.Synchronized
     void doRun() {
         assert dataset
         log.debug("Starting ${this.id}. Plugin: $importerPlugin, url: $serviceUrl, dataset: $dataset")
@@ -90,15 +89,20 @@ class ImportOperator extends AbstractOperator {
                     String dString = whelkState.get("oaipmh", [:]).get("lastImport", [:]).get(ds)
                     if (dString) {
                         since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dString)
-                        log.info("Using whelkstate to set 'since' to $since (${dString})")
+                    } else {
+                        since = new Date()
+                        def lastWeeksDate = since[Calendar.DATE] - 7
+                        since.set(date: lastWeeksDate)
+                        log.info("Whelk has no state for last import from $ds. Setting last week (${since})")
                     }
                 }
+                log.info("Executing import for $ds")
                 int dsImportCount = importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
                 totalCount = totalCount + dsImportCount
                 log.debug("Imported $dsImportCount document from $ds.")
                 log.debug("Total count is now: $totalCount")
-                whelkState.get("oaipmh", [:]).get("lastImport", [:]).put(ds, new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
-                whelk.saveState(whelkState)
+
+                updateState(whelkState, ds)
             }
         } else {
             if (!serviceUrl) {
@@ -114,6 +118,15 @@ class ImportOperator extends AbstractOperator {
         }
         importer = null // Release
     }
+
+    @groovy.transform.Synchronized
+    void updateState(whelkState, dataset) {
+        whelkState = whelk.loadState()
+        whelkState.get("oaipmh", [:]).get("lastImport", [:]).put(dataset, new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+        whelk.saveState(whelkState)
+
+    }
+
 
     int getCount() { (importer ? importer.recordCount : totalCount) }
 
