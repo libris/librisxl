@@ -1,0 +1,55 @@
+package whelk.camel
+
+import groovy.util.logging.Slf4j as Log
+import org.apache.camel.Exchange
+import org.apache.camel.Message
+import org.apache.camel.Processor
+import whelk.Document
+import whelk.plugin.BasicPlugin
+import whelk.result.JsonLdSearchResult
+
+@Log
+class ReindexProcessor extends BasicPlugin implements Processor {
+
+    def fields
+    def identifier
+    def start = 0
+    def size = 10000
+
+    ReindexProcessor(Map settings) {
+
+        fields =  (settings ? settings.get("fields") : [])
+        identifier = (settings ? settings.get("identifier") : "@id")
+        log.debug("ReindexProcessor with field: ${fields} for identifier ${identifier}")
+    }
+
+    @Override
+    void process(Exchange exchange) throws Exception {
+        List documents = []
+        Message message = exchange.getIn()
+        def doc = message.getBody(Map.class) as ConfigObject
+        def props = doc.toProperties()
+        def incommingIdentifier = props[identifier]
+
+        def query = "{\"from\": \"${start}\",\"size\": \"${size}\",\"query\": {\"multi_match\":{\"query\":\"${incommingIdentifier}\",\"fields\": [${fields.collect{ "\"$it\"" }.join(', ')}] }}}" //TODO
+        log.debug("Running query [ ${query} ]")
+        JsonLdSearchResult jsonResult = this.whelk.index.query(query,0, 0, "libris", ["auth", "bib", "hold"] as String[])
+
+        Map result = jsonResult.toMap(null, [])
+         List items = result.get("items")
+         for (Map item in items) {
+             log.info("identifiers to add to cue ${item.get("@id")}")
+             Document document = this.whelk.get(item.get("@id"))
+             documents.add(document)
+         }
+        log.debug("Adding documents to cue")
+        this.whelk.notifyCamel(documents)
+
+        if (start < jsonResult.getNumberOfHits() && size < jsonResult.getNumberOfHits()) {
+            start++
+            process(exchange)
+        }
+
+
+    }
+}
