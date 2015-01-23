@@ -20,11 +20,16 @@ public abstract class BasicPlugin implements WhelkAware {
 
     public final static mapper = new ObjectMapper()
 
+    protected boolean initialized = false
+
     public final void init() {
         if (this.id == null) {
             throw new PluginConfigurationException("Plugin ${this.getClass().getName()} must have ID set before init()")
         }
-        bootstrap()
+        if (!initialized) {
+            bootstrap()
+        }
+        initialized = true
     }
     void bootstrap() {
         log.debug("Bootstrapmethod not found on ${this.getClass().getName()}")
@@ -44,5 +49,9 @@ public abstract class BasicPlugin implements WhelkAware {
         int hash = 1;
         hash = hash * 31 + (id?.hashCode() ?: 0)
         return hash;
+    }
+
+    public Map getStatus() {
+        return ["status":"ok"]
     }
 }

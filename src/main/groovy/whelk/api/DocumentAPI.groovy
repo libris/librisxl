@@ -141,7 +141,7 @@ class DocumentAPI extends BasicAPI {
             }
             def extensionContentType = (mt.getContentType(path) == "application/octet-stream" ? null : mt.getContentType(path))
             log.debug("mimetype: $extensionContentType")
-            if (path ==~ /(.*\.\w+)/) {
+            if (!d && path ==~ /(.*\.\w+)/) {
                 log.debug("Found extension in $path")
                 if (!d && extensionContentType) {
                     d = whelk.get(path.substring(0, path.lastIndexOf(".")))

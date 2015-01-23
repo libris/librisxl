@@ -39,6 +39,9 @@
             "indexroutebuilder",
             "graphstoreroutebuilder"
             ],
+        "_maintenance": [
+            "scheduledoperator"
+        ],
         "_components": [
             "jsonldstorage",
             "graphstore",
