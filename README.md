@@ -3,14 +3,13 @@
 The project layout is as follows:
 
 * etc/
-    Configuration files for different environments and configurations. The files from here are copied into src/main/resources on project build.
+    Configuration files for different environments and configurations. The files from here are copied into build/resources/main on project build.
 * src/
     Standard gradle/maven source-layout
 * dep/
     Third party libraries not available from maven central or other online repositories.
 * librisxl-tools/
-    Various scripts and datatools used for maintenance and operations.
-    See librisxl-tools/datatools/README.md
+    Various scripts used for maintenance and operations.
 
 
 ## Dependencies
@@ -40,14 +39,16 @@ This starts a local whelk, using an embedded elasticsearch and storage configure
 
     $ pip install -r scripts/requirements.txt
 
-### Get/create/update and load Definifion Datasets
+### Get/create/update and load Definition Datasets
+
+This requires a checkout of the separate repository called "definitions", located beside this repository.
 
 Get/create/update datasets:
 
-    $ cd librisxl-tools/
-    $ python librisxl-tools/datatools/scripts/compile_defs.py -c librisxl-tools/datatools/cache/ -o librisxl-tools/datatools/build/
+    $ cd ../definitions/
+    $ python scripts/compile_defs.py -c cache/ -o build/
 
-Load into the running whelk:
+Load the resulting resources into the running whelk:
 
     $ scripts/load_defs_whelk.sh http://localhost:8180/whelk
 
