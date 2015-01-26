@@ -761,13 +761,13 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
     }
 
-    def translateParams(params, whelkname) {
+    protected def translateParams(params) {
         def plist = []
         if (params instanceof String) {
             for (param in params.split(",")) {
                 param = param.trim()
                 if (param == "_whelkname") {
-                    plist << whelkname
+                    plist << this.id
                 } else if (param.startsWith("_property:")) {
                     plist << global.get(param.substring(10))
                 } else {
@@ -775,16 +775,22 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 }
             }
         } else if (params instanceof Map) {
-            params.each {
-                if (it.value instanceof String && it.value.startsWith("_property")) {
-                    params.put(it.key, global.get(it.value.substring(10)))
-                }
-            }
-            plist << params
+            plist << replacePropertiesInMap(params)
         } else {
             plist << params
         }
         return plist
+    }
+
+    protected Map replacePropertiesInMap(Map propertyMap) {
+        propertyMap.each {
+            if (it.value instanceof String && it.value.startsWith("_property")) {
+                propertyMap.put(it.key, global.get(it.value.substring(10)))
+            } else if (it.value instanceof Map) {
+                propertyMap.put(it.key, replacePropertiesInMap(it.value))
+            }
+        }
+        return propertyMap
     }
 
     protected Map<String,Plugin> availablePlugins = new HashMap<String,Plugin>()
@@ -799,7 +805,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             if (label == plugname) {
                 if (meta._params) {
                     log.trace("Plugin $label has parameters.")
-                    def params = translateParams(meta._params, whelkname)
+                    def params = translateParams(meta._params)
                     log.trace("Plugin parameter: ${params}")
                     def pclasses = params.collect { it.class }
                     try {

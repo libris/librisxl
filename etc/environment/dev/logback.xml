@@ -131,7 +131,7 @@
 <logger name="whelk.importer.LibrisOaiPmhImporter">
   <level value="info"/>
 </logger>
-<logger name="whelk.api.ImportOperator" level="info"/>
+<logger name="whelk.api.ImportOperator" level="debug"/>
 <logger name="whelk.importer.libris.OldOAIPMHImporter">
   <level value="info"/>
 </logger>

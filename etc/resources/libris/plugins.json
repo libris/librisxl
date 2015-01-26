@@ -299,15 +299,15 @@
         "_params": {
             "authupdate": {
                 "operator": "authimportoperator",
-                "interval" : 300
+                "interval" : "_property:UPDATE_INTERVAL"
             },
             "bibupdate": {
                 "operator": "bibimportoperator",
-                "interval" : 300
+                "interval" : "_property:UPDATE_INTERVAL"
             },
             "holdupdate": {
                 "operator": "holdimportoperator",
-                "interval" : 300
+                "interval" : "_property:UPDATE_INTERVAL"
             }
         }
     },
@@ -319,7 +319,7 @@
         "_params": {
             "importer": "oaipmhimporter",
             "dataset" : "auth",
-            "url": "http://localhost:8000/{dataset}/oaipmh"
+            "url": "_property:UPDATE_OAIPMH_URL"
         }
 
     },
@@ -331,7 +331,7 @@
         "_params": {
             "importer": "oaipmhimporter",
             "dataset" : "bib",
-            "url": "http://localhost:8000/{dataset}/oaipmh"
+            "url": "_property:UPDATE_OAIPMH_URL"
         }
 
     },
@@ -343,7 +343,7 @@
         "_params": {
             "importer": "oaipmhimporter",
             "dataset" : "hold",
-            "url": "http://localhost:8000/{dataset}/oaipmh"
+            "url": "_property:UPDATE_OAIPMH_URL"
         }
     },
     "importoperator": {

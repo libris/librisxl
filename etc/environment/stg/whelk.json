@@ -13,7 +13,9 @@
         "MQ_GRAPHSTORE": "activemq:stglibris.graphstore?concurrentConsumers=10",
         "CAMEL_MASTER_COMPONENT":"sendmq",
         "CAMEL_CHANNEL_PREFIX":"stgops",
-        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=50"
+        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=50",
+        "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
+        "UPDATE_INTERVAL":30
     },
     "_id": "stglibris",
     "_docBaseUri" : "http://libris.kb.se/",
@@ -24,6 +26,9 @@
         "_components": [
             "jsonldstorage",
             "index"
+        ],
+        "_maintenance": [
+            "scheduledoperator"
         ]
     },
     "_apis": [
