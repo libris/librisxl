@@ -22,15 +22,18 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
 
     void configure() {
         ElasticRouteProcessor elasticTypeRouteProcessor = getPlugin("elasticprocessor")
+        ReindexProcessor reindexProcessor = getPlugin("camel_reindex_processor")
 
         from(messageQueue) // Also removeQueue (configured to same)
-            .process(elasticTypeRouteProcessor)
-            .routingSlip(header("elasticDestination"))
+                .process(elasticTypeRouteProcessor)
+                .process(reindexProcessor)
+                .routingSlip(header("elasticDestination"))
 
         from(bulkMessageQueue)
-            .process(elasticTypeRouteProcessor)
-            .aggregate(header("document:dataset"), ArrayListAggregationStrategy.getInstance()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
-            .routingSlip(header("elasticDestination"))
+                .process(elasticTypeRouteProcessor)
+                .process(reindexProcessor)
+                .aggregate(header("document:dataset"), ArrayListAggregationStrategy.getInstance()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
+                .routingSlip(header("elasticDestination"))
     }
 }
 

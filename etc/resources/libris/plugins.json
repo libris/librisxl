@@ -583,6 +583,13 @@
           "bnodeSkolemBase": "tag:libris.kb.se,2014:bnode:"
         }
     },
+    "camel_reindex_processor": {
+        "_class" : "whelk.camel.ReindexProcessor",
+        "_params": {
+            "fields": ["*.@id"],
+            "identifier": "about.@id"
+         }
+    },
     "apixresponseprocessor": {
         "_class": "whelk.camel.APIXResponseProcessor"
     },
@@ -598,7 +605,8 @@
     "indexroutebuilder": {
         "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
         "_plugins" : [
-            "elasticprocessor"
+            "elasticprocessor",
+            "camel_reindex_processor"
         ],
         "_params": {
             "elasticBatchSize": 2000,
