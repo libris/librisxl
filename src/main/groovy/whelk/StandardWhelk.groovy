@@ -55,6 +55,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     final static String DEFAULT_WHELK_CONFIG_FILENAME = "whelk.json"
     final static String DEFAULT_PLUGIN_CONFIG_FILENAME = "plugins.json"
+    final static String WHELKSTATE_ID = "/sys/whelk.state"
 
     // Set by init()-method
     CamelContext camelContext = null
@@ -100,6 +101,32 @@ class StandardWhelk extends HttpServlet implements Whelk {
             }
         }
         return doc.identifier
+    }
+
+    @groovy.transform.Synchronized
+    void saveState(Map state) {
+        Storage storage = getStorage()
+        boolean versioningSetting
+        if (state && storage) {
+            try {
+                versioningSetting = storage.versioning
+                def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(state)
+                if (!storage.store(stateDoc)) {
+                    log.error("Failed to save state!")
+                }
+            } finally {
+                storage.versioning = versioningSetting
+            }
+        }
+    }
+
+    @groovy.transform.Synchronized
+    Map loadState() {
+        def stateDoc = getStorage().get(WHELKSTATE_ID)
+        if (stateDoc) {
+            return stateDoc.getDataAsMap()
+        }
+        return [:]
     }
 
     /**
@@ -363,7 +390,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
     }
 
-
     @Override
     void flush() {
         log.debug("Flushing data.")
@@ -478,15 +504,19 @@ class StandardWhelk extends HttpServlet implements Whelk {
         log.debug("Path is $path")
         try {
             if (request.method == "GET" && path == "/" && request.getServerPort() != 80) {
-                def compManifest = [:]
-                components.each {
-                    def plList = []
-                    for (pl in it.plugins) {
-                        plList << ["id":pl.id, "class": pl.getClass().getName()]
+                if (request.getServerPort() != 80) {
+                    def compManifest = [:]
+                    components.each {
+                        def plList = []
+                        for (pl in it.plugins) {
+                            def plStat = ["id":pl.id, "class": pl.getClass().getName()]
+                            plStat.putAll(pl.getStatus())
+                            plList << plStat
+                        }
+                        compManifest[(it.id)] = ["class": it.getClass().getName(), "plugins": plList]
                     }
-                    compManifest[(it.id)] = ["class": it.getClass().getName(), "plugins": plList]
+                    whelkinfo["components"] = compManifest
                 }
-                whelkinfo["components"] = compManifest
                 printAvailableAPIs(response, whelkinfo)
             } else {
                 (api, pathVars) = getAPIForPath(path)

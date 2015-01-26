@@ -43,6 +43,9 @@
             "jsonldstorage",
             "graphstore",
             "index"
+        ],
+        "_maintenance": [
+            "scheduledoperator"
         ]
     },
     "_apis": [

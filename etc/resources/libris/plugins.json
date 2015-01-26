@@ -288,8 +288,63 @@
             "graphBatchSize" : 1500
         }
     },
-    "reindexoperator": {
-        "_class" : "whelk.api.ReindexOperator"
+    "scheduledoperator": {
+        "_class": "whelk.plugin.ScheduledOperator",
+        "_plugins": [
+            "jsonldstorage",
+            "authimportoperator",
+            "bibimportoperator",
+            "holdimportoperator"
+            ],
+        "_params": {
+            "authupdate": {
+                "operator": "authimportoperator",
+                "interval" : 300
+            },
+            "bibupdate": {
+                "operator": "bibimportoperator",
+                "interval" : 300
+            },
+            "holdupdate": {
+                "operator": "holdimportoperator",
+                "interval" : 300
+            }
+        }
+    },
+    "authimportoperator": {
+        "_class" : "whelk.api.ImportOperator",
+        "_plugins": [
+            "oaipmhimporter"
+        ],
+        "_params": {
+            "importer": "oaipmhimporter",
+            "dataset" : "auth",
+            "url": "http://localhost:8000/{dataset}/oaipmh"
+        }
+
+    },
+    "bibimportoperator": {
+        "_class" : "whelk.api.ImportOperator",
+        "_plugins": [
+            "oaipmhimporter"
+        ],
+        "_params": {
+            "importer": "oaipmhimporter",
+            "dataset" : "bib",
+            "url": "http://localhost:8000/{dataset}/oaipmh"
+        }
+
+    },
+    "holdimportoperator": {
+        "_class" : "whelk.api.ImportOperator",
+        "_plugins": [
+            "oaipmhimporter"
+        ],
+        "_params": {
+            "importer": "oaipmhimporter",
+            "dataset" : "hold",
+            "url": "http://localhost:8000/{dataset}/oaipmh"
+        }
     },
     "importoperator": {
         "_class" : "whelk.api.ImportOperator",
@@ -297,7 +352,11 @@
             "oaipmhimporter",
             "oaipmhimporter2",
             "mysqlimporter"
-        ]
+        ],
+        "_params": {}
+    },
+    "reindexoperator": {
+        "_class" : "whelk.api.ReindexOperator"
     },
     "transferoperator": {
         "_class" : "whelk.api.TransferOperator",

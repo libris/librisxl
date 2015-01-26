@@ -44,12 +44,15 @@ class OperatorAPI extends BasicAPI {
     }
 
     void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
-        def req = new HashMap(request.parameterMap)
+        def req = [:]
+        request.parameterNames.each {
+            req.put(it, request.getParameter(it))
+        }
         req.putAll(configurationSettings)
         log.debug("req: $req")
-        if (!isBusy() && operators.containsKey(req.operation?.first())) {
-            log.debug("Starting ${req.operation.first()} operation")
-            def op = operators[req.operation.first()]
+        if (!isBusy() && operators.containsKey(req.operation)) {
+            log.debug("Starting ${req.operation} operation")
+            def op = operators[req.operation]
             op.whelk = this.whelk
             op.setParameters(req)
             new Thread(op).start()
@@ -57,9 +60,9 @@ class OperatorAPI extends BasicAPI {
             response.setHeader("Location", request.getRequestURL().toString())
             return
         }
-        if (isBusy() && operators.containsKey(req.cancel?.first())) {
-            log.debug("Cancelling operation ${req.cancel.first()}")
-            operators[req.cancel.first()].cancel()
+        if (isBusy() && operators.containsKey(req.cancel)) {
+            log.debug("Cancelling operation ${req.cancel}")
+            operators[req.cancel].cancel()
         }
 
         if (isBusy() || req.status) {
@@ -91,73 +94,6 @@ class OperatorAPI extends BasicAPI {
     }
 }
 
-/*
-@Log
-@Deprecated
-class BenchmarkOperator extends AbstractOperator {
-
-    String oid = "benchmark"
-    Date since = null
-    String fromStorage = null
-    boolean withSerialization = false
-    boolean showSpinner = false
-    int bmcount = 0
-
-    @Override
-    void setParameters(Map parameters) {
-        super.setParameters(parameters)
-        if (parameters.get("since", []) && parameters.get("since", []).first().length() > 0) {
-            this.since = Date.parse("yyyy-MM-dd'T'hh:mm:ss'Z'", parameters.get("since").first())
-            log.info("Since: $since")
-        }
-        this.fromStorage = parameters.get("fromStorage", null)?.first()
-        if (fromStorage == "") {
-            fromStorage = null
-        }
-        this.showSpinner = parameters.get("showSpinner", false)
-    }
-
-    void doRunBenchmark() {
-        def storage = this.whelk.getStorage()
-        log.info("Starting benchmark method on ${storage.id}")
-        storage.benchmark()
-    }
-
-    int getCount() { bmcount }
-
-    void doRun() {
-        bmcount = 0
-        for (doc in whelk.loadAll(dataset, since, fromStorage)) {
-            if (doc) {
-                if (bmcount == 0) {
-                    println "First document received at ${new Date()}"
-                }
-                bmcount++
-                if (withSerialization) {
-                    doc.getData()
-                }
-            }
-            if (cancelled) {
-                break
-            }
-        }
-    }
-
-    @Override
-    Map getStatus() {
-        def map = super.getStatus()
-        if (hasRun) {
-            map.get("lastrun",[:]).put("fromStorage", fromStorage)
-            map.get("lastrun").put("withSerialization", withSerialization)
-        } else if (operatorState == OperatorState.RUNNING) {
-            map.put("fromStorage", fromStorage)
-            map.put("withSerialization", withSerialization)
-        }
-        return map
-    }
-}
-*/
-
 abstract class AbstractOperator extends BasicPlugin implements Runnable {
     abstract String getOid()
     String dataset
@@ -170,7 +106,7 @@ abstract class AbstractOperator extends BasicPlugin implements Runnable {
     List<String> errorMessages
 
     void setParameters(Map parameters) {
-        this.dataset = parameters.get("dataset", null)?.first()
+        this.dataset = parameters.get("dataset") ?: this.dataset
         if (this.dataset?.length() == 0) {
             this.dataset = null
         }
@@ -180,7 +116,7 @@ abstract class AbstractOperator extends BasicPlugin implements Runnable {
     void run() {
         assert whelk
         try {
-            log.debug("Starting operation")
+            log.trace("Starting operation")
             operatorState=OperatorState.RUNNING
             cancelled = false
             runningTime = 0
