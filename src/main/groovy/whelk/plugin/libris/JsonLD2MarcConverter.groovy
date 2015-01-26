@@ -20,11 +20,11 @@ class JsonLD2MarcConverter extends BasicFormatConverter {
     JsonLD2MarcConverter() {
         def loader = getClass().classLoader
 
-        loader.getResourceAsStream("oldspace.json").withStream {
+        loader.getResourceAsStream("ext/oldspace.json").withStream {
             uriMinter = new LibrisURIMinter(mapper.readValue(it, Map))
         }
 
-        def config = loader.getResourceAsStream("marcframe.json").withStream {
+        def config = loader.getResourceAsStream("ext/marcframe.json").withStream {
             mapper.readValue(it, Map)
         }
         def tokenMaps = [:]

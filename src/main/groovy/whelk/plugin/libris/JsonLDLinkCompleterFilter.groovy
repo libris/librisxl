@@ -22,7 +22,7 @@ class JsonLDLinkCompleterFilter extends BasicFilter implements WhelkAware {
     Map bnodeIdMap
 
     public JsonLDLinkCompleterFilter() {
-        def entityShapesCfgPath = "entityshapes.json"
+        def entityShapesCfgPath = "ext/entityshapes.json"
         getClass().classLoader.getResourceAsStream(entityShapesCfgPath).withStream {
             this.entityShapes = mapper.readValue(it, Map)
         }

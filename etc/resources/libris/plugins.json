@@ -45,7 +45,7 @@
     },
     "turtleconverter" : {
         "_class" : "whelk.plugin.JsonLDTurtleConverter",
-        "_params": "context.jsonld, http://libris.kb.se/resource/"
+        "_params": "ext/context.jsonld, http://libris.kb.se/resource/"
     },
     "cleanupindexconverter" : {
         "_class" : "whelk.plugin.libris.CleanupIndexFormatConverter"
@@ -578,7 +578,7 @@
     "graphstore_aggregator": {
         "_class" : "whelk.camel.GraphstoreBatchUpdateAggregationStrategy",
         "_params": {
-          "contextPath": "context.jsonld",
+          "contextPath": "ext/context.jsonld",
           "base": "http://libris.kb.se/resource/",
           "bnodeSkolemBase": "tag:libris.kb.se,2014:bnode:"
         }
@@ -692,7 +692,7 @@
             "graphStoreUri": "_property:GRAPHSTORE_DATA_URI",
             "queryUri": "_property:GRAPHSTORE_QUERY_URI",
             "updateUri": "_property:GRAPHSTORE_UPDATE_URI",
-            "contextPath": "context.jsonld",
+            "contextPath": "ext/context.jsonld",
             "baseUri": "http://libris.kb.se/resource/"
         }
     }
