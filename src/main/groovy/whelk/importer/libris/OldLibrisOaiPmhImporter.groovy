@@ -8,7 +8,6 @@ import java.text.*
 import java.util.concurrent.*
 
 import whelk.*
-import whelk.importer.*
 import whelk.exception.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
@@ -339,7 +338,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
                         }
                     }
                 } catch (Exception e) {
-                    log.error("Conversion failed for id ${entry.identifier}", e)
+                    log.error("Exception in conversion", e)
                 }
             }
 

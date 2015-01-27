@@ -61,6 +61,8 @@ class StandardWhelk extends HttpServlet implements Whelk {
     CamelContext camelContext = null
 
     private ProducerTemplate producerTemplate
+    private final Map whelkState = new ConcurrentHashMap()
+
 
     static final DateTimeFormatter DT_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XXX")
@@ -103,14 +105,16 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return doc.identifier
     }
 
+    public Map getState() { whelkState }
+
     @groovy.transform.Synchronized
-    void saveState(Map state) {
+    void saveState() {
         Storage storage = getStorage()
-        boolean versioningSetting
-        if (state && storage) {
+        boolean versioningSetting = storage ? storage.versioning : false
+        if (storage) {
             try {
-                versioningSetting = storage.versioning
-                def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(state)
+                storage.versioning = false
+                def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(whelkState)
                 if (!storage.store(stateDoc)) {
                     log.error("Failed to save state!")
                 }
@@ -121,12 +125,68 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     @groovy.transform.Synchronized
-    Map loadState() {
-        def stateDoc = getStorage().get(WHELKSTATE_ID)
-        if (stateDoc) {
-            return stateDoc.getDataAsMap()
+    private Map loadState() {
+        Storage storage = getStorage()
+        if (storage) {
+            def stateDoc = getStorage().get(WHELKSTATE_ID)
+            if (stateDoc) {
+                def jd = new JsonDocument().fromDocument(stateDoc)
+                whelkState.putAll(jd.dataAsMap)
+            }
+        } else {
+            whelkState.put("status", "OK")
+            whelkState.put("locked", false)
         }
-        return [:]
+        return whelkState
+    }
+
+    @groovy.transform.Synchronized
+    boolean acquireLock(String dataset = null) {
+
+        if (whelkState.get("locked", false)) {
+            log.trace("Global lock in effect.")
+            return false
+        }
+
+        if (whelkState.get(dataset, [:]).get("locked", false)) {
+            log.trace("Dataset $dataset lock is in effect.")
+            return false
+        }
+
+        if (dataset == null) {
+            whelkState.put("locked", true)
+            saveState()
+            log.trace("Global lock acquired.")
+            return true
+        } else {
+            whelkState.get(dataset, [:]).put("locked", true)
+            saveState()
+            log.trace("Lock acquired for ${dataset}.")
+            return true
+        }
+
+
+        return false
+    }
+
+    void releaseLock(String dataset = null) {
+        log.trace("Releasing lock ${ dataset ?: '' }")
+        if (dataset == null) {
+            whelkState.remove("locked")
+        } else {
+            whelkState.get(dataset, [:]).remove("locked")
+        }
+        saveState()
+    }
+
+    @groovy.transform.Synchronized
+    boolean updateState(String key, Map data) {
+        if (!['locked','status'].contains(key)) {
+            whelkState.put(key, data)
+            saveState()
+            return true
+        }
+        return false
     }
 
     /**
@@ -431,8 +491,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         } else {
             message.setBody(document.data)
         }
-        message.setHeader("document:metaentry", document.entry.inspect())
-        // For conveniance
         message.setHeader("document:identifier", document.identifier)
         message.setHeader("document:dataset", document.dataset)
         message.setHeader("document:metaentry", document.metadataAsJson)
@@ -488,8 +546,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
 
-    String whelkStatus = "STARTING"
-
     /*
      * Servlet methods
      *******************************/
@@ -499,7 +555,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         List pathVars = []
         def whelkinfo = [:]
         whelkinfo["whelk"] = this.id
-        whelkinfo["status"] = whelkStatus
+        whelkinfo["status"] = whelkState.get("status", "STARTING")
 
         log.debug("Path is $path")
         try {
@@ -659,12 +715,24 @@ class StandardWhelk extends HttpServlet implements Whelk {
             }
             throw e
         }
-        whelkStatus = "RUNNING"
+
+        loadState()
+        // Remove all locks
+        whelkState.remove("locked")
+        whelkState.each { key, value ->
+            if (value instanceof Map && value.containsKey("locked")) {
+                value.remove("locked")
+            }
+        }
+        whelkState.put("status", "RUNNING")
+        log.trace("Initialized whelkState: $whelkState")
+
+        //plugins.find { it.id == "scheduledoperator" }.testJob()
     }
 
     @Override
     void destroy() {
-        whelkStatus = "SHUTTING DOWN"
+        whelkState.put("status", "SHUTTING DOWN")
     }
 
     /*

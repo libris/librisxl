@@ -31,54 +31,63 @@ class ReindexOperator extends AbstractOperator {
         super.setParameters(parameters)
         log.debug("parameters: $parameters")
         if (parameters.selectedComponents) {
-            this.selectedComponents = parameters.get("selectedComponents").first().split(",") as List<String>
+            this.selectedComponents = parameters.get("selectedComponents").split(",") as List<String>
         }
-        this.fromStorage = parameters.get("fromStorage", null)?.first()
+        this.fromStorage = parameters.get("fromStorage")
         this.showSpinner = parameters.get("showSpinner", false)
     }
 
     int getCount() { reindexcount }
 
     void doRun() {
-        String indexName = whelk.id
-        reindexcount = 0
-
-        log.info("Starting reindexing.")
-
-        if (!dataset && whelk.index) {
-            log.debug("Requesting new index for ${whelk.index.id}.")
-            indexName = whelk.index.createNewCurrentIndex(whelk.id)
+        if (whelk.state.locked) {
+            log.info("Whelk is currently busy. Don't do anything.")
+            return
         }
-        if (fromStorage) {
-            log.info("Rebuilding storage from $fromStorage")
-        }
-        for (doc in whelk.loadAll(dataset, null, fromStorage)) {
-            log.trace("Loaded doc ${doc.identifier} with type ${doc.contentType}")
-            if (!doc.entry.deleted) {
-                if (fromStorage) {
-                    try {
-                        for (strg in whelk.storages) {
-                            if (strg.id != fromStorage) {
-                                strg.add(doc)
+        try {
+            whelk.acquireLock()
+            String indexName = whelk.index?.getIndexName()
+            reindexcount = 0
+
+            log.info("Starting reindexing.")
+
+            if (!dataset && whelk.index) {
+                log.debug("Requesting new index for ${whelk.index.id}.")
+                indexName = whelk.index.createNewCurrentIndex(whelk.index.getIndexName())
+            }
+            if (fromStorage) {
+                log.info("Rebuilding storage from $fromStorage")
+            }
+            for (doc in whelk.loadAll(dataset, null, fromStorage)) {
+                log.trace("Loaded doc ${doc.identifier} with type ${doc.contentType}")
+                    if (!doc.entry.deleted) {
+                        if (fromStorage) {
+                            try {
+                                for (strg in whelk.storages) {
+                                    if (strg.id != fromStorage) {
+                                        strg.add(doc)
+                                    }
+                                }
+                            } catch (WhelkAddException wae) {
+                                log.trace("Expected exception ${wae.message}")
                             }
                         }
-                    } catch (WhelkAddException wae) {
-                        log.trace("Expected exception ${wae.message}")
+                        whelk.notifyCamel(doc, Whelk.BULK_ADD_OPERATION, ["index":indexName])
+                            reindexcount++
+                    } else {
+                        log.debug("Document ${doc.identifier} is deleted. Don't try to add it.")
+                            whelk.notifyCamel(doc.identifier, doc.dataset, Whelk.REMOVE_OPERATION, ["index":indexName])
                     }
+                if (cancelled) {
+                    break
                 }
-                whelk.notifyCamel(doc, Whelk.BULK_ADD_OPERATION, ["index":indexName])
-                reindexcount++
-            } else {
-                log.debug("Document ${doc.identifier} is deleted. Don't try to add it.")
-                whelk.notifyCamel(doc.identifier, doc.dataset, Whelk.REMOVE_OPERATION, ["index":indexName])
             }
-            if (cancelled) {
-                break
+            // TODO: Find a way to do this AFTER the indexing queue is empty.
+            if (!dataset && whelk.index && !cancelled) {
+                whelk.index.reMapAliases(whelk.index.getIndexName())
             }
-        }
-        // TODO: Find a way to do this AFTER the indexing queue is empty.
-        if (!dataset && whelk.index && !cancelled) {
-            whelk.index.reMapAliases(whelk.id)
+        } finally {
+            whelk.releaseLock()
         }
     }
 

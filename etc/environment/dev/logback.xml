@@ -35,7 +35,7 @@
   <logger name="whelk.camel.APIXProcessor">
       <level value="info"/>
   </logger>
-  <logger name="whelk.camel.ElasticTypeRouteProcessor">
+  <logger name="whelk.camel.ElasticRouteProcessor">
       <level value="info"/>
   </logger>
   <logger name="whelk.camel.GraphstoreBatchUpdateAggregationStrategy">

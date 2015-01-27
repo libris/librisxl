@@ -62,74 +62,88 @@ class ImportOperator extends AbstractOperator {
 
     void doRun() {
         assert dataset
-        log.trace("Starting ${this.id}. Plugin: $importerPlugin, url: $serviceUrl, dataset: $dataset")
-        if (importerPlugin) {
-            importer = plugins.find { it instanceof Importer && it.id == importerPlugin }
-        } else {
-            def importers = plugins.find { it instanceof Importer }
-            if (importers.size() > 1) {
-                throw new WhelkRuntimeException("Multiple importers available for ${whelk.id}, you need to specify one with the 'importer' parameter.")
+        for (ds in dataset.split(",")) {
+            whelk.releaseLock(ds)
+            whelk.acquireLock(ds)
+        }
+        try {
+            log.trace("Starting ${this.id}. Plugin: $importerPlugin, url: $serviceUrl, dataset: $dataset")
+            if (importerPlugin) {
+                importer = plugins.find { it instanceof Importer && it.id == importerPlugin }
             } else {
-                try {
-                    importer = importers[0]
-                } catch (IndexOutOfBoundsException e) { }
-            }
-        }
-        if (!importer) {
-            throw new WhelkRuntimeException("Couldn't find any importers working for ${whelk.id} or specified importer \"${importerPlugin}\" is unavailable.")
-        }
-        log.trace("Using importer: ${importer.getClass().getName()}")
-        if (importer instanceof OaiPmhImporter || importer.getClass().getName() == "whelk.importer.libris.OldOAIPMHImporter") {
-            importer.serviceUrl = serviceUrl
-            this.totalCount = 0
-            for (ds in dataset.split(",")) {
-                def whelkState = whelk.loadState()
-                if (useWhelkState) {
-                    String dString = whelkState.get("oaipmh", [:]).get("lastImport", [:]).get(ds)
-                    if (dString) {
-                        since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dString)
-                    } else {
-                        since = new Date()
-                        def lastWeeksDate = since[Calendar.DATE] - 7
-                        since.set(date: lastWeeksDate)
-                        log.info("Whelk has no state for last import from $ds. Setting last week (${since})")
-                    }
-                }
-                log.debug("Executing OAIPMH import for $ds since $since from $serviceUrl")
-                Date dateStamp = new Date()
-                int dsImportCount = importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
-                totalCount = totalCount + dsImportCount
-                if (dsImportCount > 0) {
-                    log.info("Imported $dsImportCount document for $ds.")
+                def importers = plugins.find { it instanceof Importer }
+                if (importers.size() > 1) {
+                    throw new WhelkRuntimeException("Multiple importers available for ${whelk.id}, you need to specify one with the 'importer' parameter.")
                 } else {
-                    log.debug("Imported $dsImportCount document for $ds.")
+                    try {
+                        importer = importers[0]
+                    } catch (IndexOutOfBoundsException e) { }
                 }
-                log.trace("Total count is now: $totalCount")
-                updateState(whelkState, ds, dateStamp)
             }
-        } else {
-            if (!serviceUrl) {
-                throw new WhelkRuntimeException("URL is required for import.")
+            if (!importer) {
+                throw new WhelkRuntimeException("Couldn't find any importers working for ${whelk.id} or specified importer \"${importerPlugin}\" is unavailable.")
             }
-            try {
-                importer.startAt = startAtId
-            } catch (MissingMethodException mme) {
-                log.trace("Importer has no startAt parameter.")
-            }
-            totalCount = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
+            log.trace("Using importer: ${importer.getClass().getName()}")
+            if (importer instanceof OaiPmhImporter || importer.getClass().getName() == "whelk.importer.libris.OldOAIPMHImporter") {
+                importer.serviceUrl = serviceUrl
+                this.totalCount = 0
+                for (ds in dataset.split(",")) {
+                    log.info("all state: ${whelk.state}")
+                    def whelkState = whelk.state.get(ds, [:])
+                    if (useWhelkState) {
+                        log.info("whelkState: $whelkState")
+                        String dString = whelkState.get("lastImport")
+                        if (dString) {
+                            since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dString)
+                        } else {
+                            since = new Date()
+                            def lastWeeksDate = since[Calendar.DATE] - 7
+                            since.set(date: lastWeeksDate)
+                            log.info("Whelk has no state for last import from $ds. Setting last week (${since})")
+                        }
+                    }
+                    log.debug("Executing OAIPMH import for $ds since $since from $serviceUrl")
+                    whelkState.put("status", "RUNNING")
+                    whelkState.put("importOperator", this.id)
+                    whelkState.remove("lastImport")
+                    whelkState.remove("lastImportOperator")
+                    whelkState.remove("lastRunNrImported")
+                    whelk.updateState(ds, whelkState)
+                    Date dateStamp = new Date()
+                    int dsImportCount = importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
+                    totalCount = totalCount + dsImportCount
+                    if (dsImportCount > 0) {
+                        log.info("Imported $dsImportCount document for $ds.")
+                    } else {
+                        log.debug("Imported $dsImportCount document for $ds.")
+                    }
+                    log.trace("Total count is now: $totalCount")
+                    whelkState.remove("importOperator")
+                    whelkState.put("status", "IDLE")
+                    whelkState.put("lastImport", dateStamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+                    whelkState.put("lastImportOperator", this.id)
+                    whelkState.put("lastRunNrImported", dsImportCount)
+                    whelk.updateState(ds, whelkState)
+                }
+            } else {
+                if (!serviceUrl) {
+                    throw new WhelkRuntimeException("URL is required for import.")
+                }
+                try {
+                    importer.startAt = startAtId
+                } catch (MissingMethodException mme) {
+                    log.trace("Importer has no startAt parameter.")
+                }
+                totalCount = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
 
+            }
+        } finally {
+            importer = null // Release
+            for (ds in dataset.split(",")) {
+                whelk.releaseLock(ds)
+            }
         }
-        importer = null // Release
     }
-
-    @groovy.transform.Synchronized
-    void updateState(whelkState, dataset, dateStamp) {
-        whelkState = whelk.loadState()
-        whelkState.get("oaipmh", [:]).get("lastImport", [:]).put(dataset, dateStamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
-        whelk.saveState(whelkState)
-
-    }
-
 
     int getCount() { (importer ? importer.recordCount : totalCount) }
 

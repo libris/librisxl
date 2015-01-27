@@ -30,7 +30,7 @@ class JsonLD2MarcConverter extends BasicFormatConverter {
         def tokenMaps = [:]
         config.tokenMaps.each { key, sourceRef ->
             if (sourceRef instanceof String) {
-                tokenMaps[key] = loader.getResourceAsStream(sourceRef).withStream {
+                tokenMaps[key] = loader.getResourceAsStream("ext/" + sourceRef).withStream {
                     mapper.readValue(it, List).collectEntries { [it.code, it] }
                 }
             } else {

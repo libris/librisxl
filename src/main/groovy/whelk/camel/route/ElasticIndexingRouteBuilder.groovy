@@ -26,12 +26,12 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
 
         from(messageQueue) // Also removeQueue (configured to same)
                 .process(elasticTypeRouteProcessor)
-                .process(reindexProcessor)
+                //.process(reindexProcessor)
                 .routingSlip(header("elasticDestination"))
 
         from(bulkMessageQueue)
                 .process(elasticTypeRouteProcessor)
-                .process(reindexProcessor)
+                //.process(reindexProcessor)
                 .aggregate(header("document:dataset"), ArrayListAggregationStrategy.getInstance()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))
     }

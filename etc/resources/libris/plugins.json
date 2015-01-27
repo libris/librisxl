@@ -292,58 +292,27 @@
         "_class": "whelk.plugin.ScheduledOperator",
         "_plugins": [
             "jsonldstorage",
-            "authimportoperator",
-            "bibimportoperator",
-            "holdimportoperator"
+            "oaipmhimporter"
             ],
         "_params": {
             "authupdate": {
-                "operator": "authimportoperator",
+                "importer": "oaipmhimporter",
+                "dataset" : "auth",
+                "url": "_property:UPDATE_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
             },
             "bibupdate": {
-                "operator": "bibimportoperator",
+                "importer": "oaipmhimporter",
+                "dataset" : "bib",
+                "url": "_property:UPDATE_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
             },
             "holdupdate": {
-                "operator": "holdimportoperator",
+                "importer": "oaipmhimporter",
+                "dataset" : "hold",
+                "url": "_property:UPDATE_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
             }
-        }
-    },
-    "authimportoperator": {
-        "_class" : "whelk.api.ImportOperator",
-        "_plugins": [
-            "oaipmhimporter"
-        ],
-        "_params": {
-            "importer": "oaipmhimporter",
-            "dataset" : "auth",
-            "url": "_property:UPDATE_OAIPMH_URL"
-        }
-
-    },
-    "bibimportoperator": {
-        "_class" : "whelk.api.ImportOperator",
-        "_plugins": [
-            "oaipmhimporter"
-        ],
-        "_params": {
-            "importer": "oaipmhimporter",
-            "dataset" : "bib",
-            "url": "_property:UPDATE_OAIPMH_URL"
-        }
-
-    },
-    "holdimportoperator": {
-        "_class" : "whelk.api.ImportOperator",
-        "_plugins": [
-            "oaipmhimporter"
-        ],
-        "_params": {
-            "importer": "oaipmhimporter",
-            "dataset" : "hold",
-            "url": "_property:UPDATE_OAIPMH_URL"
         }
     },
     "importoperator": {

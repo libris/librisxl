@@ -82,7 +82,7 @@ class OperatorAPI extends BasicAPI {
 
     boolean isBusy() {
         boolean busy = operators.values().any { it.operatorState == OperatorState.RUNNING }
-        return busy
+        return busy || whelk.state.locked
     }
 
     String loadPage() {

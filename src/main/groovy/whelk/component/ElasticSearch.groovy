@@ -57,6 +57,8 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     Map<String,String> configuredTypes
     List<String> availableTypes
 
+    final static String INDEXNAME_SUFFIX = "_index"
+
     Class searchResultClass = null
 
     ElasticSearch(Map settings) {
@@ -72,13 +74,18 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     @Override
-    void componentBootstrap(String indexName) {
+    void componentBootstrap(String whelkName) {
+        String indexName = whelkName + INDEXNAME_SUFFIX
         createIndexIfNotExists(indexName)
         flush()
         def realIndex = getRealIndexFor(indexName)
         availableTypes.each {
             checkTypeMapping(realIndex, it)
         }
+    }
+
+    String getIndexName() {
+        return this.whelk.id + INDEXNAME_SUFFIX
     }
 
     String getLatestIndex(String prefix) {
@@ -129,7 +136,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
     @Override
     void remove(String identifier) {
-        String indexName = this.whelk.id
+        String indexName = getIndexName()
         log.debug("Peforming deletebyquery to remove documents extracted from $identifier")
         def delQuery = termQuery("extractedFrom.@id", identifier)
         log.debug("DelQuery: $delQuery")
@@ -150,7 +157,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
     @Override
     SearchResult query(Query q) {
-        String indexName = this.whelk.id
+        String indexName = getIndexName()
         def indexTypes = []
         if (q instanceof ElasticQuery) {
             for (t in q.indexTypes) {
