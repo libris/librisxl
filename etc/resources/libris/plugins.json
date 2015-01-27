@@ -45,7 +45,7 @@
     },
     "turtleconverter" : {
         "_class" : "whelk.plugin.JsonLDTurtleConverter",
-        "_params": "context.jsonld, http://libris.kb.se/resource/"
+        "_params": "ext/context.jsonld, http://libris.kb.se/resource/"
     },
     "cleanupindexconverter" : {
         "_class" : "whelk.plugin.libris.CleanupIndexFormatConverter"
@@ -299,15 +299,15 @@
         "_params": {
             "authupdate": {
                 "operator": "authimportoperator",
-                "interval" : 300
+                "interval" : "_property:UPDATE_INTERVAL"
             },
             "bibupdate": {
                 "operator": "bibimportoperator",
-                "interval" : 300
+                "interval" : "_property:UPDATE_INTERVAL"
             },
             "holdupdate": {
                 "operator": "holdimportoperator",
-                "interval" : 300
+                "interval" : "_property:UPDATE_INTERVAL"
             }
         }
     },
@@ -319,7 +319,7 @@
         "_params": {
             "importer": "oaipmhimporter",
             "dataset" : "auth",
-            "url": "http://localhost:8000/{dataset}/oaipmh"
+            "url": "_property:UPDATE_OAIPMH_URL"
         }
 
     },
@@ -331,7 +331,7 @@
         "_params": {
             "importer": "oaipmhimporter",
             "dataset" : "bib",
-            "url": "http://localhost:8000/{dataset}/oaipmh"
+            "url": "_property:UPDATE_OAIPMH_URL"
         }
 
     },
@@ -343,7 +343,7 @@
         "_params": {
             "importer": "oaipmhimporter",
             "dataset" : "hold",
-            "url": "http://localhost:8000/{dataset}/oaipmh"
+            "url": "_property:UPDATE_OAIPMH_URL"
         }
     },
     "importoperator": {
@@ -578,7 +578,7 @@
     "graphstore_aggregator": {
         "_class" : "whelk.camel.GraphstoreBatchUpdateAggregationStrategy",
         "_params": {
-          "contextPath": "context.jsonld",
+          "contextPath": "ext/context.jsonld",
           "base": "http://libris.kb.se/resource/",
           "bnodeSkolemBase": "tag:libris.kb.se,2014:bnode:"
         }
@@ -692,7 +692,7 @@
             "graphStoreUri": "_property:GRAPHSTORE_DATA_URI",
             "queryUri": "_property:GRAPHSTORE_QUERY_URI",
             "updateUri": "_property:GRAPHSTORE_UPDATE_URI",
-            "contextPath": "context.jsonld",
+            "contextPath": "ext/context.jsonld",
             "baseUri": "http://libris.kb.se/resource/"
         }
     }

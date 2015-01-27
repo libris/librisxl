@@ -13,7 +13,9 @@
 
         "CAMEL_MASTER_COMPONENT":"sendmq",
         "CAMEL_CHANNEL_PREFIX":"test",
-        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=10"
+        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=10",
+        "UPDATE_OAIPMH_URL":"http://averell.libris.kb.se/vcopy/{dataset}/oaipmh",
+        "UPDATE_INTERVAL": 30
     },
     "_id": "testlibris",
     "_docBaseUri" : "http://libris.kb.se/",
@@ -25,6 +27,9 @@
         "_components": [
             "jsonldstorage",
             "index"
+        ],
+        "_maintenance": [
+            "scheduledoperator"
         ]
     },
     "_apis": [

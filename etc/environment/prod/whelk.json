@@ -17,7 +17,9 @@
         "MQ_GRAPHSTORE": "activemq:libris.graphstore?concurrentConsumers=10"
         "MQ_APIX": "activemq:apix",
         "CAMEL_MASTER_COMPONENT":"sendmq",
-        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=50"
+        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=50",
+        "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
+        "UPDATE_INTERVAL":1
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
@@ -36,6 +38,9 @@
             "jsonldstorage",
             "index",
             "graphstore"
+        ],
+        "_maintenance": [
+            "scheduledoperator"
         ]
     },
     "_apis": [

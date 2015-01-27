@@ -19,7 +19,9 @@
         "APIX_HOST": "http://localhost:8001",
         "CAMEL_MASTER_COMPONENT":"sendmq",
         "CAMEL_CHANNEL_PREFIX":"local",
-        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=10"
+        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=10",
+        "UPDATE_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
+        "UPDATE_INTERVAL":300
 
     },
     "_id": "libris",

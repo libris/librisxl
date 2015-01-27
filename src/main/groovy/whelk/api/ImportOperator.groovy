@@ -62,7 +62,7 @@ class ImportOperator extends AbstractOperator {
 
     void doRun() {
         assert dataset
-        log.debug("Starting ${this.id}. Plugin: $importerPlugin, url: $serviceUrl, dataset: $dataset")
+        log.trace("Starting ${this.id}. Plugin: $importerPlugin, url: $serviceUrl, dataset: $dataset")
         if (importerPlugin) {
             importer = plugins.find { it instanceof Importer && it.id == importerPlugin }
         } else {
@@ -78,12 +78,11 @@ class ImportOperator extends AbstractOperator {
         if (!importer) {
             throw new WhelkRuntimeException("Couldn't find any importers working for ${whelk.id} or specified importer \"${importerPlugin}\" is unavailable.")
         }
-        log.debug("Using importer: ${importer.getClass().getName()}")
+        log.trace("Using importer: ${importer.getClass().getName()}")
         if (importer instanceof OaiPmhImporter || importer.getClass().getName() == "whelk.importer.libris.OldOAIPMHImporter") {
             importer.serviceUrl = serviceUrl
             this.totalCount = 0
             for (ds in dataset.split(",")) {
-                log.debug("Import from OAIPMH ${ds}")
                 def whelkState = whelk.loadState()
                 if (useWhelkState) {
                     String dString = whelkState.get("oaipmh", [:]).get("lastImport", [:]).get(ds)
@@ -96,13 +95,17 @@ class ImportOperator extends AbstractOperator {
                         log.info("Whelk has no state for last import from $ds. Setting last week (${since})")
                     }
                 }
-                log.info("Executing import for $ds")
+                log.debug("Executing OAIPMH import for $ds since $since from $serviceUrl")
+                Date dateStamp = new Date()
                 int dsImportCount = importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
                 totalCount = totalCount + dsImportCount
-                log.debug("Imported $dsImportCount document from $ds.")
-                log.debug("Total count is now: $totalCount")
-
-                updateState(whelkState, ds)
+                if (dsImportCount > 0) {
+                    log.info("Imported $dsImportCount document for $ds.")
+                } else {
+                    log.debug("Imported $dsImportCount document for $ds.")
+                }
+                log.trace("Total count is now: $totalCount")
+                updateState(whelkState, ds, dateStamp)
             }
         } else {
             if (!serviceUrl) {
@@ -111,7 +114,7 @@ class ImportOperator extends AbstractOperator {
             try {
                 importer.startAt = startAtId
             } catch (MissingMethodException mme) {
-                log.debug("Importer has no startAt parameter.")
+                log.trace("Importer has no startAt parameter.")
             }
             totalCount = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
 
@@ -120,9 +123,9 @@ class ImportOperator extends AbstractOperator {
     }
 
     @groovy.transform.Synchronized
-    void updateState(whelkState, dataset) {
+    void updateState(whelkState, dataset, dateStamp) {
         whelkState = whelk.loadState()
-        whelkState.get("oaipmh", [:]).get("lastImport", [:]).put(dataset, new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+        whelkState.get("oaipmh", [:]).get("lastImport", [:]).put(dataset, dateStamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
         whelk.saveState(whelkState)
 
     }
