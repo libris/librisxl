@@ -287,8 +287,8 @@ class DocumentAPI extends BasicAPI {
     }
 
     boolean hasPermission(info, doc) {
-        if (info) {
-            log.info("User has no privileges")
+        if (!info) {
+            log.info("No user received")
             return false
         }
         log.trace("User is a-okey.")

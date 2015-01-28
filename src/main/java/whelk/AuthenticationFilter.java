@@ -67,6 +67,9 @@ public class AuthenticationFilter implements Filter {
                 e.printStackTrace();
             }
         }else {
+            Map emptyUser = new HashMap();
+            emptyUser.put("filtered", false);
+            request.setAttribute("user", emptyUser);
             chain.doFilter(request, response);
         }
     }
