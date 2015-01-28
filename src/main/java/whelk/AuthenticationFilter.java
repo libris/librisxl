@@ -20,13 +20,17 @@ public class AuthenticationFilter implements Filter {
 
     private ObjectMapper mapper = null;
     private List<String> supportedMethods;
+    private List<String> filterOnPorts;
     private String url = null;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
 
         String initParams = filterConfig.getInitParameter("supportedMethods");
-        supportedMethods = splitSupportedMethod(initParams);
+        String filterOnPortsStr = filterConfig.getInitParameter("filterOnPorts");
+
+        supportedMethods = splitInitParameters(initParams);
+        filterOnPorts = splitInitParameters(filterOnPortsStr);
     }
 
     @Override
@@ -34,8 +38,13 @@ public class AuthenticationFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         if (isApiCall(httpRequest) && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+            System.out.print("##### isApiCall");
             try {
                 String token = httpRequest.getHeader("Authorization");
+                if (token == null) {
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Invalid accesstoken, Token is: "+token);
+                    return;
+                }
                 String json = verifyToken(token.replace("Bearer ", ""));
                 if (json == null || json.isEmpty()) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "The access token expired");
@@ -98,7 +107,7 @@ public class AuthenticationFilter implements Filter {
     }
 
     private boolean isApiCall(HttpServletRequest httpRequest) {
-        return httpRequest.getServerPort() == 80 ? true : false;
+        return filterOnPorts.contains(new Integer(httpRequest.getServerPort()).toString());
     }
 
     private JSONObject getUserInfo(JSONObject obj) {
@@ -117,13 +126,13 @@ public class AuthenticationFilter implements Filter {
 
     /**
      *
-     * @param supportedMethods
+     * @param initParams
      * @return a list with all supported methods
      */
-    private List<String> splitSupportedMethod(String supportedMethods) {
+    private List<String> splitInitParameters(String initParams) {
 
-        if (supportedMethods != null) {
-            return Arrays.asList(supportedMethods.replace(" ", "").split(","));
+        if (initParams != null) {
+            return Arrays.asList(initParams.replace(" ", "").split(","));
         }
         return null;
     }

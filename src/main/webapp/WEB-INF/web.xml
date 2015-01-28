@@ -27,6 +27,10 @@
             <param-name>supportedMethods</param-name>
             <param-value>POST, PUT, DELETE</param-value>
         </init-param>
+        <init-param>
+            <param-name>filterOnPorts</param-name>
+            <param-value>80</param-value>
+        </init-param>
     </filter>
 
     <servlet>
