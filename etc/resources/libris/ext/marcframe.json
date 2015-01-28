@@ -1701,7 +1701,7 @@
       "s": "/def/enum/content/Shortened",
       "x": "/def/enum/content/MissingCharacters"
     },
-    "type": {
+    "holdingType": {
       "u": null,
       "v": "/def/enum/record/MultipartItemHolding",
       "x": "/def/enum/record/SinglePartItemHolding",
@@ -5525,9 +5525,9 @@
       },
       "[6:7]": {
         "aboutEntity": "?record",
-        "link": "type",
+        "link": "holdingType",
         "uriTemplate": "{_}",
-        "tokenMap": "type"
+        "tokenMap": "holdingType"
       },
       "[7:8]": {
         "aboutEntity": "?record",
@@ -5574,7 +5574,7 @@
             "encLevel": {"@id": "/def/enum/record/HoldingsLevel1"},
             "itemInfoInRecord": {"@id": "/def/enum/record/Exemplarinformation_finns_ej"},
             "status": {"@id": "/def/enum/record/New"},
-            "type": {"@id": "/def/enum/record/SinglePartItemHolding"},
+            "holdingType": {"@id": "/def/enum/record/SinglePartItemHolding"},
             "about": {
               "@id": "/resource/hold/0000000",
               "@type": "HeldMaterial",
