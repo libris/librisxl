@@ -23,36 +23,40 @@ def loadConfiguration() {
     System.setProperty 'file.encoding', encoding
 }
 
-allprojects {
-    version "0.7.0"
-    war.baseName = "whelk"
-    war.appendix = configuration
 
-    apply plugin: 'java'
-    apply plugin: 'groovy'
-
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-
-    sourceSets {
-        main {
-            java { srcDirs = [] }
-            groovy { srcDir 'src/main/' }
-        }
-        test {
-            groovy { srcDir 'src/test/groovy/' }
-        }
+def versionprops = new Properties()
+try {
+    file("src/main/resources/version.properties").withInputStream { stream ->
+        versionprops.load(stream)
     }
+} catch (Exception e) {}
+version = versionprops.get("releaseTag", "")
+war.baseName = "whelk"
+war.appendix = configuration
 
-    test.testLogging.exceptionFormat "full"
+apply plugin: 'java'
+apply plugin: 'groovy'
 
-    repositories {
-        mavenCentral()
-        maven { url "http://maven.restlet.org/" }
-        maven { url "http://repository.codehaus.org/" }
-        flatDir name: 'localDir', dirs: 'dep/lib'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+sourceSets {
+    main {
+        java { srcDirs = [] }
+        groovy { srcDir 'src/main/' }
     }
+    test {
+        groovy { srcDir 'src/test/groovy/' }
+    }
+}
 
+test.testLogging.exceptionFormat "full"
+
+repositories {
+    mavenCentral()
+    maven { url "http://maven.restlet.org/" }
+    maven { url "http://repository.codehaus.org/" }
+    flatDir name: 'localDir', dirs: 'dep/lib'
 }
 
 dependencies {

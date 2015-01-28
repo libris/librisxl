@@ -557,9 +557,11 @@ class StandardWhelk extends HttpServlet implements Whelk {
         whelkinfo["whelk"] = this.id
         whelkinfo["status"] = whelkState.get("status", "STARTING")
 
+
         log.debug("Path is $path")
         try {
-            if (request.method == "GET" && path == "/" && request.getServerPort() != 80) {
+            if (request.method == "GET" && path == "/") {
+                whelkinfo["version"] = loadVersionInfo()
                 if (request.getServerPort() != 80) {
                     def compManifest = [:]
                     components.each {
@@ -591,6 +593,17 @@ class StandardWhelk extends HttpServlet implements Whelk {
             response.writer.write(mapper.writeValueAsString(whelkinfo))
             response.writer.flush()
         }
+    }
+
+    String loadVersionInfo() {
+        java.util.Properties properties = new java.util.Properties()
+        try {
+            properties.load(this.getClass().getClassLoader().getResourceAsStream("version.properties"))
+            return properties.getProperty("releaseTag")
+        } catch (Exception e) {
+            log.debug("Failed to load version information.")
+        }
+        return "badly deployed version (bananas)"
     }
 
     void printAvailableAPIs(HttpServletResponse response, Map whelkinfo) {
