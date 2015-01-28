@@ -88,10 +88,10 @@ class ImportOperator extends AbstractOperator {
                 importer.serviceUrl = serviceUrl
                 this.totalCount = 0
                 for (ds in dataset.split(",")) {
-                    log.info("all state: ${whelk.state}")
+                    log.trace("all state: ${whelk.state}")
                     def whelkState = whelk.state.get(ds, [:])
                     if (useWhelkState) {
-                        log.info("whelkState: $whelkState")
+                        log.trace("whelkState: $whelkState")
                         String dString = whelkState.get("lastImport")
                         if (dString) {
                             since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dString)

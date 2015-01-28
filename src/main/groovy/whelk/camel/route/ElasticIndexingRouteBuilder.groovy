@@ -24,15 +24,21 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
         ElasticRouteProcessor elasticTypeRouteProcessor = getPlugin("elasticprocessor")
         ReindexProcessor reindexProcessor = getPlugin("camel_reindex_processor")
 
-        from(messageQueue) // Also removeQueue (configured to same)
-            .multicast().to("seda:q1", "seda:q2")
+        if (reindexProcessor) {
+            from(messageQueue) // Also removeQueue (configured to same)
+                .multicast().to("seda:q1", "seda:q2")
 
-        from("seda:q1")
+            from("seda:q1")
+                    .process(elasticTypeRouteProcessor)
+                    .routingSlip(header("elasticDestination"))
+            from("seda:q2")
+                    .process(reindexProcessor)
+                    .end()
+        } else {
+            from(messageQueue)
                 .process(elasticTypeRouteProcessor)
                 .routingSlip(header("elasticDestination"))
-        from("seda:q2")
-                .process(reindexProcessor)
-                .end()
+        }
 
         from(bulkMessageQueue)
                 .process(elasticTypeRouteProcessor)

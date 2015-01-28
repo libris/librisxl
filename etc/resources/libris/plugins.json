@@ -574,8 +574,7 @@
     "indexroutebuilder": {
         "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
         "_plugins" : [
-            "elasticprocessor",
-            "camel_reindex_processor"
+            "elasticprocessor"
         ],
         "_params": {
             "elasticBatchSize": 2000,

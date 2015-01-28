@@ -45,7 +45,7 @@ class ReindexOperator extends AbstractOperator {
             return
         }
         try {
-            whelk.acquireLock()
+            whelk.acquireLock(dataset)
             String indexName = whelk.index?.getIndexName()
             reindexcount = 0
 
@@ -87,7 +87,7 @@ class ReindexOperator extends AbstractOperator {
                 whelk.index.reMapAliases(whelk.index.getIndexName())
             }
         } finally {
-            whelk.releaseLock()
+            whelk.releaseLock(dataset)
         }
     }
 

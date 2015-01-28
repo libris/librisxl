@@ -148,7 +148,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
             return false
         }
 
-        if (whelkState.get(dataset, [:]).get("locked", false)) {
+        if (dataset && whelkState.get(dataset, [:]).get("locked", false)) {
             log.trace("Dataset $dataset lock is in effect.")
             return false
         }
