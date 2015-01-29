@@ -12,7 +12,7 @@ import whelk.*
 class JettyServer {
 
     static void main(String[] args) {
-        int port = 8080
+        int port = 8180
         String contextPath = "/"
 
         def cli = new CliBuilder(usage: 'JettyServer -[chflms] [date] [prefix]')
