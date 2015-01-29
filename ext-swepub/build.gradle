@@ -1,4 +1,0 @@
-dependencies {
-    compile project(":whelk-core")
-    compile project(":ext-libris")
-}

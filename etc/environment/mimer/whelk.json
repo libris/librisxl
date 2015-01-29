@@ -1,36 +1,19 @@
 {
     "_properties": {
-        "ELASTIC_SEARCH_HOST": "localhost",
-        "ELASTIC_STORAGE_HOST": "localhost",
+        "ELASTIC_STORAGE_HOST": "10.50.16.150",
+        "ELASTIC_CLUSTER": "kbelasticsearch",
         "ELASTIC_PORT": 9300,
-        "AVAILABLE_TYPES": ["eld","def","sys"],
-        "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
-        "MQ_INDEX": "activemq:mimer.index",
-        "MQ_BULK_INDEX": "activemq:mimer.bulk.index?concurrentConsumers=5"
+        "AVAILABLE_TYPES": ["eld","def","sys"]
     },
     "_id": "mimer",
     "_docBaseUri" : "http://libris.kb.se/",
-    "_docMetaMapping" : {
-        "hold": [
-            "about.heldBy.notation"
-        ]
-    },
     "_plugins": {
-        "_support": [
-            "elasticnode",
-            "activemqbroker"
-            ],
-        "_camel": [
-            "routebuilder"
-            ],
         "_components": [
-            "jsonldstorage",
-            "index"
+            "allstorage"
         ]
     },
     "_apis": [
-        { "/_operations": "operator" },
-        { "^/([^_].*)$":  "documentapi" },
+        { "^([^_].*)$":  "documentapi" },
         { "^/$":  "documentapi" }
     ]
 }
