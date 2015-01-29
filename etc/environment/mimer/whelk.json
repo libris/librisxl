@@ -1,6 +1,7 @@
 {
     "_properties": {
         "ELASTIC_STORAGE_HOST": "10.50.16.150",
+        "ELASTIC_CLUSTER": "kbelasticsearch",
         "ELASTIC_PORT": 9300,
         "AVAILABLE_TYPES": ["eld","def","sys"]
     },
