@@ -15,6 +15,11 @@ class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
         batchTimeout = settings.get("batchTimeout", batchTimeout)
         messageQueue = settings.get("graphstoreMessageQueue")
         bulkMessageQueue = settings.get("graphstoreMessageQueue")
+        try {
+            properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
+        } catch (Exception ex) {
+            log.warn("Failed to load whelk.properties.")
+        }
     }
 
     void configure() {
@@ -22,7 +27,7 @@ class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
         def credentials = global.GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED?
         "?authenticationPreemptive=true&authUsername=${properties.getProperty("graphstoreUpdateAuthUser")}&authPassword=${properties.getProperty("graphstoreUpdateAuthPass")}" : ""
         def camelStep = from(messageQueue)
-            .filter("groovy", "request.getHeader('whelk:operation') != 'DELETE' && ['auth','bib'].contains(request.getHeader('document:dataset'))") // Only save auth and bib
+            .filter("groovy", "request.getHeader('whelk:operation') != 'DELETE' && ['auth','bib','hold'].contains(request.getHeader('document:dataset'))")
             .aggregate(header("document:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
             .threads(1,parallelProcesses)
 
