@@ -165,9 +165,12 @@ This is now available as:
     "GRAPHSTORE_QUERY_URI": "http://127.0.0.1:8890/sparql",
     "GRAPHSTORE_UPDATE_URI": "http://127.0.0.1:8890/sparql-auth",
     "GRAPHSTORE_UPDATE_POST_PARAMETER": "update",
-    "GRAPHSTORE_UPDATE_AUTH_USER": "dba",
-    "GRAPHSTORE_UPDATE_AUTH_PASS": ...
 
+5. Configure whelk.properties with user credentials for updates.
+
+    # Virtuoso credentials
+    graphstoreUpdateAuthUser=dba
+    graphstoreUpdateAuthPass=...
 
 ## Whelk maintenance (rebuilding and reloading)
 
