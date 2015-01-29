@@ -7,12 +7,16 @@
     </encoder>
   </appender>
 
+  <logger name="whelk.api.SearchAPI">
+      <level value="warn"/>
+  </logger>
   <logger name="whelk.api.BasicAPI">
       <level value="warn"/>
   </logger>
   <logger name="org.apache.camel">
       <level value="info"/>
   </logger>
+  <logger name="whelk.api.libris.FormatterAPI" level="warn"/>
   <logger name="whelk.camel.APIXProcessor">
       <level value="debug"/>
   </logger>
