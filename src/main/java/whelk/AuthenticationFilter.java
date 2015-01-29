@@ -70,9 +70,11 @@ public class AuthenticationFilter implements Filter {
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
                 e.printStackTrace();
             }
-        } else {
+        } else if (supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             log.info("Authentication check bypassed, creating dummy user.");
             request.setAttribute("user", createDevelopmentUser());
+            chain.doFilter(request, response);
+        } else {
             chain.doFilter(request, response);
         }
     }
