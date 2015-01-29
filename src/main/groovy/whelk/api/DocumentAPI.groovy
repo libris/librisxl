@@ -290,6 +290,8 @@ class DocumentAPI extends BasicAPI {
         if (!info) {
             log.info("No user received")
             return false
+        } else {
+            log.info("User is: $info")
         }
         log.trace("User is a-okey.")
         return true

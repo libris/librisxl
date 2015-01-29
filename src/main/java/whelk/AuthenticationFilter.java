@@ -8,6 +8,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.json.simple.JSONObject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,10 +21,12 @@ import java.util.*;
 
 public class AuthenticationFilter implements Filter {
 
-    private ObjectMapper mapper = null;
+    private static final ObjectMapper mapper = new ObjectMapper();
     private List<String> supportedMethods;
     private List<String> filterOnPorts;
     private String url = null;
+
+    final static Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -38,21 +43,17 @@ public class AuthenticationFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         if (isApiCall(httpRequest) && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
-            System.out.print("##### isApiCall");
+            String json = null;
             try {
                 String token = httpRequest.getHeader("Authorization");
                 if (token == null) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Invalid accesstoken, Token is: "+token);
                     return;
                 }
-                String json = verifyToken(token.replace("Bearer ", ""));
+                json = verifyToken(token.replace("Bearer ", ""));
                 if (json == null || json.isEmpty()) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "The access token expired");
                     return;
-                }
-
-                if (mapper == null) {
-                    mapper = new ObjectMapper();
                 }
 
                 HashMap result = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
@@ -62,16 +63,24 @@ public class AuthenticationFilter implements Filter {
                 }else {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
                 }
+            } catch (org.codehaus.jackson.JsonParseException jpe) {
+                log.error("JsonParseExceptin. Failed to parse:" + json, jpe);
+                httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
             } catch (Exception e) {
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
                 e.printStackTrace();
             }
-        }else {
-            Map emptyUser = new HashMap();
-            emptyUser.put("filtered", false);
-            request.setAttribute("user", emptyUser);
+        } else {
+            log.info("Authentication check bypassed, creating dummy user.");
+            request.setAttribute("user", createDevelopmentUser());
             chain.doFilter(request, response);
         }
+    }
+
+    private Map createDevelopmentUser() {
+        Map emptyUser = new HashMap<String,Object>();
+        emptyUser.put("user", System.getenv("USER") + " (from system environment)");
+        return emptyUser;
     }
 
     private String verifyToken(String token) {
