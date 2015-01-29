@@ -746,6 +746,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     @Override
     void destroy() {
         whelkState.put("status", "SHUTTING DOWN")
+        saveState()
     }
 
     /*
