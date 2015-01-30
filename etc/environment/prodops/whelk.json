@@ -39,6 +39,8 @@
         ]
     },
     "_apis": [
-        { "/_operations": "operator" }
+        { "/_operations": "operator" },
+        { "^([^_].*)$":  "documentapi" },
+        { "^/$":  "documentapi" }
     ]
 }
