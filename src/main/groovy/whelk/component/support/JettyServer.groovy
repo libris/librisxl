@@ -1,13 +1,14 @@
 package whelk.component.support
 
+import java.security.ProtectionDomain
+
 import org.eclipse.jetty.*
 import org.eclipse.jetty.server.*
 import org.eclipse.jetty.servlet.*
 import org.eclipse.jetty.util.log.Log
 import org.eclipse.jetty.util.log.Slf4jLog
+import org.eclipse.jetty.webapp.*
 
-
-import whelk.*
 
 class JettyServer {
 
@@ -15,6 +16,7 @@ class JettyServer {
         int port = 8180
         String contextPath = "/"
 
+        /*
         def cli = new CliBuilder(usage: 'JettyServer -[chflms] [date] [prefix]')
         cli.with {
             h longOpt: 'help', 'Show usage information'
@@ -32,16 +34,35 @@ class JettyServer {
         if (options.c) {
             contextPath = options.c
         }
+        */
 
-        Server server = new Server(port)
 
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS)
-        context.setContextPath(contextPath)
-        server.setHandler(context)
+        Server server = new Server();
 
-        context.addServlet(new ServletHolder(new StandardWhelk()),"/*")
+        Connector connector = new ServerConnector(server, new HttpConnectionFactory());
+        connector.setPort(port);
+        server.addConnector(connector);
+        server.setStopAtShutdown(true);
+        WebAppContext context = new WebAppContext();
 
-        server.start();
-        server.join();
+        context.setServer(server);
+        context.setContextPath(contextPath);
+
+        ProtectionDomain protectionDomain = JettyServer.class.getProtectionDomain();
+        URL location = protectionDomain.getCodeSource().getLocation();
+        context.setWar(location.toExternalForm());
+        println "WAR URL: ${location.toExternalForm()}"
+        server.setHandler(context);
+
+        try {
+            server.start();
+            System.in.read();
+            server.stop();
+            server.join();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(100);
+        }
+
     }
 }

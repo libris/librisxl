@@ -4,8 +4,6 @@ import groovy.util.logging.Slf4j as Log
 
 import java.util.concurrent.*
 
-import org.codehaus.jackson.map.ObjectMapper
-
 import whelk.exception.*
 import whelk.plugin.*
 import whelk.*
@@ -13,7 +11,6 @@ import whelk.*
 @Log
 abstract class BasicComponent extends BasicPlugin implements Component {
 
-    public static final ObjectMapper mapper = new ObjectMapper()
     Whelk whelk
     List contentTypes
 

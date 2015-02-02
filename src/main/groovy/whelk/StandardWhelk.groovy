@@ -24,7 +24,6 @@ import whelk.result.*
 
 import whelk.util.Tools
 
-import org.codehaus.jackson.JsonParseException
 import org.codehaus.jackson.map.ObjectMapper
 
 import org.apache.camel.*
@@ -445,7 +444,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 return new JsonDocument().fromDocument(document)
             }
             return document
-        } catch (JsonParseException jpe) {
+        } catch (org.codehaus.jackson.JsonParseException jpe) {
             throw new DocumentException(jpe)
         }
     }

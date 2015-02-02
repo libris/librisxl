@@ -601,7 +601,7 @@
         ],
         "_params": {
             "apixMessageQueue": "_property:MQ_APIX",
-            "retriesQueue": "activemq:apix.retriesQueue",
+            "retriesQueue": "_property:MQ_APIX_RETRIES",
             "apixUri": "_property:APIX_HOST"
         }
     },

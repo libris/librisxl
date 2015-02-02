@@ -81,7 +81,7 @@ public class AuthenticationFilter implements Filter {
 
     private Map createDevelopmentUser() {
         Map emptyUser = new HashMap<String,Object>();
-        emptyUser.put("user", System.getenv("USER") + " (from system environment)");
+        emptyUser.put("user", "SYSTEM");
         return emptyUser;
     }
 

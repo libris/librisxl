@@ -288,7 +288,7 @@ class DocumentAPI extends BasicAPI {
 
     boolean hasPermission(info, doc) {
         if (!info) {
-            log.info("No user received")
+            log.info("No user received, denying request.")
             return false
         } else {
             log.info("User is: $info")
