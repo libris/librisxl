@@ -17,7 +17,6 @@
         "MQ_GRAPHSTORE": "activemq:libris.graphstore?concurrentConsumers=10",
         "MQ_APIX": "activemq:apix",
         "CAMEL_MASTER_COMPONENT":"sendmq",
-        "CAMEL_CHANNEL_PREFIX":"prodops",
         "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=50"
     },
     "_id": "libris",
