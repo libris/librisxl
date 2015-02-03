@@ -65,6 +65,7 @@ dependencies {
     def camelVersion = "2.14.1"
     def activeMQVersion = "5.10.0"
     def groovyVersion="2.3.6"
+    def jettyVersion="8.1.16.v20140903"
 
     // KB dependencies
     compile 'se.kb.libris:marc:1.2.7'
@@ -103,8 +104,8 @@ dependencies {
     compile 'com.vividsolutions:jts:1.13'
     compile 'mysql:mysql-connector-java:5.1.33'
     // Standalone
-    compile "org.eclipse.jetty:jetty-webapp:9.3.0.M1"
-    compile "org.eclipse.jetty:jetty-server:9.3.0.M1"
+    compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
+    compile "org.eclipse.jetty:jetty-server:${jettyVersion}"
     // Servlet dependencies
     compile 'com.thetransactioncompany:cors-filter:2.1.2'
     providedCompile 'javax.servlet:servlet-api:2.5'
@@ -113,9 +114,10 @@ dependencies {
     compile project(":dep/locgov-pairtree")
 
     // Standalone
-    executableWarDeps "org.eclipse.jetty:jetty-server:9.3.0.M1"
-    executableWarDeps "org.eclipse.jetty:jetty-webapp:9.3.0.M1"
+    executableWarDeps "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    executableWarDeps "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     executableWarDeps "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    executableWarDeps 'commons-cli:commons-cli:1.2'
 
 }
 
@@ -139,7 +141,10 @@ war {
     }
 
     from {configurations.executableWarDeps.collect {
-            it.isDirectory() ? it : project.zipTree(it)
+            //it.isDirectory() ? it : project.zipTree(it)
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+            }
             /*
             it.isDirectory() || it.getName().endsWith('.pom') ? it : zipTree(it).matching {
                 exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA', 'META-INF/maven', 'log4j.properties', 'org/apache/log4j/*'
