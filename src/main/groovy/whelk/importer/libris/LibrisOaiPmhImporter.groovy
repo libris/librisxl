@@ -11,7 +11,7 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
     Whelk whelk
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
-    Map global
+    Map props
 
     String serviceUrl = "http://data.libris.kb.se/{dataset}/oaipmh"
 
@@ -88,5 +88,5 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
         plugins.add(p);
     }
     public List<Plugin> getPlugins() { plugins }
-    public Map getGlobal() { global }
+    public Map getProps() { props }
 }

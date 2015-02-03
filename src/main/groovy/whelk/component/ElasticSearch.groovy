@@ -45,8 +45,9 @@ import static whelk.util.Tools.*
 @Log
 class ElasticSearchClient extends ElasticSearch implements Index {
 
-    ElasticSearchClient(Map params) {
+    ElasticSearchClient(String ident = null, Map params) {
         super(params)
+        id = ident
     }
 }
 

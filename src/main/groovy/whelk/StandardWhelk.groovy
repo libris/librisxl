@@ -2,25 +2,20 @@ package whelk
 
 import groovy.util.logging.Slf4j as Log
 
+import java.lang.management.*
 import java.net.URISyntaxException
-import java.util.regex.*
 import java.util.UUID
 import java.util.concurrent.*
-import javax.servlet.http.*
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-import java.lang.management.*
-
-
-import whelk.api.*
 import whelk.camel.*
 import whelk.camel.route.*
 import whelk.component.*
-import whelk.exception.*
 import whelk.plugin.*
 import whelk.result.*
+import whelk.exception.*
 
 import whelk.util.Tools
 
@@ -33,12 +28,11 @@ import org.apache.camel.builder.RouteBuilder
 import org.apache.activemq.camel.component.ActiveMQComponent
 
 @Log
-class StandardWhelk extends HttpServlet implements Whelk {
+class StandardWhelk implements Whelk {
 
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
     List<Storage> storages = new ArrayList<Storage>()
-    Map<Pattern, API> apis = new LinkedHashMap<Pattern, API>()
 
     final Map locationConfig = ["preCursor": "/resource"]
 
@@ -46,7 +40,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     GraphStore graphStore
 
     // Set by configuration
-    Map global = [:]
+    private Map globalProperties = [:]
     URI docBaseUri
     Map documentDataToMetaMapping = null
 
@@ -69,6 +63,12 @@ class StandardWhelk extends HttpServlet implements Whelk {
     def timeZone = ZoneId.systemDefault()
 
     long MAX_MEMORY_THRESHOLD = 95 // In percent
+
+
+    StandardWhelk(String name) {
+        this.id = name
+    }
+    StandardWhelk() {}
 
     /*
      * Whelk methods
@@ -133,6 +133,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 whelkState.putAll(jd.dataAsMap)
             }
         } else {
+            log.warn("Whelk $id has no storage component configured. State will be in-memory only.")
             whelkState.put("status", "OK")
             whelkState.put("locked", false)
         }
@@ -465,9 +466,22 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
     @Override
     void notifyCamel(String identifier, String dataset, String operation, Map extraInfo) {
+        Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, identifier, extraInfo)
+        log.trace("Sending $operation message to camel regaring ${identifier}")
+        sendCamelMessage(operation, exchange)
+    }
+
+    @Override
+    void notifyCamel(Document document, String operation, Map extraInfo) {
+        Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
+        log.trace("Sending document in message to camel regaring ${document.identifier}")
+        sendCamelMessage(operation, exchange)
+    }
+
+    private Exchange createAndPrepareExchange(String identifier, String dataset, String operation, Object messageBody, Map extraInfo) {
         Exchange exchange = new DefaultExchange(getCamelContext())
         Message message = new DefaultMessage()
-        message.setBody(identifier, String)
+
         if (extraInfo) {
             extraInfo.each { key, value ->
                 message.setHeader("whelk:$key", value)
@@ -477,34 +491,14 @@ class StandardWhelk extends HttpServlet implements Whelk {
         message.setHeader("document:identifier", identifier)
         message.setHeader("document:dataset", dataset)
 
+        message.setBody(messageBody)
         exchange.setIn(message)
-        log.trace("Sending $operation message to camel regaring ${identifier}")
-        sendCamelMessage(operation, exchange)
+
+        return exchange
     }
 
-    void notifyCamel(Document document, String operation, Map extraInfo) {
-        Exchange exchange = new DefaultExchange(getCamelContext())
-        Message message = new DefaultMessage()
-        if (document.isJson()) {
-            message.setBody(document.dataAsMap, Map)
-        } else {
-            message.setBody(document.data)
-        }
-        message.setHeader("document:identifier", document.identifier)
-        message.setHeader("document:dataset", document.dataset)
-        message.setHeader("document:metaentry", document.metadataAsJson)
-        if (extraInfo) {
-            extraInfo.each { key, value ->
-                message.setHeader("whelk:$key", value)
-            }
-        }
-        message.setHeader("whelk:operation", operation)
-        exchange.setIn(message)
-        log.trace("Sending document in message to camel regaring ${document.identifier}")
-        sendCamelMessage(operation, exchange)
-    }
 
-    void sendCamelMessage(String operation, Exchange exchange) {
+    private void sendCamelMessage(String operation, Exchange exchange) {
         if (!producerTemplate) {
             producerTemplate = getCamelContext().createProducerTemplate();
         }
@@ -514,9 +508,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
     }
 
     String getCamelEndpoint(String operation, withConfig = false) {
-        def comp = global.get("CAMEL_MASTER_COMPONENT") ?: "seda"
-        def prefix = global.get("CAMEL_CHANNEL_PREFIX") ?: ""
-        def config = global.get("CAMEL_COMPONENT_CONFIG") ?: ""
+        def comp = props.get("CAMEL_MASTER_COMPONENT") ?: "seda"
+        def prefix = props.get("CAMEL_CHANNEL_PREFIX") ?: ""
+        def config = props.get("CAMEL_COMPONENT_CONFIG") ?: ""
         return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withConfig && config ? "?"+config : "")
     }
 
@@ -540,59 +534,20 @@ class StandardWhelk extends HttpServlet implements Whelk {
             }
             totalMemory=heap.getUsed();
             maxMemory=heap.getMax();
-            used=(totalMemory * 100) / maxMemory;
+            used=(totalMemory * 100) / maxMemory; // comment to fix highlighting in vim ... */
         }
     }
 
 
-    /*
-     * Servlet methods
-     *******************************/
-    void handleRequest(HttpServletRequest request, HttpServletResponse response) {
-        String path = request.pathInfo
-        API api = null
-        List pathVars = []
-        def whelkinfo = [:]
-        whelkinfo["whelk"] = this.id
-        whelkinfo["status"] = whelkState.get("status", "STARTING")
-
-
-        log.debug("Path is $path")
-        try {
-            if (request.method == "GET" && path == "/") {
-                whelkinfo["version"] = loadVersionInfo()
-                if (request.getServerPort() != 80) {
-                    def compManifest = [:]
-                    components.each {
-                        def plList = []
-                        for (pl in it.plugins) {
-                            def plStat = ["id":pl.id, "class": pl.getClass().getName()]
-                            plStat.putAll(pl.getStatus())
-                            plList << plStat
-                        }
-                        compManifest[(it.id)] = ["class": it.getClass().getName(), "plugins": plList]
-                    }
-                    whelkinfo["components"] = compManifest
-                }
-                printAvailableAPIs(response, whelkinfo)
-            } else {
-                (api, pathVars) = getAPIForPath(path)
-                if (api) {
-                    api.handle(request, response, pathVars)
-                } else {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "No API found for $path")
-                }
-            }
-        } catch (DownForMaintenanceException dfme) {
-            whelkinfo["status"] = "UNAVAILABLE"
-            whelkinfo["message"] = dfme.message
-            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE)
-            response.setCharacterEncoding("UTF-8")
-            response.setContentType("application/json")
-            response.writer.write(mapper.writeValueAsString(whelkinfo))
-            response.writer.flush()
-        }
+    @Override
+    void setProps(final Map global) {
+        this.globalProperties = global.asImmutable()
     }
+
+    public Map getProps() {
+        globalProperties
+    }
+
 
     String loadVersionInfo() {
         java.util.Properties properties = new java.util.Properties()
@@ -603,36 +558,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
             log.debug("Failed to load version information.")
         }
         return "badly deployed version (bananas)"
-    }
-
-    void printAvailableAPIs(HttpServletResponse response, Map whelkinfo) {
-        whelkinfo["apis"] = apis.collect {
-             [ "path" : it.key ,
-                "id": it.value.id,
-                "description" : it.value.description ]
-        }
-        response.setCharacterEncoding("UTF-8")
-        response.setContentType("application/json")
-        response.writer.write(mapper.writeValueAsString(whelkinfo))
-        response.writer.flush()
-    }
-
-    def getAPIForPath(String path) {
-        for (entry in apis.entrySet()) {
-            log.trace("${entry.key} (${entry.key.getClass().getName()}) = ${entry.value}")
-            Matcher matcher = entry.key.matcher(path)
-            if (matcher.matches()) {
-                log.trace("$path matches ${entry.key}")
-                int groupCount = matcher.groupCount()
-                List pathVars = new ArrayList(groupCount)
-                for (int i = 1; i <= groupCount; i++) {
-                    pathVars.add(matcher.group(i))
-                }
-                log.debug("Matched API ${entry.value} with pathVars $pathVars")
-                return [entry.value, pathVars]
-            }
-        }
-        return [null, []]
     }
 
     @Override
@@ -655,33 +580,19 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return identifier
     }
 
-    /**
-     * Redirect request to handleRequest()-method
-     */
-    @Override
-    void doGet(HttpServletRequest request, HttpServletResponse response) {
-        handleRequest(request, response)
-    }
-    @Override
-    void doPost(HttpServletRequest request, HttpServletResponse response) {
-        handleRequest(request, response)
-    }
-    @Override
-    void doPut(HttpServletRequest request, HttpServletResponse response) {
-        handleRequest(request, response)
-    }
-    @Override
-    void doDelete(HttpServletRequest request, HttpServletResponse response) {
-        handleRequest(request, response)
-    }
 
     @Override
     void init() {
         def ctxThread
         try {
-            def (whelkConfig, pluginConfig) = loadConfig()
-            setConfig(whelkConfig, pluginConfig)
+            if (!id) {
+                def (whelkConfig, pluginConfig) = loadConfig()
+                setConfig(whelkConfig, pluginConfig)
+            } else {
+                log.debug("Assuming whelk programmatically configured.")
+            }
             // Start all plugins
+            log.debug("Starting components.")
             for (component in this.components) {
                 log.info("Starting component ${component.id}")
                 component.start()
@@ -695,15 +606,15 @@ class StandardWhelk extends HttpServlet implements Whelk {
 
 
 
-            if (global.containsKey('ACTIVEMQ_BROKER_URL')) {
+            if (props.containsKey('ACTIVEMQ_BROKER_URL')) {
                 ActiveMQComponent amqreceive = ActiveMQComponent.activeMQComponent()
-                amqreceive.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 100))
+                amqreceive.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(props['ACTIVEMQ_BROKER_URL'], 10, 100))
                 whelkCamelMain.addComponent("activemq", amqreceive)
 
-                def sendQName = global.get("CAMEL_MASTER_COMPONENT")
+                def sendQName = props.get("CAMEL_MASTER_COMPONENT")
                 if (sendQName) {
                     ActiveMQComponent amqsend = ActiveMQComponent.activeMQComponent()
-                    amqsend.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(global['ACTIVEMQ_BROKER_URL'], 10, 200))
+                    amqsend.setConnectionFactory(ActiveMQPooledConnectionFactory.createPooledConnectionFactory(props['ACTIVEMQ_BROKER_URL'], 10, 200))
                     whelkCamelMain.addComponent(sendQName, amqsend)
                 }
             }
@@ -738,14 +649,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
         }
         whelkState.put("status", "RUNNING")
         log.trace("Initialized whelkState: $whelkState")
-
-        //plugins.find { it.id == "scheduledoperator" }.testJob()
-    }
-
-    @Override
-    void destroy() {
-        whelkState.put("status", "SHUTTING DOWN")
-        saveState()
     }
 
     /*
@@ -753,6 +656,9 @@ class StandardWhelk extends HttpServlet implements Whelk {
      ************************************/
     @Override
     void addPlugin(Plugin plugin) {
+        if (!this.id) {
+            throw new WhelkException("Can not add plugins to id-less whelk. Use correct constructor, or make sure init() is run before adding plugins.")
+        }
         log.debug("[${this.id}] Initializing ${plugin.id}")
         if (plugin instanceof WhelkAware) {
             plugin.setWhelk(this)
@@ -776,7 +682,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
         plugin.init()
     }
 
-    private def loadConfig() {
+    protected def loadConfig() {
         Map whelkConfig
         Map pluginConfig
         if (System.getProperty("whelk.config.uri") && System.getProperty("plugin.config.uri")) {
@@ -807,12 +713,13 @@ class StandardWhelk extends HttpServlet implements Whelk {
         return [whelkConfig, pluginConfig]
     }
 
-    private void setConfig(whelkConfig, pluginConfig) {
+    protected void setConfig(whelkConfig, pluginConfig) {
+        log.info("Running setConfig in standardwhelk.")
         def disabled = System.getProperty("disable.plugins", "").split(",")
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])
         documentDataToMetaMapping = whelkConfig["_docMetaMapping"]
-        this.global = whelkConfig["_properties"].asImmutable()
+        setProps(whelkConfig["_properties"])
         whelkConfig["_plugins"].each { key, value ->
             log.trace("key: $key, value: $value")
             if (!(key =~ /^_.+$/)) {
@@ -831,15 +738,6 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 }
             }
         }
-        whelkConfig["_apis"].each { apiEntry ->
-            apiEntry.each {
-                log.debug("Found api: ${it.value}, should attach at ${it.key}")
-                API api = getPlugin(pluginConfig, it.value, this.id)
-                api.setWhelk(this)
-                api.init()
-                apis.put(Pattern.compile(it.key), api)
-            }
-        }
     }
 
     protected def translateParams(params) {
@@ -850,7 +748,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 if (param == "_whelkname") {
                     plist << this.id
                 } else if (param.startsWith("_property:")) {
-                    plist << global.get(param.substring(10))
+                    plist << props.get(param.substring(10))
                 } else {
                     plist << param
                 }
@@ -866,7 +764,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
     protected Map replacePropertiesInMap(Map propertyMap) {
         propertyMap.each {
             if (it.value instanceof String && it.value.startsWith("_property")) {
-                propertyMap.put(it.key, global.get(it.value.substring(10)))
+                propertyMap.put(it.key, props.get(it.value.substring(10)))
             } else if (it.value instanceof Map) {
                 propertyMap.put(it.key, replacePropertiesInMap(it.value))
             }
@@ -931,7 +829,7 @@ class StandardWhelk extends HttpServlet implements Whelk {
                 } else {
                     plugin.setId(label)
                 }
-                plugin.global = global
+                plugin.props = getProps()
                 log.trace("Looking for other properties to set on plugin \"${plugin.id}\".")
                 meta.each { key, value ->
                     if (!(key =~ /^_.+$/)) {
@@ -1001,18 +899,13 @@ class StandardWhelk extends HttpServlet implements Whelk {
     // Sugar methods
     List<Component> getComponents() { return plugins.findAll { it instanceof Component } }
 
-    Storage getStorage() { return storages.get(0) }
-    Storage getPrimaryStorage() { return storages.get(0) }
+    Storage getStorage() { return storages.isEmpty() ? null : storages.get(0) }
     List<Storage> getStorages(String rct) { return storages.findAll { it.handlesContent(rct) } }
     Storage getStorage(String rct) { return storages.find { it.handlesContent(rct) } }
 
     List<SparqlEndpoint> getSparqlEndpoints() { return plugins.findAll { it instanceof SparqlEndpoint } }
     SparqlEndpoint getSparqlEndpoint() { return plugins.find { it instanceof SparqlEndpoint } }
     List<URIMinter> getUriMinters() { return plugins.findAll { it instanceof URIMinter }}
-    List<Filter> getFilters() { return plugins.findAll { it instanceof Filter }}
-    Importer getImporter(String id) { return plugins.find { it instanceof Importer && it.id == id } }
-    List<Importer> getImporters() { return plugins.findAll { it instanceof Importer } }
-    List<API> getAPIs() { return apis.values() as List}
 
 
     // Maintenance whelk methods

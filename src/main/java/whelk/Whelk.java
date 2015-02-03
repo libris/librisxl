@@ -45,7 +45,10 @@ public interface Whelk {
     public boolean updateState(String key, Map data);
 
     // ecosystem
-    public Map getGlobal();
+    public void init();
+    public Map getProps();
+    public void setProps(Map props);
     public CamelContext getCamelContext();
+    public void notifyCamel(Document doc, String operation, Map extraInfo);
     public void notifyCamel(String identifier, String dataset, String operation, Map extraInfo);
 }

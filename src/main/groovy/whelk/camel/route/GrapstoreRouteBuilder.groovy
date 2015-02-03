@@ -22,16 +22,18 @@ class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
         }
     }
 
+    void bootstrap() {}
+
     void configure() {
         AggregationStrategy graphstoreAggregationStrategy = getPlugin("graphstore_aggregator")
-        def credentials = global.GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED?
+        def credentials = props.GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED?
         "?authenticationPreemptive=true&authUsername=${properties.getProperty("graphstoreUpdateAuthUser")}&authPassword=${properties.getProperty("graphstoreUpdateAuthPass")}" : ""
         def camelStep = from(messageQueue)
             .filter("groovy", "request.getHeader('whelk:operation') != 'DELETE' && ['auth','bib','hold'].contains(request.getHeader('document:dataset'))")
             .aggregate(header("document:dataset"), graphstoreAggregationStrategy).completionSize(graphstoreBatchSize).completionTimeout(batchTimeout)
             .threads(1,parallelProcesses)
 
-        def postParameter = global.GRAPHSTORE_UPDATE_POST_PARAMETER
+        def postParameter = props.GRAPHSTORE_UPDATE_POST_PARAMETER
         if (postParameter) {
             camelStep.process {
                 def msg = it.getIn()
@@ -42,7 +44,7 @@ class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
             }
         }
 
-        camelStep.to("http4:${global.GRAPHSTORE_UPDATE_URI.substring(7)}" + credentials)
+        camelStep.to("http4:${props.GRAPHSTORE_UPDATE_URI.substring(7)}" + credentials)
     }
 }
 

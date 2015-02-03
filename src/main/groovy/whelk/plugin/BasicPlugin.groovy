@@ -14,7 +14,7 @@ import whelk.Whelk
 public abstract class BasicPlugin implements WhelkAware {
     String id = null
     private List<Plugin> plugins = new ArrayList<Plugin>();
-    Map global
+    Map props
 
     Whelk whelk
 
@@ -39,7 +39,7 @@ public abstract class BasicPlugin implements WhelkAware {
         plugins.add(p);
     }
     public List<Plugin> getPlugins() { plugins }
-    public Map getGlobal() { global }
+    public Map getProps() { props }
     public Plugin getPlugin(String pluginId) {
         plugins.find { it.id == pluginId }
     }

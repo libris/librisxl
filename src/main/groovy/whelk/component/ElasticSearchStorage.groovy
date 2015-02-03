@@ -21,11 +21,12 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     String indexName
 
-    ElasticSearchStorage(Map settings) {
+    ElasticSearchStorage(String componentId = null, Map settings) {
         super(settings)
         this.contentTypes = settings.get('contentTypes', null)
         this.indexName = settings.get('indexName', null)
         this.versioning = settings.get('versioning', false)
+        id = componentId
     }
 
     void componentBootstrap(String str) {

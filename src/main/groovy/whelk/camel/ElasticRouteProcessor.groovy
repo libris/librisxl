@@ -26,11 +26,13 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
     List<Filter> filters
 
     void bootstrap() {
-        this.shapeComputer = getPlugin("index")
+        this.shapeComputer = getPlugin("index") ?: this.shapeComputer
+        assert shapeComputer
         this.elasticHost = shapeComputer.getElasticHost()
         this.elasticCluster = shapeComputer.getElasticCluster()
         this.elasticPort = shapeComputer.getElasticPort()
         filters = plugins.findAll { it instanceof Filter }
+        log.info("${this.id} is bootstrapped.")
     }
 
     @Override

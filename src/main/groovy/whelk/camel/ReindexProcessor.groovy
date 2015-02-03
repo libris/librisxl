@@ -67,7 +67,7 @@ class ReindexProcessor extends BasicPlugin implements Processor {
                         msg.setBody(document.dataAsMap, Map)
 
                         ex.setIn(msg)
-                        template.send(global.get("MQ_BULK_INDEX"), ex)
+                        template.send(props.get("MQ_BULK_INDEX"), ex)
                     }
 
                     if (start < hits && size < hits ) {
