@@ -591,7 +591,8 @@
         "_params": {
             "graphstoreBatchSize": 32,
             "batchTimeout": 5000,
-            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE"
+            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE",
+            "retriesQueue": "_property:MQ_GRAPHSTORE_RETRIES"
         }
     },
     "apixroutebuilder": {

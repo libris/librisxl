@@ -147,16 +147,16 @@ sourceSets {
     }
 }
 
+configurations {
+    all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
+}
+
 war {
     baseName = "whelk"
     appendix = configuration
     classifier = environment
 
     // Prevent circular log redirection; use slf4j
-    configurations.all  {
-        exclude group: "org.slf4j", module: "slf4j-log4j12"
-    }
-
     from {configurations.executableWarDeps.collect {
             //it.isDirectory() ? it : project.zipTree(it)
             it.isDirectory() ? it : project.zipTree(it).matching {

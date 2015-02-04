@@ -11,6 +11,7 @@
         "MQ_INDEX": "activemq:stglibris.index?concurrentConsumers=10",
         "MQ_BULK_INDEX": "activemq:stglibris.bulk.index?concurrentConsumers=10",
         "MQ_GRAPHSTORE": "activemq:stglibris.graphstore?concurrentConsumers=10",
+        "MQ_GRAPHSTORE_RETRIES": "activemq:stglibris.graphstore.retries",
         "CAMEL_MASTER_COMPONENT":"sendmq",
         "CAMEL_CHANNEL_PREFIX":"stg",
         "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=50",
