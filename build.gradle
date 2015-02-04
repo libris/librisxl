@@ -3,6 +3,11 @@ apply plugin: 'groovy'
 apply plugin: 'jetty'
 apply plugin: 'war'
 apply plugin: 'application'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
+apply plugin: 'java'
+
 
 loadConfiguration()
 
@@ -30,10 +35,11 @@ try {
         versionprops.load(stream)
     }
 } catch (Exception e) {}
-version = versionprops.get("releaseTag", "")
 
-apply plugin: 'java'
-apply plugin: 'groovy'
+// Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
+version = versionprops.get("releaseTag", "0.5-SNAPSHOT")
+
+archivesBaseName = "whelk"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -52,13 +58,25 @@ test.testLogging.exceptionFormat "full"
 
 repositories {
     mavenCentral()
-    maven { url "http://maven.restlet.org/" }
     maven { url "http://repository.codehaus.org/" }
     flatDir name: 'localDir', dirs: 'dep/lib'
+    maven { url "http://dev.libris.kb.se/nexus/content/groups/public/" }
 }
 
 configurations {
     executableWarDeps
+}
+
+buildscript {
+  repositories {
+    jcenter()
+    mavenCentral()
+    maven { url "http://repository.jboss.org/nexus/content/groups/public/" }
+  }
+  dependencies {
+    classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
+    classpath 'junit:junit:3.8.2'
+  }
 }
 
 dependencies {
@@ -118,7 +136,6 @@ dependencies {
     executableWarDeps "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     executableWarDeps "org.codehaus.groovy:groovy-all:${groovyVersion}"
     executableWarDeps 'commons-cli:commons-cli:1.2'
-
 }
 
 sourceSets {
@@ -145,11 +162,6 @@ war {
             it.isDirectory() ? it : project.zipTree(it).matching {
                 exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
             }
-            /*
-            it.isDirectory() || it.getName().endsWith('.pom') ? it : zipTree(it).matching {
-                exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA', 'META-INF/maven', 'log4j.properties', 'org/apache/log4j/*'
-            }
-            */
         }
     }
     from "$buildDir/classes/main"
@@ -212,26 +224,32 @@ task(console, dependsOn: 'classes', type: JavaExec) {
   main = 'groovy.ui.Console'
 }
 
-/*
-task fatjar(type: Jar) {
-    configurations.all  {
-        exclude group: "org.slf4j", module: "slf4j-log4j12"
-    }
-    baseName = environment+"-whelk"
-    appendix = configuration
-    from {
-        configurations.compile.collect {
-            it.isDirectory() || it.getName().endsWith('.pom') ? it : zipTree(it).matching {
-                exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA', 'META-INF/maven', 'log4j.properties', 'org/apache/log4j/*'
+publishing {
+    publications {
+        mavenCustom(MavenPublication) {
+            groupId "se.kb.libris"
+            artifactId "librisxl-whelk"
+            version "${project.jar.version}"
+            artifacts {
+                archives jar
             }
+            from components.java
+
+
+            pom.withXml {
+                asNode().appendNode('parent')
+                .appendNode('groupId', 'se.kb.libris').parent()
+                .appendNode('artifactId', 'super-pom').parent()
+                .appendNode('version', '1.1')
+            }
+
         }
     }
-    manifest {
-        attributes 'Implementation-Title': 'Standalone Whelk',
-        'Implementation-Version': version,
-        'Main-Class': 'whelk.component.support.JettyServer'
-    }
 
-    with jar
+    repositories {
+        maven {
+            name "nexus"
+            url "http://dev.libris.kb.se/nexus/content/repositories/internal/"
+        }
+    }
 }
-*/

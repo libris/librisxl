@@ -29,6 +29,9 @@ class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
         }
     }
 
+    void bootstrap() {
+    }
+
     @Override
     void configure() {
         Processor formatConverterProcessor = getPlugin("camel_format_processor")

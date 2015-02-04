@@ -2,6 +2,7 @@ package whelk.camel.route
 
 import groovy.util.logging.Slf4j as Log
 
+import whelk.*
 import whelk.camel.*
 
 import org.apache.camel.*
@@ -11,7 +12,10 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
     String messageQueue, bulkMessageQueue, removeQueue
     int elasticBatchSize = 2000
 
-    ElasticIndexingRouteBuilder(Map settings) {
+    Processor reindexProcessor, elasticTypeRouteProcessor
+
+    ElasticIndexingRouteBuilder(String ident = null, Map settings) {
+        id = ident
         batchTimeout = settings.get("batchTimeout", batchTimeout)
 
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
@@ -20,9 +24,14 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
         removeQueue = messageQueue
     }
 
+    void bootstrap() {
+        elasticTypeRouteProcessor = getElasticProcessor()
+        reindexProcessor = getPlugin("camel_reindex_processor")
+
+        assert elasticTypeRouteProcessor
+    }
+
     void configure() {
-        ElasticRouteProcessor elasticTypeRouteProcessor = getPlugin("elasticprocessor")
-        ReindexProcessor reindexProcessor = getPlugin("camel_reindex_processor")
 
         if (reindexProcessor) {
             from(messageQueue) // Also removeQueue (configured to same)
@@ -44,6 +53,17 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
                 .process(elasticTypeRouteProcessor)
                 .aggregate(header("document:dataset"), ArrayListAggregationStrategy.getInstance()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))
+    }
+
+    Processor getElasticProcessor() {
+        ElasticRouteProcessor ep = getPlugin("elasticprocessor")
+        if (!ep) {
+            assert whelk
+            ep = ElasticRouteProcessor.getInstance()
+            ep.shapeComputer = whelk.index
+            ep.bootstrap()
+        }
+        return ep
     }
 }
 

@@ -23,7 +23,7 @@
       <level value="warn"/>
   </logger>
   <logger name="org.apache.activemq.camel.component">
-      <level value="debug"/>
+      <level value="info"/>
   </logger>
   <logger name="org.apache.activemq">
       <level value="warn"/>
@@ -56,6 +56,9 @@
   <logger name="whelk.WhelkInitializer">
       <level value="info"/>
   </logger> 
+  <logger name="whelk.api.HttpWhelk">
+      <level value="debug"/>
+  </logger>
   <logger name="whelk.StandardWhelk">
       <level value="info"/>
   </logger>
@@ -82,9 +85,6 @@
   </logger>
 <logger name="whelk.JsonDocument">
       <level value="info"/>
-  </logger>
-<logger name="whelk.api.IRIAPI">
-      <level value="debug"/>
   </logger>
 <logger name="whelk.api.DocumentAPI">
       <level value="info"/>
