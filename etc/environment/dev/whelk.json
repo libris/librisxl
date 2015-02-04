@@ -43,7 +43,7 @@
             "graphstoreroutebuilder"
             ],
         "_components": [
-            "jsonldstorage",
+            "postgrestorage",
             "graphstore",
             "index"
         ],

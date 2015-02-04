@@ -631,6 +631,13 @@
             "versioning" : false
         }
     },
+    "postgrestorage": {
+        "_class" : "whelk.component.PostgreSQLStorage",
+        "_params" : {
+            "contentTypes": ["application/ld+json"],
+            "versioning" : true
+        }
+    },
     "jsonldstorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
         "_params" : {

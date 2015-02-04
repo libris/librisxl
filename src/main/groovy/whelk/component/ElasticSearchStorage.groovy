@@ -16,7 +16,6 @@ import whelk.exception.*
 class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     final static String ELASTIC_STORAGE_TYPE = "document"
-    final static String VERSION_STORAGE_SUFFIX = "_versions"
     boolean versioning
 
     String indexName
@@ -169,6 +168,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         return null
     }
 
+    @Override
     Document getByAlternateIdentifier(String identifier) {
         def query = termQuery("entry.alternateIdentifiers", identifier)
         def srq = client.prepareSearch(indexName).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query).setSize(1)

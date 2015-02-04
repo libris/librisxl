@@ -13,6 +13,7 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     Whelk whelk
     List contentTypes
+    final static String VERSION_STORAGE_SUFFIX = "_versions"
 
     final void bootstrap() {
         assert whelk

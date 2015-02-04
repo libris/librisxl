@@ -95,6 +95,15 @@ class DefaultDocument implements Document {
     }
 
     @JsonIgnore
+    String getEntryAsJson() {
+        return mapper.writeValueAsString(entry)
+    }
+    @JsonIgnore
+    String getMetaAsJson() {
+        return mapper.writeValueAsString(meta)
+    }
+
+    @JsonIgnore
     String getContentType() { entry[CONTENT_TYPE_KEY] }
 
     @JsonIgnore
