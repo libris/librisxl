@@ -13,13 +13,12 @@ import org.apache.camel.component.http4.*
 class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
 
     int graphstoreBatchSize = 1000
-    String messageQueue, bulkMessageQueue, removeQueue, retriesQueue
+    String messageQueue, bulkMessageQueue, removeQueue
 
     GraphstoreRouteBuilder(Map settings) {
         batchTimeout = settings.get("batchTimeout", batchTimeout)
         messageQueue = settings.get("graphstoreMessageQueue")
         bulkMessageQueue = settings.get("graphstoreMessageQueue")
-        retriesQueue = settings.get("retriesQueue")
         try {
             properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
         } catch (Exception ex) {
@@ -36,16 +35,15 @@ class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
         def credentials = props.GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED?
         "?authenticationPreemptive=true&authUsername=${properties.getProperty("graphstoreUpdateAuthUser")}&authPassword=${properties.getProperty("graphstoreUpdateAuthPass")}" : ""
 
-        onException(HttpOperationFailedException.class, org.apache.http.NoHttpResponseException.class)
+        onException(HttpOperationFailedException.class, org.apache.http.NoHttpResponseException.class, org.apache.http.conn.HttpHostConnectException)
             .bean(graphstoreFailureBean, "handle")
             .handled(true)
             .choice()
                 .when(header("retry"))
-                    .to(retriesQueue)
+                    .delay(header("delay"))
+                    .to(messageQueue)
                 .otherwise()
                     .end()
-
-        from(retriesQueue).delay(header("delay")).to(messageQueue)
 
         def camelStep = from(messageQueue)
             .filter("groovy", "request.getHeader('whelk:operation') != 'DELETE' && ['auth','bib','hold'].contains(request.getHeader('document:dataset'))")
@@ -100,7 +98,7 @@ class GraphstoreHttpResponseFailedBean {
         } else {
             log.error("Graphstore update failed with ${e.getName().getClass()}: ${e.message}")
             message.setHeader("retry", true)
-            message.setHeader("delay", 600000)
+            message.setHeader("delay", 3600000)
         }
     }
 }
