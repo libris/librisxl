@@ -316,6 +316,12 @@ class MarcConversion {
                 }
             }
         }
+        // TODO: how to re-add only partially _unhandled?
+        data._marcUncompleted.each {
+            def field = it.clone()
+            field.remove('_unhandled')
+            fields << field
+        }
         return marc
     }
 
