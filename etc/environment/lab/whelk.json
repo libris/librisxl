@@ -10,7 +10,7 @@
         "MQ_INDEX": "activemq:testlibris.index",
         "MQ_BULK_INDEX": "activemq:testlibris.bulk.index?concurrentConsumers=10",
         "MQ_APIX": "activemq:testlibris.apix",
-
+        "MQ_APIX_RETRIES": "activemq:testlibris.apix.retries",
         "CAMEL_MASTER_COMPONENT":"sendmq",
         "CAMEL_CHANNEL_PREFIX":"test",
         "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=10",
