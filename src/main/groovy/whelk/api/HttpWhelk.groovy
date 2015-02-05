@@ -141,7 +141,7 @@ class HttpWhelk extends HttpServlet {
     @Override
     void destroy() {
         whelk.state.put("status", "SHUTTING DOWN")
-        saveState()
+        whelk.saveState()
     }
 
 }

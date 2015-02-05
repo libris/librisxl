@@ -35,16 +35,13 @@
     "_plugins": {
         "_support": [
             "elasticnode",
-            "fusekiserver",
             "activemqbroker"
             ],
         "_camel": [
-            "indexroutebuilder",
-            "graphstoreroutebuilder"
+            "indexroutebuilder"
             ],
         "_components": [
             "postgrestorage",
-            "graphstore",
             "index"
         ],
         "_maintenance": [

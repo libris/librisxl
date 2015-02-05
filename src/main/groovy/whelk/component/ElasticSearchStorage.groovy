@@ -49,7 +49,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     @Override
     boolean eligibleForStoring(Document doc) {
         if (versioning) {
-            Document currentDoc = get(doc.identifier)
+            Document currentDoc = load(doc.identifier)
             log.debug("eligible: $currentDoc - ${currentDoc?.deleted}, checksums: ${currentDoc?.checksum} / ${doc.checksum}")
             if (currentDoc && !currentDoc.isDeleted() && currentDoc.checksum == doc.checksum) {
                 log.debug("Document ${doc.identifier} is not suitable for storing.")
@@ -101,7 +101,8 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         }
     }
 
-    List<Document> getAllVersions(String identifier) {
+    @Override
+    List<Document> loadAllVersions(String identifier) {
         if (versioning) {
             def query = termQuery("identifier", identifier)
             def srq = client.prepareSearch(indexName + VERSION_STORAGE_SUFFIX).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query)
@@ -117,7 +118,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     protected fetchAndUpdateVersion(Document newDoc) {
-        Document currentDoc = get(newDoc.identifier)
+        Document currentDoc = load(newDoc.identifier)
         if (currentDoc && !currentDoc.entry['deleted'] && currentDoc.checksum != newDoc.checksum) {
             newDoc.setVersion(currentDoc.version + 1)
         } else {
@@ -135,12 +136,12 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         }
     }
 
-    Document get(String identifier) {
-        return get(identifier, null)
+    Document load(String identifier) {
+        return load(identifier, null)
     }
 
     @Override
-    Document get(String identifier, String version) {
+    Document load(String identifier, String version) {
         def grq = client.prepareGet(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier))
         def response = grq.execute().actionGet();
 
@@ -169,7 +170,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     @Override
-    Document getByAlternateIdentifier(String identifier) {
+    Document loadByAlternateIdentifier(String identifier) {
         def query = termQuery("entry.alternateIdentifiers", identifier)
         def srq = client.prepareSearch(indexName).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query).setSize(1)
         def response = performExecute(srq)
@@ -180,7 +181,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         return null
     }
 
-    Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
+    Iterable<Document> loadAll(String dataset = null, Date since = null, Date until = null) {
         return new Iterable<Document>() {
             def results = []
             Iterator<Document> iterator() {

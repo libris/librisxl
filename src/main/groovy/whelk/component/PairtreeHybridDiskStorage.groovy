@@ -97,7 +97,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     @Override
     boolean eligibleForStoring(Document doc) {
         if (versioning) {
-            Document currentDoc = get(doc.identifier)
+            Document currentDoc = load(doc.identifier)
             if (currentDoc && !currentDoc.isDeleted() && currentDoc.checksum == doc.checksum) {
                 return false
             }
@@ -226,13 +226,13 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
 
-    Document get(String id, String version = null) {
+    Document load(String id, String version = null) {
         loadDocument(id, version)
     }
 
-    Document getByAlternateIdentifier(String id) {
+    Document loadByAlternateIdentifier(String id) {
         log.warn("Storage currently has no alternate identifier support! Using primary identifier for request.")
-        return get(id)
+        return load(id)
     }
 
     @groovy.transform.CompileStatic
@@ -267,7 +267,11 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
     }
 
-    Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
+    List<Document> loadAllVersions(String identifier) {
+        return []
+    }
+
+    Iterable<Document> loadAll(String dataset = null, Date since = null, Date until = null) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         if (dataset || since) {
             log.debug("Loading documents by index query for dataset $dataset ${(since ? "since $since": "")}")

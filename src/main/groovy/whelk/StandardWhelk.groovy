@@ -127,7 +127,7 @@ class StandardWhelk implements Whelk {
     private Map loadState() {
         Storage storage = getStorage()
         if (storage) {
-            def stateDoc = getStorage().get(WHELKSTATE_ID)
+            def stateDoc = getStorage().load(WHELKSTATE_ID)
             if (stateDoc) {
                 def jd = new JsonDocument().fromDocument(stateDoc)
                 whelkState.putAll(jd.dataAsMap)
@@ -221,13 +221,13 @@ class StandardWhelk implements Whelk {
             def s = getStorage(contentType)
             if (s) {
                 log.debug("Found $contentType storage ${s.id}.")
-                doc = s.get(identifier, version)
+                doc = s.load(identifier, version)
                 break
             }
         }
         // TODO: Check this
         if (!doc) {
-            doc = storage.get(identifier, version)
+            doc = storage.load(identifier, version)
         }
 
         return doc
@@ -258,7 +258,7 @@ class StandardWhelk implements Whelk {
             }
 
             log.debug("Check alternate identifiers.")
-            doc = storage.getByAlternateIdentifier(uri)
+            doc = storage.loadByAlternateIdentifier(uri)
             if (doc) {
                 return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
             }
@@ -284,7 +284,7 @@ class StandardWhelk implements Whelk {
     }
 
     Map<String, String> getVersions(String identifier) {
-        def docs = storage.getAllVersions(identifier)
+        def docs = storage.loadAllVersions(identifier)
         def versions = [:]
         for (d in docs) {
             versions[(d.version)] = d.checksum
@@ -424,12 +424,13 @@ class StandardWhelk implements Whelk {
         }
         if (st) {
             log.debug("Loading "+(dataset ? dataset : "all")+" "+(since ?: "")+" from storage ${st.id}")
-            return st.getAll(dataset, since)
+            return st.loadAll(dataset, since)
         } else {
             throw new WhelkRuntimeException("Couldn't find storage. (storageId = $storageId)")
         }
     }
 
+    @Override
     Document createDocument(String contentType) {
         if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
             return new JsonDocument().withContentType(contentType)
@@ -438,6 +439,7 @@ class StandardWhelk implements Whelk {
         }
     }
 
+    @Override
     Document createDocumentFromJson(String json) {
         try {
             Document document = mapper.readValue(json, DefaultDocument)
@@ -448,6 +450,15 @@ class StandardWhelk implements Whelk {
         } catch (org.codehaus.jackson.JsonParseException jpe) {
             throw new DocumentException(jpe)
         }
+    }
+
+    @Override
+    Document createDocument(byte[] data, Map entry, Map meta) {
+        Document document = new DefaultDocument().withMeta(meta).withEntry(entry).withData(data)
+        if (document.isJson()) {
+            return new JsonDocument().fromDocument(document)
+        }
+        return document
     }
 
     @Override
@@ -714,7 +725,7 @@ class StandardWhelk implements Whelk {
     }
 
     protected void setConfig(whelkConfig, pluginConfig) {
-        log.info("Running setConfig in standardwhelk.")
+        log.debug("Running setConfig in standardwhelk.")
         def disabled = System.getProperty("disable.plugins", "").split(",")
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])

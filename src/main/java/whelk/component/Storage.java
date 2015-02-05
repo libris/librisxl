@@ -23,18 +23,20 @@ public interface Storage extends Component {
      * @param identifier the identifier of the object to be retrieved.
      * @return the requested document or null if no object exists for specified identifier.
      */
-    public Document get(String identifier, String version);
+    public Document load(String identifier, String version);
     /**
      * Retrieves an object by one of its alternate identifiers.
      * @param identifier the identifier of the object to be retrieved.
      * @return the requested document or null if no object exists for specified identifier.
      */
-    public Document getByAlternateIdentifier(String identifier);
+    public Document loadByAlternateIdentifier(String identifier);
 
     /**
      * Retrieves all objects from Storage.
      */
-    public Iterable<Document> getAll();
+    public Iterable<Document> loadAll();
+
+    public List<Document> loadAllVersions(String identifier);
     /**
      * @return true if this storage can handle documents of this kind.
      */
