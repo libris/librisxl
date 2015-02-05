@@ -183,6 +183,28 @@ class MarcFrameConverterSpec extends Specification {
         ]
     }
 
+    def "should copy over unhandled marc fields"() {
+        given:
+        def jsonld = [
+            controlNumber: "0000000",
+            about: [
+                "@type": ["Text", "Monograph"]
+            ],
+            _marcUncompleted: [
+                ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
+                ["100": ["ind1": "0", "subfields": [["?": "?"]]], "_unhandled": ["?"]]
+            ]
+        ]
+        when:
+        def result = converter.conversion.revert(jsonld)
+        then:
+        result.fields == [
+            ["001": "0000000"],
+            ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
+            ["100": ["ind1": "0", "subfields": [["?": "?"]]]]
+        ]
+    }
+
     def "should handle postprocessing"() {
         when:
         def data = deepcopy(item.spec.source)
