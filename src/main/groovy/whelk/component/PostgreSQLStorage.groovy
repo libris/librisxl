@@ -12,6 +12,15 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
 
     boolean versioning
 
+    private Map<String,Document> documentCache = new LinkedHashMap<String,Document>() {
+        int maxCacheSize = 2000
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > maxCacheSize;
+        }
+    }
+
     // Starta postgres: postgres -D /usr/local/var/postgres
 
     String mainTableName, versionsTableName
@@ -50,6 +59,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
 
 
         GET_DOCUMENT = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE identifier = ?"
+        GET_DOCUMENT_VERSION = "SELECT identifier,data,entry,meta FROM $versionsTableName WHERE identifier = ? AND version = ?"
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE entry @> '{ \"alternateIdentifiers\": [?] }'"
     }
 
@@ -86,7 +96,10 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 +"id serial,"
                 +"identifier varchar(200) not null,"
                 +"version integer not null default 0,"
-                +"document jsonb"
+                +"data bytea,"
+                +"entry jsonb,"
+                +"meta jsonb,"
+                +"UNIQUE (identifier, version)"
                 +")");
             }
         stmt.close()
@@ -101,6 +114,14 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
     @Override
     @groovy.transform.Synchronized
     boolean store(Document doc) {
+        if (versioning) {
+            def existingDoc = load(doc.identifier)
+            if (existingDoc && existingDoc.checksum == doc.checksum) {
+                log.debug("Same document, do nothing.")
+                return
+            }
+            saveVersion(existingDoc)
+        }
         log.debug("Saving document ${doc.identifier}")
         Connection connection = connectionPool.getConnection()
         PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
@@ -118,6 +139,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             insert.setObject(11, doc.entryAsJson, java.sql.Types.OTHER)
             insert.setObject(12, doc.metaAsJson, java.sql.Types.OTHER)
             insert.executeUpdate()
+            documentCache.put(doc.identifier, doc)
             return true
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}")
@@ -129,12 +151,14 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         return false
     }
 
+    boolean saveVersion(Document doc) {
+    }
+
     @Override
     void bulkStore(final List docs) {
         if (!docs || docs.isEmpty()) {
             return
         }
-        log.info("Executing batch.")
         Connection connection = connectionPool.getConnection()
         PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT)
         try {
@@ -152,6 +176,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 batch.setObject(11, doc.entryAsJson, java.sql.Types.OTHER)
                 batch.setObject(12, doc.metaAsJson, java.sql.Types.OTHER)
                 batch.addBatch()
+                documentCache.put(doc.identifier, doc)
             }
             batch.executeBatch()
         } catch (Exception e) {
@@ -169,10 +194,28 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
 
     @Override
     Document load(String id, String version) {
-        return loadFromSql(id, version, GET_DOCUMENT)
+        Document doc = null
+        if (documentCache.containsKey(id)) {
+            doc = documentCache.get(id)
+            if (version && doc.version != version.toInteger()) {
+                log.trace("Wrong version of document in cache.")
+                doc = null
+            }
+        }
+        if (!doc) {
+            log.debug("Loading document from database.")
+            if (version) {
+                doc = loadFromSql(id, version.toInteger(), GET_DOCUMENT_VERSION)
+            } else {
+                doc = loadFromSql(id, -1, GET_DOCUMENT)
+            }
+        } else {
+            log.info("Retrieved document ${doc.identifier} from documentCache.")
+        }
+        return doc
     }
 
-    Document loadFromSql(String id, String version, String sql) {
+    private Document loadFromSql(String id, int version, String sql) {
         Document doc = null
         Connection connection = connectionPool.getConnection()
         PreparedStatement selectstmt
@@ -180,12 +223,16 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         try {
             selectstmt = connection.prepareStatement(sql)
             selectstmt.setString(1, id)
+            if (version > 0) {
+                selectstmt.setInteger(2, version)
+            }
             rs = selectstmt.executeQuery()
             if (rs.next()) {
                 doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
                 log.debug("Retrieved document ${doc.identifier}.")
+                documentCache.put(doc.identifier, doc)
             } else {
-                log.debug("No results returned for get($id)")
+                log.trace("No results returned for get($id)")
             }
         } finally {
             rs.close()
@@ -207,15 +254,21 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
 
     @Override
     List<Document> loadAllVersions(String identifier) {
-        return []
+        throw UnsupportedOperationException("Not implemented yet!")
     }
 
     Iterable<Document> loadAll(String dataset, Date since = null, Date until = null) {
-        return null
+        throw UnsupportedOperationException("Not implemented yet!")
     }
 
     @Override
-    void remove(String identifier) {
+    void remove(String identifier, String dataset) {
+        if (versioning) {
+            log.debug("Creating tombstone record with id ${identifier}")
+            store(createTombstone(identifier, dataset))
+        } else {
+            throw UnsupportedOperationException("Not implemented yet!")
+        }
     }
 
     public void close() {

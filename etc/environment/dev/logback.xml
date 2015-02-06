@@ -65,6 +65,7 @@
  <logger name="whelk.component.BasicElasticComponent">
       <level value="info"/>
   </logger>
+ <logger name="whelk.component.PostgreSQLStorage" level="trace"/>
  <logger name="whelk.component.ElasticSearch">
       <level value="info"/>
   </logger>

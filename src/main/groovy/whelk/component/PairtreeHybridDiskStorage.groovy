@@ -305,7 +305,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    void remove(String id) {
+    void remove(String id, String dataset) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
 
         if (versioning) {

@@ -265,7 +265,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     @Override
-    void remove(String identifier) {
+    void remove(String identifier, String dataset) {
         if (!versioning) {
             log.debug("Deleting record at $indexName with id ${toElasticId(identifier)}")
             client.delete(new DeleteRequest(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier)))
@@ -273,11 +273,5 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             log.debug("Creating tombstone record at $indexName with id ${toElasticId(identifier)}")
             store(createTombstone(identifier))
         }
-    }
-
-    private Document createTombstone(id) {
-        def tombstone = whelk.createDocument("text/plain").withIdentifier(id).withData("DELETED ENTRY")
-        tombstone.entry['deleted'] = true
-        return tombstone
     }
 }

@@ -12,7 +12,7 @@ import org.elasticsearch.action.admin.indices.alias.get.*
 
 import whelk.exception.*
 
-abstract class BasicElasticComponent extends BasicComponent implements ElasticShapeComputer {
+abstract class BasicElasticComponent extends BasicComponent implements ShapeComputer {
     Client client
     def defaultMapping, es_settings
     static final String METAENTRY_INDEX_TYPE = "entry"
@@ -217,7 +217,7 @@ abstract class BasicElasticComponent extends BasicComponent implements ElasticSh
     }
 
     /**
-     * ElasticShapeComputer methods
+     * ShapeComputer methods
      */
 
     String calculateTypeFromIdentifier(String id) {

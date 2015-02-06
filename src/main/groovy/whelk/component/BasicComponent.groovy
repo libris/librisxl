@@ -38,5 +38,11 @@ abstract class BasicComponent extends BasicPlugin implements Component {
         return (!this.contentTypes || this.contentTypes.contains("*/*") || this.contentTypes.contains(ctype))
     }
 
+    protected Document createTombstone(id, dataset) {
+        def tombstone = whelk.createDocument("text/plain").withIdentifier(id).withData("DELETED ENTRY")
+        tombstone.entry['deleted'] = true
+        tombstone.entry['dataset'] = dataset
+        return tombstone
+    }
 
 }

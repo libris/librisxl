@@ -15,7 +15,7 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class ElasticRouteProcessor extends BasicPlugin implements Processor {
 
-    ElasticShapeComputer shapeComputer
+    ShapeComputer shapeComputer
     String elasticHost, elasticCluster
     int elasticPort
 

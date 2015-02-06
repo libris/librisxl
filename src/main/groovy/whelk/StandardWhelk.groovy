@@ -294,11 +294,15 @@ class StandardWhelk implements Whelk {
 
     void remove(String id, String dataset = null) {
         def doc= get(id)
-        components.each {
-            ((Component)it).remove(id)
-        }
         if (doc?.dataset) {
             dataset = doc.dataset
+        }
+        if (!dataset) {
+            dataset = plugins.find { it instanceof ShapeComputer }?.calculateTypeFromIdentifier(id)
+            log.info("Calculated dataset: $dataset")
+        }
+        components.each {
+            ((Component)it).remove(id, dataset)
         }
         log.debug("Sending DELETE operation to camel.")
         log.debug("document has identifier: ${doc?.identifier} with dataset ${dataset}")
