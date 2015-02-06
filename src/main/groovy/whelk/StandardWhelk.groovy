@@ -474,7 +474,7 @@ class StandardWhelk implements Whelk {
     @Override
     void notifyCamel(Document document, String operation, Map extraInfo) {
         Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
-        log.trace("Sending document in message to camel regaring ${document.identifier}")
+        log.trace("Sending document in message to camel regaring ${document.identifier} with operation $operation")
         exchange.getIn().setHeader("document:metaentry", document.metadataAsJson)
         sendCamelMessage(operation, exchange)
     }
