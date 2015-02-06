@@ -45,7 +45,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             "INSERT INTO $mainTableName (identifier, data, dataset, modified, entry, meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
 
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (identifier,checksum,data,entry,meta) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE identifier = ? AND checksum = ?)"
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (identifier,data,checksum,modified,entry,meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE identifier = ? AND checksum = ?)"
 
         GET_DOCUMENT = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE identifier = ?"
         GET_DOCUMENT_VERSION = "SELECT identifier,data,entry,meta FROM $versionsTableName WHERE identifier = ? AND version = ?"
@@ -84,8 +84,9 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $versionsTableName ("
                 +"id serial,"
                 +"identifier varchar(200) not null,"
-                +"checksum char(32) not null,"
                 +"data bytea,"
+                +"checksum char(32) not null,"
+                +"modified timestamp,"
                 +"entry jsonb,"
                 +"meta jsonb,"
                 +"UNIQUE (identifier, checksum)"
@@ -135,17 +136,18 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
     }
 
     boolean saveVersion(Document doc) {
-        log.debug("Saving a version of ${doc.identifier} with checksum ${doc.checksum}")
+        log.debug("Saving a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: ${doc.modified}")
         Connection connection = connectionPool.getConnection()
         PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             insvers.setString(1, doc.identifier)
-            insvers.setString(2, doc.checksum)
-            insvers.setBytes(3, doc.data)
-            insvers.setObject(4, doc.entryAsJson, java.sql.Types.OTHER)
-            insvers.setObject(5, doc.metaAsJson, java.sql.Types.OTHER)
-            insvers.setString(6, doc.identifier)
-            insvers.setString(7, doc.checksum)
+            insvers.setBytes(2, doc.data)
+            insvers.setString(3, doc.checksum)
+            insvers.setTimestamp(4, new Timestamp(doc.modified))
+            insvers.setObject(5, doc.entryAsJson, java.sql.Types.OTHER)
+            insvers.setObject(6, doc.metaAsJson, java.sql.Types.OTHER)
+            insvers.setString(7, doc.identifier)
+            insvers.setString(8, doc.checksum)
             insvers.executeUpdate()
             return true
         } catch (Exception e) {
