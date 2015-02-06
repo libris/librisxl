@@ -55,7 +55,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
             if (!messagePrepared) {
                 def doc = createDocument(message)
-                log.debug("Recreated document from message in preparation for deletion. (${doc.identifier})")
+                log.debug("Recreated document from message in preparation for deletion. (${doc?.identifier})")
                 String voyagerUri
                 if (doc instanceof JsonDocument) {
                     voyagerUri = getVoyagerUri(doc)
