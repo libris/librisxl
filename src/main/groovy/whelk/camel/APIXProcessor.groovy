@@ -75,6 +75,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
             }
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.PUT)
         }
+        log.debug("Sending message to ${message.getHeader(Exchange.HTTP_PATH)}")
 
         exchange.setOut(message)
     }
