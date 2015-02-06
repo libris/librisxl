@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import whelk.*
 import whelk.plugin.*
+import whelk.exception.*
 
 import org.apache.camel.Exchange
 import org.apache.camel.Message
@@ -33,6 +34,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
 
     @Override
     public void process(Exchange exchange) throws Exception {
+        println "APIX start processing."
         Message message = exchange.getIn()
 
         String operation = message.getHeader("whelk:operation")
@@ -53,6 +55,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
             if (!messagePrepared) {
                 def doc = createDocument(message)
+                log.debug("Recreated document from message in preparation for deletion. (${doc.identifier})")
                 String voyagerUri
                 if (doc instanceof JsonDocument) {
                     voyagerUri = getVoyagerUri(doc)
@@ -67,7 +70,14 @@ class APIXProcessor extends BasicPlugin implements Processor {
         } else {
             if (!messagePrepared) {
                 def doc = createDocument(message)
-                String voyagerUri = getVoyagerUri(doc) ?: "/" + message.getHeader("document:dataset") +"/new"
+                String voyagerUri = getVoyagerUri(doc)
+                if (!voyagerUri) {
+                    if (message.getHeader("document:dataset") == "hold") {
+                        voyagerUri = getUriForNewHolding(doc)
+                    } else {
+                        voyagerUri =  "/" + message.getHeader("document:dataset") +"/new"
+                    }
+                }
                 doc = runConverters(doc)
                 prepareMessage(doc, message)
 
@@ -76,8 +86,34 @@ class APIXProcessor extends BasicPlugin implements Processor {
             }
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.PUT)
         }
+        log.debug("Sending message to ${message.getHeader(Exchange.HTTP_PATH)}")
 
         exchange.setOut(message)
+    }
+
+    String getUriForNewHolding(Document doc) {
+        log.debug("Constructing proper URI for creating new holding.")
+        def holdingFor = doc.dataAsMap.about.holdingFor.get("@id")
+        log.debug("Document is holding for $holdingFor, loading that document ...")
+        def location = whelk.locate(holdingFor)
+        log.debug("Found location: $location")
+        def bibDoc = location?.document
+        log.debug("It contained a doc: $bibDoc")
+        if (!bibDoc && location) {
+            log.debug(" ... or rather not. Loading redirect: ${location.uri}")
+            bibDoc = whelk.get(location.uri.toString())
+        }
+        String apixNewHold = null
+        try {
+            apixNewHold = getVoyagerUri(bibDoc) + "/newhold"
+            if (!apixNewHold) {
+                throw new Exception("Failed")
+            }
+        } catch (Exception e) {
+            throw new IdentifierException("Could not figure out voyager-id for document ${doc.identifier}")
+        }
+        log.debug("Constructed URI $apixNewHold for creating holding.")
+        return apixNewHold
     }
 
     String getVoyagerUri(String xlIdentifier, String dataset) {
@@ -91,6 +127,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
 
     String getVoyagerUri(Document doc) {
         String vUri = getVoyagerUri(doc.identifier, doc.dataset)
+        log.debug("proposed voy id from identifier: $vUri")
         log.debug("Looking in ${doc.identifiers}")
         for (altId in doc.identifiers) {
             if (altId ==~ /\/(auth|bib|hold)\/\d+/) {
