@@ -12,15 +12,6 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
 
     boolean versioning
 
-    private Map<String,Document> documentCache = new LinkedHashMap<String,Document>() {
-        int maxCacheSize = 2000
-
-        @Override
-        protected boolean removeEldestEntry(Map.Entry eldest) {
-            return size() > maxCacheSize;
-        }
-    }
-
     // Starta postgres: postgres -D /usr/local/var/postgres
 
     String mainTableName, versionsTableName
@@ -50,13 +41,11 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         if (versioning) {
             this.versionsTableName = mainTableName+VERSION_STORAGE_SUFFIX
         }
-        /*
-        INSERT_DOCUMENT = "INSERT INTO $mainTableName (identifier, data, dataset, modified, entry, meta) VALUES (?,?,?,?,?,?)"
-        UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, dataset = ?, modified = ?, entry = ?, meta = ? WHERE identifier = ?"
-        */
         UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, dataset = ?, modified = ?, entry = ?, meta = ? WHERE identifier = ? RETURNING *) " +
             "INSERT INTO $mainTableName (identifier, data, dataset, modified, entry, meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
 
+
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (identifier,checksum,data,entry,meta) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE identifier = ? AND checksum = ?)"
 
         GET_DOCUMENT = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE identifier = ?"
         GET_DOCUMENT_VERSION = "SELECT identifier,data,entry,meta FROM $versionsTableName WHERE identifier = ? AND version = ?"
@@ -95,11 +84,11 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $versionsTableName ("
                 +"id serial,"
                 +"identifier varchar(200) not null,"
-                +"version integer not null default 0,"
+                +"checksum char(32) not null,"
                 +"data bytea,"
                 +"entry jsonb,"
                 +"meta jsonb,"
-                +"UNIQUE (identifier, version)"
+                +"UNIQUE (identifier, checksum)"
                 +")");
             }
         stmt.close()
@@ -115,12 +104,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
     @groovy.transform.Synchronized
     boolean store(Document doc) {
         if (versioning) {
-            def existingDoc = load(doc.identifier)
-            if (existingDoc && existingDoc.checksum == doc.checksum) {
-                log.debug("Same document, do nothing.")
-                return
-            }
-            saveVersion(existingDoc)
+            saveVersion(doc)
         }
         log.debug("Saving document ${doc.identifier}")
         Connection connection = connectionPool.getConnection()
@@ -139,7 +123,6 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             insert.setObject(11, doc.entryAsJson, java.sql.Types.OTHER)
             insert.setObject(12, doc.metaAsJson, java.sql.Types.OTHER)
             insert.executeUpdate()
-            documentCache.put(doc.identifier, doc)
             return true
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}")
@@ -152,6 +135,27 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
     }
 
     boolean saveVersion(Document doc) {
+        log.debug("Saving a version of ${doc.identifier} with checksum ${doc.checksum}")
+        Connection connection = connectionPool.getConnection()
+        PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
+        try {
+            insvers.setString(1, doc.identifier)
+            insvers.setString(2, doc.checksum)
+            insvers.setBytes(3, doc.data)
+            insvers.setObject(4, doc.entryAsJson, java.sql.Types.OTHER)
+            insvers.setObject(5, doc.metaAsJson, java.sql.Types.OTHER)
+            insvers.setString(6, doc.identifier)
+            insvers.setString(7, doc.checksum)
+            insvers.executeUpdate()
+            return true
+        } catch (Exception e) {
+            log.error("Failed to save document version: ${e.message}")
+            throw e
+        } finally {
+            insvers.close()
+            connection.close()
+        }
+        return false
     }
 
     @Override
@@ -176,7 +180,6 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 batch.setObject(11, doc.entryAsJson, java.sql.Types.OTHER)
                 batch.setObject(12, doc.metaAsJson, java.sql.Types.OTHER)
                 batch.addBatch()
-                documentCache.put(doc.identifier, doc)
             }
             batch.executeBatch()
         } catch (Exception e) {
@@ -192,25 +195,16 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         return load(id, null)
     }
 
+
+    // TODO: Idea for version: If numeric version, list all versions ordered by id, and count until desired version number is found. (consider feasability of this)
     @Override
     Document load(String id, String version) {
         Document doc = null
-        if (documentCache.containsKey(id)) {
-            doc = documentCache.get(id)
-            if (version && doc.version != version.toInteger()) {
-                log.trace("Wrong version of document in cache.")
-                doc = null
-            }
-        }
-        if (!doc) {
-            log.debug("Loading document from database.")
-            if (version) {
-                doc = loadFromSql(id, version.toInteger(), GET_DOCUMENT_VERSION)
-            } else {
-                doc = loadFromSql(id, -1, GET_DOCUMENT)
-            }
+        log.debug("Loading document from database.")
+        if (version) {
+            doc = loadFromSql(id, version.toInteger(), GET_DOCUMENT_VERSION)
         } else {
-            log.info("Retrieved document ${doc.identifier} from documentCache.")
+            doc = loadFromSql(id, -1, GET_DOCUMENT)
         }
         return doc
     }
@@ -230,7 +224,6 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             if (rs.next()) {
                 doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
                 log.debug("Retrieved document ${doc.identifier}.")
-                documentCache.put(doc.identifier, doc)
             } else {
                 log.trace("No results returned for get($id)")
             }
