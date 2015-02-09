@@ -342,7 +342,8 @@
         "_class" : "whelk.api.libris.FormatterAPI",
         "_plugins" : [
             "marcconverter",
-            "jsonld2marcconverter"
+            "jsonld2marcconverter",
+            "jsonld2marcxmlconverter"
         ]
     },
     "linkexpander" : {

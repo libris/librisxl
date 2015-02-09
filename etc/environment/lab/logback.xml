@@ -9,6 +9,7 @@
 
   <logger name="whelk.api.SearchAPI" level="warn"/>
   <logger name="whelk.api.BasicAPI" level="warn"/>
+  <logger name="whelk.api.DocumentAPI" level="info"/>
   <logger name="org.apache.camel" level="info"/>
   <logger name="whelk.api.libris.FormatterAPI" level="warn"/>
   <logger name="whelk.camel.APIXProcessor" level="debug"/>
