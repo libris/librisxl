@@ -5675,8 +5675,23 @@
 
     "084": {"inherit": "bib", "addLink": "callno"},
 
+    "541": {
+      "addProperty": "immediateSourceOfAcquisitionOfItem",
+      "repeatable": true
+    },
+
+    "561": {
+      "addProperty": "custodialHistoryOfItem",
+      "repeatable": true
+    },
+
     "562": {
       "inherit": "bib"
+    },
+
+    "563": {
+      "addProperty": "bindingInformation",
+      "repeatable": true
     },
 
     "600": {"inherit": "bib:100", "addLink": "subject"},
