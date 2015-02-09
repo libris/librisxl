@@ -13,12 +13,13 @@ import org.apache.camel.component.http4.*
 class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
 
     int graphstoreBatchSize = 1000
-    String messageQueue, bulkMessageQueue, removeQueue
+    String messageQueue, bulkMessageQueue, removeQueue,retriesQueue
 
     GraphstoreRouteBuilder(Map settings) {
         batchTimeout = settings.get("batchTimeout", batchTimeout)
         messageQueue = settings.get("graphstoreMessageQueue")
         bulkMessageQueue = settings.get("graphstoreMessageQueue")
+        retriesQueue = settings.get("retriesQueue")
         try {
             properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
         } catch (Exception ex) {
@@ -40,10 +41,11 @@ class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
             .handled(true)
             .choice()
                 .when(header("retry"))
-                    .delay(header("delay"))
-                    .to(messageQueue)
+                    .to(retriesQueue)
                 .otherwise()
                     .end()
+
+        from(retriesQueue).delay(header("delay")).to(messageQueue)
 
         def camelStep = from(messageQueue)
             .filter("groovy", "request.getHeader('whelk:operation') != 'DELETE' && ['auth','bib','hold'].contains(request.getHeader('document:dataset'))")
