@@ -2,9 +2,6 @@ package whelk
 
 import groovy.util.logging.Slf4j as Log
 
-import java.time.ZoneId
-import java.time.ZonedDateTime
-
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
@@ -17,8 +14,6 @@ class JsonDocument extends DefaultDocument {
     // store serialized data
     @JsonIgnore
     protected Map serializedDataInMap
-    @JsonIgnore
-    protected def timeZone = ZoneId.systemDefault()
 
     JsonDocument fromDocument(Document otherDocument) {
         setEntry(otherDocument.getEntry())
@@ -57,6 +52,7 @@ class JsonDocument extends DefaultDocument {
         return serializedDataInMap
     }
 
+    /*
     @Override
     long updateModified() {
         long mt = super.updateModified()
@@ -72,6 +68,7 @@ class JsonDocument extends DefaultDocument {
         }
         return mt
     }
+    */
 
     @Override
     void addIdentifier(String id) {

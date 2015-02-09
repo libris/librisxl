@@ -83,6 +83,7 @@ class StandardWhelk implements Whelk {
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
+        doc.updateModified()
         doc = prepareDocument(doc)
         boolean saved = false
         for (storage in availableStorages) {
@@ -218,7 +219,22 @@ class StandardWhelk implements Whelk {
         if (!doc) {
             doc = storage.load(identifier, version)
         }
+        if (doc && doc.contentType == "application/ld+json") {
+            doc = setModifiedInDocumentForJsonLD(doc)
+        }
 
+        return doc
+    }
+
+    Document setModifiedInDocumentForJsonLD(Document doc) {
+        def map = doc.getDataAsMap()
+        if (map.containsKey("modified")) {
+            log.trace("Setting modified in document data.")
+            def time = ZonedDateTime.ofInstant(new Date(doc.modified).toInstant(), timeZone)
+            def timestamp = time.format(StandardWhelk.DT_FORMAT)
+            map.put("modified", timestamp)
+            doc = doc.withData(map)
+        }
         return doc
     }
 
@@ -276,6 +292,7 @@ class StandardWhelk implements Whelk {
         def docs = storage.loadAllVersions(identifier)
         def versions = [:]
         for (d in docs) {
+            d = setModifiedInDocumentForJsonLD(d)
             def time = ZonedDateTime.ofInstant(d.modifiedAsDate.toInstant(), timeZone)
             versions[(d.version)] = ["checksum":d.checksum,"modified":time.format(DT_FORMAT)]
         }
@@ -318,29 +335,6 @@ class StandardWhelk implements Whelk {
         return sparqlEndpoint?.sparql(query)
     }
 
-    /*
-    Document updateModified(Document doc, long mt = -1) {
-        if (mt < 0) {
-            mt = doc.updateModified()
-        } else {
-            doc.setModified(mt)
-        }
-        if (doc.contentType == "application/ld+json") {
-            def map = doc.getDataAsMap()
-            if (map.containsKey("modified")) {
-                log.trace("Setting modified in document data.")
-                def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
-                def timestamp = time.format(DT_FORMAT)
-                map.put("modified", timestamp)
-                doc = doc.withData(map)
-            }
-        } else {
-            log.debug("Document with content-type ${doc.contentType} cannot have modified automatically updated in data.")
-        }
-        return doc
-    }
-    */
-
     Document prepareDocument(Document doc) {
         doc = sanityCheck(doc)
         if (doc.contentType == "application/ld+json") {
@@ -348,6 +342,10 @@ class StandardWhelk implements Whelk {
             // TODO: Make this configurable, or move it to uriminter
             if (map.containsKey("about") && !map.get("about")?.containsKey("@id")) {
                 map.get("about").put("@id", "/resource"+doc.identifier)
+            }
+            // Remove modified from jsonld documents prior to saving, to avoid messing up checksum.
+            if (map.containsKey("modified")) {
+                map.put("modified", null)
             }
             if (documentDataToMetaMapping) {
                 def meta = doc.meta

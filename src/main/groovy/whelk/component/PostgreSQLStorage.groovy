@@ -104,8 +104,6 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             if (!saveVersion(doc)) {
                 return true // Same document already in storage.
             }
-        } else {
-            doc.updateModified()
         }
         log.debug("Saving document ${doc.identifier} (with checksum: ${doc.checksum})")
         Connection connection = connectionPool.getConnection()
@@ -139,8 +137,6 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         Connection connection = connectionPool.getConnection()
         PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
-            String oldChecksum = doc.checksum
-            doc.updateModified()
             log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: ${doc.modified}")
             insvers.setString(1, doc.identifier)
             insvers.setBytes(2, doc.data)
@@ -149,8 +145,8 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             insvers.setObject(5, doc.entryAsJson, java.sql.Types.OTHER)
             insvers.setObject(6, doc.metaAsJson, java.sql.Types.OTHER)
             insvers.setString(7, doc.identifier)
-            insvers.setString(8, oldChecksum)
-            int updated = insvers.executeUpdate()
+            insvers.setString(8, doc.checksum)
+            int updated =  insvers.executeUpdate()
             log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
             return (updated > 0)
         } catch (Exception e) {
@@ -162,16 +158,29 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         }
     }
 
-    // TODO: Fix updating of modified and versioning
     @Override
     void bulkStore(final List docs) {
+        log.info("Bulk store requested. Versioning set to $versioning")
         if (!docs || docs.isEmpty()) {
             return
         }
         Connection connection = connectionPool.getConnection()
         PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT)
+        PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
+                if (versioning) {
+                    ver_batch.setString(1, doc.identifier)
+                    ver_batch.setBytes(2, doc.data)
+                    ver_batch.setString(3, doc.checksum)
+                    ver_batch.setTimestamp(4, new Timestamp(doc.modified))
+                    ver_batch.setObject(5, doc.entryAsJson, java.sql.Types.OTHER)
+                    ver_batch.setObject(6, doc.metaAsJson, java.sql.Types.OTHER)
+                    ver_batch.setString(7, doc.identifier)
+                    ver_batch.setString(8, doc.checksum)
+                    ver_batch.addBatch()
+                }
+
                 batch.setBytes(1, doc.data)
                 batch.setString(2, doc.dataset)
                 batch.setTimestamp(3, new Timestamp(doc.modified))
@@ -186,12 +195,16 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 batch.setObject(12, doc.metaAsJson, java.sql.Types.OTHER)
                 batch.addBatch()
             }
+            if (versioning) {
+                ver_batch.executeBatch()
+            }
             batch.executeBatch()
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}")
             throw e
         } finally {
             batch.close()
+            ver_batch.close()
             connection.close()
         }
     }
@@ -203,7 +216,6 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
     @Override
     Document load(String id, String version) {
         Document doc = null
-        log.debug("Loading document from database.")
         if (version && version.isInteger()) {
             int v = version.toInteger()
             def docList = loadAllVersions(id)

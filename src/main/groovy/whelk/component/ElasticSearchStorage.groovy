@@ -51,15 +51,16 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     @Override
     boolean store(Document doc, boolean withVersioning = versioning) {
         def olddoc = load(doc.identifier)
+            /*
         if (olddoc?.checksum == doc.checksum) {
             log.debug("Supplied document already in storage.")
             return true
         }
-        doc.updateModified()
-        if (versioning && withVersioning) {
-            performExecute(prepareIndexingRequest(doc, null, indexName))
-        }
+        */
         try {
+            if (versioning && withVersioning) {
+                performExecute(prepareIndexingRequest(doc, null, indexName))
+            }
             performExecute(prepareIndexingRequest(doc, doc.identifier, indexName))
             return true
         } catch (Exception e) {
@@ -73,12 +74,13 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         log.info("Bulk store requested. Versioning set to $versioning")
         def breq = client.prepareBulk()
         for (doc in docs) {
+            /*
             def olddoc = load(doc.identifier)
             if (olddoc?.checksum == doc.checksum) {
                 log.debug("Document ${doc.identifier} already in storage with same checksum.")
                 continue
             }
-            doc.updateModified()
+            */
             if (versioning) {
                 breq.add(prepareIndexingRequest(doc, null, indexName))
             }
@@ -97,8 +99,11 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             def srq = client.prepareSearch(indexName + VERSION_STORAGE_SUFFIX).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query).addSort("entry.modified", SortOrder.ASC)
             def response = performExecute(srq)
             def docs = []
+            int v = 0
             response.hits.hits.each {
-                docs << whelk.createDocumentFromJson(it.sourceAsString)
+                def doc = whelk.createDocumentFromJson(it.sourceAsString)
+                doc.version = v++
+                docs << doc
             }
             return docs
         } else {
