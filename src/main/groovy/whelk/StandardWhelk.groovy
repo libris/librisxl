@@ -86,13 +86,8 @@ class StandardWhelk implements Whelk {
         doc = prepareDocument(doc)
         boolean saved = false
         for (storage in availableStorages) {
-            if (storage.eligibleForStoring(doc)) {
-                doc = updateModified(doc)
-                saved = (storage.store(doc) || saved)
-                log.debug("Storage ${storage.id} result from save: $saved")
-            } else if (log.isDebugEnabled()) {
-                log.debug("Storage ${storage.id} didn't find document ${doc.identifier} eligible for storing.")
-            }
+            saved = (storage.store(doc) || saved)
+            log.debug("Storage ${storage.id} result from save: $saved")
         }
         if (saved) {
             if (!minorUpdate) {
@@ -109,16 +104,10 @@ class StandardWhelk implements Whelk {
     @groovy.transform.Synchronized
     void saveState() {
         Storage storage = getStorage()
-        boolean versioningSetting = storage ? storage.versioning : false
         if (storage) {
-            try {
-                storage.versioning = false
-                def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(whelkState)
-                if (!storage.store(stateDoc)) {
-                    log.error("Failed to save state!")
-                }
-            } finally {
-                storage.versioning = versioningSetting
+            def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(whelkState)
+            if (!storage.store(stateDoc, false)) {
+                log.error("Failed to save state!")
             }
         }
     }
@@ -287,7 +276,8 @@ class StandardWhelk implements Whelk {
         def docs = storage.loadAllVersions(identifier)
         def versions = [:]
         for (d in docs) {
-            versions[(d.version)] = d.checksum
+            def time = ZonedDateTime.ofInstant(d.modifiedAsDate.toInstant(), timeZone)
+            versions[(d.version)] = ["checksum":d.checksum,"modified":time.format(DT_FORMAT)]
         }
         return versions
     }

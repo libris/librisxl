@@ -84,11 +84,14 @@
  <logger name="whelk.component.HttpBatchGraphStore">
       <level value="info"/>
   </logger>
+<logger name="whelk.DefaultDocument">
+      <level value="debug"/>
+  </logger>
 <logger name="whelk.JsonDocument">
       <level value="info"/>
   </logger>
 <logger name="whelk.api.DocumentAPI">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
 <logger name="whelk.api.ReindexOperator">
       <level value="info"/>

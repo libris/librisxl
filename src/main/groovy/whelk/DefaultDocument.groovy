@@ -117,6 +117,11 @@ class DefaultDocument implements Document {
     }
 
     @JsonIgnore
+    Date getModifiedAsDate() {
+        return new Date(getModified())
+    }
+
+    @JsonIgnore
     int getVersion() {
         return entry.get("version", 0)
     }

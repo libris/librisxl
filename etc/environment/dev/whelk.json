@@ -5,7 +5,6 @@
         "ELASTIC_SEARCH_HOST": "localhost",
         "ELASTIC_STORAGE_HOST": "localhost",
         "ELASTIC_PORT": 9300,
-        "ELASTIC_CLUSTER": "markuscluster",
         "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
@@ -35,15 +34,19 @@
     },
     "_plugins": {
         "_support": [
-            "activemqbroker"
+            "elasticnode",
+            "activemqbroker",
+            "fusekiserver"
             ],
         "_camel": [
-            "indexroutebuilder"
+            "indexroutebuilder",
+            "graphstoreroutebuilder"
             ],
         "_components": [
-            "postgrestorage",
-            "index"
-        ],
+            "jsonldstorage",
+            "index",
+            "graphstore"
+        ]
         "_maintenance": [
             "scheduledoperator"
         ]
