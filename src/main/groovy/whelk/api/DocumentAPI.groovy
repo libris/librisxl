@@ -298,6 +298,7 @@ class DocumentAPI extends BasicAPI {
     }
 
     void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
+        log.debug("Setting header Location: $locationRef")
         response.setHeader("Location", locationRef)
         response.setHeader("ETag", etag as String)
         response.setStatus(HttpServletResponse.SC_CREATED, "Thank you! Document ingested.")
