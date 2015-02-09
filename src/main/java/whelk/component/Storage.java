@@ -8,16 +8,14 @@ import whelk.Document;
 public interface Storage extends Component {
     /**
      * Stores an object in this Storage.
+     * @param d the Document
+     * @param withVersioning ability to overide storage versioning setting. Defaults to storage defaults.
      * @return true if the operation was successful.
      * @throws IdentifierException if the Document doesn't have an identifier.
      */
+    public boolean store(Document d, boolean withVersioning);
     public boolean store(Document d);
     public void bulkStore(List<Document> documents);
-    /**
-     * Checks document checksum agains previously stored document, if available. If storage is not versioning, this method always returns true.
-     * @return true if the document would be stored.
-     */
-    public boolean eligibleForStoring(Document d);
     /**
      * Retrieves an object from this Storage.
      * @param identifier the identifier of the object to be retrieved.

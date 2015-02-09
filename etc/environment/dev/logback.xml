@@ -70,7 +70,7 @@
       <level value="info"/>
   </logger>
  <logger name="whelk.component.ElasticSearchStorage">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
  <logger name="whelk.plugin.BasicPlugin">
       <level value="info"/>

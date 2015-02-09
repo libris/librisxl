@@ -334,7 +334,7 @@ class StandardWhelk implements Whelk {
                 doc = doc.withData(map)
             }
         } else {
-            log.info("Document with content-type ${doc.contentType} cannot have modified automatically updated in data.")
+            log.debug("Document with content-type ${doc.contentType} cannot have modified automatically updated in data.")
         }
         return doc
     }

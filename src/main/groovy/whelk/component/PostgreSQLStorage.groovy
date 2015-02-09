@@ -98,21 +98,14 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
     }
 
     @Override
-    boolean eligibleForStoring(Document doc) {
-        return true
-    }
-
-    @Override
-    boolean store(Document doc) {
-        return store(doc, true)
-    }
-
-    boolean store(Document doc, boolean withVersioning) {
+    boolean store(Document doc, boolean withVersioning = versioning) {
         log.debug("Document ${doc.identifier} checksum before save: ${doc.checksum}")
         if (versioning && withVersioning) {
             if (!saveVersion(doc)) {
                 return true // Same document already in storage.
             }
+        } else {
+            whelk.updateModified(doc)
         }
         log.debug("Saving document ${doc.identifier} (with checksum: ${doc.checksum})")
         Connection connection = connectionPool.getConnection()
@@ -158,7 +151,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             insvers.setString(7, doc.identifier)
             insvers.setString(8, oldChecksum)
             int updated = insvers.executeUpdate()
-            log.debug("${updated > 0 ? 'New version saved.' : 'Already had a version'}")
+            log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
             return (updated > 0)
         } catch (Exception e) {
             log.error("Failed to save document version: ${e.message}")
@@ -169,6 +162,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         }
     }
 
+    // TODO: Fix updating of modified and versioning
     @Override
     void bulkStore(final List docs) {
         if (!docs || docs.isEmpty()) {

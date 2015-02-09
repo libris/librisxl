@@ -53,6 +53,11 @@ class JsonDocument extends DefaultDocument {
     }
 
     @Override
+    long updateModified() {
+        super.updateModified()
+    }
+
+    @Override
     void addIdentifier(String id) {
         super.addIdentifier(id)
         if (getContentType() == "application/ld+json") {

@@ -28,6 +28,7 @@ import org.elasticsearch.action.search.*
 import org.elasticsearch.search.sort.SortOrder
 import static org.elasticsearch.index.query.QueryBuilders.*
 
+@Deprecated
 class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridStorage {
 
     String indexName
@@ -95,18 +96,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    boolean eligibleForStoring(Document doc) {
-        if (versioning) {
-            Document currentDoc = load(doc.identifier)
-            if (currentDoc && !currentDoc.isDeleted() && currentDoc.checksum == doc.checksum) {
-                return false
-            }
-        }
-        return true
-    }
-
-    @Override
-    public boolean store(Document doc) {
+    public boolean store(Document doc, boolean withVersioning=versioning) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         boolean result = storeAsFile(doc)
         log.debug("Result from store-operation: $result")
