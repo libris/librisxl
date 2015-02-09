@@ -318,6 +318,7 @@ class StandardWhelk implements Whelk {
         return sparqlEndpoint?.sparql(query)
     }
 
+    /*
     Document updateModified(Document doc, long mt = -1) {
         if (mt < 0) {
             mt = doc.updateModified()
@@ -338,6 +339,7 @@ class StandardWhelk implements Whelk {
         }
         return doc
     }
+    */
 
     Document prepareDocument(Document doc) {
         doc = sanityCheck(doc)

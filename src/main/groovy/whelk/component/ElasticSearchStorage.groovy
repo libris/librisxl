@@ -55,7 +55,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             log.debug("Supplied document already in storage.")
             return true
         }
-        whelk.updateModified(doc)
+        doc.updateModified()
         if (versioning && withVersioning) {
             performExecute(prepareIndexingRequest(doc, null, indexName))
         }
@@ -78,7 +78,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
                 log.debug("Document ${doc.identifier} already in storage with same checksum.")
                 continue
             }
-            whelk.updateModified(doc)
+            doc.updateModified()
             if (versioning) {
                 breq.add(prepareIndexingRequest(doc, null, indexName))
             }

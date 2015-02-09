@@ -105,7 +105,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 return true // Same document already in storage.
             }
         } else {
-            whelk.updateModified(doc)
+            doc.updateModified()
         }
         log.debug("Saving document ${doc.identifier} (with checksum: ${doc.checksum})")
         Connection connection = connectionPool.getConnection()
@@ -140,7 +140,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             String oldChecksum = doc.checksum
-            whelk.updateModified(doc)
+            doc.updateModified()
             log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: ${doc.modified}")
             insvers.setString(1, doc.identifier)
             insvers.setBytes(2, doc.data)
