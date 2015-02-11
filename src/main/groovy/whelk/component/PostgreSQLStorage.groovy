@@ -24,7 +24,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
 
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_STATEMENT
 
     PostgreSQLStorage(String componentId = null, Map settings) {
         this.contentTypes = settings.get('contentTypes', null)
@@ -51,6 +51,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         GET_DOCUMENT_VERSION = "SELECT identifier,data,entry,meta FROM $versionsTableName WHERE identifier = ? AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT identifier,data,entry,meta FROM $versionsTableName WHERE identifier = ? ORDER BY modified"
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE entry @> '{ \"alternateIdentifiers\": [?] }'"
+        LOAD_ALL_STATEMENT = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? ORDER BY modified LIMIT 2000"
     }
 
     @Override
@@ -292,7 +293,48 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
     }
 
     Iterable<Document> loadAll(String dataset, Date since = null, Date until = null) {
-        throw UnsupportedOperationException("Not implemented yet!")
+        return new Iterable<Document>() {
+            def results = new LinkedHashSet<Document>()
+            Iterator<Document> iterator() {
+                Iterator listIterator = null
+                Connection connection = connectionPool.getConnection()
+                PreparedStatement loadAllStatement = connection.prepareStatement(LOAD_ALL_STATEMENT)
+
+                return new Iterator<Document>() {
+                    long lastModified = 0
+
+                    public boolean hasNext() {
+                        if (results.isEmpty()) {
+                            log.debug("Getting results from postgres")
+                            listIterator = null
+                            loadAllStatement.setTimestamp(1, new Timestamp(lastModified))
+                            ResultSet rs = loadAllStatement.executeQuery()
+                            while (rs.next()) {
+                                def doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
+                                lastModified = doc.modified
+                                results << doc
+
+                            }
+                            listIterator = results.iterator()
+                        }
+                        return !results.isEmpty()
+                    }
+                    public Document next() {
+                        if (listIterator == null) {
+                            listIterator = results.iterator()
+                        }
+                        Document d = listIterator.next()
+                        if (!listIterator.hasNext()) {
+                            listIterator = null
+                            results = new LinkedHashSet<Document>()
+                        }
+                        log.trace("Got document ${d?.identifier}")
+                        return d
+                    }
+                    public void remove() { throw new UnsupportedOperationException(); }
+                }
+            }
+        }
     }
 
     @Override
