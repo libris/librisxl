@@ -2,6 +2,9 @@ package whelk
 
 import groovy.util.logging.Slf4j as Log
 
+import java.time.ZoneId
+import java.time.ZonedDateTime
+
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
@@ -14,6 +17,7 @@ class JsonDocument extends DefaultDocument {
     // store serialized data
     @JsonIgnore
     protected Map serializedDataInMap
+    def timeZone = ZoneId.systemDefault()
 
     JsonDocument fromDocument(Document otherDocument) {
         setEntry(otherDocument.getEntry())
@@ -52,7 +56,6 @@ class JsonDocument extends DefaultDocument {
         return serializedDataInMap
     }
 
-    /*
     @Override
     long updateModified() {
         long mt = super.updateModified()
@@ -68,7 +71,6 @@ class JsonDocument extends DefaultDocument {
         }
         return mt
     }
-    */
 
     @Override
     void addIdentifier(String id) {
@@ -88,11 +90,15 @@ class JsonDocument extends DefaultDocument {
     }
 
     @Override
-    protected void calculateChecksum() {
+    protected void calculateChecksum(byte[] databytes, byte[] metabytes) {
         if (getData().length > 0) {
             log.trace("Normalizing json data before checksum calculation")
-            setData(mapper.writeValueAsBytes(getDataAsMap()), false)
+            def dataMap = getDataAsMap()
+            setData(mapper.writeValueAsBytes(dataMap), false)
+            // Removed modified from data before checksum calculation
+            dataMap.remove("modified")
+            databytes = mapper.writeValueAsBytes(dataMap)
         }
-        super.calculateChecksum()
+        super.calculateChecksum(databytes, metabytes)
     }
 }

@@ -28,7 +28,7 @@ class FormatterAPI extends BasicAPI {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No content received.")
             } else {
                 String ctype = ContentType.parse(request.getContentType()).getMimeType()
-                Document doc = whelk.createDocument(ctype).withData(Tools.normalizeString(request.getInputStream().getText("UTF-8"))).withEntry(["contentType":ctype, "timestamp": new Date().getTime()])
+                Document doc = whelk.createDocument(ctype).withData(Tools.normalizeString(request.getInputStream().getText("UTF-8"))).withEntry([CONTENT_TYPE_KEY:ctype, (Document.CREATED_KEY): new Date().getTime()])
                 if (requestedContentType) {
                     log.info("Constructed document. Asking for converter for $requestedContentType")
                     def fc = plugins.find { it.requiredContentType == doc.contentType && it.resultContentType == requestedContentType }

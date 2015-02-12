@@ -2,7 +2,7 @@
     "_timestamp" : {
         "enabled" : true,
         "store" : true,
-        "path" : "entry.timestamp"
+        "path" : "entry.modified"
     },
     "_source" : {
         "enabled" : true
@@ -25,7 +25,7 @@
                     "type" : "string",
                     "index" : "not_analyzed"
                 },
-                "timestamp" : {
+                "created" : {
                     "type" : "date"
                 },
                 "modified" : {

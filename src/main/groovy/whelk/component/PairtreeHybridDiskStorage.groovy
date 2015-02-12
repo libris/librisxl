@@ -197,7 +197,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             version = existingDocument.version + 1
             Map versions = existingDocument.entry.versions ?: [:]
             String lastVersion = existingDocument.version as String
-            versions[lastVersion] = [(Document.TIMESTAMP_KEY) : existingDocument.timestamp]
+            versions[lastVersion] = [(Document.CREATED_KEY) : existingDocument.created]
             if (existingDocument?.entry?.deleted) {
                 versions.get(lastVersion).put("deleted", true)
             } else {
@@ -421,7 +421,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             query = query.must(termQuery("entry.dataset", dataset))
         }
         if (lastTimestamp < 0 && (since || until)) {
-            def timeRangeQuery = rangeQuery("entry.timestamp")
+            def timeRangeQuery = rangeQuery("entry.modified")
             if (since) {
                 timeRangeQuery = timeRangeQuery.from(since.getTime())
             }
@@ -431,16 +431,16 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             query = query.must(timeRangeQuery)
         }
         if (lastTimestamp >= 0) {
-            def tsQuery = rangeQuery("entry.timestamp").gte(lastTimestamp)
+            def tsQuery = rangeQuery("entry.modified").gte(lastTimestamp)
             query = query.must(tsQuery)
         }
         def srb = client.prepareSearch(indexName)
             .setSearchType(SearchType.QUERY_THEN_FETCH)
             .setTypes([METAENTRY_INDEX_TYPE] as String[])
-            .setFetchSource(["identifier", "entry.timestamp"] as String[], null)
+            .setFetchSource(["identifier", "entry.modified"] as String[], null)
             .setQuery(query)
             .setFrom(0).setSize(batchUpdateSize)
-            .addSort("entry.timestamp", SortOrder.ASC)
+            .addSort("entry.modified", SortOrder.ASC)
 
         log.debug("MetaEntryQuery: $srb")
 
@@ -467,7 +467,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
                     for (hit in response.hits.hits) {
                         Map sourceMap = mapper.readValue(hit.source(), Map)
-                        lastDocumentTimestamp = sourceMap.entry.get("timestamp", 0L)
+                        lastDocumentTimestamp = sourceMap.entry.get("modified", 0L)
                         ident = sourceMap.get("identifier")
                         list.add(ident)
                     }

@@ -50,13 +50,6 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     @Override
     boolean store(Document doc, boolean withVersioning = versioning) {
-        def olddoc = load(doc.identifier)
-            /*
-        if (olddoc?.checksum == doc.checksum) {
-            log.debug("Supplied document already in storage.")
-            return true
-        }
-        */
         try {
             if (versioning && withVersioning) {
                 performExecute(prepareIndexingRequest(doc, null, indexName))
@@ -74,13 +67,6 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         log.info("Bulk store requested. Versioning set to $versioning")
         def breq = client.prepareBulk()
         for (doc in docs) {
-            /*
-            def olddoc = load(doc.identifier)
-            if (olddoc?.checksum == doc.checksum) {
-                log.debug("Document ${doc.identifier} already in storage with same checksum.")
-                continue
-            }
-            */
             if (versioning) {
                 breq.add(prepareIndexingRequest(doc, null, indexName))
             }
@@ -194,7 +180,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
                                         query = query.must(termQuery("entry.dataset", dataset))
                                     }
                                     if (since || until) {
-                                        def timeRangeQuery = rangeQuery("entry.timestamp")
+                                        def timeRangeQuery = rangeQuery("entry.modified")
                                         if (since) {
                                             timeRangeQuery = timeRangeQuery.from(since.getTime())
                                         }

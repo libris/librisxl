@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import java.sql.*
 import org.apache.commons.dbcp2.*
+import org.postgresql.PGStatement
 
 import whelk.*
 
@@ -24,7 +25,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
 
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_STATEMENT
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_STATEMENT, LOAD_ALL_STATEMENT_WITH_DATASET
 
     PostgreSQLStorage(String componentId = null, Map settings) {
         this.contentTypes = settings.get('contentTypes', null)
@@ -51,7 +52,8 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         GET_DOCUMENT_VERSION = "SELECT identifier,data,entry,meta FROM $versionsTableName WHERE identifier = ? AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT identifier,data,entry,meta FROM $versionsTableName WHERE identifier = ? ORDER BY modified"
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE entry @> '{ \"alternateIdentifiers\": [?] }'"
-        LOAD_ALL_STATEMENT = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? ORDER BY modified LIMIT 2000"
+        LOAD_ALL_STATEMENT = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? AND identifier != ?  ORDER BY modified LIMIT 2000"
+        LOAD_ALL_STATEMENT_WITH_DATASET = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? AND identifier != ? AND dataset = ? ORDER BY modified LIMIT 2000"
     }
 
     @Override
@@ -196,9 +198,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 batch.setObject(12, doc.metaAsJson, java.sql.Types.OTHER)
                 batch.addBatch()
             }
-            if (versioning) {
-                ver_batch.executeBatch()
-            }
+            ver_batch.executeBatch()
             batch.executeBatch()
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}")
@@ -245,7 +245,6 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             rs = selectstmt.executeQuery()
             if (rs.next()) {
                 doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
-                log.debug("Retrieved document ${doc.identifier}.")
             } else {
                 log.trace("No results returned for get($id)")
             }
@@ -282,7 +281,6 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 def doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
                 doc.version = v++
                 docList << doc
-                log.debug("Retrieved document ${doc.identifier}.")
             }
         } finally {
             rs.close()
@@ -298,23 +296,38 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             Iterator<Document> iterator() {
                 Iterator listIterator = null
                 Connection connection = connectionPool.getConnection()
-                PreparedStatement loadAllStatement = connection.prepareStatement(LOAD_ALL_STATEMENT)
+                PreparedStatement loadAllStatement
+                long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
+
+                if (dataset) {
+                    loadAllStatement = connection.prepareStatement(LOAD_ALL_STATEMENT_WITH_DATASET)
+                } else {
+                    loadAllStatement = connection.prepareStatement(LOAD_ALL_STATEMENT)
+                }
 
                 return new Iterator<Document>() {
-                    long lastModified = 0
+                    long lastModified = since?.getTime() ?: 0L
+                    String lastIdentifier = ''
+                    int nums = 0
 
                     public boolean hasNext() {
                         if (results.isEmpty()) {
                             log.debug("Getting results from postgres")
                             listIterator = null
                             loadAllStatement.setTimestamp(1, new Timestamp(lastModified))
+                            loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
+                            loadAllStatement.setString(3, lastIdentifier)
+                            if (dataset) {
+                                loadAllStatement.setString(4, dataset)
+                            }
                             ResultSet rs = loadAllStatement.executeQuery()
                             while (rs.next()) {
                                 def doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
                                 lastModified = doc.modified
+                                lastIdentifier = doc.identifier
                                 results << doc
-
                             }
+                            log.debug("Number of results in list: ${results.size()}")
                             listIterator = results.iterator()
                         }
                         return !results.isEmpty()

@@ -83,7 +83,6 @@ class StandardWhelk implements Whelk {
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
-        doc.updateModified()
         doc = prepareDocument(doc)
         boolean saved = false
         for (storage in availableStorages) {
@@ -219,14 +218,17 @@ class StandardWhelk implements Whelk {
         if (!doc) {
             doc = storage.load(identifier, version)
         }
-        if (doc && doc.contentType == "application/ld+json") {
-            doc = setModifiedInDocumentForJsonLD(doc)
+        /*
+        if (doc?.contentType == "application/ld+json") {
+            doc = setModifiedInJsonLdDocument(doc)
         }
+        */
 
         return doc
     }
 
-    Document setModifiedInDocumentForJsonLD(Document doc) {
+    /*
+    Document setModifiedInJsonLdDocument(Document doc) {
         def map = doc.getDataAsMap()
         if (map.containsKey("modified")) {
             log.trace("Setting modified in document data.")
@@ -237,6 +239,7 @@ class StandardWhelk implements Whelk {
         }
         return doc
     }
+    */
 
     Location locate(String uri) {
         log.debug("Locating $uri")
@@ -292,7 +295,6 @@ class StandardWhelk implements Whelk {
         def docs = storage.loadAllVersions(identifier)
         def versions = [:]
         for (d in docs) {
-            d = setModifiedInDocumentForJsonLD(d)
             def time = ZonedDateTime.ofInstant(d.modifiedAsDate.toInstant(), timeZone)
             versions[(d.version)] = ["checksum":d.checksum,"modified":time.format(DT_FORMAT)]
         }
@@ -337,6 +339,7 @@ class StandardWhelk implements Whelk {
 
     Document prepareDocument(Document doc) {
         doc = sanityCheck(doc)
+        doc.updateModified()
         if (doc.contentType == "application/ld+json") {
             def map = doc.getDataAsMap()
             // TODO: Make this configurable, or move it to uriminter
