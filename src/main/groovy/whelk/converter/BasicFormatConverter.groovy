@@ -25,9 +25,9 @@ abstract class BasicFormatConverter extends BasicPlugin implements FormatConvert
         log.debug("Document is ${doc?.contentType} - required is $requiredContentType")
         Document newdocument = doc
         if (doc.contentType == requiredContentType) {
-            long originalDocumentTimestamp = doc.timestamp
+            long originalDocumentTimestamp = doc.created
             log.debug("Running converter.")
-            return doConvert(doc).withTimestamp(originalDocumentTimestamp)
+            return doConvert(doc).withCreated(originalDocumentTimestamp)
         }
         return doc
     }

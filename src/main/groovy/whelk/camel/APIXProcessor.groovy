@@ -81,6 +81,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
                 doc = runConverters(doc)
                 prepareMessage(doc, message)
 
+                log.debug("PUT to APIX at ${apixPathPrefix + voyagerUri}")
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
             }
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.PUT)

@@ -86,13 +86,8 @@ class StandardWhelk implements Whelk {
         doc = prepareDocument(doc)
         boolean saved = false
         for (storage in availableStorages) {
-            if (storage.eligibleForStoring(doc)) {
-                doc = updateModified(doc)
-                saved = (storage.store(doc) || saved)
-                log.debug("Storage ${storage.id} result from save: $saved")
-            } else if (log.isDebugEnabled()) {
-                log.debug("Storage ${storage.id} didn't find document ${doc.identifier} eligible for storing.")
-            }
+            saved = (storage.store(doc) || saved)
+            log.debug("Storage ${storage.id} result from save: $saved")
         }
         if (saved) {
             if (!minorUpdate) {
@@ -109,16 +104,10 @@ class StandardWhelk implements Whelk {
     @groovy.transform.Synchronized
     void saveState() {
         Storage storage = getStorage()
-        boolean versioningSetting = storage ? storage.versioning : false
         if (storage) {
-            try {
-                storage.versioning = false
-                def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(whelkState)
-                if (!storage.store(stateDoc)) {
-                    log.error("Failed to save state!")
-                }
-            } finally {
-                storage.versioning = versioningSetting
+            def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(whelkState)
+            if (!storage.store(stateDoc, false)) {
+                log.error("Failed to save state!")
             }
         }
     }
@@ -127,7 +116,7 @@ class StandardWhelk implements Whelk {
     private Map loadState() {
         Storage storage = getStorage()
         if (storage) {
-            def stateDoc = getStorage().get(WHELKSTATE_ID)
+            def stateDoc = getStorage().load(WHELKSTATE_ID)
             if (stateDoc) {
                 def jd = new JsonDocument().fromDocument(stateDoc)
                 whelkState.putAll(jd.dataAsMap)
@@ -221,17 +210,36 @@ class StandardWhelk implements Whelk {
             def s = getStorage(contentType)
             if (s) {
                 log.debug("Found $contentType storage ${s.id}.")
-                doc = s.get(identifier, version)
+                doc = s.load(identifier, version)
                 break
             }
         }
         // TODO: Check this
         if (!doc) {
-            doc = storage.get(identifier, version)
+            doc = storage.load(identifier, version)
         }
+        /*
+        if (doc?.contentType == "application/ld+json") {
+            doc = setModifiedInJsonLdDocument(doc)
+        }
+        */
 
         return doc
     }
+
+    /*
+    Document setModifiedInJsonLdDocument(Document doc) {
+        def map = doc.getDataAsMap()
+        if (map.containsKey("modified")) {
+            log.trace("Setting modified in document data.")
+            def time = ZonedDateTime.ofInstant(new Date(doc.modified).toInstant(), timeZone)
+            def timestamp = time.format(StandardWhelk.DT_FORMAT)
+            map.put("modified", timestamp)
+            doc = doc.withData(map)
+        }
+        return doc
+    }
+    */
 
     Location locate(String uri) {
         log.debug("Locating $uri")
@@ -258,7 +266,7 @@ class StandardWhelk implements Whelk {
             }
 
             log.debug("Check alternate identifiers.")
-            doc = storage.getByAlternateIdentifier(uri)
+            doc = storage.loadByAlternateIdentifier(uri)
             if (doc) {
                 return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
             }
@@ -284,21 +292,26 @@ class StandardWhelk implements Whelk {
     }
 
     Map<String, String> getVersions(String identifier) {
-        def docs = storage.getAllVersions(identifier)
+        def docs = storage.loadAllVersions(identifier)
         def versions = [:]
         for (d in docs) {
-            versions[(d.version)] = d.checksum
+            def time = ZonedDateTime.ofInstant(d.modifiedAsDate.toInstant(), timeZone)
+            versions[(d.version)] = ["checksum":d.checksum,"modified":time.format(DT_FORMAT)]
         }
         return versions
     }
 
     void remove(String id, String dataset = null) {
         def doc= get(id)
-        components.each {
-            ((Component)it).remove(id)
-        }
         if (doc?.dataset) {
             dataset = doc.dataset
+        }
+        if (!dataset) {
+            dataset = plugins.find { it instanceof ShapeComputer }?.calculateTypeFromIdentifier(id)
+            log.info("Calculated dataset: $dataset")
+        }
+        components.each {
+            ((Component)it).remove(id, dataset)
         }
         log.debug("Sending DELETE operation to camel.")
         log.debug("document has identifier: ${doc?.identifier} with dataset ${dataset}")
@@ -324,34 +337,18 @@ class StandardWhelk implements Whelk {
         return sparqlEndpoint?.sparql(query)
     }
 
-    Document updateModified(Document doc, long mt = -1) {
-        if (mt < 0) {
-            mt = doc.updateModified()
-        } else {
-            doc.setModified(mt)
-        }
-        if (doc.contentType == "application/ld+json") {
-            def map = doc.getDataAsMap()
-            if (map.containsKey("modified")) {
-                log.trace("Setting modified in document data.")
-                def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
-                def timestamp = time.format(DT_FORMAT)
-                map.put("modified", timestamp)
-                doc = doc.withData(map)
-            }
-        } else {
-            log.info("Document with content-type ${doc.contentType} cannot have modified automatically updated in data.")
-        }
-        return doc
-    }
-
     Document prepareDocument(Document doc) {
         doc = sanityCheck(doc)
+        doc.updateModified()
         if (doc.contentType == "application/ld+json") {
             def map = doc.getDataAsMap()
             // TODO: Make this configurable, or move it to uriminter
             if (map.containsKey("about") && !map.get("about")?.containsKey("@id")) {
                 map.get("about").put("@id", "/resource"+doc.identifier)
+            }
+            // Remove modified from jsonld documents prior to saving, to avoid messing up checksum.
+            if (map.containsKey("modified")) {
+                map.put("modified", null)
             }
             if (documentDataToMetaMapping) {
                 def meta = doc.meta
@@ -424,12 +421,13 @@ class StandardWhelk implements Whelk {
         }
         if (st) {
             log.debug("Loading "+(dataset ? dataset : "all")+" "+(since ?: "")+" from storage ${st.id}")
-            return st.getAll(dataset, since)
+            return st.loadAll(dataset, since)
         } else {
             throw new WhelkRuntimeException("Couldn't find storage. (storageId = $storageId)")
         }
     }
 
+    @Override
     Document createDocument(String contentType) {
         if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
             return new JsonDocument().withContentType(contentType)
@@ -438,6 +436,7 @@ class StandardWhelk implements Whelk {
         }
     }
 
+    @Override
     Document createDocumentFromJson(String json) {
         try {
             Document document = mapper.readValue(json, DefaultDocument)
@@ -448,6 +447,15 @@ class StandardWhelk implements Whelk {
         } catch (org.codehaus.jackson.JsonParseException jpe) {
             throw new DocumentException(jpe)
         }
+    }
+
+    @Override
+    Document createDocument(byte[] data, Map entry, Map meta) {
+        Document document = new DefaultDocument().withMeta(meta).withEntry(entry).withData(data)
+        if (document.isJson()) {
+            return new JsonDocument().fromDocument(document)
+        }
+        return document
     }
 
     @Override
@@ -715,7 +723,7 @@ class StandardWhelk implements Whelk {
     }
 
     protected void setConfig(whelkConfig, pluginConfig) {
-        log.info("Running setConfig in standardwhelk.")
+        log.debug("Running setConfig in standardwhelk.")
         def disabled = System.getProperty("disable.plugins", "").split(",")
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])

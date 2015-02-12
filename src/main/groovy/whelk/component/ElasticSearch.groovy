@@ -136,7 +136,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     @Override
-    void remove(String identifier) {
+    void remove(String identifier, String dataset) {
         String indexName = getIndexName()
         log.debug("Peforming deletebyquery to remove documents extracted from $identifier")
         def delQuery = termQuery("extractedFrom.@id", identifier)

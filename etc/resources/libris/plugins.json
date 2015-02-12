@@ -632,6 +632,14 @@
             "versioning" : false
         }
     },
+    "postgrestorage": {
+        "_class" : "whelk.component.PostgreSQLStorage",
+        "_params" : {
+            "databaseUrl": "jdbc://127.0.0.1:5342/whelk",
+            "contentTypes": ["application/ld+json"],
+            "versioning" : true
+        }
+    },
     "jsonldstorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
         "_params" : {

@@ -65,11 +65,12 @@
  <logger name="whelk.component.BasicElasticComponent">
       <level value="info"/>
   </logger>
+ <logger name="whelk.component.PostgreSQLStorage" level="trace"/>
  <logger name="whelk.component.ElasticSearch">
       <level value="info"/>
   </logger>
  <logger name="whelk.component.ElasticSearchStorage">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
  <logger name="whelk.plugin.BasicPlugin">
       <level value="info"/>
@@ -83,11 +84,14 @@
  <logger name="whelk.component.HttpBatchGraphStore">
       <level value="info"/>
   </logger>
+<logger name="whelk.DefaultDocument">
+      <level value="debug"/>
+  </logger>
 <logger name="whelk.JsonDocument">
       <level value="info"/>
   </logger>
 <logger name="whelk.api.DocumentAPI">
-      <level value="info"/>
+      <level value="debug"/>
   </logger>
 <logger name="whelk.api.ReindexOperator">
       <level value="info"/>

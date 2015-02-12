@@ -58,7 +58,7 @@ class HttpEndpoint extends BasicComponent implements SparqlEndpoint {
         return new ByteArrayInputStream(EntityUtils.toByteArray(response.getEntity()))
     }
 
-    public void remove(String id) {
+    public void remove(String id, String dataset) {
         log.warn("Remove called on ${this.id} but it isn't implemented yet.")
     }
 

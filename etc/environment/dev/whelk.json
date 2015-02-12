@@ -35,8 +35,8 @@
     "_plugins": {
         "_support": [
             "elasticnode",
-            "fusekiserver",
-            "activemqbroker"
+            "activemqbroker",
+            "fusekiserver"
             ],
         "_camel": [
             "indexroutebuilder",
@@ -44,8 +44,8 @@
             ],
         "_components": [
             "jsonldstorage",
-            "graphstore",
-            "index"
+            "index",
+            "graphstore"
         ],
         "_maintenance": [
             "scheduledoperator"

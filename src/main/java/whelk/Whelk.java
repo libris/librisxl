@@ -35,6 +35,11 @@ public interface Whelk {
 
     public InputStream sparql(String query);
 
+    // Document creation
+    public Document createDocument(String contentType);
+    public Document createDocumentFromJson(String jsonData);
+    public Document createDocument(byte[] data, Map documentEntry, Map documentMeta);
+
     // maintenance
     public String getId(); // Whelk ID
     public void addPlugin(Plugin plugin);

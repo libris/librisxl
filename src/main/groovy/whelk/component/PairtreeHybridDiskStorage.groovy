@@ -28,6 +28,7 @@ import org.elasticsearch.action.search.*
 import org.elasticsearch.search.sort.SortOrder
 import static org.elasticsearch.index.query.QueryBuilders.*
 
+@Deprecated
 class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridStorage {
 
     String indexName
@@ -95,18 +96,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    boolean eligibleForStoring(Document doc) {
-        if (versioning) {
-            Document currentDoc = get(doc.identifier)
-            if (currentDoc && !currentDoc.isDeleted() && currentDoc.checksum == doc.checksum) {
-                return false
-            }
-        }
-        return true
-    }
-
-    @Override
-    public boolean store(Document doc) {
+    public boolean store(Document doc, boolean withVersioning=versioning) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         boolean result = storeAsFile(doc)
         log.debug("Result from store-operation: $result")
@@ -207,7 +197,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             version = existingDocument.version + 1
             Map versions = existingDocument.entry.versions ?: [:]
             String lastVersion = existingDocument.version as String
-            versions[lastVersion] = [(Document.TIMESTAMP_KEY) : existingDocument.timestamp]
+            versions[lastVersion] = [(Document.CREATED_KEY) : existingDocument.created]
             if (existingDocument?.entry?.deleted) {
                 versions.get(lastVersion).put("deleted", true)
             } else {
@@ -226,13 +216,13 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
 
-    Document get(String id, String version = null) {
+    Document load(String id, String version = null) {
         loadDocument(id, version)
     }
 
-    Document getByAlternateIdentifier(String id) {
+    Document loadByAlternateIdentifier(String id) {
         log.warn("Storage currently has no alternate identifier support! Using primary identifier for request.")
-        return get(id)
+        return load(id)
     }
 
     @groovy.transform.CompileStatic
@@ -267,7 +257,11 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
         }
     }
 
-    Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
+    List<Document> loadAllVersions(String identifier) {
+        return []
+    }
+
+    Iterable<Document> loadAll(String dataset = null, Date since = null, Date until = null) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         if (dataset || since) {
             log.debug("Loading documents by index query for dataset $dataset ${(since ? "since $since": "")}")
@@ -301,7 +295,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    void remove(String id) {
+    void remove(String id, String dataset) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
 
         if (versioning) {
@@ -427,7 +421,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             query = query.must(termQuery("entry.dataset", dataset))
         }
         if (lastTimestamp < 0 && (since || until)) {
-            def timeRangeQuery = rangeQuery("entry.timestamp")
+            def timeRangeQuery = rangeQuery("entry.modified")
             if (since) {
                 timeRangeQuery = timeRangeQuery.from(since.getTime())
             }
@@ -437,16 +431,16 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
             query = query.must(timeRangeQuery)
         }
         if (lastTimestamp >= 0) {
-            def tsQuery = rangeQuery("entry.timestamp").gte(lastTimestamp)
+            def tsQuery = rangeQuery("entry.modified").gte(lastTimestamp)
             query = query.must(tsQuery)
         }
         def srb = client.prepareSearch(indexName)
             .setSearchType(SearchType.QUERY_THEN_FETCH)
             .setTypes([METAENTRY_INDEX_TYPE] as String[])
-            .setFetchSource(["identifier", "entry.timestamp"] as String[], null)
+            .setFetchSource(["identifier", "entry.modified"] as String[], null)
             .setQuery(query)
             .setFrom(0).setSize(batchUpdateSize)
-            .addSort("entry.timestamp", SortOrder.ASC)
+            .addSort("entry.modified", SortOrder.ASC)
 
         log.debug("MetaEntryQuery: $srb")
 
@@ -473,7 +467,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
 
                     for (hit in response.hits.hits) {
                         Map sourceMap = mapper.readValue(hit.source(), Map)
-                        lastDocumentTimestamp = sourceMap.entry.get("timestamp", 0L)
+                        lastDocumentTimestamp = sourceMap.entry.get("modified", 0L)
                         ident = sourceMap.get("identifier")
                         list.add(ident)
                     }

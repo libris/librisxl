@@ -13,7 +13,7 @@ import org.apache.camel.component.http4.*
 class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
 
     int graphstoreBatchSize = 1000
-    String messageQueue, bulkMessageQueue, removeQueue,retriesQueue
+    String messageQueue, bulkMessageQueue, removeQueue, retriesQueue
 
     GraphstoreRouteBuilder(Map settings) {
         batchTimeout = settings.get("batchTimeout", batchTimeout)

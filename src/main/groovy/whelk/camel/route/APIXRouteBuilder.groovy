@@ -80,7 +80,7 @@ class APIXHttpResponseFailedBean {
             log.debug("Handling a 303 from APIX, send it to APIX response processor.")
             apixResponseProcessor.process(exchange)
         } else if (e.statusCode == 404) {
-            log.info("received status ${e.statusCode} from http, setting handled=true")
+            log.info("received status ${e.statusCode} from http for ${message.getHeader('CamelHttpPath')}, setting handled=true")
             message.setHeader("handled", true)
         } else if (e.statusCode < 500) {
             log.info("Failed to deliver to ${e.uri} with status ${e.statusCode}. Sending message to retry queue.")
