@@ -218,28 +218,9 @@ class StandardWhelk implements Whelk {
         if (!doc) {
             doc = storage.load(identifier, version)
         }
-        /*
-        if (doc?.contentType == "application/ld+json") {
-            doc = setModifiedInJsonLdDocument(doc)
-        }
-        */
 
         return doc
     }
-
-    /*
-    Document setModifiedInJsonLdDocument(Document doc) {
-        def map = doc.getDataAsMap()
-        if (map.containsKey("modified")) {
-            log.trace("Setting modified in document data.")
-            def time = ZonedDateTime.ofInstant(new Date(doc.modified).toInstant(), timeZone)
-            def timestamp = time.format(StandardWhelk.DT_FORMAT)
-            map.put("modified", timestamp)
-            doc = doc.withData(map)
-        }
-        return doc
-    }
-    */
 
     Location locate(String uri) {
         log.debug("Locating $uri")
