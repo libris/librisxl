@@ -27,8 +27,6 @@ abstract class WhelkRouteBuilderPlugin extends RouteBuilder implements WhelkAwar
     long batchTimeout = 5000
     int parallelProcesses = 20
 
-    java.util.Properties properties = new java.util.Properties()
-
     abstract String getMessageQueue()
     abstract String getBulkMessageQueue()
 

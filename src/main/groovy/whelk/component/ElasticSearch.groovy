@@ -104,7 +104,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     String createNewCurrentIndex(String indexName) {
         assert (indexName != null)
         log.info("Creating index ...")
-        es_settings = loadJson("es/es_settings.json")
+        es_settings = loadJson("es_settings.json")
         String currentIndex = "${indexName}-" + new Date().format("yyyyMMdd.HHmmss")
         log.debug("Will create index $currentIndex.")
         performExecute(client.admin().indices().prepareCreate(currentIndex).setSettings(es_settings))
@@ -122,18 +122,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexAlias).removeAlias(oldIndex, indexAlias))
     }
 
-
-    def loadJson(String file) {
-        def json
-        try {
-            json = getClass().classLoader.getResourceAsStream(file).withStream {
-                mapper.readValue(it, Map)
-            }
-        } catch (NullPointerException npe) {
-            log.trace("File $file not found.")
-        }
-        return json
-    }
 
     @Override
     void remove(String identifier, String dataset) {

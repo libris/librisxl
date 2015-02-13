@@ -20,11 +20,6 @@ class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
         messageQueue = settings.get("graphstoreMessageQueue")
         bulkMessageQueue = settings.get("graphstoreMessageQueue")
         retriesQueue = settings.get("retriesQueue")
-        try {
-            properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
-        } catch (Exception ex) {
-            log.warn("Failed to load whelk.properties.")
-        }
     }
 
     void bootstrap() {}
@@ -34,7 +29,7 @@ class GraphstoreRouteBuilder extends WhelkRouteBuilderPlugin {
         GraphstoreHttpResponseFailedBean graphstoreFailureBean = new GraphstoreHttpResponseFailedBean(messageQueue)
 
         def credentials = props.GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED?
-        "?authenticationPreemptive=true&authUsername=${properties.getProperty("graphstoreUpdateAuthUser")}&authPassword=${properties.getProperty("graphstoreUpdateAuthPass")}" : ""
+        "?authenticationPreemptive=true&authUsername=${whelk.props.get("graphstoreUpdateAuthUser")}&authPassword=${whelk.props.get("graphstoreUpdateAuthPass")}" : ""
 
         onException(HttpOperationFailedException.class, org.apache.http.NoHttpResponseException.class, org.apache.http.conn.HttpHostConnectException)
             .bean(graphstoreFailureBean, "handle")

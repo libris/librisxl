@@ -660,6 +660,15 @@
             "versioning" : false
         }
     },
+    "allstorage": {
+        "_class" : "whelk.component.ElasticSearchStorage",
+        "_params" : {
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes": ["*/*"],
+            "versioning" : true
+        }
+    },
     "graphstore": {
         "_class" : "whelk.component.HttpBatchGraphStore",
         "_plugins" : [

@@ -143,6 +143,7 @@ class DefaultDocument implements Document {
     protected void setCreated(long ts) {
         log.trace("Setting created ts $ts")
         this.entry[CREATED_KEY] = ts
+        this.entry["timestamp"] = ts // Hack to prevent _timestamp-errors in older elastic mappings. Safe to remove once all indexes are up to date.
         if (getModified() < 1) {
             this.entry[MODIFIED_KEY] = ts
         }

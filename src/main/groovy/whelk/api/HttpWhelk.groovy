@@ -129,7 +129,7 @@ class HttpWhelk extends HttpServlet {
         whelkConfig["_apis"].each { apiEntry ->
             apiEntry.each {
                 log.debug("Found api: ${it.value}, should attach at ${it.key}")
-                API api = whelk.getPlugin(pluginConfig, it.value, whelk.id)
+                API api = whelk.loadPlugin(pluginConfig, it.value, whelk.id)
                 api.setWhelk(whelk)
                 api.init()
                 apis.put(Pattern.compile(it.key), api)

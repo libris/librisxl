@@ -63,7 +63,9 @@ class StandardWhelk implements Whelk {
     def timeZone = ZoneId.systemDefault()
 
     long MAX_MEMORY_THRESHOLD = 95 // In percent
+    final static String DEFAULT_ENVIRONMENT = "dev"
 
+    String environment = DEFAULT_ENVIRONMENT
 
     StandardWhelk(String name) {
         this.id = name
@@ -531,7 +533,13 @@ class StandardWhelk implements Whelk {
 
     @Override
     void setProps(final Map global) {
-        this.globalProperties = global.asImmutable()
+        global.each { key, value ->
+            if (value instanceof String) {
+                value = value.replaceAll(/\{whelkname\}/, this.id)
+            }
+            log.trace("Setting prop $key = $value")
+            globalProperties.put(key, value)
+        }
     }
 
     public Map getProps() {
@@ -575,9 +583,14 @@ class StandardWhelk implements Whelk {
     void init() {
         def ctxThread
         try {
+            environment = System.getProperty("whelk.environment")
+            if (!environment) {
+                environment = DEFAULT_ENVIRONMENT
+                log.warn("No environment specified, using default: $environment")
+            }
             if (!id) {
                 def (whelkConfig, pluginConfig) = loadConfig()
-                setConfig(whelkConfig, pluginConfig)
+                configureWhelk(whelkConfig, pluginConfig)
             } else {
                 log.debug("Assuming whelk programmatically configured.")
             }
@@ -689,12 +702,31 @@ class StandardWhelk implements Whelk {
                 throw new PluginConfigurationException("Failed to read configuration: ${e.message}", e)
             }
         } else {
-            log.info("Loading config from classpath")
+            log.info("Loading config from classpath for environment $environment")
             try {
                 whelkConfig = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_WHELK_CONFIG_FILENAME), Map)
-                pluginConfig = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_PLUGIN_CONFIG_FILENAME), Map)
+
+                def overlayStream = this.getClass().getClassLoader().getResourceAsStream("env/" + environment + "/" + DEFAULT_WHELK_CONFIG_FILENAME)
+                if (overlayStream) {
+                    whelkConfig = loadConfigOverlay(whelkConfig, mapper.readValue(overlayStream, Map))
+                }
             } catch (Exception e) {
-                throw new PluginConfigurationException("Failed to read configuration: ${e.message}", e)
+                throw new PluginConfigurationException("Failed to read whelk configuration: ${e.message}", e)
+            }
+            try {
+                def secrets = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream("secrets.json"), Map)
+                whelkConfig.get("_properties").putAll(secrets)
+            } catch (Exception e) {
+                throw new PluginConfigurationException("Failed to read secrets: ${e.message}", e)
+            }
+            try {
+                pluginConfig = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_PLUGIN_CONFIG_FILENAME), Map)
+                def overlayStream = this.getClass().getClassLoader().getResourceAsStream("env/" + environment + "/" + DEFAULT_PLUGIN_CONFIG_FILENAME)
+                if (overlayStream) {
+                    pluginConfig = loadConfigOverlay(pluginConfig, mapper.readValue(overlayStream, Map))
+                }
+            } catch (Exception e) {
+                throw new PluginConfigurationException("Failed to read plugin configuration: ${e.message}", e)
             }
         }
         if (!whelkConfig || !pluginConfig) {
@@ -703,13 +735,33 @@ class StandardWhelk implements Whelk {
         return [whelkConfig, pluginConfig]
     }
 
-    protected void setConfig(whelkConfig, pluginConfig) {
-        log.debug("Running setConfig in standardwhelk.")
+    private Map loadConfigOverlay(Map baseConfig, Map overlay) {
+        overlay.each { key, value ->
+            if (value instanceof Map) {
+                log.trace("Loading overlays for parameter $key")
+                def nval = loadConfigOverlay(baseConfig.get(key, [:]), value)
+                log.trace("key: $key nval: $nval")
+                baseConfig.put(key, nval)
+            } else {
+                log.trace("Overwriting configuration $key (${baseConfig.get(key)}) with $value")
+                baseConfig.put(key, value)
+            }
+        }
+        return baseConfig
+    }
+
+    protected void configureWhelk(whelkConfig, pluginConfig) {
+        log.debug("Running configureWhelk in standardwhelk.")
         def disabled = System.getProperty("disable.plugins", "").split(",")
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])
         documentDataToMetaMapping = whelkConfig["_docMetaMapping"]
-        setProps(whelkConfig["_properties"])
+        setProps(whelkConfig.get("_properties"))
+        // Some configurations might want to start services to act standalone
+        whelkConfig["_supportplugins"].each { p ->
+            def plugin = loadPlugin(pluginConfig, p, this.id)
+            addPlugin(plugin)
+        }
         whelkConfig["_plugins"].each { key, value ->
             log.trace("key: $key, value: $value")
             if (!(key =~ /^_.+$/)) {
@@ -718,8 +770,8 @@ class StandardWhelk implements Whelk {
             } else if (value instanceof List) {
                 log.info("Adding plugins from group $key")
                 for (p in value) {
-                    if (!disabled.contains(p)) {
-                        def plugin = getPlugin(pluginConfig, p, this.id)
+                    if (p && !disabled.contains(p)) {
+                        def plugin = loadPlugin(pluginConfig, p, this.id)
                         //log.info("Adding plugin ${plugin.id} to ${this.id}")
                         addPlugin(plugin)
                     } else {
@@ -764,7 +816,7 @@ class StandardWhelk implements Whelk {
 
     protected Map<String,Plugin> availablePlugins = new HashMap<String,Plugin>()
 
-    def getPlugin(pluginConfig, plugname, whelkname, pluginChain=[:]) {
+    def loadPlugin(pluginConfig, plugname, whelkname, pluginChain=[:]) {
         if (availablePlugins.containsKey(plugname)) {
             log.debug("Recycling plugin $plugname")
             return availablePlugins.get(plugname)
@@ -846,7 +898,7 @@ class StandardWhelk implements Whelk {
                             plugin.addPlugin(pluginChain.get(plug))
                         } else {
                             log.debug("Loading plugin $plug for ${plugin.id}")
-                            def subplugin = getPlugin(pluginConfig, plug, whelkname, pluginChain)
+                            def subplugin = loadPlugin(pluginConfig, plug, whelkname, pluginChain)
                             plugin.addPlugin(subplugin)
                         }
                     }

@@ -18,14 +18,10 @@ def loadConfiguration() {
         } catch (MissingPropertyException mpe) {
             environment = "dev"
         }
-        try {
-            configuration = conf
-        } catch (MissingPropertyException mpe) {
-            configuration = "libris"
-        }
     }
     def encoding = hasProperty('file.encoding') ? file.encoding : 'UTF-8'
     System.setProperty 'file.encoding', encoding
+    System.setProperty 'whelk.environment', environment
 }
 
 
@@ -37,7 +33,7 @@ try {
 } catch (Exception e) {}
 
 // Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
-version = versionprops.get("releaseTag", "0.5-SNAPSHOT")
+version = versionprops.get("releaseTag", "0.6.x")
 
 archivesBaseName = "whelk"
 
@@ -140,23 +136,12 @@ dependencies {
     executableWarDeps 'commons-cli:commons-cli:1.2'
 }
 
-sourceSets {
-    main {
-        resources {
-            srcDir "etc/environment/${environment}"
-            srcDir "etc/resources/${configuration}"
-        }
-    }
-}
-
 configurations {
     all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
 }
 
 war {
     baseName = "whelk"
-    appendix = configuration
-    classifier = environment
 
     // Prevent circular log redirection; use slf4j
     from {configurations.executableWarDeps.collect {

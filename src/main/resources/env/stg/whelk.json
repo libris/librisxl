@@ -1,0 +1,16 @@
+{
+    "_properties": {
+        "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
+        "UPDATE_INTERVAL":30
+    },
+    "_id": "stglibris",
+    "_plugins": {
+        "_camel": [
+            "indexroutebuilder"
+            ],
+        "_components": [
+            "jsonldstorage",
+            "index"
+        ]
+    }
+}
