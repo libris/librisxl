@@ -583,7 +583,11 @@ class StandardWhelk implements Whelk {
     void init() {
         def ctxThread
         try {
-            environment = System.getProperty("whelk.environment", DEFAULT_ENVIRONMENT)
+            environment = System.getProperty("whelk.environment")
+            if (!environment) {
+                environment = DEFAULT_ENVIRONMENT
+                log.warn("No environment specified, using default: $environment")
+            }
             if (!id) {
                 def (whelkConfig, pluginConfig) = loadConfig()
                 configureWhelk(whelkConfig, pluginConfig)
