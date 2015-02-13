@@ -746,7 +746,15 @@ class StandardWhelk implements Whelk {
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])
         documentDataToMetaMapping = whelkConfig["_docMetaMapping"]
-        setProps(whelkConfig["_properties"])
+        log.debug("Looking placeholders in properties.")
+        def wprops = [:]
+        whelkConfig["_properties"].each { key, value ->
+            if (value instanceof String) {
+                value = value.replaceAll("{whelkname}", this.id)
+            }
+            wprops.put(key, value)
+        }
+        setProps(wprops)
         // Some configurations might want to start services to act standalone
         whelkConfig["_supportplugins"].each { p ->
             def plugin = loadPlugin(pluginConfig, p, this.id)
