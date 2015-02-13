@@ -50,7 +50,7 @@ class DocumentAPI extends BasicAPI {
     }
     protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         String path = pathVars.first()
-        log.debug "Path: $path req method: ${request.method}"
+        log.debug "Path: $path req method: ${request.method} req url: ${request.requestURL} forward req uri: ${request.getAttribute('javax.servlet.forward.request_uri')}"
         if (request.method == "GET" && path.startsWith("/_iri/")) {
             def docBase = new StringBuilder(whelk.docBaseUri.toString())
             while (docBase[-1] == '/') {
@@ -288,7 +288,7 @@ class DocumentAPI extends BasicAPI {
 
     boolean hasPermission(info, doc) {
         if (!info) {
-            log.info("No user received")
+            log.info("No user received, denying request.")
             return false
         } else {
             log.info("User is: $info")
@@ -298,6 +298,7 @@ class DocumentAPI extends BasicAPI {
     }
 
     void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
+        log.debug("Setting header Location: $locationRef")
         response.setHeader("Location", locationRef)
         response.setHeader("ETag", etag as String)
         response.setStatus(HttpServletResponse.SC_CREATED, "Thank you! Document ingested.")

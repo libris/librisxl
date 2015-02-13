@@ -12,21 +12,13 @@ class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
     String messageQueue, bulkMessageQueue, removeQueue, retriesQueue, apixUri = null
 
     APIXRouteBuilder(Map settings) {
-        properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
-
         messageQueue = settings.get("apixMessageQueue")
         retriesQueue = settings.get("retriesQueue")
         removeQueue = messageQueue
         apixUri = settings.get("apixUri")
-        if (apixUri) {
-            apixUri = apixUri.replace("http://", "http4:")
-            apixUri = apixUri.replace("https://", "https4:")
-            apixUri = apixUri + "?" +
-                "authUsername=" + properties.getProperty("apixUsername") + "&" +
-                "authPassword=" + properties.getProperty("apixPassword") + "&" +
-                "authenticationPreemptive=true" + "&" +
-                "httpClient.redirectsEnabled=false"
-        }
+    }
+
+    void bootstrap() {
     }
 
     @Override
@@ -35,6 +27,15 @@ class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
         APIXProcessor apixProcessor = getPlugin("apixprocessor")
         APIXResponseProcessor apixResponseProcessor = getPlugin("apixresponseprocessor")
         APIXHttpResponseFailedBean apixFailureBean = new APIXHttpResponseFailedBean(apixResponseProcessor)
+        if (apixUri) {
+            apixUri = apixUri.replace("http://", "http4:")
+            apixUri = apixUri.replace("https://", "https4:")
+            apixUri = apixUri + "?" +
+                "authUsername=" + whelk.props.get("apixUsername") + "&" +
+                "authPassword=" + whelk.props.get("apixPassword") + "&" +
+                "authenticationPreemptive=true" + "&" +
+                "httpClient.redirectsEnabled=false"
+        }
 
         onException(HttpOperationFailedException.class)
             .handled(true)
@@ -77,7 +78,7 @@ class APIXHttpResponseFailedBean {
             log.debug("Handling a 303 from APIX, send it to APIX response processor.")
             apixResponseProcessor.process(exchange)
         } else if (e.statusCode == 404) {
-            log.info("received status ${e.statusCode} from http, setting handled=true")
+            log.info("received status ${e.statusCode} from http for ${message.getHeader('CamelHttpPath')}, setting handled=true")
             message.setHeader("handled", true)
         } else if (e.statusCode < 500) {
             log.info("Failed to deliver to ${e.uri} with status ${e.statusCode}. Sending message to retry queue.")

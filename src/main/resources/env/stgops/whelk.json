@@ -1,0 +1,20 @@
+{
+    "_properties": {
+    },
+    "_id": "stglibris",
+    "_plugins": {
+        "_camel": [
+            "indexroutebuilder"
+            ],
+        "_components": [
+            "jsonldstorage",
+            "index"
+        ],
+        "_maintenance" : [ null ]
+    },
+    "_apis": [
+        { "/_operations": "operator" },
+        { "^([^_].*)$":  "documentapi" },
+        { "^/$":  "documentapi" }
+    ]
+}

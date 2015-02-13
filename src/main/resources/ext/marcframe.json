@@ -1701,7 +1701,7 @@
       "s": "/def/enum/content/Shortened",
       "x": "/def/enum/content/MissingCharacters"
     },
-    "type": {
+    "holdingType": {
       "u": null,
       "v": "/def/enum/record/MultipartItemHolding",
       "x": "/def/enum/record/SinglePartItemHolding",
@@ -1945,6 +1945,7 @@
         "aboutEntity": "?record",
         "link": "characterCoding",
         "uriTemplate": "{_}",
+        "fixedDefault": "a",
         "tokenMap": "characterCoding"
       },
       "[17:18]": {
@@ -1969,6 +1970,7 @@
       "[20:24]": {
         "aboutEntity": "?record",
         "property": "entryMap",
+        "fixedDefault": "4500",
         "TODO:patternMap": "entryMap"
       },
       "repeatable": false,
@@ -1980,9 +1982,7 @@
             "@type": "Record",
             "@id": "/bib/0000000",
             "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
-            "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
             "catForm": {"@id": "/def/enum/record/AACR2"},
-            "entryMap":  "4500",
             "controlNumber": "0000000",
             "about": {"@type": ["Text", "Monograph"], "@id": "/resource/bib/0000000"}
           }
@@ -5029,7 +5029,7 @@
         "addProperty": "cataloguersNote", "uriTemplate": "{+_}"
       },
       "$y": {"property": "altLabel"},
-      "$z": {"property": "comment"}
+      "$z": {"addProperty": "copyNote"}
     },
 
     "863": {},
@@ -5096,10 +5096,8 @@
             "@type": "Record",
             "@id": "/auth/140482",
             "controlNumber": "140482",
-            "entryMap": "4500",
             "encLevel": {"@id": "/def/enum/record/CompleteAuthorityRecord"},
             "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
-            "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
             "about": {
               "@type": ["Authority"],
               "@id": "/resource/auth/140482"
@@ -5525,9 +5523,9 @@
       },
       "[6:7]": {
         "aboutEntity": "?record",
-        "link": "type",
+        "link": "holdingType",
         "uriTemplate": "{_}",
-        "tokenMap": "type"
+        "tokenMap": "holdingType"
       },
       "[7:8]": {
         "aboutEntity": "?record",
@@ -5539,6 +5537,7 @@
         "aboutEntity": "?record",
         "link": "characterCoding",
         "uriTemplate": "{_}",
+        "fixedDefault": "a",
         "tokenMap": "characterCoding"
       },
       "[17:18]": {
@@ -5553,11 +5552,17 @@
         "uriTemplate": "{_}",
         "tokenMap": "itemInfoInRecord"
       },
+      "[20:24]": {
+        "aboutEntity": "?record",
+        "property": "entryMap",
+        "fixedDefault": "4500",
+        "TODO:patternMap": "entryMap"
+      },
       "repeatable": false,
       "_spec": [
         {
           "originalLeader": "00236nxa a22001091n44500",
-          "source": {"leader": "     nx  a       1n", "fields": [
+          "source": {"leader": "     nx  a       1n 4500", "fields": [
             {"001": "0000000"},
             {"004": "7149593"},
             {"852": {
@@ -5569,12 +5574,11 @@
           "result": {
             "@type": "Record",
             "@id": "/hold/0000000",
-            "characterCoding": {"@id": "/def/enum/record/UCS-Unicode"},
             "controlNumber": "0000000",
             "encLevel": {"@id": "/def/enum/record/HoldingsLevel1"},
             "itemInfoInRecord": {"@id": "/def/enum/record/Exemplarinformation_finns_ej"},
             "status": {"@id": "/def/enum/record/New"},
-            "type": {"@id": "/def/enum/record/SinglePartItemHolding"},
+            "holdingType": {"@id": "/def/enum/record/SinglePartItemHolding"},
             "about": {
               "@id": "/resource/hold/0000000",
               "@type": "HeldMaterial",
@@ -5671,8 +5675,23 @@
 
     "084": {"inherit": "bib", "addLink": "callno"},
 
+    "541": {
+      "addProperty": "immediateSourceOfAcquisitionOfItem",
+      "repeatable": true
+    },
+
+    "561": {
+      "addProperty": "custodialHistoryOfItem",
+      "repeatable": true
+    },
+
     "562": {
       "inherit": "bib"
+    },
+
+    "563": {
+      "addProperty": "bindingInformation",
+      "repeatable": true
     },
 
     "600": {"inherit": "bib:100", "addLink": "subject"},

@@ -11,7 +11,7 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
     Whelk whelk
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
-    Map global
+    Map props
 
     String serviceUrl = "http://data.libris.kb.se/{dataset}/oaipmh"
 
@@ -72,10 +72,8 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
 
     int doImport(String ds, String token, int maxNrOfDocsToImport, boolean silent, boolean picky, Date since = null) {
         String startUrl = serviceUrl.replace("{dataset}", ds)
-        Properties properties = new Properties()
-        properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
-        String username = properties.getProperty("oaipmhUsername")
-        String password = properties.getProperty("oaipmhPassword")
+        String username = whelk.props.get("oaipmhUsername")
+        String password = whelk.props.get("oaipmhPassword")
         parseOaipmh(startUrl, username, password, since)
         return recordCount
     }
@@ -88,5 +86,5 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
         plugins.add(p);
     }
     public List<Plugin> getPlugins() { plugins }
-    public Map getGlobal() { global }
+    public Map getProps() { props }
 }

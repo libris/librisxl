@@ -20,14 +20,12 @@ abstract class WhelkRouteBuilderPlugin extends RouteBuilder implements WhelkAwar
     // Properties copied from BasicPlugin
     String id = null
     private List<Plugin> plugins = new ArrayList<Plugin>();
-    Map global
+    Map props
 
     Whelk whelk
 
     long batchTimeout = 5000
     int parallelProcesses = 20
-
-    java.util.Properties properties = new java.util.Properties()
 
     abstract String getMessageQueue()
     abstract String getBulkMessageQueue()
@@ -42,6 +40,13 @@ abstract class WhelkRouteBuilderPlugin extends RouteBuilder implements WhelkAwar
     public Plugin getPlugin(String pluginId) {
         return plugins.find { it.id == pluginId }
     }
-    public void init() {}
+    public final void init() {
+        if (this.id == null) {
+            throw new PluginConfigurationException("Plugin cannot have null id.")
+        }
+        bootstrap()
+    }
+
+    abstract void bootstrap()
 }
 

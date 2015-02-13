@@ -81,7 +81,7 @@ public class AuthenticationFilter implements Filter {
 
     private Map createDevelopmentUser() {
         Map emptyUser = new HashMap<String,Object>();
-        emptyUser.put("user", System.getenv("USER") + " (from system environment)");
+        emptyUser.put("user", "SYSTEM");
         return emptyUser;
     }
 
@@ -153,13 +153,13 @@ public class AuthenticationFilter implements Filter {
 
     private String getVerifyUrl() {
         if (url == null) {
-            Properties properties = new Properties();
+            Map secrets = null;
             try {
-                properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"));
+                secrets = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream("secrets.json"), new TypeReference<Map<String, Object>>() {});
             } catch (IOException ioe) {
                 throw new RuntimeException("Failed to load api properties.", ioe);
             }
-            url = properties.getProperty("verifyurl");
+            url = (String)secrets.get("oauth2verifyurl");
         }
         return url;
     }

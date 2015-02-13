@@ -1,0 +1,19 @@
+{
+    "_properties": {
+        "APIX_HOST": "https://libris.kb.se",
+        "UPDATE_OAIPMH_URL":"http://averell.libris.kb.se/vcopy/{dataset}/oaipmh",
+        "UPDATE_INTERVAL": 30
+    },
+    "_id": "testlibris",
+    "_plugins": {
+        "_camel": [
+            "indexroutebuilder",
+            "apixroutebuilder"
+            ],
+        "_components": [
+            "jsonldstorage",
+            "index"
+        ]
+    }
+}
+

@@ -1,0 +1,24 @@
+{
+    "_properties": {
+        "GRAPHSTORE_DATA_URI": "http://hp04.libris.kb.se:8890/sparql-graph-crud",
+        "GRAPHSTORE_QUERY_URI": "http://hp04.libris.kb.se:8890/sparql",
+        "GRAPHSTORE_UPDATE_URI": "http://hp04.libris.kb.se:8890/sparql-auth",
+        "GRAPHSTORE_UPDATE_POST_PARAMETER": "update",
+        "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": true
+    },
+    "_plugins": {
+        "_camel": [
+            "indexroutebuilder"
+            ],
+        "_components": [
+            "jsonldstorage",
+            "index"
+        ],
+        "_maintenance": [ null ]
+    },
+    "_apis": [
+        { "/_operations": "operator" },
+        { "^([^_].*)$":  "documentapi" },
+        { "^/$":  "documentapi" }
+    ]
+}

@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.List;
 
 public interface Document {
-    static final String TIMESTAMP_KEY = "timestamp";
+    static final String CREATED_KEY = "created";
     static final String MODIFIED_KEY = "modified";
     static final String CONTENT_TYPE_KEY = "contentType";
 
@@ -13,7 +13,7 @@ public interface Document {
 
     public String getContentType();
     public void setContentType(String contenttype);
-    public long getTimestamp();
+    public long getCreated();
     public long getModified();
     public void setModified(long ts);
     public String getChecksum();

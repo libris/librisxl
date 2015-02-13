@@ -342,7 +342,8 @@
         "_class" : "whelk.api.libris.FormatterAPI",
         "_plugins" : [
             "marcconverter",
-            "jsonld2marcconverter"
+            "jsonld2marcconverter",
+            "jsonld2marcxmlconverter"
         ]
     },
     "linkexpander" : {
@@ -591,7 +592,8 @@
         "_params": {
             "graphstoreBatchSize": 32,
             "batchTimeout": 5000,
-            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE"
+            "graphstoreMessageQueue": "_property:MQ_GRAPHSTORE",
+            "retriesQueue": "_property:MQ_GRAPHSTORE_RETRIES"
         }
     },
     "apixroutebuilder": {
@@ -601,7 +603,7 @@
         ],
         "_params": {
             "apixMessageQueue": "_property:MQ_APIX",
-            "retriesQueue": "activemq:apix.retriesQueue",
+            "retriesQueue": "_property:MQ_APIX_RETRIES",
             "apixUri": "_property:APIX_HOST"
         }
     },
@@ -630,6 +632,14 @@
             "versioning" : false
         }
     },
+    "postgrestorage": {
+        "_class" : "whelk.component.PostgreSQLStorage",
+        "_params" : {
+            "databaseUrl": "jdbc://127.0.0.1:5342/whelk",
+            "contentTypes": ["application/ld+json"],
+            "versioning" : true
+        }
+    },
     "jsonldstorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
         "_params" : {
@@ -648,6 +658,15 @@
             "contentTypes" : [ "application/marcxml+xml" ],
             "baseStorageSuffix": "marcxml",
             "versioning" : false
+        }
+    },
+    "allstorage": {
+        "_class" : "whelk.component.ElasticSearchStorage",
+        "_params" : {
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes": ["*/*"],
+            "versioning" : true
         }
     },
     "graphstore": {

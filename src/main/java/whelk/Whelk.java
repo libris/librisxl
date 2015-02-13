@@ -16,11 +16,6 @@ public interface Whelk {
 
     // storage
     public String add(Document d);
-    /*
-    public String add(byte[] data,
-            Map<String, Object> entrydata,
-            Map<String, Object> metadata);
-            */
     public void bulkAdd(List<Document> d, String contentType);
     public Document get(String identifier);
     public void remove(String identifier);
@@ -40,14 +35,25 @@ public interface Whelk {
 
     public InputStream sparql(String query);
 
+    // Document creation
+    public Document createDocument(String contentType);
+    public Document createDocumentFromJson(String jsonData);
+    public Document createDocument(byte[] data, Map documentEntry, Map documentMeta);
+
     // maintenance
     public String getId(); // Whelk ID
     public void addPlugin(Plugin plugin);
     public void flush();
     public String mintIdentifier(Document document);
+    public boolean acquireLock(String dataset);
+    public void releaseLock(String dataset);
+    public boolean updateState(String key, Map data);
 
     // ecosystem
-    public Map getGlobal();
+    public void init();
+    public Map getProps();
+    public void setProps(Map props);
     public CamelContext getCamelContext();
+    public void notifyCamel(Document doc, String operation, Map extraInfo);
     public void notifyCamel(String identifier, String dataset, String operation, Map extraInfo);
 }

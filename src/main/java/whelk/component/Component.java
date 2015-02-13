@@ -12,6 +12,6 @@ public interface Component extends WhelkAware {
      * @param identifier the identifier of the entry to be deleted.
      * @param whelkId ID of the whelk calling the method. (May be null)
      */
-    public void remove(String identifier);
+    public void remove(String identifier, String dataset);
     boolean handlesContent(String contentType);
 }

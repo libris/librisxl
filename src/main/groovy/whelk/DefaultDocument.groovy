@@ -21,7 +21,7 @@ import whelk.exception.*
 @Log
 class DefaultDocument implements Document {
     protected byte[] data = new byte[0]
-    Map entry = [:] // For "technical" metadata about the record, such as contentType, timestamp, etc.
+    Map entry = [:] // For "technical" metadata about the record, such as contentType, created, etc.
     Map meta  = [:] // For extra metadata about the object, e.g. links and such.
 
     @JsonIgnore
@@ -37,7 +37,7 @@ class DefaultDocument implements Document {
         log.trace("### NEW DOCUMENT INSTANTIATED")
         entry = [:]
         meta = [:]
-        updateTimestamp()
+        setCreated(new Date().getTime())
     }
 
     @JsonIgnore
@@ -95,16 +95,30 @@ class DefaultDocument implements Document {
     }
 
     @JsonIgnore
+    String getEntryAsJson() {
+        return mapper.writeValueAsString(entry)
+    }
+    @JsonIgnore
+    String getMetaAsJson() {
+        return mapper.writeValueAsString(meta)
+    }
+
+    @JsonIgnore
     String getContentType() { entry[CONTENT_TYPE_KEY] }
 
     @JsonIgnore
-    long getTimestamp() {
-        return (entry.get(TIMESTAMP_KEY, 0L))
+    long getCreated() {
+        return (entry.get(CREATED_KEY, 0L))
     }
 
     @JsonIgnore
     long getModified() {
         return entry.get(MODIFIED_KEY, 0L)
+    }
+
+    @JsonIgnore
+    Date getModifiedAsDate() {
+        return new Date(getModified())
     }
 
     @JsonIgnore
@@ -117,13 +131,6 @@ class DefaultDocument implements Document {
         return entry.get("dataset")
     }
 
-
-
-    // Setters
-    private void updateTimestamp() {
-        setTimestamp(new Date().getTime())
-    }
-
     long updateModified() {
         setModified(new Date().getTime())
         return getModified()
@@ -133,9 +140,10 @@ class DefaultDocument implements Document {
         entry['identifier'] = identifier
     }
 
-    protected void setTimestamp(long ts) {
-        log.trace("Setting timestamp $ts")
-        this.entry[TIMESTAMP_KEY] = ts
+    protected void setCreated(long ts) {
+        log.trace("Setting created ts $ts")
+        this.entry[CREATED_KEY] = ts
+        this.entry["timestamp"] = ts // Hack to prevent _timestamp-errors in older elastic mappings. Safe to remove once all indexes are up to date.
         if (getModified() < 1) {
             this.entry[MODIFIED_KEY] = ts
         }
@@ -153,7 +161,7 @@ class DefaultDocument implements Document {
     void setData(byte[] data, boolean calcChecksum = true) {
         this.data = data
         if (calcChecksum) {
-            calculateChecksum()
+            calculateChecksum(this.data, meta.toString().getBytes())
         }
     }
 
@@ -184,8 +192,8 @@ class DefaultDocument implements Document {
         this.entry[CONTENT_TYPE_KEY] = ctype
     }
 
-    protected DefaultDocument withTimestamp(long ts) {
-        setTimestamp(ts)
+    protected DefaultDocument withCreated(long ts) {
+        setCreated(ts)
         return this
     }
 
@@ -227,8 +235,8 @@ class DefaultDocument implements Document {
         if (entrydata?.containsKey("identifier")) {
             this.identifier = entrydata["identifier"]
         }
-        if (entrydata?.containsKey(TIMESTAMP_KEY)) {
-            setTimestamp(entrydata.get(TIMESTAMP_KEY))
+        if (entrydata?.containsKey(CREATED_KEY)) {
+            setCreated(entrydata.get(CREATED_KEY))
         }
         if (entrydata?.containsKey(MODIFIED_KEY)) {
             setModified(entrydata.get(MODIFIED_KEY))
@@ -254,7 +262,7 @@ class DefaultDocument implements Document {
         if (metadata != null) {
             this.meta = [:]
             this.meta.putAll(metadata)
-            calculateChecksum()
+            calculateChecksum(this.data, this.meta.toString().getBytes())
         }
         return this
     }
@@ -296,14 +304,14 @@ class DefaultDocument implements Document {
         return entry.get("deleted", false)
     }
 
-    protected void calculateChecksum() {
+    protected void calculateChecksum(byte[] databytes, byte[] metabytes) {
         checksum = null
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
-        byte[] metabytes = meta.toString().getBytes()
-        byte[] checksumbytes = new byte[data.length + metabytes.length];
-        System.arraycopy(data, 0, checksumbytes, 0, data.length);
-        System.arraycopy(metabytes, 0, checksumbytes, data.length, metabytes.length);
+        //byte[] metabytes = meta.toString().getBytes()
+        byte[] checksumbytes = new byte[databytes.length + metabytes.length];
+        System.arraycopy(databytes, 0, checksumbytes, 0, databytes.length);
+        System.arraycopy(metabytes, 0, checksumbytes, databytes.length, metabytes.length);
         m.update(checksumbytes)
         byte[] digest = m.digest()
         BigInteger bigInt = new BigInteger(1,digest)

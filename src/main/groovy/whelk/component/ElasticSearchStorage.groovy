@@ -6,6 +6,7 @@ import org.elasticsearch.action.get.*
 import org.elasticsearch.action.index.*
 import org.elasticsearch.action.delete.*
 import org.elasticsearch.common.unit.TimeValue
+import org.elasticsearch.search.sort.SortOrder
 import static org.elasticsearch.index.query.QueryBuilders.*
 
 import whelk.*
@@ -16,16 +17,16 @@ import whelk.exception.*
 class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     final static String ELASTIC_STORAGE_TYPE = "document"
-    final static String VERSION_STORAGE_SUFFIX = "_versions"
     boolean versioning
 
     String indexName
 
-    ElasticSearchStorage(Map settings) {
+    ElasticSearchStorage(String componentId = null, Map settings) {
         super(settings)
         this.contentTypes = settings.get('contentTypes', null)
         this.indexName = settings.get('indexName', null)
         this.versioning = settings.get('versioning', false)
+        id = componentId
     }
 
     void componentBootstrap(String str) {
@@ -46,33 +47,13 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         }
     }
 
-    @Override
-    boolean eligibleForStoring(Document doc) {
-        if (versioning) {
-            Document currentDoc = get(doc.identifier)
-            log.debug("eligible: $currentDoc - ${currentDoc?.deleted}, checksums: ${currentDoc?.checksum} / ${doc.checksum}")
-            if (currentDoc && !currentDoc.isDeleted() && currentDoc.checksum == doc.checksum) {
-                log.debug("Document ${doc.identifier} is not suitable for storing.")
-                return false
-            }
-        }
-        log.debug("Document ${doc.identifier} is deemed eligible for storing.")
-        return true
-    }
-
 
     @Override
-    boolean store(Document doc) {
-        if (versioning) {
-            def oldDoc = null
-            (oldDoc, doc) = fetchAndUpdateVersion(doc)
-            if (oldDoc) {
-                log.debug("Saving old version with version ${oldDoc.version}.")
-                performExecute(prepareIndexingRequest(oldDoc, null, indexName))
-            }
-        }
-        log.debug("Saving doc (${doc.identifier}) with version ${doc.version}")
+    boolean store(Document doc, boolean withVersioning = versioning) {
         try {
+            if (versioning && withVersioning) {
+                performExecute(prepareIndexingRequest(doc, null, indexName))
+            }
             performExecute(prepareIndexingRequest(doc, doc.identifier, indexName))
             return true
         } catch (Exception e) {
@@ -83,15 +64,11 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     @Override
     void bulkStore(final List docs) {
+        log.info("Bulk store requested. Versioning set to $versioning")
         def breq = client.prepareBulk()
         for (doc in docs) {
             if (versioning) {
-                def oldDoc = null
-                (oldDoc, doc) = fetchAndUpdateVersion(doc)
-                if (oldDoc) {
-                    log.debug("Saving old version with version ${oldDoc.version}.")
-                    breq.add(prepareIndexingRequest(oldDoc, null, indexName))
-                }
+                breq.add(prepareIndexingRequest(doc, null, indexName))
             }
             breq.add(prepareIndexingRequest(doc, doc.identifier, indexName))
         }
@@ -101,14 +78,18 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         }
     }
 
-    List<Document> getAllVersions(String identifier) {
+    @Override
+    List<Document> loadAllVersions(String identifier) {
         if (versioning) {
             def query = termQuery("identifier", identifier)
-            def srq = client.prepareSearch(indexName + VERSION_STORAGE_SUFFIX).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query)
+            def srq = client.prepareSearch(indexName + VERSION_STORAGE_SUFFIX).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query).addSort("entry.modified", SortOrder.ASC)
             def response = performExecute(srq)
             def docs = []
+            int v = 0
             response.hits.hits.each {
-                docs << whelk.createDocumentFromJson(it.sourceAsString)
+                def doc = whelk.createDocumentFromJson(it.sourceAsString)
+                doc.version = v++
+                docs << doc
             }
             return docs
         } else {
@@ -116,59 +97,54 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         }
     }
 
-    protected fetchAndUpdateVersion(Document newDoc) {
-        Document currentDoc = get(newDoc.identifier)
-        if (currentDoc && !currentDoc.entry['deleted'] && currentDoc.checksum != newDoc.checksum) {
-            newDoc.setVersion(currentDoc.version + 1)
-        } else {
-            currentDoc = null
-        }
-        return [currentDoc, newDoc]
-    }
-
     protected prepareIndexingRequest(doc, identifier, idxName) {
+        String encodedIdentifier = toElasticId(doc.identifier)
         if (identifier) {
-            String encodedIdentifier = toElasticId(doc.identifier)
             return client.prepareIndex(idxName, ELASTIC_STORAGE_TYPE, encodedIdentifier).setSource(doc.toJson().getBytes("UTF-8"))
         } else {
-            return client.prepareIndex(idxName + VERSION_STORAGE_SUFFIX, ELASTIC_STORAGE_TYPE).setSource(doc.toJson().getBytes("UTF-8"))
+            String idAndChecksum = encodedIdentifier + ":" + doc.checksum
+            log.debug("Saving versioned document with identifier $idAndChecksum")
+            return client.prepareIndex(idxName + VERSION_STORAGE_SUFFIX, ELASTIC_STORAGE_TYPE, idAndChecksum).setSource(doc.toJson().getBytes("UTF-8"))
         }
     }
 
-    Document get(String identifier) {
-        return get(identifier, null)
+    Document load(String identifier) {
+        return load(identifier, null)
     }
 
     @Override
-    Document get(String identifier, String version) {
+    Document load(String identifier, String version) {
+        Document document = null
         def grq = client.prepareGet(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier))
         def response = grq.execute().actionGet();
 
-        int v = (version ? version as int : -1)
 
-        Document document = null
+        int v = -1
+        if (version && version.isInteger()) {
+            v = version.toInteger()
+        }
+
 
         if (response.exists) {
             log.trace("Get response for ${identifier}: " + response.sourceAsMap)
             document = whelk.createDocumentFromJson(response.sourceAsString)
         }
 
-        if (document && (v < 0 || document.version == v)) {
+        if (document && (v < 1 || version == document.checksum)) {
             return document
         } else if (document != null) {
-            log.debug("Current version (${document.version}) of document not the one requested ($v). Looking in the cellar ...")
-            def query = boolQuery().must(termQuery("identifier", document.identifier)).must(termQuery("entry.version", v))
-            def srq = client.prepareSearch(indexName + VERSION_STORAGE_SUFFIX).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query).setSize(1)
-            response = performExecute(srq)
-            log.trace("Response from version search: $response")
-            if (response.hits.totalHits == 1) {
-                return whelk.createDocumentFromJson(response.hits.hits[0].sourceAsString)
+            def docList = loadAllVersions(identifier)
+            if (v > 0 && v < docList.size()) {
+                document = docList[v]
+            } else {
+                document = docList.find { it.checksum == version }
             }
         }
-        return null
+        return document
     }
 
-    Document getByAlternateIdentifier(String identifier) {
+    @Override
+    Document loadByAlternateIdentifier(String identifier) {
         def query = termQuery("entry.alternateIdentifiers", identifier)
         def srq = client.prepareSearch(indexName).setTypes([ELASTIC_STORAGE_TYPE] as String[]).setQuery(query).setSize(1)
         def response = performExecute(srq)
@@ -179,7 +155,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         return null
     }
 
-    Iterable<Document> getAll(String dataset = null, Date since = null, Date until = null) {
+    Iterable<Document> loadAll(String dataset = null, Date since = null, Date until = null) {
         return new Iterable<Document>() {
             def results = []
             Iterator<Document> iterator() {
@@ -204,7 +180,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
                                         query = query.must(termQuery("entry.dataset", dataset))
                                     }
                                     if (since || until) {
-                                        def timeRangeQuery = rangeQuery("entry.timestamp")
+                                        def timeRangeQuery = rangeQuery("entry.modified")
                                         if (since) {
                                             timeRangeQuery = timeRangeQuery.from(since.getTime())
                                         }
@@ -263,19 +239,13 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     @Override
-    void remove(String identifier) {
+    void remove(String identifier, String dataset) {
         if (!versioning) {
             log.debug("Deleting record at $indexName with id ${toElasticId(identifier)}")
             client.delete(new DeleteRequest(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier)))
         } else {
             log.debug("Creating tombstone record at $indexName with id ${toElasticId(identifier)}")
-            store(createTombstone(identifier))
+            store(createTombstone(identifier, dataset))
         }
-    }
-
-    private Document createTombstone(id) {
-        def tombstone = whelk.createDocument("text/plain").withIdentifier(id).withData("DELETED ENTRY")
-        tombstone.entry['deleted'] = true
-        return tombstone
     }
 }

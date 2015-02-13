@@ -316,6 +316,12 @@ class MarcConversion {
                 }
             }
         }
+        // TODO: how to re-add only partially _unhandled?
+        data._marcUncompleted.each {
+            def field = it.clone()
+            field.remove('_unhandled')
+            fields << field
+        }
         return marc
     }
 
@@ -566,7 +572,7 @@ class MarcFixedFieldHandler {
             if (m) {
                 def start = m[0][1].toInteger()
                 def end = m[0][2].toInteger()
-                columns << new Column(ruleSet, obj, start, end, obj['default'])
+                columns << new Column(ruleSet, obj, start, end, obj['fixedDefault'])
                 if (end > fieldSize) {
                     fieldSize = end
                 }
@@ -618,13 +624,13 @@ class MarcFixedFieldHandler {
     class Column extends MarcSimpleFieldHandler {
         int start
         int end
-        String defaultValue
-        Column(ruleSet, fieldDfn, start, end, defaultValue) {
+        String fixedDefault
+        Column(ruleSet, fieldDfn, start, end, fixedDefault) {
             super(ruleSet, null, fieldDfn)
             assert start > -1 && end >= start
             this.start = start
             this.end = end
-            this.defaultValue = defaultValue
+            this.fixedDefault = fixedDefault
         }
         int getWidth() { return end - start }
         String getToken(value) {
@@ -638,7 +644,7 @@ class MarcFixedFieldHandler {
             def token = getToken(value)
             if (token == "")
                 return OK
-            if (token == defaultValue)
+            if (token == fixedDefault)
                 return OK
             boolean isNothing = token.find { it != FIXED_NONE && it != FIXED_UNDEF } == null
             if (isNothing)
@@ -647,8 +653,8 @@ class MarcFixedFieldHandler {
         }
         def revert(Map data) {
             def v = super.revert(data, null)
-            if (v == null && defaultValue)
-                return defaultValue
+            if ((v == null || v == [null]) && fixedDefault)
+                return fixedDefault
             return v
         }
     }

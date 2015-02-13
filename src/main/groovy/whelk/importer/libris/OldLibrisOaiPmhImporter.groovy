@@ -363,10 +363,8 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
     private void getAuthentication() {
         try {
-            Properties properties = new Properties()
-            properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
-            final String username = properties.getProperty("oaipmhUsername")
-            final String password = properties.getProperty("oaipmhPassword")
+            final String username = whelk.props.get("oaipmhUsername")
+            final String password = whelk.props.get("oaipmhPassword")
             Authenticator.setDefault(new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(username, password.toCharArray())
