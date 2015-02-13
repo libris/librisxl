@@ -26,7 +26,7 @@ def loadConfiguration() {
     }
     def encoding = hasProperty('file.encoding') ? file.encoding : 'UTF-8'
     System.setProperty 'file.encoding', encoding
-    System.setProperty 'env', environment
+    System.setProperty 'whelk.environment', environment
 }
 
 
