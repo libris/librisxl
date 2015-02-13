@@ -722,20 +722,22 @@ class StandardWhelk implements Whelk {
         if (!whelkConfig || !pluginConfig) {
             throw new PluginConfigurationException("Could not find suitable config. Please set the 'whelk.config.uri' system property")
         }
+        log.info("Configuration built: Here is whelkConfig: $whelkConfig")
         return [whelkConfig, pluginConfig]
     }
 
     private Map loadConfigOverlay(Map baseConfig, Map overlay) {
-        log.info("base: $baseConfig, overlay: $overlay")
         overlay.each { key, value ->
-            if (value instanceof Map && baseConfig.containsKey(key)) {
-                log.debug("Loading overlays for parameter $key")
-                baseConfig.put(key, loadConfigOverlay(baseConfig.get(key), overlay.get(key)))
+            if (value instanceof Map) {
+                log.info("Loading overlays for parameter $key")
+                baseConfig.put(key, loadConfigOverlay(baseConfig.get(key,[:]), value))
+                log.info("baseConfig[${key}] is now: ${baseConfig.key}")
             } else {
-                log.debug("Overwriting configuration $key with $value")
+                log.info("Overwriting configuration $key with $value")
                 baseConfig.put(key, value)
             }
         }
+        log.info("Returning $baseConfig")
         return baseConfig
     }
 

@@ -206,6 +206,13 @@ abstract class BasicElasticComponent extends BasicComponent implements ShapeComp
     def loadJson(String file) {
         log.trace("Loading file $file")
         def json
+        String basefile = file
+        if (!getClass().classLoader.findResource(file)) {
+            file = "es/" + basefile
+        }
+        if (!getClass().classLoader.findResource(file)) {
+            file = "es/" + whelk.props.get("ES_CONFIG_PREFIX") + "/" + basefile
+        }
         try {
             json = getClass().classLoader.getResourceAsStream(file).withStream {
                 mapper.readValue(it, Map)
