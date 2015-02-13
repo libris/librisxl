@@ -123,18 +123,6 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
 
-    def loadJson(String file) {
-        def json
-        try {
-            json = getClass().classLoader.getResourceAsStream(file).withStream {
-                mapper.readValue(it, Map)
-            }
-        } catch (NullPointerException npe) {
-            log.trace("File $file not found.")
-        }
-        return json
-    }
-
     @Override
     void remove(String identifier, String dataset) {
         String indexName = getIndexName()

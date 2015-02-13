@@ -17,6 +17,7 @@ class JsonDocument extends DefaultDocument {
     // store serialized data
     @JsonIgnore
     protected Map serializedDataInMap
+    @JsonIgnore
     def timeZone = ZoneId.systemDefault()
 
     JsonDocument fromDocument(Document otherDocument) {

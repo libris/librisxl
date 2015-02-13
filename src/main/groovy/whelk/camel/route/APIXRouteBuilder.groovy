@@ -12,8 +12,6 @@ class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
     String messageQueue, bulkMessageQueue, removeQueue, retriesQueue, apixUri = null
 
     APIXRouteBuilder(Map settings) {
-        properties.load(this.getClass().getClassLoader().getResourceAsStream("whelk.properties"))
-
         messageQueue = settings.get("apixMessageQueue")
         retriesQueue = settings.get("retriesQueue")
         removeQueue = messageQueue
@@ -22,8 +20,8 @@ class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
             apixUri = apixUri.replace("http://", "http4:")
             apixUri = apixUri.replace("https://", "https4:")
             apixUri = apixUri + "?" +
-                "authUsername=" + properties.getProperty("apixUsername") + "&" +
-                "authPassword=" + properties.getProperty("apixPassword") + "&" +
+                "authUsername=" + whelk.props.get("apixUsername") + "&" +
+                "authPassword=" + whelk.props.get("apixPassword") + "&" +
                 "authenticationPreemptive=true" + "&" +
                 "httpClient.redirectsEnabled=false"
         }

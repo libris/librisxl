@@ -4,7 +4,6 @@
         "STORAGE_PATH": "work/storage",
         "ELASTIC_SEARCH_HOST": "localhost",
         "ELASTIC_STORAGE_HOST": "localhost",
-        "ELASTIC_PORT": 9300,
         "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
@@ -18,19 +17,10 @@
         "MQ_GRAPHSTORE_RETRIES": "activemq:devlibris.graphstore.retries",
         "MQ_APIX": "activemq:localapix",
         "APIX_HOST": "http://localhost:8001",
-        "CAMEL_MASTER_COMPONENT":"sendmq",
         "CAMEL_CHANNEL_PREFIX":"local",
         "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=10",
         "UPDATE_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
         "UPDATE_INTERVAL":300
-
-    },
-    "_id": "libris",
-    "_docBaseUri" : "http://libris.kb.se/",
-    "_docMetaMapping" : {
-        "hold": [
-            "about.heldBy.notation"
-        ]
     },
     "_plugins": {
         "_support": [
@@ -50,20 +40,5 @@
         "_maintenance": [
             "scheduledoperator"
         ]
-    },
-    "_apis": [
-        { "/_remotesearch": "remotesearch" },
-        { "/_operations": "operator" },
-        { "/_format": "formatter" },
-        { "/_sparql": "sparqlapi" },
-        { "/_sys/metasearch":  "metasearchapi" },
-        { "/_libcount": "libcount" },
-        { "/_isxntool":  "isxntool" },
-        { "/_complete/([\\w/]+)$":  "completeexpander" },
-        { "/([\\w/]+)/_oaipmhsearch": "oaipmhsearch"},
-        { "/([\\w/]+)/_search":  "search" },
-        { "^/_iri/(.+)$": "documentapi" },
-        { "^([^_].*)$":  "documentapi" },
-        { "^/$":  "documentapi" }
-    ]
+    }
 }
