@@ -533,7 +533,13 @@ class StandardWhelk implements Whelk {
 
     @Override
     void setProps(final Map global) {
-        this.globalProperties = global.asImmutable()
+        global.each { key, value ->
+            if (value instanceof String) {
+                value = value.replaceAll(/\{whelkname\}/, this.id)
+            }
+            log.trace("Setting prop $key = $value")
+            globalProperties.put(key, value)
+        }
     }
 
     public Map getProps() {
@@ -704,8 +710,8 @@ class StandardWhelk implements Whelk {
                 throw new PluginConfigurationException("Failed to read whelk configuration: ${e.message}", e)
             }
             try {
-                def secrets = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream(DEFAULT_WHELK_CONFIG_FILENAME), Map)
-                whelkConfig["_properties"].putAll(secrets)
+                def secrets = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream("secrets.json"), Map)
+                whelkConfig.get("_properties").putAll(secrets)
             } catch (Exception e) {
                 throw new PluginConfigurationException("Failed to read secrets: ${e.message}", e)
             }
@@ -733,7 +739,7 @@ class StandardWhelk implements Whelk {
                 log.trace("key: $key nval: $nval")
                 baseConfig.put(key, nval)
             } else {
-                log.trace("Overwriting configuration $key with $value")
+                log.trace("Overwriting configuration $key (${baseConfig.get(key)}) with $value")
                 baseConfig.put(key, value)
             }
         }
@@ -746,15 +752,7 @@ class StandardWhelk implements Whelk {
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])
         documentDataToMetaMapping = whelkConfig["_docMetaMapping"]
-        log.debug("Looking placeholders in properties.")
-        def wprops = [:]
-        whelkConfig["_properties"].each { key, value ->
-            if (value instanceof String) {
-                value = value.replaceAll("{whelkname}", this.id)
-            }
-            wprops.put(key, value)
-        }
-        setProps(wprops)
+        setProps(whelkConfig.get("_properties"))
         // Some configurations might want to start services to act standalone
         whelkConfig["_supportplugins"].each { p ->
             def plugin = loadPlugin(pluginConfig, p, this.id)
