@@ -158,8 +158,6 @@ configurations {
 
 war {
     baseName = "whelk"
-    appendix = configuration
-    classifier = environment
 
     // Prevent circular log redirection; use slf4j
     from {configurations.executableWarDeps.collect {
