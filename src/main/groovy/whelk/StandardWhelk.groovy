@@ -722,22 +722,21 @@ class StandardWhelk implements Whelk {
         if (!whelkConfig || !pluginConfig) {
             throw new PluginConfigurationException("Could not find suitable config. Please set the 'whelk.config.uri' system property")
         }
-        log.info("Configuration built: Here is whelkConfig: $whelkConfig")
         return [whelkConfig, pluginConfig]
     }
 
     private Map loadConfigOverlay(Map baseConfig, Map overlay) {
         overlay.each { key, value ->
             if (value instanceof Map) {
-                log.info("Loading overlays for parameter $key")
-                baseConfig.put(key, loadConfigOverlay(baseConfig.get(key,[:]), value))
-                log.info("baseConfig[${key}] is now: ${baseConfig.key}")
+                log.trace("Loading overlays for parameter $key")
+                def nval = loadConfigOverlay(baseConfig.get(key, [:]), value)
+                log.trace("key: $key nval: $nval")
+                baseConfig.put(key, nval)
             } else {
-                log.info("Overwriting configuration $key with $value")
+                log.trace("Overwriting configuration $key with $value")
                 baseConfig.put(key, value)
             }
         }
-        log.info("Returning $baseConfig")
         return baseConfig
     }
 
@@ -748,6 +747,11 @@ class StandardWhelk implements Whelk {
         setDocBaseUri(whelkConfig["_docBaseUri"])
         documentDataToMetaMapping = whelkConfig["_docMetaMapping"]
         setProps(whelkConfig["_properties"])
+        // Some configurations might want to start services to act standalone
+        whelkConfig["_supportplugins"].each { p ->
+            def plugin = loadPlugin(pluginConfig, p, this.id)
+            addPlugin(plugin)
+        }
         whelkConfig["_plugins"].each { key, value ->
             log.trace("key: $key, value: $value")
             if (!(key =~ /^_.+$/)) {
@@ -756,7 +760,7 @@ class StandardWhelk implements Whelk {
             } else if (value instanceof List) {
                 log.info("Adding plugins from group $key")
                 for (p in value) {
-                    if (!disabled.contains(p)) {
+                    if (p && !disabled.contains(p)) {
                         def plugin = loadPlugin(pluginConfig, p, this.id)
                         //log.info("Adding plugin ${plugin.id} to ${this.id}")
                         addPlugin(plugin)

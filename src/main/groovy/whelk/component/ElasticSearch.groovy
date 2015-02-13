@@ -104,7 +104,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     String createNewCurrentIndex(String indexName) {
         assert (indexName != null)
         log.info("Creating index ...")
-        es_settings = loadJson("es/es_settings.json")
+        es_settings = loadJson("es_settings.json")
         String currentIndex = "${indexName}-" + new Date().format("yyyyMMdd.HHmmss")
         log.debug("Will create index $currentIndex.")
         performExecute(client.admin().indices().prepareCreate(currentIndex).setSettings(es_settings))
