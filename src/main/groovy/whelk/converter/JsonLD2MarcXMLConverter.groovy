@@ -22,11 +22,11 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
         if (jsonldConverter == null)
             jsonldConverter =  plugins.find { it instanceof JsonLD2MarcConverter }
 
-        assert jsonldConverter;
+        assert jsonldConverter
 
-        Document jsonldDocument = jsonldConverter.doConvert(doc)
+        Document jsonDocument = jsonldConverter.doConvert(doc)
 
-        MarcRecord record = JSONMarcConverter.fromJson(jsonldDocument.getDataAsString())
+        MarcRecord record = JSONMarcConverter.fromJson(jsonDocument.getDataAsString())
 
         /*
         log.warn("APPLYING HACK TO MAKE APIX WORK!")

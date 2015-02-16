@@ -64,7 +64,7 @@ public class AuthenticationFilter implements Filter {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
                 }
             } catch (org.codehaus.jackson.JsonParseException jpe) {
-                log.error("JsonParseExceptin. Failed to parse:" + json, jpe);
+                log.error("JsonParseException. Failed to parse:" + json, jpe);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
             } catch (Exception e) {
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);

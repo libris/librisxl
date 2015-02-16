@@ -5,7 +5,7 @@ import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 
 @Log
-abstract class OaiPmhImporter {
+abstract class BasicOaiPmhImporter {
 
     int recordCount
 

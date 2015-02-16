@@ -251,7 +251,7 @@
         }
     },
     "oaipmhimporter2" : {
-        "_class" : "whelk.importer.libris.LibrisOaiPmhImporter",
+        "_class" : "whelk.importer.libris.NewLibrisOaiPmhImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],
@@ -265,7 +265,7 @@
         }
     },
     "oaipmhimporter" : {
-        "_class" : "whelk.importer.libris.OldOAIPMHImporter",
+        "_class" : "whelk.importer.libris.OaiPmhImporter",
         "_plugins" : [
             "marcconverter", "linkcompleter"
         ],

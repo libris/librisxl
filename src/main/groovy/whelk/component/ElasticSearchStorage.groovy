@@ -64,7 +64,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     @Override
     void bulkStore(final List docs) {
-        log.info("Bulk store requested. Versioning set to $versioning")
+        log.debug("Bulk store requested. Versioning set to $versioning")
         def breq = client.prepareBulk()
         for (doc in docs) {
             if (versioning) {
