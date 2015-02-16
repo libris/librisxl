@@ -19,7 +19,7 @@ class CleanupIndexFormatConverter extends BasicFilter {
         return doc
     }
 
-    Map doFilter(Map docmap) {
+    Map doFilter(Map docmap, String dataset) {
         def ct = docmap.remove("@context")
         def broken = docmap.remove("broken")
         return docmap

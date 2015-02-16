@@ -42,6 +42,9 @@
         ],
         "_maintenance": [
             "scheduledoperator"
+        ],
+        "_filters": [
+            "linkexpander"
         ]
     },
     "_apis": [

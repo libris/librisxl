@@ -205,7 +205,7 @@ class StandardWhelk implements Whelk {
         log.debug("Bulk operation completed")
     }
 
-    Document get(String identifier, String version=null, List contentTypes=[], boolean expandLinks = true) {
+    Document get(String identifier, String version=null, List contentTypes=[], boolean applyFilters = true) {
         Document doc = null
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
@@ -219,6 +219,12 @@ class StandardWhelk implements Whelk {
         // TODO: Check this
         if (!doc) {
             doc = storage.load(identifier, version)
+        }
+        if (doc && applyFilters) {
+            for (filter in plugins.findAll { it instanceof Filter && it.valid(doc) }) {
+                log.debug("Filtering using ${filter.id} for ${doc.identifier}")
+                doc = filter.filter(doc)
+            }
         }
 
         return doc
