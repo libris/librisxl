@@ -82,7 +82,7 @@ class DocumentAPI extends BasicAPI {
         } else if (request.method == "DELETE") {
             try {
                 def doc = whelk.get(path)
-                if (doc && !hasPermission(request.getAttribute("user"), doc)) {
+                if (doc && !hasPermission(request.getAttribute("user"), doc, null)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
                     return
                 } else {
@@ -215,9 +215,10 @@ class DocumentAPI extends BasicAPI {
             }
             def entry = [:]
             def meta = [:]
+            Document existingDoc = null
 
             if (identifierSupplied) {
-                Document existingDoc = whelk.get(path)
+                existingDoc = whelk.get(path)
                 if (existingDoc) {
                     log.debug("Document with identifier ${existingDoc.identifier} already exists.")
                     // Check If-Match
@@ -251,7 +252,7 @@ class DocumentAPI extends BasicAPI {
             try {
                 Document doc = whelk.createDocument(entry["contentType"]).withMetaEntry(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
 
-                if (!hasPermission(request.getAttribute("user"), doc)) {
+                if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
                     return
                 }
@@ -302,7 +303,7 @@ class DocumentAPI extends BasicAPI {
             if (info.user == "SYSTEM") {
                 return true
             }
-            return accessControl.checkDocument(doc, info)
+            return accessControl.checkDocument(newdoc, olddoc, info)
         }
         log.info("No user information received, denying request.")
         return false
