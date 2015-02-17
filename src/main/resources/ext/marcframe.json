@@ -1713,19 +1713,19 @@
       "r": "/def/enum/record/Retrospektiv_katalogisering"
     },
     "itemInfoInRecord": {
-      "i": "/def/enum/record/Exemplarinformation",
-      "n": "/def/enum/record/Exemplarinformation_finns_ej"
+      "i": "/def/enum/record/HasItemInformation",
+      "n": "/def/enum/record/NoItemInformation"
     },
-    "receipt": {
+    "acquisitionStatus": {
       "0": null,
-      "1": "/def/enum/content/OtherReceiptOrAcquisitionStatu",
+      "1": "/def/enum/content/OtherReceiptOrAcquisitionStatus",
       "2": "/def/enum/content/Completed",
       "3": "/def/enum/content/OnOrder",
       "4": "/def/enum/content/CurrentlyReceived",
       "5": "/def/enum/content/NotCurrentlyReceived",
-      "_": "/def/enum/content/Uppgift_saknas"
+      "_": null
     },
-    "method": {
+    "acquisitionMethod": {
       "c": "/def/enum/content/CooperativeOrConsortialPurchase",
       "d": "/def/enum/content/Deposit",
       "e": "/def/enum/content/Exchange",
@@ -1738,7 +1738,7 @@
       "u": null,
       "z": "/def/enum/content/OtherMethodOfAcquisition"
     },
-    "generalRetention": {
+    "generalRetentionPolicy": {
       "0": null,
       "1": "/def/enum/content/OtherGeneralRetentionPolicy",
       "2": "/def/enum/content/RetainedExceptAsReplacedByUpdate",
@@ -1749,17 +1749,17 @@
       "7": "/def/enum/content/NotRetained",
       "8": "/def/enum/content/PermanentlyRetained"
     },
-    "policyType": {
+    "retentionPolicyType": {
       "l": "/def/enum/content/Latest",
-      "p": "/def/enum/content/Previou"
+      "p": "/def/enum/content/Previous"
     },
-    "unitType": {
-      "e": "/def/enum/content/EditionSPart",
-      "i": "/def/enum/content/IssueSPart",
-      "m": "/def/enum/content/MonthSTime",
-      "s": "/def/enum/content/SupplementSPart",
-      "w": "/def/enum/content/WeekSTime",
-      "y": "/def/enum/content/YearSTime"
+    "retentionPolicyUnitType": {
+      "e": "/def/enum/content/EditionsPart",
+      "i": "/def/enum/content/IssuesPart",
+      "m": "/def/enum/content/MonthsTime",
+      "s": "/def/enum/content/SupplementsPart",
+      "w": "/def/enum/content/WeeksTime",
+      "y": "/def/enum/content/YearsTime"
     },
     "completeness": {
       "0": null,
@@ -1767,18 +1767,18 @@
       "2": "/def/enum/content/Incomplete",
       "3": "/def/enum/content/Scattered",
       "4": null,
-      "_": "/def/enum/content/Uppgift_saknas"
+      "_": null
     },
     "lendingPolicy": {
-      "_": "/def/enum/content/Uppgift_saknas",
+      "_": null,
       "a": "/def/enum/content/WillLend",
       "b": "/def/enum/content/WillNotLend",
       "c": "/def/enum/content/WillLendHardCopyOnly",
       "l": "/def/enum/content/LimitedLendingPolicy",
       "u": null
     },
-    "reproduction": {
-      "_": "/def/enum/content/Uppgift_saknas",
+    "reproductionPolicy": {
+      "_": null,
       "a": "/def/enum/content/WillReproduce",
       "b": "/def/enum/content/WillNotReproduce",
       "u": null
@@ -1786,18 +1786,7 @@
     "copyReport": {
       "0": "/def/enum/content/Separate",
       "1": "/def/enum/content/Composite",
-      "_": "/def/enum/content/Uppgift_saknas"
-    },
-    "numberUnits": {
-      "1": "/def/enum/content/1",
-      "2": "/def/enum/content/2",
-      "3": "/def/enum/content/3",
-      "4": "/def/enum/content/4",
-      "5": "/def/enum/content/5",
-      "6": "/def/enum/content/6",
-      "7": "/def/enum/content/7",
-      "8": "/def/enum/content/8",
-      "9": "/def/enum/content/9"
+      "_": null
     }
 
   },
@@ -5576,7 +5565,7 @@
             "@id": "/hold/0000000",
             "controlNumber": "0000000",
             "encLevel": {"@id": "/def/enum/record/HoldingsLevel1"},
-            "itemInfoInRecord": {"@id": "/def/enum/record/Exemplarinformation_finns_ej"},
+            "itemInfoInRecord": {"@id": "/def/enum/record/NoItemInformation"},
             "status": {"@id": "/def/enum/record/New"},
             "holdingType": {"@id": "/def/enum/record/SinglePartItemHolding"},
             "about": {
@@ -5599,46 +5588,67 @@
     },
 
     "001" : {"inherit": "bib"},
+
     "003": {
       "ignored": true,
       "TODO:systemNumber-with-default": "SE-LIBR", "note": "used-for-exports"
     },
-    "004": {"link": "holdingFor", "uriTemplate": "/resource/bib/{_}"},
+
+    "004": {
+      "link": "holdingFor", "uriTemplate": "/resource/bib/{_}",
+      "TODO:recordDescription(@reverse:about)": {"property": "controlNumber"}
+    },
+
     "005": {"inherit": "bib"},
 
     "007": {"inherit": "bib"},
 
     "008": {
-      "[0:6]": {"property": "date"},
+      "[0:6]": {
+        "aboutEntity": "?record",
+        "property": "createdRawDate",
+        "TODO:parseDate": "yyMMdd",
+        "TODO:centuryCutoff": "1970"
+      },
       "[6:7]": {
-        "link": "receipt",
+        "link": "acquisitionStatus",
         "uriTemplate": "{_}",
-        "tokenMap": "receipt"
+        "tokenMap": "acquisitionStatus"
       },
       "[7:8]": {
-        "link": "method",
+        "link": "acquisitionMethod",
         "uriTemplate": "{_}",
-        "tokenMap": "method"
+        "tokenMap": "acquisitionMethod"
+      },
+      "[8:12]": {
+        "property": "expectedAcquisitionEndDate"
       },
       "[12:13]": {
-        "link": "generalRetention",
+        "link": "generalRetentionPolicy",
         "uriTemplate": "{_}",
-        "tokenMap": "generalRetention"
+        "tokenMap": "generalRetentionPolicy"
       },
       "[13:14]": {
-        "link": "policyType",
+        "link": "retentionPolicyType",
         "uriTemplate": "{_}",
-        "tokenMap": "policyType"
+        "tokenMap": "retentionPolicyType"
+      },
+      "[14:15]": {
+        "property": "retentionPolicyNumberOfUnits"
       },
       "[15:16]": {
-        "link": "unitType",
+        "link": "retentionPolicyUnitType",
         "uriTemplate": "{_}",
-        "tokenMap": "unitType"
+        "tokenMap": "retentionPolicyUnitType"
       },
       "[16:17]": {
         "link": "completeness",
         "uriTemplate": "{_}",
         "tokenMap": "completeness"
+      },
+      "[17:20]": {
+        "property": "numberOfItems",
+        "TODO": "parse-zero-padded-number"
       },
       "[20:21]": {
         "link": "lendingPolicy",
@@ -5646,19 +5656,23 @@
         "tokenMap": "lendingPolicy"
       },
       "[21:22]": {
-        "link": "reproduction",
+        "link": "reproductionPolicy",
         "uriTemplate": "{_}",
-        "tokenMap": "reproduction"
+        "tokenMap": "reproductionPolicy"
+      },
+      "[22:25]": {
+        "addLink": "language",
+        "uriTemplate": "/def/languages/{_}",
+        "matchUriToken": "^\\w{2,3}$"
       },
       "[25:26]": {
         "link": "copyReport",
         "uriTemplate": "{_}",
         "tokenMap": "copyReport"
       },
-      "[14:15]": {
-        "link": "numberUnits",
-        "uriTemplate": "{_}",
-        "tokenMap": "numberUnits"
+      "[26:32]": {
+        "aboutEntity": "?record",
+        "property": "rawDate", "TODO:parseDate": "yyMMdd"
       },
       "repeatable": false
     },
