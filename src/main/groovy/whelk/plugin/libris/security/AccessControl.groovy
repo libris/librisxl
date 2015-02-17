@@ -19,7 +19,7 @@ class AccessControl extends BasicPlugin {
                 return false
             }
 
-            def currentSigel =olddoc?.dataAsMap?.about?.heldBy?.notation
+            def currentSigel = olddoc?.dataAsMap?.about?.heldBy?.notation
             if (currentSigel) {
                 log.trace("Checking sigel privs for existing document.")
                 privs = userPrivileges.authorization.find { it.sigel == currentSigel }
@@ -32,7 +32,7 @@ class AccessControl extends BasicPlugin {
         }
 
         if (newdoc) {
-            docnew.entry.lastChangeBy = userPrivileges.username
+            newdoc.entry.lastChangeBy = userPrivileges.username
         }
         log.debug("User is authorized to make the change.")
         return true
