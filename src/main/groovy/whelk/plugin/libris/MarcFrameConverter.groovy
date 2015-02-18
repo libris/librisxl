@@ -875,20 +875,25 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (dateTimeFormat) {
-            def dateTime = null
-            if (defaultTime) {
-                if (missingCentury) {
-                    value = (value[0..2] > "70"? "19" : "20") + value
+            def givenValue = value
+            try {
+                def dateTime = null
+                if (defaultTime) {
+                    if (missingCentury) {
+                        value = (value[0..2] > "70"? "19" : "20") + value
+                    }
+                    dateTime = ZonedDateTime.of(LocalDate.parse(
+                                value, dateTimeFormat),
+                            defaultTime, timeZone)
+                } else if (timeZone) {
+                    dateTime = LocalDateTime.parse(value, dateTimeFormat).atZone(timeZone)
+                } else {
+                    dateTime = ZonedDateTime.parse(value, dateTimeFormat)
                 }
-                dateTime = ZonedDateTime.of(LocalDate.parse(
-                            value, dateTimeFormat),
-                        defaultTime, timeZone)
-            } else if (timeZone) {
-                dateTime = LocalDateTime.parse(value, dateTimeFormat).atZone(timeZone)
-            } else {
-                dateTime = ZonedDateTime.parse(value, dateTimeFormat)
+                value = dateTime.format(DT_FORMAT)
+            } catch (DateTimeParseException e) {
+                value = givenValue
             }
-            value = dateTime.format(DT_FORMAT)
         }
 
         def ent = state.entityMap[aboutEntityName]
