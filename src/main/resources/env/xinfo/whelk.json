@@ -7,24 +7,23 @@
         "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": true,
         "APIX_HOST": "https://libris.kb.se",
         "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
-        "UPDATE_INTERVAL":1
+        "UPDATE_INTERVAL":1,
+        "ES_CONFIG_PREFIX":"xinfo"
     },
+    "_id":"xinfo",
     "_plugins": {
         "_camel": [
-            "indexroutebuilder",
-            "graphstoreroutebuilder",
-            "apixroutebuilder"
-            ]
+            "indexroutebuilder"
+            ],
+        "_components": [
+            "jsonldstorage",
+            "index"
+        ],
+        "_maintenance": [ null ],
+        "_filters": [ null ]
     },
     "_apis": [
-        { "/_remotesearch": "remotesearch" },
-        { "/_format": "formatter" },
-        { "/_sparql": "sparqlapi" },
-        { "/_libcount": "libcount" },
-        { "/_isxntool":  "isxntool" },
-        { "/_complete/([\\w/]+)$":  "completeexpander" },
-        { "/(\\w+)/_search":  "search" },
-        { "^/_iri/(.+)$": "documentapi" },
+        { "/_operations": "operator" },
         { "^([^_].*)$":  "documentapi" },
         { "^/$":  "documentapi" }
     ]
