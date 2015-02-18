@@ -58,17 +58,28 @@ class JsonDocument extends DefaultDocument {
     }
 
     @Override
+    void setCreated(long ts) {
+        super.setCreated(ts)
+        if (getContentType() == "application/ld+json") {
+            def map = getDataAsMap()
+            log.trace("Setting created in document data.")
+            def time = ZonedDateTime.ofInstant(new Date(ts).toInstant(), timeZone)
+            def timestamp = time.format(StandardWhelk.DT_FORMAT)
+            map.put("created", timestamp)
+            withData(map)
+        }
+    }
+
+    @Override
     long updateModified() {
         long mt = super.updateModified()
         if (getContentType() == "application/ld+json") {
             def map = getDataAsMap()
-            if (map.containsKey("modified")) {
-                log.trace("Setting modified in document data.")
-                def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
-                def timestamp = time.format(StandardWhelk.DT_FORMAT)
-                map.put("modified", timestamp)
-                withData(map)
-            }
+            log.trace("Setting modified in document data.")
+            def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
+            def timestamp = time.format(StandardWhelk.DT_FORMAT)
+            map.put("modified", timestamp)
+            withData(map)
         }
         return mt
     }
@@ -98,6 +109,7 @@ class JsonDocument extends DefaultDocument {
             setData(mapper.writeValueAsBytes(dataMap), false)
             // Removed modified from data before checksum calculation
             dataMap.remove("modified")
+            dataMap.remove("created")
             databytes = mapper.writeValueAsBytes(dataMap)
         }
         super.calculateChecksum(databytes, metabytes)
