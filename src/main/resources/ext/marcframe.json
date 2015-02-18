@@ -5100,7 +5100,11 @@
     "005": {"inherit": "bib"},
 
     "008": {
-      "[0:6]": {"property": "date"},
+      "[0:6]": {
+        "aboutEntity": "?record",
+        "property": "created",
+        "parseDateTime": "yyMMdd", "timeZone": "CET"
+      },
       "[6:7]": {
         "link": "subdivision",
         "uriTemplate": "{_}",
