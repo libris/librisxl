@@ -1791,6 +1791,47 @@
 
   },
 
+  "postProcessing": [
+    {
+      "type": "SetUpdatedStatus",
+      "statusFlag": "status",
+      "statusFlagNewValue": "/def/enum/record/New",
+      "statusFlagUpdatedValue": "/def/enum/record/CorrectedOrRevised",
+      "dateProperty": "created",
+      "updatedProperty": "modified",
+      "_spec": [
+        {
+          "source": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:00Z",
+            "status": {"@id": "/def/enum/record/New"}
+          },
+          "result": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:00Z"
+          },
+          "back": true
+        },
+        {
+          "source": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:01Z",
+            "status": {"@id": "/def/enum/record/New"}
+          },
+          "result": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:01Z"
+          },
+          "back": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:01Z",
+            "status": {"@id": "/def/enum/record/CorrectedOrRevised"}
+          }
+        }
+      ]
+    }
+  ],
+
   "bib": {
 
     "thingLink": "about",
@@ -1813,11 +1854,6 @@
             "source": {
               "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
               "_providerYear": "1977"
-            },
-            "normalized": {
-              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-              "_providerYear": "1977",
-              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
             },
             "result": {
               "publication": [ {"providerDate": "1977"} ]

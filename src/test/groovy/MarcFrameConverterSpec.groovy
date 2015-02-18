@@ -24,6 +24,14 @@ class MarcFrameConverterSpec extends Specification {
     static postProcStepSpecs = []
 
     static {
+
+        converter.conversion.sharedPostProcSteps.eachWithIndex { step, i ->
+            def dfn = converter.config.postProcessing
+            dfn[i]._spec.each {
+                postProcStepSpecs << [step: step, spec: it]
+            }
+        }
+
         ['bib', 'auth', 'hold'].each { marcType ->
             def ruleSets = converter.conversion.marcRuleSets
             converter.config[marcType].each { code, dfn ->
@@ -206,11 +214,22 @@ class MarcFrameConverterSpec extends Specification {
     }
 
     def "should handle postprocessing"() {
-        when:
+        given:
         def data = deepcopy(item.spec.source)
-        item.step.modify(null, data)
+        def record = data
+        def thing = 'about' in data? data['about'] : data
+
+        when:
+        item.step.modify(record, thing)
         then:
         data == item.spec.result
+
+        when:
+        item.step.unmodify(record, thing)
+        then:
+        !item.spec.back || data == (item.spec.back == true?
+                                    item.spec.source : item.spec.back)
+
         where:
         item << postProcStepSpecs
     }
