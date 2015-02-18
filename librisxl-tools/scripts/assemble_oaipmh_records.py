@@ -1,3 +1,4 @@
+import os
 import csv
 import requests
 try:
@@ -13,7 +14,17 @@ import os
 baseurl = 'http://data.libris.kb.se/{rectype}/oaipmh/?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/{record}'
 
 args = argv[1:]
-name, passwd = args.pop(0).split(':')
+
+passwd_data = args.pop(0)
+if os.path.isfile(passwd_data):
+    import json
+    with open(passwd_data) as fp:
+        secrets = json.load(fp)
+    name, passwd = secrets['oaipmhUsername'], secrets['oaipmhPassword']
+elif ':' in passwd_data:
+    name, passwd = passwd_data.split(':')
+else:
+    name, passwd = "", ""
 
 if args[0].endswith('.tsv'):
     records = []
