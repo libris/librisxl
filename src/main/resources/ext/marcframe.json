@@ -2985,7 +2985,8 @@
       "TODO:repeatedBy": "006",
       "[0:6]": {
         "aboutEntity": "?record",
-        "property": "createdRawDate", "TODO:parseDate": "yyMMdd"
+        "property": "created",
+        "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6:7]": {
         "link": "_providerDateStatus",
@@ -3451,7 +3452,7 @@
             {"008": "900101s1977    sw            000 0aswe  "}
           ],
           "result": {
-            "createdRawDate": "900101",
+            "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
               "language": [{"@id": "/def/languages/swe"}],
               "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
@@ -5099,7 +5100,11 @@
     "005": {"inherit": "bib"},
 
     "008": {
-      "[0:6]": {"property": "date"},
+      "[0:6]": {
+        "aboutEntity": "?record",
+        "property": "created",
+        "parseDateTime": "yyMMdd", "timeZone": "CET"
+      },
       "[6:7]": {
         "link": "subdivision",
         "uriTemplate": "{_}",
@@ -5606,9 +5611,8 @@
     "008": {
       "[0:6]": {
         "aboutEntity": "?record",
-        "property": "createdRawDate",
-        "TODO:parseDate": "yyMMdd",
-        "TODO:centuryCutoff": "1970"
+        "property": "created",
+        "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6:7]": {
         "link": "acquisitionStatus",
@@ -5672,9 +5676,23 @@
       },
       "[26:32]": {
         "aboutEntity": "?record",
-        "property": "rawDate", "TODO:parseDate": "yyMMdd"
+        "property": "date",
+        "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
-      "repeatable": false
+      "repeatable": false,
+      "_spec": [
+        {
+          "source": [
+            {"008": "900101                swe       "}
+          ],
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "about": {
+              "language": [{"@id": "/def/languages/swe"}]
+            }
+          }
+        }
+      ]
     },
 
     "014": {

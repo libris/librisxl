@@ -2,7 +2,9 @@ package whelk.plugin.libris
 
 import groovy.util.logging.Slf4j as Log
 
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -809,6 +811,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     Pattern matchUriToken = null
     DateTimeFormatter dateTimeFormat
     ZoneId timeZone
+    LocalTime defaultTime
+    boolean missingCentury = false
     boolean ignored = false
     // TODO: working, but not so useful until capable of merging entities..
     //MarcSimpleFieldHandler linkedHandler
@@ -822,10 +826,18 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         } else {
             property = fieldDfn.property
         }
-        if (fieldDfn.parseDateTime) {
-            dateTimeFormat = DateTimeFormatter.ofPattern(fieldDfn.parseDateTime)
+        def parseDateTime = fieldDfn.parseDateTime
+        if (parseDateTime) {
+            missingCentury = (parseDateTime == "yyMMdd")
+            if (missingCentury) {
+                parseDateTime = "yy" + parseDateTime
+            }
+            dateTimeFormat = DateTimeFormatter.ofPattern(parseDateTime)
             if (fieldDfn.timeZone) {
-                timeZone =ZoneId.of(fieldDfn.timeZone)
+                timeZone = ZoneId.of(fieldDfn.timeZone)
+            }
+            if (parseDateTime.indexOf("HH") == -1) {
+                defaultTime = LocalTime.MIN
             }
         }
         ignored = fieldDfn.get('ignored', false)
@@ -863,10 +875,25 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (dateTimeFormat) {
-            value = (timeZone?
-                    LocalDateTime.parse(value, dateTimeFormat).atZone(timeZone) :
-                    ZonedDateTime.parse(value, dateTimeFormat)
-                ).format(DT_FORMAT)
+            def givenValue = value
+            try {
+                def dateTime = null
+                if (defaultTime) {
+                    if (missingCentury) {
+                        value = (value[0..2] > "70"? "19" : "20") + value
+                    }
+                    dateTime = ZonedDateTime.of(LocalDate.parse(
+                                value, dateTimeFormat),
+                            defaultTime, timeZone)
+                } else if (timeZone) {
+                    dateTime = LocalDateTime.parse(value, dateTimeFormat).atZone(timeZone)
+                } else {
+                    dateTime = ZonedDateTime.parse(value, dateTimeFormat)
+                }
+                value = dateTime.format(DT_FORMAT)
+            } catch (DateTimeParseException e) {
+                value = givenValue
+            }
         }
 
         def ent = state.entityMap[aboutEntityName]
@@ -905,7 +932,11 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             def v = entity[property]
             if (v && dateTimeFormat) {
                 def zonedDateTime = parseDate(v)
-                return zonedDateTime.format(dateTimeFormat)
+                def value = zonedDateTime.format(dateTimeFormat)
+                if (missingCentury) {
+                    value = value.substring(2)
+                }
+                return value
             }
             return revertObject(v)
         } else {
