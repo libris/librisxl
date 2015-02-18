@@ -15,11 +15,11 @@ abstract class BasicFilter extends BasicPlugin implements Filter {
         return document
     }
 
-    final Map filter(final Map documentMap) {
-        return doFilter(documentMap)
+    final Map filter(final Map documentMap, String dataset) {
+        return doFilter(documentMap, dataset)
     }
 
     abstract boolean valid(Document doc)
     abstract protected Document doFilter(final Document doc)
-    abstract protected Map doFilter(final Map docMap)
+    abstract protected Map doFilter(final Map docMap, String dataset)
 }

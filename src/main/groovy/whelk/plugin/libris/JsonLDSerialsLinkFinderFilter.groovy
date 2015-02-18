@@ -24,6 +24,6 @@ class JsonLDSerialsLinkFinderFilter extends BasicFilter implements WhelkAware {
     boolean valid(Document doc) {
         return false
     }
-    Map doFilter(Map docmap) { throw new UnsupportedOperationException("Not implemented.") }
+    Map doFilter(Map docmap, String dataset) { throw new UnsupportedOperationException("Not implemented.") }
 }
 

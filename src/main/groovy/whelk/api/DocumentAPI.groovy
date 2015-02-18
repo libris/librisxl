@@ -1,5 +1,7 @@
 package whelk.api
 import groovy.util.logging.Slf4j as Log
+import whelk.plugin.libris.security.AccessControl
+
 import javax.servlet.http.*
 
 import javax.activation.MimetypesFileTypeMap
@@ -21,11 +23,18 @@ class DocumentAPI extends BasicAPI {
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
 
     Map contextHeaders = [:]
+    AccessControl accessControl
 
     DocumentAPI(Map settings) {
         if (settings) {
             this.contextHeaders = settings.get("contextHeaders", [:])
         }
+    }
+
+    @Override
+    void bootstrap() {
+        accessControl = plugins.find { it instanceof AccessControl }
+        assert accessControl
     }
 
     def determineDisplayMode(path) {
@@ -72,9 +81,16 @@ class DocumentAPI extends BasicAPI {
             handlePutAndPostRequest(request, response, path, true)
         } else if (request.method == "DELETE") {
             try {
-                log.debug("Removing resource at $path")
-                whelk.remove(path)
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT)
+                def doc = whelk.get(path)
+                if (doc && !hasPermission(request.getAttribute("user"), doc, null)) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
+                    return
+                } else {
+                    log.debug("Removing resource at $path")
+                    whelk.remove(path)
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT)
+
+                }
             } catch (WhelkRuntimeException wre) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
             }
@@ -163,12 +179,6 @@ class DocumentAPI extends BasicAPI {
 
             if (d && (mode== DisplayMode.META || !d.entry['deleted'])) {
 
-                if (mode == DisplayMode.DOCUMENT) {
-                    for (filter in getFiltersFor(d)) {
-                        log.debug("Filtering using ${filter.id} for ${d.identifier}")
-                        d = filter.filter(d)
-                    }
-                }
                 if (mode == DisplayMode.META) {
                     def versions = whelk.getVersions(d.identifier)
                     if (versions) {
@@ -205,9 +215,10 @@ class DocumentAPI extends BasicAPI {
             }
             def entry = [:]
             def meta = [:]
+            Document existingDoc = null
 
             if (identifierSupplied) {
-                Document existingDoc = whelk.get(path)
+                existingDoc = whelk.get(path)
                 if (existingDoc) {
                     log.debug("Document with identifier ${existingDoc.identifier} already exists.")
                     // Check If-Match
@@ -241,7 +252,7 @@ class DocumentAPI extends BasicAPI {
             try {
                 Document doc = whelk.createDocument(entry["contentType"]).withMetaEntry(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
 
-                if (!hasPermission(request.getAttribute("user"), doc)) {
+                if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
                     return
                 }
@@ -286,15 +297,16 @@ class DocumentAPI extends BasicAPI {
         }
     }
 
-    boolean hasPermission(info, doc) {
-        if (!info) {
-            log.info("No user received, denying request.")
-            return false
-        } else {
+    boolean hasPermission(info, newdoc, olddoc) {
+        if (info) {
             log.info("User is: $info")
+            if (info.user == "SYSTEM") {
+                return true
+            }
+            return accessControl.checkDocument(newdoc, olddoc, info)
         }
-        log.trace("User is a-okey.")
-        return true
+        log.info("No user information received, denying request.")
+        return false
     }
 
     void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
@@ -313,8 +325,6 @@ class DocumentAPI extends BasicAPI {
         }
         return ds
     }
-
-    List<Filter> getFiltersFor(Document doc) { return plugins.findAll { it instanceof Filter && it.valid(doc) } }
 
     List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
         def alts = []
