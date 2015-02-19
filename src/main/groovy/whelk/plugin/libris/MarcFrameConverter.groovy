@@ -974,7 +974,11 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         try {
             return ZonedDateTime.parse(s, DT_FORMAT)
         } catch (DateTimeParseException e) {
-            return ZonedDateTime.parse(s, DT_FORMAT_FALLBACK)
+            try {
+                return ZonedDateTime.parse(s, DT_FORMAT_FALLBACK)
+            } catch (DateTimeParseException e2) {
+                return s
+            }
         }
     }
 
