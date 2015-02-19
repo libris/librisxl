@@ -297,7 +297,7 @@ class StandardWhelk implements Whelk {
         }
         if (!dataset) {
             dataset = plugins.find { it instanceof ShapeComputer }?.calculateTypeFromIdentifier(id)
-            log.info("Calculated dataset: $dataset")
+            log.debug("Calculated dataset: $dataset")
         }
         components.each {
             ((Component)it).remove(id, dataset)
@@ -419,7 +419,9 @@ class StandardWhelk implements Whelk {
     @Override
     Document createDocument(String contentType) {
         if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
-            return new JsonDocument().withContentType(contentType)
+            def jsonDoc = new JsonDocument().withContentType(contentType)
+            jsonDoc.setCreated(jsonDoc.created)
+            return jsonDoc
         } else {
             return new DefaultDocument().withContentType(contentType)
         }
@@ -430,7 +432,9 @@ class StandardWhelk implements Whelk {
         try {
             Document document = mapper.readValue(json, DefaultDocument)
             if (document.isJson()) {
-                return new JsonDocument().fromDocument(document)
+                def jsonDoc = new JsonDocument().fromDocument(document)
+                jsonDoc.setCreated(jsonDoc.created)
+                return jsonDoc
             }
             return document
         } catch (org.codehaus.jackson.JsonParseException jpe) {
@@ -440,9 +444,11 @@ class StandardWhelk implements Whelk {
 
     @Override
     Document createDocument(byte[] data, Map entry, Map meta) {
-        Document document = new DefaultDocument().withMeta(meta).withEntry(entry).withData(data)
+        Document document = new DefaultDocument().withData(data).withMeta(meta).withEntry(entry)
         if (document.isJson()) {
-            return new JsonDocument().fromDocument(document)
+            def jsonDoc = new JsonDocument().fromDocument(document)
+            jsonDoc.setCreated(jsonDoc.created)
+            return jsonDoc
         }
         return document
     }

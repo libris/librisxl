@@ -21,9 +21,10 @@ class JsonDocument extends DefaultDocument {
     def timeZone = ZoneId.systemDefault()
 
     JsonDocument fromDocument(Document otherDocument) {
+        log.trace("Creating json document from other document.")
+        setData(otherDocument.getData())
         setEntry(otherDocument.getEntry())
         setMeta(otherDocument.getMeta())
-        setData(otherDocument.getData())
         return this
     }
 
@@ -51,14 +52,27 @@ class JsonDocument extends DefaultDocument {
     @JsonIgnore
     Map getDataAsMap() {
         if (!serializedDataInMap) {
-            log.trace("Serializing data as map")
-            this.serializedDataInMap = mapper.readValue(new String(getData(), "UTF-8"), Map)
+            if (getData().length > 0) {
+                log.trace("Serializing data as map")
+                this.serializedDataInMap = mapper.readValue(new String(getData(), "UTF-8"), Map)
+            } else {
+                this.serializedDataInMap = [:]
+            }
         }
         return serializedDataInMap
     }
+    @Override
+    String toJson() {
+        log.trace("Refresing jsondata")
+        setCreated(getCreated())
+        setModified(getModified())
+        return super.toJson()
+    }
+
 
     @Override
-    void setCreated(long ts) {
+    protected void setCreated(long ts) {
+        log.debug("setCreated in json document ct is: $contentType")
         super.setCreated(ts)
         if (getContentType() == "application/ld+json") {
             def map = getDataAsMap()
@@ -71,8 +85,9 @@ class JsonDocument extends DefaultDocument {
     }
 
     @Override
-    long updateModified() {
-        long mt = super.updateModified()
+    void setModified(long mt) {
+        log.debug("setModified in json document ct is: $contentType")
+        super.setModified(mt)
         if (getContentType() == "application/ld+json") {
             def map = getDataAsMap()
             log.trace("Setting modified in document data.")
@@ -81,7 +96,6 @@ class JsonDocument extends DefaultDocument {
             map.put("modified", timestamp)
             withData(map)
         }
-        return mt
     }
 
     @Override
@@ -105,7 +119,7 @@ class JsonDocument extends DefaultDocument {
     protected void calculateChecksum(byte[] databytes, byte[] metabytes) {
         if (getData().length > 0) {
             log.trace("Normalizing json data before checksum calculation")
-            def dataMap = getDataAsMap()
+            def dataMap = mapper.readValue(new String(getData(), "UTF-8"), Map)
             setData(mapper.writeValueAsBytes(dataMap), false)
             // Removed modified from data before checksum calculation
             dataMap.remove("modified")

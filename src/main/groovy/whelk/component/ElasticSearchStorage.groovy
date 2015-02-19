@@ -93,7 +93,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             }
             return docs
         } else {
-            return [get(identifier)]
+            return [load(identifier)]
         }
     }
 
