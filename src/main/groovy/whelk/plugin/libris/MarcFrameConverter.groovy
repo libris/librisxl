@@ -124,6 +124,7 @@ class MarcConversion {
 
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
+    List<MarcFramePostProcStep> sharedPostProcSteps
     Map<String, MarcRuleSet> marcRuleSets = [:]
     boolean doPostProcessing = true
     Map marcTypeMap = [:]
@@ -135,13 +136,29 @@ class MarcConversion {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps
-        def loader = getClass().classLoader
+
+        this.sharedPostProcSteps = config.postProcessing.collect {
+            parsePostProcStep(it)
+        }
+
         MARC_CATEGORIES.each { marcCat ->
             def marcRuleSet = new MarcRuleSet(this, marcCat)
             marcRuleSets[marcCat] = marcRuleSet
             marcRuleSet.buildHandlers(config)
         }
         addTypeMaps()
+    }
+
+    MarcFramePostProcStep parsePostProcStep(Map stepDfn) {
+        def props = stepDfn.clone()
+        for (k in stepDfn.keySet())
+            if (k[0] == '_')
+                props.remove(k)
+        switch (stepDfn.type) {
+            case 'FoldLinkedProperty': new FoldLinkedPropertyStep(props); break
+            case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(props); break
+            case 'SetUpdatedStatus': new SetUpdatedStatusStep(props); break
+        }
     }
 
     void addTypeMaps() {
@@ -236,6 +253,9 @@ class MarcConversion {
         }
 
         if (doPostProcessing) {
+            sharedPostProcSteps.each {
+                it.modify(record, thing)
+            }
             marcRuleSet.postProcSteps.each {
                 it.modify(record, thing)
             }
@@ -292,6 +312,9 @@ class MarcConversion {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
         if (doPostProcessing) {
+            sharedPostProcSteps.each {
+                it.unmodify(data, data[marcRuleSet.thingLink])
+            }
             marcRuleSet.postProcSteps.each {
                 it.unmodify(data, data[marcRuleSet.thingLink])
             }
@@ -358,14 +381,7 @@ class MarcRuleSet {
                 return
             } else if (tag == 'postProcessing') {
                 postProcSteps = dfn.collect {
-                    def props = it.clone()
-                    for (k in it.keySet())
-                        if (k[0] == '_')
-                            props.remove(k)
-                    switch (it.type) {
-                        case 'FoldLinkedProperty': new FoldLinkedPropertyStep(props); break
-                        case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(props); break
-                    }
+                    conversion.parsePostProcStep(it)
                 }
                 return
             }
