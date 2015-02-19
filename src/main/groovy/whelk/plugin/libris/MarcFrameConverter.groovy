@@ -947,17 +947,16 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         if (property) {
             def v = entity[property]
             if (v && dateTimeFormat) {
-                def zonedDateTime = null
                 try {
-                    zonedDateTime = parseDate(v)
+                    def zonedDateTime = parseDate(v)
+                    def value = zonedDateTime.format(dateTimeFormat)
+                    if (missingCentury) {
+                        value = value.substring(2)
+                    }
+                    return value
                 } catch (DateTimeParseException e) {
-                    zonedDateTime = v
+                    return v
                 }
-                def value = zonedDateTime.format(dateTimeFormat)
-                if (missingCentury) {
-                    value = value.substring(2)
-                }
-                return value
             }
             return revertObject(v)
         } else {
