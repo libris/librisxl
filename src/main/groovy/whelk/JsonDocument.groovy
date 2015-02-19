@@ -72,7 +72,7 @@ class JsonDocument extends DefaultDocument {
 
     @Override
     protected void setCreated(long ts) {
-        log.debug("setCreated in json document ct is: $contentType")
+        log.trace("setCreated in json document ct is: $contentType")
         super.setCreated(ts)
         if (getContentType() == "application/ld+json") {
             def map = getDataAsMap()
@@ -86,7 +86,7 @@ class JsonDocument extends DefaultDocument {
 
     @Override
     void setModified(long mt) {
-        log.debug("setModified in json document ct is: $contentType")
+        log.trace("setModified in json document ct is: $contentType")
         super.setModified(mt)
         if (getContentType() == "application/ld+json") {
             def map = getDataAsMap()

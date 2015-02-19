@@ -241,6 +241,9 @@
     "linkcompleter" : {
         "_class" : "whelk.plugin.libris.JsonLDLinkCompleterFilter"
     },
+    "xinfoimporter" : {
+        "_class" : "whelk.importer.xinfo.XInfoImporter"
+    },
     "mysqlimporter" : {
         "_class" : "whelk.importer.libris.MySQLImporter",
         "_plugins" : [
@@ -320,7 +323,8 @@
         "_plugins": [
             "oaipmhimporter",
             "oaipmhimporter2",
-            "mysqlimporter"
+            "mysqlimporter",
+            "xinfoimporter"
         ],
         "_params": {}
     },
@@ -584,7 +588,23 @@
         "_class": "whelk.camel.ElasticRouteProcessor",
         "_plugins" : ["index", "linkexpander", "cleanupindexconverter" ]
     },
-    "indexroutebuilder": {
+    "xinfoprocessor": {
+        "_class": "whelk.camel.XInfoRouteProcessor",
+        "_plugins": [ "index" ]
+    },
+    "xinfoindexroutebuilder": {
+      "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
+      "_plugins" : [
+        "xinfoprocessor"
+      ],
+      "_params": {
+        "elasticBatchSize": 2000,
+        "batchTimeout": 5000,
+        "indexMessageQueue": "_property:MQ_INDEX",
+        "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX"
+      }
+    },
+   "indexroutebuilder": {
         "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
         "_plugins" : [
             "elasticprocessor"
@@ -658,6 +678,15 @@
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes": ["application/ld+json"],
+            "versioning" : true
+        }
+    },
+    "xinfostorage": {
+        "_class" : "whelk.component.ElasticSearchStorage",
+        "_params" : {
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes": ["application/ld+json","image/jpeg"],
             "versioning" : true
         }
     },

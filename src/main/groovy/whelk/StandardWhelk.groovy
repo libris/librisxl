@@ -419,9 +419,7 @@ class StandardWhelk implements Whelk {
     @Override
     Document createDocument(String contentType) {
         if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
-            def jsonDoc = new JsonDocument().withContentType(contentType)
-            jsonDoc.setCreated(jsonDoc.created)
-            return jsonDoc
+            return new JsonDocument().withContentType(contentType)
         } else {
             return new DefaultDocument().withContentType(contentType)
         }
@@ -432,9 +430,7 @@ class StandardWhelk implements Whelk {
         try {
             Document document = mapper.readValue(json, DefaultDocument)
             if (document.isJson()) {
-                def jsonDoc = new JsonDocument().fromDocument(document)
-                jsonDoc.setCreated(jsonDoc.created)
-                return jsonDoc
+                return new JsonDocument().fromDocument(document)
             }
             return document
         } catch (org.codehaus.jackson.JsonParseException jpe) {
@@ -446,9 +442,7 @@ class StandardWhelk implements Whelk {
     Document createDocument(byte[] data, Map entry, Map meta) {
         Document document = new DefaultDocument().withData(data).withMeta(meta).withEntry(entry)
         if (document.isJson()) {
-            def jsonDoc = new JsonDocument().fromDocument(document)
-            jsonDoc.setCreated(jsonDoc.created)
-            return jsonDoc
+            return new JsonDocument().fromDocument(document)
         }
         return document
     }

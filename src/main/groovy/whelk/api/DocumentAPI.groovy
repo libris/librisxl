@@ -196,7 +196,7 @@ class DocumentAPI extends BasicAPI {
                         contentType = d.contentType
                         log.debug("request is for context file. Must serve original content-type ($contentType).")
                     }
-                    sendResponse(response, d.dataAsString, contentType)
+                    sendResponse(response, d.data, contentType)
                 }
             } else {
                 log.debug("Failed to find a document with URI $path")

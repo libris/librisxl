@@ -16,8 +16,6 @@ import se.kb.libris.util.marc.io.*
 @Log
 class MySQLImporter extends BasicPlugin implements Importer {
 
-    Whelk whelk
-
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 

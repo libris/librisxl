@@ -1,22 +1,21 @@
 {
     "_properties": {
-        "GRAPHSTORE_DATA_URI": "http://hp04.libris.kb.se:8890/sparql-graph-crud",
-        "GRAPHSTORE_QUERY_URI": "http://hp04.libris.kb.se:8890/sparql",
-        "GRAPHSTORE_UPDATE_URI": "http://hp04.libris.kb.se:8890/sparql-auth",
-        "GRAPHSTORE_UPDATE_POST_PARAMETER": "update",
-        "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": true,
-        "APIX_HOST": "https://libris.kb.se",
-        "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
-        "UPDATE_INTERVAL":1,
+        "ELASTIC_SEARCH_HOST": "localhost",
+        "ELASTIC_STORAGE_HOST": "localhost",
+        "ELASTIC_CLUSTER": null,
         "ES_CONFIG_PREFIX":"xinfo"
     },
     "_id":"xinfo",
+    "_supportplugins": [
+        "elasticnode",
+        "activemqbroker"
+    ],
     "_plugins": {
         "_camel": [
-            "indexroutebuilder"
+            null
             ],
         "_components": [
-            "jsonldstorage",
+            "xinfostorage",
             "index"
         ],
         "_maintenance": [ null ],
