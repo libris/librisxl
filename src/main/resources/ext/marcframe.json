@@ -3907,7 +3907,26 @@
             "notation": "UDC"
           }
         }
-      }
+      },
+      "_spec": [
+        {
+          "source": {
+            "080": {"ind1": " ", "ind2": " ", "subfields": [{"a": "030"}]}
+          },
+          "result": {
+            "about": {
+              "classification": [
+                {
+                  "@type": "Concept",
+                  "notation": "030",
+                  "inScheme": {"@id": "http://udcdata.info/udc-schema",
+                    "@type": "ConceptScheme", "notation": "UDC"}
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
 
     "082": {
