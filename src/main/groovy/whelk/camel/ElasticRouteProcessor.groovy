@@ -6,11 +6,7 @@ import whelk.*
 import whelk.component.*
 import whelk.plugin.*
 
-import org.apache.camel.Exchange
-import org.apache.camel.Message
-import org.apache.camel.Processor
-
-import org.codehaus.jackson.map.ObjectMapper
+import org.apache.camel.*
 
 @Log
 class ElasticRouteProcessor extends BasicPlugin implements Processor {
@@ -60,14 +56,25 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
             log.debug(">>> Setting message body to $elasticId in preparation for REMOVE operation.")
             message.setBody(elasticId)
         } else {
-            def dataMap = message.getBody(Map.class)
-            for (filter in filters) {
-                log.trace("Applying filter $filter")
-                dataMap = filter.doFilter(dataMap, dataset)
+            try {
+                def dataMap = message.getBody(Map.class)
+                for (filter in filters) {
+                    log.trace("Applying filter $filter")
+                    dataMap = filter.doFilter(dataMap, dataset)
+                }
+                dataMap.put("encodedId", elasticId)
+                message.setBody(dataMap)
+            } catch (TypeConversionException tce) {
+                log.info("Message body is not json, sending message to stub.")
+                message.setHeader("stub:discard")
             }
-            dataMap.put("encodedId", elasticId)
-            message.setBody(dataMap)
         }
         exchange.setOut(message)
+    }
+
+    boolean isJsonMessage(header) {
+        def metaentry = mapper.readValue(header("document:metaentry") as String, Map)
+        def ctype = metaentry.entry.contentType
+        ctype ==~ /application\/(\w+\+)*json/ || ctype ==~ /application\/x-(\w+)-json/
     }
 }

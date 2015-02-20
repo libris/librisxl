@@ -379,7 +379,7 @@ class StandardWhelk implements Whelk {
             log.debug("Document was missing identifier. Setting identifier ${d.identifier}")
         }
         if (!d.data || d.data.length == 0) {
-            log.error("No data in document.")
+            log.error("No data in document ${d.identifier}.")
             throw new DocumentException("No data in document.")
         }
 

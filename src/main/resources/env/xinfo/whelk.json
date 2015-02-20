@@ -1,18 +1,15 @@
 {
     "_properties": {
-        "ELASTIC_SEARCH_HOST": "localhost",
-        "ELASTIC_STORAGE_HOST": "localhost",
-        "ELASTIC_CLUSTER": null,
-        "ES_CONFIG_PREFIX":"xinfo"
+        "ELASTIC_SEARCH_HOST": "192.168.3.23",
+        "ELASTIC_STORAGE_HOST": "192.168.3.23",
+        "ELASTIC_CLUSTER": "mini",
+        "ES_CONFIG_PREFIX":"xinfo",
+        "ACTIVEMQ_BROKER_URL": "tcp://192.168.3.23:61616"
     },
     "_id":"xinfo",
-    "_supportplugins": [
-        "elasticnode",
-        "activemqbroker"
-    ],
     "_plugins": {
         "_camel": [
-            null
+            "indexroutebuilder"
             ],
         "_components": [
             "xinfostorage",

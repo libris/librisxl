@@ -43,7 +43,7 @@ class XInfoImporter extends MySQLImporter {
     HttpClient client = HttpClientBuilder.create().build();
 
     PreparedStatement prepareStatement(String dataset, Connection conn) {
-        return conn.prepareStatement("SELECT * FROM xinfo.resource LIMIT ?, $sqlLimit")
+        return conn.prepareStatement("SELECT * FROM xinfo.resource WHERE type != 'PICTURE' LIMIT ?, $sqlLimit")
     }
 
     int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
@@ -97,7 +97,7 @@ class XInfoImporter extends MySQLImporter {
 
                 log.debug("Query executed. Starting processing ...")
                 def imgdocs = []
-                def jsondocs = []
+                def jsondocs = [:]
                 while(resultSet.next()) {
                     String xinfoId = resultSet.getString("id")
                     String xinfoUrl = resultSet.getString("url")
@@ -105,30 +105,51 @@ class XInfoImporter extends MySQLImporter {
                     String whelkId = createWhelkId(xinfoId, type)
                     if (type == "PICTURE") {
                         log.info("Loading all versions of image for $xinfoUrl, saving to base $whelkId")
-                        Document doc = whelk.get(whelkId)
+                        Document doc
+                        if (jsondocs.containsKey(whelkId)) {
+                            doc = jsondocs.get(whelkId)
+                        } else {
+                            doc = whelk.get(whelkId)
+                        }
                         if (!doc) {
                             doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId)
                         }
-                        jsondocs << doc
-                        imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/original").withData(new URL("http://xinfo.libris.kb.se" + xinfoUrl + "/orginal").getBytes())
-                        imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/hitlist").withData(new URL("http://xinfo.libris.kb.se" + xinfoUrl + "/hitlist").getBytes())
-                        imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/record").withData(new URL("http://xinfo.libris.kb.se" + xinfoUrl + "/record").getBytes())
+                        jsondocs.put(doc.identifier, doc)
+                        ["orginal", "hitlist", "record"].each {
+                            String version = it
+                            byte[] imgBytes = new URL("http://xinfo.libris.kb.se" + xinfoUrl + "/"+ version).getBytes()
+                            if (imgBytes.length > 0) {
+                                if (version == "orginal") {
+                                    version = "original"
+                                }
+                                imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/" + version).withData(imgBytes)
+                            }
+                        }
                     } else {
-                        Document doc = whelk.get(whelkId)
+                        Document doc
+                        if (jsondocs.containsKey(whelkId)) {
+                            doc = jsondocs.get(whelkId)
+                        } else {
+                            doc = whelk.get(whelkId)
+                        }
                         if (!doc) {
                             doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId)
                         }
                         def dataMap = doc.dataAsMap
                         dataMap.put(type.toLowerCase(), loadXinfoText(xinfoUrl))
                         doc.withData(dataMap)
-                        jsondocs << doc
+                        jsondocs.put(doc.identifier, doc)
                     }
                     recordCount++
                     startAt++
                 }
                 queue.execute({
-                    this.whelk.bulkAdd(imgdocs, "image/jpeg")
-                    this.whelk.bulkAdd(jsondocs, "application/ld+json")
+                    if (imgdocs.size() > 0) {
+                        this.whelk.bulkAdd(imgdocs, "image/jpeg")
+                    }
+                    if (jsondocs.size() > 0) {
+                        this.whelk.bulkAdd(jsondocs.values() as List, "application/ld+json")
+                    }
                 } as Runnable)
 
                 if (nrOfDocs > 0 && recordCount > nrOfDocs) {
@@ -190,22 +211,31 @@ class XInfoImporter extends MySQLImporter {
         return inString
     }
 
-    String createString(GPathResult root) {
-        return new StreamingMarkupBuilder().bind{
-            out << root
-        }
+    String washXmlOfBadCharacters(String xmlString) {
+        StringBuilder sb = new StringBuilder(xmlString)
+        for (int i=0;i<sb.length();i++)
+            if (sb.charAt(i) < 0x09 || (sb.charAt(i) > 0x0D && sb.charAt(i) < 0x1F)) {
+                log.warn("Found illegal character: ${sb.charAt(i)}")
+                sb.setCharAt(i, '?' as char);
+            }
+
+        return sb.toString()
     }
 
     String loadXinfoText(String url) {
         URL xinfoUrl = new URL("http://xinfo.libris.kb.se" + url + "&type=summary")
         log.info("Loading xinfo metadata from $xinfoUrl")
-        String xmlString = normalizeString(xinfoUrl.text)
+        String xmlString = washXmlOfBadCharacters(normalizeString(xinfoUrl.text))
         if (xmlString) {
             //log.info("xmlString: $xmlString")
-            def summary = new XmlSlurper(false,false).parseText(xmlString)
-            String infoText = summary.text()
-            log.info("Setting infotext: $infoText")
-            return infoText
+            try {
+                def summary = new XmlSlurper(false,false).parseText(xmlString)
+                String infoText = summary.text()
+                log.trace("Setting infotext: $infoText")
+                return infoText
+            } catch (org.xml.sax.SAXParseException spe) {
+                log.error("XML contains invalid characters: ${spe.message} :\n$xmlString")
+            }
         }
         return null
     }
