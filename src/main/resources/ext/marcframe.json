@@ -5583,6 +5583,47 @@
 
     "thingLink": "about",
 
+    "postProcessing": [
+      {
+        "type": "MappedProperty",
+        "sourceEntity": "?thing",
+        "sourceLink": "holdingFor",
+        "sourceProperty": "@type",
+        "targetEntity": "?record",
+        "targetProperty": "holdingType",
+        "valueMap": {
+          "ComponentPart": {"@id": "/def/enum/record/SinglePartItemHolding"},
+          "Collection": {"@id": "/def/enum/record/SinglePartItemHolding"},
+          "SubCollection": {"@id": "/def/enum/record/SinglePartItemHolding"},
+          "Monograph": {"@id": "/def/enum/record/SinglePartItemHolding"},
+          "SerialComponentPart": {"@id": "/def/enum/record/SerialItemHolding"},
+          "Integrating": {"@id": "/def/enum/record/SerialItemHolding"},
+          "Serial": {"@id": "/def/enum/record/SerialItemHolding"},
+          "?": {"@id": "/def/enum/record/MultipartItemHolding"},
+          "Periodical": null
+        },
+        "_spec": [
+          {
+            "source": {
+              "about": {
+                "holdingFor": {
+                  "@type": ["Monograph"]
+                }
+              }
+            },
+            "result": {
+              "holdingType": {"@id": "/def/enum/record/SinglePartItemHolding"},
+              "about": {
+                "holdingFor": {
+                  "@type": ["Monograph"]
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+
     "000": {
       "[5:6]": {
         "aboutEntity": "?record",
