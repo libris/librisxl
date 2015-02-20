@@ -27,14 +27,13 @@ import java.util.concurrent.TimeUnit
 @Log
 class XInfoImporter extends MySQLImporter {
 
-    int sqlLimit = 200
+    int sqlLimit = 1000
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
 
     boolean cancelled = false
 
     ExecutorService queue
-    Semaphore tickets
 
     int startAt = 0
 
@@ -43,7 +42,7 @@ class XInfoImporter extends MySQLImporter {
     HttpClient client = HttpClientBuilder.create().build();
 
     PreparedStatement prepareStatement(String dataset, Connection conn) {
-        return conn.prepareStatement("SELECT * FROM xinfo.resource WHERE type != 'PICTURE' LIMIT ?, $sqlLimit")
+        return conn.prepareStatement("SELECT * FROM xinfo.resource LIMIT ?, $sqlLimit")
     }
 
     int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
@@ -54,12 +53,8 @@ class XInfoImporter extends MySQLImporter {
         PreparedStatement statement = null
         ResultSet resultSet = null
 
-
-        int sqlLimit = 6000
         if (nrOfDocs > 0 && nrOfDocs < sqlLimit) { sqlLimit = nrOfDocs }
 
-        tickets = new Semaphore(0)
-        //queue = Executors.newSingleThreadExecutor()
         queue = Executors.newWorkStealingPool()
 
         def versioningSettings = [:]
@@ -88,8 +83,6 @@ class XInfoImporter extends MySQLImporter {
 
             log.info("Starting loading at ID $startAt")
 
-            MarcRecord record = null
-
             for (;;) {
                 statement.setInt(1, startAt)
                 log.debug("Reset statement with $startAt")
@@ -104,7 +97,7 @@ class XInfoImporter extends MySQLImporter {
                     String type = resultSet.getString("type")
                     String whelkId = createWhelkId(xinfoId, type)
                     if (type == "PICTURE") {
-                        log.info("Loading all versions of image for $xinfoUrl, saving to base $whelkId")
+                        log.debug("Loading all versions of image for $xinfoUrl, saving to base $whelkId")
                         Document doc
                         if (jsondocs.containsKey(whelkId)) {
                             doc = jsondocs.get(whelkId)
@@ -112,7 +105,7 @@ class XInfoImporter extends MySQLImporter {
                             doc = whelk.get(whelkId)
                         }
                         if (!doc) {
-                            doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId)
+                            doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId).withDataset("xinfo").withData('{"@type":"xinfo"}')
                         }
                         jsondocs.put(doc.identifier, doc)
                         ["orginal", "hitlist", "record"].each {
@@ -122,7 +115,7 @@ class XInfoImporter extends MySQLImporter {
                                 if (version == "orginal") {
                                     version = "original"
                                 }
-                                imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/" + version).withData(imgBytes)
+                                imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/" + version).withData(imgBytes).withDataset("image")
                             }
                         }
                     } else {
@@ -133,9 +126,10 @@ class XInfoImporter extends MySQLImporter {
                             doc = whelk.get(whelkId)
                         }
                         if (!doc) {
-                            doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId)
+                            doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId).withDataset("xinfo")
                         }
                         def dataMap = doc.dataAsMap
+                        dataMap.put("@type", "xinfo")
                         dataMap.put(type.toLowerCase(), loadXinfoText(xinfoUrl))
                         doc.withData(dataMap)
                         jsondocs.put(doc.identifier, doc)
@@ -187,20 +181,6 @@ class XInfoImporter extends MySQLImporter {
         queue.awaitTermination(7, TimeUnit.DAYS)
         log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
         return recordCount
-    }
-
-    InputStream loadXinfoImage(String url, String version) {
-        try {
-            HttpGet get = new HttpGet("http://" + url + "/" + version);
-            HttpResponse response = client.execute(get);
-            if (response.statusLine.statusCode == 200) {
-                return response.getEntity().getContent()
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null
-
     }
 
     String normalizeString(String inString) {

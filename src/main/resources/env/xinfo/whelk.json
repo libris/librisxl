@@ -1,5 +1,6 @@
 {
     "_properties": {
+        "AVAILABLE_TYPES": ["xinfo"],
         "ELASTIC_SEARCH_HOST": "192.168.3.23",
         "ELASTIC_STORAGE_HOST": "192.168.3.23",
         "ELASTIC_CLUSTER": "mini",
@@ -9,7 +10,7 @@
     "_id":"xinfo",
     "_plugins": {
         "_camel": [
-            "indexroutebuilder"
+            "xinfoindexroutebuilder"
             ],
         "_components": [
             "xinfostorage",

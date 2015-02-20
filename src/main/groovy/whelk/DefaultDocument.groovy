@@ -165,6 +165,10 @@ class DefaultDocument implements Document {
         }
     }
 
+    void setDataset(String ds) {
+        entry.put("dataset", ds)
+    }
+
     void addIdentifier(String id) {
         identifiers.add(id)
         entry["alternateIdentifiers"] = identifiers
@@ -178,12 +182,12 @@ class DefaultDocument implements Document {
     /*
      * Convenience methods
      */
-    DefaultDocument withIdentifier(String i) {
+    Document withIdentifier(String i) {
         this.entry['identifier'] = i
         return this
     }
 
-    DefaultDocument withContentType(String ctype) {
+    Document withContentType(String ctype) {
         setContentType(ctype)
         return this
     }
@@ -192,33 +196,38 @@ class DefaultDocument implements Document {
         this.entry[CONTENT_TYPE_KEY] = ctype
     }
 
-    protected DefaultDocument withCreated(long ts) {
+    protected Document withCreated(long ts) {
         setCreated(ts)
         return this
     }
 
-    DefaultDocument withModified(long mt) {
+    Document withModified(long mt) {
         setModified(mt)
         return this
     }
 
-    DefaultDocument withVersion(long v) {
+    Document withVersion(long v) {
         setVersion((int)v)
         return this
     }
 
-    DefaultDocument withVersion(int v) {
+    Document withVersion(int v) {
         setVersion(v)
         return this
     }
 
-    DefaultDocument withData(byte[] data) {
+    Document withData(byte[] data) {
         setData(data)
         return this
     }
 
-    DefaultDocument withData(String dataString) {
+    Document withData(String dataString) {
         return withData(dataString.getBytes("UTF-8"))
+    }
+
+    Document withDataset(String dataset) {
+        setDataset(dataset)
+        return this
     }
 
     /**
@@ -230,7 +239,7 @@ class DefaultDocument implements Document {
         withEntry(entryData)
     }
 
-    DefaultDocument withEntry(Map entrydata) {
+    Document withEntry(Map entrydata) {
         log.debug("withEntry: $entrydata")
         if (entrydata?.containsKey("identifier")) {
             this.identifier = entrydata["identifier"]
@@ -258,7 +267,7 @@ class DefaultDocument implements Document {
         }
         return this
     }
-    DefaultDocument withMeta(Map metadata) {
+    Document withMeta(Map metadata) {
         if (metadata != null) {
             this.meta = [:]
             this.meta.putAll(metadata)
@@ -267,12 +276,12 @@ class DefaultDocument implements Document {
         return this
     }
 
-    DefaultDocument setMetaEntry(Map metaEntry) {
+    Document setMetaEntry(Map metaEntry) {
         setEntry(metaEntry.entry)
         withMeta(metaEntry.meta)
     }
 
-    DefaultDocument withMetaEntry(Map metaEntry) {
+    Document withMetaEntry(Map metaEntry) {
         withEntry(metaEntry.entry)
         withMeta(metaEntry.meta)
         if (metaEntry.data) {
@@ -285,12 +294,12 @@ class DefaultDocument implements Document {
      * Expects a JSON string containing meta and entry as dictionaries.
      * It's the reverse of getMetadataAsJson().
      */
-    DefaultDocument withMetaEntry(String jsonEntry) {
+    Document withMetaEntry(String jsonEntry) {
         Map metaEntry = mapper.readValue(jsonEntry, Map)
         return withMetaEntry(metaEntry)
     }
 
-    DefaultDocument withMetaEntry(File entryFile) {
+    Document withMetaEntry(File entryFile) {
         return withMetaEntry(entryFile.getText("utf-8"))
     }
 
