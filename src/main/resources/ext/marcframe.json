@@ -5747,6 +5747,16 @@
               "language": [{"@id": "/def/languages/swe"}]
             }
           }
+        },
+        {
+          "name": "keep broken date values verbatim",
+          "source": [
+            {"008": "900101                    000000"}
+          ],
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "date": "000000"
+          }
         }
       ]
     },
