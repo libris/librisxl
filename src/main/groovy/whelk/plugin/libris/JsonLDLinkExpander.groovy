@@ -24,7 +24,6 @@ import org.apache.http.client.protocol.*
 class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
 
     final Map nodesToExpand
-    List requiredDataset
     Whelk whelk
     Index index
 
@@ -33,11 +32,10 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
 
     JsonLDLinkExpander(Map settings) {
         this.nodesToExpand = settings.get('nodesToExpand').asImmutable()
-        this.requiredDataset = settings.get('requiredDataset')
     }
 
     boolean valid(Document doc) {
-        if (doc && doc.isJson() && doc.contentType == "application/ld+json" && this.requiredDataset.contains(doc.entry.dataset)) {
+        if (doc && doc.isJson() && doc.contentType == "application/ld+json" && this.nodesToExpand.containsKey(doc.entry.dataset)) {
             return true
         }
         return false
@@ -46,13 +44,13 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
     @groovy.transform.Synchronized
     Document doFilter(Document doc) {
         log.debug("Expanding ${doc.identifier}")
-        def dataMap = doFilter(doc.dataAsMap)
+        def dataMap = doFilter(doc.dataAsMap, doc.dataset)
         return doc.withData(dataMap)
     }
 
     @groovy.transform.Synchronized
-    Map doFilter(Map dataMap) {
-        nodesToExpand.each { key, instructions ->
+    Map doFilter(Map dataMap, String dataset) {
+        nodesToExpand[dataset].each { key, instructions ->
             log.trace("key: $key, instructions: $instructions")
             def mapSegment = getNestedObject(key, dataMap)
             if (mapSegment instanceof List) {
@@ -96,7 +94,16 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
             if (result.numberOfHits) {
                 log.trace("data is : " + result.hits[0].dataAsString)
                 log.trace("ct is : " + result.hits[0].contentType)
-                return  (instructions['resultKey'] ? result.hits[0].dataAsMap.get(instructions['resultKey']) : result.hits[0].dataAsMap)
+
+                def resultMap = (instructions['resultKey'] ? result.hits[0].dataAsMap.get(instructions['resultKey']) : result.hits[0].dataAsMap)
+                def bastards = (instructions['resultKey'] ? instructions['queryProperties']['_source.include'].findAll { it != "@id" && !it.startsWith(instructions['resultKey'])} : [])
+                if (bastards.size() > 0) {
+                    bastards.each {
+                        resultMap.put("@reverse", [(instructions['resultKey']): [(it): result.hits[0].dataAsMap.get(it)]])
+                    }
+                }
+
+                return resultMap
             } else {
                 log.trace("No results in query.")
                 return node

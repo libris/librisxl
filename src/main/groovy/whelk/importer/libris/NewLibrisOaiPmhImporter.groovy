@@ -3,11 +3,11 @@ package whelk.importer.libris
 import groovy.util.logging.Slf4j as Log
 
 import whelk.*
-import whelk.importer.*
+import whelk.importer.BasicOaiPmhImporter
 import whelk.plugin.*
 
 @Log
-class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
+class NewLibrisOaiPmhImporter extends BasicOaiPmhImporter implements Importer {
     Whelk whelk
     String id
     List<Plugin> plugins = new ArrayList<Plugin>()
@@ -19,7 +19,7 @@ class LibrisOaiPmhImporter extends OaiPmhImporter implements Importer {
     def datasetMapping = [:]
     boolean preserveTimestamps = false
 
-    LibrisOaiPmhImporter(Map settings) {
+    NewLibrisOaiPmhImporter(Map settings) {
         preserveTimestamps = settings.get("preserveTimestamps", preserveTimestamps)
         datasetMapping = settings.get("datasetMapping", datasetMapping)
         specUriMapping = ["authority":"auth"]

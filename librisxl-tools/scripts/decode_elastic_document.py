@@ -8,5 +8,4 @@ def decode_base64(coded):
 if __name__ == '__main__':
     from sys import argv
     encoded_string = argv[1]
-    print "About to decode %s" % encoded_string
     print decode_base64(encoded_string)

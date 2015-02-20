@@ -205,7 +205,7 @@ class StandardWhelk implements Whelk {
         log.debug("Bulk operation completed")
     }
 
-    Document get(String identifier, String version=null, List contentTypes=[], boolean expandLinks = true) {
+    Document get(String identifier, String version=null, List contentTypes=[], boolean applyFilters = true) {
         Document doc = null
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
@@ -219,6 +219,12 @@ class StandardWhelk implements Whelk {
         // TODO: Check this
         if (!doc) {
             doc = storage.load(identifier, version)
+        }
+        if (doc && applyFilters) {
+            for (filter in plugins.findAll { it instanceof Filter && it.valid(doc) }) {
+                log.debug("Filtering using ${filter.id} for ${doc.identifier}")
+                doc = filter.filter(doc)
+            }
         }
 
         return doc
@@ -291,7 +297,7 @@ class StandardWhelk implements Whelk {
         }
         if (!dataset) {
             dataset = plugins.find { it instanceof ShapeComputer }?.calculateTypeFromIdentifier(id)
-            log.info("Calculated dataset: $dataset")
+            log.debug("Calculated dataset: $dataset")
         }
         components.each {
             ((Component)it).remove(id, dataset)
@@ -373,7 +379,7 @@ class StandardWhelk implements Whelk {
             log.debug("Document was missing identifier. Setting identifier ${d.identifier}")
         }
         if (!d.data || d.data.length == 0) {
-            log.error("No data in document.")
+            log.error("No data in document ${d.identifier}.")
             throw new DocumentException("No data in document.")
         }
 
@@ -434,7 +440,7 @@ class StandardWhelk implements Whelk {
 
     @Override
     Document createDocument(byte[] data, Map entry, Map meta) {
-        Document document = new DefaultDocument().withMeta(meta).withEntry(entry).withData(data)
+        Document document = new DefaultDocument().withData(data).withMeta(meta).withEntry(entry)
         if (document.isJson()) {
             return new JsonDocument().fromDocument(document)
         }

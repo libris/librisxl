@@ -2,7 +2,9 @@ package whelk.plugin.libris
 
 import groovy.util.logging.Slf4j as Log
 
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -122,6 +124,7 @@ class MarcConversion {
 
     static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
+    List<MarcFramePostProcStep> sharedPostProcSteps
     Map<String, MarcRuleSet> marcRuleSets = [:]
     boolean doPostProcessing = true
     Map marcTypeMap = [:]
@@ -133,13 +136,29 @@ class MarcConversion {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps
-        def loader = getClass().classLoader
+
+        this.sharedPostProcSteps = config.postProcessing.collect {
+            parsePostProcStep(it)
+        }
+
         MARC_CATEGORIES.each { marcCat ->
             def marcRuleSet = new MarcRuleSet(this, marcCat)
             marcRuleSets[marcCat] = marcRuleSet
             marcRuleSet.buildHandlers(config)
         }
         addTypeMaps()
+    }
+
+    MarcFramePostProcStep parsePostProcStep(Map stepDfn) {
+        def props = stepDfn.clone()
+        for (k in stepDfn.keySet())
+            if (k[0] == '_')
+                props.remove(k)
+        switch (stepDfn.type) {
+            case 'FoldLinkedProperty': new FoldLinkedPropertyStep(props); break
+            case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(props); break
+            case 'SetUpdatedStatus': new SetUpdatedStatusStep(props); break
+        }
     }
 
     void addTypeMaps() {
@@ -234,6 +253,9 @@ class MarcConversion {
         }
 
         if (doPostProcessing) {
+            sharedPostProcSteps.each {
+                it.modify(record, thing)
+            }
             marcRuleSet.postProcSteps.each {
                 it.modify(record, thing)
             }
@@ -290,6 +312,9 @@ class MarcConversion {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
         if (doPostProcessing) {
+            sharedPostProcSteps.each {
+                it.unmodify(data, data[marcRuleSet.thingLink])
+            }
             marcRuleSet.postProcSteps.each {
                 it.unmodify(data, data[marcRuleSet.thingLink])
             }
@@ -356,14 +381,7 @@ class MarcRuleSet {
                 return
             } else if (tag == 'postProcessing') {
                 postProcSteps = dfn.collect {
-                    def props = it.clone()
-                    for (k in it.keySet())
-                        if (k[0] == '_')
-                            props.remove(k)
-                    switch (it.type) {
-                        case 'FoldLinkedProperty': new FoldLinkedPropertyStep(props); break
-                        case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(props); break
-                    }
+                    conversion.parsePostProcStep(it)
                 }
                 return
             }
@@ -809,6 +827,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     Pattern matchUriToken = null
     DateTimeFormatter dateTimeFormat
     ZoneId timeZone
+    LocalTime defaultTime
+    boolean missingCentury = false
     boolean ignored = false
     // TODO: working, but not so useful until capable of merging entities..
     //MarcSimpleFieldHandler linkedHandler
@@ -822,10 +842,18 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         } else {
             property = fieldDfn.property
         }
-        if (fieldDfn.parseDateTime) {
-            dateTimeFormat = DateTimeFormatter.ofPattern(fieldDfn.parseDateTime)
+        def parseDateTime = fieldDfn.parseDateTime
+        if (parseDateTime) {
+            missingCentury = (parseDateTime == "yyMMdd")
+            if (missingCentury) {
+                parseDateTime = "yy" + parseDateTime
+            }
+            dateTimeFormat = DateTimeFormatter.ofPattern(parseDateTime)
             if (fieldDfn.timeZone) {
-                timeZone =ZoneId.of(fieldDfn.timeZone)
+                timeZone = ZoneId.of(fieldDfn.timeZone)
+            }
+            if (parseDateTime.indexOf("HH") == -1) {
+                defaultTime = LocalTime.MIN
             }
         }
         ignored = fieldDfn.get('ignored', false)
@@ -863,10 +891,25 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (dateTimeFormat) {
-            value = (timeZone?
-                    LocalDateTime.parse(value, dateTimeFormat).atZone(timeZone) :
-                    ZonedDateTime.parse(value, dateTimeFormat)
-                ).format(DT_FORMAT)
+            def givenValue = value
+            try {
+                def dateTime = null
+                if (defaultTime) {
+                    if (missingCentury) {
+                        value = (value[0..2] > "70"? "19" : "20") + value
+                    }
+                    dateTime = ZonedDateTime.of(LocalDate.parse(
+                                value, dateTimeFormat),
+                            defaultTime, timeZone)
+                } else if (timeZone) {
+                    dateTime = LocalDateTime.parse(value, dateTimeFormat).atZone(timeZone)
+                } else {
+                    dateTime = ZonedDateTime.parse(value, dateTimeFormat)
+                }
+                value = dateTime.format(DT_FORMAT)
+            } catch (DateTimeParseException e) {
+                value = givenValue
+            }
         }
 
         def ent = state.entityMap[aboutEntityName]
@@ -904,8 +947,16 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         if (property) {
             def v = entity[property]
             if (v && dateTimeFormat) {
-                def zonedDateTime = parseDate(v)
-                return zonedDateTime.format(dateTimeFormat)
+                try {
+                    def zonedDateTime = parseDate(v)
+                    def value = zonedDateTime.format(dateTimeFormat)
+                    if (missingCentury) {
+                        value = value.substring(2)
+                    }
+                    return value
+                } catch (DateTimeParseException e) {
+                    return v
+                }
             }
             return revertObject(v)
         } else {

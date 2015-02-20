@@ -17,7 +17,7 @@ import whelk.converter.MarcJSONConverter
 import whelk.util.Tools
 
 @Log
-class OldOAIPMHImporter extends BasicPlugin implements Importer {
+class OaiPmhImporter extends BasicPlugin implements Importer {
 
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
@@ -46,7 +46,7 @@ class OldOAIPMHImporter extends BasicPlugin implements Importer {
 
     List errorMessages = []
 
-    OldOAIPMHImporter(Map settings) {
+    OaiPmhImporter(Map settings) {
         this.serviceUrl = settings.get('serviceUrl',SERVICE_BASE_URL)
         this.preserveTimestamps = settings.get("preserveTimestamps", true)
     }

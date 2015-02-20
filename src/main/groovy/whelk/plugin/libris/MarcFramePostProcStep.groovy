@@ -125,3 +125,31 @@ class FoldJoinedPropertiesStep extends MarcFramePostProcStepBase {
     }
 
 }
+
+
+class SetUpdatedStatusStep implements MarcFramePostProcStep {
+
+    String type
+    String statusFlag
+    String statusFlagNewValue
+    String statusFlagUpdatedValue
+    String dateProperty
+    String updatedProperty
+
+    void modify(Map record, Map thing) {
+        def flag = record[statusFlag][ID]
+        if (flag == statusFlagNewValue || flag == statusFlagUpdatedValue) {
+            record.remove(statusFlag)
+        }
+    }
+
+    void unmodify(Map record, Map thing) {
+        def dateValue = record[dateProperty]
+        def updatedValue = record[updatedProperty]
+        def flag = (updatedValue > dateValue)? statusFlagUpdatedValue : statusFlagNewValue
+        if (!record.containsKey(statusFlag)) {
+            record[statusFlag] = [(ID): flag]
+        }
+    }
+
+}

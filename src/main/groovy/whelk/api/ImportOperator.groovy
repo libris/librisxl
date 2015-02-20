@@ -1,20 +1,9 @@
 package whelk.api
 
 import groovy.util.logging.Slf4j as Log
-
-import javax.servlet.http.*
-
-import org.codehaus.jackson.map.*
-import org.codehaus.jackson.map.SerializationConfig.Feature
-
-import java.util.concurrent.*
-
-import whelk.*
 import whelk.exception.*
 import whelk.importer.*
 import whelk.plugin.*
-
-import whelk.util.Tools
 
 @Log
 class ImportOperator extends AbstractOperator {
@@ -84,7 +73,7 @@ class ImportOperator extends AbstractOperator {
                 throw new WhelkRuntimeException("Couldn't find any importers working for ${whelk.id} or specified importer \"${importerPlugin}\" is unavailable.")
             }
             log.trace("Using importer: ${importer.getClass().getName()}")
-            if (importer instanceof OaiPmhImporter || importer.getClass().getName() == "whelk.importer.libris.OldOAIPMHImporter") {
+            if (importer instanceof BasicOaiPmhImporter || importer.getClass().getName() == "whelk.importer.libris.OaiPmhImporter") {
                 importer.serviceUrl = serviceUrl
                 this.totalCount = 0
                 for (ds in dataset.split(",")) {

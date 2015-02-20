@@ -57,7 +57,7 @@ Load the resulting resources into the running whelk:
 
 Create a local OAI-PMH dump of examples and run a full import, load into running whelk:
 
-    $ python librisxl-tools/scripts/assemble_oaipmh_records.py *******:**** librisxl-tools/scripts/example_records.tsv /tmp/oaidump
+    $ python librisxl-tools/scripts/assemble_oaipmh_records.py src/main/resources/secrets.json librisxl-tools/scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
 
     Make sure whelk is running

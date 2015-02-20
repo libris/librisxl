@@ -64,7 +64,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     @Override
     void bulkStore(final List docs) {
-        log.info("Bulk store requested. Versioning set to $versioning")
+        log.debug("Bulk store requested. Versioning set to $versioning")
         def breq = client.prepareBulk()
         for (doc in docs) {
             if (versioning) {
@@ -93,7 +93,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             }
             return docs
         } else {
-            return [get(identifier)]
+            return [load(identifier)]
         }
     }
 
@@ -115,29 +115,31 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     @Override
     Document load(String identifier, String version) {
         Document document = null
-        def grq = client.prepareGet(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier))
-        def response = grq.execute().actionGet();
+        if (identifier) {
+            def grq = client.prepareGet(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier))
+            def response = grq.execute().actionGet();
 
 
-        int v = -1
-        if (version && version.isInteger()) {
-            v = version.toInteger()
-        }
+            int v = -1
+            if (version && version.isInteger()) {
+                v = version.toInteger()
+            }
 
 
-        if (response.exists) {
-            log.trace("Get response for ${identifier}: " + response.sourceAsMap)
-            document = whelk.createDocumentFromJson(response.sourceAsString)
-        }
+            if (response.exists) {
+                log.trace("Get response for ${identifier}: " + response.sourceAsMap)
+                document = whelk.createDocumentFromJson(response.sourceAsString)
+            }
 
-        if (document && (v < 1 || version == document.checksum)) {
-            return document
-        } else if (document != null) {
-            def docList = loadAllVersions(identifier)
-            if (v > 0 && v < docList.size()) {
-                document = docList[v]
-            } else {
-                document = docList.find { it.checksum == version }
+            if (document && (v < 1 || version == document.checksum)) {
+                return document
+            } else if (document != null) {
+                def docList = loadAllVersions(identifier)
+                if (v > 0 && v < docList.size()) {
+                    document = docList[v]
+                } else {
+                    document = docList.find { it.checksum == version }
+                }
             }
         }
         return document
