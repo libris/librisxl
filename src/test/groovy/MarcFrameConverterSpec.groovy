@@ -149,6 +149,7 @@ class MarcFrameConverterSpec extends Specification {
         def source = fieldSpec.normalized ?: fieldSpec.source
         if (source instanceof List) {
             expected.fields += source
+            expected.fields.sort { fld -> fld.keySet()[0] }
         } else if (source.fields) {
             expected.fields = source.fields
         } else {
