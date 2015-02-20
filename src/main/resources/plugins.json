@@ -589,7 +589,7 @@
         "_plugins" : ["index", "linkexpander", "cleanupindexconverter" ]
     },
     "xinfoprocessor": {
-        "_class": "whelk.camel.XInfoRouteProcessor",
+        "_class": "whelk.camel.ElasticRouteProcessor",
         "_plugins": [ "index" ]
     },
     "xinfoindexroutebuilder": {
@@ -684,6 +684,7 @@
     "xinfostorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
         "_params" : {
+            "indexName" : "xinfo_storage",
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes": ["application/ld+json","image/jpeg"],

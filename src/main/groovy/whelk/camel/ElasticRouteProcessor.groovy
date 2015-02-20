@@ -38,7 +38,7 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
         String dataset = message.getHeader("document:identifier")
         String indexName = message.getHeader("whelk:index", shapeComputer.getIndexName())
         message.setHeader("whelk:index", indexName)
-        String indexType = shapeComputer.calculateTypeFromIdentifier(identifier)
+        String indexType = (message.getHeader("document:dataset") ?: shapeComputer.calculateTypeFromIdentifier(identifier))
         message.setHeader("whelk:type", indexType)
         String elasticId = shapeComputer.toElasticId(identifier)
         message.setHeader("elastic:id", elasticId)
@@ -52,11 +52,12 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
         log.debug("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $elasticId)")
 
         message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexName=${indexName}&indexType=${indexType}")
+        log.debug("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
         if (operation == Whelk.REMOVE_OPERATION) {
             log.debug(">>> Setting message body to $elasticId in preparation for REMOVE operation.")
             message.setBody(elasticId)
         } else {
-            try {
+            if (isJsonMessage(message.getHeader("document:metaentry") as String)) {
                 def dataMap = message.getBody(Map.class)
                 for (filter in filters) {
                     log.trace("Applying filter $filter")
@@ -64,16 +65,16 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
                 }
                 dataMap.put("encodedId", elasticId)
                 message.setBody(dataMap)
-            } catch (TypeConversionException tce) {
-                log.info("Message body is not json, sending message to stub.")
-                message.setHeader("stub:discard")
+            } else {
+                log.debug("Message body is not json, sending message to stub.")
+                message.setHeader("elasticDestination", "stub:discard")
             }
         }
         exchange.setOut(message)
     }
 
-    boolean isJsonMessage(header) {
-        def metaentry = mapper.readValue(header("document:metaentry") as String, Map)
+    boolean isJsonMessage(String json) {
+        def metaentry = mapper.readValue(json, Map)
         def ctype = metaentry.entry.contentType
         ctype ==~ /application\/(\w+\+)*json/ || ctype ==~ /application\/x-(\w+)-json/
     }
