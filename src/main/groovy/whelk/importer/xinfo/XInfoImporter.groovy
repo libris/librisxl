@@ -96,7 +96,7 @@ class XInfoImporter extends MySQLImporter {
                     String xinfoUrl = resultSet.getString("url")
                     String type = resultSet.getString("type")
                     String whelkId = createWhelkId(xinfoId, type)
-                    if (type == "PICTURE") {
+                    if (type == "PICTURE" && xinfoUrl.startsWith("/")) {
                         log.debug("Loading all versions of image for $xinfoUrl, saving to base $whelkId")
                         Document doc
                         if (jsondocs.containsKey(whelkId)) {
@@ -118,7 +118,7 @@ class XInfoImporter extends MySQLImporter {
                                 imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/" + version).withData(imgBytes).withDataset("image")
                             }
                         }
-                    } else {
+                    } else if (xinfoUrl.startsWith("/")) {
                         Document doc
                         if (jsondocs.containsKey(whelkId)) {
                             doc = jsondocs.get(whelkId)
@@ -204,7 +204,7 @@ class XInfoImporter extends MySQLImporter {
 
     String loadXinfoText(String url) {
         URL xinfoUrl = new URL("http://xinfo.libris.kb.se" + url + "&type=summary")
-        log.info("Loading xinfo metadata from $xinfoUrl")
+        log.debug("Loading xinfo metadata from $xinfoUrl")
         String xmlString = washXmlOfBadCharacters(normalizeString(xinfoUrl.text))
         if (xmlString) {
             //log.info("xmlString: $xmlString")
