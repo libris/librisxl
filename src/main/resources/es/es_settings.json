@@ -3,8 +3,12 @@
         "analyzer" : {
             "default" : {
                 "tokenizer" : "standard",
-                "filter" : ["lowercase", "swe_light_stemmer"],
+                "filter" : ["lowercase", "swe_light_stemmer", "additional_asciifolding"],
                 "stopwords" : "_none_"
+            },
+            "stemmed" : {
+              "tokenizer" : "standard",
+              "filter" :  ["lowercase", "swe_light_stemmer"]
             },
             "completer" : {
                 "type" : "custom",
@@ -22,6 +26,10 @@
                 "type" : "edgeNGram",
                 "min_gram" : 2,
                 "max_gram" : 50
+            },
+            "additional_asciifolding" : {
+              "type" : "asciifolding",
+              "preserve_original" : true
             }
         }
     }
