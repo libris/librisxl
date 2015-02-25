@@ -5839,8 +5839,8 @@
     },
 
     "561": {
-      "addProperty": "custodialHistoryOfItem",
-      "repeatable": true
+      "addLink": "workExample", "resourceType": "Product",
+      "$a": {"addProperty": "custodialHistoryOfItem"}
     },
 
     "562": {
@@ -5848,8 +5848,8 @@
     },
 
     "563": {
-      "addProperty": "bindingInformation",
-      "repeatable": true
+      "addLink": "workExample", "resourceType": "Product",
+      "$a": {"addProperty": "bindingInformation"}
     },
 
     "600": {"inherit": "bib:100", "addLink": "subject"},
