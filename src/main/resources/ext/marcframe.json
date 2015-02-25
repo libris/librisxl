@@ -3535,7 +3535,7 @@
           "identifierStatus": null
         }
       },
-      "$c": {"aboutEntity": "?thing", "property": "availability"},
+      "$c": {"aboutEntity": "?thing", "property": "termsOfAvailability"},
       "$q": {"property": "identifierNote"},
       "$z": {
         "property": "identifierValue",
@@ -3562,7 +3562,7 @@
                 "identifierValue": "91-0-056322-6",
                 "identifierNote": "inb.",
                 "identifierScheme": {"@id": "/def/identifiers/isbn"}}],
-            "availability": "310:00"
+            "termsOfAvailability": "310:00"
           }}
         },
         {
