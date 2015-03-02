@@ -158,6 +158,7 @@ class MarcConversion {
             case 'FoldLinkedProperty': new FoldLinkedPropertyStep(props); break
             case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(props); break
             case 'SetUpdatedStatus': new SetUpdatedStatusStep(props); break
+            case 'MappedProperty': new MappedPropertyStep(props); break
         }
     }
 
