@@ -5,7 +5,8 @@ import groovy.util.slurpersupport.GPathResult
 import groovy.xml.StreamingMarkupBuilder
 import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
-import whelk.importer.MySQLImporter
+import whelk.plugin.Importer
+import whelk.plugin.BasicPlugin
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -25,7 +26,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
 @Log
-class XInfoImporter extends MySQLImporter {
+class XInfoImporter extends BasicPlugin implements Importer {
 
     int sqlLimit = 1000
 
@@ -110,12 +111,17 @@ class XInfoImporter extends MySQLImporter {
                         jsondocs.put(doc.identifier, doc)
                         ["orginal", "hitlist", "record"].each {
                             String version = it
-                            byte[] imgBytes = new URL("http://xinfo.libris.kb.se" + xinfoUrl + "/"+ version).getBytes()
-                            if (imgBytes.length > 0) {
-                                if (version == "orginal") {
-                                    version = "original"
+                            String imgUrl = "http://xinfo.libris.kb.se" + xinfoUrl + "/"+ version
+                            try {
+                                byte[] imgBytes = new URL(imgUrl).getBytes()
+                                if (imgBytes.length > 0) {
+                                    if (version == "orginal") {
+                                        version = "original"
+                                    }
+                                    imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/" + version).withData(imgBytes).withDataset("image")
                                 }
-                                imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/" + version).withData(imgBytes).withDataset("image")
+                            } catch (IOException ioe) {
+                                log.warn("Error retrieving data from $imgUrl ... Skipping")
                             }
                         }
                     } else if (xinfoUrl.startsWith("/")) {
@@ -198,8 +204,7 @@ class XInfoImporter extends MySQLImporter {
                 log.warn("Found illegal character: ${sb.charAt(i)}")
                 sb.setCharAt(i, '?' as char);
             }
-
-        return sb.toString()
+        return sb.toString().replaceAll("&#(\\d+);", " ")
     }
 
     String loadXinfoText(String url) {
@@ -210,7 +215,7 @@ class XInfoImporter extends MySQLImporter {
             //log.info("xmlString: $xmlString")
             try {
                 def summary = new XmlSlurper(false,false).parseText(xmlString)
-                String infoText = summary.text()
+                String infoText = removeMarkup(summary.text())
                 log.trace("Setting infotext: $infoText")
                 return infoText
             } catch (org.xml.sax.SAXParseException spe) {
@@ -218,6 +223,10 @@ class XInfoImporter extends MySQLImporter {
             }
         }
         return null
+    }
+
+    String removeMarkup(String text) {
+        return text.replaceAll("<[^>]*>", " ").replaceAll(/\s{2,}/, " ").trim()
     }
 
     String createWhelkId(String xiId, String type) {
@@ -259,12 +268,7 @@ class XInfoImporter extends MySQLImporter {
 
 
     @Override
-    int getRecordCount() {
-        return 0
-    }
-
-    @Override
     void cancel() {
-
+        cancelled = true
     }
 }

@@ -29,7 +29,7 @@ class JettyServer {
             return
         }
         if (options.p) {
-            port = options.p
+            port = options.p as int
         }
         if (options.c) {
             contextPath = options.c

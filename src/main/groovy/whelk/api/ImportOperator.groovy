@@ -134,7 +134,9 @@ class ImportOperator extends AbstractOperator {
         }
     }
 
-    int getCount() { (importer ? importer.recordCount : totalCount) }
+    int getCount() { 
+        return (importer ? importer.recordCount : totalCount) 
+    }
 
     @Override
     void cancel() {
