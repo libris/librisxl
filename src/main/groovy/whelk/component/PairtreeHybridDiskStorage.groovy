@@ -40,6 +40,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     String versionsStorageDir = null
     String baseStorageSuffix = null
 
+    boolean readOnly = false
     boolean versioning
 
     private ProducerTemplate producerTemplate

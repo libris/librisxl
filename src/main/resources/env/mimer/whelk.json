@@ -1,18 +1,29 @@
 {
     "_properties": {
-        "ELASTIC_STORAGE_HOST": "10.50.16.150",
-        "ELASTIC_CLUSTER": "kbelasticsearch",
+        "ELASTIC_SEARCH_HOST": "localhost",
+        "ELASTIC_STORAGE_HOST": "localhost",
+        "ELASTIC_CLUSTER": null,
         "ELASTIC_PORT": 9300,
         "AVAILABLE_TYPES": ["eld","def","sys"]
     },
     "_id": "mimer",
     "_docBaseUri" : "http://libris.kb.se/",
+    "_supportplugins": [
+        "elasticnode"
+    ],
     "_plugins": {
+        "_camel": [
+            "indexroutebuilder"
+        ],
         "_components": [
-            "allstorage"
+            "index",
+            "mimerstorage",
+            "readonly_librisstorage"
         ]
     },
     "_apis": [
+        { "/_sys/metasearch":  "metasearchapi" },
+        { "^/_iri/(.+)$": "documentapi" },
         { "^([^_].*)$":  "documentapi" },
         { "^/$":  "documentapi" }
     ]

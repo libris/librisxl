@@ -681,6 +681,16 @@
             "versioning" : true
         }
     },
+    "readonly_librisstorage": {
+        "_class" : "whelk.component.ElasticSearchStorage",
+        "_params" : {
+            "indexName": "libris_jsonldstorage",
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes": ["application/ld+json"],
+            "readOnly":true
+        }
+    },
     "xinfostorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
         "_params" : {
@@ -702,9 +712,10 @@
             "versioning" : false
         }
     },
-    "allstorage": {
+    "mimerstorage": {
         "_class" : "whelk.component.ElasticSearchStorage",
         "_params" : {
+            "indexName" : "mimer_storage",
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes": ["*/*"],

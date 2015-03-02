@@ -41,6 +41,7 @@ public interface Storage extends Component {
     public boolean handlesContent(String contentType);
 
     public boolean isVersioning();
+    public boolean isReadOnly();
 
     /**
      * List of content-types this storage handles.

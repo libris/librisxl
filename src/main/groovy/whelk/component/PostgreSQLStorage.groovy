@@ -12,6 +12,7 @@ import whelk.*
 class PostgreSQLStorage extends BasicComponent implements Storage {
 
     boolean versioning
+    boolean readOnly = false
 
     // Starta postgres: postgres -D /usr/local/var/postgres
 

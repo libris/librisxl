@@ -81,7 +81,7 @@ class StandardWhelk implements Whelk {
         if (!doc.data || doc.data.length < 1) {
             throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
         }
-        def availableStorages = getStorages(doc.contentType)
+        def availableStorages = getWriteStorages(doc.contentType)
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
@@ -187,7 +187,7 @@ class StandardWhelk implements Whelk {
     void bulkAdd(final List<Document> docs, String contentType, boolean prepareDocuments = true) {
         checkAvailableMemory()
         log.debug("Bulk add ${docs.size()} documents")
-        def suitableStorages = getStorages(contentType)
+        def suitableStorages = getWriteStorages(contentType)
         if (suitableStorages.isEmpty()) { 
             log.debug("No storages found for $contentType.")
             return
@@ -218,7 +218,12 @@ class StandardWhelk implements Whelk {
         }
         // TODO: Check this
         if (!doc) {
-            doc = storage.load(identifier, version)
+            def stiter = storages.iterator()
+            log.info("got an iterator of storages.")
+            while (!doc && stiter.hasNext()) {
+                doc = stiter.next().load(identifier, version)
+                log.info("tried loading, doc is $doc")
+            }
         }
         if (doc && applyFilters) {
             for (filter in plugins.findAll { it instanceof Filter && it.valid(doc) }) {
@@ -949,6 +954,7 @@ class StandardWhelk implements Whelk {
 
     Storage getStorage() { return storages.isEmpty() ? null : storages.get(0) }
     List<Storage> getStorages(String rct) { return storages.findAll { it.handlesContent(rct) } }
+    List<Storage> getWriteStorages(String rct) { return storages.findAll { it.handlesContent(rct) && it.readOnly == false} }
     Storage getStorage(String rct) { return storages.find { it.handlesContent(rct) } }
 
     List<SparqlEndpoint> getSparqlEndpoints() { return plugins.findAll { it instanceof SparqlEndpoint } }
