@@ -1,0 +1,86 @@
+{
+    "properties": {
+        "@id": {
+            "include_in_all": false,
+            "index": "not_analyzed",
+            "store": true,
+            "type": "string"
+        },
+        "@type": {
+            "include_in_all": false,
+            "index": "no",
+            "store": true,
+            "type": "string"
+        },
+        "created": {
+            "format": "date_time",
+            "include_in_all": false,
+            "store": true,
+            "type": "date"
+        },
+        "description": {
+            "index_analyzer": "fulltext_analyzer",
+            "store": true,
+            "term_vector": "with_positions_offsets_payloads",
+            "type": "string"
+        },
+        "encodedId": {
+            "include_in_all": false,
+            "index": "not_analyzed",
+            "store": true,
+            "type": "string"
+        },
+        "modified": {
+            "format": "date_time",
+            "include_in_all": false,
+            "store": true,
+            "type": "date"
+        },
+        "review": {
+            "index_analyzer": "fulltext_analyzer",
+            "store": true,
+            "term_vector": "with_positions_offsets_payloads",
+            "type": "string"
+        },
+        "tableOfContents": {
+            "index_analyzer": "fulltext_analyzer",
+            "store": true,
+            "term_vector": "with_positions_offsets_payloads",
+            "type": "string"
+        },
+        "summary": {
+            "index_analyzer": "fulltext_analyzer",
+            "store": true,
+            "term_vector": "with_positions_offsets_payloads",
+            "type": "string"
+        },
+        "annotationSource": {
+            "properties": {
+                "label": {
+                    "store": "true",
+                    "type": "string",
+                    "include_in_all": false,
+                    "index": "not_analyzed"
+                }
+            }
+        },
+        "covertArt": {
+            "type":"string",
+            "include_in_all": false,
+            "index": "not_analyzed",
+            "store": true
+        },
+        "covertArtThumb": {
+            "type":"string",
+            "include_in_all": false,
+            "index": "not_analyzed",
+            "store": true
+        },
+        "covertArtMidsize": {
+            "type":"string",
+            "include_in_all": false,
+            "index": "not_analyzed",
+            "store": true
+        }
+    }
+}

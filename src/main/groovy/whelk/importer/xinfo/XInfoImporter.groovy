@@ -127,7 +127,7 @@ class XInfoImporter extends BasicPlugin implements Importer {
                                         imgdocDataMap.put("covertArtThumb", whelkId + "/image/" + version)
                                     }
                                     if (version == "record") {
-                                        imgdocDataMap.put("covertArtMidSize", whelkId + "/image/" + version)
+                                        imgdocDataMap.put("covertArtMidsize", whelkId + "/image/" + version)
                                     }
                                     if (whelkId.contains("/bib/")) {
                                         imgdocDataMap.put("annotates", ["@id": "/resource/" + whelkId.substring(7)])
