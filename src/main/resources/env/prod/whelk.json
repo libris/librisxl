@@ -11,9 +11,7 @@
     },
     "_plugins": {
         "_camel": [
-            "indexroutebuilder",
-            "graphstoreroutebuilder",
-            "apixroutebuilder"
+            "indexroutebuilder"
             ]
     },
     "_apis": [
