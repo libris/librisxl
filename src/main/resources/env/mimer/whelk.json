@@ -3,6 +3,9 @@
         "ELASTIC_SEARCH_HOST": "localhost",
         "ELASTIC_STORAGE_HOST": "localhost",
         "ELASTIC_CLUSTER": null,
+        "_ELASTIC_SEARCH_HOST": "10.50.16.150",
+        "_ELASTIC_STORAGE_HOST": "10.50.16.150",
+        "_ELASTIC_CLUSTER": "kbelasticsearch",
         "ELASTIC_PORT": 9300,
         "AVAILABLE_TYPES": ["eld","def","sys"]
     },

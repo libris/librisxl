@@ -219,10 +219,8 @@ class StandardWhelk implements Whelk {
         // TODO: Check this
         if (!doc) {
             def stiter = storages.iterator()
-            log.info("got an iterator of storages.")
             while (!doc && stiter.hasNext()) {
                 doc = stiter.next().load(identifier, version)
-                log.info("tried loading, doc is $doc")
             }
         }
         if (doc && applyFilters) {
