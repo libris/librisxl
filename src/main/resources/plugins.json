@@ -667,7 +667,7 @@
     "postgrestorage": {
         "_class" : "whelk.component.PostgreSQLStorage",
         "_params" : {
-            "databaseUrl": "jdbc://127.0.0.1:5342/whelk",
+            "databaseUrl": "jdbc:postgresql://127.0.0.1:5342/whelk",
             "contentTypes": ["application/ld+json"],
             "versioning" : true
         }
@@ -698,7 +698,7 @@
             "elasticHost": "_property:ELASTIC_STORAGE_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "contentTypes": ["application/ld+json","image/jpeg"],
-            "versioning" : true
+            "versioning" : false
         }
     },
     "marcxmlstorage": {
