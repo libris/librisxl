@@ -294,7 +294,6 @@
     "scheduledoperator": {
         "_class": "whelk.plugin.ScheduledOperator",
         "_plugins": [
-            "jsonldstorage",
             "oaipmhimporter"
             ],
         "_params": {
@@ -588,22 +587,6 @@
         "_class": "whelk.camel.ElasticRouteProcessor",
         "_plugins" : ["index", "linkexpander", "cleanupindexconverter" ]
     },
-    "xinfoprocessor": {
-        "_class": "whelk.camel.ElasticRouteProcessor",
-        "_plugins": [ "index" ]
-    },
-    "xinfoindexroutebuilder": {
-      "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
-      "_plugins" : [
-        "xinfoprocessor"
-      ],
-      "_params": {
-        "elasticBatchSize": 2000,
-        "batchTimeout": 5000,
-        "indexMessageQueue": "_property:MQ_INDEX",
-        "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX"
-      }
-    },
    "indexroutebuilder": {
         "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
         "_plugins" : [
@@ -667,8 +650,8 @@
     "postgrestorage": {
         "_class" : "whelk.component.PostgreSQLStorage",
         "_params" : {
-            "databaseUrl": "jdbc:postgresql://127.0.0.1:5342/whelk",
-            "contentTypes": ["application/ld+json"],
+            "databaseUrl": "jdbc:postgresql://localhost/whelk",
+            "contentTypes": ["application/ld+json", "image/jpeg"],
             "versioning" : true
         }
     },
@@ -681,26 +664,6 @@
             "versioning" : true
         }
     },
-    "readonly_librisstorage": {
-        "_class" : "whelk.component.ElasticSearchStorage",
-        "_params" : {
-            "indexName": "libris_jsonldstorage",
-            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
-            "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "contentTypes": ["application/ld+json"],
-            "readOnly":true
-        }
-    },
-    "xinfostorage": {
-        "_class" : "whelk.component.ElasticSearchStorage",
-        "_params" : {
-            "indexName" : "xinfo_storage",
-            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
-            "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "contentTypes": ["application/ld+json","image/jpeg"],
-            "versioning" : false
-        }
-    },
     "marcxmlstorage": {
         "_class" : "whelk.component.PairtreeHybridDiskStorage",
         "_params" : {
@@ -710,16 +673,6 @@
             "contentTypes" : [ "application/marcxml+xml" ],
             "baseStorageSuffix": "marcxml",
             "versioning" : false
-        }
-    },
-    "mimerstorage": {
-        "_class" : "whelk.component.ElasticSearchStorage",
-        "_params" : {
-            "indexName" : "mimer_storage",
-            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
-            "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "contentTypes": ["*/*"],
-            "versioning" : true
         }
     },
     "graphstore": {

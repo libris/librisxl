@@ -14,9 +14,6 @@
         "_components": [
             "jsonldstorage",
             "index"
-        ],
-        "_maintenance": [
-            "scheduledoperator"
         ]
     }
 }

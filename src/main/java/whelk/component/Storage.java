@@ -14,7 +14,14 @@ public interface Storage extends Component {
      * @throws IdentifierException if the Document doesn't have an identifier.
      */
     public boolean store(Document d, boolean withVersioning);
+    /**
+     * Stores an object in this Storage with default versioning settings.
+     * @param d the Document
+     * @return true if the operation was successful.
+     * @throws IdentifierException if the Document doesn't have an identifier.
+     */
     public boolean store(Document d);
+
     public void bulkStore(List<Document> documents);
     /**
      * Retrieves an object from this Storage.

@@ -9,21 +9,11 @@ import org.postgresql.PGStatement
 import whelk.*
 
 @Log
-class PostgreSQLStorage extends BasicComponent implements Storage {
-
-    boolean versioning
-    boolean readOnly = false
-
-    // Starta postgres: postgres -D /usr/local/var/postgres
+class PostgreSQLStorage extends AbstractSQLStorage {
 
     String mainTableName, versionsTableName
 
-    // Database connectors
-    URI dbUri
-
-    // Connectionpool
-    private BasicDataSource connectionPool
-
+    String jdbcDriver = "org.postgresql.Driver"
 
     // SQL statements
     protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_STATEMENT, LOAD_ALL_STATEMENT_WITH_DATASET
@@ -31,7 +21,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
     PostgreSQLStorage(String componentId = null, Map settings) {
         this.contentTypes = settings.get('contentTypes', null)
         this.versioning = settings.get('versioning', false)
-        this.dbUri = new URI(settings.get("databaseUrl"))
+        this.connectionUrl = settings.get("databaseUrl")
         id = componentId
     }
 
@@ -57,6 +47,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         LOAD_ALL_STATEMENT_WITH_DATASET = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? AND identifier != ? AND dataset = ? ORDER BY modified LIMIT 2000"
     }
 
+    /*
     @Override
     void onStart() {
         log.info("Connecting to postgres at $dbUri ... (${dbUri.scheme} / ${dbUri.host} / ${dbUri.port})")
@@ -73,14 +64,16 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         connectionPool.setInitialSize(10);
         createTables()
     }
+    */
 
+    @Override
     void createTables() {
         Connection connection = connectionPool.getConnection()
         Statement stmt = connection.createStatement();
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $mainTableName ("
-            +"identifier varchar(200) primary key,"
+            +"identifier text primary key,"
             +"data bytea,"
-            +"dataset varchar(20) not null,"
+            +"dataset text not null,"
             +"modified timestamp,"
             +"entry jsonb,"
             +"meta jsonb"
@@ -88,7 +81,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         if (versioning) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $versionsTableName ("
                 +"id serial,"
-                +"identifier varchar(200) not null,"
+                +"identifier text not null,"
                 +"data bytea,"
                 +"checksum char(32) not null,"
                 +"modified timestamp,"
@@ -239,7 +232,9 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         ResultSet rs
         try {
             selectstmt = connection.prepareStatement(sql)
-            selectstmt.setString(1, id)
+            if (id) {
+                selectstmt.setString(1, id)
+            }
             if (checksum) {
                 selectstmt.setString(2, checksum)
             }
@@ -250,8 +245,12 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 log.trace("No results returned for get($id)")
             }
         } finally {
-            rs.close()
-            selectstmt.close()
+            if (rs) {
+                rs.close()
+            }
+            if (selectstmt) {
+                selectstmt.close()
+            }
             connection.close()
         }
         return doc
@@ -259,7 +258,8 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
 
     @Override
     Document loadByAlternateIdentifier(String identifier) {
-        return loadFromSql(GET_DOCUMENT_BY_ALTERNATE_ID)
+        String sql = GET_DOCUMENT_BY_ALTERNATE_ID.replace("?", '"' + identifier + '"')
+        return loadFromSql(null, null, sql)
     }
 
     @Override

@@ -10,10 +10,10 @@
     "_id":"xinfo",
     "_plugins": {
         "_camel": [
-            "xinfoindexroutebuilder"
+            "indexroutebuilder"
             ],
         "_components": [
-            "xinfostorage",
+            "storage",
             "index"
         ],
         "_maintenance": [ null ],

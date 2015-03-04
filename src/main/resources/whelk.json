@@ -31,13 +31,11 @@
     },
     "_plugins": {
         "_camel": [
-            "indexroutebuilder",
-            "graphstoreroutebuilder"
+            "indexroutebuilder"
             ],
         "_components": [
             "jsonldstorage",
-            "index",
-            "graphstore"
+            "index"
         ],
         "_maintenance": [
             "scheduledoperator"
