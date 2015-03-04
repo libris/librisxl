@@ -16,7 +16,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
     String jdbcDriver = "org.postgresql.Driver"
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_STATEMENT, LOAD_ALL_STATEMENT_WITH_DATASET
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_STATEMENT, LOAD_ALL_STATEMENT_WITH_DATASET, DELETE_DOCUMENT_STATEMENT
 
     PostgreSQLStorage(String componentId = null, Map settings) {
         this.contentTypes = settings.get('contentTypes', null)
@@ -45,26 +45,8 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE entry @> '{ \"alternateIdentifiers\": [?] }'"
         LOAD_ALL_STATEMENT = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? AND identifier != ?  ORDER BY modified LIMIT 2000"
         LOAD_ALL_STATEMENT_WITH_DATASET = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? AND identifier != ? AND dataset = ? ORDER BY modified LIMIT 2000"
+        DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE identifier = ?"
     }
-
-    /*
-    @Override
-    void onStart() {
-        log.info("Connecting to postgres at $dbUri ... (${dbUri.scheme} / ${dbUri.host} / ${dbUri.port})")
-        String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + dbUri.getPath();
-        //String dbUrl = "jdbc:postgresql:whelk"
-        connectionPool = new BasicDataSource();
-
-        if (dbUri.getUserInfo() != null) {
-            connectionPool.setUsername(dbUri.getUserInfo().split(":")[0]);
-            connectionPool.setPassword(dbUri.getUserInfo().split(":")[1]);
-        }
-        connectionPool.setDriverClassName("org.postgresql.Driver");
-        connectionPool.setUrl(dbUrl);
-        connectionPool.setInitialSize(10);
-        createTables()
-    }
-    */
 
     @Override
     void createTables() {
@@ -157,7 +139,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
 
     @Override
     void bulkStore(final List docs) {
-        log.info("Bulk store requested. Versioning set to $versioning")
+        log.debug("Bulk store requested. Versioning set to $versioning")
         if (!docs || docs.isEmpty()) {
             return
         }
@@ -357,7 +339,15 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             log.debug("Creating tombstone record with id ${identifier}")
             store(createTombstone(identifier, dataset))
         } else {
-            throw new UnsupportedOperationException("Not implemented yet!")
+            Connection connection = connectionPool.getConnection()
+            PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
+            try {
+                delstmt.setString(1, identifier)
+                delstmt.executeUpdate()
+            } finally {
+                delstmt.close()
+                connection.close()
+            }
         }
     }
 

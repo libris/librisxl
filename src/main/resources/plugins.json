@@ -650,8 +650,8 @@
     "postgrestorage": {
         "_class" : "whelk.component.PostgreSQLStorage",
         "_params" : {
-            "databaseUrl": "jdbc:postgresql://localhost/whelk",
-            "contentTypes": ["application/ld+json", "image/jpeg"],
+            "databaseUrl": "_property:DATABASE_URL",
+            "contentTypes": ["application/ld+json"],
             "versioning" : true
         }
     },
