@@ -103,6 +103,7 @@ class ScheduledJob implements Runnable {
 
         } finally {
             whelk.releaseLock(dataset)
+            log.debug("Lock released for $dataset")
         }
     }
 
