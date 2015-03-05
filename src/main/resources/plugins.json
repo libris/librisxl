@@ -339,7 +339,7 @@
             "holdupdate": {
                 "importer": "oaipmhimporter_hold",
                 "dataset" : "hold",
-                "url": "_property:UPDATE_OAIPMH_URL",
+                "url": "_property:UPDATE_HOLD_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
             }
         }
