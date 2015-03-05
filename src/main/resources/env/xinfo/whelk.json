@@ -1,13 +1,12 @@
 {
     "_properties": {
         "AVAILABLE_TYPES": ["xinfo"],
-        "ELASTIC_SEARCH_HOST": "localhost",
-        "_ELASTIC_SEARCH_HOST": "hp01.libris.kb.se",
-        "_ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
+        "_ELASTIC_SEARCH_HOST": "localhost",
+        "ELASTIC_SEARCH_HOST": "hp01.libris.kb.se",
         "ELASTIC_CLUSTER": "whelks",
         "ES_CONFIG_PREFIX":"xinfo",
-        "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616"
-        "_ACTIVEMQ_BROKER_URL": "tcp://hp04.libris.kb.se:61616"
+        "_ACTIVEMQ_BROKER_URL": "tcp://localhost:61616"
+        "ACTIVEMQ_BROKER_URL": "tcp://hp04.libris.kb.se:61616"
     },
     "_id":"xinfo",
     "_plugins": {

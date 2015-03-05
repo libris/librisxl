@@ -101,6 +101,8 @@ class ScheduledJob implements Runnable {
             whelkState.put("lastRunNrImported", totalCount)
             whelk.updateState(dataset, whelkState)
 
+        } catch (Exception e) {
+            log.error("Something failed: ${e.message}", e)
         } finally {
             whelk.releaseLock(dataset)
             log.debug("Lock released for $dataset")
