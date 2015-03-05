@@ -71,10 +71,11 @@ class ScheduledJob implements Runnable {
 
         try {
             log.trace("all state: ${whelk.state}")
-            def whelkState = whelk.state.get(dataset, [:])
+            def whelkState = whelk.state.get(dataset) ?: [:]
             String dString = whelkState.get("lastImport")
             Date since
             if (dString) {
+                log.trace("Parsing $dString as date")
                 since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dString)
             } else {
                 since = new Date()
