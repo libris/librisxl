@@ -12,6 +12,7 @@
         "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": false,
         "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
         "APIX_HOST": "http://localhost:8001",
+        "DATABASE_URL": "jdbc:postgresql://localhost/whelk",
         "UPDATE_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
         "UPDATE_INTERVAL":3000
     },

@@ -22,13 +22,14 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         this.contentTypes = settings.get('contentTypes', null)
         this.versioning = settings.get('versioning', false)
         this.connectionUrl = settings.get("databaseUrl")
+        this.mainTableName = settings.get('tableName', null)
         id = componentId
     }
 
     void componentBootstrap(String str) {
         log.info("Bootstrapping ${this.id}")
         if (!this.mainTableName) {
-            this.mainTableName = str+"_"+this.id
+            this.mainTableName = str
         }
         if (versioning) {
             this.versionsTableName = mainTableName+VERSION_STORAGE_SUFFIX

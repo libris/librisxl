@@ -58,7 +58,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     Map<String,String> configuredTypes
     List<String> availableTypes
 
-    final static String INDEXNAME_SUFFIX = "_index"
+    String indexNameSuffix = ""
 
     Class searchResultClass = null
 
@@ -66,6 +66,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         super(settings)
         configuredTypes = (settings ? settings.get("typeConfiguration", [:]) : [:])
         availableTypes = (settings ? settings.get("availableTypes", []) : [])
+        this.indexNameSuffix = (settings ? settings.get("indexNameSuffix", "") : "")
         if (settings.batchUpdateSize) {
             this.batchUpdateSize = settings.batchUpdateSize
         }
@@ -76,7 +77,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
     @Override
     void componentBootstrap(String whelkName) {
-        String indexName = whelkName + INDEXNAME_SUFFIX
+        String indexName = whelkName + indexNameSuffix
         createIndexIfNotExists(indexName)
         flush()
         def realIndex = getRealIndexFor(indexName)
@@ -86,7 +87,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
     }
 
     String getIndexName() {
-        return this.whelk.id + INDEXNAME_SUFFIX
+        return this.whelk.id + indexNameSuffix
     }
 
     String getLatestIndex(String prefix) {
