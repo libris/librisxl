@@ -14,6 +14,7 @@
         "APIX_HOST": "http://localhost:8001",
         "DATABASE_URL": "jdbc:postgresql://localhost/whelk",
         "UPDATE_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
+        "UPDATE_HOLD_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
         "UPDATE_INTERVAL":3000
     },
     "_supportplugins": [

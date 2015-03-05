@@ -17,7 +17,8 @@
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
         "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": false,
-        "UPDATE_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
+        "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
+        "UPDATE_HOLD_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
         "UPDATE_INTERVAL":300,
         "ES_CONFIG_PREFIX": "libris",
         "DATABASE_URL": "jdbc:postgresql://hp04.libris.kb.se:5432/whelk"
