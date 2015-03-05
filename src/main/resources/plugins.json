@@ -276,6 +276,33 @@
             "preserveTimestamps" : true
         }
     },
+    "oaipmhimporter_bib" : {
+        "_class" : "whelk.importer.libris.OaiPmhImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "preserveTimestamps" : true
+        }
+    },
+    "oaipmhimporter_auth" : {
+        "_class" : "whelk.importer.libris.OaiPmhImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "preserveTimestamps" : true
+        }
+    },
+    "oaipmhimporter_hold" : {
+        "_class" : "whelk.importer.libris.OaiPmhImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "preserveTimestamps" : true
+        }
+    },
     "operator" : {
         "_class" : "whelk.api.OperatorAPI",
         "_plugins": [
@@ -294,23 +321,23 @@
     "scheduledoperator": {
         "_class": "whelk.plugin.ScheduledOperator",
         "_plugins": [
-            "oaipmhimporter"
+            "oaipmhimporter_auth","oaipmhimporter_bib","oaipmhimporter_hold"
             ],
         "_params": {
             "authupdate": {
-                "importer": "oaipmhimporter",
+                "importer": "oaipmhimporter_auth",
                 "dataset" : "auth",
                 "url": "_property:UPDATE_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
             },
             "bibupdate": {
-                "importer": "oaipmhimporter",
+                "importer": "oaipmhimporter_bib",
                 "dataset" : "bib",
                 "url": "_property:UPDATE_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
             },
             "holdupdate": {
-                "importer": "oaipmhimporter",
+                "importer": "oaipmhimporter_hold",
                 "dataset" : "hold",
                 "url": "_property:UPDATE_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
