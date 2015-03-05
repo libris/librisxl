@@ -273,7 +273,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                         throw e
                     }
                 }
-            } else if (it.header.@status == 'deleted') {
+            } else if (it.header?.@status == 'deleted' || it.header?.@deleted == 'true') {
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                     try {
                         whelk.remove(deleteIdentifier, this.dataset)
