@@ -324,7 +324,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                             def dataMap = doc.dataAsMap
                             dataMap['controlNumber'] = it.record.getControlfields("001").get(0).getData()
                             doc = doc.withData(dataMap)
-                            doc.addIdentifier("/"+this.dataset+"/"+record.getControlfields("001").get(0).getData())
+                            doc.addIdentifier("/"+this.dataset+"/"+it.record.getControlfields("001").get(0).getData())
                         }
                         if (enhancer) {
                             log.trace("Enhancing starts.")
