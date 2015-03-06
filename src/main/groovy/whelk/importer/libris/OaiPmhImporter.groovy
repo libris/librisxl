@@ -309,7 +309,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
 
     void addDocuments(final List documents) {
         if (tickets.availablePermits() < 10) {
-            log.info("Trying to acquire semaphore for adding to queue. ${tickets.availablePermits()} available.")
+            log.debug("Trying to acquire semaphore for adding to queue. ${tickets.availablePermits()} available.")
         }
         tickets.acquire()
         queue.execute({

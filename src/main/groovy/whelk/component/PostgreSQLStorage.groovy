@@ -12,6 +12,7 @@ import whelk.*
 class PostgreSQLStorage extends AbstractSQLStorage {
 
     String mainTableName, versionsTableName
+    List<String> availableTypes
 
     String jdbcDriver = "org.postgresql.Driver"
 
@@ -23,6 +24,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         this.versioning = settings.get('versioning', false)
         this.connectionUrl = settings.get("databaseUrl")
         this.mainTableName = settings.get('tableName', null)
+        this.availableTypes = settings.get('availableTypes', [])
         id = componentId
     }
 
@@ -32,7 +34,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             this.mainTableName = str
         }
         if (versioning) {
-            this.versionsTableName = mainTableName+VERSION_STORAGE_SUFFIX
+            this.versionsTableName = "versions_" + mainTableName
         }
         UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, dataset = ?, modified = ?, entry = ?, meta = ? WHERE identifier = ? RETURNING *) " +
             "INSERT INTO $mainTableName (identifier, data, dataset, modified, entry, meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
@@ -61,6 +63,18 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             +"entry jsonb,"
             +"meta jsonb"
             +")");
+        availableTypes.each {
+            log.debug("Creating child table $it")
+            def result = stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ${mainTableName}_${it} ("
+                    +"CHECK (dataset = '${it}'), PRIMARY KEY (identifier) ) INHERITS (${mainTableName})")
+            log.debug("Creating indexes for $it")
+            try {
+                stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_dataset ON ${mainTableName}_${it} (dataset)")
+                stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_modified ON ${mainTableName}_${it} (modified)")
+            } catch (org.postgresql.util.PSQLException pgsqle) {
+                log.trace("Indexes on $mainTableName / $it already exists.")
+            }
+        }
         if (versioning) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $versionsTableName ("
                 +"id serial,"
@@ -72,7 +86,14 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 +"meta jsonb,"
                 +"UNIQUE (identifier, checksum)"
                 +")");
+            try {
+                stmt.executeUpdate("CREATE INDEX ${versionsTableName}_identifier ON ${versionsTableName} (identifier)")
+                stmt.executeUpdate("CREATE INDEX ${versionsTableName}_modified ON ${versionsTableName} (modified)")
+                stmt.executeUpdate("CREATE INDEX ${versionsTableName}_checksum ON ${versionsTableName} (checksum)")
+            } catch (org.postgresql.util.PSQLException pgsqle) {
+                log.trace("Indexes on $mainTableName / $it already exists.")
             }
+        }
         stmt.close()
         connection.close()
     }

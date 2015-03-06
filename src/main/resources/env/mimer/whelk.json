@@ -22,6 +22,9 @@
             "index",
             "storage",
             "jsonldstorage"
+        ],
+        "_maintenance": [
+            null
         ]
     },
     "_apis": [
