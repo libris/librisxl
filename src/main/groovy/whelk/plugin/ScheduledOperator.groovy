@@ -47,6 +47,8 @@ class ScheduledOperator extends BasicPlugin {
 @Log
 class ScheduledJob implements Runnable {
 
+    static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+
     String id, dataset
     Importer importer
     Whelk whelk
@@ -77,7 +79,7 @@ class ScheduledJob implements Runnable {
             Date nextSince = new Date()
             if (lastImport) {
                 log.trace("Parsing $dString as date")
-                currentSince = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", lastImport)
+                currentSince = Date.parse(DATE_FORMAT, lastImport)
                 nextSince.set(date: currentSince[Calendar.SECOND] + 1)
             } else {
                 nextSince = new Date()
@@ -96,17 +98,17 @@ class ScheduledJob implements Runnable {
             int totalCount = result.numberOfDocuments
             if (totalCount > 0) {
                 log.info("Imported $totalCount document for $dataset.")
-                whelkState.put("lastImportThatYieldedResults", result.lastRecordDatestamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+                whelkState.put("lastImportThatYieldedResults", result.lastRecordDatestamp.format(DATE_FORMAT))
                 whelkState.put("lastImportThatYieldedResultsNrImported", totalCount)
-                whelkState.put("lastImport", result.lastRecordDatestamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+                whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
             } else {
                 log.debug("Imported $totalCount document for $dataset.")
-                whelkState.put("lastImport", currentSince.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+                whelkState.put("lastImport", currentSince.format(DATE_FORMAT))
             }
             whelkState.remove("importOperator")
             whelkState.put("status", "IDLE")
             whelkState.put("lastRunNrImported", totalCount)
-            whelkState.put("lastRun", new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+            whelkState.put("lastRun", new Date().format(DATE_FORMAT))
             whelk.updateState(dataset, whelkState)
 
         } catch (Exception e) {
