@@ -77,6 +77,8 @@ class ScheduledJob implements Runnable {
             if (dString) {
                 log.trace("Parsing $dString as date")
                 since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dString)
+                def nextSecondDate = since[Calendar.SECOND] + 1
+                since.set(date: nextSecondDate)
             } else {
                 since = new Date()
                 def lastWeeksDate = since[Calendar.DATE] - 7
@@ -88,19 +90,21 @@ class ScheduledJob implements Runnable {
             whelkState.put("importOperator", this.id)
             whelkState.remove("lastImportOperator")
             whelk.updateState(dataset, whelkState)
-            Date dateStamp = new Date()
-            int totalCount = importer.doImport(dataset, null, -1, true, true, since)
+            def result = importer.doImport(dataset, null, -1, true, true, since)
+
+            int totalCount = result.numberOfDocuments
             if (totalCount > 0) {
                 log.info("Imported $totalCount document for $dataset.")
-                whelkState.put("lastImportThatYieldedResults", dateStamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+                whelkState.put("lastImportThatYieldedResults", result.lastRecordDatestamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
                 whelkState.put("lastImportThatYieldedResultsNrImported", totalCount)
             } else {
                 log.debug("Imported $totalCount document for $dataset.")
             }
             whelkState.remove("importOperator")
             whelkState.put("status", "IDLE")
-            whelkState.put("lastImport", dateStamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+            whelkState.put("lastImport", result.lastRecordDatestamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
             whelkState.put("lastRunNrImported", totalCount)
+            whelkState.put("lastRun", new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
             whelk.updateState(dataset, whelkState)
 
         } catch (Exception e) {
