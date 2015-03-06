@@ -22,7 +22,7 @@ public interface Storage extends Component {
      */
     public boolean store(Document d);
 
-    public void bulkStore(List<Document> documents);
+    public void bulkStore(List<Document> documents, String dataset);
     /**
      * Retrieves an object from this Storage.
      * @param identifier the identifier of the object to be retrieved.

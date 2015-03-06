@@ -16,7 +16,7 @@ public interface Whelk {
 
     // storage
     public String add(Document d);
-    public void bulkAdd(List<Document> d, String contentType);
+    public void bulkAdd(List<Document> d, String dataset, String contentType);
     public Document get(String identifier);
     public void remove(String identifier);
     /**

@@ -184,7 +184,7 @@ class StandardWhelk implements Whelk {
      * Requires that all documents have an identifier.
      */
     @groovy.transform.CompileStatic
-    void bulkAdd(final List<Document> docs, String contentType, boolean prepareDocuments = true) {
+    void bulkAdd(final List<Document> docs, String dataset, String contentType, boolean prepareDocuments = true) {
         checkAvailableMemory()
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getWriteStorages(contentType)
@@ -199,7 +199,7 @@ class StandardWhelk implements Whelk {
         }
         log.debug("Sending to storage(s)")
         for (storage in suitableStorages) {
-            storage.bulkStore(docs)
+            storage.bulkStore(docs, dataset)
         }
         notifyCamel(docs)
         log.debug("Bulk operation completed")

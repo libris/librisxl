@@ -69,7 +69,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     @Override
-    void bulkStore(final List docs) {
+    void bulkStore(final List docs, String dataset) {
         if (readOnly) {
             log.debug("Storage is read only. Not saving.")
             return

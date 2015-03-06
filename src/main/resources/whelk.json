@@ -25,11 +25,6 @@
     },
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
-    "_docMetaMapping" : {
-        "hold": [
-            "about.heldBy.notation"
-        ]
-    },
     "_plugins": {
         "_camel": [
             "indexroutebuilder"
