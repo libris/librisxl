@@ -107,7 +107,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             log.debug("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
         }
         def harvestResult = harvest(url)
-        def resumptionToken = harvest.resumptionToken
+        def resumptionToken = harvestResult.resumptionToken
         log.debug("resumptionToken: $resumptionToken")
         long loadUrlTime = startTime
         long elapsed = 0
