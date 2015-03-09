@@ -317,7 +317,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
 
     void addDocuments(final List documents) {
         if (tickets.availablePermits() < 10) {
-            log.info("Trying to acquire semaphore for adding to queue. ${tickets.availablePermits()} available.")
+            log.debug("Trying to acquire semaphore for adding to queue. ${tickets.availablePermits()} available.")
         }
         tickets.acquire()
         queue.execute({
@@ -351,7 +351,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             try {
                 log.debug("Adding ${convertedDocs.size()} documents to whelk.")
                 long elapsed = System.currentTimeMillis()
-                this.whelk.bulkAdd(convertedDocs, convertedDocs.get(0).contentType, prepareDocuments)
+                this.whelk.bulkAdd(convertedDocs, convertedDocs.get(0).dataset, convertedDocs.get(0).contentType, prepareDocuments)
                 if ((System.currentTimeMillis() - elapsed) > 10000) {
                     log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
                 }

@@ -9,6 +9,11 @@
         "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
         "UPDATE_INTERVAL":1
     },
+    "_plugins": {
+        "_maintenance": [
+            null
+        ]
+    },
     "_apis": [
         { "/_remotesearch": "remotesearch" },
         { "/_format": "formatter" },

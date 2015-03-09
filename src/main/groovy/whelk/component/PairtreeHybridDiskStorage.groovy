@@ -114,7 +114,7 @@ class PairtreeHybridDiskStorage extends BasicElasticComponent implements HybridS
     }
 
     @Override
-    public void bulkStore(List<Document> docs) {
+    public void bulkStore(List<Document> docs, String dataset) {
         if (rebuilding) { throw new DownForMaintenanceException("The system is currently rebuilding it's indexes. Please try again later.") }
         long startTime
         if (log.debugEnabled) {

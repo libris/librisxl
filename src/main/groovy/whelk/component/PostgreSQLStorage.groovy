@@ -12,6 +12,7 @@ import whelk.*
 class PostgreSQLStorage extends AbstractSQLStorage {
 
     String mainTableName, versionsTableName
+    List<String> availableTypes
 
     String jdbcDriver = "org.postgresql.Driver"
 
@@ -23,6 +24,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         this.versioning = settings.get('versioning', false)
         this.connectionUrl = settings.get("databaseUrl")
         this.mainTableName = settings.get('tableName', null)
+        this.availableTypes = settings.get('availableTypes', [])
         id = componentId
     }
 
@@ -32,10 +34,10 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             this.mainTableName = str
         }
         if (versioning) {
-            this.versionsTableName = mainTableName+VERSION_STORAGE_SUFFIX
+            this.versionsTableName = "versions_" + mainTableName
         }
         UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, dataset = ?, modified = ?, entry = ?, meta = ? WHERE identifier = ? RETURNING *) " +
-            "INSERT INTO $mainTableName (identifier, data, dataset, modified, entry, meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+            "INSERT INTO {tableName} (identifier, data, dataset, modified, entry, meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
 
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (identifier,data,checksum,modified,entry,meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE identifier = ? AND checksum = ?)"
@@ -61,6 +63,18 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             +"entry jsonb,"
             +"meta jsonb"
             +")");
+        availableTypes.each {
+            log.debug("Creating child table $it")
+            def result = stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ${mainTableName}_${it} ("
+                    +"CHECK (dataset = '${it}'), PRIMARY KEY (identifier) ) INHERITS (${mainTableName})")
+            log.debug("Creating indexes for $it")
+            try {
+                stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_dataset ON ${mainTableName}_${it} (dataset)")
+                stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_modified ON ${mainTableName}_${it} (modified)")
+            } catch (org.postgresql.util.PSQLException pgsqle) {
+                log.trace("Indexes on $mainTableName / $it already exists.")
+            }
+        }
         if (versioning) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $versionsTableName ("
                 +"id serial,"
@@ -72,7 +86,14 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 +"meta jsonb,"
                 +"UNIQUE (identifier, checksum)"
                 +")");
+            try {
+                stmt.executeUpdate("CREATE INDEX ${versionsTableName}_identifier ON ${versionsTableName} (identifier)")
+                stmt.executeUpdate("CREATE INDEX ${versionsTableName}_modified ON ${versionsTableName} (modified)")
+                stmt.executeUpdate("CREATE INDEX ${versionsTableName}_checksum ON ${versionsTableName} (checksum)")
+            } catch (org.postgresql.util.PSQLException pgsqle) {
+                log.trace("Indexes on $mainTableName / $it already exists.")
             }
+        }
         stmt.close()
         connection.close()
     }
@@ -85,9 +106,10 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 return true // Same document already in storage.
             }
         }
+        assert doc.dataset
         log.debug("Saving document ${doc.identifier} (with checksum: ${doc.checksum})")
         Connection connection = connectionPool.getConnection()
-        PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
+        PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT.replaceAll(/\{tableName\}/, mainTableName + "_" + doc.dataset))
         try {
             insert.setBytes(1, doc.data)
             insert.setString(2, doc.dataset)
@@ -139,13 +161,13 @@ class PostgreSQLStorage extends AbstractSQLStorage {
     }
 
     @Override
-    void bulkStore(final List docs) {
+    void bulkStore(final List docs, String dataset) {
         log.debug("Bulk store requested. Versioning set to $versioning")
         if (!docs || docs.isEmpty()) {
             return
         }
         Connection connection = connectionPool.getConnection()
-        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT)
+        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT.replaceAll(/\{tableName\}/, mainTableName + "_" + dataset))
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->

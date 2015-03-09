@@ -245,7 +245,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                     }
                     convertedDocs << doc
                 }
-                this.whelk.bulkAdd(convertedDocs, convertedDocs.first().contentType, false)
+                this.whelk.bulkAdd(convertedDocs, convertedDocs.first().dataset, convertedDocs.first().contentType, false)
             } finally {
                 tickets.release()
             }
