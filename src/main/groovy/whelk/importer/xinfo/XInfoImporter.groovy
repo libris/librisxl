@@ -7,6 +7,7 @@ import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
 import whelk.plugin.Importer
 import whelk.plugin.BasicPlugin
+import whelk.result.ImportResult
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -46,7 +47,7 @@ class XInfoImporter extends BasicPlugin implements Importer {
         return conn.prepareStatement("SELECT * FROM xinfo.resource LIMIT ?, $sqlLimit")
     }
 
-    int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
+    ImportResult doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false
@@ -135,7 +136,7 @@ class XInfoImporter extends BasicPlugin implements Importer {
                                         imgdocDataMap.put("annotates", ["@id": "urn:" + whelkId.substring(7)])
                                     }
                                     if (supplier) {
-                                        imgdocDataMap.put("annotationSource", ["label": supplier])
+                                        imgdocDataMap.put("annotationSource", ["name": supplier])
                                     }
                                 }
                             } catch (IOException ioe) {
@@ -163,7 +164,7 @@ class XInfoImporter extends BasicPlugin implements Importer {
                             dataMap.put(type.toLowerCase(), loadXinfoText(xinfoUrl))
                         }
                         if (supplier) {
-                            dataMap.put("annotationSource", ["label": supplier])
+                            dataMap.put("annotationSource", ["name": supplier])
                         }
                         if (whelkId.contains("/bib/")) {
                             dataMap.put("annotates", ["@id": "/resource/" + whelkId.substring(7)])
@@ -219,7 +220,7 @@ class XInfoImporter extends BasicPlugin implements Importer {
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
         log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
-        return recordCount
+        return new ImportResult(numberOfDocuments: recordCount)
     }
 
     String normalizeString(String inString) {

@@ -8,6 +8,7 @@ import java.text.*
 import java.util.concurrent.*
 
 import whelk.*
+import whelk.result.*
 import whelk.exception.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
@@ -54,12 +55,12 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         enhancer = plugins.find { it instanceof JsonLDLinkCompleterFilter }
     }
 
-    int doImport(String dataset, int nrOfDocs) {
+    ImportResult doImport(String dataset, int nrOfDocs) {
         return doImport(dataset, null, nrOfDocs)
     }
 
     @groovy.transform.Synchronized
-    int doImport(String dataset, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
+    ImportResult doImport(String dataset, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
         getAuthentication()
         this.cancelled = false
         this.dataset = dataset
@@ -109,13 +110,15 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         log.debug("resumptionToken: $resumptionToken")
         long loadUrlTime = startTime
         long elapsed = 0
+        Date lastRecordDatestamp = from
         while (!cancelled && resumptionToken && (nrOfDocs == -1 || recordCount <  nrOfDocs)) {
             loadUrlTime = System.currentTimeMillis()
             url = new URL(baseUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
             log.trace("Harvesting $url")
             try {
-                String rtok = harvest(url)
-                resumptionToken = rtok
+                def harvestResult = harvest(url)
+                lastRecordDatestamp = harvestResult.lastRecordDatestamp ?: from
+                resumptionToken = harvestResult.resumptionToken
             } catch (XmlParsingFailedException xpfe) {
                 log.warn("[$dataset / $recordCount] Harvesting failed. Retrying ...")
             }
@@ -140,7 +143,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         queue.awaitTermination(7, TimeUnit.DAYS)
         log.debug("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
 
-        return recordCount
+        return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: lastRecordDatestamp)
     }
 
 
@@ -156,8 +159,9 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         return sb.toString()
     }
 
-    String harvest(URL url) {
+    def harvest(URL url) {
         long elapsed = System.currentTimeMillis()
+        Date recordDate
         def xmlString = normalizeString(url.text)
         if ((System.currentTimeMillis() - elapsed) > 5000) {
             log.warn("[$dataset / $recordCount] Load from URL ${url.toString()} took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
@@ -202,7 +206,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                         return
                     }
                     log.trace("Checked for suppress record.")
-                    def recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
+                    recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
                     if (preserveTimestamps) {
                         log.trace("Setting date: $recordDate")
                         entry.put(Document.MODIFIED_KEY, recordDate.getTime())
@@ -295,8 +299,12 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
             log.trace("Last page is $xmlString")
         }
-        return OAIPMH.ListRecords.resumptionToken
+        return new HarvestResult(resumptionToken: OAIPMH.ListRecords.resumptionToken, lastRecordDatestamp: recordDate)
+    }
 
+    class HarvestResult {
+        String resumptionToken
+        Date lastRecordDatestamp
     }
 
     Date getMarcRecordModificationTime(MarcRecord record) {

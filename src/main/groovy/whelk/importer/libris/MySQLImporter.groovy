@@ -8,6 +8,7 @@ import java.util.concurrent.*
 import whelk.*
 import whelk.importer.*
 import whelk.plugin.*
+import whelk.result.*
 import whelk.plugin.libris.*
 
 import se.kb.libris.util.marc.*
@@ -47,7 +48,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         assert marcFrameConverter
     }
 
-    int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
+    ImportResult doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false
@@ -167,7 +168,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
         log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
-        return recordCount
+        return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
     }
 
     void buildDocument(MarcRecord record, String dataset, String oaipmhSetSpecValue) {
