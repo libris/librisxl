@@ -92,7 +92,8 @@ class XInfoImporter extends BasicPlugin implements Importer {
 
                 log.debug("Query executed. Starting processing ...")
                 def imgdocs = []
-                def jsondocs = [:]
+                def jsondocs = []
+                def coverjsondocs = []
                 while(resultSet.next()) {
                     String xinfoId = resultSet.getString("id")
                     String xinfoUrl = resultSet.getString("url")
@@ -101,16 +102,8 @@ class XInfoImporter extends BasicPlugin implements Importer {
                     String whelkId = createWhelkId(xinfoId, type)
                     if ((type == "PICTURE" || type == "BILD") && xinfoUrl.startsWith("/")) {
                         log.debug("Loading all versions of image for $xinfoUrl, saving to base $whelkId")
-                        Document doc
-                        if (jsondocs.containsKey(whelkId)) {
-                            doc = jsondocs.get(whelkId)
-                        } else {
-                            doc = whelk.get(whelkId)
-                        }
-                        if (!doc) {
-                            doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId).withDataset("xinfo").withData('{"@type":"Annotation"}')
-                        }
-                        def imgdocDataMap = doc.dataAsMap
+                        Document coverDoc = whelk.createDocument("application/ld+json").withIdentifier(whelkId + "/cover").withDataset("cover").withData('{"@type":"CoverArt"}')
+                        def coverDocMap = coverDoc.dataAsMap
                         ["orginal", "hitlist", "record"].each {
                             String version = it
                             String imgUrl = "http://xinfo.libris.kb.se" + xinfoUrl + "/"+ version
@@ -120,48 +113,42 @@ class XInfoImporter extends BasicPlugin implements Importer {
                                     if (version == "orginal") {
                                         version = "original"
                                     }
-                                    imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/" + version).withData(imgBytes).withDataset("image")
+                                    imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/cover/" + version).withData(imgBytes).withDataset("image")
                                     if (version == "original") {
-                                        imgdocDataMap.put("covertArt", whelkId + "/image/" + version)
+                                        coverDocMap.put("covertArt", whelkId + "/cover/" + version)
                                     }
                                     if (version == "hitlist") {
-                                        imgdocDataMap.put("covertArtThumb", whelkId + "/image/" + version)
+                                        coverDocMap.put("covertArtThumb", whelkId + "/cover/" + version)
                                     }
                                     if (version == "record") {
-                                        imgdocDataMap.put("covertArtMidsize", whelkId + "/image/" + version)
+                                        coverDocMap.put("covertArtMidsize", whelkId + "/cover/" + version)
                                     }
                                     if (whelkId.contains("/bib/")) {
-                                        imgdocDataMap.put("annotates", ["@id": "/resource/" + whelkId.substring(7)])
+                                        coverDocMap.put("annotates", ["@id": "/resource/" + whelkId.substring(7)])
                                     } else {
-                                        imgdocDataMap.put("annotates", ["@id": "urn:" + whelkId.substring(7)])
+                                        coverDocMap.put("annotates", ["@id": "urn:" + whelkId.substring(7)])
                                     }
                                     if (supplier) {
-                                        imgdocDataMap.put("annotationSource", ["name": supplier])
+                                        coverDocMap.put("annotationSource", ["name": supplier])
                                     }
+                                } else {
+                                    log.warn("No data at $imgUrl")
                                 }
                             } catch (IOException ioe) {
                                 log.warn("Error retrieving data from $imgUrl ... Skipping")
                             }
                         }
-                        doc.withData(imgdocDataMap)
-                        jsondocs.put(doc.identifier, doc)
+                        coverDoc.withData(coverDocMap)
+                        coverjsondocs << coverDoc
                     } else if (xinfoUrl.startsWith("/")) {
-                        Document doc
-                        if (jsondocs.containsKey(whelkId)) {
-                            doc = jsondocs.get(whelkId)
-                        } else {
-                            doc = whelk.get(whelkId)
-                        }
-                        if (!doc) {
-                            doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId).withDataset("xinfo")
-                        }
+                        Document doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId + "/" + type.toLowerCase()).withDataset("annotation")
                         def dataMap = doc.dataAsMap
                         dataMap.put("@id", whelkId)
-                        dataMap.put("@type", "Annotation")
+                        dataMap.put("text", loadXinfoText(xinfoUrl))
                         if (type == "TOC") {
-                            dataMap.put("tableOfContents", loadXinfoText(xinfoUrl))
+                            dataMap.put("@type", "TableOfContents")
                         } else {
-                            dataMap.put(type.toLowerCase(), loadXinfoText(xinfoUrl))
+                            dataMap.put("@type", type.toLowerCase().capitalize())
                         }
                         if (supplier) {
                             dataMap.put("annotationSource", ["name": supplier])
@@ -172,17 +159,20 @@ class XInfoImporter extends BasicPlugin implements Importer {
                             dataMap.put("annotates", ["@id": "urn:" + whelkId.substring(7)])
                         }
                         doc.withData(dataMap)
-                        jsondocs.put(doc.identifier, doc)
+                        jsondocs << doc
                     }
                     recordCount++
                     startAt++
                 }
                 queue.execute({
                     if (imgdocs.size() > 0) {
-                        this.whelk.bulkAdd(imgdocs, "image/jpeg")
+                        this.whelk.bulkAdd(imgdocs, "image", "image/jpeg")
+                    }
+                    if (coverjsondocs.size() > 0) {
+                        this.whelk.bulkAdd(coverjsondocs, "cover", "application/ld+json")
                     }
                     if (jsondocs.size() > 0) {
-                        this.whelk.bulkAdd(jsondocs.values() as List, "application/ld+json")
+                        this.whelk.bulkAdd(jsondocs, "annotation", "application/ld+json")
                     }
                 } as Runnable)
 

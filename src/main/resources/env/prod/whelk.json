@@ -10,9 +10,6 @@
         "UPDATE_INTERVAL":1
     },
     "_plugins": {
-        "_maintenance": [
-            null
-        ]
     },
     "_apis": [
         { "/_remotesearch": "remotesearch" },

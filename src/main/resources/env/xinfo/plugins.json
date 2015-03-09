@@ -3,13 +3,12 @@
         "_class": "whelk.camel.ElasticRouteProcessor",
         "_plugins": [ "index" ]
     },
-    "storage": {
-        "_class" : "whelk.component.ElasticSearchStorage",
+    "postgrestorage": {
+        "_class" : "whelk.component.PostgreSQLStorage",
         "_params" : {
-            "indexName" : "xinfo_storage",
-            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
-            "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "contentTypes": ["application/ld+json","image/jpeg"],
+            "availableTypes": "_property:AVAILABLE_TYPES",
+            "databaseUrl": "_property:DATABASE_URL",
+            "contentTypes": ["application/ld+json", "image/jpeg"],
             "versioning" : false
         }
     }
