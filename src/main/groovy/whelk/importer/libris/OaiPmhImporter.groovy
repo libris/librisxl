@@ -106,7 +106,8 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             url = new URL(urlString)
             log.debug("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
         }
-        String resumptionToken = harvest(url)
+        def harvestResult = harvest(url)
+        def resumptionToken = harvestResult.resumptionToken
         log.debug("resumptionToken: $resumptionToken")
         long loadUrlTime = startTime
         long elapsed = 0
@@ -116,7 +117,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             url = new URL(baseUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
             log.trace("Harvesting $url")
             try {
-                def harvestResult = harvest(url)
+                harvestResult = harvest(url)
                 lastRecordDatestamp = harvestResult.lastRecordDatestamp ?: from
                 resumptionToken = harvestResult.resumptionToken
             } catch (XmlParsingFailedException xpfe) {
