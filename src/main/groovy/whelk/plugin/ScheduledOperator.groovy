@@ -95,8 +95,7 @@ class ScheduledJob implements Runnable {
             int totalCount = result.numberOfDocuments
             if (totalCount > 0) {
                 log.info("Imported $totalCount document for $dataset.")
-                whelkState.put("lastImportThatYieldedResults", result.lastRecordDatestamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
-                whelkState.put("lastImportThatYieldedResultsNrImported", totalCount)
+                whelkState.put("lastImportNrImported", totalCount)
             } else {
                 log.debug("Imported $totalCount document for $dataset.")
             }
