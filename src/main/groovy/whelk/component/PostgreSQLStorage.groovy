@@ -162,7 +162,6 @@ class PostgreSQLStorage extends AbstractSQLStorage {
 
     @Override
     void bulkStore(final List docs, String dataset) {
-        log.debug("Bulk store requested. Versioning set to $versioning")
         if (!docs || docs.isEmpty()) {
             return
         }
@@ -199,6 +198,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             }
             ver_batch.executeBatch()
             batch.executeBatch()
+            log.debug("Stored ${docs.size()} documents with dataset $dataset (versioning: ${versioning})")
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}")
             throw e
