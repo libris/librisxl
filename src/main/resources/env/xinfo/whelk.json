@@ -8,10 +8,6 @@
     },
     "_id":"xinfo",
     "_plugins": {
-        "_components": [
-            "postgrestorage",
-            "index"
-        ],
         "_maintenance": [ null ],
         "_filters": [ null ]
     },
