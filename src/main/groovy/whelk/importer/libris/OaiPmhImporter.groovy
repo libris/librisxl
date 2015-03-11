@@ -201,16 +201,15 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
 
                     def entry = ["identifier":recordId,"dataset":this.dataset]
-                    def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
-                    if ("SUPPRESSRECORD" in aList) {
-                        log.debug("Record ${entry.identifier} is suppressed. Next ...")
-                        return
-                    }
-                    log.trace("Checked for suppress record.")
                     recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
                     if (preserveTimestamps) {
                         log.trace("Setting date: $recordDate")
                         entry.put(Document.MODIFIED_KEY, recordDate.getTime())
+                    }
+                    def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
+                    if ("SUPPRESSRECORD" in aList) {
+                        log.debug("Record ${entry.identifier} is suppressed. Next ...")
+                        return
                     }
 
                     String originalIdentifier = null

@@ -29,7 +29,7 @@ class ScheduledOperator extends BasicPlugin {
             def job = new ScheduledJob(task, imp, conf.dataset, whelk)
             try {
                 ses.scheduleWithFixedDelay(job, 30, conf.interval, TimeUnit.SECONDS)
-                log.info("${job.id} will start in 30 seconds.")
+                log.info("${task} will start in 30 seconds.")
             } catch (RejectedExecutionException ree) {
                 log.error("execution failed", ree)
             }
@@ -65,9 +65,9 @@ class ScheduledJob implements Runnable {
         assert dataset
 
         if (whelk.acquireLock(dataset)) {
-            log.debug("Lock acquired for $dataset")
+            log.trace("Lock acquired for $dataset")
         } else {
-            log.debug("[${this.id}] Whelk is busy for dataset $dataset")
+            log.trace("[${this.id}] Whelk is busy for dataset $dataset")
             return
         }
 
@@ -78,11 +78,12 @@ class ScheduledJob implements Runnable {
             Date currentSince
             Date nextSince = new Date()
             if (lastImport) {
-                log.trace("Parsing $dString as date")
+                log.trace("Parsing $lastImport as date")
                 currentSince = Date.parse(DATE_FORMAT, lastImport)
-                nextSince.set(date: currentSince[Calendar.SECOND] + 1)
+                nextSince = new Date(currentSince.getTime())
+                nextSince.set(second: currentSince[Calendar.SECOND] + 1)
+                log.trace("Next since (upped by 1 second): $nextSince")
             } else {
-                nextSince = new Date()
                 def lastWeeksDate = nextSince[Calendar.DATE] - 7
                 nextSince.set(date: lastWeeksDate)
                 currentSince = nextSince
@@ -114,7 +115,7 @@ class ScheduledJob implements Runnable {
             log.error("Something failed: ${e.message}", e)
         } finally {
             whelk.releaseLock(dataset)
-            log.debug("Lock released for $dataset")
+            log.trace("Lock released for $dataset")
         }
     }
 
