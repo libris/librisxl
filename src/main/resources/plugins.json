@@ -375,6 +375,9 @@
             "jsonld2marcxmlconverter"
         ]
     },
+    "termreducer" : {
+        "_class" : "whelk.plugin.libris.JsonLdTermReducer"
+    },
     "linkexpander" : {
         "_class" : "whelk.plugin.libris.JsonLDLinkExpander",
         "_plugins" : [
@@ -611,7 +614,7 @@
     },
     "elasticprocessor": {
         "_class": "whelk.camel.ElasticRouteProcessor",
-        "_plugins" : ["index", "linkexpander", "cleanupindexconverter" ]
+        "_plugins" : ["index", "linkexpander", "termreducer", "cleanupindexconverter" ]
     },
    "indexroutebuilder": {
         "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",

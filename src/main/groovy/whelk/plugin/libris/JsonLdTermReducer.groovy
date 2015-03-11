@@ -30,8 +30,8 @@ class JsonLdTermReducer extends BasicFilter {
 
         add thing, 'title', thing.instanceTitle?.titleValue
 
-        add thing, 'isbn', thing.identifier.findAll {
-            it.identifierScheme == "/def/identifiers/isbn"
+        add thing, 'isbn', thing.identifier?.findAll {
+            it.identifierScheme?.get("@id") == "/def/identifiers/isbn"
         }.collect {
             it.identifierValue
         }
