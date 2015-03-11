@@ -7,9 +7,18 @@
         "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": true,
         "APIX_HOST": "https://libris.kb.se",
         "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
+        "UPDATE_HOLD_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
         "UPDATE_INTERVAL":1
     },
     "_plugins": {
+        "_camel": [
+            "indexroutebuilder",
+            "apixroutebuilder"
+            ],
+        "_components": [
+            "jsonldstorage",
+            "index"
+        ]
     },
     "_apis": [
         { "/_remotesearch": "remotesearch" },
