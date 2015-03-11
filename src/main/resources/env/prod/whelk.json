@@ -1,6 +1,5 @@
 {
     "_properties": {
-        "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
         "GRAPHSTORE_DATA_URI": "http://hp04.libris.kb.se:8890/sparql-graph-crud",
         "GRAPHSTORE_QUERY_URI": "http://hp04.libris.kb.se:8890/sparql",
         "GRAPHSTORE_UPDATE_URI": "http://hp04.libris.kb.se:8890/sparql-auth",
@@ -9,15 +8,14 @@
         "APIX_HOST": "https://libris.kb.se",
         "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
         "UPDATE_HOLD_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
-        "UPDATE_INTERVAL":1
+        "UPDATE_INTERVAL":60
     },
     "_plugins": {
         "_camel": [
-            "indexroutebuilder",
-            "apixroutebuilder"
+            "indexroutebuilder"
         ],
         "_components": [
-            "jsonldstorage",
+            "postgrestorage",
             "index"
         ]
     },
