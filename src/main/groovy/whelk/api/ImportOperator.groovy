@@ -98,8 +98,9 @@ class ImportOperator extends AbstractOperator {
                     whelkState.remove("lastImportOperator")
                     whelkState.remove("lastRunNrImported")
                     whelk.updateState(ds, whelkState)
-                    Date dateStamp = new Date()
-                    int dsImportCount = importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
+                    def result = importer.doImport(ds, resumptionToken, numToImport, true, picky, since)
+                    int dsImportCount = result.numberOfDocuments
+                    Date dateStamp = result.lastRecordDatestamp
                     totalCount = totalCount + dsImportCount
                     if (dsImportCount > 0) {
                         log.info("Imported $dsImportCount document for $ds.")
@@ -123,8 +124,8 @@ class ImportOperator extends AbstractOperator {
                 } catch (MissingMethodException mme) {
                     log.trace("Importer has no startAt parameter.")
                 }
-                totalCount = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
-
+                def result = importer.doImport(dataset, numToImport, true, picky, new URI(serviceUrl))
+                totalCount = result.numberOfDocuments
             }
         } finally {
             importer = null // Release
@@ -134,7 +135,9 @@ class ImportOperator extends AbstractOperator {
         }
     }
 
-    int getCount() { (importer ? importer.recordCount : totalCount) }
+    int getCount() { 
+        return (importer ? importer.recordCount : totalCount) 
+    }
 
     @Override
     void cancel() {

@@ -137,7 +137,10 @@ class SetUpdatedStatusStep implements MarcFramePostProcStep {
     String updatedProperty
 
     void modify(Map record, Map thing) {
-        def flag = record[statusFlag][ID]
+        def flagObj = record[statusFlag]
+        if (flagObj == null)
+            return
+        def flag = flagObj[ID]
         if (flag == statusFlagNewValue || flag == statusFlagUpdatedValue) {
             record.remove(statusFlag)
         }
@@ -150,6 +153,45 @@ class SetUpdatedStatusStep implements MarcFramePostProcStep {
         if (!record.containsKey(statusFlag)) {
             record[statusFlag] = [(ID): flag]
         }
+    }
+
+}
+
+
+class MappedPropertyStep implements MarcFramePostProcStep {
+
+    String type
+    String sourceEntity
+    String sourceLink
+    String sourceProperty
+    String targetEntity
+    String targetProperty
+    Map<String, String> valueMap
+
+    /**
+     * Sets computed value if missing. Overrides any given value.
+     */
+    void modify(Map record, Map thing) {
+        def source = sourceEntity == "?record"? record : thing
+        def target = targetEntity == "?record"? record : thing
+        def values = source.get(sourceLink)?.get(sourceProperty)
+        if (values instanceof String) {
+            values = [values]
+        }
+        for (value in values) {
+            def mapped = valueMap[value]
+            if (mapped) {
+                target[targetProperty] = mapped
+                break
+            }
+        }
+    }
+
+    /**
+     * Adds computed value by invoking {@link modify}.
+     */
+    void unmodify(Map record, Map thing) {
+        modify(record, thing)
     }
 
 }

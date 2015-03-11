@@ -7,13 +7,6 @@
         "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": true
     },
     "_plugins": {
-        "_camel": [
-            "indexroutebuilder"
-            ],
-        "_components": [
-            "jsonldstorage",
-            "index"
-        ],
         "_maintenance": [ null ]
     },
     "_apis": [

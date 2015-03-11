@@ -1,5 +1,6 @@
 {
     "_properties": {
+        "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
         "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
         "UPDATE_INTERVAL":30
     },

@@ -14,8 +14,15 @@ public interface Storage extends Component {
      * @throws IdentifierException if the Document doesn't have an identifier.
      */
     public boolean store(Document d, boolean withVersioning);
+    /**
+     * Stores an object in this Storage with default versioning settings.
+     * @param d the Document
+     * @return true if the operation was successful.
+     * @throws IdentifierException if the Document doesn't have an identifier.
+     */
     public boolean store(Document d);
-    public void bulkStore(List<Document> documents);
+
+    public void bulkStore(List<Document> documents, String dataset);
     /**
      * Retrieves an object from this Storage.
      * @param identifier the identifier of the object to be retrieved.
@@ -41,6 +48,7 @@ public interface Storage extends Component {
     public boolean handlesContent(String contentType);
 
     public boolean isVersioning();
+    public boolean isReadOnly();
 
     /**
      * List of content-types this storage handles.

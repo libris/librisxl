@@ -75,11 +75,16 @@ class MarcFrameConverter extends BasicFormatConverter {
     String getRequiredContentType() { "application/x-marc-json" }
 
     Document doConvert(final Object record, final Map metaentry) {
-        def source = MarcJSONConverter.toJSONMap(record)
-        def result = runConvert(source, metaentry.meta)
-        log.trace("Created frame: $result")
+        try {
+            def source = MarcJSONConverter.toJSONMap(record)
+            def result = runConvert(source, metaentry.meta)
+            log.trace("Created frame: $result")
 
-        return whelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry)
+            return whelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry)
+        } catch (Exception e) {
+            log.error("Failed marc conversion (${e.message}). Metaentry: $metaentry")
+            throw e
+        }
     }
 
     @Override
@@ -158,6 +163,7 @@ class MarcConversion {
             case 'FoldLinkedProperty': new FoldLinkedPropertyStep(props); break
             case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(props); break
             case 'SetUpdatedStatus': new SetUpdatedStatusStep(props); break
+            case 'MappedProperty': new MappedPropertyStep(props); break
         }
     }
 

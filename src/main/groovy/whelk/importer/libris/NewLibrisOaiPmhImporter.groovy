@@ -3,6 +3,7 @@ package whelk.importer.libris
 import groovy.util.logging.Slf4j as Log
 
 import whelk.*
+import whelk.result.ImportResult
 import whelk.importer.BasicOaiPmhImporter
 import whelk.plugin.*
 
@@ -66,16 +67,16 @@ class NewLibrisOaiPmhImporter extends BasicOaiPmhImporter implements Importer {
     }
 
 
-    int doImport(String ds, int maxNrOfDocsToImport) {
+    ImportResult doImport(String ds, int maxNrOfDocsToImport) {
         return doImport(ds, null, maxNrOfDocsToImport, false, true, null)
     }
 
-    int doImport(String ds, String token, int maxNrOfDocsToImport, boolean silent, boolean picky, Date since = null) {
+    ImportResult doImport(String ds, String token, int maxNrOfDocsToImport, boolean silent, boolean picky, Date since = null) {
         String startUrl = serviceUrl.replace("{dataset}", ds)
         String username = whelk.props.get("oaipmhUsername")
         String password = whelk.props.get("oaipmhPassword")
         parseOaipmh(startUrl, username, password, since)
-        return recordCount
+        return new ImportResult(numberOfDocuments: recordCount)
     }
 
     void init() {}

@@ -1,8 +1,10 @@
 {
     "_properties": {
+        "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
         "APIX_HOST": "https://libris.kb.se",
         "CAMEL_CHANNEL_PREFIX":"lab",
         "UPDATE_OAIPMH_URL":"http://averell.libris.kb.se/vcopy/{dataset}/oaipmh",
+        "UPDATE_HOLD_OAIPMH_URL":"http://averell.libris.kb.se/vcopy/mfhd/oaipmh",
         "UPDATE_INTERVAL": 30
     },
     "_id": "testlibris",

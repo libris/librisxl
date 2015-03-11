@@ -35,7 +35,7 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
         String identifier = message.getHeader("document:identifier")
-        String dataset = message.getHeader("document:identifier")
+        String dataset = message.getHeader("document:dataset")
         String indexName = message.getHeader("whelk:index", shapeComputer.getIndexName())
         message.setHeader("whelk:index", indexName)
         String indexType = (message.getHeader("document:dataset") ?: shapeComputer.calculateTypeFromIdentifier(identifier))
@@ -60,7 +60,7 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
             if (isJsonMessage(message.getHeader("document:metaentry") as String)) {
                 def dataMap = message.getBody(Map.class)
                 for (filter in filters) {
-                    log.trace("Applying filter $filter")
+                    log.trace("Applying filter ${filter.id} on ${identifier} for dataset $dataset")
                     dataMap = filter.doFilter(dataMap, dataset)
                 }
                 dataMap.put("encodedId", elasticId)

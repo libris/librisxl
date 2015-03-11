@@ -73,10 +73,10 @@ class ReindexOperator extends AbstractOperator {
                             }
                         }
                         whelk.notifyCamel(doc, Whelk.BULK_ADD_OPERATION, ["index":indexName])
-                            reindexcount++
+                        reindexcount++
                     } else {
                         log.debug("Document ${doc.identifier} is deleted. Don't try to add it.")
-                            whelk.notifyCamel(doc.identifier, doc.dataset, Whelk.REMOVE_OPERATION, ["index":indexName])
+                        whelk.notifyCamel(doc.identifier, doc.dataset, Whelk.REMOVE_OPERATION, ["index":indexName])
                     }
                 if (cancelled) {
                     break

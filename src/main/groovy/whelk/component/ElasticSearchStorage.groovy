@@ -18,6 +18,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     final static String ELASTIC_STORAGE_TYPE = "document"
     boolean versioning
+    boolean readOnly = false
 
     String indexName
 
@@ -26,6 +27,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
         this.contentTypes = settings.get('contentTypes', null)
         this.indexName = settings.get('indexName', null)
         this.versioning = settings.get('versioning', false)
+        this.readOnly = settings.get('readOnly', false)
         id = componentId
     }
 
@@ -50,6 +52,10 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     @Override
     boolean store(Document doc, boolean withVersioning = versioning) {
+        if (readOnly) {
+            log.debug("Storage is read only. Not saving.")
+            return true
+        }
         try {
             if (versioning && withVersioning) {
                 performExecute(prepareIndexingRequest(doc, null, indexName))
@@ -63,7 +69,11 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     @Override
-    void bulkStore(final List docs) {
+    void bulkStore(final List docs, String dataset) {
+        if (readOnly) {
+            log.debug("Storage is read only. Not saving.")
+            return
+        }
         log.debug("Bulk store requested. Versioning set to $versioning")
         def breq = client.prepareBulk()
         for (doc in docs) {
@@ -242,6 +252,10 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
 
     @Override
     void remove(String identifier, String dataset) {
+        if (readOnly) {
+            log.debug("Storage is read only. Not removing.")
+            return
+        }
         if (!versioning) {
             log.debug("Deleting record at $indexName with id ${toElasticId(identifier)}")
             client.delete(new DeleteRequest(indexName, ELASTIC_STORAGE_TYPE, toElasticId(identifier)))

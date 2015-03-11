@@ -29,7 +29,7 @@ class JettyServer {
             return
         }
         if (options.p) {
-            port = options.p
+            port = options.p as int
         }
         if (options.c) {
             contextPath = options.c
@@ -55,13 +55,23 @@ class JettyServer {
         server.setHandler(context)
 
         try {
-            server.start();
-            System.in.read();
-            server.stop();
-            server.join();
+            boolean running = true
+            server.start()
+            while (running) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(System.in))
+                String command = br.readLine()
+                if (command == "stop") {
+                    running = false
+                    println "Stopping jetty server"
+                    server.stop()
+                    server.join()
+                } else {
+                    println "Command: $command (use 'stop' to stop)"
+                }
+            }
         } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(100);
+            e.printStackTrace()
+            System.exit(100)
         }
 
     }
