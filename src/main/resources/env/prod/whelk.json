@@ -14,7 +14,7 @@
         "_camel": [
             "indexroutebuilder",
             "apixroutebuilder"
-            ],
+        ],
         "_components": [
             "jsonldstorage",
             "index"
