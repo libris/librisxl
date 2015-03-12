@@ -279,7 +279,6 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                 }
             } else if (it.header?.@status == 'deleted' || it.header?.@deleted == 'true') {
                 recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
-                log.info("Setting recordDate: $recordDate for delete")
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                     try {
                         whelk.remove(deleteIdentifier, this.dataset)
@@ -301,7 +300,6 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         if (!OAIPMH.ListRecords.resumptionToken.text()) {
             log.trace("Last page is $xmlString")
         }
-        log.info("Returning harvest result with recordDate $recordDate")
         return new HarvestResult(resumptionToken: OAIPMH.ListRecords.resumptionToken, lastRecordDatestamp: recordDate)
     }
 
