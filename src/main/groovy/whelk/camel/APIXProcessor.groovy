@@ -201,6 +201,13 @@ class APIXResponseProcessor extends BasicPlugin implements Processor {
                 docMeta['apixRequestPath'] = message.getHeader('CamelHttpPath').toString()
                 failedDocument.withMeta(docMeta)
                 whelk.add(failedDocument, true)
+                if (xmlresponse.@error_message.toString().endsWith(" error = 203") && xmlresponse.@error_code as int == 2) {
+                    message.setHeader("retry", true)
+                    log.info("Setting retry with next: ${message.getHeader('JMSDetination')}")
+                    message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))
+                } else {
+                    log.info("Error ${xmlresponse.@error_code} (${xmlresponse.@error_message}) is not deemed retryable.")
+                }
             } else {
                 log.info("Received XML response from APIX: $xmlBody")
             }
