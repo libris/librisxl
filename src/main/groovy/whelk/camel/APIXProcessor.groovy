@@ -55,12 +55,14 @@ class APIXProcessor extends BasicPlugin implements Processor {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
             if (!messagePrepared) {
                 def doc = createDocument(message)
-                log.debug("Recreated document from message in preparation for deletion. (${doc?.identifier})")
+                log.debug("Recreated document in preparation for deletion. (${doc?.identifier})")
                 String voyagerUri
                 if (doc instanceof JsonDocument) {
                     voyagerUri = getVoyagerUri(doc)
+                    log.debug("got voyageruri $voyagerUri from doc")
                 } else {
-                    voyagerUri = getVoyagerUri(message.getHeader("whelk:identifier"), message.getHeader("whelk:dataset"))
+                    voyagerUri = getVoyagerUri(message.getHeader("document:identifier"), message.getHeader("document:dataset"))
+                    log.debug("got voyageruri $voyagerUri from headers")
                 }
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
                 if (doc) {
@@ -117,6 +119,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
     }
 
     String getVoyagerUri(String xlIdentifier, String dataset) {
+        log.debug("trying to build voyager uri from $xlIdentifier and $dataset")
         if (xlIdentifier ==~ /\/(auth|bib|hold)\/\d+/) {
             log.debug("Identified apix uri: ${xlIdentifier}")
             return xlIdentifier
@@ -201,7 +204,7 @@ class APIXResponseProcessor extends BasicPlugin implements Processor {
                 docMeta['apixRequestPath'] = message.getHeader('CamelHttpPath').toString()
                 failedDocument.withMeta(docMeta)
                 whelk.add(failedDocument, true)
-                if (xmlresponse.@error_message.toString().endsWith(" error = 203") && xmlresponse.@error_code as int == 2) {
+                if (xmlresponse.@error_message.toString().endsWith(" error = 203") && xmlresponse.@error_code.toString() == "2") {
                     message.setHeader("retry", true)
                     log.info("Setting retry with next: ${message.getHeader('JMSDetination')}")
                     message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))
