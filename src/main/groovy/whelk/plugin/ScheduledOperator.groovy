@@ -99,7 +99,6 @@ class ScheduledJob implements Runnable {
             int totalCount = result.numberOfDocuments
             if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0) {
                 log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $dataset.")
-                log.info("lastRecordDatestamp: ${result.lastRecordDatestamp}")
                 whelkState.put("lastImportNrImported", result.numberOfDocuments)
                 whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
                 whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))

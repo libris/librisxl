@@ -33,7 +33,7 @@ class JsonLdTermReducer extends BasicFilter {
         add thing, 'isbn', thing.identifier?.findAll {
             it.identifierScheme?.get("@id") == "/def/identifiers/isbn"
         }.collect {
-            it.identifierValue
+            it.identifierValue?.replaceAll("-", "")
         }
 
         add thing, 'creator', ['attributedTo', 'influencedBy'].collect {
