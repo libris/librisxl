@@ -200,7 +200,7 @@ class APIXResponseProcessor extends BasicPlugin implements Processor {
                 docMeta['apixErrorMessage'] = xmlresponse.@error_message as String
                 docMeta['apixRequestPath'] = message.getHeader('CamelHttpPath').toString()
                 failedDocument.withMeta(docMeta)
-                whelk.add(failedDocument, false)
+                whelk.add(failedDocument, true)
             } else {
                 log.info("Received XML response from APIX: $xmlBody")
             }
