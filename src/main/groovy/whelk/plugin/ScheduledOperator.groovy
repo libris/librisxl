@@ -97,17 +97,18 @@ class ScheduledJob implements Runnable {
             def result = importer.doImport(dataset, null, -1, true, true, nextSince)
 
             int totalCount = result.numberOfDocuments
-            if (totalCount > 0) {
-                log.info("Imported $totalCount document for $dataset.")
-                whelkState.put("lastImportNrImported", totalCount)
+            if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0) {
+                log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $dataset.")
+                whelkState.put("lastImportNrImported", result.numberOfDocuments)
+                whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
                 whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
             } else {
-                log.debug("Imported $totalCount document for $dataset.")
+                log.debug("Imported ${result.numberOfDocuments} document for $dataset.")
                 whelkState.put("lastImport", currentSince.format(DATE_FORMAT))
             }
             whelkState.remove("importOperator")
             whelkState.put("status", "IDLE")
-            whelkState.put("lastRunNrImported", totalCount)
+            whelkState.put("lastRunNrImported", result.numberOfDocuments)
             whelkState.put("lastRun", new Date().format(DATE_FORMAT))
             whelk.updateState(dataset, whelkState)
 
