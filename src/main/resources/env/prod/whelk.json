@@ -8,7 +8,7 @@
         "APIX_HOST": "https://libris.kb.se",
         "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
         "UPDATE_HOLD_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
-        "UPDATE_INTERVAL":60
+        "UPDATE_INTERVAL":1
     },
     "_plugins": {
         "_camel": [
