@@ -1,5 +1,9 @@
 {
     "date_detection" : false,
+    "_id" : {
+        "type": "string",
+        "path": "encodedId"
+    },
     "_timestamp" : {
         "enabled" : true,
         "store" : true

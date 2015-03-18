@@ -1,5 +1,6 @@
 {
     "_properties": {
+        "CAMEL_CHANNEL_PREFIX":"prodops",
         "GRAPHSTORE_DATA_URI": "http://hp04.libris.kb.se:8890/sparql-graph-crud",
         "GRAPHSTORE_QUERY_URI": "http://hp04.libris.kb.se:8890/sparql",
         "GRAPHSTORE_UPDATE_URI": "http://hp04.libris.kb.se:8890/sparql-auth",

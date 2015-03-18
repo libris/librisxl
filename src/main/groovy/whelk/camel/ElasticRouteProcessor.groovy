@@ -65,7 +65,7 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
                     log.trace("Applying filter ${filter.id} on ${identifier} for dataset $dataset")
                     dataMap = filter.doFilter(dataMap, dataset)
                 }
-                //dataMap.put("encodedId", elasticId)
+                dataMap.put("encodedId", elasticId)
                 message.setBody(dataMap)
             } else {
                 log.debug("Message body is not json, sending message to stub.")
