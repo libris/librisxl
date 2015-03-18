@@ -27,11 +27,12 @@ class XInfoRouteProcessor extends BasicPlugin implements Processor {
         def identifier = exchange.getIn().getHeader("document:identifier")
         identifier = identifier.substring(1).replaceAll(/\//, ":")
 
-        def boobId = data.get("annotates").get("@id")
-        if (boobId.startsWith("/resource/")) {
+        def bookId = data.get("annotates").get("@id")
+        if (bookId.startsWith("/resource/")) {
             idField = "derivedFrom.@id"
         } else {
-            idField = "isbn" //boobId.substring(9)
+            idField = "isbn"
+            bookId = bookId.substring(9)
         }
 
 
@@ -43,7 +44,7 @@ class XInfoRouteProcessor extends BasicPlugin implements Processor {
         HttpPost post = new HttpPost(cherryElasticUrl)
         Map query = [
                 "query": [
-                        "term" : [ (idField) : boobId ]
+                        "term" : [ (idField) : value ]
                 ]
         ]
         post.setEntity(new StringEntity(mapper.writeValueAsString(query)))
