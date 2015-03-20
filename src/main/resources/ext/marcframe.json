@@ -5083,8 +5083,16 @@
     "855": {},
 
     "856": {
-      "addLink": "isPrimaryTopicOf", "resourceType": "Document",
+      "addLink": true,
       "TODO:i1": {
+        "0": "mailto:",
+        "1": "ftp:",
+        "2": "telnet:",
+        "3": "tel:",
+        "4": "http:",
+        "7": "$2"
+      },
+      "i1": {
         "marcDefault": "4"
       },
       "match-i2": {
@@ -5103,7 +5111,21 @@
         "addProperty": "cataloguersNote", "uriTemplate": "{+_}"
       },
       "$y": {"property": "altLabel"},
-      "$z": {"addProperty": "copyNote"}
+      "$z": {"addProperty": "copyNote"},
+      "_spec": [
+        {
+          "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/page"}]}},
+          "result": {"about": {
+            "isPrimaryTopicOf": [{"@type": "Document", "@id": "http://example.org/page"}]
+          }}
+        },
+        {
+          "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.org/page"}]}},
+          "result": {"about": {
+            "associatedMedia": [{"@type": "MediaObject", "@id": "http://example.org/page"}]
+          }}
+        }
+      ]
     },
 
     "863": {},
