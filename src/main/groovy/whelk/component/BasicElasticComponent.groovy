@@ -123,6 +123,7 @@ abstract class BasicElasticComponent extends BasicComponent implements ShapeComp
         def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
     }
 
+    /*
     void index(final List<Map<String,String>> data) throws WhelkIndexException  {
         def breq = client.prepareBulk()
         for (entry in data) {
@@ -162,7 +163,9 @@ abstract class BasicElasticComponent extends BasicComponent implements ShapeComp
         def response = performExecute(client.prepareDelete(indexName, indexType, toElasticId(identifier)))
         log.debug("Deleted ${response.id} with type ${response.type} from ${response.index}. Document found: ${response.found}")
     }
+    */
 
+    @Deprecated
     void checkTypeMapping(indexName, indexType) {
         log.debug("Checking mappings for index $indexName, type $indexType")
         def mappings = performExecute(client.admin().cluster().prepareState()).state.metaData.index(indexName).getMappings()
@@ -173,6 +176,7 @@ abstract class BasicElasticComponent extends BasicComponent implements ShapeComp
         }
     }
 
+    @Deprecated
     protected void setTypeMapping(indexName, itype) {
         log.info("Creating mappings for $indexName/$itype ...")
         //XContentBuilder mapping = jsonBuilder().startObject().startObject("mappings")
