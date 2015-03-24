@@ -10,14 +10,6 @@
                 "type" : "custom",
                 "tokenizer" : "lowercase",
                 "filter" : "custom_edge_ngram"
-            },
-            "fulltext_analyzer": {
-                "type": "custom",
-                "tokenizer": "whitespace",
-                "filter": [
-                    "lowercase",
-                    "type_as_payload"
-                ]
             }
         },
         "filter" : {

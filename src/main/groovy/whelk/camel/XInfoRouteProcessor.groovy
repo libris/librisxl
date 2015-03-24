@@ -36,7 +36,7 @@ class XInfoRouteProcessor extends BasicPlugin implements Processor {
 
         def bookId = data.get("annotates").get("@id")
         if (bookId.startsWith("/resource/")) {
-            idField = "derivedFrom.@id"
+            idField = "wasDerivedFrom.@id"
         } else {
             idField = "isbn"
             bookId = bookId.substring(9)
