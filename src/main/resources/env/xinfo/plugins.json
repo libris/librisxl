@@ -8,6 +8,11 @@
       "_plugins": [ "index" ],
       "_params" : {
         "cherryElasticUrl": "localhost:9200/cherry"
+        "elasticCluster": "fiolelis",
+        "elasticHost": "localhost",
+        "indexType" : "annotation",
+        "indexName" : "cherry",
+        "elasticPort" : 9300
       }
 
     },
@@ -21,3 +26,4 @@
         }
     }
 }
+
