@@ -20,6 +20,8 @@ class ElasticSearchStorage extends ElasticSearch implements Storage {
     boolean versioning
     boolean readOnly = false
 
+    int batchUpdateSize = 2000
+
     def es_settings, defaultMapping
     String indexName
 
