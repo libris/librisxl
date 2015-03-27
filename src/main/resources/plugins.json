@@ -1,6 +1,7 @@
 {
     "elasticnode": {
-        "_class": "whelk.component.support.ElasticSearchNode"
+        "_class": "whelk.component.support.ElasticSearchNode",
+        "_params": "work/data,libris_index"
     },
     "activemqbroker": {
         "_class": "whelk.component.support.ActiveMQBroker"
