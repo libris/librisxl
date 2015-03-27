@@ -5914,10 +5914,12 @@
       "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {
         "property": "classificationPart",
+        "TODO:property": "shelfMark? only for HeldItem?",
         "NOTE": "libris deviates from standard (used for all kinds of shelfControlNumber?)"
       },
       "$i": {
         "addProperty": "availability",
+        "TODO:property": "change to copyNote?",
         "NOTE": "deviates from standard (itemPart)?",
         "TODO": "optional controlled values (see websearch holdings interface)"
       },
@@ -5932,7 +5934,10 @@
       "$t": {"property": "copyNumber"},
       "$u": {"addProperty": "url"},
       "$x": {"addProperty": "cataloguersNote"},
-      "$z": {"addProperty": "copyNote"}
+      "$z": {
+        "addProperty": "copyNote",
+        "TODO:property": "change to comment?"
+      }
     },
 
     "856": {
