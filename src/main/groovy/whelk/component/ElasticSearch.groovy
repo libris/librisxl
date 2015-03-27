@@ -52,7 +52,7 @@ class ElasticSearchClient extends ElasticSearch implements Index {
 }
 
 @Log
-abstract class ElasticSearch extends BasicElasticComponent implements Index {
+abstract class ElasticSearch extends BasicComponent implements Index {
 
     String defaultType = "record"
     Map<String,String> configuredTypes
@@ -90,6 +90,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         return this.whelk.id + indexNameSuffix
     }
 
+    /*
     String getLatestIndex(String prefix) {
         def indices = performExecute(client.admin().cluster().prepareState()).state.metaData.indices
         def li = new TreeSet<String>()
@@ -122,6 +123,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
         log.debug("Resetting alias \"$indexAlias\" from \"$oldIndex\" to \"$currentIndex\".")
         performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexAlias).removeAlias(oldIndex, indexAlias))
     }
+    */
 
 
     @Override

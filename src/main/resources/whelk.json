@@ -1,8 +1,7 @@
 {
     "_properties": {
-        "ELASTIC_SEARCH_HOST": "hp01.libris.kb.se",
+        "ELASTIC_SEARCH_HOST": "hp01.libris.kb.se:9300",
         "ELASTIC_CLUSTER": "whelks",
-        "ELASTIC_PORT": 9300,
         "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],
         "ACTIVEMQ_BROKER_URL": "tcp://hp04.libris.kb.se:61616?wireFormat.maxInactivityDuration=3600000",
         "MQ_INDEX": "activemq:{whelkname}.index?concurrentConsumers=10",

@@ -43,7 +43,7 @@ abstract class BasicElasticComponent extends BasicComponent implements ShapeComp
         if (!elasticcluster) {
             this.elasticcluster = System.getProperty("elastic.cluster", DEFAULT_CLUSTER)
         }
-        this.elasticport = settings.get('elasticPort', System.getProperty("elastic.port", ""+elasticport)) as int
+        //this.elasticport = settings.get('elasticPort', System.getProperty("elastic.port", ""+elasticport)) as int
         this.batchUpdateSize = settings.get('batchUpdateSize', batchUpdateSize)
         this.defaultType = settings.get("defaultType", DEFAULT_TYPE)
         connectClient()
@@ -51,7 +51,7 @@ abstract class BasicElasticComponent extends BasicComponent implements ShapeComp
 
     void connectClient() {
         if (elastichost) {
-            log.info("Connecting to $elastichost:$elasticport using cluster $elasticcluster")
+            log.info("Connecting to $elasticcluster using hosts $elastichost")
             def sb = ImmutableSettings.settingsBuilder()
                 .put("client.transport.ping_timeout", 30000)
                 .put("client.transport.sniff", true)
@@ -59,7 +59,14 @@ abstract class BasicElasticComponent extends BasicComponent implements ShapeComp
                 sb = sb.put("cluster.name", elasticcluster)
             }
             Settings elasticSettings = sb.build();
-            client = new TransportClient(elasticSettings).addTransportAddress(new InetSocketTransportAddress(elastichost, elasticport))
+            client = new TransportClient(elasticSettings)
+            elastichost.split(",").each {
+                def (host, port) = it.split(":")
+                if (!port) {
+                    port = 9300
+                }
+                client = client.addTransportAddress(new InetSocketTransportAddress(host, port))
+            }
             log.debug("... connected")
         } else {
             throw new WhelkRuntimeException("Unable to initialize ${this.id}. Need to configure plugins.json or set system property \"elastic.host\" and possibly \"elastic.cluster\".")
