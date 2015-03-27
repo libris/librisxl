@@ -56,7 +56,7 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
     }
 
     Processor getElasticProcessor() {
-        ElasticRouteProcessor ep = getPlugin("elasticprocessor")
+        Processor ep = getPlugin("elasticprocessor")
         if (!ep) {
             assert whelk
             ep = ElasticRouteProcessor.getInstance()

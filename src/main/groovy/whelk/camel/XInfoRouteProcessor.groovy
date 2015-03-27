@@ -1,5 +1,7 @@
 package whelk.camel
 
+import groovy.util.logging.Slf4j as Log
+
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
 import org.apache.http.client.HttpClient
@@ -11,8 +13,9 @@ import whelk.Whelk
 import whelk.plugin.BasicPlugin
 
 /**
- * Created by markus on 19/02/15.
+ * Created by lisa on 19/02/15.
  */
+@Log
 class XInfoRouteProcessor extends BasicPlugin implements Processor {
 
     XInfoRouteProcessor(Map settings) {
@@ -30,34 +33,41 @@ class XInfoRouteProcessor extends BasicPlugin implements Processor {
 
     @Override
     void process(Exchange exchange) throws Exception {
-        Map data = exchange.getIn().getBody(Map.class)
-        def identifier = exchange.getIn().getHeader("document:identifier")
-        identifier = identifier.substring(1).replaceAll(/\//, ":")
+        if (isJsonMessage(exchange.getIn().getHeader("document:metaentry") as String)) {
+            Map data = exchange.getIn().getBody(Map.class)
+            def identifier = exchange.getIn().getHeader("document:identifier")
+            identifier = identifier.substring(1).replaceAll(/\//, ":")
 
-        def bookId = data.get("annotates").get("@id")
-        if (bookId.startsWith("/resource/")) {
-            idField = "wasDerivedFrom.@id"
+            def bookId = data.get("annotates").get("@id")
+            String idField
+            if (bookId.startsWith("/resource/")) {
+                idField = "wasDerivedFrom.@id"
+
+            } else {
+                idField = "isbn"
+                bookId = bookId.substring(9)
+            }
+            String operation = exchange.getIn().getHeader("whelk:operation")
+            if (operation == Whelk.ADD_OPERATION) {
+                operation = "INDEX"
+            }
+            if (operation == Whelk.BULK_ADD_OPERATION) {
+                operation = "BULK_INDEX"
+            }
+            def parentId = findParentId(idField, bookId)
+            if (parentId){
+                log.info("Found a parent! $bookId -> $parentId")
+                exchange.getIn().setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexType=${indexType}&indexName=${indexName}")
+                exchange.getIn().setHeader("indexId", identifier)
+                exchange.getIn().setHeader("parentId", parentId)
+            } else {
+                log.trace("Couldn't find parent record for identifier $identifier (${bookId})")
+                exchange.getIn().setHeader("elasticDestination", "stub:discard")
+        }
         } else {
-            idField = "isbn"
-            bookId = bookId.substring(9)
-        }
-        String operation = message.getHeader("whelk:operation")
-        if (operation == Whelk.ADD_OPERATION) {
-            operation = "INDEX"
-        }
-        if (operation == Whelk.BULK_ADD_OPERATION) {
-            operation = "BULK_INDEX"
-        }
-        def parentId = findParentId(idField, bookId)
-        if (parentId){
-            exchange.getIn().setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexType=${indexType}&indexName=${indexName}")
-            exchange.getIn().setHeader("indexId", identifier)
-            exchange.getIn().setHeader("parentId", parentId)
-        } else {
+            log.debug("Message body is not json, sending message to stub.")
             exchange.getIn().setHeader("elasticDestination", "stub:discard")
         }
-
-
     }
 
     String findParentId(String idField, String value){
@@ -71,6 +81,16 @@ class XInfoRouteProcessor extends BasicPlugin implements Processor {
         post.setEntity(new StringEntity(mapper.writeValueAsString(query)))
         def response = client.execute(post)
         def json = mapper.readValue(response.entity.getContent(), Map.class)
-        return json.get('hits').get('hits').first().get('_id')
+        try {
+            return json.get('hits').get('hits').first().get('_id')
+        } catch (NoSuchElementException nsee) {
+            return null
+        }
+    }
+
+    boolean isJsonMessage(String json) {
+        def metaentry = mapper.readValue(json, Map)
+        def ctype = metaentry.entry.contentType
+        ctype ==~ /application\/(\w+\+)*json/ || ctype ==~ /application\/x-(\w+)-json/
     }
 }

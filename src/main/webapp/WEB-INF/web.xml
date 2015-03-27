@@ -29,7 +29,7 @@
         </init-param>
         <init-param>
             <param-name>filterOnPorts</param-name>
-            <param-value>80,8080</param-value>
+            <param-value>80</param-value>
         </init-param>
     </filter>
 
