@@ -102,11 +102,11 @@ def reindex(**args):
                 identifier = row[0]
                 dataset = row[1]
                 stored_json = json.loads(bytes(row[2]).decode("utf-8"))
-                index_json = filter(stored_json, dataset, es)
-                docs.append({ '_index': 'l2', '_type': dataset, '_id' : bytes.decode(base64.urlsafe_b64encode(bytes(identifier, 'UTF-8'))) , '_source': index_json })
+                index_json = stored_json # filter(stored_json, dataset, es)
+                docs.append({ '_index': args['index'], '_type': dataset, '_id' : bytes.decode(base64.urlsafe_b64encode(bytes(identifier, 'UTF-8'))) , '_source': index_json })
                 jsoncounter += 1
             except Exception as e:
-                print("Failed to convert row {0} to json".format(identifier), e.message)
+                print("Failed to convert row {0} to json".format(identifier), e)
 
         r = bulk(es, docs)
 
@@ -121,6 +121,7 @@ if __name__ == "__main__":
     parser.add_argument('--es', help='Elasticsearch connect url', default='localhost:9200', nargs='+')
     parser.add_argument('--pg', help='Postgres connection url', default='pg://localhost/whelk')
     parser.add_argument('--ds', help='Which dataset to reindex')
+    parser.add_argument('--index', help='Which index to save to', required=True)
 
     try:
         args = vars(parser.parse_args())
