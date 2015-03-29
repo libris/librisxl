@@ -6,13 +6,16 @@ import psycopg2
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 
-def loadexpansiondata(identifier, es, dataset, source):
+args = None
+es = None
+
+def loadexpansiondata(identifier, dataset, source):
     query = {
         "query": {
             "term" : { "about.@id" : identifier }
         }
     }
-    result  = es.search(index='libris_index',
+    result  = es.search(index=args['index'],
                        doc_type=dataset,
                        _source=source,
                        size=1,
@@ -25,7 +28,7 @@ def loadexpansiondata(identifier, es, dataset, source):
     return None
 
 
-def linkexpand(about, es):
+def linkexpand(about):
     try:
         for (key,value) in about.items():
             if key in ['attributedTo','influencedBy','author','language','originalLanguage','literaryForm','publicationCountry']:
@@ -35,9 +38,9 @@ def linkexpand(about, es):
                     identifier = item.get('@id')
                     expansion = None
                     if identifier and identifier.startswith('/resource/'):
-                        expansion = loadexpansiondata(identifier, es, 'auth', [ "about.@id", "about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName" ])
+                        expansion = loadexpansiondata(identifier, 'auth', [ "about.@id", "about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName" ])
                     if identifier and identifier.startswith('/def/'):
-                        expansion = loadexpansiondata(identifier, es, 'def', [ "about.*" ])
+                        expansion = loadexpansiondata(identifier, 'def', [ "about.*" ])
 
                     expandeditems.append(expansion if expansion else item)
 
@@ -45,18 +48,16 @@ def linkexpand(about, es):
 
     except Exception as e:
         print("Problem link expanding doc", e)
-        raise
 
     return about
 
 
-def filter(jsondata, dataset, es):
-    # First filter: term reduce
+def filter(jsondata, dataset):
     about = jsondata['about']
-    if not about or dataset == 'def' or dataset == 'auth':
+    if not about or dataset in ['auth','hold','sys','def']:
         return jsondata
 
-    about = linkexpand(about, es)
+    about = linkexpand(about)
 
     try:
         if 'attributedTo' in about:
@@ -68,21 +69,19 @@ def filter(jsondata, dataset, es):
         about['title'] = about['instanceTitle']['titleValue']
     except Exception as e:
         print("Problem with term reducing", e)
-        raise
 
     jsondata['about'] = about
 
     return jsondata
 
 def reindex(**args):
-    es = Elasticsearch(args['es'], sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60)
     con = psycopg2.connect(database='whelk')
     cur = con.cursor()
 
     if args['ds']:
-        query = "SELECT identifier,dataset,data FROM libris WHERE dataset = '{0}'".format(args['ds'])
+        query = "SELECT identifier,dataset,data FROM libris WHERE dataset = '%s' AND  NOT entry @> '{ \"deleted\" : true }'" % args['ds']
     else:
-        query = "SELECT identifier,dataset,data FROM libris"
+        query = "SELECT identifier,dataset,data FROM libris WHERE NOT entry @> '{ \"deleted\" : true }'"
 
     cur.execute(query)
     print("Query executed, start reading rows.")
@@ -102,7 +101,7 @@ def reindex(**args):
                 identifier = row[0]
                 dataset = row[1]
                 stored_json = json.loads(bytes(row[2]).decode("utf-8"))
-                index_json = stored_json # filter(stored_json, dataset, es)
+                index_json = filter(stored_json, dataset)
                 docs.append({ '_index': args['index'], '_type': dataset, '_id' : bytes.decode(base64.urlsafe_b64encode(bytes(identifier, 'UTF-8'))) , '_source': index_json })
                 jsoncounter += 1
             except Exception as e:
@@ -114,8 +113,6 @@ def reindex(**args):
     print("All {0} rows read. {1} where json data.".format(counter, jsoncounter))
 
 
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='LIBRISXL reindexer')
     parser.add_argument('--es', help='Elasticsearch connect url', default='localhost:9200', nargs='+')
@@ -125,6 +122,7 @@ if __name__ == "__main__":
 
     try:
         args = vars(parser.parse_args())
+        es = Elasticsearch(args['es'], sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60)
     except:
         exit(1)
 
