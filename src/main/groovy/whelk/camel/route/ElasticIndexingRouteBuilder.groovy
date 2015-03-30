@@ -6,6 +6,7 @@ import whelk.*
 import whelk.camel.*
 
 import org.apache.camel.*
+import org.apache.camel.component.elasticsearch.aggregation.BulkRequestAggregationStrategy
 
 class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
 
@@ -33,6 +34,8 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
 
     void configure() {
 
+        BulkRequestAggregationStrategy aggStrat = new BulkRequestAggregationStrategy()
+
         if (reindexProcessor) {
             from(messageQueue) // Also removeQueue (configured to same)
                 .multicast().to("seda:q1", "seda:q2")
@@ -51,7 +54,7 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
 
         from(bulkMessageQueue)
                 .process(elasticTypeRouteProcessor)
-                .aggregate(header("document:dataset"), ArrayListAggregationStrategy.getInstance()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
+                .aggregate(header("document:dataset"), aggStrat).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))
     }
 

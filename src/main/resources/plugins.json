@@ -1,6 +1,7 @@
 {
     "elasticnode": {
-        "_class": "whelk.component.support.ElasticSearchNode"
+        "_class": "whelk.component.support.ElasticSearchNode",
+        "_params": "work/data,libris_index"
     },
     "activemqbroker": {
         "_class": "whelk.component.support.ActiveMQBroker"
@@ -661,7 +662,7 @@
             "elasticHost": "_property:ELASTIC_SEARCH_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "availableTypes": "_property:AVAILABLE_TYPES",
-            "indexNameSuffix": "_index",
+            "indexName": "_property:ELASTIC_INDEX_NAME",
             "searchResultClass": "whelk.result.JsonLdSearchResult"
         },
         "_unique" : true

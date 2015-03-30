@@ -5,6 +5,8 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.*
 
+import org.apache.commons.codec.binary.Base64
+
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
 import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.SearchResponse
@@ -52,24 +54,40 @@ class ElasticSearchClient extends ElasticSearch implements Index {
 }
 
 @Log
-abstract class ElasticSearch extends BasicElasticComponent implements Index {
+abstract class ElasticSearch extends BasicComponent implements Index, ShapeComputer {
 
+    static final String METAENTRY_INDEX_TYPE = "entry"
+    static final String DEFAULT_CLUSTER = "whelks"
+    static final int WARN_AFTER_TRIES = 1000
+    static final int RETRY_TIMEOUT = 300
+    static final int MAX_RETRY_TIMEOUT = 60*60*1000
+    static final String DEFAULT_TYPE = "record"
+
+    Client client
+    String elastichost, elasticcluster
     String defaultType = "record"
+    String defaultIndex = null
+
     Map<String,String> configuredTypes
     List<String> availableTypes
 
-    String indexNameSuffix = ""
 
     Class searchResultClass = null
 
     ElasticSearch(Map settings) {
-        super(settings)
+        this.elastichost = settings.get('elasticHost')
+        if (!elastichost) {
+            this.elastichost = System.getProperty("elastic.host")
+        }
+        this.elasticcluster = settings.get('elasticCluster')
+        if (!elasticcluster) {
+            this.elasticcluster = System.getProperty("elastic.cluster", DEFAULT_CLUSTER)
+        }
+        this.defaultType = settings.get("defaultType", DEFAULT_TYPE)
+        connectClient()
         configuredTypes = (settings ? settings.get("typeConfiguration", [:]) : [:])
         availableTypes = (settings ? settings.get("availableTypes", []) : [])
-        this.indexNameSuffix = (settings ? settings.get("indexNameSuffix", "") : "")
-        if (settings.batchUpdateSize) {
-            this.batchUpdateSize = settings.batchUpdateSize
-        }
+        this.defaultIndex = (settings ? settings.get("indexName") : null)
         if (settings.searchResultClass) {
             this.searchResultClass = Class.forName(settings.searchResultClass)
         }
@@ -77,61 +95,71 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
     @Override
     void componentBootstrap(String whelkName) {
-        String indexName = whelkName + indexNameSuffix
-        createIndexIfNotExists(indexName)
-        flush()
-        def realIndex = getRealIndexFor(indexName)
-        availableTypes.each {
-            checkTypeMapping(realIndex, it)
+        if (!defaultIndex) {
+            this.defaultIndex = whelkName
         }
     }
 
-    String getIndexName() {
-        return this.whelk.id + indexNameSuffix
+    void connectClient() {
+        if (elastichost) {
+            log.info("Connecting to $elasticcluster using hosts $elastichost")
+            def sb = ImmutableSettings.settingsBuilder()
+                .put("client.transport.ping_timeout", 30000)
+                .put("client.transport.sniff", true)
+            if (elasticcluster) {
+                sb = sb.put("cluster.name", elasticcluster)
+            }
+            Settings elasticSettings = sb.build();
+            client = new TransportClient(elasticSettings)
+            try {
+                elastichost.split(",").each {
+                        def (host, port) = it.split(":")
+                        if (!port) {
+                            port = 9300
+                        }
+                        client = client.addTransportAddress(new InetSocketTransportAddress(host, port as int))
+                }
+            } catch (ArrayIndexOutOfBoundsException aioobe) {
+                throw new WhelkRuntimeException("Unable to initialize elasticsearch client. Host configuration might be missing port?")
+            }
+            log.debug("... connected")
+        } else {
+            throw new WhelkRuntimeException("Unable to initialize ${this.id}. Need to configure plugins.json or set system property \"elastic.host\" and possibly \"elastic.cluster\".")
+        }
     }
 
-    String getLatestIndex(String prefix) {
-        def indices = performExecute(client.admin().cluster().prepareState()).state.metaData.indices
-        def li = new TreeSet<String>()
-        for (idx in indices.keys()) {
-            if (idx.value.startsWith(prefix+"-")) {
-                li << idx.value
+    def performExecute(def requestBuilder) {
+        int failcount = 0
+        def response = null
+        while (response == null) {
+            try {
+                response = requestBuilder.execute().actionGet()
+            } catch (NoNodeAvailableException n) {
+                log.trace("Retrying server connection ...")
+                if (failcount++ > WARN_AFTER_TRIES) {
+                    log.warn("Failed to connect to elasticsearch after $failcount attempts.")
+                }
+                if (failcount % 100 == 0) {
+                    log.info("Server is not responsive. Still trying ...")
+                }
+                Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
             }
         }
-        log.debug("Latest index is ${li.last()}")
-        return li.last()
+        return response
     }
 
-    String createNewCurrentIndex(String indexName) {
-        assert (indexName != null)
-        log.info("Creating index ...")
-        es_settings = loadJson("es_settings.json")
-        String currentIndex = "${indexName}-" + new Date().format("yyyyMMdd.HHmmss")
-        log.debug("Will create index $currentIndex.")
-        performExecute(client.admin().indices().prepareCreate(currentIndex).setSettings(es_settings))
-        setTypeMapping(currentIndex, defaultType)
-        availableTypes.each {
-            setTypeMapping(currentIndex, it)
-        }
-        return currentIndex
+    void flush() {
+        log.debug("Flusing ${this.id}")
+        def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
     }
-
-    void reMapAliases(String indexAlias) {
-        String oldIndex = getRealIndexFor(indexAlias)
-        String currentIndex = getLatestIndex(indexAlias)
-        log.debug("Resetting alias \"$indexAlias\" from \"$oldIndex\" to \"$currentIndex\".")
-        performExecute(client.admin().indices().prepareAliases().addAlias(currentIndex, indexAlias).removeAlias(oldIndex, indexAlias))
-    }
-
 
     @Override
     void remove(String identifier, String dataset) {
-        String indexName = getIndexName()
         log.debug("Peforming deletebyquery to remove documents extracted from $identifier")
         def delQuery = termQuery("extractedFrom.@id", identifier)
         log.debug("DelQuery: $delQuery")
 
-        def response = performExecute(client.prepareDeleteByQuery(indexName).setQuery(delQuery))
+        def response = performExecute(client.prepareDeleteByQuery(defaultIndex).setQuery(delQuery))
 
         log.debug("Delbyquery response: $response")
         for (r in response.iterator()) {
@@ -140,14 +168,13 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
 
-        client.delete(new DeleteRequest(indexName, calculateTypeFromIdentifier(identifier), toElasticId(identifier)))
+        client.delete(new DeleteRequest(defaultIndex, calculateTypeFromIdentifier(identifier), toElasticId(identifier)))
 
             // Kanske en matchall-query filtrerad på _type och _id?
     }
 
     @Override
     SearchResult query(Query q) {
-        String indexName = getIndexName()
         def indexTypes = []
         if (q instanceof ElasticQuery) {
             for (t in q.indexTypes) {
@@ -163,7 +190,7 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
             indexTypes = [defaultType]
         }
         log.debug("Assembled indexTypes: $indexTypes")
-        return query(q, indexName, indexTypes as String[])
+        return query(q, defaultIndex, indexTypes as String[])
     }
 
     SearchResult query(Query q, String indexName, String[] indexTypes, Class resultClass = searchResultClass) {
@@ -241,34 +268,53 @@ abstract class ElasticSearch extends BasicElasticComponent implements Index {
 
     Document createResultDocumentFromHit(hit, queriedIndex) {
         log.trace("creating document. ID: ${hit?.id}, index: $queriedIndex")
-        def metaEntryMap = null //getMetaEntry(hit.id, queriedIndex)
-        if (metaEntryMap) {
-            return whelk.createDocument(metaEntryMap?.contentType).withData(hit.source())
-        } else {
-            log.trace("Meta entry not found for document. Will assume application/json for content-type.")
-            return whelk.createDocument("application/json").withData(hit.source()).withIdentifier(fromElasticId(hit.id))
-        }
+        return whelk.createDocument("application/json").withData(hit.source()).withIdentifier(fromElasticId(hit.id))
     }
 
-    private Map getMetaEntry(id, queriedIndex) {
-        //def emei = ".$queriedIndex"
-        def emei = this.whelk.primaryStorage.indexName
-        log.trace("Requested id: $id")
-        id = fromElasticId(id)
-        log.trace("Translated id: $id")
-        try {
-            def grb = new GetRequestBuilder(client, emei).setType(METAENTRY_INDEX_TYPE).setId(toElasticId(id))
-            def result = performExecute(grb)
-            if (result.exists) {
-                return result.sourceAsMap
-            }
-        } catch (org.elasticsearch.indices.IndexMissingException ime) {
-            log.debug("Meta entry index $emei does not exist.")
-        }
-        return null
-    }
-
-    public String getElasticHost() { elastichost }
+    public String getIndexName() { defaultIndex }
+    public String getElasticHost() { elastichost.split(":").first() }
     public String getElasticCluster() { elasticcluster }
-    public int getElasticPort() { elasticport }
+    public int getElasticPort() {
+        try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9300 }
+    }
+
+    /**
+     * ShapeComputer methods
+     */
+
+    String calculateTypeFromIdentifier(String id) {
+        String identifier = new URI(id).path.toString()
+        log.debug("Received uri $identifier")
+        String idxType
+        try {
+            def identParts = identifier.split("/")
+            idxType = (identParts[1] == whelk.id && identParts.size() > 3 ? identParts[2] : identParts[1])
+        } catch (Exception e) {
+            log.error("Tried to use first part of URI ${identifier} as type. Failed: ${e.message}")
+        }
+        if (!idxType) {
+            idxType = defaultType
+        }
+        log.debug("Using type $idxType for ${identifier}")
+        return idxType
+    }
+
+    String toElasticId(String id) {
+        return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
+    }
+
+    String fromElasticId(String id) {
+        if (id.contains("::")) {
+            log.warn("Using old style index id's for $id")
+            def pathelements = []
+            id.split("::").each {
+                pathelements << java.net.URLEncoder.encode(it, "UTF-8")
+            }
+            return  new String("/"+pathelements.join("/"))
+        } else {
+            String decodedIdentifier = new String(Base64.decodeBase64(id), "UTF-8")
+            log.debug("Decoded new style id into $decodedIdentifier")
+            return decodedIdentifier
+        }
+    }
 }

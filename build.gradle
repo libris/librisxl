@@ -107,7 +107,7 @@ dependencies {
     compile "com.netflix.astyanax:astyanax-thrift:1.56.43"
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile "org.apache.camel:camel-core:${camelVersion}"
-    compile "org.apache.camel:camel-elasticsearch:2.16-SNAPSHOT"
+    compile "org.apache.camel:camel-elasticsearch:2.15.0"
     //compile "org.apache.camel:camel-elasticsearch:2.14.2-SNAPSHOT"
     compile "org.apache.camel:camel-jackson:${camelVersion}"
     compile "org.apache.camel:camel-http4:${camelVersion}"

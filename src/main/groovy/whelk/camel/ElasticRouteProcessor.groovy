@@ -8,6 +8,8 @@ import whelk.plugin.*
 
 import org.apache.camel.*
 
+import org.elasticsearch.action.index.IndexRequest
+
 @Log
 class ElasticRouteProcessor extends BasicPlugin implements Processor {
 
@@ -41,7 +43,6 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
         String indexType = (message.getHeader("document:dataset") ?: shapeComputer.calculateTypeFromIdentifier(identifier))
         message.setHeader("whelk:type", indexType)
         String elasticId = shapeComputer.toElasticId(identifier)
-        message.setHeader("elastic:id", elasticId)
         String operation = message.getHeader("whelk:operation")
         if (operation == Whelk.ADD_OPERATION) {
             operation = "INDEX"
@@ -52,8 +53,6 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
         log.debug("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $elasticId)")
 
         message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexType=${indexType}&indexName=${indexName}")
-        message.setHeader("indexId", elasticId)
-        message.setHeader("indexType", indexType)
         log.debug("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
         if (operation == Whelk.REMOVE_OPERATION) {
             log.debug(">>> Setting message body to $elasticId in preparation for REMOVE operation.")
@@ -65,8 +64,10 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
                     log.trace("Applying filter ${filter.id} on ${identifier} for dataset $dataset")
                     dataMap = filter.doFilter(dataMap, dataset)
                 }
-                dataMap.put("encodedId", elasticId)
-                message.setBody(dataMap)
+                //dataMap.put("encodedId", elasticId)
+                //message.setBody(dataMap)
+                def idxReq = new IndexRequest(indexName, indexType, elasticId).source(dataMap)
+                message.setBody(idxReq)
             } else {
                 log.debug("Message body is not json, sending message to stub.")
                 message.setHeader("elasticDestination", "stub:discard")
