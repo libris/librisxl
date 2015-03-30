@@ -13,6 +13,8 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
     String messageQueue, bulkMessageQueue, removeQueue
     int elasticBatchSize = 2000
 
+    final static String VALID_CONTENTTYPE_REGEX = "application\\/(\\w+\\+)*json|application\\/x-(\\w+)-json|text/plain"
+
     Processor reindexProcessor, elasticTypeRouteProcessor
 
     ElasticIndexingRouteBuilder(String ident = null, Map settings) {
@@ -36,6 +38,7 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
 
         BulkRequestAggregationStrategy aggStrat = new BulkRequestAggregationStrategy()
 
+        // TODO: Check this. Will reindex consume messages for regular indexing?
         if (reindexProcessor) {
             from(messageQueue) // Also removeQueue (configured to same)
                 .multicast().to("seda:q1", "seda:q2")
@@ -48,11 +51,13 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
                     .end()
         } else {
             from(messageQueue)
+                .filter(header("document:contentType").regex(VALID_CONTENTTYPE_REGEX))
                 .process(elasticTypeRouteProcessor)
                 .routingSlip(header("elasticDestination"))
         }
 
         from(bulkMessageQueue)
+                .filter(header("document:contentType").regex(VALID_CONTENTTYPE_REGEX))
                 .process(elasticTypeRouteProcessor)
                 .aggregate(header("document:dataset"), aggStrat).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))

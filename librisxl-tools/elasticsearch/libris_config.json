@@ -38,7 +38,7 @@
                                     "index": "analyzed",
                                     "type": "string"
                                 },
-                                "untouched": {
+                                "raw": {
                                     "index": "not_analyzed",
                                     "type": "string"
                                 }
@@ -53,7 +53,7 @@
                     "allLabel_template": {
                         "mapping": {
                             "fields": {
-                                "untouched": {
+                                "raw": {
                                     "index": "not_analyzed",
                                     "type": "string"
                                 },
@@ -76,7 +76,7 @@
                                     "index": "analyzed",
                                     "type": "string"
                                 },
-                                "untouched": {
+                                "raw": {
                                     "index": "not_analyzed",
                                     "type": "string"
                                 }
@@ -91,7 +91,7 @@
                     "scheme_template": {
                         "mapping": {
                             "fields": {
-                                "untouched": {
+                                "raw": {
                                     "index": "not_analyzed",
                                     "type": "string"
                                 },
@@ -110,7 +110,7 @@
                     "name_template": {
                         "mapping": {
                             "fields": {
-                                "untouched": {
+                                "raw": {
                                     "index": "not_analyzed",
                                     "type": "string"
                                 },
@@ -129,7 +129,7 @@
                     "value_template": {
                         "mapping": {
                             "fields": {
-                                "untouched": {
+                                "raw": {
                                     "index": "not_analyzed",
                                     "type": "string"
                                 },
@@ -148,7 +148,7 @@
                     "title_template": {
                         "mapping": {
                             "fields": {
-                                "untouched": {
+                                "raw": {
                                     "index": "not_analyzed",
                                     "type": "string"
                                 },
@@ -247,7 +247,7 @@
                                             "index_analyzer": "completer",
                                             "type": "string"
                                         },
-                                        "untouched": {
+                                        "raw": {
                                             "index": "not_analyzed",
                                             "type": "string"
                                         }
@@ -264,7 +264,7 @@
                                             "index_analyzer": "completer",
                                             "type": "string"
                                         },
-                                        "untouched": {
+                                        "raw": {
                                             "index": "not_analyzed",
                                             "type": "string"
                                         }

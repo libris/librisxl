@@ -466,20 +466,20 @@ class StandardWhelk implements Whelk {
 
     @Override
     void notifyCamel(String identifier, String dataset, String operation, Map extraInfo) {
-        Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, identifier, extraInfo)
+        Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, "text/plain", identifier, extraInfo)
         log.trace("Sending $operation message to camel regaring ${identifier}")
         sendCamelMessage(operation, exchange)
     }
 
     @Override
     void notifyCamel(Document document, String operation, Map extraInfo) {
-        Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
+        Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, document.contentType, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
         log.trace("Sending document in message to camel regaring ${document.identifier} with operation $operation")
         exchange.getIn().setHeader("document:metaentry", document.metadataAsJson)
         sendCamelMessage(operation, exchange)
     }
 
-    private Exchange createAndPrepareExchange(String identifier, String dataset, String operation, Object messageBody, Map extraInfo) {
+    private Exchange createAndPrepareExchange(String identifier, String dataset, String operation, String contentType, Object messageBody, Map extraInfo) {
         Exchange exchange = new DefaultExchange(getCamelContext())
         Message message = new DefaultMessage()
 
@@ -491,6 +491,7 @@ class StandardWhelk implements Whelk {
         message.setHeader("whelk:operation", operation)
         message.setHeader("document:identifier", identifier)
         message.setHeader("document:dataset", dataset)
+        message.setHeader("document:contentType", contentType)
 
         message.setBody(messageBody)
         exchange.setIn(message)
