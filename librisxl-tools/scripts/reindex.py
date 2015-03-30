@@ -53,9 +53,10 @@ def linkexpand(about):
 
 
 def filter(jsondata, dataset):
-    about = jsondata['about']
-    if not about or dataset in ['auth','hold','sys','def']:
+    if not 'about' in jsondata or dataset in ['auth','hold','sys','def']:
         return jsondata
+
+    about = jsondata['about']
 
     about = linkexpand(about)
 
@@ -98,16 +99,17 @@ def reindex(**args):
         for row in results:
             counter += 1
             try:
-                identifier = row[0]
+                identifier = base64.urlsafe_b64encode(row[0])
                 dataset = row[1]
                 stored_json = json.loads(bytes(row[2]).decode("utf-8"))
                 index_json = filter(stored_json, dataset)
-                docs.append({ '_index': args['index'], '_type': dataset, '_id' : bytes.decode(base64.urlsafe_b64encode(bytes(identifier, 'UTF-8'))) , '_source': index_json })
+                docs.append({ '_index': args['index'], '_type': dataset, '_id' : identifier, '_source': index_json })
                 jsoncounter += 1
             except Exception as e:
                 print("Failed to convert row {0} to json".format(identifier), e)
 
         r = bulk(es, docs)
+        es.cluster.health(wait_for_status='yellow', request_timeout=10)
 
     print("save result", r)
     print("All {0} rows read. {1} where json data.".format(counter, jsoncounter))
@@ -122,7 +124,7 @@ if __name__ == "__main__":
 
     try:
         args = vars(parser.parse_args())
-        es = Elasticsearch(args['es'], sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60)
+        es = Elasticsearch(args['es'], sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60, timeout=300)
     except:
         exit(1)
 
