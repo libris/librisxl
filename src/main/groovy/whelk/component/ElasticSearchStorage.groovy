@@ -283,6 +283,7 @@ class ElasticSearchStorage extends ElasticSearch implements Storage {
         }
     }
 
+    @Deprecated
     def loadJson(String file) {
         log.trace("Loading file $file")
         def json

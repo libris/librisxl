@@ -1,10 +1,6 @@
 {
     "mappings": {
         "_default_": {
-            "_id": {
-                "path": "encodedId",
-                "type": "string"
-            },
             "_source": {
                 "enabled": true
             },

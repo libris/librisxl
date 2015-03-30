@@ -1,6 +1,7 @@
 {
     "_properties": {
         "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
+        "ELASTIC_INDEX_NAME": "testlibris_index",
         "APIX_HOST": "https://libris.kb.se",
         "CAMEL_CHANNEL_PREFIX":"lab",
         "UPDATE_OAIPMH_URL":"http://averell.libris.kb.se/vcopy/{dataset}/oaipmh",

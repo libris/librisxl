@@ -2,6 +2,7 @@
     "_properties": {
         "ELASTIC_SEARCH_HOST": "hp01.libris.kb.se:9300",
         "ELASTIC_CLUSTER": "whelks",
+        "ELASTIC_INDEX_NAME": "libris",
         "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],
         "ACTIVEMQ_BROKER_URL": "tcp://hp04.libris.kb.se:61616?wireFormat.maxInactivityDuration=3600000",
         "MQ_INDEX": "activemq:{whelkname}.index?concurrentConsumers=10",
@@ -19,7 +20,6 @@
         "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
         "UPDATE_HOLD_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
         "UPDATE_INTERVAL":300,
-        "ES_CONFIG_PREFIX": "libris",
         "DATABASE_URL": "jdbc:postgresql://hp04.libris.kb.se:5432/whelk"
     },
     "_id": "libris",

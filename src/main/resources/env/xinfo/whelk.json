@@ -3,7 +3,7 @@
         "AVAILABLE_TYPES": ["annotation","cover","image","sys"],
         "ELASTIC_SEARCH_HOST": "hp01.libris.kb.se",
         "ELASTIC_CLUSTER": "whelks",
-        "ES_CONFIG_PREFIX":"xinfo",
+        "ELASTIC_INDEX_NAME": "xinfo",
         "ACTIVEMQ_BROKER_URL": "tcp://hp04.libris.kb.se:61616"
     },
     "_id":"xinfo",
