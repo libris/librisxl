@@ -7,7 +7,7 @@
       "_class": "whelk.camel.XInfoRouteProcessor",
       "_plugins": [ "index" ],
       "_params" : {
-        "cherryElasticUrl": "localhost:9200/cherry"
+        "cherryElasticUrl": "localhost:9200/cherry",
         "elasticCluster": "fiolelis",
         "elasticHost": "localhost",
         "indexType" : "annotation",
