@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     try:
         args = vars(parser.parse_args())
-        es = Elasticsearch(args['es'], sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60, timeout=300)
+        es = Elasticsearch(args['es'], sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=300, timeout=300)
     except:
         exit(1)
 

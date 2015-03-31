@@ -1,8 +1,7 @@
 {
     "_properties": {
         "AVAILABLE_TYPES": ["annotation","cover","image","sys"],
-        "ELASTIC_INDEX_NAME": "xinfo",
-        "ACTIVEMQ_BROKER_URL": "tcp://hp04.libris.kb.se:61616"
+        "ELASTIC_INDEX_NAME": "xinfo"
     },
     "_id":"xinfo",
     "_plugins": {
