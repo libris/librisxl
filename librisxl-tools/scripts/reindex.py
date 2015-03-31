@@ -117,9 +117,12 @@ def reindex(**args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='LIBRISXL reindexer')
-    parser.add_argument('--es', help='Elasticsearch connect url', default='localhost:9200', nargs='+')
-    parser.add_argument('--pg', help='Postgres connection url', default='pg://localhost/whelk')
-    parser.add_argument('--ds', help='Which dataset to reindex')
+    parser.add_argument('--elasticsearch', help='Elasticsearch connect url', default='localhost:9200', nargs='+')
+    parser.add_argument('--dataset', help='Which dataset to reindex')
+    parser.add_argument('--database', help='The name of the postgresql database schema. Defaults to "whelk"', default='whelk')
+    parser.add_argument('--user', help='Username for the postgresql database. Defaults to "whelk"', default='whelk')
+    parser.add_argument('--host', help='The postgresql host to connect to. Defaults to "localhost"', default='localhost')
+    parser.add_argument('--password', help='Password for the postgresql database.')
     parser.add_argument('--index', help='Which index to save to', required=True)
 
     try:

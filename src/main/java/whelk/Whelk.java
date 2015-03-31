@@ -17,21 +17,21 @@ public interface Whelk {
     // storage
     public String add(Document d);
     public void bulkAdd(List<Document> d, String dataset, String contentType);
-    public Document get(String identifier);
     public void remove(String identifier);
     /**
      * For conveniance. If the dataset is known, then pass it along.
      */
     public void remove(String identifier, String dataset);
-    public Map<String, String> getVersions(String identifier);
 
-    // search/lookup
+    // get/search/lookup
+    public Document get(String identifier);
     public SearchResult search(Query query);
     public Iterable<Document> loadAll();
     public Iterable<Document> loadAll(Date since);
     public Iterable<Document> loadAll(String dataset);
     public Iterable<Document> loadAll(String dataset, Date since);
     public Location locate(String identifier);
+    public Map<String, String> getVersions(String identifier);
 
     public InputStream sparql(String query);
 
