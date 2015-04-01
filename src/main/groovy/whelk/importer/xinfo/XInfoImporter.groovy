@@ -141,25 +141,29 @@ class XInfoImporter extends BasicPlugin implements Importer {
                         coverDoc.withData(coverDocMap)
                         coverjsondocs << coverDoc
                     } else if (xinfoUrl.startsWith("/")) {
-                        Document doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId + "/" + type.toLowerCase()).withDataset("annotation")
-                        def dataMap = doc.dataAsMap
-                        dataMap.put("@id", whelkId)
-                        dataMap.put("text", loadXinfoText(xinfoUrl))
-                        if (type == "TOC") {
-                            dataMap.put("@type", "TableOfContents")
-                        } else {
-                            dataMap.put("@type", type.toLowerCase().capitalize())
+                        try {
+                            Document doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId + "/" + type.toLowerCase()).withDataset("annotation")
+                            def dataMap = doc.dataAsMap
+                            dataMap.put("@id", whelkId)
+                            dataMap.put("text", loadXinfoText(xinfoUrl))
+                            if (type == "TOC") {
+                                dataMap.put("@type", "TableOfContents")
+                            } else {
+                                dataMap.put("@type", type.toLowerCase().capitalize())
+                            }
+                            if (supplier) {
+                                dataMap.put("annotationSource", ["name": supplier])
+                            }
+                            if (whelkId.contains("/bib/")) {
+                                dataMap.put("annotates", ["@id": "/resource/" + whelkId.substring(7)])
+                            } else {
+                                dataMap.put("annotates", ["@id": "urn:" + whelkId.substring(7)])
+                            }
+                            doc.withData(dataMap)
+                            jsondocs << doc
+                        } catch (Exception e) {
+                            log.error("Failed to create document for $xinfoUrl", e)
                         }
-                        if (supplier) {
-                            dataMap.put("annotationSource", ["name": supplier])
-                        }
-                        if (whelkId.contains("/bib/")) {
-                            dataMap.put("annotates", ["@id": "/resource/" + whelkId.substring(7)])
-                        } else {
-                            dataMap.put("annotates", ["@id": "urn:" + whelkId.substring(7)])
-                        }
-                        doc.withData(dataMap)
-                        jsondocs << doc
                     }
                     recordCount++
                     startAt++

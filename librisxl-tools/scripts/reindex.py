@@ -8,8 +8,13 @@ from elasticsearch.helpers import bulk
 
 args = None
 es = None
+expansiondata = {}
 
 def loadexpansiondata(identifier, dataset, source):
+    if identifier in expansiondata:
+        return expansiondata.get(identifier)
+
+    print("No cached expansiondata found for " + identifier + ". Startin query ...")
     query = {
         "query": {
             "term" : { "about.@id" : identifier }
@@ -20,12 +25,14 @@ def loadexpansiondata(identifier, dataset, source):
                        _source=source,
                        size=1,
                        body=query)
+    data = None
     if 'hits' in result:
         try:
-            return result.get("hits").get("hits")[0].get("_source").get("about")
+            data = result.get("hits").get("hits")[0].get("_source").get("about")
         except:
             print("No hits for {0}".format(identifier))
-    return None
+    expansiondata[identifier] = data
+    return data
 
 
 def linkexpand(about):
@@ -76,11 +83,11 @@ def filter(jsondata, dataset):
     return jsondata
 
 def reindex(**args):
-    con = psycopg2.connect(database='whelk')
+    con = psycopg2.connect(database=args['database'], user=args['user'], host=args['host'])
     cur = con.cursor()
 
-    if args['ds']:
-        query = "SELECT identifier,dataset,data FROM libris WHERE dataset = '%s' AND  NOT entry @> '{ \"deleted\" : true }'" % args['ds']
+    if args['dataset']:
+        query = "SELECT identifier,dataset,data FROM libris WHERE dataset = '%s' AND  NOT entry @> '{ \"deleted\" : true }'" % args['dataset']
     else:
         query = "SELECT identifier,dataset,data FROM libris WHERE NOT entry @> '{ \"deleted\" : true }'"
 
@@ -99,14 +106,15 @@ def reindex(**args):
         for row in results:
             counter += 1
             try:
-                identifier = base64.urlsafe_b64encode(row[0])
+                identifier = base64.urlsafe_b64encode(bytes(row[0], 'utf-8')).decode()
                 dataset = row[1]
                 stored_json = json.loads(bytes(row[2]).decode("utf-8"))
                 index_json = filter(stored_json, dataset)
                 docs.append({ '_index': args['index'], '_type': dataset, '_id' : identifier, '_source': index_json })
                 jsoncounter += 1
             except Exception as e:
-                print("Failed to convert row {0} to json".format(identifier), e)
+                print("Failed to convert row {0} to json".format(row[0]), e)
+                raise
 
         r = bulk(es, docs)
         es.cluster.health(wait_for_status='yellow', request_timeout=10)
@@ -125,11 +133,8 @@ if __name__ == "__main__":
     parser.add_argument('--password', help='Password for the postgresql database.')
     parser.add_argument('--index', help='Which index to save to', required=True)
 
-    try:
-        args = vars(parser.parse_args())
-        es = Elasticsearch(args['es'], sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=300, timeout=300)
-    except:
-        exit(1)
+    args = vars(parser.parse_args())
+    es = Elasticsearch(args['elasticsearch'], sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=10, timeout=30)
 
     reindex(**args)
 
