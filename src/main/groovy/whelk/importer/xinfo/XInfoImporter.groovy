@@ -238,7 +238,17 @@ class XInfoImporter extends BasicPlugin implements Importer {
     String loadXinfoText(String url) {
         URL xinfoUrl = new URL("http://xinfo.libris.kb.se" + url + "&type=summary")
         log.debug("Loading xinfo metadata from $xinfoUrl")
-        String xmlString = washXmlOfBadCharacters(normalizeString(xinfoUrl.text))
+        boolean loaded = false
+        String xmlString = null
+        while (!loaded) {
+            try {
+                xmlString = washXmlOfBadCharacters(normalizeString(xinfoUrl.text))
+                loaded = true
+            } catch (java.net.ConnectException ce) {
+                log.info("ConnectException. Failed to load text from ${xinfoUrl}. Trying again in a few seconds.")
+                Thread.sleep(5000)
+            }
+        }
         if (xmlString) {
             //log.info("xmlString: $xmlString")
             try {
