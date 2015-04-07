@@ -1,0 +1,311 @@
+{
+    "mappings": {
+        "_default_": {
+            "_source": {
+                "enabled": true
+            },
+            "_timestamp": {
+                "enabled": true,
+                "store": true
+            },
+            "date_detection": false,
+            "dynamic_templates": [
+                {
+                    "type_template": {
+                        "mapping": {
+                            "index": "not_analyzed",
+                            "type": "string"
+                        },
+                        "match": "@type",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "id_template": {
+                        "mapping": {
+                            "index": "not_analyzed",
+                            "type": "string"
+                        },
+                        "match": "@id",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "notation_template": {
+                        "mapping": {
+                            "fields": {
+                                "notation": {
+                                    "index": "analyzed",
+                                    "type": "string"
+                                },
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "multi_field"
+                        },
+                        "match": "notation",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "allLabel_template": {
+                        "mapping": {
+                            "fields": {
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "string"
+                                },
+                                "{name}": {
+                                    "index": "analyzed",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "multi_field"
+                        },
+                        "match": "*Label",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "label_template": {
+                        "mapping": {
+                            "fields": {
+                                "label": {
+                                    "index": "analyzed",
+                                    "type": "string"
+                                },
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "multi_field"
+                        },
+                        "match": "label",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "scheme_template": {
+                        "mapping": {
+                            "fields": {
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "string"
+                                },
+                                "{name}": {
+                                    "index": "analyzed",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "multi_field"
+                        },
+                        "match": "*Scheme",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "name_template": {
+                        "mapping": {
+                            "fields": {
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "string"
+                                },
+                                "{name}": {
+                                    "index": "analyzed",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "multi_field"
+                        },
+                        "match": "*Name",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "value_template": {
+                        "mapping": {
+                            "fields": {
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "string"
+                                },
+                                "{name}": {
+                                    "index": "analyzed",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "multi_field"
+                        },
+                        "match": "*Value",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "title_template": {
+                        "mapping": {
+                            "fields": {
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "string"
+                                },
+                                "{name}": {
+                                    "index": "analyzed",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "multi_field"
+                        },
+                        "match": "*title*",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "unknown_template": {
+                        "mapping": {
+                            "index": "not_analyzed",
+                            "type": "string"
+                        },
+                        "match_mapping_type": "string",
+                        "path_match": "unknown.*.subfields.*"
+                    }
+                }
+            ]
+        },
+        "auth": {
+            "properties": {
+                "about": {
+                    "properties": {
+                        "altLabel": {
+                            "index_analyzer": "completer",
+                            "type": "string"
+                        },
+                        "closeMatch": {
+                            "properties": {
+                                "inScheme": {
+                                    "properties": {
+                                        "prefLabel": {
+                                            "index_analyzer": "completer",
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "controlledLabel": {
+                            "index_analyzer": "completer",
+                            "type": "string"
+                        },
+                        "familyName": {
+                            "index_analyzer": "completer",
+                            "type": "string"
+                        },
+                        "givenName": {
+                            "index_analyzer": "completer",
+                            "type": "string"
+                        },
+                        "hiddenLabel": {
+                            "index_analyzer": "completer",
+                            "type": "string"
+                        },
+                        "label": {
+                            "index_analyzer": "completer",
+                            "type": "string"
+                        },
+                        "name": {
+                            "index_analyzer": "completer",
+                            "type": "string"
+                        },
+                        "prefLabel": {
+                            "index_analyzer": "completer",
+                            "type": "string"
+                        },
+                        "sameAs": {
+                            "properties": {
+                                "controlledLabel": {
+                                    "index_analyzer": "completer",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "bib": {
+            "properties": {
+                "about": {
+                    "properties": {
+                        "attributedTo": {
+                            "properties": {
+                                "controlledLabel": {
+                                    "fields": {
+                                        "controlledLabel": {
+                                            "index_analyzer": "completer",
+                                            "type": "string"
+                                        },
+                                        "raw": {
+                                            "index": "not_analyzed",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "multi_field"
+                                }
+                            }
+                        },
+                        "influencedBy": {
+                            "properties": {
+                                "controlledLabel": {
+                                    "fields": {
+                                        "controlledLabel": {
+                                            "index_analyzer": "completer",
+                                            "type": "string"
+                                        },
+                                        "raw": {
+                                            "index": "not_analyzed",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "multi_field"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "settings": {
+        "analysis": {
+            "analyzer": {
+                "completer": {
+                    "filter": "custom_edge_ngram",
+                    "tokenizer": "lowercase",
+                    "type": "custom"
+                },
+                "default": {
+                    "filter": [
+                        "lowercase",
+                        "swe_light_stemmer"
+                    ],
+                    "stopwords": "_none_",
+                    "tokenizer": "standard"
+                }
+            },
+            "filter": {
+                "custom_edge_ngram": {
+                    "max_gram": 50,
+                    "min_gram": 2,
+                    "type": "edgeNGram"
+                },
+                "swe_light_stemmer": {
+                    "name": "light_swedish",
+                    "type": "stemmer"
+                }
+            }
+        }
+    }
+}

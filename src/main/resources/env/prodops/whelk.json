@@ -1,5 +1,8 @@
 {
     "_properties": {
+        "CAMEL_CHANNEL_PREFIX":"prodops",
+        "MQ_BULK_INDEX": "activemq:{whelkname}.bulk.index?concurrentConsumers=50",
+        "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=40",
         "GRAPHSTORE_DATA_URI": "http://hp04.libris.kb.se:8890/sparql-graph-crud",
         "GRAPHSTORE_QUERY_URI": "http://hp04.libris.kb.se:8890/sparql",
         "GRAPHSTORE_UPDATE_URI": "http://hp04.libris.kb.se:8890/sparql-auth",

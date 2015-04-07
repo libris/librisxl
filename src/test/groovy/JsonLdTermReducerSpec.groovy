@@ -26,15 +26,17 @@ class JsonLdTermReducerSpec extends Specification {
             source: [
                 "identifier": [
                     ["identifierValue": "0"],
-                    ["identifierScheme": "/def/identifiers/isbn", "identifierValue": "00-0-000000-0"]
+                    ["identifierScheme": ["@id": "/def/identifiers/isbn"],
+                     "identifierValue": "00-0-000000-0"]
                 ]
             ],
             result: [
                 "identifier": [
                     ["identifierValue": "0"],
-                    ["identifierScheme": "/def/identifiers/isbn", "identifierValue": "00-0-000000-0"]
+                    ["identifierScheme": ["@id": "/def/identifiers/isbn"],
+                     "identifierValue": "00-0-000000-0"]
                 ],
-                "isbn": ["00-0-000000-0"]
+                "isbn": ["0000000000"]
             ],
 
         ]

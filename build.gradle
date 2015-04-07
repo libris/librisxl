@@ -33,7 +33,7 @@ try {
 } catch (Exception e) {}
 
 // Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
-version = versionprops.get("releaseTag", "0.8.2.x")
+version = versionprops.get("releaseTag", "0.8.3.x")
 
 archivesBaseName = "whelk"
 
@@ -56,7 +56,7 @@ repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
     flatDir name: 'localDir', dirs: 'dep/lib'
-    maven { url "http://dev.libris.kb.se/nexus/content/groups/public/" }
+    //maven { url "http://dev.libris.kb.se/nexus/content/groups/public/" }
 }
 
 configurations {
@@ -78,7 +78,7 @@ buildscript {
 dependencies {
     def camelVersion = "2.14.1"
     def activeMQVersion = "5.10.0"
-    def groovyVersion="2.3.6"
+    def groovyVersion="2.3.9"
     def jettyVersion="8.1.16.v20140903"
 
     // KB dependencies
@@ -107,7 +107,8 @@ dependencies {
     compile "com.netflix.astyanax:astyanax-thrift:1.56.43"
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile "org.apache.camel:camel-core:${camelVersion}"
-    compile "org.apache.camel:camel-elasticsearch:2.14.2-SNAPSHOT"
+    compile "org.apache.camel:camel-elasticsearch:2.15.0"
+    //compile "org.apache.camel:camel-elasticsearch:2.14.2-SNAPSHOT"
     compile "org.apache.camel:camel-jackson:${camelVersion}"
     compile "org.apache.camel:camel-http4:${camelVersion}"
     compile "org.apache.camel:camel-groovy:${camelVersion}"

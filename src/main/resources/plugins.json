@@ -1,6 +1,7 @@
 {
     "elasticnode": {
-        "_class": "whelk.component.support.ElasticSearchNode"
+        "_class": "whelk.component.support.ElasticSearchNode",
+        "_params": "work/data,libris_index"
     },
     "activemqbroker": {
         "_class": "whelk.component.support.ActiveMQBroker"
@@ -67,11 +68,11 @@
                 "bib" : {
                     "queryFields" : [],
                     "infoFields" : [],
-                    "defaultBoost" : "about.instanceTitle.titleValue:50,about.identifier.identifierValue:50,about.instanceOf.attributedTo.controlledLabel:50,about.instanceOf.influencedBy.controlledLabel:10,about.instanceOf.subject.prefLabel:10,about.publication.providerName:10",
+                    "defaultBoost" : "about.title:50,about.identifier.identifierValue:50,about.creator.familyName:50,about.creator.givenName:50,about.creator.name:50,about.subject.prefLabel:10,about.publication.providerName:10",
                     "sortby": {
                         "recordPriority" : "desc",
                         "_score" : "desc",
-                        "about.instanceTitle.titleValue" : "asc",
+                        "about.title" : "asc",
                         "about.identifier.identifierValue" : "asc"
                     },
                     "queryFacets" : "about.@type,about.language.@id,encLevel.@id",
@@ -83,8 +84,8 @@
                         "about.responsibilityStatement",
                         "about.publication",
                         "about.identifier",
-                        "about.instanceOf.attributedTo",
-                        "about.instanceOf.influencedBy",
+                        "about.attributedTo",
+                        "about.influencedBy",
                         "encLevel.@id"
                     ]
                 },
@@ -661,7 +662,7 @@
             "elasticHost": "_property:ELASTIC_SEARCH_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "availableTypes": "_property:AVAILABLE_TYPES",
-            "indexNameSuffix": "_index",
+            "indexName": "_property:ELASTIC_INDEX_NAME",
             "searchResultClass": "whelk.result.JsonLdSearchResult"
         },
         "_unique" : true

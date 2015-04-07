@@ -14,12 +14,15 @@ import whelk.exception.*
 
 
 @Log
-class ElasticSearchStorage extends BasicElasticComponent implements Storage {
+class ElasticSearchStorage extends ElasticSearch implements Storage {
 
     final static String ELASTIC_STORAGE_TYPE = "document"
     boolean versioning
     boolean readOnly = false
 
+    int batchUpdateSize = 2000
+
+    def es_settings, defaultMapping
     String indexName
 
     ElasticSearchStorage(String componentId = null, Map settings) {
@@ -32,6 +35,7 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     }
 
     void componentBootstrap(String str) {
+        super.componentBootstrap(str)
         if (!this.indexName) {
             this.indexName = str+"_"+this.id
         }
@@ -41,10 +45,10 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
     @Override
     void onStart() {
         log.info("Starting ${this.id} with index name $indexName")
-        createIndexIfNotExists(indexName, true)
+        createIndexIfNotExists(indexName)
         checkTypeMapping(indexName, ELASTIC_STORAGE_TYPE)
         if (versioning) {
-            createIndexIfNotExists(indexName + VERSION_STORAGE_SUFFIX, true)
+            createIndexIfNotExists(indexName + VERSION_STORAGE_SUFFIX)
             checkTypeMapping(indexName + VERSION_STORAGE_SUFFIX, ELASTIC_STORAGE_TYPE)
         }
     }
@@ -264,4 +268,109 @@ class ElasticSearchStorage extends BasicElasticComponent implements Storage {
             store(createTombstone(identifier, dataset))
         }
     }
+
+
+    // Elastic maintenance methods
+    void createIndexIfNotExists(String indexName) {
+        if (!performExecute(client.admin().indices().prepareExists(indexName)).exists) {
+            log.info("Couldn't find index by name $indexName. Creating ...")
+            /*
+            if (!es_settings) {
+                es_settings = loadJson("es_settings.json")
+            }
+            */
+            performExecute(client.admin().indices().prepareCreate(indexName)) // .setSettings(es_settings))
+        }
+    }
+
+    @Deprecated
+    def loadJson(String file) {
+        log.trace("Loading file $file")
+        def json
+        String basefile = file
+        if (!getClass().classLoader.findResource(file)) {
+            file = "es/" + basefile
+        }
+        if (!getClass().classLoader.findResource(file)) {
+            file = "es/" + whelk.props.get("ES_CONFIG_PREFIX") + "/" + basefile
+        }
+        try {
+            json = getClass().classLoader.getResourceAsStream(file).withStream {
+                mapper.readValue(it, Map)
+            }
+        } catch (NullPointerException npe) {
+            log.trace("File $file not found.")
+        }
+        return json
+    }
+
+    void checkTypeMapping(indexName, indexType) {
+        log.debug("Checking mappings for index $indexName, type $indexType")
+        def mappings = performExecute(client.admin().cluster().prepareState()).state.metaData.index(indexName).getMappings()
+        log.trace("Mappings: $mappings")
+        if (!mappings.containsKey(indexType)) {
+            log.debug("Mapping for $indexName/$indexType does not exist. Creating ...")
+            setTypeMapping(indexName, indexType)
+        }
+    }
+
+    protected void setTypeMapping(indexName, itype) {
+        log.info("Creating mappings for $indexName/$itype ...")
+        def documentTypeMapping = [
+            "_timestamp" : [
+                "enabled" : true,
+                "store" : true,
+                "path" : "entry.modified"
+            ],
+            "_source" : [
+                "enabled" : true
+            ],
+            "properties" : [
+                "data": [
+                    "type": "binary"
+                ],
+                "entry" : [
+                    "properties" : [
+                        "identifier" : [
+                            "type" : "string",
+                            "index" : "not_analyzed"
+                        ],
+                        "checksum" : [
+                            "type" : "string",
+                            "index" : "not_analyzed"
+                        ],
+                        "dataset" : [
+                            "type" : "string",
+                            "index" : "not_analyzed"
+                        ],
+                        "created" : [
+                            "type" : "date"
+                        ],
+                        "modified" : [
+                            "type" : "date"
+                        ],
+                        "contentType" : [
+                            "type" : "string",
+                            "index" : "not_analyzed"
+                        ],
+                        "alternateIdentifiers" : [
+                            "type" : "string",
+                            "index" : "not_analyzed"
+                        ],
+                        "alternateDatasets" : [
+                            "type" : "string",
+                            "index" : "not_analyzed"
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+        String mapping = mapper.writeValueAsString(documentTypeMapping)
+        log.debug("mapping for $indexName/$itype: " + mapping)
+        def response = performExecute(client.admin().indices().preparePutMapping(indexName).setType(itype).setSource(mapping))
+        log.debug("mapping response: ${response.acknowledged}")
+    }
+
+
 }

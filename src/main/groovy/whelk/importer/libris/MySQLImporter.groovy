@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import java.sql.*
 import java.util.concurrent.*
+import java.text.*
 
 import whelk.*
 import whelk.importer.*
@@ -109,7 +110,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 int lastRecordId = recordId
                 while(resultSet.next()) {
                     recordId  = resultSet.getInt(1)
-                    record = Iso2709Deserializer.deserialize(resultSet.getBytes("data"))
+                    record = Iso2709Deserializer.deserialize(normalizeString(new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
 
                     buildDocument(record, dataset, null)
 
@@ -301,6 +302,14 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 conn = null
             }
         }
+    }
+
+    String normalizeString(String inString) {
+        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
+            log.trace("Normalizing ...")
+            return Normalizer.normalize(inString, Normalizer.Form.NFC)
+        }
+        return inString
     }
 }
 

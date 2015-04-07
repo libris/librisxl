@@ -22,6 +22,7 @@ class ReindexOperator extends AbstractOperator {
     List<String> selectedComponents = null
     String startAt = null
     String fromStorage = null
+    String toIndex = null
 
     boolean showSpinner = false
     int reindexcount = 0
@@ -34,6 +35,7 @@ class ReindexOperator extends AbstractOperator {
             this.selectedComponents = parameters.get("selectedComponents").split(",") as List<String>
         }
         this.fromStorage = parameters.get("fromStorage")
+        this.toIndex = parameters.get("toIndex")
         this.showSpinner = parameters.get("showSpinner", false)
     }
 
@@ -46,17 +48,13 @@ class ReindexOperator extends AbstractOperator {
         }
         try {
             whelk.acquireLock(dataset)
-            String indexName = whelk.index?.getIndexName()
+            String indexName = toIndex ?: whelk.index.getIndexName()
             reindexcount = 0
 
-            log.info("Starting reindexing.")
+            log.info("Starting reindexing into $indexName.")
 
-            if (!dataset && whelk.index) {
-                log.debug("Requesting new index for ${whelk.index.id}.")
-                indexName = whelk.index.createNewCurrentIndex(whelk.index.getIndexName())
-            }
             if (fromStorage) {
-                log.info("Rebuilding storage from $fromStorage")
+                log.info("Loading data from $fromStorage")
             }
             for (doc in whelk.loadAll(dataset, null, fromStorage)) {
                 log.trace("Loaded doc ${doc.identifier} with type ${doc.contentType}")
@@ -81,10 +79,6 @@ class ReindexOperator extends AbstractOperator {
                 if (cancelled) {
                     break
                 }
-            }
-            // TODO: Find a way to do this AFTER the indexing queue is empty.
-            if (!dataset && whelk.index && !cancelled) {
-                whelk.index.reMapAliases(whelk.index.getIndexName())
             }
         } finally {
             whelk.releaseLock(dataset)

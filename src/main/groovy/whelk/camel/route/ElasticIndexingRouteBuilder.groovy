@@ -6,11 +6,14 @@ import whelk.*
 import whelk.camel.*
 
 import org.apache.camel.*
+import org.apache.camel.component.elasticsearch.aggregation.BulkRequestAggregationStrategy
 
 class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
 
     String messageQueue, bulkMessageQueue, removeQueue
     int elasticBatchSize = 2000
+
+    final static String VALID_CONTENTTYPE_REGEX = "application\\/(\\w+\\+)*json|application\\/x-(\\w+)-json|text/plain"
 
     Processor reindexProcessor, elasticTypeRouteProcessor
 
@@ -33,6 +36,9 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
 
     void configure() {
 
+        BulkRequestAggregationStrategy aggStrat = new BulkRequestAggregationStrategy()
+
+        // TODO: Check this. Will reindex consume messages for regular indexing?
         if (reindexProcessor) {
             from(messageQueue) // Also removeQueue (configured to same)
                 .multicast().to("seda:q1", "seda:q2")
@@ -45,18 +51,20 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
                     .end()
         } else {
             from(messageQueue)
+                .filter(header("document:contentType").regex(VALID_CONTENTTYPE_REGEX))
                 .process(elasticTypeRouteProcessor)
                 .routingSlip(header("elasticDestination"))
         }
 
         from(bulkMessageQueue)
+                .filter(header("document:contentType").regex(VALID_CONTENTTYPE_REGEX))
                 .process(elasticTypeRouteProcessor)
-                .aggregate(header("document:dataset"), ArrayListAggregationStrategy.getInstance()).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
+                .aggregate(header("document:dataset"), aggStrat).completionSize(elasticBatchSize).completionTimeout(batchTimeout)
                 .routingSlip(header("elasticDestination"))
     }
 
     Processor getElasticProcessor() {
-        ElasticRouteProcessor ep = getPlugin("elasticprocessor")
+        Processor ep = getPlugin("elasticprocessor")
         if (!ep) {
             assert whelk
             ep = ElasticRouteProcessor.getInstance()

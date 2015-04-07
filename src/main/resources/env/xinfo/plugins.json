@@ -3,6 +3,19 @@
         "_class": "whelk.camel.ElasticRouteProcessor",
         "_plugins": [ "index" ]
     },
+    "xinfoprocessor": {
+      "_class": "whelk.camel.XInfoRouteProcessor",
+      "_plugins": [ "index" ],
+      "_params" : {
+        "cherryElasticUrl": "localhost:9200/cherry",
+        "elasticCluster": "fiolelis",
+        "elasticHost": "localhost",
+        "indexType" : "annotation",
+        "indexName" : "cherry",
+        "elasticPort" : 9300
+      }
+
+    },
     "postgrestorage": {
         "_class" : "whelk.component.PostgreSQLStorage",
         "_params" : {
@@ -13,3 +26,4 @@
         }
     }
 }
+
