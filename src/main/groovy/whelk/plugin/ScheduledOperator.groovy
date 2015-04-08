@@ -29,7 +29,7 @@ class ScheduledOperator extends BasicPlugin {
             def job = new ScheduledJob(task, imp, conf.dataset, whelk)
             try {
                 ses.scheduleWithFixedDelay(job, 30, conf.interval, TimeUnit.SECONDS)
-                log.info("${job.id} will start in 30 seconds.")
+                log.info("${task} will start in 30 seconds.")
             } catch (RejectedExecutionException ree) {
                 log.error("execution failed", ree)
             }
@@ -47,6 +47,8 @@ class ScheduledOperator extends BasicPlugin {
 @Log
 class ScheduledJob implements Runnable {
 
+    static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+
     String id, dataset
     Importer importer
     Whelk whelk
@@ -63,45 +65,58 @@ class ScheduledJob implements Runnable {
         assert dataset
 
         if (whelk.acquireLock(dataset)) {
-            log.debug("Lock acquired for $dataset")
+            log.trace("Lock acquired for $dataset")
         } else {
-            log.debug("[${this.id}] Whelk is busy for dataset $dataset")
+            log.trace("[${this.id}] Whelk is busy for dataset $dataset")
             return
         }
 
         try {
             log.trace("all state: ${whelk.state}")
-            def whelkState = whelk.state.get(dataset, [:])
-            String dString = whelkState.get("lastImport")
-            Date since
-            if (dString) {
-                since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dString)
+            def whelkState = whelk.state.get(dataset) ?: [:]
+            String lastImport = whelkState.get("lastImport")
+            Date currentSince
+            Date nextSince = new Date()
+            if (lastImport) {
+                log.trace("Parsing $lastImport as date")
+                currentSince = Date.parse(DATE_FORMAT, lastImport)
+                nextSince = new Date(currentSince.getTime())
+                nextSince.set(second: currentSince[Calendar.SECOND] + 1)
+                log.trace("Next since (upped by 1 second): $nextSince")
             } else {
-                since = new Date()
-                def lastWeeksDate = since[Calendar.DATE] - 7
-                since.set(date: lastWeeksDate)
-                log.info("Whelk has no state for last import from $dataset. Setting last week (${since})")
+                def lastWeeksDate = nextSince[Calendar.DATE] - 7
+                nextSince.set(date: lastWeeksDate)
+                currentSince = nextSince
+                log.info("Whelk has no state for last import from $dataset. Setting last week (${nextSince})")
             }
-            log.debug("Executing OAIPMH import for $dataset since $since from $serviceUrl")
+            log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
             whelkState.put("status", "RUNNING")
             whelkState.put("importOperator", this.id)
             whelkState.remove("lastImportOperator")
             whelk.updateState(dataset, whelkState)
-            Date dateStamp = new Date()
-            int totalCount = importer.doImport(dataset, null, -1, true, true, since)
-            if (totalCount > 0) {
-                log.info("Imported $totalCount document for $dataset.")
+            def result = importer.doImport(dataset, null, -1, true, true, nextSince)
+
+            int totalCount = result.numberOfDocuments
+            if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0) {
+                log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $dataset.")
+                whelkState.put("lastImportNrImported", result.numberOfDocuments)
+                whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
+                whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
             } else {
-                log.debug("Imported $totalCount document for $dataset.")
+                log.debug("Imported ${result.numberOfDocuments} document for $dataset.")
+                whelkState.put("lastImport", currentSince.format(DATE_FORMAT))
             }
             whelkState.remove("importOperator")
             whelkState.put("status", "IDLE")
-            whelkState.put("lastImport", dateStamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
-            whelkState.put("lastRunNrImported", totalCount)
+            whelkState.put("lastRunNrImported", result.numberOfDocuments)
+            whelkState.put("lastRun", new Date().format(DATE_FORMAT))
             whelk.updateState(dataset, whelkState)
 
+        } catch (Exception e) {
+            log.error("Something failed: ${e.message}", e)
         } finally {
             whelk.releaseLock(dataset)
+            log.trace("Lock released for $dataset")
         }
     }
 

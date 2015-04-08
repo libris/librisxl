@@ -1,0 +1,31 @@
+{
+    "storage": {
+        "_class" : "whelk.component.ElasticSearchStorage",
+        "_params" : {
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes": ["*/*"],
+            "versioning" : true
+        }
+    },
+    "jsonldstorage": {
+        "_class" : "whelk.component.ElasticSearchStorage",
+        "_params" : {
+            "indexName" : "libris_jsonldstorage",
+            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
+            "elasticCluster": "_property:ELASTIC_CLUSTER",
+            "contentTypes": ["application/ld+json"],
+            "versioning" : false,
+            "readOnly" : true
+        }
+    },
+    "postgrestorage": {
+        "_class" : "whelk.component.PostgreSQLStorage",
+        "_params" : {
+            "availableTypes": "_property:AVAILABLE_TYPES",
+            "databaseUrl": "_property:DATABASE_URL",
+            "contentTypes": ["application/ld+json"],
+            "versioning" : true
+        }
+    }
+}

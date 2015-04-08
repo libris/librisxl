@@ -1,14 +1,10 @@
 package whelk.plugin.libris
 
 import spock.lang.Specification
-import org.codehaus.jackson.map.ObjectMapper
-import groovy.util.logging.Slf4j as Log
 import whelk.DefaultDocument
 import whelk.component.ElasticJsonMapper
-import whelk.Document
 import whelk.Whelk
 
-@Log
 class JsonLDLinkCompleterFilterSpec extends Specification {
 
     private mapper = new ElasticJsonMapper()

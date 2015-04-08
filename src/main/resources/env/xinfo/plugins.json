@@ -1,0 +1,29 @@
+{
+    "elasticprocessor": {
+        "_class": "whelk.camel.ElasticRouteProcessor",
+        "_plugins": [ "index" ]
+    },
+    "xinfoprocessor": {
+      "_class": "whelk.camel.XInfoRouteProcessor",
+      "_plugins": [ "index" ],
+      "_params" : {
+        "cherryElasticUrl": "localhost:9200/cherry",
+        "elasticCluster": "fiolelis",
+        "elasticHost": "localhost",
+        "indexType" : "annotation",
+        "indexName" : "cherry",
+        "elasticPort" : 9300
+      }
+
+    },
+    "postgrestorage": {
+        "_class" : "whelk.component.PostgreSQLStorage",
+        "_params" : {
+            "availableTypes": "_property:AVAILABLE_TYPES",
+            "databaseUrl": "_property:DATABASE_URL",
+            "contentTypes": ["application/ld+json", "image/jpeg"],
+            "versioning" : false
+        }
+    }
+}
+

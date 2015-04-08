@@ -1,7 +1,7 @@
-
 {
     "elasticnode": {
-        "_class": "whelk.component.support.ElasticSearchNode"
+        "_class": "whelk.component.support.ElasticSearchNode",
+        "_params": "work/data,libris_index"
     },
     "activemqbroker": {
         "_class": "whelk.component.support.ActiveMQBroker"
@@ -68,11 +68,11 @@
                 "bib" : {
                     "queryFields" : [],
                     "infoFields" : [],
-                    "defaultBoost" : "about.instanceTitle.titleValue:50,about.identifier.identifierValue:50,about.instanceOf.attributedTo.controlledLabel:50,about.instanceOf.influencedBy.controlledLabel:10,about.instanceOf.subject.prefLabel:10,about.publication.providerName:10",
+                    "defaultBoost" : "about.title:50,about.identifier.identifierValue:50,about.creator.familyName:50,about.creator.givenName:50,about.creator.name:50,about.subject.prefLabel:10,about.publication.providerName:10",
                     "sortby": {
                         "recordPriority" : "desc",
                         "_score" : "desc",
-                        "about.instanceTitle.titleValue" : "asc",
+                        "about.title" : "asc",
                         "about.identifier.identifierValue" : "asc"
                     },
                     "queryFacets" : "about.@type,about.language.@id,encLevel.@id",
@@ -84,8 +84,8 @@
                         "about.responsibilityStatement",
                         "about.publication",
                         "about.identifier",
-                        "about.instanceOf.attributedTo",
-                        "about.instanceOf.influencedBy",
+                        "about.attributedTo",
+                        "about.influencedBy",
                         "encLevel.@id"
                     ]
                 },
@@ -276,6 +276,33 @@
             "preserveTimestamps" : true
         }
     },
+    "oaipmhimporter_bib" : {
+        "_class" : "whelk.importer.libris.OaiPmhImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "preserveTimestamps" : true
+        }
+    },
+    "oaipmhimporter_auth" : {
+        "_class" : "whelk.importer.libris.OaiPmhImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "preserveTimestamps" : true
+        }
+    },
+    "oaipmhimporter_hold" : {
+        "_class" : "whelk.importer.libris.OaiPmhImporter",
+        "_plugins" : [
+            "marcconverter", "linkcompleter"
+        ],
+        "_params" : {
+            "preserveTimestamps" : true
+        }
+    },
     "operator" : {
         "_class" : "whelk.api.OperatorAPI",
         "_plugins": [
@@ -294,26 +321,25 @@
     "scheduledoperator": {
         "_class": "whelk.plugin.ScheduledOperator",
         "_plugins": [
-            "jsonldstorage",
-            "oaipmhimporter"
+            "oaipmhimporter_auth","oaipmhimporter_bib","oaipmhimporter_hold"
             ],
         "_params": {
             "authupdate": {
-                "importer": "oaipmhimporter",
+                "importer": "oaipmhimporter_auth",
                 "dataset" : "auth",
                 "url": "_property:UPDATE_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
             },
             "bibupdate": {
-                "importer": "oaipmhimporter",
+                "importer": "oaipmhimporter_bib",
                 "dataset" : "bib",
                 "url": "_property:UPDATE_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
             },
             "holdupdate": {
-                "importer": "oaipmhimporter",
+                "importer": "oaipmhimporter_hold",
                 "dataset" : "hold",
-                "url": "_property:UPDATE_OAIPMH_URL",
+                "url": "_property:UPDATE_HOLD_OAIPMH_URL",
                 "interval" : "_property:UPDATE_INTERVAL"
             }
         }
@@ -349,6 +375,9 @@
             "jsonld2marcconverter",
             "jsonld2marcxmlconverter"
         ]
+    },
+    "termreducer" : {
+        "_class" : "whelk.plugin.libris.JsonLdTermReducer"
     },
     "linkexpander" : {
         "_class" : "whelk.plugin.libris.JsonLDLinkExpander",
@@ -586,23 +615,7 @@
     },
     "elasticprocessor": {
         "_class": "whelk.camel.ElasticRouteProcessor",
-        "_plugins" : ["index", "linkexpander", "cleanupindexconverter" ]
-    },
-    "xinfoprocessor": {
-        "_class": "whelk.camel.ElasticRouteProcessor",
-        "_plugins": [ "index" ]
-    },
-    "xinfoindexroutebuilder": {
-      "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
-      "_plugins" : [
-        "xinfoprocessor"
-      ],
-      "_params": {
-        "elasticBatchSize": 2000,
-        "batchTimeout": 5000,
-        "indexMessageQueue": "_property:MQ_INDEX",
-        "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX"
-      }
+        "_plugins" : ["index", "linkexpander", "termreducer", "cleanupindexconverter" ]
     },
    "indexroutebuilder": {
         "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
@@ -649,6 +662,7 @@
             "elasticHost": "_property:ELASTIC_SEARCH_HOST",
             "elasticCluster": "_property:ELASTIC_CLUSTER",
             "availableTypes": "_property:AVAILABLE_TYPES",
+            "indexName": "_property:ELASTIC_INDEX_NAME",
             "searchResultClass": "whelk.result.JsonLdSearchResult"
         },
         "_unique" : true
@@ -667,7 +681,8 @@
     "postgrestorage": {
         "_class" : "whelk.component.PostgreSQLStorage",
         "_params" : {
-            "databaseUrl": "jdbc://127.0.0.1:5342/whelk",
+            "availableTypes": "_property:AVAILABLE_TYPES",
+            "databaseUrl": "_property:DATABASE_URL",
             "contentTypes": ["application/ld+json"],
             "versioning" : true
         }
@@ -681,16 +696,6 @@
             "versioning" : true
         }
     },
-    "xinfostorage": {
-        "_class" : "whelk.component.ElasticSearchStorage",
-        "_params" : {
-            "indexName" : "xinfo_storage",
-            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
-            "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "contentTypes": ["application/ld+json","image/jpeg"],
-            "versioning" : true
-        }
-    },
     "marcxmlstorage": {
         "_class" : "whelk.component.PairtreeHybridDiskStorage",
         "_params" : {
@@ -700,15 +705,6 @@
             "contentTypes" : [ "application/marcxml+xml" ],
             "baseStorageSuffix": "marcxml",
             "versioning" : false
-        }
-    },
-    "allstorage": {
-        "_class" : "whelk.component.ElasticSearchStorage",
-        "_params" : {
-            "elasticHost": "_property:ELASTIC_STORAGE_HOST",
-            "elasticCluster": "_property:ELASTIC_CLUSTER",
-            "contentTypes": ["*/*"],
-            "versioning" : true
         }
     },
     "graphstore": {

@@ -9,41 +9,35 @@ import org.postgresql.PGStatement
 import whelk.*
 
 @Log
-class PostgreSQLStorage extends BasicComponent implements Storage {
-
-    boolean versioning
-
-    // Starta postgres: postgres -D /usr/local/var/postgres
+class PostgreSQLStorage extends AbstractSQLStorage {
 
     String mainTableName, versionsTableName
+    List<String> availableTypes
 
-    // Database connectors
-    URI dbUri
-
-    // Connectionpool
-    private BasicDataSource connectionPool
-
+    String jdbcDriver = "org.postgresql.Driver"
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_STATEMENT, LOAD_ALL_STATEMENT_WITH_DATASET
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_STATEMENT, LOAD_ALL_STATEMENT_WITH_DATASET, DELETE_DOCUMENT_STATEMENT
 
     PostgreSQLStorage(String componentId = null, Map settings) {
         this.contentTypes = settings.get('contentTypes', null)
         this.versioning = settings.get('versioning', false)
-        this.dbUri = new URI(settings.get("databaseUrl"))
+        this.connectionUrl = settings.get("databaseUrl")
+        this.mainTableName = settings.get('tableName', null)
+        this.availableTypes = settings.get('availableTypes', [])
         id = componentId
     }
 
     void componentBootstrap(String str) {
         log.info("Bootstrapping ${this.id}")
         if (!this.mainTableName) {
-            this.mainTableName = str+"_"+this.id
+            this.mainTableName = str
         }
         if (versioning) {
-            this.versionsTableName = mainTableName+VERSION_STORAGE_SUFFIX
+            this.versionsTableName = "versions_" + mainTableName
         }
         UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, dataset = ?, modified = ?, entry = ?, meta = ? WHERE identifier = ? RETURNING *) " +
-            "INSERT INTO $mainTableName (identifier, data, dataset, modified, entry, meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+            "INSERT INTO {tableName} (identifier, data, dataset, modified, entry, meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
 
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (identifier,data,checksum,modified,entry,meta) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE identifier = ? AND checksum = ?)"
@@ -54,40 +48,37 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE entry @> '{ \"alternateIdentifiers\": [?] }'"
         LOAD_ALL_STATEMENT = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? AND identifier != ?  ORDER BY modified LIMIT 2000"
         LOAD_ALL_STATEMENT_WITH_DATASET = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? AND identifier != ? AND dataset = ? ORDER BY modified LIMIT 2000"
+        DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE identifier = ?"
     }
 
     @Override
-    void onStart() {
-        log.info("Connecting to postgres at $dbUri ... (${dbUri.scheme} / ${dbUri.host} / ${dbUri.port})")
-        String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + dbUri.getPath();
-        //String dbUrl = "jdbc:postgresql:whelk"
-        connectionPool = new BasicDataSource();
-
-        if (dbUri.getUserInfo() != null) {
-            connectionPool.setUsername(dbUri.getUserInfo().split(":")[0]);
-            connectionPool.setPassword(dbUri.getUserInfo().split(":")[1]);
-        }
-        connectionPool.setDriverClassName("org.postgresql.Driver");
-        connectionPool.setUrl(dbUrl);
-        connectionPool.setInitialSize(10);
-        createTables()
-    }
-
     void createTables() {
         Connection connection = connectionPool.getConnection()
         Statement stmt = connection.createStatement();
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $mainTableName ("
-            +"identifier varchar(200) primary key,"
+            +"identifier text primary key,"
             +"data bytea,"
-            +"dataset varchar(20) not null,"
+            +"dataset text not null,"
             +"modified timestamp,"
             +"entry jsonb,"
             +"meta jsonb"
             +")");
+        availableTypes.each {
+            log.debug("Creating child table $it")
+            def result = stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ${mainTableName}_${it} ("
+                    +"CHECK (dataset = '${it}'), PRIMARY KEY (identifier) ) INHERITS (${mainTableName})")
+            log.debug("Creating indexes for $it")
+            try {
+                stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_dataset ON ${mainTableName}_${it} (dataset)")
+                stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_modified ON ${mainTableName}_${it} (modified)")
+            } catch (org.postgresql.util.PSQLException pgsqle) {
+                log.trace("Indexes on $mainTableName / $it already exists.")
+            }
+        }
         if (versioning) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $versionsTableName ("
                 +"id serial,"
-                +"identifier varchar(200) not null,"
+                +"identifier text not null,"
                 +"data bytea,"
                 +"checksum char(32) not null,"
                 +"modified timestamp,"
@@ -95,7 +86,14 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 +"meta jsonb,"
                 +"UNIQUE (identifier, checksum)"
                 +")");
+            try {
+                stmt.executeUpdate("CREATE INDEX ${versionsTableName}_identifier ON ${versionsTableName} (identifier)")
+                stmt.executeUpdate("CREATE INDEX ${versionsTableName}_modified ON ${versionsTableName} (modified)")
+                stmt.executeUpdate("CREATE INDEX ${versionsTableName}_checksum ON ${versionsTableName} (checksum)")
+            } catch (org.postgresql.util.PSQLException pgsqle) {
+                log.trace("Indexes on $mainTableName / $it already exists.")
             }
+        }
         stmt.close()
         connection.close()
     }
@@ -108,9 +106,10 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 return true // Same document already in storage.
             }
         }
+        assert doc.dataset
         log.debug("Saving document ${doc.identifier} (with checksum: ${doc.checksum})")
         Connection connection = connectionPool.getConnection()
-        PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
+        PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT.replaceAll(/\{tableName\}/, mainTableName + "_" + doc.dataset))
         try {
             insert.setBytes(1, doc.data)
             insert.setString(2, doc.dataset)
@@ -162,13 +161,12 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
     }
 
     @Override
-    void bulkStore(final List docs) {
-        log.info("Bulk store requested. Versioning set to $versioning")
+    void bulkStore(final List docs, String dataset) {
         if (!docs || docs.isEmpty()) {
             return
         }
         Connection connection = connectionPool.getConnection()
-        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT)
+        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT.replaceAll(/\{tableName\}/, mainTableName + "_" + dataset))
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
@@ -200,6 +198,7 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             }
             ver_batch.executeBatch()
             batch.executeBatch()
+            log.debug("Stored ${docs.size()} documents with dataset $dataset (versioning: ${versioning})")
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}")
             throw e
@@ -238,7 +237,9 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
         ResultSet rs
         try {
             selectstmt = connection.prepareStatement(sql)
-            selectstmt.setString(1, id)
+            if (id) {
+                selectstmt.setString(1, id)
+            }
             if (checksum) {
                 selectstmt.setString(2, checksum)
             }
@@ -249,8 +250,12 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
                 log.trace("No results returned for get($id)")
             }
         } finally {
-            rs.close()
-            selectstmt.close()
+            if (rs) {
+                rs.close()
+            }
+            if (selectstmt) {
+                selectstmt.close()
+            }
             connection.close()
         }
         return doc
@@ -258,7 +263,8 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
 
     @Override
     Document loadByAlternateIdentifier(String identifier) {
-        return loadFromSql(GET_DOCUMENT_BY_ALTERNATE_ID)
+        String sql = GET_DOCUMENT_BY_ALTERNATE_ID.replace("?", '"' + identifier + '"')
+        return loadFromSql(null, null, sql)
     }
 
     @Override
@@ -356,7 +362,15 @@ class PostgreSQLStorage extends BasicComponent implements Storage {
             log.debug("Creating tombstone record with id ${identifier}")
             store(createTombstone(identifier, dataset))
         } else {
-            throw new UnsupportedOperationException("Not implemented yet!")
+            Connection connection = connectionPool.getConnection()
+            PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
+            try {
+                delstmt.setString(1, identifier)
+                delstmt.executeUpdate()
+            } finally {
+                delstmt.close()
+                connection.close()
+            }
         }
     }
 

@@ -54,6 +54,12 @@ class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
             .process(apixProcessor)
             .to(apixUri)
             .process(apixResponseProcessor)
+            .choice()
+                .when(header("retry"))
+                    .to(retriesQueue)
+                .otherwise()
+                    .end()
+
     }
 
 }

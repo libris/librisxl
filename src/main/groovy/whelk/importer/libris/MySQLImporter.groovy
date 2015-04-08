@@ -4,10 +4,12 @@ import groovy.util.logging.Slf4j as Log
 
 import java.sql.*
 import java.util.concurrent.*
+import java.text.*
 
 import whelk.*
 import whelk.importer.*
 import whelk.plugin.*
+import whelk.result.*
 import whelk.plugin.libris.*
 
 import se.kb.libris.util.marc.*
@@ -47,7 +49,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         assert marcFrameConverter
     }
 
-    int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
+    ImportResult doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false
@@ -108,7 +110,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 int lastRecordId = recordId
                 while(resultSet.next()) {
                     recordId  = resultSet.getInt(1)
-                    record = Iso2709Deserializer.deserialize(resultSet.getBytes("data"))
+                    record = Iso2709Deserializer.deserialize(normalizeString(new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
 
                     buildDocument(record, dataset, null)
 
@@ -167,7 +169,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
         log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
-        return recordCount
+        return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
     }
 
     void buildDocument(MarcRecord record, String dataset, String oaipmhSetSpecValue) {
@@ -244,7 +246,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                     }
                     convertedDocs << doc
                 }
-                this.whelk.bulkAdd(convertedDocs, convertedDocs.first().contentType, false)
+                this.whelk.bulkAdd(convertedDocs, convertedDocs.first().dataset, convertedDocs.first().contentType, false)
             } finally {
                 tickets.release()
             }
@@ -300,6 +302,14 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 conn = null
             }
         }
+    }
+
+    String normalizeString(String inString) {
+        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
+            log.trace("Normalizing ...")
+            return Normalizer.normalize(inString, Normalizer.Form.NFC)
+        }
+        return inString
     }
 }
 

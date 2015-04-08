@@ -1,16 +1,8 @@
 {
+    "_id": "libris_staging",
     "_properties": {
-        "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",
-        "UPDATE_INTERVAL":30
-    },
-    "_id": "stglibris",
-    "_plugins": {
-        "_camel": [
-            "indexroutebuilder"
-            ],
-        "_components": [
-            "jsonldstorage",
-            "index"
-        ]
+        "DATABASE_URL": "jdbc:postgresql://hp04.libris.kb.se:5432/whelk",
+        "ELASTIC_INDEX_NAME": "libris_staging",
+        "UPDATE_INTERVAL": 300
     }
 }

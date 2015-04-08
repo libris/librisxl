@@ -137,7 +137,10 @@ class SetUpdatedStatusStep implements MarcFramePostProcStep {
     String updatedProperty
 
     void modify(Map record, Map thing) {
-        def flag = record[statusFlag][ID]
+        def flagObj = record[statusFlag]
+        if (flagObj == null)
+            return
+        def flag = flagObj[ID]
         if (flag == statusFlagNewValue || flag == statusFlagUpdatedValue) {
             record.remove(statusFlag)
         }

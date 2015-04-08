@@ -1827,6 +1827,15 @@
             "modified": "2015-02-18T00:00:01Z",
             "status": {"@id": "/def/enum/record/CorrectedOrRevised"}
           }
+        },
+        {
+          "source": {
+            "status": null
+          },
+          "result": {
+            "status": null
+          },
+          "back": true
         }
       ]
     }
@@ -3535,7 +3544,7 @@
           "identifierStatus": null
         }
       },
-      "$c": {"aboutEntity": "?thing", "property": "availability"},
+      "$c": {"aboutEntity": "?thing", "property": "termsOfAvailability"},
       "$q": {"property": "identifierNote"},
       "$z": {
         "property": "identifierValue",
@@ -3562,7 +3571,7 @@
                 "identifierValue": "91-0-056322-6",
                 "identifierNote": "inb.",
                 "identifierScheme": {"@id": "/def/identifiers/isbn"}}],
-            "availability": "310:00"
+            "termsOfAvailability": "310:00"
           }}
         },
         {
@@ -5074,8 +5083,16 @@
     "855": {},
 
     "856": {
-      "addLink": "isPrimaryTopicOf", "resourceType": "Document",
+      "addLink": true,
       "TODO:i1": {
+        "0": "mailto:",
+        "1": "ftp:",
+        "2": "telnet:",
+        "3": "tel:",
+        "4": "http:",
+        "7": "$2"
+      },
+      "i1": {
         "marcDefault": "4"
       },
       "match-i2": {
@@ -5094,7 +5111,21 @@
         "addProperty": "cataloguersNote", "uriTemplate": "{+_}"
       },
       "$y": {"property": "altLabel"},
-      "$z": {"addProperty": "copyNote"}
+      "$z": {"addProperty": "copyNote"},
+      "_spec": [
+        {
+          "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/page"}]}},
+          "result": {"about": {
+            "isPrimaryTopicOf": [{"@type": "Document", "@id": "http://example.org/page"}]
+          }}
+        },
+        {
+          "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.org/page"}]}},
+          "result": {"about": {
+            "associatedMedia": [{"@type": "MediaObject", "@id": "http://example.org/page"}]
+          }}
+        }
+      ]
     },
 
     "863": {},
@@ -5839,8 +5870,8 @@
     },
 
     "561": {
-      "addProperty": "custodialHistoryOfItem",
-      "repeatable": true
+      "addLink": "workExample", "resourceType": "Product",
+      "$a": {"addProperty": "custodialHistoryOfItem"}
     },
 
     "562": {
@@ -5848,8 +5879,8 @@
     },
 
     "563": {
-      "addProperty": "bindingInformation",
-      "repeatable": true
+      "addLink": "workExample", "resourceType": "Product",
+      "$a": {"addProperty": "bindingInformation"}
     },
 
     "600": {"inherit": "bib:100", "addLink": "subject"},
@@ -5883,10 +5914,12 @@
       "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {
         "property": "classificationPart",
+        "TODO:property": "shelfMark? only for HeldItem?",
         "NOTE": "libris deviates from standard (used for all kinds of shelfControlNumber?)"
       },
       "$i": {
         "addProperty": "availability",
+        "TODO:property": "change to copyNote?",
         "NOTE": "deviates from standard (itemPart)?",
         "TODO": "optional controlled values (see websearch holdings interface)"
       },
@@ -5901,7 +5934,10 @@
       "$t": {"property": "copyNumber"},
       "$u": {"addProperty": "url"},
       "$x": {"addProperty": "cataloguersNote"},
-      "$z": {"addProperty": "copyNote"}
+      "$z": {
+        "addProperty": "copyNote",
+        "TODO:property": "change to comment?"
+      }
     },
 
     "856": {

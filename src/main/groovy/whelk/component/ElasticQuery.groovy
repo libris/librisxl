@@ -13,6 +13,7 @@ class ElasticQuery extends Query {
     String phraseField, phraseValue
     List indexTypes
     boolean phraseQuery = false
+    static final int MAX_NUMBER_OF_FACETS = 100
 
     Map<String,List> terms = null
     def sourceFilter = null
@@ -172,15 +173,14 @@ class ElasticQuery extends Query {
             this.facets.each {
                 if (it instanceof TermFacet) {
                     log.trace("Building FIELD facet for ${it.field}")
-                    facetMap[(it.name)] = ["terms":["field":it.field,"size": ElasticSearch.MAX_NUMBER_OF_FACETS]]
+                    facetMap[(it.name)] = ["terms":["field":it.field,"size": MAX_NUMBER_OF_FACETS]]
                 } else if (it instanceof ScriptFieldFacet) {
                     if (it.field.contains("@")) {
                         log.warn("Forcing FIELD facet for ${it.field}")
-                        facetMap[(it.name)] = ["terms":["field":it.field,"size": ElasticSearch.MAX_NUMBER_OF_FACETS]]
+                        facetMap[(it.name)] = ["terms":["field":it.field,"size": MAX_NUMBER_OF_FACETS]]
                     } else {
                         log.trace("Building SCRIPTFIELD facet for ${it.field}")
                         throw new UnsupportedOperationException("Scriptfield facet not yet implemented in DSL")
-                        //srb = srb.addFacet(FacetBuilders.termsFacet(it.name).scriptField("_source.?"+it.field.replaceAll(/\./, ".?")).size(ElasticSearch.MAX_NUMBER_OF_FACETS))
                     }
                 } else if (it instanceof QueryFacet) {
                     throw new UnsupportedOperationException("QueryFacet not yet implemented in DSL")

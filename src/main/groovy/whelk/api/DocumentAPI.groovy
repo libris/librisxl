@@ -151,7 +151,7 @@ class DocumentAPI extends BasicAPI {
                 if (!d && location?.uri) {
                     def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
                     response.setHeader("Location", locationRef + location.uri.toString())
-                    sendResponse(response, null, null, location.responseCode)
+                    sendResponse(response, new byte[0], null, location.responseCode)
                     return
                 }
             }

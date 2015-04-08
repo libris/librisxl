@@ -5,7 +5,9 @@ import groovy.util.slurpersupport.GPathResult
 import groovy.xml.StreamingMarkupBuilder
 import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
-import whelk.importer.MySQLImporter
+import whelk.plugin.Importer
+import whelk.plugin.BasicPlugin
+import whelk.result.ImportResult
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -25,7 +27,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
 @Log
-class XInfoImporter extends MySQLImporter {
+class XInfoImporter extends BasicPlugin implements Importer {
 
     int sqlLimit = 1000
 
@@ -45,7 +47,7 @@ class XInfoImporter extends MySQLImporter {
         return conn.prepareStatement("SELECT * FROM xinfo.resource LIMIT ?, $sqlLimit")
     }
 
-    int doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
+    ImportResult doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false
@@ -90,59 +92,91 @@ class XInfoImporter extends MySQLImporter {
 
                 log.debug("Query executed. Starting processing ...")
                 def imgdocs = []
-                def jsondocs = [:]
+                def jsondocs = []
+                def coverjsondocs = []
                 while(resultSet.next()) {
                     String xinfoId = resultSet.getString("id")
                     String xinfoUrl = resultSet.getString("url")
                     String type = resultSet.getString("type")
+                    String supplier = resultSet.getString("supplier")
                     String whelkId = createWhelkId(xinfoId, type)
-                    if (type == "PICTURE" && xinfoUrl.startsWith("/")) {
+                    if ((type == "PICTURE" || type == "BILD") && xinfoUrl.startsWith("/")) {
                         log.debug("Loading all versions of image for $xinfoUrl, saving to base $whelkId")
-                        Document doc
-                        if (jsondocs.containsKey(whelkId)) {
-                            doc = jsondocs.get(whelkId)
-                        } else {
-                            doc = whelk.get(whelkId)
-                        }
-                        if (!doc) {
-                            doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId).withDataset("xinfo").withData('{"@type":"xinfo"}')
-                        }
-                        jsondocs.put(doc.identifier, doc)
+                        Document coverDoc = whelk.createDocument("application/ld+json").withIdentifier(whelkId + "/cover").withDataset("cover").withData('{"@type":"CoverArt"}')
+                        def coverDocMap = coverDoc.dataAsMap
                         ["orginal", "hitlist", "record"].each {
                             String version = it
-                            byte[] imgBytes = new URL("http://xinfo.libris.kb.se" + xinfoUrl + "/"+ version).getBytes()
-                            if (imgBytes.length > 0) {
-                                if (version == "orginal") {
-                                    version = "original"
+                            String imgUrl = "http://xinfo.libris.kb.se" + xinfoUrl + "/"+ version
+                            try {
+                                byte[] imgBytes = new URL(imgUrl).getBytes()
+                                if (imgBytes.length > 0) {
+                                    if (version == "orginal") {
+                                        version = "original"
+                                    }
+                                    imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/cover/" + version).withData(imgBytes).withDataset("image")
+                                    if (version == "original") {
+                                        coverDocMap.put("covertArt", whelkId + "/cover/" + version)
+                                    }
+                                    if (version == "hitlist") {
+                                        coverDocMap.put("covertArtThumb", whelkId + "/cover/" + version)
+                                    }
+                                    if (version == "record") {
+                                        coverDocMap.put("covertArtMidsize", whelkId + "/cover/" + version)
+                                    }
+                                    if (whelkId.contains("/bib/")) {
+                                        coverDocMap.put("annotates", ["@id": "/resource/" + whelkId.substring(7)])
+                                    } else {
+                                        coverDocMap.put("annotates", ["@id": "urn:" + whelkId.substring(7)])
+                                    }
+                                    if (supplier) {
+                                        coverDocMap.put("annotationSource", ["name": supplier])
+                                    }
+                                } else {
+                                    log.warn("No data at $imgUrl")
                                 }
-                                imgdocs << whelk.createDocument("image/jpeg").withIdentifier(whelkId + "/image/" + version).withData(imgBytes).withDataset("image")
+                            } catch (IOException ioe) {
+                                log.warn("Error retrieving data from $imgUrl ... Skipping")
                             }
                         }
+                        coverDoc.withData(coverDocMap)
+                        coverjsondocs << coverDoc
                     } else if (xinfoUrl.startsWith("/")) {
-                        Document doc
-                        if (jsondocs.containsKey(whelkId)) {
-                            doc = jsondocs.get(whelkId)
-                        } else {
-                            doc = whelk.get(whelkId)
+                        try {
+                            Document doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId + "/" + type.toLowerCase()).withDataset("annotation")
+                            def dataMap = doc.dataAsMap
+                            dataMap.put("@id", whelkId)
+                            dataMap.put("text", loadXinfoText(xinfoUrl))
+                            if (type == "TOC") {
+                                dataMap.put("@type", "TableOfContents")
+                            } else {
+                                dataMap.put("@type", type.toLowerCase().capitalize())
+                            }
+                            if (supplier) {
+                                dataMap.put("annotationSource", ["name": supplier])
+                            }
+                            if (whelkId.contains("/bib/")) {
+                                dataMap.put("annotates", ["@id": "/resource/" + whelkId.substring(7)])
+                            } else {
+                                dataMap.put("annotates", ["@id": "urn:" + whelkId.substring(7)])
+                            }
+                            doc.withData(dataMap)
+                            jsondocs << doc
+                        } catch (Exception e) {
+                            log.error("Failed to create document for $xinfoUrl", e)
                         }
-                        if (!doc) {
-                            doc = whelk.createDocument("application/ld+json").withIdentifier(whelkId).withDataset("xinfo")
-                        }
-                        def dataMap = doc.dataAsMap
-                        dataMap.put("@type", "xinfo")
-                        dataMap.put(type.toLowerCase(), loadXinfoText(xinfoUrl))
-                        doc.withData(dataMap)
-                        jsondocs.put(doc.identifier, doc)
                     }
                     recordCount++
                     startAt++
                 }
                 queue.execute({
                     if (imgdocs.size() > 0) {
-                        this.whelk.bulkAdd(imgdocs, "image/jpeg")
+                        this.whelk.bulkAdd(imgdocs, "image", "image/jpeg")
+                    }
+                    if (coverjsondocs.size() > 0) {
+                        this.whelk.bulkAdd(coverjsondocs, "cover", "application/ld+json")
                     }
                     if (jsondocs.size() > 0) {
-                        this.whelk.bulkAdd(jsondocs.values() as List, "application/ld+json")
+                        this.whelk.bulkAdd(jsondocs, "annotation", "application/ld+json")
                     }
                 } as Runnable)
 
@@ -180,7 +214,7 @@ class XInfoImporter extends MySQLImporter {
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
         log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
-        return recordCount
+        return new ImportResult(numberOfDocuments: recordCount)
     }
 
     String normalizeString(String inString) {
@@ -198,19 +232,27 @@ class XInfoImporter extends MySQLImporter {
                 log.warn("Found illegal character: ${sb.charAt(i)}")
                 sb.setCharAt(i, '?' as char);
             }
-
-        return sb.toString()
+        return sb.toString().replaceAll("&#(\\d+);", " ")
     }
 
     String loadXinfoText(String url) {
         URL xinfoUrl = new URL("http://xinfo.libris.kb.se" + url + "&type=summary")
         log.debug("Loading xinfo metadata from $xinfoUrl")
-        String xmlString = washXmlOfBadCharacters(normalizeString(xinfoUrl.text))
+        boolean loaded = false
+        String xmlString = null
+        while (!loaded) {
+            try {
+                xmlString = washXmlOfBadCharacters(normalizeString(xinfoUrl.text))
+                loaded = true
+            } catch (java.net.ConnectException ce) {
+                log.info("ConnectException. Failed to load text from ${xinfoUrl}. Trying again in a few seconds.")
+                Thread.sleep(5000)
+            }
+        }
         if (xmlString) {
-            //log.info("xmlString: $xmlString")
             try {
                 def summary = new XmlSlurper(false,false).parseText(xmlString)
-                String infoText = summary.text()
+                String infoText = removeMarkup(summary.text())
                 log.trace("Setting infotext: $infoText")
                 return infoText
             } catch (org.xml.sax.SAXParseException spe) {
@@ -218,6 +260,10 @@ class XInfoImporter extends MySQLImporter {
             }
         }
         return null
+    }
+
+    String removeMarkup(String text) {
+        return text.replaceAll("<[^>]*>", " ").replaceAll(/\s{2,}/, " ").trim()
     }
 
     String createWhelkId(String xiId, String type) {
@@ -259,12 +305,7 @@ class XInfoImporter extends MySQLImporter {
 
 
     @Override
-    int getRecordCount() {
-        return 0
-    }
-
-    @Override
     void cancel() {
-
+        cancelled = true
     }
 }
