@@ -29,6 +29,9 @@ class AccessControl extends BasicPlugin {
                     return false
                 }
             }
+        } else {
+            log.info("Datasets 'bib' and 'auth' are not editable right now.")
+            return false
         }
 
         if (newdoc) {

@@ -250,7 +250,6 @@ class XInfoImporter extends BasicPlugin implements Importer {
             }
         }
         if (xmlString) {
-            //log.info("xmlString: $xmlString")
             try {
                 def summary = new XmlSlurper(false,false).parseText(xmlString)
                 String infoText = removeMarkup(summary.text())
