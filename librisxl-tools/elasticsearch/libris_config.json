@@ -61,7 +61,7 @@
                             "type": "string"
                         },
                         "match_mapping_type": "string",
-                        "path_match" : "_marc*.*.subfields.*"
+                        "path_match": "_marc*.*.subfields.*"
                     }
                 }
             ]
