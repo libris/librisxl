@@ -133,7 +133,6 @@ class StandardWhelk implements Whelk {
 
     @groovy.transform.Synchronized
     boolean acquireLock(String dataset = null) {
-
         if (whelkState.get("locked", false)) {
             log.trace("Global lock in effect.")
             return false

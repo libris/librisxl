@@ -269,7 +269,7 @@ PUT mapping with prop config:
 curl -XPUT http://<host>:9200/libris/bib/_mapping -d@etc/resources/_all/default_mapping.json
 
 ELASTIC SEARCH, ANALYZE INDEXED VALUES FOR A SPECIFIC FIELD:
-curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.untouched" } } } }'
+curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.raw" } } } }'
 
 whelk, SEARCH API:
 http://<host>:<PORT>/whelk/<indextype>/_search?q=(<field>:)strindberg
