@@ -43,6 +43,7 @@ class JsonLdTermReducer extends BasicFilter {
     }
 
     void add(owner, term, value) {
+        // TODO: treat result as a set; i.e. don't add if value or ID is present
         if (value) {
             def container = owner[term]
             if (container instanceof List) {
