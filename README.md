@@ -176,6 +176,14 @@ This is now available as:
 
 All whelk maintenance is controlled from the operations interface (<whelkhost>/\_operations).
 
+### New Index Config
+
+If a new index is to be set up, and unless you run locally in a pristine setup, you need to put the config to the index, like (replace localhost with target machine):
+
+  $ curl -XPUT http://localhost:9200/libris/ -d @librisxl-tools/elasticsearch/libris_config.json
+
+(To replace an existing setup with entirely new configuration, you need to delete the index `curl -XDELETE http://localhost:9200/libris/` and read all data again (even locally).)
+
 ### New format
 
 If the JSONLD format has been updated, in such a way that the marcframeconverter need to be run, the only options are either to reload the data from a marcxml storage (currently untested and probably not working) or reloading the data from OAIPMH.
@@ -269,7 +277,7 @@ PUT mapping with prop config:
 curl -XPUT http://<host>:9200/libris/bib/_mapping -d@etc/resources/_all/default_mapping.json
 
 ELASTIC SEARCH, ANALYZE INDEXED VALUES FOR A SPECIFIC FIELD:
-curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.untouched" } } } }'
+curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.raw" } } } }'
 
 whelk, SEARCH API:
 http://<host>:<PORT>/whelk/<indextype>/_search?q=(<field>:)strindberg

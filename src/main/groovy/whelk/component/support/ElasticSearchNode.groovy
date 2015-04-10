@@ -28,7 +28,7 @@ class ElasticSearchNode extends BasicPlugin {
         log.info("Elasticsearch node started.")
         if (!node.client().admin().indices().prepareExists(indexName).execute().actionGet().exists) {
             log.info("Creating local index $indexName")
-            def config = mapper.readValue(new FileInputStream("librisxl-tools/elasticsearch/config_libris.json"), Map)
+            def config = mapper.readValue(new FileInputStream("librisxl-tools/elasticsearch/libris_config.json"), Map)
             node.client().admin().indices().prepareCreate(indexName).setSettings(config.get("settings", [:])).execute().actionGet()
             def defaultMappings = config.mappings['_default_']
             config.mappings.each {
