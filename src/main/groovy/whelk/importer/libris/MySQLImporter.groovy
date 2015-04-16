@@ -20,7 +20,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
-    LinkFinder linkfinder
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
 
@@ -47,7 +46,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
     void bootstrap() {
         marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
         enhancer = plugins.find { it instanceof JsonLDLinkCompleterFilter }
-        linkfinder = plugins.find { it instanceof LinkFinder }
         assert marcFrameConverter
     }
 
@@ -180,7 +178,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
             tickets.acquire()
             */
             log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
-            queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, linkfinder, documentList, tickets))
+            queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets))
             log.debug("     Current poolsize: ${queue.poolSize}")
             log.debug("------------------------------")
             log.debug("queuedSubmissionCount: ${queue.queuedSubmissionCount}")
@@ -218,13 +216,12 @@ class MySQLImporter extends BasicPlugin implements Importer {
         private Whelk whelk
         private MarcFrameConverter converter
         private Filter filter
-        private LinkFinder linkfinder
 
         private List recordList
 
         private Semaphore tickets
 
-        ConvertAndStoreRunner(Whelk w, FormatConverter c, Filter f, LinkFinder linkfinder, final List recList, Semaphore t) {
+        ConvertAndStoreRunner(Whelk w, FormatConverter c, Filter f, final List recList, Semaphore t) {
             this.whelk = w
             this.converter = c
             this.filter = f
@@ -242,9 +239,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
                     Document doc = converter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
                     if (filter) {
                         doc = filter.filter(doc)
-                    }
-                    if (linkfinder) {
-                        doc = linkfinder.findLinks(doc)
                     }
                     convertedDocs << doc
                 }
