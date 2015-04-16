@@ -33,7 +33,7 @@ try {
 } catch (Exception e) {}
 
 // Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
-version = versionprops.get("releaseTag", "0.8.3.x")
+version = versionprops.get("releaseTag", "0.8.4.x")
 
 archivesBaseName = "whelk"
 
