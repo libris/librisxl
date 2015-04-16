@@ -4,7 +4,6 @@
         "STORAGE_PATH": "work/storage",
         "ELASTIC_SEARCH_HOST": "localhost:9300",
         "ELASTIC_STORAGE_HOST": "localhost:9300",
-        "ELASTIC_INDEX_NAME": "libris_index",
         "ELASTIC_CLUSTER": null,
         "GRAPHSTORE_DATA_URI": "http://localhost:3030/libris/data",
         "GRAPHSTORE_QUERY_URI": "http://localhost:3030/libris/query",
