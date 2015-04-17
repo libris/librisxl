@@ -36,10 +36,6 @@ class JsonLdTermReducer extends BasicFilter {
             it.identifierValue?.replaceAll("-", "")
         }
 
-        add thing, 'creator', ['attributedTo', 'influencedBy'].collect {
-            asList(thing[it])
-        }.flatten().findAll()
-
     }
 
     void add(owner, term, value) {

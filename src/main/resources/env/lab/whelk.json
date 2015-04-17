@@ -1,6 +1,6 @@
 {
     "_properties": {
-        "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se",
+        "ELASTIC_STORAGE_HOST": "hp01.libris.kb.se:9300",
         "ELASTIC_INDEX_NAME": "testlibris_index",
         "APIX_HOST": "https://libris.kb.se",
         "CAMEL_CHANNEL_PREFIX":"lab",
