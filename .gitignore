@@ -15,3 +15,4 @@ target/camel-elasticsearch-test.log
 src/main/resources/version.properties
 src/main/resources/secrets.json
 src/main/resources/logback.xml
+catalina.base_IS_UNDEFINED
