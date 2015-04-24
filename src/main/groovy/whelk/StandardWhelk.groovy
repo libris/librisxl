@@ -181,7 +181,7 @@ class StandardWhelk implements Whelk {
      */
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String dataset, String contentType, boolean prepareDocuments = true) {
-        checkAvailableMemory()
+        //checkAvailableMemory()
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getWriteStorages(contentType)
         if (suitableStorages.isEmpty()) { 
