@@ -41,14 +41,12 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
         return false
     }
 
-    @groovy.transform.Synchronized
     Document doFilter(Document doc) {
         log.debug("Expanding ${doc.identifier}")
         def dataMap = doFilter(doc.dataAsMap, doc.dataset)
         return doc.withData(dataMap)
     }
 
-    @groovy.transform.Synchronized
     Map doFilter(Map dataMap, String dataset) {
         nodesToExpand[dataset].each { key, instructions ->
             log.trace("key: $key, instructions: $instructions")

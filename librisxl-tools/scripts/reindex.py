@@ -38,7 +38,7 @@ def loadexpansiondata(identifier, dataset, source):
 def linkexpand(about):
     try:
         for (key,value) in about.items():
-            if key in ['attributedTo','influencedBy','author','language','originalLanguage','literaryForm','publicationCountry']:
+            if key in ['attributedTo','influencedBy','author','language','originalLanguage','literaryForm','publicationCountry', 'additionalCarrierType', 'contentType']:
                 items = value if type(value) is list else [ value ]
                 expandeditems = []
                 for item in items:

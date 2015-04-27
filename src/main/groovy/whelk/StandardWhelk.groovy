@@ -181,7 +181,7 @@ class StandardWhelk implements Whelk {
      */
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String dataset, String contentType, boolean prepareDocuments = true) {
-        checkAvailableMemory()
+        //checkAvailableMemory()
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getWriteStorages(contentType)
         if (suitableStorages.isEmpty()) { 
@@ -225,7 +225,6 @@ class StandardWhelk implements Whelk {
                 doc = filter.filter(doc)
             }
         }
-
         return doc
     }
 
@@ -454,25 +453,31 @@ class StandardWhelk implements Whelk {
     }
 
     void notifyCamel(List<Document> documents) {
-        for (doc in documents) {
-            notifyCamel(doc, BULK_ADD_OPERATION, [:])
+        if (camelContext) {
+            for (doc in documents) {
+                notifyCamel(doc, BULK_ADD_OPERATION, [:])
+            }
         }
     }
 
 
     @Override
     void notifyCamel(String identifier, String dataset, String operation, Map extraInfo) {
-        Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, "text/plain", identifier, extraInfo)
-        log.trace("Sending $operation message to camel regaring ${identifier}")
-        sendCamelMessage(operation, exchange)
+        if (camelContext) {
+            Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, "text/plain", identifier, extraInfo)
+            log.trace("Sending $operation message to camel regaring ${identifier}")
+            sendCamelMessage(operation, exchange)
+        }
     }
 
     @Override
     void notifyCamel(Document document, String operation, Map extraInfo) {
-        Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, document.contentType, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
-        log.trace("Sending document in message to camel regaring ${document.identifier} with operation $operation")
-        exchange.getIn().setHeader("document:metaentry", document.metadataAsJson)
-        sendCamelMessage(operation, exchange)
+        if (camelContext) {
+            Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, document.contentType, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
+            log.trace("Sending document in message to camel regaring ${document.identifier} with operation $operation")
+            exchange.getIn().setHeader("document:metaentry", document.metadataAsJson)
+            sendCamelMessage(operation, exchange)
+        }
     }
 
     private Exchange createAndPrepareExchange(String identifier, String dataset, String operation, String contentType, Object messageBody, Map extraInfo) {
@@ -628,12 +633,15 @@ class StandardWhelk implements Whelk {
                 }
             }
 
+            boolean routesAdded = false
             for (route in plugins.findAll { it instanceof RouteBuilder }) {
                 log.info("Adding route ${route.id}")
                 whelkCamelMain.addRoutes(route)
+                routesAdded = true
             }
-
-            camelContext = whelkCamelMain.camelContext
+            if (routesAdded) {
+                camelContext = whelkCamelMain.camelContext
+            }
 
             ctxThread = Thread.start {
                 log.debug("Starting Apache Camel")
