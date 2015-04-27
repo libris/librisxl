@@ -610,7 +610,7 @@
     },
     "apixprocessor": {
         "_class": "whelk.camel.APIXProcessor",
-        "_params": "/apix/0.1/cat/test/",
+        "_params": "_property:APIX_PATH",
         "_plugins" : ["jsonld2marcxmlconverter"]
     },
     "elasticprocessor": {

@@ -11,6 +11,7 @@
         "MQ_GRAPHSTORE_RETRIES": "activemq:{whelkname}.graphstore.retries",
         "MQ_APIX": "activemq:{whelkname}.apix",
         "MQ_APIX_RETRIES": "activemq:{whelkname}.apix.retries",
+        "APIX_PATH": "/apix/0.1/cat/test/",
         "CAMEL_MASTER_COMPONENT":"sendmq",
         "CAMEL_COMPONENT_CONFIG":"concurrentConsumers=5",
         "UPDATE_OAIPMH_URL":"http://data.libris.kb.se/{dataset}/oaipmh",

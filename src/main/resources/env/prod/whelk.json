@@ -6,6 +6,7 @@
         "GRAPHSTORE_UPDATE_POST_PARAMETER": "update",
         "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": true,
         "APIX_HOST": "https://libris.kb.se",
+        "APIX_PATH": "/apix/0.1/cat/libris/",
         "UPDATE_INTERVAL":1
     },
     "_apis": [
