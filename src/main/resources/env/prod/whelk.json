@@ -9,10 +9,12 @@
         "APIX_PATH": "/apix/0.1/cat/libris/",
         "UPDATE_INTERVAL":1
     },
-    "_camel": [
-        "indexroutebuilder",
-        "apixroutebuilder"
-        ],
+    "_plugins": {
+      "_camel": [
+          "indexroutebuilder",
+          "apixroutebuilder"
+        ]
+    },
     "_apis": [
         { "/_remotesearch": "remotesearch" },
         { "/_format": "formatter" },
