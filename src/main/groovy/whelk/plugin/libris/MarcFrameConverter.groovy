@@ -584,6 +584,7 @@ class ConvertResult {
 class MarcFixedFieldHandler {
 
     String tag
+    String fillChar
     static final String FIXED_NONE = " "
     static final String FIXED_UNDEF = "|"
     def columns = []
@@ -591,6 +592,7 @@ class MarcFixedFieldHandler {
 
     MarcFixedFieldHandler(ruleSet, tag, fieldDfn) {
         this.tag = tag
+        this.fillChar = FIXED_NONE
         fieldDfn.each { key, obj ->
             def m = (key =~ /^\[(\d+):(\d+)\]$/)
             if (m) {
@@ -626,23 +628,27 @@ class MarcFixedFieldHandler {
     }
 
     def revert(Map data, Map result, boolean keepEmpty=false) {
-        def value = new StringBuilder(FIXED_NONE * fieldSize)
+        def value = new StringBuilder(fillChar * fieldSize)
+        def actualValue = false
         for (col in columns) {
             def obj = col.revert(data)
             // TODO: ambiguity trouble if this is a List!
-            if (obj instanceof List) obj = obj.find { it }
+            if (obj instanceof List) {
+                obj = obj.find { it }
+            }
             if (obj) {
                 assert col.width - obj.size() > -1
                 assert value.size() > col.start
                 assert col.width >= obj.size()
                 def end = col.start + obj.size() - 1
                 value[col.start .. end] = obj
+                if (obj != col.fixedDefault &&
+                        obj != FIXED_NONE && obj != FIXED_UNDEF) {
+                    actualValue = true
+                }
             }
         }
-        def repr = value.toString()
-        if (keepEmpty)
-            return repr
-        return repr.find { it != FIXED_NONE }? repr : null
+        return (actualValue || keepEmpty)? value.toString() : null
     }
 
     class Column extends MarcSimpleFieldHandler {
@@ -810,7 +816,8 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
                     value = combined.join("")
                 }
             }
-            if (value.find { it != MarcFixedFieldHandler.FIXED_NONE }) {
+            if (value.find { it != MarcFixedFieldHandler.FIXED_NONE &&
+                    it != MarcFixedFieldHandler.FIXED_UNDEF }) {
                 values << value
             }
         }
