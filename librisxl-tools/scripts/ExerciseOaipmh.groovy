@@ -59,9 +59,9 @@ class ExerciseOaipmh {
     }
 
     static void main(args) {
-        def startUrl = "http://data.libris.kb.se/hold/oaipmh"
-        def name = args[0]
-        def passwd = args[1]
+        def startUrl = args[0]
+        def name = args[1]
+        def passwd = args[2]
         new ExerciseOaipmh().parseOaipmh(startUrl, name, passwd)
     }
 }
