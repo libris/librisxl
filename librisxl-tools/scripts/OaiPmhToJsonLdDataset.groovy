@@ -6,6 +6,7 @@ import whelk.plugin.libris.MarcFrameConverter
 
 class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
 
+    int counter = 0
     String dest
     MarcFrameConverter converter
     PrintWriter pw
@@ -27,7 +28,7 @@ class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
             def node = it.metadata.record
             def xmlRepr = XmlUtil.serialize(node)
             def data = marcXmlToJsonLd(xmlRepr)
-            println "Saving: ${it.header.identifier}"
+            println "Saving #${++counter}: ${it.header.identifier}"
             saveData(data)
         }
     }
