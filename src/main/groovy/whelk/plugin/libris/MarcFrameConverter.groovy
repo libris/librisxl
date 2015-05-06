@@ -584,18 +584,17 @@ class ConvertResult {
 class MarcFixedFieldHandler {
 
     String tag
-    String fillChar
-    static final String FIXED_NONE = " "
     static final String FIXED_UNDEF = "|"
+    static final String FIXED_NONE = " "
+    static final String FIXED_FAUX_NONE = "_"
     def columns = []
     int fieldSize = 0
 
     MarcFixedFieldHandler(ruleSet, tag, fieldDfn) {
         this.tag = tag
-        this.fillChar = FIXED_NONE
         fieldDfn.each { key, obj ->
             def m = (key =~ /^\[(\d+):(\d+)\]$/)
-            if (m) {
+            if (m && obj) {
                 def start = m[0][1].toInteger()
                 def end = m[0][2].toInteger()
                 columns << new Column(ruleSet, obj, start, end, obj['fixedDefault'])
@@ -628,7 +627,7 @@ class MarcFixedFieldHandler {
     }
 
     def revert(Map data, Map result, boolean keepEmpty=false) {
-        def value = new StringBuilder(fillChar * fieldSize)
+        def value = new StringBuilder(FIXED_NONE * fieldSize)
         def actualValue = false
         for (col in columns) {
             def obj = col.revert(data)
@@ -661,6 +660,11 @@ class MarcFixedFieldHandler {
             this.start = start
             this.end = end
             this.fixedDefault = fixedDefault
+            if (!fixedDefault && tokenMap &&
+                !tokenMap.containsKey(FIXED_FAUX_NONE) &&
+                !tokenMap.containsKey(FIXED_NONE)) {
+                this.fixedDefault = FIXED_UNDEF
+            }
         }
         int getWidth() { return end - start }
         String getToken(value) {
