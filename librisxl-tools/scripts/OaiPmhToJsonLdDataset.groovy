@@ -23,13 +23,29 @@ class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
         }
     }
 
+    @Override
+    def makeNextUrl(startUrl, resumptionToken, since) {
+        def next = super.makeNextUrl(startUrl, resumptionToken, since)
+        println "Following: <$next>"
+        return next
+    }
+
     void parseResult(final slurpedXml) {
         slurpedXml.ListRecords.record.each {
-            def node = it.metadata.record
-            def xmlRepr = XmlUtil.serialize(node)
-            def data = marcXmlToJsonLd(xmlRepr)
-            println "Saving #${++counter}: ${it.header.identifier}"
-            saveData(data)
+            if (it.header?.@status == 'deleted' || it.header?.@deleted == 'true') {
+                println "Skipping deleted"
+            } else {
+                def node = it.metadata.record
+                try {
+                    def xmlRepr = XmlUtil.serialize(node)
+                    def data = marcXmlToJsonLd(xmlRepr)
+                    println "Saving #${++counter}: <${it.header.identifier}>"
+                    saveData(data)
+                } catch (Exception e) {
+                    println "Error: $e"
+                    println "Record: $it"
+                }
+            }
         }
     }
 
