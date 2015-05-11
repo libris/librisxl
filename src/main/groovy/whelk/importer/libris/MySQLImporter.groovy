@@ -165,6 +165,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         }
 
 
+        /*
         queue.execute({
             this.whelk.flush()
             log.debug("Resetting versioning setting for storages")
@@ -177,50 +178,26 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
+        */
 
         log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
         return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
     }
 
-    private checkAvailableMemory() {
-        boolean logMessagePrinted = false
-        MemoryMXBean mem=ManagementFactory.getMemoryMXBean();
-        MemoryUsage heap=mem.getHeapMemoryUsage();
-
-        long totalMemory=heap.getUsed();
-        long maxMemory=heap.getMax();
-        long used=(totalMemory * 100) / maxMemory;
-
-        log.debug("totalMemory: $totalMemory")
-        log.debug("maxMemory: $maxMemory")
-        log.debug("used: $used")
-
-        while (used > MAX_MEMORY_THRESHOLD) {
-            if (!logMessagePrinted) {
-                log.warn("Using more than $MAX_MEMORY_THRESHOLD percent of available memory ($totalMemory / $maxMemory). Blocking.")
-                logMessagePrinted = true
-            }
-            totalMemory=heap.getUsed();
-            maxMemory=heap.getMax();
-            used=(totalMemory * 100) / maxMemory; // comment to fix highlighting in vim ... */
-        }
-    }
-
     void buildDocument(MarcRecord record, String dataset, String oaipmhSetSpecValue) {
-        //checkAvailableMemory()
         String identifier = null
         if (documentList.size() >= addBatchSize || record == null) {
+            /*
             if (tickets.availablePermits() < 1) {
                 log.info("Queues are full at the moment. Waiting for some to finish.")
             }
             tickets.acquire()
             log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
+            */
 
-            /*
             def casr = new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets)
             casr.run()
-            */
-            queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets))
+            //queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets))
             /*
             log.debug("     Current poolsize: ${queue.poolSize}")
             log.debug("------------------------------")
@@ -292,25 +269,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
             }
         }
     }
-
-    /*
-    void addDocuments(final List<Document> docs) {
-        if (tickets.availablePermits() < 1) {
-            log.info("Queues are full at the moment. Waiting for some to finish.")
-        }
-        tickets.acquire()
-        queue.execute({
-            try {
-                log.debug("Starting add of ${docs.size()} documents.")
-                whelk.bulkAdd(docs, docs.first().contentType, false)
-                log.debug("Bulk add operation completed.")
-            } finally {
-                tickets.release()
-                log.debug("Add completed.")
-            }
-        } as Runnable)
-    }
-    */
 
     Connection connectToUri(URI uri) {
         log.info("connect uri: $uri")
