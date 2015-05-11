@@ -844,27 +844,33 @@ class StandardWhelk implements Whelk {
                     log.trace("Plugin parameter: ${params}")
                     def pclasses = params.collect { it.class }
                     try {
-                        def c = Class.forName(meta._class).getConstructor(pclasses as Class[])
-                        log.trace("c: $c")
-                        plugin = c.newInstance(params as Object[])
-                        log.trace("plugin: $plugin")
-                    } catch (NoSuchMethodException nsme) {
-                        log.trace("Constructor not found the easy way. Trying to find assignable class.")
-                        for (cnstr in Class.forName(meta._class).getConstructors()) {
-                            log.trace("Found constructor for ${meta._class}: $cnstr")
-                            log.trace("Parameter types: " + cnstr.getParameterTypes())
-                            boolean match = true
-                            int i = 0
-                            for (pt in cnstr.getParameterTypes()) {
-                                log.trace("Loop parameter type: $pt")
-                                log.trace("Check against: " + params[i])
-                                if (!pt.isAssignableFrom(params[i++].getClass())) {
-                                    match = false
+                        log.trace("Trying getInstance()-method.")
+                        plugin = Class.forName(meta._class).getDeclaredMethod("getInstance").invoke(null,null)
+                        plugin.setSettings(meta._params)
+                    } catch (NoSuchMethodException noGetInstance) {
+                        try {
+                            def c = Class.forName(meta._class).getConstructor(pclasses as Class[])
+                            log.trace("c: $c")
+                            plugin = c.newInstance(params as Object[])
+                            log.trace("plugin: $plugin")
+                        } catch (NoSuchMethodException nsme) {
+                            log.trace("Constructor not found the easy way. Trying to find assignable class.")
+                            for (cnstr in Class.forName(meta._class).getConstructors()) {
+                                log.trace("Found constructor for ${meta._class}: $cnstr")
+                                log.trace("Parameter types: " + cnstr.getParameterTypes())
+                                boolean match = true
+                                int i = 0
+                                for (pt in cnstr.getParameterTypes()) {
+                                    log.trace("Loop parameter type: $pt")
+                                    log.trace("Check against: " + params[i])
+                                    if (!pt.isAssignableFrom(params[i++].getClass())) {
+                                        match = false
+                                    }
                                 }
-                            }
-                            if (match) {
-                                plugin = cnstr.newInstance(params as Object[])
-                                break;
+                                if (match) {
+                                    plugin = cnstr.newInstance(params as Object[])
+                                    break;
+                                }
                             }
                         }
                     }
