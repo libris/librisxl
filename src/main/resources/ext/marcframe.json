@@ -1766,8 +1766,7 @@
       "1": "/def/enum/content/Complete",
       "2": "/def/enum/content/Incomplete",
       "3": "/def/enum/content/Scattered",
-      "4": null,
-      "_": null
+      "4": null
     },
     "lendingPolicy": {
       "_": null,
@@ -3009,8 +3008,8 @@
       "repeatable": true,
       "_spec": [
         {
-          "source": {"007":"aj  a|||"},
-          "normalized": {"007":"aj  a                  "},
+          "source": {"007":"aj |a|||"},
+          "normalized": {"007":"aj |a|||               "},
           "result": {
             "about": {
               "hasFormat": [
@@ -3494,7 +3493,7 @@
       "_spec": [
         {
           "source": [
-            {"008": "900101s1977    sw            000 0aswe  "}
+            {"008": "900101s1977    sw |||||||||||000 0aswe| "}
           ],
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
@@ -5185,6 +5184,7 @@
 
     "000": {
       "inherit": "bib",
+      "[7:8]": null,
       "[17:18]": {
         "aboutEntity": "?record",
         "link": "encLevel",
@@ -5782,7 +5782,8 @@
         "tokenMap": "acquisitionMethod"
       },
       "[8:12]": {
-        "property": "expectedAcquisitionEndDate"
+        "property": "expectedAcquisitionEndDate",
+        "fixedDefault": "0000"
       },
       "[12:13]": {
         "link": "generalRetentionPolicy",
@@ -5809,7 +5810,8 @@
       },
       "[17:20]": {
         "property": "numberOfItems",
-        "TODO": "parse-zero-padded-number"
+        "TODO": "parse-zero-padded-number",
+        "fixedDefault": "000"
       },
       "[20:21]": {
         "link": "lendingPolicy",
@@ -5834,13 +5836,14 @@
       "[26:32]": {
         "aboutEntity": "?record",
         "property": "date",
-        "parseDateTime": "yyMMdd", "timeZone": "CET"
+        "parseDateTime": "yyMMdd", "timeZone": "CET",
+        "fixedDefault": "000000"
       },
       "repeatable": false,
       "_spec": [
         {
           "source": [
-            {"008": "900101                swe       "}
+            {"008": "900101 |0000|| ||000  swe 000000"}
           ],
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
@@ -5852,11 +5855,10 @@
         {
           "name": "keep broken date values verbatim",
           "source": [
-            {"008": "900101                    000000"}
+            {"008": "900101 |0000|| ||000      000000"}
           ],
           "result": {
-            "created": "1990-01-01T00:00:00.0+01:00",
-            "date": "000000"
+            "created": "1990-01-01T00:00:00.0+01:00"
           }
         }
       ]
