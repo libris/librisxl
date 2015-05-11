@@ -24,7 +24,7 @@ import org.apache.http.client.protocol.*
 class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
 
     Map nodesToExpand = null
-    private Map cachedDocuments = null
+    private Map cachedDocuments = [:]
     Map settings
     Whelk whelk
     Index index
@@ -63,7 +63,6 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
     @groovy.transform.Synchronized
     void loadCachedDocuments() {
         log.info("Caching def-documents.")
-        cachedDocuments = [:]
         for (doc in whelk.loadAll("def")) {
             def dataMap = (doc.dataAsMap.containsKey("about") ? doc.dataAsMap.get("about") : doc.dataAsMap)
             dataMap.put("@id", doc.identifier)
