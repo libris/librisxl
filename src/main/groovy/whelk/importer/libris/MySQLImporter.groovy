@@ -192,8 +192,8 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 log.info("Queues are full at the moment. Waiting for some to finish.")
             }
             tickets.acquire()
-            log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
             */
+            log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
 
             def casr = new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets)
             casr.run()
@@ -208,6 +208,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
             log.debug("------------------------------")
             */
             //log.debug("       completed jobs: ${tickets.availablePermits()}")
+            log.debug("Documents stored. Continuing to load rows")
             this.documentList = []
         }
         if (record) {

@@ -334,9 +334,11 @@ class StandardWhelk implements Whelk {
                 map.get("about").put("@id", "/resource"+doc.identifier)
             }
             // Remove modified from jsonld documents prior to saving, to avoid messing up checksum.
+            /* Necessary anymore?
             if (map.containsKey("modified")) {
                 map.put("modified", null)
             }
+            */
             if (documentDataToMetaMapping) {
                 def meta = doc.meta
                 boolean modified = false
