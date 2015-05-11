@@ -87,6 +87,10 @@ class MySQLImporter extends BasicPlugin implements Importer {
             conn = connectToUri(serviceUrl)
             conn.setAutoCommit(false)
 
+            if (dataset == "auth") {
+                log.info("Creating auth load statement.")
+                statement = conn.prepareStatement("SELECT auth_id, data FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
+            }
             if (dataset == "bib") {
                 log.info("Creating bib load statement.")
                 statement = conn.prepareStatement("SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
@@ -117,7 +121,12 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
                 buildDocument(record, dataset, null)
 
-                if (dataset == "bib") {
+                if (dataset == "auth") {
+                    int auth_id = resultSet.getInt("auth_id")
+                    if (auth_id > 0) {
+                        buildDocument(record, dataset, null)
+                    }
+                } else if (dataset == "bib") {
                     int auth_id = resultSet.getInt("auth_id")
                     if (auth_id > 0) {
                         log.trace("Found auth_id $auth_id for $recordId Adding to oaipmhSetSpecs")
