@@ -842,6 +842,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     String property
     String uriTemplate
     Pattern matchUriToken = null
+    boolean parseZeroPaddedNumber
     DateTimeFormatter dateTimeFormat
     ZoneId timeZone
     LocalTime defaultTime
@@ -873,6 +874,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 defaultTime = LocalTime.MIN
             }
         }
+        parseZeroPaddedNumber = (fieldDfn.parseZeroPaddedNumber == true)
         ignored = fieldDfn.get('ignored', false)
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
@@ -927,6 +929,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             } catch (DateTimeParseException e) {
                 value = givenValue
             }
+        } else if (parseZeroPaddedNumber && value) {
+            if (value) {
+                try {
+                    value = Integer.parseInt(value)
+                } catch (NumberFormatException e) {
+                    ; // pass
+                }
+            }
         }
 
         def ent = state.entityMap[aboutEntityName]
@@ -963,16 +973,24 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             entity = entity[link]
         if (property) {
             def v = entity[property]
-            if (v && dateTimeFormat) {
-                try {
-                    def zonedDateTime = parseDate(v)
-                    def value = zonedDateTime.format(dateTimeFormat)
-                    if (missingCentury) {
-                        value = value.substring(2)
+            if (v) {
+                if (dateTimeFormat) {
+                    try {
+                        def zonedDateTime = parseDate(v)
+                        def value = zonedDateTime.format(dateTimeFormat)
+                        if (missingCentury) {
+                            value = value.substring(2)
+                        }
+                        return value
+                    } catch (DateTimeParseException e) {
+                        return v
                     }
-                    return value
-                } catch (DateTimeParseException e) {
-                    return v
+                } else if (parseZeroPaddedNumber) {
+                    try {
+                        return String.format("%03d", v)
+                    } catch (UnknownFormatConversionException) {
+                        return null
+                    }
                 }
             }
             return revertObject(v)
