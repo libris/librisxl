@@ -1,8 +1,7 @@
 {
-    "_id": "libris_staging",
+    "_id": "stg_libris",
     "_properties": {
-        "DATABASE_URL": "jdbc:postgresql://hp04.libris.kb.se:5432/whelk",
-        "ELASTIC_INDEX_NAME": "libris_staging",
+        "ELASTIC_INDEX_NAME": "libris-stg",
         "UPDATE_INTERVAL": 300
     }
 }

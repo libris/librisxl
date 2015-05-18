@@ -187,17 +187,15 @@ class MySQLImporter extends BasicPlugin implements Importer {
     void buildDocument(MarcRecord record, String dataset, String oaipmhSetSpecValue) {
         String identifier = null
         if (documentList.size() >= addBatchSize || record == null) {
-            /*
             if (tickets.availablePermits() < 1) {
                 log.info("Queues are full at the moment. Waiting for some to finish.")
             }
             tickets.acquire()
-            */
             log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
 
-            def casr = new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets)
-            casr.run()
-            //queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets))
+            //def casr = new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets)
+            //casr.run()
+            queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets))
             /*
             log.debug("     Current poolsize: ${queue.poolSize}")
             log.debug("------------------------------")
