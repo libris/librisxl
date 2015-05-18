@@ -14,7 +14,8 @@
         "_camel": [
             "indexroutebuilder",
             "apixroutebuilder"
-            ]
+        ],
+        "_maintenance": [ null ]
     }
 }
 
