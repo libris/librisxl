@@ -184,7 +184,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
     }
 
-    void buildDocument(String recordId, MarcRecord record, String dataset, String oaipmhSetSpecValue) {
+    void buildDocument(Integer recordId, MarcRecord record, String dataset, String oaipmhSetSpecValue) {
         String identifier = null
         if (documentList.size() >= addBatchSize || record == null) {
             if (tickets.availablePermits() < 1) {
