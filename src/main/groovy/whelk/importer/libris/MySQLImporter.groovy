@@ -119,29 +119,29 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 recordId = resultSet.getInt(1)
                 record = Iso2709Deserializer.deserialize(normalizeString(new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
 
-                buildDocument(record, dataset, null)
+                buildDocument(recordId, record, dataset, null)
 
                 if (dataset == "auth") {
                     int auth_id = resultSet.getInt("auth_id")
                     if (auth_id > 0) {
-                        buildDocument(record, dataset, null)
+                        buildDocument(recordId, record, dataset, null)
                     }
                 } else if (dataset == "bib") {
                     int auth_id = resultSet.getInt("auth_id")
                     if (auth_id > 0) {
                         log.trace("Found auth_id $auth_id for $recordId Adding to oaipmhSetSpecs")
-                        buildDocument(record, dataset, "authority:"+auth_id)
+                        buildDocument(recordId, record, dataset, "authority:"+auth_id)
                     }
                 } else if (dataset == "hold") {
                     int bib_id = resultSet.getInt("bib_id")
                     String sigel = resultSet.getString("shortname")
                     if (bib_id > 0) {
                         log.trace("Found bib_id $bib_id for $recordId Adding to oaipmhSetSpecs")
-                        buildDocument(record, dataset, "bibid:" + bib_id)
+                        buildDocument(recordId, record, dataset, "bibid:" + bib_id)
                     }
                     if (sigel) {
                         log.trace("Found sigel $sigel for $recordId Adding to oaipmhSetSpecs")
-                        buildDocument(record, dataset, "location:" + sigel)
+                        buildDocument(recordId, record, dataset, "location:" + sigel)
                     }
                 }
                 if (nrOfDocs > 0 && recordCount > nrOfDocs) {
@@ -153,7 +153,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 }
             }
             log.debug("Clearing out remaining docs ...")
-            buildDocument(null, dataset, null)
+            buildDocument(null, null, dataset, null)
 
         } catch(SQLException se) {
             log.error("SQL Exception", se)
@@ -184,7 +184,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
     }
 
-    void buildDocument(MarcRecord record, String dataset, String oaipmhSetSpecValue) {
+    void buildDocument(String recordId, MarcRecord record, String dataset, String oaipmhSetSpecValue) {
         String identifier = null
         if (documentList.size() >= addBatchSize || record == null) {
             if (tickets.availablePermits() < 1) {
@@ -221,19 +221,21 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 buildingMetaRecord.get(identifier, [:]).put("record", record)
                 buildingMetaRecord.get(identifier, [:]).put("entry", ["identifier":identifier,"dataset":dataset])
             } catch (Exception e) {
-                log.error("Problem getting field 001 from marc record. Skipping document.", e)
+                log.error("Problem getting field 001 from marc record $recordId. Skipping document.", e)
             }
         }
-        if (oaipmhSetSpecValue && buildingMetaRecord?.containsKey(identifier)) {
-            buildingMetaRecord.get(identifier, [:]).get("meta", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
-        }
-        if (identifier && lastIdentifier && lastIdentifier != identifier) {
-            log.trace("New document received. Adding last ($lastIdentifier}) to the doclist")
-            recordCount++
-            documentList << buildingMetaRecord.remove(lastIdentifier)
-        }
-        if (identifier) {
+        try {
+            if (oaipmhSetSpecValue) {
+                buildingMetaRecord.get(identifier, [:]).get("meta", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
+            }
+            if (lastIdentifier && lastIdentifier != identifier) {
+                log.trace("New document received. Adding last ($lastIdentifier}) to the doclist")
+                recordCount++
+                documentList << buildingMetaRecord.remove(lastIdentifier)
+            }
             lastIdentifier = identifier
+        } catch (Exception e) {
+            log.error("Problem with marc record ${recordId}. Skipping ...", e)
         }
     }
 
