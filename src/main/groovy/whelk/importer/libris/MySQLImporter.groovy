@@ -216,9 +216,13 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 return
             }
             log.trace("building document $identifier")
-            identifier = "/"+dataset+"/"+record.getControlfields("001").get(0).getData()
-            buildingMetaRecord.get(identifier, [:]).put("record", record)
-            buildingMetaRecord.get(identifier, [:]).put("entry", ["identifier":identifier,"dataset":dataset])
+            try {
+                identifier = "/"+dataset+"/"+record.getControlfields("001").get(0).getData()
+                buildingMetaRecord.get(identifier, [:]).put("record", record)
+                buildingMetaRecord.get(identifier, [:]).put("entry", ["identifier":identifier,"dataset":dataset])
+            } catch (Exception e) {
+                log.error("Problem getting field 001 from marc record. Skipping document.", e)
+            }
         }
         if (oaipmhSetSpecValue) {
             buildingMetaRecord.get(identifier, [:]).get("meta", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
