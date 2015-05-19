@@ -187,27 +187,13 @@ If the JSONLD format has been updated, in such a way that the marcframeconverter
 
 #### From OAIPMH
 
-1.  If the changes are such that a new mapping is required for elasticsearch, it's best to remove the old elastic type before starting up the whelk, i.e:
+1.  In the operations gui, under "import", select which dataset to import (auth/bib/hold). If loading data from data.libris.kb.se, just erase everything from the "service url" field. Finally, hit "go".
 
-    $ curl -XDELETE http://elastichost:9200/libris/[type] 
-
-    where type is bib, auth or hold. 
-    When the whelk starts up, it will detect that the type is missing and create proper mappings for the given type.
-
-2.  In the operations gui, under "import", select which dataset to import (auth/bib/hold). If loading data from data.libris.kb.se, just erase everything from the "service url" field. Finally, hit "go".
-
-3.  The import will now start. The current velocity and import count can be viewed from the operations-page.
+2.  The import will now start. The current velocity and import count can be viewed from the operations-page.
 
 ##### Alternatively
 
-1.  If the changes are such that a new mapping is required for elasticsearch, it's best to remove the old elastic type before starting up the whelk, i.e:
-
-    $ curl -XDELETE http://elastichost:9200/libris/[type] 
-
-    where type is bib, auth or hold. 
-    When the whelk starts up, it will detect that the type is missing and create proper mappings for the given type.
-
-2.  $ curl -XPOST http://localhost:8180/whelk/\_operations -d 'operation=import&dataset=auth,bib,hold&url=http://localhost:8000/{dataset}/oaipmh&importer=oaipmhimporter'
+1.  $ curl -XPOST http://localhost:8180/whelk/\_operations -d 'operation=import&dataset=auth,bib,hold&url=http://localhost:8000/{dataset}/oaipmh&importer=oaipmhimporter'
 
 
 ### Reindexing

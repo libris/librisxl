@@ -224,15 +224,17 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 log.error("Problem getting field 001 from marc record. Skipping document.", e)
             }
         }
-        if (oaipmhSetSpecValue) {
+        if (oaipmhSetSpecValue && buildingMetaRecord.containsKey(identifier)) {
             buildingMetaRecord.get(identifier, [:]).get("meta", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
         }
-        if (lastIdentifier && lastIdentifier != identifier) {
+        if (identifier && lastIdentifier && lastIdentifier != identifier) {
             log.trace("New document received. Adding last ($lastIdentifier}) to the doclist")
             recordCount++
             documentList << buildingMetaRecord.remove(lastIdentifier)
         }
-        lastIdentifier = identifier
+        if (identifier) {
+            lastIdentifier = identifier
+        }
     }
 
     class ConvertAndStoreRunner implements Runnable {
