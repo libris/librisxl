@@ -224,7 +224,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 log.error("Problem getting field 001 from marc record. Skipping document.", e)
             }
         }
-        if (oaipmhSetSpecValue && buildingMetaRecord.containsKey(identifier)) {
+        if (oaipmhSetSpecValue && buildingMetaRecord?.containsKey(identifier)) {
             buildingMetaRecord.get(identifier, [:]).get("meta", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
         }
         if (identifier && lastIdentifier && lastIdentifier != identifier) {
