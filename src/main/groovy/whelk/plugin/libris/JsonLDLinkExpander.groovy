@@ -37,7 +37,6 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
     public static JsonLDLinkExpander getInstance() { return instance }
 
     public void setSettings(Map settings) {
-        log.info("setting ${settings}")
         this.nodesToExpand = settings.get('nodesToExpand').asImmutable()
 
     }
@@ -62,7 +61,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
 
     @groovy.transform.Synchronized
     void loadCachedDocuments() {
-        log.info("Caching def-documents.")
+        log.debug("Caching def-documents.")
         for (doc in whelk.loadAll("def")) {
             def dataMap = (doc.dataAsMap.containsKey("about") ? doc.dataAsMap.get("about") : doc.dataAsMap)
             dataMap.put("@id", doc.identifier)
@@ -78,7 +77,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
             log.debug("adding ${doc.identifier} ($dataMap) to cache")
             cachedDocuments.put(doc.identifier, dataMap)
         }
-        log.info("Cached ${cachedDocuments.size()} docs.")
+        log.debug("Cached ${cachedDocuments.size()} docs.")
     }
 
     Document doFilter(Document doc) {
@@ -89,7 +88,6 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
 
     Map doFilter(Map dataMap, String dataset) {
         if (!cachedDocuments) {
-            log.info("cd is $cachedDocuments")
             loadCachedDocuments()
         }
         nodesToExpand[dataset].each { key, instructions ->

@@ -396,4 +396,18 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             }
         }
     }
+
+    @Override
+    public Map getStatus() {
+        def status = [:]
+        status['mainTable'] = mainTableName
+        status['versioning'] = versioning
+        if (versioning) {
+            status['versionsTableName'] = versionsTableName
+        }
+        status['contentTypes'] = contentTypes
+        status['availableTypes'] = availableTypes
+        status['databaseUrl'] = connectionUrl
+        return status
+    }
 }

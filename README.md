@@ -33,19 +33,20 @@ Ask for directions if you don't know the proper settings.
 
 .. Running at <http://localhost:8180/>
 
-This starts a local whelk, using an embedded elasticsearch and storage configured in `etc/environment/dev/whelks.json`.
-
-### Install script requirements
-
-    $ pip install -r scripts/requirements.txt
+This starts a local whelk, using an embedded elasticsearch and storage configured in `src/main/resources/env/dev/whelk.json`.
 
 ### Get/create/update and load Definition Datasets
 
 This requires a checkout of the separate repository called "definitions", located beside this repository.
 
+    $ cd ../definitions/
+
+Install script requirements
+
+    $ pip install -r scripts/requirements.txt
+
 Get/create/update datasets:
 
-    $ cd ../definitions/
     $ python scripts/compile_defs.py -c cache/ -o build/
 
 Load the resulting resources into the running whelk:
@@ -61,13 +62,13 @@ Create a local OAI-PMH dump of examples and run a full import, load into running
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
 
     Make sure whelk is running
-    
+
     $ gradle jettyrun
-    
+
     and go to http://localhost:8180/whelk/_operations using a browser
 
 
-(Using the OAI-PMH dump makes out-of-band metadata is available, which is necessary to create links from bib data to auth data.)
+(Using the OAI-PMH dump makes out-of-band metadata available, which is necessary to create links from bib data to auth data.)
 
 Unless you have set up a graph store (see below), you need to add `-Ddisable.plugins="fusekigraphstore"` to the invocations above to avoid error messages.
 
@@ -76,11 +77,7 @@ There is also a script, `librisxl-tools/scripts/update_mock_storage.sh`, for upl
 
 ### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)
 
-1. Configure mock whelk with suitable converters, etc/environment/dev/whelks.json
-
-2. Create a jar-file. From root librisxl folder:
-
-        $ gradle fatjar
+1. Configure mock whelk with suitable converters, src/main/resources/env/dev/whelk.json
 
 3. Run a local mock-configured Http standard whelk. From root librisxl folder:
 
@@ -180,9 +177,9 @@ All whelk maintenance is controlled from the operations interface (<whelkhost>/\
 
 If a new index is to be set up, and unless you run locally in a pristine setup, you need to put the config to the index, like (replace localhost with target machine):
 
-  $ curl -XPUT http://localhost:9200/libris/ -d @librisxl-tools/elasticsearch/libris_config.json
+  $ curl -XPUT http://localhost:9200/<indexname> -d @librisxl-tools/elasticsearch/libris\_config.json
 
-(To replace an existing setup with entirely new configuration, you need to delete the index `curl -XDELETE http://localhost:9200/libris/` and read all data again (even locally).)
+(To replace an existing setup with entirely new configuration, you need to delete the index `curl -XDELETE http://localhost:9200/<indexname>/` and read all data again (even locally).)
 
 ### New format
 
