@@ -358,67 +358,74 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 Connection connection = connectionPool.getConnection()
-                try {
-                    connection.setAutoCommit(false)
-                    PreparedStatement loadAllStatement
-                    long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
-                    long sinceTS = since?.getTime() ?: 0L
+                connection.setAutoCommit(false)
+                PreparedStatement loadAllStatement
+                long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
+                long sinceTS = since?.getTime() ?: 0L
 
-                    if (dataset) {
-                        if (withLinks) {
-                            loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET)
-                        } else {
-                            loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_DATASET)
-                        }
+                if (dataset) {
+                    if (withLinks) {
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET)
                     } else {
-                        if (withLinks) {
-                            loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS)
-                        } else {
-                            loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS)
-                        }
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_DATASET)
                     }
-                    loadAllStatement.setFetchSize(100)
-                    if (dataset) {
-                        loadAllStatement.setString(1, dataset)
-                        if (withLinks) {
-                            loadAllStatement.setString(2, dataset)
-                        } else {
-                            loadAllStatement.setTimestamp(2, new Timestamp(sinceTS))
-                            loadAllStatement.setTimestamp(3, new Timestamp(untilTS))
-                        }
+                } else {
+                    if (withLinks) {
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS)
                     } else {
-                        loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
-                        loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS)
                     }
-                    ResultSet rs = loadAllStatement.executeQuery()
+                }
+                loadAllStatement.setFetchSize(100)
+                if (dataset) {
+                    loadAllStatement.setString(1, dataset)
+                    if (withLinks) {
+                        loadAllStatement.setString(2, dataset)
+                    } else {
+                        loadAllStatement.setTimestamp(2, new Timestamp(sinceTS))
+                        loadAllStatement.setTimestamp(3, new Timestamp(untilTS))
+                    }
+                } else {
+                    loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
+                    loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
+                }
+                ResultSet rs = loadAllStatement.executeQuery()
 
-                    boolean more = rs.next()
+                boolean more = rs.next()
+                if (!more) {
+                    try {
+                        connection.commit()
+                        connection.setAutoCommit(true)
+                    } finally {
+                        connection.close()
+                    }
+                }
 
-                    return new Iterator<Document>() {
-                        @Override
-                        public Document next() {
-                            Document doc
-                            if (withLinks) {
-                                doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map), rs.getString("parent"))
-                            } else {
-                                doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
+                return new Iterator<Document>() {
+                    @Override
+                    public Document next() {
+                        Document doc
+                        if (withLinks) {
+                            doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map), rs.getString("parent"))
+                        } else {
+                            doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
+                        }
+                        more = rs.next()
+                        if (!more) {
+                            try {
+                                connection.commit()
+                                connection.setAutoCommit(true)
+                            } finally {
+                                connection.close()
                             }
-                            more = rs.next()
-                            return doc
                         }
-
-                        @Override
-                        public boolean hasNext() {
-                            return more
-                        }
+                        return doc
                     }
-                } catch (Exception e) {
-                    log.error("Load all failed for dataset ${dataset}", e)
-                } finally {
-                    connection.commit()
-                    connection.setAutoCommit(true)
-                    connection.close()
-                    log.debug("[loadAll] Closed connection.")
+
+                    @Override
+                    public boolean hasNext() {
+                        return more
+                    }
                 }
             }
         }
