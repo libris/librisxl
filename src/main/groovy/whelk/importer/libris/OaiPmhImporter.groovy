@@ -79,6 +79,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
 
         tickets = new Semaphore(100)
 
+        /*
         if (from == null) {
             for (st in this.whelk.getStorages()) {
                 log.debug("Turning off versioning in ${st.id}")
@@ -89,6 +90,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             from = new Date(0L)
             prepareDocuments = false
         }
+        */
 
         if (from) {
             urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -130,6 +132,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             log.debug("resumptionToken: $resumptionToken")
         }
         log.debug("Flushing data ...")
+        /*
         queue.execute({
             this.whelk.flush()
             log.debug("Resetting versioning setting for storages")
@@ -139,6 +142,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                 }
             }
         } as Runnable)
+        */
         log.debug("Shutting down queue")
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)

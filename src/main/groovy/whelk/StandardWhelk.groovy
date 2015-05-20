@@ -203,6 +203,7 @@ class StandardWhelk implements Whelk {
 
     Document get(String identifier, String version=null, List contentTypes=[], boolean applyFilters = true) {
         Document doc = null
+        log.trace("get $identifier. version = $version, ctypes=$contentTypes, filters = $applyFilters")
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
             def s = getStorage(contentType)
@@ -216,7 +217,10 @@ class StandardWhelk implements Whelk {
         if (!doc) {
             def stiter = storages.iterator()
             while (!doc && stiter.hasNext()) {
-                doc = stiter.next().load(identifier, version)
+                def s = stiter.next()
+                log.trace("Trying to load $identifier from storage ${s.id}")
+                doc = s.load(identifier, version)
+                log.debug("Result of load: doc is ${doc}")
             }
         }
         if (doc && applyFilters) {
@@ -399,9 +403,9 @@ class StandardWhelk implements Whelk {
         return d
     }
 
-    Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}
+    //Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}
 
-    Iterable<Document> loadAll(String dataset = null, Date since = null, String storageId = null) {
+    Iterable<Document> loadAll(String dataset) { //, Date since = null, String storageId = null) {
         def st
         if (storageId) {
             st = getStorages().find { it.id == storageId }
@@ -409,8 +413,8 @@ class StandardWhelk implements Whelk {
             st = getStorage()
         }
         if (st) {
-            log.debug("Loading "+(dataset ? dataset : "all")+" "+(since ?: "")+" from storage ${st.id}")
-            return st.loadAll(dataset, since)
+            //log.debug("Loading "+(dataset ? dataset : "all")+" "+(since ?: "")+" from storage ${st.id}")
+            return st.loadAll(dataset)
         } else {
             throw new WhelkRuntimeException("Couldn't find storage. (storageId = $storageId)")
         }

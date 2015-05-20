@@ -26,10 +26,7 @@ public interface Whelk {
     // get/search/lookup
     public Document get(String identifier);
     public SearchResult search(Query query);
-    public Iterable<Document> loadAll();
-    public Iterable<Document> loadAll(Date since);
     public Iterable<Document> loadAll(String dataset);
-    public Iterable<Document> loadAll(String dataset, Date since);
     public Location locate(String identifier);
     public Map<String, String> getVersions(String identifier);
 
