@@ -5543,12 +5543,12 @@
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
       "_spec": [
         {
-          "source": {"550": {"subfields": [{"a": "Psykologi"}, {"w": "g"}]}},
+          "source": {"550": {"subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}},
           "result": {"about": {
             "broader": [
               {"@type": "Concept",
-                "@id": "/topic/sao/Psykologi",
-                "prefLabel":  "Psykologi"}
+                "@id": "/topic/sao/Commedia%20dell%60arte",
+                "prefLabel":  "Commedia dell`arte"}
           ]
           }}
         }

@@ -20,6 +20,7 @@ import whelk.StandardWhelk
 import whelk.converter.MarcJSONConverter
 
 import com.damnhandy.uri.template.UriTemplate
+import com.damnhandy.uri.template.UriUtil
 
 
 @Log
@@ -29,6 +30,13 @@ class MarcFrameConverter extends BasicFormatConverter {
     ObjectMapper mapper = new ObjectMapper()
 
     protected MarcConversion conversion
+
+    // monkey-patch to fix bug in handy-uri-templates (issue #22)
+    static {
+        UriUtil.@RESERVED.set(('`' as char) as byte)
+        UriUtil.@RESERVED.set(('"' as char) as byte)
+        UriUtil.@RESERVED.set(('^' as char) as byte)
+    }
 
     MarcFrameConverter(uriSpacePath="ext/oldspace.json") {
         def loader = getClass().classLoader
