@@ -317,4 +317,15 @@ abstract class ElasticSearch extends BasicComponent implements Index, ShapeCompu
             return decodedIdentifier
         }
     }
+
+    @Override
+    public Map getStatus() {
+        def status = [:]
+        status['indexName'] = getIndexName()
+        status['availableTypes'] = availableTypes
+        status['host'] = getElasticHost()
+        status['cluster'] = getElasticCluster()
+        status['port'] = getElasticPort()
+        return status
+    }
 }

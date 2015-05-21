@@ -1722,8 +1722,7 @@
       "2": "/def/enum/content/Completed",
       "3": "/def/enum/content/OnOrder",
       "4": "/def/enum/content/CurrentlyReceived",
-      "5": "/def/enum/content/NotCurrentlyReceived",
-      "_": null
+      "5": "/def/enum/content/NotCurrentlyReceived"
     },
     "acquisitionMethod": {
       "c": "/def/enum/content/CooperativeOrConsortialPurchase",
@@ -1751,7 +1750,8 @@
     },
     "retentionPolicyType": {
       "l": "/def/enum/content/Latest",
-      "p": "/def/enum/content/Previous"
+      "p": "/def/enum/content/Previous",
+      "_": null
     },
     "retentionPolicyUnitType": {
       "e": "/def/enum/content/EditionsPart",
@@ -1759,18 +1759,17 @@
       "m": "/def/enum/content/MonthsTime",
       "s": "/def/enum/content/SupplementsPart",
       "w": "/def/enum/content/WeeksTime",
-      "y": "/def/enum/content/YearsTime"
+      "y": "/def/enum/content/YearsTime",
+      "_": null
     },
     "completeness": {
       "0": null,
       "1": "/def/enum/content/Complete",
       "2": "/def/enum/content/Incomplete",
       "3": "/def/enum/content/Scattered",
-      "4": null,
-      "_": null
+      "4": null
     },
     "lendingPolicy": {
-      "_": null,
       "a": "/def/enum/content/WillLend",
       "b": "/def/enum/content/WillNotLend",
       "c": "/def/enum/content/WillLendHardCopyOnly",
@@ -1778,15 +1777,13 @@
       "u": null
     },
     "reproductionPolicy": {
-      "_": null,
       "a": "/def/enum/content/WillReproduce",
       "b": "/def/enum/content/WillNotReproduce",
       "u": null
     },
     "copyReport": {
       "0": "/def/enum/content/Separate",
-      "1": "/def/enum/content/Composite",
-      "_": null
+      "1": "/def/enum/content/Composite"
     }
 
   },
@@ -3009,8 +3006,8 @@
       "repeatable": true,
       "_spec": [
         {
-          "source": {"007":"aj  a|||"},
-          "normalized": {"007":"aj  a                  "},
+          "source": {"007":"aj |a|||"},
+          "normalized": {"007":"aj |a|||               "},
           "result": {
             "about": {
               "hasFormat": [
@@ -3494,7 +3491,7 @@
       "_spec": [
         {
           "source": [
-            {"008": "900101s1977    sw            000 0aswe  "}
+            {"008": "900101s1977    sw |||||||||||000 0aswe| "}
           ],
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
@@ -5185,6 +5182,7 @@
 
     "000": {
       "inherit": "bib",
+      "[7:8]": null,
       "[17:18]": {
         "aboutEntity": "?record",
         "link": "encLevel",
@@ -5545,12 +5543,12 @@
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
       "_spec": [
         {
-          "source": {"550": {"subfields": [{"a": "Psykologi"}, {"w": "g"}]}},
+          "source": {"550": {"subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}},
           "result": {"about": {
             "broader": [
               {"@type": "Concept",
-                "@id": "/topic/sao/Psykologi",
-                "prefLabel":  "Psykologi"}
+                "@id": "/topic/sao/Commedia%20dell%60arte",
+                "prefLabel":  "Commedia dell`arte"}
           ]
           }}
         }
@@ -5715,12 +5713,7 @@
           "originalLeader": "00236nxa a22001091n44500",
           "source": {"leader": "     nx  a       1n 4500", "fields": [
             {"001": "0000000"},
-            {"004": "7149593"},
-            {"852": {
-              "ind1": " ",
-              "ind2": " ",
-              "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
-            }}
+            {"004": "7149593"}
           ]},
           "result": {
             "@type": "Record",
@@ -5731,18 +5724,9 @@
             "status": {"@id": "/def/enum/record/New"},
             "holdingType": {"@id": "/def/enum/record/SinglePartItemHolding"},
             "about": {
-              "@id": "/resource/hold/0000000",
               "@type": "HeldMaterial",
-              "holdingFor": {"@id": "/resource/bib/7149593"},
-              "offers": [
-                {
-                  "@type": "Offer",
-                  "copyNumber": "1",
-                  "heldBy": [{"@type": "Organization", "notation": "H"}],
-                  "shelfControlNumber": "65.465",
-                  "shelfLocation": ["MAG"]
-                }
-              ]
+              "@id": "/resource/hold/0000000",
+              "holdingFor": {"@id": "/resource/bib/7149593"}
             }
           }
         }
@@ -5757,6 +5741,7 @@
     },
 
     "004": {
+      "aboutType": "HeldMaterial",
       "link": "holdingFor", "uriTemplate": "/resource/bib/{_}",
       "TODO:recordDescription(@reverse:about)": {"property": "controlNumber"}
     },
@@ -5809,7 +5794,8 @@
       },
       "[17:20]": {
         "property": "numberOfItems",
-        "TODO": "parse-zero-padded-number"
+        "parseZeroPaddedNumber": true,
+        "fixedDefault": "|||"
       },
       "[20:21]": {
         "link": "lendingPolicy",
@@ -5824,7 +5810,8 @@
       "[22:25]": {
         "addLink": "language",
         "uriTemplate": "/def/languages/{_}",
-        "matchUriToken": "^\\w{2,3}$"
+        "matchUriToken": "^\\w{2,3}$",
+        "fixedDefault": "und"
       },
       "[25:26]": {
         "link": "copyReport",
@@ -5834,14 +5821,13 @@
       "[26:32]": {
         "aboutEntity": "?record",
         "property": "date",
-        "parseDateTime": "yyMMdd", "timeZone": "CET"
+        "parseDateTime": "yyMMdd", "timeZone": "CET",
+        "fixedDefault": "000000"
       },
       "repeatable": false,
       "_spec": [
         {
-          "source": [
-            {"008": "900101                swe       "}
-          ],
+          "source": {"008": "900101||    |   ||||||swe|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
@@ -5851,12 +5837,30 @@
         },
         {
           "name": "keep broken date values verbatim",
-          "source": [
-            {"008": "900101                    000000"}
-          ],
+          "source": {"008": "900101||    |   ||||||und|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00"
+          }
+        },
+        {
+          "name": "parse zero padded numberOfItems",
+          "source": {"008": "900101||    |   |001||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
-            "date": "000000"
+            "about": {
+              "numberOfItems": 1
+            }
+          }
+        },
+        {
+          "name": "broken numberOfItems",
+          "source": {"008": "900101||    |   |NaN||und|000000"},
+          "normalized": {"008": "900101||    |   ||||||und|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "about": {
+              "numberOfItems": "NaN"
+            }
           }
         }
       ]
@@ -5947,7 +5951,30 @@
       "$z": {
         "addProperty": "copyNote",
         "TODO:property": "change to comment?"
-      }
+      },
+      "_spec": [
+        {
+          "source": {"852": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+          }},
+          "result": {
+            "about": {
+              "@type": "HeldMaterial",
+              "offers": [
+                {
+                  "@type": "Offer",
+                  "copyNumber": "1",
+                  "heldBy": [{"@type": "Organization", "notation": "H"}],
+                  "shelfControlNumber": "65.465",
+                  "shelfLocation": ["MAG"]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
 
     "856": {

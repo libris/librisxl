@@ -203,6 +203,7 @@ class StandardWhelk implements Whelk {
 
     Document get(String identifier, String version=null, List contentTypes=[], boolean applyFilters = true) {
         Document doc = null
+        log.trace("get $identifier. version = $version, ctypes=$contentTypes, filters = $applyFilters")
         for (contentType in contentTypes) {
             log.trace("Looking for $contentType storage.")
             def s = getStorage(contentType)
@@ -216,7 +217,10 @@ class StandardWhelk implements Whelk {
         if (!doc) {
             def stiter = storages.iterator()
             while (!doc && stiter.hasNext()) {
-                doc = stiter.next().load(identifier, version)
+                def s = stiter.next()
+                log.trace("Trying to load $identifier from storage ${s.id}")
+                doc = s.load(identifier, version)
+                log.debug("Result of load: doc is ${doc}")
             }
         }
         if (doc && applyFilters) {
@@ -334,9 +338,11 @@ class StandardWhelk implements Whelk {
                 map.get("about").put("@id", "/resource"+doc.identifier)
             }
             // Remove modified from jsonld documents prior to saving, to avoid messing up checksum.
+            /* Necessary anymore?
             if (map.containsKey("modified")) {
                 map.put("modified", null)
             }
+            */
             if (documentDataToMetaMapping) {
                 def meta = doc.meta
                 boolean modified = false
@@ -397,9 +403,9 @@ class StandardWhelk implements Whelk {
         return d
     }
 
-    Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}
+    //Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}
 
-    Iterable<Document> loadAll(String dataset = null, Date since = null, String storageId = null) {
+    Iterable<Document> loadAll(String dataset) { //, Date since = null, String storageId = null) {
         def st
         if (storageId) {
             st = getStorages().find { it.id == storageId }
@@ -407,8 +413,8 @@ class StandardWhelk implements Whelk {
             st = getStorage()
         }
         if (st) {
-            log.debug("Loading "+(dataset ? dataset : "all")+" "+(since ?: "")+" from storage ${st.id}")
-            return st.loadAll(dataset, since)
+            //log.debug("Loading "+(dataset ? dataset : "all")+" "+(since ?: "")+" from storage ${st.id}")
+            return st.loadAll(dataset)
         } else {
             throw new WhelkRuntimeException("Couldn't find storage. (storageId = $storageId)")
         }
@@ -844,27 +850,33 @@ class StandardWhelk implements Whelk {
                     log.trace("Plugin parameter: ${params}")
                     def pclasses = params.collect { it.class }
                     try {
-                        def c = Class.forName(meta._class).getConstructor(pclasses as Class[])
-                        log.trace("c: $c")
-                        plugin = c.newInstance(params as Object[])
-                        log.trace("plugin: $plugin")
-                    } catch (NoSuchMethodException nsme) {
-                        log.trace("Constructor not found the easy way. Trying to find assignable class.")
-                        for (cnstr in Class.forName(meta._class).getConstructors()) {
-                            log.trace("Found constructor for ${meta._class}: $cnstr")
-                            log.trace("Parameter types: " + cnstr.getParameterTypes())
-                            boolean match = true
-                            int i = 0
-                            for (pt in cnstr.getParameterTypes()) {
-                                log.trace("Loop parameter type: $pt")
-                                log.trace("Check against: " + params[i])
-                                if (!pt.isAssignableFrom(params[i++].getClass())) {
-                                    match = false
+                        log.trace("Trying getInstance()-method.")
+                        plugin = Class.forName(meta._class).getDeclaredMethod("getInstance").invoke(null,null)
+                        plugin.setSettings(meta._params)
+                    } catch (NoSuchMethodException noGetInstance) {
+                        try {
+                            def c = Class.forName(meta._class).getConstructor(pclasses as Class[])
+                            log.trace("c: $c")
+                            plugin = c.newInstance(params as Object[])
+                            log.trace("plugin: $plugin")
+                        } catch (NoSuchMethodException nsme) {
+                            log.trace("Constructor not found the easy way. Trying to find assignable class.")
+                            for (cnstr in Class.forName(meta._class).getConstructors()) {
+                                log.trace("Found constructor for ${meta._class}: $cnstr")
+                                log.trace("Parameter types: " + cnstr.getParameterTypes())
+                                boolean match = true
+                                int i = 0
+                                for (pt in cnstr.getParameterTypes()) {
+                                    log.trace("Loop parameter type: $pt")
+                                    log.trace("Check against: " + params[i])
+                                    if (!pt.isAssignableFrom(params[i++].getClass())) {
+                                        match = false
+                                    }
                                 }
-                            }
-                            if (match) {
-                                plugin = cnstr.newInstance(params as Object[])
-                                break;
+                                if (match) {
+                                    plugin = cnstr.newInstance(params as Object[])
+                                    break;
+                                }
                             }
                         }
                     }

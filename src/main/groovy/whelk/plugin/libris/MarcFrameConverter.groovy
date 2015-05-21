@@ -20,6 +20,7 @@ import whelk.StandardWhelk
 import whelk.converter.MarcJSONConverter
 
 import com.damnhandy.uri.template.UriTemplate
+import com.damnhandy.uri.template.UriUtil
 
 
 @Log
@@ -29,6 +30,13 @@ class MarcFrameConverter extends BasicFormatConverter {
     ObjectMapper mapper = new ObjectMapper()
 
     protected MarcConversion conversion
+
+    // monkey-patch to fix bug in handy-uri-templates (issue #22)
+    static {
+        UriUtil.@RESERVED.set(('`' as char) as byte)
+        UriUtil.@RESERVED.set(('"' as char) as byte)
+        UriUtil.@RESERVED.set(('^' as char) as byte)
+    }
 
     MarcFrameConverter(uriSpacePath="ext/oldspace.json") {
         def loader = getClass().classLoader
@@ -584,8 +592,9 @@ class ConvertResult {
 class MarcFixedFieldHandler {
 
     String tag
-    static final String FIXED_NONE = " "
     static final String FIXED_UNDEF = "|"
+    static final String FIXED_NONE = " "
+    static final String FIXED_FAUX_NONE = "_"
     def columns = []
     int fieldSize = 0
 
@@ -593,7 +602,7 @@ class MarcFixedFieldHandler {
         this.tag = tag
         fieldDfn.each { key, obj ->
             def m = (key =~ /^\[(\d+):(\d+)\]$/)
-            if (m) {
+            if (m && obj) {
                 def start = m[0][1].toInteger()
                 def end = m[0][2].toInteger()
                 columns << new Column(ruleSet, obj, start, end, obj['fixedDefault'])
@@ -627,22 +636,26 @@ class MarcFixedFieldHandler {
 
     def revert(Map data, Map result, boolean keepEmpty=false) {
         def value = new StringBuilder(FIXED_NONE * fieldSize)
+        def actualValue = false
         for (col in columns) {
             def obj = col.revert(data)
             // TODO: ambiguity trouble if this is a List!
-            if (obj instanceof List) obj = obj.find { it }
+            if (obj instanceof List) {
+                obj = obj.find { it }
+            }
             if (obj) {
                 assert col.width - obj.size() > -1
                 assert value.size() > col.start
                 assert col.width >= obj.size()
                 def end = col.start + obj.size() - 1
                 value[col.start .. end] = obj
+                if (obj != col.fixedDefault &&
+                        obj != FIXED_NONE && obj != FIXED_UNDEF) {
+                    actualValue = true
+                }
             }
         }
-        def repr = value.toString()
-        if (keepEmpty)
-            return repr
-        return repr.find { it != FIXED_NONE }? repr : null
+        return (actualValue || keepEmpty)? value.toString() : null
     }
 
     class Column extends MarcSimpleFieldHandler {
@@ -655,6 +668,11 @@ class MarcFixedFieldHandler {
             this.start = start
             this.end = end
             this.fixedDefault = fixedDefault
+            if (!fixedDefault && tokenMap &&
+                !tokenMap.containsKey(FIXED_FAUX_NONE) &&
+                !tokenMap.containsKey(FIXED_NONE)) {
+                this.fixedDefault = FIXED_UNDEF
+            }
         }
         int getWidth() { return end - start }
         String getToken(value) {
@@ -810,7 +828,8 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
                     value = combined.join("")
                 }
             }
-            if (value.find { it != MarcFixedFieldHandler.FIXED_NONE }) {
+            if (value.find { it != MarcFixedFieldHandler.FIXED_NONE &&
+                    it != MarcFixedFieldHandler.FIXED_UNDEF }) {
                 values << value
             }
         }
@@ -831,6 +850,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     String property
     String uriTemplate
     Pattern matchUriToken = null
+    boolean parseZeroPaddedNumber
     DateTimeFormatter dateTimeFormat
     ZoneId timeZone
     LocalTime defaultTime
@@ -862,6 +882,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 defaultTime = LocalTime.MIN
             }
         }
+        parseZeroPaddedNumber = (fieldDfn.parseZeroPaddedNumber == true)
         ignored = fieldDfn.get('ignored', false)
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
@@ -916,6 +937,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             } catch (DateTimeParseException e) {
                 value = givenValue
             }
+        } else if (parseZeroPaddedNumber && value) {
+            if (value) {
+                try {
+                    value = Integer.parseInt(value)
+                } catch (NumberFormatException e) {
+                    ; // pass
+                }
+            }
         }
 
         def ent = state.entityMap[aboutEntityName]
@@ -952,16 +981,24 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             entity = entity[link]
         if (property) {
             def v = entity[property]
-            if (v && dateTimeFormat) {
-                try {
-                    def zonedDateTime = parseDate(v)
-                    def value = zonedDateTime.format(dateTimeFormat)
-                    if (missingCentury) {
-                        value = value.substring(2)
+            if (v) {
+                if (dateTimeFormat) {
+                    try {
+                        def zonedDateTime = parseDate(v)
+                        def value = zonedDateTime.format(dateTimeFormat)
+                        if (missingCentury) {
+                            value = value.substring(2)
+                        }
+                        return value
+                    } catch (DateTimeParseException e) {
+                        return v
                     }
-                    return value
-                } catch (DateTimeParseException e) {
-                    return v
+                } else if (parseZeroPaddedNumber) {
+                    try {
+                        return String.format("%03d", v)
+                    } catch (UnknownFormatConversionException) {
+                        return null
+                    }
                 }
             }
             return revertObject(v)

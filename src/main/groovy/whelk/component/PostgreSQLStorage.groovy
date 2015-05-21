@@ -17,7 +17,8 @@ class PostgreSQLStorage extends AbstractSQLStorage {
     String jdbcDriver = "org.postgresql.Driver"
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_STATEMENT, LOAD_ALL_STATEMENT_WITH_DATASET, DELETE_DOCUMENT_STATEMENT
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT
+    protected String LOAD_ALL_STATEMENT, LOAD_ALL_STATEMENT_WITH_DATASET
 
     PostgreSQLStorage(String componentId = null, Map settings) {
         this.contentTypes = settings.get('contentTypes', null)
@@ -48,6 +49,29 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE entry @> '{ \"alternateIdentifiers\": [?] }'"
         LOAD_ALL_STATEMENT = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? AND identifier != ?  ORDER BY modified LIMIT 2000"
         LOAD_ALL_STATEMENT_WITH_DATASET = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? AND identifier != ? AND dataset = ? ORDER BY modified LIMIT 2000"
+        LOAD_ALL_DOCUMENTS = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE modified >= ? AND modified <= ? ORDER BY modified"
+        LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT identifier,data,entry,meta FROM $mainTableName WHERE dataset = ? AND modified >= ? AND modified <= ? ORDER BY modified"
+        LOAD_ALL_DOCUMENTS_WITH_LINKS = """
+            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.entry as entry, r.meta as meta
+            FROM (
+                SELECT * FROM (
+                    SELECT identifier as id, identifier as link FROM $mainTableName
+                    UNION ALL
+                    SELECT identifier as id, jsonb_array_elements_text(entry->'links') as link FROM $mainTableName
+                ) AS links GROUP by id,link
+            ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
+            """
+        LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET = """
+            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.entry as entry, r.meta as meta
+            FROM (
+                SELECT * FROM (
+                    SELECT identifier as id, identifier as link FROM $mainTableName WHERE dataset = ?
+                    UNION ALL
+                    SELECT identifier as id, jsonb_array_elements_text(entry->'links') as link FROM $mainTableName WHERE dataset = ?
+                ) AS links GROUP by id,link
+            ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
+            """
+
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE identifier = ?"
     }
 
@@ -72,7 +96,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_dataset ON ${mainTableName}_${it} (dataset)")
                 stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_modified ON ${mainTableName}_${it} (modified)")
             } catch (org.postgresql.util.PSQLException pgsqle) {
-                log.trace("Indexes on $mainTableName / $it already exists.")
+                log.trace("Indexes on $mainTableName / $id already exists.")
             }
         }
         if (versioning) {
@@ -91,10 +115,12 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 stmt.executeUpdate("CREATE INDEX ${versionsTableName}_modified ON ${versionsTableName} (modified)")
                 stmt.executeUpdate("CREATE INDEX ${versionsTableName}_checksum ON ${versionsTableName} (checksum)")
             } catch (org.postgresql.util.PSQLException pgsqle) {
-                log.trace("Indexes on $mainTableName / $it already exists.")
+                log.trace("Indexes on $mainTableName / $id already exists.")
             }
         }
+        /*
         stmt.close()
+        */
         connection.close()
     }
 
@@ -108,6 +134,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         }
         assert doc.dataset
         log.debug("Saving document ${doc.identifier} (with checksum: ${doc.checksum})")
+        displayConnectionPoolStatus("store")
         Connection connection = connectionPool.getConnection()
         PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT.replaceAll(/\{tableName\}/, mainTableName + "_" + doc.dataset))
         try {
@@ -129,13 +156,18 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             log.error("Failed to save document: ${e.message}")
             throw e
         } finally {
+            /*
             insert.close()
+            */
             connection.close()
+            log.debug("[store] Closed connection.")
         }
         return false
     }
 
     boolean saveVersion(Document doc) {
+        log.debug("Save version")
+        displayConnectionPoolStatus("saveVersion")
         Connection connection = connectionPool.getConnection()
         PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
@@ -155,8 +187,11 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             log.error("Failed to save document version: ${e.message}")
             throw e
         } finally {
+            /*
             insvers.close()
+            */
             connection.close()
+            log.debug("[saveVersion] Closed connection.")
         }
     }
 
@@ -165,6 +200,8 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         if (!docs || docs.isEmpty()) {
             return
         }
+        log.debug("Bulk storing ${docs.size()} documents.")
+        displayConnectionPoolStatus("bulkStore")
         Connection connection = connectionPool.getConnection()
         PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT.replaceAll(/\{tableName\}/, mainTableName + "_" + dataset))
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
@@ -203,9 +240,12 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             log.error("Failed to save batch: ${e.message}")
             throw e
         } finally {
+            /*
             batch.close()
             ver_batch.close()
+            */
             connection.close()
+            log.debug("[bulkStore] Closed connection.")
         }
     }
 
@@ -230,20 +270,33 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         return doc
     }
 
+    private void displayConnectionPoolStatus(String callingMethod) {
+        log.debug("[${callingMethod}] cpool numActive: ${connectionPool.numActive}")
+        log.debug("[${callingMethod}] cpool numIdle: ${connectionPool.numIdle}")
+        log.debug("[${callingMethod}] cpool maxTotal: ${connectionPool.maxTotal}")
+    }
+
     private Document loadFromSql(String id, String checksum, String sql) {
         Document doc = null
+        log.debug("loadFromSql $id ($sql)")
+        displayConnectionPoolStatus("loadFromSql")
         Connection connection = connectionPool.getConnection()
+        //connection = DriverManager.getConnection("jdbc:postgresql://localhost/whelk")
+        log.debug("Got connection.")
         PreparedStatement selectstmt
         ResultSet rs
         try {
             selectstmt = connection.prepareStatement(sql)
+            log.trace("Prepared statement")
             if (id) {
                 selectstmt.setString(1, id)
             }
             if (checksum) {
                 selectstmt.setString(2, checksum)
             }
+            log.trace("About to execute")
             rs = selectstmt.executeQuery()
+            log.trace("Executed.")
             if (rs.next()) {
                 doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
             } else {
@@ -257,6 +310,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 selectstmt.close()
             }
             connection.close()
+            log.debug("[loadFromSql] Closed connection.")
         }
         return doc
     }
@@ -265,11 +319,6 @@ class PostgreSQLStorage extends AbstractSQLStorage {
     Document loadByAlternateIdentifier(String identifier) {
         String sql = GET_DOCUMENT_BY_ALTERNATE_ID.replace("?", '"' + identifier + '"')
         return loadFromSql(null, null, sql)
-    }
-
-    @Override
-    Iterable<Document> loadAll() {
-        return loadAll(null,null,null)
     }
 
     @Override
@@ -289,14 +338,101 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 docList << doc
             }
         } finally {
+            /*
             rs.close()
             selectstmt.close()
+            */
             connection.close()
+            log.debug("[loadAllVersions] Closed connection.")
         }
         return docList
     }
 
-    Iterable<Document> loadAll(String dataset, Date since = null, Date until = null) {
+    @Override
+    Iterable<Document> loadAll(String dataset) {
+        return loadAllDocuments(dataset, false)
+    }
+
+    private Iterable<Document> loadAllDocuments(String dataset, boolean withLinks, Date since = null, Date until = null) {
+        log.debug("Load all called with dataset: $dataset")
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                Connection connection = connectionPool.getConnection()
+                connection.setAutoCommit(false)
+                PreparedStatement loadAllStatement
+                long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
+                long sinceTS = since?.getTime() ?: 0L
+
+                if (dataset) {
+                    if (withLinks) {
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET)
+                    } else {
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_DATASET)
+                    }
+                } else {
+                    if (withLinks) {
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS)
+                    } else {
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS)
+                    }
+                }
+                loadAllStatement.setFetchSize(100)
+                if (dataset) {
+                    loadAllStatement.setString(1, dataset)
+                    if (withLinks) {
+                        loadAllStatement.setString(2, dataset)
+                    } else {
+                        loadAllStatement.setTimestamp(2, new Timestamp(sinceTS))
+                        loadAllStatement.setTimestamp(3, new Timestamp(untilTS))
+                    }
+                } else {
+                    loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
+                    loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
+                }
+                ResultSet rs = loadAllStatement.executeQuery()
+
+                boolean more = rs.next()
+                if (!more) {
+                    try {
+                        connection.commit()
+                        connection.setAutoCommit(true)
+                    } finally {
+                        connection.close()
+                    }
+                }
+
+                return new Iterator<Document>() {
+                    @Override
+                    public Document next() {
+                        Document doc
+                        if (withLinks) {
+                            doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map), rs.getString("parent"))
+                        } else {
+                            doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
+                        }
+                        more = rs.next()
+                        if (!more) {
+                            try {
+                                connection.commit()
+                                connection.setAutoCommit(true)
+                            } finally {
+                                connection.close()
+                            }
+                        }
+                        return doc
+                    }
+
+                    @Override
+                    public boolean hasNext() {
+                        return more
+                    }
+                }
+            }
+        }
+    }
+
+    Iterable<Document> oldloadAll(String dataset, Date since = null, Date until = null) {
+        log.debug("Load all called with dataset: $dataset")
         return new Iterable<Document>() {
             def results = new LinkedHashSet<Document>()
             Iterator<Document> iterator() {
@@ -368,8 +504,11 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 delstmt.setString(1, identifier)
                 delstmt.executeUpdate()
             } finally {
+                /*
                 delstmt.close()
+                */
                 connection.close()
+                log.debug("[remove] Closed connection.")
             }
         }
     }
@@ -395,5 +534,19 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 conn = null
             }
         }
+    }
+
+    @Override
+    public Map getStatus() {
+        def status = [:]
+        status['mainTable'] = mainTableName
+        status['versioning'] = versioning
+        if (versioning) {
+            status['versionsTableName'] = versionsTableName
+        }
+        status['contentTypes'] = contentTypes
+        status['availableTypes'] = availableTypes
+        status['databaseUrl'] = connectionUrl
+        return status
     }
 }

@@ -17,6 +17,8 @@ class HttpWhelk extends HttpServlet {
     Map<Pattern, API> apis = new LinkedHashMap<Pattern, API>()
     Whelk whelk
 
+    static final List<String> LOCAL_ADDRESSES = ['0:0:0:0:0:0:0:1', '192.168.', '10.']
+
     /*
      * Servlet methods
      *******************************/
@@ -33,7 +35,18 @@ class HttpWhelk extends HttpServlet {
         try {
             if (request.method == "GET" && path == "/") {
                 whelkinfo["version"] = whelk.loadVersionInfo()
-                if (request.getServerPort() != 80) {
+                String remote_addr = request.getHeader("X-Forwarded-For") ?: request.getRemoteAddr()
+                boolean local = false
+                for (addr in LOCAL_ADDRESSES) {
+                    if (remote_addr.startsWith(addr)) {
+                        local = true
+                    }
+                }
+                if (!local) {
+                    log.info("Network address $remote_addr is not considered local. Not showing details.")
+                }
+
+                if (request.getServerPort() != 80 && local) {
                     def compManifest = [:]
                     whelk.components.each {
                         def plList = []
@@ -43,6 +56,7 @@ class HttpWhelk extends HttpServlet {
                             plList << plStat
                         }
                         compManifest[(it.id)] = ["class": it.getClass().getName(), "plugins": plList]
+                        compManifest[(it.id)].putAll(it.getStatus())
                     }
                     whelkinfo["components"] = compManifest
                 }

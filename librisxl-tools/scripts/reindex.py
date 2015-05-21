@@ -106,7 +106,7 @@ def reindex(**args):
         for row in results:
             counter += 1
             try:
-                identifier = base64.urlsafe_b64encode(bytes(row[0], 'utf-8')).decode()
+                identifier = base64.urlsafe_b64encode(bytes(row[0], 'utf-8')).decode().rstrip("=")
                 dataset = row[1]
                 stored_json = json.loads(bytes(row[2]).decode("utf-8"))
                 index_json = filter(stored_json, dataset)

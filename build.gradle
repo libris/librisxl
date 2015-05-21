@@ -33,7 +33,7 @@ try {
 } catch (Exception e) {}
 
 // Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
-version = versionprops.get("releaseTag", "0.8.8.x")
+version = versionprops.get("releaseTag", "0.8.11.x")
 
 archivesBaseName = "whelk"
 
@@ -204,6 +204,7 @@ task jettyRun(type: JettyRun, overwrite: true) {
 
     def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
     System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
+    System.setProperty('whelk.mode', System.getProperty("whelk.mode", "ops"))
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {

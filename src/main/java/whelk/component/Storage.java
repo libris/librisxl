@@ -39,7 +39,7 @@ public interface Storage extends Component {
     /**
      * Retrieves all objects from Storage.
      */
-    public Iterable<Document> loadAll();
+    public Iterable<Document> loadAll(String dataset);
 
     public List<Document> loadAllVersions(String identifier);
     /**

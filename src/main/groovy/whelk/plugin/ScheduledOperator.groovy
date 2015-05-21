@@ -20,19 +20,23 @@ class ScheduledOperator extends BasicPlugin {
     }
 
     void bootstrap() {
-        ses = Executors.newScheduledThreadPool(configuration.size())
-        configuration.each { task, conf ->
-            log.debug("Setting up schedule for $task : $conf")
-            def imp = getPlugin(conf.importer)
-            assert imp
-            imp.serviceUrl = conf.url
-            def job = new ScheduledJob(task, imp, conf.dataset, whelk)
-            try {
-                ses.scheduleWithFixedDelay(job, 30, conf.interval, TimeUnit.SECONDS)
-                log.info("${task} will start in 30 seconds.")
-            } catch (RejectedExecutionException ree) {
-                log.error("execution failed", ree)
+        if (System.getProperty("whelk.mode", "") != "ops") {
+            ses = Executors.newScheduledThreadPool(configuration.size())
+            configuration.each { task, conf ->
+                log.debug("Setting up schedule for $task : $conf")
+                def imp = getPlugin(conf.importer)
+                assert imp
+                imp.serviceUrl = conf.url
+                def job = new ScheduledJob(task, imp, conf.dataset, whelk)
+                try {
+                    ses.scheduleWithFixedDelay(job, 30, conf.interval, TimeUnit.SECONDS)
+                    log.info("${task} will start in 30 seconds.")
+                } catch (RejectedExecutionException ree) {
+                    log.error("execution failed", ree)
+                }
             }
+        } else {
+            log.info("Whelk ${this.whelk.id} is started in operations mode. No tasks scheduled.")
         }
     }
 
