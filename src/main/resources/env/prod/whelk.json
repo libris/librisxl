@@ -14,16 +14,5 @@
           "indexroutebuilder",
           "apixroutebuilder"
         ]
-    },
-    "_apis": [
-        { "/_remotesearch": "remotesearch" },
-        { "/_format": "formatter" },
-        { "/_libcount": "libcount" },
-        { "/_isxntool":  "isxntool" },
-        { "/_complete/([\\w/]+)$":  "completeexpander" },
-        { "/(\\w+)/_search":  "search" },
-        { "^/_iri/(.+)$": "documentapi" },
-        { "^([^_].*)$":  "documentapi" },
-        { "^/$":  "documentapi" }
-    ]
+    }
 }
