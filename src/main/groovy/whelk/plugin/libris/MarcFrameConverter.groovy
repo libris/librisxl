@@ -940,7 +940,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         } else if (parseZeroPaddedNumber && value) {
             if (value) {
                 try {
-                    value = Integer.parseInt(value)
+                    value = Integer.parseInt(value.trim())
                 } catch (NumberFormatException e) {
                     ; // pass
                 }
