@@ -164,6 +164,14 @@
                     }
                 },
                 {
+                    "numberOf_template": {
+                        "mapping": {
+                            "type": "string"
+                        },
+                        "match": "numberOf*"
+                    }
+                },
+                {
                     "unknown_template": {
                         "mapping": {
                             "index": "not_analyzed",
