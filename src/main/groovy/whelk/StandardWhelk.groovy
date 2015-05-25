@@ -405,7 +405,7 @@ class StandardWhelk implements Whelk {
 
     //Iterable<Document> loadAll(Date since) { return loadAll(null, since, null)}
 
-    Iterable<Document> loadAll(String dataset) { //, Date since = null, String storageId = null) {
+    Iterable<Document> loadAll(String dataset, Date since = null, String storageId = null) {
         def st
         if (storageId) {
             st = getStorages().find { it.id == storageId }
@@ -422,7 +422,9 @@ class StandardWhelk implements Whelk {
 
     @Override
     Document createDocument(String contentType) {
-        if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
+        if (contentType == "application/ld+json") {
+            return new JsonLdDocument().withContentType(contentType)
+        } else if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
             return new JsonDocument().withContentType(contentType)
         } else {
             return new DefaultDocument().withContentType(contentType)
@@ -434,7 +436,11 @@ class StandardWhelk implements Whelk {
         try {
             Document document = mapper.readValue(json, DefaultDocument)
             if (document.isJson()) {
-                return new JsonDocument().fromDocument(document)
+                if (document.contentType == "application/ld+json") {
+                    return new JsonLdDocument().fromDocument(document)
+                } else {
+                    return new JsonDocument().fromDocument(document)
+                }
             }
             return document
         } catch (org.codehaus.jackson.JsonParseException jpe) {
@@ -446,7 +452,11 @@ class StandardWhelk implements Whelk {
     Document createDocument(byte[] data, Map entry, Map meta) {
         Document document = new DefaultDocument().withData(data).withMeta(meta).withEntry(entry)
         if (document.isJson()) {
-            return new JsonDocument().fromDocument(document)
+            if (document.contentType == "application/ld+json") {
+                return new JsonLdDocument().fromDocument(document)
+            } else {
+                return new JsonDocument().fromDocument(document)
+            }
         }
         return document
     }

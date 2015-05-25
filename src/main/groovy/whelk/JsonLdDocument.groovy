@@ -28,6 +28,10 @@ class JsonLdDocument extends JsonDocument {
 
     void setData(byte[] data) {
         super.setData(data)
-        this.entry['links'] = findLinks(getDataAsMap())
+        def links = findLinks(getDataAsMap())
+        //log.info("For ${identifier}, found links: ${links}")
+        if (links) {
+            this.entry['links'] = links
+        }
     }
 }
