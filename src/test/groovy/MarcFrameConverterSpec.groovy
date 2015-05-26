@@ -56,6 +56,7 @@ class MarcFrameConverterSpec extends Specification {
                             fieldSpecs << [source: it.source,
                                            normalized: it.normalized,
                                            result: it.result,
+                                           name: it.name ?: "",
                                            marcType: marcType, code: code]
                         }
                     }
@@ -105,7 +106,7 @@ class MarcFrameConverterSpec extends Specification {
         value << ["Text", ["@id": "/link"]]
     }
 
-    def "should convert field spec for #fieldSpec.marcType #fieldSpec.code"() {
+    def "should convert field spec for #fieldSpec.marcType #fieldSpec.code (#fieldSpec.name)"() {
         given:
         def marcType = fieldSpec.marcType
         def marc = deepcopy(marcSkeletons[marcType])
@@ -134,7 +135,7 @@ class MarcFrameConverterSpec extends Specification {
     }
 
     //@Ignore
-    def "should revert field spec for #fieldSpec.marcType #fieldSpec.code"() {
+    def "should revert field spec for #fieldSpec.marcType #fieldSpec.code (#fieldSpec.name)"() {
         given:
         def marcType = fieldSpec.marcType
         def jsonld = deepcopy(marcResults[marcType])

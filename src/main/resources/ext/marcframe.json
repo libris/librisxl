@@ -5767,7 +5767,10 @@
         "tokenMap": "acquisitionMethod"
       },
       "[8:12]": {
-        "property": "expectedAcquisitionEndDate"
+        "property": "expectedAcquisitionEndDate",
+        "TODO:parseDateTime": "yyMM", "timeZone": "CET",
+        "fixedDefault": "    ",
+        "matchAsDefault": "^ *0+ *$|^ +$|^\\|+$"
       },
       "[12:13]": {
         "link": "generalRetentionPolicy",
@@ -5822,7 +5825,8 @@
         "aboutEntity": "?record",
         "property": "date",
         "parseDateTime": "yyMMdd", "timeZone": "CET",
-        "fixedDefault": "000000"
+        "fixedDefault": "000000",
+        "matchAsDefault": "^ *0+ *$|^ +$|^\\|+$"
       },
       "repeatable": false,
       "_spec": [
@@ -5860,6 +5864,18 @@
             "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
               "numberOfItems": "NaN"
+            }
+          }
+        },
+        {
+          "name": "non-zero-padded numberOfItems and odd dates",
+          "source": {"008": "121102||0   |||||1  b ||| 0     "},
+          "normalized": {"008": "121102||    |   |001b|und|000000"},
+          "result": {
+            "created": "2012-11-02T00:00:00.0+01:00",
+            "about": {
+              "numberOfItems": 1,
+              "lendingPolicy": {"@id": "/def/enum/content/WillNotLend"}
             }
           }
         }

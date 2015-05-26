@@ -22,9 +22,9 @@ class JsonDocument extends DefaultDocument {
 
     JsonDocument fromDocument(Document otherDocument) {
         log.trace("Creating json document from other document.")
-        setData(otherDocument.getData())
         setEntry(otherDocument.getEntry())
         setMeta(otherDocument.getMeta())
+        setData(otherDocument.getData())
         return this
     }
 

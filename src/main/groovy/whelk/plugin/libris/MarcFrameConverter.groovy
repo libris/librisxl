@@ -605,7 +605,9 @@ class MarcFixedFieldHandler {
             if (m && obj) {
                 def start = m[0][1].toInteger()
                 def end = m[0][2].toInteger()
-                columns << new Column(ruleSet, obj, start, end, obj['fixedDefault'])
+                columns << new Column(ruleSet, obj, start, end,
+                    obj['fixedDefault'],
+                    obj['matchAsDefault'])
                 if (end > fieldSize) {
                     fieldSize = end
                 }
@@ -649,8 +651,7 @@ class MarcFixedFieldHandler {
                 assert col.width >= obj.size()
                 def end = col.start + obj.size() - 1
                 value[col.start .. end] = obj
-                if (obj != col.fixedDefault &&
-                        obj != FIXED_NONE && obj != FIXED_UNDEF) {
+                if (col.isActualValue(obj)) {
                     actualValue = true
                 }
             }
@@ -662,12 +663,16 @@ class MarcFixedFieldHandler {
         int start
         int end
         String fixedDefault
-        Column(ruleSet, fieldDfn, start, end, fixedDefault) {
+        Pattern matchAsDefault
+        Column(ruleSet, fieldDfn, start, end, fixedDefault, matchAsDefault=null) {
             super(ruleSet, null, fieldDfn)
             assert start > -1 && end >= start
             this.start = start
             this.end = end
             this.fixedDefault = fixedDefault
+            if (matchAsDefault) {
+                this.matchAsDefault = Pattern.compile(matchAsDefault)
+            }
             if (!fixedDefault && tokenMap &&
                 !tokenMap.containsKey(FIXED_FAUX_NONE) &&
                 !tokenMap.containsKey(FIXED_NONE)) {
@@ -688,6 +693,8 @@ class MarcFixedFieldHandler {
                 return OK
             if (token == fixedDefault)
                 return OK
+            if (matchAsDefault && matchAsDefault.matcher(token).matches())
+                return OK
             boolean isNothing = token.find { it != FIXED_NONE && it != FIXED_UNDEF } == null
             if (isNothing)
                 return OK
@@ -698,6 +705,12 @@ class MarcFixedFieldHandler {
             if ((v == null || v == [null]) && fixedDefault)
                 return fixedDefault
             return v
+        }
+        boolean isActualValue(String value) {
+            return value != fixedDefault &&
+                (matchAsDefault == null ||
+                 !matchAsDefault.matcher(value).matches())
+                value != FIXED_NONE && value != FIXED_UNDEF
         }
     }
 
@@ -940,7 +953,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         } else if (parseZeroPaddedNumber && value) {
             if (value) {
                 try {
-                    value = Integer.parseInt(value)
+                    value = Integer.parseInt(value.trim())
                 } catch (NumberFormatException e) {
                     ; // pass
                 }
