@@ -201,6 +201,7 @@ class JsonLdToTurtle {
         objectToTurtle(obj)
         writeln("}")
         writeln()
+        flush()
     }
 
     void toLiteral(obj, viaKey=null) {
