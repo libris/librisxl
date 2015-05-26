@@ -106,14 +106,18 @@ class JsonLdToTurtle {
     }
 
     void prelude() {
-        if (base) {
-            writeln("BASE <${base}>")
-        }
         prefixes.each { k, v ->
             writeln("PREFIX ${k}: <${v}>")
         }
+        if (base) {
+            writeBase(base)
+        }
         writeln()
         flush()
+    }
+
+    void writeBase(String iri) {
+        writeln("BASE <$iri>")
     }
 
     def objectToTurtle(obj, level=0, viaKey=null) {
@@ -188,6 +192,15 @@ class JsonLdToTurtle {
             write(indent + "]")
             return topObjects
         }
+    }
+
+    def objectToTrig(String iri, Map obj) {
+        writeln()
+        writeln("GRAPH <$iri> {")
+        writeln()
+        objectToTurtle(obj)
+        writeln("}")
+        writeln()
     }
 
     void toLiteral(obj, viaKey=null) {
@@ -266,13 +279,11 @@ class JsonLdToTurtle {
             serializer.prelude()
             for (path in args[1..-1]) {
                 if (path.startsWith("http://")) {
-                    println "BASE <$path>"
+                    serializer.writeBase(path)
                     continue
                 }
-                println(); println "GRAPH <$path> {"; println()
                 def source = new File(path).withInputStream { mapper.readValue(it, Map) }
-                serializer.objectToTurtle(source)
-                println "}"; println()
+                serializer.objectToTrig(path, source)
             }
         }
     }
