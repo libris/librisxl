@@ -15,6 +15,8 @@ class ScheduledOperator extends BasicPlugin {
 
     Map configuration
 
+    int scheduleDelaySeconds = 30
+
     ScheduledOperator(Map settings) {
         this.configuration = settings
     }
@@ -29,8 +31,8 @@ class ScheduledOperator extends BasicPlugin {
                 imp.serviceUrl = conf.url
                 def job = new ScheduledJob(task, imp, conf.dataset, whelk)
                 try {
-                    ses.scheduleWithFixedDelay(job, 30, conf.interval, TimeUnit.SECONDS)
-                    log.info("${task} will start in 30 seconds.")
+                    ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, conf.interval, TimeUnit.SECONDS)
+                    log.info("${task} will start in ${scheduleDelaySeconds} seconds.")
                 } catch (RejectedExecutionException ree) {
                     log.error("execution failed", ree)
                 }
