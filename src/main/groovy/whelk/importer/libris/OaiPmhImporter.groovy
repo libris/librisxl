@@ -30,8 +30,6 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
     int nrDeleted = 0
     long startTime = 0
 
-    boolean picky = true
-    boolean silent = false
     boolean preserveTimestamps = true
 
     long runningTime = 0
@@ -64,8 +62,6 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         getAuthentication()
         this.cancelled = false
         this.dataset = dataset
-        this.picky = picky
-        this.silent = silent
         this.recordCount = 0
         this.nrDeleted = 0
         if (!serviceUrl) {
@@ -108,23 +104,28 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             url = new URL(urlString)
             log.debug("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
         }
-        def harvestResult = harvest(url)
-        Date lastRecordDatestamp = harvestResult.lastRecordDatestamp ?: from
-        def resumptionToken = harvestResult.resumptionToken
-        log.debug("resumptionToken: $resumptionToken")
+
+        def harvestResult = null
+        Date lastRecordDatestamp = from
+        def resumptionToken = null
         long loadUrlTime = startTime
         long elapsed = 0
-        while (!cancelled && resumptionToken && (nrOfDocs == -1 || recordCount <  nrOfDocs)) {
+
+        while (elapsed == 0 ||
+            (!cancelled && resumptionToken && (nrOfDocs == -1 || recordCount <  nrOfDocs))) {
             loadUrlTime = System.currentTimeMillis()
             url = new URL(baseUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
             log.trace("Harvesting $url")
             try {
                 harvestResult = harvest(url)
-                lastRecordDatestamp = harvestResult.lastRecordDatestamp ?: from
-                resumptionToken = harvestResult.resumptionToken
             } catch (XmlParsingFailedException xpfe) {
                 log.warn("[$dataset / $recordCount] Harvesting failed. Retrying ...")
+            } catch (Exception e) {
+                log.error("Caught exception in doImport loop", e)
+                break
             }
+            lastRecordDatestamp = harvestResult.lastRecordDatestamp ?: from
+            resumptionToken = harvestResult.resumptionToken
             elapsed = System.currentTimeMillis() - loadUrlTime
             if (elapsed > 6000) {
                 log.warn("[$dataset / $recordCount] Harvest took more than 6 seconds ($elapsed)")
@@ -194,92 +195,26 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         }
         def documents = []
         elapsed = System.currentTimeMillis()
-        OAIPMH.ListRecords.record.each {
+        def resumptionToken = OAIPMH.ListRecords.resumptionToken.text()
+        for (it in OAIPMH.ListRecords.record) {
             String mdrecord = createString(it.metadata.record)
             if (mdrecord) {
                 try {
-                    def documentMap = [:]
-                    log.trace("Record preparation starts.")
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
-                    log.trace("Marc record instantiated from XML.")
-                    String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
-
-                    def entry = ["identifier":recordId,"dataset":this.dataset]
-                    recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
-                    if (preserveTimestamps) {
-                        log.trace("Setting date: $recordDate")
-                        entry.put(Document.MODIFIED_KEY, recordDate.getTime())
-                    }
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
                         log.debug("Record ${entry.identifier} is suppressed. Next ...")
-                        return
+                        continue
                     }
-
-                    String originalIdentifier = null
-                    long originalModified = 0
-
-                    log.trace("Start check for 887")
-                    try {
-                        for (field in record.getDatafields("887")) {
-                            if (!field.getSubfields("2").isEmpty() && field.getSubfields("2").first().data == "librisxl") {
-                                try {
-                                    def xlData = mapper.readValue(field.getSubfields("a").first().data, Map)
-                                    originalIdentifier = xlData.get("@id")
-                                    originalModified = xlData.get("modified") as long
-                                } catch (Exception e) {
-                                    log.error("Failed to parse 887 as json for $recordId")
-                                }
-                            }
-                        }
-                        if (originalIdentifier) {
-                            log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
-                            entry['identifier'] = originalIdentifier
-                            long marcRecordModified = getMarcRecordModificationTime(record)?.getTime()
-                            log.info("record timestamp: $marcRecordModified")
-                            log.info("    xl timestamp: $originalModified")
-                            long diff = (marcRecordModified - originalModified) / 1000
-                            log.info("/update time difference: $diff secs.")
-                            if (diff < 60) {
-                                log.info("Record probably not edited in Voyager. Skipping ...")
-                                return
-                            }
-                        }
-                    } catch (NoSuchElementException nsee) {
-                        log.trace("Record doesn't have a 877 field.")
-                    }
-
-                    log.trace("887 check complete.")
-                    def meta = [:]
-
-                    if (it.header.setSpec) {
-                        for (spec in it.header.setSpec) {
-                            meta.get("oaipmhSetSpecs", []).add(spec.toString())
-                        }
-                    }
-                    log.trace("Record prepared.")
-
-                    documentMap['record'] = record
-                    documentMap['entry'] = entry
-                    documentMap['meta'] = meta
-                    documentMap['originalIdentifier'] = originalIdentifier
-
-                    documents << documentMap
-
+                    log.trace("Marc record instantiated from XML.")
+                    recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
+                    def document = createDocumentMap(record, recordDate, it.header)
+                    documents << document
                     recordCount++
-                    def velocityMsg = ""
                     runningTime = System.currentTimeMillis() - startTime
-                    if (!silent) {
-                        velocityMsg = "Current velocity: ${recordCount/(runningTime/1000)}."
-                        Tools.printSpinner("Running OAIPMH ${this.dataset} import. ${recordCount} documents imported sofar. $velocityMsg", recordCount)
-                    }
                 } catch (Exception e) {
-
                     log.error("Failed! (${e.message}) for :\n$mdrecord", e)
-                    if (picky) {
-                        log.error("Picky mode enabled. Throwing exception", e)
-                        throw e
-                    }
+                    break
                 }
             } else if (it.header?.@status == 'deleted' || it.header?.@deleted == 'true') {
                 recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
@@ -291,7 +226,9 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     }
                 nrDeleted++
             } else {
-                throw new WhelkRuntimeException("Failed to handle record: " + createString(it))
+                log.error("Failed to handle record: " + createString(it))
+                resumptionToken = null
+                break
             }
         }
         if ((System.currentTimeMillis() - elapsed) > 5000) {
@@ -301,10 +238,69 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             addDocuments(documents)
         }
 
-        if (!OAIPMH.ListRecords.resumptionToken.text()) {
-            log.trace("Last page is $xmlString")
+        return new HarvestResult(resumptionToken: resumptionToken, lastRecordDatestamp: recordDate)
+    }
+
+    Map createDocumentMap(MarcRecord record, Date recordDate, def header) {
+        def documentMap = [:]
+        log.trace("Record preparation starts.")
+        String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
+
+        def entry = ["identifier":recordId,"dataset":this.dataset]
+        if (preserveTimestamps) {
+            log.trace("Setting date: $recordDate")
+            entry.put(Document.MODIFIED_KEY, recordDate.getTime())
         }
-        return new HarvestResult(resumptionToken: OAIPMH.ListRecords.resumptionToken, lastRecordDatestamp: recordDate)
+
+        String originalIdentifier = null
+        long originalModified = 0
+
+        log.trace("Start check for 887")
+        try {
+            for (field in record.getDatafields("887")) {
+                if (!field.getSubfields("2").isEmpty() && field.getSubfields("2").first().data == "librisxl") {
+                    try {
+                        def xlData = mapper.readValue(field.getSubfields("a").first().data, Map)
+                        originalIdentifier = xlData.get("@id")
+                        originalModified = xlData.get("modified") as long
+                    } catch (Exception e) {
+                        log.error("Failed to parse 887 as json for $recordId")
+                    }
+                }
+            }
+            if (originalIdentifier) {
+                log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
+                entry['identifier'] = originalIdentifier
+                long marcRecordModified = getMarcRecordModificationTime(record)?.getTime()
+                log.info("record timestamp: $marcRecordModified")
+                log.info("    xl timestamp: $originalModified")
+                long diff = (marcRecordModified - originalModified) / 1000
+                log.info("/update time difference: $diff secs.")
+                if (diff < 60) {
+                    log.info("Record probably not edited in Voyager. Skipping ...")
+                    return null
+                }
+            }
+        } catch (NoSuchElementException nsee) {
+            log.trace("Record doesn't have a 877 field.")
+        }
+
+        log.trace("887 check complete.")
+        def meta = [:]
+
+        if (header.setSpec) {
+            for (spec in header.setSpec) {
+                meta.get("oaipmhSetSpecs", []).add(spec.toString())
+            }
+        }
+        log.trace("Record prepared.")
+
+        documentMap['record'] = record
+        documentMap['entry'] = entry
+        documentMap['meta'] = meta
+        documentMap['originalIdentifier'] = originalIdentifier
+
+        return documentMap
     }
 
     class HarvestResult {
