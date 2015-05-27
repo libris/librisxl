@@ -303,11 +303,6 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         return documentMap
     }
 
-    class HarvestResult {
-        String resumptionToken
-        Date lastRecordDatestamp
-    }
-
     Date getMarcRecordModificationTime(MarcRecord record) {
         String datetime = record.getControlfields("005")?.get(0).getData()
         if (datetime) {
@@ -399,7 +394,14 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
     void cancel() {
         this.cancelled = true
     }
+
+    static class HarvestResult {
+        String resumptionToken
+        Date lastRecordDatestamp
+    }
+
 }
+
 
 class XmlParsingFailedException extends Exception {
     XmlParsingFailedException() {
