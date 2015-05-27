@@ -18,31 +18,37 @@ class ScheduledOperatorSpec extends Specification {
         whelk.updateState(_, _) >> { key, newState -> state[key] = newState }
 
         and:
-        def imports = ["2001-01-01T00:00:00Z", "2002-02-02T00:00:00Z"]
+        def imports = ["2001-01-01T00:00:00Z", null, "2002-02-02T00:00:00Z"]
         def importer = GroovyMock(Importer)
         importer.serviceUrl >> "http://example.org/service"
         importer.doImport(_, _, _, _, _, _) >>> imports.collect {
             new ImportResult(
-                numberOfDocuments: 1,
-                numberOfDeleted: 1,
-                lastRecordDatestamp: Date.parse(ScheduledJob.DATE_FORMAT, it))
+                numberOfDocuments: it? 1 : 0,
+                numberOfDeleted: 0,
+                lastRecordDatestamp:
+                    it? Date.parse(ScheduledJob.DATE_FORMAT, it) : null)
         }
 
-        when:
+        when: "first import"
         def sjob = new ScheduledJob("id", importer, ds, whelk)
         sjob.run()
         then:
         state[ds].lastImport == imports[0]
 
-        and: "again"
+        and: "none in this one"
         sjob.run()
         then:
-        state[ds].lastImport == imports[1]
+        state[ds].lastImport == imports[0]
 
-        and: "yet again"
+        and: "something new"
         sjob.run()
         then:
-        state[ds].lastImport == imports[1]
+        state[ds].lastImport == imports[2]
+
+        and: "nothing new"
+        sjob.run()
+        then:
+        state[ds].lastImport == imports[2]
     }
 
 }
