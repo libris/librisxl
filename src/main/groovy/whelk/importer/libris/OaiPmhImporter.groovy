@@ -22,6 +22,8 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
 
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
+    static DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+
     Whelk whelk
     String dataset
 
@@ -89,7 +91,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         */
 
         if (from) {
-            urlString = urlString + "&from=" + from.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            urlString = urlString + "&from=" + from.format(DATE_FORMAT)
         }
         log.debug("urlString: $urlString")
         //queue = Executors.newSingleThreadExecutor()
@@ -207,7 +209,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                         continue
                     }
                     log.trace("Marc record instantiated from XML.")
-                    recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
+                    recordDate = Date.parse(DATE_FORMAT, it.header.datestamp.toString())
                     def document = createDocumentMap(record, recordDate, it.header)
                     documents << document
                     recordCount++
@@ -217,7 +219,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     break
                 }
             } else if (it.header?.@status == 'deleted' || it.header?.@deleted == 'true') {
-                recordDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
+                recordDate = Date.parse(DATE_FORMAT, it.header.datestamp.toString())
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                     try {
                         whelk.remove(deleteIdentifier, this.dataset)
