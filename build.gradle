@@ -50,7 +50,10 @@ sourceSets {
     }
 }
 
-test.testLogging.exceptionFormat "full"
+test.testLogging {
+    showStandardStreams true
+    exceptionFormat "full"
+}
 
 repositories {
     mavenCentral()
