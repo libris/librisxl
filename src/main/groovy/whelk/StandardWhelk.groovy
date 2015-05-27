@@ -107,7 +107,8 @@ class StandardWhelk implements Whelk {
     void saveState() {
         Storage storage = getStorage()
         if (storage) {
-            def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(whelkState)
+            def stateCopy = new HashMap<String,Object>(whelkState)
+            def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(stateCopy)
             if (!storage.store(stateDoc, false)) {
                 log.error("Failed to save state!")
             }

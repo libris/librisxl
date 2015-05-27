@@ -28,7 +28,8 @@ abstract class AbstractSQLStorage extends BasicComponent implements Storage {
         }
         connectionPool.setDriverClassName(getJdbcDriver());
         connectionPool.setUrl(connectionUrl);
-        connectionPool.setInitialSize(3);
+        connectionPool.setInitialSize(10);
+        connectionPool.setMaxTotal(40);
         connectionPool.setDefaultAutoCommit(true)
         createTables()
     }
