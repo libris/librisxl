@@ -11,11 +11,7 @@ class ScheduledOperatorSpec extends Specification {
     def "should update state on successful import"() {
         setup:
         def ds = "test"
-        def whelk = Mock(StandardWhelk)
-        def state = [:]
-        whelk.acquireLock(ds) >> true
-        whelk.getState() >> state
-        whelk.updateState(_, _) >> { key, newState -> state[key] = newState }
+        def whelk = new StandardWhelk()
 
         and:
         def imports = ["2001-01-01T00:00:00Z", null, "2002-02-02T00:00:00Z"]
@@ -33,22 +29,22 @@ class ScheduledOperatorSpec extends Specification {
         def sjob = new ScheduledJob("id", importer, ds, whelk)
         sjob.run()
         then:
-        state[ds].lastImport == imports[0]
+        whelk.state[ds].lastImport == imports[0]
 
         and: "none in this one"
         sjob.run()
         then:
-        state[ds].lastImport == imports[0]
+        whelk.state[ds].lastImport == imports[0]
 
         and: "something new"
         sjob.run()
         then:
-        state[ds].lastImport == imports[2]
+        whelk.state[ds].lastImport == imports[2]
 
         and: "nothing new"
         sjob.run()
         then:
-        state[ds].lastImport == imports[2]
+        whelk.state[ds].lastImport == imports[2]
     }
 
 }
