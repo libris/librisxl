@@ -187,7 +187,9 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     log.trace("Marc record instantiated from XML.")
                     recordDate = Date.parse(DATE_FORMAT, it.header.datestamp.toString())
                     def document = createDocumentMap(record, recordDate, it.header)
-                    documents << document
+                    if (document) {
+                        documents << document
+                    }
                     recordCount++
                     runningTime = System.currentTimeMillis() - startTime
                 } catch (Exception e) {
