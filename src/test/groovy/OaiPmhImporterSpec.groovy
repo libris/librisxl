@@ -37,6 +37,17 @@ class OaiPmhImporterSpec extends Specification {
         result.lastRecordDatestamp == expectedLast
     }
 
+    def "should follow resumptionToken even from empty page"() {
+        given:
+        currentPageSet = emptyFirstPagePageSet
+        def expectedLast = Date.parse(DATE_FORMAT, "2002-02-02T00:00:00Z")
+        when:
+        def result = importer.doImport("dataset")
+        then:
+        result.numberOfDocuments == 1
+        result.lastRecordDatestamp == expectedLast
+    }
+
     def "should retain last successful record datestamp"() {
         given:
         currentPageSet = brokenPageSet
@@ -54,6 +65,7 @@ class OaiPmhImporterSpec extends Specification {
         def result = importer.doImport("dataset")
         then:
         result.numberOfDocuments == 0
+        result.lastRecordDatestamp == Date.parse(DATE_FORMAT, "1970-01-01T00:00:00Z")
     }
 
     def "should skip suppressed records"() {
@@ -101,6 +113,27 @@ class OaiPmhImporterSpec extends Specification {
                     </record>
                 </metadata>
             </record>
+            <resumptionToken>page-2</resumptionToken>
+        """),
+        (BASE+'?verb=ListRecords&resumptionToken=page-2'): oaiPmhPage("""
+            <record>
+                <header>
+                    <identifier>http://example.org/item/2</identifier>
+                    <datestamp>2002-02-02T00:00:00Z</datestamp>
+                    <setSpec>license:CC0</setSpec>
+                </header>
+                <metadata>
+                    <record xmlns="http://www.loc.gov/MARC21/slim" type="Authority">
+                    <leader>00986cz  a2200217n  4500</leader>
+                    <controlfield tag="001">2</controlfield>
+                    </record>
+                </metadata>
+            </record>
+        """)
+    ]
+
+    static emptyFirstPagePageSet = [
+        (BASE+'?verb=ListRecords&metadataPrefix=marcxml'): oaiPmhPage("""
             <resumptionToken>page-2</resumptionToken>
         """),
         (BASE+'?verb=ListRecords&resumptionToken=page-2'): oaiPmhPage("""
