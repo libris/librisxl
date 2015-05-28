@@ -47,13 +47,24 @@ class OaiPmhImporterSpec extends Specification {
         result.lastRecordDatestamp == expectedLast
     }
 
-    def "should skip documents originating from itself"() {
+    def "should skip records originating from itself"() {
         given:
         currentPageSet = selfOriginPageSet
         when:
         def result = importer.doImport("dataset")
         then:
         result.numberOfDocuments == 0
+    }
+
+    def "should skip suppressed records"() {
+        given:
+        currentPageSet = suppressedPageSet
+        def expectedLast = Date.parse(DATE_FORMAT, "2015-05-28T12:43:00Z")
+        when:
+        def result = importer.doImport("dataset")
+        then:
+        result.numberOfDocuments == 0
+        result.lastRecordDatestamp == expectedLast
     }
 
     static {
@@ -189,4 +200,25 @@ class OaiPmhImporterSpec extends Specification {
         """)
     ]
 
+    static suppressedPageSet = [
+        (BASE+'?verb=ListRecords&metadataPrefix=marcxml'): oaiPmhPage("""
+            <record>
+                <header>
+                    <identifier>http://example.org/item/1</identifier>
+                    <datestamp>2015-05-28T12:43:00Z</datestamp>
+                    <setSpec>license:CC0</setSpec>
+                </header>
+                <metadata>
+                    <record xmlns="http://www.loc.gov/MARC21/slim" type="Authority">
+                    <leader>00986cz  a2200217n  4500</leader>
+                    <controlfield tag="001">1</controlfield>
+                    <controlfield tag="005">20150528124300.0</controlfield>
+                    <datafield tag="599" ind1=" " ind2=" ">
+                        <subfield code="a">SUPPRESSRECORD</subfield>
+                    </datafield>
+                    </record>
+                </metadata>
+            </record>
+        """)
+    ]
 }

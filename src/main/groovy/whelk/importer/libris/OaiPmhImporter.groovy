@@ -178,14 +178,14 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             String mdrecord = createString(it.metadata.record)
             if (mdrecord) {
                 try {
+                    recordDate = Date.parse(DATE_FORMAT, it.header.datestamp.toString())
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
-                        log.debug("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Next ...")
+                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Next ...")
                         continue
                     }
                     log.trace("Marc record instantiated from XML.")
-                    recordDate = Date.parse(DATE_FORMAT, it.header.datestamp.toString())
                     def document = createDocumentMap(record, recordDate, it.header)
                     if (document) {
                         documents << document
