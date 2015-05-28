@@ -77,35 +77,21 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
 
         tickets = new Semaphore(100)
 
-        /*
-        if (from == null) {
-            for (st in this.whelk.getStorages()) {
-                log.debug("Turning off versioning in ${st.id}")
-                // Preserve original setting
-                versioningSettings.put(st.id, st.versioning)
-                st.versioning = false
-            }
-            from = new Date(0L)
-            prepareDocuments = false
-        }
-        */
-
         if (from) {
             urlString = urlString + "&from=" + from.format(DATE_FORMAT)
         }
         log.debug("urlString: $urlString")
-        //queue = Executors.newSingleThreadExecutor()
+        queue = Executors.newSingleThreadExecutor()
         //queue = Executors.newFixedThreadPool(numberOfThreads)
-        queue = Executors.newWorkStealingPool()
+        //queue = Executors.newWorkStealingPool()
         startTime = System.currentTimeMillis()
         URL url
         if (startResumptionToken) {
             url = new URL(baseUrl + "?verb=ListRecords&resumptionToken=" + startResumptionToken)
-            log.debug("Harvesting OAIPMH data from ${url.toString()}. Pickymode: $picky")
         } else {
             url = new URL(urlString)
-            log.debug("Harvesting OAIPMH data from $urlString. Pickymode: $picky")
         }
+        log.debug("Harvesting OAIPMH data from ${url.toString()}. Pickymode: $picky")
 
         def harvestResult = null
         Date lastRecordDatestamp = from
@@ -116,7 +102,9 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         while (elapsed == 0 ||
             (!cancelled && resumptionToken && (nrOfDocs == -1 || recordCount <  nrOfDocs))) {
             loadUrlTime = System.currentTimeMillis()
-            url = new URL(baseUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
+            if (resumptionToken) {
+                url = new URL(baseUrl + "?verb=ListRecords&resumptionToken=" + resumptionToken)
+            }
             log.trace("Harvesting $url")
             try {
                 harvestResult = harvest(url)
@@ -134,18 +122,6 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             }
             log.debug("resumptionToken: $resumptionToken")
         }
-        log.debug("Flushing data ...")
-        /*
-        queue.execute({
-            this.whelk.flush()
-            log.debug("Resetting versioning setting for storages")
-            if (!from) {
-                for (st in this.whelk.getStorages()) {
-                    st.versioning = versioningSettings.get(st.id)
-                }
-            }
-        } as Runnable)
-        */
         log.debug("Shutting down queue")
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
@@ -205,7 +181,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
-                        log.debug("Record ${entry.identifier} is suppressed. Next ...")
+                        log.debug("Record ${record.getDatafields('001').get(0).getData()} is suppressed. Next ...")
                         continue
                     }
                     log.trace("Marc record instantiated from XML.")
@@ -319,32 +295,32 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         }
         tickets.acquire()
         queue.execute({
-            def convertedDocs = []
-            documents.each {
-                try {
-                    if (marcFrameConverter) {
-                        log.trace("Conversion starts.")
-                        def doc = marcFrameConverter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
-                        log.trace("Convestion finished.")
-                        if (it.originalIdentifier) {
-                            def dataMap = doc.dataAsMap
-                            dataMap['controlNumber'] = it.record.getControlfields("001").get(0).getData()
-                            doc = doc.withData(dataMap)
-                            doc.addIdentifier("/"+this.dataset+"/"+it.record.getControlfields("001").get(0).getData())
+                def convertedDocs = []
+                documents.each {
+                    try {
+                        if (marcFrameConverter) {
+                            log.trace("Conversion starts.")
+                            def doc = marcFrameConverter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
+                            log.trace("Convestion finished.")
+                            if (it.originalIdentifier) {
+                                def dataMap = doc.dataAsMap
+                                dataMap['controlNumber'] = it.record.getControlfields("001").get(0).getData()
+                                doc = doc.withData(dataMap)
+                                doc.addIdentifier("/"+this.dataset+"/"+it.record.getControlfields("001").get(0).getData())
+                            }
+                            if (enhancer) {
+                                log.trace("Enhancing starts.")
+                                doc = enhancer.filter(doc)
+                                log.trace("Enhancing finished.")
+                            }
+                            if (doc) {
+                                convertedDocs << doc
+                            }
                         }
-                        if (enhancer) {
-                            log.trace("Enhancing starts.")
-                            doc = enhancer.filter(doc)
-                            log.trace("Enhancing finished.")
-                        }
-                        if (doc) {
-                            convertedDocs << doc
-                        }
+                    } catch (Exception e) {
+                        log.error("Exception in conversion", e)
                     }
-                } catch (Exception e) {
-                    log.error("Exception in conversion", e)
                 }
-            }
 
             try {
                 log.debug("Adding ${convertedDocs.size()} documents to whelk.")
@@ -355,7 +331,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                 }
             } catch (WhelkAddException wae) {
                 log.warn("Failed adding: ${wae.message} (${wae.failedIdentifiers})")
-                throw wae
+                    throw wae
             } catch (Exception e) {
                 log.error("Exception on bulkAdd: ${e.message}", e)
                 throw e

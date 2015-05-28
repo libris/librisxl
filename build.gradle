@@ -131,8 +131,6 @@ dependencies {
     providedCompile 'javax.servlet:servlet-api:2.5'
     testCompile 'cglib:cglib-nodep:3.1'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-    // From dep
-    compile project(":dep/locgov-pairtree")
 
     // Standalone
     executableWarDeps "org.eclipse.jetty:jetty-server:${jettyVersion}"

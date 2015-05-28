@@ -59,7 +59,7 @@ class OaiPmhImporterSpec extends Specification {
     static currentPageSet = null
 
     static okPageSet = [
-        (BASE+'?verb=ListRecords&resumptionToken=null'): oaiPmhPage("""
+        (BASE+'?verb=ListRecords&metadataPrefix=marcxml'): oaiPmhPage("""
             <record>
                 <header>
                     <identifier>http://example.org/item/1</identifier>
@@ -93,7 +93,7 @@ class OaiPmhImporterSpec extends Specification {
     ]
 
     static brokenPageSet = [
-        (BASE+'?verb=ListRecords&resumptionToken=null'): oaiPmhPage("""
+        (BASE+'?verb=ListRecords&metadataPrefix=marcxml'): oaiPmhPage("""
             <record>
                 <header>
                     <identifier>http://example.org/item/1</identifier>
