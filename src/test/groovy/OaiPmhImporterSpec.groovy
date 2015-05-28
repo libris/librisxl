@@ -7,9 +7,19 @@ import spock.lang.Specification
 
 class OaiPmhImporterSpec extends Specification {
 
-    static DATE_FORMAT = OaiPmhImporter.DATE_FORMAT
-
     static BASE = "http://example.org/service"
+
+    static currentPageSet = null
+
+    static {
+        URL.metaClass.getText = {
+            currentPageSet[delegate.toString()]
+        }
+    }
+
+    static date(dateStr) {
+        Date.parse(OaiPmhImporter.DATE_FORMAT, dateStr)
+    }
 
     def importer
 
@@ -27,35 +37,32 @@ class OaiPmhImporterSpec extends Specification {
     def "should import OAI-PMH"() {
         given:
         currentPageSet = okPageSet
-        def expectedLast = Date.parse(DATE_FORMAT, "2002-02-02T00:00:00Z")
         when:
         def result = importer.doImport("dataset")
         then:
         importer.documents.size() == 2
         result.numberOfDocuments == 2
         result.numberOfDeleted == 0
-        result.lastRecordDatestamp == expectedLast
+        result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
     }
 
     def "should follow resumptionToken even from empty page"() {
         given:
         currentPageSet = emptyFirstPagePageSet
-        def expectedLast = Date.parse(DATE_FORMAT, "2002-02-02T00:00:00Z")
         when:
         def result = importer.doImport("dataset")
         then:
         result.numberOfDocuments == 1
-        result.lastRecordDatestamp == expectedLast
+        result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
     }
 
     def "should retain last successful record datestamp"() {
         given:
         currentPageSet = brokenPageSet
-        def expectedLast = Date.parse(DATE_FORMAT, "2002-02-02T00:00:00Z")
         when:
         def result = importer.doImport("dataset")
         then:
-        result.lastRecordDatestamp == expectedLast
+        result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
     }
 
     def "should skip records originating from itself"() {
@@ -65,24 +72,17 @@ class OaiPmhImporterSpec extends Specification {
         def result = importer.doImport("dataset")
         then:
         result.numberOfDocuments == 0
-        result.lastRecordDatestamp == Date.parse(DATE_FORMAT, "1970-01-01T00:00:00Z")
+        result.lastRecordDatestamp == date("1970-01-01T00:00:00Z")
     }
 
     def "should skip suppressed records"() {
         given:
         currentPageSet = suppressedPageSet
-        def expectedLast = Date.parse(DATE_FORMAT, "2015-05-28T12:43:00Z")
         when:
         def result = importer.doImport("dataset")
         then:
         result.numberOfDocuments == 0
-        result.lastRecordDatestamp == expectedLast
-    }
-
-    static {
-        URL.metaClass.getText = {
-            currentPageSet[delegate.toString()]
-        }
+        result.lastRecordDatestamp == date("2015-05-28T12:43:00Z")
     }
 
     static oaiPmhPage(body) {
@@ -95,8 +95,6 @@ class OaiPmhImporterSpec extends Specification {
             </OAI-PMH>
         """
     }
-
-    static currentPageSet = null
 
     static okPageSet = [
         (BASE+'?verb=ListRecords&metadataPrefix=marcxml'): oaiPmhPage("""
