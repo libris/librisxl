@@ -129,6 +129,9 @@ dependencies {
     // Servlet dependencies
     compile 'com.thetransactioncompany:cors-filter:2.1.2'
     providedCompile 'javax.servlet:servlet-api:2.5'
+
+    // profiling and test
+    testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
     testCompile 'cglib:cglib-nodep:3.1'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 
@@ -171,7 +174,7 @@ war {
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
-    classpath = sourceSets.main.runtimeClasspath
+    classpath = sourceSets.test.runtimeClasspath
     main = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
 }
