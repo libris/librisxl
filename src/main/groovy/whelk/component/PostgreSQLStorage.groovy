@@ -95,6 +95,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             try {
                 stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_dataset ON ${mainTableName}_${it} (dataset)")
                 stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_modified ON ${mainTableName}_${it} (modified)")
+                stmt.executeUpdate("CREATE INDEX ${mainTableName}_${it}_entry ON ${mainTableName}_${it} USING gin (modified jsonb_path_ops)")
             } catch (org.postgresql.util.PSQLException pgsqle) {
                 log.trace("Indexes on $mainTableName / $id already exists.")
             }

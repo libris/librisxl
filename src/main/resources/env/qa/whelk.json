@@ -7,7 +7,7 @@
         "ELASTIC_INDEX_NAME": "libris-qa",
         "ELASTIC_SEARCH_HOST": "hp06.libris.kb.se:9300",
         "UPDATE_OAIPMH_URL":"http://averell.libris.kb.se/vcopy/{dataset}/oaipmh",
-        "UPDATE_HOLD_OAIPMH_URL":"http://averell.libris.kb.se/vcopy/{dataset}/oaipmh",
+        "UPDATE_HOLD_OAIPMH_URL":"http://averell.libris.kb.se/vcopy/mfhd/oaipmh",
         "UPDATE_INTERVAL": 30
     },
     "_plugins": {

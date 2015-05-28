@@ -33,7 +33,7 @@ try {
 } catch (Exception e) {}
 
 // Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
-version = versionprops.get("releaseTag", "0.8.12.x")
+version = versionprops.get("releaseTag", "0.8.14.x")
 
 archivesBaseName = "whelk"
 
@@ -50,7 +50,10 @@ sourceSets {
     }
 }
 
-test.testLogging.exceptionFormat "full"
+test.testLogging {
+    showStandardStreams true
+    exceptionFormat "full"
+}
 
 repositories {
     mavenCentral()
@@ -126,9 +129,8 @@ dependencies {
     // Servlet dependencies
     compile 'com.thetransactioncompany:cors-filter:2.1.2'
     providedCompile 'javax.servlet:servlet-api:2.5'
+    testCompile 'cglib:cglib-nodep:3.1'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-    // From dep
-    compile project(":dep/locgov-pairtree")
 
     // Standalone
     executableWarDeps "org.eclipse.jetty:jetty-server:${jettyVersion}"
