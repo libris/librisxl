@@ -1,5 +1,7 @@
 package whelk.importer.libris
 
+import whelk.StandardWhelk
+
 import spock.lang.Specification
 
 
@@ -9,11 +11,17 @@ class OaiPmhImporterSpec extends Specification {
 
     static BASE = "http://example.org/service"
 
-    def importer = new OaiPmhImporter(serviceUrl: BASE) {
-        def documents = []
-        void addDocuments(final List documents) {
-            this.documents += documents
+    def importer
+
+    def setup() {
+        importer = new OaiPmhImporter(serviceUrl: BASE) {
+            def documents = []
+            void addDocuments(final List documents) {
+                this.documents += documents
+                super.addDocuments(documents)
+            }
         }
+        importer.whelk = Mock(StandardWhelk)
     }
 
     def "should import OAI-PMH"() {
@@ -37,6 +45,15 @@ class OaiPmhImporterSpec extends Specification {
         def result = importer.doImport("dataset")
         then:
         result.lastRecordDatestamp == expectedLast
+    }
+
+    def "should skip documents originating from itself"() {
+        given:
+        currentPageSet = selfOriginPageSet
+        when:
+        def result = importer.doImport("dataset")
+        then:
+        result.numberOfDocuments == 0
     }
 
     static {
@@ -143,6 +160,29 @@ class OaiPmhImporterSpec extends Specification {
                     <record xmlns="http://www.loc.gov/MARC21/slim" type="Authority">
                         <leader>00986cz  a2200217n  4500</leader>
                         <controlfield tag="001">4</controlfield>
+                    </record>
+                </metadata>
+            </record>
+        """)
+    ]
+
+    static selfOriginPageSet = [
+        (BASE+'?verb=ListRecords&metadataPrefix=marcxml'): oaiPmhPage("""
+            <record>
+                <header>
+                    <identifier>http://example.org/item/1</identifier>
+                    <datestamp>1970-01-01T00:00:00Z</datestamp>
+                    <setSpec>license:CC0</setSpec>
+                </header>
+                <metadata>
+                    <record xmlns="http://www.loc.gov/MARC21/slim" type="Authority">
+                    <leader>00986cz  a2200217n  4500</leader>
+                    <controlfield tag="001">1</controlfield>
+                    <controlfield tag="005">19700101010000.0</controlfield>
+                    <datafield tag="887" ind1=" " ind2=" ">
+                        <subfield code="a">{"@id": "http://example.org/item/1", "modified": 0}</subfield>
+                        <subfield code="2">librisxl</subfield>
+                    </datafield>
                     </record>
                 </metadata>
             </record>

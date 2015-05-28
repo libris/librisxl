@@ -189,8 +189,8 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     def document = createDocumentMap(record, recordDate, it.header)
                     if (document) {
                         documents << document
+                        recordCount++
                     }
-                    recordCount++
                     runningTime = System.currentTimeMillis() - startTime
                 } catch (Exception e) {
                     log.error("Failed! (${e.message}) for :\n$mdrecord", e)
@@ -297,6 +297,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         }
         tickets.acquire()
         queue.execute({
+            try {
                 def convertedDocs = []
                 documents.each {
                     try {
@@ -324,19 +325,22 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     }
                 }
 
-            try {
-                log.debug("Adding ${convertedDocs.size()} documents to whelk.")
-                long elapsed = System.currentTimeMillis()
-                this.whelk.bulkAdd(convertedDocs, convertedDocs.get(0).dataset, convertedDocs.get(0).contentType, prepareDocuments)
-                if ((System.currentTimeMillis() - elapsed) > 10000) {
-                    log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
+                if (convertedDocs.size() > 0) {
+                    try {
+                        log.debug("Adding ${convertedDocs.size()} documents to whelk.")
+                        long elapsed = System.currentTimeMillis()
+                        this.whelk.bulkAdd(convertedDocs, convertedDocs.get(0).dataset, convertedDocs.get(0).contentType, prepareDocuments)
+                        if ((System.currentTimeMillis() - elapsed) > 10000) {
+                            log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
+                        }
+                    } catch (WhelkAddException wae) {
+                        log.warn("Failed adding: ${wae.message} (${wae.failedIdentifiers})")
+                            throw wae
+                    } catch (Exception e) {
+                        log.error("Exception on bulkAdd: ${e.message}", e)
+                        throw e
+                    }
                 }
-            } catch (WhelkAddException wae) {
-                log.warn("Failed adding: ${wae.message} (${wae.failedIdentifiers})")
-                    throw wae
-            } catch (Exception e) {
-                log.error("Exception on bulkAdd: ${e.message}", e)
-                throw e
             } finally {
                 tickets.release()
             }
