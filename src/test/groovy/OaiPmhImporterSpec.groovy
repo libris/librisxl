@@ -85,6 +85,29 @@ class OaiPmhImporterSpec extends Specification {
         result.lastRecordDatestamp == date("2015-05-28T12:43:00Z")
     }
 
+    def "should not accept lastRecordDatestamp lower than start date"() {
+        given:
+        currentPageSet = badDateOrderPageSet
+        when: "one is correct"
+        def result = importer.doImport("dataset", null, -1, false, true, date("2015-05-29T00:00:00Z"))
+        then:
+        result.numberOfDocuments == 1
+        result.numberOfDeleted == 0
+        result.lastRecordDatestamp == date("2015-05-29T08:00:00Z")
+    }
+
+    def "should preserve record datestamps until bad"() {
+        given:
+        badDateOrderPageSet[(BASE+'?verb=ListRecords&metadataPrefix=marcxml&from=2015-05-29T09:00:00Z')] = badDateOrderPageSet[(BASE+'?verb=ListRecords&metadataPrefix=marcxml&from=2015-05-29T00:00:00Z')]
+        currentPageSet = badDateOrderPageSet
+        when: "none is correct"
+        def result = importer.doImport("dataset", null, -1, false, true, date("2015-05-29T09:00:00Z"))
+        then:
+        result.numberOfDocuments == 0
+        result.numberOfDeleted == 0
+        result.lastRecordDatestamp == date("2015-05-29T09:00:00Z")
+    }
+
     static oaiPmhPage(body) {
         """<?xml version="1.0"?>
             <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/">
@@ -247,6 +270,40 @@ class OaiPmhImporterSpec extends Specification {
                     <datafield tag="599" ind1=" " ind2=" ">
                         <subfield code="a">SUPPRESSRECORD</subfield>
                     </datafield>
+                    </record>
+                </metadata>
+            </record>
+        """)
+    ]
+
+    static badDateOrderPageSet = [
+        (BASE+'?verb=ListRecords&metadataPrefix=marcxml&from=2015-05-29T00:00:00Z'): oaiPmhPage("""
+            <record>
+                <header>
+                    <identifier>http://example.org/item/1</identifier>
+                    <datestamp>2015-05-29T08:00:00Z</datestamp>
+                    <setSpec>license:CC0</setSpec>
+                </header>
+                <metadata>
+                    <record xmlns="http://www.loc.gov/MARC21/slim" type="Authority">
+                    <leader>00986cz  a2200217n  4500</leader>
+                    <controlfield tag="001">1</controlfield>
+                    </record>
+                </metadata>
+            </record>
+            <resumptionToken>page-2</resumptionToken>
+        """),
+        (BASE+'?verb=ListRecords&resumptionToken=page-2'): oaiPmhPage("""
+            <record>
+                <header>
+                    <identifier>http://example.org/item/2</identifier>
+                    <datestamp>2002-02-02T00:00:00Z</datestamp>
+                    <setSpec>license:CC0</setSpec>
+                </header>
+                <metadata>
+                    <record xmlns="http://www.loc.gov/MARC21/slim" type="Authority">
+                    <leader>00986cz  a2200217n  4500</leader>
+                    <controlfield tag="001">2</controlfield>
                     </record>
                 </metadata>
             </record>

@@ -22,7 +22,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
 
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
-    static DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+    static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'"
 
     Whelk whelk
     String dataset
@@ -107,7 +107,8 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             }
             log.trace("Harvesting $url")
             try {
-                harvestResult = harvest(url)
+                harvestResult = harvest(url, harvestResult?.lastRecordDatestamp ?: from ?: Date.parse(DATE_FORMAT, "1970-01-01T00:00:00Z"))
+                //harvestResult = harvest(url, from ?: new Date(0))
             } catch (XmlParsingFailedException xpfe) {
                 log.warn("[$dataset / $recordCount] Harvesting failed. Retrying ...")
             } catch (Exception e) {
@@ -143,7 +144,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         return sb.toString()
     }
 
-    def harvest(URL url) {
+    def harvest(URL url, Date startDate) {
         long elapsed = System.currentTimeMillis()
         Date recordDate
         def xmlString = normalizeString(url.text)
@@ -179,6 +180,12 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
             if (mdrecord) {
                 try {
                     recordDate = Date.parse(DATE_FORMAT, it.header.datestamp.toString())
+                    if (recordDate.before(startDate)) {
+                        log.error("Encountered datestamp older (${recordDate}) than starttime (${startDate}) for record ${it.header.identifier}. Breaking.")
+                        recordDate = startDate
+                        resumptionToken = null
+                        break
+                    }
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
