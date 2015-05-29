@@ -53,7 +53,7 @@ abstract class BasicOaiPmhImporter {
         return startUrl + params
     }
 
-    private void getAuthentication(username, password) {
+    protected void getAuthentication(username, password) {
         Authenticator.setDefault(new Authenticator() {
                 protected PasswordAuthentication getPasswordAuthentication() {
                     return new PasswordAuthentication(username, password.toCharArray())

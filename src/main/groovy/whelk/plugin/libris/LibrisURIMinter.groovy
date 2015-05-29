@@ -245,7 +245,7 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
         return (j >= ceil)? j - ceil : j
     }
 
-    class MintRuleSet {
+    static class MintRuleSet {
         Map<String, MintRule> ruleByType = [:]
         String uriTemplate
         MintRuleSet(Map rules) {
@@ -263,7 +263,7 @@ class LibrisURIMinter extends BasicPlugin implements URIMinter {
         }
     }
 
-    class MintRule {
+    static class MintRule {
         Map<String, String> bound
         List<String> variables
         List subclasses
