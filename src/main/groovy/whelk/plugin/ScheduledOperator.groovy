@@ -53,7 +53,7 @@ class ScheduledOperator extends BasicPlugin {
 @Log
 class ScheduledJob implements Runnable {
 
-    static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+    static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
     String id, dataset
     Importer importer

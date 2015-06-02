@@ -47,7 +47,7 @@ abstract class BasicOaiPmhImporter {
         } else {
             params = "?verb=ListRecords&metadataPrefix=marcxml"
             if (since) {
-                params += "&from=" + since.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+                params += "&from=" + since.format("yyyy-MM-dd'T'HH:mm:ssX")
             }
         }
         return startUrl + params

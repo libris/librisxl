@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat
 @Log
 class OaipmhSearchAPI extends BasicAPI {
 
-    static final String DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:MM:ss'Z'"
+    static final String DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:MM:ssX"
     JsonLD2MarcXMLConverter jsonLD2MarcXMLConverter = null
     def result              = new StringWriter()
     def builder             = new StreamingMarkupBuilder()
