@@ -1840,7 +1840,7 @@
 
   "bib": {
 
-    "thingLink": "about",
+    "thingLink": "mainEntity",
 
     "postProcessing": [
       {
@@ -5178,7 +5178,7 @@
 
   "auth": {
 
-    "thingLink": "about",
+    "thingLink": "focus",
 
     "000": {
       "inherit": "bib",
