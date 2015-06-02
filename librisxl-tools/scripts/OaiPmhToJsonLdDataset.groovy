@@ -35,7 +35,7 @@ class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
     void run(startUrl, name, passwd) {
         new File(dest).withOutputStream {
             if (jsonLdContext) {
-                turtleSerializer = new JsonLdToTurtle(jsonLdContext, out, baseIri)
+                turtleSerializer = new JsonLdToTurtle(jsonLdContext, it, baseIri)
                 turtleSerializer.prelude()
             } else {
                 writer = it.newWriter('UTF-8')
