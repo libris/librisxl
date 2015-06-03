@@ -217,7 +217,6 @@ class MarcConversion {
 
         def record = ["@id": recordId]
         def thing = [:]
-        record[marcRuleSet.thingLink] = thing
 
         def state = [
             entityMap: ['?record': record, '?thing': thing],
@@ -296,6 +295,22 @@ class MarcConversion {
             }
         }
 
+        def linkedThing = record[marcRuleSet.thingLink]
+        if (linkedThing) {
+            thing.each { key, value ->
+                def hasValue = linkedThing[key]
+                if (hasValue) {
+                    if (!(hasValue instanceof List)) {
+                        hasValue = [hasValue]
+                    }
+                    hasValue += value
+                } else {
+                    linkedThing[key] = value
+                }
+            }
+        } else {
+            record[marcRuleSet.thingLink] = thing
+        }
         return record
     }
 
