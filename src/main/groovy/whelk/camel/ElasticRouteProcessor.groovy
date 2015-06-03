@@ -55,12 +55,13 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
             operation = "DELETE"
         }
         message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexType=${indexType}&indexName=${indexName}")
-        log.debug("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $elasticId)");
-        log.debug("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
+        log.trace("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $elasticId)");
         if (operation == Whelk.REMOVE_OPERATION) {
             log.debug("Setting message body to $elasticId in preparation for REMOVE operation.")
+            log.debug("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
             message.setBody(elasticId)
         } else {
+            log.trace("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
             def dataMap = message.getBody(Map.class)
             for (filter in filters) {
                 log.trace("Applying filter ${filter.id} on ${identifier} for dataset $dataset")

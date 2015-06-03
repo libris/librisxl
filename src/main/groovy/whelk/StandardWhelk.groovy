@@ -294,9 +294,14 @@ class StandardWhelk implements Whelk {
     }
 
     void remove(String id, String dataset = null) {
-        def doc= get(id)
+        def location = locate(id)
+        def doc = location?.document
+
         if (doc?.dataset) {
             dataset = doc.dataset
+        }
+        if (!doc && location && location.responseCode > 300 && location.responseCode < 400) {
+            id = location.uri.toString()
         }
         if (!dataset) {
             dataset = plugins.find { it instanceof ShapeComputer }?.calculateTypeFromIdentifier(id)
@@ -306,7 +311,11 @@ class StandardWhelk implements Whelk {
             ((Component)it).remove(id, dataset)
         }
         log.debug("Sending DELETE operation to camel.")
-        log.debug("document has identifier: ${doc?.identifier} with dataset ${dataset}")
+        if (log.isDebugEnabled() && doc) {
+            log.debug("Sending DELETE operation to camel for document with identifier: ${doc?.identifier} with dataset ${dataset}")
+        } else if (log.isDebugEnabled()) {
+            log.debug("Sending DELETE operation to camel for identifier: ${id} with dataset ${dataset}")
+        }
         def extraInfo = [:]
         if (doc && !doc.deleted && doc instanceof JsonDocument) {
             // Temporary necessity to handle removal of librisxl-born documents from voyager
