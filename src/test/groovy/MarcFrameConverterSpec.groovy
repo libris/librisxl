@@ -35,12 +35,14 @@ class MarcFrameConverterSpec extends Specification {
         ['bib', 'auth', 'hold'].each { marcType ->
             def ruleSets = converter.conversion.marcRuleSets
             converter.config[marcType].each { code, dfn ->
+                def ruleSet = ruleSets[marcType]
+                def thingLink = ruleSet.thingLink
                 if (code == 'thingLink')
                     return
                 if (code == 'postProcessing') {
-                    ruleSets[marcType].postProcSteps.eachWithIndex { step, i ->
+                    ruleSet.postProcSteps.eachWithIndex { step, i ->
                         dfn[i]._spec.each {
-                            postProcStepSpecs << [step: step, spec: it]
+                            postProcStepSpecs << [step: step, spec: it, thingLink: thingLink]
                         }
                     }
                     return
@@ -57,7 +59,8 @@ class MarcFrameConverterSpec extends Specification {
                                            normalized: it.normalized,
                                            result: it.result,
                                            name: it.name ?: "",
-                                           marcType: marcType, code: code]
+                                           marcType: marcType, code: code,
+                                           thingLink: thingLink]
                         }
                     }
                 }
@@ -122,7 +125,7 @@ class MarcFrameConverterSpec extends Specification {
         def expected = deepcopy(marcResults[marcType])
         // test id generation separately
         expected['@id'] = result['@id']
-        expected['about']['@id'] = result['about']['@id']
+        expected[fieldSpec.thingLink]['@id'] = result[fieldSpec.thingLink]['@id']
         fieldSpec.result.each { prop, obj ->
             def value = expected[prop]
             if (value instanceof Map) value.putAll(obj)
@@ -219,7 +222,7 @@ class MarcFrameConverterSpec extends Specification {
         given:
         def data = deepcopy(item.spec.source)
         def record = data
-        def thing = 'about' in data? data['about'] : data
+        def thing = item.thingLink in data? data[item.thingLink] : data
 
         when:
         item.step.modify(record, thing)
