@@ -6,9 +6,9 @@ import time
 
 PMH = "{http://www.openarchives.org/OAI/2.0/}"
 
-def parse_oaipmh(start_url, name, passwd, do_print=False):
+def parse_oaipmh(start_url, name, passwd, resumption_token=None, do_print=False):
     start_time = time.time()
-    resumption_token = None
+    resumption_token = resumption_token
     record_count = 0
     while True:
         url = make_next_url(start_url, resumption_token)
@@ -42,12 +42,14 @@ if __name__ == '__main__':
         do_print = False
 
     if not args:
-        print "Usage: %s OAI_PMH_URL [NAME, PASSWORD] [-p]" % argv[0]
+        print "Usage: %s OAI_PMH_URL [NAME:PASSWORD] [RESUMPTION_TOKEN] [-p]" % argv[0]
         exit()
     start_url = args.pop(0)
     if args:
-        name, passwd = args[:2]
+        name, passwd = args.pop(0).split(':')
     else:
         name, passwd = None, None
 
-    parse_oaipmh(start_url, name, passwd, do_print)
+    resumption_token = args.pop(0) if args else None
+
+    parse_oaipmh(start_url, name, passwd, resumption_token, do_print)
