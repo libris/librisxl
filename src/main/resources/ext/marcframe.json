@@ -1840,7 +1840,7 @@
 
   "bib": {
 
-    "thingLink": "mainEntity",
+    "thingLink": "about",
 
     "postProcessing": [
       {
@@ -5220,96 +5220,115 @@
         "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6:7]": {
+        "aboutEntity": "?record",
         "link": "subdivision",
         "uriTemplate": "{_}",
         "tokenMap": "subdivision"
       },
       "[7:8]": {
+        "aboutEntity": "?record",
         "link": "romanization",
         "uriTemplate": "{_}",
         "tokenMap": "romanization"
       },
       "[8:9]": {
+        "aboutEntity": "?record",
         "link": "languageOfCatalog",
         "uriTemplate": "{_}",
         "tokenMap": "languageOfCatalog"
       },
       "[9:10]": {
+        "aboutEntity": "?record",
         "link": "kindOfRecord",
         "uriTemplate": "{_}",
         "tokenMap": "kindOfRecord"
       },
       "[10:11]": {
+        "aboutEntity": "?record",
         "link": "catalogingRules",
         "uriTemplate": "{_}",
         "tokenMap": "catalogingRules"
       },
       "[11:12]": {
+        "aboutEntity": "?record",
         "link": "subjectHeading",
         "uriTemplate": "{_}",
         "tokenMap": "subjectHeading"
       },
       "[12:13]": {
+        "aboutEntity": "?record",
         "link": "typeOfSeries",
         "uriTemplate": "{_}",
         "tokenMap": "typeOfSeries"
       },
       "[13:14]": {
+        "aboutEntity": "?record",
         "link": "numberedSeries",
         "uriTemplate": "{_}",
         "tokenMap": "numberedSeries"
       },
       "[16:17]": {
+        "aboutEntity": "?record",
         "link": "headingSeries",
         "uriTemplate": "{_}",
         "tokenMap": "headingSeries"
       },
       "[17:18]": {
+        "aboutEntity": "?record",
         "link": "subjectSubdivision",
         "uriTemplate": "{_}",
         "tokenMap": "subjectSubdivision"
       },
       "[28:29]": {
+        "aboutEntity": "?record",
         "link": "govtAgency",
         "uriTemplate": "{_}",
         "tokenMap": "govtAgency"
       },
       "[29:30]": {
+        "aboutEntity": "?record",
         "link": "reference",
         "uriTemplate": "{_}",
         "tokenMap": "reference"
       },
       "[31:32]": {
+        "aboutEntity": "?record",
         "link": "recordUpdate",
         "uriTemplate": "{_}",
         "tokenMap": "recordUpdate"
       },
       "[32:33]": {
+        "aboutEntity": "?record",
         "link": "personalName",
         "uriTemplate": "{_}",
         "tokenMap": "personalName"
       },
       "[33:34]": {
+        "aboutEntity": "?record",
         "link": "level",
         "uriTemplate": "{_}",
         "tokenMap": "level"
       },
       "[38:39]": {
+        "aboutEntity": "?record",
         "link": "modified",
         "uriTemplate": "{_}",
         "tokenMap": "modified"
       },
       "[39:40]": {
+        "aboutEntity": "?record",
         "link": "catalogingSource",
         "uriTemplate": "{_}",
         "tokenMap": "catalogingSource"
       },
       "[14:15]": {
+        "aboutEntity": "?record",
         "link": "headingMain",
         "uriTemplate": "{_}",
         "tokenMap": "headingSeries"
       },
       "[15:16]": {
+        "aboutEntity": "?record",
         "link": "headingSubject",
         "uriTemplate": "{_}",
         "tokenMap": "headingSeries"
@@ -5322,7 +5341,7 @@
       "inherit": "bib",
       "TODO": "if no $f, drop entire record (or mark as obsolete)",
       "$f": {
-        "aboutEntity": "?thing",
+        "aboutEntity": "?record",
         "IMPROVE:about": "$thing if Concept else $record",
         "TODO": "inCollection if . = sgp?",
         "link": "inScheme", "resourceType": "ConceptScheme",
@@ -5338,7 +5357,11 @@
         }
       ]
     },
-    "042" : {"inherit": "bib", "TODO": "about-inCollection-skönlitteratur?"},
+    "042": {
+      "aboutEntity": "?record",
+      "$a": {"property": "authenticationCode"},
+      "$9": {"addLink": "inCollection", "resourceType": "TermCollection", "property": "notation"}
+    },
     "043" : {
       "$a": {
         "link": "nationality",
@@ -5362,6 +5385,7 @@
     "082" : {"inherit": "bib"},
     "083" : {
       "inherit": "bib:082",
+      "aboutEntity": "?record",
       "addLink": "subject",
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
@@ -5372,9 +5396,12 @@
 
     "100" : {
       "inherit": "bib",
-      "aboutType": "Person", "link": null, "resourceType": null,
+      "aboutEntity": "?record",
+      "aboutType": "PersonTerm",
+      "link": "focus", "resourceType": "Person",
       "match-code": {
         "t v x y z": {
+          "aboutEntity": "?thing",
           "aboutType": "UniformWork",
           "link": "attributedTo",
           "resourceType": "Person",
@@ -5387,10 +5414,13 @@
             "100": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Jansson, Tove"}
           ]}},
-          "result": {"about": {
-            "@type": "Person",
-            "familyName":  "Jansson", "givenName":  "Tove"
-          }}
+          "result": {
+            "@type": "PersonTerm",
+            "focus": {
+              "@type": "Person",
+              "familyName":  "Jansson", "givenName":  "Tove"
+            }
+          }
         },
         {
           "source": {
@@ -5398,7 +5428,7 @@
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"}
           ]}},
-          "result": {"about": {
+          "result": {"focus": {
             "@type": "UniformWork",
             "title": "Anteckningar från en ö",
             "attributedTo": {"@type": "Person",
@@ -5409,18 +5439,24 @@
     },
     "110" : {
       "inherit": "bib",
-      "aboutType": "Organization", "link": null, "resourceType": null
+      "aboutEntity": "?record",
+      "aboutType": "OrganizationTerm", "link": "focus"
     },
     "111" : {
       "inherit": "bib",
-      "aboutType": "Meeting", "link": null, "resourceType": null
+      "aboutEntity": "?record",
+      "aboutType": "MeetingTerm", "link": "focus"
     },
     "130" : {
       "inherit": "bib",
-      "aboutType": "UniformWork", "link": null, "resourceType": null
+      "aboutEntity": "?record",
+      "aboutType": "WorkTerm",
+      "link": "focus", "resourceType": "UniformWork"
     },
     "148" : {
-      "aboutType": "Event", "link": null, "resourceType": null,
+      "aboutEntity": "?record",
+      "aboutType": "ChronologicalTerm",
+      "link": null, "resourceType": null,
       "$a": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
@@ -5434,7 +5470,7 @@
       "addLink": null,
       "computeLinks": null,
       "resourceType": null,
-      "aboutEntity": null,
+      "aboutEntity": "?record",
       "aboutType": "Concept",
       "$a": {"property": "prefLabel"},
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
@@ -5446,22 +5482,23 @@
         {
           "name": "",
           "source": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
-          "result": {"about": {
+          "result": {
             "@type": "Concept",
             "@id": "/resource/auth/140482",
             "prefLabel": "Barnpsykologi",
             "sameAs":  [{"@id": "/topic/sao/Barnpsykologi"}]
-          }}
+          }
         }
       ]
     },
     "151" : {
-      "aboutType": "Place", "link": null, "resourceType": null,
+      "aboutType": "GeographicalTerm",
       "$a": {"property": "prefLabel"},
       "uriTemplate": "/place/{prefLabel}"
     },
     "155" : {
       "inherit": "150",
+      "aboutType": "GenreTerm",
       "uriTemplate": "/topic/saogf/{prefLabel}"
     },
     "TODO:162" : {
@@ -5510,7 +5547,8 @@
       "inherit": "bib:611", "addLink": "hasVersion"
     },
     "450" : {
-      "$a": {"addProperty": "hiddenLabel"},
+      "aboutEntity": "?record",
+      "$a": {"addProperty": "altLabel"},
       "match-code": {
         "x": {
           "addLink": "replaces",
@@ -5538,29 +5576,30 @@
     "511" : {"inherit": "bib:111", "aboutType": null, "addLink": "seeAlso"},
     "550" : {
       "inherit": "150",
-      "aboutType": null,
+      "aboutEntity": "?record",
       "resourceType": "Concept",
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
       "_spec": [
         {
           "source": {"550": {"subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}},
-          "result": {"about": {
+          "result": {
             "broader": [
               {"@type": "Concept",
                 "@id": "/topic/sao/Commedia%20dell%60arte",
                 "prefLabel":  "Commedia dell`arte"}
-          ]
-          }}
+            ]
+          }
         }
       ]
     },
     "551" : {
         "inherit": "550",
-      "resourceType": "Place",
+      "resourceType": "GeographicalTerm",
       "uriTemplate": "/place/{prefLabel}"
     },
     "555" : {
       "inherit": "550",
+      "resourceType": "GenreTerm",
       "uriTemplate": "/topic/saogf/{prefLabel}"
     },
     "580" : {
@@ -5588,14 +5627,16 @@
       "$a": {"addProperty": "note"}
     },
     "680" : {
+      "aboutEntity": "?record",
       "$i": {"addProperty": "scopeNote"}
     },
     "688" : {
+      "aboutEntity": "?record",
       "$a": {"addProperty": "historyNote"}
     },
     "750" : {
       "inherit": "bib:650",
-      "aboutEntity": null,
+      "aboutEntity": "?record",
       "computeLinks": null,
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
