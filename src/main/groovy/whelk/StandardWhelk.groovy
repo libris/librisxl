@@ -182,7 +182,6 @@ class StandardWhelk implements Whelk {
      */
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String dataset, String contentType, boolean prepareDocuments = true) {
-        //checkAvailableMemory()
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getWriteStorages(contentType)
         if (suitableStorages.isEmpty()) { 
@@ -542,31 +541,6 @@ class StandardWhelk implements Whelk {
         def config = props.get("CAMEL_COMPONENT_CONFIG") ?: ""
         return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withConfig && config ? "?"+config : "")
     }
-
-    private checkAvailableMemory() {
-        boolean logMessagePrinted = false
-        MemoryMXBean mem=ManagementFactory.getMemoryMXBean();
-        MemoryUsage heap=mem.getHeapMemoryUsage();
-
-        long totalMemory=heap.getUsed();
-        long maxMemory=heap.getMax();
-        long used=(totalMemory * 100) / maxMemory;
-
-        log.debug("totalMemory: $totalMemory")
-        log.debug("maxMemory: $maxMemory")
-        log.debug("used: $used")
-
-        while (used > MAX_MEMORY_THRESHOLD) {
-            if (!logMessagePrinted) {
-                log.warn("Using more than $MAX_MEMORY_THRESHOLD percent of available memory ($totalMemory / $maxMemory). Blocking.")
-                logMessagePrinted = true
-            }
-            totalMemory=heap.getUsed();
-            maxMemory=heap.getMax();
-            used=(totalMemory * 100) / maxMemory; // comment to fix highlighting in vim ... */
-        }
-    }
-
 
     @Override
     void setProps(final Map global) {
