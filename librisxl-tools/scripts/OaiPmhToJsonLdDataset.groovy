@@ -35,7 +35,7 @@ class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
     void run(startUrl, name, passwd) {
         new File(dest).withOutputStream {
             if (jsonLdContext) {
-                turtleSerializer = new JsonLdToTurtle(jsonLdContext, out, baseIri)
+                turtleSerializer = new JsonLdToTurtle(jsonLdContext, it, baseIri)
                 turtleSerializer.prelude()
             } else {
                 writer = it.newWriter('UTF-8')
@@ -110,7 +110,7 @@ class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
 
         def startUrl = args[0]
         def dest = args[1]
-        def (name, passwd) = (opts.u ?: "").split(':')
+        def (name, passwd) = (opts.u ?: " : ").split(':').collect { it.trim() }
         def base = opts.b ?: null
         def ctxPath = opts.c ?: null
         if (opts.l) {
