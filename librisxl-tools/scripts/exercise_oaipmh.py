@@ -37,11 +37,16 @@ def process_oaipmh(start_url, name, passwd, resumption_token=None, to_json=True)
 
         if to_json:
             for record in records:
-                # TODO: pick out setSpec and add to data['_extra']
                 marcrec = record.find('{0}metadata/*'.format(PMH))
                 if not marcrec:
                     continue
                 data = xml2json(marcrec)
+                extra = {}
+                for elem in record.findall('{0}header/*'.format(PMH)):
+                    key = elem.tag.rsplit('}', 1)[-1]
+                    extra[key] = elem.text
+                if extra:
+                    data['_extra'] = extra
                 print(json.dumps(data).encode('utf-8'))
 
         print("Record count: %s. Got resumption token: %s. Elapsed time: %s. "
