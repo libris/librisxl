@@ -8,6 +8,10 @@ class JsonLdDocument extends JsonDocument {
 
     final static String ID_KEY = "@id"
 
+    JsonLdDocument() {
+        setContentType("application/ld+json")
+    }
+
     protected List<String> findLinks(Map dataMap) {
         List<String> ids = []
         for (entry in dataMap) {

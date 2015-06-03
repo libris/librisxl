@@ -182,7 +182,6 @@ class StandardWhelk implements Whelk {
      */
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String dataset, String contentType, boolean prepareDocuments = true) {
-        //checkAvailableMemory()
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getWriteStorages(contentType)
         if (suitableStorages.isEmpty()) { 
@@ -294,9 +293,14 @@ class StandardWhelk implements Whelk {
     }
 
     void remove(String id, String dataset = null) {
-        def doc= get(id)
+        def location = locate(id)
+        def doc = location?.document
+
         if (doc?.dataset) {
             dataset = doc.dataset
+        }
+        if (!doc && location && location.responseCode > 300 && location.responseCode < 400) {
+            id = location.uri.toString()
         }
         if (!dataset) {
             dataset = plugins.find { it instanceof ShapeComputer }?.calculateTypeFromIdentifier(id)
@@ -306,7 +310,11 @@ class StandardWhelk implements Whelk {
             ((Component)it).remove(id, dataset)
         }
         log.debug("Sending DELETE operation to camel.")
-        log.debug("document has identifier: ${doc?.identifier} with dataset ${dataset}")
+        if (log.isDebugEnabled() && doc) {
+            log.debug("Sending DELETE operation to camel for document with identifier: ${doc?.identifier} with dataset ${dataset}")
+        } else if (log.isDebugEnabled()) {
+            log.debug("Sending DELETE operation to camel for identifier: ${id} with dataset ${dataset}")
+        }
         def extraInfo = [:]
         if (doc && !doc.deleted && doc instanceof JsonDocument) {
             // Temporary necessity to handle removal of librisxl-born documents from voyager
@@ -533,31 +541,6 @@ class StandardWhelk implements Whelk {
         def config = props.get("CAMEL_COMPONENT_CONFIG") ?: ""
         return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withConfig && config ? "?"+config : "")
     }
-
-    private checkAvailableMemory() {
-        boolean logMessagePrinted = false
-        MemoryMXBean mem=ManagementFactory.getMemoryMXBean();
-        MemoryUsage heap=mem.getHeapMemoryUsage();
-
-        long totalMemory=heap.getUsed();
-        long maxMemory=heap.getMax();
-        long used=(totalMemory * 100) / maxMemory;
-
-        log.debug("totalMemory: $totalMemory")
-        log.debug("maxMemory: $maxMemory")
-        log.debug("used: $used")
-
-        while (used > MAX_MEMORY_THRESHOLD) {
-            if (!logMessagePrinted) {
-                log.warn("Using more than $MAX_MEMORY_THRESHOLD percent of available memory ($totalMemory / $maxMemory). Blocking.")
-                logMessagePrinted = true
-            }
-            totalMemory=heap.getUsed();
-            maxMemory=heap.getMax();
-            used=(totalMemory * 100) / maxMemory; // comment to fix highlighting in vim ... */
-        }
-    }
-
 
     @Override
     void setProps(final Map global) {
