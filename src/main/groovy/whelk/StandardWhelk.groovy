@@ -252,7 +252,7 @@ class StandardWhelk implements Whelk {
                 log.trace("New place to look: $identifier")
             }
             log.debug("Checking if new identifier (${identifier}) has something to get")
-            if (get(identifier)) {
+            if (get(identifier, null, [], false)) {
                 return new Location().withURI(new URI(identifier)).withResponseCode(303)
             }
 
