@@ -5311,9 +5311,9 @@
       },
       "[38:39]": {
         "aboutEntity": "?record",
-        "link": "modified",
+        "link": "modifiedRecord",
         "uriTemplate": "{_}",
-        "tokenMap": "modified"
+        "tokenMap": "modifiedRecord"
       },
       "[39:40]": {
         "aboutEntity": "?record",
