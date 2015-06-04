@@ -1595,6 +1595,8 @@ class MarcSubFieldHandler extends ConversionPart {
 
         if (subVal)
             subVal = clearChars(subVal)
+        else
+            return true // no value, treat as not present
 
         if (tokenMap) {
             if (subVal == definedElsewhereToken) {
