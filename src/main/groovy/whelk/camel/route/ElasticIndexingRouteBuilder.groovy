@@ -22,7 +22,7 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
         batchTimeout = settings.get("batchTimeout", batchTimeout)
 
         elasticBatchSize = settings.get("elasticBatchSize", elasticBatchSize)
-        messageQueue = settings.get("indexMessageQueue")
+        messageQueue = null //settings.get("indexMessageQueue")
         bulkMessageQueue = settings.get("bulkIndexMessageQueue")
         removeQueue = messageQueue
     }
@@ -39,6 +39,7 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
         BulkRequestAggregationStrategy aggStrat = new BulkRequestAggregationStrategy()
 
         // TODO: Check this. Will reindex consume messages for regular indexing?
+        /*
         if (reindexProcessor) {
             from(messageQueue) // Also removeQueue (configured to same)
                 .multicast().to("seda:q1", "seda:q2")
@@ -55,6 +56,7 @@ class ElasticIndexingRouteBuilder extends WhelkRouteBuilderPlugin {
                 .process(elasticTypeRouteProcessor)
                 .routingSlip(header("elasticDestination"))
         }
+        */
 
         from(bulkMessageQueue)
                 .filter(header("document:contentType").regex(VALID_CONTENTTYPE_REGEX))
