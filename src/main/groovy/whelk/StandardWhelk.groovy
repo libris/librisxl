@@ -92,6 +92,10 @@ class StandardWhelk implements Whelk {
             log.debug("Storage ${storage.id} result from save: $saved")
         }
         if (saved) {
+            if (index) {
+                // Index synchronously for single documents.
+                getIndex().index(doc.identifier, doc.dataset, ((JsonDocument)doc).getDataAsMap())
+            }
             if (!minorUpdate) {
                 notifyCamel(doc, ADD_OPERATION, [:])
             } else if (log.isDebugEnabled()) {
@@ -346,12 +350,6 @@ class StandardWhelk implements Whelk {
             if (map.containsKey("about") && !map.get("about")?.containsKey("@id")) {
                 map.get("about").put("@id", "/resource"+doc.identifier)
             }
-            // Remove modified from jsonld documents prior to saving, to avoid messing up checksum.
-            /* Necessary anymore?
-            if (map.containsKey("modified")) {
-                map.put("modified", null)
-            }
-            */
             if (documentDataToMetaMapping) {
                 def meta = doc.meta
                 boolean modified = false

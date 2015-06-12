@@ -154,7 +154,23 @@ abstract class ElasticSearch extends BasicComponent implements Index, ShapeCompu
     }
 
     @Override
-    void remove(String identifier, String dataset) {
+    public boolean index(String identifier, String dataset, Map data) {
+        try {
+            def response = performExecute(client.prepareIndex(getIndexName(), dataset, toElasticId(identifier)).setSource(data))
+            def esIdentifier = response.getId()
+            if (esIdentifier) {
+                log.debug("Document $identifier indexed with es id: $esIdentifier")
+                return true
+            }
+            throw WhelkIndexException("No elasticsearch identifier received for $identifier")
+        } catch (Exception e) {
+            log.error("Indexing failed", e)
+        }
+        return false
+    }
+
+    @Override
+    public void remove(String identifier, String dataset) {
         log.debug("Peforming deletebyquery to remove documents extracted from $identifier")
         def delQuery = termQuery("extractedFrom.@id", identifier)
         log.debug("DelQuery: $delQuery")
@@ -313,7 +329,7 @@ abstract class ElasticSearch extends BasicComponent implements Index, ShapeCompu
             return  new String("/"+pathelements.join("/"))
         } else {
             String decodedIdentifier = new String(Base64.decodeBase64(id), "UTF-8")
-            log.debug("Decoded new style id into $decodedIdentifier")
+            log.debug("Decoded id $id into $decodedIdentifier")
             return decodedIdentifier
         }
     }
