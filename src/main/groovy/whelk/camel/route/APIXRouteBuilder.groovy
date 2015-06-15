@@ -3,6 +3,7 @@ package whelk.camel.route
 import groovy.util.logging.Slf4j as Log
 
 import whelk.camel.*
+import whelk.Whelk
 
 import org.apache.camel.*
 import org.apache.camel.component.http4.*
