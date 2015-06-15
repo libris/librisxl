@@ -6,10 +6,12 @@ import javax.xml.bind.JAXBException
 
 import whelk.camel.route.*
 
-import org.apache.camel.*
-import org.apache.camel.impl.*
+import org.apache.camel.CamelContext
+import org.apache.camel.Component
+import org.apache.camel.ProducerTemplate
+import org.apache.camel.impl.DefaultCamelContext
+import org.apache.camel.main.MainSupport
 import org.apache.camel.builder.RouteBuilder
-import org.apache.camel.builder.impl.*
 import org.apache.camel.view.ModelFileGenerator
 
 @Log
