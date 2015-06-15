@@ -80,7 +80,7 @@ buildscript {
 
 dependencies {
     def camelVersion = "2.14.1"
-    def activeMQVersion = "5.10.0"
+    def activeMQVersion = "5.11.1"
     def groovyVersion="2.3.9"
     def jettyVersion="8.1.16.v20140903"
 
@@ -111,7 +111,6 @@ dependencies {
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile "org.apache.camel:camel-core:${camelVersion}"
     compile "org.apache.camel:camel-elasticsearch:2.15.0"
-    //compile "org.apache.camel:camel-elasticsearch:2.14.2-SNAPSHOT"
     compile "org.apache.camel:camel-jackson:${camelVersion}"
     compile "org.apache.camel:camel-http4:${camelVersion}"
     compile "org.apache.camel:camel-groovy:${camelVersion}"

@@ -9,6 +9,7 @@ import whelk.plugin.*
 import org.apache.camel.*
 
 import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.action.delete.DeleteRequest
 
 @Log
 class ElasticRouteProcessor extends BasicPlugin implements Processor {
@@ -57,9 +58,10 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
         message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexType=${indexType}&indexName=${indexName}")
         log.trace("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $elasticId)");
         if (operation == Whelk.REMOVE_OPERATION) {
-            log.debug("Setting message body to $elasticId in preparation for REMOVE operation.")
+            log.debug("Setting message body to delete request for $elasticId in preparation for REMOVE operation.")
             log.debug("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
-            message.setBody(elasticId)
+            def delReq = new DeleteRequest(indexName, indexType, elasticId)
+            message.setBody(delReq)
         } else {
             log.trace("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
             def dataMap = message.getBody(Map.class)
