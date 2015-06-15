@@ -49,6 +49,7 @@ class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
 
 
         from(messageQueue)
+            .filter("groovy", "[${Whelk.ADD_OPERATION}, ${Whelk.REMOVE_OPERATION}].contains(request.getHeader('whelk:operation'))")
             .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('document:dataset'))") // Only save auth hold and bib
             .process(apixProcessor)
             .to(apixUri)
