@@ -487,7 +487,7 @@ class StandardWhelk implements Whelk {
     @Override
     void notifyCamel(String identifier, String dataset, String operation, Map extraInfo) {
         if (camelContext) {
-            Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, "text/plain", identifier, extraInfo)
+            Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, "text/plain", 0, identifier, extraInfo)
             log.trace("Sending $operation message to camel regaring ${identifier}")
             sendCamelMessage(operation, exchange)
         }
@@ -496,14 +496,14 @@ class StandardWhelk implements Whelk {
     @Override
     void notifyCamel(Document document, String operation, Map extraInfo) {
         if (camelContext) {
-            Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, document.contentType, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
+            Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, document.contentType, document.modified, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
             log.trace("Sending document in message to camel regaring ${document.identifier} with operation $operation")
             exchange.getIn().setHeader("document:metaentry", document.metadataAsJson)
             sendCamelMessage(operation, exchange)
         }
     }
 
-    private Exchange createAndPrepareExchange(String identifier, String dataset, String operation, String contentType, Object messageBody, Map extraInfo) {
+    private Exchange createAndPrepareExchange(String identifier, String dataset, String operation, String contentType, long timestamp, Object messageBody, Map extraInfo) {
         Exchange exchange = new DefaultExchange(getCamelContext())
         Message message = new DefaultMessage()
 
@@ -516,6 +516,7 @@ class StandardWhelk implements Whelk {
         message.setHeader("document:identifier", identifier)
         message.setHeader("document:dataset", dataset)
         message.setHeader("document:contentType", contentType)
+        message.setHeader("document:timestamp", timestamp)
 
         message.setBody(messageBody)
         exchange.setIn(message)
@@ -537,7 +538,8 @@ class StandardWhelk implements Whelk {
         def comp = props.get("CAMEL_MASTER_COMPONENT") ?: "seda"
         def prefix = props.get("CAMEL_CHANNEL_PREFIX") ?: ""
         def config = props.get("CAMEL_COMPONENT_CONFIG") ?: ""
-        return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withConfig && config ? "?"+config : "")
+        //return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withConfig && config ? "?"+config : "")
+        return comp+":"+(prefix? prefix + "." :"")+this.id + (withConfig && config ? "?"+config : "")
     }
 
     @Override
@@ -587,6 +589,9 @@ class StandardWhelk implements Whelk {
         return identifier
     }
 
+    Map lastUpdate(String identifier) {
+        return getStorage().status(identifier)
+    }
 
     @Override
     void init() {
@@ -610,13 +615,7 @@ class StandardWhelk implements Whelk {
                 component.start()
             }
             log.debug("Setting up and configuring Apache Camel")
-            def whelkCamelMain = new WhelkCamelMain(
-                    getCamelEndpoint(ADD_OPERATION, true),
-                    getCamelEndpoint(BULK_ADD_OPERATION, true),
-                    getCamelEndpoint(REMOVE_OPERATION, true)
-                )
-
-
+            def whelkCamelMain = new WhelkCamelMain( getCamelEndpoint(ADD_OPERATION, true) )
 
             if (props.containsKey('ACTIVEMQ_BROKER_URL')) {
                 ActiveMQComponent amqreceive = ActiveMQComponent.activeMQComponent()

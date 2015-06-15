@@ -111,6 +111,11 @@ class ElasticSearchStorage extends ElasticSearch implements Storage {
         }
     }
 
+    @Override
+    Map<String,Object> status(String identifier) {
+        throw new UnsupportedOperationException("Not implemented yet")
+    }
+
     protected prepareIndexingRequest(doc, identifier, idxName) {
         String encodedIdentifier = toElasticId(doc.identifier)
         if (identifier) {

@@ -28,7 +28,6 @@ abstract class WhelkRouteBuilderPlugin extends RouteBuilder implements WhelkAwar
     int parallelProcesses = 20
 
     abstract String getMessageQueue()
-    abstract String getBulkMessageQueue()
 
     // Plugin methods
     @Override

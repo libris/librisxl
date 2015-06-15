@@ -9,12 +9,11 @@ import org.apache.camel.component.http4.*
 
 class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
 
-    String messageQueue, bulkMessageQueue, removeQueue, retriesQueue, apixUri = null
+    String messageQueue, retriesQueue, apixUri = null
 
     APIXRouteBuilder(Map settings) {
         messageQueue = settings.get("apixMessageQueue")
         retriesQueue = settings.get("retriesQueue")
-        removeQueue = messageQueue
         apixUri = settings.get("apixUri")
     }
 

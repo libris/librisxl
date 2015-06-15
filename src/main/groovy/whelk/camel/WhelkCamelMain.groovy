@@ -19,13 +19,11 @@ public class WhelkCamelMain extends MainSupport {
 
     CamelContext camelContext = new DefaultCamelContext();
 
-    String addQueueUri, bulkAddQueueUri, removeQueueUri
+    String queueUri
 
-    WhelkCamelMain(String aquri, String baquri, rquri) {
+    WhelkCamelMain(String quri) {
         this.camelContexts.add(camelContext)
-        this.addQueueUri = aquri
-        this.bulkAddQueueUri = baquri
-        this.removeQueueUri = rquri
+        this.queueUri = quri
     }
 
     @Override
@@ -64,24 +62,14 @@ public class WhelkCamelMain extends MainSupport {
     }
 
     void constructMasterRoute() {
-        def addMQs = routeBuilders.findAll { it instanceof WhelkRouteBuilderPlugin && it.messageQueue }*.messageQueue
-        def bulkAddMQs = routeBuilders.findAll { it instanceof WhelkRouteBuilderPlugin && it.bulkMessageQueue }*.bulkMessageQueue
-        def removeMQs = routeBuilders.findAll { it instanceof WhelkRouteBuilderPlugin && it.removeQueue }*.removeQueue
+        def MQs = routeBuilders.findAll { it instanceof WhelkRouteBuilderPlugin && it.messageQueue }*.messageQueue
 
         addRoutes(new RouteBuilder() {
             @Override
             void configure() {
-                if (addQueueUri && addMQs.size() > 0) {
-                    log.debug("multicasting $addMQs to $addQueueUri")
-                    from(addQueueUri).multicast().parallelProcessing().to(addMQs as String[])
-                }
-                if (bulkAddQueueUri && bulkAddMQs.size() > 0) {
-                    log.debug("multicasting $bulkAddMQs to $bulkAddQueueUri")
-                    from(bulkAddQueueUri).multicast().parallelProcessing().to(bulkAddMQs as String[])
-                }
-                if (removeQueueUri && removeMQs.size() > 0) {
-                    log.debug("multicasting $removeMQs to $removeQueueUri")
-                    from(removeQueueUri).multicast().parallelProcessing().to(removeMQs as String[])
+                if (queueUri && MQs.size() > 0) {
+                    log.debug("multicasting $MQs to $queueUri")
+                    from(queueUri).multicast().parallelProcessing().to(MQs as String[])
                 }
             }
         })

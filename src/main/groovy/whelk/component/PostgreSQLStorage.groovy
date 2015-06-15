@@ -17,7 +17,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
     String jdbcDriver = "org.postgresql.Driver"
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT
     protected String LOAD_ALL_STATEMENT, LOAD_ALL_STATEMENT_WITH_DATASET
 
     PostgreSQLStorage(String componentId = null, Map settings) {
@@ -73,6 +73,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             """
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE identifier = ?"
+        STATUS_OF_DOCUMENT = "SELECT modified, coalesce(entry->>'deleted', 'false') AS deleted FROM $mainTableName WHERE identifier = ?"
     }
 
     @Override
@@ -123,6 +124,29 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         stmt.close()
         */
         connection.close()
+    }
+
+    @Override
+    public Map status(String identifier) {
+        Map statusMap = [:]
+        Connection connection
+        try {
+            connection = connectionPool.getConnection()
+            PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
+            statusStmt.setString(1, identifier)
+            def rs = statusStmt.executeQuery()
+            if (rs.next()) {
+                statusMap['exists'] = true
+                statusMap['lastUpdate'] rs.getTimestamp("modified").getTime()
+                statusMap['deleted'] = rs.getString("deleted") == "true"
+            } else {
+                log.trace("No results returned for $id")
+                statusMap['exists'] = false
+            }
+        } finally {
+            connection.close()
+        }
+        return statusMap
     }
 
     @Override
