@@ -5401,11 +5401,13 @@
       "link": "focus", "resourceType": "Person",
       "match-code": {
         "t v x y z": {
-          "aboutEntity": "?thing",
-          "aboutType": "UniformWork",
+          "aboutType": "WorkTerm",
+          "splitLink": [
+            {"codes": ["t"], "addLink": "focus", "spliceEntity": "UniformWork"}
+          ],
           "link": "attributedTo",
           "resourceType": "Person",
-          "$t": {"aboutEntity": "?thing", "property": "title"}
+          "$t": {"property": "title"}
         }
       },
       "_spec": [
