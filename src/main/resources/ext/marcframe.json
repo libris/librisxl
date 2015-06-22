@@ -5403,7 +5403,7 @@
         "t v x y z": {
           "aboutType": "WorkTerm",
           "splitLink": [
-            {"codes": ["t"], "addLink": "focus", "spliceEntity": "UniformWork"}
+            {"codes": ["t"], "link": "focus", "spliceEntity": "UniformWork"}
           ],
           "link": "attributedTo",
           "resourceType": "Person",
