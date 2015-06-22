@@ -72,7 +72,8 @@ class OaiPmhImporterSpec extends Specification {
         def result = importer.doImport("dataset")
         then:
         result.numberOfDocuments == 0
-        result.lastRecordDatestamp == date("1970-01-01T00:00:00Z")
+        result.numberOfDocumentsSkipped == 1
+        result.lastRecordDatestamp == date("2007-01-01T00:00:00Z")
     }
 
     def "should skip suppressed records"() {
@@ -82,6 +83,7 @@ class OaiPmhImporterSpec extends Specification {
         def result = importer.doImport("dataset")
         then:
         result.numberOfDocuments == 0
+        result.numberOfDocumentsSkipped == 1
         result.lastRecordDatestamp == date("2015-05-28T12:43:00Z")
     }
 
@@ -236,7 +238,7 @@ class OaiPmhImporterSpec extends Specification {
             <record>
                 <header>
                     <identifier>http://example.org/item/1</identifier>
-                    <datestamp>1970-01-01T00:00:00Z</datestamp>
+                    <datestamp>2007-01-01T00:00:00Z</datestamp>
                     <setSpec>license:CC0</setSpec>
                 </header>
                 <metadata>
@@ -245,7 +247,7 @@ class OaiPmhImporterSpec extends Specification {
                     <controlfield tag="001">1</controlfield>
                     <controlfield tag="005">19700101010000.0</controlfield>
                     <datafield tag="887" ind1=" " ind2=" ">
-                        <subfield code="a">{"@id": "http://example.org/item/1", "modified": 0}</subfield>
+                        <subfield code="a">{"@id": "http://example.org/item/1", "modified": 1167609600000}</subfield>
                         <subfield code="2">librisxl</subfield>
                     </datafield>
                     </record>

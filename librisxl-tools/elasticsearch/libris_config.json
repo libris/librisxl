@@ -13,13 +13,11 @@
                 {
                     "context_template": {
                         "mapping": {
-                            "index": "no",
-                            "include_in_all": false,
-                            "dynamic": false
+                            "type": "object",
+                            "enabled": false
 
                         },
-                        "match": "@context",
-                        "match_mapping_type": "array"
+                        "match": "@context"
                     }
                 },
                 {
@@ -294,6 +292,14 @@
                             }
                         }
                     }
+                }
+            }
+        },
+        "def": {
+            "properties": {
+                "index": {
+                    "type": "object",
+                    "enabled": false
                 }
             }
         }

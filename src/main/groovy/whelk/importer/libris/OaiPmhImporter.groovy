@@ -30,6 +30,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
     String serviceUrl
     int recordCount = 0
     int nrDeleted = 0
+    int skippedRecordCount = 0
     long startTime = 0
 
     boolean preserveTimestamps = true
@@ -127,7 +128,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         queue.awaitTermination(7, TimeUnit.DAYS)
         log.debug("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
 
-        return new ImportResult(numberOfDocuments: recordCount, numberOfDeleted: nrDeleted, lastRecordDatestamp: lastRecordDatestamp)
+        return new ImportResult(numberOfDocuments: recordCount, numberOfDeleted: nrDeleted, numberOfDocumentsSkipped: skippedRecordCount, lastRecordDatestamp: lastRecordDatestamp)
     }
 
 
@@ -190,6 +191,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
                         log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Next ...")
+                        skippedRecordCount++
                         continue
                     }
                     log.trace("Marc record instantiated from XML.")
@@ -197,6 +199,8 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     if (document) {
                         documents << document
                         recordCount++
+                    } else {
+                        skippedRecordCount++
                     }
                     runningTime = System.currentTimeMillis() - startTime
                 } catch (Exception e) {
@@ -263,7 +267,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                 log.info("    xl timestamp: $originalModified")
                 long diff = (marcRecordModified - originalModified) / 1000
                 log.info("/update time difference: $diff secs.")
-                if (diff < 60) {
+                if (diff < 30) {
                     log.info("Record probably not edited in Voyager. Skipping ...")
                     return null
                 }

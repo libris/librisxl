@@ -299,7 +299,7 @@ class DocumentAPI extends BasicAPI {
 
     boolean hasPermission(info, newdoc, olddoc) {
         if (info) {
-            log.info("User is: $info")
+            log.debug("User is: $info")
             if (info.user == "SYSTEM") {
                 return true
             }
