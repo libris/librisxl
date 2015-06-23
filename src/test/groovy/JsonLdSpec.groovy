@@ -17,7 +17,7 @@ class JsonLdSpec extends Specification {
         def flatJson = mapper.readValue(defaultFlatRecord, Map)
         def framedJson = mapper.readValue(defaultFramedRecord, Map)
         when:
-        def resultJson = LD.frame("/bib/13531679", flatJson)
+        def resultJson = JsonLd.frame("/bib/13531679", flatJson)
         then:
         resultJson.get("about").get("identifier")[0].get("identifierValue") == "9789174771107"
         resultJson.get("about").get("genre")[0].get("prefLabel") == "E-böcker"
@@ -25,13 +25,23 @@ class JsonLdSpec extends Specification {
 
     }
 
+    def "should flatten framed jsonld"() {
+        given:
+        def flatJson = mapper.readValue(defaultFlatRecord, Map)
+        def framedJson = mapper.readValue(defaultFramedRecord, Map)
+        when:
+        def resultJson = JsonLd.flatten(framedJson)
+        then:
+        flatJson.size() == resultJson.size()
+    }
+
     def "should detect flat jsonld"() {
         given:
         def flatJson = mapper.readValue(defaultFlatRecord, Map)
         def framedJson = mapper.readValue(defaultFramedRecord, Map)
         expect:
-        LD.isFlat(flatJson) == true
-        LD.isFlat(framedJson) == false
+        JsonLd.isFlat(flatJson) == true
+        JsonLd.isFlat(framedJson) == false
     }
 
     static String defaultFlatRecord = """
