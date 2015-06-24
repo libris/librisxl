@@ -615,7 +615,7 @@
     },
     "elasticprocessor": {
         "_class": "whelk.camel.ElasticRouteProcessor",
-        "_plugins" : ["index", "linkexpander", "termreducer", "cleanupindexconverter" ]
+        "_plugins" : ["index", "linkexpander" ]
     },
    "indexroutebuilder": {
         "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
