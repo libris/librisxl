@@ -212,7 +212,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
 
     private PreparedStatement rigVersionStatement(PreparedStatement insvers, JsonDocument doc) {
         insvers.setString(1, doc.identifier)
-        insvers.setObject(2, doc.dataAsString)
+        insvers.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insvers.setObject(3, doc.entryAsJson, java.sql.Types.OTHER)
         insvers.setString(4, doc.checksum)
         insvers.setString(5, doc.identifier)

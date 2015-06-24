@@ -43,7 +43,6 @@ class StandardWhelk implements Whelk {
     // Set by configuration
     private Map globalProperties = [:]
     URI docBaseUri
-    Map documentDataToMetaMapping = null
 
     final static ObjectMapper mapper = new ObjectMapper()
 
@@ -352,34 +351,7 @@ class StandardWhelk implements Whelk {
             if (map.containsKey("about") && !map.get("about")?.containsKey("@id")) {
                 map.get("about").put("@id", "/resource"+doc.identifier)
             }
-            if (documentDataToMetaMapping) {
-                def meta = doc.meta
-                boolean modified = false
-                documentDataToMetaMapping.each { dset, rules ->
-                    if (doc.getDataset() == dset) {
-                        rules.each { jsonldpath ->
-                            try {
-                                def value = Eval.x(map, "x.$jsonldpath")
-                                if (value) {
-                                    meta = Tools.insertAt(meta, jsonldpath, value)
-                                    modified = true
-                                }
-                            } catch (MissingPropertyException mpe) {
-                                log.trace("Unable to set meta property $jsonldpath : $mpe")
-                            } catch (NullPointerException npe) {
-                                log.warn("Failed to set $jsonldpath for $meta")
-                            } catch (Exception e) {
-                                log.error("Failed to extract meta info: $e", e)
-                                throw e
-                            }
-                        }
-                    }
-                }
-                if (modified) {
-                    log.trace("Document meta is modified. Setting new values.")
-                    doc.withMeta(meta)
-                }
-            }
+            map = JsonLd.flatten(map)
             doc.withData(map)
         }
         return doc
@@ -772,7 +744,6 @@ class StandardWhelk implements Whelk {
         def disabled = System.getProperty("disable.plugins", "").split(",")
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])
-        documentDataToMetaMapping = whelkConfig["_docMetaMapping"]
         setProps(whelkConfig.get("_properties"))
         // Some configurations might want to start services to act standalone
         whelkConfig["_supportplugins"].each { p ->

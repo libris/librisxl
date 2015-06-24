@@ -70,7 +70,10 @@ public class JsonLd {
     }
 
     static boolean isFramed(Map jsonLd) {
-        return !isFlat(jsonLd)
+        if (jsonLd.size() == 1 && !jsonLd.containsKey(GRAPH_KEY)) {
+            return true
+        }
+        return false
     }
 
     private static Map embed(Map framedMap, Map idMap) {

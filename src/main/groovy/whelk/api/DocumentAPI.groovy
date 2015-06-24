@@ -201,6 +201,7 @@ class DocumentAPI extends BasicAPI {
                     if (flat) {
                         sendResponse(response, JsonLd.flatten(d.dataAsMap), contentType)
                     } else {
+                        log.info("Framing ${d.identifier} ...")
                         sendResponse(response, JsonLd.frame(d.identifier, d.dataAsMap), contentType)
                     }
                 }
