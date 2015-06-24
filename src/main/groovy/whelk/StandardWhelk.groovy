@@ -18,6 +18,7 @@ import whelk.result.*
 import whelk.exception.*
 
 import whelk.util.Tools
+import whelk.util.JsonLd
 
 import org.codehaus.jackson.map.ObjectMapper
 
@@ -94,7 +95,8 @@ class StandardWhelk implements Whelk {
         if (saved) {
             if (index) {
                 // Index synchronously for single documents.
-                getIndex().index(doc.identifier, doc.dataset, ((JsonDocument)doc).getDataAsMap())
+                Map dataMap = JsonLd.frame(doc.identifier, ((JsonDocument)doc).getDataAsMap())
+                getIndex().index(doc.identifier, doc.dataset, dataMap)
             }
             if (!minorUpdate) {
                 notifyCamel(doc, ADD_OPERATION, [:])

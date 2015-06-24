@@ -49,7 +49,7 @@ public class JsonLd {
     }
 
 
-    static Map frame(String mainId, Map flatJsonLd) {
+    public static Map frame(String mainId, Map flatJsonLd) {
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
