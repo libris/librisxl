@@ -3,7 +3,7 @@
         "ELASTIC_SEARCH_HOST": "hp01.libris.kb.se:9300",
         "ELASTIC_CLUSTER": "whelks",
         "ELASTIC_INDEX_NAME": "libris",
-        "AVAILABLE_TYPES": ["auth","bib","hold","def","sys"],
+        "AVAILABLE_TYPES": ["auth","bib","hold","def","sys","eplikt"],
         "ACTIVEMQ_BROKER_URL": "tcp://hp04.libris.kb.se:61616?wireFormat.maxInactivityDuration=3600000",
         "MQ_INDEX": "activemq:{whelkname}.index?concurrentConsumers=5",
         "MQ_GRAPHSTORE": "activemq:{whelkname}.graphstore",
