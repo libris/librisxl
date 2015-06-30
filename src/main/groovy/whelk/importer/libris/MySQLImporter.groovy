@@ -184,8 +184,9 @@ class MySQLImporter extends BasicPlugin implements Importer {
         return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
     }
 
-    void buildDocument(Integer recordId, MarcRecord record, String dataset, String oaipmhSetSpecValue) {
+    void buildDocument(Integer recordId, MarcRecord record, String type, String oaipmhSetSpecValue) {
         String identifier = null
+        String dataset = type
         if (documentList.size() >= addBatchSize || record == null) {
             if (tickets.availablePermits() < 1) {
                 log.info("Queues are full at the moment. Waiting for some to finish.")
@@ -212,12 +213,12 @@ class MySQLImporter extends BasicPlugin implements Importer {
         if (record) {
             def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
             if ("SUPPRESSRECORD" in aList) {
-                log.debug("Record ${identifier} is suppressed. Next ...")
-                return
+                log.debug("Record ${identifier} is suppressed. Setting dataset to $SUPPRESSRECORD_DATASET ...")
+                dataset = SUPPRESSRECORD_DATASET
             }
             log.trace("building document $identifier")
             try {
-                identifier = "/"+dataset+"/"+record.getControlfields("001").get(0).getData()
+                identifier = "/"+type+"/"+record.getControlfields("001").get(0).getData()
                 buildingMetaRecord.get(identifier, [:]).put("record", record)
                 buildingMetaRecord.get(identifier, [:]).put("entry", ["identifier":identifier,"dataset":dataset])
             } catch (Exception e) {
@@ -261,16 +262,25 @@ class MySQLImporter extends BasicPlugin implements Importer {
         @Override
         void run() {
             try {
-                List<Document> convertedDocs = []
+                def convertedDocs = [:]
                 recordList.each {
-
-                    Document doc = converter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
-                    if (filter) {
-                        doc = filter.filter(doc)
+                    if (!convertedDocs.containsKey(it.entry.dataset)) { // Create new list
+                        convertedDocs.put(it.entry.dataset, [])
                     }
-                    convertedDocs << doc
+                    if (it.entry.dataset == SUPPRESSRECORD_DATASET) {
+                        it.entry['contentType'] = "application/x-marc-json"
+                        convertedDocs[(SUPPRESSRECORD_DATASET)] << whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.entry, it.meta)
+                    } else {
+                        Document doc = converter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
+                        if (filter) {
+                            doc = filter.filter(doc)
+                        }
+                        convertedDocs[(doc.dataset)] << doc
+                    }
                 }
-                this.whelk.bulkAdd(convertedDocs, convertedDocs.first().dataset, convertedDocs.first().contentType, false)
+                convertedDocs.each { ds, docList ->
+                    this.whelk.bulkAdd(docList, ds, docList.first().contentType, false)
+                }
             } finally {
                 tickets.release()
             }

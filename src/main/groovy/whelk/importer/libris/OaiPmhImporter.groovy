@@ -176,6 +176,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         elapsed = System.currentTimeMillis()
         def resumptionToken = OAIPMH.ListRecords.resumptionToken.text()
         for (it in OAIPMH.ListRecords.record) {
+            String ds = this.dataset
             String mdrecord = createString(it.metadata.record)
             if (mdrecord) {
                 try {
@@ -188,14 +189,18 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                         break
                     }
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
+                    log.trace("Marc record instantiated from XML.")
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
-                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Next ...")
+                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Setting dataset to $SUPPRESSRECORD_DATASET ...")
+
+                        ds = SUPPRESSRECORD_DATASET
+                        /*
                         skippedRecordCount++
                         continue
+                        */
                     }
-                    log.trace("Marc record instantiated from XML.")
-                    def document = createDocumentMap(record, recordDate, it.header)
+                    def document = createDocumentMap(record, recordDate, it.header, ds)
                     if (document) {
                         documents << document
                         recordCount++
@@ -232,12 +237,12 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         return new HarvestResult(resumptionToken: resumptionToken, lastRecordDatestamp: recordDate)
     }
 
-    Map createDocumentMap(MarcRecord record, Date recordDate, def header) {
+    Map createDocumentMap(MarcRecord record, Date recordDate, def header, String ds = this.dataset) {
         def documentMap = [:]
         log.trace("Record preparation starts.")
         String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
 
-        def entry = ["identifier":recordId,"dataset":this.dataset]
+        def entry = ["identifier":recordId,"dataset":ds]
         if (preserveTimestamps) {
             log.trace("Setting date: $recordDate")
             entry.put(Document.MODIFIED_KEY, recordDate.getTime())
@@ -309,10 +314,10 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         tickets.acquire()
         queue.execute({
             try {
-                def convertedDocs = []
+                def convertedDocs = [:]
                 documents.each {
                     try {
-                        if (marcFrameConverter) {
+                        if (marcFrameConverter && it.entry.dataset != SUPPRESSRECORD_DATASET) {
                             log.trace("Conversion starts.")
                             def doc = marcFrameConverter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
                             log.trace("Convestion finished.")
@@ -328,8 +333,17 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                                 log.trace("Enhancing finished.")
                             }
                             if (doc) {
-                                convertedDocs << doc
+                                if (!convertedDocs.containsKey(doc.dataset)) {
+                                    convertedDocs.put(doc.dataset, [])
+                                }
+                                convertedDocs[(doc.dataset)] << doc
                             }
+                        } else if (it.entry.dataset == SUPPRESSRECORD_DATASET) {
+                            if (!convertedDocs.containsKey(SUPPRESSRECORD_DATASET)) {
+                                convertedDocs.put(SUPPRESSRECORD_DATASET, [])
+                            }
+                            it.entry['contentType'] = "application/x-marc-json"
+                            convertedDocs[(SUPPRESSRECORD_DATASET)] << whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.entry, it.meta)
                         }
                     } catch (Exception e) {
                         log.error("Exception in conversion", e)
@@ -340,7 +354,10 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                     try {
                         log.debug("Adding ${convertedDocs.size()} documents to whelk.")
                         long elapsed = System.currentTimeMillis()
-                        this.whelk.bulkAdd(convertedDocs, convertedDocs.get(0).dataset, convertedDocs.get(0).contentType, prepareDocuments)
+                        convertedDocs.each { ds, docList ->
+                            log.info("Bulk saving ${docList.size()} documents to dataset $ds ...")
+                            this.whelk.bulkAdd(docList, ds, docList.get(0).contentType, prepareDocuments)
+                        }
                         if ((System.currentTimeMillis() - elapsed) > 10000) {
                             log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
                         }

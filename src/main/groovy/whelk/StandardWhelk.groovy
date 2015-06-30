@@ -189,9 +189,8 @@ class StandardWhelk implements Whelk {
     void bulkAdd(final List<Document> docs, String dataset, String contentType, boolean prepareDocuments = true) {
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getWriteStorages(contentType)
-        if (suitableStorages.isEmpty()) { 
-            log.debug("No storages found for $contentType.")
-            return
+        if (suitableStorages.isEmpty()) {
+            throw new WhelkStorageException("No storages found for $contentType.")
         }
         if (prepareDocuments) {
             for (doc in docs) {
@@ -442,6 +441,17 @@ class StandardWhelk implements Whelk {
             } else {
                 return new JsonDocument().fromDocument(document)
             }
+        }
+        return document
+    }
+
+    @Override
+    Document createDocument(Map data, Map entry, Map meta) {
+        Document document = new JsonDocument().withData(data).withMeta(meta).withEntry(entry)
+        if (document.contentType == "application/ld+json") {
+            return new JsonLdDocument().fromDocument(document)
+        } else {
+            return new JsonDocument().fromDocument(document)
         }
         return document
     }
