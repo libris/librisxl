@@ -4840,6 +4840,7 @@
     "651": {
       "inherit": "650",
       "resourceType": "Place",
+      "TOOO:i2": {},
       "i1": null,
       "$a": {"property": "prefLabel"},
       "uriTemplate": "/place/{prefLabel}"
