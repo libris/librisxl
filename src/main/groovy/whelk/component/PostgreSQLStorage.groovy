@@ -73,6 +73,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         STATUS_OF_DOCUMENT = "SELECT modified, deleted FROM $mainTableName WHERE id = ?"
     }
 
+    /*
     @Override
     void createTables() {
         Connection connection = connectionPool.getConnection()
@@ -122,11 +123,8 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 log.trace("Indexes on $mainTableName / $id already exists.")
             }
         }
-        /*
-        stmt.close()
-        */
         connection.close()
-    }
+    }*/
 
     @Override
     public Map status(String identifier) {
