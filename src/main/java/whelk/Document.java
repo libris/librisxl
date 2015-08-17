@@ -6,6 +6,7 @@ import java.util.List;
 public interface Document {
     static final String CREATED_KEY = "created";
     static final String MODIFIED_KEY = "modified";
+    static final String DELETED_KEY = "deleted";
     static final String CONTENT_TYPE_KEY = "contentType";
 
     public String getIdentifier();

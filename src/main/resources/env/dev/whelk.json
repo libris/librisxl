@@ -17,11 +17,6 @@
         "UPDATE_HOLD_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
         "UPDATE_INTERVAL":3000
     },
-    "_docMetaMapping" : {
-        "hold": [
-            "about.heldBy.notation"
-        ]
-    },
     "_supportplugins": [
         "elasticnode",
         "activemqbroker",

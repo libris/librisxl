@@ -18,6 +18,7 @@ import whelk.result.*
 import whelk.exception.*
 
 import whelk.util.Tools
+import whelk.util.JsonLd
 
 import org.codehaus.jackson.map.ObjectMapper
 
@@ -42,7 +43,6 @@ class StandardWhelk implements Whelk {
     // Set by configuration
     private Map globalProperties = [:]
     URI docBaseUri
-    Map documentDataToMetaMapping = null
 
     final static ObjectMapper mapper = new ObjectMapper()
 
@@ -94,7 +94,8 @@ class StandardWhelk implements Whelk {
         if (saved) {
             if (index) {
                 // Index synchronously for single documents.
-                getIndex().index(doc.identifier, doc.dataset, ((JsonDocument)doc).getDataAsMap())
+                Map dataMap = JsonLd.frame(doc.identifier, ((JsonDocument)doc).getDataAsMap())
+                getIndex().index(doc.identifier, doc.dataset, dataMap)
             }
             if (!minorUpdate) {
                 notifyCamel(doc, ADD_OPERATION, [:])
@@ -188,9 +189,8 @@ class StandardWhelk implements Whelk {
     void bulkAdd(final List<Document> docs, String dataset, String contentType, boolean prepareDocuments = true) {
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getWriteStorages(contentType)
-        if (suitableStorages.isEmpty()) { 
-            log.debug("No storages found for $contentType.")
-            return
+        if (suitableStorages.isEmpty()) {
+            throw new WhelkStorageException("No storages found for $contentType.")
         }
         if (prepareDocuments) {
             for (doc in docs) {
@@ -350,34 +350,7 @@ class StandardWhelk implements Whelk {
             if (map.containsKey("about") && !map.get("about")?.containsKey("@id")) {
                 map.get("about").put("@id", "/resource"+doc.identifier)
             }
-            if (documentDataToMetaMapping) {
-                def meta = doc.meta
-                boolean modified = false
-                documentDataToMetaMapping.each { dset, rules ->
-                    if (doc.getDataset() == dset) {
-                        rules.each { jsonldpath ->
-                            try {
-                                def value = Eval.x(map, "x.$jsonldpath")
-                                if (value) {
-                                    meta = Tools.insertAt(meta, jsonldpath, value)
-                                    modified = true
-                                }
-                            } catch (MissingPropertyException mpe) {
-                                log.trace("Unable to set meta property $jsonldpath : $mpe")
-                            } catch (NullPointerException npe) {
-                                log.warn("Failed to set $jsonldpath for $meta")
-                            } catch (Exception e) {
-                                log.error("Failed to extract meta info: $e", e)
-                                throw e
-                            }
-                        }
-                    }
-                }
-                if (modified) {
-                    log.trace("Document meta is modified. Setting new values.")
-                    doc.withMeta(meta)
-                }
-            }
+            map = JsonLd.flatten(map)
             doc.withData(map)
         }
         return doc
@@ -455,6 +428,10 @@ class StandardWhelk implements Whelk {
         }
     }
 
+    JsonDocument createDocument(Map data, Map entry) {
+        return new JsonLdDocument().withData(data).withEntry(entry)
+    }
+
     @Override
     Document createDocument(byte[] data, Map entry, Map meta) {
         Document document = new DefaultDocument().withData(data).withMeta(meta).withEntry(entry)
@@ -464,6 +441,17 @@ class StandardWhelk implements Whelk {
             } else {
                 return new JsonDocument().fromDocument(document)
             }
+        }
+        return document
+    }
+
+    @Override
+    Document createDocument(Map data, Map entry, Map meta) {
+        Document document = new JsonDocument().withData(data).withMeta(meta).withEntry(entry)
+        if (document.contentType == "application/ld+json") {
+            return new JsonLdDocument().fromDocument(document)
+        } else {
+            return new JsonDocument().fromDocument(document)
         }
         return document
     }
@@ -766,7 +754,6 @@ class StandardWhelk implements Whelk {
         def disabled = System.getProperty("disable.plugins", "").split(",")
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])
-        documentDataToMetaMapping = whelkConfig["_docMetaMapping"]
         setProps(whelkConfig.get("_properties"))
         // Some configurations might want to start services to act standalone
         whelkConfig["_supportplugins"].each { p ->

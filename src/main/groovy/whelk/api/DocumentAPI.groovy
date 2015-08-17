@@ -13,6 +13,7 @@ import whelk.*
 import whelk.component.*
 import whelk.plugin.*
 import whelk.exception.*
+import whelk.util.JsonLd
 
 @Log
 class DocumentAPI extends BasicAPI {
@@ -136,6 +137,7 @@ class DocumentAPI extends BasicAPI {
         def mode = DisplayMode.DOCUMENT
         (path, mode) = determineDisplayMode(path)
         def version = request.getParameter("version")
+        boolean flat = request.getParameter("flat") == "true"
         def accepting = request.getHeader("accept")?.split(",").collect {
             int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
             it.substring(0,last)
@@ -196,7 +198,12 @@ class DocumentAPI extends BasicAPI {
                         contentType = d.contentType
                         log.debug("request is for context file. Must serve original content-type ($contentType).")
                     }
-                    sendResponse(response, d.data, contentType)
+                    if (flat) {
+                        sendResponse(response, JsonLd.flatten(d.dataAsMap), contentType)
+                    } else {
+                        log.info("Framing ${d.identifier} ...")
+                        sendResponse(response, JsonLd.frame(d.identifier, d.dataAsMap), contentType)
+                    }
                 }
             } else {
                 log.debug("Failed to find a document with URI $path")

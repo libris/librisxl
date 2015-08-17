@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import whelk.*
 import whelk.component.*
 import whelk.plugin.*
+import whelk.util.JsonLd
 
 import org.apache.camel.*
 
@@ -64,7 +65,7 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
             message.setBody(delReq)
         } else {
             log.trace("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
-            def dataMap = message.getBody(Map.class)
+            def dataMap = JsonLd.frame(identifier, message.getBody(Map.class))
             for (filter in filters) {
                 log.trace("Applying filter ${filter.id} on ${identifier} for dataset $dataset")
                     dataMap = filter.doFilter(dataMap, dataset)
