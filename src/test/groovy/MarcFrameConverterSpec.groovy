@@ -14,6 +14,7 @@ class MarcFrameConverterSpec extends Specification {
             super.initialize(uriMinter, config)
             this.config = config
             super.conversion.doPostProcessing = false
+            super.conversion.flatQuotedForm = false
         }
     }
 
