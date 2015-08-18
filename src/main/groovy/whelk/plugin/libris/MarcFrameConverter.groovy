@@ -353,13 +353,14 @@ class MarcConversion {
     }
 
     String createKeyString(ent) {
-        def repr = ent.keySet().toList().sort().collect {
+        if (ent instanceof String) {
+            return UriUtil.encode(ent.trim())
+        }
+        return ent.keySet().toList().sort().collect {
             def v = ent[it]
-            return v instanceof Map? createKeyString(v) :
-                v instanceof List? v.collect { createKeyString(v) } :
-                    v.trim()
+            return v instanceof List? v.collect { createKeyString(it) } :
+                    createKeyString(v)
         }.join(':').toLowerCase()
-        return repr
     }
 
     void processFields(state, fieldHandlers, sourceMap, fields) {
