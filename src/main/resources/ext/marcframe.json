@@ -4259,7 +4259,7 @@
 
     "260": {
       "aboutEntity": "?thing",
-      "addLink": "provider",
+      "addLink": "provision",
       "embedded": true,
       "splitLink": [
         {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
@@ -4357,7 +4357,7 @@
         "3": {"addLink": "manufacture"},
         "4": {"addLink": "copyright"}
       },
-      "addLink": "provider",
+      "addLink": "provision",
       "embedded": true,
       "resourceType": "ProviderEvent",
       "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
@@ -4609,7 +4609,7 @@
       "embedded": true,
       "resourceType": "CreativeWork",
       "pendingResources": {
-        "_:event": {"addLink": "provider", "resourceType": "ProviderEvent"}
+        "_:event": {"addLink": "provision", "resourceType": "ProviderEvent"}
       },
       "$a": {"property": "description", "interpunctionChars": ":"},
       "$b": {"about": "_:event", "addLink": "providerPlace", "resourceType": "Place", "property": "label", "interpunctionChars": ":"},
@@ -4636,7 +4636,7 @@
               {
                 "@type": "CreativeWork",
                 "description":  "Digitalt faksimil och elektronisk text",
-                "provider":  [
+                "provision":  [
                     {"@type": "ProviderEvent",
                         "providerDate":  "2010",
                         "providerName":  ["Litteraturbanken"]
