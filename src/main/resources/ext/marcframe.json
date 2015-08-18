@@ -3528,6 +3528,7 @@
     "020": {
       "aboutEntity": "?thing",
       "addLink": "identifier",
+      "embedded": true,
       "match-domain": {
         "EBook": {"addLink": "commonEndeavor"}
       },
@@ -3617,6 +3618,7 @@
     "022": {
       "aboutEntity": "?thing",
       "addLink": "identifier",
+      "embedded": true,
       "resourceType": "Identifier",
       "TODO:i1": {},
       "$a": {
@@ -3639,6 +3641,7 @@
     "024": {
       "aboutEntity": "?thing",
       "addLink": "identifier",
+      "embedded": true,
       "resourceType": "Identifier",
       "i1": {
         "link": "identifierScheme",
@@ -3736,6 +3739,7 @@
     "034": {
       "NOTE:domain": "Cartography",
       "addLink": "cartographicAscensionAndDeclination",
+      "embedded": true,
       "resourceType": "CartographyCoordinates",
       "TODO": "draft",
       "TODO:i1": {},
@@ -3822,7 +3826,8 @@
     },
     "041": {
       "TODO:match-repetition": {
-        "addLink": "hasPart"
+        "addLink": "hasPart",
+        "embedded": true
       },
       "$a": {
         "TODO:unifyWith": ["008:language", "240.a?", "546"],
@@ -4094,6 +4099,7 @@
     "210": {
       "aboutEntity": "?thing",
       "addLink": "abbreviatedTitle",
+      "embedded": true,
       "resourceType": "Title",
       "TOOO:i1": {},
       "TOOO:i2": {},
@@ -4146,6 +4152,7 @@
       "i2": {"marcDefault": "0"},
       "aboutEntity": "?thing",
       "link": "instanceTitle",
+      "embedded": true,
       "resourceType": "Title",
       "$a": {
         "property": "titleValue",
@@ -4229,7 +4236,7 @@
 
     "255": {
       "TODO:match-repetition?": {
-        "addLink": "hasFormat", "resourceType": "Product"
+        "addLink": "hasFormat", "resourceType": "Product", "embedded": true
       },
       "NOTE:domain": "Cartography",
       "$a": {"property": "cartographicScale"},
@@ -4253,6 +4260,7 @@
     "260": {
       "aboutEntity": "?thing",
       "addLink": "provider",
+      "embedded": true,
       "splitLink": [
         {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
         {"codes": ["e", "f", "g"], "addLink": "manufacture"}
@@ -4350,6 +4358,7 @@
         "4": {"addLink": "copyright"}
       },
       "addLink": "provider",
+      "embedded": true,
       "resourceType": "ProviderEvent",
       "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
       "$b": {"property": "providerName", "interpunctionChars": ",:;"},
@@ -4389,6 +4398,7 @@
       },
       "aboutEntity": "?thing",
       "addLink": "hasFormat",
+      "embedded": true,
       "resourceType": "Product",
       "$a": {"property": "extent", "interpunctionChars": "+:;"},
       "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
@@ -4411,6 +4421,7 @@
 
     "321": {
       "addLink": "replaces",
+      "embedded": true,
       "resourceType": "Serial",
       "$a": {"property": "frequency"},
       "$b": {"property": "date"}
@@ -4499,6 +4510,7 @@
       "note:candidate:aboutEntity": "Work",
       "TODO:prefer": "490 or 773? See also mapping for 240",
       "addLink": "series",
+      "embedded": true,
       "resourceType": "Serial",
       "TOOO:i2": {},
       "$a": {"property": "title", "interpunctionChars": ".,=;"},
@@ -4521,6 +4533,7 @@
     "501": {},
     "502": {
       "addLink": "hasAnnotation", "resourceType": "DissertationAnnotation",
+      "embedded": true,
       "$a": {"property": "note"},
       "$b": {"property": "degree"},
       "$c": {"property": "location"},
@@ -4569,6 +4582,7 @@
         "u": {
           "TODO": "unify with summary or the generic annotation model?",
           "addLink": "describedBy",
+          "embedded": true,
           "resourceType": "WebPage",
           "$a": {"property": "label"},
           "$u": {"property": "@id"}
@@ -4578,6 +4592,7 @@
 
     "521": {
       "addLink": "audience",
+      "embedded": true,
       "resourceType": "Audience",
       "TOOO:i1": {},
       "$a": {"property": "label"}
@@ -4587,10 +4602,12 @@
     "525": {},
     "526": {},
 
-    "530": {"addLink": "hasFormat", "$a": {"addProperty": "comment"}},
+    "530": {"addLink": "hasFormat", "$a": {"addProperty": "comment"}, "embedded": true},
 
     "533": {
-      "addLink": "reproduction", "resourceType": "CreativeWork",
+      "addLink": "reproduction",
+      "embedded": true,
+      "resourceType": "CreativeWork",
       "pendingResources": {
         "_:event": {"addLink": "provider", "resourceType": "ProviderEvent"}
       },
@@ -4649,7 +4666,9 @@
     "556": {},
     "561": {},
     "562": {
-      "addLink": "workExample", "resourceType": "Product",
+      "addLink": "workExample",
+      "embedded": true,
+      "resourceType": "Product",
       "$a": {"addProperty": "itemCondition"},
       "$b": {"addProperty": "copyIdentification"},
       "$c": {"addProperty": "versionIdentification"},
@@ -4954,7 +4973,9 @@
       "$m": {"property": "mediaNote"},
       "$n": {"addProperty": "note"},
       "$o": {
-        "addLink": "identifier", "resourceType": "Identifier",
+        "addLink": "identifier",
+        "embedded": true,
+        "resourceType": "Identifier",
         "addProperty": "identifierValue",
         "defaults": {"identifierScheme": null}
       },
@@ -4968,14 +4989,18 @@
       },
       "$x": {
         "TODO:targetMatch": "022",
-        "link": "identifier", "resourceType": "Identifier",
+        "link": "identifier",
+        "embedded": true,
+        "resourceType": "Identifier",
         "property": "identifierValue",
         "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
       },
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
-        "addLink": "identifier", "resourceType": "Identifier",
+        "addLink": "identifier",
+        "embedded": true,
+        "resourceType": "Identifier",
         "property": "identifierValue",
         "defaults": {"identifierScheme": {"@id": "/def/identifiers/isbn"}}
       },
@@ -5082,6 +5107,7 @@
 
     "856": {
       "addLink": true,
+      "embedded": true,
       "TODO:i1": {
         "0": "mailto:",
         "1": "ftp:",
@@ -5399,7 +5425,7 @@
       "inherit": "bib",
       "aboutEntity": "?record",
       "aboutType": "PersonTerm",
-      "link": "focus", "resourceType": "Person",
+      "link": "focus", "embedded": true, "resourceType": "Person",
       "match-code": {
         "t v x y z": {
           "aboutType": "WorkTerm",
@@ -5443,18 +5469,18 @@
     "110" : {
       "inherit": "bib",
       "aboutEntity": "?record",
-      "aboutType": "OrganizationTerm", "link": "focus"
+      "aboutType": "OrganizationTerm", "link": "focus", "embedded": true
     },
     "111" : {
       "inherit": "bib",
       "aboutEntity": "?record",
-      "aboutType": "MeetingTerm", "link": "focus"
+      "aboutType": "MeetingTerm", "link": "focus", "embedded": true
     },
     "130" : {
       "inherit": "bib",
       "aboutEntity": "?record",
       "aboutType": "WorkTerm",
-      "link": "focus", "resourceType": "UniformWork"
+      "link": "focus", "embedded": true, "resourceType": "UniformWork"
     },
     "148" : {
       "aboutEntity": "?record",
@@ -5571,6 +5597,7 @@
       "match-domain": {
         "Person": {
           "addLink": "hasPersona",
+          "embedded": true,
           "resourceType": "Person"
         }
       }
@@ -5617,7 +5644,9 @@
     },
     "670" : {
       "aboutEntity": "?record",
-      "addLink": "source", "resourceType": "CreativeWork",
+      "addLink": "source",
+      "embedded": true,
+      "resourceType": "CreativeWork",
       "$a": {"property": "label"},
       "$b": {"property": "citation"},
       "$u": {"property": "url"}
@@ -5944,7 +5973,7 @@
     },
 
     "561": {
-      "addLink": "workExample", "resourceType": "Product",
+      "addLink": "workExample", "embedded": true, "resourceType": "Product",
       "$a": {"addProperty": "custodialHistoryOfItem"}
     },
 
@@ -5953,7 +5982,7 @@
     },
 
     "563": {
-      "addLink": "workExample", "resourceType": "Product",
+      "addLink": "workExample", "embedded": true, "resourceType": "Product",
       "$a": {"addProperty": "bindingInformation"}
     },
 
@@ -5965,6 +5994,7 @@
     "852": {
       "aboutType": "HeldMaterial",
       "addLink": "offers",
+      "embedded": true,
       "resourceType": "Offer",
       "TODO:i1": {},
       "FIXME:i2": {
@@ -6043,6 +6073,7 @@
     "866": {
       "NOTE:domainIncludes": "Aggregate",
       "addLink": "workExample",
+      "embedded": true,
       "resourceType": "SomeProducts",
       "TODO:i1": {},
       "TODO:i2": {},
