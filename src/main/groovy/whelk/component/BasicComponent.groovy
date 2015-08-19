@@ -40,8 +40,8 @@ abstract class BasicComponent extends BasicPlugin implements Component {
 
     protected Document createTombstone(id, dataset) {
         def tombstone = whelk.createDocument("application/ld+json").withIdentifier(id).withData(["@type":"Tombstone"])
-        tombstone.entry['deleted'] = true
-        tombstone.entry['dataset'] = dataset
+        tombstone.manifest['deleted'] = true
+        tombstone.manifest['dataset'] = dataset
         return tombstone
     }
 

@@ -113,7 +113,7 @@ class StandardWhelk implements Whelk {
         Storage storage = getStorage()
         if (storage) {
             def stateCopy = new HashMap<String,Object>(whelkState)
-            def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(stateCopy)
+            def stateDoc = new JsonDocument().withManifest(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(stateCopy)
             if (!storage.store(stateDoc, false)) {
                 log.error("Failed to save state!")
             }
@@ -428,13 +428,13 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    JsonDocument createDocument(Map data, Map entry) {
-        return new JsonLdDocument().withData(data).withEntry(entry)
+    JsonDocument createDocument(Map data, Map manifest) {
+        return new JsonLdDocument().withData(data).withManifest(manifest)
     }
 
     @Override
-    Document createDocument(byte[] data, Map entry, Map meta) {
-        Document document = new DefaultDocument().withData(data).withMeta(meta).withEntry(entry)
+    Document createDocument(byte[] data, Map manifest, Map meta) {
+        Document document = new DefaultDocument().withData(data).withMeta(meta).withManifest(manifest)
         if (document.isJson()) {
             if (document.contentType == "application/ld+json") {
                 return new JsonLdDocument().fromDocument(document)
@@ -446,8 +446,8 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
-    Document createDocument(Map data, Map entry, Map meta) {
-        Document document = new JsonDocument().withData(data).withMeta(meta).withEntry(entry)
+    Document createDocument(Map data, Map manifest, Map meta) {
+        Document document = new JsonDocument().withData(data).withMeta(meta).withManifest(manifest)
         if (document.contentType == "application/ld+json") {
             return new JsonLdDocument().fromDocument(document)
         } else {
@@ -486,7 +486,7 @@ class StandardWhelk implements Whelk {
         if (camelContext) {
             Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, document.contentType, document.modified, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
             log.trace("Sending document in message to camel regaring ${document.identifier} with operation $operation")
-            exchange.getIn().setHeader("document:metaentry", document.metadataAsJson)
+            exchange.getIn().setHeader("document:manifest", document.manifestAsJson)
             sendCamelMessage(operation, exchange)
         }
     }
@@ -565,8 +565,8 @@ class StandardWhelk implements Whelk {
         }
         if (!identifier) {
             try {
-                if (d.entry.dataset) {
-                    identifier = new URI("/" + d.entry.dataset + "/" + UUID.randomUUID()).toString();
+                if (d.manifest.dataset) {
+                    identifier = new URI("/" + d.manifest.dataset + "/" + UUID.randomUUID()).toString();
                 } else {
                     identifier = new URI("/"+ UUID.randomUUID()).toString();
                 }

@@ -21,7 +21,7 @@ import whelk.exception.*
 @Log
 class DefaultDocument implements Document {
     protected byte[] data = new byte[0]
-    Map entry = [:] // For "technical" metadata about the record, such as contentType, created, etc.
+    Map manifest = [:] // For "technical" metadata about the record, such as contentType, created, etc.
     Map meta  = [:] // For extra metadata about the object, e.g. links and such.
 
     @JsonIgnore
@@ -35,14 +35,13 @@ class DefaultDocument implements Document {
 
     DefaultDocument() {
         log.trace("### NEW DOCUMENT INSTANTIATED")
-        entry = [:]
+        manifest = [:]
         meta = [:]
-        setCreated(new Date().getTime())
     }
 
     @JsonIgnore
     String getIdentifier() {
-        entry['identifier']
+        manifest['identifier']
     }
 
     @JsonIgnore
@@ -90,13 +89,13 @@ class DefaultDocument implements Document {
 
     @JsonIgnore
     String getMetadataAsJson() {
-        log.trace("For $identifier. Meta is: $meta, entry is: $entry")
-        return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "entry":entry])
+        log.trace("For $identifier. Meta is: $meta, manifest is: $manifest")
+        return mapper.writeValueAsString(["identifier":identifier, "meta":meta, "manifest":manifest])
     }
 
     @JsonIgnore
-    String getEntryAsJson() {
-        return mapper.writeValueAsString(entry)
+    String getManifestAsJson() {
+        return mapper.writeValueAsString(manifest)
     }
     @JsonIgnore
     String getMetaAsJson() {
@@ -104,16 +103,16 @@ class DefaultDocument implements Document {
     }
 
     @JsonIgnore
-    String getContentType() { entry[CONTENT_TYPE_KEY] }
+    String getContentType() { manifest[CONTENT_TYPE_KEY] }
 
     @JsonIgnore
     long getCreated() {
-        return (entry.get(CREATED_KEY, 0L))
+        return (manifest.get(CREATED_KEY, 0L))
     }
 
     @JsonIgnore
     long getModified() {
-        return entry.get(MODIFIED_KEY, 0L)
+        return manifest.get(MODIFIED_KEY, 0L)
     }
 
     @JsonIgnore
@@ -123,12 +122,12 @@ class DefaultDocument implements Document {
 
     @JsonIgnore
     int getVersion() {
-        return entry.get("version", 0)
+        return manifest.get("version", 0)
     }
 
     @JsonIgnore
     String getDataset() {
-        return entry.get("dataset")
+        return manifest.get("dataset")
     }
 
     long updateModified() {
@@ -137,25 +136,25 @@ class DefaultDocument implements Document {
     }
 
     void setIdentifier(String identifier) {
-        entry['identifier'] = identifier
+        manifest['identifier'] = identifier
     }
 
     protected void setCreated(long ts) {
         log.trace("Setting created ts $ts")
-        this.entry[CREATED_KEY] = ts
-        this.entry["timestamp"] = ts // Hack to prevent _timestamp-errors in older elastic mappings. Safe to remove once all indexes are up to date.
+        this.manifest[CREATED_KEY] = ts
+        this.manifest["timestamp"] = ts // Hack to prevent _timestamp-errors in older elastic mappings. Safe to remove once all indexes are up to date.
         if (getModified() < 1) {
-            this.entry[MODIFIED_KEY] = ts
+            this.manifest[MODIFIED_KEY] = ts
         }
     }
 
     void setModified(long mt) {
         log.trace("Updating modified for ${this.identifier} to ${mt}")
-        this.entry[MODIFIED_KEY] = mt
+        this.manifest[MODIFIED_KEY] = mt
     }
 
     void setVersion(int v) {
-        this.entry["version"] = v
+        this.manifest["version"] = v
     }
 
     void setData(byte[] data, boolean calcChecksum = true) {
@@ -166,24 +165,24 @@ class DefaultDocument implements Document {
     }
 
     void setDataset(String ds) {
-        entry.put("dataset", ds)
+        manifest.put("dataset", ds)
     }
 
     void addIdentifier(String id) {
         identifiers.add(id)
-        entry["alternateIdentifiers"] = identifiers
+        manifest["alternateIdentifiers"] = identifiers
     }
 
     void addDataset(String ds) {
         datasets = ds
-        entry["alternateDatasets"] = datasets
+        manifest["alternateDatasets"] = datasets
     }
 
     /*
      * Convenience methods
      */
     Document withIdentifier(String i) {
-        this.entry['identifier'] = i
+        this.manifest['identifier'] = i
         return this
     }
 
@@ -193,7 +192,7 @@ class DefaultDocument implements Document {
     }
 
     void setContentType(String ctype) {
-        this.entry[CONTENT_TYPE_KEY] = ctype
+        this.manifest[CONTENT_TYPE_KEY] = ctype
     }
 
     protected Document withCreated(long ts) {
@@ -233,14 +232,14 @@ class DefaultDocument implements Document {
     /**
      * Convenience method to set data from dictionary, assuming data is to be stored as json.
      */
-    void setEntry(Map entryData) {
-        log.debug("Clearing entry")
-        this.entry = [:]
-        withEntry(entryData)
+    void setManifest(Map entryData) {
+        log.debug("Clearing manifest")
+        this.manifest = [:]
+        withManifest(entryData)
     }
 
-    Document withEntry(Map entrydata) {
-        log.debug("withEntry: $entrydata")
+    Document withManifest(Map entrydata) {
+        log.debug("withManifest: $entrydata")
         if (entrydata?.containsKey("identifier")) {
             this.identifier = entrydata["identifier"]
         }
@@ -260,9 +259,9 @@ class DefaultDocument implements Document {
             this.datasets = entrydata.get("alternateDatasets")
         }
         if (entrydata != null) {
-            this.entry.putAll(entrydata)
+            this.manifest.putAll(entrydata)
             if (checksum) {
-                this.entry['checksum'] = checksum
+                this.manifest['checksum'] = checksum
             }
         }
         return this
@@ -276,31 +275,31 @@ class DefaultDocument implements Document {
         return this
     }
 
-    Document setMetaEntry(Map metaEntry) {
-        setEntry(metaEntry.entry)
-        withMeta(metaEntry.meta)
+    Document setMetaManifest(Map metaManifest) {
+        setManifest(metaManifest.manifest)
+        withMeta(metaManifest.meta)
     }
 
-    Document withMetaEntry(Map metaEntry) {
-        withEntry(metaEntry.entry)
-        withMeta(metaEntry.meta)
-        if (metaEntry.data) {
-            withData(metaEntry.data)
+    Document withMetaManifest(Map metaManifest) {
+        withManifest(metaManifest.manifest)
+        withMeta(metaManifest.meta)
+        if (metaManifest.data) {
+            withData(metaManifest.data)
         }
         return this
     }
 
     /**
-     * Expects a JSON string containing meta and entry as dictionaries.
+     * Expects a JSON string containing meta and manifest as dictionaries.
      * It's the reverse of getMetadataAsJson().
      */
-    Document withMetaEntry(String jsonEntry) {
-        Map metaEntry = mapper.readValue(jsonEntry, Map)
-        return withMetaEntry(metaEntry)
+    Document withMetaManifest(String jsonManifest) {
+        Map metaManifest = mapper.readValue(jsonManifest, Map)
+        return withMetaManifest(metaManifest)
     }
 
-    Document withMetaEntry(File entryFile) {
-        return withMetaEntry(entryFile.getText("utf-8"))
+    Document withMetaManifest(File entryFile) {
+        return withMetaManifest(entryFile.getText("utf-8"))
     }
 
     @JsonIgnore
@@ -310,7 +309,7 @@ class DefaultDocument implements Document {
 
     @JsonIgnore
     boolean isDeleted() {
-        return entry.get("deleted", false)
+        return manifest.get("deleted", false)
     }
 
     protected void calculateChecksum(byte[] databytes, byte[] metabytes) {
@@ -327,6 +326,6 @@ class DefaultDocument implements Document {
         String hashtext = bigInt.toString(16)
         log.debug("calculated checksum: $hashtext")
         this.checksum = hashtext
-        this.entry['checksum'] = hashtext
+        this.manifest['checksum'] = hashtext
     }
 }

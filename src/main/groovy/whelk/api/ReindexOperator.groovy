@@ -58,7 +58,7 @@ class ReindexOperator extends AbstractOperator {
             }
             for (doc in whelk.loadAll(dataset, null, fromStorage)) {
                 log.trace("Loaded doc ${doc.identifier} with type ${doc.contentType}")
-                    if (!doc.entry.deleted) {
+                    if (!doc.manifest.deleted) {
                         if (fromStorage) {
                             try {
                                 for (strg in whelk.storages) {

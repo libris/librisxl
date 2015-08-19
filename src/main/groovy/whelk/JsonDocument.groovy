@@ -2,9 +2,6 @@ package whelk
 
 import groovy.util.logging.Slf4j as Log
 
-import java.time.ZoneId
-import java.time.ZonedDateTime
-
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
@@ -17,13 +14,10 @@ class JsonDocument extends DefaultDocument {
     // store serialized data
     @JsonIgnore
     protected Map serializedDataInMap
-    @JsonIgnore
-    def timeZone = ZoneId.systemDefault()
 
     JsonDocument fromDocument(Document otherDocument) {
         log.trace("Creating json document from other document.")
-        setEntry(otherDocument.getEntry())
-        setMeta(otherDocument.getMeta())
+        setManifest(otherDocument.getManifest())
         setData(otherDocument.getData())
         return this
     }
@@ -69,34 +63,6 @@ class JsonDocument extends DefaultDocument {
         return super.toJson()
     }
 
-
-    @Override
-    protected void setCreated(long ts) {
-        log.trace("setCreated in json document ct is: $contentType")
-        super.setCreated(ts)
-        if (getContentType() == "application/ld+json") {
-            def map = getDataAsMap()
-            log.trace("Setting created in document data.")
-            def time = ZonedDateTime.ofInstant(new Date(ts).toInstant(), timeZone)
-            def timestamp = time.format(StandardWhelk.DT_FORMAT)
-            map.put("created", timestamp)
-            withData(map)
-        }
-    }
-
-    @Override
-    void setModified(long mt) {
-        log.trace("setModified in json document ct is: $contentType")
-        super.setModified(mt)
-        if (getContentType() == "application/ld+json") {
-            def map = getDataAsMap()
-            log.trace("Setting modified in document data.")
-            def time = ZonedDateTime.ofInstant(new Date(mt).toInstant(), timeZone)
-            def timestamp = time.format(StandardWhelk.DT_FORMAT)
-            map.put("modified", timestamp)
-            withData(map)
-        }
-    }
 
     @Override
     void addIdentifier(String id) {

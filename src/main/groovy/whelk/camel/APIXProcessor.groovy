@@ -149,8 +149,8 @@ class APIXProcessor extends BasicPlugin implements Processor {
             log.debug("Loaded document ${doc?.identifier}")
         } else {
             log.debug("Setting document data with type ${body.getClass().getName()}")
-            def metaentry = mapper.readValue(docMessage.getHeader("document:metaentry") as String, Map)
-            doc = whelk.createDocument(metaentry.entry.contentType).withData(body).withMeta(metaentry.meta).withEntry(metaentry.entry)
+            def manifest = mapper.readValue(docMessage.getHeader("document:manifest") as String, Map)
+            doc = whelk.createDocument(manifest.contentType).withData(body).withManifest(manifest)
         }
         return doc
     }
@@ -173,7 +173,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
     void prepareMessage(Document doc, Message docMessage) {
         log.debug("Resetting document ${doc.identifier} in message.")
         docMessage.setBody(doc.data)
-        docMessage.setHeader("document:metaentry", doc.metadataAsJson)
+        docMessage.setHeader("document:manifest", doc.manifestAsJson)
     }
 }
 

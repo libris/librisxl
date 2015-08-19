@@ -169,6 +169,26 @@ This is now available as:
     graphstoreUpdateAuthUser=dba
     graphstoreUpdateAuthPass=...
 
+
+### Using PostgreSQL
+
+1. Install postgresql; e.g. by running:
+
+    $ brew install postgresql
+
+2. Launch:
+
+    $ postgres -D /usr/local/var/postgres
+
+3. Create database
+
+    $ createdb whelk
+
+4. Create tables (config is found in libris/lddb -repo.
+
+    $ psql whelk < ../lddb/config/lddb.sql
+
+
 ## Whelk maintenance (rebuilding and reloading)
 
 All whelk maintenance is controlled from the operations interface (<whelkhost>/\_operations).
