@@ -220,7 +220,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
             try {
                 identifier = "/"+type+"/"+record.getControlfields("001").get(0).getData()
                 buildingMetaRecord.get(identifier, [:]).put("record", record)
-                buildingMetaRecord.get(identifier, [:]).put("entry", ["identifier":identifier,"dataset":dataset])
+                buildingMetaRecord.get(identifier, [:]).put("manifest", ["identifier":identifier,"dataset":dataset])
             } catch (Exception e) {
                 log.error("Problem getting field 001 from marc record $recordId. Skipping document.", e)
             }
@@ -264,14 +264,14 @@ class MySQLImporter extends BasicPlugin implements Importer {
             try {
                 def convertedDocs = [:]
                 recordList.each {
-                    if (!convertedDocs.containsKey(it.entry.dataset)) { // Create new list
-                        convertedDocs.put(it.entry.dataset, [])
+                    if (!convertedDocs.containsKey(it.manifest.dataset)) { // Create new list
+                        convertedDocs.put(it.manifest.dataset, [])
                     }
-                    if (it.entry.dataset == SUPPRESSRECORD_DATASET) {
-                        it.entry['contentType'] = "application/x-marc-json"
-                        convertedDocs[(SUPPRESSRECORD_DATASET)] << whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.entry, it.meta)
+                    if (it.manifest.dataset == SUPPRESSRECORD_DATASET) {
+                        it.manifest['contentType'] = "application/x-marc-json"
+                        convertedDocs[(SUPPRESSRECORD_DATASET)] << whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest, it.meta)
                     } else {
-                        Document doc = converter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
+                        Document doc = converter.doConvert(it.record, ["manifest":it.manifest,"meta":it.meta])
                         if (filter) {
                             doc = filter.filter(doc)
                         }

@@ -242,10 +242,10 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         log.trace("Record preparation starts.")
         String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
 
-        def entry = ["identifier":recordId,"dataset":ds]
+        def manifest = ["identifier":recordId,"dataset":ds]
         if (preserveTimestamps) {
             log.trace("Setting date: $recordDate")
-            entry.put(Document.MODIFIED_KEY, recordDate.getTime())
+            manifest.put(Document.MODIFIED_KEY, recordDate.getTime())
         }
 
         String originalIdentifier = null
@@ -265,8 +265,8 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                 }
             }
             if (originalIdentifier) {
-                log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating entry.")
-                entry['identifier'] = originalIdentifier
+                log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating manifest.")
+                manifest['identifier'] = originalIdentifier
                 long marcRecordModified = getMarcRecordModificationTime(record)?.getTime()
                 log.info("record timestamp: $marcRecordModified")
                 log.info("    xl timestamp: $originalModified")
@@ -292,8 +292,8 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
         log.trace("Record prepared.")
 
         documentMap['record'] = record
-        documentMap['entry'] = entry
-        documentMap['meta'] = meta
+        documentMap['manifest'] = manifest
+        documentMap['extraData'] = meta
         documentMap['originalIdentifier'] = originalIdentifier
 
         return documentMap
@@ -317,9 +317,9 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                 def convertedDocs = [:]
                 documents.each {
                     try {
-                        if (marcFrameConverter && it.entry.dataset != SUPPRESSRECORD_DATASET) {
+                        if (marcFrameConverter && it.manifest.dataset != SUPPRESSRECORD_DATASET) {
                             log.trace("Conversion starts.")
-                            def doc = marcFrameConverter.doConvert(it.record, ["entry":it.entry,"meta":it.meta])
+                            def doc = marcFrameConverter.doConvert(it.record, it.manifest)
                             log.trace("Convestion finished.")
                             if (it.originalIdentifier) {
                                 def dataMap = doc.dataAsMap
@@ -338,12 +338,12 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                                 }
                                 convertedDocs[(doc.dataset)] << doc
                             }
-                        } else if (it.entry.dataset == SUPPRESSRECORD_DATASET) {
+                        } else if (it.manifest.dataset == SUPPRESSRECORD_DATASET) {
                             if (!convertedDocs.containsKey(SUPPRESSRECORD_DATASET)) {
                                 convertedDocs.put(SUPPRESSRECORD_DATASET, [])
                             }
-                            it.entry['contentType'] = "application/x-marc-json"
-                            convertedDocs[(SUPPRESSRECORD_DATASET)] << whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.entry, it.meta)
+                            it.manifest['contentType'] = "application/x-marc-json"
+                            convertedDocs[(SUPPRESSRECORD_DATASET)] << whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest)
                         }
                     } catch (Exception e) {
                         log.error("Exception in conversion", e)

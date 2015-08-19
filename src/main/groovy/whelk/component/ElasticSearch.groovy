@@ -56,7 +56,7 @@ class ElasticSearchClient extends ElasticSearch implements Index {
 @Log
 abstract class ElasticSearch extends BasicComponent implements Index, ShapeComputer {
 
-    static final String METAENTRY_INDEX_TYPE = "entry"
+    static final String METAENTRY_INDEX_TYPE = "manifest"
     static final String DEFAULT_CLUSTER = "whelks"
     static final int WARN_AFTER_TRIES = 1000
     static final int RETRY_TIMEOUT = 300

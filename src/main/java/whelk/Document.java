@@ -29,12 +29,10 @@ public interface Document {
     public Document withData(byte [] data);
     public long updateModified();
 
-    public Map<String,Object> getEntry();
-    public void setEntry(Map<String, Object> entry);
-    public Map<String,Object> getMeta();
-    public void setMeta(Map<String, Object> entry);
+    public Map<String,Object> getManifest();
+    public void setManifest(Map<String, Object> entry);
 
-    public String getMetadataAsJson();
+    public String getManifestAsJson();
 
     public boolean isJson();
     public boolean isDeleted();

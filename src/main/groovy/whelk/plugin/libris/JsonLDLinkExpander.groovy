@@ -53,7 +53,7 @@ class JsonLDLinkExpander extends BasicFilter implements WhelkAware {
 
     @Override
     boolean valid(Document doc) {
-        if (doc && doc.isJson() && doc.contentType == "application/ld+json" && this.nodesToExpand.containsKey(doc.entry.dataset)) {
+        if (doc && doc.isJson() && doc.contentType == "application/ld+json" && this.nodesToExpand.containsKey(doc.manifest.dataset)) {
             return true
         }
         return false

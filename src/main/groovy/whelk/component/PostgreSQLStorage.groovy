@@ -36,35 +36,35 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         if (versioning) {
             this.versionsTableName = mainTableName + "__versions"
         }
-        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, entry = ?, modified = ?, deleted = ? WHERE id = ? RETURNING *) " +
-            "INSERT INTO {tableName} (id, data, entry, deleted) SELECT ?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, manifest = ?, modified = ?, deleted = ? WHERE id = ? RETURNING *) " +
+            "INSERT INTO $mainTableName (id, data, manifest, deleted) SELECT ?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
 
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, entry, checksum) SELECT ?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)"
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum) SELECT ?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)"
 
-        GET_DOCUMENT = "SELECT id,data,entry,created,modified,deleted FROM $mainTableName WHERE id= ?"
-        GET_DOCUMENT_VERSION = "SELECT id,data,entry FROM $versionsTableName WHERE id = ? AND checksum = ?"
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,entry,created,modified,deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
-        GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,entry,created,modified,deleted FROM $mainTableName WHERE entry @> '{ \"alternateIdentifiers\": [?] }'"
-        LOAD_ALL_DOCUMENTS = "SELECT id,data,entry,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? ORDER BY modified"
-        LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT id,data,entry,created,modified,deleted FROM $mainTableName WHERE entry->>'dataset' = ? AND modified >= ? AND modified <= ? ORDER BY modified"
+        GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
+        GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
+        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,created,modified,deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
+        GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest @> '{ \"alternateIdentifiers\": [?] }'"
+        LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? ORDER BY modified"
+        LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest->>'dataset' = ? AND modified >= ? AND modified <= ? ORDER BY modified"
         LOAD_ALL_DOCUMENTS_WITH_LINKS = """
-            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.entry as entry, r.meta as meta
+            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
             FROM (
                 SELECT * FROM (
                     SELECT identifier as id, identifier as link FROM $mainTableName
                     UNION ALL
-                    SELECT identifier as id, jsonb_array_elements_text(entry->'links') as link FROM $mainTableName
+                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName
                 ) AS links GROUP by id,link
             ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
             """
         LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET = """
-            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.entry as entry, r.meta as meta
+            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
             FROM (
                 SELECT * FROM (
                     SELECT identifier as id, identifier as link FROM $mainTableName WHERE dataset = ?
                     UNION ALL
-                    SELECT identifier as id, jsonb_array_elements_text(entry->'links') as link FROM $mainTableName WHERE dataset = ?
+                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName WHERE dataset = ?
                 ) AS links GROUP by id,link
             ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
             """
@@ -73,6 +73,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         STATUS_OF_DOCUMENT = "SELECT modified, deleted FROM $mainTableName WHERE id = ?"
     }
 
+    /*
     @Override
     void createTables() {
         Connection connection = connectionPool.getConnection()
@@ -80,7 +81,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $mainTableName ("
             +"id text primary key,"
             +"data jsonb not null,"
-            +"entry jsonb not null,"
+            +"manifest jsonb not null,"
             +"created timestamp with time zone not null default now(),"
             +"modified timestamp with time zone not null default now(),"
             +"deleted boolean default false"
@@ -89,15 +90,15 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         availableTypes.each {
             log.debug("Creating child table $it")
             def result = stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ${mainTableName}_${it} ("
-                    +"CHECK (entry->>'dataset' = '${it}'), PRIMARY KEY (id) ) INHERITS (${mainTableName})")
+                    +"CHECK (manifest->>'dataset' = '${it}'), PRIMARY KEY (id) ) INHERITS (${mainTableName})")
 
             log.debug("Creating indexes for $it")
             try {
                 stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_modified ON ${mainTableName}_${it} (modified)")
-                stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_entry ON ${mainTableName}_${it} USING GIN (entry jsonb_path_ops)")
+                stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_manifest ON ${mainTableName}_${it} USING GIN (manifest jsonb_path_ops)")
                 stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_alive ON ${mainTableName}_${it} (id) WHERE deleted IS NOT true")
                 stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_graphs ON ${mainTableName}_${it} USING GIN ((data->'@graph') jsonb_path_ops)")
-                stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_dataset ON ${mainTableName}_${it} USING GIN ((entry->'dataset') jsonb_path_ops)")
+                stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_dataset ON ${mainTableName}_${it} USING GIN ((manifest->'dataset') jsonb_path_ops)")
             } catch (org.postgresql.util.PSQLException pgsqle) {
                 log.trace("Indexes on $mainTableName / $id already exists.")
             }
@@ -108,7 +109,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 +"id text not null,"
                 +"checksum char(32) not null,"
                 +"data jsonb not null,"
-                +"entry jsonb not null,"
+                +"manifest jsonb not null,"
                 +"modified timestamp with time zone not null default now(),"
                 +"UNIQUE (id, checksum)"
                 +")");
@@ -116,17 +117,14 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                 stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_id ON ${versionsTableName} (id)")
                 stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_modified ON ${versionsTableName} (modified)")
                 stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_checksum ON ${versionsTableName} (checksum)")
-                stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_entry ON ${versionsTableName} USING GIN (entry jsonb_path_ops)")
-                stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_dataset ON ${versionsTableName} USING GIN ((entry->'dataset') jsonb_path_ops)")
+                stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_manifest ON ${versionsTableName} USING GIN (manifest jsonb_path_ops)")
+                stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_dataset ON ${versionsTableName} USING GIN ((manifest->'dataset') jsonb_path_ops)")
             } catch (org.postgresql.util.PSQLException pgsqle) {
                 log.trace("Indexes on $mainTableName / $id already exists.")
             }
         }
-        /*
-        stmt.close()
-        */
         connection.close()
-    }
+    }*/
 
     @Override
     public Map status(String identifier) {
@@ -163,7 +161,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         assert doc.dataset
         log.debug("Saving document ${doc.identifier} (with checksum: ${doc.checksum})")
         Connection connection = connectionPool.getConnection()
-        PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT.replaceAll(/\{tableName\}/, mainTableName + "_" + doc.dataset))
+        PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT) //.replaceAll(/\{tableName\}/, mainTableName + "_" + doc.dataset))
         try {
             insert = rigUpsertStatement(insert, doc)
             insert.executeUpdate()
@@ -180,13 +178,13 @@ class PostgreSQLStorage extends AbstractSQLStorage {
 
     private PreparedStatement rigUpsertStatement(PreparedStatement insert, JsonDocument doc) {
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
-        insert.setObject(2, doc.entryAsJson, java.sql.Types.OTHER)
+        insert.setObject(2, doc.manifestAsJson, java.sql.Types.OTHER)
         insert.setTimestamp(3, new Timestamp(doc.modified))
         insert.setBoolean(4, doc.isDeleted())
         insert.setString(5, doc.identifier)
         insert.setString(6, doc.identifier)
         insert.setObject(7, doc.dataAsString, java.sql.Types.OTHER)
-        insert.setObject(8, doc.entryAsJson, java.sql.Types.OTHER)
+        insert.setObject(8, doc.manifestAsJson, java.sql.Types.OTHER)
         insert.setBoolean(9, doc.isDeleted())
 
         return insert
@@ -213,7 +211,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
     private PreparedStatement rigVersionStatement(PreparedStatement insvers, JsonDocument doc) {
         insvers.setString(1, doc.identifier)
         insvers.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
-        insvers.setObject(3, doc.entryAsJson, java.sql.Types.OTHER)
+        insvers.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
         insvers.setString(4, doc.checksum)
         insvers.setString(5, doc.identifier)
         insvers.setString(6, doc.checksum)
@@ -227,7 +225,7 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         }
         log.debug("Bulk storing ${docs.size()} documents.")
         Connection connection = connectionPool.getConnection()
-        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT.replaceAll(/\{tableName\}/, mainTableName + "_" + dataset))
+        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT) //.replaceAll(/\{tableName\}/, mainTableName + "_" + dataset))
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
@@ -291,13 +289,13 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             }
             rs = selectstmt.executeQuery()
             if (rs.next()) {
-                def entry = mapper.readValue(rs.getString("entry"), Map)
+                def manifest = mapper.readValue(rs.getString("manifest"), Map)
                 if (!checksum) {
-                    entry.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
-                    entry.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
-                    entry.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
+                    manifest.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
+                    manifest.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
+                    manifest.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
                 }
-                doc = whelk.createDocument(mapper.readValue(rs.getString("data"), Map), entry)
+                doc = whelk.createDocument(mapper.readValue(rs.getString("data"), Map), manifest)
             } else if (log.isTraceEnabled()) {
                 log.trace("No results returned for get($id)")
             }
@@ -325,11 +323,11 @@ class PostgreSQLStorage extends AbstractSQLStorage {
             rs = selectstmt.executeQuery()
             int v = 0
             while (rs.next()) {
-                def entry = mapper.readValue(rs.getString("entry"), Map)
-                entry.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
-                entry.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
-                entry.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
-                def doc = whelk.createDocument(mapper.readValue(rs.getString("data"), Map), entry)
+                def manifest = mapper.readValue(rs.getString("manifest"), Map)
+                manifest.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
+                manifest.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
+                manifest.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
+                def doc = whelk.createDocument(mapper.readValue(rs.getString("data"), Map), manifest)
                 doc.version = v++
                 docList << doc
             }
@@ -402,13 +400,13 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                     public Document next() {
                         Document doc
                         if (withLinks) {
-                            doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map), rs.getString("parent"))
+                            doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("manifest"), Map), mapper.readValue(rs.getString("meta"), Map), rs.getString("parent"))
                         } else {
-                            def entry = mapper.readValue(rs.getString("entry"), Map)
-                            entry.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
-                            entry.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
-                            entry.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
-                            doc = whelk.createDocument(mapper.readValue(rs.getString("data"), Map), entry)
+                            def manifest = mapper.readValue(rs.getString("manifest"), Map)
+                            manifest.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
+                            manifest.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
+                            manifest.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
+                            doc = whelk.createDocument(mapper.readValue(rs.getString("data"), Map), manifest)
                         }
                         more = rs.next()
                         if (!more) {
@@ -426,67 +424,6 @@ class PostgreSQLStorage extends AbstractSQLStorage {
                     public boolean hasNext() {
                         return more
                     }
-                }
-            }
-        }
-    }
-
-    Iterable<Document> oldloadAll(String dataset, Date since = null, Date until = null) {
-        log.debug("Load all called with dataset: $dataset")
-        return new Iterable<Document>() {
-            def results = new LinkedHashSet<Document>()
-            Iterator<Document> iterator() {
-                Iterator listIterator = null
-                Connection connection = connectionPool.getConnection()
-                PreparedStatement loadAllStatement
-                long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
-
-                if (dataset) {
-                    loadAllStatement = connection.prepareStatement(LOAD_ALL_STATEMENT_WITH_DATASET)
-                } else {
-                    loadAllStatement = connection.prepareStatement(LOAD_ALL_STATEMENT)
-                }
-
-                return new Iterator<Document>() {
-                    long lastModified = since?.getTime() ?: 0L
-                    String lastIdentifier = ''
-                    int nums = 0
-
-                    public boolean hasNext() {
-                        if (results.isEmpty()) {
-                            log.debug("Getting results from postgres")
-                            listIterator = null
-                            loadAllStatement.setTimestamp(1, new Timestamp(lastModified))
-                            loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
-                            loadAllStatement.setString(3, lastIdentifier)
-                            if (dataset) {
-                                loadAllStatement.setString(4, dataset)
-                            }
-                            ResultSet rs = loadAllStatement.executeQuery()
-                            while (rs.next()) {
-                                def doc = whelk.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("entry"), Map), mapper.readValue(rs.getString("meta"), Map))
-                                lastModified = doc.modified
-                                lastIdentifier = doc.identifier
-                                results << doc
-                            }
-                            log.debug("Number of results in list: ${results.size()}")
-                            listIterator = results.iterator()
-                        }
-                        return !results.isEmpty()
-                    }
-                    public Document next() {
-                        if (listIterator == null) {
-                            listIterator = results.iterator()
-                        }
-                        Document d = listIterator.next()
-                        if (!listIterator.hasNext()) {
-                            listIterator = null
-                            results = new LinkedHashSet<Document>()
-                        }
-                        log.trace("Got document ${d?.identifier}")
-                        return d
-                    }
-                    public void remove() { throw new UnsupportedOperationException(); }
                 }
             }
         }

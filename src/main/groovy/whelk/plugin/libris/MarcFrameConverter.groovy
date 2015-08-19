@@ -85,10 +85,10 @@ class MarcFrameConverter extends BasicFormatConverter {
     Document doConvert(final Object record, final Map metaentry) {
         try {
             def source = MarcJSONConverter.toJSONMap(record)
-            def result = runConvert(source, metaentry.meta)
+            def result = runConvert(source, metaentry.extraData)
             log.trace("Created frame: $result")
 
-            return whelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withMetaEntry(metaentry)
+            return whelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withManifest(metaentry)
         } catch (Exception e) {
             log.error("Failed marc conversion (${e.message}). Metaentry: $metaentry")
             throw e
@@ -102,7 +102,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         def result = runConvert(source, meta)
         log.trace("Created frame: $result")
 
-        return whelk.createDocument("application/ld+json").withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta)
+        return whelk.createDocument("application/ld+json").withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.manifest).withMeta(doc.meta)
     }
 
     public static void main(String[] args) {
