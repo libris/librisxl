@@ -140,6 +140,7 @@ class MarcConversion {
     List<MarcFramePostProcStep> sharedPostProcSteps
     Map<String, MarcRuleSet> marcRuleSets = [:]
     boolean doPostProcessing = true
+    boolean flatQuotedForm = true
     Map marcTypeMap = [:]
     Map tokenMaps
 
@@ -220,6 +221,7 @@ class MarcConversion {
 
         def state = [
             entityMap: ['?record': record, '?thing': thing],
+            quotedEntities: [],
             marcRemains: marcRemains
         ]
 
@@ -286,11 +288,13 @@ class MarcConversion {
             if (marcCat == "hold") {
                 def prefix = "bibid:"
                 if (it.startsWith(prefix) && !thing.holdingFor) {
-                    thing.holdingFor = ["@type": "Record", controlNumber: it.substring(prefix.size())]
+                    thing.holdingFor = ["@type": "Record",
+                                        controlNumber: it.substring(prefix.size())]
                 }
                 prefix = "location:"
                 if (it.startsWith(prefix) && !thing.heldBy) {
-                    thing.heldBy = ["@type": "Organization", notation: it.substring(prefix.size())]
+                    thing.heldBy = ["@type": "Organization",
+                                    notation: it.substring(prefix.size())]
                 }
             }
         }
@@ -311,7 +315,52 @@ class MarcConversion {
         } else {
             record[marcRuleSet.thingLink] = thing
         }
-        return record
+
+        if (flatQuotedForm) {
+            return toFlatQuotedForm(state, marcRuleSet.thingLink)
+        } else {
+            return record
+        }
+    }
+
+    def toFlatQuotedForm(state, thingLink) {
+        def record = state.entityMap['?record']
+        def thing = record[thingLink]
+        def thingId = thing['@id']
+        if (thingId) {
+            record[thingLink] = ['@id': thingId]
+        }
+
+        def quotedEntities = []
+        def quotedIds = new HashSet()
+
+        state.quotedEntities.each { ent ->
+            def entId = ent['@id'] ?: '_:' + createKeyString(ent)
+            if (entId) {
+                def copy = ent.clone()
+                ent.clear()
+                ent['@id'] = copy['@id'] = entId
+                if (!quotedIds.contains(entId)) {
+                    quotedIds << entId
+                    quotedEntities << ['@graph': copy]
+                }
+            }
+        }
+
+        return [
+            '@graph': [ record, thing ] + quotedEntities
+        ]
+    }
+
+    String createKeyString(ent) {
+        if (ent instanceof String) {
+            return UriUtil.encode(ent.trim())
+        }
+        return ent.keySet().toList().sort().collect {
+            def v = ent[it]
+            return v instanceof List? v.collect { createKeyString(it) } :
+                    createKeyString(v)
+        }.join(':').toLowerCase()
     }
 
     void processFields(state, fieldHandlers, sourceMap, fields) {
@@ -488,6 +537,7 @@ class ConversionPart {
     String aboutEntityName
     Map tokenMap
     Map reverseTokenMap
+    boolean embedded = false
 
     void setTokenMap(fieldHandler, dfn) {
         def tokenMap = dfn.tokenMap
@@ -525,6 +575,39 @@ class ConversionPart {
         }
     }
 
+    Map newEntity(state, type, id=null) {
+        def ent = [:]
+        if (type) ent["@type"] = type
+        if (id) ent["@id"] = id
+        if (!embedded) {
+            state.quotedEntities << ent
+        }
+        return ent
+    }
+
+    static void addValue(obj, key, value, repeatable) {
+        def current = obj[key]
+        if (current || repeatable) {
+            def l = current ?: []
+
+            def vId = value instanceof Map? value["@id"] : null
+            if (vId) {
+                def existing = l.find { it instanceof Map && it["@id"] == vId }
+                if (existing) {
+                    value.putAll(existing)
+                    l[l.indexOf(existing)] = value
+                    return
+                }
+            } else if (l.find { it == value }) {
+                return
+            }
+
+            l << value
+            value = l
+        }
+        obj[key] = value
+    }
+
 }
 
 abstract class BaseMarcFieldHandler extends ConversionPart {
@@ -553,42 +636,13 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         } else {
             link = fieldDfn.link
         }
+        embedded = fieldDfn.embedded == true
         resourceType = fieldDfn.resourceType
     }
 
     abstract ConvertResult convert(state, sourceMap, value)
 
     abstract def revert(Map data, Map result)
-
-    static void addValue(obj, key, value, repeatable) {
-        def current = obj[key]
-        if (current || repeatable) {
-            def l = current ?: []
-
-            def vId = value instanceof Map? value["@id"] : null
-            if (vId) {
-                def existing = l.find { it instanceof Map && it["@id"] == vId }
-                if (existing) {
-                    value.putAll(existing)
-                    l[l.indexOf(existing)] = value
-                    return
-                }
-            } else if (l.find { it == value }) {
-                return
-            }
-
-            l << value
-            value = l
-        }
-        obj[key] = value
-    }
-
-    static Map newEntity(type, id=null) {
-        def ent = [:]
-        if (type) ent["@type"] = type
-        if (id) ent["@id"] = id
-        return ent
-    }
 
 }
 
@@ -817,7 +871,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         def entityMap = state.entityMap
         if (addLink) {
             def ent = entityMap['?thing']
-            def newEnt = newEntity(null)
+            def newEnt = newEntity(state, null)
             addValue(ent, addLink, newEnt, true)
             state = state.clone()
             state.entityMap = entityMap.clone()
@@ -984,7 +1038,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         if (ent == null)
             return FAIL
         if (link) {
-            def newEnt = newEntity(resourceType)
+            def newEnt = newEntity(state, resourceType)
             addValue(ent, link, newEnt, repeatable)
             ent = newEnt
         }
@@ -1174,7 +1228,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def handled = new HashSet()
 
-        def linkage = computeLinkage(sourceMap, entity, value, handled)
+        def linkage = computeLinkage(state, sourceMap, entity, value, handled)
         if (linkage.newEntity) {
             entity = linkage.newEntity
         }
@@ -1188,7 +1242,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         [ind1: ind1, ind2: ind2].each { indKey, handler ->
             if (!handler)
                 return
-            def ok = handler.convertSubValue(
+            def ok = handler.convertSubValue(state,
                     value[indKey], entity, uriTemplateParams, localEntites)
             if (!ok && handler.marcDefault == null) {
                 unhandled << indKey
@@ -1207,7 +1261,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
                         ok = true // rule does not apply here
                     } else {
-                        ok = subDfn.convertSubValue(subVal, ent, uriTemplateParams, localEntites)
+                        ok = subDfn.convertSubValue(state, subVal, ent, uriTemplateParams, localEntites)
                     }
                 }
                 if (!ok && !handled.contains(code)) {
@@ -1249,7 +1303,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return new ConvertResult(unhandled)
     }
 
-    def computeLinkage(sourceMap, entity, value, handled) {
+    def computeLinkage(state, sourceMap, entity, value, handled) {
         def codeLinkSplits = [:]
         // TODO: clear unused codeLinkSplits afterwards..
         def splitResults = []
@@ -1300,7 +1354,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
 
-            newEnt = newEntity(resourceType)
+            newEnt = newEntity(state, resourceType)
 
             def lRepeatLink = repeatable
             if (useLinks) {
@@ -1343,11 +1397,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return (entity instanceof String)? entity : null
     }
 
-    Map getLocalEntity(Map owner, String id, Map localEntites) {
+    Map getLocalEntity(Map state, Map owner, String id, Map localEntites) {
         def entity = localEntites[id]
         if (entity == null) {
             def pending = pendingResources[id]
-            entity = localEntites[id] = newEntity(pending.resourceType)
+            entity = localEntites[id] = newEntity(state, pending.resourceType)
             def link = pending.link ?: pending.addLink
             addValue(owner, link, entity, pending.containsKey('addLink'))
         }
@@ -1589,7 +1643,7 @@ class MarcSubFieldHandler extends ConversionPart {
         itemPos = subDfn.itemPos
     }
 
-    boolean convertSubValue(subVal, ent, uriTemplateParams, localEntites) {
+    boolean convertSubValue(state, subVal, ent, uriTemplateParams, localEntites) {
         def ok = false
         def uriTemplateKeyBase = ""
 
@@ -1609,7 +1663,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
 
         if (about) {
-            ent = fieldHandler.getLocalEntity(ent, about, localEntites)
+            ent = fieldHandler.getLocalEntity(state, ent, about, localEntites)
         }
 
         if (link) {
@@ -1622,8 +1676,8 @@ class MarcSubFieldHandler extends ConversionPart {
                     // bad characters in what should have been a proper URI path ({+_} expansion)
                 }
             }
-            def newEnt = fieldHandler.newEntity(resourceType, entId)
-            fieldHandler.addValue(ent, link, newEnt, repeatable)
+            def newEnt = newEntity(state, resourceType, entId)
+            addValue(ent, link, newEnt, repeatable)
             ent = newEnt
             uriTemplateKeyBase = "${link}."
             ok = true
