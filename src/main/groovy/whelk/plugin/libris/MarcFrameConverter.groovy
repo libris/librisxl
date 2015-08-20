@@ -1832,10 +1832,13 @@ class MarcSubFieldHandler extends ConversionPart {
 }
 
 abstract class MatchRule {
+
     static matchRuleKeys = [
         'match-domain', 'match-i1', 'match-i2', 'match-code', 'match-pattern'
     ]
+
     Map ruleMap = [:]
+
     MatchRule(handler, fieldDfn, ruleKey, rules) {
         rules.each { key, matchDfn ->
             def comboDfn = fieldDfn.clone()
@@ -1855,13 +1858,27 @@ abstract class MatchRule {
             ruleMap[key] = new MarcFieldHandler(handler.ruleSet, tag, comboDfn)
         }
     }
+
     MarcFieldHandler getHandler(entity, value) {
-        return ruleMap[getKey(entity, value)]
+        for (String key : getKeys(entity, value)) {
+            def handler = ruleMap[key]
+            if (handler) {
+                return handler
+            }
+        }
+        return null
     }
-    abstract String getKey(entity, value)
+
+    List<String> getKeys(entity, value) {
+        return [getSingleKey(entity, value)]
+    }
+
+    abstract String getSingleKey(entity, value)
+
     List<MatchCandidate> getCandidates() {
         return []
     }
+
 }
 
 class MatchCandidate {
@@ -1883,11 +1900,12 @@ class DomainMatchRule extends MatchRule {
     DomainMatchRule(handler, fieldDfn, ruleKey, rules) {
         super(handler, fieldDfn, ruleKey, rules)
     }
-    String getKey(entity, value) {
-        def type = entity['@type']
-        if (type instanceof List)
-            return type[-1]
-        return type
+    List<String> getKeys(entity, value) {
+        def types = entity['@type']
+        return types instanceof String? [types] : types
+    }
+    String getSingleKey(entity, value) {
+        throw new UnsupportedOperationException()
     }
 }
 
@@ -1897,7 +1915,7 @@ class IndMatchRule extends MatchRule {
         super(handler, fieldDfn, ruleKey, rules)
         this.indKey = indKey
     }
-    String getKey(entity, value) {
+    String getSingleKey(entity, value) {
         return value[indKey]
     }
     List<MatchCandidate> getCandidates() {
@@ -1918,7 +1936,7 @@ class CodeMatchRule extends MatchRule {
         }
         return parsed
     }
-    String getKey(entity, value) {
+    String getSingleKey(entity, value) {
         for (sub in value.subfields) {
             for (key in sub.keySet()) {
                 if (key in ruleMap)
@@ -1961,7 +1979,7 @@ class CodePatternMatchRule extends MatchRule {
             }
         }
     }
-    String getKey(entity, value) {
+    String getSingleKey(entity, value) {
         def key
         for (sub in value.subfields) {
             sub.each { code, codeval ->
