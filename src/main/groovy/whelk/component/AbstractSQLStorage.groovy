@@ -12,6 +12,8 @@ abstract class AbstractSQLStorage extends BasicComponent implements Storage {
     boolean readOnly = false
 
     String connectionUrl = null
+    String username = null
+    String password = null
 
     // Connectionpool
     protected BasicDataSource connectionPool
@@ -22,9 +24,9 @@ abstract class AbstractSQLStorage extends BasicComponent implements Storage {
         log.info("Connecting to sql database at $connectionUrl")
         connectionPool = new BasicDataSource();
 
-        if (whelk.props.sqlUsername != null) {
-            connectionPool.setUsername(whelk.props.sqlUsername)
-            connectionPool.setPassword(whelk.props.sqlPassword)
+        if (username != null) {
+            connectionPool.setUsername(username)
+            connectionPool.setPassword(password)
         }
         connectionPool.setDriverClassName(getJdbcDriver());
         connectionPool.setUrl(connectionUrl);
