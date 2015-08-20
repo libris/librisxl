@@ -220,6 +220,8 @@ class MarcConversion {
         def thing = [:]
 
         def state = [
+            sourceMap: [leader: leader],
+            bnodeCounter: 0,
             entityMap: ['?record': record, '?thing': thing],
             quotedEntities: [],
             marcRemains: marcRemains
@@ -228,13 +230,12 @@ class MarcConversion {
         def preprocFields = []
         def primaryFields = []
         def otherFields = []
-        def sourceMap = [leader: leader, _bnodeCounter: 0]
 
         marcSource.fields.each { field ->
             field.each { tag, value ->
-                def fieldsByTag = sourceMap[tag]
+                def fieldsByTag = state.sourceMap[tag]
                 if (fieldsByTag == null) {
-                    fieldsByTag = sourceMap[tag] = []
+                    fieldsByTag = state.sourceMap[tag] = []
                 }
                 fieldsByTag << field
 
@@ -250,12 +251,12 @@ class MarcConversion {
 
         def fieldHandlers = marcRuleSet.fieldHandlers
 
-        fieldHandlers["000"].convert(state, sourceMap, leader)
+        fieldHandlers["000"].convert(state, leader)
 
-        processFields(state, fieldHandlers, sourceMap, preprocFields)
+        processFields(state, fieldHandlers, preprocFields)
 
-        processFields(state, fieldHandlers, sourceMap, primaryFields)
-        processFields(state, fieldHandlers, sourceMap, otherFields)
+        processFields(state, fieldHandlers, primaryFields)
+        processFields(state, fieldHandlers, otherFields)
 
         if (marcRemains.uncompleted.size() > 0) {
             record._marcUncompleted = marcRemains.uncompleted
@@ -363,14 +364,14 @@ class MarcConversion {
         }.join(':').toLowerCase()
     }
 
-    void processFields(state, fieldHandlers, sourceMap, fields) {
+    void processFields(state, fieldHandlers, fields) {
         fields.each { field ->
             try {
                 def result = null
                 field.each { tag, value ->
                     def handler = fieldHandlers[tag]
                     if (handler) {
-                        result = handler.convert(state, sourceMap, value)
+                        result = handler.convert(state, value)
                     }
                 }
                 if (!result || !result.ok) {
@@ -640,7 +641,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         resourceType = fieldDfn.resourceType
     }
 
-    abstract ConvertResult convert(state, sourceMap, value)
+    abstract ConvertResult convert(state, value)
 
     abstract def revert(Map data, Map result)
 
@@ -685,11 +686,11 @@ class MarcFixedFieldHandler {
         columns.sort { it.start }
     }
 
-    ConvertResult convert(state, sourceMap, value) {
+    ConvertResult convert(state, value) {
         def success = true
         def failedFixedFields = state.marcRemains.failedFixedFields
         for (col in columns) {
-            if (!col.convert(state, sourceMap, value).ok) {
+            if (!col.convert(state, value).ok) {
                 success = false
                 def unmapped = failedFixedFields[tag]
                 if (unmapped == null) {
@@ -756,7 +757,7 @@ class MarcFixedFieldHandler {
                 return value.substring(start)
             return value.substring(start, end)
         }
-        ConvertResult convert(state, sourceMap, value) {
+        ConvertResult convert(state, value) {
             def token = getToken(value)
             if (token == "")
                 return OK
@@ -767,7 +768,7 @@ class MarcFixedFieldHandler {
             boolean isNothing = token.find { it != FIXED_NONE && it != FIXED_UNDEF } == null
             if (isNothing)
                 return OK
-            return super.convert(state, sourceMap, token)
+            return super.convert(state, token)
         }
         def revert(Map data) {
             def v = super.revert(data, null)
@@ -858,14 +859,14 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         }
     }
 
-    ConvertResult convert(state, sourceMap, value) {
-        def token = getToken(sourceMap.leader, value)
+    ConvertResult convert(state, value) {
+        def token = getToken(state.sourceMap.leader, value)
         def converter = handlerMap[token]
         if (converter == null)
             return FAIL
 
         def addLink = this.link
-        if (sourceMap[tag].size() > 1 && repeatedAddLink) {
+        if (state.sourceMap[tag].size() > 1 && repeatedAddLink) {
             addLink = repeatedAddLink
         }
         def entityMap = state.entityMap
@@ -880,8 +881,8 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
 
         def baseOk = true
         if (baseConverter)
-            baseOk = baseConverter.convert(state, sourceMap, value)
-        def ok = converter.convert(state, sourceMap, value).ok
+            baseOk = baseConverter.convert(state, value)
+        def ok = converter.convert(state, value).ok
         return new ConvertResult(baseOk && ok)
     }
 
@@ -984,7 +985,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         //}
     }
 
-    ConvertResult convert(state, sourceMap, value) {
+    ConvertResult convert(state, value) {
         if (ignored || !(property || link))
             return
 
@@ -1049,7 +1050,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 ent['@value'] = value
             }
         //} else if (linkedHandler) {
-        //    linkedHandler.convert(sourceMap, value,["?thing": ent])
+        //    linkedHandler.convert(state, value,["?thing": ent])
         } else {
             addValue(ent, property, value, repeatable)
         }
@@ -1202,7 +1203,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         subfields[code] = dfn? new MarcSubFieldHandler(this, code, dfn) : null
     }
 
-    ConvertResult convert(state, sourceMap, value) {
+    ConvertResult convert(state, value) {
 
         if (!(value instanceof Map)) {
             throw new MalformedFieldValueException()
@@ -1220,7 +1221,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def handler = rule.getHandler(aboutEntity, value)
             if (handler) {
                 // TODO: resolve combined config
-                return handler.convert(state, sourceMap, value)
+                return handler.convert(state, value)
             }
         }
 
@@ -1228,7 +1229,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def handled = new HashSet()
 
-        def linkage = computeLinkage(state, sourceMap, entity, value, handled)
+        def linkage = computeLinkage(state, entity, value, handled)
         if (linkage.newEntity) {
             entity = linkage.newEntity
         }
@@ -1303,7 +1304,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return new ConvertResult(unhandled)
     }
 
-    def computeLinkage(state, sourceMap, entity, value, handled) {
+    def computeLinkage(state, entity, value, handled) {
         def codeLinkSplits = [:]
         // TODO: clear unused codeLinkSplits afterwards..
         def splitResults = []
@@ -1368,7 +1369,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def entRef = newEnt
             if (useLinks && link) {
                 if (!newEnt['@id'])
-                    newEnt['@id'] = "_:b-${sourceMap._bnodeCounter++}" as String
+                    newEnt['@id'] = "_:b-${state.bnodeCounter++}" as String
                 entRef = ['@id': newEnt['@id']]
             }
             if (link) {
