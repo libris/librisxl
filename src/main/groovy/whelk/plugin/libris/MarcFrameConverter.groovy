@@ -135,8 +135,6 @@ class MarcConversion {
 
     static MARC_CATEGORIES = ['bib', 'auth', 'hold']
 
-    static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
-
     List<MarcFramePostProcStep> sharedPostProcSteps
     Map<String, MarcRuleSet> marcRuleSets = [:]
     boolean doPostProcessing = true
@@ -214,10 +212,10 @@ class MarcConversion {
         def marcCat = getMarcCategory(leader)
         def marcRuleSet = marcRuleSets[marcCat]
 
-        def marcRemains = [failedFixedFields: [:], uncompleted: [], broken: []]
-
         def record = ["@id": recordId]
         def thing = [:]
+
+        def marcRemains = [failedFixedFields: [:], uncompleted: [], broken: []]
 
         def state = [
             sourceMap: [leader: leader],
@@ -227,36 +225,7 @@ class MarcConversion {
             marcRemains: marcRemains
         ]
 
-        def preprocFields = []
-        def primaryFields = []
-        def otherFields = []
-
-        marcSource.fields.each { field ->
-            field.each { tag, value ->
-                def fieldsByTag = state.sourceMap[tag]
-                if (fieldsByTag == null) {
-                    fieldsByTag = state.sourceMap[tag] = []
-                }
-                fieldsByTag << field
-
-                if (tag in PREPROC_TAGS) {
-                    preprocFields << field
-                } else if (tag in marcRuleSet.primaryTags) {
-                    primaryFields << field
-                } else {
-                    otherFields << field
-                }
-            }
-        }
-
-        def fieldHandlers = marcRuleSet.fieldHandlers
-
-        fieldHandlers["000"].convert(state, leader)
-
-        processFields(state, fieldHandlers, preprocFields)
-
-        processFields(state, fieldHandlers, primaryFields)
-        processFields(state, fieldHandlers, otherFields)
+        marcRuleSet.convert(marcSource, state)
 
         if (marcRemains.uncompleted.size() > 0) {
             record._marcUncompleted = marcRemains.uncompleted
@@ -364,29 +333,6 @@ class MarcConversion {
         }.join(':').toLowerCase()
     }
 
-    void processFields(state, fieldHandlers, fields) {
-        fields.each { field ->
-            try {
-                def result = null
-                field.each { tag, value ->
-                    def handler = fieldHandlers[tag]
-                    if (handler) {
-                        result = handler.convert(state, value)
-                    }
-                }
-                if (!result || !result.ok) {
-                    field = field.clone()
-                    if (result && result.unhandled) {
-                        field['_unhandled'] = result.unhandled as List
-                    }
-                    state.marcRemains.uncompleted << field
-                }
-            } catch (MalformedFieldValueException e) {
-                state.marcRemains.broken << field
-            }
-        }
-    }
-
     Map revert(data) {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
@@ -432,6 +378,8 @@ class MarcConversion {
 }
 
 class MarcRuleSet {
+
+    static PREPROC_TAGS = ["000", "001", "006", "007", "008"] as Set
 
     MarcConversion conversion
     String name
@@ -527,6 +475,58 @@ class MarcRuleSet {
                 return true
         }
         return false
+    }
+
+    void convert(Map marcSource, Map state) {
+        def preprocFields = []
+        def primaryFields = []
+        def otherFields = []
+
+        marcSource.fields.each { field ->
+            field.each { tag, value ->
+                def fieldsByTag = state.sourceMap[tag]
+                if (fieldsByTag == null) {
+                    fieldsByTag = state.sourceMap[tag] = []
+                }
+                fieldsByTag << field
+
+                if (tag in PREPROC_TAGS) {
+                    preprocFields << field
+                } else if (tag in primaryTags) {
+                    primaryFields << field
+                } else {
+                    otherFields << field
+                }
+            }
+        }
+
+        fieldHandlers["000"].convert(state, state.sourceMap.leader)
+        processFields(state, fieldHandlers, preprocFields)
+        processFields(state, fieldHandlers, primaryFields)
+        processFields(state, fieldHandlers, otherFields)
+    }
+
+    void processFields(state, fieldHandlers, fields) {
+        fields.each { field ->
+            try {
+                def result = null
+                field.each { tag, value ->
+                    def handler = fieldHandlers[tag]
+                    if (handler) {
+                        result = handler.convert(state, value)
+                    }
+                }
+                if (!result || !result.ok) {
+                    field = field.clone()
+                    if (result && result.unhandled) {
+                        field['_unhandled'] = result.unhandled as List
+                    }
+                    state.marcRemains.uncompleted << field
+                }
+            } catch (MalformedFieldValueException e) {
+                state.marcRemains.broken << field
+            }
+        }
     }
 
 }
