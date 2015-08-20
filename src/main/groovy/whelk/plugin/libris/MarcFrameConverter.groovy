@@ -340,7 +340,7 @@ class MarcConversion {
                 def copy = ent.clone()
                 ent.clear()
                 ent['@id'] = copy['@id'] = entId
-                if (!quotedIds.contains(entId)) {
+                if (copy.size() > 1 && !quotedIds.contains(entId)) {
                     quotedIds << entId
                     quotedEntities << ['@graph': copy]
                 }
@@ -348,7 +348,7 @@ class MarcConversion {
         }
 
         return [
-            '@graph': [ record, thing ] + quotedEntities
+            'contents': [entry: record, items: [thing], quoted: quotedEntities]
         ]
     }
 
