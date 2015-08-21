@@ -318,7 +318,7 @@ class MarcConversion {
         }
 
         return [
-            'contents': [entry: record, items: [thing], quoted: quotedEntities]
+            'descriptions': [entry: record, items: [thing], quoted: quotedEntities]
         ]
     }
 

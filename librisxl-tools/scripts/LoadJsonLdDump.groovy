@@ -16,11 +16,11 @@ storage.componentBootstrap(null)
 
 def i = 1
 new File(sourceDump).eachLine('UTF-8') {
-    def contents = mapper.readValue(it, Map).contents
-    def id = contents.entry['@id']
+    def data = mapper.readValue(it, Map)
+    def id = data.descriptions.entry['@id']
     def doc = new JsonDocument()
         .withIdentifier(id)
-        .withData(contents)
+        .withData(data)
         .withModified(new Date().time)
         .withDataset('auth')
     storage.store(doc)
