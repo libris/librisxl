@@ -73,59 +73,6 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         STATUS_OF_DOCUMENT = "SELECT modified, deleted FROM $mainTableName WHERE id = ?"
     }
 
-    /*
-    @Override
-    void createTables() {
-        Connection connection = connectionPool.getConnection()
-        Statement stmt = connection.createStatement();
-        stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $mainTableName ("
-            +"id text primary key,"
-            +"data jsonb not null,"
-            +"manifest jsonb not null,"
-            +"created timestamp with time zone not null default now(),"
-            +"modified timestamp with time zone not null default now(),"
-            +"deleted boolean default false"
-            +")");
-
-        availableTypes.each {
-            log.debug("Creating child table $it")
-            def result = stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ${mainTableName}_${it} ("
-                    +"CHECK (manifest->>'dataset' = '${it}'), PRIMARY KEY (id) ) INHERITS (${mainTableName})")
-
-            log.debug("Creating indexes for $it")
-            try {
-                stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_modified ON ${mainTableName}_${it} (modified)")
-                stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_manifest ON ${mainTableName}_${it} USING GIN (manifest jsonb_path_ops)")
-                stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_alive ON ${mainTableName}_${it} (id) WHERE deleted IS NOT true")
-                stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_graphs ON ${mainTableName}_${it} USING GIN ((data->'@graph') jsonb_path_ops)")
-                stmt.executeUpdate("CREATE INDEX idx_${mainTableName}_${it}_dataset ON ${mainTableName}_${it} USING GIN ((manifest->'dataset') jsonb_path_ops)")
-            } catch (org.postgresql.util.PSQLException pgsqle) {
-                log.trace("Indexes on $mainTableName / $id already exists.")
-            }
-        }
-        if (versioning) {
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS $versionsTableName ("
-                +"pk serial,"
-                +"id text not null,"
-                +"checksum char(32) not null,"
-                +"data jsonb not null,"
-                +"manifest jsonb not null,"
-                +"modified timestamp with time zone not null default now(),"
-                +"UNIQUE (id, checksum)"
-                +")");
-            try {
-                stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_id ON ${versionsTableName} (id)")
-                stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_modified ON ${versionsTableName} (modified)")
-                stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_checksum ON ${versionsTableName} (checksum)")
-                stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_manifest ON ${versionsTableName} USING GIN (manifest jsonb_path_ops)")
-                stmt.executeUpdate("CREATE INDEX idx_${versionsTableName}_dataset ON ${versionsTableName} USING GIN ((manifest->'dataset') jsonb_path_ops)")
-            } catch (org.postgresql.util.PSQLException pgsqle) {
-                log.trace("Indexes on $mainTableName / $id already exists.")
-            }
-        }
-        connection.close()
-    }*/
-
     @Override
     public Map status(String identifier) {
         Map statusMap = [:]

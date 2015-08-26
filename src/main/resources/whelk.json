@@ -22,6 +22,9 @@
     "_id": "libris",
     "_docBaseUri" : "http://libris.kb.se/",
     "_plugins": {
+        "_camel": [
+            "indexroutebuilder"
+            ],
         "_components": [
             "postgrestorage",
             "index"
