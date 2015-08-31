@@ -16,15 +16,12 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     final static String VERSION_STORAGE_SUFFIX = "_versions"
 
     final void bootstrap() {
-        assert whelk
-
-        componentBootstrap(whelk.id)
+        componentBootstrap(whelk?.id)
     }
 
     abstract void componentBootstrap(String str)
 
     public final void start() {
-        assert whelk
         log.debug("Calling onStart() on sub classes")
         onStart()
     }

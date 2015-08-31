@@ -122,6 +122,11 @@ dependencies {
     compile 'com.vividsolutions:jts:1.13'
     compile 'mysql:mysql-connector-java:5.1.33'
     compile 'org.postgresql:postgresql:9.4-1200-jdbc41'
+    compile 'org.picocontainer:picocontainer:2.15'
+    /* Not needed?
+    compile 'com.thoughtworks.paranamer:paranamer:2.7'
+    compile 'asm:asm:3.3.1'
+    */
     // Standalone
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     compile "org.eclipse.jetty:jetty-server:${jettyVersion}"
