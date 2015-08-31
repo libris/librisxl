@@ -9,7 +9,7 @@ import org.picocontainer.injectors.*
 import whelk.component.*
 
 @Log
-class PicoWhelk implements Whelk {
+class PicoWhelk {
 
 
     //PicoContainer pico = new DefaultPicoContainer(new CompositeInjection(new ConstructorInjection(), new SetterInjection()))

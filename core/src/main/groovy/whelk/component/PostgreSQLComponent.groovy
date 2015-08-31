@@ -111,7 +111,6 @@ class PostgreSQLComponent {
     }
 
     boolean store(Document doc, boolean withVersioning = versioning) {
-        assert doc instanceof JsonDocument
         log.debug("Document ${doc.identifier} checksum before save: ${doc.checksum}")
         if (versioning && withVersioning) {
             if (!saveVersion(doc)) {
@@ -136,7 +135,7 @@ class PostgreSQLComponent {
         return false
     }
 
-    private PreparedStatement rigUpsertStatement(PreparedStatement insert, JsonDocument doc) {
+    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc) {
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(2, doc.manifestAsJson, java.sql.Types.OTHER)
         insert.setTimestamp(3, new Timestamp(doc.modified))
@@ -168,7 +167,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private PreparedStatement rigVersionStatement(PreparedStatement insvers, JsonDocument doc) {
+    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc) {
         insvers.setString(1, doc.identifier)
         insvers.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insvers.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
