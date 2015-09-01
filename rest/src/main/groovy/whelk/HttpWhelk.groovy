@@ -4,8 +4,11 @@ import groovy.util.logging.Slf4j as Log
 
 import java.util.regex.*
 import javax.servlet.http.*
+import javax.activation.MimetypesFileTypeMap
 
 import whelk.exception.*
+import whelk.converter.*
+import whelk.security.*
 
 import org.codehaus.jackson.map.ObjectMapper
 
@@ -136,31 +139,8 @@ class HttpWhelk extends HttpServlet {
     void init() {
         whelk = Class.forName(servletConfig.getInitParameter("whelkClass")).newInstance()
         whelk.init()
-        //def (whelkConfig, pluginConfig) = whelk.loadConfig()
-        //setConfig(whelkConfig, pluginConfig)
     }
 
-    protected void setConfig(whelkConfig, pluginConfig) {
-        log.debug("Running setConfig in servlet.")
-        whelkConfig["_apis"].each { apiEntry ->
-            apiEntry.each {
-                log.debug("Found api: ${it.value}, should attach at ${it.key}")
-                /*
-                API api = whelk.loadPlugin(pluginConfig, it.value, whelk.id)
-                api.setWhelk(whelk)
-                api.init()
-                apis.put(Pattern.compile(it.key), api)
-                */
-            }
-        }
-    }
-
-
-    @Override
-    void destroy() {
-        whelk.state.put("status", "SHUTTING DOWN")
-        whelk.saveState()
-    }
 
     MimetypesFileTypeMap mt = new MimetypesFileTypeMap()
 
@@ -169,13 +149,7 @@ class HttpWhelk extends HttpServlet {
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
 
     Map contextHeaders = [:]
-    AccessControl accessControl
-
-    @Override
-    void bootstrap() {
-        accessControl = plugins.find { it instanceof AccessControl }
-        assert accessControl
-    }
+    AccessControl accessControl = new AccessControl()
 
     def determineDisplayMode(path) {
         if (path.endsWith("/meta")) {

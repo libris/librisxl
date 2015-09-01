@@ -6,7 +6,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
-import org.json.simple.JSONObject;
+//import org.json.simple.JSONObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,6 +124,7 @@ public class AuthenticationFilter implements Filter {
         return filterOnPorts.contains(new Integer(httpRequest.getServerPort()).toString());
     }
 
+    /*
     private JSONObject getUserInfo(JSONObject obj) {
 
         if (obj != null) {
@@ -131,6 +132,7 @@ public class AuthenticationFilter implements Filter {
         }
         return null;
     }
+    */
 
     private boolean isExpired(long unixtime) {
         Date now = new Date();

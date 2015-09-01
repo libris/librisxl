@@ -59,7 +59,6 @@ repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
     flatDir name: 'localDir', dirs: 'dep/lib'
-    //maven { url "http://dev.libris.kb.se/nexus/content/groups/public/" }
 }
 
 configurations {
