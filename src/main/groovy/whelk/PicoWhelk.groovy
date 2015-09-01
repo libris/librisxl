@@ -11,8 +11,7 @@ import whelk.component.*
 @Log
 class PicoWhelk {
 
-
-    //PicoContainer pico = new DefaultPicoContainer(new CompositeInjection(new ConstructorInjection(), new SetterInjection()))
+    PicoContainer pico
 
     void init() {
         log.info("Starting picowhelk.")
@@ -39,6 +38,10 @@ class PicoWhelk {
         log.info("Postgres is ${postgres.getClass().getName()} with connect url: ${postgres.connectionUrl}")
         def doc = postgres.load("/bib/13531679")
         log.info("Loaded doc ${doc.identifier}")
+    }
+
+    PicoContainer getContainer() {
+        return pico
     }
 }
 
