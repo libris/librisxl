@@ -1,8 +1,10 @@
-package whelk
+package whelk.rest
 
 import groovy.util.logging.Slf4j as Log
 
 import org.codehaus.jackson.map.ObjectMapper
+
+import whelk.*
 
 @Log
 class LinkedDataAPIQuery extends ElasticQuery {

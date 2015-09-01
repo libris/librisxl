@@ -1,4 +1,4 @@
-package whelk.security
+package whelk.rest.security
 import groovy.util.logging.Slf4j as Log
 
 import whelk.Document

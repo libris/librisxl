@@ -72,7 +72,7 @@ class Document {
         return this
     }
 
-    protected void calculateChecksum(byte[] databytes, byte[] metabytes) {
+    private void calculateChecksum(byte[] databytes, byte[] metabytes) {
         checksum = null
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
