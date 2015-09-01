@@ -20,18 +20,13 @@ class PicoWhelk {
         Properties mainProps = new Properties()
 
         // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
-        InputStream mainConfig = ( System.getProperty("xl.properties")
-                                   ? new FileInputStream(System.getProperty("xl.properties"))
-                                   : this.getClass().getClassLoader().getResourceAsStream("whelk.properties") )
         InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
                                       ? new FileInputStream(System.getProperty("xl.secret.properties"))
-                                      : this.getClass().getClassLoader().getResourceAsStream("secrets.properties") )
+                                      : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
 
-        mainProps.load(mainConfig)
-        Properties props = new Properties(mainProps)
+        Properties props = new Properties()
 
         props.load(secretsConfig)
-        props.list(System.out)
 
         MutablePicoContainer pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
 
