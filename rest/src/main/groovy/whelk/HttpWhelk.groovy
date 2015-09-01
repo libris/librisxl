@@ -137,7 +137,7 @@ class HttpWhelk extends HttpServlet {
 
     @Override
     void init() {
-        whelk = Class.forName(servletConfig.getInitParameter("whelkClass")).newInstance()
+        def whelk = Class.forName(servletConfig.getInitParameter("whelkClass")).newInstance()
         whelk.init()
     }
 
