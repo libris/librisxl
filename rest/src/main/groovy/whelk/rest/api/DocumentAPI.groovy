@@ -5,6 +5,8 @@ import groovy.util.logging.Slf4j as Log
 import javax.servlet.http.*
 import javax.activation.MimetypesFileTypeMap
 
+import org.codehaus.jackson.map.ObjectMapper
+
 import whelk.*
 import whelk.component.*
 import whelk.converter.*
@@ -17,6 +19,8 @@ class DocumentAPI implements RestAPI {
     MimetypesFileTypeMap mt = new MimetypesFileTypeMap()
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
+
+    final static ObjectMapper mapper = new ObjectMapper()
 
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
 
@@ -144,9 +148,9 @@ class DocumentAPI implements RestAPI {
         try {
             def d = null
             if (version) {
-                d = whelk.get(path, version, accepting)
+                d = storage.load(path, version)
             } else {
-                def location = whelk.locate(path)
+                def location = storage.locate(path)
                 d = location?.document
                 if (!d && location?.uri) {
                     def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
@@ -197,10 +201,10 @@ class DocumentAPI implements RestAPI {
                         log.debug("request is for context file. Must serve original content-type ($contentType).")
                     }
                     if (flat) {
-                        sendResponse(response, JsonLd.flatten(d.dataAsMap), contentType)
+                        sendResponse(response, JsonLd.flatten(d.data), contentType)
                     } else {
                         log.info("Framing ${d.identifier} ...")
-                        sendResponse(response, JsonLd.frame(d.identifier, d.dataAsMap), contentType)
+                        sendResponse(response, JsonLd.frame(d.identifier, d.data), contentType)
                     }
                 }
             } else {
@@ -331,6 +335,10 @@ class DocumentAPI implements RestAPI {
         return ds
     }
 
+    String getMajorContentType(String contentType) {
+        return contentType?.replaceAll("/[\\w]+\\+", "/")
+    }
+
     List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
         def alts = []
         for (link in request.getHeaders("Link")) {
@@ -344,6 +352,34 @@ class DocumentAPI implements RestAPI {
         }
         return alts
     }
+
+    void sendResponse(HttpServletResponse response, Map data, String contentType, int statusCode = 200) {
+        if (!data) {
+            sendResponse(response, new byte[0], contentType, statusCode)
+        } else {
+            sendResponse(response, mapper.writeValueAsBytes(data), contentType, statusCode)
+        }
+    }
+
+    void sendResponse(HttpServletResponse response, byte[] data, String contentType, int statusCode = 200) {
+        response.setStatus(statusCode)
+        if (contentType) {
+            response.setContentType(contentType)
+            if (contentType.startsWith("text/") || contentType.startsWith("application/")) {
+                response.setCharacterEncoding("UTF-8")
+            }
+        }
+
+        if (data.length > 0) {
+            OutputStream out = response.getOutputStream()
+            out.write(data, 0, data.length)
+            //response.writer.write(text)
+            //response.writer.flush()
+            out.flush()
+            out.close()
+        }
+    }
+
 
 }
 
