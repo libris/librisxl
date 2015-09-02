@@ -20,6 +20,8 @@ class PostgreSQLComponent {
     public final static DocumentFactory docFactory = new DocumentFactory()
     public final static mapper = new ObjectMapper()
 
+    private final static LOCATION_PRECURSOR = "/resource"
+
     protected boolean readOnly = false
     protected boolean versioning = true
     protected String connectionUrl = null
@@ -208,6 +210,7 @@ class PostgreSQLComponent {
         }
     }
 
+    // TODO: Update to real locate
     Location locate(String uri) {
         log.debug("Locating $uri")
         if (uri) {
@@ -219,39 +222,19 @@ class PostgreSQLComponent {
             String identifier = new URI(uri).getPath().toString()
             log.trace("Nothing found at identifier $identifier")
 
-            if (locationConfig['preCursor'] && identifier.startsWith(locationConfig['preCursor'])) {
-                identifier = identifier.substring(locationConfig['preCursor'].length())
-                log.trace("New place to look: $identifier")
-            }
-            if (locationConfig['postCursor'] && identifier.endsWith(locationConfig['postCursor'])) {
-                identifier = identifier.substring(0, identifier.length() - locationConfig['postCursor'].length())
+            if (identifier.startsWith(LOCATION_PRECURSOR)) {
+                identifier = identifier.substring(LOCATION_PRECURSOR.length())
                 log.trace("New place to look: $identifier")
             }
             log.debug("Checking if new identifier (${identifier}) has something to get")
-            if (get(identifier, null, [], false)) {
+            if (load(identifier, null, [], false)) {
                 return new Location().withURI(new URI(identifier)).withResponseCode(303)
             }
 
             log.debug("Check alternate identifiers.")
-            doc = storage.loadByAlternateIdentifier(uri)
+            doc = loadByAlternateIdentifier(uri)
             if (doc) {
                 return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
-            }
-
-            if (index) {
-                log.debug("Looking for identifiers in record.")
-                // TODO: This query MUST be made against storage index. It will not be safe otherwise
-                def query = new ElasticQuery(["terms":["sameAs.@id:"+identifier]])
-                def result = index.query(query)
-                if (result.numberOfHits > 1) {
-                    log.error("Something is terribly wrong. Got too many hits for sameAs. Don't know how to handle it. Yet.")
-                }
-                if (result.numberOfHits == 1) {
-                    log.trace("Results: ${result.toJson()}")
-                    // TODO: Adapt to new search results.
-                    def foundIdentifier = result.toMap(null, []).list[0].identifier
-                    return new Location().withURI(foundIdentifier).withResponseCode(301)
-                }
             }
         }
 

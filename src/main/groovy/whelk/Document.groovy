@@ -33,6 +33,8 @@ class Document {
 
     String getIdentifier() { id }
 
+    String getContentType() { manifest[CONTENT_TYPE_KEY] }
+
     Document withData(Map data) {
         this.data = data
         return this
