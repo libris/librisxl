@@ -1,13 +1,18 @@
 package whelk.rest.api
 
+import groovy.util.logging.Slf4j as Log
+
 import javax.servlet.http.*
 import javax.activation.MimetypesFileTypeMap
 
 import whelk.*
+import whelk.component.*
 import whelk.converter.*
 import whelk.exception.*
+import whelk.rest.*
 import whelk.rest.security.*
 
+@Log
 class DocumentAPI implements RestAPI {
     MimetypesFileTypeMap mt = new MimetypesFileTypeMap()
 
@@ -15,8 +20,19 @@ class DocumentAPI implements RestAPI {
 
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
 
+    private ElasticSearch elastic
+    private PostgreSQLComponent storage
+
     Map contextHeaders = [:]
     AccessControl accessControl = new AccessControl()
+
+    DocumentAPI(PostgreSQLComponent pg, ElasticSearch es) {
+        elastic = es
+        storage = pg
+        assert elastic
+        assert storage
+        log.info("Doc api instantiated.")
+    }
 
     def determineDisplayMode(path) {
         if (path.endsWith("/meta")) {
@@ -27,6 +43,7 @@ class DocumentAPI implements RestAPI {
         }
         return [path, DisplayMode.DOCUMENT]
     }
+
     String getCleanPath(List pathVars) {
         if (pathVars) {
             //return "/"+pathVars.first().replaceAll('\\/\\/', '/')
@@ -38,7 +55,8 @@ class DocumentAPI implements RestAPI {
         }
         return "/"
     }
-    protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+
+    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         String path = pathVars.first()
         log.debug "Path: $path req method: ${request.method} req url: ${request.requestURL} forward req uri: ${request.getAttribute('javax.servlet.forward.request_uri')}"
         if (request.method == "GET" && path.startsWith("/_iri/")) {
@@ -327,4 +345,8 @@ class DocumentAPI implements RestAPI {
         return alts
     }
 
+}
+
+enum DisplayMode {
+DOCUMENT, META, RAW
 }

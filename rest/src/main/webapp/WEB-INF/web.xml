@@ -36,10 +36,6 @@
     <servlet>
         <servlet-name>WhelkServlet</servlet-name>
         <servlet-class>whelk.rest.HttpWhelk</servlet-class>
-        <init-param>
-            <param-name>whelkClass</param-name>
-            <param-value>whelk.PicoWhelk</param-value>
-        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

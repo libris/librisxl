@@ -5,9 +5,13 @@ import groovy.util.logging.Slf4j as Log
 import java.util.regex.*
 import javax.servlet.http.*
 
-import whelk.exception.*
-
+import org.picocontainer.*
+import org.picocontainer.containers.*
 import org.codehaus.jackson.map.ObjectMapper
+
+import whelk.exception.*
+import whelk.component.*
+import whelk.rest.api.DocumentAPI
 
 @Log
 class HttpWhelk extends HttpServlet {
@@ -28,8 +32,10 @@ class HttpWhelk extends HttpServlet {
         //API api = null
         List pathVars = []
         def whelkinfo = [:]
+        /*
         whelkinfo["whelk"] = whelk.id
         whelkinfo["status"] = whelk.state.get("status", "STARTING")
+        */
 
 
         log.debug("Path is $path")
@@ -63,7 +69,9 @@ class HttpWhelk extends HttpServlet {
                 }
                 printAvailableAPIs(response, whelkinfo)
             } else {
-                doHandle(request, response, [path])
+                log.info("Accessing $path")
+                def api = pico.getComponent(DocumentAPI.class)
+                api.handle(request, response, [path])
                 /*
                 (api, pathVars) = getAPIForPath(path)
                 if (api) {
@@ -136,11 +144,33 @@ class HttpWhelk extends HttpServlet {
 
     @Override
     void init() {
-        def whelk = Class.forName(servletConfig.getInitParameter("whelkClass")).newInstance()
-        whelk.init()
-        log.info("Creating new pico container.")
-        pico = new DefaultPicoContainer(whelk.getContainer())
+        log.info("Starting httpwhelk.")
+
+        Properties mainProps = new Properties()
+
+        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
+        InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
+                                      ? new FileInputStream(System.getProperty("xl.secret.properties"))
+                                      : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
+
+        Properties props = new Properties()
+
+        props.load(secretsConfig)
+
+        pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
+
+        pico.as(Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        pico.as(Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+
         pico.addComponent(DocumentAPI.class)
+
+        pico.start()
+        /*
+        def postgres = pico.getComponent(PostgreSQLComponent.class)
+        log.info("Postgres is ${postgres.getClass().getName()} with connect url: ${postgres.connectionUrl}")
+        def doc = postgres.load("/bib/13531679")
+        log.info("Loaded doc ${doc.identifier}")
+        */
     }
 
 

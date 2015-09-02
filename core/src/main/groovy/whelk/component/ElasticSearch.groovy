@@ -54,7 +54,7 @@ class ElasticSearchClient extends ElasticSearch {
 }
 
 @Log
-abstract class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
+class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
 
     static final String DEFAULT_CLUSTER = "whelks"
     static final int WARN_AFTER_TRIES = 1000

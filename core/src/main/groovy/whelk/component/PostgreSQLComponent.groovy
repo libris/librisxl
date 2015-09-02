@@ -208,6 +208,56 @@ class PostgreSQLComponent {
         }
     }
 
+    Location locate(String uri) {
+        log.debug("Locating $uri")
+        if (uri) {
+            def doc = load(uri)
+            if (doc) {
+                return new Location(doc)
+            }
+
+            String identifier = new URI(uri).getPath().toString()
+            log.trace("Nothing found at identifier $identifier")
+
+            if (locationConfig['preCursor'] && identifier.startsWith(locationConfig['preCursor'])) {
+                identifier = identifier.substring(locationConfig['preCursor'].length())
+                log.trace("New place to look: $identifier")
+            }
+            if (locationConfig['postCursor'] && identifier.endsWith(locationConfig['postCursor'])) {
+                identifier = identifier.substring(0, identifier.length() - locationConfig['postCursor'].length())
+                log.trace("New place to look: $identifier")
+            }
+            log.debug("Checking if new identifier (${identifier}) has something to get")
+            if (get(identifier, null, [], false)) {
+                return new Location().withURI(new URI(identifier)).withResponseCode(303)
+            }
+
+            log.debug("Check alternate identifiers.")
+            doc = storage.loadByAlternateIdentifier(uri)
+            if (doc) {
+                return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
+            }
+
+            if (index) {
+                log.debug("Looking for identifiers in record.")
+                // TODO: This query MUST be made against storage index. It will not be safe otherwise
+                def query = new ElasticQuery(["terms":["sameAs.@id:"+identifier]])
+                def result = index.query(query)
+                if (result.numberOfHits > 1) {
+                    log.error("Something is terribly wrong. Got too many hits for sameAs. Don't know how to handle it. Yet.")
+                }
+                if (result.numberOfHits == 1) {
+                    log.trace("Results: ${result.toJson()}")
+                    // TODO: Adapt to new search results.
+                    def foundIdentifier = result.toMap(null, []).list[0].identifier
+                    return new Location().withURI(foundIdentifier).withResponseCode(301)
+                }
+            }
+        }
+
+        return null
+    }
+
     Document load(String id) {
         return load(id, null)
     }
