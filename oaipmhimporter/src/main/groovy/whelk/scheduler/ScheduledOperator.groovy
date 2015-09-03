@@ -1,50 +1,39 @@
-package whelk.plugin
+package whelk.scheduler
 
 import groovy.util.logging.Slf4j as Log
 
 import java.util.concurrent.*
 
-import whelk.Whelk
+import whelk.importer.OaiPmhImporter
+
 
 @Log
-class ScheduledOperator extends BasicPlugin {
+class ScheduledOperator {
 
     String description = "Scheduled operator runner."
 
-    ScheduledExecutorService ses
-
-    Map configuration
-
     int scheduleDelaySeconds = 30
+    int scheduleIntervalSeconds = 30
 
-    ScheduledOperator(Map settings) {
-        this.configuration = settings
-    }
 
-    void bootstrap() {
-        if (System.getProperty("whelk.mode", "") != "ops") {
-            ses = Executors.newScheduledThreadPool(configuration.size())
-            configuration.each { task, conf ->
-                log.debug("Setting up schedule for $task : $conf")
-                def imp = getPlugin(conf.importer)
-                assert imp
-                imp.serviceUrl = conf.url
-                def job = new ScheduledJob(task, imp, conf.dataset, whelk)
-                try {
-                    ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, conf.interval, TimeUnit.SECONDS)
-                    log.info("${task} will start in ${scheduleDelaySeconds} seconds.")
-                } catch (RejectedExecutionException ree) {
-                    log.error("execution failed", ree)
-                }
+    ScheduledOperator(OaiPmhImporter opi) {
+        ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
+
+        for (dataset in ["auth", "bib", "hold"]) {
+            log.debug("Setting up schedule for $dataset")
+            def job = new ScheduledJob(opi, dataset)
+            try {
+                ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
+            } catch (RejectedExecutionException ree) {
+                log.error("execution failed", ree)
             }
-        } else {
-            log.info("Whelk ${this.whelk.id} is started in operations mode. No tasks scheduled.")
         }
+
     }
 
     void testJob() {
         log.info("Test job!")
-        def j = new ScheduledJob("test", getPlugin("oaipmhimporter"), "bib", whelk)
+        def j = new ScheduledJob("test", getPlugin("oaipmhimporter"), "bib")
         j.run()
         log.info("Test complete!")
     }
@@ -55,31 +44,22 @@ class ScheduledJob implements Runnable {
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
-    String id, dataset
-    Importer importer
-    Whelk whelk
+    String dataset
+    OaiPmhImporter importer
 
-    ScheduledJob(String id, whelk.plugin.Importer imp, String ds, Whelk w) {
-        this.id = id
+
+    ScheduledJob(OaiPmhImporter imp, String ds) {
         this.importer = imp
         this.dataset = ds
-        this.whelk = w
     }
 
 
     void run() {
         assert dataset
 
-        if (whelk.acquireLock(dataset)) {
-            log.trace("Lock acquired for $dataset")
-        } else {
-            log.trace("[${this.id}] Whelk is busy for dataset $dataset")
-            return
-        }
 
         try {
-            log.trace("all state: ${whelk.state}")
-            def whelkState = whelk.state.get(dataset) ?: [:]
+            def whelkState = [:]
             String lastImport = whelkState.get("lastImport")
             Date currentSince
             Date nextSince = new Date()
@@ -97,9 +77,8 @@ class ScheduledJob implements Runnable {
             }
             log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
             whelkState.put("status", "RUNNING")
-            whelkState.put("importOperator", this.id)
+            whelkState.put("importOperator", dataset)
             whelkState.remove("lastImportOperator")
-            whelk.updateState(dataset, whelkState)
             def result = importer.doImport(dataset, null, -1, true, true, nextSince)
 
             int totalCount = result.numberOfDocuments
@@ -117,13 +96,9 @@ class ScheduledJob implements Runnable {
             whelkState.put("status", "IDLE")
             whelkState.put("lastRunNrImported", result.numberOfDocuments)
             whelkState.put("lastRun", new Date().format(DATE_FORMAT))
-            whelk.updateState(dataset, whelkState)
 
         } catch (Exception e) {
             log.error("Something failed: ${e.message}", e)
-        } finally {
-            whelk.releaseLock(dataset)
-            log.trace("Lock released for $dataset")
         }
     }
 

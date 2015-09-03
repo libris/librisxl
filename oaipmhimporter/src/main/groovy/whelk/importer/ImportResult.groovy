@@ -1,4 +1,4 @@
-package whelk.result
+package whelk.importer
 
 class ImportResult {
     int numberOfDocuments

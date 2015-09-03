@@ -1,33 +1,32 @@
-package whelk.importer.libris
+package whelk.importer
 
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
+import whelk.converter.JsonLDLinkCompleterFilter
+import whelk.converter.MarcFrameConverter
 
 import java.text.*
 import java.util.concurrent.*
 
 import whelk.*
-import whelk.result.*
-import whelk.exception.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
-import whelk.plugin.*
-import whelk.plugin.libris.*
 import whelk.converter.MarcJSONConverter
 import whelk.util.Tools
 
 @Log
-class OaiPmhImporter extends BasicPlugin implements Importer {
+class OaiPmhImporter {
 
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
-    Whelk whelk
     String dataset
 
     String serviceUrl
+    //imp.serviceUrl = conf.url  removed from scheduled operator. fix!
+
     int recordCount = 0
     int nrDeleted = 0
     int skippedRecordCount = 0
@@ -46,15 +45,12 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
 
     boolean cancelled = false
 
-    OaiPmhImporter(Map settings) {
-        this.serviceUrl = settings.get('serviceUrl',SERVICE_BASE_URL)
-        this.preserveTimestamps = settings.get("preserveTimestamps", true)
+    OaiPmhImporter(MarcFrameConverter mfc, JsonLDLinkCompleterFilter jlcf, String serviceUrl) {
+        this.serviceUrl = serviceUrl
+        marcFrameConverter = mfc
+        enhancer = jlcf
     }
 
-    void bootstrap() {
-        marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
-        enhancer = plugins.find { it instanceof JsonLDLinkCompleterFilter }
-    }
 
     ImportResult doImport(String dataset, int nrOfDocs) {
         return doImport(dataset, null, nrOfDocs)
