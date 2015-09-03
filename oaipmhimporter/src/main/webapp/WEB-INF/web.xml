@@ -9,7 +9,7 @@
 
     <servlet>
         <servlet-name>ImporterServlet</servlet-name>
-        <servlet-class>whelk.importer.OAIPMHImporterServlet</servlet-class>
+        <servlet-class>whelk.servlet.OaiPmhImporterServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

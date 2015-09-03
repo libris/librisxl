@@ -20,7 +20,7 @@ class ScheduledOperator {
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
 
         for (dataset in ["auth", "bib", "hold"]) {
-            log.debug("Setting up schedule for $dataset")
+            log.info("Setting up schedule for $dataset")
             def job = new ScheduledJob(opi, dataset)
             try {
                 ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
@@ -28,7 +28,7 @@ class ScheduledOperator {
                 log.error("execution failed", ree)
             }
         }
-
+        log.info("scheduler started")
     }
 
     void testJob() {

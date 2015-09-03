@@ -5,6 +5,7 @@ import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
 import whelk.converter.JsonLDLinkCompleterFilter
 import whelk.converter.MarcFrameConverter
+import whelk.exception.WhelkAddException
 
 import java.text.*
 import java.util.concurrent.*
@@ -13,7 +14,6 @@ import whelk.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import whelk.converter.MarcJSONConverter
-import whelk.util.Tools
 
 @Log
 class OaiPmhImporter {
@@ -21,6 +21,7 @@ class OaiPmhImporter {
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
+    static final String SUPPRESSRECORD_DATASET = "eplikt"
 
     String dataset
 
@@ -40,12 +41,21 @@ class OaiPmhImporter {
 
     ExecutorService queue
     Semaphore tickets
+    Whelk whelk
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
     boolean cancelled = false
 
-    OaiPmhImporter(MarcFrameConverter mfc, JsonLDLinkCompleterFilter jlcf, String serviceUrl) {
+    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, String serviceUrl) {
+        whelk = w
+        this.serviceUrl = serviceUrl
+        marcFrameConverter = mfc
+    }
+
+
+    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, JsonLDLinkCompleterFilter jlcf, String serviceUrl) {
+        whelk = w
         this.serviceUrl = serviceUrl
         marcFrameConverter = mfc
         enhancer = jlcf

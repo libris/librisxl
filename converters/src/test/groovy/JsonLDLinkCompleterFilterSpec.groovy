@@ -1,13 +1,12 @@
 package whelk.converter
 
+import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Specification
-import whelk.DefaultDocument
-import whelk.component.ElasticJsonMapper
-import whelk.Whelk
+import whelk.Document
 
 class JsonLDLinkCompleterFilterSpec extends Specification {
 
-    private mapper = new ElasticJsonMapper()
+    private mapper = new ObjectMapper()
 
     def authData = [
         "/auth/94541": [about: ["@id": "/resource/auth/94541", "@type": "Person",
@@ -143,9 +142,9 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
     }
 
     def makeDoc(path, data, links=[]) {
-        def doc = new DefaultDocument()
-                .withIdentifier(path)
-                .withData(mapper.writeValueAsString(data))
+        def doc = new Document()
+                .withId(path)
+                .withData(data)
                 .withContentType("application/ld+json")
         links.each {
             doc.meta.get("oaipmhSetSpecs", []).add(it)
