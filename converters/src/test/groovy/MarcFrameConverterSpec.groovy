@@ -1,7 +1,7 @@
-package whelk.plugin.libris
+package whelk.converter
 
 
-import whelk.plugin.URIMinter
+
 import spock.lang.*
 
 
@@ -10,7 +10,7 @@ class MarcFrameConverterSpec extends Specification {
 
     static converter = new MarcFrameConverter() {
         def config
-        void initialize(URIMinter uriMinter, Map config) {
+        void initialize(LibrisURIMinter uriMinter, Map config) {
             super.initialize(uriMinter, config)
             this.config = config
             super.conversion.doPostProcessing = false

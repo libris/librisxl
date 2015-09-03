@@ -1,4 +1,4 @@
-package whelk.plugin.libris
+package whelk.converter
 
 import spock.lang.Specification
 import whelk.DefaultDocument
