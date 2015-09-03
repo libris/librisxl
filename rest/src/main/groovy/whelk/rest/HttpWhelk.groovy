@@ -159,7 +159,7 @@ class HttpWhelk extends HttpServlet {
 
         pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
 
-        pico.as(Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        //pico.as(Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
 
         pico.addComponent(DocumentAPI.class)

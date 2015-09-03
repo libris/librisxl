@@ -30,6 +30,11 @@ class DocumentAPI implements RestAPI {
     Map contextHeaders = [:]
     AccessControl accessControl = new AccessControl()
 
+    DocumentAPI(PostgreSQLComponent pg) {
+        storage = pg
+        log.info("Simpler constructor used.")
+    }
+
     DocumentAPI(PostgreSQLComponent pg, ElasticSearch es) {
         elastic = es
         storage = pg
