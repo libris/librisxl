@@ -1,4 +1,4 @@
-package whelk.converter
+package whelk.converter.marc
 
 import groovy.util.logging.Slf4j as Log
 
@@ -14,6 +14,7 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Document
+import whelk.converter.*
 
 import com.damnhandy.uri.template.UriTemplate
 import com.damnhandy.uri.template.UriUtil

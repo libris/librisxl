@@ -277,15 +277,20 @@ class PostgreSQLComponent {
             if (checksum) {
                 selectstmt.setString(2, checksum)
             }
+            log.trace("Executing query")
             rs = selectstmt.executeQuery()
+            log.trace("Executed query")
             if (rs.next()) {
+                log.trace("next")
                 def manifest = mapper.readValue(rs.getString("manifest"), Map)
                 if (!checksum) {
                     manifest.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
                     manifest.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
                     manifest.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
                 }
-                doc = docFactory.createDocument(mapper.readValue(rs.getString("data"), Map), manifest)
+                log.trace("About to create document")
+                doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest) // docFactory.createDocument(mapper.readValue(rs.getString("data"), Map), manifest)
+                log.trace("Created document with id ${doc.id}")
             } else if (log.isTraceEnabled()) {
                 log.trace("No results returned for get($id)")
             }

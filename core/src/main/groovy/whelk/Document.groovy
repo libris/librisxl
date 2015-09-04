@@ -23,8 +23,29 @@ class Document {
     Date created
     Date modified
 
+    Document(String id, Map data) {
+        this.id = id
+        this.data = data
+    }
+
+    Document(Map data, Map manifest) {
+        this.data = data
+        withManifest(manifest)
+    }
+
+    Document(String id, Map data, Map manifest) {
+        this.data = data
+        withManifest(manifest)
+        this.id = id
+    }
+
     void setContentType(String contentType) {
         withContentType(contentType)
+    }
+
+    void setData(Map data) {
+        this.data = data
+        calculateChecksum(mapper.writeValueAsBytes(data), mapper.writeValueAsBytes([:]))
     }
 
     String getDataAsString() {
@@ -35,11 +56,23 @@ class Document {
 
     String getContentType() { manifest[CONTENT_TYPE_KEY] }
 
+    @JsonIgnore
+    String getManifestAsJson() {
+        return mapper.writeValueAsString(manifest)
+    }
+
     Document withData(Map data) {
         this.data = data
         return this
     }
 
+    void setIdentifiers(List<String> identifiers) {
+        manifest.put("alternateIdentifiers", identifiers)
+    }
+
+    void addIdentifer(String identifier) {
+        manifest.get("alternateIdentifiers", []).add(identifier)
+    }
 
     Document withManifest(Map entrydata) {
         if (entrydata?.containsKey("identifier")) {

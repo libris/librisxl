@@ -10,6 +10,7 @@ import org.picocontainer.containers.PropertiesPicoContainer
 import whelk.Whelk
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
+import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.OaiPmhImporter
 import whelk.scheduler.ScheduledOperator
 
@@ -51,12 +52,14 @@ class OaiPmhImporterServlet extends HttpServlet {
         pico.as(Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
         pico.as(Characteristics.USE_NAMES).addComponent(OaiPmhImporter.class)
+        pico.addComponent(new MarcFrameConverter())
         pico.addComponent(ScheduledOperator.class)
         pico.addComponent(Whelk.class)
 
         pico.start()
 
-        pico.getComponent(ScheduledOperator.class)
+        ScheduledOperator operator = pico.getComponent(ScheduledOperator.class)
+        operator.start()
 
         log.info("Started ...")
     }

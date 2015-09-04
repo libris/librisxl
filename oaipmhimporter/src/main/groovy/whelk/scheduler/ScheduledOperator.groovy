@@ -1,6 +1,8 @@
 package whelk.scheduler
 
 import groovy.util.logging.Slf4j as Log
+import whelk.Document
+import whelk.component.PostgreSQLComponent
 
 import java.util.concurrent.*
 
@@ -12,16 +14,23 @@ class ScheduledOperator {
 
     String description = "Scheduled operator runner."
 
-    int scheduleDelaySeconds = 30
+    int scheduleDelaySeconds = 10
     int scheduleIntervalSeconds = 30
 
+    ScheduledExecutorService ses
+    OaiPmhImporter oaiPmhImporter
+    PostgreSQLComponent storage
 
-    ScheduledOperator(OaiPmhImporter opi) {
-        ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
+    ScheduledOperator(OaiPmhImporter opi, PostgreSQLComponent pg) {
+        oaiPmhImporter = opi
+        ses = Executors.newScheduledThreadPool(3)
+        storage = pg
+    }
 
+    void start() {
         for (dataset in ["auth", "bib", "hold"]) {
             log.info("Setting up schedule for $dataset")
-            def job = new ScheduledJob(opi, dataset)
+            def job = new ScheduledJob(oaiPmhImporter, dataset, storage)
             try {
                 ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
             } catch (RejectedExecutionException ree) {
@@ -46,20 +55,21 @@ class ScheduledJob implements Runnable {
 
     String dataset
     OaiPmhImporter importer
+    PostgreSQLComponent storage
 
-
-    ScheduledJob(OaiPmhImporter imp, String ds) {
+    ScheduledJob(OaiPmhImporter imp, String ds, PostgreSQLComponent pg) {
         this.importer = imp
         this.dataset = ds
+        this.storage = pg
     }
 
 
     void run() {
         assert dataset
 
-
+        def whelkState = storage.load("/sys/whelk.state")?.data ?: [:]
+        log.info("Current whelkstate: $whelkState")
         try {
-            def whelkState = [:]
             String lastImport = whelkState.get("lastImport")
             Date currentSince
             Date nextSince = new Date()
@@ -99,6 +109,8 @@ class ScheduledJob implements Runnable {
 
         } catch (Exception e) {
             log.error("Something failed: ${e.message}", e)
+        } finally {
+            storage.store(new Document("/sys/whelk.state", whelkState))
         }
     }
 

@@ -4,7 +4,7 @@ import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
 import whelk.converter.JsonLDLinkCompleterFilter
-import whelk.converter.MarcFrameConverter
+import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.WhelkAddException
 
 import java.text.*
@@ -45,12 +45,16 @@ class OaiPmhImporter {
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
+    String username, password
+
     boolean cancelled = false
 
-    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, String serviceUrl) {
+    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, String serviceUrl, String oaipmhUsername, String oaipmhPassword) {
         whelk = w
         this.serviceUrl = serviceUrl
         marcFrameConverter = mfc
+        username = oaipmhUsername
+        password = oaipmhPassword
     }
 
 
@@ -325,10 +329,10 @@ class OaiPmhImporter {
                     try {
                         if (marcFrameConverter && it.manifest.dataset != SUPPRESSRECORD_DATASET) {
                             log.trace("Conversion starts.")
-                            def doc = marcFrameConverter.doConvert(it.record, it.manifest)
+                            def doc = marcFrameConverter.convert(it.record, it.manifest)
                             log.trace("Convestion finished.")
                             if (it.originalIdentifier) {
-                                def dataMap = doc.dataAsMap
+                                def dataMap = doc.data
                                 dataMap['controlNumber'] = it.record.getControlfields("001").get(0).getData()
                                 doc = doc.withData(dataMap)
                                 doc.addIdentifier("/"+this.dataset+"/"+it.record.getControlfields("001").get(0).getData())
@@ -349,7 +353,7 @@ class OaiPmhImporter {
                                 convertedDocs.put(SUPPRESSRECORD_DATASET, [])
                             }
                             it.manifest['contentType'] = "application/x-marc-json"
-                            convertedDocs[(SUPPRESSRECORD_DATASET)] << whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest)
+                            convertedDocs[(SUPPRESSRECORD_DATASET)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)// whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest)
                         }
                     } catch (Exception e) {
                         log.error("Exception in conversion", e)
@@ -362,7 +366,7 @@ class OaiPmhImporter {
                         long elapsed = System.currentTimeMillis()
                         convertedDocs.each { ds, docList ->
                             log.info("Bulk saving ${docList.size()} documents to dataset $ds ...")
-                            this.whelk.bulkAdd(docList, ds, docList.get(0).contentType, prepareDocuments)
+                            this.whelk.bulkStore(docList, ds)
                         }
                         if ((System.currentTimeMillis() - elapsed) > 10000) {
                             log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
@@ -383,8 +387,6 @@ class OaiPmhImporter {
 
     private void getAuthentication() {
         try {
-            final String username = whelk.props.get("oaipmhUsername")
-            final String password = whelk.props.get("oaipmhPassword")
             Authenticator.setDefault(new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(username, password.toCharArray())

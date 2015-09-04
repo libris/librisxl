@@ -7,7 +7,7 @@ import groovy.util.logging.Slf4j as Log
 import whelk.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
-import whelk.converter.MarcJSONConverter
+import whelk.converter.marc.MarcFrameConverter
 
 @Log
 class MarcXml2JsonLDConverter {
