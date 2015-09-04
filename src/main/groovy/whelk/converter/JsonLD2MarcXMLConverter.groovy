@@ -28,25 +28,16 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
 
         MarcRecord record = JSONMarcConverter.fromJson(jsonDocument.getDataAsString())
 
-        /*
-        log.warn("APPLYING HACK TO MAKE APIX WORK!")
-        if (record.getLeader().length() < 24) {
-            log.warn("PADDING LEADER UNTIL 24 CHARS LONG!")
-            StringBuilder leaderBuilder = new StringBuilder(record.getLeader())
-            while (leaderBuilder.length() < 24) {
-                // pad before entryMap
-                leaderBuilder.insertAt(record.getLeader().length() - 4, " ")
+        log.debug("Clearing old 887 fields")
+        def newfieldList = []
+        record.fields.each {
+            if (it.tag == "887" && it.getSubfields("2")?.find { it.data == "librisxl" }) {
+                log.debug("Found 887 from librisxl. Does not add.")
+            } else {
+                newfieldList.add(it)
             }
-            record.setLeader(leaderBuilder.toString())
         }
-        def fields = record.fields.findAll { it.tag != "035" }
-        if (fields) {
-            log.warn("REMOVING 035")
-            record.fields = fields
-        }
-        */
-
-        log.debug("Creating new document ${doc.identifier} from doc with entry: ${doc.entry} and meta: ${doc.meta}")
+        record.fields = newfieldList
 
         log.debug("Setting document identifier in field 887.")
         def df = record.createDatafield("887")
@@ -54,6 +45,7 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
         df.addSubfield("2".charAt(0), "librisxl")
         record.addField(df)
 
+        log.debug("Creating new document ${doc.identifier} from doc with entry: ${doc.entry} and meta: ${doc.meta}")
         Document xmlDocument = whelk.createDocument(getResultContentType()).withEntry(doc.entry).withContentType(getResultContentType()).withData(whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record))
 
         log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.entry} and meta: ${xmlDocument.meta}")
