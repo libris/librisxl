@@ -1,4 +1,4 @@
-package whelk.plugin.libris
+package whelk.converter
 
 import groovy.util.logging.Slf4j as Log
 
@@ -14,19 +14,15 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Document
-import whelk.plugin.*
-import whelk.StandardWhelk
-
-import whelk.converter.MarcJSONConverter
 
 import com.damnhandy.uri.template.UriTemplate
 import com.damnhandy.uri.template.UriUtil
 
 
 @Log
-class MarcFrameConverter extends BasicFormatConverter {
+class MarcFrameConverter implements FormatConverter { // extends BasicFormatConverter {
 
-    URIMinter uriMinter
+    LibrisURIMinter uriMinter
     ObjectMapper mapper = new ObjectMapper()
 
     protected MarcConversion conversion
@@ -49,11 +45,11 @@ class MarcFrameConverter extends BasicFormatConverter {
         initialize(uriMinter, config)
     }
 
-    MarcFrameConverter(URIMinter uriMinter, Map config) {
+    MarcFrameConverter(LibrisURIMinter uriMinter, Map config) {
         initialize(uriMinter, config)
     }
 
-    void initialize(URIMinter uriMinter, Map config) {
+    void initialize(LibrisURIMinter uriMinter, Map config) {
         def tokenMaps = [:]
         def loader = getClass().classLoader
         config.tokenMaps.each { key, sourceRef ->
@@ -82,7 +78,7 @@ class MarcFrameConverter extends BasicFormatConverter {
     @Override
     String getRequiredContentType() { "application/x-marc-json" }
 
-    Document doConvert(final Object record, final Map metaentry) {
+    Document convert(final Object record, final Map metaentry) {
         try {
             def source = MarcJSONConverter.toJSONMap(record)
             def result = runConvert(source, metaentry.extraData)
@@ -95,8 +91,7 @@ class MarcFrameConverter extends BasicFormatConverter {
         }
     }
 
-    @Override
-    Document doConvert(final Document doc) {
+    Document convert(final Document doc) {
         def source = doc.dataAsMap
         def meta = doc.meta
         def result = runConvert(source, meta)
@@ -142,9 +137,9 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
 
-    URIMinter uriMinter
+    LibrisURIMinter uriMinter
 
-    MarcConversion(Map config, URIMinter uriMinter, Map tokenMaps) {
+    MarcConversion(Map config, LibrisURIMinter uriMinter, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps
