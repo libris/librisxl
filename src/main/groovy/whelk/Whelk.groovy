@@ -26,9 +26,11 @@ class Whelk {
         }
     }
 
-    void bulkStore(List<Document> documents) {
-        if (storage.bulkStore(documents, documents.first().dataset)) {
+    void bulkStore(List<Document> documents, String dataset) {
+        if (storage.bulkStore(documents, dataset)) {
             //elastic.bulkIndex(documents)
         }
     }
+
+    void remove(String id, String dataset) {}
 }
