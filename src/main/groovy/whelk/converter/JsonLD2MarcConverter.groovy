@@ -3,6 +3,7 @@ package whelk.converter
 import groovy.util.logging.Slf4j as Log
 
 import whelk.*
+import whelk.converter.marc.*
 
 @Log
 class JsonLD2MarcConverter implements FormatConverter {
@@ -41,7 +42,7 @@ class JsonLD2MarcConverter implements FormatConverter {
 
     @Override
     Document convert(final Document doc) {
-        def source = doc.dataAsMap
+        def source = doc.data
         def result = conversion.revert(source)
         log.trace("Created frame: $result")
 
