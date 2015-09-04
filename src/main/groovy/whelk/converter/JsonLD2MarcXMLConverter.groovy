@@ -43,7 +43,7 @@ class JsonLD2MarcXMLConverter extends BasicFormatConverter {
             df.addSubfield("2".charAt(0), "librisxl")
             record.addField(df)
         }
-
+        log.debug("Creating new document ${doc.identifier} from doc with entry: ${doc.entry} and meta: ${doc.meta}")
         Document xmlDocument = whelk.createDocument(getResultContentType()).withEntry(doc.entry).withContentType(getResultContentType()).withData(whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record))
 
         log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.entry} and meta: ${xmlDocument.meta}")
