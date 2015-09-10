@@ -41,7 +41,7 @@ class NewLibrisOaiPmhImporter extends BasicOaiPmhImporter implements Importer {
                 def meta = [:]
 
                 if (preserveTimestamps && it.header.datestamp) {
-                    def date = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", it.header.datestamp.toString())
+                    def date = Date.parse("yyyy-MM-dd'T'HH:mm:ssX", it.header.datestamp.toString())
                     entry.put("modified", date.getTime())
                 }
 

@@ -42,7 +42,6 @@ class StandardWhelk implements Whelk {
     // Set by configuration
     private Map globalProperties = [:]
     URI docBaseUri
-    Map documentDataToMetaMapping = null
 
     final static ObjectMapper mapper = new ObjectMapper()
 
@@ -92,6 +91,10 @@ class StandardWhelk implements Whelk {
             log.debug("Storage ${storage.id} result from save: $saved")
         }
         if (saved) {
+            if (index) {
+                // Index synchronously for single documents.
+                getIndex().index(doc.identifier, doc.dataset, ((JsonDocument)doc).getDataAsMap())
+            }
             if (!minorUpdate) {
                 notifyCamel(doc, ADD_OPERATION, [:])
             } else if (log.isDebugEnabled()) {
@@ -182,12 +185,10 @@ class StandardWhelk implements Whelk {
      */
     @groovy.transform.CompileStatic
     void bulkAdd(final List<Document> docs, String dataset, String contentType, boolean prepareDocuments = true) {
-        //checkAvailableMemory()
         log.debug("Bulk add ${docs.size()} documents")
         def suitableStorages = getWriteStorages(contentType)
-        if (suitableStorages.isEmpty()) { 
-            log.debug("No storages found for $contentType.")
-            return
+        if (suitableStorages.isEmpty()) {
+            throw new WhelkStorageException("No storages found for $contentType.")
         }
         if (prepareDocuments) {
             for (doc in docs) {
@@ -253,7 +254,7 @@ class StandardWhelk implements Whelk {
                 log.trace("New place to look: $identifier")
             }
             log.debug("Checking if new identifier (${identifier}) has something to get")
-            if (get(identifier)) {
+            if (get(identifier, null, [], false)) {
                 return new Location().withURI(new URI(identifier)).withResponseCode(303)
             }
 
@@ -294,9 +295,14 @@ class StandardWhelk implements Whelk {
     }
 
     void remove(String id, String dataset = null) {
-        def doc= get(id)
+        def location = locate(id)
+        def doc = location?.document
+
         if (doc?.dataset) {
             dataset = doc.dataset
+        }
+        if (!doc && location && location.responseCode > 300 && location.responseCode < 400) {
+            id = location.uri.toString()
         }
         if (!dataset) {
             dataset = plugins.find { it instanceof ShapeComputer }?.calculateTypeFromIdentifier(id)
@@ -306,7 +312,11 @@ class StandardWhelk implements Whelk {
             ((Component)it).remove(id, dataset)
         }
         log.debug("Sending DELETE operation to camel.")
-        log.debug("document has identifier: ${doc?.identifier} with dataset ${dataset}")
+        if (log.isDebugEnabled() && doc) {
+            log.debug("Sending DELETE operation to camel for document with identifier: ${doc?.identifier} with dataset ${dataset}")
+        } else if (log.isDebugEnabled()) {
+            log.debug("Sending DELETE operation to camel for identifier: ${id} with dataset ${dataset}")
+        }
         def extraInfo = [:]
         if (doc && !doc.deleted && doc instanceof JsonDocument) {
             // Temporary necessity to handle removal of librisxl-born documents from voyager
@@ -337,40 +347,6 @@ class StandardWhelk implements Whelk {
             // TODO: Make this configurable, or move it to uriminter
             if (map.containsKey("about") && !map.get("about")?.containsKey("@id")) {
                 map.get("about").put("@id", "/resource"+doc.identifier)
-            }
-            // Remove modified from jsonld documents prior to saving, to avoid messing up checksum.
-            /* Necessary anymore?
-            if (map.containsKey("modified")) {
-                map.put("modified", null)
-            }
-            */
-            if (documentDataToMetaMapping) {
-                def meta = doc.meta
-                boolean modified = false
-                documentDataToMetaMapping.each { dset, rules ->
-                    if (doc.getDataset() == dset) {
-                        rules.each { jsonldpath ->
-                            try {
-                                def value = Eval.x(map, "x.$jsonldpath")
-                                if (value) {
-                                    meta = Tools.insertAt(meta, jsonldpath, value)
-                                    modified = true
-                                }
-                            } catch (MissingPropertyException mpe) {
-                                log.trace("Unable to set meta property $jsonldpath : $mpe")
-                            } catch (NullPointerException npe) {
-                                log.warn("Failed to set $jsonldpath for $meta")
-                            } catch (Exception e) {
-                                log.error("Failed to extract meta info: $e", e)
-                                throw e
-                            }
-                        }
-                    }
-                }
-                if (modified) {
-                    log.trace("Document meta is modified. Setting new values.")
-                    doc.withMeta(meta)
-                }
             }
             doc.withData(map)
         }
@@ -463,6 +439,17 @@ class StandardWhelk implements Whelk {
     }
 
     @Override
+    Document createDocument(Map data, Map entry, Map meta) {
+        Document document = new JsonDocument().withData(data).withMeta(meta).withEntry(entry)
+        if (document.contentType == "application/ld+json") {
+            return new JsonLdDocument().fromDocument(document)
+        } else {
+            return new JsonDocument().fromDocument(document)
+        }
+        return document
+    }
+
+    @Override
     void flush() {
         log.debug("Flushing data.")
         // TODO: Implement storage and graphstore flush if necessary
@@ -481,7 +468,7 @@ class StandardWhelk implements Whelk {
     @Override
     void notifyCamel(String identifier, String dataset, String operation, Map extraInfo) {
         if (camelContext) {
-            Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, "text/plain", identifier, extraInfo)
+            Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, "text/plain", 0, identifier, extraInfo)
             log.trace("Sending $operation message to camel regaring ${identifier}")
             sendCamelMessage(operation, exchange)
         }
@@ -490,14 +477,14 @@ class StandardWhelk implements Whelk {
     @Override
     void notifyCamel(Document document, String operation, Map extraInfo) {
         if (camelContext) {
-            Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, document.contentType, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
+            Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, document.contentType, document.modified, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
             log.trace("Sending document in message to camel regaring ${document.identifier} with operation $operation")
             exchange.getIn().setHeader("document:metaentry", document.metadataAsJson)
             sendCamelMessage(operation, exchange)
         }
     }
 
-    private Exchange createAndPrepareExchange(String identifier, String dataset, String operation, String contentType, Object messageBody, Map extraInfo) {
+    private Exchange createAndPrepareExchange(String identifier, String dataset, String operation, String contentType, long timestamp, Object messageBody, Map extraInfo) {
         Exchange exchange = new DefaultExchange(getCamelContext())
         Message message = new DefaultMessage()
 
@@ -510,6 +497,7 @@ class StandardWhelk implements Whelk {
         message.setHeader("document:identifier", identifier)
         message.setHeader("document:dataset", dataset)
         message.setHeader("document:contentType", contentType)
+        message.setHeader("document:timestamp", timestamp)
 
         message.setBody(messageBody)
         exchange.setIn(message)
@@ -531,33 +519,9 @@ class StandardWhelk implements Whelk {
         def comp = props.get("CAMEL_MASTER_COMPONENT") ?: "seda"
         def prefix = props.get("CAMEL_CHANNEL_PREFIX") ?: ""
         def config = props.get("CAMEL_COMPONENT_CONFIG") ?: ""
-        return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withConfig && config ? "?"+config : "")
+        //return comp+":"+(prefix? prefix + "." :"")+this.id+"."+operation + (withConfig && config ? "?"+config : "")
+        return comp+":"+(prefix? prefix + "." :"")+this.id + (withConfig && config ? "?"+config : "")
     }
-
-    private checkAvailableMemory() {
-        boolean logMessagePrinted = false
-        MemoryMXBean mem=ManagementFactory.getMemoryMXBean();
-        MemoryUsage heap=mem.getHeapMemoryUsage();
-
-        long totalMemory=heap.getUsed();
-        long maxMemory=heap.getMax();
-        long used=(totalMemory * 100) / maxMemory;
-
-        log.debug("totalMemory: $totalMemory")
-        log.debug("maxMemory: $maxMemory")
-        log.debug("used: $used")
-
-        while (used > MAX_MEMORY_THRESHOLD) {
-            if (!logMessagePrinted) {
-                log.warn("Using more than $MAX_MEMORY_THRESHOLD percent of available memory ($totalMemory / $maxMemory). Blocking.")
-                logMessagePrinted = true
-            }
-            totalMemory=heap.getUsed();
-            maxMemory=heap.getMax();
-            used=(totalMemory * 100) / maxMemory; // comment to fix highlighting in vim ... */
-        }
-    }
-
 
     @Override
     void setProps(final Map global) {
@@ -606,6 +570,9 @@ class StandardWhelk implements Whelk {
         return identifier
     }
 
+    Map lastUpdate(String identifier) {
+        return getStorage().status(identifier)
+    }
 
     @Override
     void init() {
@@ -629,13 +596,7 @@ class StandardWhelk implements Whelk {
                 component.start()
             }
             log.debug("Setting up and configuring Apache Camel")
-            def whelkCamelMain = new WhelkCamelMain(
-                    getCamelEndpoint(ADD_OPERATION, true),
-                    getCamelEndpoint(BULK_ADD_OPERATION, true),
-                    getCamelEndpoint(REMOVE_OPERATION, true)
-                )
-
-
+            def whelkCamelMain = new WhelkCamelMain( getCamelEndpoint(ADD_OPERATION, true) )
 
             if (props.containsKey('ACTIVEMQ_BROKER_URL')) {
                 ActiveMQComponent amqreceive = ActiveMQComponent.activeMQComponent()
@@ -786,7 +747,6 @@ class StandardWhelk implements Whelk {
         def disabled = System.getProperty("disable.plugins", "").split(",")
         setId(whelkConfig["_id"])
         setDocBaseUri(whelkConfig["_docBaseUri"])
-        documentDataToMetaMapping = whelkConfig["_docMetaMapping"]
         setProps(whelkConfig.get("_properties"))
         // Some configurations might want to start services to act standalone
         whelkConfig["_supportplugins"].each { p ->

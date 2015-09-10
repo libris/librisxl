@@ -8,11 +8,13 @@ import whelk.plugin.libris.MarcFrameConverter
 
 class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
 
+    static int limit = -1
+
     int counter = 0
     String dest
     MarcFrameConverter converter
     ObjectMapper mapper
-    OutputStream out
+    Writer writer
     String baseIri
     def jsonLdContext
     JsonLdToTurtle turtleSerializer
@@ -32,10 +34,11 @@ class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
 
     void run(startUrl, name, passwd) {
         new File(dest).withOutputStream {
-            this.out = it
             if (jsonLdContext) {
-                turtleSerializer = new JsonLdToTurtle(jsonLdContext, out, baseIri)
+                turtleSerializer = new JsonLdToTurtle(jsonLdContext, it, baseIri)
                 turtleSerializer.prelude()
+            } else {
+                writer = it.newWriter('UTF-8')
             }
             parseOaipmh(startUrl, name, passwd, null)
         }
@@ -64,6 +67,8 @@ class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
                     println "Record: $it"
                 }
             }
+            if (limit > -1 && counter == limit)
+                throw new BreakException()
         }
     }
 
@@ -73,7 +78,8 @@ class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
             marcXmlToTurtle(id, jsonld)
         } else {
             def repr = mapper.writeValueAsString(jsonld)
-            out.println(repr)
+            writer.write(repr)
+            writer.write('\n')
         }
     }
 
@@ -87,14 +93,52 @@ class OaiPmhToJsonLdDataset extends BasicOaiPmhImporter {
         return converter.runConvert(source)
     }
 
-    static void main(args) {
+    static void main(argv) {
+        def cli = new CliBuilder(usage:'SCRIPT [OPTS] START_URL DEST_FILE')
+        cli.u(args:1, 'set user:password')
+        cli.l(args:1, 'set limit')
+        cli.b(args:1, 'set base')
+        cli.c(args:1, 'set context for Trig output')
+        cli.p('use profiler')
+        def opts = cli.parse(argv)
+        def args = opts.arguments()
+
+        if (args.size() == 0) {
+            println cli.usage()
+            System.exit(0)
+        }
+
         def startUrl = args[0]
-        def name = args[1]
-        def passwd = args[2]
-        def dest = args[3]
-        def base = args.length >= 5? args[4] : null
-        def ctxPath = args.length >= 6? args[5] : null
-        new OaiPmhToJsonLdDataset(dest, base, ctxPath).run(startUrl, name, passwd)
+        def dest = args[1]
+        def (name, passwd) = (opts.u ?: " : ").split(':').collect { it.trim() }
+        def base = opts.b ?: null
+        def ctxPath = opts.c ?: null
+        if (opts.l) {
+            OaiPmhToJsonLdDataset.limit = Integer.parseInt(opts.l)
+            println "Limit set to $opts.l"
+        }
+
+        def profiler = opts.p? new groovyx.gprof.Profiler() : null
+
+        if (profiler) {
+            println "Using profiler"
+            profiler.start()
+        }
+
+        try {
+            new OaiPmhToJsonLdDataset(dest, base, ctxPath).run(startUrl, name, passwd)
+        } catch (BreakException e) {
+            println "Break"
+        }
+
+        if (profiler) {
+            profiler.stop()
+            println ">" * 42
+            profiler.report.flat.prettyPrint()
+            println "<" * 42
+        }
     }
+
+    static class BreakException extends Exception {}
 
 }

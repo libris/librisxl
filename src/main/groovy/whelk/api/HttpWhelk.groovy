@@ -139,7 +139,7 @@ class HttpWhelk extends HttpServlet {
     }
 
     protected void setConfig(whelkConfig, pluginConfig) {
-        log.info("Running setConfig in servlet.")
+        log.debug("Running setConfig in servlet.")
         whelkConfig["_apis"].each { apiEntry ->
             apiEntry.each {
                 log.debug("Found api: ${it.value}, should attach at ${it.key}")

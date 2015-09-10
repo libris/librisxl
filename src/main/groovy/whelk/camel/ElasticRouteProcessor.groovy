@@ -9,6 +9,7 @@ import whelk.plugin.*
 import org.apache.camel.*
 
 import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.action.delete.DeleteRequest
 
 @Log
 class ElasticRouteProcessor extends BasicPlugin implements Processor {
@@ -51,13 +52,18 @@ class ElasticRouteProcessor extends BasicPlugin implements Processor {
         if (operation == Whelk.BULK_ADD_OPERATION) {
             operation = "BULK_INDEX"
         }
-        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexType=${indexType}&indexName=${indexName}")
-        log.debug("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $elasticId)");
         if (operation == Whelk.REMOVE_OPERATION) {
-            log.debug(">>> Setting message body to $elasticId in preparation for REMOVE operation.")
-            message.setBody(elasticId)
-        } else {
+            operation = "DELETE"
+        }
+        message.setHeader("elasticDestination", "elasticsearch://${elasticCluster}?ip=${elasticHost}&port=${elasticPort}&operation=${operation}&indexType=${indexType}&indexName=${indexName}")
+        log.trace("Processing $operation MQ message for ${indexName}. ID: $identifier (encoded: $elasticId)");
+        if (operation == Whelk.REMOVE_OPERATION) {
+            log.debug("Setting message body to delete request for $elasticId in preparation for REMOVE operation.")
             log.debug("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
+            def delReq = new DeleteRequest(indexName, indexType, elasticId)
+            message.setBody(delReq)
+        } else {
+            log.trace("Setting elasticDestination: ${message.getHeader('elasticDestination')}")
             def dataMap = message.getBody(Map.class)
             for (filter in filters) {
                 log.trace("Applying filter ${filter.id} on ${identifier} for dataset $dataset")

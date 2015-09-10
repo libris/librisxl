@@ -21,6 +21,7 @@ public final class ActiveMQPooledConnectionFactory {
         pooled.setConnectionFactory(cf)
         pooled.setMaxConnections(maxConnections)
         pooled.setMaximumActiveSessionPerConnection(maxActive)
+        pooled.setIdleTimeout(0)
         return pooled
     }
 

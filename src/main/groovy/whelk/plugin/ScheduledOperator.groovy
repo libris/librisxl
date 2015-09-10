@@ -53,7 +53,7 @@ class ScheduledOperator extends BasicPlugin {
 @Log
 class ScheduledJob implements Runnable {
 
-    static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+    static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
     String id, dataset
     Importer importer
@@ -103,10 +103,11 @@ class ScheduledJob implements Runnable {
             def result = importer.doImport(dataset, null, -1, true, true, nextSince)
 
             int totalCount = result.numberOfDocuments
-            if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0) {
+            if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
                 log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $dataset. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
                 whelkState.put("lastImportNrImported", result.numberOfDocuments)
                 whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
+                whelkState.put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
                 whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
             } else {
                 log.debug("Imported ${result.numberOfDocuments} document for $dataset.")

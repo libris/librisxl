@@ -30,6 +30,7 @@ class ScheduledOperatorSpec extends Specification {
         sjob.run()
         then:
         whelk.state[ds].lastImport == imports[0]
+        !whelk.state[ds].lock
 
         and: "none in this one"
         sjob.run()

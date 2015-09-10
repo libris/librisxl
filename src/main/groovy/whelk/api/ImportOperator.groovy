@@ -43,7 +43,7 @@ class ImportOperator extends AbstractOperator {
             if (dateString.length() == 10) {
                 this.since = Date.parse('yyyy-MM-dd', dateString)
             } else if (dateString.length() > 10) {
-                this.since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dateString)
+                this.since = Date.parse("yyyy-MM-dd'T'HH:mm:ssX", dateString)
             }
         }
         this.startAtId = parameters.get("startAt") as Integer ?: startAtId
@@ -83,7 +83,7 @@ class ImportOperator extends AbstractOperator {
                         log.trace("whelkState: $whelkState")
                         String dString = whelkState.get("lastImport")
                         if (dString) {
-                            since = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dString)
+                            since = Date.parse("yyyy-MM-dd'T'HH:mm:ssX", dString)
                         } else {
                             since = new Date()
                             def lastWeeksDate = since[Calendar.DATE] - 7
@@ -110,7 +110,7 @@ class ImportOperator extends AbstractOperator {
                     log.trace("Total count is now: $totalCount")
                     whelkState.remove("importOperator")
                     whelkState.put("status", "IDLE")
-                    whelkState.put("lastImport", dateStamp.format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+                    whelkState.put("lastImport", dateStamp.format("yyyy-MM-dd'T'HH:mm:ssX"))
                     whelkState.put("lastImportOperator", this.id)
                     whelkState.put("lastRunNrImported", dsImportCount)
                     whelk.updateState(ds, whelkState)

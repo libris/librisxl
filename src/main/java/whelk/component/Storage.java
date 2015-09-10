@@ -43,6 +43,13 @@ public interface Storage extends Component {
 
     public List<Document> loadAllVersions(String identifier);
     /**
+     * Returns information about a documents status. 
+     * @return a Map containing information about if the document 'exists', its 'lastUpdate' and if it is 'deleted'.
+     */
+    public Map<String,Object> status(String identifier);
+
+
+    /**
      * @return true if this storage can handle documents of this kind.
      */
     public boolean handlesContent(String contentType);

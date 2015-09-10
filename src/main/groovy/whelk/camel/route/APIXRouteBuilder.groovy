@@ -3,18 +3,18 @@ package whelk.camel.route
 import groovy.util.logging.Slf4j as Log
 
 import whelk.camel.*
+import whelk.Whelk
 
 import org.apache.camel.*
 import org.apache.camel.component.http4.*
 
 class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
 
-    String messageQueue, bulkMessageQueue, removeQueue, retriesQueue, apixUri = null
+    String messageQueue, retriesQueue, apixUri = null
 
     APIXRouteBuilder(Map settings) {
         messageQueue = settings.get("apixMessageQueue")
         retriesQueue = settings.get("retriesQueue")
-        removeQueue = messageQueue
         apixUri = settings.get("apixUri")
     }
 
@@ -50,6 +50,7 @@ class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
 
 
         from(messageQueue)
+            .filter("groovy", "['${Whelk.ADD_OPERATION}', '${Whelk.REMOVE_OPERATION}'].contains(request.getHeader('whelk:operation'))")
             .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('document:dataset'))") // Only save auth hold and bib
             .process(apixProcessor)
             .to(apixUri)

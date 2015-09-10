@@ -625,8 +625,7 @@
         "_params": {
             "elasticBatchSize": 2000,
             "batchTimeout": 5000,
-            "indexMessageQueue": "_property:MQ_INDEX",
-            "bulkIndexMessageQueue": "_property:MQ_BULK_INDEX"
+            "messageQueue": "_property:MQ_INDEX"
         }
     },
     "graphstoreroutebuilder": {
@@ -683,7 +682,7 @@
         "_params" : {
             "availableTypes": "_property:AVAILABLE_TYPES",
             "databaseUrl": "_property:DATABASE_URL",
-            "contentTypes": ["application/ld+json"],
+            "contentTypes": ["application/ld+json","application/x-marc-json"],
             "versioning" : true
         }
     },

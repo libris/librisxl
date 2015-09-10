@@ -11,6 +11,16 @@
             "date_detection": false,
             "dynamic_templates": [
                 {
+                    "context_template": {
+                        "mapping": {
+                            "type": "object",
+                            "enabled": false
+
+                        },
+                        "match": "@context"
+                    }
+                },
+                {
                     "type_template": {
                         "mapping": {
                             "index": "not_analyzed",
@@ -282,6 +292,14 @@
                             }
                         }
                     }
+                }
+            }
+        },
+        "def": {
+            "properties": {
+                "index": {
+                    "type": "object",
+                    "enabled": false
                 }
             }
         }

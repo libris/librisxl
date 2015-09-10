@@ -47,13 +47,13 @@ abstract class BasicOaiPmhImporter {
         } else {
             params = "?verb=ListRecords&metadataPrefix=marcxml"
             if (since) {
-                params += "&from=" + since.format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+                params += "&from=" + since.format("yyyy-MM-dd'T'HH:mm:ssX")
             }
         }
         return startUrl + params
     }
 
-    private void getAuthentication(username, password) {
+    protected void getAuthentication(username, password) {
         Authenticator.setDefault(new Authenticator() {
                 protected PasswordAuthentication getPasswordAuthentication() {
                     return new PasswordAuthentication(username, password.toCharArray())

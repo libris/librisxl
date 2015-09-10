@@ -33,7 +33,7 @@ try {
 } catch (Exception e) {}
 
 // Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
-version = versionprops.get("releaseTag", "0.8.14.x")
+version = versionprops.get("releaseTag", "0.8.15.x")
 
 archivesBaseName = "whelk"
 
@@ -80,7 +80,7 @@ buildscript {
 
 dependencies {
     def camelVersion = "2.14.1"
-    def activeMQVersion = "5.10.0"
+    def activeMQVersion = "5.11.1"
     def groovyVersion="2.3.9"
     def jettyVersion="8.1.16.v20140903"
 
@@ -111,7 +111,6 @@ dependencies {
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile "org.apache.camel:camel-core:${camelVersion}"
     compile "org.apache.camel:camel-elasticsearch:2.15.0"
-    //compile "org.apache.camel:camel-elasticsearch:2.14.2-SNAPSHOT"
     compile "org.apache.camel:camel-jackson:${camelVersion}"
     compile "org.apache.camel:camel-http4:${camelVersion}"
     compile "org.apache.camel:camel-groovy:${camelVersion}"
@@ -129,6 +128,9 @@ dependencies {
     // Servlet dependencies
     compile 'com.thetransactioncompany:cors-filter:2.1.2'
     providedCompile 'javax.servlet:servlet-api:2.5'
+
+    // profiling and test
+    testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
     testCompile 'cglib:cglib-nodep:3.1'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 
@@ -171,7 +173,7 @@ war {
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
-    classpath = sourceSets.main.runtimeClasspath
+    classpath = sourceSets.test.runtimeClasspath
     main = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
 }
