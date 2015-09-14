@@ -112,18 +112,19 @@ class PostgreSQLComponent {
         return statusMap
     }
 
+    // TODO: get modified and created from the database
     boolean store(Document doc, boolean withVersioning = versioning) {
         log.debug("Document ${doc.identifier} checksum before save: ${doc.checksum}")
-        if (versioning && withVersioning) {
-            if (!saveVersion(doc)) {
-                return true // Same document already in storage.
-            }
-        }
         assert doc.dataset
         log.debug("Saving document ${doc.identifier} (with checksum: ${doc.checksum})")
         Connection connection = connectionPool.getConnection()
-        PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT) //.replaceAll(/\{tableName\}/, mainTableName + "_" + doc.dataset))
         try {
+            if (versioning && withVersioning) {
+                if (!saveVersion(doc, connection)) {
+                    return true // Same document already in storage.
+                }
+            }
+            PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT) //.replaceAll(/\{tableName\}/, mainTableName + "_" + doc.dataset))
             insert = rigUpsertStatement(insert, doc)
             insert.executeUpdate()
             return true
@@ -140,7 +141,7 @@ class PostgreSQLComponent {
     private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc) {
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(2, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setTimestamp(3, new Timestamp(doc.modified))
+        insert.setTimestamp(3, new Timestamp(doc.modified.getTime()))
         insert.setBoolean(4, doc.isDeleted())
         insert.setString(5, doc.identifier)
         insert.setString(6, doc.identifier)
@@ -151,8 +152,7 @@ class PostgreSQLComponent {
         return insert
     }
 
-    boolean saveVersion(Document doc) {
-        Connection connection = connectionPool.getConnection()
+    boolean saveVersion(Document doc, Connection connection) {
         PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: ${doc.modified}")
@@ -163,9 +163,6 @@ class PostgreSQLComponent {
         } catch (Exception e) {
             log.error("Failed to save document version: ${e.message}")
             throw e
-        } finally {
-            connection.close()
-            log.debug("[saveVersion] Closed connection.")
         }
     }
 
