@@ -14,16 +14,19 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Document
-import whelk.converter.*
+
+import whelk.converter.FormatConverter
+import whelk.converter.MarcJSONConverter
+import whelk.converter.URIMinter
 
 import com.damnhandy.uri.template.UriTemplate
 import com.damnhandy.uri.template.UriUtil
 
 
 @Log
-class MarcFrameConverter implements FormatConverter { // extends BasicFormatConverter {
+class MarcFrameConverter implements FormatConverter {
 
-    LibrisURIMinter uriMinter
+    URIMinter uriMinter
     ObjectMapper mapper = new ObjectMapper()
 
     protected MarcConversion conversion
@@ -38,7 +41,7 @@ class MarcFrameConverter implements FormatConverter { // extends BasicFormatConv
     MarcFrameConverter(uriSpacePath="ext/oldspace.json") {
         def loader = getClass().classLoader
         loader.getResourceAsStream(uriSpacePath).withStream {
-            uriMinter = new LibrisURIMinter(mapper.readValue(it, Map))
+            uriMinter = new URIMinter(mapper.readValue(it, Map))
         }
         def config = loader.getResourceAsStream("ext/marcframe.json").withStream {
             mapper.readValue(it, Map)
@@ -46,11 +49,11 @@ class MarcFrameConverter implements FormatConverter { // extends BasicFormatConv
         initialize(uriMinter, config)
     }
 
-    MarcFrameConverter(LibrisURIMinter uriMinter, Map config) {
+    MarcFrameConverter(URIMinter uriMinter, Map config) {
         initialize(uriMinter, config)
     }
 
-    void initialize(LibrisURIMinter uriMinter, Map config) {
+    void initialize(URIMinter uriMinter, Map config) {
         def tokenMaps = [:]
         def loader = getClass().classLoader
         config.tokenMaps.each { key, sourceRef ->
@@ -79,7 +82,7 @@ class MarcFrameConverter implements FormatConverter { // extends BasicFormatConv
     @Override
     String getRequiredContentType() { "application/x-marc-json" }
 
-    Document convert(final Object record, final Map metaentry) {
+    Document doConvert(final Object record, final Map metaentry) {
         try {
             def source = MarcJSONConverter.toJSONMap(record)
             def result = runConvert(source, metaentry.extraData)
@@ -92,6 +95,7 @@ class MarcFrameConverter implements FormatConverter { // extends BasicFormatConv
         }
     }
 
+    @Override
     Document convert(final Document doc) {
         def source = doc.dataAsMap
         def meta = doc.meta
@@ -138,9 +142,9 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
 
-    LibrisURIMinter uriMinter
+    URIMinter uriMinter
 
-    MarcConversion(Map config, LibrisURIMinter uriMinter, Map tokenMaps) {
+    MarcConversion(Map config, URIMinter uriMinter, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps

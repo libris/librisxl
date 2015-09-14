@@ -9,7 +9,7 @@ import whelk.plugin.*
 
 
 @Log
-class LibrisURIMinter {
+class URIMinter {
 
     static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
     static final char[] VOWELS = "auoeiy".chars
@@ -38,7 +38,7 @@ class LibrisURIMinter {
     private long epochOffset
     private int checkForWordsMinSize = maxWordsInSlug * (shortWordSize + 1)
 
-    LibrisURIMinter() {
+    URIMinter() {
         if (base != null) {
             this.setBase(base)
         }

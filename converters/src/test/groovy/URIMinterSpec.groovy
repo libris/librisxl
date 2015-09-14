@@ -3,11 +3,11 @@ package whelk.converter
 import spock.lang.Specification
 
 
-class LibrisURIMinterSpec extends Specification {
+class URIMinterSpec extends Specification {
 
     def "should base encode numbers"() {
         given:
-        def minter = new LibrisURIMinter(alphabet: LibrisURIMinter.DEVOWELLED)
+        def minter = new URIMinter(alphabet: URIMinter.DEVOWELLED)
         expect:
         minter.baseEncode(n, caesared) == expected
 
@@ -26,7 +26,7 @@ class LibrisURIMinterSpec extends Specification {
 
     def "should scramble slug"() {
         given:
-        def minter = new LibrisURIMinter(
+        def minter = new URIMinter(
                 alphabet: "0123456789bcdfghjklmnpqrstvwxz",
                 slugCharInAlphabet: true,
                 minSlugSize: 3)
@@ -41,7 +41,7 @@ class LibrisURIMinterSpec extends Specification {
 
     def "should shorten words in strings with many words"() {
         given:
-        def minter = new LibrisURIMinter(maxWordsInSlug: 4, shortWordSize: 2)
+        def minter = new URIMinter(maxWordsInSlug: 4, shortWordSize: 2)
         expect:
         minter.shorten(text) == shortened ?: text
         where:
@@ -54,7 +54,7 @@ class LibrisURIMinterSpec extends Specification {
 
     def "should compute path from data using variables and compound keys"() {
         given:
-        def minter = new LibrisURIMinter(config)
+        def minter = new URIMinter(config)
         minter.metaClass.createRandom = { 898 }
         minter.metaClass.createTimestamp = { 139409779957 }
         expect:

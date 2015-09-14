@@ -3,12 +3,12 @@ package whelk.converter
 import groovy.util.logging.Slf4j as Log
 
 import whelk.*
-import whelk.converter.marc.*
+import whelk.converter.marc.MarcConversion
 
 @Log
 class JsonLD2MarcConverter implements FormatConverter {
 
-    LibrisURIMinter uriMinter
+    URIMinter uriMinter
     protected MarcConversion conversion
 
     @Override
@@ -21,7 +21,7 @@ class JsonLD2MarcConverter implements FormatConverter {
         def loader = getClass().classLoader
 
         loader.getResourceAsStream("ext/oldspace.json").withStream {
-            uriMinter = new LibrisURIMinter(mapper.readValue(it, Map))
+            uriMinter = new URIMinter(mapper.readValue(it, Map))
         }
 
         def config = loader.getResourceAsStream("ext/marcframe.json").withStream {

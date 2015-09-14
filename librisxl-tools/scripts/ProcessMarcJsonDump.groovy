@@ -1,4 +1,4 @@
-import whelk.plugin.libris.MarcFrameConverter
+import whelk.converter.marc.MarcFrameConverter
 
 def sourceDump = args[0]
 def destDump = args[1]
