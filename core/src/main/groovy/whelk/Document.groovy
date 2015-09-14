@@ -1,15 +1,20 @@
 package whelk
 
+import groovy.util.logging.Slf4j as Log
+
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
 import java.security.MessageDigest
 
+@Log
 class Document {
     static final String CREATED_KEY = "created";
     static final String MODIFIED_KEY = "modified";
     static final String DELETED_KEY = "deleted";
+    static final String DATASET_KEY = "dataset";
     static final String CONTENT_TYPE_KEY = "contentType";
+    static final String CHECKUM_KEY = "checksum";
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
@@ -24,18 +29,24 @@ class Document {
     Date modified
 
     Document(String id, Map data) {
+        created = new Date()
+        modified = new Date()
         this.id = id
-        this.data = data
+        setData(data)
     }
 
     Document(Map data, Map manifest) {
-        this.data = data
+        created = new Date()
+        modified = new Date()
         withManifest(manifest)
+        setData(data)
     }
 
     Document(String id, Map data, Map manifest) {
-        this.data = data
+        created = new Date()
+        modified = new Date()
         withManifest(manifest)
+        setData(data)
         this.id = id
     }
 
@@ -43,17 +54,31 @@ class Document {
         withContentType(contentType)
     }
 
-    void setData(Map data) {
-        this.data = data
-        calculateChecksum(mapper.writeValueAsBytes(data), mapper.writeValueAsBytes([:]))
+    void setData(Map d) {
+        this.data = deepCopy(d)
+        calculateChecksum(data, manifest)
     }
 
+    def deepCopy(orig) {
+        def bos = new ByteArrayOutputStream()
+        def oos = new ObjectOutputStream(bos)
+        oos.writeObject(orig); oos.flush()
+        def bin = new ByteArrayInputStream(bos.toByteArray())
+        def ois = new ObjectInputStream(bin)
+        return ois.readObject()
+    }
+
+    @JsonIgnore
     String getDataAsString() {
         return mapper.writeValueAsString(data)
     }
 
+    String getDataset() { manifest[DATASET_KEY] }
+
+    @JsonIgnore
     String getIdentifier() { id }
 
+    @JsonIgnore
     String getContentType() { manifest[CONTENT_TYPE_KEY] }
 
     @JsonIgnore
@@ -61,16 +86,16 @@ class Document {
         return mapper.writeValueAsString(manifest)
     }
 
+    String getChecksum() {
+        manifest[CHECKUM_KEY]
+    }
+
     Document withData(Map data) {
-        this.data = data
+        setData(data)
         return this
     }
 
-    void setIdentifiers(List<String> identifiers) {
-        manifest.put("alternateIdentifiers", identifiers)
-    }
-
-    void addIdentifer(String identifier) {
+    void addIdentifier(String identifier) {
         manifest.get("alternateIdentifiers", []).add(identifier)
     }
 
@@ -84,30 +109,25 @@ class Document {
         if (entrydata?.containsKey(MODIFIED_KEY)) {
             modified = new Date(entrydata.get(MODIFIED_KEY))
         }
-        if (entrydata?.containsKey(CONTENT_TYPE_KEY)) {
-            setContentType(entrydata.get(CONTENT_TYPE_KEY))
-        }
-        if (entrydata?.containsKey("alternateIdentifiers")) {
-            this.identifiers = entrydata.get("alternateIdentifiers")
-        }
-        if (entrydata?.containsKey("alternateDatasets")) {
-            this.datasets = entrydata.get("alternateDatasets")
-        }
         if (entrydata != null) {
             this.manifest.putAll(entrydata)
-            if (checksum) {
-                this.manifest['checksum'] = checksum
-            }
         }
+        calculateChecksum(data, manifest)
         return this
     }
 
     Document withContentType(String contentType) {
         manifest.put(CONTENT_TYPE_KEY, contentType)
+        calculateChecksum(data, manifest)
         return this
     }
 
+    private void calculateChecksum(Map d, Map m) {
+        calculateChecksum(mapper.writeValueAsBytes(d), mapper.writeValueAsBytes(m))
+    }
+
     private void calculateChecksum(byte[] databytes, byte[] metabytes) {
+        log.trace("Calculating checksum")
         checksum = null
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
@@ -123,6 +143,4 @@ class Document {
         this.checksum = hashtext
         this.manifest['checksum'] = hashtext
     }
-
-
 }

@@ -42,8 +42,6 @@ import whelk.plugin.*
 import whelk.result.*
 import whelk.exception.*
 
-//import static whelk.util.Tools.*
-
 @Log
 class ElasticSearchClient extends ElasticSearch {
 
@@ -153,6 +151,7 @@ class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
 
     //@Override
     public boolean index(String identifier, String dataset, Map data) {
+        log.trace("Indexing with identifier $identifier, dataset(type): $dataset, data: $data")
         try {
             def response = performExecute(client.prepareIndex(getIndexName(), dataset, toElasticId(identifier)).setSource(data))
             def esIdentifier = response.getId()

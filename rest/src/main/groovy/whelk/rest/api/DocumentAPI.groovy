@@ -6,6 +6,7 @@ import javax.servlet.http.*
 import javax.activation.MimetypesFileTypeMap
 
 import org.codehaus.jackson.map.ObjectMapper
+import org.apache.http.entity.ContentType
 
 import whelk.*
 import whelk.component.*
@@ -26,18 +27,22 @@ class DocumentAPI implements RestAPI {
 
     private ElasticSearch elastic
     private PostgreSQLComponent storage
+    private Whelk whelk
 
     Map contextHeaders = [:]
     AccessControl accessControl = new AccessControl()
 
-    DocumentAPI(PostgreSQLComponent pg) {
+    DocumentAPI(Whelk w, PostgreSQLComponent pg) {
+        whelk = w
         storage = pg
         log.info("Simpler constructor used.")
     }
 
-    DocumentAPI(PostgreSQLComponent pg, ElasticSearch es) {
+    DocumentAPI(Whelk w, PostgreSQLComponent pg, ElasticSearch es) {
+        whelk = w
         elastic = es
         storage = pg
+        assert whelk
         assert elastic
         assert storage
         log.info("Doc api instantiated.")
@@ -89,7 +94,7 @@ class DocumentAPI implements RestAPI {
             handlePutAndPostRequest(request, response, path, true)
         } else if (request.method == "DELETE") {
             try {
-                def doc = whelk.get(path)
+                def doc = storage.load(path)
                 if (doc && !hasPermission(request.getAttribute("user"), doc, null)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
                     return
@@ -110,7 +115,7 @@ class DocumentAPI implements RestAPI {
     void handleIriRequest(HttpServletRequest request, HttpServletResponse response, String iriPath) {
         log.info("identifier: $iriPath")
 
-        def location = whelk.locate(iriPath)
+        def location = storage.locate(iriPath)
         def doc = location?.document
         log.info("location: $location, doc: $doc")
         def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
@@ -193,7 +198,7 @@ class DocumentAPI implements RestAPI {
                     if (versions) {
                         d.manifest.versions = versions
                     }
-                    sendResponse(response, d.metadataAsJson, "application/json")
+                    sendResponse(response, d.getManifestAsJson(), "application/json")
                 } else {
                     def ctheader = contextHeaders.get(path.split("/")[1])
                     if (ctheader) {
@@ -228,11 +233,10 @@ class DocumentAPI implements RestAPI {
                 throw new WhelkRuntimeException("PUT requires a proper URI.")
             }
             def manifest = [:]
-            def meta = [:]
             Document existingDoc = null
 
             if (identifierSupplied) {
-                existingDoc = whelk.get(path)
+                existingDoc = storage.load(path)
                 if (existingDoc) {
                     log.debug("Document with identifier ${existingDoc.identifier} already exists.")
                     // Check If-Match
@@ -243,7 +247,6 @@ class DocumentAPI implements RestAPI {
                     }
                     manifest = existingDoc.manifest
                     manifest.remove("deleted")
-                    meta = existingDoc.meta
                 }
                 else {
                     manifest['identifier'] = path
@@ -257,28 +260,24 @@ class DocumentAPI implements RestAPI {
             manifest["contentType"] = cType
             log.debug("Set ct: ${manifest.contentType}")
             manifest["dataset"] = getDatasetBasedOnPath(path)
-
-            if (request.getParameterMap()) {
-                meta = request.getParameterMap()
-                log.debug("Setting meta from parameter map: $meta")
-            }
+            log.debug("Set dataset: ${manifest.dataset}")
 
             try {
-                Document doc = whelk.createDocument(manifest["contentType"]).withManifest(manifest).withData(request.getInputStream().getBytes())
+                Document doc = new Document(mapper.readValue(request.getInputStream().getBytes(), Map), manifest)    // whelk.createDocument(manifest["contentType"]).withManifest(manifest).withData(request.getInputStream().getBytes())
 
                 if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
                     return
                 }
 
-                doc = whelk.sanityCheck(doc)
+                //doc = whelk.sanityCheck(doc)
 
                 getAlternateIdentifiersFromLinkHeaders(request).each {
-                    doc.addIdentifier(it)
+                    doc.addIdentifier(it);
                 }
 
                 log.debug("Saving document (${doc.identifier})")
-                def identifier = whelk.add(doc)
+                def identifier = whelk.store(doc)
 
                 def locationRef = request.getRequestURL()
 
@@ -334,9 +333,10 @@ class DocumentAPI implements RestAPI {
         String ds = ""
         def elements = path.split("/")
         int i = 1
-        while (ds.length() == 0 || ds == whelk.id) {
+        while (ds.length() == 0) {
             ds = elements[i++]
         }
+        log.trace("Estimated dataset: $ds")
         return ds
     }
 

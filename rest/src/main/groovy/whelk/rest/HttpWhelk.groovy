@@ -1,6 +1,7 @@
 package whelk.rest
 
 import groovy.util.logging.Slf4j as Log
+import whelk.Whelk
 
 import java.util.regex.*
 import javax.servlet.http.*
@@ -159,8 +160,9 @@ class HttpWhelk extends HttpServlet {
 
         pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
 
-        //pico.as(Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
-        pico.as(Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+        pico.addComponent(Whelk.class)
 
         pico.addComponent(DocumentAPI.class)
 
@@ -171,6 +173,7 @@ class HttpWhelk extends HttpServlet {
         def doc = postgres.load("/bib/13531679")
         log.info("Loaded doc ${doc.identifier}")
         */
+
     }
 
 
