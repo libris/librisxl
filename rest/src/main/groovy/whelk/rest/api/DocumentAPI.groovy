@@ -185,7 +185,7 @@ class DocumentAPI implements RestAPI {
             if (d && (mode== DisplayMode.META || !d.manifest['deleted'])) {
 
                 if (mode == DisplayMode.META) {
-                    def versions = whelk.getVersions(d.identifier)
+                    def versions = whelk.storage.loadAllVersions(d.identifier)
                     if (versions) {
                         d.manifest.versions = versions
                     }
