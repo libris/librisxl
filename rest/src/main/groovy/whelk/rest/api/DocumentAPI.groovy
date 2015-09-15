@@ -9,7 +9,6 @@ import org.codehaus.jackson.map.ObjectMapper
 import org.apache.http.entity.ContentType
 
 import whelk.*
-import whelk.component.*
 import whelk.converter.*
 import whelk.exception.*
 import whelk.rest.*
@@ -26,11 +25,8 @@ class DocumentAPI implements RestAPI {
 
     final static ObjectMapper mapper = new ObjectMapper()
 
-    String id = "DocumentAPI"
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
 
-    private ElasticSearch elastic
-    private PostgreSQLComponent storage
     private Whelk whelk
 
     Map contextHeaders = [:]
@@ -38,19 +34,8 @@ class DocumentAPI implements RestAPI {
 
     Pattern pathPattern = Pattern.compile("^([^_].*)\$")
 
-    DocumentAPI(Whelk w, PostgreSQLComponent pg) {
+    DocumentAPI(Whelk w) {
         whelk = w
-        storage = pg
-        log.info("Simpler constructor used.")
-    }
-
-    DocumentAPI(Whelk w, PostgreSQLComponent pg, ElasticSearch es) {
-        whelk = w
-        elastic = es
-        storage = pg
-        assert whelk
-        assert elastic
-        assert storage
         log.info("Doc api instantiated.")
     }
 
@@ -100,7 +85,7 @@ class DocumentAPI implements RestAPI {
             handlePutAndPostRequest(request, response, path, true)
         } else if (request.method == "DELETE") {
             try {
-                def doc = storage.load(path)
+                def doc = whelk.storage.load(path)
                 if (doc && !hasPermission(request.getAttribute("user"), doc, null)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
                     return
@@ -121,7 +106,7 @@ class DocumentAPI implements RestAPI {
     void handleIriRequest(HttpServletRequest request, HttpServletResponse response, String iriPath) {
         log.info("identifier: $iriPath")
 
-        def location = storage.locate(iriPath)
+        def location = whelk.storage.locate(iriPath)
         def doc = location?.document
         log.info("location: $location, doc: $doc")
         def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
@@ -164,9 +149,9 @@ class DocumentAPI implements RestAPI {
         try {
             def d = null
             if (version) {
-                d = storage.load(path, version)
+                d = whelk.storage.load(path, version)
             } else {
-                def location = storage.locate(path)
+                def location = whelk.storage.locate(path)
                 d = location?.document
                 if (!d && location?.uri) {
                     def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
@@ -180,7 +165,7 @@ class DocumentAPI implements RestAPI {
             if (!d && path ==~ /(.*\.\w+)/) {
                 log.debug("Found extension in $path")
                 if (!d && extensionContentType) {
-                    d = whelk.get(path.substring(0, path.lastIndexOf(".")))
+                    d = whelk.storage.load(path.substring(0, path.lastIndexOf(".")))
                 }
                 accepting = [extensionContentType]
             }
@@ -242,7 +227,7 @@ class DocumentAPI implements RestAPI {
             Document existingDoc = null
 
             if (identifierSupplied) {
-                existingDoc = storage.load(path)
+                existingDoc = whelk.storage.load(path)
                 if (existingDoc) {
                     log.debug("Document with identifier ${existingDoc.identifier} already exists.")
                     // Check If-Match
