@@ -19,8 +19,6 @@ class Document {
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
 
-    private String checksum
-
     String id
     private Map data = [:]
     private final TreeMap manifest = new TreeMap()
@@ -75,6 +73,13 @@ class Document {
         this.data = deepCopy(d)
     }
 
+    void setDeleted(boolean d) {
+        deleted = d
+        if (deleted) {
+            manifest[DELETED_KEY] = deleted
+        }
+    }
+
     def deepCopy(orig) {
         def bos = new ByteArrayOutputStream()
         def oos = new ObjectOutputStream(bos)
@@ -89,6 +94,7 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
+    @JsonIgnore
     String getDataset() { manifest[DATASET_KEY] }
 
     @JsonIgnore
@@ -102,6 +108,7 @@ class Document {
         return mapper.writeValueAsString(manifest)
     }
 
+    @JsonIgnore
     String getChecksum() {
         manifest[CHECKUM_KEY]
     }
@@ -125,6 +132,9 @@ class Document {
         if (entrydata?.containsKey(MODIFIED_KEY)) {
             setModified(entrydata.remove(MODIFIED_KEY))
         }
+        if (entrydata?.containsKey(DELETED_KEY)) {
+            deleted = entrydata[DELETED_KEY]
+        }
         if (entrydata != null) {
             this.manifest.putAll(entrydata)
         }
@@ -133,6 +143,11 @@ class Document {
 
     Document withContentType(String contentType) {
         manifest.put(CONTENT_TYPE_KEY, contentType)
+        return this
+    }
+
+    Document withDataset(String ds) {
+        manifest[DATASET_KEY] = ds
         return this
     }
 }

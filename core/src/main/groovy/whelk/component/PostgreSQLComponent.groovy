@@ -463,49 +463,17 @@ class PostgreSQLComponent {
                 delstmt.setString(1, identifier)
                 delstmt.executeUpdate()
             } finally {
-                /*
-                delstmt.close()
-                */
                 connection.close()
                 log.debug("[remove] Closed connection.")
             }
         }
     }
 
-    public void close() {
-        log.info("Closing down postgresql connections.")
-        try {
-            statement.cancel()
-            if (resultSet != null) {
-                resultSet.close()
-            }
-        } catch (SQLException e) {
-            log.warn("Exceptions on close. These are safe to ignore.", e)
-        } finally {
-            try {
-                statement.close()
-                conn.close()
-            } catch (SQLException e) {
-                log.warn("Exceptions on close. These are safe to ignore.", e)
-            } finally {
-                resultSet = null
-                statement = null
-                conn = null
-            }
-        }
+
+    protected Document createTombstone(id, dataset) {
+        def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json").withDataset(dataset)
+        tombstone.setDeleted(true)
+        return tombstone
     }
 
-    /*
-    public Map getStatus() {
-        def status = [:]
-        status['mainTable'] = mainTableName
-        status['versioning'] = versioning
-        if (versioning) {
-            status['versionsTableName'] = versionsTableName
-        }
-        status['contentTypes'] = contentTypes
-        status['databaseUrl'] = connectionUrl
-        return status
-    }
-    */
 }
