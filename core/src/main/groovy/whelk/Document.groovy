@@ -25,6 +25,7 @@ class Document {
     boolean deleted = false
     Date created
     Date modified
+    int version = 0
 
     Document(String id, Map data) {
         this.id = id

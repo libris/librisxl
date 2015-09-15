@@ -2,6 +2,7 @@ package whelk.rest
 
 import groovy.util.logging.Slf4j as Log
 import whelk.Whelk
+import whelk.rest.api.RestAPI
 
 import java.util.regex.*
 import javax.servlet.http.*
@@ -24,6 +25,33 @@ class HttpWhelk extends HttpServlet {
     static final List<String> LOCAL_ADDRESSES = ['0:0:0:0:0:0:0:1', '192.168.', '10.']
 
     private PicoContainer pico
+    List apis = []
+
+    HttpWhelk() {
+        super()
+        log.info("Setting up httpwhelk.")
+
+        Properties mainProps = new Properties()
+
+        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
+        InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
+                ? new FileInputStream(System.getProperty("xl.secret.properties"))
+                : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
+
+        Properties props = new Properties()
+
+        props.load(secretsConfig)
+
+        pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
+
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+        pico.addComponent(Whelk.class)
+
+        pico.addComponent(DocumentAPI.class)
+
+        pico.start()
+    }
 
     /*
      * Servlet methods
@@ -31,7 +59,6 @@ class HttpWhelk extends HttpServlet {
     void handleRequest(HttpServletRequest request, HttpServletResponse response) {
         String path = request.pathInfo
         //API api = null
-        List pathVars = []
         def whelkinfo = [:]
         /*
         whelkinfo["whelk"] = whelk.id
@@ -42,7 +69,7 @@ class HttpWhelk extends HttpServlet {
         log.debug("Path is $path")
         try {
             if (request.method == "GET" && path == "/") {
-                whelkinfo["version"] = whelk.loadVersionInfo()
+                whelkinfo["version"] = loadVersionInfo()
                 String remote_addr = request.getHeader("X-Forwarded-For") ?: request.getRemoteAddr()
                 boolean local = false
                 for (addr in LOCAL_ADDRESSES) {
@@ -55,6 +82,7 @@ class HttpWhelk extends HttpServlet {
                 }
 
                 if (request.getServerPort() != 80 && local) {
+                    /*
                     def compManifest = [:]
                     whelk.components.each {
                         def plList = []
@@ -67,20 +95,20 @@ class HttpWhelk extends HttpServlet {
                         compManifest[(it.id)].putAll(it.getStatus())
                     }
                     whelkinfo["components"] = compManifest
+                    */
                 }
                 printAvailableAPIs(response, whelkinfo)
             } else {
                 log.info("Accessing $path")
-                def api = pico.getComponent(DocumentAPI.class)
-                api.handle(request, response, [path])
-                /*
-                (api, pathVars) = getAPIForPath(path)
+                //def api = pico.getComponent(DocumentAPI.class)
+                //api.handle(request, response, [path])
+
+                def (api, pathVars) = getAPIForPath(path)
                 if (api) {
                     api.handle(request, response, pathVars)
                 } else {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "No API found for $path")
                 }
-                */
             }
         } catch (DownForMaintenanceException dfme) {
             whelkinfo["status"] = "UNAVAILABLE"
@@ -93,11 +121,21 @@ class HttpWhelk extends HttpServlet {
         }
     }
 
+    String loadVersionInfo() {
+        Properties properties = new Properties()
+        try {
+            properties.load(this.getClass().getClassLoader().getResourceAsStream("version.properties"))
+            return properties.getProperty("releaseTag")
+        } catch (Exception e) {
+            log.debug("Failed to load version information.")
+        }
+        return "badly deployed version (bananas)"
+    }
+
     void printAvailableAPIs(HttpServletResponse response, Map whelkinfo) {
         whelkinfo["apis"] = apis.collect {
-             [ "path" : it.key ,
-                "id": it.value.id,
-                "description" : it.value.description ]
+             [ "class" : it.getClass().getName() ,
+               "description" : it.description ]
         }
         response.setCharacterEncoding("UTF-8")
         response.setContentType("application/json")
@@ -126,18 +164,17 @@ class HttpWhelk extends HttpServlet {
     }
 
     def getAPIForPath(String path) {
-        for (entry in apis.entrySet()) {
-            log.trace("${entry.key} (${entry.key.getClass().getName()}) = ${entry.value}")
-            Matcher matcher = entry.key.matcher(path)
+        for (api in apis) {
+            Matcher matcher = api.pathPattern.matcher(path)
             if (matcher.matches()) {
-                log.trace("$path matches ${entry.key}")
+                log.trace("$path matches ${api}")
                 int groupCount = matcher.groupCount()
                 List pathVars = new ArrayList(groupCount)
                 for (int i = 1; i <= groupCount; i++) {
                     pathVars.add(matcher.group(i))
                 }
-                log.debug("Matched API ${entry.value} with pathVars $pathVars")
-                return [entry.value, pathVars]
+                log.debug("Matched API ${api} with pathVars $pathVars")
+                return [api, pathVars]
             }
         }
         return [null, []]
@@ -145,35 +182,9 @@ class HttpWhelk extends HttpServlet {
 
     @Override
     void init() {
-        log.info("Starting httpwhelk.")
-
-        Properties mainProps = new Properties()
-
-        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
-        InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
-                                      ? new FileInputStream(System.getProperty("xl.secret.properties"))
-                                      : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
-
-        Properties props = new Properties()
-
-        props.load(secretsConfig)
-
-        pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
-
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
-        pico.addComponent(Whelk.class)
-
-        pico.addComponent(DocumentAPI.class)
-
-        pico.start()
-        /*
-        def postgres = pico.getComponent(PostgreSQLComponent.class)
-        log.info("Postgres is ${postgres.getClass().getName()} with connect url: ${postgres.connectionUrl}")
-        def doc = postgres.load("/bib/13531679")
-        log.info("Loaded doc ${doc.identifier}")
-        */
-
+        log.info("Loading REST APIs")
+        apis = pico.getComponents(RestAPI.class)
+        log.info("Found ${apis.size()} apis.")
     }
 
 

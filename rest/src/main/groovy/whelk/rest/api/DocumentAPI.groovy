@@ -15,14 +15,18 @@ import whelk.exception.*
 import whelk.rest.*
 import whelk.rest.security.*
 
+import java.util.regex.Pattern
+
 @Log
 class DocumentAPI implements RestAPI {
     MimetypesFileTypeMap mt = new MimetypesFileTypeMap()
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
+    final static String DOCBASE_URI = "http://libris.kb.se/"
 
     final static ObjectMapper mapper = new ObjectMapper()
 
+    String id = "DocumentAPI"
     String description = "A GET request with identifier loads a document. A PUT request stores a document. A DELETE request deletes a document."
 
     private ElasticSearch elastic
@@ -31,6 +35,8 @@ class DocumentAPI implements RestAPI {
 
     Map contextHeaders = [:]
     AccessControl accessControl = new AccessControl()
+
+    Pattern pathPattern = Pattern.compile("^([^_].*)\$")
 
     DocumentAPI(Whelk w, PostgreSQLComponent pg) {
         whelk = w
@@ -74,7 +80,7 @@ class DocumentAPI implements RestAPI {
         String path = pathVars.first()
         log.debug "Path: $path req method: ${request.method} req url: ${request.requestURL} forward req uri: ${request.getAttribute('javax.servlet.forward.request_uri')}"
         if (request.method == "GET" && path.startsWith("/_iri/")) {
-            def docBase = new StringBuilder(whelk.docBaseUri.toString())
+            def docBase = new StringBuilder(DOCBASE_URI)
             while (docBase[-1] == '/') {
                 docBase.deleteCharAt(docBase.length()-1)
             }
