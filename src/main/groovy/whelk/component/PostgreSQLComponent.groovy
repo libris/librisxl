@@ -10,7 +10,6 @@ import whelk.Location
 import java.security.MessageDigest
 import java.sql.ResultSet
 import java.sql.Timestamp
-import java.sql.SQLException
 import java.sql.PreparedStatement
 import java.sql.Connection
 
@@ -314,13 +313,13 @@ class PostgreSQLComponent {
             if (rs.next()) {
                 log.trace("next")
                 def manifest = mapper.readValue(rs.getString("manifest"), Map)
+                log.trace("About to create document")
                 doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
                 if (!checksum) {
                     doc.setCreated(rs.getTimestamp("created").getTime())
                     doc.setModified(rs.getTimestamp("modified").getTime())
                     doc.deleted = rs.getBoolean("deleted")
                 }
-                log.trace("About to create document")
                 log.trace("Created document with id ${doc.id}")
             } else if (log.isTraceEnabled()) {
                 log.trace("No results returned for get($id)")
@@ -347,19 +346,11 @@ class PostgreSQLComponent {
             rs = selectstmt.executeQuery()
             int v = 0
             while (rs.next()) {
-                def manifest = mapper.readValue(rs.getString("manifest"), Map)
-                manifest.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
-                manifest.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
-                manifest.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
-                def doc = docFactory.createDocument(mapper.readValue(rs.getString("data"), Map), manifest)
+                def doc = assembleDocument(rs)
                 doc.version = v++
                 docList << doc
             }
         } finally {
-            /*
-            rs.close()
-            selectstmt.close()
-            */
             connection.close()
             log.debug("[loadAllVersions] Closed connection.")
         }
@@ -368,6 +359,14 @@ class PostgreSQLComponent {
 
     Iterable<Document> loadAll(String dataset) {
         return loadAllDocuments(dataset, false)
+    }
+
+    private Document assembleDocument(ResultSet rs) {
+        Document doc = new Document(mapper.readValue(rs.getString("data"), Map), mapper.readValue(rs.getString("manifest"), Map))
+        doc.setCreated(rs.getTimestamp("created").getTime())
+        doc.setModified(rs.getTimestamp("modified").getTime())
+        doc.setDeleted(rs.getBoolean("deleted"))
+        return doc
     }
 
     private Iterable<Document> loadAllDocuments(String dataset, boolean withLinks, Date since = null, Date until = null) {
@@ -425,11 +424,7 @@ class PostgreSQLComponent {
                         if (withLinks) {
                             doc = docFactory.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("manifest"), Map), mapper.readValue(rs.getString("meta"), Map), rs.getString("parent"))
                         } else {
-                            def manifest = mapper.readValue(rs.getString("manifest"), Map)
-                            manifest.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
-                            manifest.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
-                            manifest.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
-                            doc = docFactory.createDocument(mapper.readValue(rs.getString("data"), Map), manifest)
+                            doc = assembleDocument(rs)
                         }
                         more = rs.next()
                         if (!more) {
