@@ -20,10 +20,11 @@ class Whelk {
         log.info("Whelk started")
     }
 
-    void store(Document document) {
+    String store(Document document) {
         if (storage.store(document)) {
             elastic.index(document.id, document.dataset, document.data)
         }
+        return document.identifier
     }
 
     void bulkStore(List<Document> documents, String dataset) {

@@ -1,43 +1,42 @@
 package whelk.component
 
 import groovy.util.logging.Slf4j as Log
-
-import java.sql.*
-
-import org.apache.commons.dbcp2.*
+import org.apache.commons.dbcp2.BasicDataSource
+import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
-import org.codehaus.jackson.map.*
+import whelk.Document
+import whelk.Location
 
-import whelk.*
+import java.security.MessageDigest
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.sql.SQLException
+import java.sql.PreparedStatement
+import java.sql.Connection
 
 @Log
 class PostgreSQLComponent {
 
-    protected String mainTableName, versionsTableName
-
     protected BasicDataSource connectionPool
 
-    public final static DocumentFactory docFactory = new DocumentFactory()
     public final static mapper = new ObjectMapper()
 
     private final static LOCATION_PRECURSOR = "/resource"
 
-    protected boolean readOnly = false
     protected boolean versioning = true
-    protected String connectionUrl = null
 
     // SQL statements
     protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT
 
     PostgreSQLComponent(String sqlUrl, String sqlMaintable, String sqlUsername, String sqlPassword) {
         //this.contentTypes = ["application/ld+json", "application/json", "application/x-marc-json"]
-        this.connectionUrl = sqlUrl // props.getProperty("sql.url")
-        this.mainTableName = sqlMaintable // props.getProperty("sql.maintable")
 
-        String username = sqlUsername // props.getProperty("sql.username")
-        String password = sqlPassword // props.getProperty("sql.password")
+        String mainTableName = sqlMaintable
+        String versionsTableName = mainTableName + "__versions"
+        String username = sqlUsername
+        String password = sqlPassword
 
-        log.info("Connecting to sql database at $connectionUrl")
+        log.info("Connecting to sql database at $sqlUrl")
         connectionPool = new BasicDataSource();
 
         if (username != null) {
@@ -45,19 +44,17 @@ class PostgreSQLComponent {
             connectionPool.setPassword(password)
         }
         connectionPool.setDriverClassName("org.postgresql.Driver")
-        connectionPool.setUrl(connectionUrl)
+        connectionPool.setUrl(sqlUrl)
         connectionPool.setInitialSize(10)
         connectionPool.setMaxTotal(40)
         connectionPool.setDefaultAutoCommit(true)
+
         // Setting up sql-statements
-        if (versioning) {
-            this.versionsTableName = mainTableName + "__versions"
-        }
-        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, manifest = ?, modified = ?, deleted = ? WHERE id = ? RETURNING *) " +
+        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? RETURNING *) " +
             "INSERT INTO $mainTableName (id, data, manifest, deleted) SELECT ?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
 
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum) SELECT ?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)"
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)"
 
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
@@ -87,62 +84,73 @@ class PostgreSQLComponent {
             """
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
-        STATUS_OF_DOCUMENT = "SELECT modified, deleted FROM $mainTableName WHERE id = ?"
+        STATUS_OF_DOCUMENT = "SELECT created, modified, deleted FROM $mainTableName WHERE id = ?"
     }
 
-    public Map status(String identifier) {
+    public Map status(String identifier, Connection connection = null) {
         Map statusMap = [:]
-        Connection connection
+        boolean newConnection = (connection == null)
         try {
-            connection = connectionPool.getConnection()
+            if (newConnection) {
+                connection = connectionPool.getConnection()
+            }
             PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
             statusStmt.setString(1, identifier)
             def rs = statusStmt.executeQuery()
             if (rs.next()) {
                 statusMap['exists'] = true
-                statusMap['lastUpdate'] rs.getTimestamp("modified").getTime()
+                statusMap['created'] = new Date(rs.getTimestamp("created").getTime())
+                statusMap['modified'] = new Date(rs.getTimestamp("modified").getTime())
                 statusMap['deleted'] = rs.getBoolean("deleted")
             } else {
-                log.trace("No results returned for $id")
+                log.trace("No results returned for $identifier")
                 statusMap['exists'] = false
             }
         } finally {
-            connection.close()
+            if (newConnection) {
+                connection.close()
+            }
         }
         return statusMap
     }
 
-    // TODO: get modified and created from the database
-    boolean store(Document doc, boolean withVersioning = versioning) {
-        log.debug("Document ${doc.identifier} checksum before save: ${doc.checksum}")
+    Document store(Document doc, boolean withVersioning = versioning) {
         assert doc.dataset
-        log.debug("Saving document ${doc.identifier} (with checksum: ${doc.checksum})")
         Connection connection = connectionPool.getConnection()
+        connection.setAutoCommit(false)
         try {
+            calculateChecksum(doc)
+            Date now = new Date()
             if (versioning && withVersioning) {
-                if (!saveVersion(doc, connection)) {
-                    return true // Same document already in storage.
+                if (!saveVersion(doc, connection, now)) {
+                    return doc// Same document already in storage.
                 }
             }
-            PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT) //.replaceAll(/\{tableName\}/, mainTableName + "_" + doc.dataset))
-            insert = rigUpsertStatement(insert, doc)
+            PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
+            insert = rigUpsertStatement(insert, doc, now)
             insert.executeUpdate()
-            return true
+            connection.commit()
+            def status = status(doc.identifier, connection)
+            doc.setCreated(status['created'])
+            doc.setModified(status['modified'])
+            log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
+            return doc
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}")
+            connection.rollback()
             throw e
         } finally {
             connection.close()
             log.debug("[store] Closed connection.")
         }
-        return false
+        return null
     }
 
-    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc) {
+    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime) {
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(2, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setTimestamp(3, new Timestamp(doc.modified.getTime()))
-        insert.setBoolean(4, doc.isDeleted())
+        insert.setBoolean(3, doc.isDeleted())
+        insert.setTimestamp(4, new Timestamp(modTime.getTime()))
         insert.setString(5, doc.identifier)
         insert.setString(6, doc.identifier)
         insert.setObject(7, doc.dataAsString, java.sql.Types.OTHER)
@@ -152,11 +160,11 @@ class PostgreSQLComponent {
         return insert
     }
 
-    boolean saveVersion(Document doc, Connection connection) {
+    boolean saveVersion(Document doc, Connection connection, Date modTime) {
         PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
-            log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: ${doc.modified}")
-            insvers = rigVersionStatement(insvers, doc)
+            log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
+            insvers = rigVersionStatement(insvers, doc, modTime)
             int updated =  insvers.executeUpdate()
             log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
             return (updated > 0)
@@ -166,13 +174,14 @@ class PostgreSQLComponent {
         }
     }
 
-    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc) {
+    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime) {
         insvers.setString(1, doc.identifier)
         insvers.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insvers.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
         insvers.setString(4, doc.checksum)
-        insvers.setString(5, doc.identifier)
-        insvers.setString(6, doc.checksum)
+        insvers.setTimestamp(5, new Timestamp(modTime.getTime()))
+        insvers.setString(6, doc.identifier)
+        insvers.setString(7, doc.checksum)
         return insvers
     }
 
@@ -182,10 +191,11 @@ class PostgreSQLComponent {
         }
         log.debug("Bulk storing ${docs.size()} documents.")
         Connection connection = connectionPool.getConnection()
-        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT) //.replaceAll(/\{tableName\}/, mainTableName + "_" + dataset))
+        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT)
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
+                calculateChecksum(doc)
                 if (versioning) {
                     ver_batch = rigVersionStatement(ver_batch, doc)
                     ver_batch.addBatch()
@@ -205,6 +215,30 @@ class PostgreSQLComponent {
             connection.close()
             log.debug("[bulkStore] Closed connection.")
         }
+    }
+
+    String calculateChecksum(Document doc) {
+        log.trace("Calculating checksum with manifest: ${doc.manifest}")
+        MessageDigest m = MessageDigest.getInstance("MD5")
+        m.reset()
+        byte[] databytes = mapper.writeValueAsBytes(doc.data)
+        // Remove created and modified from manifest in preparation for checksum calculation
+        Date created = doc.manifest.remove(Document.CREATED_KEY)
+        Date modified = doc.manifest.remove(Document.MODIFIED_KEY)
+        doc.manifest.remove(Document.CHECKUM_KEY)
+        byte[] manifestbytes= mapper.writeValueAsBytes(doc.manifest)
+        byte[] checksumbytes = new byte[databytes.length + manifestbytes.length];
+        System.arraycopy(databytes, 0, checksumbytes, 0, databytes.length);
+        System.arraycopy(manifestbytes, 0, checksumbytes, databytes.length, manifestbytes.length);
+        m.update(checksumbytes)
+        byte[] digest = m.digest()
+        BigInteger bigInt = new BigInteger(1,digest)
+        String hashtext = bigInt.toString(16)
+        log.debug("calculated checksum: $hashtext")
+        doc.manifest[Document.CHECKUM_KEY] = hashtext
+        // Reinsert created and modified
+        doc.setCreated(created)
+        doc.setModified(modified)
     }
 
     // TODO: Update to real locate
@@ -280,13 +314,13 @@ class PostgreSQLComponent {
             if (rs.next()) {
                 log.trace("next")
                 def manifest = mapper.readValue(rs.getString("manifest"), Map)
+                doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
                 if (!checksum) {
-                    manifest.put(Document.CREATED_KEY, rs.getTimestamp("created").getTime())
-                    manifest.put(Document.MODIFIED_KEY, rs.getTimestamp("modified").getTime())
-                    manifest.put(Document.DELETED_KEY, rs.getBoolean("deleted"))
+                    doc.setCreated(rs.getTimestamp("created").getTime())
+                    doc.setModified(rs.getTimestamp("modified").getTime())
+                    doc.deleted = rs.getBoolean("deleted")
                 }
                 log.trace("About to create document")
-                doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest) // docFactory.createDocument(mapper.readValue(rs.getString("data"), Map), manifest)
                 log.trace("Created document with id ${doc.id}")
             } else if (log.isTraceEnabled()) {
                 log.trace("No results returned for get($id)")

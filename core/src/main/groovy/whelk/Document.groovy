@@ -23,31 +23,48 @@ class Document {
 
     String id
     private Map data = [:]
-    private Map manifest = [:]
+    private final TreeMap manifest = new TreeMap()
     boolean deleted = false
     Date created
     Date modified
 
     Document(String id, Map data) {
-        created = new Date()
-        modified = new Date()
         this.id = id
         setData(data)
     }
 
     Document(Map data, Map manifest) {
-        created = new Date()
-        modified = new Date()
         withManifest(manifest)
         setData(data)
     }
 
     Document(String id, Map data, Map manifest) {
-        created = new Date()
-        modified = new Date()
         withManifest(manifest)
         setData(data)
         this.id = id
+    }
+
+    void setCreated(Date c) {
+        if (c) {
+            setCreated(c.getTime())
+        }
+    }
+
+    void setCreated(long c) {
+        this.created = new Date(c)
+        this.manifest.put(CREATED_KEY, this.created)
+    }
+
+    void setModified(Date m) {
+        if (m) {
+            setModified(m.getTime())
+        }
+    }
+
+    void setModified(long m) {
+        this.modified = new Date(m)
+        this.manifest.put(MODIFIED_KEY, this.modified)
+
     }
 
     void setContentType(String contentType) {
@@ -56,7 +73,6 @@ class Document {
 
     void setData(Map d) {
         this.data = deepCopy(d)
-        calculateChecksum(data, manifest)
     }
 
     def deepCopy(orig) {
@@ -104,43 +120,19 @@ class Document {
             this.id = entrydata["identifier"]
         }
         if (entrydata?.containsKey(CREATED_KEY)) {
-            created = new Date(entrydata.get(CREATED_KEY))
+            setCreated(entrydata.remove(CREATED_KEY))
         }
         if (entrydata?.containsKey(MODIFIED_KEY)) {
-            modified = new Date(entrydata.get(MODIFIED_KEY))
+            setModified(entrydata.remove(MODIFIED_KEY))
         }
         if (entrydata != null) {
             this.manifest.putAll(entrydata)
         }
-        calculateChecksum(data, manifest)
         return this
     }
 
     Document withContentType(String contentType) {
         manifest.put(CONTENT_TYPE_KEY, contentType)
-        calculateChecksum(data, manifest)
         return this
-    }
-
-    private void calculateChecksum(Map d, Map m) {
-        calculateChecksum(mapper.writeValueAsBytes(d), mapper.writeValueAsBytes(m))
-    }
-
-    private void calculateChecksum(byte[] databytes, byte[] metabytes) {
-        log.trace("Calculating checksum")
-        checksum = null
-        MessageDigest m = MessageDigest.getInstance("MD5")
-        m.reset()
-        //byte[] metabytes = meta.toString().getBytes()
-        byte[] checksumbytes = new byte[databytes.length + metabytes.length];
-        System.arraycopy(databytes, 0, checksumbytes, 0, databytes.length);
-        System.arraycopy(metabytes, 0, checksumbytes, databytes.length, metabytes.length);
-        m.update(checksumbytes)
-        byte[] digest = m.digest()
-        BigInteger bigInt = new BigInteger(1,digest)
-        String hashtext = bigInt.toString(16)
-        log.debug("calculated checksum: $hashtext")
-        this.checksum = hashtext
-        this.manifest['checksum'] = hashtext
     }
 }
