@@ -7,28 +7,13 @@
     </encoder>
   </appender>
 
-  <logger name="org.elasticsearch">
-      <level value="warn"/>
-   </logger>
-  <logger name="org.apache.camel">
-      <level value="info"/>
-  </logger>
-  <logger name="org.apache.jena.fuseki">
-      <level value="warn"/>
-  </logger>
-  <logger name="org.apache.camel.component.http4">
-      <level value="warn"/>
-  </logger>
-  <logger name="org.apache.camel.component.elasticsearch">
-      <level value="warn"/>
-  </logger>
-  <logger name="org.apache.activemq.camel.component">
-      <level value="info"/>
-  </logger>
-  <logger name="org.apache.activemq">
-      <level value="warn"/>
-  </logger>
-
+  <logger name="org.elasticsearch" level="warn"/>
+  <logger name="org.apache.camel" level="info"/>
+  <logger name="org.apache.jena.fuseki" level="warn"/>
+  <logger name="org.apache.camel.component.http4" level="warn"/>
+   <logger name="org.apache.camel.component.elasticsearch" level="warn"/>
+   <logger name="org.apache.activemq.camel.component" level="info"/>
+   <logger name="org.apache.activemq" level="warn"/>
    <logger name="whelk.Document" level="trace"/>
    <logger name="whelk.rest.api.DocumentAPI" level="trace"/>
    <logger name="whelk.plugin.libris.security.AccessControl" level="info"/>

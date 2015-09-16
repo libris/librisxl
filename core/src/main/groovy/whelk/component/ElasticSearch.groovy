@@ -2,98 +2,39 @@ package whelk.component
 
 import groovy.util.logging.Slf4j as Log
 
-import org.codehaus.jackson.map.*
-import org.codehaus.jackson.*
-
 import org.apache.commons.codec.binary.Base64
-
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest
-import org.elasticsearch.action.index.IndexResponse
-import org.elasticsearch.action.search.SearchResponse
-import org.elasticsearch.action.search.SearchType
+import org.elasticsearch.action.ActionRequest
+import org.elasticsearch.action.ActionResponse
+import org.elasticsearch.action.bulk.BulkRequest
+import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.*
 import org.elasticsearch.common.transport.*
 import org.elasticsearch.common.settings.ImmutableSettings
-import org.elasticsearch.common.xcontent.ToXContent
 import org.elasticsearch.common.settings.*
-import org.elasticsearch.search.highlight.*
-import org.elasticsearch.action.admin.indices.flush.*
-import org.elasticsearch.action.count.CountResponse
-import org.elasticsearch.search.facet.FacetBuilders
-import org.elasticsearch.common.xcontent.XContentBuilder
-import org.elasticsearch.common.unit.TimeValue
-import org.elasticsearch.index.query.*
-import org.elasticsearch.search.sort.FieldSortBuilder
-import org.elasticsearch.search.sort.SortOrder
-import org.elasticsearch.index.query.FilterBuilders.*
 import org.elasticsearch.action.delete.*
-import org.elasticsearch.action.get.*
-import org.elasticsearch.action.search.*
 
-import org.elasticsearch.common.io.stream.*
-import org.elasticsearch.common.xcontent.*
-
-import static org.elasticsearch.index.query.QueryBuilders.*
-import static org.elasticsearch.common.xcontent.XContentFactory.*
-
-import whelk.*
-import whelk.plugin.*
-import whelk.result.*
 import whelk.exception.*
 
 @Log
-class ElasticSearchClient extends ElasticSearch {
+class ElasticSearch {
 
-    ElasticSearchClient(String ident = null, Map params) {
-        super(params)
-        id = ident
-    }
-}
-
-@Log
-class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
-
-    static final String DEFAULT_CLUSTER = "whelks"
     static final int WARN_AFTER_TRIES = 1000
     static final int RETRY_TIMEOUT = 300
     static final int MAX_RETRY_TIMEOUT = 60*60*1000
-    static final String DEFAULT_TYPE = "record"
 
     Client client
-    String elastichost, elasticcluster
+    private String elastichost, elasticcluster
     String defaultType = "record"
     String defaultIndex = null
 
-    Map<String,String> configuredTypes
-    List<String> availableTypes
-
-
-    Class searchResultClass = null
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
         this.elastichost = elasticHost
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
 
-        //this.elastichost = props.getProperty("elastic.host")
-        if (!elastichost) {
-            this.elastichost = System.getProperty("elastic.host")
-        }
-        //this.elasticcluster = props.getProperty("elastic.cluster")
-        if (!elasticcluster) {
-            this.elasticcluster = System.getProperty("elastic.cluster", DEFAULT_CLUSTER)
-        }
-        configuredTypes = [:] // (props ? props.getProperty("typeConfiguration", [:]) : [:])
-        availableTypes = [] // (props ? props.getProperty("availableTypes", []) : [])
         connectClient()
-
-        //this.defaultIndex = (props ? props.getProperty("indexName") : null)
-        /*
-        if (props.getProperty("searchresultclass") {
-            this.searchResultClass = Class.forName(props.getProperty("searchresultclass"))
-        }
-        */
     }
 
     void connectClient() {
@@ -113,23 +54,31 @@ class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
                         if (!port) {
                             port = 9300
                         }
-                        client = client.addTransportAddress(new InetSocketTransportAddress(host, port as int))
+                        client = ((TransportClient)client).addTransportAddress(new InetSocketTransportAddress(host, port as int))
                 }
             } catch (ArrayIndexOutOfBoundsException aioobe) {
                 throw new WhelkRuntimeException("Unable to initialize elasticsearch client. Host configuration might be missing port?")
             }
             log.debug("... connected")
         } else {
-            throw new WhelkRuntimeException("Unable to initialize ${this.id}. Need to configure plugins.json or set system property \"elastic.host\" and possibly \"elastic.cluster\".")
+            throw new WhelkRuntimeException("Unable to initialize ES client.")
         }
     }
 
-    def performExecute(def requestBuilder) {
+    public ActionResponse performExecute(ActionRequest request) {
         int failcount = 0
-        def response = null
+        ActionResponse response = null
         while (response == null) {
             try {
-                response = requestBuilder.execute().actionGet()
+                if (request instanceof IndexRequest) {
+                    response = client.index(request).actionGet()
+                }
+                if (request instanceof BulkRequest) {
+                    response = client.bulk(request).actionGet()
+                }
+                if (request instanceof DeleteRequest) {
+                    response = client.delete(request).actionGet()
+                }
             } catch (NoNodeAvailableException n) {
                 log.trace("Retrying server connection ...")
                 if (failcount++ > WARN_AFTER_TRIES) {
@@ -144,16 +93,27 @@ class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
         return response
     }
 
+    /*
     void flush() {
         log.debug("Flusing ${this.id}")
         def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
     }
 
-    //@Override
+    public boolean bulkIndex(List<Document> docs) {
+        BulkRequest bulk = new BulkRequest()
+        for (doc in docs) {
+            bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)))
+        }
+        BulkResponse response = performExecute(bulk)
+        if (response.hasFailures()) {
+
+        }
+    }
+
     public boolean index(String identifier, String dataset, Map data) {
         log.trace("Indexing with identifier $identifier, dataset(type): $dataset, data: $data")
         try {
-            def response = performExecute(client.prepareIndex(getIndexName(), dataset, toElasticId(identifier)).setSource(data))
+            IndexResponse response = performExecute(new IndexRequest(getIndexName(), dataset, toElasticId(identifier)).source(data))
             def esIdentifier = response.getId()
             if (esIdentifier) {
                 log.debug("Document $identifier indexed with es id: $esIdentifier")
@@ -165,6 +125,8 @@ class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
         }
         return false
     }
+
+    public IndexRequest
 
     //@Override
     public void remove(String identifier, String dataset) {
@@ -182,11 +144,8 @@ class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
 
         client.delete(new DeleteRequest(defaultIndex, calculateTypeFromIdentifier(identifier), toElasticId(identifier)))
-
-            // Kanske en matchall-query filtrerad på _type och _id?
     }
 
-    /*
     SearchResult query(Query q) {
         def indexTypes = []
         if (q instanceof ElasticQuery) {
@@ -330,15 +289,5 @@ class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
             log.debug("Decoded id $id into $decodedIdentifier")
             return decodedIdentifier
         }
-    }
-
-    public Map getStatus() {
-        def status = [:]
-        status['indexName'] = getIndexName()
-        status['availableTypes'] = availableTypes
-        status['host'] = getElasticHost()
-        status['cluster'] = getElasticCluster()
-        status['port'] = getElasticPort()
-        return status
     }
 }
