@@ -3881,7 +3881,7 @@
         "property": "notation",
         "defaults": {
           "inScheme": {
-            "@id": "/def/schemes/nlm",
+            "@id": "/ext/scheme/nlm",
             "@type": "ConceptScheme",
             "notation": "NLM"
           }
@@ -3984,7 +3984,7 @@
       "uriTemplateDefaults": {"inScheme.notation": "kssb"},
       "$a": {"property": "notation", "required": true},
       "$2": {"link": "inScheme",
-             "resourceType": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+             "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
              "property": "notation"},
       "$b": {"property": "classificationItem", "ignored": true},
       "_spec": [
@@ -4730,7 +4730,7 @@
         "about": "_:concept",
         "link": "inScheme",
         "resourceType": "ConceptScheme",
-        "uriTemplate": "/topic/{+_}",
+        "uriTemplate": "/scheme/{+_}",
         "property": "notation",
         "tokenMap": "thesaurus",
         "definedElsewhereToken": "7"
@@ -4754,6 +4754,7 @@
         "requires-i2": "7",
         "about": "_:concept",
         "link": "inScheme",
+        "uriTemplate": "/scheme/{+_}",
         "resourceType": "ConceptScheme",
         "property": "notation"
       },
@@ -4774,7 +4775,11 @@
                 "name": "samlingar",
                 "focusOf": {
                   "@type": "Concept",
-                  "inScheme": {"@type": "ConceptScheme", "notation": "sao"}
+                  "inScheme": {
+                    "@id": "/scheme/sao",
+                    "@type": "ConceptScheme",
+                    "notation": "sao"
+                  }
                 }
               }
             ]
@@ -4833,14 +4838,14 @@
       "i2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
-        "uriTemplate": "/topic/{+_}",
+        "uriTemplate": "/scheme/{+_}",
         "property": "notation",
         "tokenMap": "thesaurus"
       },
       "$2": {
         "requires-i2": "7",
         "link": "inScheme",
-        "resourceType": "ConceptScheme", "uriTemplate": "/topic/{+_}",
+        "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
         "property": "notation"
       },
       "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
@@ -4867,7 +4872,7 @@
                   }
                 ],
                 "inScheme": {
-                  "@id": "/topic/lcsh",
+                  "@id": "/scheme/lcsh",
                   "@type": "ConceptScheme",
                   "notation": "lcsh"
                 }
@@ -5212,7 +5217,7 @@
       "resourceType": "Concept",
       "i2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
-        "uriTemplate": "/topic/{+_}",
+        "uriTemplate": "/scheme/{+_}",
         "property": "notation",
         "tokenMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
         "TODO": "proper code for sab förkortad"
@@ -5393,14 +5398,14 @@
         "IMPROVE:about": "$thing if Concept else $record",
         "TODO": "inCollection if . = sgp?",
         "link": "inScheme", "resourceType": "ConceptScheme",
-        "uriTemplate": "/topic/{_}",
+        "uriTemplate": "/scheme/{_}",
         "property": "notation"
       },
       "_spec": [
         {
           "source": {"040": {"subfields": [{"f":"barn"}]}},
           "result": {"about": {
-            "inScheme":  {"@type": "ConceptScheme", "@id": "/topic/barn", "notation": "barn"}
+            "inScheme":  {"@type": "ConceptScheme", "@id": "/scheme/barn", "notation": "barn"}
           }}
         }
       ]
@@ -5426,7 +5431,7 @@
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "$2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
-        "uriTemplate": "/topic/{+_}",
+        "uriTemplate": "/scheme/{+_}",
         "property": "notation"
       }
     },
@@ -5434,11 +5439,11 @@
     "083" : {
       "inherit": "bib:082",
       "aboutEntity": "?record",
-      "addLink": "subject",
+      "addLink": "closeMatch",
       "match-domain": {
         "Concept": {"addLink": "closeMatch"},
         "Place": {"addLink": "closeMatch"},
-        "Work": {"addLink": "subject"}
+        "UniformWork": {"addLink": "subject"}
       }
     },
 
@@ -5521,7 +5526,7 @@
       "computeLinks": null,
       "resourceType": null,
       "aboutEntity": "?record",
-      "aboutType": "Concept",
+      "aboutType": "TopicalTerm",
       "$a": {"property": "prefLabel"},
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "dependsOn": ["040", "042"],
@@ -5533,7 +5538,7 @@
           "name": "",
           "source": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
           "result": {
-            "@type": "Concept",
+            "@type": "TopicalTerm",
             "@id": "/resource/auth/140482",
             "prefLabel": "Barnpsykologi",
             "sameAs":  [{"@id": "/topic/sao/Barnpsykologi"}]
@@ -5558,6 +5563,7 @@
 
     "180" : {
       "inherit": "150",
+      "aboutType": "AspectTerm",
       "$x": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/aspects/", "notation": "aspects"}}
@@ -5580,15 +5586,17 @@
         }
       },
       "match-domain": {
-        "Person": {
+        "PersonTerm": {
           "addLink": "sameAs",
+          "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
         }
       },
-      "aboutEntity": "?thing", "NOTE": "really Work - see 100",
-      "addLink": "attributedTo", "resourceType": "Person"
+      "aboutEntity": "?record", "NOTE": "really Work - see 100",
+      "addLink": "attributedTo",
+      "resourceType": "Person"
     },
     "410": {
       "inherit": "bib:610",
@@ -5604,7 +5612,7 @@
       "match-code": {
         "x": {
           "addLink": "replaces",
-          "resourceType": "Concept",
+          "resourceType": "TopicalTerm",
           "uriTemplate": "/topic/sao/{broader.prefLabel*}",
           "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
           "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
@@ -5630,14 +5638,14 @@
     "550" : {
       "inherit": "150",
       "aboutEntity": "?record",
-      "resourceType": "Concept",
+      "resourceType": "TopicalTerm",
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
       "_spec": [
         {
           "source": {"550": {"subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}},
           "result": {
             "broader": [
-              {"@type": "Concept",
+              {"@type": "TopicalTerm",
                 "@id": "/topic/sao/Commedia%20dell%60arte",
                 "prefLabel":  "Commedia dell`arte"}
             ]
@@ -5659,7 +5667,7 @@
       "TODO": "incomplete",
       "inherit": "180",
       "aboutType": null,
-      "resourceType": "Concept"
+      "resourceType": "AspectTerm"
     },
     "667" : {
       "aboutEntity": "?record",
@@ -5693,9 +5701,10 @@
       "inherit": "bib:650",
       "aboutEntity": "?record",
       "computeLinks": null,
+      "addLink": "closeMatch",
       "match-domain": {
-        "Concept": {"addLink": "closeMatch"},
-        "Work": {"addLink": "subject"}
+        "TopicalTerm": {"addLink": "closeMatch"},
+        "WorkTerm": {"addLink": "subject"}
       },
       "i1": null,
       "$0": {"addProperty": "notation"},
