@@ -12,6 +12,7 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.sql.PreparedStatement
 import java.sql.Connection
+import java.sql.Types
 
 @Log
 class PostgreSQLComponent {
@@ -53,7 +54,10 @@ class PostgreSQLComponent {
             "INSERT INTO $mainTableName (id, data, manifest, deleted) SELECT ?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
 
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)"
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"// (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)" +
+
+
+
 
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
@@ -175,8 +179,8 @@ class PostgreSQLComponent {
 
     private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime) {
         insvers.setString(1, doc.identifier)
-        insvers.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
-        insvers.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
+        insvers.setObject(2, doc.dataAsString, Types.OTHER)
+        insvers.setObject(3, doc.manifestAsJson, Types.OTHER)
         insvers.setString(4, doc.checksum)
         insvers.setTimestamp(5, new Timestamp(modTime.getTime()))
         insvers.setString(6, doc.identifier)
