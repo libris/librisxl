@@ -46,6 +46,7 @@ class HttpWhelk extends HttpServlet {
 
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+
         pico.addComponent(Whelk.class)
 
         pico.addComponent(DocumentAPI.class)

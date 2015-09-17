@@ -1,8 +1,9 @@
-package whelk.api.libris
+package whelk.rest.api
 
 import groovy.util.logging.Slf4j as Log
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
+import whelk.converter.marc.MarcFrameConverter
 
 import java.util.concurrent.*
 import javax.servlet.http.*
@@ -18,13 +19,17 @@ import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import whelk.converter.*
 
+import java.util.regex.Pattern
+
 @Log
-class RemoteSearchAPI extends BasicAPI {
+class RemoteSearchAPI implements RestAPI {
     final static mapper = new ElasticJsonMapper()
 
     String description = "Query API for remote search"
 
     Map remoteURLs
+
+    Pattern pathPattern = Pattern.compile("/_remotesearch")
 
     MarcFrameConverter marcFrameConverter
 
@@ -35,14 +40,14 @@ class RemoteSearchAPI extends BasicAPI {
 
     def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
 
-    RemoteSearchAPI(Map settings) {
-        this.metaProxyBaseUrl = settings.metaproxyBaseUrl
+    RemoteSearchAPI(String metaProxyBaseUrl, String metaProxyInfoUrl) {
+        this.metaProxyBaseUrl = metaProxyBaseUrl
         // Cut trailing slashes from url
         while (metaProxyBaseUrl.endsWith("/")) {
             metaProxyBaseUrl = metaProxyBaseUrl[0..-1]
         }
         assert metaProxyBaseUrl
-        metaProxyInfoUrl = new URL(settings.metaproxyInfoUrl)
+        this.metaProxyInfoUrl = new URL(metaProxyInfoUrl)
 
         // Prepare remoteURLs by loading settings once.
         loadMetaProxyInfo(metaProxyInfoUrl)
@@ -84,7 +89,8 @@ class RemoteSearchAPI extends BasicAPI {
         assert marcFrameConverter
     }
 
-    void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+    @Override
+    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         def query = request.getParameter("q")
         int start = (request.getParameter("start") ?: "0") as int
         int n = (request.getParameter("n") ?: "10") as int
@@ -166,7 +172,7 @@ class RemoteSearchAPI extends BasicAPI {
         if (!output) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT)
         } else {
-            sendResponse(response, output, "application/json")
+            DocumentAPI.sendResponse(response, output, "application/json")
         }
     }
 

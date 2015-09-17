@@ -349,7 +349,7 @@ class DocumentAPI implements RestAPI {
         return alts
     }
 
-    void sendResponse(HttpServletResponse response, Map data, String contentType, int statusCode = 200) {
+    static void sendResponse(HttpServletResponse response, Map data, String contentType, int statusCode = 200) {
         if (!data) {
             sendResponse(response, new byte[0], contentType, statusCode)
         } else {
@@ -357,7 +357,7 @@ class DocumentAPI implements RestAPI {
         }
     }
 
-    void sendResponse(HttpServletResponse response, byte[] data, String contentType, int statusCode = 200) {
+    static void sendResponse(HttpServletResponse response, byte[] data, String contentType, int statusCode = 200) {
         response.setStatus(statusCode)
         if (contentType) {
             response.setContentType(contentType)

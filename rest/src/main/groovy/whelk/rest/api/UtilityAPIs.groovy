@@ -1,26 +1,28 @@
-package whelk.api.libris
+package whelk.rest.api
 
 import groovy.util.logging.Slf4j as Log
+import org.codehaus.jackson.map.ObjectMapper
 
 import javax.servlet.http.*
 
 import org.apache.http.entity.ContentType
 
-import whelk.util.Tools
-
 import whelk.*
-import whelk.api.*
-import whelk.component.*
 import whelk.exception.*
-import whelk.plugin.*
 
 import se.kb.libris.utils.isbn.*
 
+import java.util.regex.Pattern
+
 @Log
-class FormatterAPI extends BasicAPI {
+class FormatterAPI implements RestAPI {
 
     String description = "API to transform between formats the whelk is capable of handling."
-    void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+
+    Pattern pathPattern = Pattern.compile("/_format")
+
+
+    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         if (request.method == "POST") {
             String requestedContentType = request.getParameter("to")
             if (request.getContentLength() == 0) {
@@ -42,7 +44,7 @@ class FormatterAPI extends BasicAPI {
                 } else {
                     log.info("No conversion requested. Returning document as is.")
                 }
-                sendResponse(response, doc.dataAsString, doc.contentType)
+                DocumentAPI.sendResponse(response, doc.dataAsString, doc.contentType)
             }
         } else {
             response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
@@ -54,12 +56,15 @@ class FormatterAPI extends BasicAPI {
 class HoldCounter extends SearchAPI {
     String description = "Custom search API for counting holdings."
 
+
+    Pattern pathPattern = Pattern.compile("")
+
     HoldCounter(indexTypeConfig) {
         super(indexTypeConfig)
     }
 
     @Override
-    void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         def idparam = request.getParameter("id")
         log.info("idparam: $idparam")
 
@@ -69,23 +74,25 @@ class HoldCounter extends SearchAPI {
         elasticQuery.n = 0
 
         try {
-            sendResponse(response, performQuery(elasticQuery, null), "application/json")
+            DocumentAPI.sendResponse(response, performQuery(elasticQuery, null), "application/json")
         } catch (WhelkRuntimeException wrte) {
-            response.sendError(Status.SC_BAD_REQUEST, wrte.message)
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, wrte.message)
 
         }
     }
 }
 
 @Log
-class ISXNTool extends BasicAPI {
+class ISXNTool implements RestAPI {
     String description = "Formats data (ISBN-numbers) according to international presention rules."
 
-    void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+    Pattern pathPattern = Pattern.compile("/_isxntool")
+
+    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         if (request.getParameter("isbn")) {
             handleIsbn(request, response)
         } else {
-            sendResponse(response, '{"error":"No valid parameter found."}', "application/json")
+            DocumentAPI.sendResponse(response, '{"error":"No valid parameter found."}', "application/json")
         }
     }
 
@@ -120,7 +127,7 @@ class ISXNTool extends BasicAPI {
             isbnmap["valid"] = false
             isbnmap["error"] = new String("Failed to parse $providedIsbn as ISBN")
         }
-        sendResponse(response, mapper.writeValueAsString(["isbn":isbnmap]), "application/json")
+        DocumentAPI.sendResponse(response, mapper.writeValueAsString(["isbn":isbnmap]), "application/json")
     }
 
     boolean validISBN(String isbn) {
@@ -151,14 +158,20 @@ class ISXNTool extends BasicAPI {
 }
 
 @Log
-class CompleteExpander extends BasicAPI {
+class CompleteExpander implements RestAPI {
     String description = "Provides useful information about authorities."
 
-    void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+    Pattern pathPattern = Pattern.compile("/_complete/([\\w/]+)\$")
+
+    static final ObjectMapper mapper = new ObjectMapper()
+
+
+    @Override
+    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         def identifier, result, relator, authDoc, resultMap, authDataMap, idQuery
 
         if (pathVars.size() == 0) {
-            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST)
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST)
         } else {
             identifier = pathVars.first()
             authDoc = whelk.get(identifier)
@@ -195,7 +208,7 @@ class CompleteExpander extends BasicAPI {
                 if (!resultMap) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND)
                 } else {
-                    sendResponse(response, mapper.writeValueAsString(resultMap), "application/json")
+                    DocumentAPI.sendResponse(response, mapper.writeValueAsString(resultMap), "application/json")
                 }
 
             }

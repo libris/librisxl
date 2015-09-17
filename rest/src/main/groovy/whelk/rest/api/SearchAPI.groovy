@@ -1,4 +1,4 @@
-package whelk.api
+package whelk.rest.api
 
 import groovy.util.logging.Slf4j as Log
 
@@ -9,12 +9,16 @@ import whelk.component.*
 import whelk.plugin.*
 import whelk.exception.*
 
+import java.util.regex.Pattern
+
 @Log
-class SearchAPI extends BasicAPI implements API {
+class SearchAPI implements RestAPI {
     String description = "Generic search query API. User parameters \"q\" for querystring, and optionally \"facets\" and \"boost\"."
 
     def config
     Whelk whelk
+
+    Pattern pathPattern = Pattern.compile("/([\\w/]+)/_search")
 
 
     SearchAPI(indexTypeConfig) {
@@ -22,7 +26,7 @@ class SearchAPI extends BasicAPI implements API {
     }
 
     @Override
-    protected void doHandle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
         def queryMap = new HashMap(request.parameterMap)
         Map result = [:]
         def indexType = pathVars.first()
@@ -69,7 +73,7 @@ class SearchAPI extends BasicAPI implements API {
             performQuery(elasticQuery, indexConfig) +
             (callback ? ");" : "")
 
-            sendResponse(response, jsonResult, "application/json")
+            DocumentAPI.sendResponse(response, jsonResult, "application/json")
 
         } catch (WhelkRuntimeException wrte) {
             response.sendError(response.SC_NOT_FOUND)
