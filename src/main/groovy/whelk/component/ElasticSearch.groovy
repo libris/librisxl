@@ -6,6 +6,7 @@ import org.apache.commons.codec.binary.Base64
 import org.elasticsearch.action.ActionRequest
 import org.elasticsearch.action.ActionResponse
 import org.elasticsearch.action.bulk.BulkRequest
+import org.elasticsearch.action.bulk.BulkResponse
 import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.*
@@ -13,11 +14,11 @@ import org.elasticsearch.common.transport.*
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.action.delete.*
-
+import whelk.Document
 import whelk.exception.*
 
 @Log
-class ElasticSearch {
+class ElasticSearch implements Index {
 
     static final int WARN_AFTER_TRIES = 1000
     static final int RETRY_TIMEOUT = 300
@@ -93,22 +94,36 @@ class ElasticSearch {
         return response
     }
 
-    /*
-    void flush() {
-        log.debug("Flusing ${this.id}")
-        def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
-    }
-
-    public boolean bulkIndex(List<Document> docs) {
+    @Override
+    public void bulkIndex(List<Document> docs) {
         BulkRequest bulk = new BulkRequest()
         for (doc in docs) {
             bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)))
         }
         BulkResponse response = performExecute(bulk)
         if (response.hasFailures()) {
-
+            response.iterator().each {
+                if (it.failed) {
+                    log.error("Indexing of ${it.id} (${fromElasticId(it.id)}) failed: ${it.failureMessage}")
+                }
+            }
         }
     }
+
+    @Override
+    public void index(Document doc) {
+        def idxReq = new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data)
+        def response = performExecute(idxReq)
+        log.debug("Indexed the document ${doc.id} as ${indexName}/${doc.dataset}/${response.getId()} as version ${response.getVersion()}")
+    }
+
+
+    /*
+    void flush() {
+        log.debug("Flusing ${this.id}")
+        def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
+    }
+
 
     public boolean index(String identifier, String dataset, Map data) {
         log.trace("Indexing with identifier $identifier, dataset(type): $dataset, data: $data")
