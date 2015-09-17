@@ -2,6 +2,7 @@ package whelk.rest
 
 import groovy.util.logging.Slf4j as Log
 import whelk.Whelk
+import whelk.rest.api.ISXNTool
 import whelk.rest.api.RestAPI
 
 import java.util.regex.*
@@ -50,6 +51,7 @@ class HttpWhelk extends HttpServlet {
         pico.addComponent(Whelk.class)
 
         pico.addComponent(DocumentAPI.class)
+        pico.addComponent(ISXNTool.class)
 
         pico.start()
     }

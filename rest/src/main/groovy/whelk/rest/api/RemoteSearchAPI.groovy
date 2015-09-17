@@ -215,12 +215,11 @@ class RemoteSearchAPI implements RestAPI {
 
                         def jsonRec = MarcJSONConverter.toJSONString(record)
                         log.trace("Marcjsonconverter for done")
-                        def xMarcJsonDoc = whelk.createDocument("application/x-marc-json")
-                        .withData(jsonRec.getBytes("UTF-8"))
+                        def xMarcJsonDoc = new Document(mapper.readValue(jsonRec.getBytes("UTF-8"), Map)).withContentType("application/x-marc-json")
                         //Convert xMarcJsonDoc to ld+json
                         def jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
-                        if (!jsonDoc.identifier) {
-                            jsonDoc.identifier = this.whelk.mintIdentifier(jsonDoc)
+                        if (!jsonDoc.id) {
+                            jsonDoc.id = new URIMinter().mint(jsonDoc)
                         }
                         log.trace("Marcframeconverter done")
 
@@ -248,13 +247,19 @@ class RemoteSearchAPI implements RestAPI {
         }
     }
 
-    class MetaproxySearchResult extends JsonLdSearchResult {
+    class MetaproxySearchResult {
 
+        List hits = new ArrayList()
         String database, error
+        int numberOfHits
 
         MetaproxySearchResult(String db, int nrHits) {
             this.numberOfHits = nrHits
             this.database = db
+        }
+
+        void addHit(Document doc) {
+            hits.add(doc)
         }
     }
 
