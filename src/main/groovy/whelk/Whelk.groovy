@@ -1,10 +1,7 @@
 package whelk
 
 import groovy.util.logging.Slf4j as Log
-import org.elasticsearch.action.bulk.BulkRequest
-import org.elasticsearch.action.bulk.BulkResponse
-import org.elasticsearch.action.index.IndexRequest
-import whelk.component.ElasticSearch
+
 import whelk.component.Index
 import whelk.component.PostgreSQLComponent
 
@@ -36,5 +33,9 @@ class Whelk {
         }
     }
 
-    void remove(String id, String dataset) {}
+    void remove(String id, String dataset) {
+        if (storage.remove(id, dataset)) {
+            elastic.remove(id, dataset)
+        }
+    }
 }

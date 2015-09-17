@@ -17,6 +17,8 @@ import org.elasticsearch.action.delete.*
 import whelk.Document
 import whelk.exception.*
 
+import static org.elasticsearch.index.query.QueryBuilders.termQuery
+
 @Log
 class ElasticSearch implements Index {
 
@@ -116,6 +118,14 @@ class ElasticSearch implements Index {
         def response = performExecute(idxReq)
         log.debug("Indexed the document ${doc.id} as ${indexName}/${doc.dataset}/${response.getId()} as version ${response.getVersion()}")
     }
+
+    @Override
+    public void remove(String identifier, String dataset) {
+        log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
+
+        client.delete(new DeleteRequest(defaultIndex, dataset, toElasticId(identifier)))
+    }
+
 
 
     /*
