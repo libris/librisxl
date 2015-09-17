@@ -88,7 +88,7 @@ class MarcFrameConverter implements FormatConverter {
             def result = runConvert(source, metaentry.extraData)
             log.trace("Created frame: $result")
 
-            return whelk.createDocument(getResultContentType()).withData(mapper.writeValueAsBytes(result)).withManifest(metaentry)
+            return new Document(result, metaentry).withContentType(getResultContentType())
         } catch (Exception e) {
             log.error("Failed marc conversion (${e.message}). Metaentry: $metaentry")
             throw e
@@ -97,12 +97,12 @@ class MarcFrameConverter implements FormatConverter {
 
     @Override
     Document convert(final Document doc) {
-        def source = doc.dataAsMap
-        def meta = doc.meta
+        def source = doc.data
+        def meta = doc.manifest
         def result = runConvert(source, meta)
         log.trace("Created frame: $result")
 
-        return whelk.createDocument("application/ld+json").withIdentifier(((String)doc.identifier)).withData(mapper.writeValueAsBytes(result)).withEntry(doc.manifest).withMeta(doc.meta)
+        return new Document(result, doc.manifest).withIdentifier(((String)doc.identifier)).withContentType(getResultContentType())
     }
 
     public static void main(String[] args) {

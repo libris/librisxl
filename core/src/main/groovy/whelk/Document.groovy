@@ -9,6 +9,7 @@ import java.security.MessageDigest
 
 @Log
 class Document {
+    static final String ID_KEY = "identifier"
     static final String CREATED_KEY = "created";
     static final String MODIFIED_KEY = "modified";
     static final String DELETED_KEY = "deleted";
@@ -122,6 +123,11 @@ class Document {
     void addIdentifier(String identifier) {
         manifest.get("alternateIdentifiers", []).add(identifier)
     }
+
+    Document withIdentifier(String identifier) {
+        this.id = identifier
+        this.manifest[ID_KEY] = id
+     }
 
     Document withManifest(Map entrydata) {
         if (entrydata?.containsKey("identifier")) {
