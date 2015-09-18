@@ -16,6 +16,7 @@ import org.elasticsearch.common.settings.*
 import org.elasticsearch.action.delete.*
 import whelk.Document
 import whelk.exception.*
+import whelk.filter.JsonLDLinkExpander
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery
 
@@ -31,6 +32,16 @@ class ElasticSearch implements Index {
     String defaultType = "record"
     String defaultIndex = null
 
+    JsonLDLinkExpander expander
+
+
+    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex, JsonLDLinkExpander ex) {
+        this.elastichost = elasticHost
+        this.elasticcluster = elasticCluster
+        this.defaultIndex = elasticIndex
+        this.expander = ex
+        connectClient()
+    }
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
         this.elastichost = elasticHost
@@ -100,6 +111,10 @@ class ElasticSearch implements Index {
     public void bulkIndex(List<Document> docs) {
         BulkRequest bulk = new BulkRequest()
         for (doc in docs) {
+            if (expander) {
+                doc = expander.filter(doc)
+            }
+
             bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)))
         }
         BulkResponse response = performExecute(bulk)
@@ -114,6 +129,9 @@ class ElasticSearch implements Index {
 
     @Override
     public void index(Document doc) {
+        if (expander) {
+            doc = expander.filter(doc)
+        }
         def idxReq = new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data)
         def response = performExecute(idxReq)
         log.debug("Indexed the document ${doc.id} as ${indexName}/${doc.dataset}/${response.getId()} as version ${response.getVersion()}")
