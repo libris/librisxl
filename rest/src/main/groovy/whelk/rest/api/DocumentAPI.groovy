@@ -369,8 +369,6 @@ class DocumentAPI implements RestAPI {
         if (data.length > 0) {
             OutputStream out = response.getOutputStream()
             out.write(data, 0, data.length)
-            //response.writer.write(text)
-            //response.writer.flush()
             out.flush()
             out.close()
         }

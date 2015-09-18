@@ -2,6 +2,7 @@ package whelk.rest
 
 import groovy.util.logging.Slf4j as Log
 import whelk.Whelk
+import whelk.filter.JsonLDLinkExpander
 import whelk.rest.api.ISXNTool
 import whelk.rest.api.RestAPI
 
@@ -49,6 +50,8 @@ class HttpWhelk extends HttpServlet {
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
 
         pico.addComponent(Whelk.class)
+
+        pico.addComponent(Characteristics.CACHE).addComponent(JsonLDLinkExpander.class)
 
         pico.addComponent(DocumentAPI.class)
         pico.addComponent(ISXNTool.class)

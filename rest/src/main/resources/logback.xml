@@ -19,6 +19,7 @@
    <logger name="whelk.plugin.libris.security.AccessControl" level="info"/>
    <logger name="whelk.component.PostgreSQLComponent" level="trace"/>
    <logger name="whelk.component.ElasticSearch" level="trace"/>
+    <logger name="whelk.filter.JsonLDLinkExpander" level="trace"/>
 
   <root level="info">
     <appender-ref ref="STDOUT" />
